@@ -72,27 +72,5 @@ public class TempQueue extends Queue{
             LOG.debug(" changed ownership of " + this + " to "+ tempDest.getConnectionId());
         }
         super.addSubscription(context, sub);
-    } 
-    
-    public void xwakeup() {
-        boolean result = false;
-        synchronized (messages) {
-            result = !messages.isEmpty();
-        }
-        if (result) {
-            try {
-               pageInMessages(false);
-               
-            } catch (Throwable e) {
-                LOG.error("Failed to page in more queue messages ", e);
-            }
-        }
-        if (!messagesWaitingForSpace.isEmpty() || !isRecoveryDispatchEmpty()) {
-            try {
-                taskRunner.wakeup();
-            } catch (InterruptedException e) {
-                LOG.warn("Task Runner failed to wakeup ", e);
-            }
-        }
     }
 }

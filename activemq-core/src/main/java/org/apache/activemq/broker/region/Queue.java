@@ -18,6 +18,7 @@ package org.apache.activemq.broker.region;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -214,12 +215,37 @@ public class Queue extends BaseDestination implements Task {
         }
     }
 
-    class RecoveryDispatch {
-        public ArrayList<QueueMessageReference> messages;
-        public Subscription subscription;
+    /*
+     * Holder for subscription and pagedInMessages as a browser
+     * needs access to existing messages in the queue that have
+     * already been dispatched
+     */
+    class BrowserDispatch {
+        ArrayList<QueueMessageReference> messages;
+        QueueBrowserSubscription browser;
+        
+        public BrowserDispatch(QueueBrowserSubscription browserSubscription,
+                Collection<QueueMessageReference> values) {
+            
+            messages =  new ArrayList<QueueMessageReference>(values);
+            browser = browserSubscription;
+            browser.incrementQueueRef();
+        }
+        
+        void done() {
+            try {
+                browser.decrementQueueRef();
+            } catch (Exception e) {
+                LOG.warn("decrement ref on browser: " + browser, e);
+            }
+        }
+
+        public QueueBrowserSubscription getBrowser() {
+            return browser;
+        }
     }
    
-    LinkedList<RecoveryDispatch> recoveries = new LinkedList<RecoveryDispatch>();
+    LinkedList<BrowserDispatch> browserDispatches = new LinkedList<BrowserDispatch>();
 
     public void addSubscription(ConnectionContext context, Subscription sub) throws Exception {
         // synchronize with dispatch method so that no new messages are sent
@@ -257,19 +283,18 @@ public class Queue extends BaseDestination implements Task {
                 }
             }
             
-            // do recovery dispatch only if it is a browser subscription
-            if(sub instanceof QueueBrowserSubscription ) { 
-            	// any newly paged in messages that are not dispatched are added to pagedInPending in iterate()
-            	doPageIn(false);
+            if (sub instanceof QueueBrowserSubscription ) { 
+                QueueBrowserSubscription browserSubscription = (QueueBrowserSubscription) sub;
+            	
+                // do again in iterate to ensure new messages are dispatched
+                doPageIn(false);
             
             	synchronized (pagedInMessages) {
-            		RecoveryDispatch rd = new RecoveryDispatch();
-            		rd.messages =  new ArrayList<QueueMessageReference>(pagedInMessages.values());
-            		rd.subscription = sub;
-            		recoveries.addLast(rd);
+            	    if (!pagedInMessages.isEmpty()) {
+            	        BrowserDispatch browserDispatch = new BrowserDispatch(browserSubscription, pagedInMessages.values());
+            	        browserDispatches.addLast(browserDispatch);
+            	    }
             	}
-            
-                ((QueueBrowserSubscription)sub).incrementQueueRef();
             }
             if (!(this.optimizedDispatch || isSlave())) {
                 wakeup();
@@ -971,19 +996,14 @@ public class Queue extends BaseDestination implements Task {
         return movedCounter;
     }
     
-    RecoveryDispatch getNextRecoveryDispatch() {
+    BrowserDispatch getNextBrowserDispatch() {
         synchronized (pagedInMessages) {
-            if( recoveries.isEmpty() ) {
+            if( browserDispatches.isEmpty() ) {
                 return null;
             }
-            return recoveries.removeFirst();
+            return browserDispatches.removeFirst();
         }
 
-    }
-    protected boolean isRecoveryDispatchEmpty() {
-        synchronized (pagedInMessages) {
-            return recoveries.isEmpty();
-        }
     }
 
     /**
@@ -991,44 +1011,30 @@ public class Queue extends BaseDestination implements Task {
      * @see org.apache.activemq.thread.Task#iterate()
      */
     public boolean iterate() {
+        boolean pageInMoreMessages = false;
         synchronized(iteratingMutex) {
-	        RecoveryDispatch rd;
-	        while ((rd = getNextRecoveryDispatch()) != null) {
+            BrowserDispatch rd;
+	        while ((rd = getNextBrowserDispatch()) != null) {
+	            pageInMoreMessages = true;
+	            
 	            try {
 	                MessageEvaluationContext msgContext = new NonCachedMessageEvaluationContext();
 	                msgContext.setDestination(destination);
 	    
+	                QueueBrowserSubscription browser = rd.getBrowser();
 	                for (QueueMessageReference node : rd.messages) {
-	                    if (!node.isDropped() && !node.isAcked() && (!node.isDropped() || rd.subscription.getConsumerInfo().isBrowser())) {
+	                    if (!node.isAcked()) {
 	                        msgContext.setMessageReference(node);
-	                        if (rd.subscription.matches(node, msgContext)) {
- 	                            // Log showing message dispatching
- 	                            if (LOG.isDebugEnabled()) {
- 	                                LOG.debug(destination.getQualifiedName() + " - Recovery - Message pushed '" + node.hashCode() + " - " + node + "' to subscription: '" + rd.subscription + "'");
- 	                            }
-	                            rd.subscription.add(node);
-	                        } else {
-	                            // make sure it gets queued for dispatched again
-	                            dispatchLock.lock();
-	                            try {
-	                                synchronized(pagedInPendingDispatch) {
-	                                    if (!pagedInPendingDispatch.contains(node)) {
-	                                        pagedInPendingDispatch.add(node);
-	                                    }
-	                                }
-	                            } finally {
-	                                dispatchLock.unlock();
-	                            }
+	                        if (browser.matches(node, msgContext)) {
+	                            browser.add(node);
 	                        }
 	                    }
 	                }
-	                
-	                if( rd.subscription instanceof QueueBrowserSubscription ) {
-	                    ((QueueBrowserSubscription)rd.subscription).decrementQueueRef();
-	                }
-	                
+	                                    
+                    rd.done();
+
 	            } catch (Exception e) {
-	                e.printStackTrace();
+	                LOG.warn("exception on dispatch to browser: " + rd.getBrowser(), e);
 	            }
 	        }
 	        
@@ -1061,7 +1067,6 @@ public class Queue extends BaseDestination implements Task {
 	        	}
 	        }
 	        
-	        boolean pageInMoreMessages = false;
 	        synchronized (messages) {
 	            pageInMoreMessages = !messages.isEmpty();
 	        }               

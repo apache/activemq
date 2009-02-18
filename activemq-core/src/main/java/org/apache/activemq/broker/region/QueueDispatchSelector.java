@@ -62,12 +62,9 @@ public class QueueDispatchSelector extends SimpleDispatchSelector {
        
     public boolean canSelect(Subscription subscription,
             MessageReference m) throws Exception {
-        if (subscription.isBrowser() && super.canDispatch(subscription, m)) {
-            return true;
-        }
        
-        boolean result =  super.canDispatch(subscription, m) ;
-        if (result) {
+        boolean result =  super.canDispatch(subscription, m);
+        if (result && !subscription.isBrowser()) {
             result = exclusiveConsumer == null
                     || exclusiveConsumer == subscription;
             if (result) {
