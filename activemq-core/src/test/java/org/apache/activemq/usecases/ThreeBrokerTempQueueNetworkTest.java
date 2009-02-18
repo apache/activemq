@@ -109,7 +109,7 @@ public class ThreeBrokerTempQueueNetworkTest extends JmsMultipleBrokersTestSuppo
     }
 
     protected NetworkConnector bridgeBrokers(String localBrokerName, String remoteBrokerName, boolean dynamicOnly, int networkTTL) throws Exception {
-        NetworkConnector connector = super.bridgeBrokers(localBrokerName, remoteBrokerName, dynamicOnly, networkTTL);
+        NetworkConnector connector = super.bridgeBrokers(localBrokerName, remoteBrokerName, dynamicOnly, networkTTL, true);
         connector.setBridgeTempDestinations(enableTempDestinationBridging);
         return connector;
     }

@@ -17,11 +17,15 @@
 package org.apache.activemq.usecases;
 
 import java.net.URI;
+import java.util.HashMap;
 
 import javax.jms.Destination;
 import javax.jms.MessageConsumer;
 
+import junit.framework.Test;
+
 import org.apache.activemq.JmsMultipleBrokersTestSupport;
+import org.apache.activemq.transport.failover.FailoverUriTest;
 import org.apache.activemq.util.MessageIdList;
 
 /**
@@ -29,6 +33,7 @@ import org.apache.activemq.util.MessageIdList;
  */
 public class ThreeBrokerTopicNetworkTest extends JmsMultipleBrokersTestSupport {
     protected static final int MESSAGE_COUNT = 100;
+    public boolean dynamicOnly;
 
     /**
      * BrokerA -> BrokerB -> BrokerC
@@ -67,6 +72,52 @@ public class ThreeBrokerTopicNetworkTest extends JmsMultipleBrokersTestSupport {
         assertEquals(MESSAGE_COUNT, msgsA.getMessageCount());
         assertEquals(MESSAGE_COUNT * 2, msgsB.getMessageCount());
         assertEquals(MESSAGE_COUNT * 2, msgsC.getMessageCount());
+    }
+    
+    public void initCombosForTestABandBCbrokerNetworkWithSelectors() {
+    	addCombinationValues("dynamicOnly", new Object[] {true, false});
+    }
+    
+    /**
+     * BrokerA -> BrokerB -> BrokerC
+     */
+    public void testABandBCbrokerNetworkWithSelectors() throws Exception {
+        // Setup broker networks
+        bridgeBrokers("BrokerA", "BrokerB", dynamicOnly, 2, true);
+        bridgeBrokers("BrokerB", "BrokerC", dynamicOnly, 2, true);
+
+        startAllBrokers();
+
+        // Setup destination
+        Destination dest = createDestination("TEST.FOO", true);
+
+        // Setup consumers
+        MessageConsumer clientA = createConsumer("BrokerC", dest, "dummy = 33");
+        MessageConsumer clientB = createConsumer("BrokerC", dest, "dummy > 30");
+        MessageConsumer clientC = createConsumer("BrokerC", dest, "dummy = 34");
+
+        // let consumers propogate around the network
+        Thread.sleep(2000);
+        // Send messages
+        // Send messages for broker A
+        HashMap<String, Object> props = new HashMap<String, Object>();
+        props.put("dummy", 33);
+        sendMessages("BrokerA", dest, MESSAGE_COUNT, props);
+        props.put("dummy", 34);
+        sendMessages("BrokerA", dest, MESSAGE_COUNT * 2, props);
+
+        // Get message count
+        MessageIdList msgsA = getConsumerMessages("BrokerC", clientA);
+        MessageIdList msgsB = getConsumerMessages("BrokerC", clientB);
+        MessageIdList msgsC = getConsumerMessages("BrokerC", clientC);
+
+        msgsA.waitForMessagesToArrive(MESSAGE_COUNT);
+        msgsB.waitForMessagesToArrive(MESSAGE_COUNT * 3);
+        msgsC.waitForMessagesToArrive(MESSAGE_COUNT * 2) ;
+
+        assertEquals(MESSAGE_COUNT, msgsA.getMessageCount());
+        assertEquals(MESSAGE_COUNT * 3, msgsB.getMessageCount());
+        assertEquals(MESSAGE_COUNT *2, msgsC.getMessageCount());
     }
 
     /**
@@ -236,5 +287,9 @@ public class ThreeBrokerTopicNetworkTest extends JmsMultipleBrokersTestSupport {
         createBroker(new URI("broker:(tcp://localhost:61616)/BrokerA?persistent=false&useJmx=false"));
         createBroker(new URI("broker:(tcp://localhost:61617)/BrokerB?persistent=false&useJmx=false"));
         createBroker(new URI("broker:(tcp://localhost:61618)/BrokerC?persistent=false&useJmx=false"));
+    }
+    
+    public static Test suite() {
+    	return suite(ThreeBrokerTopicNetworkTest.class);
     }
 }

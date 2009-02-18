@@ -75,27 +75,27 @@ public class JmsMultipleBrokersTestSupport extends CombinationTestSupport {
     protected boolean verbose;
 
     protected NetworkConnector bridgeBrokers(String localBrokerName, String remoteBrokerName) throws Exception {
-        return bridgeBrokers(localBrokerName, remoteBrokerName, false, 1);
+        return bridgeBrokers(localBrokerName, remoteBrokerName, false, 1, true);
     }
 
     protected void bridgeBrokers(String localBrokerName, String remoteBrokerName, boolean dynamicOnly) throws Exception {
         BrokerService localBroker = brokers.get(localBrokerName).broker;
         BrokerService remoteBroker = brokers.get(remoteBrokerName).broker;
 
-        bridgeBrokers(localBroker, remoteBroker, dynamicOnly, 1);
+        bridgeBrokers(localBroker, remoteBroker, dynamicOnly, 1, true);
     }
 
-    protected NetworkConnector bridgeBrokers(String localBrokerName, String remoteBrokerName, boolean dynamicOnly, int networkTTL) throws Exception {
+    protected NetworkConnector bridgeBrokers(String localBrokerName, String remoteBrokerName, boolean dynamicOnly, int networkTTL, boolean conduit) throws Exception {
         BrokerService localBroker = brokers.get(localBrokerName).broker;
         BrokerService remoteBroker = brokers.get(remoteBrokerName).broker;
 
-        return bridgeBrokers(localBroker, remoteBroker, dynamicOnly, networkTTL);
+        return bridgeBrokers(localBroker, remoteBroker, dynamicOnly, networkTTL, conduit);
     }
 
     // Overwrite this method to specify how you want to bridge the two brokers
     // By default, bridge them using add network connector of the local broker
     // and the first connector of the remote broker
-    protected NetworkConnector bridgeBrokers(BrokerService localBroker, BrokerService remoteBroker, boolean dynamicOnly, int networkTTL) throws Exception {
+    protected NetworkConnector bridgeBrokers(BrokerService localBroker, BrokerService remoteBroker, boolean dynamicOnly, int networkTTL, boolean conduit) throws Exception {
         List transportConnectors = remoteBroker.getTransportConnectors();
         URI remoteURI;
         if (!transportConnectors.isEmpty()) {
@@ -103,6 +103,7 @@ public class JmsMultipleBrokersTestSupport extends CombinationTestSupport {
             NetworkConnector connector = new DiscoveryNetworkConnector(new URI("static:" + remoteURI));
             connector.setDynamicOnly(dynamicOnly);
             connector.setNetworkTTL(networkTTL);
+            connector.setConduitSubscriptions(conduit);
             localBroker.addNetworkConnector(connector);
             maxSetupTime = 2000;
             return connector;

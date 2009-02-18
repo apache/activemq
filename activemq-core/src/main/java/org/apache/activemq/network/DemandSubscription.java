@@ -39,7 +39,7 @@ public class DemandSubscription {
         localInfo = info.copy();
         localInfo.setNetworkSubscription(true);
         remoteSubsIds.add(info.getConsumerId());    
-     }
+    }
 
     /**
      * Increment the consumers associated with this subscription
