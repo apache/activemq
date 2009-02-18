@@ -47,12 +47,12 @@ public class ConduitBridge extends DemandForwardingBridge {
     }
 
     protected DemandSubscription createDemandSubscription(ConsumerInfo info) throws IOException {
-
         if (addToAlreadyInterestedConsumers(info)) {
             return null; // don't want this subscription added
         }
         //add our original id to ourselves
         info.addNetworkConsumerId(info.getConsumerId());
+        info.setSelector(null);
         return doCreateDemandSubscription(info);
     }
 

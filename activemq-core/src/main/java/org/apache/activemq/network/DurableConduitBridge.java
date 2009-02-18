@@ -95,6 +95,7 @@ public class DurableConduitBridge extends ConduitBridge {
 
             info.setSubscriptionName(getSubscriberName(info.getDestination()));
         }
+        info.setSelector(null);
         return doCreateDemandSubscription(info);
     }
 
