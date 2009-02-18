@@ -94,20 +94,21 @@ public class DataFileNotDeletedTest extends TestCase {
         }
         latch.await();
         assertEquals(max_messages, messageCounter);
-        waitFordataFilesToBeCleanedUp(persistentAdapter.getAsyncDataManager(), 30000, 2); 
+        LOG.info("Sent and received + " + messageCounter + ", file count " + persistentAdapter.getAsyncDataManager().getFiles().size());
+        waitFordataFilesToBeCleanedUp(persistentAdapter.getAsyncDataManager(), 60000, 2); 
     }
 
     private void waitFordataFilesToBeCleanedUp(
             AsyncDataManager asyncDataManager, int timeout, int numExpected) throws InterruptedException {
         long expiry = System.currentTimeMillis()  + timeout;
         while(expiry > System.currentTimeMillis()) {
-            if (asyncDataManager.getFiles().size() <= numExpected) {
-                break;
-            } else {
+            if (asyncDataManager.getFiles().size() > numExpected) {
                 Thread.sleep(1000);
+            } else {
+                break;
             }
         }
-        assertEquals("persistence adapter dataManager has correct number of files", 2, asyncDataManager.getFiles().size());
+        assertEquals("persistence adapter dataManager has correct number of files", numExpected, asyncDataManager.getFiles().size());
     }
 
     private Connection createConnection() throws JMSException {
