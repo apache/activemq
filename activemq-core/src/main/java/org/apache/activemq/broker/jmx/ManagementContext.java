@@ -55,7 +55,7 @@ public class ManagementContext implements Service {
     private boolean createMBeanServer = true;
     private boolean locallyCreateMBeanServer;
     private boolean createConnector = true;
-    private boolean findTigerMbeanServer;
+    private boolean findTigerMbeanServer = true;
     private int connectorPort = 1099;
     private int rmiServerPort;
     private String connectorPath = "/jmxrmi";
@@ -297,7 +297,7 @@ public class ManagementContext implements Service {
         return result;
     }
 
-    public static MBeanServer findTigerMBeanServer() {
+    public MBeanServer findTigerMBeanServer() {
         String name = "java.lang.management.ManagementFactory";
         Class type = loadClass(name, ManagementContext.class.getClassLoader());
         if (type != null) {
@@ -306,6 +306,9 @@ public class ManagementContext implements Service {
                 if (method != null) {
                     Object answer = method.invoke(null, new Object[0]);
                     if (answer instanceof MBeanServer) {
+                    	if (createConnector) {
+                    		createConnector((MBeanServer)answer);
+                    	}
                         return (MBeanServer)answer;
                     } else {
                         LOG.warn("Could not cast: " + answer + " into an MBeanServer. There must be some classloader strangeness in town");
