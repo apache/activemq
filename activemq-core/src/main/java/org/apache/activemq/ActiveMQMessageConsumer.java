@@ -630,7 +630,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
     void deliverAcks() {
         MessageAck ack = null;
         if (deliveryingAcknowledgements.compareAndSet(false, true)) {
-            if (this.optimizeAcknowledge) {
+            if (session.isAutoAcknowledge()) {
             	synchronized(deliveredMessages) {
             		ack = makeAckForAllDeliveredMessages(MessageAck.STANDARD_ACK_TYPE);
             		if (ack != null) {
@@ -775,14 +775,12 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
             if (session.getTransacted()) {
                 // Do nothing.
             } else if (session.isAutoAcknowledge()) {
-                synchronized (deliveredMessages) {
-                    if (!deliveredMessages.isEmpty()) {
-                        if (optimizeAcknowledge) {
-                            if (deliveryingAcknowledgements.compareAndSet(
-                                    false, true)) {
+                if (deliveryingAcknowledgements.compareAndSet(false, true)) {
+                    synchronized (deliveredMessages) {
+                        if (!deliveredMessages.isEmpty()) {
+                            if (optimizeAcknowledge) {
                                 ackCounter++;
-                                if (ackCounter >= (info
-                                        .getCurrentPrefetchSize() * .65)) {
+                                if (ackCounter >= (info.getCurrentPrefetchSize() * .65)) {
                                 	MessageAck ack = makeAckForAllDeliveredMessages(MessageAck.STANDARD_ACK_TYPE);
                                 	if (ack != null) {
                             		    deliveredMessages.clear();
@@ -790,16 +788,16 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                             		    session.sendAck(ack);
                                 	}
                                 }
-                                deliveryingAcknowledgements.set(false);
-                            }
-                        } else {
-                            MessageAck ack = makeAckForAllDeliveredMessages(MessageAck.STANDARD_ACK_TYPE);
-                            if (ack!=null) {
-                            	deliveredMessages.clear();
-                            	session.sendAck(ack);
+                            } else {
+                                MessageAck ack = makeAckForAllDeliveredMessages(MessageAck.STANDARD_ACK_TYPE);
+                                if (ack!=null) {
+                                    deliveredMessages.clear();
+                                    session.sendAck(ack);
+                                }
                             }
                         }
                     }
+                    deliveryingAcknowledgements.set(false);
                 }
             } else if (session.isDupsOkAcknowledge()) {
                 ackLater(md, MessageAck.STANDARD_ACK_TYPE);
