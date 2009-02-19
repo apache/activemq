@@ -336,8 +336,7 @@ public class Queue extends BaseDestination implements Task {
                     }
                 }
                 ConsumerId consumerId = sub.getConsumerInfo().getConsumerId();
-                MessageGroupSet ownedGroups = getMessageGroupOwners()
-                        .removeConsumer(consumerId);
+                getMessageGroupOwners().removeConsumer(consumerId);
                 
                 // redeliver inflight messages
                 List<QueueMessageReference> list = new ArrayList<QueueMessageReference>();
@@ -353,18 +352,9 @@ public class Queue extends BaseDestination implements Task {
                     list.add(qmr);
                 }
                 
-                if (!list.isEmpty() && !consumers.isEmpty()) {
+                if (!list.isEmpty()) {
                     doDispatch(list);
                 }
-            }
-            //if it is a last consumer (and not a browser) dispatch all pagedIn messages
-            if (consumers.isEmpty() && !(sub instanceof QueueBrowserSubscription)) {
-            		List<QueueMessageReference> list = new ArrayList<QueueMessageReference>();
-            		for (QueueMessageReference ref : pagedInMessages.values()) {
-            			list.add(ref);
-            		}
-            		pagedInPendingDispatch.clear();
-            		doDispatch(list);
             }
             if (!(this.optimizedDispatch || isSlave())) {
                 wakeup();
@@ -1068,7 +1058,7 @@ public class Queue extends BaseDestination implements Task {
 	        }
 	        
 	        synchronized (messages) {
-	            pageInMoreMessages = !messages.isEmpty();
+	            pageInMoreMessages |= !messages.isEmpty();
 	        }               
 	        
 	        // Kinda ugly.. but I think dispatchLock is the only mutex protecting the 
@@ -1333,14 +1323,18 @@ public class Queue extends BaseDestination implements Task {
      *         were not full.
      */
     private List<QueueMessageReference> doActualDispatch(List<QueueMessageReference> list) throws Exception {
-        List<QueueMessageReference> rc = new ArrayList<QueueMessageReference>(list.size());
-        Set<Subscription> fullConsumers = new HashSet<Subscription>(this.consumers.size());
         List<Subscription> consumers;
         
         synchronized (this.consumers) {
+            if (this.consumers.isEmpty()) {
+                return list;
+            }
             consumers = new ArrayList<Subscription>(this.consumers);
         }
 
+        List<QueueMessageReference> rc = new ArrayList<QueueMessageReference>(list.size());
+        Set<Subscription> fullConsumers = new HashSet<Subscription>(this.consumers.size());
+        
         for (MessageReference node : list) {
             Subscription target = null;
             int interestCount=0;
