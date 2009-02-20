@@ -29,7 +29,7 @@ import javax.jms.TextMessage;
 import junit.framework.Assert;
 
 import org.apache.camel.component.mock.MockEndpoint;
-import org.apache.camel.CamelTemplate;
+import org.apache.camel.ProducerTemplate;
 import org.apache.camel.impl.DefaultProducerTemplate;
 import org.apache.camel.spring.SpringTestSupport;
 import org.apache.commons.logging.Log;

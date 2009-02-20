@@ -39,12 +39,12 @@ import org.apache.camel.impl.DefaultProducer;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-public class JournalEndpoint extends DefaultEndpoint<Exchange> {
+public class JournalEndpoint extends DefaultEndpoint {
 
     private static final transient Log LOG = LogFactory.getLog(JournalEndpoint.class);
 
     private final File directory;
-    private final AtomicReference<DefaultConsumer<Exchange>> consumer = new AtomicReference<DefaultConsumer<Exchange>>();
+    private final AtomicReference<DefaultConsumer> consumer = new AtomicReference<DefaultConsumer>();
     private final Object activationMutex = new Object();
     private int referenceCount;
     private AsyncDataManager dataManager;
@@ -72,8 +72,8 @@ public class JournalEndpoint extends DefaultEndpoint<Exchange> {
         return directory;
     }
 
-    public Consumer<Exchange> createConsumer(Processor processor) throws Exception {
-        return new DefaultConsumer<Exchange>(this, processor) {
+    public Consumer createConsumer(Processor processor) throws Exception {
+        return new DefaultConsumer(this, processor) {
             @Override
             public void start() throws Exception {
                 super.start();
@@ -115,7 +115,7 @@ public class JournalEndpoint extends DefaultEndpoint<Exchange> {
         }
     }
 
-    protected void deactivateConsumer(DefaultConsumer<Exchange> consumer) throws IOException {
+    protected void deactivateConsumer(DefaultConsumer consumer) throws IOException {
         synchronized (activationMutex) {
             if (this.consumer.get() != consumer) {
                 throw new RuntimeCamelException("Consumer was not active.");
@@ -130,7 +130,7 @@ public class JournalEndpoint extends DefaultEndpoint<Exchange> {
         }
     }
 
-    protected void activateConsumer(DefaultConsumer<Exchange> consumer) throws IOException {
+    protected void activateConsumer(DefaultConsumer consumer) throws IOException {
         synchronized (activationMutex) {
             if (this.consumer.get() != null) {
                 throw new RuntimeCamelException("Consumer already active: journal endpoints only support 1 active consumer");
@@ -151,7 +151,7 @@ public class JournalEndpoint extends DefaultEndpoint<Exchange> {
 
     protected void dispatchToConsumer() {
         try {
-            DefaultConsumer<Exchange> consumer;
+            DefaultConsumer consumer;
             while ((consumer = this.consumer.get()) != null) {
                 // See if there is a new record to process
                 Location location = dataManager.getNextLocation(lastReadLocation);
@@ -184,8 +184,8 @@ public class JournalEndpoint extends DefaultEndpoint<Exchange> {
         }
     }
 
-    public Producer<Exchange> createProducer() throws Exception {
-        return new DefaultProducer<Exchange>(this) {
+    public Producer createProducer() throws Exception {
+        return new DefaultProducer(this) {
             public void process(Exchange exchange) throws Exception {
                 incrementReference();
                 try {

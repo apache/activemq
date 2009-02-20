@@ -148,7 +148,7 @@ public class CamelEndpointLoader implements InitializingBean, DisposableBean, Ca
         String queueUri = getQueueUri(queue);
         ActiveMQComponent jmsComponent = getComponent();
         Endpoint endpoint = new JmsQueueEndpoint(queueUri, jmsComponent, queue.getPhysicalName(), jmsComponent.getConfiguration());
-        camelContext.addSingletonEndpoint(queueUri, endpoint);
+        camelContext.addEndpoint(queueUri, endpoint);
     }
 
     protected String getQueueUri(ActiveMQQueue queue) {
@@ -157,6 +157,6 @@ public class CamelEndpointLoader implements InitializingBean, DisposableBean, Ca
 
     protected void removeQueue(ActiveMQQueue queue) throws Exception {
         String queueUri = getQueueUri(queue);
-        camelContext.removeSingletonEndpoint(queueUri);
+        camelContext.removeEndpoints(queueUri);
     }
 }

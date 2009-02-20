@@ -28,10 +28,10 @@ import java.util.Map;
  *
  * @version $Revision$
  */
-public class JournalComponent extends DefaultComponent<Exchange> {
+public class JournalComponent extends DefaultComponent {
 
     @Override
-    protected Endpoint<Exchange> createEndpoint(String uri, String remaining, Map parameters) throws Exception {        
+    protected Endpoint createEndpoint(String uri, String remaining, Map parameters) throws Exception {        
         JournalEndpoint endpoint = new JournalEndpoint(uri, this, new File(remaining));
         setProperties(endpoint, parameters);
         return endpoint;

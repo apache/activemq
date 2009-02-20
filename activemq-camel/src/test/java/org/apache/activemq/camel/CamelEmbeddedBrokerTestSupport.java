@@ -23,7 +23,7 @@ import javax.naming.Context;
 
 import org.apache.activemq.EmbeddedBrokerTestSupport;
 import org.apache.camel.CamelContext;
-import org.apache.camel.CamelTemplate;
+import org.apache.camel.ProducerTemplate;
 import org.apache.camel.Endpoint;
 import org.apache.camel.Exchange;
 import org.apache.camel.component.mock.MockEndpoint;
@@ -37,7 +37,7 @@ import org.apache.camel.util.jndi.JndiContext;
  */
 public abstract class CamelEmbeddedBrokerTestSupport extends EmbeddedBrokerTestSupport {
     protected CamelContext camelContext;
-    protected CamelTemplate<Exchange> template;
+    protected ProducerTemplate template;
                            
     @Override
     protected void setUp() throws Exception {
@@ -47,7 +47,7 @@ public abstract class CamelEmbeddedBrokerTestSupport extends EmbeddedBrokerTestS
         addCamelRoutes(camelContext);
         assertValidContext(camelContext);
         camelContext.start();
-        template = new CamelTemplate<Exchange>(camelContext);
+        template = camelContext.createProducerTemplate();
         template.start();
     }
 
