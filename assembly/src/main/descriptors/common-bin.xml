@@ -83,6 +83,14 @@
         <include>${pom.groupId}:activemq-run</include>
       </includes>
     </dependencySet>
+
+    <dependencySet>
+      <outputDirectory>/webapps/camel</outputDirectory>
+      <unpack>true</unpack>
+      <includes>
+        <include>org.apache.camel:camel-web:war</include>
+      </includes>
+    </dependencySet>
     
     <dependencySet>
       <outputDirectory>/</outputDirectory>

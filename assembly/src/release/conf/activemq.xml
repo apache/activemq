@@ -21,7 +21,7 @@
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.0.xsd
   http://activemq.apache.org/schema/core http://activemq.apache.org/schema/core/activemq-core.xsd   
-  http://activemq.apache.org/camel/schema/spring http://activemq.apache.org/camel/schema/spring/camel-spring.xsd">
+  http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd">
 
     <!-- Allows us to use system properties as variables in this configuration file -->
     <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
@@ -119,7 +119,7 @@
     **
     ** http://activemq.apache.org/enterprise-integration-patterns.html
     -->
-    <camelContext id="camel" xmlns="http://activemq.apache.org/camel/schema/spring">
+    <camelContext id="camel" xmlns="http://camel.apache.org/schema/spring">
 
         <!-- You can use a <package> element for each root package to search for Java routes -->
         <package>org.foo.bar</package>
@@ -164,6 +164,7 @@
 
         <handlers>
             <webAppContext contextPath="/admin" resourceBase="${activemq.base}/webapps/admin" logUrlOnStart="true"/>
+            <webAppContext contextPath="/camel" resourceBase="${activemq.base}/webapps/camel" logUrlOnStart="true"/>
             <webAppContext contextPath="/demo" resourceBase="${activemq.base}/webapps/demo" logUrlOnStart="true"/>
             <webAppContext contextPath="/fileserver" resourceBase="${activemq.base}/webapps/fileserver" logUrlOnStart="true"/>
         </handlers>
