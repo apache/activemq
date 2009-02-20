@@ -42,7 +42,7 @@
     <aopalliance-version>1.0</aopalliance-version>
     <axion-version>1.0-M3-dev</axion-version>
     <axis-version>1.2-RC1</axis-version>
-    <camel-version>1.6.0</camel-version>
+    <camel-version>2.0-SNAPSHOT</camel-version>
     <cglib-version>2.0</cglib-version>
     <commons-beanutils-version>1.6.1</commons-beanutils-version>
     <commons-collections-version>3.1</commons-collections-version>
@@ -395,6 +395,12 @@
         <artifactId>camel-jms</artifactId>
         <version>${camel-version}</version>
       </dependency>
+      <dependency>
+        <groupId>org.apache.camel</groupId>
+        <artifactId>camel-web</artifactId>
+        <version>${camel-version}</version>
+        <type>war</type>
+      </dependency>
       
       <dependency>
         <groupId>org.apache.hadoop.zookeeper</groupId>
@@ -407,22 +413,18 @@
       <dependency>
         <groupId>javax.xml.bind</groupId>
         <artifactId>jaxb-api</artifactId>
-        <version>2.0</version>
+        <version>2.1</version>
         <exclusions>
           <exclusion>
             <groupId>javax.xml</groupId>
             <artifactId>jsr173</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>javax.activation</groupId>
-            <artifactId>activation</artifactId>
           </exclusion>
         </exclusions>
       </dependency>
       <dependency>
         <groupId>com.sun.xml.bind</groupId>
         <artifactId>jaxb-impl</artifactId>
-        <version>2.0.3</version>
+        <version>2.1.6</version>
         <exclusions>
           <exclusion>
             <groupId>javax.jws</groupId>

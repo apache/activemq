@@ -80,7 +80,7 @@ public class CamelMessageProducer extends ActiveMQMessageProducerSupport {
 
     public void send(Destination destination, Message message, int deliveryMode, int priority, long timeToLive) throws JMSException {
         CamelDestination camelDestination = null;
-        if (ObjectHelper.equals(destination, this.destination)) {
+        if (ObjectHelper.equal(destination, this.destination)) {
             camelDestination = this.destination;
         } else {
             // TODO support any CamelDestination?

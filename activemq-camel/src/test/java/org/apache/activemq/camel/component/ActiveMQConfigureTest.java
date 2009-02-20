@@ -37,7 +37,7 @@ public class ActiveMQConfigureTest extends ContextTestSupport {
         JmsEndpoint endpoint = resolveMandatoryEndpoint("activemq:test.foo");
         JmsProducer producer = endpoint.createProducer();
 
-        JmsTemplate template = assertIsInstanceOf(JmsTemplate.class, producer.getTemplate());
+        JmsTemplate template = assertIsInstanceOf(JmsTemplate.class, producer.getInOutTemplate());
         assertEquals("pubSubDomain", false, template.isPubSubDomain());
         assertIsInstanceOf(PooledConnectionFactory.class, template.getConnectionFactory());
     }
@@ -46,7 +46,7 @@ public class ActiveMQConfigureTest extends ContextTestSupport {
         JmsEndpoint endpoint = resolveMandatoryEndpoint("activemq:test.foo?useSingleConnection=true");
         JmsProducer producer = endpoint.createProducer();
 
-        JmsTemplate template = assertIsInstanceOf(JmsTemplate.class, producer.getTemplate());
+        JmsTemplate template = assertIsInstanceOf(JmsTemplate.class, producer.getInOutTemplate());
         assertEquals("pubSubDomain", false, template.isPubSubDomain());
         SingleConnectionFactory connectionFactory = assertIsInstanceOf(SingleConnectionFactory.class, template.getConnectionFactory());
         assertIsInstanceOf(ActiveMQConnectionFactory.class, connectionFactory.getTargetConnectionFactory());
@@ -56,7 +56,7 @@ public class ActiveMQConfigureTest extends ContextTestSupport {
         JmsEndpoint endpoint = resolveMandatoryEndpoint("activemq:test.foo?usePooledConnection=false");
         JmsProducer producer = endpoint.createProducer();
 
-        JmsTemplate template = assertIsInstanceOf(JmsTemplate.class, producer.getTemplate());
+        JmsTemplate template = assertIsInstanceOf(JmsTemplate.class, producer.getInOutTemplate());
         assertEquals("pubSubDomain", false, template.isPubSubDomain());
         assertIsInstanceOf(ActiveMQConnectionFactory.class, template.getConnectionFactory());
     }

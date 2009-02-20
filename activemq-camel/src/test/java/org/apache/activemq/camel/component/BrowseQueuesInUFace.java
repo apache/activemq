@@ -20,7 +20,7 @@ package org.apache.activemq.camel.component;
 import org.apache.activemq.camel.SetHeaderTest;
 import org.apache.camel.CamelContext;
 import org.apache.camel.component.uface.swing.SwingBrowser;
-import org.apache.camel.CamelTemplate;
+import org.apache.camel.ProducerTemplate;
 import org.apache.camel.impl.DefaultCamelContext;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -37,7 +37,7 @@ public class BrowseQueuesInUFace extends AbstractJUnit38SpringContextTests {
     @Autowired
     protected CamelContext camelContext;
     @Autowired
-    protected CamelTemplate template;
+    protected ProducerTemplate template;
     protected String[] queueNames = {"Sample.A", "Sample.B", "Sample.C"};
 
     public void testBrowseQueues() throws Exception {
