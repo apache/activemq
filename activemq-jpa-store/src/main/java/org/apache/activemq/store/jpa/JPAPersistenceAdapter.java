@@ -210,7 +210,7 @@ public class JPAPersistenceAdapter implements PersistenceAdapter {
     }
 
     public void stop() throws Exception {
-        if (entityManagerFactory != null) {
+        if (entityManagerFactory != null && entityManagerFactory.isOpen()) {
             entityManagerFactory.close();
         }
     }
