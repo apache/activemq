@@ -510,13 +510,13 @@ public class BrokerService implements Service {
         // to avoid timimg issue with discovery (spinning up a new instance)
         BrokerRegistry.getInstance().unbind(getBrokerName());
         VMTransportFactory.stopped(getBrokerName());        
-        stopper.stop(persistenceAdapter);
         if (broker != null) {
             stopper.stop(broker);
         }
         if (tempDataStore != null) {
             tempDataStore.close();
         }
+        stopper.stop(persistenceAdapter);
         if (isUseJmx()) {
             MBeanServer mbeanServer = getManagementContext().getMBeanServer();
             if (mbeanServer != null) {

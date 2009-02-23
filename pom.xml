@@ -46,7 +46,7 @@
     <cglib-version>2.0</cglib-version>
     <commons-beanutils-version>1.6.1</commons-beanutils-version>
     <commons-collections-version>3.1</commons-collections-version>
-    <openjpa-version>1.0.0</openjpa-version>
+    <openjpa-version>1.2.0</openjpa-version>
     <commons-dbcp-version>1.2.2</commons-dbcp-version>
     <commons-httpclient-version>2.0.1</commons-httpclient-version>
     <commons-logging-version>1.1</commons-logging-version>
