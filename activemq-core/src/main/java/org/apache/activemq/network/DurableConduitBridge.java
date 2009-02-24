@@ -82,18 +82,14 @@ public class DurableConduitBridge extends ConduitBridge {
         }
         //add our original id to ourselves
         info.addNetworkConsumerId(info.getConsumerId());
-        // not matched so create a new one
-        // but first, if it's durable - changed set the
-        // ConsumerId here - so it won't be removed if the
-        // durable subscriber goes away on the other end
-        if (info.isDurable() || (info.getDestination().isQueue() && !info.getDestination().isTemporary())) {  
-            info.setConsumerId(new ConsumerId(localSessionInfo.getSessionId(), consumerIdGenerator
-                .getNextSequenceId()));
-        }
+
         if (info.isDurable()) {
             // set the subscriber name to something reproducible
-
             info.setSubscriptionName(getSubscriberName(info.getDestination()));
+            // and override the consumerId with something unique so that it won't
+            // be removed if the durable subscriber (at the other end) goes away
+            info.setConsumerId(new ConsumerId(localSessionInfo.getSessionId(), consumerIdGenerator
+                    .getNextSequenceId()));
         }
         info.setSelector(null);
         return doCreateDemandSubscription(info);
