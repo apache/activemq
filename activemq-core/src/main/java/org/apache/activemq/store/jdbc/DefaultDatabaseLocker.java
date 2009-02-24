@@ -95,7 +95,11 @@ public class DefaultDatabaseLocker implements DatabaseLocker {
             }
 
             LOG.debug("Sleeping for " + lockAcquireSleepInterval + " milli(s) before trying again to get the lock...");
-            Thread.sleep(lockAcquireSleepInterval);
+            try {
+            	Thread.sleep(lockAcquireSleepInterval);
+            } catch (InterruptedException ie) {
+            	LOG.warn("Master lock retry sleep interrupted", ie);
+            }
         }
 
         LOG.info("Becoming the master on dataSource: " + dataSource);
@@ -103,8 +107,12 @@ public class DefaultDatabaseLocker implements DatabaseLocker {
 
     public void stop() throws Exception {
         stopping = true;
-        if (connection != null) {
-            connection.rollback();
+        if (connection != null && !connection.isClosed()) {
+        	try {
+        		connection.rollback();
+        	} catch (SQLException sqle) {
+        		LOG.warn("Exception while rollbacking the connection on shutdown", sqle);
+        	}
             connection.close();
         }
     }
