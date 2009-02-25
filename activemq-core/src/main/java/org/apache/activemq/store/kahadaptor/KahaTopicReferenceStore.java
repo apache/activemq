@@ -164,8 +164,11 @@ public class KahaTopicReferenceStore extends KahaReferenceStore implements Topic
                         }
                     }
                 }else{
-                    //no message held
-                    removeMessage = true;
+           
+                    if (ackContainer.isEmpty() || isUnreferencedBySubscribers(subscriberMessages, messageId)) {
+                        // no message reference held        
+                        removeMessage = true;
+                    }
                 }
             }
         }finally {
@@ -174,6 +177,28 @@ public class KahaTopicReferenceStore extends KahaReferenceStore implements Topic
         return removeMessage;
     }
     
+    // verify that no subscriber has a reference to this message. In the case where the subscribers
+    // references are persisted but more than the persisted consumers get the message, the ack from the non
+    // persisted consumer would remove the message in error
+    //
+    // see: https://issues.apache.org/activemq/browse/AMQ-2123
+    private boolean isUnreferencedBySubscribers(
+            Map<String, TopicSubContainer> subscriberContainers, MessageId messageId) {
+        boolean isUnreferenced = true;
+        for (TopicSubContainer container: subscriberContainers.values()) {
+            if (!container.isEmpty()) {
+                for (Iterator i = container.iterator(); i.hasNext();) {
+                    ConsumerMessageRef ref = (ConsumerMessageRef) i.next();
+                    if (messageId.equals(ref.getMessageId())) {
+                        isUnreferenced = false;
+                        break;
+                    }
+                }
+            }
+        }
+        return isUnreferenced; 
+    }
+
     public void acknowledge(ConnectionContext context,
 			String clientId, String subscriptionName, MessageId messageId) throws IOException {
 	    acknowledgeReference(context, clientId, subscriptionName, messageId);
