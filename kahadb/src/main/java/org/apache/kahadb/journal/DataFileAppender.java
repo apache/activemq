@@ -175,6 +175,9 @@ class DataFileAppender {
         // assigned
         // by the data manager (which is basically just appending)
 
+        if (!sync) {
+            inflightWrites.put(new WriteKey(location), write);
+        }
         synchronized (this) {
             batch = enqueue(write);
         }
@@ -185,9 +188,8 @@ class DataFileAppender {
             } catch (InterruptedException e) {
                 throw new InterruptedIOException();
             }
-        } else {
-        	inflightWrites.put(new WriteKey(location), write);
         }
+        	
 
         return location;
     }
