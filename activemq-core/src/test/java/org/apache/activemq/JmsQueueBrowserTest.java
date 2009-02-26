@@ -118,7 +118,7 @@ public class JmsQueueBrowserTest extends JmsTestSupport {
         MessageConsumer consumer = session.createConsumer(destination);
         
         // browse the first message
-        assertTrue("should have received the fisrts message", enumeration.hasMoreElements());
+        assertTrue("should have received the first message", enumeration.hasMoreElements());
         assertEquals(outbound[0], (Message) enumeration.nextElement());
         
         // Receive the first message.
