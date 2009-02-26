@@ -229,13 +229,14 @@ public class ActiveMQManagedConnection implements ManagedConnection, ExceptionLi
             proxy.cleanup();
         }
         proxyConnections.clear();
-        localAndXATransaction.cleanup();
 
         try {
             ((ActiveMQConnection)physicalConnection).cleanup();
         } catch (JMSException e) {
             throw new ResourceException("Could cleanup the ActiveMQ connection: " + e, e);
         }
+        // defer transaction cleanup till after close so that close is aware of the current tx
+        localAndXATransaction.cleanup();
 
     }
 
