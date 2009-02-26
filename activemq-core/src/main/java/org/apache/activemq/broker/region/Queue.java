@@ -287,8 +287,8 @@ public class Queue extends BaseDestination implements Task {
                 QueueBrowserSubscription browserSubscription = (QueueBrowserSubscription) sub;
             	
                 // do again in iterate to ensure new messages are dispatched
-                doPageIn(false);
-            
+                pageInMessages(false);
+                
             	synchronized (pagedInMessages) {
             	    if (!pagedInMessages.isEmpty()) {
             	        BrowserDispatch browserDispatch = new BrowserDispatch(browserSubscription, pagedInMessages.values());
@@ -1339,6 +1339,10 @@ public class Queue extends BaseDestination implements Task {
             Subscription target = null;
             int interestCount=0;
             for (Subscription s : consumers) {
+            	if (s instanceof QueueBrowserSubscription) {
+            		interestCount++;
+            		continue;
+            	}
                 if (dispatchSelector.canSelect(s, node)) {
                     if (!fullConsumers.contains(s)) {
                         if (!s.isFull()) {

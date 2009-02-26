@@ -95,4 +95,37 @@ public class JmsQueueBrowserTest extends JmsTestSupport {
         consumer.close();
 
     }
+    
+    public void testBrowseReceive() throws Exception {
+        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        ActiveMQQueue destination = new ActiveMQQueue("TEST");
+       
+        connection.start();
+
+        Message[] outbound = new Message[]{session.createTextMessage("First Message"),
+                                           session.createTextMessage("Second Message"),
+                                           session.createTextMessage("Third Message")};
+
+        
+        MessageProducer producer = session.createProducer(destination);
+        producer.send(outbound[0]);
+        
+        // create browser first
+        QueueBrowser browser = session.createBrowser((Queue) destination);
+        Enumeration enumeration = browser.getEnumeration();
+        
+        // create consumer
+        MessageConsumer consumer = session.createConsumer(destination);
+        
+        // browse the first message
+        assertTrue("should have received the fisrts message", enumeration.hasMoreElements());
+        assertEquals(outbound[0], (Message) enumeration.nextElement());
+        
+        // Receive the first message.
+        assertEquals(outbound[0], consumer.receive(1000));
+        consumer.close();
+        browser.close();
+        producer.close();
+
+    }    
 }
