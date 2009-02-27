@@ -175,9 +175,6 @@ class DataFileAppender {
         // assigned
         // by the data manager (which is basically just appending)
 
-        if (!sync) {
-            inflightWrites.put(new WriteKey(location), write);
-        }
         synchronized (this) {
             batch = enqueue(write);
         }
@@ -188,8 +185,7 @@ class DataFileAppender {
             } catch (InterruptedException e) {
                 throw new InterruptedIOException();
             }
-        }
-        	
+        }	
 
         return location;
     }
@@ -208,14 +204,13 @@ class DataFileAppender {
         synchronized (this) {
             batch = enqueue(write);
         }
-        inflightWrites.put(new WriteKey(location), write);
+ 
         location.setLatch(batch.latch);
         return location;
     }
 
     private WriteBatch enqueue(WriteCommand write) throws IOException {
         synchronized (enqueueMutex) {
-            WriteBatch rc = null;
             if (shutdown) {
                 throw new IOException("Async Writter Thread Shutdown");
             }
@@ -244,14 +239,13 @@ class DataFileAppender {
 	            	}
 	            	
 	                nextWriteBatch = new WriteBatch(file, file.getLength(), write);
-	                rc = nextWriteBatch;
 	                enqueueMutex.notify();
-	                return rc;
+	                break;
 	            } else {
 	                // Append to current batch if possible..
 	                if (nextWriteBatch.canAppend(write)) {
 	                    nextWriteBatch.append(write);
-	                    return nextWriteBatch;
+	                    break;
 	                } else {
 	                    // Otherwise wait for the queuedCommand to be null
 	                    try {
@@ -267,6 +261,10 @@ class DataFileAppender {
 	                }
 	            }
             }
+            if (!write.sync) {
+                inflightWrites.put(new WriteKey(write.location), write);
+            }
+            return nextWriteBatch;
         }
     }
 
