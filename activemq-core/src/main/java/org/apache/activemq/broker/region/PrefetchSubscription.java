@@ -178,7 +178,8 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
         }
         throw new JMSException(
                 "Slave broker out of sync with master: Dispatched message ("
-                        + mdn.getMessageId() + ") was not in the pending list for " + mdn.getDestination().getPhysicalName());
+                        + mdn.getMessageId() + ") was not in the pending list for "
+                        + mdn.getConsumerId() + " on " + mdn.getDestination().getPhysicalName());
     }
 
     public final void acknowledge(final ConnectionContext context,final MessageAck ack) throws Exception {
