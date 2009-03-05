@@ -58,6 +58,7 @@ public class MasterBroker extends InsertableMutableBrokerFilter {
     private static final Log LOG = LogFactory.getLog(MasterBroker.class);
     private Transport slave;
     private AtomicBoolean started = new AtomicBoolean(false);
+    private final Object addConsumerLock = new Object();
 
     /**
      * Constructor
@@ -196,9 +197,12 @@ public class MasterBroker extends InsertableMutableBrokerFilter {
      * @throws Exception
      */
     public Subscription addConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
-        sendAsyncToSlave(info);
-        Subscription answer = super.addConsumer(context, info);
-        return answer;
+        // as master and slave do independent dispatch, the consumer add order between master and slave
+        // needs to be maintained
+        synchronized (addConsumerLock) {
+    	    sendSyncToSlave(info);
+    	    return super.addConsumer(context, info);
+        }
     }
 
     /**
@@ -313,7 +317,7 @@ public class MasterBroker extends InsertableMutableBrokerFilter {
         if (messageDispatch.getMessage() != null) {
             Message msg = messageDispatch.getMessage();
             mdn.setMessageId(msg.getMessageId());
-            sendAsyncToSlave(mdn);
+            sendSyncToSlave(mdn);
         }
     }
 
