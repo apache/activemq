@@ -138,7 +138,7 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
             throw IOExceptionSupport.create("Failed to bind to server socket: " + bind + " due to: " + e, e);
         }
         try {
-            setConnectURI(new URI(bind.getScheme(), bind.getUserInfo(), resolveHostName(bind.getHost()), serverSocket.getLocalPort(), bind.getPath(), bind.getQuery(), bind
+            setConnectURI(new URI(bind.getScheme(), bind.getUserInfo(), resolveHostName(serverSocket, addr), serverSocket.getLocalPort(), bind.getPath(), bind.getQuery(), bind
                 .getFragment()));
         } catch (URISyntaxException e) {
 
@@ -314,15 +314,22 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
     }
 
     /**
-     * @param hostName
+     * @param socket 
+     * @param inetAddress
      * @return real hostName
      * @throws UnknownHostException
      */
-    protected String resolveHostName(String hostName) throws UnknownHostException {
-        String result = hostName;
-        // hostname can be null for vm:// protocol ...
-        if (hostName != null && (hostName.equalsIgnoreCase("localhost") || hostName.equals("127.0.0.1"))) {
-            result = InetAddress.getLocalHost().getHostName();
+    protected String resolveHostName(ServerSocket socket, InetAddress bindAddress) throws UnknownHostException {
+        String result = null;
+        if (socket.isBound()) {
+            if (socket.getInetAddress().isAnyLocalAddress()) {
+                // make it more human readable and useful, an alternative to 0.0.0.0
+                result = InetAddress.getLocalHost().getHostName();
+            } else {
+                result = socket.getInetAddress().getCanonicalHostName();
+            }
+        } else {
+            result = bindAddress.getCanonicalHostName();
         }
         return result;
     }

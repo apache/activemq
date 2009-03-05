@@ -71,6 +71,8 @@ public class SslContextNBrokerServiceTest extends TestCase {
         context.init(null, new TrustManager[] {catcher}, null);
         
         SSLSocketFactory factory = context.getSocketFactory();
+        LOG.info("Connecting to broker: " + broker.getBrokerName()
+                + " on: " + brokerUri.getHost() + ":" + brokerUri.getPort());
         SSLSocket socket = (SSLSocket)factory.createSocket(brokerUri.getHost(), brokerUri.getPort());
         socket.setSoTimeout(5000);
         socket.startHandshake();
