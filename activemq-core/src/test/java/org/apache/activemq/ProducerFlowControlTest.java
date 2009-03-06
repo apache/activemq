@@ -276,6 +276,11 @@ public class ProducerFlowControlTest extends JmsTestSupport {
         return service;
     }
 
+    public void setUp() throws Exception {
+        setAutoFail(true);
+        super.setUp();
+    }
+    
     protected void tearDown() throws Exception {
         if (connection != null) {
             TcpTransport t = (TcpTransport)connection.getTransport().narrow(TcpTransport.class);
