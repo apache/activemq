@@ -56,9 +56,7 @@
 <td>${row.dequeueCount}</td>
 <td>
     <a href="browse.jsp?JMSDestination=${row.name}">Browse</a>
-<%--    
-    <a href="graph.jsp?JMSDestination=${row.name}">Graph</a>
---%>    
+	<a href="queueConsumers.jsp?JMSDestination=${row.name}">Active Consumers</a><br/>
     <a href="queueBrowse/${row.name}?view=rss&feedType=atom_1.0" title="Atom 1.0"><img src="images/feed_atom.png"/></a>
     <a href="queueBrowse/${row.name}?view=rss&feedType=rss_2.0" title="RSS 2.0"><img src="images/feed_rss.png"/></a>
 </td>

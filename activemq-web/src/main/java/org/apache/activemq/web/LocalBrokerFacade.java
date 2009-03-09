@@ -34,36 +34,34 @@ import org.apache.activemq.command.ActiveMQDestination;
  * @version $Revision$
  */
 public class LocalBrokerFacade extends BrokerFacadeSupport {
-    private BrokerService brokerService;
+	private BrokerService brokerService;
 
-    public LocalBrokerFacade(BrokerService brokerService) {
-        this.brokerService = brokerService;
-    }
+	public LocalBrokerFacade(BrokerService brokerService) {
+		this.brokerService = brokerService;
+	}
 
-    public BrokerService getBrokerService() {
-        return brokerService;
-    }
-
-    public Broker getBroker() throws Exception {
-        return brokerService.getBroker();
-    }
-
-    public ManagementContext getManagementContext() {
-        return brokerService.getManagementContext();
-    }
-
-    public BrokerViewMBean getBrokerAdmin() throws Exception {
-        // TODO could use JMX to look this up
-        return brokerService.getAdminView();
-    }
-
-    public ManagedRegionBroker getManagedBroker() throws Exception {
-        BrokerView adminView = brokerService.getAdminView();
-        if (adminView == null) {
-            return null;
-        }
-        return adminView.getBroker();
-    }
+	public BrokerService getBrokerService() {
+		return brokerService;
+	}
+	public String getBrokerName() throws Exception {
+		return brokerService.getBrokerName();
+	}
+	public Broker getBroker() throws Exception {
+		return brokerService.getBroker();
+	}
+	public ManagementContext getManagementContext() {
+		return brokerService.getManagementContext();
+	}
+	public BrokerViewMBean getBrokerAdmin() throws Exception {
+		return brokerService.getAdminView();
+	}
+	public ManagedRegionBroker getManagedBroker() throws Exception {
+		BrokerView adminView = brokerService.getAdminView();
+		if (adminView == null) {
+			return null;
+		}
+		return adminView.getBroker();
+	}
 
     public void purgeQueue(ActiveMQDestination destination) throws Exception {
         Set destinations = getManagedBroker().getQueueRegion().getDestinations(destination);
@@ -72,4 +70,5 @@ public class LocalBrokerFacade extends BrokerFacadeSupport {
             regionQueue.purge();
         }
     }
+    
 }

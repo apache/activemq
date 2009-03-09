@@ -37,9 +37,6 @@
 </tr>
 </thead>
 <tbody>
-<%--    
-<c:forEach items="${requestContext.queueBrowser.browser.enumeration}" var="row">
----%>
 <jms:forEachMessage queueBrowser="${requestContext.queueBrowser.browser}" var="row">
 <tr>
 <td><a href="message.jsp?id=${row.JMSMessageID}&JMSDestination=${requestContext.queueBrowser.JMSDestination}" 
@@ -56,13 +53,12 @@
 </td>
 </tr>
 </jms:forEachMessage>
-<%--    
-</c:forEach>
---%>
 </tbody>
 </table>
 
-
+<div>
+<a href="queueConsumers.jsp?JMSDestination=${requestContext.queueBrowser.JMSDestination}">View Consumers</a>
+</div>
 </body>
 </html>
 	

@@ -27,20 +27,17 @@
   	<property name="connectionFactory" ref="connectionFactory"/>
   </bean>
 
+  <bean id="configuration" class="org.apache.activemq.web.config.JNDIConfiguration"/>
+
   <bean id="brokerQuery" class="org.apache.activemq.web.RemoteJMXBrokerFacade" autowire="constructor" destroy-method="shutdown">
-  	<property name="jmxUrl" ref="jmxUrl"/>
+  	<property name="configuration" ref="configuration"/>
   	<property name="brokerName"><null/></property>
   </bean>
   
-  <bean id="jmxUrl" class="org.springframework.jndi.JndiObjectFactoryBean">
-    <property name="jndiName" value="java:comp/env/jmx/url" />
-  </bean>
-  <bean id="connectionFactory" class="org.springframework.jndi.JndiObjectFactoryBean">
-    <property name="jndiName" value="java:comp/env/jms/connectionFactory" />
-  </bean>
-  
+  <bean id="connectionFactory" factory-bean="configuration" factory-method="getConnectionFactory"/> 
 
   <bean id="queueBrowser" class="org.apache.activemq.web.QueueBrowseQuery" autowire="constructor" destroy-method="destroy" scope="request"/>
   <bean id="messageQuery" class="org.apache.activemq.web.MessageQuery" autowire="constructor" destroy-method="destroy" scope="request"/>
-
+  <bean id="queueConsumerQuery" class="org.apache.activemq.web.QueueConsumerQuery" autowire="constructor" destroy-method="destroy" scope="request"/>
+  <bean id="connectionQuery" class="org.apache.activemq.web.ConnectionQuery" autowire="constructor" destroy-method="destroy" scope="request"/>
 </beans>

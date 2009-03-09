@@ -26,20 +26,19 @@
   <bean id="sessionPool" class="org.apache.activemq.web.SessionPool">
   	<property name="connectionFactory" ref="connectionFactory"/>
   </bean>
+  
+  <bean id="configuration" class="org.apache.activemq.web.config.SystemPropertiesConfiguration"/>
 
   <bean id="brokerQuery" class="org.apache.activemq.web.RemoteJMXBrokerFacade" autowire="constructor" destroy-method="shutdown">
-  	<property name="jmxUrl" value="${webconsole.jmx.url}"/>
-	<property name="jmxRole" value="${webconsole.jmx.role}"/>
-	<property name="jmxPassword" value="${webconsole.jmx.password}"/>
+  	<property name="configuration" ref="configuration"/>
   	<property name="brokerName"><null/></property>
   </bean>
   
-  <bean id="connectionFactory" class="org.apache.activemq.ActiveMQConnectionFactory">
-    <property name="brokerURL" value="${webconsole.jms.url}"/>
-  </bean>  
-  
+  <bean id="connectionFactory" factory-bean="configuration" factory-method="getConnectionFactory"/>
 
   <bean id="queueBrowser" class="org.apache.activemq.web.QueueBrowseQuery" autowire="constructor" destroy-method="destroy" scope="request"/>
   <bean id="messageQuery" class="org.apache.activemq.web.MessageQuery" autowire="constructor" destroy-method="destroy" scope="request"/>
+  <bean id="queueConsumerQuery" class="org.apache.activemq.web.QueueConsumerQuery" autowire="constructor" destroy-method="destroy" scope="request"/>
+  <bean id="connectionQuery" class="org.apache.activemq.web.ConnectionQuery" autowire="constructor" destroy-method="destroy" scope="request"/>
 
 </beans>

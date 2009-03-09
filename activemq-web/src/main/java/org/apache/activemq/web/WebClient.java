@@ -56,8 +56,6 @@ import org.apache.camel.impl.DefaultCamelContext;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import sun.util.logging.resources.logging;
-
 /**
  * Represents a messaging client used from inside a web container typically
  * stored inside a HttpSession TODO controls to prevent DOS attacks with users
