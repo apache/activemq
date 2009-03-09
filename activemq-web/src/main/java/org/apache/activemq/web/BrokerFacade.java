@@ -19,33 +19,163 @@ package org.apache.activemq.web;
 import java.util.Collection;
 
 import org.apache.activemq.broker.jmx.BrokerViewMBean;
+import org.apache.activemq.broker.jmx.ConnectionViewMBean;
+import org.apache.activemq.broker.jmx.ConnectorViewMBean;
+import org.apache.activemq.broker.jmx.DurableSubscriptionViewMBean;
+import org.apache.activemq.broker.jmx.NetworkConnectorViewMBean;
 import org.apache.activemq.broker.jmx.QueueViewMBean;
+import org.apache.activemq.broker.jmx.SubscriptionViewMBean;
 import org.apache.activemq.broker.jmx.TopicViewMBean;
 import org.apache.activemq.command.ActiveMQDestination;
 
 /**
  * A facade for either a local in JVM broker or a remote broker over JMX
  *
+ * 
  * @version $Revision$
  */
 public interface BrokerFacade {
 
-    BrokerViewMBean getBrokerAdmin() throws Exception;
+	/**
+	 * The name of the active broker (f.e. 'localhost' or 'my broker').
+	 * 
+	 * @return not <code>null</code>
+	 * @throws Exception
+	 */
+	String getBrokerName() throws Exception;
 
-    Collection getQueues() throws Exception;
+	/**
+	 * Admin view of the broker.
+	 * 
+	 * @return not <code>null</code>
+	 * @throws Exception
+	 */
+	BrokerViewMBean getBrokerAdmin() throws Exception;
 
-    Collection getTopics() throws Exception;
+	/**
+	 * All queues known to the broker.
+	 * 
+	 * @return not <code>null</code>
+	 * @throws Exception
+	 */
+	Collection<QueueViewMBean> getQueues() throws Exception;
 
-    Collection getDurableTopicSubscribers() throws Exception;
+	/**
+	 * All topics known to the broker.
+	 * 
+	 * @return not <code>null</code>
+	 * @throws Exception
+	 */
+	Collection<TopicViewMBean> getTopics() throws Exception;
 
-    /**
-     * Purges the given destination
-     * @param destination
-     * @throws Exception
-     */
-    void purgeQueue(ActiveMQDestination destination) throws Exception;
+	/**
+	 * All active consumers of a queue.
+	 * 
+	 * @param queueName
+	 *            the name of the queue, not <code>null</code>
+	 * @return not <code>null</code>
+	 * @throws Exception
+	 */
+	Collection<SubscriptionViewMBean> getQueueConsumers(String queueName)
+			throws Exception;
 
-    QueueViewMBean getQueue(String name) throws Exception;
+	/**
+	 * All durable subscribers to topics of the broker.
+	 * 
+	 * @return not <code>null</code>
+	 * @throws Exception
+	 */
+	Collection<DurableSubscriptionViewMBean> getDurableTopicSubscribers()
+			throws Exception;
 
-    TopicViewMBean getTopic(String name) throws Exception;
+	/**
+	 * The names of all transport connectors of the broker (f.e. openwire, ssl)
+	 * 
+	 * @return not <code>null</code>
+	 * @throws Exception
+	 */
+	Collection<String> getConnectors() throws Exception;
+
+	/**
+	 * A transport connectors.
+	 * 
+	 * @param name
+	 *            name of the connector (f.e. openwire)
+	 * @return <code>null</code> if not found
+	 * @throws Exception
+	 */
+	ConnectorViewMBean getConnector(String name) throws Exception;
+
+	/**
+	 * All connections to all transport connectors of the broker.
+	 * 
+	 * @return not <code>null</code>
+	 * @throws Exception
+	 */
+	Collection<ConnectionViewMBean> getConnections() throws Exception;
+
+	/**
+	 * The names of all connections to a specific transport connectors of the
+	 * broker.
+	 * 
+	 * @see #getConnection(String)
+	 * @param connectorName
+	 *            not <code>null</code>
+	 * @return not <code>null</code>
+	 * @throws Exception
+	 */
+	Collection<String> getConnections(String connectorName) throws Exception;
+
+	/**
+	 * A specific connection to the broker.
+	 * 
+	 * @param connectionName
+	 *            the name of the connection, not <code>null</code>
+	 * @return not <code>null</code>
+	 * @throws Exception
+	 */
+	ConnectionViewMBean getConnection(String connectionName) throws Exception;
+	/**
+	 * Returns all consumers of a connection.
+	 * 
+	 * @param connectionName
+	 *            the name of the connection, not <code>null</code>
+	 * @return not <code>null</code>
+	 * @throws Exception
+	 */
+	Collection<SubscriptionViewMBean> getConsumersOnConnection(
+			String connectionName) throws Exception;
+	/**
+	 * The brokers network connectors.
+	 * 
+	 * @return not <code>null</code>
+	 * @throws Exception
+	 */
+	Collection<NetworkConnectorViewMBean> getNetworkConnectors()
+			throws Exception;
+	/**
+	 * Purges the given destination
+	 * 
+	 * @param destination
+	 * @throws Exception
+	 */
+	void purgeQueue(ActiveMQDestination destination) throws Exception;
+	/**
+	 * Get the view of the queue with the specified name.
+	 * 
+	 * @param name
+	 *            not <code>null</code>
+	 * @return <code>null</code> if no queue with this name exists
+	 * @throws Exception
+	 */
+	QueueViewMBean getQueue(String name) throws Exception;
+	/**
+	 * Get the view of the topic with the specified name.
+	 * 
+	 * @param name
+	 *            not <code>null</code>
+	 * @return <code>null</code> if no topic with this name exists
+	 * @throws Exception
+	 */
+	TopicViewMBean getTopic(String name) throws Exception;
 }

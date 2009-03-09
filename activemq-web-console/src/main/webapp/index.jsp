@@ -23,7 +23,7 @@
 <h2>Welcome!</h2>
 
 <p>
-Welcome to the ActiveMQ Console
+Welcome to the ActiveMQ Console of <b>${requestContext.brokerQuery.brokerName}</b> (${requestContext.brokerQuery.brokerAdmin.brokerId})
 </p>
 
 <p>

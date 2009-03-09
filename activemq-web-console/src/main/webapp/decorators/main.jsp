@@ -72,6 +72,8 @@
                             &#124;
                             <a href="<c:url value='/subscribers.jsp'/>" title="Subscribers">Subscribers</a>
                             &#124;
+                            <a href="<c:url value='/connections.jsp'/>" title="Connections">Connections</a>
+                            &#124;
                             <a href="<c:url value='/send.jsp'/>"
                                title="Send">Send</a>
                         </div>

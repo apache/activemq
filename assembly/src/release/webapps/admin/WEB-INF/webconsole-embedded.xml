@@ -40,5 +40,7 @@
 
   <bean id="queueBrowser" class="org.apache.activemq.web.QueueBrowseQuery" autowire='constructor' singleton="false"/>
   <bean id="messageQuery" class="org.apache.activemq.web.MessageQuery" autowire='constructor' singleton="false"/>
+  <bean id="queueConsumerQuery" class="org.apache.activemq.web.QueueConsumerQuery" autowire="constructor" singleton="false"/>
+  <bean id="connectionQuery" class="org.apache.activemq.web.ConnectionQuery" autowire="constructor" singleton="false"/>
 
 </beans>

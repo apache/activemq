@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.management.MBeanServerConnection;
@@ -35,6 +36,7 @@ import org.apache.activemq.broker.jmx.BrokerViewMBean;
 import org.apache.activemq.broker.jmx.ManagementContext;
 import org.apache.activemq.broker.jmx.QueueViewMBean;
 import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.web.config.WebConsoleConfiguration;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -48,26 +50,12 @@ public class RemoteJMXBrokerFacade extends BrokerFacadeSupport {
     
     private static final transient Log LOG = LogFactory.getLog(RemoteJMXBrokerFacade.class);
     
-    private String jmxUrl;
-    private String jmxRole;
-    private String jmxPassword;
     private String brokerName;
     private JMXConnector connector;
+    private WebConsoleConfiguration configuration;
 
     public void setBrokerName(String brokerName) {
         this.brokerName = brokerName;
-    }
-
-    public void setJmxUrl(String url) {
-        this.jmxUrl = url;
-    }
-
-    public void setJmxRole(String role) {
-        this.jmxRole = role;
-    }
-
-    public void setJmxPassword(String password) {
-        this.jmxPassword = password;
     }
 
     /**
@@ -76,6 +64,16 @@ public class RemoteJMXBrokerFacade extends BrokerFacadeSupport {
     public void shutdown() {
         closeConnection();
     }
+    
+    private ObjectName getBrokerObjectName(MBeanServerConnection connection)
+			throws IOException, MalformedObjectNameException {
+		Set<ObjectName> brokers = findBrokers(connection);
+		if (brokers.size() == 0) {
+			throw new IOException("No broker could be found in the JMX.");
+		}
+		ObjectName name = brokers.iterator().next();
+		return name;
+	}
 
     public BrokerViewMBean getBrokerAdmin() throws Exception {
         MBeanServerConnection connection = getConnection();
@@ -89,6 +87,14 @@ public class RemoteJMXBrokerFacade extends BrokerFacadeSupport {
         return mbean;
     }
 
+    public String getBrokerName() throws Exception,
+			MalformedObjectNameException {
+		MBeanServerConnection connection = getMBeanServerConnection();
+		ObjectName brokerObjectName = getBrokerObjectName(connection);
+		String brokerName = brokerObjectName.getKeyProperty("BrokerName");
+		return brokerName;
+	}
+    
     protected MBeanServerConnection getConnection() throws IOException {
         JMXConnector connector = this.connector;
         if (isConnectionActive(connector)) {
@@ -119,44 +125,43 @@ public class RemoteJMXBrokerFacade extends BrokerFacadeSupport {
     }
 
     protected JMXConnector createConnection() {
-        String[] urls = this.jmxUrl.split(",");
-        HashMap env = new HashMap();
-        env.put("jmx.remote.credentials", new String[] {
-            this.jmxRole, this.jmxPassword
-        });
 
-        if (urls == null || urls.length == 0) {
-            urls = new String[] {
-                this.jmxUrl
-            };
-        }
+        Map<String, Object> env = new HashMap<String, Object>();
+		if (this.configuration.getJmxUser() != null) {
+			env.put("jmx.remote.credentials", new String[] {
+					this.configuration.getJmxUser(),
+					this.configuration.getJmxPassword() });
+		}
+        Collection<JMXServiceURL> jmxUrls = this.configuration.getJmxUrls();
 
         Exception exception = null;
-        for (int i = 0; i < urls.length; i++) {
-            try {
-                JMXConnector connector = JMXConnectorFactory.connect(new JMXServiceURL(urls[i]), env);
-                connector.connect();
-                MBeanServerConnection connection = connector.getMBeanServerConnection();
+		for (JMXServiceURL url : jmxUrls) {
+			try {
+				JMXConnector connector = JMXConnectorFactory.connect(url, env);
+				connector.connect();
+				MBeanServerConnection connection = connector
+						.getMBeanServerConnection();
 
-                Set brokers = findBrokers(connection);
-                if (brokers.size() > 0) {
-                    LOG.info("Connected via JMX to the broker at " + urls[i]);
-                    return connector;
-                }
-            } catch (Exception e) {
-                // Keep the exception for later
-                exception = e;
-            }
-        }
-        if (exception != null) {
-            if (exception instanceof RuntimeException) {
-                throw (RuntimeException)exception;
-            } else {
-                throw new RuntimeException(exception);
-            }
-        }
-        throw new IllegalStateException("No broker is found at any of the urls " + this.jmxUrl);
-    }
+				Set<ObjectName> brokers = findBrokers(connection);
+				if (brokers.size() > 0) {
+					LOG.info("Connected via JMX to the broker at " + url);
+					return connector;
+				}
+			} catch (Exception e) {
+				// Keep the exception for later
+				exception = e;
+			}
+		}
+		if (exception != null) {
+			if (exception instanceof RuntimeException) {
+				throw (RuntimeException) exception;
+			} else {
+				throw new RuntimeException(exception);
+			}
+		}
+		throw new IllegalStateException("No broker is found at any of the "
+				+ jmxUrls.size() + " configured urls");
+	}
 
     protected synchronized void closeConnection() {
         if (connector != null) {
@@ -171,55 +176,61 @@ public class RemoteJMXBrokerFacade extends BrokerFacadeSupport {
         }
     }
 
-    /**
-     * Finds all ActiveMQ-Brokers registered on a certain JMX-Server or, if a
-     * JMX-BrokerName has been set, the broker with that name.
-     * 
-     * @param connection not <code>null</code>
-     * @return Set with ObjectName-elements
-     * @throws IOException
-     * @throws MalformedObjectNameException
-     */
-    protected Set findBrokers(MBeanServerConnection connection) throws IOException, MalformedObjectNameException {
-        ObjectName name;
-        if (this.brokerName == null) {
-            name = new ObjectName("org.apache.activemq:Type=Broker,*");
-        } else {
-            name = new ObjectName("org.apache.activemq:BrokerName=" + this.brokerName + ",Type=Broker");
-        }
+	/**
+	 * Finds all ActiveMQ-Brokers registered on a certain JMX-Server or, if a
+	 * JMX-BrokerName has been set, the broker with that name.
+	 * 
+	 * @param connection
+	 *            not <code>null</code>
+	 * @return Set with ObjectName-elements
+	 * @throws IOException
+	 * @throws MalformedObjectNameException
+	 */
+	@SuppressWarnings("unchecked")
+	protected Set<ObjectName> findBrokers(MBeanServerConnection connection)
+			throws IOException, MalformedObjectNameException {
+		ObjectName name;
+		if (this.brokerName == null) {
+			name = new ObjectName("org.apache.activemq:Type=Broker,*");
+		} else {
+			name = new ObjectName("org.apache.activemq:BrokerName="
+					+ this.brokerName + ",Type=Broker");
+		}
 
-        Set brokers = connection.queryNames(name, null);
-        return brokers;
-    }
+		Set<ObjectName> brokers = connection.queryNames(name, null);
+		return brokers;
+	}
+	public void purgeQueue(ActiveMQDestination destination) throws Exception {
+		QueueViewMBean queue = getQueue(destination.getPhysicalName());
+		queue.purge();
+	}
+	public ManagementContext getManagementContext() {
+		throw new IllegalStateException("not supported");
+	}
 
-    public void purgeQueue(ActiveMQDestination destination) throws Exception {
-        QueueViewMBean queue = getQueue(destination.getPhysicalName());
-        queue.purge();
-    }
+	
+	@SuppressWarnings("unchecked")
+	protected <T> Collection<T> getManagedObjects(ObjectName[] names,
+			Class<T> type) {
+		MBeanServerConnection connection;
+		try {
+			connection = getMBeanServerConnection();
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
 
-    public ManagementContext getManagementContext() {
-        throw new IllegalStateException("not supported");
-    }
-
-    protected Collection getManagedObjects(ObjectName[] names, Class type) {
-        MBeanServerConnection connection;
-        try {
-            connection = getConnection();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
-        List answer = new ArrayList();
-        if (connection != null) {
-            for (int i = 0; i < names.length; i++) {
-                ObjectName name = names[i];
-                Object value = MBeanServerInvocationHandler.newProxyInstance(connection, name, type, true);
-                if (value != null) {
-                    answer.add(value);
-                }
-            }
-        }
-        return answer;
+		List<T> answer = new ArrayList<T>();
+		if (connection != null) {
+			for (int i = 0; i < names.length; i++) {
+				ObjectName name = names[i];
+				T value = (T) MBeanServerInvocationHandler.newProxyInstance(
+						connection, name, type, true);
+				if (value != null) {
+					answer.add(value);
+				}
+			}
+		}
+		return answer;
     }
 
 }
