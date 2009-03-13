@@ -108,11 +108,8 @@ public class MasterSlaveTempQueueMemoryTest extends TempQueueMemoryTest {
         RegionBroker masterRb = (RegionBroker) broker.getBroker().getAdaptor(
                 RegionBroker.class);
 
-        // REVISIT the following two are not dependable at the moment, off by a small number
-        // for some reason? The work for a COUNT < ~500
-        //
-        //assertEquals("inflight match", rb.getDestinationStatistics().getInflight().getCount(), masterRb.getDestinationStatistics().getInflight().getCount());
-        //assertEquals("enqueues match", rb.getDestinationStatistics().getEnqueues().getCount(), masterRb.getDestinationStatistics().getEnqueues().getCount());
+        assertEquals("inflight match", rb.getDestinationStatistics().getInflight().getCount(), masterRb.getDestinationStatistics().getInflight().getCount());
+        assertEquals("enqueues match", rb.getDestinationStatistics().getEnqueues().getCount(), masterRb.getDestinationStatistics().getEnqueues().getCount());
         
         assertEquals("dequeues match",
                 rb.getDestinationStatistics().getDequeues().getCount(),

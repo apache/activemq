@@ -38,7 +38,6 @@ import java.util.concurrent.locks.ReentrantLock;
 import javax.jms.InvalidSelectorException;
 import javax.jms.JMSException;
 
-import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.ProducerBrokerExchange;
@@ -48,15 +47,14 @@ import org.apache.activemq.broker.region.cursors.VMPendingMessageCursor;
 import org.apache.activemq.broker.region.group.MessageGroupHashBucketFactory;
 import org.apache.activemq.broker.region.group.MessageGroupMap;
 import org.apache.activemq.broker.region.group.MessageGroupMapFactory;
-import org.apache.activemq.broker.region.group.MessageGroupSet;
 import org.apache.activemq.broker.region.policy.DispatchPolicy;
 import org.apache.activemq.broker.region.policy.RoundRobinDispatchPolicy;
 import org.apache.activemq.command.ActiveMQDestination;
-import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.command.ExceptionResponse;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
+import org.apache.activemq.command.MessageDispatchNotification;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.command.ProducerAck;
 import org.apache.activemq.command.ProducerInfo;
@@ -65,7 +63,6 @@ import org.apache.activemq.filter.BooleanExpression;
 import org.apache.activemq.filter.MessageEvaluationContext;
 import org.apache.activemq.filter.NonCachedMessageEvaluationContext;
 import org.apache.activemq.selector.SelectorParser;
-import org.apache.activemq.state.ProducerState;
 import org.apache.activemq.store.MessageRecoveryListener;
 import org.apache.activemq.store.MessageStore;
 import org.apache.activemq.thread.DeterministicTaskRunner;
@@ -1001,7 +998,7 @@ public class Queue extends BaseDestination implements Task {
      * @see org.apache.activemq.thread.Task#iterate()
      */
     public boolean iterate() {
-        boolean pageInMoreMessages = false;
+        boolean pageInMoreMessages = false;   
         synchronized(iteratingMutex) {
             BrowserDispatch rd;
 	        while ((rd = getNextBrowserDispatch()) != null) {
@@ -1244,13 +1241,13 @@ public class Queue extends BaseDestination implements Task {
                 // Only page in the minimum number of messages which can be dispatched immediately.
                 toPageIn = Math.min(getConsumerMessageCountBeforeFull(), toPageIn);
             }
-            if ((force || !consumers.isEmpty()) && toPageIn > 0) {
-                messages.setMaxBatchSize(toPageIn);
+            
+            if ((force || !consumers.isEmpty()) && toPageIn > 0) { 
                 int count = 0;
                 result = new ArrayList<QueueMessageReference>(toPageIn);
                 synchronized (messages) {
                     try {
-                      
+                        messages.setMaxBatchSize(toPageIn);
                         messages.reset();
                         while (messages.hasNext() && count < toPageIn) {
                             MessageReference node = messages.next();
@@ -1326,7 +1323,8 @@ public class Queue extends BaseDestination implements Task {
         List<Subscription> consumers;
         
         synchronized (this.consumers) {
-            if (this.consumers.isEmpty()) {
+            if (this.consumers.isEmpty() || isSlave()) {
+                // slave dispatch happens in processDispatchNotification
                 return list;
             }
             consumers = new ArrayList<Subscription>(this.consumers);
@@ -1422,4 +1420,104 @@ public class Queue extends BaseDestination implements Task {
         return total;
     }
 
+    /* 
+     * In slave mode, dispatch is ignored till we get this notification as the dispatch
+     * process is non deterministic between master and slave.
+     * On a notification, the actual dispatch to the subscription (as chosen by the master) 
+     * is completed. 
+     * (non-Javadoc)
+     * @see org.apache.activemq.broker.region.BaseDestination#processDispatchNotification(org.apache.activemq.command.MessageDispatchNotification)
+     */
+    public void processDispatchNotification(
+            MessageDispatchNotification messageDispatchNotification) throws Exception {
+        // do dispatch
+        Subscription sub = getMatchingSubscription(messageDispatchNotification);
+        if (sub != null) {
+            MessageReference message = getMatchingMessage(messageDispatchNotification);
+            sub.add(message);   
+            sub.processMessageDispatchNotification(messageDispatchNotification);
+        }
+    }
+
+    private QueueMessageReference getMatchingMessage(MessageDispatchNotification messageDispatchNotification) throws Exception {
+        QueueMessageReference message = null;
+        MessageId messageId = messageDispatchNotification.getMessageId();
+        
+        dispatchLock.lock();
+        try {
+            synchronized (pagedInPendingDispatch) {
+               for(QueueMessageReference ref : pagedInPendingDispatch) {
+                   if (messageId.equals(ref.getMessageId())) {
+                       message = ref;
+                       pagedInPendingDispatch.remove(ref);
+                       break;
+                   }
+               }
+            }
+    
+            if (message == null) {
+                synchronized (pagedInMessages) {
+                    message = pagedInMessages.get(messageId);
+                }
+            }
+            
+            if (message == null) {            
+                synchronized (messages) {
+                    try {
+                        messages.setMaxBatchSize(getMaxPageSize());
+                        messages.reset();
+                        while (messages.hasNext()) {
+                            MessageReference node = messages.next();
+                            node.incrementReferenceCount();
+                            messages.remove();
+                            if (messageId.equals(node.getMessageId())) {
+                                message = this.createMessageReference(node.getMessage());
+                                break;
+                            }
+                        }
+                    } finally {
+                        messages.release();
+                    }
+                }
+            }
+            
+            if (message == null) {
+                Message msg = loadMessage(messageId);
+                if (msg != null) {
+                    message = this.createMessageReference(msg);
+                }
+            }          
+            
+        } finally {
+            dispatchLock.unlock();        
+        }
+        if (message == null) {
+            throw new JMSException(
+                    "Slave broker out of sync with master - Message: "
+                    + messageDispatchNotification.getMessageId()
+                    + " on " + messageDispatchNotification.getDestination()
+                    + " does not exist among pending(" + pagedInPendingDispatch.size() + ") for subscription: "
+                    + messageDispatchNotification.getConsumerId());
+        }
+        return message;
+    }
+
+    /**
+     * Find a consumer that matches the id in the message dispatch notification
+     * @param messageDispatchNotification
+     * @return sub or null if the subscription has been removed before dispatch
+     * @throws JMSException
+     */
+    private Subscription getMatchingSubscription(MessageDispatchNotification messageDispatchNotification) throws JMSException {
+        Subscription sub = null;
+        synchronized (consumers) {
+            for (Subscription s : consumers) {
+                if (messageDispatchNotification.getConsumerId().equals(s.getConsumerInfo().getConsumerId())) {
+                    sub = s;
+                    break;
+                }
+            }
+        }
+        return sub;
+    }
 }

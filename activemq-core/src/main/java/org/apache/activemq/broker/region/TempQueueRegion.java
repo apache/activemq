@@ -22,6 +22,7 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ConsumerInfo;
+import org.apache.activemq.command.MessageDispatchNotification;
 import org.apache.activemq.thread.TaskRunnerFactory;
 import org.apache.activemq.usage.SystemUsage;
 import org.apache.commons.logging.Log;
@@ -72,4 +73,16 @@ public class TempQueueRegion extends AbstractTempRegion {
 
         super.removeDestination(context, destination, timeout);
     }
+    
+    /*
+     * For a Queue, dispatch order is imperative to match acks, so the dispatch is deferred till 
+     * the notification to ensure that the subscription chosen by the master is used.
+     * 
+     * (non-Javadoc)
+     * @see org.apache.activemq.broker.region.AbstractRegion#processDispatchNotification(org.apache.activemq.command.MessageDispatchNotification)
+     */
+    public void processDispatchNotification(MessageDispatchNotification messageDispatchNotification) throws Exception {
+        processDispatchNotificationViaDestination(messageDispatchNotification);
+    }
+
 }

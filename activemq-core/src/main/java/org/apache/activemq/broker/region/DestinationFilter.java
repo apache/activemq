@@ -27,6 +27,7 @@ import org.apache.activemq.broker.region.policy.DeadLetterStrategy;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
+import org.apache.activemq.command.MessageDispatchNotification;
 import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.store.MessageStore;
 import org.apache.activemq.usage.MemoryUsage;
@@ -258,5 +259,10 @@ public class DestinationFilter implements Destination {
 
     public void setMaxBrowsePageSize(int maxPageSize) {
         next.setMaxBrowsePageSize(maxPageSize);
+    }
+
+    public void processDispatchNotification(
+            MessageDispatchNotification messageDispatchNotification) throws Exception {
+        next.processDispatchNotification(messageDispatchNotification);   
     }
 }
