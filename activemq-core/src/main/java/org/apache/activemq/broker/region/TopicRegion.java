@@ -80,8 +80,12 @@ public class TopicRegion extends AbstractRegion {
                     durableSubscriptions.remove(key);
                     synchronized (destinationsMutex) {
                         for (Iterator<Destination> iter = destinations.values().iterator(); iter.hasNext();) {
-                            Topic topic = (Topic)iter.next();
-                            topic.deleteSubscription(context, key);
+                            Destination dest = iter.next();
+                            //Account for virtual destinations
+                            if (dest instanceof Topic){
+                                Topic topic = (Topic)dest;
+                                topic.deleteSubscription(context, key);
+                            }
                         }
                     }
                     super.removeConsumer(context, sub.getConsumerInfo());
@@ -136,8 +140,12 @@ public class TopicRegion extends AbstractRegion {
         durableSubscriptions.remove(key);
         synchronized (destinationsMutex) {
             for (Iterator<Destination> iter = destinations.values().iterator(); iter.hasNext();) {
-                Topic topic = (Topic)iter.next();
-                topic.deleteSubscription(context, key);
+            	Destination dest = iter.next();
+            	//Account for virtual destinations
+            	if (dest instanceof Topic){
+            	    Topic topic = (Topic)dest;
+            	    topic.deleteSubscription(context, key);
+            	}
             }
         }
         super.removeConsumer(context, sub.getConsumerInfo());
