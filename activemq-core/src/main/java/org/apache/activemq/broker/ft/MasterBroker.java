@@ -16,6 +16,8 @@
  */
 package org.apache.activemq.broker.ft;
 
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.activemq.broker.Connection;
@@ -28,6 +30,7 @@ import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.command.Command;
 import org.apache.activemq.command.ConnectionControl;
 import org.apache.activemq.command.ConnectionInfo;
+import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.DestinationInfo;
 import org.apache.activemq.command.ExceptionResponse;
@@ -58,8 +61,9 @@ public class MasterBroker extends InsertableMutableBrokerFilter {
     private static final Log LOG = LogFactory.getLog(MasterBroker.class);
     private Transport slave;
     private AtomicBoolean started = new AtomicBoolean(false);
-    private final Object addConsumerLock = new Object();
 
+    private Map<ConsumerId, ConsumerId> consumers = new ConcurrentHashMap<ConsumerId, ConsumerId>();
+    
     /**
      * Constructor
      * 
@@ -197,13 +201,18 @@ public class MasterBroker extends InsertableMutableBrokerFilter {
      * @throws Exception
      */
     public Subscription addConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
-        // as master and slave do independent dispatch, the consumer add order between master and slave
-        // needs to be maintained
-        synchronized (addConsumerLock) {
-    	    sendSyncToSlave(info);
-    	    return super.addConsumer(context, info);
-        }
+        sendSyncToSlave(info);
+        consumers.put(info.getConsumerId(), info.getConsumerId());
+        return super.addConsumer(context, info);
     }
+
+    @Override
+    public void removeConsumer(ConnectionContext context, ConsumerInfo info)
+            throws Exception {
+        super.removeConsumer(context, info);
+        consumers.remove(info.getConsumerId());
+        sendSyncToSlave(new RemoveInfo(info.getConsumerId()));
+   }
 
     /**
      * remove a subscription
@@ -317,7 +326,9 @@ public class MasterBroker extends InsertableMutableBrokerFilter {
         if (messageDispatch.getMessage() != null) {
             Message msg = messageDispatch.getMessage();
             mdn.setMessageId(msg.getMessageId());
-            sendSyncToSlave(mdn);
+            if (consumers.containsKey(messageDispatch.getConsumerId())) {
+                sendSyncToSlave(mdn);
+            }
         }
     }
 

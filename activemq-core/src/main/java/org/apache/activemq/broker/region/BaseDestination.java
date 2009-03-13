@@ -18,6 +18,8 @@ package org.apache.activemq.broker.region;
 
 import java.io.IOException;
 
+import javax.jms.JMSException;
+
 import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.BrokerService;
@@ -27,6 +29,7 @@ import org.apache.activemq.broker.region.policy.DeadLetterStrategy;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.command.Message;
+import org.apache.activemq.command.MessageDispatchNotification;
 import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.state.ProducerState;
 import org.apache.activemq.store.MessageStore;
@@ -485,4 +488,9 @@ public abstract class BaseDestination implements Destination {
             }
         }
     }
+    
+    public void processDispatchNotification(
+            MessageDispatchNotification messageDispatchNotification) throws Exception {
+    }
+
 }

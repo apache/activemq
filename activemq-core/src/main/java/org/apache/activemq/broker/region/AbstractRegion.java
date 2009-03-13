@@ -418,6 +418,34 @@ public abstract class AbstractRegion implements Region {
         Subscription sub = subscriptions.get(messageDispatchNotification.getConsumerId());
         if (sub != null) {
             sub.processMessageDispatchNotification(messageDispatchNotification);
+        } else {
+            throw new JMSException("Slave broker out of sync with master - Subscription: "
+                    + messageDispatchNotification.getConsumerId()
+                    + " on " + messageDispatchNotification.getDestination()
+                    + " does not exist for dispatch of message: "
+                    + messageDispatchNotification.getMessageId());
+        }
+    }
+    
+    /*
+     * For a Queue/TempQueue, dispatch order is imperative to match acks, so the dispatch is deferred till 
+     * the notification to ensure that the subscription chosen by the master is used. AMQ-2102
+     */ 
+    protected void processDispatchNotificationViaDestination(MessageDispatchNotification messageDispatchNotification) throws Exception {
+        Destination dest = null;
+        synchronized (destinationsMutex) {
+            dest = destinations.get(messageDispatchNotification.getDestination());
+        }
+        if (dest != null) {
+            dest.processDispatchNotification(messageDispatchNotification);
+        } else {
+            throw new JMSException(
+                    "Slave broker out of sync with master - Destination: " 
+                            + messageDispatchNotification.getDestination()
+                            + " does not exist for consumer "
+                            + messageDispatchNotification.getConsumerId()
+                            + " with message: "
+                            + messageDispatchNotification.getMessageId());
         }
     }
 

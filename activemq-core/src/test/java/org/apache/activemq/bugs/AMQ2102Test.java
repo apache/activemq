@@ -47,14 +47,15 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 public class AMQ2102Test extends TestCase implements UncaughtExceptionHandler {
+       
+    final static int MESSAGE_COUNT = 12120;
+    final static int NUM_CONSUMERS = 10;
+    final static int CONSUME_ALL = -1;
     
-    
-    final static int MESSAGE_COUNT = 5120;
-    final static int NUM_CONSUMERS = 20;
     
     private static final Log LOG = LogFactory.getLog(AMQ2102Test.class);
     
-    private final Map<Thread, Throwable> exceptions = new ConcurrentHashMap<Thread, Throwable>();
+    private final static Map<Thread, Throwable> exceptions = new ConcurrentHashMap<Thread, Throwable>();
     
     private class Consumer implements Runnable, ExceptionListener {
         private ActiveMQConnectionFactory connectionFactory;
@@ -63,12 +64,14 @@ public class AMQ2102Test extends TestCase implements UncaughtExceptionHandler {
         private boolean running;
         private org.omg.CORBA.IntHolder startup;
         private Thread thread;
+        private int numToProcessPerIteration;
 
-        Consumer(ActiveMQConnectionFactory connectionFactory, String queueName, org.omg.CORBA.IntHolder startup, int id) {
+        Consumer(ActiveMQConnectionFactory connectionFactory, String queueName, org.omg.CORBA.IntHolder startup, int id, int numToProcess) {
             this.connectionFactory = connectionFactory;
             this.queueName = queueName;
             this.startup = startup;
             name = "Consumer-" + queueName + "-" + id;
+            numToProcessPerIteration = numToProcess;
             thread = new Thread(this, name);
         }
 
@@ -93,6 +96,7 @@ public class AMQ2102Test extends TestCase implements UncaughtExceptionHandler {
         }
 
         public void onException(JMSException e) {
+            exceptions.put(Thread.currentThread(), e);
             error("JMS exception: ", e);
         }
 
@@ -146,7 +150,13 @@ public class AMQ2102Test extends TestCase implements UncaughtExceptionHandler {
             Session session = null;
             try {
                 session = connection.createSession(true, Session.SESSION_TRANSACTED);
-                processMessages(session);
+                if (numToProcessPerIteration > 0) {
+                    while(isRunning()) {
+                        processMessages(session);
+                    }
+                } else {
+                    processMessages(session);
+                }
             } finally {
                 if (session != null) {
                     session.close();
@@ -189,7 +199,8 @@ public class AMQ2102Test extends TestCase implements UncaughtExceptionHandler {
                 }
                 startup = null;
             }
-            while (isRunning()) {
+            int numToProcess = numToProcessPerIteration;
+            do {
                 Message message = consumer.receive(5000);
 
                 if (message != null) {
@@ -201,7 +212,7 @@ public class AMQ2102Test extends TestCase implements UncaughtExceptionHandler {
                         session.rollback();
                     }
                 }
-            }
+            } while ((numToProcess == CONSUME_ALL || --numToProcess > 0) && isRunning());
         }
 
         public void run() {
@@ -224,7 +235,7 @@ public class AMQ2102Test extends TestCase implements UncaughtExceptionHandler {
         }
     }
     
-    private class Producer {
+    private class Producer implements ExceptionListener {
         private ActiveMQConnectionFactory connectionFactory;
         private String queueName;
         
@@ -246,6 +257,7 @@ public class AMQ2102Test extends TestCase implements UncaughtExceptionHandler {
 
             try {
                 connection = (ActiveMQConnection) connectionFactory.createConnection();
+                connection.setExceptionListener(this);
                 connection.start();
 
                 sendMessages(connection);
@@ -302,6 +314,7 @@ public class AMQ2102Test extends TestCase implements UncaughtExceptionHandler {
                 sendMessages(session, replyQueue, consumer);
             } finally {
                 consumer.close();
+                session.commit();
             }
         }
 
@@ -326,9 +339,8 @@ public class AMQ2102Test extends TestCase implements UncaughtExceptionHandler {
             }
         }
 
-        private void sendMessages(Session session, Destination replyQueue, MessageConsumer consumer) throws JMSException {
+        private void sendMessages(final Session session, Destination replyQueue, MessageConsumer consumer) throws JMSException {
             final org.omg.CORBA.IntHolder messageCount = new org.omg.CORBA.IntHolder(MESSAGE_COUNT);
-
             consumer.setMessageListener(new MessageListener() {
                 public void onMessage(Message reply) {
                     if (reply instanceof TextMessage) {
@@ -340,6 +352,15 @@ public class AMQ2102Test extends TestCase implements UncaughtExceptionHandler {
                                 error("Problem processing reply", e);
                             }
                             messageCount.value--;
+                            if (messageCount.value % 200 == 0) {
+                                // ack a bunch of replys
+                                info("acking via session commit: messageCount=" + messageCount.value);
+                                try {
+                                    session.commit();
+                                } catch (JMSException e) {
+                                    error("Failed to commit with count: " + messageCount.value, e);
+                                }
+                            }
                             messageCount.notify();
                         }
                     } else {
@@ -354,11 +375,7 @@ public class AMQ2102Test extends TestCase implements UncaughtExceptionHandler {
             synchronized (messageCount) {
                 while (messageCount.value > 0) {
                     
-                    if (messageCount.value % 100 == 0) {
-                        // ack a bunch of replys
-                        debug("acking via session commit: messageCount=" + messageCount.value);
-                        session.commit();
-                    }
+                    
                     try {
                         messageCount.wait();
                     } catch (InterruptedException e) {
@@ -370,12 +387,21 @@ public class AMQ2102Test extends TestCase implements UncaughtExceptionHandler {
             session.commit();
             debug("All replies received...");
         }
+
+        public void onException(JMSException exception) {
+           LOG.error(exception);
+           exceptions.put(Thread.currentThread(), exception);
+        }
     }
 
     private static void debug(String message) {
         LOG.debug(message);
     }
 
+    private static void info(String message) {
+        LOG.info(message);
+    }
+    
     private static void error(String message) {
         LOG.error(message);
     }
@@ -384,15 +410,17 @@ public class AMQ2102Test extends TestCase implements UncaughtExceptionHandler {
         t.printStackTrace();
         String msg = message + ": " + (t.getMessage() != null ? t.getMessage() : t.toString());
         LOG.error(msg, t);
+        exceptions.put(Thread.currentThread(), t);
         fail(msg);
     }
 
-    private ArrayList<Consumer> createConsumers(ActiveMQConnectionFactory connectionFactory, String queueName, int max) {
+    private ArrayList<Consumer> createConsumers(ActiveMQConnectionFactory connectionFactory, String queueName, 
+            int max, int numToProcessPerConsumer) {
         ArrayList<Consumer> consumers = new ArrayList<Consumer>(max);
         org.omg.CORBA.IntHolder startup = new org.omg.CORBA.IntHolder(max);
 
         for (int id = 0; id < max; id++) {
-            consumers.add(new Consumer(connectionFactory, queueName, startup, id));
+            consumers.add(new Consumer(connectionFactory, queueName, startup, id, numToProcessPerConsumer));
         }
         for (Consumer consumer : consumers) {
             consumer.start();
@@ -445,6 +473,7 @@ public class AMQ2102Test extends TestCase implements UncaughtExceptionHandler {
     public void tearDown() throws Exception {
         master.stop();
         slave.stop();
+        exceptions.clear();
     }
     
     public void testMasterSlaveBug() throws Exception {
@@ -453,7 +482,7 @@ public class AMQ2102Test extends TestCase implements UncaughtExceptionHandler {
         ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory("failover:(" + 
                 masterUrl + ")?randomize=false");
         String queueName = "MasterSlaveBug";
-        ArrayList<Consumer> consumers = createConsumers(connectionFactory, queueName, NUM_CONSUMERS);
+        ArrayList<Consumer> consumers = createConsumers(connectionFactory, queueName, NUM_CONSUMERS, CONSUME_ALL);
         
         Producer producer = new Producer(connectionFactory, queueName);
         producer.execute(new String[]{});
@@ -468,10 +497,31 @@ public class AMQ2102Test extends TestCase implements UncaughtExceptionHandler {
         assertTrue(exceptions.isEmpty());
     }
 
+    
+    public void testMasterSlaveBugWithStopStartConsumers() throws Exception {
+
+        Thread.setDefaultUncaughtExceptionHandler(this);
+        ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory(
+                "failover:(" + masterUrl + ")?randomize=false");
+        String queueName = "MasterSlaveBug";
+        ArrayList<Consumer> consumers = createConsumers(connectionFactory,
+                queueName, NUM_CONSUMERS, 10);
+
+        Producer producer = new Producer(connectionFactory, queueName);
+        producer.execute(new String[] {});
+
+        for (Consumer consumer : consumers) {
+            consumer.setRunning(false);
+        }
+
+        for (Consumer consumer : consumers) {
+            consumer.join();
+        }
+        assertTrue(exceptions.isEmpty());
+    }
+
     public void uncaughtException(Thread t, Throwable e) {
         error("" + t + e);
         exceptions.put(t,e);
-        
-        
     }
 }
