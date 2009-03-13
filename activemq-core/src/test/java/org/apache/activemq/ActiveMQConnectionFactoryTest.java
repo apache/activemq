@@ -82,6 +82,9 @@ public class ActiveMQConnectionFactoryTest extends CombinationTestSupport {
         assertTrue(cf.isUseAsyncSend());
         // the broker url have been adjusted.
         assertEquals("vm:(broker:()/localhost)", cf.getBrokerURL());
+        
+        cf = new ActiveMQConnectionFactory("vm://localhost?jms.auditDepth=5000");
+        assertEquals(5000, cf.getAuditDepth());
     }
 
     public void testUseURIToConfigureRedeliveryPolicy() throws URISyntaxException, JMSException {

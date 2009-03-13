@@ -112,6 +112,8 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     private boolean sendAcksAsync=true;
     private TransportListener transportListener;
 	private ExceptionListener exceptionListener;
+	private int auditDepth = ActiveMQMessageAudit.DEFAULT_WINDOW_SIZE;
+	private int auditMaximumProducerNumber = ActiveMQMessageAudit.MAXIMUM_PRODUCER_COUNT;
 
     // /////////////////////////////////////////////
     //
@@ -310,6 +312,8 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
         connection.setWarnAboutUnstartedConnectionTimeout(getWarnAboutUnstartedConnectionTimeout());
         connection.setSendTimeout(getSendTimeout());
         connection.setSendAcksAsync(isSendAcksAsync());
+        connection.setAuditDepth(getAuditDepth());
+        connection.setAuditMaximumProducerNumber(getAuditMaximumProducerNumber());
         if (transportListener != null) {
             connection.addTransportListener(transportListener);
         }
@@ -669,6 +673,8 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
         props.setProperty("producerWindowSize", Integer.toString(getProducerWindowSize()));
         props.setProperty("sendTimeout", Integer.toString(getSendTimeout()));
         props.setProperty("sendAcksAsync",Boolean.toString(isSendAcksAsync()));
+        props.setProperty("auditDepth", Integer.toString(getAuditDepth()));
+        props.setProperty("auditMaximumProducerNumber", Integer.toString(getAuditMaximumProducerNumber()));
     }
 
     public boolean isUseCompression() {
@@ -882,4 +888,20 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     public void setExceptionListener(ExceptionListener exceptionListener) {
     	this.exceptionListener = exceptionListener;
     }
+
+	public int getAuditDepth() {
+		return auditDepth;
+	}
+
+	public void setAuditDepth(int auditDepth) {
+		this.auditDepth = auditDepth;
+	}
+
+	public int getAuditMaximumProducerNumber() {
+		return auditMaximumProducerNumber;
+	}
+
+	public void setAuditMaximumProducerNumber(int auditMaximumProducerNumber) {
+		this.auditMaximumProducerNumber = auditMaximumProducerNumber;
+	}
 }

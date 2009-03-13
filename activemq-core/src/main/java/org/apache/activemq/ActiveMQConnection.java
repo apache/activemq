@@ -2196,6 +2196,14 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
         this.producerWindowSize = producerWindowSize;
     }
 
+    public void setAuditDepth(int auditDepth) {
+        connectionAudit.setAuditDepth(auditDepth);
+	}
+
+    public void setAuditMaximumProducerNumber(int auditMaximumProducerNumber) {
+        connectionAudit.setAuditMaximumProducerNumber(auditMaximumProducerNumber);
+	}
+
     protected void removeDispatcher(ActiveMQDispatcher dispatcher) {
         connectionAudit.removeDispatcher(dispatcher);
     }

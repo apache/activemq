@@ -30,6 +30,11 @@ class ConnectionAudit {
     private LinkedHashMap<ActiveMQDestination, ActiveMQMessageAudit> destinations = new LRUCache<ActiveMQDestination, ActiveMQMessageAudit>(1000);
     private LinkedHashMap<ActiveMQDispatcher, ActiveMQMessageAudit> dispatchers = new LRUCache<ActiveMQDispatcher, ActiveMQMessageAudit>(1000);
 
+    
+	private int auditDepth = ActiveMQMessageAudit.DEFAULT_WINDOW_SIZE;
+	private int auditMaximumProducerNumber = ActiveMQMessageAudit.MAXIMUM_PRODUCER_COUNT;
+	
+	
     synchronized void removeDispatcher(ActiveMQDispatcher dispatcher) {
         dispatchers.remove(dispatcher);
     }
@@ -41,7 +46,7 @@ class ConnectionAudit {
                 if (destination.isQueue()) {
                     ActiveMQMessageAudit audit = destinations.get(destination);
                     if (audit == null) {
-                        audit = new ActiveMQMessageAudit();
+                        audit = new ActiveMQMessageAudit(auditDepth, auditMaximumProducerNumber);
                         destinations.put(destination, audit);
                     }
                     boolean result = audit.isDuplicate(message);
@@ -49,7 +54,7 @@ class ConnectionAudit {
                 }
                 ActiveMQMessageAudit audit = dispatchers.get(dispatcher);
                 if (audit == null) {
-                    audit = new ActiveMQMessageAudit();
+                    audit = new ActiveMQMessageAudit(auditDepth, auditMaximumProducerNumber);
                     dispatchers.put(dispatcher, audit);
                 }
                 boolean result = audit.isDuplicate(message);
@@ -91,4 +96,21 @@ class ConnectionAudit {
     void setCheckForDuplicates(boolean checkForDuplicates) {
         this.checkForDuplicates = checkForDuplicates;
     }
+
+	public int getAuditDepth() {
+		return auditDepth;
+	}
+
+	public void setAuditDepth(int auditDepth) {
+		this.auditDepth = auditDepth;
+	}
+
+	public int getAuditMaximumProducerNumber() {
+		return auditMaximumProducerNumber;
+	}
+
+	public void setAuditMaximumProducerNumber(int auditMaximumProducerNumber) {
+		this.auditMaximumProducerNumber = auditMaximumProducerNumber;
+	}
+    
 }
