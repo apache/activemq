@@ -324,9 +324,9 @@ public class MessageDatabase {
                         tx.store(metadata.page, metadataMarshaller, true);
                     }
                 });
-                close();
             }
         }
+        close();
     }
 
     /**
