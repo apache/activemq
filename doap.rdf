@@ -38,7 +38,7 @@
     <asfext:pmc rdf:resource="http://activemq.apache.org/" />
     <shortdesc>ActiveMQ is the most popular and powerful open source Message Broker.</shortdesc>
     <description>ActiveMQ is a fast and powerful Message Broker which supports many Cross Language Clients and Protocols and many advanced features while fully supporting JMS 1.1 and J2EE 1.4.</description>
-    <bug-database rdf:resource="http://jira.activemq.org/jira/browse/AMQ" />
+    <bug-database rdf:resource="http://issues.apache.org/activemq/browse/AMQ" />
     <mailing-list rdf:resource="http://activemq.apache.org/mailing-lists.html" />
     <download-page rdf:resource="http://activemq.apache.org/download.html" />
 
