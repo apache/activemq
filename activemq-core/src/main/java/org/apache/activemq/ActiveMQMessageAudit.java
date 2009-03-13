@@ -33,15 +33,15 @@ import org.apache.activemq.util.LRUCache;
  */
 public class ActiveMQMessageAudit {
 
-    private static final int DEFAULT_WINDOW_SIZE = 2048;
-    private static final int MAXIMUM_PRODUCER_COUNT = 64;
+    public static final int DEFAULT_WINDOW_SIZE = 2048;
+    public static final int MAXIMUM_PRODUCER_COUNT = 64;
     private int auditDepth;
     private int maximumNumberOfProducersToTrack;
     private LRUCache<Object, BitArrayBin> map;
 
     /**
-     * Default Constructor windowSize = 1024, maximumNumberOfProducersToTrack =
-     * 128
+     * Default Constructor windowSize = 2048, maximumNumberOfProducersToTrack =
+     * 64
      */
     public ActiveMQMessageAudit() {
         this(DEFAULT_WINDOW_SIZE, MAXIMUM_PRODUCER_COUNT);
