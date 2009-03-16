@@ -96,7 +96,8 @@ public class TcpTransportFactory extends TransportFactory {
             }
         }
 
-        if (isUseInactivityMonitor(transport)) {
+        boolean useInactivityMonitor = "true".equals(getOption(options, "useInactivityMonitor", "true"));
+        if (useInactivityMonitor && isUseInactivityMonitor(transport)) {
             transport = new InactivityMonitor(transport, format);
         }
 
@@ -106,6 +107,14 @@ public class TcpTransportFactory extends TransportFactory {
         }
 
         return transport;
+    }
+
+    private String getOption(Map options, String key, String def) {
+        String rc = (String) options.remove(key);
+        if( rc == null ) {
+            rc = def;
+        }
+        return rc;
     }
 
     /**
