@@ -34,7 +34,7 @@ import org.apache.activemq.state.CommandVisitor;
  */
 public class StompFrame implements Command {
 
-    private static final byte[] NO_DATA = new byte[] {};
+    public static final byte[] NO_DATA = new byte[] {};
 
     private String action;
     private Map<String, String> headers = new HashMap<String, String>();
