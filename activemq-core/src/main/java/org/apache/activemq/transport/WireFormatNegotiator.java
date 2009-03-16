@@ -71,15 +71,19 @@ public class WireFormatNegotiator extends TransportFilter {
     public void start() throws Exception {
         super.start();
         if (firstStart.compareAndSet(true, false)) {
-            try {
-                WireFormatInfo info = wireFormat.getPreferedWireFormatInfo();
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("Sending: " + info);
-                }
-                sendWireFormat(info);
-            } finally {
-                wireInfoSentDownLatch.countDown();
+            sendWireFormat();
+        }
+    }
+
+    public void sendWireFormat() throws IOException {
+        try {
+            WireFormatInfo info = wireFormat.getPreferedWireFormatInfo();
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Sending: " + info);
             }
+            sendWireFormat(info);
+        } finally {
+            wireInfoSentDownLatch.countDown();
         }
     }
 
@@ -104,43 +108,47 @@ public class WireFormatNegotiator extends TransportFilter {
         Command command = (Command)o;
         if (command.isWireFormatInfo()) {
             WireFormatInfo info = (WireFormatInfo)command;
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("Received WireFormat: " + info);
-            }
-
-            try {
-                wireInfoSentDownLatch.await();
-
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug(this + " before negotiation: " + wireFormat);
-                }
-                if (!info.isValid()) {
-                    onException(new IOException("Remote wire format magic is invalid"));
-                } else if (info.getVersion() < minimumVersion) {
-                    onException(new IOException("Remote wire format (" + info.getVersion() + ") is lower the minimum version required (" + minimumVersion + ")"));
-                }
-
-                wireFormat.renegotiateWireFormat(info);
-                Socket socket = next.narrow(Socket.class);
-                if (socket != null) {
-                    socket.setTcpNoDelay(wireFormat.isTcpNoDelayEnabled());
-                }
-
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug(this + " after negotiation: " + wireFormat);
-                }
-
-            } catch (IOException e) {
-                onException(e);
-            } catch (InterruptedException e) {
-                onException((IOException)new InterruptedIOException().initCause(e));
-            } catch (Exception e) {
-                onException(IOExceptionSupport.create(e));
-            }
-            readyCountDownLatch.countDown();
-            onWireFormatNegotiated(info);
+            negociate(info);
         }
         getTransportListener().onCommand(command);
+    }
+
+    public void negociate(WireFormatInfo info) {
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("Received WireFormat: " + info);
+        }
+
+        try {
+            wireInfoSentDownLatch.await();
+
+            if (LOG.isDebugEnabled()) {
+                LOG.debug(this + " before negotiation: " + wireFormat);
+            }
+            if (!info.isValid()) {
+                onException(new IOException("Remote wire format magic is invalid"));
+            } else if (info.getVersion() < minimumVersion) {
+                onException(new IOException("Remote wire format (" + info.getVersion() + ") is lower the minimum version required (" + minimumVersion + ")"));
+            }
+
+            wireFormat.renegotiateWireFormat(info);
+            Socket socket = next.narrow(Socket.class);
+            if (socket != null) {
+                socket.setTcpNoDelay(wireFormat.isTcpNoDelayEnabled());
+            }
+
+            if (LOG.isDebugEnabled()) {
+                LOG.debug(this + " after negotiation: " + wireFormat);
+            }
+
+        } catch (IOException e) {
+            onException(e);
+        } catch (InterruptedException e) {
+            onException((IOException)new InterruptedIOException().initCause(e));
+        } catch (Exception e) {
+            onException(IOExceptionSupport.create(e));
+        }
+        readyCountDownLatch.countDown();
+        onWireFormatNegotiated(info);
     }
 
     public void onException(IOException error) {
