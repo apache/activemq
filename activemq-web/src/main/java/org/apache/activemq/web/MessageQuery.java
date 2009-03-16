@@ -78,7 +78,12 @@ public class MessageQuery extends QueueBrowseQuery {
             return ((TextMessage) message).getText();
         }
         if (message instanceof ObjectMessage) {
-            return ((ObjectMessage) message).getObject();
+            try {
+                return ((ObjectMessage) message).getObject();
+            } catch (JMSException e) {
+                //message could not be parsed, make the reason available
+                return e;
+            }
         }
         if (message instanceof MapMessage) {
             return createMapBody((MapMessage) message);

@@ -176,9 +176,10 @@ public class ActiveMQObjectMessage extends ActiveMQMessage implements ObjectMess
                 try {
                     object = (Serializable)objIn.readObject();
                 } catch (ClassNotFoundException ce) {
-                    throw new IOException(ce.getMessage());
+                    throw JMSExceptionSupport.create("Failed to build body from content. Serializable class not available to broker. Reason: " + ce, ce);
+                } finally {
+                    dataIn.close();
                 }
-                dataIn.close();
             } catch (IOException e) {
                 throw JMSExceptionSupport.create("Failed to build body from bytes. Reason: " + e, e);
             }
