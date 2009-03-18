@@ -18,7 +18,7 @@
 <beans>
   <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer"/>
 
-  <broker brokerName="master" persistent="false" useJmx="false" deleteAllMessagesOnStartup="true"  xmlns="http://activemq.apache.org/schema/core">
+  <broker brokerName="master" useJmx="false" deleteAllMessagesOnStartup="true"  xmlns="http://activemq.apache.org/schema/core">
     <transportConnectors>
       <transportConnector uri="tcp://localhost:62001"/>
     </transportConnectors>

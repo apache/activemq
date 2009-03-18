@@ -70,6 +70,8 @@ import org.apache.activemq.thread.Task;
 import org.apache.activemq.thread.TaskRunner;
 import org.apache.activemq.thread.TaskRunnerFactory;
 import org.apache.activemq.transaction.Synchronization;
+import org.apache.activemq.usage.Usage;
+import org.apache.activemq.usage.UsageListener;
 import org.apache.activemq.util.BrokerSupport;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -81,7 +83,7 @@ import org.apache.commons.logging.LogFactory;
  * 
  * @version $Revision: 1.28 $
  */
-public class Queue extends BaseDestination implements Task {
+public class Queue extends BaseDestination implements Task, UsageListener {
     protected static final Log LOG = LogFactory.getLog(Queue.class);
     protected TaskRunnerFactory taskFactory;
     protected TaskRunner taskRunner;    
@@ -99,7 +101,7 @@ public class Queue extends BaseDestination implements Task {
     private final ReentrantLock dispatchLock = new ReentrantLock();
     private boolean useConsumerPriority=true;
     private boolean strictOrderDispatch=false;
-    private QueueDispatchSelector  dispatchSelector;
+    private QueueDispatchSelector dispatchSelector;
     private boolean optimizedDispatch=false;
     private boolean firstConsumer = false;
     private int timeBeforeDispatchStarts = 0;
@@ -133,6 +135,16 @@ public class Queue extends BaseDestination implements Task {
         }
     }
 
+    // make the queue easily visible in the debugger from its task runner threads
+    final class QueueThread extends Thread {
+        final Queue queue;
+        public QueueThread(Runnable runnable, String name,
+                Queue queue) {
+            super(runnable, name);
+            this.queue = queue;
+        }
+    }
+    
     public void initialize() throws Exception {
         if (this.messages == null) {
             if (destination.isTemporary() || broker == null || store == null) {
@@ -153,9 +165,10 @@ public class Queue extends BaseDestination implements Task {
         if (isOptimizedDispatch()) {
             this.taskRunner = taskFactory.createTaskRunner(this, "TempQueue:  " + destination.getPhysicalName());
         }else {
+            final Queue queue = this;
             this.executor =  Executors.newSingleThreadExecutor(new ThreadFactory() {
                 public Thread newThread(Runnable runnable) {
-                    Thread thread = new Thread(runnable, "QueueThread:"+destination);
+                    Thread thread = new QueueThread(runnable, "QueueThread:"+destination, queue);
                     thread.setDaemon(true);
                     thread.setPriority(Thread.NORM_PRIORITY);
                     return thread;
@@ -565,6 +578,7 @@ public class Queue extends BaseDestination implements Task {
         if (memoryUsage != null) {
             memoryUsage.start();
         }
+        systemUsage.getMemoryUsage().addUsageListener(this);
         messages.start();
         doPageIn(false);
     }
@@ -579,6 +593,8 @@ public class Queue extends BaseDestination implements Task {
         if (messages != null) {
             messages.stop();
         }
+        
+        systemUsage.getMemoryUsage().removeUsageListener(this);
         if (memoryUsage != null) {
             memoryUsage.stop();
         }
@@ -1000,6 +1016,15 @@ public class Queue extends BaseDestination implements Task {
     public boolean iterate() {
         boolean pageInMoreMessages = false;   
         synchronized(iteratingMutex) {
+            
+            // do early to allow dispatch of these waiting messages
+            synchronized(messagesWaitingForSpace) {
+                while (!messagesWaitingForSpace.isEmpty() && !memoryUsage.isFull()) {
+                    Runnable op = messagesWaitingForSpace.removeFirst();
+                    op.run();
+                }
+            }
+            
             BrowserDispatch rd;
 	        while ((rd = getNextBrowserDispatch()) != null) {
 	            pageInMoreMessages = true;
@@ -1078,13 +1103,7 @@ public class Queue extends BaseDestination implements Task {
 	                LOG.error("Failed to page in more queue messages ", e);
                 }
 	        }
-	        synchronized(messagesWaitingForSpace) {
-	               while (!messagesWaitingForSpace.isEmpty() && !memoryUsage.isFull()) {
-	                   Runnable op = messagesWaitingForSpace.removeFirst();
-	                   op.run();
-	               }
-	        }
-	        return false;
+	        return !messagesWaitingForSpace.isEmpty();
         }
     }
 
@@ -1519,5 +1538,19 @@ public class Queue extends BaseDestination implements Task {
             }
         }
         return sub;
+    }
+
+    public void onUsageChanged(Usage usage, int oldPercentUsage, int newPercentUsage) {
+        if (oldPercentUsage > newPercentUsage) {
+            synchronized(messagesWaitingForSpace) {
+                if (!messagesWaitingForSpace.isEmpty() && !memoryUsage.isFull()) {
+                    try {
+                        this.taskRunner.wakeup();
+                    } catch (InterruptedException e) {
+                        LOG.warn(getName() + " failed to wakeup task runner on usageChange: " + e);
+                    }
+                }
+            }
+        }
     }
 }

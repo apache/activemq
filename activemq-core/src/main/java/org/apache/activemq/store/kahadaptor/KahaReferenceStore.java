@@ -32,7 +32,8 @@ import org.apache.activemq.kaha.StoreEntry;
 import org.apache.activemq.store.MessageRecoveryListener;
 import org.apache.activemq.store.ReferenceStore;
 import org.apache.activemq.store.AbstractMessageStore;
-import org.apache.activemq.usage.MemoryUsage;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * @author rajdavies
@@ -40,6 +41,7 @@ import org.apache.activemq.usage.MemoryUsage;
  */
 public class KahaReferenceStore extends AbstractMessageStore implements ReferenceStore {
 
+    private static final Log LOG = LogFactory.getLog(KahaReferenceStore.class);
     protected final MapContainer<MessageId, ReferenceRecord> messageContainer;
     protected KahaReferenceStoreAdapter adapter;
     private StoreEntry batchEntry;
@@ -120,6 +122,11 @@ public class KahaReferenceStore extends AbstractMessageStore implements Referenc
                         if ( recoverReference(listener, msg)) {
                             count++;
                             lastBatchId = msg.getMessageId();
+                        } else {
+                            if (LOG.isDebugEnabled()) {
+                                LOG.debug(destination.getQualifiedName() + " did not recover:" + msg.getMessageId());
+                            }
+                            break;
                         }
                     } else {
                         lastBatchId = null;
