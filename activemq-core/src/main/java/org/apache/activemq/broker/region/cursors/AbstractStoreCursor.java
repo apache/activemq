@@ -25,8 +25,6 @@ import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.store.MessageRecoveryListener;
-import org.apache.activemq.usage.Usage;
-import org.apache.activemq.usage.UsageListener;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -34,7 +32,7 @@ import org.apache.commons.logging.LogFactory;
  *  Store based cursor
  *
  */
-public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor implements MessageRecoveryListener, UsageListener {
+public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor implements MessageRecoveryListener {
     private static final Log LOG = LogFactory.getLog(AbstractStoreCursor.class);
     protected final Destination regionDestination;
     private final LinkedHashMap<MessageId,Message> batchList = new LinkedHashMap<MessageId,Message> ();
@@ -60,11 +58,9 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
                 cacheEnabled=true;
             }
         } 
-        getSystemUsage().getMemoryUsage().addUsageListener(this);
     }
     
     public final synchronized void stop() throws Exception {
-        getSystemUsage().getMemoryUsage().removeUsageListener(this);
         resetBatch();
         super.stop();
         gc();
@@ -160,7 +156,9 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
             if (cacheEnabled) {
                 cacheEnabled=false;
                 // sync with store on disabling the cache
-                setBatch(lastCachedId);
+                if (lastCachedId != null) {
+                    setBatch(lastCachedId);
+                }
             }
         }
         size++;
@@ -190,20 +188,6 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
         batchList.remove(node.getMessageId());
     }
     
-           
-    public final synchronized void onUsageChanged(Usage usage, int oldPercentUsage,
-            int newPercentUsage) {
-        if (oldPercentUsage > newPercentUsage && oldPercentUsage >= memoryUsageHighWaterMark) {
-            storeHasMessages = true;
-            try {
-                fillBatch();
-            } catch (Exception e) {
-                LOG.error("Failed to fill batch ", e);
-            }
-        }
-        
-    }
-    
     public final synchronized void clear() {
         gc();
     }
@@ -229,7 +213,6 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
             resetBatch();
             this.batchResetNeeded = false;
         }
-        
         if( this.batchList.isEmpty() && (this.storeHasMessages ||this.size >0)) {
             this.storeHasMessages = false;
             try {
