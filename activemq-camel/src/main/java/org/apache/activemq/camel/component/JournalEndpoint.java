@@ -190,9 +190,8 @@ public class JournalEndpoint extends DefaultEndpoint {
                 incrementReference();
                 try {
                     ByteSequence body = null;
-                    try {
-                        body = exchange.getIn().getBody(ByteSequence.class);
-                    } catch(NoTypeConversionAvailableException e) {
+                    body = exchange.getIn().getBody(ByteSequence.class);
+                    if (body == null) {
                         byte[] bytes = exchange.getIn().getBody(byte[].class);
                         if (bytes != null) {
                             body = new ByteSequence(bytes);
