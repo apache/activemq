@@ -24,6 +24,7 @@ import javax.jms.JMSException;
 import javax.jms.TextMessage;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.xpath.XPath;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.traversal.NodeIterator;
@@ -32,6 +33,8 @@ import org.xml.sax.InputSource;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.util.ByteArrayInputStream;
 import org.apache.xpath.CachedXPathAPI;
+import org.apache.xpath.objects.XObject;
+
 
 public class XalanXPathEvaluator implements XPathExpression.XPathEvaluator {
 
@@ -63,10 +66,15 @@ public class XalanXPathEvaluator implements XPathExpression.XPathEvaluator {
             factory.setNamespaceAware(true);
             DocumentBuilder dbuilder = factory.newDocumentBuilder();
             Document doc = dbuilder.parse(inputSource);
-
+            
             CachedXPathAPI cachedXPathAPI = new CachedXPathAPI();
-            NodeIterator iterator = cachedXPathAPI.selectNodeIterator(doc, xpath);
-            return iterator.nextNode() != null;
+            XObject result = cachedXPathAPI.eval(doc, xpath);
+            if (result.bool())
+            	return true;
+            else {
+            	NodeIterator iterator = cachedXPathAPI.selectNodeIterator(doc, xpath);
+            	return (iterator.nextNode() != null);
+            }  
 
         } catch (Throwable e) {
             return false;
@@ -82,12 +90,20 @@ public class XalanXPathEvaluator implements XPathExpression.XPathEvaluator {
             DocumentBuilder dbuilder = factory.newDocumentBuilder();
             Document doc = dbuilder.parse(inputSource);
 
-            // We should associated the cachedXPathAPI object with the message
-            // being evaluated
-            // since that should speedup subsequent xpath expressions.
+            //An XPath expression could return a true or false value instead of a node.
+            //eval() is a better way to determine the boolean value of the exp.
+            //For compliance with legacy behavior where selecting an empty node returns true,
+            //selectNodeIterator is attempted in case of a failure.
+            
             CachedXPathAPI cachedXPathAPI = new CachedXPathAPI();
-            NodeIterator iterator = cachedXPathAPI.selectNodeIterator(doc, xpath);
-            return iterator.nextNode() != null;
+            XObject result = cachedXPathAPI.eval(doc, xpath);
+            if (result.bool())
+            	return true;
+            else {
+            	NodeIterator iterator = cachedXPathAPI.selectNodeIterator(doc, xpath);
+            	return (iterator.nextNode() != null);
+            }    	
+            
         } catch (Throwable e) {
             return false;
         }
