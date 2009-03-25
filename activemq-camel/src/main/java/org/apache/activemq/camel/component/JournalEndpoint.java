@@ -189,8 +189,7 @@ public class JournalEndpoint extends DefaultEndpoint {
             public void process(Exchange exchange) throws Exception {
                 incrementReference();
                 try {
-                    ByteSequence body = null;
-                    body = exchange.getIn().getBody(ByteSequence.class);
+                    ByteSequence body = exchange.getIn().getBody(ByteSequence.class);
                     if (body == null) {
                         byte[] bytes = exchange.getIn().getBody(byte[].class);
                         if (bytes != null) {
