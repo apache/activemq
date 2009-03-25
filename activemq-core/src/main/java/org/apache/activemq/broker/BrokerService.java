@@ -29,6 +29,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.management.MBeanServer;
 import javax.management.MalformedObjectNameException;
@@ -161,6 +162,7 @@ public class BrokerService implements Service {
     private int persistenceThreadPriority = Thread.MAX_PRIORITY;
     private boolean useLocalHostBrokerName;
     private CountDownLatch stoppedLatch = new CountDownLatch(1);
+    private CountDownLatch startedLatch = new CountDownLatch(1);
     private boolean supportFailOver;
     private Broker regionBroker;
     private int producerSystemUsagePortion = 60;
@@ -481,6 +483,7 @@ public class BrokerService implements Service {
             brokerId = broker.getBrokerId();
             LOG.info("ActiveMQ JMS Message Broker (" + getBrokerName() + ", " + brokerId + ") started");
             getBroker().brokerServiceStarted();
+            startedLatch.countDown();
         } catch (Exception e) {
             LOG.error("Failed to start ActiveMQ JMS Message Broker. Reason: " + e, e);
             try{
@@ -553,11 +556,26 @@ public class BrokerService implements Service {
      * stopped
      */
     public void waitUntilStopped() {
-        while (!stopped.get()) {
+        while (isStarted() && !stopped.get()) {
             try {
                 stoppedLatch.await();
             } catch (InterruptedException e) {
                 // ignore
+            }
+        }
+    }
+
+    
+    /**
+     * A helper method to block the caller thread until the broker has been
+     * started
+     */
+    public void waitUntilStarted() {
+        boolean waitSucceeded = false;
+        while (isStarted() && !stopped.get() && !waitSucceeded) {
+            try {
+                waitSucceeded = startedLatch.await(100L, TimeUnit.MILLISECONDS);
+            } catch (InterruptedException ignore) {
             }
         }
     }
