@@ -75,7 +75,7 @@ public class KahaTopicReferenceStore extends KahaReferenceStore implements Topic
         throw new RuntimeException("Use addMessageReference instead");
     }
 
-    public  void addMessageReference(final ConnectionContext context, final MessageId messageId,
+    public  boolean addMessageReference(final ConnectionContext context, final MessageId messageId,
                                     final ReferenceData data) {
         lock.lock();
         try {
@@ -100,6 +100,7 @@ public class KahaTopicReferenceStore extends KahaReferenceStore implements Topic
         }finally {
             lock.unlock();
         }
+        return true;
     }
 
     public ReferenceData getMessageReference(final MessageId identity) throws IOException {

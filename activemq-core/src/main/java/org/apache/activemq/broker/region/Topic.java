@@ -238,6 +238,10 @@ public class Topic  extends BaseDestination  implements Task{
                     public boolean hasSpace() {
                         return true;
                     }
+                    
+                    public boolean isDuplicate(MessageId id) {
+                        return false;
+                    }
                 });
             }
 
@@ -493,6 +497,10 @@ public class Topic  extends BaseDestination  implements Task{
 
                     public boolean hasSpace() {
                         return true;
+                    }
+                    
+                    public boolean isDuplicate(MessageId id) {
+                        return false;
                     }
                 });
                 Message[] msgs = subscriptionRecoveryPolicy.browse(getActiveMQDestination());

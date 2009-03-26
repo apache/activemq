@@ -67,8 +67,9 @@ public interface ReferenceStore extends MessageStore {
 
     /**
      * Adds a message reference to the message store
+     * @return true if reference was added, false if it is a duplicate and not added
      */
-    void addMessageReference(ConnectionContext context, MessageId messageId, ReferenceData data) throws IOException;
+    boolean addMessageReference(ConnectionContext context, MessageId messageId, ReferenceData data) throws IOException;
 
     /**
      * Looks up a message using either the String messageID or the

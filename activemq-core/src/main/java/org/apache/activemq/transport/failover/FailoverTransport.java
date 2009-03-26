@@ -486,7 +486,9 @@ public class FailoverTransport implements CompositeTransport {
                         return;
 
                     } catch (IOException e) {
-                        LOG.debug("Send oneway attempt: " + i + " failed.");
+                        if (LOG.isDebugEnabled()) {
+                            LOG.debug("Send oneway attempt: " + i + " failed for command:" + command);   
+                        }
                         handleTransportFailure(e);
                     }
                 }
@@ -622,6 +624,9 @@ public class FailoverTransport implements CompositeTransport {
         }
         for (Iterator<Command> iter2 = tmpMap.values().iterator(); iter2.hasNext();) {
             Command command = iter2.next();
+            if (LOG.isTraceEnabled()) {
+                LOG.trace("restore, replay: " + command);
+            }
             t.oneway(command);
         }
     }

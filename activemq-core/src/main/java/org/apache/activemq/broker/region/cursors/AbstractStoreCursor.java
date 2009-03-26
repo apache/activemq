@@ -71,7 +71,8 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
         return recoverMessage(message,false);
     }
     
-    public synchronized boolean recoverMessage(Message message, boolean cached)throws Exception {
+    public synchronized boolean recoverMessage(Message message, boolean cached) throws Exception {
+        boolean recovered = false;
         if (!isDuplicate(message.getMessageId())) {
             if (!cached) {
                 message.setRegionDestination(regionDestination);
@@ -82,13 +83,14 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
             message.incrementReferenceCount();
             batchList.put(message.getMessageId(), message);
             clearIterator(true);
+            recovered = true;
         } else {
             if (LOG.isDebugEnabled()) {
-                LOG.debug("Ignoring batched duplicated from store: " + message);
+                LOG.debug(regionDestination.getActiveMQDestination().getPhysicalName() + " cursor got duplicate: " + message);
             }
             storeHasMessages = true;
         }
-        return true;
+        return recovered;
     }
     
     public final void reset() {

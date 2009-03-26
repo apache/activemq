@@ -22,8 +22,6 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.Vector;
 
-import junit.framework.TestCase;
-
 import javax.jms.Connection;
 import javax.jms.DeliveryMode;
 import javax.jms.JMSException;
@@ -33,11 +31,15 @@ import javax.jms.MessageListener;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
 
+import junit.framework.TestCase;
+
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.region.Destination;
+import org.apache.activemq.broker.region.DestinationStatistics;
+import org.apache.activemq.broker.region.RegionBroker;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
-import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.store.amq.AMQPersistenceAdapterFactory;
 import org.apache.activemq.usage.MemoryUsage;
@@ -53,7 +55,7 @@ public class AMQ2149Test extends TestCase {
 
     private static final Log LOG = LogFactory.getLog(AMQ2149Test.class);
 
-    private static final long BROKER_STOP_PERIOD = 15 * 1000;
+    private static final long BROKER_STOP_PERIOD = 20 * 1000;
 
     private static final String BROKER_CONNECTOR = "tcp://localhost:61617";
     private static final String BROKER_URL = "failover:("+ BROKER_CONNECTOR
@@ -62,7 +64,7 @@ public class AMQ2149Test extends TestCase {
     private final String SEQ_NUM_PROPERTY = "seqNum";
 
     final int MESSAGE_LENGTH_BYTES = 75000;
-    final int MAX_TO_SEND  = 2000;
+    final int MAX_TO_SEND  = 1500;
     final long SLEEP_BETWEEN_SEND_MS = 3;
     final int NUM_SENDERS_AND_RECEIVERS = 10;
     final Object brokerLock = new Object();
@@ -144,7 +146,7 @@ public class AMQ2149Test extends TestCase {
         public void onMessage(Message message) {
             try {
                 final long seqNum = message.getLongProperty(SEQ_NUM_PROPERTY);
-                if ((seqNum % 100) == 0) {
+                if ((seqNum % 500) == 0) {
                     LOG.info(queueName + " received " + seqNum);
                 }
                 if (seqNum != nextExpectedSeqNum) {
@@ -192,7 +194,7 @@ public class AMQ2149Test extends TestCase {
 
         public void run() {
             final String longString = buildLongString();
-            while (nextSequenceNumber <= MAX_TO_SEND) {
+            while (nextSequenceNumber < MAX_TO_SEND) {
                 try {
                     final Message message = session
                             .createTextMessage(longString);
@@ -219,7 +221,20 @@ public class AMQ2149Test extends TestCase {
         }
     }
 
-    public void x_testOrderWithMemeUsageLimit() throws Exception {
+    // no need to run this unless there are some issues with the others
+    public void vanilaVerify_testOrder() throws Exception {
+        
+        createBroker(new Configurer() {
+            public void configure(BrokerService broker) throws Exception {
+               broker.deleteAllMessages();            
+            }
+        });
+        
+        verifyOrderedMessageReceipt();
+        verifyStats(false);
+    }
+
+    public void testOrderWithMemeUsageLimit() throws Exception {
         
         createBroker(new Configurer() {
             public void configure(BrokerService broker) throws Exception {
@@ -234,9 +249,10 @@ public class AMQ2149Test extends TestCase {
         });
         
         verifyOrderedMessageReceipt();
+        verifyStats(false);
     }
 
-    public void testOrderWithRestartVMIndex() throws Exception {
+    public void testOrderWithRestartAndVMIndex() throws Exception {
         createBroker(new Configurer() {
             public void configure(BrokerService broker) throws Exception {
                 AMQPersistenceAdapterFactory persistenceFactory =
@@ -260,10 +276,11 @@ public class AMQ2149Test extends TestCase {
         } finally {
             timer.cancel();
         }
+        verifyStats(true);
     }
 
 
-    public void x_testOrderWithRestart() throws Exception {
+    public void testOrderWithRestart() throws Exception {
         createBroker(new Configurer() {
             public void configure(BrokerService broker) throws Exception {
                 broker.deleteAllMessages();     
@@ -278,10 +295,45 @@ public class AMQ2149Test extends TestCase {
         } finally {
             timer.cancel();
         }
+        
+        verifyStats(true);
     }
     
+    
+    public void testOrderWithRestartAndNoCache() throws Exception {
+        
+        PolicyEntry noCache = new PolicyEntry();
+        noCache.setUseCache(false);
+        final PolicyMap policyMap = new PolicyMap();
+        policyMap.setDefaultEntry(noCache);
 
-    public void x_testOrderWithRestartWithForceRecover() throws Exception {
+        createBroker(new Configurer() {
+            public void configure(BrokerService broker) throws Exception {
+                broker.setDestinationPolicy(policyMap);
+                broker.deleteAllMessages();
+            }
+        });
+        
+        final Timer timer = new Timer();
+        schedualRestartTask(timer, new Configurer() {
+            public void configure(BrokerService broker) throws Exception {
+                broker.setDestinationPolicy(policyMap);
+            }
+        });
+        
+        try {
+            verifyOrderedMessageReceipt();
+        } finally {
+            timer.cancel();
+        }
+        
+        verifyStats(true);
+    }
+
+
+    // no need to run this unless there are issues with the other restart tests
+  
+    public void eaiserToRepoduce_testOrderWithRestartWithForceRecover() throws Exception {
         createBroker(new Configurer() {
             public void configure(BrokerService broker) throws Exception {
                 AMQPersistenceAdapterFactory persistenceFactory =
@@ -297,11 +349,6 @@ public class AMQ2149Test extends TestCase {
                 AMQPersistenceAdapterFactory persistenceFactory =
                     (AMQPersistenceAdapterFactory) broker.getPersistenceFactory();
                 persistenceFactory.setForceRecoverReferenceStore(true);
-//                PolicyEntry auditDepthPolicy = new PolicyEntry();
-//                auditDepthPolicy.setMaxAuditDepth(2000);
-//                PolicyMap policyMap = new PolicyMap();
-//                policyMap.setDefaultEntry(auditDepthPolicy);
-//                broker.setDestinationPolicy(policyMap);
             }
         });
         
@@ -309,6 +356,23 @@ public class AMQ2149Test extends TestCase {
             verifyOrderedMessageReceipt();
         } finally {
             timer.cancel();
+        }
+        
+        verifyStats(true);
+    }
+
+    private void verifyStats(boolean brokerRestarts) throws Exception {
+        RegionBroker regionBroker = (RegionBroker) broker.getRegionBroker();
+        
+        for (Destination dest : regionBroker.getQueueRegion().getDestinationMap().values()) {
+            DestinationStatistics stats = dest.getDestinationStatistics();
+            if (brokerRestarts) {
+                assertTrue("qneue/dequeue match for: " + dest.getName(),
+                        stats.getEnqueues().getCount() <= stats.getDequeues().getCount());
+            } else {
+                assertEquals("qneue/dequeue match for: " + dest.getName(),
+                        stats.getEnqueues().getCount(), stats.getDequeues().getCount());   
+            }
         }
     }
 
@@ -319,6 +383,7 @@ public class AMQ2149Test extends TestCase {
                     LOG.info("stopping broker..");
                     try {
                         broker.stop();
+                        broker.waitUntilStopped();
                     } catch (Exception e) {
                         LOG.error("ex on broker stop", e);
                         exceptions.add(e);
@@ -355,7 +420,7 @@ public class AMQ2149Test extends TestCase {
             threads.add(thread);
         }
         
-        final long expiry = System.currentTimeMillis() + 1000 * 60 * 10;
+        final long expiry = System.currentTimeMillis() + 1000 * 60 * 20;
         while(!threads.isEmpty() && exceptions.isEmpty() && System.currentTimeMillis() < expiry) {
             Thread sendThread = threads.firstElement();
             sendThread.join(1000*10);

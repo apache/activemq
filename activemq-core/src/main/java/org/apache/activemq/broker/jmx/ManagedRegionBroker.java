@@ -432,6 +432,10 @@ public class ManagedRegionBroker extends RegionBroker {
                 public boolean hasSpace() {
                     return true;
                 }
+                
+                public boolean isDuplicate(MessageId id) {
+                    return false;
+                }
             });
         } catch (Throwable e) {
             LOG.error("Failed to browse messages for Subscription " + view, e);

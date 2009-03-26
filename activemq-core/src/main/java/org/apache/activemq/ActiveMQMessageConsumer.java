@@ -884,7 +884,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
     }
 
     /**
-     * Acknowledge all the messages that have been delivered to the client upto
+     * Acknowledge all the messages that have been delivered to the client up to
      * this point.
      * 
      * @throws JMSException
@@ -1067,7 +1067,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                         if (LOG.isDebugEnabled()) {
                             LOG.debug(getConsumerId() + " Ignoring Duplicate: " + md.getMessage());
                         }
-                        ackLater(md, MessageAck.STANDARD_ACK_TYPE);
+                        acknowledge(md);
                     }
                 }
             }
