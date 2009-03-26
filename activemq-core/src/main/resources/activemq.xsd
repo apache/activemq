@@ -3091,17 +3091,37 @@ in draft-ietf-ldapext-psearch-03.txt (2.16.840.1.113730.3.4.3)
     </xs:annotation>
     <xs:complexType>
       <xs:sequence>
-        <xs:element name='ackLog' minOccurs='0' maxOccurs='1'>
+        <xs:element name='logAll' minOccurs='0' maxOccurs='1'>
           <xs:complexType>
             <xs:sequence minOccurs='0' maxOccurs='1'><xs:any namespace='##other'/></xs:sequence>
           </xs:complexType>
         </xs:element>
-        <xs:element name='adminConnectionContext' minOccurs='0' maxOccurs='1'>
+        <xs:element name='logConnectionEvents' minOccurs='0' maxOccurs='1'>
           <xs:complexType>
             <xs:sequence minOccurs='0' maxOccurs='1'><xs:any namespace='##other'/></xs:sequence>
           </xs:complexType>
         </xs:element>
-        <xs:element name='log' minOccurs='0' maxOccurs='1'>
+        <xs:element name='logConsumerEvents' minOccurs='0' maxOccurs='1'>
+          <xs:complexType>
+            <xs:sequence minOccurs='0' maxOccurs='1'><xs:any namespace='##other'/></xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name='logProducerEvents' minOccurs='0' maxOccurs='1'>
+          <xs:complexType>
+            <xs:sequence minOccurs='0' maxOccurs='1'><xs:any namespace='##other'/></xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name='logMessageEvents' minOccurs='0' maxOccurs='1'>
+          <xs:complexType>
+            <xs:sequence minOccurs='0' maxOccurs='1'><xs:any namespace='##other'/></xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name='logTransactionEvents' minOccurs='0' maxOccurs='1'>
+          <xs:complexType>
+            <xs:sequence minOccurs='0' maxOccurs='1'><xs:any namespace='##other'/></xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name='logInternalEvents' minOccurs='0' maxOccurs='1'>
           <xs:complexType>
             <xs:sequence minOccurs='0' maxOccurs='1'><xs:any namespace='##other'/></xs:sequence>
           </xs:complexType>
@@ -3117,19 +3137,15 @@ in draft-ietf-ldapext-psearch-03.txt (2.16.840.1.113730.3.4.3)
             </xs:choice>
           </xs:complexType>
         </xs:element>
-        <xs:element name='sendLog' minOccurs='0' maxOccurs='1'>
-          <xs:complexType>
-            <xs:sequence minOccurs='0' maxOccurs='1'><xs:any namespace='##other'/></xs:sequence>
-          </xs:complexType>
-        </xs:element>
         <xs:any namespace='##other' minOccurs='0' maxOccurs='unbounded'/>
       </xs:sequence>
-      <xs:attribute name='ackLog' type='xs:string'/>
-      <xs:attribute name='adminConnectionContext' type='xs:string'/>
-      <xs:attribute name='log' type='xs:string'/>
-      <xs:attribute name='next' type='xs:string'/>
-      <xs:attribute name='sendLog' type='xs:string'/>
-      <xs:attribute name='id' type='xs:ID'/>
+      <xs:attribute name='logAll' type="xs:boolean"/>
+      <xs:attribute name='logConnectionEvents' type='xs:boolean'/>
+      <xs:attribute name='logConsumerEvents' type='xs:boolean'/>
+      <xs:attribute name='logProducerEvents' type='xs:boolean'/>
+      <xs:attribute name='logMessageEvents' type='xs:boolean'/>
+      <xs:attribute name='logTransactionEvents' type='xs:boolean'/>
+      <xs:attribute name='logInternalEvents' type='xs:boolean'/>
       <xs:anyAttribute namespace='##other' processContents='lax'/>
     </xs:complexType>
   </xs:element>

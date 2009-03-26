@@ -1319,11 +1319,13 @@ h3. The _[<loggingBrokerPlugin>|#loggingBrokerPlugin-element]_ Element
     {html}A simple Broker interceptor which allows you to enable/disable logging.{html}
 h4. Properties
     || Property Name || Type || Description ||
-    | ackLog | _org.apache.commons.logging.Log_ | {html}{html} |
-    | adminConnectionContext | _org.apache.activemq.broker.ConnectionContext_ | {html}{html} |
-    | log | _org.apache.commons.logging.Log_ | {html}{html} |
-    | next | _[org.apache.activemq.broker.Broker|#org.apache.activemq.broker.Broker-types]_ | {html}{html} |
-    | sendLog | _org.apache.commons.logging.Log_ | {html}{html} |
+    | logAll | _boolean_ | {html}Log all Events that go through the Plugin{html} |
+    | logConnectionEvents | _boolean_ | {html}Log Events that are related to connections and sessions.{html} |
+    | logConsumerEvents | _boolean_ | {html}Log Events that are related to Consumers.{html} |
+    | logProducerEvents | _boolean_ | {html}Log Events that are related to Producers.{html} |
+    | logMessageEvents | _boolean_ | {html}Log Events that are related to message processing.{html} |
+    | logTransactionEvents | _boolean_ | {html}Log Events that are related to transaction processing.{html} |
+    | logInternalEvents | _boolean_ | {html}Log Events that are normally internal to the broker.{html} |
 
 {anchor:managementContext-element}
 h3. The _[<managementContext>|#managementContext-element]_ Element
