@@ -279,7 +279,7 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
         return TRACKED_RESPONSE_MARKER;
     }
 
-    public Response processRemoveConsumer(ConsumerId id) {
+    public Response processRemoveConsumer(ConsumerId id, long lastDeliveredSequenceId) {
         if (id != null) {
             SessionId sessionId = id.getParentId();
             if (sessionId != null) {
@@ -311,7 +311,7 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
         return TRACKED_RESPONSE_MARKER;
     }
 
-    public Response processRemoveSession(SessionId id) {
+    public Response processRemoveSession(SessionId id, long lastDeliveredSequenceId) {
         if (id != null) {
             ConnectionId connectionId = id.getParentId();
             if (connectionId != null) {
@@ -331,7 +331,7 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
         return TRACKED_RESPONSE_MARKER;
     }
 
-    public Response processRemoveConnection(ConnectionId id) throws Exception {
+    public Response processRemoveConnection(ConnectionId id, long lastDeliveredSequenceId) throws Exception {
         if (id != null) {
             connectionStates.remove(id);
         }
