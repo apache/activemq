@@ -18,10 +18,7 @@ package org.apache.kahadb.index;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.io.PrintStream;
 import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.io.Writer;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -31,7 +28,6 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.kahadb.page.Page;
 import org.apache.kahadb.page.PageFile;
 import org.apache.kahadb.page.Transaction;
-import org.apache.kahadb.page.Transaction.Closure;
 import org.apache.kahadb.util.Marshaller;
 
 /**
@@ -119,8 +115,8 @@ public class BTreeIndex<Key,Value> implements Index<Key,Value> {
         }
     }    
 
-    private final PageFile pageFile;
-    private final long pageId;
+    private PageFile pageFile;
+    private long pageId;
     private AtomicBoolean loaded = new AtomicBoolean();
     
     private final BTreeNode.Marshaller<Key, Value> marshaller = new BTreeNode.Marshaller<Key, Value>(this);
@@ -128,11 +124,24 @@ public class BTreeIndex<Key,Value> implements Index<Key,Value> {
     private Marshaller<Value> valueMarshaller;
     private Prefixer<Key> prefixer;
 
+    public BTreeIndex() {
+    }
+
+    public BTreeIndex(long rootPageId) {
+        this.pageId = rootPageId;
+    }
+    
+    @SuppressWarnings("unchecked")
+    public BTreeIndex(Page page) {
+        this(page.getPageId());
+    }
+    
     public BTreeIndex(PageFile pageFile, long rootPageId) {
         this.pageFile = pageFile;
         this.pageId = rootPageId;
     }
 
+    @SuppressWarnings("unchecked")
     public BTreeIndex(PageFile pageFile, Page page) {
         this(pageFile, page.getPageId());
     }
@@ -307,6 +316,14 @@ public class BTreeIndex<Key,Value> implements Index<Key,Value> {
     }
     public void setPrefixer(Prefixer<Key> prefixer) {
         this.prefixer = prefixer;
+    }
+
+    public void setPageFile(PageFile pageFile) {
+        this.pageFile = pageFile;
+    }
+
+    public void setPageId(long pageId) {
+        this.pageId = pageId;
     }
 
 }
