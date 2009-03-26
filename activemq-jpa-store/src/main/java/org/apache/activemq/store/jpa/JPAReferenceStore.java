@@ -66,7 +66,7 @@ public class JPAReferenceStore extends AbstractMessageStore implements Reference
         throw new RuntimeException("Use addMessageReference instead");
     }
 
-    public void addMessageReference(ConnectionContext context, MessageId messageId, ReferenceData data) throws IOException {
+    public boolean addMessageReference(ConnectionContext context, MessageId messageId, ReferenceData data) throws IOException {
         EntityManager manager = adapter.beginEntityManager(context);
         try {
 
@@ -85,6 +85,7 @@ public class JPAReferenceStore extends AbstractMessageStore implements Reference
             throw IOExceptionSupport.create(e);
         }
         adapter.commitEntityManager(context, manager);
+        return true;
     }
 
     public ReferenceData getMessageReference(MessageId identity) throws IOException {

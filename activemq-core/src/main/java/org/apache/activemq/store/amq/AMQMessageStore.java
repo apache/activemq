@@ -380,13 +380,19 @@ public class AMQMessageStore extends AbstractMessageStore {
                 while (iterator.hasNext()) {
                     Entry<MessageId, ReferenceData> entry = iterator.next();
                     try {
-                        referenceStore.addMessageReference(context, entry.getKey(), entry.getValue());
+                        if (referenceStore.addMessageReference(context, entry.getKey(), entry.getValue())) {
+                            size++;
+                        } else {
+                            if (LOG.isDebugEnabled()) {
+                                LOG.debug("not adding duplicate reference: " + entry.getKey() + ", " + entry.getValue());
+                            }
+                        }
                         AMQMessageStore.this.peristenceAdapter.removeInProgressDataFile(AMQMessageStore.this, entry
                                 .getValue().getFileId());
                     } catch (Throwable e) {
                         LOG.warn("Message could not be added to long term store: " + e.getMessage(), e);
                     }
-                    size++;
+                    
                     // Commit the batch if it's getting too big
                     if (size >= maxCheckpointMessageAddSize) {
                         persitanceAdapter.commitTransaction(context);

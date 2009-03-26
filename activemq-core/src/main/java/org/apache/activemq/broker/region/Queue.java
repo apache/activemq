@@ -217,6 +217,10 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                     public boolean hasSpace() {
                         return true;
                     }
+                    
+                    public boolean isDuplicate(MessageId id) {
+                        return false;
+                    }
                 });
             }else {
                 int messageCount = store.getMessageCount();
@@ -540,8 +544,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
     public void acknowledge(ConnectionContext context, Subscription sub, MessageAck ack, MessageReference node) throws IOException {
         messageConsumed(context, node);
         if (store != null && node.isPersistent()) {
-            // the original ack may be a ranged ack, but we are trying to delete
-            // a specific
+            // the original ack may be a ranged ack, but we are trying to delete a specific
             // message store here so we need to convert to a non ranged ack.
             if (ack.getMessageCount() > 0) {
                 // Dup the ack
@@ -1542,14 +1545,10 @@ public class Queue extends BaseDestination implements Task, UsageListener {
 
     public void onUsageChanged(Usage usage, int oldPercentUsage, int newPercentUsage) {
         if (oldPercentUsage > newPercentUsage) {
-            synchronized(messagesWaitingForSpace) {
-                if (!messagesWaitingForSpace.isEmpty() && !memoryUsage.isFull()) {
-                    try {
-                        this.taskRunner.wakeup();
-                    } catch (InterruptedException e) {
-                        LOG.warn(getName() + " failed to wakeup task runner on usageChange: " + e);
-                    }
-                }
+            try {
+                this.taskRunner.wakeup();
+            } catch (InterruptedException e) {
+                LOG.warn(getName() + " failed to wakeup task runner on usageChange: " + e);
             }
         }
     }

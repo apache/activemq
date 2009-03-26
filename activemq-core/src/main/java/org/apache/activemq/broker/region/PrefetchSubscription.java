@@ -21,6 +21,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import javax.jms.InvalidSelectorException;
 import javax.jms.JMSException;
@@ -69,6 +71,8 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
     protected ActiveMQMessageAudit audit = new ActiveMQMessageAudit();
     private boolean slowConsumer;
 
+    private CountDownLatch okForAckAsDispatchDone = new CountDownLatch(1);
+    
     public PrefetchSubscription(Broker broker, SystemUsage usageManager, ConnectionContext context, ConsumerInfo info, PendingMessageCursor cursor) throws InvalidSelectorException {
         super(broker,context, info);
         this.usageManager=usageManager;
@@ -186,6 +190,15 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
         // Handle the standard acknowledgment case.
         boolean callDispatchMatched = false;
         Destination destination = null;
+        
+        if (!isSlave()) {
+            while(!okForAckAsDispatchDone.await(100, TimeUnit.MILLISECONDS)) {
+                LOG.warn("Ack before disaptch, waiting for recovery dispatch: " + ack);
+            }
+        }
+        if (LOG.isTraceEnabled()) {
+            LOG.trace("ack:" + ack);
+        }
         synchronized(dispatchLock) {
             if (ack.isStandardAck()) {
             	// First check if the ack matches the dispatched. When using failover this might
@@ -262,7 +275,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                 // this only happens after a reconnect - get an ack which is not
                 // valid
                 if (!callDispatchMatched) {
-                        LOG.error("Could not correlate acknowledgment with dispatched message: "
+                    LOG.error("Could not correlate acknowledgment with dispatched message: "
                                   + ack);
                 }
             } else if (ack.isIndividualAck()) {
@@ -608,6 +621,9 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
         if (message == null) {
             return false;
         }
+        
+        okForAckAsDispatchDone.countDown();
+        
         // No reentrant lock - Patch needed to IndirectMessageReference on method lock
         if (!isSlave()) {
 
@@ -647,6 +663,9 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                 node.getRegionDestination().getDestinationStatistics().getDispatched().increment();
                 node.getRegionDestination().getDestinationStatistics().getInflight().increment();
             }
+        }
+        if (LOG.isTraceEnabled()) {
+            LOG.trace(info.getDestination().getPhysicalName() + " dispatched: " + message.getMessageId());
         }
         if (info.isDispatchAsync()) {
             try {

@@ -24,10 +24,14 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import org.apache.activemq.kaha.impl.container.BaseContainerImpl;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import junit.framework.TestCase;
 
 public class MapContainerTest extends TestCase {
-
+    private static final Log LOG = LogFactory.getLog(MapContainerTest.class);
     protected static final int COUNT = 10;
 
     protected String name = "test";
@@ -180,6 +184,71 @@ public class MapContainerTest extends TestCase {
         assertTrue(container.isEmpty());
     }
 
+    
+    public void testDuplicatesOk() throws Exception {
+        StoreEntry first, entry; 
+        
+        container.put("M1", "DD");
+        first = container.getFirst();
+        LOG.info("First=" + first);
+        assertEquals(-1, first.getNextItem());
+        
+        // add duplicate
+        String old = container.put("M1", "DD");
+        assertNotNull(old);
+        assertEquals(1, container.size());
+        
+        entry = container.getFirst();
+        LOG.info("New First=" + entry);
+        assertEquals(-1, entry.getNextItem());
+
+        assertEquals(first, entry);
+        
+        container.remove("M1");
+        
+        entry = container.getFirst();
+        assertNull(entry);
+    }
+
+    
+    public void testDuplicatesFreeListShared() throws Exception {
+        StoreEntry batchEntry; 
+        
+        MapContainer other = store.getMapContainer(getName()+"2", "test", true);
+        other.load();
+        other.put("M1", "DD");
+             
+        container.put("M1", "DD");
+        batchEntry = container.getFirst();
+        LOG.info("First=" + batchEntry);
+        assertEquals(-1, batchEntry.getNextItem());
+        
+        // have something on free list before duplicate
+        other.remove("M1");
+        
+        // add duplicate
+        String old = container.put("M1", "DD");
+        assertNotNull(old);
+        assertEquals(1, container.size());
+
+        // entry now on free list on its own
+        batchEntry = container.refresh(batchEntry);
+        assertEquals(-1, batchEntry.getNextItem());
+        LOG.info("refreshed=" + batchEntry);
+        
+        // ack
+        container.remove("M1");   
+        
+        //container is valid  (empty)
+        assertNull(container.getFirst());
+
+        // batchEntry now has next as there is another on the free list
+        batchEntry = container.refresh(batchEntry);
+        LOG.info("refreshed=" + batchEntry);
+        
+        assertTrue(batchEntry.getNextItem() != -1);        
+    }
+
     protected Store getStore() throws IOException {
         return StoreFactory.open(name, "rw");
     }
@@ -188,7 +257,7 @@ public class MapContainerTest extends TestCase {
         super.setUp();
         name = System.getProperty("basedir", ".") + "/target/activemq-data/map-container.db";
         store = getStore();
-        container = store.getMapContainer("test", "test", true);
+        container = store.getMapContainer(getName(), "test", true);
         container.load();
         testMap = new HashMap<String, String>();
         for (int i = 0; i < COUNT; i++) {

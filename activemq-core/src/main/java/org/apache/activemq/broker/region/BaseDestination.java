@@ -18,8 +18,6 @@ package org.apache.activemq.broker.region;
 
 import java.io.IOException;
 
-import javax.jms.JMSException;
-
 import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.BrokerService;

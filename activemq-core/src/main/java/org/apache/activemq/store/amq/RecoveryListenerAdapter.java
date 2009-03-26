@@ -40,6 +40,10 @@ final class RecoveryListenerAdapter implements MessageRecoveryListener {
         return listener.hasSpace();
     }
 
+    public boolean isDuplicate(MessageId id) {
+        return listener.isDuplicate(id);
+    }
+    
     public boolean recoverMessage(Message message) throws Exception {
         if (listener.hasSpace()) {
             listener.recoverMessage(message);
@@ -55,7 +59,8 @@ final class RecoveryListenerAdapter implements MessageRecoveryListener {
         if (message != null) {
             return recoverMessage(message);
         } else {
-            throw new IllegalStateException("Message id " + ref + " could not be recovered from the data store - already dispatched");
+            throw new IllegalStateException("Message id " + ref + " could not be recovered from the data store for: " + store.getDestination().getQualifiedName() 
+                    + " - already dispatched");
         }
     }
 

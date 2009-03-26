@@ -268,7 +268,11 @@ public abstract class Usage<T extends Usage> implements Service {
                 }
             
             };
-            getExecutor().execute(listenerNotifier);
+            if (started.get()) {
+                getExecutor().execute(listenerNotifier);
+            } else {
+                LOG.warn("not notifying usage change to listeners on shutdown");
+            }
         }
     }
 

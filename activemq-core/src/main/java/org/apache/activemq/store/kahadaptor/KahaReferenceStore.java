@@ -29,9 +29,9 @@ import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.kaha.MapContainer;
 import org.apache.activemq.kaha.StoreEntry;
+import org.apache.activemq.store.AbstractMessageStore;
 import org.apache.activemq.store.MessageRecoveryListener;
 import org.apache.activemq.store.ReferenceStore;
-import org.apache.activemq.store.AbstractMessageStore;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -122,12 +122,18 @@ public class KahaReferenceStore extends AbstractMessageStore implements Referenc
                         if ( recoverReference(listener, msg)) {
                             count++;
                             lastBatchId = msg.getMessageId();
-                        } else {
+                        } else if (!listener.isDuplicate(new MessageId(msg.getMessageId()))) {
                             if (LOG.isDebugEnabled()) {
-                                LOG.debug(destination.getQualifiedName() + " did not recover:" + msg.getMessageId());
+                                LOG.debug(destination.getQualifiedName() + " did not recover (will retry) message: " + msg.getMessageId());
                             }
+                            // give usage limits a chance to reclaim
                             break;
-                        }
+                        } else {
+                            // skip duplicate and continue
+                            if (LOG.isDebugEnabled()) {
+                                LOG.debug(destination.getQualifiedName() + " skipping duplicate, " + msg.getMessageId());
+                            }
+                        }                        
                     } else {
                         lastBatchId = null;
                     }
@@ -140,16 +146,26 @@ public class KahaReferenceStore extends AbstractMessageStore implements Referenc
         }
     }
 
-    public void addMessageReference(ConnectionContext context, MessageId messageId,
+    public boolean addMessageReference(ConnectionContext context, MessageId messageId,
                                                  ReferenceData data) throws IOException {
+        
+        boolean uniqueueReferenceAdded = false;
         lock.lock();
         try {
-            ReferenceRecord record = new ReferenceRecord(messageId.toString(), data);
-            messageContainer.put(messageId, record);
-            addInterest(record);
-        }finally {
+            if (!messageContainer.containsKey(messageId)) {
+                ReferenceRecord record = new ReferenceRecord(messageId.toString(), data);
+                messageContainer.put(messageId, record);
+                uniqueueReferenceAdded = true;
+                addInterest(record);
+            } else {
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug(destination.getPhysicalName() + " ignoring duplicated (add) message reference:"  + messageId);
+                }
+            }
+        } finally {
             lock.unlock();
         }
+        return uniqueueReferenceAdded;
     }
 
     public ReferenceData getMessageReference(MessageId identity) throws IOException {

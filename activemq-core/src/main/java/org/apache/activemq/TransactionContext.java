@@ -212,6 +212,9 @@ public class TransactionContext implements XAResource {
                 localTransactionEventListener.beginEvent();
             }
         }
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("Being:" + transactionId);
+        }
     }
 
     /**
@@ -230,6 +233,10 @@ public class TransactionContext implements XAResource {
         
         beforeEnd();
         if (transactionId != null) {
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Rollback:" + transactionId);
+            }
+
             TransactionInfo info = new TransactionInfo(getConnectionId(), transactionId, TransactionInfo.ROLLBACK);
             this.transactionId = null;
             this.connection.asyncSendPacket(info);
@@ -260,6 +267,10 @@ public class TransactionContext implements XAResource {
 
         // Only send commit if the transaction was started.
         if (transactionId != null) {
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Commit:" + transactionId);
+            }
+
             TransactionInfo info = new TransactionInfo(getConnectionId(), transactionId, TransactionInfo.COMMIT_ONE_PHASE);
             this.transactionId = null;
             // Notify the listener that the tx was committed back
