@@ -187,8 +187,10 @@ public class SslTransportFactory extends TcpTransportFactory {
      * 
      * @param km
      * @param tm
-     * @param object
+     * @param random
      * @deprecated "Do not use anymore... using static initializers like this method only allows the JVM to use 1 SSL configuration per broker."
+     * @see org.apache.activemq.broker.SslContext#setCurrentSslContext(SslContext)
+     * @see org.apache.activemq.broker.SslContext#getSSLContext()
      */
     public void setKeyAndTrustManagers(KeyManager[] km, TrustManager[] tm, SecureRandom random) {
         SslContext ctx = new SslContext(km, tm, random);
