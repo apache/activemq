@@ -16,25 +16,31 @@
  */
 package org.apache.activemq.camel.component;
 
+import static org.apache.activemq.camel.component.ActiveMQComponent.activeMQComponent;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.hasEntry;
+import static org.hamcrest.Matchers.hasKey;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import javax.jms.Destination;
 
-import static org.apache.activemq.camel.component.ActiveMQComponent.activeMQComponent;
+import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.camel.CamelContext;
 import org.apache.camel.ContextTestSupport;
 import org.apache.camel.Exchange;
 import org.apache.camel.Headers;
 import org.apache.camel.Message;
+import org.apache.camel.Processor;
 import org.apache.camel.builder.RouteBuilder;
+import org.apache.camel.component.jms.JmsConstants;
 import org.apache.camel.component.mock.AssertionClause;
 import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
 
 /**
  * @version $Revision$
@@ -59,13 +65,26 @@ public class InvokeRequestReplyUsingJmsReplyToHeaderTest extends ContextTestSupp
         firstMessage.header("JMSXGroupID").isEqualTo(groupID);
         firstMessage.header("JMSReplyTo").isEqualTo(ActiveMQConverter.toDestination(replyQueueName));
 */
-
+        
         Map<String, Object> headers = new HashMap<String, Object>();
         headers.put("cheese", 123);
         headers.put("JMSReplyTo", replyQueueName);
         headers.put("JMSCorrelationID", correlationID);
         headers.put("JMSXGroupID", groupID);
-        template.sendBodyAndHeaders("activemq:test.server", "James", headers);
+        
+        
+        // Camel 2.0 ignores JMSReplyTo, so we're using replyTo MEP property
+        template.request("activemq:test.server?replyTo=queue:test.reply", new Processor() {
+            public void process(Exchange exchange) {
+                exchange.getIn().setBody("James");
+                Map<String, Object> headers = new HashMap<String, Object>();
+                headers.put("cheese", 123);
+                headers.put("JMSReplyTo", replyQueueName);
+                headers.put("JMSCorrelationID", correlationID);
+                headers.put("JMSXGroupID", groupID);
+                exchange.getIn().setHeaders(headers);
+            }
+        });
 
         resultEndpoint.assertIsSatisfied();
 

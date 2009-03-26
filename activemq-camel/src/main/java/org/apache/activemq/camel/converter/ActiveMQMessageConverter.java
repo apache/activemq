@@ -30,6 +30,7 @@ import org.apache.camel.Converter;
 import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
 import org.apache.camel.component.jms.JmsBinding;
+import org.apache.camel.component.jms.JmsEndpoint;
 
 /**
  * @version $Revision$

@@ -101,7 +101,7 @@ public class ActiveMQReplyToHeaderUsingConverterTest extends ContextTestSupport 
     protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             public void configure() throws Exception {
-                from("activemq:test.a").to("activemq:test.b");
+                from("activemq:test.a").to("activemq:test.b?preserveMessageQos=true");
 
                 from("activemq:test.b").to("mock:result");
             }

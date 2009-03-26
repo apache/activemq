@@ -16,23 +16,25 @@
  */
 package org.apache.activemq.camel.component;
 
+import static org.apache.activemq.camel.component.ActiveMQComponent.activeMQComponent;
+
+import java.util.Date;
+import java.util.List;
+
+import javax.jms.Destination;
+import javax.jms.Message;
+
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.camel.CamelContext;
 import org.apache.camel.ContextTestSupport;
 import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
 import org.apache.camel.builder.RouteBuilder;
-import static org.apache.activemq.camel.component.ActiveMQComponent.activeMQComponent;
 import org.apache.camel.component.jms.JmsExchange;
-import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.camel.component.mock.AssertionClause;
+import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
-import javax.jms.Message;
-import javax.jms.Destination;
-import java.util.Date;
-import java.util.List;
 
 /**
  * @version $Revision$
@@ -84,12 +86,13 @@ public class ActiveMQJmsHeaderRouteTest extends ContextTestSupport {
                     public void process(Exchange exchange) throws Exception {
                         // lets set the custom JMS headers using the JMS API
                         JmsExchange jmsExchange = assertIsInstanceOf(JmsExchange.class, exchange);
+                        
                         Message inMessage = jmsExchange.getInMessage();
                         inMessage.setJMSReplyTo(replyQueue);
                         inMessage.setJMSCorrelationID(correlationID);
                         inMessage.setJMSType(messageType);
                     }
-                }).to("activemq:test.b");
+                }).to("activemq:test.b?preserveMessageQos=true");
 
                 from("activemq:test.b").to("mock:result");
             }
