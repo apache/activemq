@@ -150,10 +150,12 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport implements
     public void acknowledge(ConsumerBrokerExchange consumerExchange,
             MessageAck ack) throws Exception {
         if (isLogAll() || isLogConsumerEvents()) {
-            LOG.info("Achknowledging message for client ID : "
-                    + consumerExchange.getConnectionContext().getClientId());
-            if (LOG.isTraceEnabled()) {
-                LOG.trace("First Message Id: " + ack.getFirstMessageId()
+            LOG.info("Acknowledging message for client ID : "
+                    + consumerExchange.getConnectionContext().getClientId() 
+                    + (ack.getMessageCount() == 1 ? ", " + ack.getLastMessageId() : ""));
+            if (LOG.isTraceEnabled() && ack.getMessageCount() > 1) {
+                LOG.trace("Message count: " + ack.getMessageCount()
+                        + ", First Message Id: " + ack.getFirstMessageId()
                         + ", Last Message Id: " + ack.getLastMessageId());
             }
         }
