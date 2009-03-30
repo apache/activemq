@@ -190,6 +190,7 @@
         <include>com.thoughtworks.xstream:xstream</include>
         <include>xmlpull:xmlpull</include>
         <include>org.apache.hadoop.zookeeper:zookeeper</include>
+        <include>org.codehaus.woodstox:wstx-asl</include>
       </includes>
     </dependencySet>
     <dependencySet>
