@@ -271,11 +271,22 @@ public class AbstractPendingMessageCursor implements PendingMessageCursor {
         this.useCache = useCache;
     }
 
-    public synchronized boolean  isDuplicate(MessageId messageId) {
+    public synchronized boolean isDuplicate(MessageId messageId) {
+        boolean unique = recordUniqueId(messageId);
+        rollback(messageId);
+        return !unique;
+    }
+    
+    /**
+     * records a message id and checks if it is a duplicate
+     * @param messageId
+     * @return true if id is unique, false otherwise.
+     */
+    public synchronized boolean recordUniqueId(MessageId messageId) {
         if (!enableAudit || audit==null) {
-            return false;
+            return true;
         }
-        return audit.isDuplicate(messageId);
+        return !audit.isDuplicate(messageId);
     }
     
     public synchronized void rollback(MessageId id) {

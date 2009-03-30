@@ -17,14 +17,11 @@
 package org.apache.activemq.broker.region.cursors;
 
 import java.io.IOException;
-import java.io.InterruptedIOException;
 
 import org.apache.activemq.broker.region.Queue;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.store.MessageStore;
-import org.apache.activemq.store.amq.AMQMessageStore;
-import org.apache.activemq.store.kahadaptor.KahaReferenceStore;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 

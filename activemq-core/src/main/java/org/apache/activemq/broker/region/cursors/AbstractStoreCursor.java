@@ -37,7 +37,7 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
     protected final Destination regionDestination;
     private final LinkedHashMap<MessageId,Message> batchList = new LinkedHashMap<MessageId,Message> ();
     private Iterator<Entry<MessageId, Message>> iterator = null;
-    protected boolean cacheEnabled=false;
+    private boolean cacheEnabled=false;
     protected boolean batchResetNeeded = true;
     protected boolean storeHasMessages = false;
     protected int size;
@@ -73,7 +73,7 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
     
     public synchronized boolean recoverMessage(Message message, boolean cached) throws Exception {
         boolean recovered = false;
-        if (!isDuplicate(message.getMessageId())) {
+        if (recordUniqueId(message.getMessageId())) {
             if (!cached) {
                 message.setRegionDestination(regionDestination);
                 if( message.getMemoryUsage()==null ) {
@@ -157,6 +157,9 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
         } else {
             if (cacheEnabled) {
                 cacheEnabled=false;
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug(regionDestination.getActiveMQDestination().getPhysicalName() + " disabling cache on size:" + size);
+                }
                 // sync with store on disabling the cache
                 if (lastCachedId != null) {
                     setBatch(lastCachedId);
@@ -176,11 +179,14 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
 
     public final synchronized void remove() {
         size--;
-        if (size==0 && isStarted() && useCache) {
-            cacheEnabled=true;
-        }
         if (iterator!=null) {
             iterator.remove();
+        }
+        if (size==0 && isStarted() && useCache && hasSpace() && getStoreSize() == 0) {
+            if (LOG.isDebugEnabled()) {
+                LOG.debug(regionDestination.getActiveMQDestination().getPhysicalName() + " enabling cache on last remove");
+            }
+            cacheEnabled=true;
         }
     }
 

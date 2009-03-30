@@ -184,10 +184,6 @@ public abstract class Usage<T extends Usage> implements Service {
         onLimitChange();
     }
 
-    /*
-     * Sets the minimum number of percentage points the usage has to change
-     * before a UsageListener event is fired by the manager.
-     */
     public int getPercentUsage() {
         synchronized (usageMutex) {
             return percentUsage;
@@ -243,8 +239,9 @@ public abstract class Usage<T extends Usage> implements Service {
 
     private void fireEvent(final int oldPercentUsage, final int newPercentUsage) {
         if (debug) {
-            LOG.debug("Memory usage change.  from: " + oldPercentUsage + ", to: " + newPercentUsage);
-        }
+            LOG.info("Memory usage change.  from: " + oldPercentUsage + ", to: " + newPercentUsage);
+        }    
+             
         if (started.get()) {
             // Switching from being full to not being full..
             if (oldPercentUsage >= 100 && newPercentUsage < 100) {

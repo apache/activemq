@@ -381,6 +381,9 @@ public class AMQMessageStore extends AbstractMessageStore {
                     Entry<MessageId, ReferenceData> entry = iterator.next();
                     try {
                         if (referenceStore.addMessageReference(context, entry.getKey(), entry.getValue())) {
+                            if (LOG.isDebugEnabled()) {
+                                LOG.debug("adding message ref:" + entry.getKey());
+                            }
                             size++;
                         } else {
                             if (LOG.isDebugEnabled()) {

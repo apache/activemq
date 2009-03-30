@@ -119,7 +119,7 @@ public class KahaReferenceStore extends AbstractMessageStore implements Referenc
                 do {
                     ReferenceRecord msg = messageContainer.getValue(entry);
                     if (msg != null ) {
-                        if ( recoverReference(listener, msg)) {
+                        if (recoverReference(listener, msg)) {
                             count++;
                             lastBatchId = msg.getMessageId();
                         } else if (!listener.isDuplicate(new MessageId(msg.getMessageId()))) {
@@ -178,14 +178,6 @@ public class KahaReferenceStore extends AbstractMessageStore implements Referenc
             return result.getData();
         }finally {
             lock.unlock();
-        }
-    }
-    
-    public void addReferenceFileIdsInUse() {
-        for (StoreEntry entry = messageContainer.getFirst(); entry != null; entry = messageContainer
-            .getNext(entry)) {
-            ReferenceRecord msg = (ReferenceRecord)messageContainer.getValue(entry);
-            addInterest(msg);
         }
     }
 
@@ -274,6 +266,9 @@ public class KahaReferenceStore extends AbstractMessageStore implements Referenc
         lock.lock();
         try {
             batchEntry = messageContainer.getEntry(startAfter);
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("setBatch: " + startAfter);
+            }
         } finally {
             lock.unlock();
         }

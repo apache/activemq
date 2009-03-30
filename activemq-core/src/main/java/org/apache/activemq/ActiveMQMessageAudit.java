@@ -91,7 +91,7 @@ public class ActiveMQMessageAudit {
     }
 
     /**
-     * Checks if this message has beeb seen before
+     * Checks if this message has been seen before
      * 
      * @param message
      * @return true if the message is a duplicate

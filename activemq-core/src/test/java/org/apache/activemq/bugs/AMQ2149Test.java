@@ -30,17 +30,20 @@ import javax.jms.MessageConsumer;
 import javax.jms.MessageListener;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
+import javax.jms.Topic;
 
 import junit.framework.TestCase;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.broker.BrokerPlugin;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.DestinationStatistics;
 import org.apache.activemq.broker.region.RegionBroker;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
-import org.apache.activemq.command.ActiveMQQueue;
+import org.apache.activemq.broker.util.LoggingBrokerPlugin;
+import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.store.amq.AMQPersistenceAdapterFactory;
 import org.apache.activemq.usage.MemoryUsage;
 import org.apache.activemq.usage.SystemUsage;
@@ -63,16 +66,18 @@ public class AMQ2149Test extends TestCase {
         
     private final String SEQ_NUM_PROPERTY = "seqNum";
 
-    final int MESSAGE_LENGTH_BYTES = 75000;
+    final int MESSAGE_LENGTH_BYTES = 75 * 1024;
     final int MAX_TO_SEND  = 1500;
     final long SLEEP_BETWEEN_SEND_MS = 3;
     final int NUM_SENDERS_AND_RECEIVERS = 10;
     final Object brokerLock = new Object();
-    
+        
     BrokerService broker;
     Vector<Throwable> exceptions = new Vector<Throwable>();
 
     private File dataDirFile;
+    final LoggingBrokerPlugin[] plugins = new LoggingBrokerPlugin[]{new LoggingBrokerPlugin()};
+    
     
     public void createBroker(Configurer configurer) throws Exception {
         broker = new BrokerService();
@@ -112,7 +117,7 @@ public class AMQ2149Test extends TestCase {
 
     private class Receiver implements MessageListener {
 
-        private final String queueName;
+        private final javax.jms.Destination dest;
 
         private final Connection connection;
 
@@ -124,13 +129,17 @@ public class AMQ2149Test extends TestCase {
         
         private String lastId = null;
 
-        public Receiver(String queueName) throws JMSException {
-            this.queueName = queueName;
+        public Receiver(javax.jms.Destination dest) throws JMSException {
+            this.dest = dest;
             connection = new ActiveMQConnectionFactory(BROKER_URL)
                     .createConnection();
+            connection.setClientID(dest.toString());
             session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-            messageConsumer = session.createConsumer(new ActiveMQQueue(
-                    queueName));
+            if (ActiveMQDestination.transform(dest).isTopic()) {
+                messageConsumer = session.createDurableSubscriber((Topic) dest, dest.toString());
+            } else {
+                messageConsumer = session.createConsumer(dest);
+            }
             messageConsumer.setMessageListener(this);
             connection.start();
         }
@@ -147,22 +156,22 @@ public class AMQ2149Test extends TestCase {
             try {
                 final long seqNum = message.getLongProperty(SEQ_NUM_PROPERTY);
                 if ((seqNum % 500) == 0) {
-                    LOG.info(queueName + " received " + seqNum);
+                    LOG.info(dest + " received " + seqNum);
                 }
                 if (seqNum != nextExpectedSeqNum) {
-                    LOG.warn(queueName + " received " + seqNum
+                    LOG.warn(dest + " received " + seqNum
                             + " in msg: " + message.getJMSMessageID()
                             + " expected "
                             + nextExpectedSeqNum
                             + ", lastId: " + lastId 
                             + ", message:" + message);
-                    fail(queueName + " received " + seqNum + " expected "
+                    fail(dest + " received " + seqNum + " expected "
                             + nextExpectedSeqNum);
                 }
                 ++nextExpectedSeqNum;
                 lastId = message.getJMSMessageID();
             } catch (Throwable e) {
-                LOG.error(queueName + " onMessage error", e);
+                LOG.error(dest + " onMessage error", e);
                 exceptions.add(e);
             }
         }
@@ -171,7 +180,7 @@ public class AMQ2149Test extends TestCase {
 
     private class Sender implements Runnable {
 
-        private final String queueName;
+        private final javax.jms.Destination dest;
 
         private final Connection connection;
 
@@ -181,13 +190,12 @@ public class AMQ2149Test extends TestCase {
 
         private volatile long nextSequenceNumber = 0;
 
-        public Sender(String queueName) throws JMSException {
-            this.queueName = queueName;
+        public Sender(javax.jms.Destination dest) throws JMSException {
+            this.dest = dest;
             connection = new ActiveMQConnectionFactory(BROKER_URL)
                     .createConnection();
             session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-            messageProducer = session.createProducer(new ActiveMQQueue(
-                    queueName));
+            messageProducer = session.createProducer(dest);
             messageProducer.setDeliveryMode(DeliveryMode.PERSISTENT);
             connection.start();
         }
@@ -203,14 +211,14 @@ public class AMQ2149Test extends TestCase {
                     ++nextSequenceNumber;
                     messageProducer.send(message);
                 } catch (Exception e) {
-                    LOG.error(queueName + " send error", e);
+                    LOG.error(dest + " send error", e);
                     exceptions.add(e);
                 }
                 if (SLEEP_BETWEEN_SEND_MS > 0) {
                     try {
                         Thread.sleep(SLEEP_BETWEEN_SEND_MS);
                     } catch (InterruptedException e) {
-                        LOG.warn(queueName + " sleep interrupted", e);
+                        LOG.warn(dest + " sleep interrupted", e);
                     }
                 }
             }
@@ -240,7 +248,7 @@ public class AMQ2149Test extends TestCase {
             public void configure(BrokerService broker) throws Exception {
                 SystemUsage usage = new SystemUsage();
                 MemoryUsage memoryUsage = new MemoryUsage();
-                memoryUsage.setLimit(MESSAGE_LENGTH_BYTES * 5 * NUM_SENDERS_AND_RECEIVERS);
+                memoryUsage.setLimit(MESSAGE_LENGTH_BYTES * 10 * NUM_SENDERS_AND_RECEIVERS);
                 usage.setMemoryUsage(memoryUsage);
                 broker.setSystemUsage(usage);
                 
@@ -252,7 +260,8 @@ public class AMQ2149Test extends TestCase {
         verifyStats(false);
     }
 
-    public void testOrderWithRestartAndVMIndex() throws Exception {
+    // no need to run this unless there are some issues with the others
+    public void noProblem_testOrderWithRestartAndVMIndex() throws Exception {
         createBroker(new Configurer() {
             public void configure(BrokerService broker) throws Exception {
                 AMQPersistenceAdapterFactory persistenceFactory =
@@ -288,7 +297,10 @@ public class AMQ2149Test extends TestCase {
         });
         
         final Timer timer = new Timer();
-        schedualRestartTask(timer, null);
+        schedualRestartTask(timer, new Configurer() {
+            public void configure(BrokerService broker) throws Exception {    
+            }
+        });
         
         try {
             verifyOrderedMessageReceipt();
@@ -300,29 +312,27 @@ public class AMQ2149Test extends TestCase {
     }
     
     
-    public void testOrderWithRestartAndNoCache() throws Exception {
+    public void x_testTopicOrderWithRestart() throws Exception {
+        plugins[0].setLogAll(true);
+        plugins[0].setLogInternalEvents(false);
         
-        PolicyEntry noCache = new PolicyEntry();
-        noCache.setUseCache(false);
-        final PolicyMap policyMap = new PolicyMap();
-        policyMap.setDefaultEntry(noCache);
-
+        
         createBroker(new Configurer() {
             public void configure(BrokerService broker) throws Exception {
-                broker.setDestinationPolicy(policyMap);
-                broker.deleteAllMessages();
+                broker.deleteAllMessages();   
+                broker.setPlugins(plugins);
             }
         });
         
         final Timer timer = new Timer();
         schedualRestartTask(timer, new Configurer() {
             public void configure(BrokerService broker) throws Exception {
-                broker.setDestinationPolicy(policyMap);
+                broker.setPlugins(plugins);
             }
         });
         
         try {
-            verifyOrderedMessageReceipt();
+            verifyOrderedMessageReceipt(ActiveMQDestination.TOPIC_TYPE);
         } finally {
             timer.cancel();
         }
@@ -339,6 +349,7 @@ public class AMQ2149Test extends TestCase {
                 AMQPersistenceAdapterFactory persistenceFactory =
                     (AMQPersistenceAdapterFactory) broker.getPersistenceFactory();
                 persistenceFactory.setForceRecoverReferenceStore(true);
+                broker.setPlugins(plugins);
                 broker.deleteAllMessages();     
             }
         });
@@ -349,6 +360,7 @@ public class AMQ2149Test extends TestCase {
                 AMQPersistenceAdapterFactory persistenceFactory =
                     (AMQPersistenceAdapterFactory) broker.getPersistenceFactory();
                 persistenceFactory.setForceRecoverReferenceStore(true);
+                broker.setPlugins(plugins);
             }
         });
         
@@ -408,19 +420,24 @@ public class AMQ2149Test extends TestCase {
     }
     
     private void verifyOrderedMessageReceipt() throws Exception {
+        verifyOrderedMessageReceipt(ActiveMQDestination.QUEUE_TYPE);
+    }
+    
+    private void verifyOrderedMessageReceipt(byte destinationType) throws Exception {
         
         Vector<Thread> threads = new Vector<Thread>();
         Vector<Receiver> receivers = new Vector<Receiver>();
         
         for (int i = 0; i < NUM_SENDERS_AND_RECEIVERS; ++i) {
-            final String queueName = "test.queue." + i;
-            receivers.add(new Receiver(queueName));
-            Thread thread = new Thread(new Sender(queueName));
+            final javax.jms.Destination destination =
+                    ActiveMQDestination.createDestination("test.dest." + i, destinationType);
+            receivers.add(new Receiver(destination));
+            Thread thread = new Thread(new Sender(destination));
             thread.start();
             threads.add(thread);
         }
         
-        final long expiry = System.currentTimeMillis() + 1000 * 60 * 20;
+        final long expiry = System.currentTimeMillis() + 1000 * 60 * 30;
         while(!threads.isEmpty() && exceptions.isEmpty() && System.currentTimeMillis() < expiry) {
             Thread sendThread = threads.firstElement();
             sendThread.join(1000*10);
