@@ -22,6 +22,7 @@ import java.util.Set;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import org.apache.activemq.ActiveMQMessageAudit;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.Message;
@@ -44,6 +45,9 @@ public class KahaReferenceStore extends AbstractMessageStore implements Referenc
     private static final Log LOG = LogFactory.getLog(KahaReferenceStore.class);
     protected final MapContainer<MessageId, ReferenceRecord> messageContainer;
     protected KahaReferenceStoreAdapter adapter;
+    // keep track of dispatched messages so that duplicate sends that follow a successful
+    // dispatch can be suppressed.
+    protected ActiveMQMessageAudit dispatchAudit = new ActiveMQMessageAudit();
     private StoreEntry batchEntry;
     private String lastBatchId;
     protected final Lock lock = new ReentrantLock();
@@ -152,14 +156,13 @@ public class KahaReferenceStore extends AbstractMessageStore implements Referenc
         boolean uniqueueReferenceAdded = false;
         lock.lock();
         try {
-            if (!messageContainer.containsKey(messageId)) {
+            if (!isDuplicate(messageId)) {
                 ReferenceRecord record = new ReferenceRecord(messageId.toString(), data);
                 messageContainer.put(messageId, record);
                 uniqueueReferenceAdded = true;
                 addInterest(record);
-            } else {
                 if (LOG.isDebugEnabled()) {
-                    LOG.debug(destination.getPhysicalName() + " ignoring duplicated (add) message reference:"  + messageId);
+                    LOG.debug(destination.getPhysicalName() + " add: " + messageId);
                 }
             }
         } finally {
@@ -168,6 +171,24 @@ public class KahaReferenceStore extends AbstractMessageStore implements Referenc
         return uniqueueReferenceAdded;
     }
 
+    protected boolean isDuplicate(final MessageId messageId) {
+        boolean duplicate = messageContainer.containsKey(messageId);
+        if (!duplicate) {
+            duplicate = dispatchAudit.isDuplicate(messageId);
+            if (duplicate) {
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug(destination.getPhysicalName()
+                        + " ignoring duplicated (add) message reference, already dispatched: "
+                        + messageId);
+                }
+            }
+        } else if (LOG.isDebugEnabled()) {
+            LOG.debug(destination.getPhysicalName()
+                    + " ignoring duplicated (add) message reference, already in store: " + messageId);
+        }
+        return duplicate;
+    }
+    
     public ReferenceData getMessageReference(MessageId identity) throws IOException {
         lock.lock();
         try {
@@ -193,6 +214,10 @@ public class KahaReferenceStore extends AbstractMessageStore implements Referenc
                 ReferenceRecord rr = messageContainer.remove(msgId);
                 if (rr != null) {
                     removeInterest(rr);
+                    dispatchAudit.isDuplicate(msgId);
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug(destination.getPhysicalName() + " remove reference: " + msgId);
+                    }
                     if (messageContainer.isEmpty()
                         || (lastBatchId != null && lastBatchId.equals(msgId.toString()))
                         || (batchEntry != null && batchEntry.equals(entry))) {

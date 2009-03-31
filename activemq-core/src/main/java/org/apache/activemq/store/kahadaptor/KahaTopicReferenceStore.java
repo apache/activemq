@@ -22,6 +22,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.Message;
@@ -34,9 +35,11 @@ import org.apache.activemq.kaha.Store;
 import org.apache.activemq.kaha.StoreEntry;
 import org.apache.activemq.store.MessageRecoveryListener;
 import org.apache.activemq.store.TopicReferenceStore;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 public class KahaTopicReferenceStore extends KahaReferenceStore implements TopicReferenceStore {
-
+    private static final Log LOG = LogFactory.getLog(KahaTopicReferenceStore.class);
     protected ListContainer<TopicSubAck> ackContainer;
     protected Map<String, TopicSubContainer> subscriberMessages = new ConcurrentHashMap<String, TopicSubContainer>();
     private MapContainer<String, SubscriptionInfo> subscriberContainer;
@@ -75,15 +78,17 @@ public class KahaTopicReferenceStore extends KahaReferenceStore implements Topic
         throw new RuntimeException("Use addMessageReference instead");
     }
 
-    public  boolean addMessageReference(final ConnectionContext context, final MessageId messageId,
+    public boolean addMessageReference(final ConnectionContext context, final MessageId messageId,
                                     final ReferenceData data) {
+        boolean uniqueReferenceAdded = false;
         lock.lock();
         try {
             final ReferenceRecord record = new ReferenceRecord(messageId.toString(), data);
             final int subscriberCount = subscriberMessages.size();
-            if (subscriberCount > 0) {
+            if (subscriberCount > 0 && !isDuplicate(messageId)) {
                 final StoreEntry messageEntry = messageContainer.place(messageId, record);
                 addInterest(record);
+                uniqueReferenceAdded = true;
                 final TopicSubAck tsa = new TopicSubAck();
                 tsa.setCount(subscriberCount);
                 tsa.setMessageEntry(messageEntry);
@@ -96,11 +101,14 @@ public class KahaTopicReferenceStore extends KahaReferenceStore implements Topic
                     ref.setMessageId(messageId);
                     container.add(ref);
                 }
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug(destination.getPhysicalName() + " add reference: " + messageId);
+                }
             }
-        }finally {
+        } finally {
             lock.unlock();
         }
-        return true;
+        return uniqueReferenceAdded;
     }
 
     public ReferenceData getMessageReference(final MessageId identity) throws IOException {
@@ -159,16 +167,22 @@ public class KahaTopicReferenceStore extends KahaReferenceStore implements Topic
                                 messageContainer.remove(entry);
                                 removeInterest(rr);
                                 removeMessage = true;
+                                dispatchAudit.isDuplicate(messageId);
                             }
                         }else {
                             ackContainer.update(entry,tsa);
                         }
                     }
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug(destination.getPhysicalName() + " remove: " + messageId);
+                    }
                 }else{
-           
                     if (ackContainer.isEmpty() || isUnreferencedBySubscribers(subscriberMessages, messageId)) {
                         // no message reference held        
                         removeMessage = true;
+                        if (LOG.isDebugEnabled()) {
+                            LOG.debug(destination.getPhysicalName() + " remove with no outstanding reference (dup ack): " + messageId);
+                        }
                     }
                 }
             }

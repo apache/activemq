@@ -35,13 +35,10 @@ import javax.jms.Topic;
 import junit.framework.TestCase;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
-import org.apache.activemq.broker.BrokerPlugin;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.DestinationStatistics;
 import org.apache.activemq.broker.region.RegionBroker;
-import org.apache.activemq.broker.region.policy.PolicyEntry;
-import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.broker.util.LoggingBrokerPlugin;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.store.amq.AMQPersistenceAdapterFactory;
@@ -71,7 +68,7 @@ public class AMQ2149Test extends TestCase {
     final long SLEEP_BETWEEN_SEND_MS = 3;
     final int NUM_SENDERS_AND_RECEIVERS = 10;
     final Object brokerLock = new Object();
-        
+         
     BrokerService broker;
     Vector<Throwable> exceptions = new Vector<Throwable>();
 
@@ -83,6 +80,13 @@ public class AMQ2149Test extends TestCase {
         broker = new BrokerService();
         AMQPersistenceAdapterFactory persistenceFactory = new AMQPersistenceAdapterFactory();
         persistenceFactory.setDataDirectory(dataDirFile);
+        
+        SystemUsage usage = new SystemUsage();
+        MemoryUsage memoryUsage = new MemoryUsage();
+        memoryUsage.setLimit(MESSAGE_LENGTH_BYTES * 200 * NUM_SENDERS_AND_RECEIVERS);
+        usage.setMemoryUsage(memoryUsage);
+        broker.setSystemUsage(usage);
+        
         broker.setPersistenceFactory(persistenceFactory);
 
         broker.addConnector(BROKER_CONNECTOR);        
@@ -242,24 +246,6 @@ public class AMQ2149Test extends TestCase {
         verifyStats(false);
     }
 
-    public void testOrderWithMemeUsageLimit() throws Exception {
-        
-        createBroker(new Configurer() {
-            public void configure(BrokerService broker) throws Exception {
-                SystemUsage usage = new SystemUsage();
-                MemoryUsage memoryUsage = new MemoryUsage();
-                memoryUsage.setLimit(MESSAGE_LENGTH_BYTES * 10 * NUM_SENDERS_AND_RECEIVERS);
-                usage.setMemoryUsage(memoryUsage);
-                broker.setSystemUsage(usage);
-                
-                broker.deleteAllMessages();            
-            }
-        });
-        
-        verifyOrderedMessageReceipt();
-        verifyStats(false);
-    }
-
     // no need to run this unless there are some issues with the others
     public void noProblem_testOrderWithRestartAndVMIndex() throws Exception {
         createBroker(new Configurer() {
@@ -312,24 +298,15 @@ public class AMQ2149Test extends TestCase {
     }
     
     
-    public void x_testTopicOrderWithRestart() throws Exception {
-        plugins[0].setLogAll(true);
-        plugins[0].setLogInternalEvents(false);
-        
-        
+    public void testTopicOrderWithRestart() throws Exception {
         createBroker(new Configurer() {
             public void configure(BrokerService broker) throws Exception {
-                broker.deleteAllMessages();   
-                broker.setPlugins(plugins);
+                broker.deleteAllMessages();
             }
         });
         
         final Timer timer = new Timer();
-        schedualRestartTask(timer, new Configurer() {
-            public void configure(BrokerService broker) throws Exception {
-                broker.setPlugins(plugins);
-            }
-        });
+        schedualRestartTask(timer, null);
         
         try {
             verifyOrderedMessageReceipt(ActiveMQDestination.TOPIC_TYPE);
