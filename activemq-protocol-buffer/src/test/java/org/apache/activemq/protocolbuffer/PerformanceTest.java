@@ -67,15 +67,15 @@ public class PerformanceTest extends TestSupport {
         StopWatch watch2 = createStopWatch("reader");
         InputStream in = new BufferedInputStream(new FileInputStream(fileName));
         CodedInputStream cin = CodedInputStream.newInstance(in);
-
+        cin.setSizeLimit(0x7FFFFFFF);
+        
         for (long i = 0; i < messageCount; i++) {
             watch2.start();
 
             int size = cin.readRawVarint32();
             int previous = cin.pushLimit(size);
-            //cin.setSizeLimit(size + 4);
+            
             OpenWire.Message message = OpenWire.Message.parseFrom(cin);
-            cin.resetBytesReadCounter();
             cin.popLimit(previous);
 
             if (verbose) {
