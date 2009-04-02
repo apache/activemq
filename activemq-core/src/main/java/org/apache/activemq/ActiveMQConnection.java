@@ -1411,7 +1411,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
      */
     public void cleanup() throws JMSException {
 
-        if (advisoryConsumer != null) {
+        if (advisoryConsumer != null && !isTransportFailed()) {
             advisoryConsumer.dispose();
             advisoryConsumer = null;
         }
@@ -1805,7 +1805,11 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
 					transportFailed(error);
 					ServiceSupport.dispose(ActiveMQConnection.this.transport);
 					brokerInfoReceived.countDown();
-
+					try {
+						cleanup();
+					} catch (JMSException e) {
+						LOG.warn("Exception during connection cleanup, " + e, e);
+					}
 					for (Iterator<TransportListener> iter = transportListeners
 							.iterator(); iter.hasNext();) {
 						TransportListener listener = iter.next();
@@ -2215,4 +2219,8 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     protected void rollbackDuplicate(ActiveMQDispatcher dispatcher, Message message) {
         connectionAudit.rollbackDuplicate(dispatcher, message);
     }
+
+	public IOException getFirstFailureError() {
+		return firstFailureError;
+	}
 }

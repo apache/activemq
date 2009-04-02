@@ -16,6 +16,7 @@
  */
 package org.apache.activemq;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -32,6 +33,7 @@ import javax.jms.IllegalStateException;
 import javax.jms.InvalidDestinationException;
 import javax.jms.JMSException;
 import javax.jms.Message;
+import javax.jms.MessageConsumer;
 import javax.jms.MessageListener;
 
 import org.apache.activemq.command.ActiveMQDestination;
@@ -129,6 +131,8 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
 
     private MessageAck pendingAck;
     private long lastDeliveredSequenceId;
+    
+    private IOException failureError;
 
     /**
      * Create a MessageConsumer
@@ -417,7 +421,11 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                     if (timeout > 0 && !unconsumedMessages.isClosed()) {
                         timeout = Math.max(deadline - System.currentTimeMillis(), 0);
                     } else {
-                        return null;
+                    	if (failureError != null) {
+                    		throw JMSExceptionSupport.create(failureError);
+                    	} else {
+                    		return null;
+                    	}
                     }
                 } else if (md.getMessage() == null) {
                     return null;
@@ -1136,4 +1144,12 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
         return lastDeliveredSequenceId;
     }
 
+	public IOException getFailureError() {
+		return failureError;
+	}
+
+	public void setFailureError(IOException failureError) {
+		this.failureError = failureError;
+	}
+    
 }

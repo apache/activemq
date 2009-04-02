@@ -609,6 +609,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
 
                 for (Iterator<ActiveMQMessageConsumer> iter = consumers.iterator(); iter.hasNext();) {
                     ActiveMQMessageConsumer consumer = iter.next();
+                    consumer.setFailureError(connection.getFirstFailureError());
                     consumer.dispose();
                     lastDeliveredSequenceId = Math.max(lastDeliveredSequenceId, consumer.getLastDeliveredSequenceId());
                 }
