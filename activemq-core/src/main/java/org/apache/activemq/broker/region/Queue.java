@@ -1258,6 +1258,13 @@ public class Queue extends BaseDestination implements Task, UsageListener {
         dispatchLock.lock();
         try{
             int toPageIn = getMaxPageSize() + Math.max(0, (int)destinationStatistics.getInflight().getCount()) - pagedInMessages.size();
+         
+            if (LOG.isDebugEnabled()) {
+                LOG.debug(destination.getPhysicalName() + " toPageIn: "  + toPageIn + ", Inflight: "
+                        + destinationStatistics.getInflight().getCount()
+                        + ", pagedInMessages.size " + pagedInMessages.size());
+            }
+            
             toPageIn = Math.max(0, Math.min(toPageIn, getMaxPageSize()));
             if (isLazyDispatch()&& !force) {
                 // Only page in the minimum number of messages which can be dispatched immediately.

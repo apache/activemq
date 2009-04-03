@@ -1669,8 +1669,8 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
             msg.setConnection(connection);
             msg.onSend();
             msg.setProducerId(msg.getMessageId().getProducerId());
-            if (this.debug) {
-                LOG.debug(getSessionId() + " sending message: " + msg);
+            if (LOG.isTraceEnabled()) {
+                LOG.trace(getSessionId() + " sending message: " + msg);
             }
             if (sendTimeout <= 0 && !msg.isResponseRequired() && !connection.isAlwaysSyncSend() && (!msg.isPersistent() || connection.isUseAsyncSend() || txid != null)) {
                 this.connection.asyncSendPacket(msg);
@@ -1960,6 +1960,13 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
             asyncSendPacket(ack);
         } else {
             syncSendPacket(ack);
+        }
+    }
+
+    public void transportResumed() {
+        for (Iterator<ActiveMQMessageConsumer> iter = consumers.iterator(); iter.hasNext();) {
+            ActiveMQMessageConsumer consumer = iter.next();
+            consumer.transportResumed();
         }
     }
 

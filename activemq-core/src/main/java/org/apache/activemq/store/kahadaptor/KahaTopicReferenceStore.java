@@ -19,8 +19,10 @@ package org.apache.activemq.store.kahadaptor;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.activemq.broker.ConnectionContext;
@@ -101,8 +103,8 @@ public class KahaTopicReferenceStore extends KahaReferenceStore implements Topic
                     ref.setMessageId(messageId);
                     container.add(ref);
                 }
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug(destination.getPhysicalName() + " add reference: " + messageId);
+                if (LOG.isTraceEnabled()) {
+                    LOG.trace(destination.getPhysicalName() + " add reference: " + messageId);
                 }
             }
         } finally {
@@ -173,11 +175,11 @@ public class KahaTopicReferenceStore extends KahaReferenceStore implements Topic
                             ackContainer.update(entry,tsa);
                         }
                     }
-                    if (LOG.isDebugEnabled()) {
-                        LOG.debug(destination.getPhysicalName() + " remove: " + messageId);
+                    if (LOG.isTraceEnabled()) {
+                        LOG.trace(destination.getPhysicalName() + " remove: " + messageId);
                     }
                 }else{
-                    if (ackContainer.isEmpty() || isUnreferencedBySubscribers(subscriberMessages, messageId)) {
+                    if (ackContainer.isEmpty() || subscriberMessages.size() == 1 || isUnreferencedBySubscribers(key, subscriberMessages, messageId)) {
                         // no message reference held        
                         removeMessage = true;
                         if (LOG.isDebugEnabled()) {
@@ -198,10 +200,11 @@ public class KahaTopicReferenceStore extends KahaReferenceStore implements Topic
     //
     // see: https://issues.apache.org/activemq/browse/AMQ-2123
     private boolean isUnreferencedBySubscribers(
-            Map<String, TopicSubContainer> subscriberContainers, MessageId messageId) {
+            String key, Map<String, TopicSubContainer> subscriberContainers, MessageId messageId) {
         boolean isUnreferenced = true;
-        for (TopicSubContainer container: subscriberContainers.values()) {
-            if (!container.isEmpty()) {
+        for (Entry<String, TopicSubContainer> entry : subscriberContainers.entrySet()) {
+            if (!key.equals(entry.getKey()) && !entry.getValue().isEmpty()) {
+                TopicSubContainer container = entry.getValue();
                 for (Iterator i = container.iterator(); i.hasNext();) {
                     ConsumerMessageRef ref = (ConsumerMessageRef) i.next();
                     if (messageId.equals(ref.getMessageId())) {

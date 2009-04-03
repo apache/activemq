@@ -211,10 +211,11 @@ public class TransactionContext implements XAResource {
             if (localTransactionEventListener != null) {
                 localTransactionEventListener.beginEvent();
             }
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Begin:" + transactionId);
+            }
         }
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("Being:" + transactionId);
-        }
+        
     }
 
     /**
@@ -234,7 +235,9 @@ public class TransactionContext implements XAResource {
         beforeEnd();
         if (transactionId != null) {
             if (LOG.isDebugEnabled()) {
-                LOG.debug("Rollback:" + transactionId);
+                LOG.debug("Rollback: "  + transactionId
+                + " syncCount: " 
+                + (synchronizations != null ? synchronizations.size() : 0));
             }
 
             TransactionInfo info = new TransactionInfo(getConnectionId(), transactionId, TransactionInfo.ROLLBACK);
@@ -268,7 +271,9 @@ public class TransactionContext implements XAResource {
         // Only send commit if the transaction was started.
         if (transactionId != null) {
             if (LOG.isDebugEnabled()) {
-                LOG.debug("Commit:" + transactionId);
+                LOG.debug("Commit: "  + transactionId
+                        + " syncCount: " 
+                        + (synchronizations != null ? synchronizations.size() : 0));
             }
 
             TransactionInfo info = new TransactionInfo(getConnectionId(), transactionId, TransactionInfo.COMMIT_ONE_PHASE);

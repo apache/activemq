@@ -39,6 +39,8 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.DestinationStatistics;
 import org.apache.activemq.broker.region.RegionBroker;
+import org.apache.activemq.broker.region.policy.PolicyEntry;
+import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.broker.util.LoggingBrokerPlugin;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.store.amq.AMQPersistenceAdapterFactory;
@@ -55,20 +57,26 @@ public class AMQ2149Test extends TestCase {
 
     private static final Log LOG = LogFactory.getLog(AMQ2149Test.class);
 
-    private static final long BROKER_STOP_PERIOD = 20 * 1000;
-
     private static final String BROKER_CONNECTOR = "tcp://localhost:61617";
-    private static final String BROKER_URL = "failover:("+ BROKER_CONNECTOR
+    private static final String DEFAULT_BROKER_URL = "failover:("+ BROKER_CONNECTOR
         +")?maxReconnectDelay=1000&useExponentialBackOff=false";
         
     private final String SEQ_NUM_PROPERTY = "seqNum";
 
     final int MESSAGE_LENGTH_BYTES = 75 * 1024;
-    final int MAX_TO_SEND  = 1500;
     final long SLEEP_BETWEEN_SEND_MS = 3;
     final int NUM_SENDERS_AND_RECEIVERS = 10;
     final Object brokerLock = new Object();
-         
+    
+    private static final long DEFAULT_BROKER_STOP_PERIOD = 20 * 1000;
+    private static final long DEFAULT_NUM_TO_SEND = 1500;
+    
+    long brokerStopPeriod = DEFAULT_BROKER_STOP_PERIOD;
+    long numtoSend = DEFAULT_NUM_TO_SEND;
+    String brokerURL = DEFAULT_BROKER_URL;
+    
+    int numBrokerRestarts = 0;
+    final static int MAX_BROKER_RESTARTS = 4;
     BrokerService broker;
     Vector<Throwable> exceptions = new Vector<Throwable>();
 
@@ -100,12 +108,17 @@ public class AMQ2149Test extends TestCase {
     
     public void setUp() throws Exception {
         dataDirFile = new File("target/"+ getName());
+        numtoSend = DEFAULT_NUM_TO_SEND;
+        brokerStopPeriod = DEFAULT_BROKER_STOP_PERIOD;
+        brokerURL = DEFAULT_BROKER_URL;
     }
     
     public void tearDown() throws Exception {
         synchronized(brokerLock) {
-            broker.stop();
-            broker.waitUntilStopped();
+            if (broker!= null) {
+                broker.stop();
+                broker.waitUntilStopped();
+            }
         }
         exceptions.clear();
     }
@@ -130,15 +143,18 @@ public class AMQ2149Test extends TestCase {
         private final MessageConsumer messageConsumer;
 
         private volatile long nextExpectedSeqNum = 0;
-        
+                
+        private final boolean transactional;
+
         private String lastId = null;
 
-        public Receiver(javax.jms.Destination dest) throws JMSException {
+        public Receiver(javax.jms.Destination dest, boolean transactional) throws JMSException {
             this.dest = dest;
-            connection = new ActiveMQConnectionFactory(BROKER_URL)
+            this.transactional = transactional;
+            connection = new ActiveMQConnectionFactory(brokerURL)
                     .createConnection();
             connection.setClientID(dest.toString());
-            session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+            session = connection.createSession(transactional, transactional ? Session.SESSION_TRANSACTED : Session.AUTO_ACKNOWLEDGE);
             if (ActiveMQDestination.transform(dest).isTopic()) {
                 messageConsumer = session.createDurableSubscriber((Topic) dest, dest.toString());
             } else {
@@ -161,6 +177,11 @@ public class AMQ2149Test extends TestCase {
                 final long seqNum = message.getLongProperty(SEQ_NUM_PROPERTY);
                 if ((seqNum % 500) == 0) {
                     LOG.info(dest + " received " + seqNum);
+                    
+                    if (transactional) {
+                        LOG.info("committing..");
+                        session.commit();
+                    }
                 }
                 if (seqNum != nextExpectedSeqNum) {
                     LOG.warn(dest + " received " + seqNum
@@ -196,7 +217,7 @@ public class AMQ2149Test extends TestCase {
 
         public Sender(javax.jms.Destination dest) throws JMSException {
             this.dest = dest;
-            connection = new ActiveMQConnectionFactory(BROKER_URL)
+            connection = new ActiveMQConnectionFactory(brokerURL)
                     .createConnection();
             session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
             messageProducer = session.createProducer(dest);
@@ -206,7 +227,7 @@ public class AMQ2149Test extends TestCase {
 
         public void run() {
             final String longString = buildLongString();
-            while (nextSequenceNumber < MAX_TO_SEND) {
+            while (nextSequenceNumber < numtoSend) {
                 try {
                     final Message message = session
                             .createTextMessage(longString);
@@ -214,6 +235,11 @@ public class AMQ2149Test extends TestCase {
                             nextSequenceNumber);
                     ++nextSequenceNumber;
                     messageProducer.send(message);
+                    
+                    if ((nextSequenceNumber % 500) == 0) {
+                        LOG.info(dest + " sent " + nextSequenceNumber);
+                    }
+                        
                 } catch (Exception e) {
                     LOG.error(dest + " send error", e);
                     exceptions.add(e);
@@ -296,8 +322,7 @@ public class AMQ2149Test extends TestCase {
         
         verifyStats(true);
     }
-    
-    
+        
     public void testTopicOrderWithRestart() throws Exception {
         createBroker(new Configurer() {
             public void configure(BrokerService broker) throws Exception {
@@ -310,6 +335,54 @@ public class AMQ2149Test extends TestCase {
         
         try {
             verifyOrderedMessageReceipt(ActiveMQDestination.TOPIC_TYPE);
+        } finally {
+            timer.cancel();
+        }
+        
+        verifyStats(true);
+    }
+
+    public void testQueueTransactionalOrderWithRestart() throws Exception {
+        doTestTransactionalOrderWithRestart(ActiveMQDestination.QUEUE_TYPE);
+    }
+    
+    public void testTopicTransactionalOrderWithRestart() throws Exception {
+        doTestTransactionalOrderWithRestart(ActiveMQDestination.TOPIC_TYPE);
+    }
+    
+    public void doTestTransactionalOrderWithRestart(byte destinationType) throws Exception {
+        
+        // with transactions there may be lots of re deliveries, in the case
+        // or a commit every 500 messages there could be up to 500 re deliveries
+        // In order to ensure these are acked and don't block new message receipt,
+        // the prefetch should be less than double the commit window.
+        // In addition there needs to be sufficient memory to available to dispatch
+        // transaction size + redeliveries - so 2*transaction size
+        brokerURL = DEFAULT_BROKER_URL + "&jms.prefetchPolicy.all=240";
+        numtoSend = 15000;
+        brokerStopPeriod = 30 * 1000;
+            
+        final PolicyMap policyMap = new PolicyMap();
+        PolicyEntry policy = new PolicyEntry();
+        policy.setMaxPageSize(500);
+        policyMap.setDefaultEntry(policy);
+    
+        createBroker(new Configurer() {
+            public void configure(BrokerService broker) throws Exception {
+                broker.deleteAllMessages();
+                broker.setDestinationPolicy(policyMap);
+            }
+        });
+        
+        final Timer timer = new Timer();
+        schedualRestartTask(timer, new Configurer() {
+            public void configure(BrokerService broker) throws Exception {
+                broker.setDestinationPolicy(policyMap);
+            }
+        });
+        
+        try {
+            verifyOrderedMessageReceipt(destinationType, 1, true);
         } finally {
             timer.cancel();
         }
@@ -356,8 +429,11 @@ public class AMQ2149Test extends TestCase {
         for (Destination dest : regionBroker.getQueueRegion().getDestinationMap().values()) {
             DestinationStatistics stats = dest.getDestinationStatistics();
             if (brokerRestarts) {
-                assertTrue("qneue/dequeue match for: " + dest.getName(),
-                        stats.getEnqueues().getCount() <= stats.getDequeues().getCount());
+                // all bets are off w.r.t stats as there may be duplicate sends and duplicate
+                // dispatches, all of which will be suppressed - either by the reference store
+                // not allowing duplicate references or consumers acking duplicates
+                LOG.info("with restart: not asserting qneue/dequeue stat match for: " + dest.getName()
+                        + " " + stats.getEnqueues().getCount() + " <= " +stats.getDequeues().getCount());
             } else {
                 assertEquals("qneue/dequeue match for: " + dest.getName(),
                         stats.getEnqueues().getCount(), stats.getDequeues().getCount());   
@@ -386,29 +462,37 @@ public class AMQ2149Test extends TestCase {
                         exceptions.add(e);
                     }
                 }
-                // do it again
-                try {
-                    timer.schedule(new RestartTask(), BROKER_STOP_PERIOD);
-                } catch (IllegalStateException ignore_alreadyCancelled) {   
+                if (++numBrokerRestarts < MAX_BROKER_RESTARTS) {
+                    // do it again
+                    try {
+                        timer.schedule(new RestartTask(), brokerStopPeriod);
+                    } catch (IllegalStateException ignore_alreadyCancelled) {   
+                    }
+                } else {
+                    LOG.info("no longer stopping broker on reaching Max restarts: " + MAX_BROKER_RESTARTS);
                 }
             } 
         }
-        timer.schedule(new RestartTask(), BROKER_STOP_PERIOD);
-    }
-    
-    private void verifyOrderedMessageReceipt() throws Exception {
-        verifyOrderedMessageReceipt(ActiveMQDestination.QUEUE_TYPE);
+        timer.schedule(new RestartTask(), brokerStopPeriod);
     }
     
     private void verifyOrderedMessageReceipt(byte destinationType) throws Exception {
-        
+        verifyOrderedMessageReceipt(destinationType, NUM_SENDERS_AND_RECEIVERS, false);
+    }
+    
+    private void verifyOrderedMessageReceipt() throws Exception {
+        verifyOrderedMessageReceipt(ActiveMQDestination.QUEUE_TYPE, NUM_SENDERS_AND_RECEIVERS, false);
+    }
+    
+    private void verifyOrderedMessageReceipt(byte destinationType, int concurrentPairs, boolean transactional) throws Exception {
+                
         Vector<Thread> threads = new Vector<Thread>();
         Vector<Receiver> receivers = new Vector<Receiver>();
         
-        for (int i = 0; i < NUM_SENDERS_AND_RECEIVERS; ++i) {
+        for (int i = 0; i < concurrentPairs; ++i) {
             final javax.jms.Destination destination =
                     ActiveMQDestination.createDestination("test.dest." + i, destinationType);
-            receivers.add(new Receiver(destination));
+            receivers.add(new Receiver(destination, transactional));
             Thread thread = new Thread(new Sender(destination));
             thread.start();
             threads.add(thread);
@@ -426,7 +510,7 @@ public class AMQ2149Test extends TestCase {
         
         while(!receivers.isEmpty() && System.currentTimeMillis() < expiry) {
             Receiver receiver = receivers.firstElement();
-            if (receiver.getNextExpectedSeqNo() >= MAX_TO_SEND || !exceptions.isEmpty()) {
+            if (receiver.getNextExpectedSeqNo() >= numtoSend || !exceptions.isEmpty()) {
                 receiver.close();
                 receivers.remove(receiver);
             }

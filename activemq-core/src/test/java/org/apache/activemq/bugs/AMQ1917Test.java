@@ -125,8 +125,10 @@ public class AMQ1917Test extends TestCase {
                                 sender.send(response);
                             }
                         } catch (JMSException e) {
-                            errorLatch.countDown();
-                            fail("Unexpected exception:" + e);
+                            if (working) {
+                                errorLatch.countDown();
+                                fail("Unexpected exception:" + e);
+                            }
                         }
                     }
                 }

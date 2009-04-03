@@ -45,6 +45,11 @@ public class LocalTransaction extends Transaction {
     }
 
     public void commit(boolean onePhase) throws XAException, IOException {
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("commit: "  + xid
+                    + " syncCount: " + size());
+        }
+        
         // Get ready for commit.
         try {
             prePrepare();
@@ -79,6 +84,10 @@ public class LocalTransaction extends Transaction {
 
     public void rollback() throws XAException, IOException {
 
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("rollback: "  + xid
+                    + " syncCount: " + size());
+        }
         setState(Transaction.FINISHED_STATE);
         context.getTransactions().remove(xid);
         transactionStore.rollback(getTransactionId());

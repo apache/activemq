@@ -393,10 +393,8 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                 }
             }
         }
-        if (callDispatchMatched && destination != null) {
-//            if (destination.isLazyDispatch()) {
-                destination.wakeup();
-//            }
+        if (callDispatchMatched && destination != null) {    
+            destination.wakeup();
             dispatchPending();
         } else {
             if (isSlave()) {
@@ -661,7 +659,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
         if (node.getRegionDestination() != null) {
             if (node != QueueMessageReference.NULL_MESSAGE) {
                 node.getRegionDestination().getDestinationStatistics().getDispatched().increment();
-                node.getRegionDestination().getDestinationStatistics().getInflight().increment();
+                node.getRegionDestination().getDestinationStatistics().getInflight().increment();       
             }
         }
         if (LOG.isTraceEnabled()) {

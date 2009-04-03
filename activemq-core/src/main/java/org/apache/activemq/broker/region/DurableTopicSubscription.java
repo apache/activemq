@@ -199,7 +199,7 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
 
     protected void doAddRecoveredMessage(MessageReference message) throws Exception {
         synchronized(pending) {
-        pending.addRecoveredMessage(message);
+            pending.addRecoveredMessage(message);
         }
     }
 

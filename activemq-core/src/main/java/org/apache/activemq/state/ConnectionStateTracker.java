@@ -39,6 +39,8 @@ import org.apache.activemq.command.SessionInfo;
 import org.apache.activemq.command.TransactionInfo;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.util.IOExceptionSupport;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * Tracks the state of a connection so a newly established transport can be
@@ -47,6 +49,7 @@ import org.apache.activemq.util.IOExceptionSupport;
  * @version $Revision$
  */
 public class ConnectionStateTracker extends CommandVisitorAdapter {
+    private static final Log LOG = LogFactory.getLog(ConnectionStateTracker.class);
 
     private static final Tracked TRACKED_RESPONSE_MARKER = new Tracked(null);
 
@@ -135,8 +138,14 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
     private void restoreTransactions(Transport transport, ConnectionState connectionState) throws IOException {
         for (Iterator iter = connectionState.getTransactionStates().iterator(); iter.hasNext();) {
             TransactionState transactionState = (TransactionState)iter.next();
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("tx: " + transactionState.getId());
+            }
             for (Iterator iterator = transactionState.getCommands().iterator(); iterator.hasNext();) {
                 Command command = (Command)iterator.next();
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("tx replay: " + command);
+                }
                 transport.oneway(command);
             }
         }
@@ -355,23 +364,6 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
             }else if (trackMessages) {
                 messageCache.put(send.getMessageId(), send.copy());
             }
-        }
-        return null;
-    }
-
-    public Response processMessageAck(MessageAck ack) {
-        if (trackTransactions && ack != null && ack.getTransactionId() != null) {
-            ConnectionId connectionId = ack.getConsumerId().getParentId().getParentId();
-            if (connectionId != null) {
-                ConnectionState cs = connectionStates.get(connectionId);
-                if (cs != null) {
-                    TransactionState transactionState = cs.getTransactionState(ack.getTransactionId());
-                    if (transactionState != null) {
-                        transactionState.addCommand(ack);
-                    }
-                }
-            }
-            return TRACKED_RESPONSE_MARKER;
         }
         return null;
     }

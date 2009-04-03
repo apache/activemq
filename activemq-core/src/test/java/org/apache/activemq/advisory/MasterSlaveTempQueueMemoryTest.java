@@ -29,7 +29,6 @@ import org.apache.activemq.ActiveMQSession;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.region.Queue;
 import org.apache.activemq.broker.region.RegionBroker;
-import org.apache.activemq.command.ActiveMQDestination;
 
 
 public class MasterSlaveTempQueueMemoryTest extends TempQueueMemoryTest {

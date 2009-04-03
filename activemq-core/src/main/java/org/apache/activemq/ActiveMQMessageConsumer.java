@@ -131,7 +131,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
 
     private MessageAck pendingAck;
     private long lastDeliveredSequenceId;
-    
+
     private IOException failureError;
 
     /**
@@ -439,8 +439,8 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                         timeout = Math.max(deadline - System.currentTimeMillis(), 0);
                     }
                 } else {
-                    if (LOG.isDebugEnabled()) {
-                        LOG.debug(getConsumerId() + " received message: " + md);
+                    if (LOG.isTraceEnabled()) {
+                        LOG.trace(getConsumerId() + " received message: " + md);
                     }
                     return md;
                 }
@@ -639,18 +639,20 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
         MessageAck ack = null;
         if (deliveryingAcknowledgements.compareAndSet(false, true)) {
             if (session.isAutoAcknowledge()) {
-            	synchronized(deliveredMessages) {
-            		ack = makeAckForAllDeliveredMessages(MessageAck.STANDARD_ACK_TYPE);
-            		if (ack != null) {
-            			deliveredMessages.clear();
-            			ackCounter = 0;
+                synchronized(deliveredMessages) {
+                    ack = makeAckForAllDeliveredMessages(MessageAck.STANDARD_ACK_TYPE);
+                    if (ack != null) {
+                        deliveredMessages.clear();
+                        ackCounter = 0;
             		}
             	}
             } else if (pendingAck != null && pendingAck.isStandardAck()) {
                 ack = pendingAck;
+                pendingAck = null;
             }
             if (ack != null) {
                 final MessageAck ackToSend = ack;
+                
                 if (executorService == null) {
                     executorService = Executors.newSingleThreadExecutor();
                 }
@@ -840,8 +842,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
     private void ackLater(MessageDispatch md, byte ackType) throws JMSException {
 
         // Don't acknowledge now, but we may need to let the broker know the
-        // consumer got the message
-        // to expand the pre-fetch window
+        // consumer got the message to expand the pre-fetch window
         if (session.getTransacted()) {
             session.doStartTransaction();
             if (!synchronizationRegistered) {
@@ -865,19 +866,30 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
             }
         }
 
-        // The delivered message list is only needed for the recover method
-        // which is only used with client ack.
         deliveredCounter++;
         
         MessageAck oldPendingAck = pendingAck;
         pendingAck = new MessageAck(md, ackType, deliveredCounter);
+        pendingAck.setTransactionId(session.getTransactionContext().getTransactionId());
         if( oldPendingAck==null ) {
             pendingAck.setFirstMessageId(pendingAck.getLastMessageId());
-        } else {
+        } else if ( oldPendingAck.getAckType() == pendingAck.getAckType() ) {
             pendingAck.setFirstMessageId(oldPendingAck.getFirstMessageId());
+        } else {
+            // old pending ack being superseded by ack of another type, if is is not a delivered
+            // ack and hence important, send it now so it is not lost.
+            if ( !oldPendingAck.isDeliveredAck()) {
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("Sending old pending ack " + oldPendingAck + ", new pending: " + pendingAck);
+                }
+                session.sendAck(oldPendingAck);
+            } else {
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("dropping old pending ack " + oldPendingAck + ", new pending: " + pendingAck);
+                }
+            }
         }
-        pendingAck.setTransactionId(session.getTransactionContext().getTransactionId());
-
+        
         if ((0.5 * info.getPrefetchSize()) <= (deliveredCounter - additionalWindowSize)) {
             session.sendAck(pendingAck);
             pendingAck=null;
@@ -910,14 +922,14 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
             }
             session.sendAck(ack);
             pendingAck = null;
-    
+            
             // Adjust the counters
-            deliveredCounter -= deliveredMessages.size();
+            deliveredCounter = Math.max(0, deliveredCounter - deliveredMessages.size());
             additionalWindowSize = Math.max(0, additionalWindowSize - deliveredMessages.size());
-    
-            if (!session.getTransacted()) {
+            
+            if (!session.getTransacted()) {  
                 deliveredMessages.clear();
-            }
+            } 
         }
     }
     
@@ -1073,9 +1085,12 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                     } else {
                         // ignore duplicate
                         if (LOG.isDebugEnabled()) {
-                            LOG.debug(getConsumerId() + " Ignoring Duplicate: " + md.getMessage());
+                            LOG.debug(getConsumerId() + " ignoring duplicate: " + md.getMessage());
                         }
-                        acknowledge(md);
+                        // in a transaction ack delivery of duplicates to ensure prefetch extension kicks in.
+                        // the normal ack will happen in the transaction.
+                        ackLater(md, session.isTransacted() ? 
+                                MessageAck.DELIVERED_ACK_TYPE : MessageAck.STANDARD_ACK_TYPE);
                     }
                 }
             }
@@ -1144,6 +1159,13 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
         return lastDeliveredSequenceId;
     }
 
+    // on resumption re deliveries will percolate acks in their own good time
+    public void transportResumed() {
+        pendingAck = null; 
+        additionalWindowSize = 0;
+        deliveredCounter = 0;
+    }
+
 	public IOException getFailureError() {
 		return failureError;
 	}
@@ -1151,5 +1173,4 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
 	public void setFailureError(IOException failureError) {
 		this.failureError = failureError;
 	}
-    
 }
