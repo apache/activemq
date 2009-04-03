@@ -301,7 +301,7 @@ public class AMQ2149Test extends TestCase {
     }
 
 
-    public void testOrderWithRestart() throws Exception {
+    public void x_testOrderWithRestart() throws Exception {
         createBroker(new Configurer() {
             public void configure(BrokerService broker) throws Exception {
                 broker.deleteAllMessages();     
@@ -323,7 +323,7 @@ public class AMQ2149Test extends TestCase {
         verifyStats(true);
     }
         
-    public void testTopicOrderWithRestart() throws Exception {
+    public void x_testTopicOrderWithRestart() throws Exception {
         createBroker(new Configurer() {
             public void configure(BrokerService broker) throws Exception {
                 broker.deleteAllMessages();
@@ -351,35 +351,17 @@ public class AMQ2149Test extends TestCase {
     }
     
     public void doTestTransactionalOrderWithRestart(byte destinationType) throws Exception {
-        
-        // with transactions there may be lots of re deliveries, in the case
-        // or a commit every 500 messages there could be up to 500 re deliveries
-        // In order to ensure these are acked and don't block new message receipt,
-        // the prefetch should be less than double the commit window.
-        // In addition there needs to be sufficient memory to available to dispatch
-        // transaction size + redeliveries - so 2*transaction size
-        brokerURL = DEFAULT_BROKER_URL + "&jms.prefetchPolicy.all=240";
         numtoSend = 15000;
         brokerStopPeriod = 30 * 1000;
-            
-        final PolicyMap policyMap = new PolicyMap();
-        PolicyEntry policy = new PolicyEntry();
-        policy.setMaxPageSize(500);
-        policyMap.setDefaultEntry(policy);
-    
+              
         createBroker(new Configurer() {
             public void configure(BrokerService broker) throws Exception {
                 broker.deleteAllMessages();
-                broker.setDestinationPolicy(policyMap);
             }
         });
         
         final Timer timer = new Timer();
-        schedualRestartTask(timer, new Configurer() {
-            public void configure(BrokerService broker) throws Exception {
-                broker.setDestinationPolicy(policyMap);
-            }
-        });
+        schedualRestartTask(timer, null);
         
         try {
             verifyOrderedMessageReceipt(destinationType, 1, true);
