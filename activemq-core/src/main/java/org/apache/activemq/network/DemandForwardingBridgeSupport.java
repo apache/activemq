@@ -558,7 +558,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
             BrokerId[] path = destInfo.getBrokerPath();
             if (path != null && path.length >= networkTTL) {
                 if (LOG.isDebugEnabled()) {
-                    LOG.debug("Ignoring Subscription " + destInfo + " restricted to " + networkTTL + " network hops only");
+                    LOG.debug("Ignoring destination " + destInfo + " restricted to " + networkTTL + " network hops only");
                 }
                 return;
             }
@@ -566,7 +566,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                 // Ignore this consumer as it's a consumer we locally sent to
                 // the broker.
                 if (LOG.isDebugEnabled()) {
-                    LOG.debug("Ignoring sub " + destInfo + " already routed through this broker once");
+                    LOG.debug("Ignoring destination " + destInfo + " already routed through this broker once");
                 }
                 return;
             }

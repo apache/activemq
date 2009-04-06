@@ -55,7 +55,7 @@ public class DemandForwardingBridge extends DemandForwardingBridgeSupport {
             remoteBrokerName = remoteBrokerInfo.getBrokerName();
             if (localBrokerId != null) {
                 if (localBrokerId.equals(remoteBrokerId)) {
-                    LOG.info("Disconnecting loop back connection.");
+                    LOG.info(configuration.getBrokerName() + " disconnecting remote loop back connection: " + remoteBrokerName);
                     // waitStarted();
                     ServiceSupport.dispose(this);
                 }
@@ -75,7 +75,7 @@ public class DemandForwardingBridge extends DemandForwardingBridgeSupport {
             localBrokerPath[0] = localBrokerId;
             if (remoteBrokerId != null) {
                 if (remoteBrokerId.equals(localBrokerId)) {
-                    LOG.info("Disconnecting loop back connection.");
+                    LOG.info(configuration.getBrokerName() + " disconnecting local loop back connection.");
                     waitStarted();
                     ServiceSupport.dispose(this);
                 }
