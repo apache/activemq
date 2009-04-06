@@ -1054,6 +1054,14 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                             session.connection.rollbackDuplicate(this, old.getMessage());
                         }
                     }
+                    if (pendingAck != null && pendingAck.isDeliveredAck()) {
+                        // on resumption a pending delivered ack will be out of sync with
+                        // re deliveries.
+                        if (LOG.isDebugEnabled()) {
+                            LOG.debug("removing pending delivered ack on transport interupt: " + pendingAck);
+                        }   
+                        pendingAck = null;
+                    }
                 }
                 if (!unconsumedMessages.isClosed()) {
                     if (this.info.isBrowser() || !session.connection.isDuplicate(this, md.getMessage())) {
@@ -1085,12 +1093,15 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                     } else {
                         // ignore duplicate
                         if (LOG.isDebugEnabled()) {
-                            LOG.debug(getConsumerId() + " ignoring duplicate: " + md.getMessage());
+                            LOG.debug(getConsumerId() + " ignoring(auto acking) duplicate: " + md.getMessage());
                         }
                         // in a transaction ack delivery of duplicates to ensure prefetch extension kicks in.
                         // the normal ack will happen in the transaction.
-                        ackLater(md, session.isTransacted() ? 
-                                MessageAck.DELIVERED_ACK_TYPE : MessageAck.STANDARD_ACK_TYPE);
+                        if (session.isTransacted()) {
+                            ackLater(md, MessageAck.DELIVERED_ACK_TYPE);
+                        } else {
+                            acknowledge(md);
+                        }
                     }
                 }
             }
@@ -1157,13 +1168,6 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
 
     public long getLastDeliveredSequenceId() {
         return lastDeliveredSequenceId;
-    }
-
-    // on resumption re deliveries will percolate acks in their own good time
-    public void transportResumed() {
-        pendingAck = null; 
-        additionalWindowSize = 0;
-        deliveredCounter = 0;
     }
 
 	public IOException getFailureError() {

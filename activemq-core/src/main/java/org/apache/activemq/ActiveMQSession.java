@@ -1962,12 +1962,4 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
             syncSendPacket(ack);
         }
     }
-
-    public void transportResumed() {
-        for (Iterator<ActiveMQMessageConsumer> iter = consumers.iterator(); iter.hasNext();) {
-            ActiveMQMessageConsumer consumer = iter.next();
-            consumer.transportResumed();
-        }
-    }
-
 }

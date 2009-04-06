@@ -39,8 +39,6 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.DestinationStatistics;
 import org.apache.activemq.broker.region.RegionBroker;
-import org.apache.activemq.broker.region.policy.PolicyEntry;
-import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.broker.util.LoggingBrokerPlugin;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.store.amq.AMQPersistenceAdapterFactory;
@@ -64,19 +62,20 @@ public class AMQ2149Test extends TestCase {
     private final String SEQ_NUM_PROPERTY = "seqNum";
 
     final int MESSAGE_LENGTH_BYTES = 75 * 1024;
-    final long SLEEP_BETWEEN_SEND_MS = 3;
+    final long SLEEP_BETWEEN_SEND_MS = 25;
     final int NUM_SENDERS_AND_RECEIVERS = 10;
     final Object brokerLock = new Object();
     
     private static final long DEFAULT_BROKER_STOP_PERIOD = 20 * 1000;
-    private static final long DEFAULT_NUM_TO_SEND = 1500;
+    private static final long DEFAULT_NUM_TO_SEND = 1400;
     
     long brokerStopPeriod = DEFAULT_BROKER_STOP_PERIOD;
     long numtoSend = DEFAULT_NUM_TO_SEND;
+    long sleepBetweenSend = SLEEP_BETWEEN_SEND_MS;
     String brokerURL = DEFAULT_BROKER_URL;
     
     int numBrokerRestarts = 0;
-    final static int MAX_BROKER_RESTARTS = 4;
+    final static int MAX_BROKER_RESTARTS = 5;
     BrokerService broker;
     Vector<Throwable> exceptions = new Vector<Throwable>();
 
@@ -110,6 +109,7 @@ public class AMQ2149Test extends TestCase {
         dataDirFile = new File("target/"+ getName());
         numtoSend = DEFAULT_NUM_TO_SEND;
         brokerStopPeriod = DEFAULT_BROKER_STOP_PERIOD;
+        sleepBetweenSend = SLEEP_BETWEEN_SEND_MS;
         brokerURL = DEFAULT_BROKER_URL;
     }
     
@@ -244,9 +244,9 @@ public class AMQ2149Test extends TestCase {
                     LOG.error(dest + " send error", e);
                     exceptions.add(e);
                 }
-                if (SLEEP_BETWEEN_SEND_MS > 0) {
+                if (sleepBetweenSend > 0) {
                     try {
-                        Thread.sleep(SLEEP_BETWEEN_SEND_MS);
+                        Thread.sleep(sleepBetweenSend);
                     } catch (InterruptedException e) {
                         LOG.warn(dest + " sleep interrupted", e);
                     }
@@ -301,7 +301,7 @@ public class AMQ2149Test extends TestCase {
     }
 
 
-    public void x_testOrderWithRestart() throws Exception {
+    public void testOrderWithRestart() throws Exception {
         createBroker(new Configurer() {
             public void configure(BrokerService broker) throws Exception {
                 broker.deleteAllMessages();     
@@ -323,7 +323,7 @@ public class AMQ2149Test extends TestCase {
         verifyStats(true);
     }
         
-    public void x_testTopicOrderWithRestart() throws Exception {
+    public void testTopicOrderWithRestart() throws Exception {
         createBroker(new Configurer() {
             public void configure(BrokerService broker) throws Exception {
                 broker.deleteAllMessages();
@@ -351,7 +351,8 @@ public class AMQ2149Test extends TestCase {
     }
     
     public void doTestTransactionalOrderWithRestart(byte destinationType) throws Exception {
-        numtoSend = 15000;
+        numtoSend = 10000;
+        sleepBetweenSend = 3;
         brokerStopPeriod = 30 * 1000;
               
         createBroker(new Configurer() {

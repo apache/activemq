@@ -1836,12 +1836,6 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
             TransportListener listener = iter.next();
             listener.transportResumed();
         }
-        for (Iterator<ActiveMQSession> i = this.sessions.iterator(); i.hasNext();) {
-            ActiveMQSession s = i.next();
-            // deliverAcks at this point is too early as acks can arrive at the broker
-            // before redispatch of messages and hence be out or order
-            s.transportResumed();
-        }
     }
 
     /**
