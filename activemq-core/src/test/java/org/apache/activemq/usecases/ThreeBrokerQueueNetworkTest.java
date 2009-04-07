@@ -17,12 +17,18 @@
 package org.apache.activemq.usecases;
 
 import java.net.URI;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 
 import javax.jms.Destination;
 import javax.jms.MessageConsumer;
 
 import org.apache.activemq.JmsMultipleBrokersTestSupport;
+import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.region.Queue;
+import org.apache.activemq.broker.region.RegionBroker;
+import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.util.MessageIdList;
 
 /**
@@ -268,6 +274,65 @@ public class ThreeBrokerQueueNetworkTest extends JmsMultipleBrokersTestSupport {
         MessageIdList msgsC = getConsumerMessages("BrokerC", clientC);
 
         assertEquals(MESSAGE_COUNT * 3, msgsA.getMessageCount() + msgsB.getMessageCount() + msgsC.getMessageCount());
+    }
+
+    public void testNoDuplicateQueueSubs() throws Exception {
+        
+        bridgeAllBrokers("default", 3, true);
+        
+        startAllBrokers();
+
+        // Setup destination
+        Destination dest = createDestination("TEST.FOO", false);
+
+        // Setup consumers
+        String brokerName = "BrokerA";
+        createConsumer(brokerName, dest);
+        
+        // wait for advisories
+        Thread.sleep(2000);
+        
+        // verify there is one consumer on each broker, no cycles
+        Collection<BrokerItem> brokerList = brokers.values();
+        for (Iterator<BrokerItem> i = brokerList.iterator(); i.hasNext();) {
+            BrokerService broker = i.next().broker;
+            verifyConsumerCount(broker, 1, dest);
+        }
+    }
+    
+
+    public void testDuplicateQueueSubs() throws Exception {
+        
+        bridgeAllBrokers("default", 3, false);
+        startAllBrokers();
+
+        // Setup destination
+        Destination dest = createDestination("TEST.FOO", false);
+
+        // Setup consumers
+        String brokerName = "BrokerA";
+        createConsumer(brokerName, dest);
+        
+        // wait for advisories
+        Thread.sleep(2000);
+        
+        verifyConsumerCount(brokers.get(brokerName).broker, 1, dest);
+        
+        // in a cyclic network, other brokers will get second order consumer
+        // an alternative route to A via each other
+        Collection<BrokerItem> brokerList = brokers.values();
+        for (Iterator<BrokerItem> i = brokerList.iterator(); i.hasNext();) {
+            BrokerService broker = i.next().broker;
+            if (!brokerName.equals(broker.getBrokerName())) {
+                verifyConsumerCount(broker, 2, dest);
+            }
+        }
+    }
+
+    private void verifyConsumerCount(BrokerService broker, int count, Destination dest) throws Exception {
+        RegionBroker regionBroker = (RegionBroker) broker.getRegionBroker();
+        Queue internalQueue = (Queue) regionBroker.getDestinations(ActiveMQDestination.transform(dest)).iterator().next(); 
+        assertEquals("consumer count on " + broker.getBrokerName() + " matches for q: " + internalQueue, count, internalQueue.getConsumers().size());      
     }
 
     public void setUp() throws Exception {

@@ -940,27 +940,32 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
     
     /*
      * check our existing subs networkConsumerIds against the list of network ids in this subscription
-     * a match means a duplicate which we suppress for topics
+     * A match means a duplicate which we suppress for topics and maybe for queues
      */
     private boolean isDuplicateNetworkSubscription(ConsumerInfo consumerInfo) {
         boolean isDuplicate = false;
-        if (consumerInfo.getDestination().isTopic()) {
-            List<ConsumerId> candidateConsumers = consumerInfo.getNetworkConsumerIds();
-            if (candidateConsumers.isEmpty()) {
-                candidateConsumers.add(consumerInfo.getConsumerId());
-            }
-            Collection<Subscription> currentSubs = getTopicRegionSubscriptions();
-            for (Subscription sub : currentSubs) {
-                List<ConsumerId> networkConsumers =  sub.getConsumerInfo().getNetworkConsumerIds();
-                if (!networkConsumers.isEmpty()) {
-                    if (matchFound(candidateConsumers, networkConsumers)) {
-                        if (LOG.isDebugEnabled()) {
-                            LOG.debug("subscription: " + consumerInfo + " is duplicated by network subscription: " 
-                                    + sub.getConsumerInfo()  + ", networkComsumerIds: " + networkConsumers);
-                        }
-                        isDuplicate = true;
-                        break;
+        
+        if (consumerInfo.getDestination().isQueue() && !configuration.isSuppressDuplicateQueueSubscriptions()) {
+            return isDuplicate;
+        }
+        
+        List<ConsumerId> candidateConsumers = consumerInfo.getNetworkConsumerIds();
+        if (candidateConsumers.isEmpty()) {
+            candidateConsumers.add(consumerInfo.getConsumerId());
+        }
+        
+        Collection<Subscription> currentSubs = 
+            getRegionSubscriptions(consumerInfo.getDestination().isTopic());
+        for (Subscription sub : currentSubs) {
+            List<ConsumerId> networkConsumers =  sub.getConsumerInfo().getNetworkConsumerIds();
+            if (!networkConsumers.isEmpty()) {
+                if (matchFound(candidateConsumers, networkConsumers)) {
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug("subscription: " + consumerInfo + " is duplicated by network subscription: " 
+                                + sub.getConsumerInfo()  + ", networkComsumerIds: " + networkConsumers);
                     }
+                    isDuplicate = true;
+                    break;
                 }
             }
         }
@@ -978,12 +983,13 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
         return found;
     }
 
-    private final Collection<Subscription> getTopicRegionSubscriptions() {
+    private final Collection<Subscription> getRegionSubscriptions(boolean isTopic) {
         RegionBroker region = (RegionBroker) brokerService.getRegionBroker();
-        AbstractRegion topicRegion = (AbstractRegion) region.getTopicRegion();
-        return topicRegion.getSubscriptions().values();
+        AbstractRegion abstractRegion = (AbstractRegion) 
+            (isTopic ? region.getTopicRegion() : region.getQueueRegion());
+        return abstractRegion.getSubscriptions().values();
     }
-
+    
     protected DemandSubscription createDemandSubscription(ConsumerInfo info) throws IOException {
         //add our original id to ourselves
         info.addNetworkConsumerId(info.getConsumerId());

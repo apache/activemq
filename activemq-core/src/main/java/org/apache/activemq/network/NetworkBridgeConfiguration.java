@@ -36,6 +36,7 @@ public class NetworkBridgeConfiguration {
     private String password;
     private String destinationFilter = ">";
     private String name = null;
+    private boolean suppressDuplicateQueueSubscriptions = false;
 
     /**
      * @return the conduitSubscriptions
@@ -221,5 +222,17 @@ public class NetworkBridgeConfiguration {
      */
     public void setName(String name) {
         this.name = name;
+    }
+
+    public boolean isSuppressDuplicateQueueSubscriptions() {
+        return suppressDuplicateQueueSubscriptions;
+    }
+    
+    /**
+     * 
+     * @param val if true, duplicate network queue subscriptions (in a cyclic network) will be suppressed
+     */
+    public void setSuppressDuplicateQueueSubscriptions(boolean val) {
+        suppressDuplicateQueueSubscriptions = val;
     }
 }

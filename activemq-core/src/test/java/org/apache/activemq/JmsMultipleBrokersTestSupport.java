@@ -115,10 +115,10 @@ public class JmsMultipleBrokersTestSupport extends CombinationTestSupport {
 
     // This will interconnect all brokes using multicast
     protected void bridgeAllBrokers() throws Exception {
-        bridgeAllBrokers("default");
+        bridgeAllBrokers("default", 1, false);
     }
 
-    protected void bridgeAllBrokers(String groupName) throws Exception {
+    protected void bridgeAllBrokers(String groupName, int ttl, boolean suppressduplicateQueueSubs) throws Exception {
         Collection<BrokerItem> brokerList = brokers.values();
         for (Iterator<BrokerItem> i = brokerList.iterator(); i.hasNext();) {
             BrokerService broker = i.next().broker;
@@ -131,7 +131,9 @@ public class JmsMultipleBrokersTestSupport extends CombinationTestSupport {
 
             TransportConnector transport = (TransportConnector)transportConnectors.get(0);
             transport.setDiscoveryUri(new URI("multicast://default?group=" + groupName));
-            broker.addNetworkConnector("multicast://default?group=" + groupName);
+            NetworkConnector nc = broker.addNetworkConnector("multicast://default?group=" + groupName);
+            nc.setNetworkTTL(ttl);
+            nc.setSuppressDuplicateQueueSubscriptions(suppressduplicateQueueSubs);
         }
 
         // Multicasting may take longer to setup
