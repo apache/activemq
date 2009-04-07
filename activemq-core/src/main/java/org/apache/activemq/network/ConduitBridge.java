@@ -88,8 +88,8 @@ public class ConduitBridge extends DemandForwardingBridge {
             DemandSubscription ds = i.next();
             subscriptionMapByLocalId.remove(ds.getRemoteInfo().getConsumerId());
             removeSubscription(ds);
-            if (LOG.isTraceEnabled()) {
-                LOG.trace("removing sub on " + localBroker + " from " + remoteBrokerName + " :  " + ds.getRemoteInfo());
+            if (LOG.isDebugEnabled()) {
+                LOG.debug(configuration.getBrokerName() + " removing sub on " + localBroker + " from " + remoteBrokerName + " :  " + ds.getRemoteInfo());
             }
         }
 
