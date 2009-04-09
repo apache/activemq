@@ -40,8 +40,8 @@
 <th>Name</th>
 <th>Number Of Pending Messages</th>
 <th>Number Of Consumers</th>
-<th>Messages Sent</th>
-<th>Messages Received</th>
+<th>Messages Enqueued</th>
+<th>Messages Dequeued</th>
 <th>Views</th>
 <th>Operations</th>
 </tr>
