@@ -63,10 +63,15 @@ public class ConduitBridge extends DemandForwardingBridge {
         for (Iterator i = subscriptionMapByLocalId.values().iterator(); i.hasNext();) {
             DemandSubscription ds = (DemandSubscription)i.next();
             if (filter.matches(ds.getLocalInfo().getDestination())) {
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug(configuration.getBrokerName() + " matched exsting sub (add interest) for : " + ds.getRemoteInfo()
+                            + " with sub: " + info);
+                }
                 // add the interest in the subscription
                 // ds.add(ds.getRemoteInfo().getConsumerId());
                 ds.add(info.getConsumerId());
                 matched = true;
+                
                 // continue - we want interest to any existing
                 // DemandSubscriptions
             }
@@ -82,6 +87,10 @@ public class ConduitBridge extends DemandForwardingBridge {
             ds.remove(id);
             if (ds.isEmpty()) {
                 tmpList.add(ds);
+            } else {
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug(configuration.getBrokerName() + " removing interest in sub on " + localBroker + " from " + remoteBrokerName + " :  " + ds.getRemoteInfo());
+                }
             }
         }
         for (Iterator<DemandSubscription> i = tmpList.iterator(); i.hasNext();) {

@@ -76,6 +76,7 @@ public class DemandForwardingBridge extends DemandForwardingBridgeSupport {
         synchronized (brokerInfoMutex) {
             localBrokerId = ((BrokerInfo)command).getBrokerId();
             localBrokerPath[0] = localBrokerId;
+            localBrokerIdKnownLatch.countDown();
             if (remoteBrokerId != null) {
                 if (remoteBrokerId.equals(localBrokerId)) {
                     if (LOG.isTraceEnabled()) {
