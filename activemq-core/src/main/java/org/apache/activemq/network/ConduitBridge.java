@@ -64,7 +64,7 @@ public class ConduitBridge extends DemandForwardingBridge {
             DemandSubscription ds = (DemandSubscription)i.next();
             if (filter.matches(ds.getLocalInfo().getDestination())) {
                 if (LOG.isDebugEnabled()) {
-                    LOG.debug(configuration.getBrokerName() + " matched exsting sub (add interest) for : " + ds.getRemoteInfo()
+                    LOG.debug(configuration.getBrokerName() + " matched (add interest) to exsting sub for: " + ds.getRemoteInfo()
                             + " with sub: " + info);
                 }
                 // add the interest in the subscription
@@ -84,18 +84,17 @@ public class ConduitBridge extends DemandForwardingBridge {
 
         for (Iterator i = subscriptionMapByLocalId.values().iterator(); i.hasNext();) {
             DemandSubscription ds = (DemandSubscription)i.next();
-            ds.remove(id);
+            if (ds.remove(id)) {
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug(configuration.getBrokerName() + " removing interest in sub on " + localBroker + " from " + remoteBrokerName + " : sub: " + id  + " existing matched sub: " + ds.getRemoteInfo());
+                }
+            }
             if (ds.isEmpty()) {
                 tmpList.add(ds);
-            } else {
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug(configuration.getBrokerName() + " removing interest in sub on " + localBroker + " from " + remoteBrokerName + " :  " + ds.getRemoteInfo());
-                }
             }
         }
         for (Iterator<DemandSubscription> i = tmpList.iterator(); i.hasNext();) {
             DemandSubscription ds = i.next();
-            subscriptionMapByLocalId.remove(ds.getRemoteInfo().getConsumerId());
             removeSubscription(ds);
             if (LOG.isDebugEnabled()) {
                 LOG.debug(configuration.getBrokerName() + " removing sub on " + localBroker + " from " + remoteBrokerName + " :  " + ds.getRemoteInfo());

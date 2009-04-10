@@ -113,7 +113,7 @@ public abstract class AbstractRegion implements Region {
     }
 
     public Destination addDestination(ConnectionContext context, ActiveMQDestination destination) throws Exception {
-        LOG.debug("Adding destination: " + destination);
+        LOG.debug(broker.getBrokerName() + " adding destination: " + destination);
         synchronized (destinationsMutex) {
             Destination dest = destinations.get(destination);
             if (dest == null) {
@@ -216,7 +216,7 @@ public abstract class AbstractRegion implements Region {
     }
 
     public Subscription addConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
-        LOG.debug("Adding consumer: " + info.getConsumerId());
+        LOG.debug(broker.getBrokerName() + " adding consumer: " + info.getConsumerId() + " for destination: " + info.getDestination());
         ActiveMQDestination destination = info.getDestination();
         if (destination != null && !destination.isPattern() && !destination.isComposite()) {
             // lets auto-create the destination
@@ -308,7 +308,7 @@ public abstract class AbstractRegion implements Region {
     }
 
     public void removeConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
-        LOG.debug("Removing consumer: " + info.getConsumerId());
+        LOG.debug(broker.getBrokerName() + " removing consumer: " + info.getConsumerId() + " for destination: " + info.getDestination());
 
         Subscription sub = subscriptions.remove(info.getConsumerId());
         //The sub could be removed elsewhere - see ConnectionSplitBroker

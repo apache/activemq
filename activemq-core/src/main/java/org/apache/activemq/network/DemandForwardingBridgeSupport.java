@@ -617,6 +617,9 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
 
     protected void removeSubscription(DemandSubscription sub) throws IOException {
         if (sub != null) {
+            if (LOG.isDebugEnabled()) {
+                LOG.debug(configuration.getBrokerName() + " remove local subscription for remote " + sub.getRemoteInfo().getConsumerId());
+            }
             subscriptionMapByLocalId.remove(sub.getLocalInfo().getConsumerId());
             localBroker.oneway(sub.getLocalInfo().createRemoveCommand());
         }

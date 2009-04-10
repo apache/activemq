@@ -17,6 +17,7 @@
 package org.apache.activemq.command;
 
 import java.io.IOException;
+import java.util.Arrays;
 
 import javax.jms.JMSException;
 
@@ -75,7 +76,9 @@ public class NetworkBridgeFilter implements DataStructure, BooleanExpression {
 
         if (contains(message.getBrokerPath(), networkBrokerId)) {
             if (LOG.isTraceEnabled()) {
-                LOG.trace("Message all ready routed once through this broker - ignoring: " + message);
+                LOG.trace("Message all ready routed once through this broker ("
+                        + networkBrokerId + "), path: "
+                        + Arrays.toString(message.getBrokerPath()) + " - ignoring: " + message);
             }
             return false;
         }

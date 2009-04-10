@@ -20,6 +20,8 @@ import java.net.URI;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import javax.jms.Destination;
 import javax.jms.MessageConsumer;
@@ -30,11 +32,14 @@ import org.apache.activemq.broker.region.Queue;
 import org.apache.activemq.broker.region.RegionBroker;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.util.MessageIdList;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * @version $Revision: 1.1.1.1 $
  */
 public class ThreeBrokerQueueNetworkTest extends JmsMultipleBrokersTestSupport {
+    private static final Log LOG = LogFactory.getLog(ThreeBrokerQueueNetworkTest.class);
     protected static final int MESSAGE_COUNT = 100;
 
     /**
@@ -243,9 +248,6 @@ public class ThreeBrokerQueueNetworkTest extends JmsMultipleBrokersTestSupport {
         assertEquals(MESSAGE_COUNT * 3, msgsA.getMessageCount() + msgsB.getMessageCount() + msgsC.getMessageCount());
     }
 
-    /**
-     * BrokerA <-> BrokerB <-> BrokerC
-     */
     public void testAllConnectedUsingMulticast() throws Exception {
         // Setup broker networks
         bridgeAllBrokers();
@@ -274,6 +276,156 @@ public class ThreeBrokerQueueNetworkTest extends JmsMultipleBrokersTestSupport {
         MessageIdList msgsC = getConsumerMessages("BrokerC", clientC);
 
         assertEquals(MESSAGE_COUNT * 3, msgsA.getMessageCount() + msgsB.getMessageCount() + msgsC.getMessageCount());
+    }
+
+    
+    public void testAllConnectedUsingMulticastProducerConsumerOnA() throws Exception {
+        bridgeAllBrokers("default", 3, false);
+        startAllBrokers();
+
+        // Setup destination
+        Destination dest = createDestination("TEST.FOO", false);
+
+        // Setup consumers
+        int messageCount = 2000;
+        CountDownLatch messagesReceived = new CountDownLatch(messageCount);
+        MessageConsumer clientA = createConsumer("BrokerA", dest, messagesReceived);
+
+        // Let's try to wait for advisory percolation.
+        Thread.sleep(1000);
+
+        // Send messages
+        sendMessages("BrokerA", dest, messageCount);
+     
+        assertTrue(messagesReceived.await(30, TimeUnit.SECONDS));
+        
+        // Get message count
+        MessageIdList msgsA = getConsumerMessages("BrokerA", clientA);
+        assertEquals(messageCount, msgsA.getMessageCount());
+    }
+
+    public void testAllConnectedWithSpare() throws Exception {
+        bridgeAllBrokers("default", 3, false);
+        startAllBrokers();
+
+        // Setup destination
+        Destination dest = createDestination("TEST.FOO", false);
+
+        // Setup consumers
+        int messageCount = 2000;
+        CountDownLatch messagesReceived = new CountDownLatch(messageCount);
+        MessageConsumer clientA = createConsumer("BrokerA", dest, messagesReceived);
+
+        // ensure advisory percolation.
+        Thread.sleep(1000);
+
+        // Send messages
+        sendMessages("BrokerB", dest, messageCount);
+
+        assertTrue(messagesReceived.await(30, TimeUnit.SECONDS));
+        
+        // Get message count
+        MessageIdList msgsA = getConsumerMessages("BrokerA", clientA);
+        assertEquals(messageCount, msgsA.getMessageCount());
+    }
+    
+    public void testMigrateConsumerStuckMessages() throws Exception {
+        boolean suppressQueueDuplicateSubscriptions = false;
+        bridgeAllBrokers("default", 3, suppressQueueDuplicateSubscriptions);
+        startAllBrokers();
+
+        // Setup destination
+        Destination dest = createDestination("TEST.FOO", false);    
+        
+        // Setup consumers
+        LOG.info("Consumer on A");
+        MessageConsumer clientA = createConsumer("BrokerA", dest);
+        
+        // ensure advisors have percolated
+        Thread.sleep(500);
+        
+        LOG.info("Consumer on B");
+        int messageCount = 2000;
+        
+        // will only get half of the messages
+        CountDownLatch messagesReceived = new CountDownLatch(messageCount/2);
+        MessageConsumer clientB = createConsumer("BrokerB", dest, messagesReceived);
+          
+        // ensure advisors have percolated
+        Thread.sleep(500);
+
+        LOG.info("Close consumer on A");
+        clientA.close();
+
+        // ensure advisors have percolated
+        Thread.sleep(500);
+       
+        LOG.info("Send to B"); 
+        sendMessages("BrokerB", dest, messageCount);
+
+        // Let's try to wait for any messages.
+        assertTrue(messagesReceived.await(30, TimeUnit.SECONDS));
+
+        // Get message count
+        MessageIdList msgs = getConsumerMessages("BrokerB", clientB);
+        
+        // see will any more arrive
+        Thread.sleep(500);        
+        assertEquals(messageCount/2, msgs.getMessageCount());
+        
+        // pick up the stuck messages
+        messagesReceived = new CountDownLatch(messageCount/2);
+        clientA = createConsumer("BrokerA", dest, messagesReceived);
+        // Let's try to wait for any messages.
+        assertTrue(messagesReceived.await(30, TimeUnit.SECONDS));
+        
+        msgs = getConsumerMessages("BrokerA", clientA);
+        assertEquals(messageCount/2, msgs.getMessageCount());
+    }
+
+    // use case: for maintenance, migrate consumers and producers from one
+    // node in the network to another so node can be replaced/updated
+    public void testMigrateConsumer() throws Exception {
+        boolean suppressQueueDuplicateSubscriptions = true;
+        boolean decreaseNetworkConsumerPriority = true;
+        bridgeAllBrokers("default", 3, suppressQueueDuplicateSubscriptions, decreaseNetworkConsumerPriority);
+        startAllBrokers();
+
+        // Setup destination
+        Destination dest = createDestination("TEST.FOO", false);    
+        
+        // Setup consumers
+        LOG.info("Consumer on A");
+        MessageConsumer clientA = createConsumer("BrokerA", dest);
+        
+        // ensure advisors have percolated
+        Thread.sleep(500);
+        
+        LOG.info("Consumer on B");
+        int messageCount = 2000;
+        CountDownLatch messagesReceived = new CountDownLatch(messageCount);
+        MessageConsumer clientB = createConsumer("BrokerB", dest, messagesReceived);
+       
+        // make the consumer slow so that any network consumer has a chance, even
+        // if it has a lower priority
+        MessageIdList msgs = getConsumerMessages("BrokerB", clientB);
+        msgs.setProcessingDelay(10);
+        
+        // ensure advisors have percolated
+        Thread.sleep(500);
+
+        LOG.info("Close consumer on A");
+        clientA.close();
+
+        // ensure advisors have percolated
+        Thread.sleep(500);
+       
+        LOG.info("Send to B"); 
+        sendMessages("BrokerB", dest, messageCount);
+
+        // Let's try to wait for any messages.
+        assertTrue(messagesReceived.await(30, TimeUnit.SECONDS));
+        assertEquals(messageCount, msgs.getMessageCount());      
     }
 
     public void testNoDuplicateQueueSubs() throws Exception {

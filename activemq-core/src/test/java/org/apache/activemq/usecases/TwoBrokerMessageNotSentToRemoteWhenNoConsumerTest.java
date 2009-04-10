@@ -98,6 +98,40 @@ public class TwoBrokerMessageNotSentToRemoteWhenNoConsumerTest extends JmsMultip
         assertEquals(MESSAGE_COUNT, msgsA.getMessageCount());
 
     }
+    
+    /**
+     * BrokerA -> BrokerB && BrokerB -> BrokerA
+     */
+    public void testDuplexStaticRemoteBrokerHasNoConsumer() throws Exception {
+        // Setup broker networks
+        boolean dynamicOnly = true;
+        int networkTTL = 2;
+        boolean conduit = true;
+        bridgeBrokers("BrokerA", "BrokerB", dynamicOnly, networkTTL, conduit);
+        bridgeBrokers("BrokerB", "BrokerA", dynamicOnly, networkTTL, conduit);
+
+        startAllBrokers();
+
+        // Setup destination
+        Destination dest = createDestination("TEST.FOO", false);
+
+        // Setup consumers
+        MessageConsumer clientA = createConsumer("BrokerA", dest);
+
+        Thread.sleep(2*1000);
+        
+        int messageCount = 2000;
+        // Send messages
+        sendMessages("BrokerA", dest, messageCount);
+
+        // Get message count
+        MessageIdList msgsA = getConsumerMessages("BrokerA", clientA);
+
+        msgsA.waitForMessagesToArrive(messageCount);
+
+        assertEquals(messageCount, msgsA.getMessageCount());
+
+    }
 
     public void setUp() throws Exception {
         super.setAutoFail(true);
