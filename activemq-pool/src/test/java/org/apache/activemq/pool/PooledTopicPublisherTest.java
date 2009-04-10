@@ -16,15 +16,16 @@
  */
 package org.apache.activemq.pool;
 
+import javax.jms.ExceptionListener;
+import javax.jms.JMSException;
 import javax.jms.Session;
 import javax.jms.TopicConnection;
 import javax.jms.TopicPublisher;
 import javax.jms.TopicSession;
 
-import junit.framework.TestCase;
 import org.apache.activemq.ActiveMQConnectionFactory;
-import org.apache.activemq.test.TestSupport;
 import org.apache.activemq.command.ActiveMQTopic;
+import org.apache.activemq.test.TestSupport;
 
 /**
  * @version $Revision$
@@ -44,6 +45,20 @@ public class PooledTopicPublisherTest extends TestSupport {
         publisher.publish(session.createMessage());
     }
 
+    
+    public void testSetGetExceptionListener() throws Exception {
+        PooledConnectionFactory pcf = new PooledConnectionFactory();
+        pcf.setConnectionFactory(new ActiveMQConnectionFactory("vm://test"));
+
+        connection = (TopicConnection) pcf.createConnection();
+        ExceptionListener listener = new ExceptionListener() {
+            public void onException(JMSException exception) {
+            }
+        };
+        connection.setExceptionListener(listener);
+        assertEquals(listener, connection.getExceptionListener());
+    }
+    
     @Override
     protected void tearDown() throws Exception {
         if (connection != null) {
