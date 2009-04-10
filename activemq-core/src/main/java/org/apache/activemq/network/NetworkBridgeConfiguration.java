@@ -16,6 +16,10 @@
  */
 package org.apache.activemq.network;
 
+import java.util.List;
+
+import org.apache.activemq.command.ActiveMQDestination;
+
 /**
  * Configuration for a NetworkBridge
  * 
@@ -36,7 +40,13 @@ public class NetworkBridgeConfiguration {
     private String password;
     private String destinationFilter = ">";
     private String name = null;
+    
+    private List<ActiveMQDestination> excludedDestinations;
+    private List<ActiveMQDestination> dynamicallyIncludedDestinations;
+    private List<ActiveMQDestination> staticallyIncludedDestinations;
+
     private boolean suppressDuplicateQueueSubscriptions = false;
+
 
     /**
      * @return the conduitSubscriptions
@@ -223,6 +233,35 @@ public class NetworkBridgeConfiguration {
     public void setName(String name) {
         this.name = name;
     }
+
+	public List<ActiveMQDestination> getExcludedDestinations() {
+		return excludedDestinations;
+	}
+
+	public void setExcludedDestinations(
+			List<ActiveMQDestination> excludedDestinations) {
+		this.excludedDestinations = excludedDestinations;
+	}
+
+	public List<ActiveMQDestination> getDynamicallyIncludedDestinations() {
+		return dynamicallyIncludedDestinations;
+	}
+
+	public void setDynamicallyIncludedDestinations(
+			List<ActiveMQDestination> dynamicallyIncludedDestinations) {
+		this.dynamicallyIncludedDestinations = dynamicallyIncludedDestinations;
+	}
+
+	public List<ActiveMQDestination> getStaticallyIncludedDestinations() {
+		return staticallyIncludedDestinations;
+	}
+
+	public void setStaticallyIncludedDestinations(
+			List<ActiveMQDestination> staticallyIncludedDestinations) {
+		this.staticallyIncludedDestinations = staticallyIncludedDestinations;
+	}
+	
+    
 
     public boolean isSuppressDuplicateQueueSubscriptions() {
         return suppressDuplicateQueueSubscriptions;

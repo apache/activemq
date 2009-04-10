@@ -21,8 +21,6 @@ import java.beans.PropertyEditorManager;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -32,8 +30,23 @@ import java.util.Set;
 import java.util.Map.Entry;
 
 import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.commons.lang.ArrayUtils;
+
+
 
 public final class IntrospectionSupport {
+	
+	static {
+		// find Spring and ActiveMQ specific property editors
+		 String[] searchPath = (String[])ArrayUtils.addAll(
+				 PropertyEditorManager.getEditorSearchPath(), 
+				 new String[] {
+					"org.springframework.beans.propertyeditors"
+				  , "org.apache.activemq.util"
+				 }
+			);
+		PropertyEditorManager.setEditorSearchPath(searchPath);
+	}
     
     private IntrospectionSupport() {
     }
@@ -177,26 +190,20 @@ public final class IntrospectionSupport {
         }
     }
 
-    private static Object convert(Object value, Class type) throws URISyntaxException {
+    private static Object convert(Object value, Class type) {
         PropertyEditor editor = PropertyEditorManager.findEditor(type);
         if (editor != null) {
             editor.setAsText(value.toString());
             return editor.getValue();
         }
-        if (type == URI.class) {
-            return new URI(value.toString());
-        }
         return null;
     }
 
-    private static String convertToString(Object value, Class type) throws URISyntaxException {
+    public static String convertToString(Object value, Class type) {
         PropertyEditor editor = PropertyEditorManager.findEditor(type);
         if (editor != null) {
             editor.setValue(value);
             return editor.getAsText();
-        }
-        if (type == URI.class) {
-            return ((URI)value).toString();
         }
         return null;
     }
@@ -219,12 +226,7 @@ public final class IntrospectionSupport {
         if (PropertyEditorManager.findEditor(clazz) != null) {
             return true;
         }
-        if (clazz == URI.class) {
-            return true;
-        }
-        if (clazz == Boolean.class) {
-            return true;
-        }
+        	
         return false;
     }
 

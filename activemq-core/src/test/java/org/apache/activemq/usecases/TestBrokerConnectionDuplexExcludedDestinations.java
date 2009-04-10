@@ -36,65 +36,92 @@ import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
 
 public class TestBrokerConnectionDuplexExcludedDestinations extends TestCase {
-
-	public void testBrokerConnectionDuplexPropertiesPropagation()
-			throws Exception {
-
+	
+	BrokerService receiverBroker;
+	BrokerService senderBroker;
+	
+	Connection hubConnection;
+	Session hubSession;
+	
+	Connection spokeConnection;
+	Session spokeSession;
+	
+	public void setUp() throws Exception {
 		// Hub broker
 		String configFileName = "org/apache/activemq/usecases/receiver-duplex.xml";
 		URI uri = new URI("xbean:" + configFileName);
-		BrokerService receiverBroker = BrokerFactory.createBroker(uri);
+		receiverBroker = BrokerFactory.createBroker(uri);
 		receiverBroker.setPersistent(false);
 		receiverBroker.setBrokerName("Hub");
 
 		// Spoke broker
 		configFileName = "org/apache/activemq/usecases/sender-duplex.xml";
 		uri = new URI("xbean:" + configFileName);
-		BrokerService senderBroker = BrokerFactory.createBroker(uri);
+		senderBroker = BrokerFactory.createBroker(uri);
 		senderBroker.setPersistent(false);
-		receiverBroker.setBrokerName("Spoke");
+		senderBroker.setBrokerName("Spoke");
 
 		// Start both Hub and Spoke broker
 		receiverBroker.start();
 		senderBroker.start();
+		
+		// create hub session
+		ConnectionFactory cfHub = new ActiveMQConnectionFactory("tcp://localhost:62002");
 
-		final ConnectionFactory cfHub = new ActiveMQConnectionFactory(
-				"tcp://localhost:62002");
-		final Connection hubConnection = cfHub.createConnection();
+		hubConnection = cfHub.createConnection();
 		hubConnection.start();
-		final Session hubSession = hubConnection.createSession(false,
-				Session.AUTO_ACKNOWLEDGE);
-		final MessageProducer hubProducer = hubSession.createProducer(null);
+		hubSession = hubConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+
+		// create spoke session
+		ConnectionFactory cfSpoke = new ActiveMQConnectionFactory("tcp://localhost:62001");
+		spokeConnection = cfSpoke.createConnection();
+		spokeConnection.start();
+		spokeSession = spokeConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+	}
+	
+	public void tearDown() throws Exception {
+		hubSession.close();
+		hubConnection.stop();
+		hubConnection.close();
+		
+		spokeSession.close();
+		spokeConnection.stop();
+		spokeConnection.close();
+
+		senderBroker.stop();
+		receiverBroker.stop();
+	}
+
+	public void testDuplexSendFromHubToSpoke()
+			throws Exception {
+
+		//create hub producer
+		MessageProducer hubProducer = hubSession.createProducer(null);
 		hubProducer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
 		hubProducer.setDisableMessageID(true);
 		hubProducer.setDisableMessageTimestamp(true);
 
-		final Queue excludedQueueHub = hubSession.createQueue("exclude.test.foo");
-		final TextMessage excludedMsgHub = hubSession.createTextMessage();
+		Queue excludedQueueHub = hubSession.createQueue("exclude.test.foo");
+		TextMessage excludedMsgHub = hubSession.createTextMessage();
 		excludedMsgHub.setText(excludedQueueHub.toString());
 		
-		final Queue includedQueueHub = hubSession.createQueue("include.test.foo");
+		Queue includedQueueHub = hubSession.createQueue("include.test.foo");
 
-		final TextMessage includedMsgHub = hubSession.createTextMessage();
-		excludedMsgHub.setText(includedQueueHub.toString());		
+		TextMessage includedMsgHub = hubSession.createTextMessage();
+		includedMsgHub.setText(includedQueueHub.toString());		
 
 		// Sending from Hub queue
 		hubProducer.send(excludedQueueHub, excludedMsgHub);
 		hubProducer.send(includedQueueHub, includedMsgHub);
 
-		final ConnectionFactory cfSpoke = new ActiveMQConnectionFactory(
-				"tcp://localhost:62001");
-		final Connection spokeConnection = cfSpoke.createConnection();
-		spokeConnection.start();
-		final Session spokeSession = spokeConnection.createSession(false,
-				Session.AUTO_ACKNOWLEDGE);
-		final Queue excludedQueueSpoke = spokeSession.createQueue("exclude.test.foo");
-		final MessageConsumer excludedConsumerSpoke = spokeSession
-				.createConsumer(excludedQueueSpoke);
 
-		final Queue includedQueueSpoke = spokeSession.createQueue("include.test.foo");
-		final MessageConsumer includedConsumerSpoke = spokeSession
-				.createConsumer(includedQueueSpoke);		
+		Queue excludedQueueSpoke = spokeSession.createQueue("exclude.test.foo");
+		MessageConsumer excludedConsumerSpoke = spokeSession.createConsumer(excludedQueueSpoke);
+		
+		Thread.sleep(100);
+
+	    Queue includedQueueSpoke = spokeSession.createQueue("include.test.foo");
+		MessageConsumer includedConsumerSpoke = spokeSession.createConsumer(includedQueueSpoke);		
 		
 		// Receiving from excluded Spoke queue
 		Message msg = excludedConsumerSpoke.receive(200);
@@ -102,19 +129,16 @@ public class TestBrokerConnectionDuplexExcludedDestinations extends TestCase {
 		
 		// Receiving from included Spoke queue
 		msg = includedConsumerSpoke.receive(200);
-		assertEquals(msg, includedMsgHub);
+		assertEquals(includedMsgHub, msg);
+		
+		// we should be able to receive excluded queue message on Hub
+		MessageConsumer excludedConsumerHub = hubSession.createConsumer(excludedQueueHub);
+		msg = excludedConsumerHub.receive(200);;
+		assertEquals(excludedMsgHub, msg);
 
-		excludedConsumerSpoke.close();
-		hubSession.close();
-		hubConnection.stop();
-		hubConnection.close();
 		hubProducer.close();
-		spokeSession.close();
-		spokeConnection.stop();
-		spokeConnection.close();
-
-		senderBroker.stop();
-		receiverBroker.stop();
+		excludedConsumerSpoke.close();
 
 	}
+	
 }

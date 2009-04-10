@@ -433,6 +433,15 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                 } else if (command.isBrokerInfo()) {
                     lastConnectSucceeded.set(true);
                     remoteBrokerInfo = (BrokerInfo)command;
+                    Properties props = MarshallingSupport.stringToProperties(remoteBrokerInfo.getNetworkProperties());
+                    try {
+                    	IntrospectionSupport.getProperties(configuration, props, null);
+                    	excludedDestinations = configuration.getExcludedDestinations().toArray(new ActiveMQDestination[configuration.getExcludedDestinations().size()]);
+                    	staticallyIncludedDestinations = configuration.getStaticallyIncludedDestinations().toArray(new ActiveMQDestination[configuration.getStaticallyIncludedDestinations().size()]);
+                    	dynamicallyIncludedDestinations = configuration.getDynamicallyIncludedDestinations().toArray(new ActiveMQDestination[configuration.getDynamicallyIncludedDestinations().size()]);
+                    } catch (Throwable t) {
+                    	LOG.error("Error mapping remote destinations", t);
+                    }
                     serviceRemoteBrokerInfo(command);
                     // Let the local broker know the remote broker's ID.
                     localBroker.oneway(command);

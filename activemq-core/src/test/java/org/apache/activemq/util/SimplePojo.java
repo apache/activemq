@@ -17,6 +17,10 @@
 package org.apache.activemq.util;
 
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.activemq.command.ActiveMQDestination;
 
 public class SimplePojo {
 
@@ -24,6 +28,9 @@ public class SimplePojo {
     int age;
     boolean enabled;
     URI uri;
+    List<ActiveMQDestination> favorites = new ArrayList<ActiveMQDestination>();
+    List<ActiveMQDestination> nonFavorites = new ArrayList<ActiveMQDestination>();
+    List<ActiveMQDestination> others = new ArrayList<ActiveMQDestination>();
     
     public int getAge() {
         return age;
@@ -49,5 +56,23 @@ public class SimplePojo {
     public void setUri(URI uri) {
         this.uri = uri;
     }
+	public List<ActiveMQDestination> getFavorites() {
+		return favorites;
+	}
+	public void setFavorites(List<ActiveMQDestination> favorites) {
+		this.favorites = favorites;
+	}
+	public List<ActiveMQDestination> getNonFavorites() {
+		return nonFavorites;
+	}
+	public void setNonFavorites(List<ActiveMQDestination> nonFavorites) {
+		this.nonFavorites = nonFavorites;
+	}
+	public List<ActiveMQDestination> getOthers() {
+		return others;
+	}
+	public void setOthers(List<ActiveMQDestination> others) {
+		this.others = others;
+	}
     
 }
