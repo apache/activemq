@@ -18,6 +18,7 @@ package org.apache.activemq.util;
 
 import java.beans.PropertyEditor;
 import java.beans.PropertyEditorManager;
+import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -34,17 +35,23 @@ import org.apache.commons.lang.ArrayUtils;
 
 
 
+
 public final class IntrospectionSupport {
 	
 	static {
-		// find Spring and ActiveMQ specific property editors
-		 String[] searchPath = (String[])ArrayUtils.addAll(
-				 PropertyEditorManager.getEditorSearchPath(), 
-				 new String[] {
-					"org.springframework.beans.propertyeditors"
-				  , "org.apache.activemq.util"
-				 }
-			);
+		// Add Spring and ActiveMQ specific property editors
+		String[] additionalPath = new String[] {
+				"org.springframework.beans.propertyeditors",
+				"org.apache.activemq.util" };
+
+		String[] searchPath = (String[]) Array.newInstance(String.class,
+				PropertyEditorManager.getEditorSearchPath().length
+						+ additionalPath.length);
+		System.arraycopy(PropertyEditorManager.getEditorSearchPath(), 0,
+				searchPath, 0,
+				PropertyEditorManager.getEditorSearchPath().length);
+		System.arraycopy(additionalPath, 0, searchPath, PropertyEditorManager
+				.getEditorSearchPath().length, additionalPath.length);
 		PropertyEditorManager.setEditorSearchPath(searchPath);
 	}
     
