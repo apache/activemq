@@ -549,10 +549,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
             // a network subscription so there is a need to synchronise on a shared entity
             synchronized(brokerService.getVmConnectorURI()) {
                 if (isDuplicateNetworkSubscription(info)) {
-                    if (LOG.isDebugEnabled()) {
-                        LOG.debug(configuration.getBrokerName() + " Ignoring sub from " + remoteBrokerName + ", destination " + info.getDestination() 
-                                + ", for " + info.getConsumerId() + " as a duplicate. Already subscribed via network subscription :"  + info);
-                    }
+                    // trace in method
                     return;
                 }
                 if (addConsumerInfo(info)) {
@@ -974,7 +971,8 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
             if (!networkConsumers.isEmpty()) {
                 if (matchFound(candidateConsumers, networkConsumers)) {
                     if (LOG.isDebugEnabled()) {
-                        LOG.debug(configuration.getBrokerName() + " subscription: " + consumerInfo + " is duplicated by network subscription: " 
+                        LOG.debug(configuration.getBrokerName() + " Ignoring duplicate subscription from " + remoteBrokerName
+                                + ", sub: " + consumerInfo + " is duplicated by network subscription: " 
                                 + sub.getConsumerInfo()  + ", networkComsumerIds: " + networkConsumers);
                     }
                     isDuplicate = true;
