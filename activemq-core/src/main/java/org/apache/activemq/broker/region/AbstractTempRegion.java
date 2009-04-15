@@ -59,7 +59,7 @@ public abstract class AbstractTempRegion extends AbstractRegion {
         this.doCacheTempDestinations=broker.getBrokerService().isCacheTempDestinations();
         this.purgeTime = broker.getBrokerService().getTimeBeforePurgeTempDestinations();
         if (this.doCacheTempDestinations) {
-            this.purgeTimer = new Timer(true);
+            this.purgeTimer = new Timer("ActiveMQ Temp destination purge timer", true);
             this.purgeTask = new TimerTask() {
                 public void run() {
                     doPurge();

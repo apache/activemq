@@ -222,9 +222,7 @@ public class JmDNS
         services = new Hashtable(20);
         serviceTypes = new Hashtable(20);
 
-        // REMIND: If I could pass in a name for the Timer thread,
-        //         I would pass 'JmDNS.Timer'.
-        timer = new Timer();
+        timer = new Timer("JmDNS.Timer");
         new RecordReaper().start();
         shutdown = new Thread(new Shutdown(), "JmDNS.Shutdown");
         Runtime.getRuntime().addShutdownHook(shutdown);
