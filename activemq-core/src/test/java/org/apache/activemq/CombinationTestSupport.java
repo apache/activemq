@@ -219,7 +219,11 @@ public abstract class CombinationTestSupport extends AutoFailTestSupport {
     }
 
     public String getName() {
-        if (options != null) {
+    	return getName(false);
+    }
+    
+    public String getName(boolean original) {
+        if (options != null && !original) {
             return super.getName() + " " + options;
         }
         return super.getName();

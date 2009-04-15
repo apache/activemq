@@ -431,6 +431,7 @@ public abstract class BaseDestination implements Destination {
 
     public void dispose(ConnectionContext context) throws IOException {
         if (this.store != null) {
+        	this.store.removeAllMessages(context);
             this.store.dispose(context);
         }
         this.destinationStatistics.setParent(null);
