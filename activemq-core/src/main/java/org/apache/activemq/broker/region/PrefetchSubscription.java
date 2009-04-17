@@ -192,8 +192,10 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
         Destination destination = null;
         
         if (!isSlave()) {
-            while(!okForAckAsDispatchDone.await(100, TimeUnit.MILLISECONDS)) {
-                LOG.warn("Ack before disaptch, waiting for recovery dispatch: " + ack);
+            if (!okForAckAsDispatchDone.await(0l, TimeUnit.MILLISECONDS)) {
+                // suppress unexpected ack exception in this expected case
+                LOG.warn("Ignoring ack received before dispatch; result of failover with an outstanding ack. Acked messages will be replayed if present on this broker. Ignored ack: " + ack);
+                return;
             }
         }
         if (LOG.isTraceEnabled()) {
