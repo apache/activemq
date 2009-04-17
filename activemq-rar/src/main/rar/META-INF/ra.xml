@@ -284,7 +284,10 @@
             <config-property-type>java.lang.String</config-property-type>
             <config-property-value></config-property-value>
             <!--
-            <config-property-value>xbean:broker-config.xml</config-property-value>
+             To use the broker-config.xml from the root for the RAR
+               <config-property-value>xbean:broker-config.xml</config-property-value>
+             To use an external file or url location
+               <config-property-value>xbean:file:///amq/config/jee/broker-config.xml</config-property-value>
             -->
         </config-property>
 

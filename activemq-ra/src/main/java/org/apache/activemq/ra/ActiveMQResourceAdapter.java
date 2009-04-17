@@ -74,6 +74,11 @@ public class ActiveMQResourceAdapter extends ActiveMQConnectionSupport implement
                 @Override
                 public void run () {
                     try {
+                        // ensure RAR resources are available to xbean (needed for weblogic)
+                        log.debug("original thread context classLoader: " + Thread.currentThread().getContextClassLoader());
+                        Thread.currentThread().setContextClassLoader(getClass().getClassLoader());
+                        log.debug("current (from getClass()) thread context classLoader: " + Thread.currentThread().getContextClassLoader());
+                        
                         synchronized( ActiveMQResourceAdapter.this ) {
                             broker = BrokerFactory.createBroker(new URI(brokerXmlConfig));
                         }

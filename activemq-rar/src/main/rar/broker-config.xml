@@ -18,47 +18,22 @@
 <!-- START SNIPPET: xbean -->
 <beans xmlns="http://activemq.apache.org/schema/core">
 
-  <broker useJmx="true">
+  <!--  shutdown hook is disabled as RAR classloader may be gone at shutdown -->
+  <broker useJmx="true" useShutdownHook="false">
 
-	<!-- In ActiveMQ 4, you can setup destination policies. note: this xml format may still change a bit -->
-    <destinationPolicy>
-      <policyMap><policyEntries>
-
-          <policyEntry topic="FOO.>">
-            <dispatchPolicy>
-              <strictOrderDispatchPolicy />
-            </dispatchPolicy>
-            <subscriptionRecoveryPolicy>
-              <lastImageSubscriptionRecoveryPolicy />
-            </subscriptionRecoveryPolicy>
-          </policyEntry>
-
-      </policyEntries></policyMap>
-    </destinationPolicy>
-
+     <managementContext>
+       <!-- use appserver provided context instead of creating one,
+            for jboss use: -Djboss.platform.mbeanserver -->
+       <managementContext createConnector="false"/>
+     </managementContext>
 
     <persistenceAdapter>
       <journaledJDBC journalLogFiles="5" dataDirectory="../data"/>
-      <!-- To use a different datasource, use th following syntax : -->
-      <!--
-      <journaledJDBC journalLogFiles="5" dataDirectory="../data" dataSource="#postgres-ds"/>
-       -->
     </persistenceAdapter>
 
     <transportConnectors>
-      <!-- prefixing a connector with discovery: causes the connector to be advertiesed over rendezvous -->
-      <transportConnector uri="tcp://localhost:61616" discoveryUri="multicast://default"/>
+      <transportConnector uri="tcp://localhost:61616"/>
     </transportConnectors>
-
-    <networkConnectors>
-      <!-- by default just auto discover the other brokers -->
-      <networkConnector uri="multicast://default"/>
-      <!--
-      <networkConnector uri="static://(tcp://host1:61616,tcp://host2:61616)"/>
-      -->
-    </networkConnectors>
-
+    
   </broker>
-
-
 </beans>
