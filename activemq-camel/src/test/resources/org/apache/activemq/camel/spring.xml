@@ -40,7 +40,7 @@
     <property name="uri" value="seda:consumer"/>
   </bean>
 
-  <bean id="camelTemplate" class="org.apache.camel.spring.CamelTemplateFactoryBean"/>
+  <bean id="camelTemplate" class="org.apache.camel.spring.CamelProducerTemplateFactoryBean"/>
   <!-- END SNIPPET: example -->
 
 <!--
