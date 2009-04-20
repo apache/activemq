@@ -317,7 +317,7 @@ public class ThreeBrokerQueueNetworkTest extends JmsMultipleBrokersTestSupport {
         MessageConsumer clientA = createConsumer("BrokerA", dest, messagesReceived);
 
         // ensure advisory percolation.
-        Thread.sleep(1000);
+        Thread.sleep(2000);
 
         // Send messages
         sendMessages("BrokerB", dest, messageCount);
@@ -342,7 +342,7 @@ public class ThreeBrokerQueueNetworkTest extends JmsMultipleBrokersTestSupport {
         MessageConsumer clientA = createConsumer("BrokerA", dest);
         
         // ensure advisors have percolated
-        Thread.sleep(500);
+        Thread.sleep(2000);
         
         LOG.info("Consumer on B");
         int messageCount = 2000;
@@ -352,13 +352,13 @@ public class ThreeBrokerQueueNetworkTest extends JmsMultipleBrokersTestSupport {
         MessageConsumer clientB = createConsumer("BrokerB", dest, messagesReceived);
           
         // ensure advisors have percolated
-        Thread.sleep(500);
+        Thread.sleep(2000);
 
         LOG.info("Close consumer on A");
         clientA.close();
 
         // ensure advisors have percolated
-        Thread.sleep(500);
+        Thread.sleep(2000);
        
         LOG.info("Send to B"); 
         sendMessages("BrokerB", dest, messageCount);
@@ -399,7 +399,7 @@ public class ThreeBrokerQueueNetworkTest extends JmsMultipleBrokersTestSupport {
         MessageConsumer clientA = createConsumer("BrokerA", dest);
         
         // ensure advisors have percolated
-        Thread.sleep(500);
+        Thread.sleep(2000);
         
         LOG.info("Consumer on B");
         int messageCount = 2000;
@@ -412,19 +412,19 @@ public class ThreeBrokerQueueNetworkTest extends JmsMultipleBrokersTestSupport {
         msgs.setProcessingDelay(10);
         
         // ensure advisors have percolated
-        Thread.sleep(500);
+        Thread.sleep(2000);
 
         LOG.info("Close consumer on A");
         clientA.close();
 
         // ensure advisors have percolated
-        Thread.sleep(500);
+        Thread.sleep(2000);
        
         LOG.info("Send to B"); 
         sendMessages("BrokerB", dest, messageCount);
 
         // Let's try to wait for any messages.
-        assertTrue(messagesReceived.await(30, TimeUnit.SECONDS));
+        assertTrue(messagesReceived.await(60, TimeUnit.SECONDS));
         assertEquals(messageCount, msgs.getMessageCount());      
     }
 
