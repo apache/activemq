@@ -26,7 +26,7 @@
 <c:when test="${empty row}">
 
 <div>
-No message could be found for ID ${requestContext.messageQuery.JMSMessageID}
+No message could be found for ID ${requestContext.messageQuery.id}
 </div>
 
 </c:when>
