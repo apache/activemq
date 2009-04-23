@@ -366,6 +366,10 @@
               <name>org.apache.activemq.default.directory.prefix</name>
               <value>target/</value>
             </property>
+            <property>
+              <name>log4j.configuration</name>
+              <value>file:target/test-classes/log4j.properties</value>
+            </property>
           </systemProperties>
 
           <includes>
