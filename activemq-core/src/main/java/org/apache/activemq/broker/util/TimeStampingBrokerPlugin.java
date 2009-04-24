@@ -46,8 +46,6 @@ import org.apache.commons.logging.LogFactory;
  */
 public class TimeStampingBrokerPlugin extends BrokerPluginSupport {
 
-    private static final Log LOG = LogFactory.getLog(TimeStampingBrokerPlugin.class);
-
     /** 
     * variable which (when non-zero) is used to override
     * the expiration date for messages that arrive with

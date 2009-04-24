@@ -245,6 +245,8 @@ timedSubscriptionRecoveryPolicy = org.apache.activemq.broker.region.policy.Timed
 topic = org.apache.activemq.command.ActiveMQTopic
 org.apache.activemq.command.ActiveMQTopic(java.lang.String).parameterNames = name
 
+traceBrokerPathPlugin = org.apache.activemq.broker.util.TraceBrokerPathPlugin
+
 transportConnector = org.apache.activemq.broker.TransportConnector
 org.apache.activemq.broker.TransportConnector(org.apache.activemq.transport.TransportServer).parameterNames = server
 

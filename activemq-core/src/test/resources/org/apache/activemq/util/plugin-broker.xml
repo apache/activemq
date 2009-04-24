@@ -28,6 +28,10 @@
       <!-- lets enable detailed logging in the broker but ignore ConnectionEvents -->
       <loggingBrokerPlugin logAll="true" logConnectionEvents="false"/>
       
+      <timeStampingBrokerPlugin zeroExpirationOverride="1000" ttlCeiling="60000"/>
+      
+      <traceBrokerPathPlugin/>
+      
     </plugins>
   </broker>
 

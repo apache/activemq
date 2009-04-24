@@ -78,7 +78,6 @@ public abstract class JmsSendReceiveTestSupport extends TestSupport implements M
 
         LOG.info("Message count for test case is: " + messageCount);
         data = new String[messageCount];
-
         for (int i = 0; i < messageCount; i++) {
             data[i] = createMessageText(i);
         }
@@ -116,12 +115,15 @@ public abstract class JmsSendReceiveTestSupport extends TestSupport implements M
             if (verbose) {
                 LOG.info("About to send a message: " + message + " with text: " + data[i]);
             }
-
-            producer.send(producerDestination, message);
+            sendMessage(i, message);
         }
 
         assertMessagesAreReceived();
         LOG.info("" + data.length + " messages(s) received, closing down connections");
+    }
+    
+    protected void sendMessage(int index, Message message) throws Exception {
+    	producer.send(producerDestination, message);
     }
 
     protected Message createMessage(int index) throws JMSException {
