@@ -38,7 +38,7 @@ import static org.apache.activemq.util.xstream.XStreamMessageTransformer.Message
  * @version $Revision$
  */
 public class XStreamTransformTest extends TestCase {
-    protected ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory("vm://localhost?broker.persistent=false");
+    protected ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory("vm://localhost?broker.persistent=false&broker.useJmx=false");
     protected Connection connection;
     protected long timeout = 5000;
 

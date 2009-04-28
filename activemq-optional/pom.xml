@@ -92,6 +92,12 @@
       <groupId>commons-httpclient</groupId>
       <artifactId>commons-httpclient</artifactId>
     </dependency>
+    
+    <dependency>
+      <groupId>commons-logging</groupId>
+      <artifactId>commons-logging</artifactId>
+      <scope>test</scope>
+    </dependency>
 
     <dependency>
       <groupId>junit</groupId>
@@ -126,7 +132,6 @@
       <artifactId>stax-api</artifactId>
       <optional>true</optional>
     </dependency>    
-
     <dependency>
       <groupId>log4j</groupId>
       <artifactId>log4j</artifactId>
@@ -134,11 +139,17 @@
       <optional>true</optional>
     </dependency>
     <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-beans</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
       <groupId>org.codehaus.jettison</groupId>
       <artifactId>jettison</artifactId>
-      <version>1.0</version>
+      <version>1.1</version>
       <scope>test</scope>
-    </dependency>     
+    </dependency>
   </dependencies>
 
   <build>
@@ -148,13 +159,9 @@
       <plugin>
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
-          <includes>
-            <include>**/Nothing</include>
-            <!--
-            <include>**/*Test.*</include>
-            -->
-          </includes>
           <excludes>
+            <exclude>**/http/*</exclude>
+            <exclude>**/https/*</exclude>
           </excludes>
         </configuration>
       </plugin>

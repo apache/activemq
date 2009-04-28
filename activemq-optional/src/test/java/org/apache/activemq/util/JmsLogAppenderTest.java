@@ -41,7 +41,7 @@ public class JmsLogAppenderTest extends TestCase {
         MessageConsumer info;
         MessageConsumer debug;
         MessageConsumer warn;
-        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("vm://localhost");
+        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("vm://localhost?broker.persistent=false&broker.useJmx=false");
         Connection conn = factory.createConnection();
         conn.start();
 
