@@ -57,7 +57,7 @@ public class BlockingQueueTransport extends TransportSupport {
 
     
     public String getRemoteAddress() {
-        return "blockingQueue";
+        return "blockingQueue_" + queue.hashCode();
     }
 
     protected void doStart() throws Exception {
