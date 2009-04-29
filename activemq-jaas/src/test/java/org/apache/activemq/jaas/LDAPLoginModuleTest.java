@@ -16,12 +16,13 @@
  */
 package org.apache.activemq.jaas;
 
-import java.io.File;
+import static org.junit.Assert.assertTrue;
+
 import java.io.IOException;
-import java.net.InetAddress;
+import java.net.URL;
 import java.util.HashSet;
 import java.util.Hashtable;
-import java.util.Properties;
+
 import javax.naming.Context;
 import javax.naming.NameClassPair;
 import javax.naming.NamingEnumeration;
@@ -35,40 +36,60 @@ import javax.security.auth.callback.UnsupportedCallbackException;
 import javax.security.auth.login.LoginContext;
 import javax.security.auth.login.LoginException;
 
-import junit.framework.TestCase;
+import org.apache.directory.server.core.integ.Level;
+import org.apache.directory.server.core.integ.annotations.ApplyLdifs;
+import org.apache.directory.server.core.integ.annotations.CleanupLevel;
+import org.apache.directory.server.integ.SiRunner;
+import org.apache.directory.server.ldap.LdapService;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 
-import org.apache.activemq.jaas.ldap.MutableServerStartupConfiguration;
-import org.apache.activemq.jaas.ldap.ServerContextFactory;
-import org.apache.ldap.server.configuration.ShutdownConfiguration;
-import org.apache.ldap.server.jndi.CoreContextFactory;
 
 
 
-/**
- * @version $Rev: $ $Date: $
- */
-public class LDAPLoginModuleTest extends TestCase {
-
+@RunWith ( SiRunner.class ) 
+@CleanupLevel ( Level.CLASS )
+@ApplyLdifs( {
+	"dn: uid=first,ou=system\n" +
+	"uid: first\n" +
+	"userPassword: secret\n" +
+	"objectClass: account\n" +
+	"objectClass: simpleSecurityObject\n" +
+	"objectClass: top\n" 
+}
+)
+public class LDAPLoginModuleTest {
+	
+    static {
+        String path = System.getProperty("java.security.auth.login.config");
+        if (path == null) {
+            URL resource = PropertiesLoginModuleTest.class.getClassLoader().getResource("login.config");
+            if (resource != null) {
+                path = resource.getFile();
+                System.setProperty("java.security.auth.login.config", path);
+            }
+        }
+    }
+    
+    private static final String BASE = "ou=system";
+    public static LdapService ldapService;
+    private static final String FILTER = "(objectclass=*)";
+    
     private static final String PRINCIPAL = "uid=admin,ou=system";
     private static final String CREDENTIALS = "secret";
-
-    public void testNothing() {
-    }
-
+    
     @SuppressWarnings("unchecked")
+    @Test
     public void testRunning() throws Exception {
 
         Hashtable env = new Hashtable();
-        env.put(Context.PROVIDER_URL, "ldap://localhost:9389");
+        env.put(Context.PROVIDER_URL, "ldap://localhost:1024");
         env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
         env.put(Context.SECURITY_AUTHENTICATION, "simple");
         env.put(Context.SECURITY_PRINCIPAL, PRINCIPAL);
         env.put(Context.SECURITY_CREDENTIALS, CREDENTIALS);
         DirContext ctx = new InitialDirContext(env);
 
-        // Perform search using URL
-        // NamingEnumeration answer = ctx.search(
-        // "ldap://localhost:389/ou=system", "(uid=admin)", null);
         HashSet set = new HashSet();
 
         NamingEnumeration list = ctx.list("ou=system");
@@ -85,8 +106,9 @@ public class LDAPLoginModuleTest extends TestCase {
         assertTrue(set.contains("prefNodeName=sysPrefRoot"));
 
     }
-
-    public void xtestLogin() throws LoginException {
+    
+    @Test
+    public void testLogin() throws LoginException {
         LoginContext context = new LoginContext("LDAPLogin", new CallbackHandler() {
             public void handle(Callback[] callbacks) throws IOException, UnsupportedCallbackException {
                 for (int i = 0; i < callbacks.length; i++) {
@@ -104,39 +126,4 @@ public class LDAPLoginModuleTest extends TestCase {
         context.logout();
     }
 
-    @SuppressWarnings("unchecked")
-    public void setUp() throws Exception {
-        MutableServerStartupConfiguration startup = new MutableServerStartupConfiguration();
-        // put some mandatory JNDI properties here
-        startup.setWorkingDirectory(new File("target/ldap"));
-        startup.setAllowAnonymousAccess(true);
-        startup.setLdapPort(9389);
-        startup.setEnableNetworking(true);
-        startup.setHost(InetAddress.getByName("localhost"));
-
-        Properties env = new Properties();
-        env.putAll(startup.toJndiEnvironment());
-        env.put(Context.INITIAL_CONTEXT_FACTORY, ServerContextFactory.class.getName());
-        env.put(Context.PROVIDER_URL, "ou=system");
-        env.put(Context.SECURITY_AUTHENTICATION, "simple");
-        env.put(Context.SECURITY_PRINCIPAL, PRINCIPAL);
-        env.put(Context.SECURITY_CREDENTIALS, CREDENTIALS);
-
-        //Fire it up
-        new InitialDirContext(env);
-    }
-
-    @SuppressWarnings("unchecked")
-    public void tearDown() throws Exception {
-        Properties env = new Properties();
-        env.putAll(new ShutdownConfiguration().toJndiEnvironment());
-        env.put(Context.INITIAL_CONTEXT_FACTORY, CoreContextFactory.class.getName());
-        env.put(Context.PROVIDER_URL, "ou=system");
-        env.put(Context.SECURITY_AUTHENTICATION, "simple");
-        env.put(Context.SECURITY_PRINCIPAL, PRINCIPAL);
-        env.put(Context.SECURITY_CREDENTIALS, CREDENTIALS);
-
-        //Shut it down
-        new InitialDirContext(env);
-    }
 }
