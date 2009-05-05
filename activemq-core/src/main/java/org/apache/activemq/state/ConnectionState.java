@@ -57,6 +57,8 @@ public class ConnectionState {
         sessions.clear();
         tempDestinations.clear();
         shutdown.set(false);
+        // Add the default session id.
+        addSession(new SessionInfo(info, -1));
     }
 
     public void addTempDestination(DestinationInfo info) {
