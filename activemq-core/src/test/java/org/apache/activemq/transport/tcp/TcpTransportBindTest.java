@@ -16,7 +16,13 @@
  */
 package org.apache.activemq.transport.tcp;
 
+import java.util.Timer;
+import java.util.TimerTask;
+
 import javax.jms.Connection;
+import javax.jms.Message;
+import javax.jms.MessageConsumer;
+import javax.jms.Session;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.EmbeddedBrokerTestSupport;
@@ -36,5 +42,30 @@ public class TcpTransportBindTest extends EmbeddedBrokerTestSupport {
     public void testConnect() throws Exception {
         Connection connection = new ActiveMQConnectionFactory(addr).createConnection();
         connection.start();
+    }
+    
+    
+    public void testReceiveThrowsException() throws Exception {
+        Connection connection = new ActiveMQConnectionFactory(addr).createConnection();
+        connection.start();
+        Session sess = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        MessageConsumer consumer = sess.createConsumer(createDestination());
+        class StopTask extends TimerTask {
+            public void run() {
+                try {
+                    broker.stop();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        Timer timer = new Timer();
+        timer.schedule(new StopTask(), 1000);
+        try {
+            consumer.receive(30000);
+            fail("Should have thrown an exception");
+        } catch (Exception e) {
+            // should fail
+        }
     }
 }
