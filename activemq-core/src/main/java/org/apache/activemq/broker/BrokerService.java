@@ -31,12 +31,13 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+
 import javax.management.MBeanServer;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
+
 import org.apache.activemq.ActiveMQConnectionMetaData;
 import org.apache.activemq.Service;
-import org.apache.activemq.selector.SelectorParser;
 import org.apache.activemq.advisory.AdvisoryBroker;
 import org.apache.activemq.broker.cluster.ConnectionSplitBroker;
 import org.apache.activemq.broker.ft.MasterConnector;
@@ -72,6 +73,7 @@ import org.apache.activemq.network.jms.JmsConnector;
 import org.apache.activemq.proxy.ProxyConnector;
 import org.apache.activemq.security.MessageAuthorizationPolicy;
 import org.apache.activemq.security.SecurityContext;
+import org.apache.activemq.selector.SelectorParser;
 import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.PersistenceAdapterFactory;
 import org.apache.activemq.store.amq.AMQPersistenceAdapterFactory;
@@ -177,6 +179,8 @@ public class BrokerService implements Service {
     private boolean systemExitOnShutdown;
     private int systemExitOnShutdownExitCode;
     private SslContext sslContext;
+    
+    private boolean forceStart = false;
     
     static {
         String localHostName = "localhost";
@@ -418,6 +422,11 @@ public class BrokerService implements Service {
         return started.get();
     }
 
+    public void start(boolean force) throws Exception {
+    	forceStart = force;
+    	start();
+    }
+    
     // Service interface
     // -------------------------------------------------------------------------
     public void start() throws Exception {
@@ -456,12 +465,22 @@ public class BrokerService implements Service {
             startDestinations();
 
             addShutdownHook();
-
-            if (isUseJmx()) {
-                getManagementContext().start();
-            }
             
             getBroker().start();
+            
+            if (isUseJmx()) {
+            	getManagementContext().start();
+                ManagedRegionBroker managedBroker = (ManagedRegionBroker)regionBroker;
+                managedBroker.setContextBroker(broker);
+                adminView = new BrokerView(this, managedBroker);
+                MBeanServer mbeanServer = getManagementContext().getMBeanServer();
+                if (mbeanServer != null) {
+                    ObjectName objectName = getBrokerObjectName();
+                    mbeanServer.registerMBean(adminView, objectName);
+                    registeredMBeanNames.add(objectName);
+                }
+            }
+            
             BrokerRegistry.getInstance().bind(getBrokerName(), this);
             
            // see if there is a MasterBroker service and if so, configure
@@ -532,6 +551,7 @@ public class BrokerService implements Service {
                     }
                 }
             }
+            registeredMBeanNames.clear();
             stopper.stop(getManagementContext());
         }
         // Clear SelectorParser cache to free memory
@@ -1585,29 +1605,26 @@ public class BrokerService implements Service {
 
         // Add a filter that will stop access to the broker once stopped
         broker = new MutableBrokerFilter(broker) {
-            public void stop() throws Exception {
-                Broker old = this.next.getAndSet(new ErrorBroker("Broker has been stopped: " + this) {
+        	Broker old;
+            
+        	public void stop() throws Exception {
+                old = this.next.getAndSet(new ErrorBroker("Broker has been stopped: " + this) {
                     // Just ignore additional stop actions.
                     public void stop() throws Exception {
                     }
+                    
                 });
                 old.stop();
             }
+        	
+        	public void start() throws Exception {
+        		if (forceStart && old != null) {
+        			this.next.set(old);
+        		}
+        		getNext().start();
+        	}
+            
         };
-
-//        RegionBroker rBroker = (RegionBroker)regionBroker;
-
-        if (isUseJmx()) {
-            ManagedRegionBroker managedBroker = (ManagedRegionBroker)regionBroker;
-            managedBroker.setContextBroker(broker);
-            adminView = new BrokerView(this, managedBroker);
-            MBeanServer mbeanServer = getManagementContext().getMBeanServer();
-            if (mbeanServer != null) {
-                ObjectName objectName = getBrokerObjectName();
-                mbeanServer.registerMBean(adminView, objectName);
-                registeredMBeanNames.add(objectName);
-            }
-        }
 
         return broker;
 

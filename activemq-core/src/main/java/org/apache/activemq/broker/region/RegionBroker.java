@@ -184,6 +184,11 @@ public class RegionBroker extends EmptyBroker {
         ServiceStopper ss = new ServiceStopper();
         doStop(ss);
         ss.throwFirstException();
+        // clear the state
+        clientIdSet.clear();
+        connections.clear();
+        destinations.clear();
+        brokerInfos.clear();
     }
 
     public PolicyMap getDestinationPolicy() {

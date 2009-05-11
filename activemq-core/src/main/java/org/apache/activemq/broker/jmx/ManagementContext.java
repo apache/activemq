@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -62,6 +63,7 @@ public class ManagementContext implements Service {
     private AtomicBoolean started = new AtomicBoolean(false);
     private JMXConnectorServer connectorServer;
     private ObjectName namingServiceObjectName;
+    private Registry registry;
 
     public ManagementContext() {
         this(null);
@@ -121,6 +123,7 @@ public class ManagementContext implements Service {
                     MBeanServerFactory.releaseMBeanServer(beanServer);
                 }
             }
+            beanServer = null;
         }
     }
 
@@ -361,7 +364,9 @@ public class ManagementContext implements Service {
     private void createConnector(MBeanServer mbeanServer) throws MalformedObjectNameException, MalformedURLException, IOException {
         // Create the NamingService, needed by JSR 160
         try {
-            LocateRegistry.createRegistry(connectorPort);
+        	if (registry == null) {
+        		registry = LocateRegistry.createRegistry(connectorPort);
+        	}
             namingServiceObjectName = ObjectName.getInstance("naming:type=rmiregistry");
             // Do not use the createMBean as the mx4j jar may not be in the
             // same class loader than the server

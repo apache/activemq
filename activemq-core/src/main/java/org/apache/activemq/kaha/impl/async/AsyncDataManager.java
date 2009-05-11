@@ -90,7 +90,7 @@ public class AsyncDataManager {
     protected int preferedFileLength = DEFAULT_MAX_FILE_LENGTH - PREFERED_DIFF;
 
     protected DataFileAppender appender;
-    protected DataFileAccessorPool accessorPool = new DataFileAccessorPool(this);
+    protected DataFileAccessorPool accessorPool;
 
     protected Map<Integer, DataFile> fileMap = new HashMap<Integer, DataFile>();
     protected Map<File, DataFile> fileByFileMap = new LinkedHashMap<File, DataFile>();
@@ -120,6 +120,7 @@ public class AsyncDataManager {
         preferedFileLength=Math.max(PREFERED_DIFF, getMaxFileLength()-PREFERED_DIFF);
         lock();
 
+        accessorPool = new DataFileAccessorPool(this);
         ByteSequence sequence = controlFile.load();
         if (sequence != null && sequence.getLength() > 0) {
             unmarshallState(sequence);
@@ -197,7 +198,7 @@ public class AsyncDataManager {
 
     public void lock() throws IOException {
         synchronized (this) {
-            if (controlFile == null) {
+            if (controlFile == null || controlFile.isDisposed()) {
                 IOHelper.mkdirs(directory);
                 controlFile = new ControlFile(new File(directory, filePrefix + "control"), CONTROL_RECORD_MAX_LENGTH);
             }

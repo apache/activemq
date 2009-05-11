@@ -179,4 +179,8 @@ public final class ControlFile {
         }
     }
 
+	public boolean isDisposed() {
+		return disposed;
+	}
+
 }

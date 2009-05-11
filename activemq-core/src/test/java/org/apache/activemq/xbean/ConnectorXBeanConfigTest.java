@@ -19,8 +19,16 @@ package org.apache.activemq.xbean;
 import java.net.URI;
 import java.util.List;
 
+import javax.jms.Connection;
+import javax.jms.Destination;
+import javax.jms.MessageConsumer;
+import javax.jms.MessageProducer;
+import javax.jms.Session;
+import javax.jms.TextMessage;
+
 import junit.framework.TestCase;
 
+import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
@@ -52,6 +60,39 @@ public class ConnectorXBeanConfigTest extends TestCase {
         assertEquals(new ActiveMQTopic("include.test.bar"), dynamicallyIncludedDestinations.get(1));
 
     }
+    
+    public void testBrokerRestartFails() throws Exception {
+    	brokerService.stop();
+    	brokerService.waitUntilStopped();
+    	
+    	try {
+    		brokerService.start();
+    	} catch (Exception e) {
+    		return;
+    	}
+    	fail("Error broker should have prevented us from starting it again");
+    }
+    
+    public void testForceBrokerRestart() throws Exception {
+    	brokerService.stop();
+    	brokerService.waitUntilStopped();
+    	
+    	brokerService.start(true); // force restart
+    	brokerService.waitUntilStarted();
+    	
+    	//send and receive a message from a restarted broker
+    	ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("tcp://localhost:61636");
+    	Connection conn = factory.createConnection();
+    	Session sess = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
+    	conn.start();
+    	Destination dest = new ActiveMQQueue("test");
+    	MessageProducer producer = sess.createProducer(dest);
+    	MessageConsumer consumer = sess.createConsumer(dest);
+    	producer.send(sess.createTextMessage("test"));
+    	TextMessage msg = (TextMessage)consumer.receive(1000);
+    	assertEquals("test", msg.getText());
+    }
+
 
     protected void setUp() throws Exception {
         brokerService = createBroker();

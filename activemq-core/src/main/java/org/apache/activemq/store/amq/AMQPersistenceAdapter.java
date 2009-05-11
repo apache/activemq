@@ -203,7 +203,7 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
                     asyncDataManager.lock();
                     break;
                 } catch (IOException e) {
-                    LOG.info("Journal is locked... waiting " + (JOURNAL_LOCKED_WAIT_DELAY / 1000) + " seconds for the journal to be unlocked.");
+                    LOG.info("Journal is locked... waiting " + (JOURNAL_LOCKED_WAIT_DELAY / 1000) + " seconds for the journal to be unlocked.", e);
                     try {
                         Thread.sleep(JOURNAL_LOCKED_WAIT_DELAY);
                     } catch (InterruptedException e1) {
@@ -325,6 +325,7 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
         topics.clear();
         IOException firstException = null;
         referenceStoreAdapter.stop();
+        referenceStoreAdapter = null;
         try {
             LOG.debug("Journal close");
             asyncDataManager.close();
