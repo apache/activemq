@@ -86,7 +86,12 @@ public class ResponseCorrelator extends TransportFilter {
     }
 
     public void onCommand(Object o) {
-        Command command = (Command)o;
+        Command command = null;
+        if (o instanceof Command) {
+            command = (Command)o;
+        } else {
+            throw new ClassCastException("Object cannot be converted to a Command,  Object: " + o);
+        }
         if (command.isResponse()) {
             Response response = (Response)command;
             FutureResponse future = null;
