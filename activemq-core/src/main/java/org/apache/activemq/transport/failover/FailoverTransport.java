@@ -700,9 +700,10 @@ public class FailoverTransport implements CompositeTransport {
                     Iterator<URI> iter = connectList.iterator();
                     while(iter.hasNext() && connectedTransport.get() == null && !disposed) {
                         URI uri = iter.next();
+                        Transport t = null;
                         try {
                             LOG.debug("Attempting connect to: " + uri);
-                            Transport t = TransportFactory.compositeConnect(uri);
+                            t = TransportFactory.compositeConnect(uri);
                             t.setTransportListener(myTransportListener);
                             t.start();
                             
@@ -743,6 +744,13 @@ public class FailoverTransport implements CompositeTransport {
                         } catch (Exception e) {
                             failure = e;
                             LOG.debug("Connect fail to: " + uri + ", reason: " + e);
+                            if (t!=null) {
+                                try {
+                                    t.stop();       
+                                } catch (Exception ee) {
+                                    LOG.debug("Stop of failed transport: " + t + " failed with reason: " + ee);
+                                }
+                            }
                         }
                     }
                 }
