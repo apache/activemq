@@ -217,7 +217,6 @@ public class TransportConnector implements Connector, BrokerServiceAware {
                             }
                         }
                     };
-                    startThread.setPriority(4);
                     startThread.start();
                 } catch (Exception e) {
                     String remoteHost = transport.getRemoteAddress();

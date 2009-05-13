@@ -159,10 +159,6 @@
       <plugin>
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
-          <excludes>
-            <exclude>**/http/*</exclude>
-            <exclude>**/https/*</exclude>
-          </excludes>
         </configuration>
       </plugin>
 

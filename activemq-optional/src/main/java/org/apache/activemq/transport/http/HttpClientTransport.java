@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.io.InterruptedIOException;
 import java.net.URI;
 
+import org.apache.activemq.command.ShutdownInfo;
 import org.apache.activemq.transport.FutureResponse;
 import org.apache.activemq.transport.util.TextWireFormat;
 import org.apache.activemq.util.ByteArrayInputStream;
@@ -29,10 +30,15 @@ import org.apache.activemq.util.IdGenerator;
 import org.apache.activemq.util.ServiceStopper;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpMethod;
+import org.apache.commons.httpclient.HttpMethodRetryHandler;
 import org.apache.commons.httpclient.HttpStatus;
+import org.apache.commons.httpclient.NoHttpResponseException;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.HeadMethod;
+import org.apache.commons.httpclient.methods.InputStreamRequestEntity;
 import org.apache.commons.httpclient.methods.PostMethod;
+import org.apache.commons.httpclient.params.HttpClientParams;
+import org.apache.commons.httpclient.params.HttpMethodParams;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -54,7 +60,8 @@ public class HttpClientTransport extends HttpTransportSupport {
 
     private final String clientID = CLIENT_ID_GENERATOR.generateId();
     private boolean trace;
-
+    private GetMethod httpMethod;
+    
     public HttpClientTransport(TextWireFormat wireFormat, URI remoteUrl) {
         super(wireFormat, remoteUrl);
     }
@@ -68,23 +75,30 @@ public class HttpClientTransport extends HttpTransportSupport {
         if (isStopped()) {
             throw new IOException("stopped.");
         }
-
         PostMethod httpMethod = new PostMethod(getRemoteUrl().toString());
         configureMethod(httpMethod);
         String data = getTextWireFormat().marshalText(command);
         byte[] bytes = data.getBytes("UTF-8");
-        httpMethod.setRequestBody(new ByteArrayInputStream(bytes));
+        InputStreamRequestEntity entity = new InputStreamRequestEntity(new ByteArrayInputStream(bytes));
+        httpMethod.setRequestEntity(entity);
 
         try {
 
             HttpClient client = getSendHttpClient();
-            client.setTimeout(MAX_CLIENT_TIMEOUT);
+            HttpClientParams params = new HttpClientParams();
+            params.setSoTimeout(MAX_CLIENT_TIMEOUT);
+            client.setParams(params);
             int answer = client.executeMethod(httpMethod);
             if (answer != HttpStatus.SC_OK) {
                 throw new IOException("Failed to post command: " + command + " as response was: " + answer);
             }
-
-            // checkSession(httpMethod);
+            if (command instanceof ShutdownInfo) {
+            	try {
+            		stop();
+            	} catch (Exception e) {
+            		LOG.warn("Error trying to stop HTTP client: "+ e, e);
+            	}
+            }
         } catch (IOException e) {
             throw IOExceptionSupport.create("Could not post command: " + command + " due to: " + e, e);
         } finally {
@@ -105,7 +119,7 @@ public class HttpClientTransport extends HttpTransportSupport {
 
         while (!isStopped() && !isStopping()) {
 
-            GetMethod httpMethod = new GetMethod(remoteUrl.toString());
+            httpMethod = new GetMethod(remoteUrl.toString());
             configureMethod(httpMethod);
 
             try {
@@ -124,7 +138,6 @@ public class HttpClientTransport extends HttpTransportSupport {
                         break;
                     }
                 } else {
-                    // checkSession(httpMethod);
                     DataInputStream stream = new DataInputStream(httpMethod.getResponseBodyAsStream());
                     Object command = (Object)getTextWireFormat().unmarshal(stream);
                     if (command == null) {
@@ -137,7 +150,6 @@ public class HttpClientTransport extends HttpTransportSupport {
                 onException(IOExceptionSupport.create("Failed to perform GET on: " + remoteUrl + " Reason: " + e.getMessage(), e));
                 break;
             } finally {
-                httpMethod.getResponseBody();
                 httpMethod.releaseConnection();
             }
         }
@@ -187,6 +199,7 @@ public class HttpClientTransport extends HttpTransportSupport {
     }
 
     protected void doStop(ServiceStopper stopper) throws Exception {
+    	httpMethod.abort();
     }
 
     protected HttpClient createHttpClient() {
@@ -208,17 +221,5 @@ public class HttpClientTransport extends HttpTransportSupport {
     public void setTrace(boolean trace) {
         this.trace = trace;
     }
-
-    // protected void checkSession(HttpMethod client) {
-    // Header header = client.getRequestHeader("Set-Cookie");
-    // if (header != null) {
-    // String set_cookie = header.getValue();
-    //
-    // if (set_cookie != null && set_cookie.startsWith("JSESSIONID=")) {
-    // String[] bits = set_cookie.split("[=;]");
-    // sessionID = bits[1];
-    // }
-    // }
-    // }
 
 }

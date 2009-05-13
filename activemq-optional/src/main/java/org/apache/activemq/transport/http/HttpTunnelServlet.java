@@ -175,12 +175,20 @@ public class HttpTunnelServlet extends HttpServlet {
             answer = createTransportChannel();
             clients.put(clientID, answer);
             listener.onAccept(answer);
+            //wait for the transport to connect
+            while (!answer.isConnected()) {
+            	try {
+            		Thread.sleep(100);
+            	} catch (InterruptedException ignore) {
+            	}
+            }
             return answer;
         }
     }
 
     protected BlockingQueueTransport createTransportChannel() {
-        return new BlockingQueueTransport(new ArrayBlockingQueue(10));
+       // return new BlockingQueueTransport(new LinkedBlockingQueue<Object>());
+    	 return new BlockingQueueTransport(new ArrayBlockingQueue<Object>(10));
     }
 
     protected TextWireFormat createWireFormat() {

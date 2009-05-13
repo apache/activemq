@@ -16,8 +16,13 @@
  */
 package org.apache.activemq.transport.http;
 
+import java.net.URI;
+
 import junit.framework.Test;
 import junit.textui.TestRunner;
+
+import org.apache.activemq.broker.BrokerFactory;
+import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.transport.TransportBrokerTestSupport;
 
 public class HttpTransportBrokerTest extends TransportBrokerTestSupport {
@@ -29,12 +34,19 @@ public class HttpTransportBrokerTest extends TransportBrokerTestSupport {
     protected void setUp() throws Exception {
         maxWait = 2000;
         super.setUp();
+        Thread.sleep(500);
     }
+    
+	protected BrokerService createBroker() throws Exception {
+		BrokerService broker = BrokerFactory.createBroker(new URI("broker:()/localhost?persistent=false&useJmx=false"));
+		connector = broker.addConnector(getBindLocation());
+		return broker;
+	}
 
-    protected void tearDown() throws Exception {
+	protected void tearDown() throws Exception {
         super.tearDown();
         // Give the jetty server enough time to shutdown before starting another one
-        Thread.sleep(300);
+        Thread.sleep(500);
     }
 
     public static Test suite() {

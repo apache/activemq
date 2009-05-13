@@ -36,7 +36,7 @@ public class HttpsTransportBrokerTest extends HttpTransportBrokerTest {
         //System.setProperty("javax.net.debug", "ssl,handshake,data,trustmanager");
         super.setUp();
 
-        Thread.sleep(5000);
+        Thread.sleep(500);
     }
 
     public static Test suite() {
