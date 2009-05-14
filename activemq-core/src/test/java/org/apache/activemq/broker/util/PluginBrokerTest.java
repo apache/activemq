@@ -64,10 +64,10 @@ public class PluginBrokerTest extends JmsTopicSendReceiveTest {
 		ActiveMQMessage amqMsg = (ActiveMQMessage)message;
 		if (index == 7) {
 			// check custom expiration
-			assertEquals(2000, amqMsg.getExpiration() - amqMsg.getTimestamp());
+			assertTrue("expiration is in range, depends on two distinct calls to System.currentTimeMillis", 1500 < amqMsg.getExpiration() - amqMsg.getTimestamp());
 		} else if (index == 9) {
 			// check ceiling
-			assertEquals(60000, amqMsg.getExpiration() - amqMsg.getTimestamp());
+			assertTrue("expiration ceeling is in range, depends on two distinct calls to System.currentTimeMillis", 59500 < amqMsg.getExpiration() - amqMsg.getTimestamp());
 		} else {
 			// check default expiration
 			assertEquals(1000, amqMsg.getExpiration() - amqMsg.getTimestamp());
