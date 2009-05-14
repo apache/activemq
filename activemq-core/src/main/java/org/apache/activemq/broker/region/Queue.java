@@ -1156,7 +1156,6 @@ public class Queue extends BaseDestination implements Task, UsageListener {
         if (!ack.isInTransaction()) {
             acknowledge(context, sub, ack, reference);
             dropMessage(reference);
-            wakeup();
         } else {
             try {
                 acknowledge(context, sub, ack, reference);

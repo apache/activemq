@@ -303,6 +303,7 @@ public class QueueDuplicatesFromStoreTest extends TestCase {
                         queue.removeMessage(contextNotInTx, subscription,
                                 new IndirectMessageReference(
                                         getMessage(removeIndex)), ack);
+                        queue.wakeup();
 
                     }
                     if (removeIndex % 1000 == 0) {
