@@ -50,10 +50,17 @@
               <name>org.apache.activemq.default.directory.prefix</name>
               <value>target/</value>
             </property>
+            <!-- Uncomment the following if you want to configure custom logging (using src/test/resources/log4j.properties)
+                 while running mvn:test
+                 Note: if you want to see log messages on the console window remove
+                       "redirectTestOutputToFile" from the parent pom
+            -->
+            <!--           
             <property>
               <name>log4j.configuration</name>
               <value>file:target/test-classes/log4j.properties</value>
             </property>
+            -->
           </systemProperties>
         </configuration>
       </plugin>
