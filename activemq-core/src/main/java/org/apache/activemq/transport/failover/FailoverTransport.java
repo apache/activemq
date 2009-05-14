@@ -397,6 +397,7 @@ public class FailoverTransport implements CompositeTransport {
                     }
                     if(command instanceof RemoveInfo) {
                         // Simulate response to RemoveInfo command
+                        stateTracker.track(command);
                         Response response = new Response();
                         response.setCorrelationId(command.getCommandId());
                         myTransportListener.onCommand(response);
