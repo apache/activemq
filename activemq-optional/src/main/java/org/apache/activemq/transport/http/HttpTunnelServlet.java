@@ -21,7 +21,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 import javax.servlet.ServletException;
@@ -187,8 +187,7 @@ public class HttpTunnelServlet extends HttpServlet {
     }
 
     protected BlockingQueueTransport createTransportChannel() {
-       // return new BlockingQueueTransport(new LinkedBlockingQueue<Object>());
-    	 return new BlockingQueueTransport(new ArrayBlockingQueue<Object>(10));
+       return new BlockingQueueTransport(new LinkedBlockingQueue<Object>());
     }
 
     protected TextWireFormat createWireFormat() {
