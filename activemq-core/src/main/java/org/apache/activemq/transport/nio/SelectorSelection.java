@@ -49,7 +49,9 @@ public final class SelectorSelection {
     }
 
     public void disable() {
-        key.interestOps(0);
+        if (key.isValid()) {
+            key.interestOps(0);
+        }
     }
 
     public void close() {
