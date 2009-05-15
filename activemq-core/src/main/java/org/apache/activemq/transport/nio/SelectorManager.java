@@ -47,7 +47,7 @@ public final class SelectorManager {
     private LinkedList<SelectorWorker> freeWorkers = new LinkedList<SelectorWorker>();
     private int maxChannelsPerWorker = 64;
     
-    static SelectorManager getInstance() {
+    public static SelectorManager getInstance() {
         return SINGLETON;
     }
 
