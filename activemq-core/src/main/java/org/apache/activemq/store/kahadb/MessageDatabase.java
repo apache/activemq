@@ -476,7 +476,7 @@ public class MessageDatabase {
             }
         	long end = System.currentTimeMillis();
         	if( end-start > 100 ) { 
-        		LOG.warn("KahaDB Cleanup took "+(end-start));
+        		LOG.info("KahaDB Cleanup took "+(end-start));
         	}
         } catch (IOException e) {
         	e.printStackTrace();
@@ -522,7 +522,7 @@ public class MessageDatabase {
         process(data, location);
     	long end = System.currentTimeMillis();
     	if( end-start > 100 ) { 
-    		LOG.warn("KahaDB long enqueue time: Journal Add Took: "+(start2-start)+" ms, Index Update took "+(end-start2)+" ms");
+    		LOG.info("KahaDB long enqueue time: Journal Add Took: "+(start2-start)+" ms, Index Update took "+(end-start2)+" ms");
     	}
 
         synchronized (indexMutex) {
