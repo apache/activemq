@@ -202,5 +202,20 @@ public class WireformatNegociationTest extends CombinationTestSupport {
         assertNotNull(serverWF.get());
         assertEquals(CommandTypes.PROTOCOL_VERSION, serverWF.get().getVersion());
     }
+    
+    public void testWireFomatInactivityDurationInitalDelay() throws Exception {
+
+        startServer("tcp://localhost:61616");
+        startClient("tcp://localhost:61616?wireFormat.maxInactivityDurationInitalDelay=60000");
+
+        assertTrue("Connect timeout", negociationCounter.await(10, TimeUnit.SECONDS));
+        assertNull("Async error: " + asyncError, asyncError.get());
+
+        assertNotNull(clientWF.get());
+        assertEquals(5, clientWF.get().getVersion());
+
+        assertNotNull(serverWF.get());
+        assertEquals(5, serverWF.get().getVersion());
+    }
 
 }

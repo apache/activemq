@@ -67,6 +67,7 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
     protected WireFormatFactory wireFormatFactory = new OpenWireFormatFactory();
     protected final TcpTransportFactory transportFactory;
     protected long maxInactivityDuration = 30000;
+    protected long maxInactivityDurationInitalDelay = 10000;
     protected int minmumWireFormatVersion;
     protected boolean useQueueForAccept=true;
        
@@ -189,6 +190,14 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
 
     public void setMaxInactivityDuration(long maxInactivityDuration) {
         this.maxInactivityDuration = maxInactivityDuration;
+    }
+    
+    public long getMaxInactivityDurationInitalDelay() {
+        return this.maxInactivityDurationInitalDelay;
+    }
+
+    public void setMaxInactivityDurationInitalDelay(long maxInactivityDurationInitalDelay) {
+        this.maxInactivityDurationInitalDelay = maxInactivityDurationInitalDelay;
     }
 
     public int getMinmumWireFormatVersion() {
@@ -390,6 +399,8 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
             HashMap<String, Object> options = new HashMap<String, Object>();
             options.put("maxInactivityDuration", Long
                     .valueOf(maxInactivityDuration));
+            options.put("maxInactivityDurationInitalDelay", Long
+                    .valueOf(maxInactivityDurationInitalDelay));            
             options.put("minmumWireFormatVersion", Integer
                     .valueOf(minmumWireFormatVersion));
             options.put("trace", Boolean.valueOf(trace));
