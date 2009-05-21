@@ -40,32 +40,11 @@
       <name>Codehaus Maven 2 Repository</name>
       <url>http://repository.codehaus.org/</url>
     </repository>
-    <repository>
-      <id>maven2-repository.dev.java.net</id>
-      <name>Java.net Maven 2 Repository</name>
-      <url>https://maven2-repository.dev.java.net/nonav/repository</url>
-    </repository>
-    <repository>
-      <id>maven-repository.dev.java.net</id>
-      <name>Java.net Maven 1 Repository (legacy)</name>
-      <url>https://maven-repository.dev.java.net/nonav/repository</url>
-      <layout>legacy</layout>
-    </repository>
   </repositories>
   <pluginRepositories>
     <pluginRepository>
       <id>maven-repository</id>
       <url>http://download.java.net/maven/2</url>
-    </pluginRepository>
-    <pluginRepository>
-      <id>maven2-repository.dev.java.net</id>
-      <url>https://maven2-repository.dev.java.net/nonav/repository</url>
-    </pluginRepository>
-    <pluginRepository>
-      <id>maven-repository.dev.java.net</id>
-      <name>Java.net Maven 1 Repository (legacy)</name>
-      <url>https://maven-repository.dev.java.net/nonav/repository</url>
-      <layout>legacy</layout>
     </pluginRepository>
   </pluginRepositories>
 
