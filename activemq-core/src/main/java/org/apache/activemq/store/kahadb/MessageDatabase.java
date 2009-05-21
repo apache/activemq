@@ -70,6 +70,7 @@ import org.apache.kahadb.util.LockFile;
 import org.apache.kahadb.util.LongMarshaller;
 import org.apache.kahadb.util.Marshaller;
 import org.apache.kahadb.util.StringMarshaller;
+import org.apache.kahadb.util.VariableMarshaller;
 
 public class MessageDatabase {
 
@@ -121,11 +122,7 @@ public class MessageDatabase {
         }
     }
 
-    class MetadataMarshaller implements Marshaller<Metadata> {
-        public Class<Metadata> getType() {
-            return Metadata.class;
-        }
-
+    class MetadataMarshaller extends VariableMarshaller<Metadata> {
         public Metadata readPayload(DataInput dataIn) throws IOException {
             Metadata rc = new Metadata();
             rc.read(dataIn);
@@ -937,13 +934,9 @@ public class MessageDatabase {
         }
     }
     
-    static protected class MessageKeysMarshaller implements Marshaller<MessageKeys> {
+    static protected class MessageKeysMarshaller extends VariableMarshaller<MessageKeys> {
         static final MessageKeysMarshaller INSTANCE = new MessageKeysMarshaller();
         
-        public Class<MessageKeys> getType() {
-            return MessageKeys.class;
-        }
-
         public MessageKeys readPayload(DataInput dataIn) throws IOException {
             return new MessageKeys(dataIn.readUTF(), LocationMarshaller.INSTANCE.readPayload(dataIn));
         }
@@ -967,10 +960,7 @@ public class MessageDatabase {
         TreeMap<Long, HashSet<String>> ackPositions;
     }
 
-    protected class StoredDestinationMarshaller implements Marshaller<StoredDestination> {
-        public Class<StoredDestination> getType() {
-            return StoredDestination.class;
-        }
+    protected class StoredDestinationMarshaller extends VariableMarshaller<StoredDestination> {
 
         public StoredDestination readPayload(DataInput dataIn) throws IOException {
             StoredDestination value = new StoredDestination();
@@ -1002,10 +992,6 @@ public class MessageDatabase {
     static class LocationMarshaller implements Marshaller<Location> {
         final static LocationMarshaller INSTANCE = new LocationMarshaller();
 
-        public Class<Location> getType() {
-            return Location.class;
-        }
-
         public Location readPayload(DataInput dataIn) throws IOException {
             Location rc = new Location();
             rc.setDataFileId(dataIn.readInt());
@@ -1017,14 +1003,22 @@ public class MessageDatabase {
             dataOut.writeInt(object.getDataFileId());
             dataOut.writeInt(object.getOffset());
         }
+
+        public int getFixedSize() {
+            return 8;
+        }
+
+        public Location deepCopy(Location source) {
+            return new Location(source);
+        }
+
+        public boolean isDeepCopySupported() {
+            return true;
+        }
     }
 
-    static class KahaSubscriptionCommandMarshaller implements Marshaller<KahaSubscriptionCommand> {
+    static class KahaSubscriptionCommandMarshaller extends VariableMarshaller<KahaSubscriptionCommand> {
         final static KahaSubscriptionCommandMarshaller INSTANCE = new KahaSubscriptionCommandMarshaller();
-
-        public Class<KahaSubscriptionCommand> getType() {
-            return KahaSubscriptionCommand.class;
-        }
 
         public KahaSubscriptionCommand readPayload(DataInput dataIn) throws IOException {
             KahaSubscriptionCommand rc = new KahaSubscriptionCommand();

@@ -29,7 +29,9 @@ import java.net.URI;
 import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -119,6 +121,9 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
     private Boolean tcpNoDelay;
     private Thread runnerThread;
 
+    private final ArrayBlockingQueue<Object> outbound = new ArrayBlockingQueue<Object>(100);
+    private Thread onewayThread;
+
     /**
      * Connect to a remote Node - e.g. a Broker
      * 
@@ -157,14 +162,37 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
         this.localLocation = null;
         setDaemon(true);
     }
-
+    
     /**
      * A one way asynchronous send
      */
     public void oneway(Object command) throws IOException {
         checkStarted();
-        wireFormat.marshal(command, dataOut);
-        dataOut.flush();
+        try {
+            outbound.put(command);
+        } catch (InterruptedException e) {
+            throw new InterruptedIOException();
+        }
+    }
+
+    protected void sendOneways() {
+        try {
+            while(!isStopped()) {
+                Object command = outbound.poll(500, TimeUnit.MILLISECONDS);
+                if( command!=null ) {
+                    try {
+                        while( command!=null ) {
+                            wireFormat.marshal(command, dataOut);
+                            command = outbound.poll();
+                        }
+                        dataOut.flush();
+                    } catch (IOException e) {
+                        getTransportListener().onException(e);
+                    }
+                }
+            }
+        } catch (InterruptedException e) {
+        }
     }
 
     /**
@@ -399,6 +427,11 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
 
     protected void doStart() throws Exception {
         connect();
+        onewayThread = new Thread(null, new Runnable(){
+            public void run() {
+                sendOneways();
+            }}, "ActiveMQ Transport Sender: " + toString(), getStackSize());
+        onewayThread.start();
         stoppedLatch.set(new CountDownLatch(1));
         super.doStart();
     }
@@ -487,7 +520,11 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
                     LOG.debug("Caught exception closing socket",e);
                 }
             }
-           
+        }
+        if( onewayThread!=null ) {
+            onewayThread.join();
+            onewayThread = null;
+            outbound.clear();
         }
     }
 

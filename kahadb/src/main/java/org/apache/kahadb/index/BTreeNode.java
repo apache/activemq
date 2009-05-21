@@ -26,11 +26,10 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Map.Entry;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.kahadb.index.BTreeIndex.Prefixer;
 import org.apache.kahadb.page.Page;
 import org.apache.kahadb.page.Transaction;
+import org.apache.kahadb.util.VariableMarshaller;
 
 
 /**
@@ -144,17 +143,13 @@ public final class BTreeNode<Key,Value> {
      * @param <Key>
      * @param <Value>
      */
-    static public class Marshaller<Key,Value> implements org.apache.kahadb.util.Marshaller<BTreeNode<Key,Value>> {
+    static public class Marshaller<Key,Value> extends VariableMarshaller<BTreeNode<Key,Value>> {
         private final BTreeIndex<Key,Value> index;
         
         public Marshaller(BTreeIndex<Key,Value> index) {
             this.index = index;
         }
 
-        public Class<BTreeNode<Key,Value>> getType() {
-            return null;
-        }
-        
         public void writePayload(BTreeNode<Key,Value> node, DataOutput os) throws IOException {
             // Write the keys
             short count = (short)node.keys.length; // cast may truncate value...

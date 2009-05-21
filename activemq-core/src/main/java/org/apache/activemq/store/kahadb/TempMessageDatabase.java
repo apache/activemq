@@ -47,6 +47,7 @@ import org.apache.kahadb.page.Transaction;
 import org.apache.kahadb.util.LongMarshaller;
 import org.apache.kahadb.util.Marshaller;
 import org.apache.kahadb.util.StringMarshaller;
+import org.apache.kahadb.util.VariableMarshaller;
 
 public class TempMessageDatabase {
 
@@ -369,13 +370,9 @@ public class TempMessageDatabase {
         }
     }
     
-    static protected class MessageKeysMarshaller implements Marshaller<MessageRecord> {
+    static protected class MessageKeysMarshaller extends VariableMarshaller<MessageRecord> {
         static final MessageKeysMarshaller INSTANCE = new MessageKeysMarshaller();
         
-        public Class<MessageRecord> getType() {
-            return MessageRecord.class;
-        }
-
         public MessageRecord readPayload(DataInput dataIn) throws IOException {
             return new MessageRecord(dataIn.readUTF(), ByteSequenceMarshaller.INSTANCE.readPayload(dataIn));
         }
@@ -398,7 +395,7 @@ public class TempMessageDatabase {
         TreeMap<Long, HashSet<String>> ackPositions;
     }
 
-    protected class StoredDestinationMarshaller implements Marshaller<StoredDestination> {
+    protected class StoredDestinationMarshaller extends VariableMarshaller<StoredDestination> {
         public Class<StoredDestination> getType() {
             return StoredDestination.class;
         }
@@ -428,12 +425,8 @@ public class TempMessageDatabase {
         }
     }
 
-    static class ByteSequenceMarshaller implements Marshaller<ByteSequence> {
+    static class ByteSequenceMarshaller extends VariableMarshaller<ByteSequence> {
         final static ByteSequenceMarshaller INSTANCE = new ByteSequenceMarshaller();
-
-        public Class<ByteSequence> getType() {
-            return ByteSequence.class;
-        }
 
         public ByteSequence readPayload(DataInput dataIn) throws IOException {
         	byte data[] = new byte[dataIn.readInt()];
@@ -447,12 +440,8 @@ public class TempMessageDatabase {
         }
     }
 
-    static class KahaSubscriptionCommandMarshaller implements Marshaller<KahaSubscriptionCommand> {
+    static class KahaSubscriptionCommandMarshaller extends VariableMarshaller<KahaSubscriptionCommand> {
         final static KahaSubscriptionCommandMarshaller INSTANCE = new KahaSubscriptionCommandMarshaller();
-
-        public Class<KahaSubscriptionCommand> getType() {
-            return KahaSubscriptionCommand.class;
-        }
 
         public KahaSubscriptionCommand readPayload(DataInput dataIn) throws IOException {
             KahaSubscriptionCommand rc = new KahaSubscriptionCommand();

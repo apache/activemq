@@ -29,15 +29,8 @@ import java.io.ObjectOutputStream;
  * 
  * @version $Revision$
  */
-public class ObjectMarshaller implements Marshaller {
+public class ObjectMarshaller extends VariableMarshaller<Object> {
 
-    /**
-     * Write the payload of this entry to the RawContainer
-     * 
-     * @param object
-     * @param dataOut
-     * @throws IOException
-     */
     public void writePayload(Object object, DataOutput dataOut) throws IOException {
         ByteArrayOutputStream bytesOut = new ByteArrayOutputStream();
         ObjectOutputStream objectOut = new ObjectOutputStream(bytesOut);
@@ -48,13 +41,6 @@ public class ObjectMarshaller implements Marshaller {
         dataOut.write(data);
     }
 
-    /**
-     * Read the entry from the RawContainer
-     * 
-     * @param dataIn
-     * @return unmarshalled object
-     * @throws IOException
-     */
     public Object readPayload(DataInput dataIn) throws IOException {
         int size = dataIn.readInt();
         byte[] data = new byte[size];
@@ -68,7 +54,4 @@ public class ObjectMarshaller implements Marshaller {
         }
     }
     
-    public Class getType() {
-        return Object.class;
-    }
 }

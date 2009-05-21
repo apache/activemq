@@ -36,10 +36,6 @@ public class SequenceSet extends LinkedNodeList<Sequence> {
 
         public static final Marshaller INSTANCE = new Marshaller();
         
-        public Class<SequenceSet> getType() {
-            return SequenceSet.class;
-        }
-
         public SequenceSet readPayload(DataInput in) throws IOException {
             SequenceSet value = new SequenceSet();
             int count = in.readInt();
@@ -69,6 +65,24 @@ public class SequenceSet extends LinkedNodeList<Sequence> {
                 }
                 sequence = sequence.getNext();
             }
+        }
+
+        public int getFixedSize() {
+            return -1;
+        }
+
+        public SequenceSet deepCopy(SequenceSet value) {
+            SequenceSet rc = new SequenceSet();
+            Sequence sequence = value.getHead();
+            while (sequence != null ) {
+                rc.add(new Sequence(sequence.first, sequence.last));
+                sequence = sequence.getNext();
+            }
+            return rc;
+        }
+
+        public boolean isDeepCopySupported() {
+            return true;
         }
     }
     

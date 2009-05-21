@@ -21,16 +21,13 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 /**
- * Marshaller for marshalling in/out objects to a RawContainer
- * 
  * @version $Revision$
  */
 public interface Marshaller<T> {
     
-    Class<T> getType();
-       
     /**
-     * Write the payload of this entry to the RawContainer
+     * Write the payload of the object to the DataOutput stream.
+     * 
      * @param object 
      * @param dataOut
      * @throws IOException
@@ -39,12 +36,28 @@ public interface Marshaller<T> {
     
     
     /**
-     * Read the entry from the RawContainer
+     * Read the payload of the object from the DataInput stream.
+     * 
      * @param dataIn 
      * @return unmarshalled object
      * @throws IOException
      */
     T readPayload(DataInput dataIn) throws IOException;
 
+    /** 
+     * @return -1 if the object do not always marshall to a fixed size, otherwise return that fixed size.
+     */
+    int getFixedSize();
+    
+    /**
+     * 
+     * @return true if the {@link #deepCopy(Object)} operations is supported.
+     */
+    boolean isDeepCopySupported();
+
+    /**
+     * @return a deep copy of the source object.
+     */
+    T deepCopy(T source);
    
 }

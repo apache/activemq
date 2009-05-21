@@ -17,15 +17,14 @@
 package org.apache.kahadb.index;
 
 import java.io.DataInput;
-import java.io.DataInputStream;
 import java.io.DataOutput;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.Map;
 import java.util.TreeMap;
 
 import org.apache.kahadb.page.Page;
 import org.apache.kahadb.page.Transaction;
+import org.apache.kahadb.util.VariableMarshaller;
 
 /**
  * Bin in a HashIndex
@@ -35,17 +34,13 @@ import org.apache.kahadb.page.Transaction;
 class HashBin<Key, Value> {
     
     
-    static public class Marshaller<Key, Value> implements org.apache.kahadb.util.Marshaller<HashBin<Key, Value>> {
+    static public class Marshaller<Key, Value> extends VariableMarshaller<HashBin<Key, Value>> {
         private final HashIndex<Key, Value> hashIndex;
 
         public Marshaller(HashIndex<Key, Value> index) {
             this.hashIndex = index;
         }
         
-        public Class<HashBin<Key, Value>> getType() {
-            return null;
-        }
-
         public HashBin<Key, Value> readPayload(DataInput is) throws IOException {
             HashBin<Key, Value> bin = new HashBin<Key, Value>();
             int size = is.readInt();

@@ -29,29 +29,23 @@ public class LongMarshaller implements Marshaller<Long> {
     
     public static final LongMarshaller INSTANCE = new LongMarshaller();
     
-    /**
-     * Write the payload of this entry to the RawContainer
-     * 
-     * @param object
-     * @param dataOut
-     * @throws IOException
-     */
     public void writePayload(Long object, DataOutput dataOut) throws IOException {
         dataOut.writeLong(object);
     }
 
-    /**
-     * Read the entry from the RawContainer
-     * 
-     * @param dataIn
-     * @return unmarshalled object
-     * @throws IOException
-     */
     public Long readPayload(DataInput dataIn) throws IOException {
         return dataIn.readLong();
     }
-    
-    public Class<Long> getType() {
-        return Long.class;
+
+    public int getFixedSize() {
+        return 8;
+    }
+
+    public Long deepCopy(Long source) {
+        return source;
+    }
+
+    public boolean isDeepCopySupported() {
+        return true;
     }
 }

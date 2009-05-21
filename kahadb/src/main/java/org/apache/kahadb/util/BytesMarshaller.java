@@ -25,35 +25,31 @@ import java.io.IOException;
  * 
  * @version $Revision$
  */
-public class BytesMarshaller implements Marshaller {
-    /**
-     * Write the payload of this entry to the RawContainer
-     * 
-     * @param object
-     * @param dataOut
-     * @throws IOException
-     */
-    public void writePayload(Object object, DataOutput dataOut) throws IOException {
-        byte[] data = (byte[])object;
+public class BytesMarshaller implements Marshaller<byte[]> {
+
+    public void writePayload(byte[] data, DataOutput dataOut) throws IOException {
         dataOut.writeInt(data.length);
         dataOut.write(data);
     }
 
-    /**
-     * Read the entry from the RawContainer
-     * 
-     * @param dataIn
-     * @return unmarshalled object
-     * @throws IOException
-     */
-    public Object readPayload(DataInput dataIn) throws IOException {
+    public byte[] readPayload(DataInput dataIn) throws IOException {
         int size = dataIn.readInt();
         byte[] data = new byte[size];
         dataIn.readFully(data);
         return data;
     }
     
-    public Class getType() {
-        return byte[].class;
+    public int getFixedSize() {
+        return -1;
+    }
+
+    public byte[] deepCopy(byte[] source) {
+        byte []rc = new byte[source.length];
+        System.arraycopy(source, 0, rc, 0, source.length);
+        return rc;
+    }
+
+    public boolean isDeepCopySupported() {
+        return true;
     }
 }

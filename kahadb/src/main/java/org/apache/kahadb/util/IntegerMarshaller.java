@@ -36,8 +36,20 @@ public class IntegerMarshaller implements Marshaller<Integer> {
     public Integer readPayload(DataInput dataIn) throws IOException {
         return dataIn.readInt();
     }
+
+    public int getFixedSize() {
+        return 4;
+    }
+
     
-    public Class<Integer> getType() {
-        return Integer.class;
+    /** 
+     * @return the source object since integers are immutable. 
+     */
+    public Integer deepCopy(Integer source) {
+        return source;
+    }
+
+    public boolean isDeepCopySupported() {
+        return true;
     }
 }

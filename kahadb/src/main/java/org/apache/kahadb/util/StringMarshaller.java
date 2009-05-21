@@ -50,8 +50,17 @@ public class StringMarshaller implements Marshaller<String> {
     public String readPayload(DataInput dataIn) throws IOException {
         return dataIn.readUTF();
     }
-    
-    public Class<String> getType() {
-        return String.class;
+
+
+    public int getFixedSize() {
+        return -1;
+    }
+
+    public String deepCopy(String source) {
+        return source;
+    }
+
+    public boolean isDeepCopySupported() {
+        return true;
     }
 }

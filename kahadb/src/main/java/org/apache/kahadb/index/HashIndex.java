@@ -30,6 +30,7 @@ import org.apache.kahadb.page.Page;
 import org.apache.kahadb.page.PageFile;
 import org.apache.kahadb.page.Transaction;
 import org.apache.kahadb.util.Marshaller;
+import org.apache.kahadb.util.VariableMarshaller;
 
 /**
  * BTree implementation
@@ -104,11 +105,7 @@ public class HashIndex<Key,Value> implements Index<Key,Value> {
             os.writeInt(binsActive);
         }
         
-        static class Marshaller implements org.apache.kahadb.util.Marshaller<Metadata> {
-            public Class<Metadata> getType() {
-                return Metadata.class;
-            }
-
+        static class Marshaller extends VariableMarshaller<Metadata> {
             public Metadata readPayload(DataInput dataIn) throws IOException {
                 Metadata rc = new Metadata();
                 rc.read(dataIn);
