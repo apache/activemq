@@ -136,6 +136,16 @@ public class JMSEndpointStatsImpl extends StatsImpl {
         }
     }
 
+    @Override
+    public void setEnabled(boolean enabled) {
+        super.setEnabled(enabled);
+        messageCount.setEnabled(enabled);
+        messageRateTime.setEnabled(enabled);
+        pendingMessageCount.setEnabled(enabled);
+        expiredMessageCount.setEnabled(enabled);
+        messageWaitTime.setEnabled(enabled);
+    }
+
     public void dump(IndentPrinter out) {
         out.printIndent();
         out.println(messageCount);
