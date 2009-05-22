@@ -217,14 +217,12 @@ public class TopicSubscription extends AbstractSubscription {
         } else if (ack.isDeliveredAck()) {
             // Message was delivered but not acknowledged: update pre-fetch
             // counters.
-            if (ack.isInTransaction()) {
-                if (destination != null) {
-                    destination.getDestinationStatistics().getInflight().subtract(ack.getMessageCount());
-                }
-            } else {
-                // expired message - expired message in a transacion
-                dequeueCounter.addAndGet(ack.getMessageCount());
+            // also. get these for a consumer expired message.
+            if (destination != null && !ack.isInTransaction()) {
+                destination.getDestinationStatistics().getDequeues().add(ack.getMessageCount());
+                destination.getDestinationStatistics().getInflight().subtract(ack.getMessageCount());   
             }
+            dequeueCounter.addAndGet(ack.getMessageCount());
             dispatchMatched();
             return;
         }

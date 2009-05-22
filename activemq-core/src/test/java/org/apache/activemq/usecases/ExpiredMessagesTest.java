@@ -72,7 +72,7 @@ public class ExpiredMessagesTest extends CombinationTestSupport {
 		
 		ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("tcp://localhost:61616");
 		connection = factory.createConnection();
-		session = connection.createSession(false, session.AUTO_ACKNOWLEDGE);
+		session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
 		producer = session.createProducer(destination);
 		producer.setTimeToLive(100);
 		consumer = session.createConsumer(destination);
@@ -117,7 +117,7 @@ public class ExpiredMessagesTest extends CombinationTestSupport {
         
         DestinationViewMBean view = createView(destination);
         
-        assertTrue("Wrong inFlightCount: " + view.getInFlightCount(), (view.getDispatchCount() - view.getDequeueCount()) - view.getInFlightCount() < 5);
+        assertEquals("Wrong inFlightCount: " + view.getInFlightCount(), view.getDispatchCount() - view.getDequeueCount(), view.getInFlightCount());
 	}
 	
 	protected DestinationViewMBean createView(ActiveMQDestination destination) throws Exception {

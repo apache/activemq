@@ -897,13 +897,8 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
         if ((0.5 * info.getPrefetchSize()) <= (deliveredCounter - additionalWindowSize)) {
             session.sendAck(pendingAck);
             pendingAck=null;
-            additionalWindowSize = deliveredCounter;
-
-            // When using DUPS ok, we do a real ack.
-            if (ackType == MessageAck.STANDARD_ACK_TYPE) {
-                deliveredCounter = 0;
-                additionalWindowSize = 0;
-            }
+            deliveredCounter = 0;
+            additionalWindowSize = 0;
         }
     }
 

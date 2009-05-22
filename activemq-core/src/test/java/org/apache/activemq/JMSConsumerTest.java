@@ -864,6 +864,7 @@ public class JMSConsumerTest extends JmsTestSupport {
     }
         
     public void testAckOfExpired() throws Exception {
+        
         ActiveMQConnectionFactory fact = new ActiveMQConnectionFactory("vm://localhost?jms.prefetchPolicy.all=4&jms.sendAcksAsync=false");
         connection = fact.createActiveMQConnection();
         
@@ -907,7 +908,9 @@ public class JMSConsumerTest extends JmsTestSupport {
     
         DestinationViewMBean view = createView(destination);
         
-        assertTrue("Wrong inFlightCount: " + view.getInFlightCount(), (view.getDispatchCount() - view.getDequeueCount()) - view.getInFlightCount() < 5);
+        assertEquals("Wrong inFlightCount: " + view.getInFlightCount(), 0, view.getInFlightCount());
+        assertEquals("Wrong dispatch count: " + view.getDispatchCount(), 8, view.getDispatchCount());
+        assertEquals("Wrong dequeue count: " + view.getDequeueCount(), 8, view.getDequeueCount());
     }
     
     protected DestinationViewMBean createView(ActiveMQDestination destination) throws Exception {
