@@ -441,10 +441,8 @@ public class TopicSubscription extends AbstractSubscription {
         message.decrementReferenceCount();
         matched.remove(message);
         discarded++;
-        dequeueCounter.incrementAndGet();
         if(destination != null) {
             destination.getDestinationStatistics().getDequeues().increment();
-            destination.getDestinationStatistics().getInflight().decrement();
         }
         if (LOG.isDebugEnabled()) {
             LOG.debug("Discarding message " + message);
