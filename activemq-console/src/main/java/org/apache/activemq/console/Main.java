@@ -19,6 +19,7 @@ package org.apache.activemq.console;
 import java.io.File;
 import java.io.InputStream;
 import java.io.PrintStream;
+import java.lang.management.ManagementFactory;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.JarURLConnection;
@@ -208,6 +209,31 @@ public class Main {
     }
 
     public void runTaskClass(List<String> tokens) throws Throwable {
+
+        StringBuilder buffer = new StringBuilder();
+        buffer.append(System.getProperty("java.vendor"));
+        buffer.append(" ");
+        buffer.append(System.getProperty("java.version"));
+        buffer.append(" ");
+        buffer.append(System.getProperty("java.home"));
+        System.out.println("Java Runtime: " + buffer.toString());
+
+        buffer = new StringBuilder();
+        buffer.append("current="); 
+        buffer.append(Runtime.getRuntime().totalMemory()/1024L); 
+        buffer.append("k  free="); 
+        buffer.append(Runtime.getRuntime().freeMemory()/1024L); 
+        buffer.append("k  max="); 
+        buffer.append(Runtime.getRuntime().maxMemory()/1024L); 
+        buffer.append("k");
+        System.out.println("  Heap sizes: " + buffer.toString());
+
+        List jvmArgs = ManagementFactory.getRuntimeMXBean().getInputArguments();
+        buffer = new StringBuilder(); 
+        for (Object arg : jvmArgs) {
+            buffer.append(" ").append(arg);
+        }
+        System.out.println("    JVM args:" + buffer.toString());
 
         System.out.println("ACTIVEMQ_HOME: " + getActiveMQHome());
         System.out.println("ACTIVEMQ_BASE: " + getActiveMQBase());
