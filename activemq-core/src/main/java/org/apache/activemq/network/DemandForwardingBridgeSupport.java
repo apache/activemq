@@ -435,12 +435,23 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                     remoteBrokerInfo = (BrokerInfo)command;
                     Properties props = MarshallingSupport.stringToProperties(remoteBrokerInfo.getNetworkProperties());
                     try {
-                    	IntrospectionSupport.getProperties(configuration, props, null);
-                    	excludedDestinations = configuration.getExcludedDestinations().toArray(new ActiveMQDestination[configuration.getExcludedDestinations().size()]);
-                    	staticallyIncludedDestinations = configuration.getStaticallyIncludedDestinations().toArray(new ActiveMQDestination[configuration.getStaticallyIncludedDestinations().size()]);
-                    	dynamicallyIncludedDestinations = configuration.getDynamicallyIncludedDestinations().toArray(new ActiveMQDestination[configuration.getDynamicallyIncludedDestinations().size()]);
+                        IntrospectionSupport.getProperties(configuration, props, null);
+                        if (configuration.getExcludedDestinations() != null) {
+                            excludedDestinations = configuration.getExcludedDestinations().toArray(
+                                    new ActiveMQDestination[configuration.getExcludedDestinations().size()]);
+                        }
+                        if (configuration.getStaticallyIncludedDestinations() != null) {
+                            staticallyIncludedDestinations = configuration.getStaticallyIncludedDestinations().toArray(
+                                    new ActiveMQDestination[configuration.getStaticallyIncludedDestinations().size()]);
+                        }
+                        if (configuration.getDynamicallyIncludedDestinations() != null) {
+                            dynamicallyIncludedDestinations = configuration.getDynamicallyIncludedDestinations()
+                                    .toArray(
+                                            new ActiveMQDestination[configuration.getDynamicallyIncludedDestinations()
+                                                    .size()]);
+                        }
                     } catch (Throwable t) {
-                    	LOG.error("Error mapping remote destinations", t);
+                        LOG.error("Error mapping remote destinations", t);
                     }
                     serviceRemoteBrokerInfo(command);
                     // Let the local broker know the remote broker's ID.
@@ -878,19 +889,21 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
         	}
         } 
 
-        DestinationFilter filter = DestinationFilter.parseFilter(destination);
+        final DestinationFilter filter = DestinationFilter.parseFilter(destination);
+        
         ActiveMQDestination[] dests = excludedDestinations;
         if (dests != null && dests.length > 0) {
             for (int i = 0; i < dests.length; i++) {
+                DestinationFilter exclusionFilter = filter;
                 ActiveMQDestination match = dests[i];
-                if (filter instanceof org.apache.activemq.filter.SimpleDestinationFilter) {
+                if (exclusionFilter instanceof org.apache.activemq.filter.SimpleDestinationFilter) {
                     DestinationFilter newFilter = DestinationFilter.parseFilter(match);
                     if (!(newFilter instanceof org.apache.activemq.filter.SimpleDestinationFilter)) {
-                        filter = newFilter;
+                        exclusionFilter = newFilter;
                         match = destination;
                     }
                 }
-                if (match != null && filter.matches(match)) {
+                if (match != null && exclusionFilter.matches(match) && dests[i].getDestinationType() == destination.getDestinationType()) {
                     return false;
                 }
             }
@@ -898,15 +911,16 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
         dests = dynamicallyIncludedDestinations;
         if (dests != null && dests.length > 0) {
             for (int i = 0; i < dests.length; i++) {
+                DestinationFilter inclusionFilter = filter;
                 ActiveMQDestination match = dests[i];
-                if (filter instanceof org.apache.activemq.filter.SimpleDestinationFilter) {
+                if (inclusionFilter instanceof org.apache.activemq.filter.SimpleDestinationFilter) {
                     DestinationFilter newFilter = DestinationFilter.parseFilter(match);
                     if (!(newFilter instanceof org.apache.activemq.filter.SimpleDestinationFilter)) {
-                        filter = newFilter;
+                        inclusionFilter = newFilter;
                         match = destination;
                     }
                 }
-                if (match != null && filter.matches(match)) {
+                if (match != null && inclusionFilter.matches(match) && dests[i].getDestinationType() == destination.getDestinationType()) {
                     return true;
                 }
             }
