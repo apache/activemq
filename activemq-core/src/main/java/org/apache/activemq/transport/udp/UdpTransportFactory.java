@@ -60,7 +60,7 @@ public class UdpTransportFactory extends TransportFactory {
             WireFormat wf = createWireFormat(options);
             int port = location.getPort();
             OpenWireFormat openWireFormat = asOpenWireFormat(wf);
-            UdpTransport transport = new UdpTransport(openWireFormat, port);
+            UdpTransport transport = (UdpTransport) createTransport(location, wf);
 
             Transport configuredTransport = configure(transport, wf, options, true);
             UdpTransportServer server = new UdpTransportServer(location, transport, configuredTransport, createReplayStrategy());
