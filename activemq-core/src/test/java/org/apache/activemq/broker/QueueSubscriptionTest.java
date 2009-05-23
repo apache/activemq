@@ -115,7 +115,7 @@ public class QueueSubscriptionTest extends JmsMultipleClientsTestSupport {
     }
 
     public void testManyProducersManyConsumers() throws Exception {
-        consumerCount = 50;
+        consumerCount = 200;
         producerCount = 50;
         messageCount = 100;
         messageSize = 1; // 1 byte
