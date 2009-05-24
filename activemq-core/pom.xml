@@ -454,6 +454,8 @@
 
             <!-- The NIO implemenation is not working properly on OS X.. -->
             <exclude>**/nio/**</exclude>
+            <exclude>**/NioQueueSubscriptionTest.*/</exclude>
+
              <!-- A test used for memory profiling only. -->
              <exclude>**/NetworkConnectionsCleanedupTest.*/**</exclude>
              
