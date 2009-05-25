@@ -285,9 +285,7 @@ public class PooledSession implements Session, TopicSession, QueueSession, XASes
         return new PooledTopicPublisher(getTopicPublisher(), topic);
     }
 
-    // Implementation methods
-    // -------------------------------------------------------------------------
-    protected ActiveMQSession getInternalSession() throws AlreadyClosedException {
+    public ActiveMQSession getInternalSession() throws AlreadyClosedException {
         if (session == null) {
             throw new AlreadyClosedException("The session has already been closed");
         }
