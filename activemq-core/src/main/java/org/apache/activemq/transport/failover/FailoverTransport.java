@@ -573,10 +573,8 @@ public class FailoverTransport implements CompositeTransport {
         }
         if (randomize) {
             // Randomly, reorder the list by random swapping
-            Random r = new Random();
-            r.setSeed(System.currentTimeMillis());
             for (int i = 0; i < l.size(); i++) {
-                int p = r.nextInt(l.size());
+                int p = (int) (Math.random()*100 % l.size());
                 URI t = l.get(p);
                 l.set(p, l.get(i));
                 l.set(i, t);
@@ -585,6 +583,7 @@ public class FailoverTransport implements CompositeTransport {
         if (removed) {
             l.add(failedConnectTransportURI);
         }
+        LOG.debug("urlList connectionList:" + l);
         return l;
     }
 
