@@ -471,6 +471,7 @@
              
 
             <exclude>**/AMQDeadlockTest3.*</exclude>
+            <exclude>**/AMQ1936Test.*</exclude>
           </excludes>
         </configuration>
       </plugin>
