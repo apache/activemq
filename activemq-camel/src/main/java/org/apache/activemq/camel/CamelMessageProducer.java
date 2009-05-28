@@ -87,7 +87,7 @@ public class CamelMessageProducer extends ActiveMQMessageProducerSupport {
             throw new IllegalArgumentException("Invalid destination setting: " + destination + " when expected: " + this.destination);
         }
         try {
-            JmsExchange exchange = new JmsExchange(endpoint.getCamelContext(), ExchangePattern.InOnly, camelDestination.getBinding(), message);
+            JmsExchange exchange = new JmsExchange(endpoint, ExchangePattern.InOnly, camelDestination.getBinding(), message);
             producer.process(exchange);
         } catch (JMSException e) {
             throw e;
