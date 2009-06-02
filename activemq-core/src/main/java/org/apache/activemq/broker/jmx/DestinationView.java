@@ -253,7 +253,7 @@ public class DestinationView implements DestinationViewMBean {
     }
 
     public String sendTextMessage(String body, String user, String password) throws Exception {
-        return sendTextMessage(Collections.EMPTY_MAP,body,null,null);
+        return sendTextMessage(Collections.EMPTY_MAP,body,user,password);
     }
 
     public String sendTextMessage(Map headers, String body,String userName,String password) throws Exception {
