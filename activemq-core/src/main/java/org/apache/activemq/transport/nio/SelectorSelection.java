@@ -35,8 +35,16 @@ public final class SelectorSelection {
     public SelectorSelection(SelectorWorker worker, SocketChannel socketChannel, Listener listener) throws ClosedChannelException {
         this.worker = worker;
         this.listener = listener;
-        this.key = socketChannel.register(worker.selector, 0, this);
-        worker.incrementUseCounter();
+        
+        // Lock when mutating state of the selector
+        worker.lock();
+        
+        try {
+            this.key = socketChannel.register(worker.selector, 0, this);
+            worker.incrementUseCounter();
+        } finally {
+            worker.unlock();
+        }
     }
 
     public void setInterestOps(int ops) {
@@ -56,8 +64,14 @@ public final class SelectorSelection {
 
     public void close() {
         worker.decrementUseCounter();
-        key.cancel();
-        worker.selector.wakeup();
+    	
+        // Lock when mutating state of the selector
+        worker.lock();
+        try {
+            key.cancel();
+        } finally {
+            worker.unlock();
+        }
     }
 
     public void onSelect() {

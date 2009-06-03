@@ -21,7 +21,10 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.util.Iterator;
 import java.util.Set;
+
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class SelectorWorker implements Runnable {
 
@@ -32,7 +35,8 @@ public class SelectorWorker implements Runnable {
     final int id = NEXT_ID.getAndIncrement();
     final AtomicInteger useCounter = new AtomicInteger();
     private final int maxChannelsPerWorker;
-
+    private final ReadWriteLock selectorLock = new ReentrantReadWriteLock();
+       
     public SelectorWorker(SelectorManager manager) throws IOException {
         this.manager = manager;
         selector = Selector.open();
@@ -67,7 +71,8 @@ public class SelectorWorker implements Runnable {
         try {
             Thread.currentThread().setName("Selector Worker: " + id);
             while (isRunning()) {
-
+                
+                lockBarrier();       	
                 int count = selector.select(10);
                 if (count == 0) {
                     continue;
@@ -127,4 +132,19 @@ public class SelectorWorker implements Runnable {
             Thread.currentThread().setName(origName);
         }
     }
+
+    private void lockBarrier() {
+        selectorLock.writeLock().lock();
+        selectorLock.writeLock().unlock();
+	}
+
+    public void lock() {
+        selectorLock.readLock().lock();
+        selector.wakeup();
+    }
+
+	public void unlock() {
+	    selectorLock.readLock().unlock();
+	}
+	
 }
