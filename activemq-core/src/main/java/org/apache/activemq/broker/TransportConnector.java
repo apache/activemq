@@ -230,8 +230,8 @@ public class TransportConnector implements Connector, BrokerServiceAware {
             }
 
             private void onAcceptError(Exception error, String remoteHost) {
-                LOG.error("Could not accept connection " + (remoteHost == null ? "" : "from " + remoteHost) + ": " + error.getMessage());
-                LOG.debug("Reason: " + error.getMessage(), error);
+                LOG.error("Could not accept connection " + (remoteHost == null ? "" : "from " + remoteHost) + ": " + error);
+                LOG.debug("Reason: " + error, error);
             }
         });
         
