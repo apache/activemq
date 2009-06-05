@@ -314,7 +314,12 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
             assertComplexData(i, cdata, "JMSType", "MyType");
             assertComplexData(i, cdata, "JMSCorrelationID", "MyCorrId");
             assertComplexData(i, cdata, "JMSDeliveryMode", "NON-PERSISTENT");
-            assertComplexData(i, cdata, "PropertiesText", "{MyStringHeader=StringHeader" + i + ", MyHeader=" + i + "}");
+            String expected = "{MyStringHeader=StringHeader" + i + ", MyHeader=" + i + "}";
+            // The order of the properties is different when using the ibm jdk.
+            if (System.getProperty("java.vendor").equals("IBM Corporation")) {
+                expected = "{MyHeader=" + i + ", MyStringHeader=StringHeader" + i + "}";
+            }
+            assertComplexData(i, cdata, "PropertiesText", expected);
 
             Map intProperties = CompositeDataHelper.getTabularMap(cdata, CompositeDataConstants.INT_PROPERTIES);
             assertEquals("intProperties size()", 1, intProperties.size());

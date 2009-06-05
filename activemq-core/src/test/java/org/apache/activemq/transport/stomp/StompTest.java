@@ -89,6 +89,25 @@ public class StompTest extends CombinationTestSupport {
         + "}}";
 
     protected void setUp() throws Exception {
+        // The order of the entries is different when using the ibm jdk.
+        if (System.getProperty("java.vendor").equals("IBM Corporation")) {
+            xmlMap = "<map>\n" 
+                + "  <entry>\n" 
+                + "    <string>city</string>\n"
+                + "    <string>Belgrade</string>\n" 
+                + "  </entry>\n" 
+                + "  <entry>\n"
+                + "    <string>name</string>\n" 
+                + "    <string>Dejan</string>\n"
+                + "  </entry>\n" 
+                + "</map>\n";
+            jsonMap = "{\"map\":{" 
+                + "\"entry\":["
+                + "{\"string\":[\"city\",\"Belgrade\"]}," 
+                + "{\"string\":[\"name\",\"Dejan\"]}"
+                + "]" 
+                + "}}";
+        }
         broker = BrokerFactory.createBroker(new URI(confUri));
         broker.start();
 
@@ -170,7 +189,7 @@ public class StompTest extends CombinationTestSupport {
 
         stompConnection.sendFrame(frame);
 
-        TextMessage message = (TextMessage)consumer.receive(1000);
+        TextMessage message = (TextMessage)consumer.receive(2500);
         assertNotNull(message);
         assertEquals("Hello World", message.getText());
 
@@ -195,7 +214,7 @@ public class StompTest extends CombinationTestSupport {
 
         stompConnection.sendFrame(frame);
 
-        TextMessage message = (TextMessage)consumer.receive(1000);
+        TextMessage message = (TextMessage)consumer.receive(2500);
         assertNotNull(message);
         assertEquals("TEST", ((ActiveMQTextMessage)message).getGroupID());
     }
@@ -214,7 +233,7 @@ public class StompTest extends CombinationTestSupport {
 
         stompConnection.sendFrame(frame);
 
-        TextMessage message = (TextMessage)consumer.receive(1000);
+        TextMessage message = (TextMessage)consumer.receive(2500);
         assertNotNull(message);
         assertEquals("Hello World", message.getText());
         assertEquals("foo", "abc", message.getStringProperty("foo"));
@@ -236,7 +255,7 @@ public class StompTest extends CombinationTestSupport {
 
         stompConnection.sendFrame(frame);
 
-        TextMessage message = (TextMessage)consumer.receive(1000);
+        TextMessage message = (TextMessage)consumer.receive(2500);
         assertNotNull(message);
         assertEquals("Hello World", message.getText());
         assertEquals("JMSCorrelationID", "c123", message.getJMSCorrelationID());
@@ -411,7 +430,7 @@ public class StompTest extends CombinationTestSupport {
 
         // message should be received since message was not acknowledged
         MessageConsumer consumer = session.createConsumer(queue);
-        TextMessage message = (TextMessage)consumer.receive(1000);
+        TextMessage message = (TextMessage)consumer.receive(2500);
         assertNotNull(message);
         assertTrue(message.getJMSRedelivered());
     }
@@ -472,7 +491,7 @@ public class StompTest extends CombinationTestSupport {
 
         waitForFrameToTakeEffect();
 
-        TextMessage message = (TextMessage)consumer.receive(1000);
+        TextMessage message = (TextMessage)consumer.receive(2500);
         assertNotNull("Should have received a message", message);
     }
 
@@ -508,7 +527,7 @@ public class StompTest extends CombinationTestSupport {
         waitForFrameToTakeEffect();
 
         // only second msg should be received since first msg was rolled back
-        TextMessage message = (TextMessage)consumer.receive(1000);
+        TextMessage message = (TextMessage)consumer.receive(2500);
         assertNotNull(message);
         assertEquals("second message", message.getText().trim());
     }
@@ -599,7 +618,7 @@ public class StompTest extends CombinationTestSupport {
 
         stompConnection.sendFrame(frame);
 
-        TextMessage message = (TextMessage)consumer.receive(1000);
+        TextMessage message = (TextMessage)consumer.receive(2500);
         assertNotNull(message);
         assertEquals("Hello World", message.getText());  	
     }
@@ -617,7 +636,7 @@ public class StompTest extends CombinationTestSupport {
 
         stompConnection.sendFrame(frame);
 
-        TextMessage message = (TextMessage)consumer.receive(1000);
+        TextMessage message = (TextMessage)consumer.receive(2500);
         assertNotNull(message);
         assertNotNull(message.getStringProperty(Stomp.Headers.TRANSFORMATION_ERROR));
         assertEquals("Hello World", message.getText());  	
@@ -636,7 +655,7 @@ public class StompTest extends CombinationTestSupport {
 
         stompConnection.sendFrame(frame);
 
-        ObjectMessage message = (ObjectMessage)consumer.receive(1000);
+        ObjectMessage message = (ObjectMessage)consumer.receive(2500);
         assertNotNull(message);
         SamplePojo object = (SamplePojo)message.getObject();
         assertEquals("Dejan", object.getName());
@@ -655,7 +674,7 @@ public class StompTest extends CombinationTestSupport {
 
         stompConnection.sendFrame(frame);
 
-        ObjectMessage message = (ObjectMessage)consumer.receive(1000);
+        ObjectMessage message = (ObjectMessage)consumer.receive(2500);
         assertNotNull(message);
         SamplePojo object = (SamplePojo)message.getObject();
         assertEquals("Dejan", object.getName());
@@ -788,7 +807,7 @@ public class StompTest extends CombinationTestSupport {
 
         stompConnection.sendFrame(frame);
 
-        MapMessage message = (MapMessage) consumer.receive(1000);
+        MapMessage message = (MapMessage) consumer.receive(2500);
         assertNotNull(message);
         assertEquals(message.getString("name"), "Dejan");
     }
@@ -806,7 +825,7 @@ public class StompTest extends CombinationTestSupport {
 
         stompConnection.sendFrame(frame);
 
-        MapMessage message = (MapMessage) consumer.receive(1000);
+        MapMessage message = (MapMessage) consumer.receive(2500);
         assertNotNull(message);
         assertEquals(message.getString("name"), "Dejan");
     }
@@ -883,7 +902,7 @@ public class StompTest extends CombinationTestSupport {
         stompConnection.sendFrame(frame);
         // wait a bit for MBean to get refreshed
         try {
-        	Thread.sleep(200);
+        	Thread.sleep(400);
         } catch (InterruptedException e){}
         
         assertEquals(view.getDurableTopicSubscribers().length, 1);
@@ -891,7 +910,7 @@ public class StompTest extends CombinationTestSupport {
         frame = "DISCONNECT\nclient-id:test\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
         try {
-        	Thread.sleep(200);
+        	Thread.sleep(400);
         } catch (InterruptedException e){}
         
         //reconnect

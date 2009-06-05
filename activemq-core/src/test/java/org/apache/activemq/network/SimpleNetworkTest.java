@@ -140,7 +140,7 @@ public class SimpleNetworkTest extends TestCase {
         doSetUp();
         remoteConsumer = remoteSession.createDurableSubscriber(included, consumerName);
         for (int i = 0; i < MESSAGE_COUNT; i++) {
-            assertNotNull("message count: " + i, remoteConsumer.receive(1000));
+            assertNotNull("message count: " + i, remoteConsumer.receive(2500));
         }
     }
 
