@@ -102,12 +102,6 @@
       <scope>test</scope>
     </dependency>    
     <dependency>
-      <groupId>org.apache.camel</groupId>
-      <artifactId>camel-swing</artifactId>
-      <version>${camel-version}</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
       <groupId>org.hamcrest</groupId>
       <artifactId>hamcrest-all</artifactId>
       <scope>test</scope>
