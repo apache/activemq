@@ -64,10 +64,6 @@
       <artifactId>commons-logging-api</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.apache.camel</groupId>
-      <artifactId>camel-core</artifactId>
-    </dependency>
-    <dependency>
       <groupId>org.apache.geronimo.specs</groupId>
       <artifactId>geronimo-jms_1.1_spec</artifactId>
     </dependency>
@@ -97,12 +93,6 @@
       <artifactId>activemq-jaas</artifactId>
       <optional>true</optional>
     </dependency>
-    <dependency>
-      <groupId>org.apache.camel</groupId>
-      <artifactId>camel-jms</artifactId>
-      <optional>true</optional>
-    </dependency>
-
     <dependency>
       <groupId>org.apache.geronimo.specs</groupId>
       <artifactId>geronimo-jta_1.0.1B_spec</artifactId>
@@ -134,6 +124,11 @@
       <artifactId>xbean-spring</artifactId>
       <optional>true</optional>
     </dependency>
+
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-context</artifactId>
+    </dependency>    
 
     <dependency>
       <groupId>org.apache.derby</groupId>
@@ -194,20 +189,11 @@
 		<artifactId>stax-api</artifactId>
 		<scope>test</scope>
 	</dependency>
-
-    <!-- testing camel helpers -->
     <dependency>
-      <groupId>org.apache.camel</groupId>
-      <artifactId>camel-core</artifactId>
-      <type>test-jar</type>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-jms</artifactId>
       <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.camel</groupId>
-      <artifactId>camel-spring</artifactId>
-      <type>test-jar</type>
-      <scope>test</scope>
-    </dependency>
+    </dependency>    
     <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring-test</artifactId>
