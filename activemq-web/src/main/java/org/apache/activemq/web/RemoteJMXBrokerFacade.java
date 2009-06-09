@@ -58,7 +58,15 @@ public class RemoteJMXBrokerFacade extends BrokerFacadeSupport {
         this.brokerName = brokerName;
     }
 
-    /**
+    public WebConsoleConfiguration getConfiguration() {
+		return configuration;
+	}
+
+	public void setConfiguration(WebConsoleConfiguration configuration) {
+		this.configuration = configuration;
+	}
+
+	/**
      * Shutdown this facade aka close any open connection.
      */
     public void shutdown() {
@@ -76,7 +84,7 @@ public class RemoteJMXBrokerFacade extends BrokerFacadeSupport {
 	}
 
     public BrokerViewMBean getBrokerAdmin() throws Exception {
-        MBeanServerConnection connection = getConnection();
+        MBeanServerConnection connection = getMBeanServerConnection();
 
         Set brokers = findBrokers(connection);
         if (brokers.size() == 0) {
@@ -89,13 +97,10 @@ public class RemoteJMXBrokerFacade extends BrokerFacadeSupport {
 
     public String getBrokerName() throws Exception,
 			MalformedObjectNameException {
-		MBeanServerConnection connection = getMBeanServerConnection();
-		ObjectName brokerObjectName = getBrokerObjectName(connection);
-		String brokerName = brokerObjectName.getKeyProperty("BrokerName");
-		return brokerName;
-	}
+        return getBrokerAdmin().getBrokerName();
+    }
     
-    protected MBeanServerConnection getConnection() throws IOException {
+    protected MBeanServerConnection getMBeanServerConnection() throws Exception {
         JMXConnector connector = this.connector;
         if (isConnectionActive(connector)) {
             return connector.getMBeanServerConnection();
@@ -200,10 +205,12 @@ public class RemoteJMXBrokerFacade extends BrokerFacadeSupport {
 		Set<ObjectName> brokers = connection.queryNames(name, null);
 		return brokers;
 	}
+	
 	public void purgeQueue(ActiveMQDestination destination) throws Exception {
 		QueueViewMBean queue = getQueue(destination.getPhysicalName());
 		queue.purge();
 	}
+	
 	public ManagementContext getManagementContext() {
 		throw new IllegalStateException("not supported");
 	}

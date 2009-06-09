@@ -26,7 +26,7 @@
   </parent>
 
   <artifactId>activemq-web</artifactId>
-  <packaging>jar</packaging>
+  <packaging>bundle</packaging>
   <name>ActiveMQ :: Web</name>
   <description>Web Connector for REST API and Streamlets support</description>
   

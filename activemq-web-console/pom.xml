@@ -40,8 +40,6 @@
             WEB-INF/lib/activation*.jar,
             WEB-INF/lib/activeio*.jar,
             WEB-INF/lib/activemq-console*.jar,
-            WEB-INF/lib/activemq-core*.jar,
-            WEB-INF/lib/activemq-xmpp*.jar,
             WEB-INF/lib/geronimo*.jar,
             WEB-INF/lib/xml-apis*.jar,
             WEB-INF/lib/xerces*.jar
