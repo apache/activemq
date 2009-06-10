@@ -50,8 +50,7 @@ public class LockFile {
             return;
         }
 
-        lockCounter++;
-        if( lockCounter!=1 ) {
+        if( lockCounter>0 ) {
             return;
         }
         
@@ -63,9 +62,12 @@ public class LockFile {
             } catch (OverlappingFileLockException e) {
                 throw IOExceptionSupport.create("File '" + file + "' could not be locked.",e);
             }
-            if (lock == null) {
+            if (lock != null) {
+                lockCounter++;
+            } else {
                 throw new IOException("File '" + file + "' could not be locked.");
             }
+              
         }
     }
 

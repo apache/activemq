@@ -229,7 +229,7 @@ public class MessageDatabase {
 	                    lockFile.lock();
 	                    break;
 	                } catch (IOException e) {
-	                    LOG.info("Database "+lockFileName+" is locked... waiting " + (DATABASE_LOCKED_WAIT_DELAY / 1000) + " seconds for the database to be unlocked.");
+	                    LOG.info("Database "+lockFileName+" is locked... waiting " + (DATABASE_LOCKED_WAIT_DELAY / 1000) + " seconds for the database to be unlocked. Reason: " + e);
 	                    try {
 	                        Thread.sleep(DATABASE_LOCKED_WAIT_DELAY);
 	                    } catch (InterruptedException e1) {
