@@ -218,26 +218,25 @@ public class MessageDatabase {
 	 * @throws IOException
 	 */
 	public void open() throws IOException {
+		File lockFileName = new File(directory, "lock");
+		lockFile = new LockFile(lockFileName, true);
+		if (failIfDatabaseIsLocked) {
+		    lockFile.lock();
+		} else {
+		    while (true) {
+		        try {
+		            lockFile.lock();
+		            break;
+		        } catch (IOException e) {
+		            LOG.info("Database "+lockFileName+" is locked... waiting " + (DATABASE_LOCKED_WAIT_DELAY / 1000) + " seconds for the database to be unlocked. Reason: " + e);
+		            try {
+		                Thread.sleep(DATABASE_LOCKED_WAIT_DELAY);
+		            } catch (InterruptedException e1) {
+		            }
+		        }
+		    }
+		}
 		if( opened.compareAndSet(false, true) ) {
-            File lockFileName = new File(directory, "lock");
-            lockFile = new LockFile(lockFileName, true);
-	        if (failIfDatabaseIsLocked) {
-	            lockFile.lock();
-	        } else {
-	            while (true) {
-	                try {
-	                    lockFile.lock();
-	                    break;
-	                } catch (IOException e) {
-	                    LOG.info("Database "+lockFileName+" is locked... waiting " + (DATABASE_LOCKED_WAIT_DELAY / 1000) + " seconds for the database to be unlocked. Reason: " + e);
-	                    try {
-	                        Thread.sleep(DATABASE_LOCKED_WAIT_DELAY);
-	                    } catch (InterruptedException e1) {
-	                    }
-	                }
-	            }
-	        }
-	        
             getJournal().start();
             
 	        loadPageFile();
@@ -312,7 +311,7 @@ public class MessageDatabase {
 	
     public void unload() throws IOException, InterruptedException {
         synchronized (indexMutex) {
-            if( pageFile.isLoaded() ) {
+            if( pageFile != null && pageFile.isLoaded() ) {
                 metadata.state = CLOSED_STATE;
                 metadata.firstInProgressTransactionLocation = getFirstInProgressTxLocation();
     

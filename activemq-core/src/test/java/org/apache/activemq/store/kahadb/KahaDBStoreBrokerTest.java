@@ -17,11 +17,9 @@
 package org.apache.activemq.store.kahadb;
 
 import java.io.File;
-import java.net.URI;
 
 import junit.framework.Test;
 
-import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.BrokerTest;
 
