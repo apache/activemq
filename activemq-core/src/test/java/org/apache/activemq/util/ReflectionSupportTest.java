@@ -84,4 +84,27 @@ public class ReflectionSupportTest extends TestCase {
     	assertEquals(nonFavoritesString, props.get("nonFavorites"));
     	assertNull(props.get("others"));
     }
+    
+    public void testSetBoolean() {
+                  
+        TestWitBoolean target = new TestWitBoolean();
+        assertTrue(!target.getKeepAlive());
+
+        IntrospectionSupport.setProperty(target, "keepAlive", "TRUE");
+        assertTrue(target.getKeepAlive());
+        
+        IntrospectionSupport.setProperty(target, "keepAlive", "false");
+        assertTrue(!target.getKeepAlive());
+    }
+
+    public static class TestWitBoolean {
+        private Boolean keepAlive = new Boolean(false);
+        public Boolean getKeepAlive() {
+            return keepAlive;
+        }
+        public void setKeepAlive(Boolean keepAlive) {
+            this.keepAlive = keepAlive;
+        }
+    }
 }
+
