@@ -17,18 +17,21 @@
 package org.apache.activemq.perf;
 
 import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.store.kahadaptor.KahaPersistenceAdapter;
-
+import org.apache.activemq.xbean.BrokerFactoryBean;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
 /**
  * @version $Revision: 1.3 $
  */
 public class KahaQueueTest extends SimpleQueueTest {
+    final static String config = "org/apache/activemq/perf/kahadbBroker.xml";
 
-    protected void configureBroker(BrokerService answer,String uri) throws Exception {
-        KahaPersistenceAdapter adaptor = new KahaPersistenceAdapter();
-        answer.setPersistenceAdapter(adaptor);
-        answer.addConnector(uri);
-        answer.setDeleteAllMessagesOnStartup(true);
+    protected BrokerService createBroker(String uri) throws Exception {
+        Resource resource = new ClassPathResource(config);
+        BrokerFactoryBean brokerFactory = new BrokerFactoryBean(resource);
+        resource = new ClassPathResource(config);
+        brokerFactory = new BrokerFactoryBean(resource);
+        brokerFactory.afterPropertiesSet();
+        return brokerFactory.getBroker();
     }
-
 }

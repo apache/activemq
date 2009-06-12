@@ -120,6 +120,9 @@ kahaPersistenceAdapter = org.apache.activemq.store.kahadaptor.KahaPersistenceAda
 kahaPersistenceAdapter.maxDataFileLength.propertyEditor = org.apache.activemq.util.MemoryPropertyEditor
 org.apache.activemq.store.kahadaptor.KahaPersistenceAdapter(java.util.concurrent.atomic.AtomicLong).parameterNames = size
 
+kahaDB = org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter
+kahaDB.journalMaxFileLength.propertyEditor = org.apache.activemq.util.MemoryPropertyEditor
+
 lDAPAuthorizationMap = org.apache.activemq.security.LDAPAuthorizationMap
 org.apache.activemq.security.LDAPAuthorizationMap(java.util.Map).parameterNames = options
 

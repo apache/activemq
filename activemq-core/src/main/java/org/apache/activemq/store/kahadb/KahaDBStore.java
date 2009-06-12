@@ -25,6 +25,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Map.Entry;
 
+import org.apache.activeio.journal.Journal;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
@@ -65,6 +66,7 @@ import org.apache.activemq.usage.SystemUsage;
 import org.apache.activemq.wireformat.WireFormat;
 import org.apache.kahadb.journal.Location;
 import org.apache.kahadb.page.Transaction;
+
 
 public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
 
