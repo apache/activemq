@@ -307,6 +307,7 @@ performed against the Message store are done as a single uow.{html} |
     | _[<journalPersistenceAdapter>|#journalPersistenceAdapter-element]_ | {html}An implementation of {@link PersistenceAdapter} designed for use with a
 {@link Journal} and then check pointing asynchronously on a timeout with some
 other long term persistent storage.{html} |
+    | _[<kahaDB>|#kahaDB-element]_ | {html}{html} |
     | _[<kahaPersistenceAdapter>|#kahaPersistenceAdapter-element]_ | {html}{html} |
     | _[<memoryPersistenceAdapter>|#memoryPersistenceAdapter-element]_ | {html}{html} |
 
@@ -1234,6 +1235,20 @@ journal{html} |
     | useQuickJournal | _boolean_ | {html}Enables or disables the use of quick journal, which keeps messages in the
 journal and just stores a reference to the messages in JDBC. Defaults to
 false so that messages actually reside long term in the JDBC database.{html} |
+
+{anchor:kahaDB-element}
+h3. The _[<kahaDB>|#kahaDB-element]_ Element
+    {html}{html}
+h4. Properties
+    || Property Name || Type || Description ||
+    | brokerName | _java.lang.String_ | {html}{html} |
+    | directory | _java.io.File_ | {html}{html} |
+    | journalMaxFileLength | _long_ | {html}{html} |
+    | indexWriteBatchSize | _int_ | {html}{html} |
+    | enableIndexWriteAsync | _boolean_ | {html}{html} |
+    | enableJournalDiskSyncs | _boolean_ | {html}{html} |
+    | size | _java.util.concurrent.atomic.AtomicLong_ | {html}{html} |
+    | usageManager | _[org.apache.activemq.usage.SystemUsage|#org.apache.activemq.usage.SystemUsage-types]_ | {html}{html} |
 
 {anchor:kahaPersistenceAdapter-element}
 h3. The _[<kahaPersistenceAdapter>|#kahaPersistenceAdapter-element]_ Element
@@ -2252,6 +2267,7 @@ performed against the Message store are done as a single uow.{html} |
 {@link Journal} and then check pointing asynchronously on a timeout with some
 other long term persistent storage.{html} |
     | _[<journaledJDBC>|#journaledJDBC-element]_ | {html}Creates a default persistence model using the Journal and JDBC{html} |
+    | _[<kahaDB>|#kahaDB-element]_ | {html}{html} |
     | _[<kahaPersistenceAdapter>|#kahaPersistenceAdapter-element]_ | {html}{html} |
     | _[<lDAPAuthorizationMap>|#lDAPAuthorizationMap-element]_ | {html}An {@link AuthorizationMap} which uses LDAP{html} |
     | _[<lastImageSubscriptionRecoveryPolicy>|#lastImageSubscriptionRecoveryPolicy-element]_ | {html}This implementation of {@link SubscriptionRecoveryPolicy} will only keep the

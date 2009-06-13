@@ -544,6 +544,7 @@ other brokers in a federated network
               <xs:element ref='tns:amqPersistenceAdapter'/>
               <xs:element ref='tns:jdbcPersistenceAdapter'/>
               <xs:element ref='tns:journalPersistenceAdapter'/>
+              <xs:element ref='tns:kahaDB'/>
               <xs:element ref='tns:kahaPersistenceAdapter'/>
               <xs:element ref='tns:memoryPersistenceAdapter'/>
               <xs:element ref='tns:journaledJDBC'/>
@@ -2695,6 +2696,7 @@ other long term persistent storage.
               <xs:element ref='tns:amqPersistenceAdapter'/>
               <xs:element ref='tns:jdbcPersistenceAdapter'/>
               <xs:element ref='tns:journalPersistenceAdapter'/>
+              <xs:element ref='tns:kahaDB'/>
               <xs:element ref='tns:kahaPersistenceAdapter'/>
               <xs:element ref='tns:memoryPersistenceAdapter'/>
               <xs:any namespace='##other'/>
@@ -2856,6 +2858,37 @@ false so that messages actually reside long term in the JDBC database.
     </xs:complexType>
   </xs:element>
 
+<!-- element for type: org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter -->
+  <xs:element name='kahaDB'>
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name='size' minOccurs='0' maxOccurs='1'>
+          <xs:complexType>
+            <xs:sequence minOccurs='0' maxOccurs='1'><xs:any namespace='##other'/></xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name='usageManager' minOccurs='0' maxOccurs='1'>
+          <xs:complexType>
+            <xs:choice minOccurs='0' maxOccurs='1'>
+              <xs:element ref='tns:systemUsage'/>
+              <xs:any namespace='##other'/>
+            </xs:choice>
+          </xs:complexType>
+        </xs:element>
+        <xs:any namespace='##other' minOccurs='0' maxOccurs='unbounded'/>
+      </xs:sequence>
+      <xs:attribute name='brokerName' type='xs:string'/>
+      <xs:attribute name='directory' type='xs:string'/>
+      <xs:attribute name='indexWriteBatchSize' type='xs:integer'/>
+      <xs:attribute name='journalMaxFileLength' type='xs:long'/>
+      <xs:attribute name='enableIndexWriteAsync' type='xs:boolean'/>
+      <xs:attribute name='enableJournalDiskSyncs' type='xs:boolean'/>
+      <xs:attribute name='size' type='xs:string'/>
+      <xs:attribute name='usageManager' type='xs:string'/>
+      <xs:attribute name='id' type='xs:ID'/>
+      <xs:anyAttribute namespace='##other' processContents='lax'/>
+    </xs:complexType>
+  </xs:element>
 
   <!-- element for type: org.apache.activemq.store.kahadaptor.KahaPersistenceAdapter -->
   <xs:element name='kahaPersistenceAdapter'>
@@ -4842,6 +4875,7 @@ memory usage.
               <xs:element ref='tns:amqPersistenceAdapter'/>
               <xs:element ref='tns:jdbcPersistenceAdapter'/>
               <xs:element ref='tns:journalPersistenceAdapter'/>
+              <xs:element ref='tns:kahaDB'/>
               <xs:element ref='tns:kahaPersistenceAdapter'/>
               <xs:element ref='tns:memoryPersistenceAdapter'/>
               <xs:any namespace='##other'/>
@@ -4946,6 +4980,7 @@ manage memory usage.
               <xs:element ref='tns:amqPersistenceAdapter'/>
               <xs:element ref='tns:jdbcPersistenceAdapter'/>
               <xs:element ref='tns:journalPersistenceAdapter'/>
+              <xs:element ref='tns:kahaDB'/>
               <xs:element ref='tns:kahaPersistenceAdapter'/>
               <xs:element ref='tns:memoryPersistenceAdapter'/>
               <xs:any namespace='##other'/>

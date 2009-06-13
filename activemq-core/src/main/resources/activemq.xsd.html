@@ -140,6 +140,7 @@ performed against the Message store are done as a single uow.</td><td>org.apache
 {@link Journal} and then check pointing asynchronously on a timeout with some
 other long term persistent storage.</td><td>org.apache.activemq.store.journal.JournalPersistenceAdapter</td></tr>
   <tr><td><a href='#journaledJDBC'>journaledJDBC</a></td><td>Creates a default persistence model using the Journal and JDBC</td><td>org.apache.activemq.store.PersistenceAdapterFactoryBean</td></tr>
+  <tr><td><a href='#kahaDB'>kahaDB</a></td><td></td><td>org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter</td></tr>
   <tr><td><a href='#kahaPersistenceAdapter'>kahaPersistenceAdapter</a></td><td></td><td>org.apache.activemq.store.kahadaptor.KahaPersistenceAdapter</td></tr>
   <tr><td><a href='#lDAPAuthorizationMap'>lDAPAuthorizationMap</a></td><td>An {@link AuthorizationMap} which uses LDAP</td><td>org.apache.activemq.security.LDAPAuthorizationMap</td></tr>
   <tr><td><a href='#lastImageSubscriptionRecoveryPolicy'>lastImageSubscriptionRecoveryPolicy</a></td><td>This implementation of {@link SubscriptionRecoveryPolicy} will only keep the
@@ -459,7 +460,7 @@ consume a given message</td></tr>
   <tr><td>networkConnectorURIs</td><td>(&lt;spring:bean/&gt;)*</td><td></td></tr>
   <tr><td>networkConnectors</td><td>(<a href='#ldapNetworkConnector'>ldapNetworkConnector</a> | <a href='#multicastNetworkConnector'>multicastNetworkConnector</a> | <a href='#networkConnector'>networkConnector</a>)*</td><td>Sets the network connectors which this broker will use to connect to
 other brokers in a federated network</td></tr>
-  <tr><td>persistenceAdapter</td><td><a href='#amqPersistenceAdapter'>amqPersistenceAdapter</a> | <a href='#jdbcPersistenceAdapter'>jdbcPersistenceAdapter</a> | <a href='#journalPersistenceAdapter'>journalPersistenceAdapter</a> | <a href='#kahaPersistenceAdapter'>kahaPersistenceAdapter</a> | <a href='#memoryPersistenceAdapter'>memoryPersistenceAdapter</a></td><td>Sets the persistence adaptor implementation to use for this broker</td></tr>
+  <tr><td>persistenceAdapter</td><td><a href='#amqPersistenceAdapter'>amqPersistenceAdapter</a> | <a href='#jdbcPersistenceAdapter'>jdbcPersistenceAdapter</a> | <a href='#journalPersistenceAdapter'>journalPersistenceAdapter</a> | <a href='#kahaPersistenceAdapter'>kahaPersistenceAdapter</a> | <a href='#kahaDB'>kahaDB</a> | <a href='#memoryPersistenceAdapter'>memoryPersistenceAdapter</a></td><td>Sets the persistence adaptor implementation to use for this broker</td></tr>
   <tr><td>persistenceFactory</td><td><a href='#amqPersistenceAdapterFactory'>amqPersistenceAdapterFactory</a> | <a href='#journaledJDBC'>journaledJDBC</a></td><td></td></tr>
   <tr><td>persistenceTaskRunnerFactory</td><td>&lt;spring:bean/&gt;</td><td></td></tr>
   <tr><td>plugins</td><td>(<a href='#authorizationPlugin'>authorizationPlugin</a> | <a href='#connectionDotFilePlugin'>connectionDotFilePlugin</a> | <a href='#destinationDotFilePlugin'>destinationDotFilePlugin</a> | <a href='#jaasAuthenticationPlugin'>jaasAuthenticationPlugin</a> | <a href='#jaasCertificateAuthenticationPlugin'>jaasCertificateAuthenticationPlugin</a> | <a href='#loggingBrokerPlugin'>loggingBrokerPlugin</a> | <a href='#multicastTraceBrokerPlugin'>multicastTraceBrokerPlugin</a> | <a href='#simpleAuthenticationPlugin'>simpleAuthenticationPlugin</a> | <a href='#timeStampingBrokerPlugin'>timeStampingBrokerPlugin</a> | <a href='#udpTraceBrokerPlugin'>udpTraceBrokerPlugin</a>)*</td><td>Sets a number of broker plugins to install such as for security
@@ -935,7 +936,7 @@ BrokerService when the Connector is embedded</td></tr>
 <table>
   <tr><th>Element</th><th>Type</th><th>Description</th>
   <tr><td>journal</td><td>&lt;spring:bean/&gt;</td><td></td></tr>
-  <tr><td>longTermPersistence</td><td><a href='#amqPersistenceAdapter'>amqPersistenceAdapter</a> | <a href='#jdbcPersistenceAdapter'>jdbcPersistenceAdapter</a> | <a href='#journalPersistenceAdapter'>journalPersistenceAdapter</a> | <a href='#kahaPersistenceAdapter'>kahaPersistenceAdapter</a> | <a href='#memoryPersistenceAdapter'>memoryPersistenceAdapter</a></td><td></td></tr>
+  <tr><td>longTermPersistence</td><td><a href='#amqPersistenceAdapter'>amqPersistenceAdapter</a> | <a href='#jdbcPersistenceAdapter'>jdbcPersistenceAdapter</a> | <a href='#journalPersistenceAdapter'>journalPersistenceAdapter</a> | <a href='#kahaPersistenceAdapter'>kahaPersistenceAdapter</a> | <a href='#kahaDB'>kahaDB</a> | <a href='#memoryPersistenceAdapter'>memoryPersistenceAdapter</a></td><td></td></tr>
   <tr><td>taskRunnerFactory</td><td>&lt;spring:bean/&gt;</td><td></td></tr>
   <tr><td>usageManager</td><td><a href='#systemUsage'>systemUsage</a></td><td></td></tr>
 </table>
@@ -965,6 +966,21 @@ false so that messages actually reside long term in the JDBC database.</td></tr>
   <tr><td>journal</td><td>&lt;spring:bean/&gt;</td><td></td></tr>
   <tr><td>statements</td><td><a href='#statements'>statements</a></td><td></td></tr>
   <tr><td>taskRunnerFactory</td><td>&lt;spring:bean/&gt;</td><td></td></tr>
+</table>
+<h2>Element: <a name='kahaDB'>kahaDB</a></h2>
+<table>
+  <tr><th>Attribute</th><th>Type</th><th>Description</th>
+  <tr><td>brokerName</td><td>xs:string</td><td></td></tr>
+  <tr><td>directory</td><td>xs:string</td><td></td></tr>
+  <tr><td>journalMaxFileLength</td><td>xs:long</td><td></td></tr>
+  <tr><td>indexWriteBatchSize</td><td>xs:integer</td><td></td></tr>
+  <tr><td>enableIndexWriteAsync</td><td>xs:boolean</td><td></td></tr>
+  <tr><td>enableJournalDiskSyncs</td><td>xs:boolean</td><td></td></tr>
+</table>
+<table>
+  <tr><th>Element</th><th>Type</th><th>Description</th>
+  <tr><td>size</td><td>&lt;spring:bean/&gt;</td><td></td></tr>
+  <tr><td>usageManager</td><td><a href='#systemUsage'>systemUsage</a></td><td></td></tr>
 </table>
 <h2>Element: <a name='kahaPersistenceAdapter'>kahaPersistenceAdapter</a></h2>
 <table>
@@ -1517,7 +1533,7 @@ before a UsageListener event is fired by the manager.</td></tr>
   <tr><th>Element</th><th>Type</th><th>Description</th>
   <tr><td>limiter</td><td><a href='#defaultUsageCapacity'>defaultUsageCapacity</a> | <a href='#usageCapacity'>usageCapacity</a></td><td></td></tr>
   <tr><td>parent</td><td>&lt;spring:bean/&gt;</td><td></td></tr>
-  <tr><td>store</td><td><a href='#amqPersistenceAdapter'>amqPersistenceAdapter</a> | <a href='#jdbcPersistenceAdapter'>jdbcPersistenceAdapter</a> | <a href='#journalPersistenceAdapter'>journalPersistenceAdapter</a> | <a href='#kahaPersistenceAdapter'>kahaPersistenceAdapter</a> | <a href='#memoryPersistenceAdapter'>memoryPersistenceAdapter</a></td><td></td></tr>
+  <tr><td>store</td><td><a href='#amqPersistenceAdapter'>amqPersistenceAdapter</a> | <a href='#jdbcPersistenceAdapter'>jdbcPersistenceAdapter</a> | <a href='#journalPersistenceAdapter'>journalPersistenceAdapter</a> | <a href='#kahaPersistenceAdapter'>kahaPersistenceAdapter</a> | <a href='#kahaDB'>kahaDB</a> | <a href='#memoryPersistenceAdapter'>memoryPersistenceAdapter</a></td><td></td></tr>
 </table>
 <h2>Element: <a name='streamJDBCAdapter'>streamJDBCAdapter</a></h2>
 <table>
@@ -1541,7 +1557,7 @@ becomes available</td></tr>
 </table>
 <table>
   <tr><th>Element</th><th>Type</th><th>Description</th>
-  <tr><td>adapter</td><td><a href='#amqPersistenceAdapter'>amqPersistenceAdapter</a> | <a href='#jdbcPersistenceAdapter'>jdbcPersistenceAdapter</a> | <a href='#journalPersistenceAdapter'>journalPersistenceAdapter</a> | <a href='#kahaPersistenceAdapter'>kahaPersistenceAdapter</a> | <a href='#memoryPersistenceAdapter'>memoryPersistenceAdapter</a></td><td></td></tr>
+  <tr><td>adapter</td><td><a href='#amqPersistenceAdapter'>amqPersistenceAdapter</a> | <a href='#jdbcPersistenceAdapter'>jdbcPersistenceAdapter</a> | <a href='#journalPersistenceAdapter'>journalPersistenceAdapter</a> | <a href='#kahaPersistenceAdapter'>kahaPersistenceAdapter</a> | <a href='#kahaDB'>kahaDB</a> |<a href='#memoryPersistenceAdapter'>memoryPersistenceAdapter</a></td><td></td></tr>
   <tr><td>memoryUsage</td><td><a href='#memoryUsage'>memoryUsage</a></td><td></td></tr>
   <tr><td>parent</td><td><a href='#systemUsage'>systemUsage</a></td><td></td></tr>
   <tr><td>storeUsage</td><td><a href='#storeUsage'>storeUsage</a></td><td></td></tr>
