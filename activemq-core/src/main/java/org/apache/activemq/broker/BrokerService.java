@@ -413,7 +413,7 @@ public class BrokerService implements Service {
                 startAllConnectors();
                 broker.nowMasterBroker();
             } catch (Exception e) {
-                LOG.error("Failed to startAllConnectors");
+                LOG.error("Failed to startAllConnectors", e);
             }
         }
     }
