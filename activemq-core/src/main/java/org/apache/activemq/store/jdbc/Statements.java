@@ -30,7 +30,7 @@ public class Statements {
     protected String binaryDataType = "BLOB";
     protected String containerNameDataType = "VARCHAR(250)";
     protected String msgIdDataType = "VARCHAR(250)";
-    protected String sequenceDataType = "INTEGER";
+    protected String sequenceDataType = "BIGINT";
     protected String longDataType = "BIGINT";
     protected String stringIdDataType = "VARCHAR(250)";
     protected boolean useExternalMessageReferences;

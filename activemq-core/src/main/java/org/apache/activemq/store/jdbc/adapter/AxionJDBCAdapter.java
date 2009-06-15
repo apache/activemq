@@ -56,6 +56,7 @@ public class AxionJDBCAdapter extends StreamJDBCAdapter {
         statements.setCreateSchemaStatements(createStatements);
         statements.setDeleteOldMessagesStatement("DELETE FROM " + statements.getFullMessageTableName() + " WHERE ( EXPIRATION<>0 AND EXPIRATION<?)");
         statements.setLongDataType("LONG");
+        statements.setSequenceDataType("LONG");
         
         super.setStatements(statements);
     }

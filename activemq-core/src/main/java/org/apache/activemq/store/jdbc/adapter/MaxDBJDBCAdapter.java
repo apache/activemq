@@ -28,6 +28,7 @@ public class MaxDBJDBCAdapter extends DefaultJDBCAdapter {
         statements.setStringIdDataType("VARCHAR(250) ASCII");
         statements.setContainerNameDataType("VARCHAR(250) ASCII");
         statements.setLongDataType("INTEGER");
+        statements.setSequenceDataType("INTEGER");
         super.setStatements(statements);
     }
 

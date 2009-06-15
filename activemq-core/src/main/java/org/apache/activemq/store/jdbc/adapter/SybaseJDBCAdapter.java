@@ -28,6 +28,7 @@ public class SybaseJDBCAdapter extends ImageBasedJDBCAdaptor {
         statements.setLockCreateStatement("LOCK TABLE " + statements.getFullLockTableName() + " IN EXCLUSIVE MODE");
 
         statements.setLongDataType("DECIMAL");
+        statements.setSequenceDataType("DECIMAL");
         super.setStatements(statements);
     }
 }

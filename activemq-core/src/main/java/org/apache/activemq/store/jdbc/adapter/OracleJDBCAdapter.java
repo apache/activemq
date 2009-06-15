@@ -46,6 +46,7 @@ public class OracleJDBCAdapter extends BlobJDBCAdapter {
 
     public void setStatements(Statements statements) {
         statements.setLongDataType("NUMBER");
+        statements.setSequenceDataType("NUMBER");
         super.setStatements(statements);
     }
     
