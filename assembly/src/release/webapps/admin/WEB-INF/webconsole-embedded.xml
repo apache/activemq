@@ -15,9 +15,9 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 -->
-<!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd">
-<beans>
-
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+     xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.0.xsd">
+     
   <bean id="placeholderConfig" class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
         <property name="locations">
                 <value>file:${activemq.base}/conf/credentials.properties</value>
@@ -25,7 +25,7 @@
   </bean>
   
   <!-- use the following bean for a local in-JVM broker -->
-  <bean id="brokerQuery" class="org.apache.activemq.web.SingletonBrokerFacade" autowire='constructor' singleton="false"/>
+  <bean id="brokerQuery" class="org.apache.activemq.web.SingletonBrokerFacade" autowire="constructor" scope="prototype"/>
 
 
   <bean id="sessionPool" class="org.apache.activemq.web.SessionPool">
@@ -38,9 +38,9 @@
     <property name="password" value="${activemq.password}"/>    
   </bean>
 
-  <bean id="queueBrowser" class="org.apache.activemq.web.QueueBrowseQuery" autowire='constructor' singleton="false"/>
-  <bean id="messageQuery" class="org.apache.activemq.web.MessageQuery" autowire='constructor' singleton="false"/>
-  <bean id="queueConsumerQuery" class="org.apache.activemq.web.QueueConsumerQuery" autowire="constructor" singleton="false"/>
-  <bean id="connectionQuery" class="org.apache.activemq.web.ConnectionQuery" autowire="constructor" singleton="false"/>
+  <bean id="queueBrowser" class="org.apache.activemq.web.QueueBrowseQuery" autowire="constructor" destroy-method="destroy" scope="request"/>
+  <bean id="messageQuery" class="org.apache.activemq.web.MessageQuery" autowire="constructor" destroy-method="destroy" scope="request"/>
+  <bean id="queueConsumerQuery" class="org.apache.activemq.web.QueueConsumerQuery" autowire="constructor" destroy-method="destroy" scope="request"/>
+  <bean id="connectionQuery" class="org.apache.activemq.web.ConnectionQuery" autowire="constructor" destroy-method="destroy" scope="request"/>
 
 </beans>
