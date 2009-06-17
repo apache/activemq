@@ -18,6 +18,7 @@ package org.apache.activemq.kaha.impl.async;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 
 import junit.framework.TestCase;
 
@@ -26,6 +27,8 @@ import org.apache.activeio.journal.RecordLocation;
 import org.apache.activeio.packet.ByteArrayPacket;
 import org.apache.activeio.packet.Packet;
 import org.apache.activemq.kaha.impl.async.JournalFacade.RecordLocationFacade;
+import org.apache.activemq.kaha.impl.async.ReadOnlyAsyncDataManager;
+import org.apache.activemq.util.ByteSequence;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -124,6 +127,37 @@ public class JournalImplTest extends TestCase {
         assertNull(l);
 
         log.info(journal);
+    }
+
+    public void testReadOnlyRead() throws InvalidRecordLocationException, InterruptedException, IOException {
+    	
+    	Packet data1 = createPacket("Hello World 1");
+        RecordLocation location1 = journal.write(data1, false);
+        Packet data2 = createPacket("Hello World 2");
+        RecordLocation location2 = journal.write(data2, false);
+        Packet data3 = createPacket("Hello World 3");
+        RecordLocation location3 = journal.write(data3, false);
+        
+        Packet packet;
+        packet = journal.read(location2);
+        assertEquals(data2, packet);
+        packet = journal.read(location1);
+        assertEquals(data1, packet);
+        packet = journal.read(location3);
+        assertEquals(data3, packet);
+    	
+        ArrayList<File> data = new ArrayList<File>();
+        data.add(logDirectory);
+        ReadOnlyAsyncDataManager rodm = new ReadOnlyAsyncDataManager(data);
+        rodm.start();
+        try {
+            for (Location curr = rodm.getFirstLocation(); curr != null; curr = rodm.getNextLocation(curr)) {
+                ByteSequence bs = rodm.read(curr);
+                assertNotNull(bs);
+            }
+        } finally {
+    	    rodm.close();
+        }
     }
 
     public void testCanReadFromArchivedLogFile() throws InvalidRecordLocationException, InterruptedException, IOException {

@@ -48,6 +48,8 @@ public class ReadOnlyAsyncDataManager extends AsyncDataManager {
         }
 
         started = true;
+
+        accessorPool = new DataFileAccessorPool(this);
                 
         ArrayList<File> files = new ArrayList<File>();
         for (File directory : dirs) {
