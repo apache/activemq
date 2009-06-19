@@ -66,7 +66,7 @@ import org.apache.activemq.util.LRUCache;
  */
 public class SelectorParser {
 
-    private static final LRUCache cache = new LRUCache(100);
+    private static final Map cache = Collections.synchronizedMap(new LRUCache(100));
 
     public static BooleanExpression parse(String sql) throws InvalidSelectorException {
         Object result = cache.get(sql);
