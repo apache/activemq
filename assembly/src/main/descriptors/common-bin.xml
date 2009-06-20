@@ -16,7 +16,7 @@
     limitations under the License.
 -->
 <component>
-  <id>common-bin</id>
+  <!--<id>common-bin</id>-->
 
   <fileSets>
     <!-- Copy over files that should not get the line endings converted -->
