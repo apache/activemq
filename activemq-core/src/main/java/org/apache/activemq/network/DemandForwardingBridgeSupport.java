@@ -559,10 +559,6 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
             // in a cyclic network there can be multiple bridges per broker that can propagate
             // a network subscription so there is a need to synchronise on a shared entity
             synchronized(brokerService.getVmConnectorURI()) {
-                if (isDuplicateNetworkSubscription(info)) {
-                    // trace in method
-                    return;
-                }
                 if (addConsumerInfo(info)) {
                     if (LOG.isDebugEnabled()) {
                         LOG.debug(configuration.getBrokerName() + " bridging sub on " + localBroker + " from " + remoteBrokerName + " : " + info);
@@ -637,8 +633,8 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
             if (LOG.isDebugEnabled()) {
                 LOG.debug(configuration.getBrokerName() + " remove local subscription for remote " + sub.getRemoteInfo().getConsumerId());
             }
-            subscriptionMapByLocalId.remove(sub.getLocalInfo().getConsumerId());
             localBroker.oneway(sub.getLocalInfo().createRemoveCommand());
+            subscriptionMapByLocalId.remove(sub.getLocalInfo().getConsumerId());
         }
     }
 
@@ -951,50 +947,88 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
     }
 
     protected boolean addConsumerInfo(final ConsumerInfo consumerInfo) throws IOException {
-        boolean result = false;
+        boolean consumerAdded = false;
         ConsumerInfo info = consumerInfo.copy();
         addRemoteBrokerToBrokerPath(info);
         DemandSubscription sub = createDemandSubscription(info);
         if (sub != null) {
-            addSubscription(sub);
-            result = true;
+            if (duplicateSuppressionIsRequired(sub) ) {
+                undoMapRegistration(sub);
+            } else {
+                addSubscription(sub);
+                consumerAdded = true;
+            }
         }
-        return result;
+        return consumerAdded;
     }
     
+    private void undoMapRegistration(DemandSubscription sub) {
+        subscriptionMapByLocalId.remove(sub.getLocalInfo().getConsumerId());
+        subscriptionMapByRemoteId.remove(sub.getRemoteInfo().getConsumerId());    
+    }
+
     /*
      * check our existing subs networkConsumerIds against the list of network ids in this subscription
      * A match means a duplicate which we suppress for topics and maybe for queues
      */
-    private boolean isDuplicateNetworkSubscription(ConsumerInfo consumerInfo) {
-        boolean isDuplicate = false;
+    private boolean duplicateSuppressionIsRequired(DemandSubscription candidate) {
+        final ConsumerInfo consumerInfo = candidate.getRemoteInfo();
+        boolean suppress = false;
         
         if (consumerInfo.getDestination().isQueue() && !configuration.isSuppressDuplicateQueueSubscriptions()) {
-            return isDuplicate;
+            return suppress;
         }
         
-        List<ConsumerId> candidateConsumers = consumerInfo.getNetworkConsumerIds();
-        if (candidateConsumers.isEmpty()) {
-            candidateConsumers.add(consumerInfo.getConsumerId());
-        }
-        
+        List<ConsumerId> candidateConsumers = consumerInfo.getNetworkConsumerIds();        
         Collection<Subscription> currentSubs = 
             getRegionSubscriptions(consumerInfo.getDestination().isTopic());
         for (Subscription sub : currentSubs) {
             List<ConsumerId> networkConsumers =  sub.getConsumerInfo().getNetworkConsumerIds();
             if (!networkConsumers.isEmpty()) {
                 if (matchFound(candidateConsumers, networkConsumers)) {
-                    if (LOG.isDebugEnabled()) {
-                        LOG.debug(configuration.getBrokerName() + " Ignoring duplicate subscription from " + remoteBrokerName
-                                + ", sub: " + consumerInfo + " is duplicated by network subscription: " 
-                                + sub.getConsumerInfo()  + ", networkComsumerIds: " + networkConsumers);
-                    }
-                    isDuplicate = true;
+                    suppress = hasLowerPriority(sub, candidate.getLocalInfo());
                     break;
                 }
             }
         }
-        return isDuplicate;
+        return suppress;
+    }
+
+ 
+    private boolean hasLowerPriority(Subscription existingSub, ConsumerInfo candidateInfo) {
+        boolean suppress = false;
+        
+        if (existingSub.getConsumerInfo().getPriority() >= candidateInfo.getPriority()) {
+            if (LOG.isDebugEnabled()) {
+                LOG.debug(configuration.getBrokerName() + " Ignoring duplicate subscription from " + remoteBrokerName
+                        + ", sub: " + candidateInfo + " is duplicated by network subscription with equal or higher network priority: " 
+                        + existingSub.getConsumerInfo()  + ", networkComsumerIds: " + existingSub.getConsumerInfo().getNetworkConsumerIds());
+            }
+            suppress = true;
+        } else {
+            // remove the existing lower priority duplicate and allow this candidate
+            try {
+                removeDuplicateSubscription(existingSub);
+                
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug(configuration.getBrokerName() + " Replacing duplicate subscription " + existingSub.getConsumerInfo()
+                            + " with sub from " + remoteBrokerName
+                            + ", which has a higher priority, new sub: " + candidateInfo + ", networkComsumerIds: " 
+                            + candidateInfo.getNetworkConsumerIds());
+                }
+            } catch (IOException e) {
+                LOG.error("Failed to remove duplicated sub as a result of sub with higher priority, sub: "+ existingSub, e);
+            }
+        }
+        return suppress;
+    }
+
+    private void removeDuplicateSubscription(Subscription existingSub) throws IOException {
+        for (NetworkConnector connector: brokerService.getNetworkConnectors()) {
+            if (connector.removeDemandSubscription(existingSub.getConsumerInfo().getConsumerId())) {
+                break;
+            }
+        }     
     }
 
     private boolean matchFound(List<ConsumerId> candidateConsumers, List<ConsumerId> networkConsumers) {
@@ -1034,15 +1068,14 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
 
         if (configuration.isDecreaseNetworkConsumerPriority()) {
             byte priority = ConsumerInfo.NETWORK_CONSUMER_PRIORITY;
-            if (priority > Byte.MIN_VALUE && info.getBrokerPath() != null && info.getBrokerPath().length > 1) {
-                // The longer the path to the consumer, the less it's consumer
-                // priority.
-                priority -= info.getBrokerPath().length + 1;
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug(configuration.getBrokerName() + " using priority :" + priority + " for subscription: " + info);
-                }
+            if (info.getBrokerPath() != null && info.getBrokerPath().length > 1) {
+                // The longer the path to the consumer, the less it's consumer priority.
+                priority -= info.getBrokerPath().length + 1; 
             }
             result.getLocalInfo().setPriority(priority);
+            if (LOG.isDebugEnabled()) {
+                LOG.debug(configuration.getBrokerName() + " using priority :" + priority + " for subscription: " + info);
+            }
         }
         configureDemandSubscription(info, result);
         return result;
@@ -1079,6 +1112,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
         sub.getLocalInfo().setAdditionalPredicate(createNetworkBridgeFilter(info));
     }
 
+    
     protected void removeDemandSubscription(ConsumerId id) throws IOException {
         DemandSubscription sub = subscriptionMapByRemoteId.remove(id);
         if (LOG.isDebugEnabled()) {
@@ -1090,6 +1124,20 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                 LOG.debug(configuration.getBrokerName() + " removed sub on " + localBroker + " from " + remoteBrokerName + " :  " + sub.getRemoteInfo());
             }
         }
+    }
+    
+    protected boolean removeDemandSubscriptionByLocalId(ConsumerId consumerId) {
+        boolean removeDone = false;
+        DemandSubscription sub = subscriptionMapByLocalId.get(consumerId);
+        if (sub != null) {
+            try {
+                removeDemandSubscription(sub.getRemoteInfo().getConsumerId());
+                removeDone = true;   
+            } catch (IOException e) {
+                LOG.debug("removeDemandSubscriptionByLocalId failed for localId: " + consumerId, e);
+            }     
+        }
+        return removeDone;
     }
 
     protected void waitStarted() throws InterruptedException {

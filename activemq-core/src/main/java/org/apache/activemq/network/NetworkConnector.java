@@ -16,13 +16,16 @@
  */
 package org.apache.activemq.network;
 
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import javax.management.MBeanServer;
@@ -34,6 +37,7 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.jmx.NetworkBridgeView;
 import org.apache.activemq.broker.jmx.NetworkBridgeViewMBean;
 import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportFactory;
 import org.apache.activemq.util.JMXSupport;
@@ -67,7 +71,8 @@ public abstract class NetworkConnector extends NetworkBridgeConfiguration implem
     private List<ActiveMQDestination> staticallyIncludedDestinations = new CopyOnWriteArrayList<ActiveMQDestination>();
     private BrokerService brokerService;
     private ObjectName objectName;
-
+    private ConcurrentLinkedQueue<DemandForwardingBridgeSupport> configuredBridges = new ConcurrentLinkedQueue<DemandForwardingBridgeSupport>();
+ 
     public NetworkConnector() {
     }
 
@@ -186,6 +191,7 @@ public abstract class NetworkConnector extends NetworkBridgeConfiguration implem
             dest = (ActiveMQDestination[])topics.toArray(dest);
             result.setDurableDestinations(dest);
         }
+        configuredBridges.add(result);
         return result;
     }
 
@@ -269,6 +275,18 @@ public abstract class NetworkConnector extends NetworkBridgeConfiguration implem
         return new ObjectName(connectorName.getDomain() + ":" + "BrokerName=" + JMXSupport.encodeObjectNamePart((String)map.get("BrokerName")) + "," + "Type=NetworkBridge,"
                               + "NetworkConnectorName=" + JMXSupport.encodeObjectNamePart((String)map.get("NetworkConnectorName")) + "," + "Name="
                               + JMXSupport.encodeObjectNamePart(JMXSupport.encodeObjectNamePart(bridge.getRemoteAddress())));
+    }
+
+    // ask all the bridges as we can't know to which this consumer is tied
+    public boolean removeDemandSubscription(ConsumerId consumerId) {
+        boolean removeSucceeded = false;
+        for (DemandForwardingBridgeSupport bridge: configuredBridges) {
+            if (bridge.removeDemandSubscriptionByLocalId(consumerId)) {
+                removeSucceeded = true;
+                break;
+            }
+        }
+        return removeSucceeded;
     }
 
 }

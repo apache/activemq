@@ -22,15 +22,24 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.jms.Destination;
 import javax.jms.MessageConsumer;
 
 import org.apache.activemq.JmsMultipleBrokersTestSupport;
+import org.apache.activemq.JmsMultipleBrokersTestSupport.BrokerItem;
+import org.apache.activemq.broker.Broker;
+import org.apache.activemq.broker.BrokerFilter;
+import org.apache.activemq.broker.BrokerPlugin;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.Queue;
 import org.apache.activemq.broker.region.RegionBroker;
+import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.command.ConsumerInfo;
+import org.apache.activemq.command.MessageDispatch;
 import org.apache.activemq.util.MessageIdList;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -322,7 +331,7 @@ public class ThreeBrokerQueueNetworkTest extends JmsMultipleBrokersTestSupport {
         // Send messages
         sendMessages("BrokerB", dest, messageCount);
 
-        assertTrue(messagesReceived.await(30, TimeUnit.SECONDS));
+        assertTrue("messaged received within time limit", messagesReceived.await(30, TimeUnit.SECONDS));
         
         // Get message count
         MessageIdList msgsA = getConsumerMessages("BrokerA", clientA);
@@ -424,7 +433,7 @@ public class ThreeBrokerQueueNetworkTest extends JmsMultipleBrokersTestSupport {
         sendMessages("BrokerB", dest, messageCount);
 
         // Let's try to wait for any messages.
-        assertTrue(messagesReceived.await(60, TimeUnit.SECONDS));
+        assertTrue("messages are received within limit", messagesReceived.await(60, TimeUnit.SECONDS));
         assertEquals(messageCount, msgs.getMessageCount());      
     }
 
@@ -451,7 +460,67 @@ public class ThreeBrokerQueueNetworkTest extends JmsMultipleBrokersTestSupport {
             verifyConsumerCount(broker, 1, dest);
         }
     }
+
     
+
+    public void testNoDuplicateQueueSubsHasLowestPriority() throws Exception {
+        boolean suppressQueueDuplicateSubscriptions = true;
+        boolean decreaseNetworkConsumerPriority = true;
+        bridgeAllBrokers("default", 3, suppressQueueDuplicateSubscriptions, decreaseNetworkConsumerPriority);
+
+        // Setup destination
+        final Destination dest = createDestination("TEST.FOO", false);
+
+        // delay the advisory messages so that one can percolate fully (cyclicly) before the other
+        BrokerItem brokerB = brokers.get("BrokerA");
+        brokerB.broker.setPlugins(new BrokerPlugin[]{new BrokerPlugin() {
+
+            public Broker installPlugin(Broker broker) throws Exception {          
+                return new BrokerFilter(broker) {
+
+                    final AtomicInteger count = new AtomicInteger();
+                    @Override
+                    public void preProcessDispatch(
+                            MessageDispatch messageDispatch) {
+                        if (messageDispatch.getDestination().getPhysicalName().contains("ActiveMQ.Advisory.Consumer")) {
+                            // lets delay the first advisory
+                            if (count.getAndIncrement() == 0) {
+                                LOG.info("Sleeping on first advisory: " + messageDispatch);
+                                try {
+                                    Thread.sleep(2000);
+                                } catch (InterruptedException e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                        }
+                        super.postProcessDispatch(messageDispatch);
+                    }
+                    
+                };
+            }}
+        });
+        
+        startAllBrokers();
+
+    
+        // Setup consumers
+        String brokerName = "BrokerA";
+        createConsumer(brokerName, dest);
+        
+        // wait for advisories
+        Thread.sleep(5000);
+        
+        // verify there is one consumer on each broker, no cycles
+        Collection<BrokerItem> brokerList = brokers.values();
+        for (Iterator<BrokerItem> i = brokerList.iterator(); i.hasNext();) {
+            BrokerService broker = i.next().broker;
+            verifyConsumerCount(broker, 1, dest);
+            if (!brokerName.equals(broker.getBrokerName())) {
+                verifyConsumePriority(broker, ConsumerInfo.NETWORK_CONSUMER_PRIORITY, dest);
+            }
+        }
+    }
+
 
     public void testDuplicateQueueSubs() throws Exception {
         
@@ -477,16 +546,25 @@ public class ThreeBrokerQueueNetworkTest extends JmsMultipleBrokersTestSupport {
             BrokerService broker = i.next().broker;
             if (!brokerName.equals(broker.getBrokerName())) {
                 verifyConsumerCount(broker, 2, dest);
+                verifyConsumePriority(broker, ConsumerInfo.NORMAL_PRIORITY, dest);
             }
         }
     }
 
     private void verifyConsumerCount(BrokerService broker, int count, Destination dest) throws Exception {
         RegionBroker regionBroker = (RegionBroker) broker.getRegionBroker();
-        Queue internalQueue = (Queue) regionBroker.getDestinations(ActiveMQDestination.transform(dest)).iterator().next(); 
+        Queue internalQueue = (Queue) regionBroker.getDestinations(ActiveMQDestination.transform(dest)).iterator().next();
         assertEquals("consumer count on " + broker.getBrokerName() + " matches for q: " + internalQueue, count, internalQueue.getConsumers().size());      
     }
 
+    private void verifyConsumePriority(BrokerService broker, byte expectedPriority, Destination dest) throws Exception {
+        RegionBroker regionBroker = (RegionBroker) broker.getRegionBroker();
+        Queue internalQueue = (Queue) regionBroker.getDestinations(ActiveMQDestination.transform(dest)).iterator().next();
+        for (Subscription consumer : internalQueue.getConsumers()) {
+            assertEquals("consumer on " + broker.getBrokerName() + " matches priority: " + internalQueue, expectedPriority, consumer.getConsumerInfo().getPriority());      
+        }
+    }
+    
     public void setUp() throws Exception {
         super.setAutoFail(true);
         super.setUp();
