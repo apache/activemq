@@ -937,7 +937,6 @@
             <forkMode>once</forkMode>
             <argLine>-enableassertions</argLine>
             <failIfNoTests>false</failIfNoTests>
-            <workingDirectory>${project.build.directory}</workingDirectory>
           </configuration>
         </plugin>
         <plugin>
