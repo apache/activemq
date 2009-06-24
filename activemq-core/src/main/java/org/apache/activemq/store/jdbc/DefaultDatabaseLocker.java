@@ -19,6 +19,8 @@ package org.apache.activemq.store.jdbc;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 
 import javax.sql.DataSource;
@@ -64,7 +66,13 @@ public class DefaultDatabaseLocker implements DatabaseLocker {
                 connection.setAutoCommit(false);
                 String sql = statements.getLockCreateStatement();
                 statement = connection.prepareStatement(sql);
-                statement.execute();
+                if (statement.getMetaData() != null) {
+                    ResultSet rs = statement.executeQuery();
+                    // if not already locked the statement below blocks until lock acquired
+                    rs.next();
+                } else {
+                    statement.execute();
+                }
                 break;
             } catch (Exception e) {
                 if (stopping) {

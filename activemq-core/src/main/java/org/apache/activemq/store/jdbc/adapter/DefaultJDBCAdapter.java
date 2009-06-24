@@ -291,7 +291,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
                 throw new SQLException("Failed to remove message");
             }
         } finally {
-            if (!this.batchStatments) {
+            if (!this.batchStatments && s != null) {
                 s.close();
             }
         }
