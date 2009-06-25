@@ -240,7 +240,10 @@ public abstract class Usage<T extends Usage> implements Service {
     private void fireEvent(final int oldPercentUsage, final int newPercentUsage) {
         if (debug) {
             LOG.debug("Memory usage change.  from: " + oldPercentUsage + ", to: " + newPercentUsage);
-        }    
+        }   
+        if (newPercentUsage >= 80) {
+            LOG.warn("Memory usage is now over 80%!");
+        }
              
         if (started.get()) {
             // Switching from being full to not being full..
