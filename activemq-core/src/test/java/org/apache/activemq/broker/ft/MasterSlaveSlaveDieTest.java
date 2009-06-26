@@ -18,27 +18,52 @@ package org.apache.activemq.broker.ft;
 
 import java.net.URI;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import junit.framework.TestCase;
 
+import org.apache.activemq.broker.BrokerPlugin;
+import org.apache.activemq.broker.BrokerPluginSupport;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.util.SocketProxy;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 public class MasterSlaveSlaveDieTest extends TestCase {
+    
+    private static final Log LOG = LogFactory.getLog(MasterSlaveSlaveDieTest.class);
 
+    private final AtomicBoolean pluginStopped = new AtomicBoolean(false);
+    class Plugin extends BrokerPluginSupport {
+
+        @Override
+        public void start() throws Exception {
+            LOG.info("plugin start");
+            super.start();
+        }
+
+        @Override
+        public void stop() throws Exception {
+            LOG.info("plugin stop");
+            pluginStopped.set(true);
+            super.stop();
+        }
+        
+    }
     public void testSlaveDieMasterStays() throws Exception {
         final BrokerService master = new BrokerService();
         master.setBrokerName("master");
         master.setPersistent(false);
         master.addConnector("tcp://localhost:0");
         master.setWaitForSlave(true);
-
+        master.setPlugins(new BrokerPlugin[] { new Plugin() });
+        
         final BrokerService slave = new BrokerService();
         slave.setBrokerName("slave");
         slave.setPersistent(false);
         URI masterUri = master.getTransportConnectors().get(0).getConnectUri();
-        SocketProxy masterProxy = new SocketProxy(masterUri);
-        slave.setMasterConnectorURI(masterProxy.getUrl().toString());
+        //SocketProxy masterProxy = new SocketProxy(masterUri);
+        slave.setMasterConnectorURI(masterUri.toString());
         
         slave.setUseJmx(false);
         slave.getManagementContext().setCreateConnector(false);
@@ -57,14 +82,12 @@ public class MasterSlaveSlaveDieTest extends TestCase {
         
         master.waitUntilStarted();
         
-        // kill socket to master
-        masterProxy.close();
-        
-        // in case a stop is too controlled an exit
-        //slave.stop();
-        Thread.sleep(5000);
+        LOG.info("killing slave..");
+        slave.stop();
+        slave.waitUntilStopped();
 
-        assertTrue(master.isStarted());
-
+        LOG.info("checking master still alive");
+        assertTrue("master is still alive", master.isStarted());
+        assertFalse("plugin was not yet stopped", pluginStopped.get());
     }
 }

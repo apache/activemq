@@ -105,7 +105,6 @@ public class MasterBroker extends InsertableMutableBrokerFilter {
      * @throws Exception
      */
     public void stop() throws Exception {
-        super.stop();
         stopProcessing();
     }
 
