@@ -90,7 +90,7 @@
     <activemq.osgi.symbolic.name>${groupId}.${artifactId}</activemq.osgi.symbolic.name>
   </properties>
   <prerequisites>
-    <maven>2.0.10</maven>
+    <maven>2.0.9</maven>
   </prerequisites>
 
   <url>http://activemq.apache.org</url>
