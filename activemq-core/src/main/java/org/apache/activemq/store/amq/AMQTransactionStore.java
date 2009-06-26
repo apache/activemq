@@ -18,12 +18,11 @@
 package org.apache.activemq.store.amq;
 
 import java.io.IOException;
-import java.util.Collection;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Set;
+
+import javax.transaction.xa.XAException;
 
 import org.apache.activemq.command.JournalTopicAck;
 import org.apache.activemq.command.JournalTransaction;
@@ -39,7 +38,7 @@ import org.apache.activemq.store.TransactionStore;
  */
 public class AMQTransactionStore implements TransactionStore {
 
-    Map<TransactionId, AMQTx> inflightTransactions = new LinkedHashMap<TransactionId, AMQTx>();
+    protected Map<TransactionId, AMQTx> inflightTransactions = new LinkedHashMap<TransactionId, AMQTx>();
     Map<TransactionId, AMQTx> preparedTransactions = new LinkedHashMap<TransactionId, AMQTx>();
 
     private final AMQPersistenceAdapter peristenceAdapter;
@@ -88,10 +87,10 @@ public class AMQTransactionStore implements TransactionStore {
         AMQTx tx = null;
         synchronized (inflightTransactions) {
             tx = inflightTransactions.get(txid);
-        }
-        if (tx == null) {
-            tx = new AMQTx(location);
-            inflightTransactions.put(txid, tx);
+            if (tx == null) {
+                tx = new AMQTx(location);
+                inflightTransactions.put(txid, tx);
+            }
         }
         return tx;
     }
