@@ -43,7 +43,7 @@
     <aopalliance-version>1.0</aopalliance-version>
     <axion-version>1.0-M3-dev</axion-version>
     <axis-version>1.2-RC1</axis-version>
-    <camel-version>2.0-SNAPSHOT</camel-version>
+    <camel-version>2.0-M2</camel-version>
     <cglib-version>2.0</cglib-version>
     <commons-beanutils-version>1.6.1</commons-beanutils-version>
     <commons-collections-version>3.2.1</commons-collections-version>
