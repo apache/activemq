@@ -239,7 +239,8 @@ public abstract class Usage<T extends Usage> implements Service {
 
     private void fireEvent(final int oldPercentUsage, final int newPercentUsage) {
         if (debug) {
-            LOG.debug("Memory usage change.  from: " + oldPercentUsage + ", to: " + newPercentUsage);
+            LOG.debug("Memory usage change from: " + oldPercentUsage + "% of available memory, to: " 
+                + newPercentUsage + "% of available memory");
         }   
         if (newPercentUsage >= 80) {
             LOG.warn("Memory usage is now over 80%!");
@@ -271,7 +272,7 @@ public abstract class Usage<T extends Usage> implements Service {
             if (started.get()) {
                 getExecutor().execute(listenerNotifier);
             } else {
-                LOG.warn("not notifying usage change to listeners on shutdown");
+                LOG.warn("Not notifying memory usage change to listeners on shutdown");
             }
         }
     }
