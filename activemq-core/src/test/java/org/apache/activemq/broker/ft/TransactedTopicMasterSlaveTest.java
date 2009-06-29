@@ -29,7 +29,7 @@ public class TransactedTopicMasterSlaveTest extends JmsTopicTransactionTest {
     protected BrokerService slave;
     protected int inflightMessageCount;
     protected int failureCount = 50;
-    protected String uriString = "failover://(tcp://localhost:62001,tcp://localhost:62002)?randomize=false";
+    protected String uriString = "failover://(tcp://localhost:62001?soWriteTimeout=15000,tcp://localhost:62002?soWriteTimeout=15000)?randomize=false";
     private boolean stopMaster = false;
 
     protected void setUp() throws Exception {

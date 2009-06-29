@@ -264,11 +264,6 @@ public abstract class TransportFactory {
      * @throws Exception
      */
     public Transport serverConfigure(Transport transport, WireFormat format, HashMap options) throws Exception {
-        if (options.containsKey(WRITE_TIMEOUT_FILTER)) {
-            transport = new WriteTimeoutFilter(transport);
-            String soWriteTimeout = (String)options.get(WRITE_TIMEOUT_FILTER);
-            if (soWriteTimeout!=null) ((WriteTimeoutFilter)transport).setWriteTimeout(Long.parseLong(soWriteTimeout));
-        }
         if (options.containsKey(THREAD_NAME_FILTER)) {
             transport = new ThreadNameFilter(transport);
         }
@@ -288,6 +283,13 @@ public abstract class TransportFactory {
      * @return
      */
     public Transport compositeConfigure(Transport transport, WireFormat format, Map options) {
+        if (options.containsKey(WRITE_TIMEOUT_FILTER)) {
+            transport = new WriteTimeoutFilter(transport);
+            String soWriteTimeout = (String)options.remove(WRITE_TIMEOUT_FILTER);
+            if (soWriteTimeout!=null) {
+                ((WriteTimeoutFilter)transport).setWriteTimeout(Long.parseLong(soWriteTimeout));
+            }
+        }
         IntrospectionSupport.setProperties(transport, options);
         return transport;
     }

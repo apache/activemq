@@ -16,45 +16,34 @@
  */
 package org.apache.activemq.broker.store;
 
-import java.net.URI;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import junit.framework.Test;
 import junit.framework.TestCase;
 
-import org.apache.activemq.broker.BrokerFactory;
-import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.broker.BrokerTest;
 import org.apache.activemq.command.ConnectionId;
 import org.apache.activemq.command.LocalTransactionId;
 import org.apache.activemq.command.TransactionId;
-import org.apache.activemq.store.amq.AMQPersistenceAdapter;
 import org.apache.activemq.store.amq.AMQTransactionStore;
 import org.apache.activemq.store.amq.AMQTx;
 
-/**
- * Once the wire format is completed we can test against real persistence storage.
- * 
- * @version $Revision$
- */
 public class TransactionStoreTest extends TestCase {
 
     protected static final int MAX_TX = 2500;
     protected static final int MAX_THREADS = 200;
     
-    class UnderTest extends AMQTransactionStore {
-        public UnderTest() {
+    class BeingTested extends AMQTransactionStore {
+        public BeingTested() {
             super(null);
         }
         public Map<TransactionId, AMQTx>  getInFlight() {
-         return inflightTransactions;   
+            return inflightTransactions;   
         }
     };
     
-    UnderTest underTest = new UnderTest();
+    BeingTested underTest = new BeingTested();
     
   public void testConcurrentGetTx() throws Exception {
       final ConnectionId connectionId = new ConnectionId("1:1");

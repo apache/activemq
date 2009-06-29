@@ -106,7 +106,7 @@ public class TcpTransportFactory extends TransportFactory {
             transport = new WireFormatNegotiator(transport, (OpenWireFormat)format, tcpTransport.getMinmumWireFormatVersion());
         }
 
-        return transport;
+        return super.compositeConfigure(transport, format, options);
     }
 
     private String getOption(Map options, String key, String def) {
