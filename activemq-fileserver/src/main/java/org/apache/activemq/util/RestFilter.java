@@ -23,6 +23,7 @@ package org.apache.activemq.util;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.net.HttpURLConnection;
 import java.net.URL;
 
 import javax.servlet.Filter;
@@ -38,7 +39,6 @@ import javax.servlet.http.HttpServletResponse;
 import org.mortbay.log.Log;
 import org.mortbay.util.IO;
 import org.mortbay.util.URIUtil;
-import sun.net.www.protocol.http.HttpURLConnection;
 
 /**
  * <p>
