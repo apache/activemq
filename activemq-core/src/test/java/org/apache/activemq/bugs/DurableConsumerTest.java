@@ -136,11 +136,11 @@ public class DurableConsumerTest extends TestCase {
 
             topicConnectionFactory = new ActiveMQConnectionFactory(CONNECTION_URL);
             try {
-            topic = new ActiveMQTopic(TOPIC_NAME);
-            topicConnection = topicConnectionFactory.createTopicConnection();
-            topicSession = topicConnection.createTopicSession(false, Session.AUTO_ACKNOWLEDGE);
-            topicPublisher = topicSession.createPublisher(topic);
-            message = topicSession.createMessage();
+            	topic = new ActiveMQTopic(TOPIC_NAME);
+            	topicConnection = topicConnectionFactory.createTopicConnection();
+            	topicSession = topicConnection.createTopicSession(false, Session.AUTO_ACKNOWLEDGE);
+            	topicPublisher = topicSession.createPublisher(topic);
+            	message = topicSession.createMessage();
             } catch( Exception ex ) {
             	exceptions.add(ex);
             }
@@ -174,13 +174,12 @@ public class DurableConsumerTest extends TestCase {
             } );
             thread.start();
             
-            LOG.info( "subscribed " + i + " of 100" );
         }
 
         Thread.sleep(5000);
         broker.stop();
         broker = createBroker(false);
-        Thread.sleep(5000);
+        Thread.sleep(10000);
         assertEquals(0, exceptions.size());
     }
   

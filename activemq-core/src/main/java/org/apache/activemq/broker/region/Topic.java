@@ -117,7 +117,6 @@ public class Topic  extends BaseDestination  implements Task{
 
     public void addSubscription(ConnectionContext context, final Subscription sub) throws Exception {
 
-        sub.add(context, this);
         destinationStatistics.getConsumers().increment();
 
         if (!sub.getConsumerInfo().isDurable()) {
@@ -133,6 +132,7 @@ public class Topic  extends BaseDestination  implements Task{
                 try {
 
                     synchronized (consumers) {
+                        sub.add(context, this);
                         consumers.add(sub);
                     }
                     subscriptionRecoveryPolicy.recover(context, this, sub);
@@ -143,10 +143,12 @@ public class Topic  extends BaseDestination  implements Task{
 
             } else {
                 synchronized (consumers) {
+                    sub.add(context, this);
                     consumers.add(sub);
                 }
             }
         } else {
+            sub.add(context, this);
             DurableTopicSubscription dsub = (DurableTopicSubscription)sub;
             durableSubcribers.put(dsub.getSubscriptionKey(), dsub);
         }
@@ -178,11 +180,7 @@ public class Topic  extends BaseDestination  implements Task{
         // we are recovering a subscription to avoid out of order messages.
         dispatchValve.turnOff();
         try {
-
-            synchronized (consumers) {
-                consumers.add(subscription);
-            }
-
+        	
             if (topicStore == null) {
                 return;
             }
@@ -199,6 +197,10 @@ public class Topic  extends BaseDestination  implements Task{
                     // Need to delete the subscription
                     topicStore.deleteSubscription(clientId, subscriptionName);
                     info = null;
+                } else {
+                    synchronized (consumers) {
+                        consumers.add(subscription);
+                    }
                 }
             }
             // Do we need to create the subscription?
@@ -208,11 +210,15 @@ public class Topic  extends BaseDestination  implements Task{
                 info.setSelector(selector);
                 info.setSubscriptionName(subscriptionName);
                 info.setDestination(getActiveMQDestination()); 
-                // Thi destination is an actual destination id.
+                // This destination is an actual destination id.
                 info.setSubscribedDestination(subscription.getConsumerInfo().getDestination()); 
                 // This destination might be a pattern
-                topicStore.addSubsciption(info,subscription.getConsumerInfo().isRetroactive());
+                synchronized (consumers) {
+                    consumers.add(subscription);
+                    topicStore.addSubsciption(info,subscription.getConsumerInfo().isRetroactive());
+                }
             }
+            
 
             final MessageEvaluationContext msgContext = new NonCachedMessageEvaluationContext();
             msgContext.setDestination(destination);
@@ -244,7 +250,6 @@ public class Topic  extends BaseDestination  implements Task{
                     }
                 });
             }
-
         } finally {
             dispatchValve.turnOn();
         }

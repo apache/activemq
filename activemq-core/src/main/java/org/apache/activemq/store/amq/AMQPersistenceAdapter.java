@@ -565,7 +565,6 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
      */
     private void recover() throws IllegalStateException, IOException {
         referenceStoreAdapter.clearMessages();
-        referenceStoreAdapter.recoverState();
         Location pos = null;
         int redoCounter = 0;
         LOG.info("Journal Recovery Started from: " + asyncDataManager);
