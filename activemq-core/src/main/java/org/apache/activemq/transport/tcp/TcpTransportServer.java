@@ -381,8 +381,10 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
     protected final void handleSocket(Socket socket) {
         try {
             if (this.currentTransportCount >= this.maximumConnections) {
-                
-            }else {
+                throw new ExceededMaximumConnectionsException("Exceeded the maximum " + 
+                        "number of allowed client connections. See the 'maximumConnections' " + 
+                        "property on the TCP transport configuration URI in the ActiveMQ configuration file (e.g., activemq.xml)"); 
+            } else {
             HashMap<String, Object> options = new HashMap<String, Object>();
             options.put("maxInactivityDuration", Long
                     .valueOf(maxInactivityDuration));
