@@ -158,8 +158,19 @@ public class DurableConsumerTest extends TestCase {
         }
     }
     
+    private void configurePersistence(BrokerService broker) throws Exception {
+        File dataDirFile = new File("target/"+ getName());
+        AMQPersistenceAdapterFactory fact = new AMQPersistenceAdapterFactory();
+        fact.setDataDirectory(dataDirFile);
+        fact.setForceRecoverReferenceStore(true);
+    	broker.setPersistenceAdapter(fact.createPersistenceAdapter());
+    }
+    
     public void testFailover() throws Exception {
         
+    	configurePersistence(broker);
+    	broker.start();
+    	
     	Thread publisherThread = new Thread( new MessagePublisher() );
         publisherThread.start();
         
@@ -179,11 +190,16 @@ public class DurableConsumerTest extends TestCase {
         Thread.sleep(5000);
         broker.stop();
         broker = createBroker(false);
+        configurePersistence(broker);
+        broker.start();
         Thread.sleep(10000);
         assertEquals(0, exceptions.size());
     }
   
     public void testConcurrentDurableConsumer() throws Exception {
+    	
+    	broker.start();
+    	
         factory = createConnectionFactory();
         final String topicName = getName();
         final int numMessages = 500;
@@ -265,6 +281,9 @@ public class DurableConsumerTest extends TestCase {
     }
     
     public void testConsumer() throws Exception{
+    	
+    	broker.start();
+    	
         factory = createConnectionFactory();
         Connection consumerConnection = factory.createConnection();
         consumerConnection.setClientID(CONSUMER_NAME);
@@ -274,7 +293,8 @@ public class DurableConsumerTest extends TestCase {
         consumerConnection.start();
         consumerConnection.close();
         broker.stop();
-        broker =createBroker(false);
+        broker = createBroker(false);
+        broker.start();
         
         Connection producerConnection = factory.createConnection();
        
@@ -292,14 +312,15 @@ public class DurableConsumerTest extends TestCase {
         }
         producerConnection.close();
         broker.stop();
-        broker =createBroker(false);
+        broker = createBroker(false);
+        broker.start();
         
         consumerConnection = factory.createConnection();
         consumerConnection.setClientID(CONSUMER_NAME);
+        consumerConnection.start();
         consumerSession = consumerConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
        
         consumer = consumerSession.createDurableSubscriber(topic, CONSUMER_NAME);
-        consumerConnection.start();
         for (int i =0; i < COUNT;i++) {
             Message msg =  consumer.receive(5000);            
             assertNotNull("Missing message: "+i, msg);
@@ -342,17 +363,11 @@ public class DurableConsumerTest extends TestCase {
     protected BrokerService createBroker(boolean deleteStore) throws Exception {
         BrokerService answer = new BrokerService();
         configureBroker(answer,deleteStore);
-        answer.start();
         return answer;
     }
     
 
     protected void configureBroker(BrokerService answer,boolean deleteStore) throws Exception {
-        File dataDirFile = new File("target/"+ getName());
-        AMQPersistenceAdapterFactory fact = new AMQPersistenceAdapterFactory();
-        fact.setDataDirectory(dataDirFile);
-        fact.setForceRecoverReferenceStore(true);
-    	answer.setPersistenceAdapter(fact.createPersistenceAdapter());
         answer.setDeleteAllMessagesOnStartup(deleteStore);
         answer.addConnector(bindAddress);
         answer.setUseShutdownHook(false);
