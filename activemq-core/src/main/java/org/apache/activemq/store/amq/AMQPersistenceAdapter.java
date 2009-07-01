@@ -44,6 +44,7 @@ import org.apache.activemq.command.JournalTopicAck;
 import org.apache.activemq.command.JournalTrace;
 import org.apache.activemq.command.JournalTransaction;
 import org.apache.activemq.command.Message;
+import org.apache.activemq.command.SubscriptionInfo;
 import org.apache.activemq.filter.NonCachedMessageEvaluationContext;
 import org.apache.activemq.kaha.impl.async.AsyncDataManager;
 import org.apache.activemq.kaha.impl.async.Location;
@@ -586,6 +587,10 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
                 }
             } else {
                 switch (c.getDataStructureType()) {
+                case SubscriptionInfo.DATA_STRUCTURE_TYPE: {
+                    referenceStoreAdapter.recoverSubscription((SubscriptionInfo)c);
+                }
+                    break;
                 case JournalQueueAck.DATA_STRUCTURE_TYPE: {
                     JournalQueueAck command = (JournalQueueAck)c;
                     AMQMessageStore store = (AMQMessageStore)createMessageStore(command.getDestination());

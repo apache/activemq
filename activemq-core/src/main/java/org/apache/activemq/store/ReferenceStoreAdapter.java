@@ -22,6 +22,7 @@ import java.util.Set;
 
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
+import org.apache.activemq.command.SubscriptionInfo;
 import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.store.amq.AMQTx;
 
@@ -103,6 +104,11 @@ public interface ReferenceStoreAdapter extends PersistenceAdapter {
      * @param maxDataFileLength
      */
     void setMaxDataFileLength(long maxDataFileLength);
-
-
+    
+    /**
+     * Recover particular subscription. Used for recovery of durable consumers
+     * @param info
+     * @throws IOException
+     */
+    void recoverSubscription(SubscriptionInfo info) throws IOException;
 }

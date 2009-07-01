@@ -68,6 +68,7 @@ public class AMQTopicMessageStore extends AMQMessageStore implements TopicMessag
     }
 
     public void addSubsciption(SubscriptionInfo subscriptionInfo, boolean retroactive) throws IOException {
+        peristenceAdapter.writeCommand(subscriptionInfo, false);
         topicReferenceStore.addSubsciption(subscriptionInfo, retroactive);
     }
 

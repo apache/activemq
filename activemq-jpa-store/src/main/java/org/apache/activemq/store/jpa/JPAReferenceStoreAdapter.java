@@ -28,6 +28,7 @@ import javax.persistence.Query;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
+import org.apache.activemq.command.SubscriptionInfo;
 import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.store.MessageStore;
 import org.apache.activemq.store.ReferenceStore;
@@ -160,5 +161,8 @@ public class JPAReferenceStoreAdapter extends JPAPersistenceAdapter implements R
     }
    
     public void setMaxDataFileLength(long maxDataFileLength) {        
+    }
+
+    public void recoverSubscription(SubscriptionInfo info) throws IOException {
     }
 }

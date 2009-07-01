@@ -28,12 +28,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.activemq.broker.ConnectionContext;
+import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.command.SubscriptionInfo;
 import org.apache.activemq.command.TransactionId;
-import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.kaha.CommandMarshaller;
 import org.apache.activemq.kaha.ListContainer;
 import org.apache.activemq.kaha.MapContainer;
@@ -274,6 +274,13 @@ public class KahaReferenceStoreAdapter extends KahaPersistenceAdapter implements
             ts.addSubsciption(info, false);
         }
     }
+    
+    public void recoverSubscription(SubscriptionInfo info) throws IOException {
+        TopicReferenceStore ts = createTopicReferenceStore((ActiveMQTopic)info.getDestination());
+        LOG.info("Recovering subscriber state for durable subscriber: " + info);
+        ts.addSubsciption(info, false);
+    }
+    
 
     public Map<TransactionId, AMQTx> retrievePreparedState() throws IOException {
         Map<TransactionId, AMQTx> result = new HashMap<TransactionId, AMQTx>();

@@ -174,7 +174,7 @@ public class DurableConsumerTest extends TestCase {
     	Thread publisherThread = new Thread( new MessagePublisher() );
         publisherThread.start();
         
-        for( int i = 0; i < 100; i++ ) {
+        for( int i = 0; i < 200; i++ ) {
             
             final int id = i;
             Thread thread = new Thread( new Runnable() {
@@ -280,9 +280,20 @@ public class DurableConsumerTest extends TestCase {
         assertTrue(exceptions.isEmpty());
     }
     
-    public void testConsumer() throws Exception{
+    public void testConsumerRecover() throws Exception {
+    	doTestConsumer(true);
+    }
+    
+    public void testConsumer() throws Exception {
+    	doTestConsumer(false);
+    }
+    
+    public void doTestConsumer(boolean forceRecover) throws Exception{
     	
-    	broker.start();
+        if (forceRecover) {
+            configurePersistence(broker);
+        }
+        broker.start();
     	
         factory = createConnectionFactory();
         Connection consumerConnection = factory.createConnection();
@@ -294,6 +305,9 @@ public class DurableConsumerTest extends TestCase {
         consumerConnection.close();
         broker.stop();
         broker = createBroker(false);
+        if (forceRecover) {
+            configurePersistence(broker);
+        }
         broker.start();
         
         Connection producerConnection = factory.createConnection();
@@ -313,6 +327,9 @@ public class DurableConsumerTest extends TestCase {
         producerConnection.close();
         broker.stop();
         broker = createBroker(false);
+        if (forceRecover) {
+            configurePersistence(broker);
+        }
         broker.start();
         
         consumerConnection = factory.createConnection();
