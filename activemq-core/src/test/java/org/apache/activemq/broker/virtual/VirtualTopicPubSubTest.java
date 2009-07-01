@@ -17,9 +17,13 @@
 package org.apache.activemq.broker.virtual;
 
 import javax.jms.Connection;
+import javax.jms.JMSException;
+import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
+
+import junit.framework.Test;
 
 import org.apache.activemq.EmbeddedBrokerTestSupport;
 import org.apache.activemq.command.ActiveMQQueue;
@@ -33,14 +37,35 @@ import org.apache.activemq.spring.ConsumerBean;
 public class VirtualTopicPubSubTest extends EmbeddedBrokerTestSupport {
 
     private Connection connection;
+    public int ackMode = Session.AUTO_ACKNOWLEDGE;
 
+    public static Test suite() {
+        return suite(VirtualTopicPubSubTest.class);
+    }
+    
+    public void initCombosForTestVirtualTopicCreation() {
+        addCombinationValues("ackMode", new Object[] {new Integer(Session.AUTO_ACKNOWLEDGE), new Integer(Session.CLIENT_ACKNOWLEDGE) });
+    }
+    
     public void testVirtualTopicCreation() throws Exception {
         if (connection == null) {
             connection = createConnection();
         }
         connection.start();
 
-        ConsumerBean messageList = new ConsumerBean();
+        ConsumerBean messageList = new ConsumerBean() {
+            public synchronized void onMessage(Message message) {
+                super.onMessage(message);
+                if (ackMode == Session.CLIENT_ACKNOWLEDGE) {
+                    try {
+                        message.acknowledge();
+                    } catch (JMSException e) {
+                        e.printStackTrace();
+                    }
+                }
+                
+            }
+        };
         messageList.setVerbose(true);
         
         String queueAName = getVirtualTopicConsumerName();
@@ -48,7 +73,7 @@ public class VirtualTopicPubSubTest extends EmbeddedBrokerTestSupport {
         ActiveMQQueue queue1 = new ActiveMQQueue(queueAName);
         ActiveMQQueue queue2 = new ActiveMQQueue(queueAName);
 
-        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        Session session = connection.createSession(false, ackMode);
         MessageConsumer c1 = session.createConsumer(queue1);
         MessageConsumer c2 = session.createConsumer(queue2);
 
