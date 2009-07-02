@@ -174,7 +174,7 @@ public class DurableConsumerTest extends TestCase {
     	Thread publisherThread = new Thread( new MessagePublisher() );
         publisherThread.start();
         
-        for( int i = 0; i < 200; i++ ) {
+        for( int i = 0; i < 100; i++ ) {
             
             final int id = i;
             Thread thread = new Thread( new Runnable() {
