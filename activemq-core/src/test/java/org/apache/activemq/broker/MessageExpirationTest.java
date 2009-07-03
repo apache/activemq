@@ -20,6 +20,7 @@ import javax.jms.DeliveryMode;
 
 import junit.framework.Test;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
+import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.broker.region.policy.VMPendingSubscriberMessageStoragePolicy;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ConnectionInfo;
@@ -33,9 +34,9 @@ import org.apache.activemq.command.SessionInfo;
 public class MessageExpirationTest extends BrokerTestSupport {
 
     public ActiveMQDestination destination;
-    public int deliveryMode;
+    public int deliveryMode = DeliveryMode.NON_PERSISTENT;
     public int prefetch;
-    public byte destinationType;
+    public byte destinationType = ActiveMQDestination.QUEUE_TYPE;
     public boolean durableConsumer;
 
     protected Message createMessage(ProducerInfo producerInfo, ActiveMQDestination destination, int deliveryMode, int timeToLive) {
@@ -63,10 +64,13 @@ public class MessageExpirationTest extends BrokerTestSupport {
         PolicyEntry policy = super.getDefaultPolicy();
         // disable spooling
         policy.setPendingSubscriberPolicy(new VMPendingSubscriberMessageStoragePolicy());
+        // have aggressive expiry period to ensure no deadlock or clash
+        policy.setExpireMessagesPeriod(100);
+        
         return policy;
     }
 
-    public void XtestMessagesWaitingForUssageDecreaseExpire() throws Exception {
+    public void testMessagesWaitingForUsageDecreaseExpire() throws Exception {
 
         // Start a producer
         final StubConnection connection = createConnection();
@@ -209,12 +213,6 @@ public class MessageExpirationTest extends BrokerTestSupport {
         assertNoMessagesLeft(connection);
 
         connection.send(closeConnectionInfo(connectionInfo));
-    }
-
-    public void xinitCombosForTestMessagesInSubscriptionPendingListExpire() {
-        addCombinationValues("deliveryMode", new Object[] {Integer.valueOf(DeliveryMode.NON_PERSISTENT), Integer.valueOf(DeliveryMode.PERSISTENT)});
-        addCombinationValues("destinationType", new Object[] {Byte.valueOf(ActiveMQDestination.QUEUE_TYPE), Byte.valueOf(ActiveMQDestination.TOPIC_TYPE),
-                                                              Byte.valueOf(ActiveMQDestination.TEMP_QUEUE_TYPE), Byte.valueOf(ActiveMQDestination.TEMP_TOPIC_TYPE)});
     }
 
     public void initCombosForTestMessagesInSubscriptionPendingListExpire() {

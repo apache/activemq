@@ -53,8 +53,6 @@ import org.apache.activemq.command.TransactionInfo;
 import org.apache.activemq.command.XATransactionId;
 import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.usage.SystemUsage;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 public class BrokerTestSupport extends CombinationTestSupport {
 
