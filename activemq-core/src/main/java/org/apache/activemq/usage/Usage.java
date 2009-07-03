@@ -242,8 +242,8 @@ public abstract class Usage<T extends Usage> implements Service {
             LOG.debug("Memory usage change from: " + oldPercentUsage + "% of available memory, to: " 
                 + newPercentUsage + "% of available memory");
         }   
-        if (newPercentUsage >= 80) {
-            LOG.warn("Memory usage is now over 80%!");
+        if (newPercentUsage >= 100) {
+            LOG.warn("Memory usage is now at " + newPercentUsage  + "%");
         }
              
         if (started.get()) {

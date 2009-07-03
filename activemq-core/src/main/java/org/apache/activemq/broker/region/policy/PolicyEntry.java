@@ -73,15 +73,15 @@ public class PolicyEntry extends DestinationMapEntry {
     private boolean advisoryWhenFull;
     private boolean advisoryForDelivery;
     private boolean advisoryForConsumed;
+    private long expireMessagesPeriod = BaseDestination.EXPIRE_MESSAGE_PERIOD;
+    private int maxExpirePageSize = BaseDestination.MAX_BROWSE_PAGE_SIZE;
    
     public void configure(Broker broker,Queue queue) {
         baseConfiguration(queue);
         if (dispatchPolicy != null) {
             queue.setDispatchPolicy(dispatchPolicy);
         }
-        if (deadLetterStrategy != null) {
-            queue.setDeadLetterStrategy(deadLetterStrategy);
-        }
+        queue.setDeadLetterStrategy(getDeadLetterStrategy());
         queue.setMessageGroupMapFactory(getMessageGroupMapFactory());
         if (memoryLimit > 0) {
             queue.getMemoryUsage().setLimit(memoryLimit);
@@ -104,9 +104,7 @@ public class PolicyEntry extends DestinationMapEntry {
         if (dispatchPolicy != null) {
             topic.setDispatchPolicy(dispatchPolicy);
         }
-        if (deadLetterStrategy != null) {
-            topic.setDeadLetterStrategy(deadLetterStrategy);
-        }
+        topic.setDeadLetterStrategy(getDeadLetterStrategy());
         if (subscriptionRecoveryPolicy != null) {
             topic.setSubscriptionRecoveryPolicy(subscriptionRecoveryPolicy.copy());
         }
@@ -132,6 +130,8 @@ public class PolicyEntry extends DestinationMapEntry {
         destination.setAdvisdoryForFastProducers(isAdvisdoryForFastProducers());
         destination.setAdvisoryWhenFull(isAdvisoryWhenFull());
         destination.setSendAdvisoryIfNoConsumers(sendAdvisoryIfNoConsumers);
+        destination.setExpireMessagesPeriod(getExpireMessagesPeriod());
+        destination.setMaxExpirePageSize(getMaxExpirePageSize());
     }
 
     public void configure(Broker broker, SystemUsage memoryManager, TopicSubscription subscription) {
@@ -542,5 +542,22 @@ public class PolicyEntry extends DestinationMapEntry {
     public void setAdvisdoryForFastProducers(boolean advisdoryForFastProducers) {
         this.advisdoryForFastProducers = advisdoryForFastProducers;
     }
+
+    public void setMaxExpirePageSize(int maxExpirePageSize) {
+        this.maxExpirePageSize = maxExpirePageSize;
+    }
+    
+    public int getMaxExpirePageSize() {
+        return maxExpirePageSize;
+    }
+    
+    public void setExpireMessagesPeriod(long expireMessagesPeriod) {
+        this.expireMessagesPeriod = expireMessagesPeriod;
+    }
+    
+    public long getExpireMessagesPeriod() {
+        return expireMessagesPeriod;
+    }
+
 
 }

@@ -21,7 +21,6 @@ import org.apache.activemq.management.CountStatisticImpl;
 import org.apache.activemq.management.PollCountStatisticImpl;
 import org.apache.activemq.management.StatsImpl;
 import org.apache.activemq.management.TimeStatisticImpl;
-import org.apache.tools.ant.taskdefs.condition.IsReference;
 
 /**
  * The J2EE Statistics for the a Destination.
@@ -38,6 +37,7 @@ public class DestinationStatistics extends StatsImpl {
     protected PollCountStatisticImpl messagesCached;
     protected CountStatisticImpl dispatched;
     protected CountStatisticImpl inflight;
+    protected CountStatisticImpl expired;
     protected TimeStatisticImpl processTime;
 
     public DestinationStatistics() {
@@ -46,6 +46,8 @@ public class DestinationStatistics extends StatsImpl {
         dispatched = new CountStatisticImpl("dispatched", "The number of messages that have been dispatched from the destination");
         dequeues = new CountStatisticImpl("dequeues", "The number of messages that have been acknowledged from the destination");
         inflight = new CountStatisticImpl("inflight", "The number of messages dispatched but awaiting acknowledgement");
+        expired = new CountStatisticImpl("expired", "The number of messages that have expired");
+        
         consumers = new CountStatisticImpl("consumers", "The number of consumers that that are subscribing to messages from the destination");
         consumers.setDoReset(false);
         producers = new CountStatisticImpl("producers", "The number of producers that that are publishing messages to the destination");
@@ -57,6 +59,7 @@ public class DestinationStatistics extends StatsImpl {
         addStatistic("dispatched", dispatched);
         addStatistic("dequeues", dequeues);
         addStatistic("inflight", inflight);
+        addStatistic("expired", expired);  
         addStatistic("consumers", consumers);
         addStatistic("producers", producers);
         addStatistic("messages", messages);
@@ -74,6 +77,10 @@ public class DestinationStatistics extends StatsImpl {
     
     public CountStatisticImpl getInflight() {
         return inflight;
+    }
+
+    public CountStatisticImpl getExpired() {
+        return expired;
     }
 
     public CountStatisticImpl getConsumers() {
@@ -111,6 +118,7 @@ public class DestinationStatistics extends StatsImpl {
             dequeues.reset();
             dispatched.reset();
             inflight.reset();
+            expired.reset();
         }
     }
 
@@ -120,6 +128,7 @@ public class DestinationStatistics extends StatsImpl {
         dispatched.setEnabled(enabled);
         dequeues.setEnabled(enabled);
         inflight.setEnabled(enabled);
+        expired.setEnabled(true);
         consumers.setEnabled(enabled);
         producers.setEnabled(enabled);
         messages.setEnabled(enabled);
@@ -134,6 +143,7 @@ public class DestinationStatistics extends StatsImpl {
             dispatched.setParent(parent.dispatched);
             dequeues.setParent(parent.dequeues);
             inflight.setParent(parent.inflight);
+            expired.setParent(parent.expired);
             consumers.setParent(parent.consumers);
             producers.setParent(parent.producers);
             messagesCached.setParent(parent.messagesCached);
@@ -144,6 +154,7 @@ public class DestinationStatistics extends StatsImpl {
             dispatched.setParent(null);
             dequeues.setParent(null);
             inflight.setParent(null);
+            expired.setParent(null);
             consumers.setParent(null);
             producers.setParent(null);
             messagesCached.setParent(null);

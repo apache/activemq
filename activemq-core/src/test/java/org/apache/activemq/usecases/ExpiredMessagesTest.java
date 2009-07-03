@@ -16,6 +16,8 @@
  */
 package org.apache.activemq.usecases;
 
+import java.util.concurrent.atomic.AtomicLong;
+
 import javax.jms.Connection;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
@@ -33,17 +35,21 @@ import org.apache.activemq.broker.jmx.DestinationViewMBean;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 
 
 public class ExpiredMessagesTest extends CombinationTestSupport {
 
+    private static final Log LOG = LogFactory.getLog(ExpiredMessagesTest.class);
+    
 	BrokerService broker;
 	Connection connection;
 	Session session;
 	MessageProducer producer;
 	MessageConsumer consumer;
-	public ActiveMQDestination destination;
+	public ActiveMQDestination destination = new ActiveMQQueue("test");
 	
     public static Test suite() {
         return suite(ExpiredMessagesTest.class);
@@ -77,6 +83,7 @@ public class ExpiredMessagesTest extends CombinationTestSupport {
 		producer.setTimeToLive(100);
 		consumer = session.createConsumer(destination);
 		connection.start();
+		final AtomicLong received = new AtomicLong();
 		
 		Thread consumerThread = new Thread("Consumer Thread") {
 			public void run() {
@@ -84,7 +91,9 @@ public class ExpiredMessagesTest extends CombinationTestSupport {
 				try {
 					long end = System.currentTimeMillis();
 					while (end - start < 3000) {
-						consumer.receive(1000);
+						if (consumer.receive(1000) != null) {
+						    received.incrementAndGet();
+						}
 						Thread.sleep(100);
 						end = System.currentTimeMillis();
 					}
@@ -115,9 +124,13 @@ public class ExpiredMessagesTest extends CombinationTestSupport {
         consumerThread.join();
         producingThread.join();
         
-        DestinationViewMBean view = createView(destination);
         
-        assertEquals("Wrong inFlightCount: " + view.getInFlightCount(), view.getDispatchCount() - view.getDequeueCount(), view.getInFlightCount());
+        DestinationViewMBean view = createView(destination);
+        LOG.info("Stats: received: "  + received.get() + ", enqueues: " + view.getDequeueCount() + ", dequeues: " + view.getDequeueCount()
+                + ", dispatched: " + view.getDispatchCount() + ", inflight: " + view.getInFlightCount() + ", expiries: " + view.getExpiredCount());
+        
+        assertEquals("got what did not expire", received.get(), view.getDequeueCount() - view.getExpiredCount());
+        //assertEquals("Wrong inFlightCount: " + view.getInFlightCount(), view.getDispatchCount() - view.getDequeueCount(), view.getInFlightCount());
 	}
 	
 	protected DestinationViewMBean createView(ActiveMQDestination destination) throws Exception {

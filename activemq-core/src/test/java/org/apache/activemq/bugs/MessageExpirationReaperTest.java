@@ -1,6 +1,7 @@
 package org.apache.activemq.bugs;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 
 import javax.jms.ConnectionFactory;
 import javax.jms.MessageProducer;
@@ -16,6 +17,8 @@ import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.jmx.DestinationViewMBean;
+import org.apache.activemq.broker.region.policy.PolicyEntry;
+import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.junit.After;
 import org.junit.Before;
@@ -56,8 +59,16 @@ public class MessageExpirationReaperTest {
         broker = new BrokerService();
 //        broker.setPersistent(false);
 //        broker.setUseJmx(true);
+        broker.setDeleteAllMessagesOnStartup(true);
         broker.setBrokerName(brokerName);
         broker.addConnector(brokerUrl);
+        
+        PolicyMap policyMap = new PolicyMap();
+        PolicyEntry defaultEntry = new PolicyEntry();
+        defaultEntry.setExpireMessagesPeriod(500);
+        policyMap.setDefaultEntry(defaultEntry);
+        broker.setDestinationPolicy(policyMap);
+        
         broker.start();
     }
     
@@ -85,15 +96,13 @@ public class MessageExpirationReaperTest {
         }
         
         // Let the messages expire 
-        Thread.sleep(1000);
+        Thread.sleep(2000);
         
         DestinationViewMBean view = createView(destination);
         
-        /*################### CURRENT EXPECTED FAILURE ####################*/ 
-        // The messages expire and should be reaped but they're not currently 
-        // reaped until there is an active consumer placed on the queue 
-        assertEquals("Incorrect count: " + view.getInFlightCount(), 0, view.getInFlightCount());
-        
+        assertEquals("Incorrect inflight count: " + view.getInFlightCount(), 0, view.getInFlightCount());
+        assertEquals("Incorrect queue size count", 0, view.getQueueSize());
+        assertEquals("Incorrect expired size count", 3, view.getEnqueueCount());   
         
         // Send more messages with an expiration 
         for (int i = 0; i < count; i++) {
@@ -101,10 +110,13 @@ public class MessageExpirationReaperTest {
             producer.send(message);
         }
         
+        // Let the messages expire 
+        Thread.sleep(2000);
+        
         // Simply browse the queue 
         Session browserSession = createSession();
         QueueBrowser browser = browserSession.createBrowser((Queue) destination);
-        browser.getEnumeration(); 
+        assertFalse("no message in the browser", browser.getEnumeration().hasMoreElements()); 
         
         // The messages expire and should be reaped because of the presence of 
         // the queue browser 

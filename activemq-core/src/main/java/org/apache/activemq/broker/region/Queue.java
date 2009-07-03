@@ -17,6 +17,7 @@
 package org.apache.activemq.broker.region;
 
 import java.io.IOException;
+import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -66,6 +67,7 @@ import org.apache.activemq.selector.SelectorParser;
 import org.apache.activemq.store.MessageRecoveryListener;
 import org.apache.activemq.store.MessageStore;
 import org.apache.activemq.thread.DeterministicTaskRunner;
+import org.apache.activemq.thread.Scheduler;
 import org.apache.activemq.thread.Task;
 import org.apache.activemq.thread.TaskRunner;
 import org.apache.activemq.thread.TaskRunnerFactory;
@@ -112,7 +114,13 @@ public class Queue extends BaseDestination implements Task, UsageListener {
             wakeup();
         }
     };
+    private final Runnable expireMessagesTask = new Runnable() {
+        public void run() {
+            expireMessages();          
+        }
+    };
     private final Object iteratingMutex = new Object() {};
+    private static final Scheduler scheduler = Scheduler.getInstance();
     
     private static final Comparator<Subscription>orderedCompare = new Comparator<Subscription>() {
 
@@ -177,6 +185,11 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                
             this.taskRunner = new DeterministicTaskRunner(this.executor,this);
         }
+        
+        if (getExpireMessagesPeriod() > 0) {
+            scheduler.executePeriodically(expireMessagesTask, getExpireMessagesPeriod());
+        }
+        
         super.initialize();
         if (store != null) {
             // Restore the persistent messages.
@@ -192,7 +205,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                         // Message could have expired while it was being
                         // loaded..
                         if (broker.isExpired(message)) {
-                            messageExpired(createConnectionContext(), message);
+                            messageExpired(createConnectionContext(), null, message, false);
                             return true;
                         }
                         if (hasSpace()) {
@@ -416,11 +429,11 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                             public void run() {
     
                                 try {
-    
                                     // While waiting for space to free up... the
                                     // message may have expired.
                                     if (message.isExpired()) {
                                         broker.messageExpired(context, message);
+                                        destinationStatistics.getExpired().increment();
                                     } else {
                                         doMessageSend(producerExchange, message);
                                     }
@@ -498,6 +511,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                         throw new IOException(
                                 "Connection closed, send aborted.");
                     }
+                    LOG.debug(this  + ", waiting for store space... msg: " + message);
                 }
                 message.getMessageId().setBrokerSequenceId(getDestinationSequenceId());
                 store.addMessage(context, message);
@@ -516,8 +530,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                         // op, by that time the message could have expired..
                         if (broker.isExpired(message)) {
                             broker.messageExpired(context, message);
-                            //message not added to stats yet
-                            //destinationStatistics.getMessages().decrement();
+                            destinationStatistics.getExpired().increment();
                             return;
                         }
                         sendMessage(context, message);
@@ -537,9 +550,34 @@ public class Queue extends BaseDestination implements Task, UsageListener {
             sendMessage(context, message);
         }
     }
+    
+    private void expireMessages() {
+        LOG.info("expiring messages...");
 
-	public void gc(){
-	}
+        // just track the insertion count
+        List<Message> l = new AbstractList<Message>() {
+            int size = 0;
+
+            @Override
+            public void add(int index, Message element) {
+                size++;
+            }
+
+            @Override
+            public int size() {
+                return size;
+            }
+
+            @Override
+            public Message get(int index) {
+                return null;
+            }
+        };
+        doBrowse(true, l, getMaxBrowsePageSize());
+    }
+
+    public void gc(){
+    }
     
     public void acknowledge(ConnectionContext context, Subscription sub, MessageAck ack, MessageReference node) throws IOException {
         messageConsumed(context, node);
@@ -593,6 +631,10 @@ public class Queue extends BaseDestination implements Task, UsageListener {
         if (this.executor != null) {
             this.executor.shutdownNow();
         }
+        
+        LOG.info(toString() + ", canceling expireMessagesTask");
+        scheduler.cancel(expireMessagesTask);
+        
         if (messages != null) {
             messages.stop();
         }
@@ -691,57 +733,74 @@ public class Queue extends BaseDestination implements Task, UsageListener {
         return result;
     }
 
-    public Message[] browse() {
-        int count = 0;
+    public Message[] browse() {    
         List<Message> l = new ArrayList<Message>();
+        doBrowse(false, l, getMaxBrowsePageSize());
+        return l.toArray(new Message[l.size()]);
+    }
+    
+    public void doBrowse(boolean forcePageIn, List<Message> l, int max) {
+        final ConnectionContext connectionContext = createConnectionContext();
         try {
-            pageInMessages(false);
-            synchronized (this.pagedInPendingDispatch) {
-                for (Iterator<QueueMessageReference> i = this.pagedInPendingDispatch
-                        .iterator(); i.hasNext()
-                        && count < getMaxBrowsePageSize();) {
-                    l.add(i.next().getMessage());
-                    count++;
-                }
-            }
-            if (count < getMaxBrowsePageSize()) {
-                synchronized (pagedInMessages) {
-                    for (Iterator<QueueMessageReference> i = this.pagedInMessages
-                            .values().iterator(); i.hasNext()
-                            && count < getMaxBrowsePageSize();) {
-                        Message m = i.next().getMessage();
-                        if (l.contains(m) == false) {
-                            l.add(m);
-                            count++;
-                        }
+            pageInMessages(forcePageIn);
+            List<MessageReference> toExpire = new ArrayList<MessageReference>();
+            dispatchLock.lock();
+            try {
+                synchronized (pagedInPendingDispatch) {
+                    addAll(pagedInPendingDispatch, l, max, toExpire);
+                    for (MessageReference ref : toExpire) {
+                        pagedInPendingDispatch.remove(ref);
+                        messageExpired(connectionContext, ref, false);
                     }
                 }
-            }
-            if (count < getMaxBrowsePageSize()) {
-                synchronized (messages) {
-                    try {
-                        messages.reset();
-                        while (messages.hasNext()
-                                && count < getMaxBrowsePageSize()) {
-                            MessageReference node = messages.next();
-                            messages.rollback(node.getMessageId());
-                            if (node != null) {
-                                Message m = node.getMessage();
-                                if (l.contains(m) == false) {
-                                    l.add(m);
-                                    count++;
+                toExpire.clear();
+                synchronized (pagedInMessages) {
+                    addAll(pagedInMessages.values(), l, max, toExpire);   
+                }
+                for (MessageReference ref : toExpire) {
+                    messageExpired(connectionContext, ref, false);
+                }
+                
+                if (l.size() < getMaxBrowsePageSize()) {
+                    synchronized (messages) {
+                        try {
+                            messages.reset();
+                            while (messages.hasNext() && l.size() < max) {
+                                MessageReference node = messages.next();
+                                messages.rollback(node.getMessageId());
+                                if (node != null) {
+                                    if (broker.isExpired(node)) {
+                                        messageExpired(connectionContext,
+                                                createMessageReference(node.getMessage()), false);
+                                    } else if (l.contains(node.getMessage()) == false) {
+                                        l.add(node.getMessage());
+                                    }
                                 }
                             }
+                        } finally {
+                            messages.release();
                         }
-                    } finally {
-                        messages.release();
                     }
                 }
+            } finally {
+                dispatchLock.unlock();
             }
         } catch (Exception e) {
-            LOG.error("Problem retrieving message in browse() ", e);
+            LOG.error("Problem retrieving message for browse", e);
         }
-        return l.toArray(new Message[l.size()]);
+    }
+
+    private void addAll(Collection<QueueMessageReference> refs,
+            List<Message> l, int maxBrowsePageSize, List<MessageReference> toExpire) throws Exception {
+        for (Iterator<QueueMessageReference> i = refs.iterator(); i.hasNext()
+                && l.size() < getMaxBrowsePageSize();) {
+            QueueMessageReference ref = i.next();
+            if (broker.isExpired(ref)) {
+                toExpire.add(ref);
+            } else if (l.contains(ref.getMessage()) == false) {
+                l.add(ref.getMessage());
+            }
+        }
     }
 
     public Message getMessage(String id) {
@@ -1190,21 +1249,25 @@ public class Queue extends BaseDestination implements Task, UsageListener {
         }
     }
     
-    public void messageExpired(ConnectionContext context,MessageReference reference) {
-        messageExpired(context,null,reference);
+    public void messageExpired(ConnectionContext context,MessageReference reference, boolean dispatched) {
+        messageExpired(context,null,reference, dispatched);
     }
     
     public void messageExpired(ConnectionContext context,Subscription subs, MessageReference reference) {
+        messageExpired(context, subs, reference, true);
+    }
+    
+    public void messageExpired(ConnectionContext context,Subscription subs, MessageReference reference, boolean dispatched) {
         broker.messageExpired(context, reference);
         destinationStatistics.getDequeues().increment();
-        destinationStatistics.getInflight().decrement();
+        destinationStatistics.getExpired().increment();
+        if (dispatched) {
+            destinationStatistics.getInflight().decrement();
+        }
         try {
             removeMessage(context,subs,(QueueMessageReference)reference);
         } catch (IOException e) {
             LOG.error("Failed to remove expired Message from the store ",e);
-        }
-        synchronized(pagedInMessages) {
-            pagedInMessages.remove(reference.getMessageId());
         }
         wakeup();
     }
@@ -1286,7 +1349,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                                 result.add(ref);
                                 count++;
                             } else {
-                                messageExpired(createConnectionContext(), ref);
+                                messageExpired(createConnectionContext(), ref, false);
                             }
                         }
                     } finally {
@@ -1312,7 +1375,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
         }
         return resultList;
     }
-    
+
     private void doDispatch(List<QueueMessageReference> list) throws Exception {
         dispatchLock.lock();
         try {

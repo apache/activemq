@@ -73,6 +73,14 @@ public interface DestinationViewMBean {
      */
     long getInFlightCount();
 
+    
+    /**
+     * Returns the number of messages that have expired
+     * 
+     * @return The number of messages that have expired
+     */
+    long getExpiredCount();
+
     /**
      * Returns the number of consumers subscribed this destination.
      * 

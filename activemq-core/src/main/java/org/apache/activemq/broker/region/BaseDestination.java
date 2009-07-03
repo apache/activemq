@@ -44,6 +44,7 @@ public abstract class BaseDestination implements Destination {
      */
     public static final int MAX_PAGE_SIZE = 200;
     public static final int MAX_BROWSE_PAGE_SIZE = MAX_PAGE_SIZE * 2;
+    public static final long EXPIRE_MESSAGE_PERIOD = 30*1000;
     protected final ActiveMQDestination destination;
     protected final Broker broker;
     protected final MessageStore store;
@@ -69,6 +70,8 @@ public abstract class BaseDestination implements Destination {
     protected final BrokerService brokerService;
     protected final Broker regionBroker;
     protected DeadLetterStrategy deadLetterStrategy = DEFAULT_DEAD_LETTER_STRATEGY;
+    protected long expireMessagesPeriod = EXPIRE_MESSAGE_PERIOD;
+    private int maxExpirePageSize = MAX_BROWSE_PAGE_SIZE;
 
     /**
      * @param broker
@@ -213,7 +216,23 @@ public abstract class BaseDestination implements Destination {
     public void setMaxBrowsePageSize(int maxPageSize) {
         this.maxBrowsePageSize = maxPageSize;
     }
+    
+    public int getMaxExpirePageSize() {
+        return this.maxExpirePageSize;
+    }
 
+    public void setMaxExpirePageSize(int maxPageSize) {
+        this.maxExpirePageSize  = maxPageSize;
+    }
+
+    public void setExpireMessagesPeriod(long expireMessagesPeriod) {
+        this.expireMessagesPeriod = expireMessagesPeriod;
+    }
+
+    public long getExpireMessagesPeriod() {
+        return expireMessagesPeriod;
+    }
+    
     public boolean isUseCache() {
         return useCache;
     }

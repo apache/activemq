@@ -161,6 +161,7 @@ public class TopicSubscription extends AbstractSubscription {
                     matched.remove();
                     dispatchedCounter.incrementAndGet();
                     node.decrementReferenceCount();
+                    node.getRegionDestination().getDestinationStatistics().getExpired().increment();
                     broker.messageExpired(getContext(), node);
                     break;
                 }

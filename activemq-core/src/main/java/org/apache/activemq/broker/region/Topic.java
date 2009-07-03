@@ -278,6 +278,7 @@ public class Topic  extends BaseDestination  implements Task{
         // destination.. it may have expired.
         if (message.isExpired()) {
             broker.messageExpired(context, message);
+            getDestinationStatistics().getExpired().increment();
             if (sendProducerAck) {
                 ProducerAck ack = new ProducerAck(producerInfo.getProducerId(), message.getSize());
                 context.getConnection().dispatchAsync(ack);
@@ -306,6 +307,7 @@ public class Topic  extends BaseDestination  implements Task{
                                     // While waiting for space to free up... the
                                     // message may have expired.
                                     if (message.isExpired()) {
+                                        getDestinationStatistics().getExpired().increment();
                                         broker.messageExpired(context, message);
                                     } else {
                                         doMessageSend(producerExchange, message);
@@ -361,6 +363,7 @@ public class Topic  extends BaseDestination  implements Task{
                     // The usage manager could have delayed us by the time
                     // we unblock the message could have expired..
                     if (message.isExpired()) {
+                        getDestinationStatistics().getExpired().increment();
                         if (LOG.isDebugEnabled()) {
                             LOG.debug("Expired message: " + message);
                         }
@@ -418,6 +421,7 @@ public class Topic  extends BaseDestination  implements Task{
                     // operration.. by that time the message could have
                     // expired..
                     if (broker.isExpired(message)) {
+                        getDestinationStatistics().getExpired().increment();
                         broker.messageExpired(context, message);
                         message.decrementReferenceCount();
                         return;
@@ -594,6 +598,7 @@ public class Topic  extends BaseDestination  implements Task{
         broker.messageExpired(context, reference);
         destinationStatistics.getMessages().decrement();
         destinationStatistics.getEnqueues().decrement();
+        destinationStatistics.getExpired().increment();
         MessageAck ack = new MessageAck();
         ack.setAckType(MessageAck.STANDARD_ACK_TYPE);
         ack.setDestination(destination);

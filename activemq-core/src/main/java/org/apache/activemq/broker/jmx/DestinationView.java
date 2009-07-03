@@ -89,6 +89,10 @@ public class DestinationView implements DestinationViewMBean {
     public long getInFlightCount() {
         return destination.getDestinationStatistics().getInflight().getCount();
     }
+    
+    public long getExpiredCount() {
+        return destination.getDestinationStatistics().getExpired().getCount();
+    }
 
     public long getConsumerCount() {
         return destination.getDestinationStatistics().getConsumers().getCount();
@@ -363,4 +367,5 @@ public class DestinationView implements DestinationViewMBean {
         }
         return answer;
     }
+
 }

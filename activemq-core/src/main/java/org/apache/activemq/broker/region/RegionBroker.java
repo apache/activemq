@@ -709,6 +709,10 @@ public class RegionBroker extends EmptyBroker {
 							BrokerSupport.resend(context,message,
 							        deadLetterDestination);
 						}
+					} else {
+					    if (LOG.isDebugEnabled()) {
+					        LOG.debug("Expired message with no DLQ strategy in place");
+					    }
 					}
 				}
 			}
