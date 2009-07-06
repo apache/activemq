@@ -18,8 +18,9 @@ package org.apache.activemq.util;
 
 import java.net.InetAddress;
 import java.net.ServerSocket;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * Generator for Globally unique Strings.
@@ -27,7 +28,7 @@ import java.util.logging.Logger;
 
 public class IdGenerator {
 
-    private static final Logger LOG = Logger.getLogger(IdGenerator.class.getName());
+    private static final Log LOG = LogFactory.getLog(IdGenerator.class);
     private static final String UNIQUE_STUB;
     private static int instanceCount;
     private static String hostName;
@@ -54,7 +55,7 @@ public class IdGenerator {
                 Thread.sleep(100);
                 ss.close();
             } catch (Exception ioe) {
-                LOG.log(Level.WARNING, "could not generate unique stub", ioe);
+                LOG.warn("could not generate unique stub", ioe);
             }
         } else {
             hostName = "localhost";
