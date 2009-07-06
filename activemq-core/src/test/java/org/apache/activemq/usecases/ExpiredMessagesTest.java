@@ -70,10 +70,6 @@ public class ExpiredMessagesTest extends CombinationTestSupport {
 		broker.waitUntilStarted();
 	}
 	
-    public void initCombosForTestExpiredMessages() {
-        addCombinationValues("destination", new Object[] {new ActiveMQQueue("test"), new ActiveMQTopic("test")});
-    }
-	
 	public void testExpiredMessages() throws Exception {
 		
 		ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("tcp://localhost:61616");
@@ -153,5 +149,4 @@ public class ExpiredMessagesTest extends CombinationTestSupport {
 
 	
 
-	
 }
