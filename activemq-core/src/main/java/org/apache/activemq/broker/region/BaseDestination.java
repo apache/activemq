@@ -50,7 +50,7 @@ public abstract class BaseDestination implements Destination {
     protected final MessageStore store;
     protected SystemUsage systemUsage;
     protected MemoryUsage memoryUsage;
-    private boolean producerFlowControl = true;
+    private boolean producerFlowControl = false;
     private int maxProducersToAudit = 1024;
     private int maxAuditDepth = 2048;
     private boolean enableAudit = true;
