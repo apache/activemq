@@ -303,9 +303,16 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                 int index = 0;
                 for (Iterator<MessageReference> iter = dispatched.iterator(); iter.hasNext(); index++) {
                     final MessageReference node = iter.next();
-                    if( node.isExpired() ) {
-                        node.getRegionDestination().messageExpired(context, this, node);
+                    if (hasNotAlreadyExpired(node)) {
+                        if (node.isExpired()) {
+                            node.getRegionDestination().messageExpired(context, this, node);
+                            dispatched.remove(node);
+                            node.getRegionDestination().getDestinationStatistics().getInflight().decrement();
+                        }
+                    } else {
+                        // already expired
                         dispatched.remove(node);
+                        node.getRegionDestination().getDestinationStatistics().getInflight().decrement();    
                     }
                     if (ack.getLastMessageId().equals(node.getMessageId())) {
                         prefetchExtension = Math.max(prefetchExtension, index + 1);
@@ -409,6 +416,16 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                         + ack);
             }
         }
+    }
+
+    private boolean hasNotAlreadyExpired(MessageReference node) {
+        boolean hasNotExpired = true;
+        try {
+            hasNotExpired = node.getMessage().getProperty(RegionBroker.ORIGINAL_EXPIRATION) == null;
+        } catch (IOException e) {
+            LOG.warn("failed to determine value message property " + RegionBroker.ORIGINAL_EXPIRATION + " for " + node, e);
+        }
+        return hasNotExpired;
     }
 
     /**
@@ -545,6 +562,11 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
         List<MessageReference> rc = new ArrayList<MessageReference>();
         synchronized(pendingLock) {
             super.remove(context, destination);
+            // Here is a potential problem concerning Inflight stat:
+            // Messages not already committed or rolled back may not be removed from dispatched list at the moment
+            // Except if each commit or rollback callback action comes before remove of subscriber.
+            rc.addAll(pending.remove(context, destination));
+
             // Synchronized to DispatchLock
             synchronized(dispatchLock) {
 	            for (MessageReference r : dispatched) {
@@ -552,12 +574,10 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
 	                	rc.add((QueueMessageReference)r);
 	                }
 	            }
-            }
-            // TODO Dispatched messages should be decremented from Inflight stat 
-            // Here is a potential problem concerning Inflight stat:
-            // Messages not already committed or rolled back may not be removed from dispatched list at the moment
-            // Except if each commit or rollback callback action comes before remove of subscriber.
-            rc.addAll(pending.remove(context, destination));
+                destination.getDestinationStatistics().getDispatched().subtract(dispatched.size());
+                destination.getDestinationStatistics().getInflight().subtract(dispatched.size());
+                dispatched.clear();
+            }            
         }
         return rc;
     }
@@ -661,12 +681,15 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
         if (node.getRegionDestination() != null) {
             if (node != QueueMessageReference.NULL_MESSAGE) {
                 node.getRegionDestination().getDestinationStatistics().getDispatched().increment();
-                node.getRegionDestination().getDestinationStatistics().getInflight().increment();       
+                node.getRegionDestination().getDestinationStatistics().getInflight().increment();   
+                if (LOG.isTraceEnabled()) {
+                    LOG.trace(info.getDestination().getPhysicalName() + " dispatched: " + message.getMessageId() 
+                            + ", dispatched: " + node.getRegionDestination().getDestinationStatistics().getDispatched().getCount()
+                            + ", inflight: " + node.getRegionDestination().getDestinationStatistics().getInflight().getCount());
+                }
             }
         }
-        if (LOG.isTraceEnabled()) {
-            LOG.trace(info.getDestination().getPhysicalName() + " dispatched: " + message.getMessageId());
-        }
+        
         if (info.isDispatchAsync()) {
             try {
                 dispatchPending();

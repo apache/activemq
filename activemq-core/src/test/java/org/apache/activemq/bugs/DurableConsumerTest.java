@@ -277,7 +277,7 @@ public class DurableConsumerTest extends TestCase {
         executor.shutdown();
         executor.awaitTermination(30, TimeUnit.SECONDS);
         assertTrue("got some messages: " + receivedCount.get(), receivedCount.get() > numMessages);
-        assertTrue(exceptions.isEmpty());
+        assertTrue("no exceptions, but: " + exceptions, exceptions.isEmpty());
     }
     
     public void testConsumerRecover() throws Exception {

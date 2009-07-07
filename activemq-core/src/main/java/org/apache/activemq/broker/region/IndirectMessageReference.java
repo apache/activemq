@@ -69,7 +69,7 @@ public class IndirectMessageReference implements QueueMessageReference {
     }
 
     public String toString() {
-        return "Message " + message.getMessageId() + " dropped=" + dropped + " locked=" + (lockOwner != null);
+        return "Message " + message.getMessageId() + " dropped=" + dropped + " acked=" + acked + " locked=" + (lockOwner != null);
     }
 
     public void incrementRedeliveryCounter() {

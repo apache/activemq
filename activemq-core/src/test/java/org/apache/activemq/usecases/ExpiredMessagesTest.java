@@ -32,13 +32,12 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.CombinationTestSupport;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.jmx.DestinationViewMBean;
+import org.apache.activemq.broker.region.policy.PolicyEntry;
+import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
-import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
-
 
 public class ExpiredMessagesTest extends CombinationTestSupport {
 
@@ -60,15 +59,22 @@ public class ExpiredMessagesTest extends CombinationTestSupport {
     }
 	
 	protected void setUp() throws Exception {
-		broker = new BrokerService();
-		broker.setBrokerName("localhost");
-		broker.setDataDirectory("data/");
-		broker.setUseJmx(true);
-		broker.deleteAllMessages();
-		broker.addConnector("tcp://localhost:61616");
-		broker.start();
-		broker.waitUntilStarted();
-	}
+        broker = new BrokerService();
+        broker.setBrokerName("localhost");
+        broker.setDataDirectory("data/");
+        broker.setUseJmx(true);
+        broker.deleteAllMessages();
+
+        PolicyEntry defaultPolicy = new PolicyEntry();
+        defaultPolicy.setExpireMessagesPeriod(100);
+        PolicyMap policyMap = new PolicyMap();
+        policyMap.setDefaultEntry(defaultPolicy);
+        broker.setDestinationPolicy(policyMap);
+
+        broker.addConnector("tcp://localhost:61616");
+        broker.start();
+        broker.waitUntilStarted();
+    }
 	
 	public void testExpiredMessages() throws Exception {
 		
@@ -93,6 +99,7 @@ public class ExpiredMessagesTest extends CombinationTestSupport {
 						Thread.sleep(100);
 						end = System.currentTimeMillis();
 					}
+					consumer.close();
 				} catch (Throwable ex) {
 					ex.printStackTrace();
 				}
@@ -109,6 +116,7 @@ public class ExpiredMessagesTest extends CombinationTestSupport {
                 	while (i++ < 30000) {
                 		producer.send(session.createTextMessage("test"));
                 	}
+                	producer.close();
                 } catch (Throwable ex) {
                     ex.printStackTrace();
                 }
@@ -119,14 +127,23 @@ public class ExpiredMessagesTest extends CombinationTestSupport {
 		
         consumerThread.join();
         producingThread.join();
+        session.close();
         
+        Thread.sleep(5000);
         
         DestinationViewMBean view = createView(destination);
         LOG.info("Stats: received: "  + received.get() + ", enqueues: " + view.getDequeueCount() + ", dequeues: " + view.getDequeueCount()
                 + ", dispatched: " + view.getDispatchCount() + ", inflight: " + view.getInFlightCount() + ", expiries: " + view.getExpiredCount());
         
         assertEquals("got what did not expire", received.get(), view.getDequeueCount() - view.getExpiredCount());
-        //assertEquals("Wrong inFlightCount: " + view.getInFlightCount(), view.getDispatchCount() - view.getDequeueCount(), view.getInFlightCount());
+        
+        long expiry = System.currentTimeMillis() + 30000;
+        while (view.getInFlightCount() > 0 && System.currentTimeMillis() < expiry) {
+            Thread.sleep(500);
+        }
+        LOG.info("Stats: received: "  + received.get() + ", enqueues: " + view.getDequeueCount() + ", dequeues: " + view.getDequeueCount()
+                + ", dispatched: " + view.getDispatchCount() + ", inflight: " + view.getInFlightCount() + ", expiries: " + view.getExpiredCount());
+        assertEquals("Wrong inFlightCount: ", 0, view.getInFlightCount());
 	}
 	
 	protected DestinationViewMBean createView(ActiveMQDestination destination) throws Exception {
@@ -146,7 +163,4 @@ public class ExpiredMessagesTest extends CombinationTestSupport {
 		broker.stop();
 		broker.waitUntilStopped();
 	}
-
-	
-
 }

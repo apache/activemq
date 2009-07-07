@@ -69,6 +69,7 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision$
  */
 public class RegionBroker extends EmptyBroker {
+    public static final String ORIGINAL_EXPIRATION = "originalExpiration";
     private static final Log LOG = LogFactory.getLog(RegionBroker.class);
     private static final IdGenerator BROKER_ID_GENERATOR = new IdGenerator();
 
@@ -689,7 +690,7 @@ public class RegionBroker extends EmptyBroker {
 						    }
 							long expiration=message.getExpiration();
 							message.setExpiration(0);
-							message.setProperty("originalExpiration",new Long(
+							message.setProperty(ORIGINAL_EXPIRATION,new Long(
 							        expiration));
 							if(!message.isPersistent()){
 							    message.setPersistent(true);
