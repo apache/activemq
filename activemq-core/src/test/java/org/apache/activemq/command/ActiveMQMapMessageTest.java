@@ -354,8 +354,12 @@ public class ActiveMQMapMessageTest extends TestCase {
 
         mapMessage.onSend();
         mapMessage.setContent(mapMessage.getContent());
-
-        assertNull(mapMessage.getString("String"));
+        try {
+        mapMessage.getString("String");
+        fail("Should throw a Null pointer");
+        }catch(NullPointerException e){
+            
+        }
         mapMessage.clearBody();
         mapMessage.setString("String", "String");
 
