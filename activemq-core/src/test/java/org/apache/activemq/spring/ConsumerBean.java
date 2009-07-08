@@ -41,7 +41,7 @@ public class ConsumerBean extends Assert implements MessageListener {
 
     /**
      * Constructor, initialized semaphore object.
-     * 
+     *
      * @param semaphore
      */
     public ConsumerBean(Object semaphore) {
@@ -59,7 +59,7 @@ public class ConsumerBean extends Assert implements MessageListener {
 
     /**
      * Method implemented from MessageListener interface.
-     * 
+     *
      * @param message
      */
     public synchronized void onMessage(Message message) {
@@ -96,7 +96,7 @@ public class ConsumerBean extends Assert implements MessageListener {
 
     /**
      * Used to wait for a message to arrive given a particular message count.
-     * 
+     *
      * @param messageCount
      */
     public void waitForMessagesToArrive(int messageCount) {
@@ -106,11 +106,11 @@ public class ConsumerBean extends Assert implements MessageListener {
 
         for (int i = 0; i < 10; i++) {
             try {
-                if (hasReceivedMessages(messageCount)) {
-                    break;
-                }
                 synchronized (semaphore) {
                     semaphore.wait(1000);
+                }
+                if (hasReceivedMessages(messageCount)) {
+                    break;
                 }
             } catch (InterruptedException e) {
                 LOG.info("Caught: " + e);
@@ -140,7 +140,7 @@ public class ConsumerBean extends Assert implements MessageListener {
 
     /**
      * Identifies if the message is empty.
-     * 
+     *
      * @return
      */
     protected boolean hasReceivedMessage() {
@@ -149,7 +149,7 @@ public class ConsumerBean extends Assert implements MessageListener {
 
     /**
      * Identifies if the message count has reached the total size of message.
-     * 
+     *
      * @param messageCount
      * @return
      */
