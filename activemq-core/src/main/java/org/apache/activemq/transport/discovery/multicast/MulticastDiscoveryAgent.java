@@ -28,6 +28,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -176,7 +177,7 @@ public class MulticastDiscoveryAgent implements DiscoveryAgent, Runnable {
     private long lastAdvertizeTime;
     private AtomicBoolean started = new AtomicBoolean(false);
     private boolean reportAdvertizeFailed = true;
-    private Executor executor = null;
+    private ExecutorService executor = null;
 
     /**
      * Set the discovery listener
@@ -315,6 +316,8 @@ public class MulticastDiscoveryAgent implements DiscoveryAgent, Runnable {
             if (mcast != null) {
                 mcast.close();
             }
+            runner.interrupt();
+            getExecutor().shutdownNow();
         }
     }
 
@@ -488,7 +491,7 @@ public class MulticastDiscoveryAgent implements DiscoveryAgent, Runnable {
         }
     }
 
-    private Executor getExecutor() {
+    private ExecutorService getExecutor() {
         if (executor == null) {
             final String threadName = "Notifier-" + this.toString();
             executor = new ThreadPoolExecutor(1, 1, 30, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>(), new ThreadFactory() {

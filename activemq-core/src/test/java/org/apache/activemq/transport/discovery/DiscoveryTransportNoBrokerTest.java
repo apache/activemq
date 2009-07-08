@@ -16,11 +16,16 @@
  */
 package org.apache.activemq.transport.discovery;
 
+import java.net.URI;
+import java.util.Vector;
+
 import javax.jms.Connection;
 import javax.jms.JMSException;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.CombinationTestSupport;
+import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.TransportConnector;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -28,6 +33,51 @@ public class DiscoveryTransportNoBrokerTest extends CombinationTestSupport {
 
     private static final Log LOG = LogFactory.getLog(DiscoveryTransportNoBrokerTest.class);
     
+
+    public void testNoExtraThreads() throws Exception {
+        BrokerService broker = new BrokerService();
+        TransportConnector tcp = broker.addConnector("tcp://localhost:0?transport.closeAsync=false");
+        String group = "GR-" +  System.currentTimeMillis();
+        URI discoveryUri = new URI("multicast://default?group=" + group);
+        tcp.setDiscoveryUri(discoveryUri);
+        broker.start();
+        broker.waitUntilStarted();
+        
+        Vector<String> existingNames = new Vector<String>();
+        Thread[] threads = getThreads();
+        for (Thread t : threads) {
+            existingNames.add(t.getName());
+        }
+        final int idleThreadCount = threads.length;
+        LOG.info("Broker started - thread Count:" + idleThreadCount);
+        
+       final int noConnectionToCreate = 10;
+        for (int i=0; i<10;i++) {
+            ActiveMQConnectionFactory factory = 
+                new ActiveMQConnectionFactory("discovery:(multicast://239.255.2.3:6155?group=" + group +")?closeAsync=false");
+            LOG.info("Connecting.");
+            Connection connection = factory.createConnection();
+            connection.setClientID("test");  
+            connection.close();
+        }
+        Thread.sleep(2000);
+        threads = getThreads();
+        for (Thread t : threads) {
+            if (!existingNames.contains(t.getName())) {
+                LOG.info("Remaining thread:" + t);
+            }
+        }
+        assertTrue("no extra threads per connection", Thread.activeCount() - idleThreadCount < noConnectionToCreate);
+    }
+   
+    
+    private Thread[] getThreads() {
+        Thread[] threads = new Thread[Thread.activeCount()];
+        Thread.enumerate(threads);
+        return threads;
+    }
+
+
     public void testMaxReconnectAttempts() throws JMSException {
         try {
             ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("discovery:(multicast://doesNOTexist)");

@@ -240,7 +240,7 @@ public class TransportConnector implements Connector, BrokerServiceAware {
         
         DiscoveryAgent da = getDiscoveryAgent();
         if (da != null) {
-            da.registerService(getConnectUri().toString());
+            da.registerService(getPublishableConnectString());
             da.start();
         }
         if (enableStatusMonitor) {
@@ -249,6 +249,20 @@ public class TransportConnector implements Connector, BrokerServiceAware {
         }
 
         LOG.info("Connector " + getName() + " Started");
+    }
+
+    private String getPublishableConnectString() throws Exception {
+        URI connectUri = getConnectUri();
+        String publishableConnectString = connectUri.toString();
+        // strip off server side query parameters which may not be compatible to clients
+        if (connectUri.getRawQuery() != null) {
+            publishableConnectString = 
+                publishableConnectString.substring(0, publishableConnectString.indexOf(connectUri.getRawQuery()) -1); 
+        }
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("Publishing: " + publishableConnectString + " for broker transport URI: " + connectUri);
+        }
+        return publishableConnectString;
     }
 
     public void stop() throws Exception {

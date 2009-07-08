@@ -39,7 +39,7 @@ public class DiscoveryTransportFactory extends FailoverTransportFactory {
         DiscoveryAgent discoveryAgent = DiscoveryAgentFactory.createDiscoveryAgent(compositData.getComponents()[0]);
         transport.setDiscoveryAgent(discoveryAgent);
         IntrospectionSupport.setProperties(transport, parameters);
-
+        transport.setParameters(parameters);
         return transport;
     }
 

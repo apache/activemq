@@ -18,6 +18,7 @@ package org.apache.activemq.transport.discovery;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.activemq.command.DiscoveryEvent;
@@ -40,6 +41,8 @@ public class DiscoveryTransport extends TransportFilter implements DiscoveryList
     private final CompositeTransport next;
     private DiscoveryAgent discoveryAgent;
     private final ConcurrentHashMap<String, URI> serviceURIs = new ConcurrentHashMap<String, URI>();
+
+    private Map<String, String> parameters;
 
     public DiscoveryTransport(CompositeTransport next) {
         super(next);
@@ -71,12 +74,26 @@ public class DiscoveryTransport extends TransportFilter implements DiscoveryList
                 URI uri = new URI(url);
                 serviceURIs.put(event.getServiceName(), uri);
                 LOG.info("Adding new broker connection URL: " + uri);
-                next.add(new URI[] {uri});
+                next.add(new URI[] {applyParameters(uri)});
             } catch (URISyntaxException e) {
                 LOG.warn("Could not connect to remote URI: " + url + " due to bad URI syntax: " + e, e);
             }
         }
     }
+
+    private URI applyParameters(URI uri) throws URISyntaxException {
+        if (parameters != null && !parameters.isEmpty()) {
+            StringBuffer newQuery = uri.getRawQuery() != null ? new StringBuffer(uri.getRawQuery()) : new StringBuffer() ;
+            for ( Map.Entry<String, String> param: parameters.entrySet()) {
+                if (newQuery.length()!=0) {
+                    newQuery.append(';');
+                }
+                newQuery.append(param.getKey()).append('=').append(param.getValue());
+            }
+            uri = new URI(uri.getScheme(), uri.getAuthority(), uri.getPath(), newQuery.toString(), uri.getFragment());
+        }
+        return uri;
+}
 
     public void onServiceRemove(DiscoveryEvent event) {
         URI uri = serviceURIs.get(event.getServiceName());
@@ -91,6 +108,10 @@ public class DiscoveryTransport extends TransportFilter implements DiscoveryList
 
     public void setDiscoveryAgent(DiscoveryAgent discoveryAgent) {
         this.discoveryAgent = discoveryAgent;
+    }
+
+    public void setParameters(Map<String, String> parameters) {
+       this.parameters = parameters;      
     }
 
 }
