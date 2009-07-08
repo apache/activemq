@@ -450,6 +450,9 @@
 
             <exclude>**/AMQDeadlockTest3.*</exclude>
             <exclude>**/AMQ1936Test.*</exclude>
+
+            <!-- https://issues.apache.org/activemq/browse/AMQ-2050 -->
+            <exclude>**/ProxyConnectorTest.*</exclude>
             
           </excludes>
         </configuration>
