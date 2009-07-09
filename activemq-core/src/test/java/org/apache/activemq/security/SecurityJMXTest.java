@@ -18,7 +18,6 @@ package org.apache.activemq.security;
 
 
 import java.net.URI;
-import java.util.HashMap;
 
 import javax.management.MBeanServerConnection;
 import javax.management.MBeanServerInvocationHandler;
@@ -42,6 +41,7 @@ public class SecurityJMXTest extends TestCase {
 	
 	public void setUp() throws Exception {
 		broker = createBroker();
+		broker.waitUntilStarted();
 		Thread.sleep(500);
 	}
 
