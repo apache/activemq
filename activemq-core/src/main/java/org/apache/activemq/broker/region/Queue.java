@@ -205,7 +205,9 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                         // Message could have expired while it was being
                         // loaded..
                         if (broker.isExpired(message)) {
-                            messageExpired(createConnectionContext(), message);
+                            messageExpired(createConnectionContext(), createMessageReference(message));
+                            // drop message will decrement so counter balance here
+                            destinationStatistics.getMessages().increment();
                             return true;
                         }
                         if (hasSpace()) {

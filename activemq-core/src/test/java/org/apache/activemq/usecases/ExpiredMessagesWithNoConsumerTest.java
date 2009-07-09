@@ -137,7 +137,7 @@ public class ExpiredMessagesWithNoConsumerTest extends CombinationTestSupport {
         
 		assertTrue("producer completed within time ", !producingThread.isAlive());
 		
-		Thread.sleep(2*expiryPeriod);
+		Thread.sleep(3*expiryPeriod);
         DestinationViewMBean view = createView(destination);
         assertEquals("All sent have expired ", sendCount, view.getExpiredCount());
 	}
