@@ -64,7 +64,7 @@ public class FailoverRandomTest extends TestCase {
 		connection.close();
 		
 		String brokerName2 = brokerName1;
-		int attempts = 5;
+		int attempts = 40;
 		while (brokerName1.equals(brokerName2) && attempts-- > 0) {
 		    connection = (ActiveMQConnection) cf.createConnection();
 		    connection.start();
