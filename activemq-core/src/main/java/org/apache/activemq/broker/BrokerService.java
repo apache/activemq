@@ -960,7 +960,7 @@ public class BrokerService implements Service {
     }
 
     public Service[] getServices() {
-        return (Service[]) services.toArray();
+        return (Service[]) services.toArray(new Service[0]);
     }
 
     /**

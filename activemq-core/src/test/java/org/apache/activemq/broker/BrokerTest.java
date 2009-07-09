@@ -1741,6 +1741,10 @@ public class BrokerTest extends BrokerTestSupport {
         connection.request(createAck(consumerInfo, m3, 1, MessageAck.DELIVERED_ACK_TYPE));
     }
 
+    public void testGetServices() throws Exception {
+        assertTrue(broker.getServices().length != 0);
+    }
+    
     public static Test suite() {
         return suite(BrokerTest.class);
     }
