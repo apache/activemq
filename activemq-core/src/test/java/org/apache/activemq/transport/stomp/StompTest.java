@@ -927,7 +927,7 @@ public class StompTest extends CombinationTestSupport {
         frame = "DISCONNECT\n" + "\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);   
         try {
-        	Thread.sleep(100);
+        	Thread.sleep(400);
         } catch (InterruptedException e){}
         assertEquals(view.getDurableTopicSubscribers().length, 0);
     }
