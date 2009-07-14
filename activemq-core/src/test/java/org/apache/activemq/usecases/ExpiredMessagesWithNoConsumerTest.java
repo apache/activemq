@@ -39,6 +39,7 @@ import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
+import org.apache.activemq.util.Wait;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -47,7 +48,6 @@ public class ExpiredMessagesWithNoConsumerTest extends CombinationTestSupport {
 
     private static final Log LOG = LogFactory.getLog(ExpiredMessagesWithNoConsumerTest.class);
 
-    private static final int expiryPeriod = 1000;
     
 	BrokerService broker;
 	Connection connection;
@@ -81,8 +81,8 @@ public class ExpiredMessagesWithNoConsumerTest extends CombinationTestSupport {
 
         PolicyMap policyMap = new PolicyMap();
         PolicyEntry defaultEntry = new PolicyEntry();
-        defaultEntry.setExpireMessagesPeriod(expiryPeriod);
-        defaultEntry.setMaxExpirePageSize(200);
+        defaultEntry.setExpireMessagesPeriod(100);
+        defaultEntry.setMaxExpirePageSize(800);
 
         if (memoryLimit) {
             // so memory is not consumed by DLQ turn if off
@@ -106,11 +106,11 @@ public class ExpiredMessagesWithNoConsumerTest extends CombinationTestSupport {
 		connection = factory.createConnection();
 		session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
 		producer = session.createProducer(destination);
-		producer.setTimeToLive(100);
+		producer.setTimeToLive(1000);
 		connection.start();
 		final long sendCount = 2000;		
 		
-		Thread producingThread = new Thread("Producing Thread") {
+		final Thread producingThread = new Thread("Producing Thread") {
             public void run() {
                 try {
                 	int i = 0;
@@ -130,21 +130,27 @@ public class ExpiredMessagesWithNoConsumerTest extends CombinationTestSupport {
 		
 		producingThread.start();
 		
-		final long expiry = System.currentTimeMillis() + 20*1000;
-		while (producingThread.isAlive() && expiry > System.currentTimeMillis()) {
-		    producingThread.join(1000);
-		}
-        
-		assertTrue("producer completed within time ", !producingThread.isAlive());
+		assertTrue("producer completed within time", Wait.waitFor(new Wait.Condition() {
+            public boolean isSatisified() throws Exception {
+                producingThread.join(1000);
+                return !producingThread.isAlive();
+            }
+		}));
 		
-		Thread.sleep(3*expiryPeriod);
-        DestinationViewMBean view = createView(destination);
-        assertEquals("All sent have expired ", sendCount, view.getExpiredCount());
+        final DestinationViewMBean view = createView(destination);
+        Wait.waitFor(new Wait.Condition() {
+            public boolean isSatisified() throws Exception {
+                return sendCount == view.getExpiredCount();
+            }
+        });
+        LOG.info("enqueue=" + view.getEnqueueCount() + ", dequeue=" + view.getDequeueCount()
+                + ", inflight=" + view.getInFlightCount() + ", expired= " + view.getExpiredCount()
+                + ", size= " + view.getQueueSize());
+        assertEquals("All sent have expired", sendCount, view.getExpiredCount());
 	}
-
-	
     
-    public void testExpiredMessagesWitVerySlowConsumer() throws Exception {
+	// first ack delivered after expiry
+    public void testExpiredMessagesWithVerySlowConsumer() throws Exception {
         createBroker();  
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("tcp://localhost:61616");
         connection = factory.createConnection();
@@ -153,7 +159,7 @@ public class ExpiredMessagesWithNoConsumerTest extends CombinationTestSupport {
         final int ttl = 4000;
         producer.setTimeToLive(ttl);
         
-        final long sendCount = 1001; 
+        final long sendCount = 1500; 
         final CountDownLatch receivedOneCondition = new CountDownLatch(1);
         final CountDownLatch waitCondition = new CountDownLatch(1);
         
@@ -165,6 +171,7 @@ public class ExpiredMessagesWithNoConsumerTest extends CombinationTestSupport {
                     LOG.info("Got my message: " + message);
                     receivedOneCondition.countDown();
                     waitCondition.await(60, TimeUnit.SECONDS);
+                    LOG.info("acking message: " + message);
                     message.acknowledge();
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -176,7 +183,7 @@ public class ExpiredMessagesWithNoConsumerTest extends CombinationTestSupport {
         connection.start();
       
         
-        Thread producingThread = new Thread("Producing Thread") {
+        final Thread producingThread = new Thread("Producing Thread") {
             public void run() {
                 try {
                     int i = 0;
@@ -195,30 +202,46 @@ public class ExpiredMessagesWithNoConsumerTest extends CombinationTestSupport {
         };
         
         producingThread.start();
+        assertTrue("got one message", receivedOneCondition.await(20, TimeUnit.SECONDS));
         
-        final long expiry = System.currentTimeMillis() + 20*1000;
-        while (producingThread.isAlive() && expiry > System.currentTimeMillis()) {
-            producingThread.join(1000);
-        }
-        
-        assertTrue("got one message", receivedOneCondition.await(10, TimeUnit.SECONDS));
-        assertTrue("producer completed within time ", !producingThread.isAlive());
-        
-        Thread.sleep(2 * Math.max(ttl, expiryPeriod));
-        DestinationViewMBean view = createView(destination);
+        assertTrue("producer completed within time ", Wait.waitFor(new Wait.Condition() {
+            public boolean isSatisified() throws Exception {
+                producingThread.join(1000);
+                return !producingThread.isAlive();
+            }      
+        }));
+             
+        final DestinationViewMBean view = createView(destination);
             
-        assertEquals("all dispatched up to default prefetch ", 1000, view.getDispatchCount());
-        assertEquals("All sent save one have expired ", sendCount, view.getExpiredCount());     
+        assertTrue("all dispatched up to default prefetch ", Wait.waitFor(new Wait.Condition() {
+            public boolean isSatisified() throws Exception {
+                return 1000 == view.getDispatchCount();
+            }
+        }));
+        assertTrue("All sent have expired ", Wait.waitFor(new Wait.Condition() {
+            public boolean isSatisified() throws Exception {
+                return sendCount == view.getExpiredCount();
+            }
+        }));     
         
+        LOG.info("enqueue=" + view.getEnqueueCount() + ", dequeue=" + view.getDequeueCount()
+                + ", inflight=" + view.getInFlightCount() + ", expired= " + view.getExpiredCount()
+                + ", size= " + view.getQueueSize());
         
         // let the ack happen
         waitCondition.countDown();
-     
-        Thread.sleep(Math.max(ttl, expiryPeriod));
         
-        assertEquals("all sent save one have expired ", sendCount, view.getExpiredCount());
-        
+        Wait.waitFor(new Wait.Condition() {
+            public boolean isSatisified() throws Exception {
+                return 0 == view.getInFlightCount();
+            }
+        });
+        LOG.info("enqueue=" + view.getEnqueueCount() + ", dequeue=" + view.getDequeueCount()
+                + ", inflight=" + view.getInFlightCount() + ", expired= " + view.getExpiredCount()
+                + ", size= " + view.getQueueSize());
         assertEquals("prefetch gets back to 0 ", 0, view.getInFlightCount());
+        assertEquals("size gets back to 0 ", 0, view.getQueueSize());
+        assertEquals("dequeues match sent/expired ", sendCount, view.getDequeueCount());
         
         consumer.close();
         LOG.info("done: " + getName());

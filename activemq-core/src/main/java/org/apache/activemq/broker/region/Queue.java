@@ -760,7 +760,9 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                     addAll(pagedInPendingDispatch, l, max, toExpire);
                     for (MessageReference ref : toExpire) {
                         pagedInPendingDispatch.remove(ref);
-                        messageExpired(connectionContext, ref);
+                        if (broker.isExpired(ref)) {
+                            messageExpired(connectionContext, ref);
+                        }
                     }
                 }
                 toExpire.clear();
@@ -768,7 +770,13 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                     addAll(pagedInMessages.values(), l, max, toExpire);   
                 }
                 for (MessageReference ref : toExpire) {
-                    messageExpired(connectionContext, ref);
+                    if (broker.isExpired(ref)) {
+                        messageExpired(connectionContext, ref);
+                    } else {
+                        synchronized (pagedInMessages) {
+                            pagedInMessages.remove(ref.getMessageId());
+                        }
+                    }
                 }
                 
                 if (l.size() < getMaxBrowsePageSize()) {
@@ -805,7 +813,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
         for (Iterator<QueueMessageReference> i = refs.iterator(); i.hasNext()
                 && l.size() < getMaxBrowsePageSize();) {
             QueueMessageReference ref = i.next();
-            if (broker.isExpired(ref)) {
+            if (ref.isExpired()) {
                 toExpire.add(ref);
             } else if (l.contains(ref.getMessage()) == false) {
                 l.add(ref.getMessage());
@@ -1224,6 +1232,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
         // This sends the ack the the journal..
         if (!ack.isInTransaction()) {
             acknowledge(context, sub, ack, reference);
+            getDestinationStatistics().getDequeues().increment();
             dropMessage(reference);
         } else {
             try {
@@ -1232,6 +1241,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                 context.getTransaction().addSynchronization(new Synchronization() {
                 
                     public void afterCommit() throws Exception {
+                        getDestinationStatistics().getDequeues().increment();
                         dropMessage(reference);
                         wakeup();
                     }
@@ -1264,11 +1274,10 @@ public class Queue extends BaseDestination implements Task, UsageListener {
     }
     
     public void messageExpired(ConnectionContext context,Subscription subs, MessageReference reference) {
-        if (LOG.isDebugEnabled()) {
+        if (LOG.isDebugEnabled()) {      
             LOG.debug("message expired: " + reference);
         }
         broker.messageExpired(context, reference);
-        destinationStatistics.getDequeues().increment();
         destinationStatistics.getExpired().increment();
         try {
             removeMessage(context,subs,(QueueMessageReference)reference);

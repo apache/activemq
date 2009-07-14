@@ -41,6 +41,7 @@ import org.apache.activemq.broker.region.policy.VMPendingQueueMessageStoragePoli
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.store.amq.AMQPersistenceAdapter;
+import org.apache.activemq.util.Wait;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -107,7 +108,7 @@ public class ExpiredMessagesTest extends CombinationTestSupport {
             public void run() {
                 try {
                 	int i = 0;
-                	while (i++ < 30000) {
+                	while (i++ < 10000) {
                 		producer.send(session.createTextMessage("test"));
                 	}
                 	producer.close();
@@ -123,21 +124,41 @@ public class ExpiredMessagesTest extends CombinationTestSupport {
         producingThread.join();
         session.close();
         
-        Thread.sleep(2000);
-                
-        DestinationViewMBean view = createView(destination);
-        LOG.info("Stats: received: "  + received.get() + ", enqueues: " + view.getDequeueCount() + ", dequeues: " + view.getDequeueCount()
-                + ", dispatched: " + view.getDispatchCount() + ", inflight: " + view.getInFlightCount() + ", expiries: " + view.getExpiredCount());
+        final DestinationViewMBean view = createView(destination);
         
-        assertEquals("got what did not expire", received.get(), view.getDequeueCount() - view.getExpiredCount());
-        
-        long expiry = System.currentTimeMillis() + 30000;
-        while (view.getInFlightCount() > 0 && System.currentTimeMillis() < expiry) {
-            Thread.sleep(500);
-        }
-        LOG.info("Stats: received: "  + received.get() + ", enqueues: " + view.getDequeueCount() + ", dequeues: " + view.getDequeueCount()
-                + ", dispatched: " + view.getDispatchCount() + ", inflight: " + view.getInFlightCount() + ", expiries: " + view.getExpiredCount());
+        // wait for all to inflight to expire
+        assertTrue("all inflight messages expired ", Wait.waitFor(new Wait.Condition() {
+            public boolean isSatisified() throws Exception {
+                return view.getInFlightCount() == 0;
+            }           
+        }));
         assertEquals("Wrong inFlightCount: ", 0, view.getInFlightCount());
+        
+        LOG.info("Stats: received: "  + received.get() + ", enqueues: " + view.getDequeueCount() + ", dequeues: " + view.getDequeueCount()
+                + ", dispatched: " + view.getDispatchCount() + ", inflight: " + view.getInFlightCount() + ", expiries: " + view.getExpiredCount());
+        
+        // wait for all sent to get delivered and expire
+        assertTrue("all sent messages expired ", Wait.waitFor(new Wait.Condition() {
+            public boolean isSatisified() throws Exception {
+                long oldEnqueues = view.getEnqueueCount();
+                Thread.sleep(200);
+                LOG.info("Stats: received: "  + received.get() + ", size= " + view.getQueueSize() + ", enqueues: " + view.getDequeueCount() + ", dequeues: " + view.getDequeueCount()
+                        + ", dispatched: " + view.getDispatchCount() + ", inflight: " + view.getInFlightCount() + ", expiries: " + view.getExpiredCount());
+                return oldEnqueues == view.getEnqueueCount();
+            }           
+        }, 60*1000));
+        
+
+        LOG.info("Stats: received: "  + received.get() + ", size= " + view.getQueueSize() + ", enqueues: " + view.getDequeueCount() + ", dequeues: " + view.getDequeueCount()
+                + ", dispatched: " + view.getDispatchCount() + ", inflight: " + view.getInFlightCount() + ", expiries: " + view.getExpiredCount());
+        
+        assertTrue("got at least what did not expire", received.get() >= view.getDequeueCount() - view.getExpiredCount());
+        
+        assertTrue("all messages expired - queue size gone to zero " + view.getQueueSize(), Wait.waitFor(new Wait.Condition() {
+            public boolean isSatisified() throws Exception {
+                return view.getQueueSize() == 0;
+            }
+        }));
 	}
 
 	
@@ -229,6 +250,7 @@ public class ExpiredMessagesTest extends CombinationTestSupport {
             defaultPolicy.setPendingQueuePolicy(new VMPendingQueueMessageStoragePolicy());
         }
         defaultPolicy.setExpireMessagesPeriod(expireMessagesPeriod);
+        defaultPolicy.setMaxExpirePageSize(1200);
         PolicyMap policyMap = new PolicyMap();
         policyMap.setDefaultEntry(defaultPolicy);
         broker.setDestinationPolicy(policyMap);

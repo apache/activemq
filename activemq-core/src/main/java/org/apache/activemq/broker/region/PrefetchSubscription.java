@@ -222,9 +222,6 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                         // Don't remove the nodes until we are committed.  
                         if (!context.isInTransaction()) {
                             dequeueCounter++;
-                            if (!this.getConsumerInfo().isBrowser()) {
-                                node.getRegionDestination().getDestinationStatistics().getDequeues().increment();
-                            }
                             node.getRegionDestination().getDestinationStatistics().getInflight().decrement();
                             removeList.add(node);
                         } else {
@@ -238,7 +235,6 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                                             synchronized(dispatchLock) {
                                                 dequeueCounter++;
                                                 dispatched.remove(node);
-                                                node.getRegionDestination().getDestinationStatistics().getDequeues().increment();
                                                 node.getRegionDestination().getDestinationStatistics().getInflight().decrement();
                                                 prefetchExtension--;
                                             }
@@ -287,7 +283,6 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                     MessageId messageId = node.getMessageId();
                     if (ack.getLastMessageId().equals(messageId)) {
                         // this should never be within a transaction
-                        node.getRegionDestination().getDestinationStatistics().getDequeues().increment();
                         node.getRegionDestination().getDestinationStatistics().getInflight().decrement();
                         destination = node.getRegionDestination();
                         acknowledge(context, ack, node);
@@ -303,16 +298,12 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                 int index = 0;
                 for (Iterator<MessageReference> iter = dispatched.iterator(); iter.hasNext(); index++) {
                     final MessageReference node = iter.next();
-                    if (hasNotAlreadyExpired(node)) {
-                        if (node.isExpired()) {
+                    if (node.isExpired()) {
+                        if (broker.isExpired(node)) {
                             node.getRegionDestination().messageExpired(context, this, node);
-                            dispatched.remove(node);
-                            node.getRegionDestination().getDestinationStatistics().getInflight().decrement();
                         }
-                    } else {
-                        // already expired
                         dispatched.remove(node);
-                        node.getRegionDestination().getDestinationStatistics().getInflight().decrement();    
+                        node.getRegionDestination().getDestinationStatistics().getInflight().decrement();
                     }
                     if (ack.getLastMessageId().equals(node.getMessageId())) {
                         prefetchExtension = Math.max(prefetchExtension, index + 1);
@@ -374,9 +365,6 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                     if (inAckRange) {
                         sendToDLQ(context, node);
                         node.getRegionDestination().getDestinationStatistics()
-                                .getDequeues().increment();
-
-                        node.getRegionDestination().getDestinationStatistics()
                                 .getInflight().increment();
 
                         removeList.add(node);
@@ -416,16 +404,6 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                         + ack);
             }
         }
-    }
-
-    private boolean hasNotAlreadyExpired(MessageReference node) {
-        boolean hasNotExpired = true;
-        try {
-            hasNotExpired = node.getMessage().getProperty(RegionBroker.ORIGINAL_EXPIRATION) == null;
-        } catch (IOException e) {
-            LOG.warn("failed to determine value message property " + RegionBroker.ORIGINAL_EXPIRATION + " for " + node, e);
-        }
-        return hasNotExpired;
     }
 
     /**
@@ -610,7 +588,9 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                                     if (node!=QueueMessageReference.NULL_MESSAGE && node.isExpired()) {
                                         //increment number to dispatch
                                         numberToDispatch++;
-                                        node.getRegionDestination().messageExpired(context, this, node);
+                                        if (broker.isExpired(node)) {
+                                            node.getRegionDestination().messageExpired(context, this, node);
+                                        }
                                         continue;
                                     }
                                     dispatch(node);

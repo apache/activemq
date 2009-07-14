@@ -611,14 +611,6 @@ public class ActiveMQMessage extends Message implements org.apache.activemq.Mess
         }
     }
 
-    public boolean isExpired() {
-        long expireTime = this.getExpiration();
-        if (expireTime > 0 && System.currentTimeMillis() > expireTime) {
-            return true;
-        }
-        return false;
-    }
-
     public Callback getAcknowledgeCallback() {
         return acknowledgeCallback;
     }

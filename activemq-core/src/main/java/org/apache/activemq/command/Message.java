@@ -88,6 +88,7 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
     private transient ActiveMQConnection connection;
     private transient org.apache.activemq.broker.region.Destination regionDestination;
     private transient MemoryUsage memoryUsage;
+    private transient boolean expired;
 
     private BrokerId[] brokerPath;
     private BrokerId[] cluster;
@@ -338,6 +339,9 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
 
     public void setExpiration(long expiration) {
         this.expiration = expiration;
+        if (this.expiration > 0) {
+            expired = false;
+        }
     }
 
     /**
@@ -435,11 +439,13 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
     }
 
     public boolean isExpired() {
-        long expireTime = getExpiration();
-        if (expireTime > 0 && System.currentTimeMillis() > expireTime) {
-            return true;
+        if (!expired) {
+            long expireTime = getExpiration();
+            if (expireTime > 0 && System.currentTimeMillis() > expireTime) {
+                expired = true;
+            }
         }
-        return false;
+        return expired;
     }
 
     public boolean isAdvisory() {

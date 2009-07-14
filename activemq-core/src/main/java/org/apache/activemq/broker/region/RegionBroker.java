@@ -664,7 +664,30 @@ public class RegionBroker extends EmptyBroker {
     }
 
     public boolean isExpired(MessageReference messageReference) {
-        return messageReference.isExpired();
+        boolean expired = false;
+        if (messageReference.isExpired()) {
+            try {
+                // prevent duplicate expiry processing
+                Message message = messageReference.getMessage();
+                synchronized (message) {
+                    expired = stampAsExpired(message);
+                }
+            } catch (IOException e) {
+                LOG.warn("unexpected exception on message expiry determination for: " + messageReference, e);
+            }
+        }
+        return expired;
+    }
+   
+    private boolean stampAsExpired(Message message) throws IOException {
+        boolean stamped=false;
+        if (message.getProperty(ORIGINAL_EXPIRATION) == null) {
+            long expiration=message.getExpiration();
+            message.setExpiration(0);
+            message.setProperty(ORIGINAL_EXPIRATION,new Long(expiration));
+            stamped = true;
+        }
+        return stamped;
     }
 
     public void messageExpired(ConnectionContext context, MessageReference node) {
@@ -679,7 +702,8 @@ public class RegionBroker extends EmptyBroker {
 		try{
 			if(node!=null){
 				Message message=node.getMessage();
-				if(message!=null&&node.getRegionDestination()!=null){
+				stampAsExpired(message);
+				if(message!=null && node.getRegionDestination()!=null){
 					DeadLetterStrategy deadLetterStrategy=node
 					        .getRegionDestination().getDeadLetterStrategy();
 					if(deadLetterStrategy!=null){
@@ -688,10 +712,6 @@ public class RegionBroker extends EmptyBroker {
 						        // message may be inflight to other subscriptions so do not modify
 						        message = message.copy();
 						    }
-							long expiration=message.getExpiration();
-							message.setExpiration(0);
-							message.setProperty(ORIGINAL_EXPIRATION,new Long(
-							        expiration));
 							if(!message.isPersistent()){
 							    message.setPersistent(true);
 							    message.setProperty("originalDeliveryMode",
