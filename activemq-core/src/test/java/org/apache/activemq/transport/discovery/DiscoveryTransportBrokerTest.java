@@ -91,7 +91,7 @@ public class DiscoveryTransportBrokerTest extends NetworkTestSupport {
         StubConnection connectionA;
         StubConnection connectionB;
         TransportConnector serverA;
-        if (connector.getServer().getConnectURI().equals(ft.getConnectedTransportURI())) {
+        if (connector.getServer().getConnectURI().getPort() == ft.getConnectedTransportURI().getPort()) {
             connectionA = connection1;
             connectionB = connection2;
             serverA = connector;
