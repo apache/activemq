@@ -468,7 +468,7 @@ public class ThreeBrokerQueueNetworkTest extends JmsMultipleBrokersTestSupport {
 
         // Setup consumers
         String brokerName = "BrokerA";
-        createConsumer(brokerName, dest);
+        MessageConsumer consumer = createConsumer(brokerName, dest);
         
         // wait for advisories
         Thread.sleep(2000);
@@ -479,8 +479,18 @@ public class ThreeBrokerQueueNetworkTest extends JmsMultipleBrokersTestSupport {
             BrokerService broker = i.next().broker;
             verifyConsumerCount(broker, 1, dest);
         }
+        
+        consumer.close();
+        
+        // wait for advisories
+        Thread.sleep(2000);
+        
+        // verify there is no more consumers
+        for (Iterator<BrokerItem> i = brokerList.iterator(); i.hasNext();) {
+            BrokerService broker = i.next().broker;
+            verifyConsumerCount(broker, 0, dest);
+        }
     }
-
     
 
     public void testNoDuplicateQueueSubsHasLowestPriority() throws Exception {
@@ -552,7 +562,7 @@ public class ThreeBrokerQueueNetworkTest extends JmsMultipleBrokersTestSupport {
 
         // Setup consumers
         String brokerName = "BrokerA";
-        createConsumer(brokerName, dest);
+        MessageConsumer consumer = createConsumer(brokerName, dest);
         
         // wait for advisories
         Thread.sleep(2000);
@@ -568,6 +578,16 @@ public class ThreeBrokerQueueNetworkTest extends JmsMultipleBrokersTestSupport {
                 verifyConsumerCount(broker, 2, dest);
                 verifyConsumePriority(broker, ConsumerInfo.NORMAL_PRIORITY, dest);
             }
+        }
+        
+        consumer.close();
+        
+        // wait for advisories
+        Thread.sleep(2000);
+        
+        for (Iterator<BrokerItem> i = brokerList.iterator(); i.hasNext();) {
+            BrokerService broker = i.next().broker;
+            verifyConsumerCount(broker, 0, dest);
         }
     }
 
