@@ -18,9 +18,11 @@ package org.apache.activemq.network;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.activemq.command.BrokerId;
 import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.filter.DestinationFilter;
@@ -55,6 +57,18 @@ public class ConduitBridge extends DemandForwardingBridge {
         info.setSelector(null);
         return doCreateDemandSubscription(info);
     }
+    
+    protected boolean checkPaths(BrokerId[] first, BrokerId[] second) {
+    	if (first == null || second == null)
+			return true;
+		if (Arrays.equals(first, second))
+			return true;
+		if (first[0].equals(second[0])
+				&& first[first.length - 1].equals(second[second.length - 1]))
+			return false;
+		else
+			return true;
+    }
 
     protected boolean addToAlreadyInterestedConsumers(ConsumerInfo info) {
         // search through existing subscriptions and see if we have a match
@@ -62,6 +76,7 @@ public class ConduitBridge extends DemandForwardingBridge {
         DestinationFilter filter = DestinationFilter.parseFilter(info.getDestination());
         for (Iterator i = subscriptionMapByLocalId.values().iterator(); i.hasNext();) {
             DemandSubscription ds = (DemandSubscription)i.next();
+            
             if (filter.matches(ds.getLocalInfo().getDestination())) {
                 if (LOG.isDebugEnabled()) {
                     LOG.debug(configuration.getBrokerName() + " matched (add interest) to exsting sub for: " + ds.getRemoteInfo()
@@ -69,9 +84,10 @@ public class ConduitBridge extends DemandForwardingBridge {
                 }
                 // add the interest in the subscription
                 // ds.add(ds.getRemoteInfo().getConsumerId());
-                ds.add(info.getConsumerId());
+                if (checkPaths(info.getBrokerPath(), ds.getRemoteInfo().getBrokerPath())) {
+                	ds.add(info.getConsumerId());
+                }
                 matched = true;
-                
                 // continue - we want interest to any existing
                 // DemandSubscriptions
             }

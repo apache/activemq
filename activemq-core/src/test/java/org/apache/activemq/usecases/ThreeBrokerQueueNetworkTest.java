@@ -553,6 +553,8 @@ public class ThreeBrokerQueueNetworkTest extends JmsMultipleBrokersTestSupport {
 
 
     public void testDuplicateQueueSubs() throws Exception {
+    	
+    	createBroker("BrokerD");
         
         bridgeAllBrokers("default", 3, false);
         startAllBrokers();
@@ -575,7 +577,7 @@ public class ThreeBrokerQueueNetworkTest extends JmsMultipleBrokersTestSupport {
         for (Iterator<BrokerItem> i = brokerList.iterator(); i.hasNext();) {
             BrokerService broker = i.next().broker;
             if (!brokerName.equals(broker.getBrokerName())) {
-                verifyConsumerCount(broker, 2, dest);
+                verifyConsumerCount(broker, 3, dest);
                 verifyConsumePriority(broker, ConsumerInfo.NORMAL_PRIORITY, dest);
             }
         }
