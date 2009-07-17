@@ -187,7 +187,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
         }
         
         if (getExpireMessagesPeriod() > 0) {
-            scheduler.executePeriodically(expireMessagesTask, getExpireMessagesPeriod());
+            scheduler.schedualPeriodically(expireMessagesTask, getExpireMessagesPeriod());
         }
         
         super.initialize();

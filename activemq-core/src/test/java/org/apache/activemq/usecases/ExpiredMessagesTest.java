@@ -49,12 +49,13 @@ public class ExpiredMessagesTest extends CombinationTestSupport {
 
     private static final Log LOG = LogFactory.getLog(ExpiredMessagesTest.class);
     
-	BrokerService broker;
-	Connection connection;
-	Session session;
-	MessageProducer producer;
-	MessageConsumer consumer;
-	public ActiveMQDestination destination = new ActiveMQQueue("test");
+    BrokerService broker;
+    Connection connection;
+    Session session;
+    MessageProducer producer;
+    MessageConsumer consumer;
+    public ActiveMQDestination destination = new ActiveMQQueue("test");
+    public ActiveMQDestination dlqDestination = new ActiveMQQueue("ActiveMQ.DLQ");
     public boolean useTextMessage = true;
     public boolean useVMCursor = true;
     
@@ -103,12 +104,12 @@ public class ExpiredMessagesTest extends CombinationTestSupport {
 		
         consumerThread.start();
 		
-		
+		final int numMessagesToSend = 10000;
 		Thread producingThread = new Thread("Producing Thread") {
             public void run() {
                 try {
                 	int i = 0;
-                	while (i++ < 10000) {
+                	while (i++ < numMessagesToSend) {
                 		producer.send(session.createTextMessage("test"));
                 	}
                 	producer.close();
@@ -159,10 +160,36 @@ public class ExpiredMessagesTest extends CombinationTestSupport {
                 return view.getQueueSize() == 0;
             }
         }));
+        
+        final long expiredBeforeEnqueue = numMessagesToSend - view.getEnqueueCount();
+        final long totalExpiredCount = view.getExpiredCount() + expiredBeforeEnqueue;
+        
+        final DestinationViewMBean dlqView = createView(dlqDestination);
+        LOG.info("DLQ stats: size= " + dlqView.getQueueSize() + ", enqueues: " + dlqView.getDequeueCount() + ", dequeues: " + dlqView.getDequeueCount()
+                + ", dispatched: " + dlqView.getDispatchCount() + ", inflight: " + dlqView.getInFlightCount() + ", expiries: " + dlqView.getExpiredCount());
+        
+        Wait.waitFor(new Wait.Condition() {
+            public boolean isSatisified() throws Exception {
+                return totalExpiredCount == dlqView.getQueueSize();
+            }
+        });
+        assertEquals("dlq contains all expired", totalExpiredCount, dlqView.getQueueSize());
+        
+        // verify DQL
+        MessageConsumer dlqConsumer = createDlqConsumer(connection);
+        int count = 0;
+        while (dlqConsumer.receive(4000) != null) {
+            count++;
+        }
+        assertEquals("dlq returned all expired", count, totalExpiredCount);
 	}
 
 	
-	public void initCombosForTestRecoverExpiredMessages() {
+	private MessageConsumer createDlqConsumer(Connection connection) throws Exception {
+	    return connection.createSession(false, Session.AUTO_ACKNOWLEDGE).createConsumer(dlqDestination);
+    }
+
+    public void initCombosForTestRecoverExpiredMessages() {
 	    addCombinationValues("useVMCursor", new Object[] {Boolean.TRUE, Boolean.FALSE});
 	}
 	
@@ -266,9 +293,9 @@ public class ExpiredMessagesTest extends CombinationTestSupport {
 		 String domain = "org.apache.activemq";
 		 ObjectName name;
 		if (destination.isQueue()) {
-			name = new ObjectName(domain + ":BrokerName=localhost,Type=Queue,Destination=test");
+			name = new ObjectName(domain + ":BrokerName=localhost,Type=Queue,Destination=" + destination.getPhysicalName());
 		} else {
-			name = new ObjectName(domain + ":BrokerName=localhost,Type=Topic,Destination=test");
+			name = new ObjectName(domain + ":BrokerName=localhost,Type=Topic,Destination=" + destination.getPhysicalName());
 		}
 		return (DestinationViewMBean)MBeanServerInvocationHandler.newProxyInstance(mbeanServer, name, DestinationViewMBean.class, true);
 	}

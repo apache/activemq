@@ -47,6 +47,16 @@ public final class Scheduler {
         TIMER_TASKS.put(task, timerTask);
     }
 
+    /*
+     * execute on rough schedual based on termination of last execution. There is no
+     * compensation (two runs in quick succession) for delays
+     */
+    public synchronized void schedualPeriodically(final Runnable task, long period) {
+        TimerTask timerTask = new SchedulerTimerTask(task);
+        CLOCK_DAEMON.schedule(timerTask, period, period);
+        TIMER_TASKS.put(task, timerTask);
+    }
+    
     public synchronized void cancel(Runnable task) {
     	TimerTask ticket = TIMER_TASKS.remove(task);
         if (ticket != null) {

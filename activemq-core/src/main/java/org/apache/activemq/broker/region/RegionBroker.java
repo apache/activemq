@@ -25,6 +25,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+
 import javax.jms.InvalidClientIDException;
 import javax.jms.JMSException;
 import org.apache.activemq.broker.Broker;
@@ -682,14 +683,14 @@ public class RegionBroker extends EmptyBroker {
     private boolean stampAsExpired(Message message) throws IOException {
         boolean stamped=false;
         if (message.getProperty(ORIGINAL_EXPIRATION) == null) {
-            long expiration=message.getExpiration();
-            message.setExpiration(0);
+            long expiration=message.getExpiration();     
             message.setProperty(ORIGINAL_EXPIRATION,new Long(expiration));
             stamped = true;
         }
         return stamped;
     }
 
+    
     public void messageExpired(ConnectionContext context, MessageReference node) {
         if (LOG.isDebugEnabled()) {
             LOG.debug("Message expired " + node);
@@ -708,11 +709,10 @@ public class RegionBroker extends EmptyBroker {
 					        .getRegionDestination().getDeadLetterStrategy();
 					if(deadLetterStrategy!=null){
 						if(deadLetterStrategy.isSendToDeadLetterQueue(message)){
-						    if (node.getRegionDestination().getActiveMQDestination().isTopic()) {
-						        // message may be inflight to other subscriptions so do not modify
-						        message = message.copy();
-						    }
-							if(!message.isPersistent()){
+						    // message may be inflight to other subscriptions so do not modify
+						    message = message.copy();
+						    message.setExpiration(0);
+						    if(!message.isPersistent()){
 							    message.setPersistent(true);
 							    message.setProperty("originalDeliveryMode",
 								        "NON_PERSISTENT");
@@ -727,7 +727,7 @@ public class RegionBroker extends EmptyBroker {
 							if (context.getBroker()==null) {
 								context.setBroker(getRoot());
 							}
-							BrokerSupport.resend(context,message,
+							BrokerSupport.resendNoCopy(context,message,
 							        deadLetterDestination);
 						}
 					} else {

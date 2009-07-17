@@ -307,8 +307,8 @@ public class Topic  extends BaseDestination  implements Task{
                                     // While waiting for space to free up... the
                                     // message may have expired.
                                     if (message.isExpired()) {
-                                        getDestinationStatistics().getExpired().increment();
                                         broker.messageExpired(context, message);
+                                        getDestinationStatistics().getExpired().increment();
                                     } else {
                                         doMessageSend(producerExchange, message);
                                     }

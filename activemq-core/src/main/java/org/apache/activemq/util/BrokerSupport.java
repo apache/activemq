@@ -32,6 +32,10 @@ public final class BrokerSupport {
     private BrokerSupport() {        
     }
     
+    public static void resendNoCopy(final ConnectionContext context, Message originalMessage, ActiveMQDestination deadLetterDestination) throws Exception {
+        doResend(context, originalMessage, deadLetterDestination, false);
+    }
+    
     /**
      * @param context
      * @param originalMessage 
@@ -39,7 +43,11 @@ public final class BrokerSupport {
      * @throws Exception
      */
     public static void resend(final ConnectionContext context, Message originalMessage, ActiveMQDestination deadLetterDestination) throws Exception {
-        Message message = originalMessage.copy();
+        doResend(context, originalMessage, deadLetterDestination, true);
+    }
+    
+    public static void doResend(final ConnectionContext context, Message originalMessage, ActiveMQDestination deadLetterDestination, boolean copy) throws Exception {       
+        Message message = copy ? originalMessage.copy() : originalMessage;
         message.setOriginalDestination(message.getDestination());
         message.setOriginalTransactionId(message.getTransactionId());
         message.setDestination(deadLetterDestination);
