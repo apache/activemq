@@ -55,7 +55,7 @@ public class AdvisoryConsumer implements ActiveMQDispatcher {
             try {
                 this.connection.asyncSendPacket(info.createRemoveCommand());
             } catch (JMSException e) {
-                LOG.info("Failed to send remove command: " + e, e);
+                LOG.debug("Failed to send remove command: " + e, e);
             }
             this.connection.removeDispatcher(info.getConsumerId());
             closed = true;
