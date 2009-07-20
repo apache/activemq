@@ -186,10 +186,6 @@ public class Queue extends BaseDestination implements Task, UsageListener {
             this.taskRunner = new DeterministicTaskRunner(this.executor,this);
         }
         
-        if (getExpireMessagesPeriod() > 0) {
-            scheduler.schedualPeriodically(expireMessagesTask, getExpireMessagesPeriod());
-        }
-        
         super.initialize();
         if (store != null) {
             // Restore the persistent messages.
@@ -631,6 +627,9 @@ public class Queue extends BaseDestination implements Task, UsageListener {
         }
         systemUsage.getMemoryUsage().addUsageListener(this);
         messages.start();
+        if (getExpireMessagesPeriod() > 0) {
+            scheduler.schedualPeriodically(expireMessagesTask, getExpireMessagesPeriod());
+        }
         doPageIn(false);
     }
 
@@ -642,7 +641,6 @@ public class Queue extends BaseDestination implements Task, UsageListener {
             this.executor.shutdownNow();
         }
         
-        LOG.info(toString() + ", canceling expireMessagesTask");
         scheduler.cancel(expireMessagesTask);
         
         if (messages != null) {
