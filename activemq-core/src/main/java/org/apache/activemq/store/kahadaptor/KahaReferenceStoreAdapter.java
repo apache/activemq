@@ -57,6 +57,7 @@ public class KahaReferenceStoreAdapter extends KahaPersistenceAdapter implements
 
     private static final Log LOG = LogFactory.getLog(KahaReferenceStoreAdapter.class);
     private static final String STORE_STATE = "store-state";
+    private static final String QUEUE_DATA = "queue-data";
     private static final String INDEX_VERSION_NAME = "INDEX_VERSION";
     private static final Integer INDEX_VERSION = new Integer(7);
     private static final String RECORD_REFERENCES = "record-references";
@@ -151,7 +152,7 @@ public class KahaReferenceStoreAdapter extends KahaPersistenceAdapter implements
     public ReferenceStore createQueueReferenceStore(ActiveMQQueue destination) throws IOException {
         ReferenceStore rc = (ReferenceStore)queues.get(destination);
         if (rc == null) {
-            rc = new KahaReferenceStore(this, getMapReferenceContainer(destination, "queue-data"),
+            rc = new KahaReferenceStore(this, getMapReferenceContainer(destination, QUEUE_DATA),
                                         destination);
             messageStores.put(destination, rc);
             // if(transactionStore!=null){
@@ -181,10 +182,15 @@ public class KahaReferenceStoreAdapter extends KahaPersistenceAdapter implements
         return rc;
     }
 
-    public void removeReferenceStore(KahaReferenceStore store) {
-        ActiveMQDestination destination = store.getDestination();
+    public void removeReferenceStore(KahaReferenceStore referenceStore) {
+        ActiveMQDestination destination = referenceStore.getDestination();
         if (destination.isQueue()) {
             queues.remove(destination);
+            try {
+                getStore().deleteMapContainer(destination, QUEUE_DATA);
+            } catch (IOException e) {
+                LOG.error("Failed to delete " + QUEUE_DATA + " map container for destination: " + destination, e);
+            }
         } else {
             topics.remove(destination);
         }
