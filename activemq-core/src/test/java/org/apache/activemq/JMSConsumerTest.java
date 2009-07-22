@@ -883,7 +883,7 @@ public class JMSConsumerTest extends JmsTestSupport {
         }
         
         // let first bunch in queue expire
-        Thread.sleep(1000);
+        Thread.sleep(2000);
         
         producer.setTimeToLive(0);
         for (int i = 0; i < count; i++) {
@@ -896,7 +896,7 @@ public class JMSConsumerTest extends JmsTestSupport {
         for(int i=0; i<count; i++) {
             TextMessage msg = (TextMessage) amqConsumer.receive();
             assertNotNull(msg);
-            assertTrue(msg.getText().contains("no expiry"));
+            assertTrue("message has \"no expiry\" text: " + msg.getText(), msg.getText().contains("no expiry"));
             
             // force an ack when there are expired messages
             amqConsumer.acknowledge();         
