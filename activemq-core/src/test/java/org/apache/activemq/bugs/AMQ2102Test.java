@@ -37,16 +37,15 @@ import javax.jms.Session;
 import javax.jms.TemporaryQueue;
 import javax.jms.TextMessage;
 
-import junit.framework.TestCase;
-
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.CombinationTestSupport;
 import org.apache.activemq.RedeliveryPolicy;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-public class AMQ2102Test extends TestCase implements UncaughtExceptionHandler {
+public class AMQ2102Test extends CombinationTestSupport implements UncaughtExceptionHandler {
        
     final static int MESSAGE_COUNT = 12120;
     final static int NUM_CONSUMERS = 10;
@@ -442,7 +441,7 @@ public class AMQ2102Test extends TestCase implements UncaughtExceptionHandler {
     String masterUrl;
 
     public void setUp() throws Exception {
-        
+        setAutoFail(true);
         master.setBrokerName("Master");
         master.addConnector("tcp://localhost:0");
         master.deleteAllMessages();
