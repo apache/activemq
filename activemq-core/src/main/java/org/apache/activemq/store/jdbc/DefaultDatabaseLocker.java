@@ -115,13 +115,22 @@ public class DefaultDatabaseLocker implements DatabaseLocker {
 
     public void stop() throws Exception {
         stopping = true;
-        if (connection != null && !connection.isClosed()) {
-        	try {
-        		connection.rollback();
-        	} catch (SQLException sqle) {
-        		LOG.warn("Exception while rollbacking the connection on shutdown", sqle);
-        	}
-            connection.close();
+        try {
+            if (connection != null && !connection.isClosed()) {
+                try {
+                    connection.rollback();
+                } catch (SQLException sqle) {
+                    LOG.warn("Exception while rollbacking the connection on shutdown", sqle);
+                } finally {
+                    try {
+                        connection.close();
+                    } catch (SQLException ignored) {
+                        LOG.debug("Exception while closing connection on shutdown", ignored);
+                    }
+                }
+            }
+        } catch (SQLException sqle) {
+            LOG.warn("Exception while checking close status of connection on shutdown", sqle);
         }
     }
 

@@ -14,6 +14,7 @@ public class DbRestartJDBCQueueMasterSlaveTest extends JDBCQueueMasterSlaveTest 
     
     protected void messageSent() throws Exception {    
         if (++inflightMessageCount == failureCount) {
+            LOG.info("STOPPING DB!@!!!!");
             final EmbeddedDataSource ds = getExistingDataSource();
             ds.setShutdownDatabase("shutdown");
             LOG.info("DB STOPPED!@!!!!");
