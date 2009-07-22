@@ -21,7 +21,6 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import javax.jms.DeliveryMode;
-import javax.jms.JMSException;
 
 import junit.framework.Test;
 
@@ -30,7 +29,6 @@ import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.command.ConnectionInfo;
 import org.apache.activemq.command.ConsumerInfo;
-import org.apache.activemq.command.DestinationInfo;
 import org.apache.activemq.command.LocalTransactionId;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
@@ -1236,7 +1234,8 @@ public class BrokerTest extends BrokerTestSupport {
         }
 
         // give the async ack a chance to perculate and validate all are currently consumed
-        assertNull(connection1.getDispatchQueue().poll(MAX_NULL_WAIT, TimeUnit.MILLISECONDS));
+        Object result = connection1.getDispatchQueue().poll(MAX_NULL_WAIT, TimeUnit.MILLISECONDS);
+        assertNull("no more messages " + result, result);
  
         // Close the consumer.
         connection1.request(closeConsumerInfo(consumerInfo1));
