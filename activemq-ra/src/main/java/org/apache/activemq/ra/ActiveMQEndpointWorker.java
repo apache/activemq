@@ -247,14 +247,14 @@ public class ActiveMQEndpointWorker {
     public void stop() throws InterruptedException {
         synchronized (shutdownMutex) {
             if (!running)
-            return;
-        running = false;
+                return;
+            running = false;
             LOG.info("Stopping");
             // wake up pausing reconnect attempt
             shutdownMutex.notifyAll();
-        serverSessionPool.close();
+            serverSessionPool.close();
+        }
         disconnect();
-    }
     }
 
     private boolean isRunning() {
