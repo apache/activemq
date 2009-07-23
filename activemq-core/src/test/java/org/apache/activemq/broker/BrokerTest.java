@@ -1187,7 +1187,8 @@ public class BrokerTest extends BrokerTestSupport {
         // Send another message, connection1 should not get the message.
         connection2.request(createMessage(producerInfo2, destination, deliveryMode));
 
-        assertNull(connection1.getDispatchQueue().poll(MAX_NULL_WAIT, TimeUnit.MILLISECONDS));
+        Object msg = connection1.getDispatchQueue().poll(MAX_NULL_WAIT, TimeUnit.MILLISECONDS);
+        assertNull("no message received from connection1 after session close", msg);
     }
 
     public void initCombosForTestConsumerClose() {
