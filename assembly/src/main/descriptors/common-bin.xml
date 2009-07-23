@@ -173,6 +173,7 @@
         <include>commons-httpclient:commons-httpclient</include>
         <include>commons-dbcp:commons-dbcp</include>
         <include>commons-pool:commons-pool</include>
+        <include>commons-codec:commons-codec</include>
         <include>log4j:log4j</include>
         <include>mx4j:mx4j-remote</include>
         <include>mx4j:mx4j-tools</include>
