@@ -73,7 +73,7 @@ public class JDBCPersistenceAdapter extends DataSourceSupport implements Persist
     private JDBCAdapter adapter;
     private MemoryTransactionStore transactionStore;
     private ScheduledThreadPoolExecutor clockDaemon;
-    private ScheduledFuture clockTicket;
+    private ScheduledFuture<?> cleanupTicket, keepAliveTicket;
     private int cleanupPeriod = 1000 * 60 * 5;
     private boolean useExternalMessageReferences;
     private boolean useDatabaseLock = true;
@@ -196,7 +196,7 @@ public class JDBCPersistenceAdapter extends DataSourceSupport implements Persist
             } else {
                 service.start();
                 if (lockKeepAlivePeriod > 0) {
-                    getScheduledThreadPoolExecutor().scheduleAtFixedRate(new Runnable() {
+                    keepAliveTicket = getScheduledThreadPoolExecutor().scheduleAtFixedRate(new Runnable() {
                         public void run() {
                             databaseLockKeepAlive();
                         }
@@ -212,7 +212,7 @@ public class JDBCPersistenceAdapter extends DataSourceSupport implements Persist
 
         // Cleanup the db periodically.
         if (cleanupPeriod > 0) {
-            clockTicket = getScheduledThreadPoolExecutor().scheduleAtFixedRate(new Runnable() {
+            cleanupTicket = getScheduledThreadPoolExecutor().scheduleAtFixedRate(new Runnable() {
                 public void run() {
                     cleanup();
                 }
@@ -221,14 +221,16 @@ public class JDBCPersistenceAdapter extends DataSourceSupport implements Persist
     }
 
     public synchronized void stop() throws Exception {
-        if (clockTicket != null) {
-            clockTicket.cancel(true);
-            clockTicket = null;
+        if (cleanupTicket != null) {
+            cleanupTicket.cancel(true);
+            cleanupTicket = null;
         }
-        if (clockDaemon != null) {
-            clockDaemon.shutdown();
-            clockDaemon = null;
+        if (keepAliveTicket != null) {
+            keepAliveTicket.cancel(false);
+            keepAliveTicket = null;
         }
+        
+        // do not shutdown clockDaemon as it may kill the thread initiating shutdown
         DatabaseLocker service = getDatabaseLocker();
         if (service != null) {
             service.stop();

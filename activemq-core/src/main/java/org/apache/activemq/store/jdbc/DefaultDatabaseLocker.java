@@ -146,7 +146,7 @@ public class DefaultDatabaseLocker implements DatabaseLocker {
             }
         } catch (Exception e) {
             LOG.error("Failed to update database lock: " + e, e);
-        }finally {
+        } finally {
             if (statement != null) {
                 try {
                     statement.close();
