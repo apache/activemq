@@ -17,6 +17,7 @@
 package org.apache.activemq;
 
 import java.lang.Thread.UncaughtExceptionHandler;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
@@ -45,8 +46,6 @@ import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
-import edu.emory.mathcs.backport.java.util.Collections;
 
 /**
  * Test cases used to test the JMS message consumer.
