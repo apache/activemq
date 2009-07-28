@@ -14,16 +14,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.activemq.store.jdbc;
+package org.apache.activemq.store.jdbc.adapter;
 
 import java.io.IOException;
-import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 
-import javax.sql.DataSource;
-
-import org.apache.activemq.util.Handler;
+import org.apache.activemq.store.jdbc.DefaultDatabaseLocker;
+import org.apache.activemq.store.jdbc.JDBCPersistenceAdapter;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -31,31 +30,19 @@ import org.apache.commons.logging.LogFactory;
  * Represents an exclusive lock on a database to avoid multiple brokers running
  * against the same logical database.
  * 
- * @version $Revision: $
+ * @version $Revision$
  */
-public class DefaultDatabaseLocker implements DatabaseLocker {
-    public static final long DEFAULT_LOCK_ACQUIRE_SLEEP_INTERVAL = 1000;
-    private static final Log LOG = LogFactory.getLog(DefaultDatabaseLocker.class);
-    protected DataSource dataSource;
-    protected Statements statements;
-    protected long lockAcquireSleepInterval = DEFAULT_LOCK_ACQUIRE_SLEEP_INTERVAL;
-
-    protected Connection connection;
-    protected boolean stopping;
-    protected Handler<Exception> exceptionHandler;
+public class TransactDatabaseLocker extends DefaultDatabaseLocker {
+    private static final Log LOG = LogFactory.getLog(TransactDatabaseLocker.class);
     
-    public DefaultDatabaseLocker() {
+    public TransactDatabaseLocker() {
     }
     
-    public DefaultDatabaseLocker(JDBCPersistenceAdapter persistenceAdapter) throws IOException {
+    public TransactDatabaseLocker(JDBCPersistenceAdapter persistenceAdapter) throws IOException {
         setPersistenceAdapter(persistenceAdapter);
     }
-
-    public void setPersistenceAdapter(JDBCPersistenceAdapter adapter) throws IOException {
-        this.dataSource = adapter.getLockDataSource();
-        this.statements = adapter.getStatements();
-    }
     
+    @Override
     public void start() throws Exception {
         stopping = false;
 
@@ -67,7 +54,13 @@ public class DefaultDatabaseLocker implements DatabaseLocker {
                 connection.setAutoCommit(false);
                 String sql = statements.getLockCreateStatement();
                 statement = connection.prepareStatement(sql);
-                statement.execute();
+                if (statement.getMetaData() != null) {
+                    ResultSet rs = statement.executeQuery();
+                    // if not already locked the statement below blocks until lock acquired
+                    rs.next();
+                } else {
+                    statement.execute();
+                }
                 break;
             } catch (Exception e) {
                 if (stopping) {
@@ -107,66 +100,5 @@ public class DefaultDatabaseLocker implements DatabaseLocker {
 
         LOG.info("Becoming the master on dataSource: " + dataSource);
     }
-
-    public void stop() throws Exception {
-        stopping = true;
-        try {
-            if (connection != null && !connection.isClosed()) {
-                try {
-                    connection.rollback();
-                } catch (SQLException sqle) {
-                    LOG.warn("Exception while rollbacking the connection on shutdown", sqle);
-                } finally {
-                    try {
-                        connection.close();
-                    } catch (SQLException ignored) {
-                        LOG.debug("Exception while closing connection on shutdown", ignored);
-                    }
-                }
-            }
-        } catch (SQLException sqle) {
-            LOG.warn("Exception while checking close status of connection on shutdown", sqle);
-        }
-    }
-
-    public boolean keepAlive() {
-        PreparedStatement statement = null;
-        boolean result = false;
-        try {
-            statement = connection.prepareStatement(statements.getLockUpdateStatement());
-            statement.setLong(1, System.currentTimeMillis());
-            int rows = statement.executeUpdate();
-            if (rows == 1) {
-                result=true;
-            }
-        } catch (Exception e) {
-            LOG.error("Failed to update database lock: " + e, e);
-        } finally {
-            if (statement != null) {
-                try {
-                    statement.close();
-                } catch (SQLException e) {
-                    LOG.error("Failed to close statement",e);
-                }
-            }
-        }
-        return result;
-    }
- 
-    public long getLockAcquireSleepInterval() {
-        return lockAcquireSleepInterval;
-    }
-
-    public void setLockAcquireSleepInterval(long lockAcquireSleepInterval) {
-        this.lockAcquireSleepInterval = lockAcquireSleepInterval;
-    }
-    
-    public Handler getExceptionHandler() {
-		return exceptionHandler;
-	}
-
-	public void setExceptionHandler(Handler exceptionHandler) {
-		this.exceptionHandler = exceptionHandler;
-	}
 
 }

@@ -64,8 +64,10 @@ public class JDBCPersistenceAdapter extends DataSourceSupport implements Persist
     BrokerServiceAware {
 
     private static final Log LOG = LogFactory.getLog(JDBCPersistenceAdapter.class);
-    private static FactoryFinder factoryFinder = new FactoryFinder(
+    private static FactoryFinder adapterFactoryFinder = new FactoryFinder(
                                                                    "META-INF/services/org/apache/activemq/store/jdbc/");
+    private static FactoryFinder lockFactoryFinder = new FactoryFinder(
+                                                                    "META-INF/services/org/apache/activemq/store/jdbc/lock/");
 
     private WireFormat wireFormat = new OpenWireFormat();
     private BrokerService brokerService;
@@ -285,11 +287,21 @@ public class JDBCPersistenceAdapter extends DataSourceSupport implements Persist
 
     public DatabaseLocker getDatabaseLocker() throws IOException {
         if (databaseLocker == null && isUseDatabaseLock()) {
-            databaseLocker = createDatabaseLocker();
+            setDatabaseLocker(loadDataBaseLocker());
         }
         return databaseLocker;
     }
-    
+
+    /**
+     * Sets the database locker strategy to use to lock the database on startup
+     * @throws IOException 
+     */
+    public void setDatabaseLocker(DatabaseLocker locker) throws IOException {
+        databaseLocker = locker;
+        databaseLocker.setPersistenceAdapter(this);
+        databaseLocker.setLockAcquireSleepInterval(getLockAcquireSleepInterval());
+    }
+
     public DataSource getLockDataSource() throws IOException {
         if (lockDataSource == null) {
             lockDataSource = getDataSource();
@@ -308,13 +320,6 @@ public class JDBCPersistenceAdapter extends DataSourceSupport implements Persist
         this.lockDataSource = dataSource;
     }
 
-    /**
-     * Sets the database locker strategy to use to lock the database on startup
-     */
-    public void setDatabaseLocker(DatabaseLocker databaseLocker) {
-        this.databaseLocker = databaseLocker;
-    }
-
     public BrokerService getBrokerService() {
         return brokerService;
     }
@@ -327,37 +332,39 @@ public class JDBCPersistenceAdapter extends DataSourceSupport implements Persist
      * @throws IOException
      */
     protected JDBCAdapter createAdapter() throws IOException {
-        JDBCAdapter adapter = null;
+       
+        adapter = (JDBCAdapter) loadAdapter(adapterFactoryFinder, "adapter");
+       
+        // Use the default JDBC adapter if the
+        // Database type is not recognized.
+        if (adapter == null) {
+            adapter = new DefaultJDBCAdapter();
+            LOG.debug("Using default JDBC Adapter: " + adapter);
+        }
+        return adapter;
+    }
+
+    private Object loadAdapter(FactoryFinder finder, String kind) throws IOException {
+        Object adapter = null;
         TransactionContext c = getTransactionContext();
         try {
-
             try {
-
                 // Make the filename file system safe.
                 String dirverName = c.getConnection().getMetaData().getDriverName();
                 dirverName = dirverName.replaceAll("[^a-zA-Z0-9\\-]", "_").toLowerCase();
 
                 try {
-                    adapter = (DefaultJDBCAdapter)factoryFinder.newInstance(dirverName);
-                    LOG.info("Database driver recognized: [" + dirverName + "]");
+                    adapter = finder.newInstance(dirverName);
+                    LOG.info("Database " + kind + " driver override recognized for : [" + dirverName + "] - adapter: " + adapter.getClass());
                 } catch (Throwable e) {
-                    LOG.warn("Database driver NOT recognized: [" + dirverName
-                             + "].  Will use default JDBC implementation.");
+                    LOG.warn("Database " + kind + " driver override not found for : [" + dirverName
+                             + "].  Will use default implementation.");
                 }
-
             } catch (SQLException e) {
-                LOG
-                    .warn("JDBC error occurred while trying to detect database type.  Will use default JDBC implementation: "
+                LOG.warn("JDBC error occurred while trying to detect database type for overrides. Will use default implementations: "
                           + e.getMessage());
                 JDBCPersistenceAdapter.log("Failure Details: ", e);
             }
-
-            // Use the default JDBC adapter if the
-            // Database type is not recognized.
-            if (adapter == null) {
-                adapter = new DefaultJDBCAdapter();
-            }
-
         } finally {
             c.close();
         }
@@ -520,9 +527,12 @@ public class JDBCPersistenceAdapter extends DataSourceSupport implements Persist
         }
     }
 
-    protected DatabaseLocker createDatabaseLocker() throws IOException {
-        DefaultDatabaseLocker locker = new DefaultDatabaseLocker(this);
-        locker.setLockAcquireSleepInterval(getLockAcquireSleepInterval());
+    protected DatabaseLocker loadDataBaseLocker() throws IOException {
+        DatabaseLocker locker = (DefaultDatabaseLocker) loadAdapter(lockFactoryFinder, "lock");       
+        if (locker == null) {
+            locker = new DefaultDatabaseLocker();
+            LOG.debug("Using default JDBC Locker: " + locker);
+        }
         return locker;
     }
 
@@ -530,7 +540,7 @@ public class JDBCPersistenceAdapter extends DataSourceSupport implements Persist
     }
 
     public String toString() {
-        return "JDBCPersistenceAdaptor(" + super.toString() + ")";
+        return "JDBCPersistenceAdapter(" + super.toString() + ")";
     }
 
     public void setDirectory(File dir) {

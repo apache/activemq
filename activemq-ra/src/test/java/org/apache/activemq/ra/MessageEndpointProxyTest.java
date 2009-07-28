@@ -23,39 +23,49 @@ import javax.jms.MessageListener;
 import javax.resource.ResourceException;
 import javax.resource.spi.endpoint.MessageEndpoint;
 
-import org.jmock.Mock;
-import org.jmock.MockObjectTestCase;
+import org.jmock.Expectations;
+import org.jmock.Mockery;
+import org.jmock.integration.junit4.JMock;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+
+import junit.framework.TestCase;
 
 /**
  * @author <a href="mailto:michael.gaffney@panacya.com">Michael Gaffney </a>
  */
-public class MessageEndpointProxyTest extends MockObjectTestCase {
+@RunWith(JMock.class)
+public class MessageEndpointProxyTest extends TestCase {
 
-    private Mock mockEndpoint;
-    private Mock stubMessage;
+    private MessageEndpoint mockEndpoint;
+    private EndpointAndListener mockEndpointAndListener;
+    private Message stubMessage;
     private MessageEndpointProxy endpointProxy;
-
-    public MessageEndpointProxyTest(String name) {
-        super(name);
-    }
+    private Mockery context;
     
-    protected void setUp() {
-        mockEndpoint = new Mock(EndpointAndListener.class);
-        stubMessage = new Mock(Message.class);
-        endpointProxy = new MessageEndpointProxy((MessageEndpoint) mockEndpoint.proxy());       
+    @Before
+    public void setUp() {
+        context = new Mockery();
+        mockEndpoint = context.mock(MessageEndpoint.class);
+        context.mock(MessageListener.class);
+        mockEndpointAndListener = context.mock(EndpointAndListener.class);
+        stubMessage = context.mock(Message.class);
+        endpointProxy = new MessageEndpointProxy(mockEndpointAndListener);
     }
 
+    @Test
     public void testInvalidConstruction() {
-        Mock mockEndpoint = new Mock(MessageEndpoint.class);
         try {
-            new MessageEndpointProxy((MessageEndpoint) mockEndpoint.proxy());
+            new MessageEndpointProxy(mockEndpoint);
             fail("An exception should have been thrown");
         } catch (IllegalArgumentException e) {
             assertTrue(true);
         }
     }
 
-    public void testSuccessfulCallSequence() {
+    @Test
+    public void testSuccessfulCallSequence() throws Exception {
         setupBeforeDeliverySuccessful();
         setupOnMessageSuccessful();
         setupAfterDeliverySuccessful();
@@ -65,11 +75,17 @@ public class MessageEndpointProxyTest extends MockObjectTestCase {
         doAfterDeliveryExpectSuccess();
     }
 
-    public void testBeforeDeliveryFailure() {
-        mockEndpoint.expects(once()).method("beforeDelivery").with(isA(Method.class))
-                .will(throwException(new ResourceException()));
-        mockEndpoint.expects(never()).method("onMessage");
-        mockEndpoint.expects(never()).method("afterDelivery");
+    @Test
+    public void testBeforeDeliveryFailure() throws Exception {
+        context.checking(new Expectations() {{
+            oneOf (mockEndpointAndListener).beforeDelivery(with(any(Method.class)));
+            will(throwException(new ResourceException()));
+        }});
+        context.checking(new Expectations() {{
+            never (mockEndpointAndListener).onMessage(null);
+            never (mockEndpointAndListener).afterDelivery();
+        }});
+        
         setupExpectRelease();
 
         try {
@@ -84,15 +100,20 @@ public class MessageEndpointProxyTest extends MockObjectTestCase {
         doFullyDeadCheck();
     }
 
-    public void testOnMessageFailure() {
+    @Test
+    public void testOnMessageFailure() throws Exception {
         setupBeforeDeliverySuccessful();
-        mockEndpoint.expects(once()).method("onMessage").with(same(stubMessage.proxy()))
-                .will(throwException(new RuntimeException()));
+     
+        context.checking(new Expectations() {{
+            oneOf (mockEndpointAndListener).onMessage(with(same(stubMessage)));
+            will(throwException(new RuntimeException()));
+        }});
+        
         setupAfterDeliverySuccessful();
 
         doBeforeDeliveryExpectSuccess();
         try {
-            endpointProxy.onMessage((Message) stubMessage.proxy());
+            endpointProxy.onMessage(stubMessage);
             fail("An exception should have been thrown");
         } catch (Exception e) {
             assertTrue(true);
@@ -101,11 +122,15 @@ public class MessageEndpointProxyTest extends MockObjectTestCase {
 
     }
 
-    public void testAfterDeliveryFailure() {
+    @Test
+    public void testAfterDeliveryFailure() throws Exception {
         setupBeforeDeliverySuccessful();
         setupOnMessageSuccessful();
-        mockEndpoint.expects(once()).method("afterDelivery")
-                .will(throwException(new ResourceException()));
+        
+        context.checking(new Expectations() {{
+            oneOf (mockEndpointAndListener).afterDelivery(); will(throwException(new ResourceException()));
+        }});
+
         setupExpectRelease();
 
         doBeforeDeliveryExpectSuccess();
@@ -127,22 +152,30 @@ public class MessageEndpointProxyTest extends MockObjectTestCase {
         doReleaseExpectInvalidMessageEndpointException();
     }
 
-    private void setupAfterDeliverySuccessful() {
-        mockEndpoint.expects(once()).method("afterDelivery");
+    private void setupAfterDeliverySuccessful() throws Exception {
+        context.checking(new Expectations() {{
+            oneOf (mockEndpointAndListener).afterDelivery();
+        }});
     }
 
     private void setupOnMessageSuccessful() {
-        mockEndpoint.expects(once()).method("onMessage").with(same(stubMessage.proxy()));
+        context.checking(new Expectations() {{
+            oneOf (mockEndpointAndListener).onMessage(with(stubMessage));
+        }});
     }
 
-    private void setupBeforeDeliverySuccessful() {
-        mockEndpoint.expects(once()).method("beforeDelivery").with(isA(Method.class));
+    private void setupBeforeDeliverySuccessful() throws Exception {
+        context.checking(new Expectations() {{
+            oneOf (mockEndpointAndListener).beforeDelivery(with(any(Method.class)));
+        }});
     }
 
     private void setupExpectRelease() {
-        mockEndpoint.expects(once()).method("release");
+        context.checking(new Expectations() {{
+            oneOf (mockEndpointAndListener).release();
+        }});
     }
-
+    
     private void doBeforeDeliveryExpectSuccess() {
         try {
             endpointProxy.beforeDelivery(ActiveMQEndpointWorker.ON_MESSAGE_METHOD);
@@ -153,7 +186,7 @@ public class MessageEndpointProxyTest extends MockObjectTestCase {
 
     private void doOnMessageExpectSuccess() {
         try {
-            endpointProxy.onMessage((Message) stubMessage.proxy());
+            endpointProxy.onMessage(stubMessage);
         } catch (Exception e) {
             fail("No exception should have been thrown");
         }
@@ -180,7 +213,7 @@ public class MessageEndpointProxyTest extends MockObjectTestCase {
 
     private void doOnMessageExpectInvalidMessageEndpointException() {
         try {
-            endpointProxy.onMessage((Message) stubMessage.proxy());
+            endpointProxy.onMessage(stubMessage);
             fail("An InvalidMessageEndpointException should have been thrown");
         } catch (InvalidMessageEndpointException e) {
             assertTrue(true);

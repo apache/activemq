@@ -16,147 +16,66 @@
  */
 package org.apache.activemq.ra;
 
-import java.lang.reflect.Method;
-import javax.jms.Message;
-import javax.jms.MessageListener;
 import javax.jms.Session;
-import javax.resource.ResourceException;
 import javax.resource.spi.endpoint.MessageEndpoint;
 import javax.resource.spi.work.WorkManager;
+
+import junit.framework.TestCase;
+
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQSession;
-import org.jmock.Mock;
-import org.jmock.cglib.MockObjectTestCase;
+import org.jmock.Expectations;
+import org.jmock.Mockery;
+import org.jmock.integration.junit4.JMock;
+import org.jmock.lib.legacy.ClassImposteriser;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 
 /**
  * @version $Revision: 1.1.1.1 $
  */
-public class ServerSessionImplTest extends MockObjectTestCase {
+@RunWith(JMock.class)
+public class ServerSessionImplTest extends TestCase {
     private static final String BROKER_URL = "vm://localhost";
     private ServerSessionImpl serverSession;
-    private Mock pool;
-    private Mock workManager;
+    private ServerSessionPoolImpl pool;
+    private WorkManager workManager;
     private MessageEndpoint messageEndpoint;
     private ActiveMQConnection con;
     private ActiveMQSession session;
+    private Mockery context;
     
-    @Override
-    protected void setUp() throws Exception
+    @Before
+    public void setUp() throws Exception
     {
         super.setUp();
+        context = new Mockery() {{
+            setImposteriser(ClassImposteriser.INSTANCE);
+        }};
+        
         org.apache.activemq.ActiveMQConnectionFactory factory = 
                 new org.apache.activemq.ActiveMQConnectionFactory(BROKER_URL);
         con = (ActiveMQConnection) factory.createConnection();
         session = (ActiveMQSession) con.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        pool = mock(ServerSessionPoolImpl.class, new Class[]{ActiveMQEndpointWorker.class, int.class}, new Object[]{null, 10});        
-        workManager = mock(WorkManager.class);
-        messageEndpoint = new MockMessageEndpoint();
+        pool = context.mock(ServerSessionPoolImpl.class);        
+        workManager = context.mock(WorkManager.class);
         
         serverSession = new ServerSessionImpl(
-                (ServerSessionPoolImpl) pool.proxy(), 
+                (ServerSessionPoolImpl) pool, 
                 session, 
-                (WorkManager) workManager.proxy(), 
+                (WorkManager) workManager, 
                 messageEndpoint, 
                 false, 
                 10);
     }
     
-    private class MockMessageEndpoint implements MessageEndpoint, MessageListener {
-
-        public void afterDelivery() throws ResourceException
-        {
-            throw new UnsupportedOperationException("Not supported yet.");
-        }
-
-        public void beforeDelivery(Method arg0) throws NoSuchMethodException, ResourceException
-        {
-            throw new UnsupportedOperationException("Not supported yet.");
-        }
-
-        public void release()
-        {
-            throw new UnsupportedOperationException("Not supported yet.");
-        }
-
-        public void onMessage(Message msg)
-        {
-            throw new UnsupportedOperationException("Not supported yet.");
-        }
-        
-    }
-    
-    /**
-     * Need to re-work this test case, it broke since the amq4 internals changed and
-     * mocks were being using against the internals.
-     *
-     */
-    public void testDummy() {
-    }
-    
-/*
-    public void testBatch() throws Exception {
-        DummyActiveMQConnection connection = new DummyActiveMQConnection(new ActiveMQConnectionFactory(),
-                 null,
-                 null,
-                 getMockTransportChannel());
-        ServerSessionPoolImpl pool = new ServerSessionPoolImpl(null, 1);
-        DummyActiveMQSession session = new DummyActiveMQSession(connection);
-        MemoryBoundedQueue queue = connection.getMemoryBoundedQueue("Session(" + session.getSessionId() + ")");
-        queue.enqueue(new ActiveMQTextMessage());
-        queue.enqueue(new ActiveMQTextMessage());
-        queue.enqueue(new ActiveMQTextMessage());
-        DummyMessageEndpoint endpoint = new DummyMessageEndpoint();
-        ServerSessionImpl serverSession = new ServerSessionImpl(pool, session, null, endpoint, true, 2);
-        serverSession.run();
-        assertEquals(2, endpoint.messagesPerBatch.size());
-        assertEquals(new Integer(2), endpoint.messagesPerBatch.get(0));
-        assertEquals(new Integer(1), endpoint.messagesPerBatch.get(1));
-    }
-
-    private class DummyMessageEndpoint implements MessageEndpoint, MessageListener {
-        protected List messagesPerBatch = new ArrayList();
-        protected int nbMessages = -1000;
-        public void beforeDelivery(Method arg0) throws NoSuchMethodException, ResourceException {
-            nbMessages = 0;
-        }
-        public void afterDelivery() throws ResourceException {
-            messagesPerBatch.add(new Integer(nbMessages));
-            nbMessages = -1000;
-        }
-        public void release() {
-        }
-        public void onMessage(Message arg0) {
-            nbMessages ++;
-        }
-    }
-
-    private class DummyActiveMQSession extends ActiveMQSession {
-        protected DummyActiveMQSession(ActiveMQConnection connection, SessionId sessionId, int acknowledgeMode, boolean asyncDispatch) throws JMSException {
-            super(connection, sessionId, acknowledgeMode, asyncDispatch);
-        }
-    }
-
-    private class DummyActiveMQConnection extends ActiveMQConnection {
-        protected DummyActiveMQConnection(Transport transport, String userName, String password, JMSStatsImpl factoryStats) throws IOException {
-            super(transport, userName, password, factoryStats);
-        }
-    }
-
-    private TransportChannel getMockTransportChannel() {
-        Mock tc = new Mock(TransportChannel.class);
-        tc.expects(once()).method("setPacketListener");
-        tc.expects(once()).method("setExceptionListener");
-        tc.expects(once()).method("addTransportStatusEventListener");
-        tc.expects(atLeastOnce()).method("asyncSend");
-        tc.expects(atLeastOnce()).method("send");
-        return (TransportChannel) tc.proxy();
-    }
-    */
-    
+    @Test
     public void testRunDetectsStoppedSession() throws Exception {
         con.close();
-        pool.expects(once()).method("removeFromPool").with(eq(serverSession));
+        context.checking(new Expectations() {{
+            oneOf (pool).removeFromPool(with(same(serverSession)));
+        }});   
         serverSession.run();
-        pool.verify();
-}
+    }
 }

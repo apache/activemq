@@ -62,7 +62,7 @@
     <hsqldb-version>1.7.2.2</hsqldb-version>
     <jdom-version>1.0</jdom-version>
     <jetty-version>6.1.9</jetty-version>
-    <jmock-version>1.0.1</jmock-version>
+    <jmock-version>2.5.1</jmock-version>
     <junit-version>4.4</junit-version>
     <jxta-version>2.0</jxta-version>
     <log4j-version>1.2.14</log4j-version>
@@ -789,21 +789,15 @@
         <scope>test</scope>
       </dependency>
       <dependency>
-        <groupId>jmock</groupId>
-        <artifactId>jmock</artifactId>
+        <groupId>org.jmock</groupId>
+        <artifactId>jmock-junit4</artifactId>
         <version>${jmock-version}</version>
         <scope>test</scope>
       </dependency>
       <dependency>
-        <groupId>jmock</groupId>
-        <artifactId>jmock-cglib</artifactId>
+        <groupId>org.jmock</groupId>
+        <artifactId>jmock-legacy</artifactId>
         <version>${jmock-version}</version>
-        <scope>test</scope>
-      </dependency>
-      <dependency>
-        <groupId>cglib</groupId>
-        <artifactId>cglib-full</artifactId>
-        <version>${cglib-version}</version>
         <scope>test</scope>
       </dependency>
       <dependency>

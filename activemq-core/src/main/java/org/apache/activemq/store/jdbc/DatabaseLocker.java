@@ -16,6 +16,8 @@
  */
 package org.apache.activemq.store.jdbc;
 
+import java.io.IOException;
+
 import org.apache.activemq.Service;
 
 /**
@@ -26,9 +28,22 @@ import org.apache.activemq.Service;
 public interface DatabaseLocker extends Service {
 
     /**
+     * allow the injection of a jdbc persistence adapter
+     * @param adapter the persistence adapter to use
+     * @throws IOException 
+     */
+    void setPersistenceAdapter(JDBCPersistenceAdapter adapter) throws IOException;
+    
+    /**
      * Used by a timer to keep alive the lock.
      * If the method returns false the broker should be terminated
      */
     boolean keepAlive();
+
+    /**
+     * set the delay interval in milliseconds between lock acquire attempts
+     * @param lockAcquireSleepInterval the sleep interval in miliseconds
+     */
+    void setLockAcquireSleepInterval(long lockAcquireSleepInterval);
     
 }

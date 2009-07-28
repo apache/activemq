@@ -51,12 +51,6 @@
       <groupId>org.apache.geronimo.specs</groupId>
       <artifactId>geronimo-j2ee-connector_1.5_spec</artifactId>
     </dependency>
-<!--
-    <dependency>
-      <groupId>org.apache.activemq</groupId>
-      <artifactId>activemq-jmdns_1.0</artifactId>
-    </dependency>
--->
     <dependency>
       <groupId>org.apache.activemq</groupId>
       <artifactId>activemq-core</artifactId>
@@ -65,23 +59,15 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>jmock</groupId>
-      <artifactId>jmock</artifactId>
-      <version>1.2.0</version>
+      <groupId>org.jmock</groupId>
+      <artifactId>jmock-junit4</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>jmock</groupId>
-      <artifactId>jmock-cglib</artifactId>
-      <version>1.2.0</version>
+      <groupId>org.jmock</groupId>
+      <artifactId>jmock-legacy</artifactId>
       <scope>test</scope>
     </dependency>
-    <dependency>
-      <groupId>cglib</groupId>
-      <artifactId>cglib-full</artifactId>
-      <scope>test</scope>
-    </dependency>
-
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
