@@ -77,8 +77,12 @@ public class AdvisoryBroker extends BrokerFilter {
         super.addConnection(context, info);
 
         ActiveMQTopic topic = AdvisorySupport.getConnectionAdvisoryTopic();
-        fireAdvisory(context, topic, info);
-        connections.put(info.getConnectionId(), info);
+        //do not distribute usernames or passwords in advisory
+        ConnectionInfo copy = info.copy();
+        copy.setUserName("");
+        copy.setPassword("");
+        fireAdvisory(context, topic, copy);
+        connections.put(copy.getConnectionId(), copy);
     }
 
     public Subscription addConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
