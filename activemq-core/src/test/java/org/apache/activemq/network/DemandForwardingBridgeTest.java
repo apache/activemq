@@ -26,6 +26,7 @@ import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.command.SessionInfo;
+import org.apache.activemq.util.Wait;
 
 public class DemandForwardingBridgeTest extends NetworkTestSupport {
 
@@ -53,7 +54,7 @@ public class DemandForwardingBridgeTest extends NetworkTestSupport {
         destination = createDestinationInfo(connection1, connectionInfo1, destinationType);
 
         // Start a consumer on a remote broker
-        StubConnection connection2 = createRemoteConnection();
+        final StubConnection connection2 = createRemoteConnection();
         ConnectionInfo connectionInfo2 = createConnectionInfo();
         SessionInfo sessionInfo2 = createSessionInfo(connectionInfo2);
         connection2.send(connectionInfo2);
@@ -73,11 +74,14 @@ public class DemandForwardingBridgeTest extends NetworkTestSupport {
         // Now create remote consumer that should cause message to move to this
         // remote consumer.
         ConsumerInfo consumerInfo2 = createConsumerInfo(sessionInfo2, destination);
-        connection2.send(consumerInfo2);
+        connection2.request(consumerInfo2);
 
         // Make sure the message was delivered via the remote.
-        m = receiveMessage(connection2);
-        assertNotNull(m);
+        assertTrue("message was received", Wait.waitFor(new Wait.Condition() {
+            public boolean isSatisified() throws Exception {
+                return receiveMessage(connection2) != null;
+            }            
+        }));
     }
 
     public void initCombosForTestAddConsumerThenSend() {

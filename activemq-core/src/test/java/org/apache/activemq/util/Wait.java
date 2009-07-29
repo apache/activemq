@@ -32,9 +32,11 @@ public class Wait {
     
     public static boolean waitFor(final Condition condition, final long duration) throws Exception {
         final long expiry = System.currentTimeMillis() + duration;
-        while (!condition.isSatisified() && System.currentTimeMillis() < expiry) {
+        boolean conditionSatisified = condition.isSatisified();
+        while (!conditionSatisified && System.currentTimeMillis() < expiry) {
             Thread.sleep(1000);
+            conditionSatisified = condition.isSatisified();
         }   
-        return condition.isSatisified();
+        return conditionSatisified;
     }  
 }
