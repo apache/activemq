@@ -154,6 +154,9 @@ public abstract class AbstractSubscription implements Subscription {
     public int getPrefetchSize() {
         return info.getPrefetchSize();
     }
+    public void setPrefetchSize(int newSize) {
+        info.setPrefetchSize(newSize);
+    }
 
     public boolean isRecoveryRequired() {
         return true;

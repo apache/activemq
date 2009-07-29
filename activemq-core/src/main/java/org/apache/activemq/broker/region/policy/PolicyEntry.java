@@ -16,11 +16,14 @@
  */
 package org.apache.activemq.broker.region.policy;
 
+import org.apache.activemq.ActiveMQPrefetchPolicy;
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.region.BaseDestination;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.DurableTopicSubscription;
 import org.apache.activemq.broker.region.Queue;
+import org.apache.activemq.broker.region.QueueBrowserSubscription;
+import org.apache.activemq.broker.region.QueueSubscription;
 import org.apache.activemq.broker.region.Topic;
 import org.apache.activemq.broker.region.TopicSubscription;
 import org.apache.activemq.broker.region.cursors.PendingMessageCursor;
@@ -75,6 +78,11 @@ public class PolicyEntry extends DestinationMapEntry {
     private boolean advisoryForConsumed;
     private long expireMessagesPeriod = BaseDestination.EXPIRE_MESSAGE_PERIOD;
     private int maxExpirePageSize = BaseDestination.MAX_BROWSE_PAGE_SIZE;
+    private int queuePrefetch=ActiveMQPrefetchPolicy.DEFAULT_QUEUE_PREFETCH;
+    private int queueBrowserPrefetch=ActiveMQPrefetchPolicy.DEFAULT_QUEUE_BROWSER_PREFETCH;
+    private int topicPrefetch=ActiveMQPrefetchPolicy.DEFAULT_TOPIC_PREFETCH;
+    private int durableTopicPrefetch=ActiveMQPrefetchPolicy.DEFAULT_DURABLE_TOPIC_PREFETCH;
+    
    
     public void configure(Broker broker,Queue queue) {
         baseConfiguration(queue);
@@ -155,6 +163,11 @@ public class PolicyEntry extends DestinationMapEntry {
         }
         if (pendingSubscriberPolicy != null) {
             String name = subscription.getContext().getClientId() + "_" + subscription.getConsumerInfo().getConsumerId();
+            //override prefetch size if not set by the Consumer
+            int prefetch=subscription.getConsumerInfo().getPrefetchSize();
+            if (prefetch == ActiveMQPrefetchPolicy.DEFAULT_TOPIC_PREFETCH){
+                subscription.getConsumerInfo().setPrefetchSize(getTopicPrefetch());
+            }
             int maxBatchSize = subscription.getConsumerInfo().getPrefetchSize();
             subscription.setMatched(pendingSubscriberPolicy.getSubscriberPendingMessageCursor(broker,name, maxBatchSize));
         }
@@ -164,6 +177,11 @@ public class PolicyEntry extends DestinationMapEntry {
         String clientId = sub.getSubscriptionKey().getClientId();
         String subName = sub.getSubscriptionKey().getSubscriptionName();
         int prefetch = sub.getPrefetchSize();
+        //override prefetch size if not set by the Consumer
+        
+        if (prefetch == ActiveMQPrefetchPolicy.DEFAULT_DURABLE_TOPIC_PREFETCH){
+            sub.setPrefetchSize(getDurableTopicPrefetch());
+        }
         if (pendingDurableSubscriberPolicy != null) {
             PendingMessageCursor cursor = pendingDurableSubscriberPolicy.getSubscriberPendingMessageCursor(broker,clientId, subName,prefetch,sub);
             cursor.setSystemUsage(memoryManager);
@@ -171,6 +189,26 @@ public class PolicyEntry extends DestinationMapEntry {
         }
         sub.setMaxAuditDepth(getMaxAuditDepth());
         sub.setMaxProducersToAudit(getMaxProducersToAudit());
+    }
+    
+    public void configure(Broker broker, SystemUsage memoryManager, QueueBrowserSubscription sub) {
+       
+        int prefetch = sub.getPrefetchSize();
+        //override prefetch size if not set by the Consumer
+        
+        if (prefetch == ActiveMQPrefetchPolicy.DEFAULT_QUEUE_BROWSER_PREFETCH){
+            sub.setPrefetchSize(getQueueBrowserPrefetch());
+        }
+    }
+    
+    public void configure(Broker broker, SystemUsage memoryManager, QueueSubscription sub) {
+        
+        int prefetch = sub.getPrefetchSize();
+        //override prefetch size if not set by the Consumer
+        
+        if (prefetch == ActiveMQPrefetchPolicy.DEFAULT_QUEUE_PREFETCH){
+            sub.setPrefetchSize(getQueuePrefetch());
+        }
     }
 
     // Properties
@@ -558,6 +596,71 @@ public class PolicyEntry extends DestinationMapEntry {
     public long getExpireMessagesPeriod() {
         return expireMessagesPeriod;
     }
+
+    /**
+     * Get the queuePrefetch
+     * @return the queuePrefetch
+     */
+    public int getQueuePrefetch() {
+        return this.queuePrefetch;
+    }
+
+    /**
+     * Set the queuePrefetch
+     * @param queuePrefetch the queuePrefetch to set
+     */
+    public void setQueuePrefetch(int queuePrefetch) {
+        this.queuePrefetch = queuePrefetch;
+    }
+
+    /**
+     * Get the queueBrowserPrefetch
+     * @return the queueBrowserPrefetch
+     */
+    public int getQueueBrowserPrefetch() {
+        return this.queueBrowserPrefetch;
+    }
+
+    /**
+     * Set the queueBrowserPrefetch
+     * @param queueBrowserPrefetch the queueBrowserPrefetch to set
+     */
+    public void setQueueBrowserPrefetch(int queueBrowserPrefetch) {
+        this.queueBrowserPrefetch = queueBrowserPrefetch;
+    }
+
+    /**
+     * Get the topicPrefetch
+     * @return the topicPrefetch
+     */
+    public int getTopicPrefetch() {
+        return this.topicPrefetch;
+    }
+
+    /**
+     * Set the topicPrefetch
+     * @param topicPrefetch the topicPrefetch to set
+     */
+    public void setTopicPrefetch(int topicPrefetch) {
+        this.topicPrefetch = topicPrefetch;
+    }
+
+    /**
+     * Get the durableTopicPrefetch
+     * @return the durableTopicPrefetch
+     */
+    public int getDurableTopicPrefetch() {
+        return this.durableTopicPrefetch;
+    }
+
+    /**
+     * Set the durableTopicPrefetch
+     * @param durableTopicPrefetch the durableTopicPrefetch to set
+     */
+    public void setDurableTopicPrefetch(int durableTopicPrefetch) {
+        this.durableTopicPrefetch = durableTopicPrefetch;
+    }
+
 
 
 }

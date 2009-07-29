@@ -22,6 +22,7 @@ import java.util.Set;
 import javax.jms.JMSException;
 
 import org.apache.activemq.broker.ConnectionContext;
+import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.MessageDispatchNotification;
@@ -47,11 +48,24 @@ public class QueueRegion extends AbstractRegion {
 
     protected Subscription createSubscription(ConnectionContext context, ConsumerInfo info)
         throws JMSException {
-        
+        ActiveMQDestination destination = info.getDestination();
+        PolicyEntry entry = null;
+        if (destination != null && broker.getDestinationPolicy() != null) {
+            entry = broker.getDestinationPolicy().getEntryFor(destination);
+            
+        }
         if (info.isBrowser()) {
-            return new QueueBrowserSubscription(broker,usageManager, context, info);
+            QueueBrowserSubscription sub = new QueueBrowserSubscription(broker,usageManager, context, info);
+            if (entry != null) {
+                entry.configure(broker, usageManager, sub);
+            }
+            return sub;
         } else {
-            return new QueueSubscription(broker, usageManager,context, info);
+            QueueSubscription sub =   new QueueSubscription(broker, usageManager,context, info);
+            if (entry != null) {
+                entry.configure(broker, usageManager, sub);
+            }
+            return sub;
         }
     }
 

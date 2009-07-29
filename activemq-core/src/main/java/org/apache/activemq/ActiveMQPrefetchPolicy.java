@@ -26,9 +26,17 @@ import org.apache.commons.logging.LogFactory;
  * @org.apache.xbean.XBean element="prefetchPolicy"
  * @version $Revision: 1.3 $
  */
-public class ActiveMQPrefetchPolicy implements Serializable {
+public class ActiveMQPrefetchPolicy extends Object implements Serializable {
+    public static final int MAX_PREFETCH_SIZE = Short.MAX_VALUE - 1;
+    public static final int DEFAULT_QUEUE_PREFETCH = 1000;
+    public static final int DEFAULT_QUEUE_BROWSER_PREFETCH = 500;
+    public static final int DEFAULT_DURABLE_TOPIC_PREFETCH = 100;
+    public static final int DEFAULT_OPTIMIZE_DURABLE_TOPIC_PREFETCH=1000;
+    public static final int DEFAULT_INPUT_STREAM_PREFETCH=100;
+    public static final int DEFAULT_TOPIC_PREFETCH = MAX_PREFETCH_SIZE;
+    
     private static final Log LOG = LogFactory.getLog(ActiveMQPrefetchPolicy.class);
-    private static final int MAX_PREFETCH_SIZE = Short.MAX_VALUE - 1;
+    
     private int queuePrefetch;
     private int queueBrowserPrefetch;
     private int topicPrefetch;
@@ -41,12 +49,12 @@ public class ActiveMQPrefetchPolicy implements Serializable {
      * Initialize default prefetch policies
      */
     public ActiveMQPrefetchPolicy() {
-        this.queuePrefetch = 1000;
-        this.queueBrowserPrefetch = 500;
-        this.topicPrefetch = MAX_PREFETCH_SIZE;
-        this.durableTopicPrefetch = 100;
-        this.optimizeDurableTopicPrefetch = 1000;
-        this.inputStreamPrefetch = 100;
+        this.queuePrefetch = DEFAULT_QUEUE_PREFETCH;
+        this.queueBrowserPrefetch = DEFAULT_QUEUE_BROWSER_PREFETCH;
+        this.topicPrefetch = DEFAULT_TOPIC_PREFETCH;
+        this.durableTopicPrefetch = DEFAULT_DURABLE_TOPIC_PREFETCH;
+        this.optimizeDurableTopicPrefetch = DEFAULT_OPTIMIZE_DURABLE_TOPIC_PREFETCH;
+        this.inputStreamPrefetch = DEFAULT_INPUT_STREAM_PREFETCH;
     }
 
     /**
@@ -155,6 +163,19 @@ public class ActiveMQPrefetchPolicy implements Serializable {
 
     public void setInputStreamPrefetch(int inputStreamPrefetch) {
         this.inputStreamPrefetch = getMaxPrefetchLimit(inputStreamPrefetch);
+    }
+    
+    public boolean equals(Object object){
+        if (object instanceof ActiveMQPrefetchPolicy){
+            ActiveMQPrefetchPolicy other = (ActiveMQPrefetchPolicy) object;
+            return this.queuePrefetch == other.queuePrefetch &&
+            this.queueBrowserPrefetch == other.queueBrowserPrefetch &&
+            this.topicPrefetch == other.topicPrefetch &&
+            this.durableTopicPrefetch == other.durableTopicPrefetch &&
+            this.optimizeDurableTopicPrefetch == other.optimizeDurableTopicPrefetch &&
+            this.inputStreamPrefetch == other.inputStreamPrefetch;
+        }
+        return false;
     }
 
 }
