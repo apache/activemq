@@ -1127,15 +1127,16 @@ public class BrokerTest extends BrokerTestSupport {
         }
 
         // give the async ack a chance to perculate and validate all are currently consumed
-        assertNull(connection1.getDispatchQueue().poll(MAX_NULL_WAIT, TimeUnit.MILLISECONDS));
-
+        Message msg = receiveMessage(connection1, MAX_NULL_WAIT);
+        assertNull("all messages were received " + msg, msg);
+        
         // Close the connection, this should in turn close the consumer.
         connection1.request(closeConnectionInfo(connectionInfo1));
 
         // Send another message, connection1 should not get the message.
         connection2.request(createMessage(producerInfo2, destination, deliveryMode));
 
-        assertNull(connection1.getDispatchQueue().poll(MAX_NULL_WAIT, TimeUnit.MILLISECONDS));
+        assertNull("no message received", receiveMessage(connection1, MAX_NULL_WAIT));
     }
 
     public void initCombosForTestSessionCloseCascades() {
@@ -1187,7 +1188,7 @@ public class BrokerTest extends BrokerTestSupport {
         // Send another message, connection1 should not get the message.
         connection2.request(createMessage(producerInfo2, destination, deliveryMode));
 
-        Object msg = connection1.getDispatchQueue().poll(MAX_NULL_WAIT, TimeUnit.MILLISECONDS);
+        Message msg = receiveMessage(connection1,MAX_NULL_WAIT);
         assertNull("no message received from connection1 after session close", msg);
     }
 
@@ -1235,7 +1236,8 @@ public class BrokerTest extends BrokerTestSupport {
         }
 
         // give the async ack a chance to perculate and validate all are currently consumed
-        Object result = connection1.getDispatchQueue().poll(MAX_NULL_WAIT, TimeUnit.MILLISECONDS);
+        // use receive rather than poll as broker info is sent async and may still need to be dequeued
+        Message result = receiveMessage(connection1, MAX_NULL_WAIT);
         assertNull("no more messages " + result, result);
  
         // Close the consumer.
@@ -1244,7 +1246,8 @@ public class BrokerTest extends BrokerTestSupport {
         // Send another message, connection1 should not get the message.
         connection2.request(createMessage(producerInfo2, destination, deliveryMode));
 
-        assertNull(connection1.getDispatchQueue().poll(MAX_NULL_WAIT, TimeUnit.MILLISECONDS));
+        result = receiveMessage(connection1, MAX_NULL_WAIT);
+        assertNull("no message received after close " + result, result);
     }
 
     public void initCombosForTestTopicNoLocal() {
