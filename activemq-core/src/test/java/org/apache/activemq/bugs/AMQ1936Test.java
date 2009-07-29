@@ -18,6 +18,7 @@ package org.apache.activemq.bugs;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.util.Wait;
 import org.apache.log4j.Logger;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
@@ -187,8 +188,11 @@ public class AMQ1936Test extends TestCase{
         }
 
         // allow some time for messages to be delivered to receivers.
-        Thread.sleep( 5000 );
-        
+        Wait.waitFor(new Wait.Condition() {
+            public boolean isSatisified() throws Exception {
+                return TEST_MESSAGE_COUNT == messages.size();
+            }
+        });
         assertEquals( "Number of messages received does not match the number sent", TEST_MESSAGE_COUNT, messages.size( ) );
         assertEquals( TEST_MESSAGE_COUNT,  messageCount.get() );
     }
