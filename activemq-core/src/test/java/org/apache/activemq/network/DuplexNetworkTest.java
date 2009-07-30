@@ -17,8 +17,6 @@
 package org.apache.activemq.network;
 
 import org.apache.activemq.broker.BrokerService;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 public class DuplexNetworkTest extends SimpleNetworkTest {
 

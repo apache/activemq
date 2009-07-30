@@ -170,6 +170,8 @@ public class SimpleNetworkTest extends TestCase {
         localBroker.start();
         URI localURI = localBroker.getVmConnectorURI();
         ActiveMQConnectionFactory fac = new ActiveMQConnectionFactory(localURI);
+        fac.setAlwaysSyncSend(true);
+        fac.setDispatchAsync(false);
         localConnection = fac.createConnection();
         localConnection.setClientID("local");
         localConnection.start();
