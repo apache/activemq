@@ -51,6 +51,7 @@ import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.amq.AMQPersistenceAdapter;
 import org.apache.activemq.store.amq.AMQPersistenceAdapterFactory;
+import org.apache.activemq.util.Wait;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -273,9 +274,14 @@ public class DurableConsumerTest extends TestCase {
             }
         }
         
-        Thread.sleep(2000);
         executor.shutdown();
         executor.awaitTermination(30, TimeUnit.SECONDS);
+        
+        Wait.waitFor(new Wait.Condition() {
+            public boolean isSatisified() throws Exception {
+                return receivedCount.get() > numMessages;
+            } 
+        });
         assertTrue("got some messages: " + receivedCount.get(), receivedCount.get() > numMessages);
         assertTrue("no exceptions, but: " + exceptions, exceptions.isEmpty());
     }
