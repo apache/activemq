@@ -1247,6 +1247,8 @@ h4. Properties
     | indexWriteBatchSize | _int_ | {html}{html} |
     | enableIndexWriteAsync | _boolean_ | {html}{html} |
     | enableJournalDiskSyncs | _boolean_ | {html}{html} |
+    | ignoreMissingJournalfiles | _boolean_ | {html}{html} |
+    | indexCacheSize | _int_ | {html}{html} |
     | size | _java.util.concurrent.atomic.AtomicLong_ | {html}{html} |
     | usageManager | _[org.apache.activemq.usage.SystemUsage|#org.apache.activemq.usage.SystemUsage-types]_ | {html}{html} |
 

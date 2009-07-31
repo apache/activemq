@@ -2883,6 +2883,8 @@ false so that messages actually reside long term in the JDBC database.
       <xs:attribute name='journalMaxFileLength' type='xs:long'/>
       <xs:attribute name='enableIndexWriteAsync' type='xs:boolean'/>
       <xs:attribute name='enableJournalDiskSyncs' type='xs:boolean'/>
+      <xs:attribute name='ignoreMissingJournalfiles' type='xs:boolean'/>
+      <xs:attribute name='indexCacheSize' type='xs:integer'/>
       <xs:attribute name='size' type='xs:string'/>
       <xs:attribute name='usageManager' type='xs:string'/>
       <xs:attribute name='id' type='xs:ID'/>

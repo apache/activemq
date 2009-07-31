@@ -63,14 +63,7 @@ import org.apache.kahadb.journal.Location;
 import org.apache.kahadb.page.Page;
 import org.apache.kahadb.page.PageFile;
 import org.apache.kahadb.page.Transaction;
-import org.apache.kahadb.util.ByteSequence;
-import org.apache.kahadb.util.DataByteArrayInputStream;
-import org.apache.kahadb.util.DataByteArrayOutputStream;
-import org.apache.kahadb.util.LockFile;
-import org.apache.kahadb.util.LongMarshaller;
-import org.apache.kahadb.util.Marshaller;
-import org.apache.kahadb.util.StringMarshaller;
-import org.apache.kahadb.util.VariableMarshaller;
+import org.apache.kahadb.util.*;
 
 public class MessageDatabase {
 
@@ -155,6 +148,8 @@ public class MessageDatabase {
     protected AtomicBoolean started = new AtomicBoolean();
     protected AtomicBoolean opened = new AtomicBoolean();
     private LockFile lockFile;
+    private boolean ignoreMissingJournalfiles = false;
+    private int indexCacheSize = 100;
 
     public MessageDatabase() {
     }
@@ -218,24 +213,6 @@ public class MessageDatabase {
 	 * @throws IOException
 	 */
 	public void open() throws IOException {
-		File lockFileName = new File(directory, "lock");
-		lockFile = new LockFile(lockFileName, true);
-		if (failIfDatabaseIsLocked) {
-		    lockFile.lock();
-		} else {
-		    while (true) {
-		        try {
-		            lockFile.lock();
-		            break;
-		        } catch (IOException e) {
-		            LOG.info("Database "+lockFileName+" is locked... waiting " + (DATABASE_LOCKED_WAIT_DELAY / 1000) + " seconds for the database to be unlocked. Reason: " + e);
-		            try {
-		                Thread.sleep(DATABASE_LOCKED_WAIT_DELAY);
-		            } catch (InterruptedException e1) {
-		            }
-		        }
-		    }
-		}
 		if( opened.compareAndSet(false, true) ) {
             getJournal().start();
             
@@ -271,24 +248,45 @@ public class MessageDatabase {
             recover();
 		}
 	}
-	
+
+    private void lock() throws IOException {
+        if( lockFile == null ) {
+            File lockFileName = new File(directory, "lock");
+            lockFile = new LockFile(lockFileName, true);
+            if (failIfDatabaseIsLocked) {
+                lockFile.lock();
+            } else {
+                while (true) {
+                    try {
+                        lockFile.lock();
+                        break;
+                    } catch (IOException e) {
+                        LOG.info("Database "+lockFileName+" is locked... waiting " + (DATABASE_LOCKED_WAIT_DELAY / 1000) + " seconds for the database to be unlocked. Reason: " + e);
+                        try {
+                            Thread.sleep(DATABASE_LOCKED_WAIT_DELAY);
+                        } catch (InterruptedException e1) {
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     public void load() throws IOException {
     	
         synchronized (indexMutex) {
+            lock();
+            if (deleteAllMessages) {
+                getJournal().start();
+                getJournal().delete();
+                getJournal().close();
+                journal = null;
+                getPageFile().delete();
+                LOG.info("Persistence store purged.");
+                deleteAllMessages = false;
+            }
+
 	    	open();
-	    	
-	        if (deleteAllMessages) {
-	            journal.delete();
-	
-	            pageFile.unload();
-	            pageFile.delete();
-	            metadata = new Metadata();
-	            
-	            LOG.info("Persistence store purged.");
-	            deleteAllMessages = false;
-	            
-	            loadPageFile();
-	        }
 	        store(new KahaTraceCommand().setMessage("LOADED " + new Date()));
 
         }
@@ -348,7 +346,6 @@ public class MessageDatabase {
      * 
      * @throws IOException
      * @throws IOException
-     * @throws InvalidLocationException
      * @throws IllegalStateException
      */
     private void recover() throws IllegalStateException, IOException {
@@ -406,6 +403,75 @@ public class MessageDatabase {
                 // TODO: do we need to modify the ack positions for the pub sub case?
 			}
         }
+
+
+        // Lets be extra paranoid here and verify that all the datafiles being referenced
+        // by the indexes still exists.
+
+        final SequenceSet ss = new SequenceSet();
+        for (StoredDestination sd : storedDestinations.values()) {
+            // Use a visitor to cut down the number of pages that we load
+            sd.locationIndex.visit(tx, new BTreeVisitor<Location, Long>() {
+                int last=-1;
+
+                public boolean isInterestedInKeysBetween(Location first, Location second) {
+                    if( first==null ) {
+                        return !ss.contains(0, second.getDataFileId());
+                    } else if( second==null ) {
+                        return true;
+                    } else {
+                        return !ss.contains(first.getDataFileId(), second.getDataFileId());
+                    }
+                }
+
+                public void visit(List<Location> keys, List<Long> values) {
+                    for (Location l : keys) {
+                        int fileId = l.getDataFileId();
+                        if( last != fileId ) {
+                            ss.add(fileId);
+                            last = fileId;
+                        }
+                    }
+                }
+
+            });
+        }
+        HashSet<Integer> missingJournalFiles = new HashSet<Integer>();
+        while( !ss.isEmpty() ) {
+            missingJournalFiles.add( (int)ss.removeFirst() );
+        }
+        missingJournalFiles.removeAll( journal.getFileMap().keySet() );
+
+        if( !missingJournalFiles.isEmpty() ) {
+            if( ignoreMissingJournalfiles ) {
+
+                for (StoredDestination sd : storedDestinations.values()) {
+
+                    final ArrayList<Long> matches = new ArrayList<Long>();
+                    for (Integer missing : missingJournalFiles) {
+                        sd.locationIndex.visit(tx, new BTreeVisitor.BetweenVisitor<Location, Long>(new Location(missing,0), new Location(missing+1,0)) {
+                            @Override
+                            protected void matched(Location key, Long value) {
+                                matches.add(value);
+                            }
+                        });
+                    }
+
+
+                    for (Long sequenceId : matches) {
+                        MessageKeys keys = sd.orderIndex.remove(tx, sequenceId);
+                        sd.locationIndex.remove(tx, keys.location);
+                        sd.messageIdIndex.remove(tx, keys.messageId);
+                        undoCounter++;
+                        // TODO: do we need to modify the ack positions for the pub sub case?
+                    }
+                }
+                
+            } else {
+                throw new IOException("Detected missing journal files: "+missingJournalFiles);
+            }
+        }
+
         long end = System.currentTimeMillis();
         if( undoCounter > 0 ) {
         	// The rolledback operations are basically in flight journal writes.  To avoid getting these the end user
@@ -1263,6 +1329,7 @@ public class MessageDatabase {
         PageFile index = new PageFile(directory, "db");
         index.setEnableWriteThread(isEnableIndexWriteAsync());
         index.setWriteBatchSize(getIndexWriteBatchSize());
+        index.setPageCacheSize(indexCacheSize);
         return index;
     }
 
@@ -1357,5 +1424,21 @@ public class MessageDatabase {
 
     public void setFailIfDatabaseIsLocked(boolean failIfDatabaseIsLocked) {
         this.failIfDatabaseIsLocked = failIfDatabaseIsLocked;
+    }
+
+    public boolean isIgnoreMissingJournalfiles() {
+        return ignoreMissingJournalfiles;
+    }
+    
+    public void setIgnoreMissingJournalfiles(boolean ignoreMissingJournalfiles) {
+        this.ignoreMissingJournalfiles = ignoreMissingJournalfiles;
+    }
+
+    public int getIndexCacheSize() {
+        return indexCacheSize;
+    }
+
+    public void setIndexCacheSize(int indexCacheSize) {
+        this.indexCacheSize = indexCacheSize;
     }
 }

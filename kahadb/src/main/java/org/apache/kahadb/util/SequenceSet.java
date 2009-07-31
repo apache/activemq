@@ -31,7 +31,7 @@ import java.util.NoSuchElementException;
  * @author chirino
  */
 public class SequenceSet extends LinkedNodeList<Sequence> {
-    
+
     public static class Marshaller implements org.apache.kahadb.util.Marshaller<SequenceSet> {
 
         public static final Marshaller INSTANCE = new Marshaller();
@@ -254,5 +254,19 @@ public class SequenceSet extends LinkedNodeList<Sequence> {
         }
         return rc;
     }
-   
+
+    public boolean contains(int first, int last) {
+        if (isEmpty()) {
+            return false;
+        }
+        Sequence sequence = getHead();
+        while (sequence != null) {
+            if (sequence.first <= first ) {
+                return last <= sequence.last ;
+            }
+            sequence = sequence.getNext();
+        }
+        return false;
+    }
+
 }

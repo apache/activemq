@@ -67,6 +67,32 @@ public interface BTreeVisitor<Key,Value> {
 		abstract protected void matched(Key key, Value value);
     }
     
+    abstract class BetweenVisitor<Key extends Comparable<Key>, Value> implements BTreeVisitor<Key, Value>{
+		private final Key first;
+        private final Key last;
+
+        public BetweenVisitor(Key first, Key last) {
+			this.first = first;
+            this.last = last;
+        }
+
+		public boolean isInterestedInKeysBetween(Key first, Key second) {
+        	return (second==null || second.compareTo(this.first)>=0)
+                   && (first==null || first.compareTo(last)<0);
+		}
+
+		public void visit(List<Key> keys, List<Value> values) {
+			for( int i=0; i < keys.size(); i++) {
+				Key key = keys.get(i);
+				if( key.compareTo(first)>=0 && key.compareTo(last)<0 ) {
+					matched(key, values.get(i));
+				}
+			}
+		}
+
+		abstract protected void matched(Key key, Value value);
+    }
+
     abstract class GTEVisitor<Key extends Comparable<Key>, Value> implements BTreeVisitor<Key, Value>{
 		final private Key value;
 
