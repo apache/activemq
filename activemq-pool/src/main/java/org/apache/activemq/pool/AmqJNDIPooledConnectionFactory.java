@@ -35,6 +35,14 @@ public class AmqJNDIPooledConnectionFactory extends PooledConnectionFactory
     public AmqJNDIPooledConnectionFactory() {
         super();
     }
+    
+    public AmqJNDIPooledConnectionFactory(String brokerURL) {
+        super(brokerURL);
+    }
+
+    public AmqJNDIPooledConnectionFactory(ActiveMQConnectionFactory connectionFactory) {
+        super(connectionFactory);
+    }
 
     /**
      * set the properties for this instance as retrieved from JNDI
