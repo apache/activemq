@@ -16,15 +16,13 @@
  */
 package org.apache.activemq.transport;
 
-import java.io.IOException;
-
-import javax.management.ObjectName;
-
 import org.apache.activemq.broker.jmx.ManagementContext;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.LogWriterFinder;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import java.io.IOException;
+import javax.management.ObjectName;
 
 /**
  * Singleton class to create TransportLogger objects.
@@ -201,7 +199,7 @@ public class TransportLoggerFactory {
 
          try {
              this.objectName = new ObjectName(this.managementContext.getJmxDomainName()+":"+ "Type=TransportLoggerControl");
-             this.managementContext.getMBeanServer().registerMBean(new TransportLoggerControl(this.managementContext),this.objectName);
+             this.managementContext.registerMBean(new TransportLoggerControl(this.managementContext),this.objectName);
              
              this.transportLoggerControlCreated = true;
 

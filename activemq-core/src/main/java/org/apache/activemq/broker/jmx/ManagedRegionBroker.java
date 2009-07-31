@@ -16,30 +16,6 @@
  */
 package org.apache.activemq.broker.jmx;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Hashtable;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArraySet;
-
-import javax.management.InstanceNotFoundException;
-import javax.management.MBeanServer;
-import javax.management.MalformedObjectNameException;
-import javax.management.ObjectName;
-import javax.management.openmbean.CompositeData;
-import javax.management.openmbean.CompositeDataSupport;
-import javax.management.openmbean.CompositeType;
-import javax.management.openmbean.OpenDataException;
-import javax.management.openmbean.TabularData;
-import javax.management.openmbean.TabularDataSupport;
-import javax.management.openmbean.TabularType;
-
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.ConnectionContext;
@@ -71,10 +47,31 @@ import org.apache.activemq.util.ServiceStopper;
 import org.apache.activemq.util.SubscriptionKey;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.Map.Entry;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArraySet;
+import javax.management.InstanceNotFoundException;
+import javax.management.MalformedObjectNameException;
+import javax.management.ObjectName;
+import javax.management.openmbean.CompositeData;
+import javax.management.openmbean.CompositeDataSupport;
+import javax.management.openmbean.CompositeType;
+import javax.management.openmbean.OpenDataException;
+import javax.management.openmbean.TabularData;
+import javax.management.openmbean.TabularDataSupport;
+import javax.management.openmbean.TabularType;
 
 public class ManagedRegionBroker extends RegionBroker {
     private static final Log LOG = LogFactory.getLog(ManagedRegionBroker.class);
-    private final MBeanServer mbeanServer;
+    private final ManagementContext managementContext;
     private final ObjectName brokerObjectName;
     private final Map<ObjectName, DestinationView> topics = new ConcurrentHashMap<ObjectName, DestinationView>();
     private final Map<ObjectName, DestinationView> queues = new ConcurrentHashMap<ObjectName, DestinationView>();
@@ -92,10 +89,10 @@ public class ManagedRegionBroker extends RegionBroker {
     /* This is the first broker in the broker interceptor chain. */
     private Broker contextBroker;
 
-    public ManagedRegionBroker(BrokerService brokerService, MBeanServer mbeanServer, ObjectName brokerObjectName, TaskRunnerFactory taskRunnerFactory, SystemUsage memoryManager,
+    public ManagedRegionBroker(BrokerService brokerService, ManagementContext context, ObjectName brokerObjectName, TaskRunnerFactory taskRunnerFactory, SystemUsage memoryManager,
                                DestinationFactory destinationFactory, DestinationInterceptor destinationInterceptor) throws IOException {
         super(brokerService, taskRunnerFactory, memoryManager, destinationFactory, destinationInterceptor);
-        this.mbeanServer = mbeanServer;
+        this.managementContext = context;
         this.brokerObjectName = brokerObjectName;
     }
 
@@ -111,7 +108,7 @@ public class ManagedRegionBroker extends RegionBroker {
         for (Iterator<ObjectName> iter = registeredMBeans.iterator(); iter.hasNext();) {
             ObjectName name = iter.next();
             try {
-                mbeanServer.unregisterMBean(name);
+                managementContext.unregisterMBean(name);
             } catch (InstanceNotFoundException e) {
                 LOG.warn("The MBean: " + name + " is no longer registered with JMX");
             } catch (Exception e) {
@@ -245,7 +242,7 @@ public class ManagedRegionBroker extends RegionBroker {
             }
         }
         try {
-            mbeanServer.registerMBean(view, key);
+            managementContext.registerMBean(view, key);
             registeredMBeans.add(key);
         } catch (Throwable e) {
             LOG.warn("Failed to register MBean: " + key);
@@ -260,7 +257,7 @@ public class ManagedRegionBroker extends RegionBroker {
         temporaryTopics.remove(key);
         if (registeredMBeans.remove(key)) {
             try {
-                mbeanServer.unregisterMBean(key);
+                managementContext.unregisterMBean(key);
             } catch (Throwable e) {
                 LOG.warn("Failed to unregister MBean: " + key);
                 LOG.debug("Failure reason: " + e, e);
@@ -288,7 +285,7 @@ public class ManagedRegionBroker extends RegionBroker {
                         if (inactiveName != null) {
                             inactiveDurableTopicSubscribers.remove(inactiveName);
                             registeredMBeans.remove(inactiveName);
-                            mbeanServer.unregisterMBean(inactiveName);
+                            managementContext.unregisterMBean(inactiveName);
                         }
                     } catch (Throwable e) {
                         LOG.error("Unable to unregister inactive durable subscriber: " + subscriptionKey, e);
@@ -300,7 +297,7 @@ public class ManagedRegionBroker extends RegionBroker {
         }
 
         try {
-            mbeanServer.registerMBean(view, key);
+            managementContext.registerMBean(view, key);
             registeredMBeans.add(key);
         } catch (Throwable e) {
             LOG.warn("Failed to register MBean: " + key);
@@ -317,7 +314,7 @@ public class ManagedRegionBroker extends RegionBroker {
         temporaryTopicSubscribers.remove(key);
         if (registeredMBeans.remove(key)) {
             try {
-                mbeanServer.unregisterMBean(key);
+                managementContext.unregisterMBean(key);
             } catch (Throwable e) {
                 LOG.warn("Failed to unregister MBean: " + key);
                 LOG.debug("Failure reason: " + e, e);
@@ -370,7 +367,7 @@ public class ManagedRegionBroker extends RegionBroker {
             SubscriptionView view = new InactiveDurableSubscriptionView(this, key.getClientId(), info);
 
             try {
-                mbeanServer.registerMBean(view, objectName);
+                managementContext.registerMBean(view, objectName);
                 registeredMBeans.add(objectName);
             } catch (Throwable e) {
                 LOG.warn("Failed to register MBean: " + key);

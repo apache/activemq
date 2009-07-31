@@ -2,17 +2,6 @@ package org.apache.activemq.bugs;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-
-import javax.jms.ConnectionFactory;
-import javax.jms.MessageProducer;
-import javax.jms.Queue;
-import javax.jms.QueueBrowser;
-import javax.jms.Session;
-import javax.jms.TextMessage;
-import javax.management.MBeanServer;
-import javax.management.MBeanServerInvocationHandler;
-import javax.management.ObjectName;
-
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
@@ -23,6 +12,13 @@ import org.apache.activemq.command.ActiveMQDestination;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import javax.jms.ConnectionFactory;
+import javax.jms.MessageProducer;
+import javax.jms.Queue;
+import javax.jms.QueueBrowser;
+import javax.jms.Session;
+import javax.jms.TextMessage;
+import javax.management.ObjectName;
 
 /**
  * Test to determine if expired messages are being reaped if there is
@@ -122,7 +118,6 @@ public class MessageExpirationReaperTest {
     }
     
     protected DestinationViewMBean createView(ActiveMQDestination destination) throws Exception {
-        MBeanServer mbeanServer = broker.getManagementContext().getMBeanServer();
         String domain = "org.apache.activemq";
         ObjectName name;
         if (destination.isQueue()) {
@@ -130,6 +125,7 @@ public class MessageExpirationReaperTest {
         } else {
             name = new ObjectName(domain + ":BrokerName=" + brokerName + ",Type=Topic,Destination=" + destinationName);
         }
-        return (DestinationViewMBean)MBeanServerInvocationHandler.newProxyInstance(mbeanServer, name, DestinationViewMBean.class, true);
+        return (DestinationViewMBean) broker.getManagementContext().newProxyInstance(name, DestinationViewMBean.class,
+                true);
     }
 }

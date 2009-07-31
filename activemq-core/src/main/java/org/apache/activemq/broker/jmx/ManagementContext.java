@@ -21,14 +21,23 @@ import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.management.Attribute;
+import javax.management.InstanceAlreadyExistsException;
+import javax.management.InstanceNotFoundException;
 import javax.management.JMException;
+import javax.management.MBeanRegistrationException;
 import javax.management.MBeanServer;
 import javax.management.MBeanServerFactory;
+import javax.management.MBeanServerInvocationHandler;
 import javax.management.MalformedObjectNameException;
+import javax.management.NotCompliantMBeanException;
+import javax.management.ObjectInstance;
 import javax.management.ObjectName;
 import javax.management.remote.JMXConnectorServer;
 import javax.management.remote.JMXConnectorServerFactory;
@@ -37,6 +46,7 @@ import javax.management.remote.JMXServiceURL;
 import org.apache.activemq.Service;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import sun.security.action.GetBooleanAction;
 
 /**
  * A Flow provides different dispatch policies within the NMR
@@ -64,6 +74,7 @@ public class ManagementContext implements Service {
     private JMXConnectorServer connectorServer;
     private ObjectName namingServiceObjectName;
     private Registry registry;
+    private List<ObjectName> registeredMBeanNames = new CopyOnWriteArrayList<ObjectName>();
 
     public ManagementContext() {
         this(null);
@@ -101,8 +112,18 @@ public class ManagementContext implements Service {
         }
     }
 
-    public void stop() throws IOException {
+    public void stop() throws Exception {
         if (started.compareAndSet(true, false)) {
+            MBeanServer mbeanServer = getMBeanServer();
+            if (mbeanServer != null) {
+                for (Iterator<ObjectName> iter = registeredMBeanNames.iterator(); iter.hasNext();) {
+                    ObjectName name = iter.next();
+                    
+                        mbeanServer.unregisterMBean(name);
+                    
+                }
+            }
+            registeredMBeanNames.clear();
             JMXConnectorServer server = connectorServer;
             connectorServer = null;
             if (server != null) {
@@ -146,7 +167,7 @@ public class ManagementContext implements Service {
      * 
      * @return the MBeanServer
      */
-    public MBeanServer getMBeanServer() {
+    protected MBeanServer getMBeanServer() {
         if (this.beanServer == null) {
             this.beanServer = findMBeanServer();
         }
@@ -258,7 +279,24 @@ public class ManagementContext implements Service {
         }
         return containerName + "." + name;
     }
-
+    
+    public Object newProxyInstance( ObjectName objectName,
+                      Class interfaceClass,
+                      boolean notificationBroadcaster){
+        return MBeanServerInvocationHandler.newProxyInstance(getMBeanServer(), objectName, interfaceClass, notificationBroadcaster);
+        
+    }
+    
+    public Object getAttribute(ObjectName name, String attribute) throws Exception{
+        return getMBeanServer().getAttribute(name, attribute);
+    }
+    
+    public ObjectInstance registerMBean(Object bean, ObjectName name) throws Exception{
+        ObjectInstance result = getMBeanServer().registerMBean(bean, name);
+        this.registeredMBeanNames.add(name);
+        return result;
+    }
+    
     /**
      * Unregister an MBean
      * 
@@ -266,7 +304,7 @@ public class ManagementContext implements Service {
      * @throws JMException
      */
     public void unregisterMBean(ObjectName name) throws JMException {
-        if (beanServer != null && beanServer.isRegistered(name)) {
+        if (beanServer != null && beanServer.isRegistered(name) && this.registeredMBeanNames.remove(name)) {
             beanServer.unregisterMBean(name);
         }
     }

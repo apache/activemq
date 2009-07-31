@@ -16,22 +16,6 @@
  */
 package org.apache.activemq.network;
 
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.CopyOnWriteArrayList;
-
-import javax.management.MBeanServer;
-import javax.management.MalformedObjectNameException;
-import javax.management.ObjectName;
-
 import org.apache.activemq.Service;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.jmx.NetworkBridgeView;
@@ -45,6 +29,17 @@ import org.apache.activemq.util.ServiceStopper;
 import org.apache.activemq.util.ServiceSupport;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.CopyOnWriteArrayList;
+import javax.management.MalformedObjectNameException;
+import javax.management.ObjectName;
 
 /**
  * @version $Revision$
@@ -238,16 +233,12 @@ public abstract class NetworkConnector extends NetworkBridgeConfiguration implem
         if (!getBrokerService().isUseJmx()) {
             return;
         }
-
-        MBeanServer mbeanServer = getBrokerService().getManagementContext().getMBeanServer();
-        if (mbeanServer != null) {
-            NetworkBridgeViewMBean view = new NetworkBridgeView(bridge);
-            try {
-                ObjectName objectName = createNetworkBridgeObjectName(bridge);
-                mbeanServer.registerMBean(view, objectName);
-            } catch (Throwable e) {
-                LOG.debug("Network bridge could not be registered in JMX: " + e.getMessage(), e);
-            }
+        NetworkBridgeViewMBean view = new NetworkBridgeView(bridge);
+        try {
+            ObjectName objectName = createNetworkBridgeObjectName(bridge);
+            getBrokerService().getManagementContext().registerMBean(view, objectName);
+        } catch (Throwable e) {
+            LOG.debug("Network bridge could not be registered in JMX: " + e.getMessage(), e);
         }
     }
 
@@ -255,15 +246,11 @@ public abstract class NetworkConnector extends NetworkBridgeConfiguration implem
         if (!getBrokerService().isUseJmx()) {
             return;
         }
-
-        MBeanServer mbeanServer = getBrokerService().getManagementContext().getMBeanServer();
-        if (mbeanServer != null) {
-            try {
-                ObjectName objectName = createNetworkBridgeObjectName(bridge);
-                mbeanServer.unregisterMBean(objectName);
-            } catch (Throwable e) {
-                LOG.debug("Network bridge could not be unregistered in JMX: " + e.getMessage(), e);
-            }
+        try {
+            ObjectName objectName = createNetworkBridgeObjectName(bridge);
+            getBrokerService().getManagementContext().unregisterMBean(objectName);
+        } catch (Throwable e) {
+            LOG.debug("Network bridge could not be unregistered in JMX: " + e.getMessage(), e);
         }
     }
     

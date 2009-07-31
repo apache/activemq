@@ -16,12 +16,6 @@
  */
 package org.apache.activemq.broker.jmx;
 
-import java.io.IOException;
-import java.util.Hashtable;
-
-import javax.management.MBeanServer;
-import javax.management.ObjectName;
-
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.TransportConnection;
 import org.apache.activemq.broker.TransportConnector;
@@ -33,6 +27,9 @@ import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.JMXSupport;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import java.io.IOException;
+import java.util.Hashtable;
+import javax.management.ObjectName;
 
 /**
  * A managed transport connection
@@ -42,7 +39,7 @@ import org.apache.commons.logging.LogFactory;
 public class ManagedTransportConnection extends TransportConnection {
     private static final Log LOG = LogFactory.getLog(ManagedTransportConnection.class);
 
-    private final MBeanServer server;
+    private final ManagementContext managementContext;
     private final ObjectName connectorName;
     private ConnectionViewMBean mbean;
 
@@ -50,10 +47,10 @@ public class ManagedTransportConnection extends TransportConnection {
     private ObjectName byAddressName;
 
     public ManagedTransportConnection(TransportConnector connector, Transport transport, Broker broker,
-                                      TaskRunnerFactory factory, MBeanServer server, ObjectName connectorName)
+                                      TaskRunnerFactory factory, ManagementContext context, ObjectName connectorName)
         throws IOException {
         super(connector, transport, broker, factory);
-        this.server = server;
+        this.managementContext = context;
         this.connectorName = connectorName;
         this.mbean = new ConnectionView(this);
         byAddressName = createByAddressObjectName("address", transport.getRemoteAddress());
@@ -99,7 +96,7 @@ public class ManagedTransportConnection extends TransportConnection {
     protected void registerMBean(ObjectName name) {
         if (name != null) {
             try {
-                server.registerMBean(mbean, name);
+                managementContext.registerMBean(mbean, name);
             } catch (Throwable e) {
                 LOG.warn("Failed to register MBean: " + name);
                 LOG.debug("Failure reason: " + e, e);
@@ -110,7 +107,7 @@ public class ManagedTransportConnection extends TransportConnection {
     protected void unregisterMBean(ObjectName name) {
         if (name != null) {
             try {
-                server.unregisterMBean(name);
+                managementContext.unregisterMBean(name);
             } catch (Throwable e) {
                 LOG.warn("Failed to unregister mbean: " + name);
                 LOG.debug("Failure reason: " + e, e);

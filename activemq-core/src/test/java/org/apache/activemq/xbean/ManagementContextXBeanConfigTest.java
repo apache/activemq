@@ -16,17 +16,13 @@
  */
 package org.apache.activemq.xbean;
 
-import java.net.URI;
-import java.util.Hashtable;
-
-import javax.management.MBeanServer;
-import javax.management.ObjectName;
-
-import junit.framework.TestCase;
-
 import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.util.JMXSupport;
+import java.net.URI;
+import java.util.Hashtable;
+import javax.management.ObjectName;
+import junit.framework.TestCase;
 
 /**
  * @version $Revision: 1.1 $
@@ -36,19 +32,14 @@ public class ManagementContextXBeanConfigTest extends TestCase {
     protected BrokerService brokerService;
 
     public void testManagmentContextConfiguredCorrectly() throws Exception {
-
         assertEquals(2011, brokerService.getManagementContext().getConnectorPort());
         assertEquals("test.domain", brokerService.getManagementContext().getJmxDomainName());
-
-        MBeanServer beanServer = brokerService.getManagementContext().getMBeanServer();
-
         // Make sure the broker is registered in the right jmx domain.
         Hashtable<String, String> map = new Hashtable<String, String>();
         map.put("Type", "Broker");
         map.put("BrokerName", JMXSupport.encodeObjectNamePart("localhost"));
         ObjectName on = new ObjectName("test.domain", map);
-
-        Object value = beanServer.getAttribute(on, "TotalEnqueueCount");
+        Object value = brokerService.getManagementContext().getAttribute(on, "TotalEnqueueCount");
         assertNotNull(value);
     }
 

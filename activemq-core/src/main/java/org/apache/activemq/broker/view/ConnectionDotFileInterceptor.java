@@ -16,25 +16,10 @@
  */
 package org.apache.activemq.broker.view;
 
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
-
-import javax.management.MBeanServer;
-import javax.management.MBeanServerInvocationHandler;
-import javax.management.MalformedObjectNameException;
-import javax.management.ObjectName;
-
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.ProducerBrokerExchange;
 import org.apache.activemq.broker.jmx.BrokerViewMBean;
-import org.apache.activemq.broker.jmx.ManagementContext;
 import org.apache.activemq.broker.jmx.SubscriptionViewMBean;
 import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.command.ActiveMQDestination;
@@ -43,6 +28,15 @@ import org.apache.activemq.command.Message;
 import org.apache.activemq.command.ProducerId;
 import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.filter.DestinationMapNode;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
+import javax.management.ObjectName;
 
 /**
  * @version $Revision: $
@@ -55,7 +49,6 @@ public class ConnectionDotFileInterceptor extends DotFileInterceptorSupport {
     private boolean clearProducerCacheAfterRender;
     private String domain = "org.apache.activemq";
     private BrokerViewMBean brokerView;
-    private MBeanServer mbeanServer;
 
     // until we have some MBeans for producers, lets do it all ourselves
     private Map<ProducerId, ProducerInfo> producers = new HashMap<ProducerId, ProducerInfo>();
@@ -65,10 +58,7 @@ public class ConnectionDotFileInterceptor extends DotFileInterceptorSupport {
     public ConnectionDotFileInterceptor(Broker next, String file, boolean redrawOnRemove) throws IOException {
         super(next, file);
         this.redrawOnRemove = redrawOnRemove;
-
-        mbeanServer = new ManagementContext().getMBeanServer();
-        ObjectName brokerName = next.getBrokerService().getBrokerObjectName();
-        brokerView = (BrokerViewMBean)MBeanServerInvocationHandler.newProxyInstance(mbeanServer, brokerName, BrokerViewMBean.class, true);
+        
     }
 
     public Subscription addConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
@@ -123,7 +113,7 @@ public class ConnectionDotFileInterceptor extends DotFileInterceptorSupport {
 
         writer.println("digraph \"ActiveMQ Connections\" {");
         writer.println();
-        writer.println("label=\"ActiveMQ Broker: " + brokerView.getBrokerId() + "\"];");
+        writer.println("label=\"ActiveMQ Broker: " + getBrokerView().getBrokerId() + "\"];");
         writer.println();
         writer.println("node [style = \"rounded,filled\", fillcolor = yellow, fontname=\"Helvetica-Oblique\"];");
         writer.println();
@@ -132,10 +122,10 @@ public class ConnectionDotFileInterceptor extends DotFileInterceptorSupport {
         Map<String, String> queues = new HashMap<String, String>();
         Map<String, String> topics = new HashMap<String, String>();
 
-        printSubscribers(writer, clients, queues, "queue_", brokerView.getQueueSubscribers());
+        printSubscribers(writer, clients, queues, "queue_", getBrokerView().getQueueSubscribers());
         writer.println();
 
-        printSubscribers(writer, clients, topics, "topic_", brokerView.getTopicSubscribers());
+        printSubscribers(writer, clients, topics, "topic_", getBrokerView().getTopicSubscribers());
         writer.println();
 
         printProducers(writer, clients, queues, topics);
@@ -210,7 +200,7 @@ public class ConnectionDotFileInterceptor extends DotFileInterceptorSupport {
     protected void printSubscribers(PrintWriter writer, Map<String, String> clients, Map<String, String> destinations, String type, ObjectName[] subscribers) {
         for (int i = 0; i < subscribers.length; i++) {
             ObjectName name = subscribers[i];
-            SubscriptionViewMBean subscriber = (SubscriptionViewMBean)MBeanServerInvocationHandler.newProxyInstance(mbeanServer, name, SubscriptionViewMBean.class, true);
+            SubscriptionViewMBean subscriber = (SubscriptionViewMBean)getBrokerService().getManagementContext().newProxyInstance(name, SubscriptionViewMBean.class, true);
 
             String clientId = subscriber.getClientId();
             String safeClientId = asID(clientId);
@@ -331,5 +321,14 @@ public class ConnectionDotFileInterceptor extends DotFileInterceptorSupport {
             return "root";
         }
         return path;
+    }
+    
+    BrokerViewMBean getBrokerView() throws Exception {
+        if (this.brokerView == null) {
+            ObjectName brokerName = getBrokerService().getBrokerObjectName();
+            this.brokerView = (BrokerViewMBean) getBrokerService().getManagementContext().newProxyInstance(brokerName,
+                    BrokerViewMBean.class, true);
+        }
+        return this.brokerView;
     }
 }

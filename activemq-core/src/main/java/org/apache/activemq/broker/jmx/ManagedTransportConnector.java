@@ -16,17 +16,14 @@
  */
 package org.apache.activemq.broker.jmx;
 
-import java.io.IOException;
-import java.net.URISyntaxException;
-
-import javax.management.MBeanServer;
-import javax.management.ObjectName;
-
-import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.Connection;
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportServer;
+import java.io.IOException;
+import java.net.URISyntaxException;
+import javax.management.MBeanServer;
+import javax.management.ObjectName;
 
 /**
  * A managed transport connector which can create multiple managed connections
@@ -38,12 +35,12 @@ public class ManagedTransportConnector extends TransportConnector {
 
     static long nextConnectionId = 1;
     
-    private final MBeanServer mbeanServer;
+    private final ManagementContext managementContext;
     private final ObjectName connectorName;
 
-    public ManagedTransportConnector(MBeanServer mbeanServer, ObjectName connectorName, TransportServer server) {
+    public ManagedTransportConnector(ManagementContext context, ObjectName connectorName, TransportServer server) {
         super(server);
-        this.mbeanServer = mbeanServer;
+        this.managementContext = context;
         this.connectorName = connectorName;
     }
 
@@ -52,7 +49,7 @@ public class ManagedTransportConnector extends TransportConnector {
     }
 
     protected Connection createConnection(Transport transport) throws IOException {
-        return new ManagedTransportConnection(this, transport, getBroker(), isDisableAsyncDispatch() ? null : getTaskRunnerFactory(), mbeanServer, connectorName);
+        return new ManagedTransportConnection(this, transport, getBroker(), isDisableAsyncDispatch() ? null : getTaskRunnerFactory(), managementContext, connectorName);
     }
 
     protected static synchronized long getNextConnectionId() {

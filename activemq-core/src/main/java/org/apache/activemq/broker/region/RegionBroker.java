@@ -520,9 +520,6 @@ public class RegionBroker extends EmptyBroker {
 
     public BrokerId getBrokerId() {
         if (brokerId == null) {
-            // TODO: this should persist the broker id so that subsequent
-            // startup
-            // uses the same broker id.
             brokerId = new BrokerId(BROKER_ID_GENERATOR.generateId());
         }
         return brokerId;

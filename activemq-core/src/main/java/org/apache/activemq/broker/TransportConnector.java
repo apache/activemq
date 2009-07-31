@@ -16,16 +16,8 @@
  */
 package org.apache.activemq.broker;
 
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.Iterator;
-import java.util.concurrent.CopyOnWriteArrayList;
-
-import javax.management.MBeanServer;
-import javax.management.ObjectName;
-
 import org.apache.activemq.broker.jmx.ManagedTransportConnector;
+import org.apache.activemq.broker.jmx.ManagementContext;
 import org.apache.activemq.broker.region.ConnectorStatistics;
 import org.apache.activemq.command.BrokerInfo;
 import org.apache.activemq.security.MessageAuthorizationPolicy;
@@ -40,6 +32,12 @@ import org.apache.activemq.util.ServiceStopper;
 import org.apache.activemq.util.ServiceSupport;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.Iterator;
+import java.util.concurrent.CopyOnWriteArrayList;
+import javax.management.ObjectName;
 
 /**
  * @org.apache.xbean.XBean
@@ -94,8 +92,8 @@ public class TransportConnector implements Connector, BrokerServiceAware {
      * Factory method to create a JMX managed version of this transport
      * connector
      */
-    public ManagedTransportConnector asManagedConnector(MBeanServer mbeanServer, ObjectName connectorName) throws IOException, URISyntaxException {
-        ManagedTransportConnector rc = new ManagedTransportConnector(mbeanServer, connectorName, getServer());
+    public ManagedTransportConnector asManagedConnector(ManagementContext context, ObjectName connectorName) throws IOException, URISyntaxException {
+        ManagedTransportConnector rc = new ManagedTransportConnector(context, connectorName, getServer());
         rc.setBrokerInfo(getBrokerInfo());
         rc.setConnectUri(getConnectUri());
         rc.setDisableAsyncDispatch(isDisableAsyncDispatch());

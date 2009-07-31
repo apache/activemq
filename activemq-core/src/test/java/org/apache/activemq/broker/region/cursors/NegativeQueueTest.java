@@ -236,9 +236,8 @@ public class NegativeQueueTest extends TestCase {
         
         ObjectName queueViewMBeanName = new ObjectName("org.apache.activemq" + ":Type=Queue,Destination=" + 
             queue.getQueueName() + ",BrokerName=localhost");
-        QueueViewMBean proxy = (QueueViewMBean)MBeanServerInvocationHandler.newProxyInstance(
-                broker.getManagementContext().getMBeanServer(), 
-            queueViewMBeanName, QueueViewMBean.class, true);
+        QueueViewMBean proxy = (QueueViewMBean) broker.getManagementContext().newProxyInstance(queueViewMBeanName,
+                QueueViewMBean.class, true);
      
         return proxy;
     }

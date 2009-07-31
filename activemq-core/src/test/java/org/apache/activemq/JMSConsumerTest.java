@@ -910,7 +910,7 @@ public class JMSConsumerTest extends JmsTestSupport {
     }
     
     protected DestinationViewMBean createView(ActiveMQDestination destination) throws Exception {
-         MBeanServer mbeanServer = broker.getManagementContext().getMBeanServer();
+         
          String domain = "org.apache.activemq";
          ObjectName name;
         if (destination.isQueue()) {
@@ -918,7 +918,7 @@ public class JMSConsumerTest extends JmsTestSupport {
         } else {
             name = new ObjectName(domain + ":BrokerName=localhost,Type=Topic,Destination=test");
         }
-        return (DestinationViewMBean)MBeanServerInvocationHandler.newProxyInstance(mbeanServer, name, DestinationViewMBean.class, true);
+        return (DestinationViewMBean)broker.getManagementContext().newProxyInstance(name, DestinationViewMBean.class, true);
     }
 
 }

@@ -119,7 +119,7 @@ public class TransportLoggerView implements TransportLoggerViewMBean {
      */
     private void register() {
         try {
-            this.managementContext.getMBeanServer().registerMBean(this, this.name);
+            this.managementContext.registerMBean(this, this.name);
         } catch (Exception e) {
             log.error("Could not register MBean for TransportLoggerView " + id + "with name " + this.name.toString() + ", reason: " + e, e);
         }
@@ -138,7 +138,7 @@ public class TransportLoggerView implements TransportLoggerViewMBean {
         TransportLoggerView.transportLoggerViews.remove(this);
         
         try {
-            this.managementContext.getMBeanServer().unregisterMBean(this.name);
+            this.managementContext.unregisterMBean(this.name);
         } catch (Exception e) {
             log.error("Could not unregister MBean for TransportLoggerView " + id + "with name " + this.name.toString() + ", reason: " + e, e);
         }

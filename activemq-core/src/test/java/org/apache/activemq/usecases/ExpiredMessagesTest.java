@@ -16,21 +16,6 @@
  */
 package org.apache.activemq.usecases;
 
-import java.io.File;
-import java.util.concurrent.atomic.AtomicLong;
-
-import javax.jms.Connection;
-import javax.jms.DeliveryMode;
-import javax.jms.Message;
-import javax.jms.MessageConsumer;
-import javax.jms.MessageProducer;
-import javax.jms.Session;
-import javax.management.MBeanServer;
-import javax.management.MBeanServerInvocationHandler;
-import javax.management.ObjectName;
-
-import junit.framework.Test;
-
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.CombinationTestSupport;
 import org.apache.activemq.broker.BrokerService;
@@ -44,6 +29,16 @@ import org.apache.activemq.store.amq.AMQPersistenceAdapter;
 import org.apache.activemq.util.Wait;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import java.io.File;
+import java.util.concurrent.atomic.AtomicLong;
+import javax.jms.Connection;
+import javax.jms.DeliveryMode;
+import javax.jms.Message;
+import javax.jms.MessageConsumer;
+import javax.jms.MessageProducer;
+import javax.jms.Session;
+import javax.management.ObjectName;
+import junit.framework.Test;
 
 public class ExpiredMessagesTest extends CombinationTestSupport {
 
@@ -289,16 +284,18 @@ public class ExpiredMessagesTest extends CombinationTestSupport {
     }
 
     protected DestinationViewMBean createView(ActiveMQDestination destination) throws Exception {
-		 MBeanServer mbeanServer = broker.getManagementContext().getMBeanServer();
-		 String domain = "org.apache.activemq";
-		 ObjectName name;
-		if (destination.isQueue()) {
-			name = new ObjectName(domain + ":BrokerName=localhost,Type=Queue,Destination=" + destination.getPhysicalName());
-		} else {
-			name = new ObjectName(domain + ":BrokerName=localhost,Type=Topic,Destination=" + destination.getPhysicalName());
-		}
-		return (DestinationViewMBean)MBeanServerInvocationHandler.newProxyInstance(mbeanServer, name, DestinationViewMBean.class, true);
-	}
+        String domain = "org.apache.activemq";
+        ObjectName name;
+        if (destination.isQueue()) {
+            name = new ObjectName(domain + ":BrokerName=localhost,Type=Queue,Destination="
+                    + destination.getPhysicalName());
+        } else {
+            name = new ObjectName(domain + ":BrokerName=localhost,Type=Topic,Destination="
+                    + destination.getPhysicalName());
+        }
+        return (DestinationViewMBean) broker.getManagementContext().newProxyInstance(name, DestinationViewMBean.class,
+                true);
+    }
 
 	protected void tearDown() throws Exception {
 		connection.stop();
