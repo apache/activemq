@@ -57,8 +57,6 @@ public class MessageExpirationReaperTest {
     
     protected void createBroker() throws Exception {
         broker = new BrokerService();
-//        broker.setPersistent(false);
-//        broker.setUseJmx(true);
         broker.setDeleteAllMessagesOnStartup(true);
         broker.setBrokerName(brokerName);
         broker.addConnector(brokerUrl);
@@ -102,7 +100,7 @@ public class MessageExpirationReaperTest {
         
         assertEquals("Incorrect inflight count: " + view.getInFlightCount(), 0, view.getInFlightCount());
         assertEquals("Incorrect queue size count", 0, view.getQueueSize());
-        assertEquals("Incorrect expired size count", 3, view.getEnqueueCount());   
+        assertEquals("Incorrect expired size count", view.getEnqueueCount(), view.getExpiredCount());   
         
         // Send more messages with an expiration 
         for (int i = 0; i < count; i++) {
