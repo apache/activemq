@@ -39,6 +39,7 @@ import javax.management.MalformedObjectNameException;
 import javax.management.NotCompliantMBeanException;
 import javax.management.ObjectInstance;
 import javax.management.ObjectName;
+import javax.management.QueryExp;
 import javax.management.remote.JMXConnectorServer;
 import javax.management.remote.JMXConnectorServerFactory;
 import javax.management.remote.JMXServiceURL;
@@ -295,6 +296,10 @@ public class ManagementContext implements Service {
         ObjectInstance result = getMBeanServer().registerMBean(bean, name);
         this.registeredMBeanNames.add(name);
         return result;
+    }
+    
+    public Set queryNames(ObjectName name, QueryExp query) throws Exception{
+        return getMBeanServer().queryNames(name, query);
     }
     
     /**
