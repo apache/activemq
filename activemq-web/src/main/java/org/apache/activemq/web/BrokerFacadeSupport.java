@@ -16,18 +16,6 @@
  */
 package org.apache.activemq.web;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
-
-import javax.management.MBeanServer;
-import javax.management.MBeanServerConnection;
-import javax.management.MBeanServerInvocationHandler;
-import javax.management.ObjectName;
-
 import org.apache.activemq.broker.jmx.BrokerViewMBean;
 import org.apache.activemq.broker.jmx.ConnectionViewMBean;
 import org.apache.activemq.broker.jmx.ConnectorViewMBean;
@@ -39,10 +27,16 @@ import org.apache.activemq.broker.jmx.QueueViewMBean;
 import org.apache.activemq.broker.jmx.SubscriptionViewMBean;
 import org.apache.activemq.broker.jmx.TopicViewMBean;
 import org.springframework.util.StringUtils;
-
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
+import javax.management.ObjectName;
 /**
  * A useful base class for an implementation of {@link BrokerFacade}
- *
+ * 
  * @version $Revision$
  */
 public abstract class BrokerFacadeSupport implements BrokerFacade {
@@ -83,162 +77,114 @@ public abstract class BrokerFacadeSupport implements BrokerFacade {
         return (TopicViewMBean) getDestinationByName(getTopics(), name);
     }
 
-    protected DestinationViewMBean getDestinationByName(
-			Collection<? extends DestinationViewMBean> collection, String name) {
-		Iterator<? extends DestinationViewMBean> iter = collection.iterator();
-		while (iter.hasNext()) {
-			DestinationViewMBean destinationViewMBean = iter.next();
-			if (name.equals(destinationViewMBean.getName())) {
-				return destinationViewMBean;
-			}
-		}
-		return null;
-	}
+    protected DestinationViewMBean getDestinationByName(Collection<? extends DestinationViewMBean> collection,
+            String name) {
+        Iterator<? extends DestinationViewMBean> iter = collection.iterator();
+        while (iter.hasNext()) {
+            DestinationViewMBean destinationViewMBean = iter.next();
+            if (name.equals(destinationViewMBean.getName())) {
+                return destinationViewMBean;
+            }
+        }
+        return null;
+    }
 
     @SuppressWarnings("unchecked")
-	protected <T> Collection<T> getManagedObjects(ObjectName[] names,
-			Class<T> type) {
-		List<T> answer = new ArrayList<T>();
-		MBeanServer mbeanServer = getManagementContext().getMBeanServer();
-		if (mbeanServer != null) {
-			for (int i = 0; i < names.length; i++) {
-				ObjectName name = names[i];
-				T value = (T) MBeanServerInvocationHandler.newProxyInstance(
-						mbeanServer, name, type, true);
-				if (value != null) {
-					answer.add(value);
-				}
-			}
-		}
-		return answer;
-	}
+    protected <T> Collection<T> getManagedObjects(ObjectName[] names, Class<T> type) {
+        List<T> answer = new ArrayList<T>();
+        for (int i = 0; i < names.length; i++) {
+            ObjectName name = names[i];
+            T value = (T) getManagementContext().newProxyInstance(name, type, true);
+            if (value != null) {
+                answer.add(value);
+            }
+        }
+        return answer;
+    }
 
-    
-    /**
-	 * Get the MBeanServer connection.
-	 * 
-	 * @return not <code>null</code>
-	 * @throws Exception
-	 */
-	protected MBeanServerConnection getMBeanServerConnection() throws Exception {
-		return getManagementContext().getMBeanServer();
-	}
+   
 
-	@SuppressWarnings("unchecked")
-	public Collection<ConnectionViewMBean> getConnections() throws Exception {
-		MBeanServerConnection connection = getMBeanServerConnection();
-		String brokerName = getBrokerName();
-		ObjectName query = new ObjectName("org.apache.activemq:BrokerName="
-				+ brokerName + ",Type=Connection,*");
-		System.out.println(query);
-		Set<ObjectName> queryResult = connection.queryNames(query, null);
-		return getManagedObjects(queryResult.toArray(new ObjectName[queryResult
-				.size()]), ConnectionViewMBean.class);
-	}
+    @SuppressWarnings("unchecked")
+    public Collection<ConnectionViewMBean> getConnections() throws Exception {
+        String brokerName = getBrokerName();
+        ObjectName query = new ObjectName("org.apache.activemq:BrokerName=" + brokerName + ",Type=Connection,*");
+        System.out.println(query);
+        Set<ObjectName> queryResult = getManagementContext().queryNames(query, null);
+        return getManagedObjects(queryResult.toArray(new ObjectName[queryResult.size()]), ConnectionViewMBean.class);
+    }
 
-	@SuppressWarnings("unchecked")
-	public Collection<String> getConnections(String connectorName)
-			throws Exception {
-		MBeanServerConnection connection = getMBeanServerConnection();
-		String brokerName = getBrokerName();
-		ObjectName query = new ObjectName("org.apache.activemq:BrokerName="
-				+ brokerName + ",Type=Connection,ConnectorName="
-				+ connectorName + ",*");
-		Set<ObjectName> queryResult = connection.queryNames(query, null);
+    @SuppressWarnings("unchecked")
+    public Collection<String> getConnections(String connectorName) throws Exception {
+        String brokerName = getBrokerName();
+        ObjectName query = new ObjectName("org.apache.activemq:BrokerName=" + brokerName
+                + ",Type=Connection,ConnectorName=" + connectorName + ",*");
+        Set<ObjectName> queryResult = getManagementContext().queryNames(query, null);
+        Collection<String> result = new ArrayList<String>(queryResult.size());
+        for (ObjectName on : queryResult) {
+            String name = StringUtils.replace(on.getKeyProperty("Connection"), "_", ":");
+            result.add(name);
+        }
+        return result;
+    }
 
-		Collection<String> result = new ArrayList<String>(queryResult.size());
-		for (ObjectName on : queryResult) {
-			String name = StringUtils.replace(on.getKeyProperty("Connection"),
-					"_", ":");
-			result.add(name);
-		}
-		return result;
-	}
+    @SuppressWarnings("unchecked")
+    public ConnectionViewMBean getConnection(String connectionName) throws Exception {
+        connectionName = StringUtils.replace(connectionName, ":", "_");
+        String brokerName = getBrokerName();
+        ObjectName query = new ObjectName("org.apache.activemq:BrokerName=" + brokerName
+                + ",Type=Connection,*,Connection=" + connectionName);
+        Set<ObjectName> queryResult = getManagementContext().queryNames(query, null);
+        if (queryResult.size() == 0)
+            return null;
+        ObjectName objectName = queryResult.iterator().next();
+        return (ConnectionViewMBean) getManagementContext().newProxyInstance(objectName,
+                ConnectionViewMBean.class, true);
+    }
 
-	@SuppressWarnings("unchecked")
-	public ConnectionViewMBean getConnection(String connectionName)
-			throws Exception {
-		connectionName = StringUtils.replace(connectionName, ":", "_");
+    @SuppressWarnings("unchecked")
+    public Collection<String> getConnectors() throws Exception {
+        String brokerName = getBrokerName();
+        ObjectName query = new ObjectName("org.apache.activemq:BrokerName=" + brokerName + ",Type=Connector,*");
+        Set<ObjectName> queryResult = getManagementContext().queryNames(query, null);
+        Collection<String> result = new ArrayList<String>(queryResult.size());
+        for (ObjectName on : queryResult)
+            result.add(on.getKeyProperty("ConnectorName"));
+        return result;
+    }
 
-		MBeanServerConnection connection = getMBeanServerConnection();
-		String brokerName = getBrokerName();
-		ObjectName query = new ObjectName("org.apache.activemq:BrokerName="
-				+ brokerName + ",Type=Connection,*,Connection="
-				+ connectionName);
-		Set<ObjectName> queryResult = connection.queryNames(query, null);
-		if (queryResult.size() == 0)
-			return null;
-		ObjectName objectName = queryResult.iterator().next();
-		return (ConnectionViewMBean) MBeanServerInvocationHandler
-				.newProxyInstance(connection, objectName,
-						ConnectionViewMBean.class, true);
-	}
+    public ConnectorViewMBean getConnector(String name) throws Exception {
+        String brokerName = getBrokerName();
+        ObjectName objectName = new ObjectName("org.apache.activemq:BrokerName=" + brokerName
+                + ",Type=Connector,ConnectorName=" + name);
+        return (ConnectorViewMBean) getManagementContext().newProxyInstance(objectName,
+                ConnectorViewMBean.class, true);
+    }
 
-	@SuppressWarnings("unchecked")
-	public Collection<String> getConnectors() throws Exception {
-		MBeanServerConnection connection = getMBeanServerConnection();
-		String brokerName = getBrokerName();
-		ObjectName query = new ObjectName("org.apache.activemq:BrokerName="
-				+ brokerName + ",Type=Connector,*");
-		Set<ObjectName> queryResult = connection.queryNames(query, null);
+    @SuppressWarnings("unchecked")
+    public Collection<NetworkConnectorViewMBean> getNetworkConnectors() throws Exception {
+        String brokerName = getBrokerName();
+        ObjectName query = new ObjectName("org.apache.activemq:BrokerName=" + brokerName + ",Type=NetworkConnector,*");
+        Set<ObjectName> queryResult = getManagementContext().queryNames(query, null);
+        return getManagedObjects(queryResult.toArray(new ObjectName[queryResult.size()]),
+                NetworkConnectorViewMBean.class);
+    }
 
-		Collection<String> result = new ArrayList<String>(queryResult.size());
-		for (ObjectName on : queryResult)
-			result.add(on.getKeyProperty("ConnectorName"));
-		return result;
-	}
+    @SuppressWarnings("unchecked")
+    public Collection<SubscriptionViewMBean> getQueueConsumers(String queueName) throws Exception {
+        String brokerName = getBrokerName();
+        ObjectName query = new ObjectName("org.apache.activemq:BrokerName=" + brokerName
+                + ",Type=Subscription,destinationType=Queue,destinationName=" + queueName + ",*");
+        Set<ObjectName> queryResult = getManagementContext().queryNames(query, null);
+        return getManagedObjects(queryResult.toArray(new ObjectName[queryResult.size()]), SubscriptionViewMBean.class);
+    }
 
-	public ConnectorViewMBean getConnector(String name) throws Exception {
-		MBeanServerConnection connection = getMBeanServerConnection();
-		String brokerName = getBrokerName();
-		ObjectName objectName = new ObjectName(
-				"org.apache.activemq:BrokerName=" + brokerName
-						+ ",Type=Connector,ConnectorName=" + name);
-		return (ConnectorViewMBean) MBeanServerInvocationHandler
-				.newProxyInstance(connection, objectName,
-						ConnectorViewMBean.class, true);
-	}
-
-	@SuppressWarnings("unchecked")
-	public Collection<NetworkConnectorViewMBean> getNetworkConnectors()
-			throws Exception {
-		MBeanServerConnection connection = getMBeanServerConnection();
-		String brokerName = getBrokerName();
-		ObjectName query = new ObjectName("org.apache.activemq:BrokerName="
-				+ brokerName + ",Type=NetworkConnector,*");
-		Set<ObjectName> queryResult = connection.queryNames(query, null);
-		return getManagedObjects(queryResult.toArray(new ObjectName[queryResult
-				.size()]), NetworkConnectorViewMBean.class);
-	}
-
-	@SuppressWarnings("unchecked")
-	public Collection<SubscriptionViewMBean> getQueueConsumers(String queueName)
-			throws Exception {
-		MBeanServerConnection connection = getMBeanServerConnection();
-		String brokerName = getBrokerName();
-		ObjectName query = new ObjectName("org.apache.activemq:BrokerName="
-				+ brokerName
-				+ ",Type=Subscription,destinationType=Queue,destinationName="
-				+ queueName + ",*");
-		Set<ObjectName> queryResult = connection.queryNames(query, null);
-		return getManagedObjects(queryResult.toArray(new ObjectName[queryResult
-				.size()]), SubscriptionViewMBean.class);
-	}
-
-	@SuppressWarnings("unchecked")
-	public Collection<SubscriptionViewMBean> getConsumersOnConnection(
-			String connectionName) throws Exception {
-		connectionName = StringUtils.replace(connectionName, ":", "_");
-
-		MBeanServerConnection connection = getMBeanServerConnection();
-		String brokerName = getBrokerName();
-		ObjectName query = new ObjectName("org.apache.activemq:BrokerName="
-				+ brokerName + ",Type=Subscription,clientId=" + connectionName
-				+ ",*");
-		Set<ObjectName> queryResult = connection.queryNames(query, null);
-		return getManagedObjects(queryResult.toArray(new ObjectName[queryResult
-				.size()]), SubscriptionViewMBean.class);
-	}
-    
-
+    @SuppressWarnings("unchecked")
+    public Collection<SubscriptionViewMBean> getConsumersOnConnection(String connectionName) throws Exception {
+        connectionName = StringUtils.replace(connectionName, ":", "_");
+        String brokerName = getBrokerName();
+        ObjectName query = new ObjectName("org.apache.activemq:BrokerName=" + brokerName
+                + ",Type=Subscription,clientId=" + connectionName + ",*");
+        Set<ObjectName> queryResult = getManagementContext().queryNames(query, null);
+        return getManagedObjects(queryResult.toArray(new ObjectName[queryResult.size()]), SubscriptionViewMBean.class);
+    }
 }
