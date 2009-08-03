@@ -24,6 +24,7 @@ import java.net.URL;
 import javax.jms.JMSException;
 
 import org.apache.activemq.BlobMessage;
+import org.apache.activemq.blob.BlobDownloader;
 import org.apache.activemq.blob.BlobUploader;
 import org.apache.activemq.util.JMSExceptionSupport;
 
@@ -44,6 +45,7 @@ public class ActiveMQBlobMessage extends ActiveMQMessage implements BlobMessage 
     private boolean deletedByBroker;
 
     private transient BlobUploader blobUploader;
+    private transient BlobDownloader blobDownloader;
     private transient URL url;
 
     public Message copy() {
@@ -123,11 +125,10 @@ public class ActiveMQBlobMessage extends ActiveMQMessage implements BlobMessage 
     }
 
     public InputStream getInputStream() throws IOException, JMSException {
-        URL value = getURL();
-        if (value == null) {
+        if(blobDownloader == null) {
             return null;
         }
-        return value.openStream();
+        return blobDownloader.getInputStream(this);
     }
 
     public URL getURL() throws JMSException {
@@ -152,6 +153,14 @@ public class ActiveMQBlobMessage extends ActiveMQMessage implements BlobMessage 
 
     public void setBlobUploader(BlobUploader blobUploader) {
         this.blobUploader = blobUploader;
+    }
+
+    public BlobDownloader getBlobDownloader() {
+        return blobDownloader;
+    }
+
+    public void setBlobDownloader(BlobDownloader blobDownloader) {
+        this.blobDownloader = blobDownloader;
     }
 
     public void onSend() throws JMSException {

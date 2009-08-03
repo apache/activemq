@@ -16,6 +16,7 @@
  */
 package org.apache.activemq;
 
+import java.net.MalformedURLException;
 import java.util.Enumeration;
 
 import javax.jms.BytesMessage;
@@ -32,6 +33,9 @@ import javax.jms.TemporaryTopic;
 import javax.jms.TextMessage;
 import javax.jms.Topic;
 
+import org.apache.activemq.blob.BlobDownloader;
+import org.apache.activemq.blob.BlobUploader;
+import org.apache.activemq.command.ActiveMQBlobMessage;
 import org.apache.activemq.command.ActiveMQBytesMessage;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQMapMessage;
@@ -165,6 +169,17 @@ public final class ActiveMQMessageTransformation {
                 msg.setConnection(connection);
                 msg.setText(textMsg.getText());
                 activeMessage = msg;
+            } else if (message instanceof BlobMessage) {
+            	BlobMessage blobMessage = (BlobMessage)message;
+            	ActiveMQBlobMessage msg = new ActiveMQBlobMessage();
+            	msg.setConnection(connection);
+            	msg.setBlobDownloader(new BlobDownloader(connection.getBlobTransferPolicy()));
+            	try {
+					msg.setURL(blobMessage.getURL());
+				} catch (MalformedURLException e) {
+					
+				}
+            	activeMessage = msg;
             } else {
                 activeMessage = new ActiveMQMessage();
                 activeMessage.setConnection(connection);

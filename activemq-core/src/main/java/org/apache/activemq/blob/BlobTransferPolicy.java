@@ -16,6 +16,9 @@
  */
 package org.apache.activemq.blob;
 
+import java.net.MalformedURLException;
+import java.net.URL;
+
 /**
  * The policy for configuring how BLOBs (Binary Large OBjects) are transferred
  * out of band between producers, brokers and consumers.
@@ -28,6 +31,7 @@ public class BlobTransferPolicy {
     private String uploadUrl;
     private int bufferSize = 128 * 1024;
     private BlobUploadStrategy uploadStrategy;
+    private BlobDownloadStrategy downloadStrategy;
 
     /**
      * Returns a copy of this policy object
@@ -90,6 +94,13 @@ public class BlobTransferPolicy {
         return uploadStrategy;
     }
 
+    public BlobDownloadStrategy getDownloadStrategy() {
+        if(downloadStrategy == null) {
+            downloadStrategy = createDownloadStrategy();
+        }
+        return downloadStrategy;
+    }
+
     /**
      * Sets the upload strategy to use for uploading BLOBs to some URL
      */
@@ -108,7 +119,49 @@ public class BlobTransferPolicy {
         this.bufferSize = bufferSize;
     }
 
+    /**
+     * Returns the upload strategy depending on the information from the
+     * uploadURL. Currently supportet HTTP and FTP
+     * 
+     * @return
+     */
     protected BlobUploadStrategy createUploadStrategy() {
-        return new DefaultBlobUploadStrategy(this);
+    	BlobUploadStrategy strategy;
+    	try {
+            URL url = new URL(getUploadUrl());
+
+            if(url.getProtocol().equalsIgnoreCase("FTP")) {
+                strategy = new FTPBlobUploadStrategy(this);
+            } else {
+                strategy = new DefaultBlobUploadStrategy(this);
     }
+        } catch (MalformedURLException e) {
+                strategy = new DefaultBlobUploadStrategy(this);
+}
+        return strategy;
+    }
+    
+    /**
+     * Returns the download strategy depending on the information from the
+     * uploadURL. Currently supportet HTTP and FTP
+     * 
+     * @return
+     */
+    protected BlobDownloadStrategy createDownloadStrategy() {
+        BlobDownloadStrategy strategy;
+        try {
+            URL url = new URL(getUploadUrl());
+            
+            if(url.getProtocol().equalsIgnoreCase("FTP")) {
+                strategy = new FTPBlobDownloadStrategy();
+            } else {
+                strategy = new DefaultBlobDownloadStrategy();
+            }
+        } catch (MalformedURLException e) {
+            strategy = new DefaultBlobDownloadStrategy();
+        }
+        return strategy;
+    }
+
+    
 }

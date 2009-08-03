@@ -140,6 +140,11 @@
       <artifactId>xalan</artifactId>
       <optional>true</optional>
     </dependency>
+    <dependency>
+    <groupId>commons-net</groupId>
+    <artifactId>commons-net</artifactId>
+    
+</dependency>
 
 
     <!-- not really a dependency at all - just added optionally to get the generator working -->
@@ -459,6 +464,10 @@
 
             <!-- https://issues.apache.org/activemq/browse/AMQ-2050 -->
             <exclude>**/ProxyConnectorTest.*</exclude>
+            
+            <!-- FTPBlob tests need FTP server running -->
+            
+            <exclude>**/FTPBlob*/</exclude>
             
           </excludes>
         </configuration>

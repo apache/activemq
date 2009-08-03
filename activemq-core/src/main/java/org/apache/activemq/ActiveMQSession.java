@@ -42,6 +42,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
+import org.apache.activemq.blob.BlobDownloader;
 
 /**
  * <P>
@@ -410,6 +411,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
         configureMessage(message);
         message.setURL(url);
         message.setDeletedByBroker(deletedByBroker);
+        message.setBlobDownloader(new BlobDownloader(getBlobTransferPolicy()));
         return message;
     }
 
@@ -430,6 +432,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
         ActiveMQBlobMessage message = new ActiveMQBlobMessage();
         configureMessage(message);
         message.setBlobUploader(new BlobUploader(getBlobTransferPolicy(), file));
+        message.setBlobDownloader(new BlobDownloader((getBlobTransferPolicy())));
         message.setDeletedByBroker(true);
         message.setName(file.getName());
         return message;
@@ -452,6 +455,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
         ActiveMQBlobMessage message = new ActiveMQBlobMessage();
         configureMessage(message);
         message.setBlobUploader(new BlobUploader(getBlobTransferPolicy(), in));
+        message.setBlobDownloader(new BlobDownloader(getBlobTransferPolicy()));
         message.setDeletedByBroker(true);
         return message;
     }
