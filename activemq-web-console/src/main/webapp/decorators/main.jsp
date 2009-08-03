@@ -24,17 +24,19 @@
         @import url(<c:url value="/styles/sorttable.css"/>);
         @import url(<c:url value="/styles/type-settings.css"/>);
         @import url(<c:url value="/styles/site.css"/>);
+        @import url(<c:url value="/styles/prettify.css"/>);
     </style>
     <c:if test="${!disableJavaScript}">
 	    <script type='text/javascript' src='<c:url value="/js/common.js"/>'></script>
 	    <script type='text/javascript' src='<c:url value="/js/css.js"/>'></script>
 	    <script type='text/javascript' src='<c:url value="/js/standardista-table-sorting.js"/>'></script>
+	    <script type='text/javascript' src='<c:url value="/js/prettify.js"/>'></script>
     </c:if>
 
 	<decorator:head />
 </head>
 
-<body>
+<body onload="prettyPrint()">
 
 
 <div class="white_box">
