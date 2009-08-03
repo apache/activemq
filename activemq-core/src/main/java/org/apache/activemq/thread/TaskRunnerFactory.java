@@ -59,7 +59,7 @@ public class TaskRunnerFactory {
         // avoid
         // using a thread pool to run tasks and use a DedicatedTaskRunner
         // instead.
-        if (dedicatedTaskRunner || "true".equals(System.getProperty("org.apache.activemq.UseDedicatedTaskRunner"))) {
+        if (dedicatedTaskRunner || "true".equalsIgnoreCase(System.getProperty("org.apache.activemq.UseDedicatedTaskRunner"))) {
             executor = null;
         } else {
             executor = createDefaultExecutor();
