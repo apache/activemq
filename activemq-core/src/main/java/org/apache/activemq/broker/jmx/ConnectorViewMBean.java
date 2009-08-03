@@ -23,16 +23,19 @@ public interface ConnectorViewMBean extends Service {
     /**
      * Resets the statistics
      */
+    @MBeanInfo("Resets the statistics")
     void resetStatistics();
     
     /**
      * enable statistics gathering
-     */   
+     */
+    @MBeanInfo("Enables statistics gathering")
     void enableStatistics();
 
     /**
      * disable statistics gathering
      */  
+    @MBeanInfo("Disables statistics gathering")
     void disableStatistics();
     
     /**
@@ -40,6 +43,7 @@ public interface ConnectorViewMBean extends Service {
      * 
      * @return true if statistics is enabled
      */  
+    @MBeanInfo("Statistics gathering enabled")
     boolean isStatisticsEnabled();
 
     /**
@@ -47,6 +51,7 @@ public interface ConnectorViewMBean extends Service {
      * 
      * @return the number of messages enqueued on this connector
      */
+    @MBeanInfo("Number of messages enqueued on this connector")
     long getEnqueueCount();
 
     /**
@@ -54,6 +59,7 @@ public interface ConnectorViewMBean extends Service {
      * 
      * @return the number of messages dequeued on this connector
      */
+    @MBeanInfo("Number of messages dequeued on this connector")
     long getDequeueCount();
 
 }

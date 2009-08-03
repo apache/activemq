@@ -23,6 +23,7 @@ import java.util.Set;
 
 import javax.management.ObjectName;
 
+import org.apache.activemq.broker.jmx.AnnotatedMBean;
 import org.apache.activemq.broker.jmx.ManagementContext;
 import org.apache.activemq.util.JMXSupport;
 import org.apache.commons.logging.Log;
@@ -119,7 +120,7 @@ public class TransportLoggerView implements TransportLoggerViewMBean {
      */
     private void register() {
         try {
-            this.managementContext.registerMBean(this, this.name);
+        	AnnotatedMBean.registerMBean(this.managementContext, this, this.name);
         } catch (Exception e) {
             log.error("Could not register MBean for TransportLoggerView " + id + "with name " + this.name.toString() + ", reason: " + e, e);
         }

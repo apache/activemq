@@ -22,31 +22,37 @@ public interface ConnectionViewMBean extends Service {
     /**
      * @return true if the Connection is slow
      */
+    @MBeanInfo("Connection is slow.")
     boolean isSlow();
 
     /**
      * @return if after being marked, the Connection is still writing
      */
+    @MBeanInfo("Connection is blocked.")
     boolean isBlocked();
 
     /**
      * @return true if the Connection is connected
      */
+    @MBeanInfo("Connection is connected to the broker.")
     boolean isConnected();
 
     /**
      * @return true if the Connection is active
      */
+    @MBeanInfo("Connection is active (both connected and receiving messages).")
     boolean isActive();
 
     /**
      * Returns the number of messages to be dispatched to this connection
      */
+    @MBeanInfo("The number of messages dispatched to this connection")
     int getDispatchQueueSize();
     
     /**
      * Resets the statistics
      */
+    @MBeanInfo("Resets the statistics")
     void resetStatistics();
 
     /**
@@ -54,6 +60,7 @@ public interface ConnectionViewMBean extends Service {
      * 
      * @return the number of messages enqueued on this connection
      */
+    @MBeanInfo("Number of messages enqueued on this connection")
     long getEnqueueCount();
 
     /**
@@ -61,6 +68,7 @@ public interface ConnectionViewMBean extends Service {
      * 
      * @return the number of messages dequeued on this connection
      */
+    @MBeanInfo("Number of messages dequeued on this connection")
     long getDequeueCount();
     
     /**
@@ -68,6 +76,7 @@ public interface ConnectionViewMBean extends Service {
      * 
      * @return the souce address for this connection
      */
+    @MBeanInfo("Source address for this connection")
     String getRemoteAddress();
 
 }

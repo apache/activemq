@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.transport;
 
+import org.apache.activemq.broker.jmx.AnnotatedMBean;
 import org.apache.activemq.broker.jmx.ManagementContext;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.LogWriterFinder;
@@ -199,7 +200,7 @@ public class TransportLoggerFactory {
 
          try {
              this.objectName = new ObjectName(this.managementContext.getJmxDomainName()+":"+ "Type=TransportLoggerControl");
-             this.managementContext.registerMBean(new TransportLoggerControl(this.managementContext),this.objectName);
+             AnnotatedMBean.registerMBean(this.managementContext, new TransportLoggerControl(this.managementContext),this.objectName);
              
              this.transportLoggerControlCreated = true;
 

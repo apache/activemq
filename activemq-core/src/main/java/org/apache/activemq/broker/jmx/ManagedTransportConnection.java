@@ -96,7 +96,7 @@ public class ManagedTransportConnection extends TransportConnection {
     protected void registerMBean(ObjectName name) {
         if (name != null) {
             try {
-                managementContext.registerMBean(mbean, name);
+                AnnotatedMBean.registerMBean(managementContext, mbean, name);
             } catch (Throwable e) {
                 LOG.warn("Failed to register MBean: " + name);
                 LOG.debug("Failure reason: " + e, e);

@@ -18,6 +18,7 @@ package org.apache.activemq.network;
 
 import org.apache.activemq.Service;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.jmx.AnnotatedMBean;
 import org.apache.activemq.broker.jmx.NetworkBridgeView;
 import org.apache.activemq.broker.jmx.NetworkBridgeViewMBean;
 import org.apache.activemq.command.ActiveMQDestination;
@@ -236,7 +237,7 @@ public abstract class NetworkConnector extends NetworkBridgeConfiguration implem
         NetworkBridgeViewMBean view = new NetworkBridgeView(bridge);
         try {
             ObjectName objectName = createNetworkBridgeObjectName(bridge);
-            getBrokerService().getManagementContext().registerMBean(view, objectName);
+            AnnotatedMBean.registerMBean(getBrokerService().getManagementContext(), view, objectName);
         } catch (Throwable e) {
             LOG.debug("Network bridge could not be registered in JMX: " + e.getMessage(), e);
         }

@@ -23,20 +23,15 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.management.Attribute;
-import javax.management.InstanceAlreadyExistsException;
-import javax.management.InstanceNotFoundException;
 import javax.management.JMException;
-import javax.management.MBeanRegistrationException;
 import javax.management.MBeanServer;
 import javax.management.MBeanServerFactory;
 import javax.management.MBeanServerInvocationHandler;
 import javax.management.MalformedObjectNameException;
-import javax.management.NotCompliantMBeanException;
 import javax.management.ObjectInstance;
 import javax.management.ObjectName;
 import javax.management.QueryExp;
@@ -47,7 +42,6 @@ import javax.management.remote.JMXServiceURL;
 import org.apache.activemq.Service;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import sun.security.action.GetBooleanAction;
 
 /**
  * A Flow provides different dispatch policies within the NMR

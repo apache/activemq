@@ -39,6 +39,7 @@ import org.apache.activemq.Service;
 import org.apache.activemq.advisory.AdvisoryBroker;
 import org.apache.activemq.broker.cluster.ConnectionSplitBroker;
 import org.apache.activemq.broker.ft.MasterConnector;
+import org.apache.activemq.broker.jmx.AnnotatedMBean;
 import org.apache.activemq.broker.jmx.BrokerView;
 import org.apache.activemq.broker.jmx.ConnectorView;
 import org.apache.activemq.broker.jmx.ConnectorViewMBean;
@@ -452,7 +453,7 @@ public class BrokerService implements Service {
                 managedBroker.setContextBroker(broker);
                 adminView = new BrokerView(this, managedBroker);
                 ObjectName objectName = getBrokerObjectName();
-                getManagementContext().registerMBean(adminView, objectName);
+                AnnotatedMBean.registerMBean(getManagementContext(), adminView, objectName);
             }
             BrokerRegistry.getInstance().bind(getBrokerName(), this);
             // see if there is a MasterBroker service and if so, configure
@@ -1427,7 +1428,7 @@ public class BrokerService implements Service {
             ObjectName objectName = createConnectorObjectName(connector);
             connector = connector.asManagedConnector(getManagementContext(), objectName);
             ConnectorViewMBean view = new ConnectorView(connector);
-            getManagementContext().registerMBean(view, objectName);
+            AnnotatedMBean.registerMBean(getManagementContext(), view, objectName);
             return connector;
         } catch (Throwable e) {
             throw IOExceptionSupport.create("Transport Connector could not be registered in JMX: " + e.getMessage(), e);
@@ -1466,7 +1467,7 @@ public class BrokerService implements Service {
         try {
             ObjectName objectName = createNetworkConnectorObjectName(connector);
             connector.setObjectName(objectName);
-            getManagementContext().registerMBean(view, objectName);
+            AnnotatedMBean.registerMBean(getManagementContext(), view, objectName);
         } catch (Throwable e) {
             throw IOExceptionSupport.create("Network Connector could not be registered in JMX: " + e.getMessage(), e);
         }
@@ -1496,7 +1497,7 @@ public class BrokerService implements Service {
             ObjectName objectName = new ObjectName(getManagementContext().getJmxDomainName() + ":" + "BrokerName="
                     + JMXSupport.encodeObjectNamePart(getBrokerName()) + "," + "Type=ProxyConnector,"
                     + "ProxyConnectorName=" + JMXSupport.encodeObjectNamePart(connector.getName()));
-            getManagementContext().registerMBean(view, objectName);
+            AnnotatedMBean.registerMBean(getManagementContext(), view, objectName);
         } catch (Throwable e) {
             throw IOExceptionSupport.create("Broker could not be registered in JMX: " + e.getMessage(), e);
         }
@@ -1507,7 +1508,7 @@ public class BrokerService implements Service {
         try {
             ObjectName objectName = new ObjectName(getManagementContext().getJmxDomainName() + ":" + "BrokerName="
                     + JMXSupport.encodeObjectNamePart(getBrokerName()) + "," + "Type=MasterConnector");
-            getManagementContext().registerMBean(view, objectName);
+            AnnotatedMBean.registerMBean(getManagementContext(), view, objectName);
         } catch (Throwable e) {
             throw IOExceptionSupport.create("Broker could not be registered in JMX: " + e.getMessage(), e);
         }
@@ -1519,7 +1520,7 @@ public class BrokerService implements Service {
             ObjectName objectName = new ObjectName(getManagementContext().getJmxDomainName() + ":" + "BrokerName="
                     + JMXSupport.encodeObjectNamePart(getBrokerName()) + "," + "Type=JmsConnector,"
                     + "JmsConnectorName=" + JMXSupport.encodeObjectNamePart(connector.getName()));
-            getManagementContext().registerMBean(view, objectName);
+            AnnotatedMBean.registerMBean(getManagementContext(), view, objectName);
         } catch (Throwable e) {
             throw IOExceptionSupport.create("Broker could not be registered in JMX: " + e.getMessage(), e);
         }

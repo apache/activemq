@@ -242,7 +242,7 @@ public class ManagedRegionBroker extends RegionBroker {
             }
         }
         try {
-            managementContext.registerMBean(view, key);
+            AnnotatedMBean.registerMBean(managementContext, view, key);
             registeredMBeans.add(key);
         } catch (Throwable e) {
             LOG.warn("Failed to register MBean: " + key);
@@ -297,7 +297,7 @@ public class ManagedRegionBroker extends RegionBroker {
         }
 
         try {
-            managementContext.registerMBean(view, key);
+            AnnotatedMBean.registerMBean(managementContext, view, key);
             registeredMBeans.add(key);
         } catch (Throwable e) {
             LOG.warn("Failed to register MBean: " + key);
@@ -367,7 +367,7 @@ public class ManagedRegionBroker extends RegionBroker {
             SubscriptionView view = new InactiveDurableSubscriptionView(this, key.getClientId(), info);
 
             try {
-                managementContext.registerMBean(view, objectName);
+                AnnotatedMBean.registerMBean(managementContext, view, objectName);
                 registeredMBeans.add(objectName);
             } catch (Throwable e) {
                 LOG.warn("Failed to register MBean: " + key);

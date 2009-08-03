@@ -28,7 +28,8 @@ public interface QueueViewMBean extends DestinationViewMBean {
      * @return A CompositeData object which is a JMX version of the messages
      * @throws OpenDataException
      */
-    CompositeData getMessage(String messageId) throws OpenDataException;
+    @MBeanInfo("View a message from the destination by JMS message ID.")
+    CompositeData getMessage(@MBeanInfo("messageId") String messageId) throws OpenDataException;
 
     /**
      * Removes a message from the queue. If the message has already been
@@ -39,14 +40,16 @@ public interface QueueViewMBean extends DestinationViewMBean {
      * @return true if the message was found and could be successfully deleted.
      * @throws Exception
      */
-    boolean removeMessage(String messageId) throws Exception;
+    @MBeanInfo("Remove a message from the destination by JMS message ID.  If the message has been dispatched, it cannot be deleted and false is returned.")
+    boolean removeMessage(@MBeanInfo("messageId") String messageId) throws Exception;
 
     /**
      * Removes the messages matching the given selector
      * 
      * @return the number of messages removed
      */
-    int removeMatchingMessages(String selector) throws Exception;
+    @MBeanInfo("Removes messages from the destination based on an SQL-92 selection on the message headers or XPATH on the body.")
+    int removeMatchingMessages(@MBeanInfo("selector") String selector) throws Exception;
 
     /**
      * Removes the messages matching the given selector up to the maximum number
@@ -54,13 +57,15 @@ public interface QueueViewMBean extends DestinationViewMBean {
      * 
      * @return the number of messages removed
      */
-    int removeMatchingMessages(String selector, int maximumMessages) throws Exception;
+    @MBeanInfo("Removes up to a specified number of messages from the destination based on an SQL-92 selection on the message headers or XPATH on the body.")
+    int removeMatchingMessages(@MBeanInfo("selector") String selector, @MBeanInfo("maximumMessages") int maximumMessages) throws Exception;
 
     /**
      * Removes all of the messages in the queue.
      * 
      * @throws Exception
      */
+    @MBeanInfo("Removes all of the messages in the queue.")
     void purge() throws Exception;
 
     /**
@@ -72,14 +77,16 @@ public interface QueueViewMBean extends DestinationViewMBean {
      *         other destination.
      * @throws Exception
      */
-    boolean copyMessageTo(String messageId, String destinationName) throws Exception;
+    @MBeanInfo("Copies a message with the given JMS message ID into the specified destination.")
+    boolean copyMessageTo(@MBeanInfo("messageId") String messageId, @MBeanInfo("destinationName") String destinationName) throws Exception;
 
     /**
      * Copies the messages matching the given selector
      * 
      * @return the number of messages copied
      */
-    int copyMatchingMessagesTo(String selector, String destinationName) throws Exception;
+    @MBeanInfo("Copies messages based on an SQL-92 selecton on the message headers or XPATH on the body into the specified destination.")
+    int copyMatchingMessagesTo(@MBeanInfo("selector") String selector, @MBeanInfo("destinationName") String destinationName) throws Exception;
 
     /**
      * Copies the messages matching the given selector up to the maximum number
@@ -87,7 +94,8 @@ public interface QueueViewMBean extends DestinationViewMBean {
      * 
      * @return the number of messages copied
      */
-    int copyMatchingMessagesTo(String selector, String destinationName, int maximumMessages) throws Exception;
+    @MBeanInfo("Copies up to a specified number of messages based on an SQL-92 selecton on the message headers or XPATH on the body into the specified destination.")
+    int copyMatchingMessagesTo(@MBeanInfo("selector") String selector, @MBeanInfo("destinationName") String destinationName, @MBeanInfo("maximumMessages") int maximumMessages) throws Exception;
 
     /**
      * Moves the message to another destination.
@@ -98,57 +106,67 @@ public interface QueueViewMBean extends DestinationViewMBean {
      *         other destination.
      * @throws Exception
      */
-    boolean moveMessageTo(String messageId, String destinationName) throws Exception;
+    @MBeanInfo("Moves a message with the given JMS message ID into the specified destination.")
+    boolean moveMessageTo(@MBeanInfo("messageId") String messageId, @MBeanInfo("destinationName") String destinationName) throws Exception;
 
     /**
      * Moves a message back to its original destination
      */
-    boolean retryMessage(String messageId) throws Exception;
+    @MBeanInfo("Moves a message with the given JMS message back to its original destination")
+    boolean retryMessage(@MBeanInfo("messageId") String messageId) throws Exception;
     
     /**
      * Moves the messages matching the given selector
      * 
      * @return the number of messages removed
      */
-    int moveMatchingMessagesTo(String selector, String destinationName) throws Exception;
+    @MBeanInfo("Moves messages based on an SQL-92 selecton on the message headers or XPATH on the body into the specified destination.")
+    int moveMatchingMessagesTo(@MBeanInfo("selector") String selector, @MBeanInfo("destinationName") String destinationName) throws Exception;
 
     /**
      * Moves the messages matching the given selector up to the maximum number
      * of matched messages
      */
-    int moveMatchingMessagesTo(String selector, String destinationName, int maximumMessages) throws Exception;
+    @MBeanInfo("Moves up to a specified number of messages based on an SQL-92 selecton on the message headers or XPATH on the body into the specified destination.")
+    int moveMatchingMessagesTo(@MBeanInfo("selector") String selector, @MBeanInfo("destinationName") String destinationName, @MBeanInfo("maximumMessages") int maximumMessages) throws Exception;
     
     /**
      * @return true if the message cursor has memory space available
      * to page in more messages
      */
+    @MBeanInfo("Message cursor has memory space available")
     public boolean doesCursorHaveSpace();
     
     /**
      * @return true if the cursor has reached its memory limit for
      * paged in messages
      */
+    @MBeanInfo("Message cusor has reached its memory limit for paged in messages")
     public boolean isCursorFull();
     
     /**
      * @return true if the cursor has messages buffered to deliver
      */
+    @MBeanInfo("Message cursor has buffered messages to deliver")
     public boolean doesCursorHaveMessagesBuffered();
     
     /**
      * @return the cursor memory usage in bytes
      */
+    @MBeanInfo("Message cursor memory usage, in bytes.")
     public long getCursorMemoryUsage();
     
     /**
      * @return the cursor memory usage as a percentage
      */
+    @MBeanInfo("Percentage of memory limit used")
     public int getCursorPercentUsage();
     
     /**
      * @return the number of messages available to be paged in 
      * by the cursor
      */
+    @MBeanInfo("Number of messages available to be paged in by the cursor.")
     public int cursorSize();
 
 }
