@@ -42,7 +42,7 @@ public class RemoveSubscriptionInfoTest extends BaseCommandTestSupport {
         super.populateObject(object);
         RemoveSubscriptionInfo info = (RemoveSubscriptionInfo)object;
         info.setConnectionId(createConnectionId("ConnectionId:1"));
-        info.setSubcriptionName("SubcriptionName:2");
+        info.setSubscriptionName("SubcriptionName:2");
         info.setClientId("ClientId:3");
 
     }

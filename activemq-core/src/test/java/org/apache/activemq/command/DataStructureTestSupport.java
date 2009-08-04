@@ -127,7 +127,7 @@ public abstract class DataStructureTestSupport extends CombinationTestSupport {
                     }
 
                     try {
-                        assertEquals(method.invoke(expect, null), method.invoke(was, null));
+                        assertEquals(method.invoke(expect, (Object)null), method.invoke(was, (Object)null));
                     } catch (IllegalArgumentException e) {
                     } catch (IllegalAccessException e) {
                     } catch (InvocationTargetException e) {

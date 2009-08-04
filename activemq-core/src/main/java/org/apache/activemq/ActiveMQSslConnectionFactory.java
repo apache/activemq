@@ -21,6 +21,8 @@ import java.security.SecureRandom;
 import javax.jms.JMSException;
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.TrustManager;
+
+import org.apache.activemq.broker.SslContext;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.tcp.SslTransportFactory;
 import org.apache.activemq.util.JMSExceptionSupport;
@@ -69,7 +71,8 @@ public class ActiveMQSslConnectionFactory extends ActiveMQConnectionFactory {
 
         try {
             SslTransportFactory sslFactory = new SslTransportFactory();
-            sslFactory.setKeyAndTrustManagers(keyManager, trustManager, secureRandom);
+            SslContext ctx = new SslContext(keyManager, trustManager, secureRandom);
+            SslContext.setCurrentSslContext(ctx);
             return sslFactory.doConnect(brokerURL);
         } catch (Exception e) {
             throw JMSExceptionSupport.create("Could not create Transport. Reason: " + e, e);

@@ -69,7 +69,7 @@ public class SubscriptionInfoMarshaller extends BaseDataStreamMarshaller {
         info.setClientId(tightUnmarshalString(dataIn, bs));
         info.setDestination((org.apache.activemq.command.ActiveMQDestination) tightUnmarsalCachedObject(wireFormat, dataIn, bs));
         info.setSelector(tightUnmarshalString(dataIn, bs));
-        info.setSubcriptionName(tightUnmarshalString(dataIn, bs));
+        info.setSubscriptionName(tightUnmarshalString(dataIn, bs));
         info.setSubscribedDestination((org.apache.activemq.command.ActiveMQDestination) tightUnmarsalNestedObject(wireFormat, dataIn, bs));
 
     }
@@ -86,7 +86,7 @@ public class SubscriptionInfoMarshaller extends BaseDataStreamMarshaller {
         rc += tightMarshalString1(info.getClientId(), bs);
         rc += tightMarshalCachedObject1(wireFormat, (DataStructure)info.getDestination(), bs);
         rc += tightMarshalString1(info.getSelector(), bs);
-        rc += tightMarshalString1(info.getSubcriptionName(), bs);
+        rc += tightMarshalString1(info.getSubscriptionName(), bs);
         rc += tightMarshalNestedObject1(wireFormat, (DataStructure)info.getSubscribedDestination(), bs);
 
         return rc + 0;
@@ -106,7 +106,7 @@ public class SubscriptionInfoMarshaller extends BaseDataStreamMarshaller {
         tightMarshalString2(info.getClientId(), dataOut, bs);
         tightMarshalCachedObject2(wireFormat, (DataStructure)info.getDestination(), dataOut, bs);
         tightMarshalString2(info.getSelector(), dataOut, bs);
-        tightMarshalString2(info.getSubcriptionName(), dataOut, bs);
+        tightMarshalString2(info.getSubscriptionName(), dataOut, bs);
         tightMarshalNestedObject2(wireFormat, (DataStructure)info.getSubscribedDestination(), dataOut, bs);
 
     }
@@ -125,7 +125,7 @@ public class SubscriptionInfoMarshaller extends BaseDataStreamMarshaller {
         info.setClientId(looseUnmarshalString(dataIn));
         info.setDestination((org.apache.activemq.command.ActiveMQDestination) looseUnmarsalCachedObject(wireFormat, dataIn));
         info.setSelector(looseUnmarshalString(dataIn));
-        info.setSubcriptionName(looseUnmarshalString(dataIn));
+        info.setSubscriptionName(looseUnmarshalString(dataIn));
         info.setSubscribedDestination((org.apache.activemq.command.ActiveMQDestination) looseUnmarsalNestedObject(wireFormat, dataIn));
 
     }
@@ -142,7 +142,7 @@ public class SubscriptionInfoMarshaller extends BaseDataStreamMarshaller {
         looseMarshalString(info.getClientId(), dataOut);
         looseMarshalCachedObject(wireFormat, (DataStructure)info.getDestination(), dataOut);
         looseMarshalString(info.getSelector(), dataOut);
-        looseMarshalString(info.getSubcriptionName(), dataOut);
+        looseMarshalString(info.getSubscriptionName(), dataOut);
         looseMarshalNestedObject(wireFormat, (DataStructure)info.getSubscribedDestination(), dataOut);
 
     }

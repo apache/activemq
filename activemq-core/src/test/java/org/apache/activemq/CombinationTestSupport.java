@@ -115,16 +115,16 @@ public abstract class CombinationTestSupport extends AutoFailTestSupport {
 
     private CombinationTestSupport[] getCombinations() {
         try {
-            Method method = getClass().getMethod("initCombos", null);
-            method.invoke(this, null);
+            Method method = getClass().getMethod("initCombos", (Class[])null);
+            method.invoke(this, (Object[])null);
         } catch (Throwable e) {
         }
 
         String name = getName().split(" ")[0];
         String comboSetupMethodName = "initCombosFor" + Character.toUpperCase(name.charAt(0)) + name.substring(1);
         try {
-            Method method = getClass().getMethod(comboSetupMethodName, null);
-            method.invoke(this, null);
+            Method method = getClass().getMethod(comboSetupMethodName, (Class[])null);
+            method.invoke(this, (Object[])null);
         } catch (Throwable e) {
         }
 

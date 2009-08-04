@@ -49,6 +49,6 @@ public class SubscriptionInfoTest extends DataFileGeneratorTestSupport {
         info.setClientId("ClientId:1");
         info.setDestination(createActiveMQDestination("Destination:2"));
         info.setSelector("Selector:3");
-        info.setSubcriptionName("SubcriptionName:4");
+        info.setSubscriptionName("SubcriptionName:4");
     }
 }
