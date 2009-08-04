@@ -505,10 +505,8 @@ public class Queue extends BaseDestination implements Task, UsageListener {
         final ConnectionContext context = producerExchange.getConnectionContext();
         synchronized (sendLock) {
             if (store != null && message.isPersistent()) {
-                if (isProducerFlowControl() && context.isProducerFlowControl() ) {
-                    if (systemUsage.isSendFailIfNoSpace() && systemUsage.getStoreUsage().isFull()) {
-                        throw new javax.jms.ResourceAllocationException("Usage Manager Store is Full");
-                    }
+                if (systemUsage.isSendFailIfNoSpace() && systemUsage.getStoreUsage().isFull()) {
+                	throw new javax.jms.ResourceAllocationException("Usage Manager Store is Full");
                 }
                 while (!systemUsage.getStoreUsage().waitForSpace(1000)) {
                     if (context.getStopping().get()) {
