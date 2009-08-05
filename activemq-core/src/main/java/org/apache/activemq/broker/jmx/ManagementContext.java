@@ -63,6 +63,7 @@ public class ManagementContext implements Service {
     private boolean locallyCreateMBeanServer;
     private boolean createConnector = true;
     private boolean findTigerMbeanServer = true;
+    private String connectorHost = "localhost";
     private int connectorPort = 1099;
     private int rmiServerPort;
     private String connectorPath = "/jmxrmi";
@@ -426,9 +427,9 @@ public class ManagementContext implements Service {
         if (rmiServerPort != 0) {
             // This is handy to use if you have a firewall and need to
             // force JMX to use fixed ports.
-            rmiServer = "localhost:" + rmiServerPort;
+            rmiServer = ""+getConnectorHost()+":" + rmiServerPort;
         }
-        String serviceURL = "service:jmx:rmi://" + rmiServer + "/jndi/rmi://localhost:" + connectorPort + connectorPath;
+        String serviceURL = "service:jmx:rmi://" + rmiServer + "/jndi/rmi://" +getConnectorHost()+":" + connectorPort + connectorPath;
         JMXServiceURL url = new JMXServiceURL(serviceURL);
         connectorServer = JMXConnectorServerFactory.newJMXConnectorServer(url, null, mbeanServer);
     }
@@ -463,5 +464,21 @@ public class ManagementContext implements Service {
 
     public void setCreateConnector(boolean createConnector) {
         this.createConnector = createConnector;
+    }
+
+    /**
+     * Get the connectorHost
+     * @return the connectorHost
+     */
+    public String getConnectorHost() {
+        return this.connectorHost;
+    }
+
+    /**
+     * Set the connectorHost
+     * @param connectorHost the connectorHost to set
+     */
+    public void setConnectorHost(String connectorHost) {
+        this.connectorHost = connectorHost;
     }
 }
