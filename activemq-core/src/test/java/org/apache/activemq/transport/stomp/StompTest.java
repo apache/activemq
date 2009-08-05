@@ -971,7 +971,7 @@ public class StompTest extends CombinationTestSupport {
         	}
         } catch (SocketTimeoutException soe) {}
         
-        Thread.sleep(100);
+        stompConnection.ack(frame1, "tx1");
         stompConnection.abort("tx1");
         
         stompConnection.begin("tx2");
