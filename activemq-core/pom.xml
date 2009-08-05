@@ -237,13 +237,11 @@
       <groupId>org.apache.directory.server</groupId>
       <artifactId>apacheds-core</artifactId>
       <version>1.0.0</version>
-      <!--<version>1.0-RC3</version>-->
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>
-      <artifactId>nlog4j</artifactId>
-      <version>1.2.24</version>
+      <artifactId>slf4j-log4j12</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -252,6 +250,12 @@
       <version>${jmock-version}</version>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>org.apache.ftpserver</groupId>
+      <artifactId>ftpserver-core</artifactId>
+      <version>${ftpserver-version}</version>
+    </dependency>
+
 
   </dependencies>
 
@@ -464,10 +468,6 @@
 
             <!-- https://issues.apache.org/activemq/browse/AMQ-2050 -->
             <exclude>**/ProxyConnectorTest.*</exclude>
-            
-            <!-- FTPBlob tests need FTP server running -->
-            
-            <exclude>**/FTPBlob*/</exclude>
             
           </excludes>
         </configuration>

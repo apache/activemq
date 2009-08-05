@@ -80,6 +80,7 @@
     <xbean-version>3.4</xbean-version>
     <felix-version>1.0.0</felix-version>
     <commons-net-version>2.0</commons-net-version>
+    <ftpserver-version>1.0.0</ftpserver-version>
     <site-repo-url>scpexe://people.apache.org/www/activemq.apache.org/maven/</site-repo-url>
     <!-- OSGi bundles properties -->
     <activemq.osgi.import.pkg>*</activemq.osgi.import.pkg>
