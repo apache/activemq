@@ -254,6 +254,7 @@
       <groupId>org.apache.ftpserver</groupId>
       <artifactId>ftpserver-core</artifactId>
       <version>${ftpserver-version}</version>
+      <scope>test</scope>
     </dependency>
 
 
