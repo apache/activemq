@@ -19,11 +19,13 @@ package org.apache.activemq.camel.component;
 import java.util.List;
 
 import org.apache.activemq.util.ByteSequence;
+import org.apache.camel.CamelContext;
 import org.apache.camel.ContextTestSupport;
 import org.apache.camel.Exchange;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.AssertionClause;
 import org.apache.camel.component.mock.MockEndpoint;
+import org.apache.camel.impl.DefaultCamelContext;
 
 /**
  * @version $Revision$
@@ -39,7 +41,7 @@ public class JournalRouteTest extends ContextTestSupport {
         resultEndpoint.expectedMessageCount(1);
         
         AssertionClause firstMessageExpectations = resultEndpoint.message(0);
-        firstMessageExpectations.header("journal").isEqualTo("activemq.journal:target/test.a");
+        firstMessageExpectations.header("journal").isEqualTo("activemq.journal://target/test.a");
         firstMessageExpectations.header("location").isNotNull();
         firstMessageExpectations.body().isInstanceOf(ByteSequence.class);
 

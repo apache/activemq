@@ -30,7 +30,7 @@ import org.apache.camel.ContextTestSupport;
 import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
 import org.apache.camel.builder.RouteBuilder;
-import org.apache.camel.component.jms.JmsExchange;
+import org.apache.camel.component.jms.JmsMessage;
 import org.apache.camel.component.mock.AssertionClause;
 import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.commons.logging.Log;
@@ -85,12 +85,11 @@ public class ActiveMQJmsHeaderRouteTest extends ContextTestSupport {
                 from("activemq:test.a").process(new Processor() {
                     public void process(Exchange exchange) throws Exception {
                         // lets set the custom JMS headers using the JMS API
-                        JmsExchange jmsExchange = assertIsInstanceOf(JmsExchange.class, exchange);
-                        
-                        Message inMessage = jmsExchange.getInMessage();
-                        inMessage.setJMSReplyTo(replyQueue);
-                        inMessage.setJMSCorrelationID(correlationID);
-                        inMessage.setJMSType(messageType);
+						JmsMessage jmsMessage = assertIsInstanceOf(JmsMessage.class, exchange.getIn());
+						
+                        jmsMessage.getJmsMessage().setJMSReplyTo(replyQueue);
+                        jmsMessage.getJmsMessage().setJMSCorrelationID(correlationID);
+                        jmsMessage.getJmsMessage().setJMSType(messageType);
                     }
                 }).to("activemq:test.b?preserveMessageQos=true");
 
