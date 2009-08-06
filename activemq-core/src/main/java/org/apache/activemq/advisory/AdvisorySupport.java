@@ -16,15 +16,15 @@
  */
 package org.apache.activemq.advisory;
 
-import javax.jms.Destination;
-
+import org.apache.activemq.ActiveMQMessageTransformation;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQTopic;
-
+import javax.jms.Destination;
+import javax.jms.JMSException;
 public final class AdvisorySupport {
-
     public static final String ADVISORY_TOPIC_PREFIX = "ActiveMQ.Advisory.";
-    public static final ActiveMQTopic CONNECTION_ADVISORY_TOPIC = new ActiveMQTopic(ADVISORY_TOPIC_PREFIX + "Connection");
+    public static final ActiveMQTopic CONNECTION_ADVISORY_TOPIC = new ActiveMQTopic(ADVISORY_TOPIC_PREFIX
+            + "Connection");
     public static final ActiveMQTopic QUEUE_ADVISORY_TOPIC = new ActiveMQTopic(ADVISORY_TOPIC_PREFIX + "Queue");
     public static final ActiveMQTopic TOPIC_ADVISORY_TOPIC = new ActiveMQTopic(ADVISORY_TOPIC_PREFIX + "Topic");
     public static final ActiveMQTopic TEMP_QUEUE_ADVISORY_TOPIC = new ActiveMQTopic(ADVISORY_TOPIC_PREFIX + "TempQueue");
@@ -48,21 +48,26 @@ public final class AdvisorySupport {
     public static final String MASTER_BROKER_TOPIC_PREFIX = ADVISORY_TOPIC_PREFIX + "MasterBroker";
     public static final String AGENT_TOPIC = "ActiveMQ.Agent";
     public static final String ADIVSORY_MESSAGE_TYPE = "Advisory";
-    public static final String MSG_PROPERTY_ORIGIN_BROKER_ID="originBrokerId";
-    public static final String MSG_PROPERTY_ORIGIN_BROKER_NAME="originBrokerName";
-    public static final String MSG_PROPERTY_ORIGIN_BROKER_URL="originBrokerURL";
-    public static final String MSG_PROPERTY_USAGE_NAME="usageName";
-    public static final String MSG_PROPERTY_CONSUMER_ID="consumerId";
-    public static final String MSG_PROPERTY_PRODUCER_ID="producerId";
-    public static final String MSG_PROPERTY_MESSAGE_ID="orignalMessageId";
-    public static final ActiveMQTopic TEMP_DESTINATION_COMPOSITE_ADVISORY_TOPIC = new ActiveMQTopic(TEMP_QUEUE_ADVISORY_TOPIC + "," + TEMP_TOPIC_ADVISORY_TOPIC);
+    public static final String MSG_PROPERTY_ORIGIN_BROKER_ID = "originBrokerId";
+    public static final String MSG_PROPERTY_ORIGIN_BROKER_NAME = "originBrokerName";
+    public static final String MSG_PROPERTY_ORIGIN_BROKER_URL = "originBrokerURL";
+    public static final String MSG_PROPERTY_USAGE_NAME = "usageName";
+    public static final String MSG_PROPERTY_CONSUMER_ID = "consumerId";
+    public static final String MSG_PROPERTY_PRODUCER_ID = "producerId";
+    public static final String MSG_PROPERTY_MESSAGE_ID = "orignalMessageId";
+    public static final ActiveMQTopic TEMP_DESTINATION_COMPOSITE_ADVISORY_TOPIC = new ActiveMQTopic(
+            TEMP_QUEUE_ADVISORY_TOPIC + "," + TEMP_TOPIC_ADVISORY_TOPIC);
     private static final ActiveMQTopic AGENT_TOPIC_DESTINATION = new ActiveMQTopic(AGENT_TOPIC);
 
-    private AdvisorySupport() {        
+    private AdvisorySupport() {
     }
-    
+
     public static ActiveMQTopic getConnectionAdvisoryTopic() {
         return CONNECTION_ADVISORY_TOPIC;
+    }
+
+    public static ActiveMQTopic getConsumerAdvisoryTopic(Destination destination) throws JMSException {
+        return getConsumerAdvisoryTopic(ActiveMQMessageTransformation.transformDestination(destination));
     }
 
     public static ActiveMQTopic getConsumerAdvisoryTopic(ActiveMQDestination destination) {
@@ -73,12 +78,20 @@ public final class AdvisorySupport {
         }
     }
 
+    public static ActiveMQTopic getProducerAdvisoryTopic(Destination destination) throws JMSException {
+        return getProducerAdvisoryTopic(ActiveMQMessageTransformation.transformDestination(destination));
+    }
+
     public static ActiveMQTopic getProducerAdvisoryTopic(ActiveMQDestination destination) {
         if (destination.isQueue()) {
             return new ActiveMQTopic(QUEUE_PRODUCER_ADVISORY_TOPIC_PREFIX + destination.getPhysicalName());
         } else {
             return new ActiveMQTopic(TOPIC_PRODUCER_ADVISORY_TOPIC_PREFIX + destination.getPhysicalName());
         }
+    }
+
+    public static ActiveMQTopic getExpiredMessageTopic(Destination destination) throws JMSException {
+        return getExpiredMessageTopic(ActiveMQMessageTransformation.transformDestination(destination));
     }
 
     public static ActiveMQTopic getExpiredMessageTopic(ActiveMQDestination destination) {
@@ -93,9 +106,17 @@ public final class AdvisorySupport {
         return new ActiveMQTopic(name);
     }
 
+    public static ActiveMQTopic getExpiredQueueMessageAdvisoryTopic(Destination destination) throws JMSException {
+        return getExpiredQueueMessageAdvisoryTopic(ActiveMQMessageTransformation.transformDestination(destination));
+    }
+
     public static ActiveMQTopic getExpiredQueueMessageAdvisoryTopic(ActiveMQDestination destination) {
         String name = EXPIRED_QUEUE_MESSAGES_TOPIC_PREFIX + destination.getPhysicalName();
         return new ActiveMQTopic(name);
+    }
+
+    public static ActiveMQTopic getNoTopicConsumersAdvisoryTopic(Destination destination) throws JMSException {
+        return getNoTopicConsumersAdvisoryTopic(ActiveMQMessageTransformation.transformDestination(destination));
     }
 
     public static ActiveMQTopic getNoTopicConsumersAdvisoryTopic(ActiveMQDestination destination) {
@@ -103,55 +124,85 @@ public final class AdvisorySupport {
         return new ActiveMQTopic(name);
     }
 
+    public static ActiveMQTopic getNoQueueConsumersAdvisoryTopic(Destination destination) throws JMSException {
+        return getNoQueueConsumersAdvisoryTopic(ActiveMQMessageTransformation.transformDestination(destination));
+    }
+
     public static ActiveMQTopic getNoQueueConsumersAdvisoryTopic(ActiveMQDestination destination) {
         String name = NO_QUEUE_CONSUMERS_TOPIC_PREFIX + destination.getPhysicalName();
         return new ActiveMQTopic(name);
     }
-    
+
+    public static ActiveMQTopic getSlowConsumerAdvisoryTopic(Destination destination) throws JMSException {
+        return getSlowConsumerAdvisoryTopic(ActiveMQMessageTransformation.transformDestination(destination));
+    }
+
     public static ActiveMQTopic getSlowConsumerAdvisoryTopic(ActiveMQDestination destination) {
-        String name = SLOW_CONSUMER_TOPIC_PREFIX
-                + destination.getDestinationTypeAsString() + "."
+        String name = SLOW_CONSUMER_TOPIC_PREFIX + destination.getDestinationTypeAsString() + "."
                 + destination.getPhysicalName();
         return new ActiveMQTopic(name);
     }
-    
+
+    public static ActiveMQTopic getFastProducerAdvisoryTopic(Destination destination) throws JMSException {
+        return getFastProducerAdvisoryTopic(ActiveMQMessageTransformation.transformDestination(destination));
+    }
+
     public static ActiveMQTopic getFastProducerAdvisoryTopic(ActiveMQDestination destination) {
-        String name = FAST_PRODUCER_TOPIC_PREFIX
-                + destination.getDestinationTypeAsString() + "."
+        String name = FAST_PRODUCER_TOPIC_PREFIX + destination.getDestinationTypeAsString() + "."
                 + destination.getPhysicalName();
         return new ActiveMQTopic(name);
     }
-    
+
+    public static ActiveMQTopic getMessageDiscardedAdvisoryTopic(Destination destination) throws JMSException {
+        return getMessageDiscardedAdvisoryTopic(ActiveMQMessageTransformation.transformDestination(destination));
+    }
+
     public static ActiveMQTopic getMessageDiscardedAdvisoryTopic(ActiveMQDestination destination) {
-        String name = MESSAGE_DISCAREDED_TOPIC_PREFIX
-                + destination.getDestinationTypeAsString() + "."
+        String name = MESSAGE_DISCAREDED_TOPIC_PREFIX + destination.getDestinationTypeAsString() + "."
                 + destination.getPhysicalName();
         return new ActiveMQTopic(name);
     }
-    
+
+    public static ActiveMQTopic getMessageDeliveredAdvisoryTopic(Destination destination) throws JMSException {
+        return getMessageDeliveredAdvisoryTopic(ActiveMQMessageTransformation.transformDestination(destination));
+    }
+
     public static ActiveMQTopic getMessageDeliveredAdvisoryTopic(ActiveMQDestination destination) {
-        String name = MESSAGE_DELIVERED_TOPIC_PREFIX
-                + destination.getDestinationTypeAsString() + "."
+        String name = MESSAGE_DELIVERED_TOPIC_PREFIX + destination.getDestinationTypeAsString() + "."
                 + destination.getPhysicalName();
         return new ActiveMQTopic(name);
     }
-    
+
+    public static ActiveMQTopic getMessageConsumedAdvisoryTopic(Destination destination) throws JMSException {
+        return getMessageConsumedAdvisoryTopic(ActiveMQMessageTransformation.transformDestination(destination));
+    }
+
     public static ActiveMQTopic getMessageConsumedAdvisoryTopic(ActiveMQDestination destination) {
-        String name = MESSAGE_CONSUMED_TOPIC_PREFIX
-                + destination.getDestinationTypeAsString() + "."
+        String name = MESSAGE_CONSUMED_TOPIC_PREFIX + destination.getDestinationTypeAsString() + "."
                 + destination.getPhysicalName();
         return new ActiveMQTopic(name);
     }
-    
+
+    public static ActiveMQTopic getMasterBrokerAdvisoryTopic(Destination destination) throws JMSException {
+        return getMasterBrokerAdvisoryTopic(ActiveMQMessageTransformation.transformDestination(destination));
+    }
+
     public static ActiveMQTopic getMasterBrokerAdvisoryTopic() {
         return new ActiveMQTopic(MASTER_BROKER_TOPIC_PREFIX);
     }
-    
+
+    public static ActiveMQTopic getFullAdvisoryTopic(Destination destination) throws JMSException {
+        return getFullAdvisoryTopic(ActiveMQMessageTransformation.transformDestination(destination));
+    }
+
     public static ActiveMQTopic getFullAdvisoryTopic(ActiveMQDestination destination) {
-        String name = FULL_TOPIC_PREFIX
-                + destination.getDestinationTypeAsString() + "."
+        String name = FULL_TOPIC_PREFIX + destination.getDestinationTypeAsString() + "."
                 + destination.getPhysicalName();
         return new ActiveMQTopic(name);
+    }
+
+    public static ActiveMQTopic getDestinationAdvisoryTopic(Destination destination) throws JMSException {
+        return getDestinationAdvisoryTopic(ActiveMQMessageTransformation.transformDestination(destination));
     }
 
     public static ActiveMQTopic getDestinationAdvisoryTopic(ActiveMQDestination destination) {
@@ -169,6 +220,10 @@ public final class AdvisorySupport {
         }
     }
 
+    public static boolean isDestinationAdvisoryTopic(Destination destination) throws JMSException {
+        return isDestinationAdvisoryTopic(ActiveMQMessageTransformation.transformDestination(destination));
+    }
+
     public static boolean isDestinationAdvisoryTopic(ActiveMQDestination destination) {
         if (destination.isComposite()) {
             ActiveMQDestination[] compositeDestinations = destination.getCompositeDestinations();
@@ -179,9 +234,13 @@ public final class AdvisorySupport {
             }
             return false;
         } else {
-            return destination.equals(TEMP_QUEUE_ADVISORY_TOPIC) || destination.equals(TEMP_TOPIC_ADVISORY_TOPIC) || destination.equals(QUEUE_ADVISORY_TOPIC)
-                   || destination.equals(TOPIC_ADVISORY_TOPIC);
+            return destination.equals(TEMP_QUEUE_ADVISORY_TOPIC) || destination.equals(TEMP_TOPIC_ADVISORY_TOPIC)
+                    || destination.equals(QUEUE_ADVISORY_TOPIC) || destination.equals(TOPIC_ADVISORY_TOPIC);
         }
+    }
+
+    public static boolean isAdvisoryTopic(Destination destination) throws JMSException {
+        return isAdvisoryTopic(ActiveMQMessageTransformation.transformDestination(destination));
     }
 
     public static boolean isAdvisoryTopic(ActiveMQDestination destination) {
@@ -198,6 +257,10 @@ public final class AdvisorySupport {
         }
     }
 
+    public static boolean isConnectionAdvisoryTopic(Destination destination) throws JMSException {
+        return isConnectionAdvisoryTopic(ActiveMQMessageTransformation.transformDestination(destination));
+    }
+
     public static boolean isConnectionAdvisoryTopic(ActiveMQDestination destination) {
         if (destination.isComposite()) {
             ActiveMQDestination[] compositeDestinations = destination.getCompositeDestinations();
@@ -210,6 +273,10 @@ public final class AdvisorySupport {
         } else {
             return destination.equals(CONNECTION_ADVISORY_TOPIC);
         }
+    }
+
+    public static boolean isProducerAdvisoryTopic(Destination destination) throws JMSException {
+        return isProducerAdvisoryTopic(ActiveMQMessageTransformation.transformDestination(destination));
     }
 
     public static boolean isProducerAdvisoryTopic(ActiveMQDestination destination) {
@@ -226,6 +293,10 @@ public final class AdvisorySupport {
         }
     }
 
+    public static boolean isConsumerAdvisoryTopic(Destination destination) throws JMSException {
+        return isConsumerAdvisoryTopic(ActiveMQMessageTransformation.transformDestination(destination));
+    }
+
     public static boolean isConsumerAdvisoryTopic(ActiveMQDestination destination) {
         if (destination.isComposite()) {
             ActiveMQDestination[] compositeDestinations = destination.getCompositeDestinations();
@@ -239,7 +310,11 @@ public final class AdvisorySupport {
             return destination.isTopic() && destination.getPhysicalName().startsWith(CONSUMER_ADVISORY_TOPIC_PREFIX);
         }
     }
-    
+
+    public static boolean isSlowConsumerAdvisoryTopic(Destination destination) throws JMSException {
+        return isSlowConsumerAdvisoryTopic(ActiveMQMessageTransformation.transformDestination(destination));
+    }
+
     public static boolean isSlowConsumerAdvisoryTopic(ActiveMQDestination destination) {
         if (destination.isComposite()) {
             ActiveMQDestination[] compositeDestinations = destination.getCompositeDestinations();
@@ -253,7 +328,11 @@ public final class AdvisorySupport {
             return destination.isTopic() && destination.getPhysicalName().startsWith(SLOW_CONSUMER_TOPIC_PREFIX);
         }
     }
-    
+
+    public static boolean isFastProducerAdvisoryTopic(Destination destination) throws JMSException {
+        return isFastProducerAdvisoryTopic(ActiveMQMessageTransformation.transformDestination(destination));
+    }
+
     public static boolean isFastProducerAdvisoryTopic(ActiveMQDestination destination) {
         if (destination.isComposite()) {
             ActiveMQDestination[] compositeDestinations = destination.getCompositeDestinations();
@@ -267,7 +346,11 @@ public final class AdvisorySupport {
             return destination.isTopic() && destination.getPhysicalName().startsWith(FAST_PRODUCER_TOPIC_PREFIX);
         }
     }
-    
+
+    public static boolean isMessageConsumedAdvisoryTopic(Destination destination) throws JMSException {
+        return isMessageConsumedAdvisoryTopic(ActiveMQMessageTransformation.transformDestination(destination));
+    }
+
     public static boolean isMessageConsumedAdvisoryTopic(ActiveMQDestination destination) {
         if (destination.isComposite()) {
             ActiveMQDestination[] compositeDestinations = destination.getCompositeDestinations();
@@ -281,7 +364,11 @@ public final class AdvisorySupport {
             return destination.isTopic() && destination.getPhysicalName().startsWith(MESSAGE_CONSUMED_TOPIC_PREFIX);
         }
     }
-    
+
+    public static boolean isMasterBrokerAdvisoryTopic(Destination destination) throws JMSException {
+        return isMasterBrokerAdvisoryTopic(ActiveMQMessageTransformation.transformDestination(destination));
+    }
+
     public static boolean isMasterBrokerAdvisoryTopic(ActiveMQDestination destination) {
         if (destination.isComposite()) {
             ActiveMQDestination[] compositeDestinations = destination.getCompositeDestinations();
@@ -295,7 +382,11 @@ public final class AdvisorySupport {
             return destination.isTopic() && destination.getPhysicalName().startsWith(MASTER_BROKER_TOPIC_PREFIX);
         }
     }
-    
+
+    public static boolean isMessageDeliveredAdvisoryTopic(Destination destination) throws JMSException {
+        return isMessageDeliveredAdvisoryTopic(ActiveMQMessageTransformation.transformDestination(destination));
+    }
+
     public static boolean isMessageDeliveredAdvisoryTopic(ActiveMQDestination destination) {
         if (destination.isComposite()) {
             ActiveMQDestination[] compositeDestinations = destination.getCompositeDestinations();
@@ -309,7 +400,11 @@ public final class AdvisorySupport {
             return destination.isTopic() && destination.getPhysicalName().startsWith(MESSAGE_DELIVERED_TOPIC_PREFIX);
         }
     }
-    
+
+    public static boolean isMessageDiscardedAdvisoryTopic(Destination destination) throws JMSException {
+        return isMessageDiscardedAdvisoryTopic(ActiveMQMessageTransformation.transformDestination(destination));
+    }
+
     public static boolean isMessageDiscardedAdvisoryTopic(ActiveMQDestination destination) {
         if (destination.isComposite()) {
             ActiveMQDestination[] compositeDestinations = destination.getCompositeDestinations();
@@ -323,7 +418,11 @@ public final class AdvisorySupport {
             return destination.isTopic() && destination.getPhysicalName().startsWith(MESSAGE_DISCAREDED_TOPIC_PREFIX);
         }
     }
-    
+
+    public static boolean isFullAdvisoryTopic(Destination destination) throws JMSException {
+        return isFullAdvisoryTopic(ActiveMQMessageTransformation.transformDestination(destination));
+    }
+
     public static boolean isFullAdvisoryTopic(ActiveMQDestination destination) {
         if (destination.isComposite()) {
             ActiveMQDestination[] compositeDestinations = destination.getCompositeDestinations();
