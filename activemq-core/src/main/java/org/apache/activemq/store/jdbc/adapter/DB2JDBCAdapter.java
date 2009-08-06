@@ -27,9 +27,6 @@ import org.apache.activemq.store.jdbc.Statements;
  * @org.apache.xbean.XBean element="db2JDBCAdapter"
  */
 public class DB2JDBCAdapter extends DefaultJDBCAdapter {
-    public DB2JDBCAdapter() {
-        batchStatments = false;
-    }
 
     public void setStatements(Statements statements) {
         String lockCreateStatement = "LOCK TABLE " + statements.getFullLockTableName() + " IN EXCLUSIVE MODE";

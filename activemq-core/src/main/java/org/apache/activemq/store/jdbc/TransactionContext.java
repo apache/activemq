@@ -162,10 +162,13 @@ public class TransactionContext {
             }
         } catch (SQLException e) {
             JDBCPersistenceAdapter.log("Commit failed: ", e);
+            
+            this.rollback(); 
+            
             throw IOExceptionSupport.create(e);
         } finally {
-            inTx = false;
             close();
+            inTx = false;
         }
     }
 
@@ -192,8 +195,8 @@ public class TransactionContext {
             JDBCPersistenceAdapter.log("Rollback failed: ", e);
             throw IOExceptionSupport.create(e);
         } finally {
-            inTx = false;
             close();
+            inTx = false;
         }
     }
 
