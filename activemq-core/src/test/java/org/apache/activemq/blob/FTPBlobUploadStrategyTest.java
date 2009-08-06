@@ -33,24 +33,74 @@ import org.apache.activemq.EmbeddedBrokerTestSupport;
 import org.apache.activemq.command.ActiveMQBlobMessage;
 import org.apache.activemq.command.MessageId;
 import org.apache.commons.net.ftp.FTPClient;
+import org.apache.ftpserver.FtpServer;
+import org.apache.ftpserver.FtpServerFactory;
+import org.apache.ftpserver.ftplet.AuthorizationRequest;
+import org.apache.ftpserver.ftplet.User;
+import org.apache.ftpserver.ftplet.UserManager;
+import org.apache.ftpserver.listener.ListenerFactory;
+import org.apache.ftpserver.usermanager.PropertiesUserManagerFactory;
+import org.apache.ftpserver.usermanager.UsernamePasswordAuthentication;
+import org.apache.ftpserver.usermanager.impl.BaseUser;
+import org.jmock.Expectations;
+import org.jmock.Mockery;
+import org.jmock.api.Invocation;
+import org.jmock.lib.action.CustomAction;
 
-/**
- * To start this test make sure an ftp server is running with
- * user: activemq and password: activemq
- */
+
 public class FTPBlobUploadStrategyTest extends EmbeddedBrokerTestSupport {
 	
-	private Connection connection;
+    private static final String ftpServerListenerName = "default";
+    private Connection connection;
+    private FtpServer server;
+    final static String userNamePass = "activemq";
 
+	Mockery context = null;
+	String ftpUrl;
+	
 	protected void setUp() throws Exception {
-		bindAddress = "vm://localhost?jms.blobTransferPolicy.defaultUploadUrl=ftp://activemq:activemq@localhost/ftptest/";
+		
+        final File ftpHomeDirFile = new File("target/FTPBlobTest/ftptest");
+        ftpHomeDirFile.mkdirs();
+        ftpHomeDirFile.getParentFile().deleteOnExit();
+
+        FtpServerFactory serverFactory = new FtpServerFactory();
+        ListenerFactory factory = new ListenerFactory();
+
+		PropertiesUserManagerFactory userManagerFactory = new PropertiesUserManagerFactory();
+		UserManager userManager = userManagerFactory.createUserManager();
+
+		BaseUser user = new BaseUser();
+        user.setName("activemq");
+        user.setPassword("activemq");
+        user.setHomeDirectory(ftpHomeDirFile.getParent());
+        
+        userManager.save(user);
+
+        serverFactory.setUserManager(userManager);
+        factory.setPort(0);
+        serverFactory.addListener(ftpServerListenerName, factory
+                .createListener());
+        server = serverFactory.createServer();
+        server.start();
+        int ftpPort = serverFactory.getListener(ftpServerListenerName)
+                .getPort();
+		
+        ftpUrl = "ftp://"
+            + userNamePass
+            + ":"
+            + userNamePass
+            + "@localhost:"
+            + ftpPort
+            + "/ftptest/";
+        bindAddress = "vm://localhost?jms.blobTransferPolicy.defaultUploadUrl=" + ftpUrl;
         super.setUp();
 
         connection = createConnection();
         connection.start();
         
         // check if file exist and delete it
-        URL url = new URL("ftp://activemq:activemq@localhost/ftptest/");
+        URL url = new URL(ftpUrl);
         String connectUrl = url.getHost();
 		int port = url.getPort() < 1 ? 21 : url.getPort();
 		
@@ -80,7 +130,7 @@ public class FTPBlobUploadStrategyTest extends EmbeddedBrokerTestSupport {
         ActiveMQBlobMessage message = (ActiveMQBlobMessage) ((ActiveMQSession)session).createBlobMessage(file);
         message.setMessageId(new MessageId("testmessage"));
         message.onSend();
-        Assert.assertEquals("ftp://activemq:activemq@localhost/ftptest/testmessage", message.getURL().toString()); 
+        Assert.assertEquals(ftpUrl + "testmessage", message.getURL().toString()); 
 	}
 
 }

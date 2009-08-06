@@ -16,6 +16,8 @@
  */
 package org.apache.activemq.blob;
 
+import java.io.File;
+import java.io.FileWriter;
 import java.io.InputStream;
 import java.net.URL;
 
@@ -25,20 +27,68 @@ import junit.framework.Assert;
 import junit.framework.TestCase;
 
 import org.apache.activemq.command.ActiveMQBlobMessage;
+import org.apache.commons.net.ftp.FTPClient;
+import org.apache.ftpserver.FtpServer;
+import org.apache.ftpserver.FtpServerFactory;
+import org.apache.ftpserver.ftplet.UserManager;
+import org.apache.ftpserver.listener.ListenerFactory;
+import org.apache.ftpserver.usermanager.PropertiesUserManagerFactory;
+import org.apache.ftpserver.usermanager.impl.BaseUser;
+import org.jmock.Mockery;
 
-/**
- * To start this test make sure an ftp server is running with
- * user: activemq and password: activemq. 
- * Also a file called test.txt with the content <b>hello world</b> must be in the ftptest directory.
- */
 public class FTPBlobDownloadStrategyTest extends TestCase {
 	
-	public void xtestDownload() {
+    private static final String ftpServerListenerName = "default";
+    private FtpServer server;
+    final static String userNamePass = "activemq";
+
+	Mockery context = null;
+	int ftpPort;
+	String ftpUrl;
+	
+	protected void setUp() throws Exception {     
+	    final File ftpHomeDirFile = new File("target/FTPBlobTest/ftptest");
+		ftpHomeDirFile.mkdirs();
+		ftpHomeDirFile.getParentFile().deleteOnExit();
+
+		FtpServerFactory serverFactory = new FtpServerFactory();
+		ListenerFactory factory = new ListenerFactory();
+
+		PropertiesUserManagerFactory userManagerFactory = new PropertiesUserManagerFactory();
+		UserManager userManager = userManagerFactory.createUserManager();
+
+		BaseUser user = new BaseUser();
+        user.setName("activemq");
+        user.setPassword("activemq");
+        user.setHomeDirectory(ftpHomeDirFile.getParent());
+        
+        userManager.save(user);
+
+		serverFactory.setUserManager(userManager);
+		factory.setPort(0);
+		serverFactory.addListener(ftpServerListenerName, factory
+				.createListener());
+		server = serverFactory.createServer();
+		server.start();
+		ftpPort = serverFactory.getListener(ftpServerListenerName)
+				.getPort();
+
+		ftpUrl = "ftp://" + userNamePass + ":" + userNamePass + "@localhost:"
+				+ ftpPort + "/ftptest/";
+
+	    File uploadFile = new File(ftpHomeDirFile, "test.txt");
+	    FileWriter wrt = new FileWriter(uploadFile);
+	    wrt.write("hello world");
+	    wrt.close();
+
+    }
+	
+	public void testDownload() {
 		ActiveMQBlobMessage message = new ActiveMQBlobMessage();
 		BlobDownloadStrategy strategy = new FTPBlobDownloadStrategy();
 		InputStream stream;
 		try {
-			message.setURL(new URL("ftp://activemq:activemq@localhost/ftptest/test.txt"));
+			message.setURL(new URL(ftpUrl + "test.txt"));
 			stream = strategy.getInputStream(message);
 			int i = stream.read();
 			StringBuilder sb = new StringBuilder(10);
@@ -53,11 +103,11 @@ public class FTPBlobDownloadStrategyTest extends TestCase {
 		}
 	}
 	
-	public void xtestWrongAuthentification() {
+	public void testWrongAuthentification() {
 		ActiveMQBlobMessage message = new ActiveMQBlobMessage();
 		BlobDownloadStrategy strategy = new FTPBlobDownloadStrategy();
 		try {
-			message.setURL(new URL("ftp://activemq:activemq_wrong@localhost/ftptest/test.txt"));
+			message.setURL(new URL("ftp://" + userNamePass + "_wrong:" + userNamePass + "@localhost:"	+ ftpPort + "/ftptest/"));
 			strategy.getInputStream(message);
 		} catch(JMSException e) {
 			Assert.assertEquals("Wrong Exception", "Cant Authentificate to FTP-Server", e.getMessage());
@@ -71,11 +121,11 @@ public class FTPBlobDownloadStrategyTest extends TestCase {
 		Assert.assertTrue("Expect Exception", false);
 	}
 	
-	public void xtestWrongFTPPort() {
+	public void testWrongFTPPort() {
 		ActiveMQBlobMessage message = new ActiveMQBlobMessage();
 		BlobDownloadStrategy strategy = new FTPBlobDownloadStrategy();
 		try {
-			message.setURL(new URL("ftp://activemq:activemq@localhost:442/ftptest/test.txt"));
+			message.setURL(new URL("ftp://" + userNamePass + ":" + userNamePass + "@localhost:"	+ 422 + "/ftptest/"));
 			strategy.getInputStream(message);
 		} catch(JMSException e) {
 			Assert.assertEquals("Wrong Exception", "Problem connecting the FTP-server", e.getMessage());

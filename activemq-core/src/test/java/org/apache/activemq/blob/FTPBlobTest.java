@@ -45,10 +45,7 @@ import org.jmock.Mockery;
 import org.jmock.api.Invocation;
 import org.jmock.lib.action.CustomAction;
 
-/**
- * To start this test make sure an ftp server is running with user: activemq and
- * password: activemq
- */
+
 public class FTPBlobTest extends EmbeddedBrokerTestSupport {
 
     private static final String ftpServerListenerName = "default";
