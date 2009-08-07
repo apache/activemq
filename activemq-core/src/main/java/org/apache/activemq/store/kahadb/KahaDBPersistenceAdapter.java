@@ -303,4 +303,37 @@ public class KahaDBPersistenceAdapter implements PersistenceAdapter {
     public void setEnableJournalDiskSyncs(boolean enableJournalDiskSyncs) {
         this.letter.setEnableJournalDiskSyncs(enableJournalDiskSyncs);
     }
+    
+    /**
+     * Get the indexCacheSize
+     * @return the indexCacheSize
+     */
+    public int getIndexCacheSize() {
+        return this.letter.getIndexCacheSize();
+    }
+
+    /**
+     * Set the indexCacheSize
+     * @param indexCacheSize the indexCacheSize to set
+     */
+    public void setIndexCacheSize(int indexCacheSize) {
+        this.letter.setIndexCacheSize(indexCacheSize);
+    }
+    
+    /**
+     * Get the ignoreMissingJournalfiles
+     * @return the ignoreMissingJournalfiles
+     */
+    public boolean isIgnoreMissingJournalfiles() {
+        return this.letter.isIgnoreMissingJournalfiles();
+    }
+
+    /**
+     * Set the ignoreMissingJournalfiles
+     * @param ignoreMissingJournalfiles the ignoreMissingJournalfiles to set
+     */
+    public void setIgnoreMissingJournalfiles(boolean ignoreMissingJournalfiles) {
+        this.letter.setIgnoreMissingJournalfiles(ignoreMissingJournalfiles);
+    }
+
 }
