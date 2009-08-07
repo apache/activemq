@@ -123,18 +123,19 @@ public class StompSubscription {
     
     synchronized void onStompCommit(TransactionId transactionId) {
     	// ack all messages
-        MessageAck ack = new MessageAck();
-        ack.setDestination(consumerInfo.getDestination());
-        ack.setConsumerId(consumerInfo.getConsumerId());
-        ack.setAckType(MessageAck.STANDARD_ACK_TYPE);
-        ack.setFirstMessageId(unconsumedMessage.getFirst().getMessage().getMessageId());
-        ack.setLastMessageId(unconsumedMessage.getLast().getMessage().getMessageId());
-        ack.setMessageCount(unconsumedMessage.size());
-        ack.setTransactionId(transactionId);
-        protocolConverter.getTransportFilter().sendToActiveMQ(ack);
-        // clear lists
-    	unconsumedMessage.clear();
-    	dispatchedMessage.clear();
+    	if (!unconsumedMessage.isEmpty()) {
+    		MessageAck ack = new MessageAck();
+    		ack.setDestination(consumerInfo.getDestination());
+    		ack.setConsumerId(consumerInfo.getConsumerId());
+    		ack.setAckType(MessageAck.STANDARD_ACK_TYPE);
+    		ack.setFirstMessageId(unconsumedMessage.getFirst().getMessage().getMessageId());
+    		ack.setLastMessageId(unconsumedMessage.getLast().getMessage().getMessageId());
+    		ack.setMessageCount(unconsumedMessage.size());
+    		ack.setTransactionId(transactionId);
+    		protocolConverter.getTransportFilter().sendToActiveMQ(ack);
+    		// clear lists
+    		unconsumedMessage.clear();
+    	}
     }
 
     synchronized MessageAck onStompMessageAck(String messageId, TransactionId transactionId) {
@@ -169,9 +170,8 @@ public class StompSubscription {
                 if (transactionId != null) {
                 	if (!unconsumedMessage.contains(msg))
                 		unconsumedMessage.add(msg);
-                } else {
-                	iter.remove();
                 }
+                iter.remove();
                 
                 
                 count++;

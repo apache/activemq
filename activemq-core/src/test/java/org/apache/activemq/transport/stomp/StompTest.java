@@ -998,7 +998,38 @@ public class StompTest extends CombinationTestSupport {
         
         stompDisconnect();
     	
-    }       
+    }
+    
+    public void testTransactionsWithMultipleDestinations() throws Exception {
+
+    	stompConnection.connect("system", "manager");
+    	
+        HashMap<String, String> headers = new HashMap<String, String>();
+        headers.put("activemq.prefetchSize", "1");
+        headers.put("activemq.exclusive", "true");
+    	
+    	stompConnection.subscribe("/queue/test1", "client", headers);
+    	
+    	stompConnection.begin("ID:tx1");
+    	
+    	headers.clear();
+    	headers.put("receipt", "ID:msg1");
+    	stompConnection.send("/queue/test2", "test message", "ID:tx1", headers);
+    	
+    	stompConnection.commit("ID:tx1");
+    	
+    	// make sure connection is active after commit
+    	Thread.sleep(1000);
+    	stompConnection.send("/queue/test1", "another message");
+    	
+    	StompFrame frame = stompConnection.receive(500);
+    	System.out.println(frame);
+    	assertNotNull(frame);
+    	
+    	
+    	stompConnection.disconnect();
+    }
+    
     protected void assertClients(int expected) throws Exception {
         org.apache.activemq.broker.Connection[] clients = broker.getBroker().getClients();
         int actual = clients.length;
