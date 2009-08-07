@@ -42,16 +42,18 @@ public final class IntrospectionSupport {
 		String[] additionalPath = new String[] {
 				"org.springframework.beans.propertyeditors",
 				"org.apache.activemq.util" };
-
-		String[] searchPath = (String[]) Array.newInstance(String.class,
-				PropertyEditorManager.getEditorSearchPath().length
-						+ additionalPath.length);
-		System.arraycopy(PropertyEditorManager.getEditorSearchPath(), 0,
-				searchPath, 0,
-				PropertyEditorManager.getEditorSearchPath().length);
-		System.arraycopy(additionalPath, 0, searchPath, PropertyEditorManager
-				.getEditorSearchPath().length, additionalPath.length);
-		PropertyEditorManager.setEditorSearchPath(searchPath);
+		synchronized (PropertyEditorManager.class) {
+		    String[] existingSearchPath = PropertyEditorManager.getEditorSearchPath();
+		    String[] newSearchPath = (String[]) Array.newInstance(String.class,
+		            existingSearchPath.length + additionalPath.length);
+		    System.arraycopy(existingSearchPath, 0,
+		            newSearchPath, 0,
+		            existingSearchPath.length);
+		    System.arraycopy(additionalPath, 0, 
+		            newSearchPath, existingSearchPath.length,
+		            additionalPath.length);
+		    PropertyEditorManager.setEditorSearchPath(newSearchPath);
+		}
 	}
     
     private IntrospectionSupport() {
