@@ -99,7 +99,9 @@ public class TcpTransportFactory extends TransportFactory {
         boolean useInactivityMonitor = "true".equals(getOption(options, "useInactivityMonitor", "true"));
         if (useInactivityMonitor && isUseInactivityMonitor(transport)) {
             transport = new InactivityMonitor(transport, format);
+            IntrospectionSupport.setProperties(transport, options);
         }
+        
 
         // Only need the WireFormatNegotiator if using openwire
         if (format instanceof OpenWireFormat) {
