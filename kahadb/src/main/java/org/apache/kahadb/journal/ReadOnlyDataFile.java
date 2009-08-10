@@ -26,7 +26,7 @@ import java.io.RandomAccessFile;
  */
 public class ReadOnlyDataFile extends DataFile {
 
-    ReadOnlyDataFile(File file, int number, long preferedSize) {
+    ReadOnlyDataFile(File file, int number, int preferedSize) {
         super(file, number, preferedSize);
     }
     
