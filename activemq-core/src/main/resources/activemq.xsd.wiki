@@ -1243,7 +1243,7 @@ h4. Properties
     || Property Name || Type || Description ||
     | brokerName | _java.lang.String_ | {html}{html} |
     | directory | _java.io.File_ | {html}{html} |
-    | journalMaxFileLength | _long_ | {html}{html} |
+    | journalMaxFileLength | _int_ | {html}{html} |
     | indexWriteBatchSize | _int_ | {html}{html} |
     | enableIndexWriteAsync | _boolean_ | {html}{html} |
     | enableJournalDiskSyncs | _boolean_ | {html}{html} |
