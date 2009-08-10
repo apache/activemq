@@ -80,8 +80,8 @@ public class Journal {
     protected String fileSuffix = DEFAULT_FILE_SUFFIX;
     protected boolean started;
     
-    protected int maxFileLength = DEFAULT_MAX_FILE_LENGTH;
-    protected int preferedFileLength = DEFAULT_MAX_FILE_LENGTH - PREFERED_DIFF;
+    protected long maxFileLength = DEFAULT_MAX_FILE_LENGTH;
+    protected long preferedFileLength = DEFAULT_MAX_FILE_LENGTH - PREFERED_DIFF;
 
     protected DataFileAppender appender;
     protected DataFileAccessorPool accessorPool;
@@ -357,14 +357,14 @@ public class Journal {
     /**
      * @return the maxFileLength
      */
-    public int getMaxFileLength() {
+    public long getMaxFileLength() {
         return maxFileLength;
     }
 
     /**
      * @param maxFileLength the maxFileLength to set
      */
-    public void setMaxFileLength(int maxFileLength) {
+    public void setMaxFileLength(long maxFileLength) {
         this.maxFileLength = maxFileLength;
     }
 

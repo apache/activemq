@@ -141,7 +141,7 @@ public class MessageDatabase {
     protected boolean enableJournalDiskSyncs=true;
     long checkpointInterval = 5*1000;
     long cleanupInterval = 30*1000;
-    int journalMaxFileLength = Journal.DEFAULT_MAX_FILE_LENGTH;
+    long journalMaxFileLength = Journal.DEFAULT_MAX_FILE_LENGTH;
     boolean enableIndexWriteAsync = false;
     int setIndexWriteBatchSize = PageFile.DEFAULT_WRITE_BATCH_SIZE; 
     
@@ -1396,11 +1396,11 @@ public class MessageDatabase {
         this.cleanupInterval = cleanupInterval;
     }
 
-    public void setJournalMaxFileLength(int journalMaxFileLength) {
+    public void setJournalMaxFileLength(long journalMaxFileLength) {
         this.journalMaxFileLength = journalMaxFileLength;
     }
     
-    public int getJournalMaxFileLength() {
+    public long getJournalMaxFileLength() {
         return journalMaxFileLength;
     }
     

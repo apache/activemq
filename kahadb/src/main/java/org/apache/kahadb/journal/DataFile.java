@@ -32,9 +32,9 @@ public class DataFile extends LinkedNode<DataFile> implements Comparable<DataFil
 
     protected final File file;
     protected final Integer dataFileId;
-    protected int length;
+    protected long length;
 
-    DataFile(File file, int number, int preferedSize) {
+    DataFile(File file, int number, long preferedSize) {
         this.file = file;
         this.dataFileId = Integer.valueOf(number);
         length = (int)(file.exists() ? file.length() : 0);
@@ -48,11 +48,11 @@ public class DataFile extends LinkedNode<DataFile> implements Comparable<DataFil
         return dataFileId;
     }
 
-    public synchronized int getLength() {
+    public synchronized long getLength() {
         return length;
     }
 
-    public void setLength(int length) {
+    public void setLength(long length) {
         this.length = length;
     }
 
