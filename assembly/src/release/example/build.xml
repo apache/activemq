@@ -298,4 +298,12 @@
 		</java>
 	</target>
 	
+	<target name="log4j-jms" depends="compile" description="Runs a Log4j JMS Appender example">
+		<echo>Running a Log4j JMS Appender example</echo>
+	    <java classname="Log4jJMSAppenderExample" fork="yes" maxmemory="100M">
+	        <classpath refid="javac.classpath" />
+	        <jvmarg value="-Dlog4j.configuration=log4j-jms.properties" />
+	    </java>
+	</target>
+	
 </project>
