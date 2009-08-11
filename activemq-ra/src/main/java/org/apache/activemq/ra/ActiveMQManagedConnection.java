@@ -17,7 +17,6 @@
 package org.apache.activemq.ra;
 
 import java.io.PrintWriter;
-import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import javax.jms.Connection;
@@ -68,7 +67,7 @@ public class ActiveMQManagedConnection implements ManagedConnection, ExceptionLi
 
     private Subject subject;
     private ActiveMQConnectionRequestInfo info;
-    private boolean destoryed;
+    private boolean destroyed;
 
     public ActiveMQManagedConnection(Subject subject, ActiveMQConnection physicalConnection, ActiveMQConnectionRequestInfo info) throws ResourceException {
         try {
@@ -124,7 +123,7 @@ public class ActiveMQManagedConnection implements ManagedConnection, ExceptionLi
 
         // Do we need to change the associated userid/password
         if (!matches(info.getUserName(), this.info.getUserName()) || !matches(info.getPassword(), this.info.getPassword())) {
-            ((ActiveMQConnection)physicalConnection).changeUserInfo(info.getUserName(), info.getPassword());
+            physicalConnection.changeUserInfo(info.getUserName(), info.getPassword());
         }
 
         // Do we need to set the clientId?
@@ -188,7 +187,7 @@ public class ActiveMQManagedConnection implements ManagedConnection, ExceptionLi
     }
 
     private boolean isDestroyed() {
-        return destoryed;
+        return destroyed;
     }
 
     /**
@@ -206,7 +205,7 @@ public class ActiveMQManagedConnection implements ManagedConnection, ExceptionLi
 
         try {
             physicalConnection.close();
-            destoryed = true;
+            destroyed = true;
         } catch (JMSException e) {
             LOG.info("Error occured during close of a JMS connection.", e);
         }
@@ -231,7 +230,7 @@ public class ActiveMQManagedConnection implements ManagedConnection, ExceptionLi
         proxyConnections.clear();
 
         try {
-            ((ActiveMQConnection)physicalConnection).cleanup();
+            physicalConnection.cleanup();
         } catch (JMSException e) {
             throw new ResourceException("Could cleanup the ActiveMQ connection: " + e, e);
         }
@@ -343,12 +342,11 @@ public class ActiveMQManagedConnection implements ManagedConnection, ExceptionLi
     }
 
     /**
-     * @param subject
-     * @param info
-     * @return
+     * @param subject subject to match
+     * @param info cri to match
+     * @return whether the subject and cri match sufficiently to allow using this connection under the new circumstances
      */
     public boolean matches(Subject subject, ConnectionRequestInfo info) {
-
         // Check to see if it is our info class
         if (info == null) {
             return false;
