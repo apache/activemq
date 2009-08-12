@@ -1340,8 +1340,8 @@ public class Group<K, V> implements Map<K, V>, Service {
 
     void checkMembership() {
         if (this.started.get() && this.electionFinished.get()) {
-            long checkTime = System.currentTimeMillis() - getHeartBeatInterval();
-            boolean doElection = false;
+            long checkTime = System.currentTimeMillis() - (2 * getHeartBeatInterval()); // give it a bit more time since scheduler can be late
+        	boolean doElection = false;
             for (Member member : this.members.values()) {
                 if (member.getTimeStamp() < checkTime) {
                     LOG.info("Member timestamp expired " + member);
