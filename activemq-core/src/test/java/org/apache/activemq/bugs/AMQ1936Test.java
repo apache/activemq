@@ -198,7 +198,7 @@ public class AMQ1936Test extends TestCase{
             public boolean isSatisified() throws Exception {
                 return TEST_MESSAGE_COUNT == messages.size();
             }
-        }, 20*60*1000);
+        }, 1*60*1000);
         if (!ok) {
             dumpAllThreads("--STUCK?--");
         }
