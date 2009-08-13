@@ -32,6 +32,8 @@ import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportDisposedIOException;
 import org.apache.activemq.transport.TransportListener;
 import org.apache.activemq.util.IOExceptionSupport;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 
 /**
@@ -143,12 +145,6 @@ public class VMTransport implements Transport, Task {
         
         // If stop() is called while being start()ed.. then we can't stop until we return to the start() method.
         if( enqueueValve.isOn() ) {
-            
-            // let the peer know that we are disconnecting..
-            try {
-                oneway(DISCONNECT);
-            } catch (Exception ignore) {
-            }
 
             TaskRunner tr = null;
             try {
@@ -167,6 +163,11 @@ public class VMTransport implements Transport, Task {
             }
             if (tr != null) {
                 tr.shutdown(1000);
+            }
+            // let the peer know that we are disconnecting..
+            try {
+                oneway(DISCONNECT);
+            } catch (Exception ignore) {
             }
         }
     }
