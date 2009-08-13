@@ -78,6 +78,37 @@
 
   <build>
     <plugins>
+          <!-- Configure which tests are included/excuded -->
+      <plugin>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <forkMode>pertest</forkMode>
+          <childDelegation>false</childDelegation>
+          <useFile>true</useFile>
+          <argLine>-Xmx512M</argLine>
+
+           <systemProperties>
+            <property>
+              <name>org.apache.activemq.default.directory.prefix</name>
+              <value>target/</value>
+            </property>
+            <!-- Uncomment the following if you want to configure custom logging (using src/test/resources/log4j.properties)
+                 while running mvn:test
+                 Note: if you want to see log messages on the console window remove
+                       "redirectTestOutputToFile" from the parent pom
+            -->
+            <!--           
+            <property>
+              <name>log4j.configuration</name>
+              <value>file:target/test-classes/log4j.properties</value>
+            </property>
+            -->
+          </systemProperties>
+          <excludes>
+            <exclude>**/GroupStateTest.*</exclude>
+          </excludes>
+        </configuration>
+      </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
