@@ -2880,7 +2880,7 @@ false so that messages actually reside long term in the JDBC database.
       <xs:attribute name='brokerName' type='xs:string'/>
       <xs:attribute name='directory' type='xs:string'/>
       <xs:attribute name='indexWriteBatchSize' type='xs:integer'/>
-      <xs:attribute name='journalMaxFileLength' type='xs:integer'/>
+      <xs:attribute name='journalMaxFileLength' type='xs:string'/>
       <xs:attribute name='enableIndexWriteAsync' type='xs:boolean'/>
       <xs:attribute name='enableJournalDiskSyncs' type='xs:boolean'/>
       <xs:attribute name='ignoreMissingJournalfiles' type='xs:boolean'/>

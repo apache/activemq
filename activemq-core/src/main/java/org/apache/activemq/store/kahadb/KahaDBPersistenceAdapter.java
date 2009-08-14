@@ -193,19 +193,19 @@ public class KahaDBPersistenceAdapter implements PersistenceAdapter {
      * Get the journalMaxFileLength
      * @return the journalMaxFileLength
      */
-    public int getJournalMaxFileLength() {
+    public long getJournalMaxFileLength() {
         return this.letter.getJournalMaxFileLength();
     }
 
     /**
-     * @param journalMaxFileLength 
+     * @param journalMaxFileLength which is rounded to an integer
      * When set using XBean, you can use values such as: "20
      * mb", "1024 kb", or "1 gb"
      * 
      * @org.apache.xbean.Property propertyEditor="org.apache.activemq.util.MemoryPropertyEditor"
      */
-    public void setJournalMaxFileLength(int journalMaxFileLength) {
-        this.letter.setJournalMaxFileLength(journalMaxFileLength);
+    public void setJournalMaxFileLength(long journalMaxFileLength) {
+        this.letter.setJournalMaxFileLength(Long.valueOf(journalMaxFileLength).intValue());
     }
 
     /**
