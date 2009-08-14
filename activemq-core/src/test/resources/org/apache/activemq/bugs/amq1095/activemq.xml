@@ -17,10 +17,10 @@
 -->
 <beans>
 
-  <broker brokerName="localhost" xmlns="http://activemq.apache.org/schema/core" persistent="true">
+  <broker brokerName="localhost" xmlns="http://activemq.apache.org/schema/core" persistent="true" deleteAllMessagesOnStartup="true">
   
     <persistenceAdapter>
-      <kahaPersistenceAdapter directory="file:kahadir" maxDataFileLength="200000"/>
+      <kahaPersistenceAdapter directory="file:target/amq1095" maxDataFileLength="200000"/>
     </persistenceAdapter>
 
     <destinations>
