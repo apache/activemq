@@ -361,11 +361,7 @@ public class ProtocolConverter {
         }
         for (Iterator<StompSubscription> iter = subscriptionsByConsumerId.values().iterator(); iter.hasNext();) {
             StompSubscription sub = iter.next();
-            try {
-            	sub.onStompAbort(activemqTx);
-            } catch (Exception e) {
-            	throw new ProtocolException("Transaction abort failed", false, e);
-            }
+            sub.onStompAbort(activemqTx);
         }
 
         TransactionInfo tx = new TransactionInfo();

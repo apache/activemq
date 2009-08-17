@@ -188,15 +188,6 @@ public class StompConnection {
     }
     
     public void abort(String transaction) throws Exception {
-    	// discard all content on the wire before
-    	// aborting the transaction
-    	try {
-    		StompFrame discarded = this.receive(100);
-    		while (discarded != null) {
-    			discarded = this.receive(100);
-    		}
-    	} catch (Exception e) {    		
-    	}
     	HashMap<String, String> headers = new HashMap<String, String>();
     	headers.put("transaction", transaction);
     	StompFrame frame = new StompFrame("ABORT", headers);

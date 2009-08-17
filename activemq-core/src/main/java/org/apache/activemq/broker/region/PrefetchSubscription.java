@@ -236,7 +236,6 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                                                 dequeueCounter++;
                                                 dispatched.remove(node);
                                                 node.getRegionDestination().getDestinationStatistics().getInflight().decrement();
-                                                prefetchExtension--;
                                             }
                                         }
 

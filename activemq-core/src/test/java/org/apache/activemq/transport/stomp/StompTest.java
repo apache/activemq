@@ -977,24 +977,24 @@ public class StompTest extends CombinationTestSupport {
         
         stompConnection.begin("tx2");
         
+        // Previously delivered message need to get re-acked...
+        stompConnection.ack(frame, "tx2");
+        stompConnection.ack(frame1, "tx2");
+        
         StompFrame frame3 = stompConnection.receive();
-        assertEquals(frame3.getBody(), "message 1");
+        assertEquals(frame3.getBody(), "message 3");
         stompConnection.ack(frame3, "tx2");
         
         StompFrame frame4 = stompConnection.receive();
-        assertEquals(frame4.getBody(), "message 2");
+        assertEquals(frame4.getBody(), "message 4");
         stompConnection.ack(frame4, "tx2");
-        
-        StompFrame frame5 = stompConnection.receive();
-        assertEquals(frame5.getBody(), "message 3");        
-        stompConnection.ack(frame5, "tx2");
         
         stompConnection.commit("tx2");
         
         stompConnection.begin("tx3");
-        StompFrame frame6 = stompConnection.receive();
-        assertEquals(frame6.getBody(), "message 4");
-        stompConnection.ack(frame6, "tx3");
+        StompFrame frame5 = stompConnection.receive();
+        assertEquals(frame5.getBody(), "message 5");
+        stompConnection.ack(frame5, "tx3");
         stompConnection.commit("tx3");
         
         stompDisconnect();

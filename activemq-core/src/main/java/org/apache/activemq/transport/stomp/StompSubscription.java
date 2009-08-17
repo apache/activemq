@@ -99,43 +99,20 @@ public class StompSubscription {
         protocolConverter.getTransportFilter().sendToStomp(command);
     }
     
-    synchronized void onStompAbort(TransactionId transactionId) throws IOException, JMSException {
-    	//ack all unacked messages
-    	for (MessageDispatch md : dispatchedMessage.values()) {
-    		if (!unconsumedMessage.contains(md)) {
-    	        MessageAck ack = new MessageAck();
-    	        ack.setDestination(consumerInfo.getDestination());
-    	        ack.setConsumerId(consumerInfo.getConsumerId());
-    	        ack.setAckType(MessageAck.DELIVERED_ACK_TYPE);
-    	        ack.setFirstMessageId(md.getMessage().getMessageId());
-    	        ack.setLastMessageId(md.getMessage().getMessageId());
-    	        ack.setMessageCount(1);
-    	        ack.setTransactionId(transactionId);
-    	        protocolConverter.getTransportFilter().sendToActiveMQ(ack);
-    	        unconsumedMessage.add(md);
-    		}
-    	}
-    	// redeliver all unconsumed messages
-    	for (MessageDispatch md : unconsumedMessage) {
-    		onMessageDispatch(md);
-    	}
+    synchronized void onStompAbort(TransactionId transactionId) {
+    	unconsumedMessage.clear();
     }
     
     synchronized void onStompCommit(TransactionId transactionId) {
-    	// ack all messages
-    	if (!unconsumedMessage.isEmpty()) {
-    		MessageAck ack = new MessageAck();
-    		ack.setDestination(consumerInfo.getDestination());
-    		ack.setConsumerId(consumerInfo.getConsumerId());
-    		ack.setAckType(MessageAck.STANDARD_ACK_TYPE);
-    		ack.setFirstMessageId(unconsumedMessage.getFirst().getMessage().getMessageId());
-    		ack.setLastMessageId(unconsumedMessage.getLast().getMessage().getMessageId());
-    		ack.setMessageCount(unconsumedMessage.size());
-    		ack.setTransactionId(transactionId);
-    		protocolConverter.getTransportFilter().sendToActiveMQ(ack);
-    		// clear lists
-    		unconsumedMessage.clear();
+    	for (Iterator iter = dispatchedMessage.entrySet().iterator(); iter.hasNext();) {
+            Map.Entry entry = (Entry)iter.next();
+            MessageId id = (MessageId)entry.getKey();
+            MessageDispatch msg = (MessageDispatch)entry.getValue();
+            if (unconsumedMessage.contains(msg)) {
+            	iter.remove();
+            }
     	}
+    	unconsumedMessage.clear();
     }
 
     synchronized MessageAck onStompMessageAck(String messageId, TransactionId transactionId) {
@@ -151,11 +128,7 @@ public class StompSubscription {
         ack.setConsumerId(consumerInfo.getConsumerId());
 
         if (ackMode == CLIENT_ACK) {
-        	if (transactionId != null) {
-        		ack.setAckType(MessageAck.DELIVERED_ACK_TYPE);
-        	} else {
-        		ack.setAckType(MessageAck.STANDARD_ACK_TYPE);
-        	}
+        	ack.setAckType(MessageAck.STANDARD_ACK_TYPE);
             int count = 0;
             for (Iterator iter = dispatchedMessage.entrySet().iterator(); iter.hasNext();) {
 
@@ -168,10 +141,12 @@ public class StompSubscription {
                 }
                 
                 if (transactionId != null) {
-                	if (!unconsumedMessage.contains(msg))
+                	if (!unconsumedMessage.contains(msg)) {
                 		unconsumedMessage.add(msg);
+                	}
+                } else {
+                	iter.remove();
                 }
-                iter.remove();
                 
                 
                 count++;
