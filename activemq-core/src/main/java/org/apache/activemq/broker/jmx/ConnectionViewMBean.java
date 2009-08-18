@@ -42,34 +42,12 @@ public interface ConnectionViewMBean extends Service {
      */
     @MBeanInfo("Connection is active (both connected and receiving messages).")
     boolean isActive();
-
-    /**
-     * Returns the number of messages to be dispatched to this connection
-     */
-    @MBeanInfo("The number of messages dispatched to this connection")
-    int getDispatchQueueSize();
     
     /**
      * Resets the statistics
      */
     @MBeanInfo("Resets the statistics")
     void resetStatistics();
-
-    /**
-     * Returns the number of messages enqueued on this connection
-     * 
-     * @return the number of messages enqueued on this connection
-     */
-    @MBeanInfo("Number of messages enqueued on this connection")
-    long getEnqueueCount();
-
-    /**
-     * Returns the number of messages dequeued on this connection
-     * 
-     * @return the number of messages dequeued on this connection
-     */
-    @MBeanInfo("Number of messages dequeued on this connection")
-    long getDequeueCount();
     
     /**
      * Returns the source address for this connection

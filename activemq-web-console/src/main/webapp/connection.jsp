@@ -61,18 +61,6 @@ No connection could be found for ID ${requestContext.connectionQuery.connectionI
 			<td class="label">Slow</td>
 			<td>${row.slow}</td>
 		</tr>
-		<tr>
-			<td class="label">Enqueue Count</td>
-			<td>${row.enqueueCount}</td>
-		</tr>
-		<tr>
-			<td class="label">Dequeue Count</td>
-			<td>${row.dequeueCount}</td>
-		</tr>
-		<tr>
-			<td class="label">Dispatch Queue Size</td>
-		    <td>${row.dispatchQueueSize}</td>
-		</tr>
 	</tbody>
 </table>
 

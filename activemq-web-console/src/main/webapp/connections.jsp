@@ -30,9 +30,6 @@
 <tr>
 	<th>Name</th>
 	<th>Remote Address</th>
-	<th>Enqueue Count</th>
-	<th>Dequeue Count</th>
-	<th>Dispatch Queue Size</th>
 	<th>Active</th>
 	<th>Slow</th>
 </tr>
@@ -43,9 +40,6 @@
 <tr>
 	<td><a href="connection.jsp?connectionID=${conName}">${conName}</a></td>
 	<td>${con.remoteAddress}</td>
-	<td>${con.enqueueCount}</td>
-	<td>${con.dequeueCount}</td>
-	<td>${con.dispatchQueueSize}</td>
 	<td>${con.active}</td>
 	<td>${con.slow}</td>
 </tr>

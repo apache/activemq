@@ -77,23 +77,4 @@ public class ConnectorView implements ConnectorViewMBean {
         return connector.getStatistics().isEnabled();
     }
 
-    /**
-     * Returns the number of messages enqueued on this connector
-     * 
-     * @return the number of messages enqueued on this connector
-     */
-    public long getEnqueueCount() {
-        return connector.getStatistics().getEnqueues().getCount();
-
-    }
-
-    /**
-     * Returns the number of messages dequeued on this connector
-     * 
-     * @return the number of messages dequeued on this connector
-     */
-    public long getDequeueCount() {
-        return connector.getStatistics().getDequeues().getCount();
-    }
-
 }

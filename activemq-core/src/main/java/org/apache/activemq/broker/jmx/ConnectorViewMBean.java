@@ -46,20 +46,4 @@ public interface ConnectorViewMBean extends Service {
     @MBeanInfo("Statistics gathering enabled")
     boolean isStatisticsEnabled();
 
-    /**
-     * Returns the number of messages enqueued on this connector
-     * 
-     * @return the number of messages enqueued on this connector
-     */
-    @MBeanInfo("Number of messages enqueued on this connector")
-    long getEnqueueCount();
-
-    /**
-     * Returns the number of messages dequeued on this connector
-     * 
-     * @return the number of messages dequeued on this connector
-     */
-    @MBeanInfo("Number of messages dequeued on this connector")
-    long getDequeueCount();
-
 }
