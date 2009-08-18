@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.activemq.broker.SslContext;
@@ -29,8 +30,10 @@ import org.apache.activemq.transport.TransportFactory;
 import org.apache.activemq.transport.discovery.DiscoveryAgent;
 import org.apache.activemq.transport.discovery.DiscoveryAgentFactory;
 import org.apache.activemq.transport.discovery.DiscoveryListener;
+import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.util.ServiceStopper;
 import org.apache.activemq.util.ServiceSupport;
+import org.apache.activemq.util.URISupport;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -46,7 +49,8 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
 
     private DiscoveryAgent discoveryAgent;
     private ConcurrentHashMap<URI, NetworkBridge> bridges = new ConcurrentHashMap<URI, NetworkBridge>();
-
+    private Map<String, String> parameters;
+    
     public DiscoveryNetworkConnector() {
     }
 
@@ -56,6 +60,14 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
 
     public void setUri(URI discoveryURI) throws IOException {
         setDiscoveryAgent(DiscoveryAgentFactory.createDiscoveryAgent(discoveryURI));
+        try {
+            parameters = URISupport.parseParamters(discoveryURI);
+            // allow discovery agent to grab it's parameters
+            IntrospectionSupport.setProperties(getDiscoveryAgent(), parameters);
+        } catch (URISyntaxException e) {
+            LOG.warn("failed to parse query parameters from discoveryURI: " + discoveryURI, e);
+        }  
+        
     }
 
     public void onServiceAdd(DiscoveryEvent event) {
@@ -83,6 +95,11 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
                 return;
             }
             URI connectUri = uri;
+            try {
+                connectUri = URISupport.applyParameters(connectUri, parameters);
+            } catch (URISyntaxException e) {
+                LOG.warn("could not apply query parameters: " + parameters + " to: " + connectUri, e);
+            }
             LOG.info("Establishing network connection from " + localURIName + " to " + connectUri);
 
             Transport remoteTransport;
@@ -93,7 +110,7 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
                 try {
                     remoteTransport = TransportFactory.connect(connectUri);
                 } catch (Exception e) {
-                    LOG.warn("Could not connect to remote URI: " + localURIName + ": " + e.getMessage());
+                    LOG.warn("Could not connect to remote URI: " + connectUri + ": " + e.getMessage());
                     LOG.debug("Connection failure exception: " + e, e);
                     return;
                 }

@@ -25,6 +25,7 @@ import org.apache.activemq.command.DiscoveryEvent;
 import org.apache.activemq.transport.CompositeTransport;
 import org.apache.activemq.transport.TransportFilter;
 import org.apache.activemq.util.ServiceStopper;
+import org.apache.activemq.util.URISupport;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -74,26 +75,12 @@ public class DiscoveryTransport extends TransportFilter implements DiscoveryList
                 URI uri = new URI(url);
                 serviceURIs.put(event.getServiceName(), uri);
                 LOG.info("Adding new broker connection URL: " + uri);
-                next.add(new URI[] {applyParameters(uri)});
+                next.add(new URI[] {URISupport.applyParameters(uri, parameters)});
             } catch (URISyntaxException e) {
                 LOG.warn("Could not connect to remote URI: " + url + " due to bad URI syntax: " + e, e);
             }
         }
     }
-
-    private URI applyParameters(URI uri) throws URISyntaxException {
-        if (parameters != null && !parameters.isEmpty()) {
-            StringBuffer newQuery = uri.getRawQuery() != null ? new StringBuffer(uri.getRawQuery()) : new StringBuffer() ;
-            for ( Map.Entry<String, String> param: parameters.entrySet()) {
-                if (newQuery.length()!=0) {
-                    newQuery.append(';');
-                }
-                newQuery.append(param.getKey()).append('=').append(param.getValue());
-            }
-            uri = new URI(uri.getScheme(), uri.getAuthority(), uri.getPath(), newQuery.toString(), uri.getFragment());
-        }
-        return uri;
-}
 
     public void onServiceRemove(DiscoveryEvent event) {
         URI uri = serviceURIs.get(event.getServiceName());

@@ -127,6 +127,20 @@ public class URISupport {
         return uri.getQuery() == null ? emptyMap() : parseQuery(stripPrefix(uri.getQuery(), "?"));
     }
 
+    public static URI applyParameters(URI uri, Map<String, String> queryParameters) throws URISyntaxException {
+        if (queryParameters != null && !queryParameters.isEmpty()) {
+            StringBuffer newQuery = uri.getRawQuery() != null ? new StringBuffer(uri.getRawQuery()) : new StringBuffer() ;
+            for ( Map.Entry<String, String> param: queryParameters.entrySet()) {
+                if (newQuery.length()!=0) {
+                    newQuery.append('&');
+                }
+                newQuery.append(param.getKey()).append('=').append(param.getValue());
+            }
+            uri = createURIWithQuery(uri, newQuery.toString());
+        }
+        return uri;
+    }
+    
     @SuppressWarnings("unchecked")
     private static Map<String, String> emptyMap() {
         return Collections.EMPTY_MAP;
