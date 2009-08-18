@@ -71,4 +71,35 @@ public class ByteSequence {
         }
     }
 
+    public int indexOf(ByteSequence needle, int pos) {
+        int max = length - needle.length;
+        for (int i = pos; i < max; i++) {
+            if (matches(needle, i)) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    private boolean matches(ByteSequence needle, int pos) {
+        for (int i = 0; i < needle.length; i++) {
+            if( data[offset + pos+ i] != needle.data[needle.offset + i] ) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private byte getByte(int i) {
+        return data[offset+i];
+    }
+
+    final public int indexOf(byte value, int pos) {
+        for (int i = pos; i < length; i++) {
+            if (data[offset + i] == value) {
+                return i;
+            }
+        }
+        return -1;
+    }
 }

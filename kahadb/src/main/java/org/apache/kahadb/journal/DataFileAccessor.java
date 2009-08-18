@@ -95,9 +95,14 @@ final class DataFileAccessor {
         }
     }
     
-    public void read(long offset, byte data[]) throws IOException {
+    public void readFully(long offset, byte data[]) throws IOException {
        file.seek(offset);
        file.readFully(data);
+    }
+
+    public int read(long offset, byte data[]) throws IOException {
+       file.seek(offset);
+       return file.read(data);
     }
 
     public void readLocationDetails(Location location) throws IOException {

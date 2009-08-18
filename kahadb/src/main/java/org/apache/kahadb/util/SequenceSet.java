@@ -175,7 +175,18 @@ public class SequenceSet extends LinkedNodeList<Sequence> {
         Sequence rc = removeFirstSequence(1);
         return rc.first;
     }
-    
+
+
+    public Sequence removeLastSequence() {
+        if (isEmpty()) {
+            return null;
+        }
+
+        Sequence rc = getTail();
+        rc.unlink();
+        return rc;
+    }
+
     /**
      * Removes and returns the first sequence that is count range large.
      *

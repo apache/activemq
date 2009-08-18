@@ -22,6 +22,7 @@ import java.io.RandomAccessFile;
 
 import org.apache.kahadb.util.IOHelper;
 import org.apache.kahadb.util.LinkedNode;
+import org.apache.kahadb.util.SequenceSet;
 
 /**
  * DataFile
@@ -33,6 +34,7 @@ public class DataFile extends LinkedNode<DataFile> implements Comparable<DataFil
     protected final File file;
     protected final Integer dataFileId;
     protected int length;
+    protected final SequenceSet corruptedBlocks = new SequenceSet();
 
     DataFile(File file, int number, int preferedSize) {
         this.file = file;
@@ -80,6 +82,10 @@ public class DataFile extends LinkedNode<DataFile> implements Comparable<DataFil
         IOHelper.moveFile(file,targetDirectory);
     }
 
+    public SequenceSet getCorruptedBlocks() {
+        return corruptedBlocks;
+    }
+    
     public int compareTo(DataFile df) {
         return dataFileId - df.dataFileId;
     }

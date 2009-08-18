@@ -20,15 +20,7 @@ import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeMap;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
@@ -39,10 +31,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.kahadb.journal.DataFileAppender.WriteCommand;
 import org.apache.kahadb.journal.DataFileAppender.WriteKey;
-import org.apache.kahadb.util.ByteSequence;
-import org.apache.kahadb.util.DataByteArrayInputStream;
-import org.apache.kahadb.util.LinkedNodeList;
-import org.apache.kahadb.util.Scheduler;
+import org.apache.kahadb.util.*;
 
 /**
  * Manages DataFiles
@@ -61,7 +50,22 @@ public class Journal {
     // Batch Control Item holds a 4 byte size of the batch and a 8 byte checksum of the batch. 
     public static final byte[] BATCH_CONTROL_RECORD_MAGIC = bytes("WRITE BATCH");
     public static final int BATCH_CONTROL_RECORD_SIZE = RECORD_HEAD_SPACE+BATCH_CONTROL_RECORD_MAGIC.length+4+8;
-    
+    public static final byte[] BATCH_CONTROL_RECORD_HEADER = createBatchControlRecordHeader();
+
+    private static byte[] createBatchControlRecordHeader() {
+        try {
+            DataByteArrayOutputStream os = new DataByteArrayOutputStream();
+            os.writeInt(BATCH_CONTROL_RECORD_SIZE);
+            os.writeByte(BATCH_CONTROL_RECORD_TYPE);
+            os.write(BATCH_CONTROL_RECORD_MAGIC);
+            ByteSequence sequence = os.toByteSequence();
+            sequence.compact();
+            return sequence.getData();
+        } catch (IOException e) {
+            throw new RuntimeException("Could not create batch control record header.");
+        }
+    }
+
     public static final String DEFAULT_DIRECTORY = ".";
     public static final String DEFAULT_ARCHIVE_DIRECTORY = "data-archive";
     public static final String DEFAULT_FILE_PREFIX = "db-";
@@ -96,6 +100,7 @@ public class Journal {
     protected boolean archiveDataLogs;
 	private ReplicationTarget replicationTarget;
     protected boolean checksum;
+    protected boolean checkForCorruptionOnStartup;
 
     public synchronized void start() throws IOException {
         if (started) {
@@ -137,17 +142,20 @@ public class Journal {
             for (DataFile df : l) {
                 dataFiles.addLast(df);
                 fileByFileMap.put(df.getFile(), df);
+
+                if( isCheckForCorruptionOnStartup() ) {
+                    lastAppendLocation.set(recoveryCheck(df));
+                }
             }
         }
 
     	getCurrentWriteFile();
-        try {
-        	Location l = recoveryCheck(dataFiles.getTail());
-            lastAppendLocation.set(l);
-        } catch (IOException e) {
-            LOG.warn("recovery check failed", e);
+
+        if( lastAppendLocation.get()==null ) {
+            DataFile df = dataFiles.getTail();
+            lastAppendLocation.set(recoveryCheck(df));
         }
-        
+
         cleanupTask = new Runnable() {
             public void run() {
                 cleanup();
@@ -177,55 +185,107 @@ public class Journal {
     	DataFileAccessor reader = accessorPool.openDataFileAccessor(dataFile);
         try {
             while( true ) {
-	        	reader.read(location.getOffset(), controlRecord);
-	        	controlIs.restart();
-	        	
-	        	// Assert that it's  a batch record.
-	        	if( controlIs.readInt() != BATCH_CONTROL_RECORD_SIZE ) {
-	        		break;
-	        	}
-	        	if( controlIs.readByte() != BATCH_CONTROL_RECORD_TYPE ) {
-	        		break;
-	        	}
-	        	for( int i=0; i < BATCH_CONTROL_RECORD_MAGIC.length; i++ ) {
-	        		if( controlIs.readByte() != BATCH_CONTROL_RECORD_MAGIC[i] ) {
-	        			break;
-	        		}
-	        	}
-	        	
-	        	int size = controlIs.readInt();
-	        	if( size > MAX_BATCH_SIZE ) {
-	        		break;
-	        	}
-	        	
-	        	if( isChecksum() ) {
-		        	
-	        		long expectedChecksum = controlIs.readLong();	        	
-		        	
-	        		byte data[] = new byte[size];
-		        	reader.read(location.getOffset()+BATCH_CONTROL_RECORD_SIZE, data);
-		        	
-		        	Checksum checksum = new Adler32();
-	                checksum.update(data, 0, data.length);
-	                
-	                if( expectedChecksum!=checksum.getValue() ) {
-	                	break;
-	                }
-	                
-	        	}
-                
-	        	
-                location.setOffset(location.getOffset()+BATCH_CONTROL_RECORD_SIZE+size);
+                int size = checkBatchRecord(reader, location.getOffset());
+                if ( size>=0 ) {
+                    location.setOffset(location.getOffset()+BATCH_CONTROL_RECORD_SIZE+size);
+                } else {
+
+                    // Perhaps it's just some corruption... scan through the file to find the next valid batch record.  We
+                    // may have subsequent valid batch records.
+                    int nextOffset = findNextBatchRecord(reader, location.getOffset()+1);
+                    if( nextOffset >=0 ) {
+                        Sequence sequence = new Sequence(location.getOffset(), nextOffset - 1);
+                        LOG.info("Corrupt journal records found in '"+dataFile.getFile()+"' between offsets: "+sequence);
+                        dataFile.corruptedBlocks.add(sequence);
+                        location.setOffset(nextOffset);
+                    } else {
+                        break;
+                    }
+                }
             }
             
         } catch (IOException e) {
 		} finally {
             accessorPool.closeDataFileAccessor(reader);
         }
-        
+
         dataFile.setLength(location.getOffset());
+
+        if( !dataFile.corruptedBlocks.isEmpty() ) {
+            // Is the end of the data file corrupted?
+            if( dataFile.corruptedBlocks.getTail().getLast()+1 == location.getOffset() ) {
+                dataFile.setLength((int) dataFile.corruptedBlocks.removeLastSequence().getFirst());
+            }
+        }
+
         return location;
     }
+
+    private int findNextBatchRecord(DataFileAccessor reader, int offset) throws IOException {
+        ByteSequence header = new ByteSequence(BATCH_CONTROL_RECORD_HEADER);
+        byte data[] = new byte[1024*4];
+        ByteSequence bs = new ByteSequence(data, 0, reader.read(offset, data));
+
+        int pos = 0;
+        while( true ) {
+            pos = bs.indexOf(header, pos);
+            if( pos >= 0 ) {
+                return offset+pos;
+            } else {
+                // need to load the next data chunck in..
+                if( bs.length != data.length ) {
+                    // If we had a short read then we were at EOF
+                    return -1;
+                }
+                offset += bs.length-BATCH_CONTROL_RECORD_HEADER.length;
+                bs = new ByteSequence(data, 0, reader.read(offset, data));
+                pos=0;
+            }
+        }
+    }
+
+
+    public int checkBatchRecord(DataFileAccessor reader, int offset) throws IOException {
+        byte controlRecord[] = new byte[BATCH_CONTROL_RECORD_SIZE];
+        DataByteArrayInputStream controlIs = new DataByteArrayInputStream(controlRecord);
+
+        reader.readFully(offset, controlRecord);
+
+        // Assert that it's  a batch record.
+        for( int i=0; i < BATCH_CONTROL_RECORD_HEADER.length; i++ ) {
+            if( controlIs.readByte() != BATCH_CONTROL_RECORD_HEADER[i] ) {
+                return -1;
+            }
+        }
+
+        int size = controlIs.readInt();
+        if( size > MAX_BATCH_SIZE ) {
+            return -1;
+        }
+
+        if( isChecksum() ) {
+
+            long expectedChecksum = controlIs.readLong();
+            if( expectedChecksum == 0 ) {
+                // Checksuming was not enabled when the record was stored.
+                // we can't validate the record :(
+                return size;
+            }
+
+            byte data[] = new byte[size];
+            reader.readFully(offset+BATCH_CONTROL_RECORD_SIZE, data);
+
+            Checksum checksum = new Adler32();
+            checksum.update(data, 0, data.length);
+
+            if( expectedChecksum!=checksum.getValue() ) {
+                return -1;
+            }
+
+        }
+        return size;
+    }
+
 
 	void addToTotalLength(int size) {
 		totalLength.addAndGet(size);
@@ -640,5 +700,11 @@ public class Journal {
 		this.checksum = checksumWrites;
 	}
 
+    public boolean isCheckForCorruptionOnStartup() {
+        return checkForCorruptionOnStartup;
+    }
 
+    public void setCheckForCorruptionOnStartup(boolean checkForCorruptionOnStartup) {
+        this.checkForCorruptionOnStartup = checkForCorruptionOnStartup;
+    }
 }

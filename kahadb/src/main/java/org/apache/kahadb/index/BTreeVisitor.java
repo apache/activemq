@@ -25,7 +25,7 @@ import java.util.List;
  * @param <Value>
  */
 public interface BTreeVisitor<Key,Value> {
-    
+
     /**
      * Do you want to visit the range of BTree entries between the first and and second key?
      * 
@@ -34,7 +34,7 @@ public interface BTreeVisitor<Key,Value> {
      * @return true if you want to visit the values between the first and second key.
      */
     boolean isInterestedInKeysBetween(Key first, Key second);
-    
+
     /**
      * The keys and values of a BTree leaf node.
      * 
@@ -42,32 +42,111 @@ public interface BTreeVisitor<Key,Value> {
      * @param values
      */
     void visit(List<Key> keys, List<Value> values);
-    
-    
-    abstract class GTVisitor<Key extends Comparable<Key>, Value> implements BTreeVisitor<Key, Value>{
-		final private Key value;
 
-		public GTVisitor(Key value) {
-			this.value = value;
-		}
+    public interface Predicate<Key> {
+        boolean isInterestedInKeysBetween(Key first, Key second);
+        boolean isInterestedInKey(Key key);
+    }
 
-		public boolean isInterestedInKeysBetween(Key first, Key second) {
-        	return second==null || second.compareTo(value)>0;
-		}
-
+    abstract class PredicateVisitor<Key, Value> implements BTreeVisitor<Key, Value>, Predicate<Key> {
 		public void visit(List<Key> keys, List<Value> values) {
 			for( int i=0; i < keys.size(); i++) {
 				Key key = keys.get(i);
-				if( key.compareTo(value)>0 ) {
+				if( isInterestedInKey(key) ) {
 					matched(key, values.get(i));
 				}
 			}
 		}
 
-		abstract protected void matched(Key key, Value value);
+		protected void matched(Key key, Value value) {
+        }
     }
-    
-    abstract class BetweenVisitor<Key extends Comparable<Key>, Value> implements BTreeVisitor<Key, Value>{
+
+    class OrVisitor<Key, Value> extends PredicateVisitor<Key, Value> {
+        private final List<Predicate<Key>> conditions;
+
+        public OrVisitor(List<Predicate<Key>> conditions) {
+            this.conditions = conditions;
+        }
+
+		public boolean isInterestedInKeysBetween(Key first, Key second) {
+            for (Predicate<Key> condition : conditions) {
+                if( condition.isInterestedInKeysBetween(first, second) ) {
+                    return true;
+                }
+            }
+            return false;
+		}
+
+        public boolean isInterestedInKey(Key key) {
+            for (Predicate<Key> condition : conditions) {
+                if( condition.isInterestedInKey(key) ) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        @Override
+        public String toString() {
+            StringBuilder sb = new StringBuilder();
+            boolean first=true;
+            for (Predicate<Key> condition : conditions) {
+                if( !first ) {
+                    sb.append(" OR ");
+                }
+                first=false;
+                sb.append("(");
+                sb.append(condition);
+                sb.append(")");
+            }
+            return sb.toString();
+        }
+    }
+
+    class AndVisitor<Key, Value> extends PredicateVisitor<Key, Value> {
+        private final List<Predicate<Key>> conditions;
+
+        public AndVisitor(List<Predicate<Key>> conditions) {
+            this.conditions = conditions;
+        }
+
+		public boolean isInterestedInKeysBetween(Key first, Key second) {
+            for (Predicate<Key> condition : conditions) {
+                if( !condition.isInterestedInKeysBetween(first, second) ) {
+                    return false;
+                }
+            }
+            return true;
+		}
+
+        public boolean isInterestedInKey(Key key) {
+            for (Predicate<Key> condition : conditions) {
+                if( !condition.isInterestedInKey(key) ) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        @Override
+        public String toString() {
+            StringBuilder sb = new StringBuilder();
+            boolean first=true;
+            for (Predicate<Key> condition : conditions) {
+                if( !first ) {
+                    sb.append(" AND ");
+                }
+                first=false;
+                sb.append("(");
+                sb.append(condition);
+                sb.append(")");
+            }
+            return sb.toString();
+        }
+    }
+
+    class BetweenVisitor<Key extends Comparable<Key>, Value> extends PredicateVisitor<Key, Value> {
 		private final Key first;
         private final Key last;
 
@@ -81,19 +160,38 @@ public interface BTreeVisitor<Key,Value> {
                    && (first==null || first.compareTo(last)<0);
 		}
 
-		public void visit(List<Key> keys, List<Value> values) {
-			for( int i=0; i < keys.size(); i++) {
-				Key key = keys.get(i);
-				if( key.compareTo(first)>=0 && key.compareTo(last)<0 ) {
-					matched(key, values.get(i));
-				}
-			}
-		}
+        public boolean isInterestedInKey(Key key) {
+            return key.compareTo(first) >=0 && key.compareTo(last) <0;
+        }
 
-		abstract protected void matched(Key key, Value value);
+        @Override
+        public String toString() {
+            return first+" <= key < "+last;
+        }
     }
 
-    abstract class GTEVisitor<Key extends Comparable<Key>, Value> implements BTreeVisitor<Key, Value>{
+    class GTVisitor<Key extends Comparable<Key>, Value> extends PredicateVisitor<Key, Value> {
+		final private Key value;
+
+		public GTVisitor(Key value) {
+			this.value = value;
+		}
+
+		public boolean isInterestedInKeysBetween(Key first, Key second) {
+        	return second==null || second.compareTo(value)>0;
+		}
+
+        public boolean isInterestedInKey(Key key) {
+            return key.compareTo(value)>0;
+        }
+
+        @Override
+        public String toString() {
+            return "key > "+ value;
+        }
+    }
+
+    class GTEVisitor<Key extends Comparable<Key>, Value> extends PredicateVisitor<Key, Value> {
 		final private Key value;
 
 		public GTEVisitor(Key value) {
@@ -104,19 +202,17 @@ public interface BTreeVisitor<Key,Value> {
         	return second==null || second.compareTo(value)>=0;
 		}
 
-		public void visit(List<Key> keys, List<Value> values) {
-			for( int i=0; i < keys.size(); i++) {
-				Key key = keys.get(i);
-				if( key.compareTo(value)>=0 ) {
-					matched(key, values.get(i));
-				}
-			}
-		}
+        public boolean isInterestedInKey(Key key) {
+            return key.compareTo(value)>=0;
+        }
 
-		abstract protected void matched(Key key, Value value);
+        @Override
+        public String toString() {
+            return "key >= "+ value;
+        }
     }
     
-    abstract class LTVisitor<Key extends Comparable<Key>, Value> implements BTreeVisitor<Key, Value>{
+    class LTVisitor<Key extends Comparable<Key>, Value> extends PredicateVisitor<Key, Value> {
 		final private Key value;
 
 		public LTVisitor(Key value) {
@@ -127,19 +223,17 @@ public interface BTreeVisitor<Key,Value> {
         	return first==null || first.compareTo(value)<0;
 		}
 
-		public void visit(List<Key> keys, List<Value> values) {
-			for( int i=0; i < keys.size(); i++) {
-				Key key = keys.get(i);
-				if( key.compareTo(value)<0 ) {
-					matched(key, values.get(i));
-				}
-			}
-		}
+        public boolean isInterestedInKey(Key key) {
+            return key.compareTo(value)<0;
+        }
 
-		abstract protected void matched(Key key, Value value);
+        @Override
+        public String toString() {
+            return "key < "+ value;
+        }
     }
     
-    abstract class LTEVisitor<Key extends Comparable<Key>, Value> implements BTreeVisitor<Key, Value>{
+    class LTEVisitor<Key extends Comparable<Key>, Value> extends PredicateVisitor<Key, Value> {
 		final private Key value;
 
 		public LTEVisitor(Key value) {
@@ -150,15 +244,13 @@ public interface BTreeVisitor<Key,Value> {
         	return first==null || first.compareTo(value)<=0;
 		}
 
-		public void visit(List<Key> keys, List<Value> values) {
-			for( int i=0; i < keys.size(); i++) {
-				Key key = keys.get(i);
-				if( key.compareTo(value)<=0 ) {
-					matched(key, values.get(i));
-				}
-			}
-		}
+        public boolean isInterestedInKey(Key key) {
+            return key.compareTo(value)<=0;
+        }
 
-		abstract protected void matched(Key key, Value value);
+        @Override
+        public String toString() {
+            return "key <= "+ value;
+        }
     }
 }
