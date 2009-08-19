@@ -141,6 +141,13 @@ public class KahaPersistenceAdapter implements PersistenceAdapter {
      */
     public void removeQueueMessageStore(ActiveMQQueue destination) {
         queues.remove(destination);
+        try{
+        	if(theStore!=null){
+        		theStore.deleteMapContainer(destination,"queue-data");
+        	}
+        }catch(IOException e ){
+        	LOG.error("Failed to remove store map container for queue:"+destination, e);
+        }
     }
 
     /**

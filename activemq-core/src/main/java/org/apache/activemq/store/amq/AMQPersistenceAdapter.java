@@ -501,7 +501,8 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
      * @param destination
      */
     public void removeQueueMessageStore(ActiveMQQueue destination) {
-        queues.remove(destination);
+        AMQMessageStore store= queues.remove(destination);
+        referenceStoreAdapter.removeQueueMessageStore(destination);
     }
 
     /**
