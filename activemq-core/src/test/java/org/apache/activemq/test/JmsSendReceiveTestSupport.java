@@ -167,7 +167,7 @@ public abstract class JmsSendReceiveTestSupport extends TestSupport implements M
             }
         }
 
-        assertEquals("Not enough messages received", data.length, receivedMessages.size());
+        assertEquals("Invalid number of messages received", data.length, receivedMessages.size());
 
         for (int i = 0; i < data.length; i++) {
             Message received = receivedMessages.get(i);

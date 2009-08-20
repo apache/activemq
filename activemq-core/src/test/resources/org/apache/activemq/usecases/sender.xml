@@ -23,7 +23,11 @@
     </transportConnectors>
 
     <networkConnectors>
-      <networkConnector uri="static:(tcp://localhost:62002)"/>
+      <networkConnector uri="static:(tcp://localhost:62002)">
+        <staticallyIncludedDestinations>
+          <topic physicalName=">"/>
+        </staticallyIncludedDestinations>
+      </networkConnector>
     </networkConnectors>
 
     <persistenceAdapter>

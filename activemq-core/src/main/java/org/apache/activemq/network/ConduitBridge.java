@@ -73,11 +73,10 @@ public class ConduitBridge extends DemandForwardingBridge {
     protected boolean addToAlreadyInterestedConsumers(ConsumerInfo info) {
         // search through existing subscriptions and see if we have a match
         boolean matched = false;
-        DestinationFilter filter = DestinationFilter.parseFilter(info.getDestination());
         for (Iterator i = subscriptionMapByLocalId.values().iterator(); i.hasNext();) {
             DemandSubscription ds = (DemandSubscription)i.next();
-            
-            if (filter.matches(ds.getLocalInfo().getDestination())) {
+            DestinationFilter filter = DestinationFilter.parseFilter(ds.getLocalInfo().getDestination());
+            if (filter.matches(info.getDestination())) {
                 if (LOG.isDebugEnabled()) {
                     LOG.debug(configuration.getBrokerName() + " matched (add interest) to exsting sub for: " + ds.getRemoteInfo()
                             + " with sub: " + info);
