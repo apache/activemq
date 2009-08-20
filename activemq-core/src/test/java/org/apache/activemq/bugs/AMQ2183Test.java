@@ -114,7 +114,7 @@ public class AMQ2183Test extends TestCase implements UncaughtExceptionHandler, M
         final MessageCounter counterA = new MessageCounter();
         connection.createSession(false, Session.AUTO_ACKNOWLEDGE).createConsumer(new ActiveMQQueue("Consumer.A.VirtualTopic.T")).setMessageListener(counterA);
        
-        MessageCounter counterB = new MessageCounter();
+        final MessageCounter counterB = new MessageCounter();
         connection.createSession(false, Session.AUTO_ACKNOWLEDGE).createConsumer(new ActiveMQQueue("Consumer.B.VirtualTopic.T")).setMessageListener(counterB);
        
         Thread.sleep(2000);
@@ -127,7 +127,7 @@ public class AMQ2183Test extends TestCase implements UncaughtExceptionHandler, M
         
         Wait.waitFor(new Condition() {
             public boolean isSatisified() throws Exception {
-                return maxSent == counterA.getCount();
+                return maxSent == counterA.getCount() && maxSent == counterB.getCount();
             }
         });
         assertEquals(maxSent, counterA.getCount());
