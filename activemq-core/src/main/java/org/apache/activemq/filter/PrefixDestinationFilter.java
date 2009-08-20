@@ -28,17 +28,20 @@ import org.apache.activemq.command.ActiveMQDestination;
 public class PrefixDestinationFilter extends DestinationFilter {
 
     private String[] prefixes;
+    private byte destinationType;
 
     /**
      * An array of paths, the last path is '>'
      *
      * @param prefixes
      */
-    public PrefixDestinationFilter(String[] prefixes) {
+    public PrefixDestinationFilter(String[] prefixes, byte destinationType) {
         this.prefixes = prefixes;
+        this.destinationType = destinationType;
     }
 
     public boolean matches(ActiveMQDestination destination) {
+    	if (destination.getDestinationType() != destinationType) return false;
         String[] path = DestinationPath.getDestinationPaths(destination.getPhysicalName());
         int length = prefixes.length;
         if (path.length >= length) {

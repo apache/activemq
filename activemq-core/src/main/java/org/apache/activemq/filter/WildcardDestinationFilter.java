@@ -28,13 +28,14 @@ import org.apache.activemq.command.ActiveMQDestination;
 public class WildcardDestinationFilter extends DestinationFilter {
 
     private String[] prefixes;
+    private byte destinationType;
 
     /**
      * An array of paths containing * characters
      *
      * @param prefixes
      */
-    public WildcardDestinationFilter(String[] prefixes) {
+    public WildcardDestinationFilter(String[] prefixes, byte destinationType) {
         this.prefixes = new String[prefixes.length];
         for (int i = 0; i < prefixes.length; i++) {
             String prefix = prefixes[i];
@@ -42,9 +43,11 @@ public class WildcardDestinationFilter extends DestinationFilter {
                 this.prefixes[i] = prefix;
             }
         }
+        this.destinationType = destinationType;
     }
 
     public boolean matches(ActiveMQDestination destination) {
+    	if (destination.getDestinationType() != destinationType) return false;
         String[] path = DestinationPath.getDestinationPaths(destination);
         int length = prefixes.length;
         if (path.length == length) {
