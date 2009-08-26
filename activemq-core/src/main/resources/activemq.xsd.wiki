@@ -1615,6 +1615,8 @@ should be used{html} |
     | maxProducersToAudit | _int_ | {html}{html} |
     | maxQueueAuditDepth | _int_ | {html}{html} |
     | memoryLimit | _long_ | {html}{html} |
+    | expireMessagesPeriod | _long_ | {html}{html} |
+    | maxExpirePageSize | _int_ | {html}{html} |
     | messageEvictionStrategy | _[org.apache.activemq.broker.region.policy.MessageEvictionStrategy|#org.apache.activemq.broker.region.policy.MessageEvictionStrategy-types]_ | {html}Sets the eviction strategy used to decide which message to evict when the
 slow consumer needs to discard messages{html} |
     | messageGroupMapFactory | _[org.apache.activemq.broker.region.group.MessageGroupMapFactory|#org.apache.activemq.broker.region.group.MessageGroupMapFactory-types]_ | {html}Sets the factory used to create new instances of {MessageGroupMap} used
