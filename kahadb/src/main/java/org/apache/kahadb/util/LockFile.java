@@ -55,7 +55,9 @@ public class LockFile {
         }
         
         IOHelper.mkdirs(file.getParentFile());
-        readFile = new RandomAccessFile(file, "rw");        
+        if (readFile == null) {
+            readFile = new RandomAccessFile(file, "rw");
+        }
         if (lock == null) {
             try {
                 lock = readFile.getChannel().tryLock();
