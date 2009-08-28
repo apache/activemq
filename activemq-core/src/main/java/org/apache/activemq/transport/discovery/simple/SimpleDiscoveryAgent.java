@@ -161,7 +161,6 @@ public class SimpleDiscoveryAgent implements DiscoveryAgent {
 
                     event.connectTime = System.currentTimeMillis();
                     event.failed.set(false);
-
                     listener.onServiceAdd(event);
                 }
             });

@@ -103,7 +103,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
     protected int demandConsumerDispatched;
     protected final AtomicBoolean localBridgeStarted = new AtomicBoolean(false);
     protected final AtomicBoolean remoteBridgeStarted = new AtomicBoolean(false);
-    protected boolean disposed;
+    protected AtomicBoolean disposed = new AtomicBoolean();
     protected BrokerId localBrokerId;
     protected ActiveMQDestination[] excludedDestinations;
     protected ActiveMQDestination[] dynamicallyIncludedDestinations;
@@ -281,7 +281,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
 
                 localConnectionInfo = new ConnectionInfo();
                 localConnectionInfo.setConnectionId(new ConnectionId(idGenerator.generateId()));
-                localClientId = "NC_" + remoteBrokerName + "_inbound" + configuration.getBrokerName();
+                localClientId = "NC_" + remoteBrokerName + "_inbound_" + configuration.getBrokerName();
                 localConnectionInfo.setClientId(localClientId);
                 localConnectionInfo.setUserName(configuration.getUserName());
                 localConnectionInfo.setPassword(configuration.getPassword());
@@ -345,7 +345,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                 demandConsumerInfo.setPrefetchSize(configuration.getPrefetchSize());
                 remoteBroker.oneway(demandConsumerInfo);
                 startedLatch.countDown();
-                if (!disposed) {
+                if (!disposed.get()) {
                     triggerLocalStartBridge();
                 }
             }
@@ -354,37 +354,36 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
 
     public void stop() throws Exception {
         if (started.compareAndSet(true, false)) {
-            LOG.debug(" stopping " + configuration.getBrokerName() + " bridge to " + remoteBrokerName + " is disposed already ? " + disposed);
-            boolean wasDisposedAlready = disposed;
-            if (!disposed) {
+            if (disposed.compareAndSet(false, true)) {
+                LOG.debug(" stopping " + configuration.getBrokerName() + " bridge to " + remoteBrokerName);
                 NetworkBridgeListener l = this.networkBridgeListener;
                 if (l != null) {
                     l.onStop(this);
                 }
                 try {
-                    disposed = true;
                     remoteBridgeStarted.set(false);
                     final CountDownLatch sendShutdown = new CountDownLatch(1);
                     ASYNC_TASKS.execute(new Runnable() {
                         public void run() {
                             try {
                                 localBroker.oneway(new ShutdownInfo());
+                                sendShutdown.countDown();
                                 remoteBroker.oneway(new ShutdownInfo());
                             } catch (Throwable e) {
                                 LOG.debug("Caught exception sending shutdown", e);
-                            }finally {
+                            } finally {
                                 sendShutdown.countDown();
                             }
                             
                         }
                     });
-                    if( !sendShutdown.await(100, TimeUnit.MILLISECONDS) ) {
+                    if( !sendShutdown.await(5, TimeUnit.SECONDS) ) {
                         LOG.debug("Network Could not shutdown in a timely manner");
                     }
                 } finally {
                     ServiceStopper ss = new ServiceStopper();
-                    ss.stop(localBroker);
                     ss.stop(remoteBroker);
+                    ss.stop(localBroker);
                     // Release the started Latch since another thread could be
                     // stuck waiting for it to start up.
                     startedLatch.countDown();
@@ -393,16 +392,12 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                     ss.throwFirstException();
                 }
             }
-            if (wasDisposedAlready) {
-                LOG.debug(configuration.getBrokerName() + " bridge to " + remoteBrokerName + " stopped");
-            } else {
-                LOG.info(configuration.getBrokerName() + " bridge to " + remoteBrokerName + " stopped");
-            }
+            LOG.info(configuration.getBrokerName() + " bridge to " + remoteBrokerName + " stopped");
         }
     }
 
     public void serviceRemoteException(Throwable error) {
-        if (!disposed) {
+        if (!disposed.get()) {
             if (error instanceof SecurityException || error instanceof GeneralSecurityException) {
                 LOG.error("Network connection between " + localBroker + " and " + remoteBroker + " shutdown due to a remote error: " + error);
             } else {
@@ -419,7 +414,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
     }
 
     protected void serviceRemoteCommand(Command command) {    	      	
-        if (!disposed) {
+        if (!disposed.get()) {
             try {
                 if (command.isMessageDispatch()) {
                     waitStarted();
@@ -606,7 +601,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
     }
 
     public void serviceLocalException(Throwable error) {
-        if (!disposed) {
+        if (!disposed.get()) {
             LOG.info("Network connection between " + localBroker + " and " + remoteBroker + " shutdown due to a local error: " + error);
             LOG.debug("The local Exception was:" + error, error);
             ASYNC_TASKS.execute(new Runnable() {
@@ -652,7 +647,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
     }
 
     protected void serviceLocalCommand(Command command) {
-        if (!disposed) {
+        if (!disposed.get()) {
             try {
                 if (command.isMessageDispatch()) {
                     enqueueCounter.incrementAndGet();

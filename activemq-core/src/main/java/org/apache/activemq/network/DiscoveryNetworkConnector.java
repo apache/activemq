@@ -126,9 +126,9 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
                 SslContext.setCurrentSslContext(null);
             }
             NetworkBridge bridge = createBridge(localTransport, remoteTransport, event);
-            bridges.put(uri, bridge);
             try {
                 bridge.start();
+                bridges.put(uri, bridge);
             } catch (Exception e) {
                 ServiceSupport.dispose(localTransport);
                 ServiceSupport.dispose(remoteTransport);

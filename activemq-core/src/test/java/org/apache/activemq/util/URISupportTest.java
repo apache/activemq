@@ -51,6 +51,16 @@ public class URISupportTest extends TestCase {
         assertEquals(2, data.getComponents().length);
     }
 
+    
+    public void testCompositeWithComponentParam() throws Exception {
+        CompositeData data = URISupport.parseComposite(new URI("test:(part1://host?part1=true)?outside=true"));
+        assertEquals(1, data.getComponents().length);
+        assertEquals(1, data.getParameters().size());
+        Map part1Params = URISupport.parseParamters(data.getComponents()[0]);
+        assertEquals(1, part1Params.size());
+        assertTrue(part1Params.containsKey("part1"));
+    }
+    
     public void testParsingURI() throws Exception {
         URI source = new URI("tcp://localhost:61626/foo/bar?cheese=Edam&x=123");
         
@@ -70,7 +80,9 @@ public class URISupportTest extends TestCase {
     }
     
     public void testParsingCompositeURI() throws URISyntaxException {
-        URISupport.parseComposite(new URI("broker://(tcp://localhost:61616)?name=foo"));
+        CompositeData data = URISupport.parseComposite(new URI("broker://(tcp://localhost:61616)?name=foo"));
+        assertEquals("one component", 1, data.getComponents().length);
+        assertEquals("Size: " + data.getParameters(), 1, data.getParameters().size());
     }
     
     public void testCheckParenthesis() throws Exception {

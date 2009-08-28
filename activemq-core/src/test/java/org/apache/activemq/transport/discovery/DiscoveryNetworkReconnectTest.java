@@ -34,6 +34,7 @@ import org.jmock.Mockery;
 import org.jmock.integration.junit4.JMock;
 import org.jmock.integration.junit4.JUnit4Mockery;
 import org.jmock.lib.legacy.ClassImposteriser;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -43,16 +44,17 @@ import org.junit.runner.RunWith;
 public class DiscoveryNetworkReconnectTest {
 
     private static final Log LOG = LogFactory.getLog(DiscoveryNetworkReconnectTest.class);
-
+    final int maxReconnects = 5;
     BrokerService brokerA, brokerB;
     Mockery context;
     ManagementContext managementContext;
     
     final String groupName = "GroupID-" + "DiscoveryNetworkReconnectTest";
-    final String discoveryAddress = "multicast://default?group=" + groupName + "&initialReconnectDelay=600";
+    final String discoveryAddress = "multicast://default?group=" + groupName + "&initialReconnectDelay=1000";
 
     private DiscoveryAgent agent;
-
+    SocketProxy proxy;
+    
     @Before
     public void setUp() throws Exception {
         context = new JUnit4Mockery() {{
@@ -64,22 +66,10 @@ public class DiscoveryNetworkReconnectTest {
         configure(brokerA);
         brokerA.addConnector("tcp://localhost:0");
         brokerA.start();
-    }
-
-    private void configure(BrokerService broker) {
-        broker.setPersistent(false);
-        broker.setUseJmx(true);      
-    }
+        
+        proxy = new SocketProxy(brokerA.getTransportConnectors().get(0).getConnectUri());
+        //new SocketProxy(new URI("tcp://localhost:61617"));
     
-    @Test
-    public void testReconnect() throws Exception {
-        final SocketProxy proxy = new SocketProxy(brokerA.getTransportConnectors().get(0).getConnectUri());
-        
-        // control multicast publish advertise agent to inject proxy
-        agent = MulticastDiscoveryAgentFactory.createDiscoveryAgent(new URI(discoveryAddress));
-        agent.registerService(proxy.getUrl().toString());
-        agent.start();
-        
         managementContext = context.mock(ManagementContext.class);
         
         context.checking(new Expectations(){{
@@ -97,40 +87,70 @@ public class DiscoveryNetworkReconnectTest {
                     new ObjectName("Test:BrokerName=BrokerNC,Type=Topic,Destination=ActiveMQ.Advisory.Connection"))));
             
             // due to reconnect we get two registrations
-            atLeast(2).of (managementContext).registerMBean(with(any(Object.class)), with(equal(
+            atLeast(maxReconnects - 1).of (managementContext).registerMBean(with(any(Object.class)), with(equal(
                     new ObjectName("Test:BrokerName=BrokerNC,Type=NetworkBridge,NetworkConnectorName=localhost,Name=localhost/127.0.0.1_" 
                             + proxy.getUrl().getPort()))));
         }});
-
+        
         brokerB = new BrokerService();
         brokerB.setManagementContext(managementContext);
         brokerB.setBrokerName("BrokerNC");
-        configure(brokerB);       
-        brokerB.addNetworkConnector(discoveryAddress + "&wireFormat.maxInactivityDuration=1000&wireFormat.maxInactivityDurationInitalDelay=1000&trace=true");
-        brokerB.start();
+        configure(brokerB);
+    }
 
-        Wait.waitFor(new Wait.Condition() {
-            public boolean isSatisified() throws Exception {
-               return proxy.connections.size() == 1;
-            }
-        });
-       
-        // force an inactivity timeout timeout
-        proxy.pause();
-        
-        // wait for the inactivity timeout
-        Thread.sleep(2000);
-        
-        // let a reconnect succeed
-        proxy.goOn();
-        
-        assertTrue("got a reconnect", Wait.waitFor(new Wait.Condition() {
-            public boolean isSatisified() throws Exception {
-               return proxy.connections.size() == 1;
-            }
-        }));
-        
+    @After
+    public void tearDown() throws Exception {
+        brokerA.stop();
         brokerB.stop();
-        // let mockery validate minimal duplicate mbean registrations
+    }
+    
+    private void configure(BrokerService broker) {
+        broker.setPersistent(false);
+        broker.setUseJmx(true);      
+    }
+    
+    @Test
+    public void testMulicastReconnect() throws Exception {     
+        
+        // control multicast advertise agent to inject proxy
+        agent = MulticastDiscoveryAgentFactory.createDiscoveryAgent(new URI(discoveryAddress));
+        agent.registerService(proxy.getUrl().toString());
+        agent.start();
+
+        brokerB.addNetworkConnector(discoveryAddress + "&wireFormat.maxInactivityDuration=1000&wireFormat.maxInactivityDurationInitalDelay=1000");
+        brokerB.start();
+        doReconnect();
+    }
+    
+    
+
+    @Test
+    public void testSimpleReconnect() throws Exception {
+        brokerB.addNetworkConnector("simple://(" + proxy.getUrl() 
+                + ")?useExponentialBackOff=false&initialReconnectDelay=500&wireFormat.maxInactivityDuration=1000&wireFormat.maxInactivityDurationInitalDelay=1000");
+        brokerB.start();       
+        doReconnect();
+    }
+
+    private void doReconnect() throws Exception {
+        
+        for (int i=0; i<maxReconnects; i++) {
+            // Wait for connection
+            assertTrue("we got a network connection in a timely manner", Wait.waitFor(new Wait.Condition() {
+                public boolean isSatisified() throws Exception {
+                   return proxy.connections.size() == 1;
+                }
+            }));
+            Thread.sleep(1000);
+            
+            // force an inactivity timeout timeout
+            proxy.pause();
+        
+            // wait for the inactivity timeout
+            Thread.sleep(3000);
+        
+            // let a reconnect succeed
+            proxy.goOn();       
+        }
     }
 }

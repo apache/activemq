@@ -70,7 +70,7 @@ public class CompositeDemandForwardingBridge extends DemandForwardingBridgeSuppo
                     ServiceSupport.dispose(this);
                 }
             }
-            if (!disposed) {
+            if (!disposed.get()) {
                 triggerLocalStartBridge();
             }
         }
