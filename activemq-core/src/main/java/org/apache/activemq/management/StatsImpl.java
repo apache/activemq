@@ -16,25 +16,28 @@
  */
 package org.apache.activemq.management;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.CopyOnWriteArraySet;
 import javax.management.j2ee.statistics.Statistic;
 import javax.management.j2ee.statistics.Stats;
-
 /**
  * Base class for a Stats implementation
  * 
  * @version $Revision: 1.2 $
  */
 public class StatsImpl extends StatisticImpl implements Stats, Resettable {
-    private Map<String, StatisticImpl> map;
+    //use a Set instead of a Map - to conserve Space
+    private Set<StatisticImpl> set;
 
     public StatsImpl() {
-        this(new HashMap<String, StatisticImpl>());
+        this(new CopyOnWriteArraySet<StatisticImpl>());
     }
 
-    public StatsImpl(Map<String, StatisticImpl> map) {
+    public StatsImpl(Set<StatisticImpl> set) {
         super("stats", "many", "Used only as container, not Statistic");
-        this.map = map;
+        this.set = set;
     }
 
     public void reset() {
@@ -43,31 +46,38 @@ public class StatsImpl extends StatisticImpl implements Stats, Resettable {
         for (int i = 0; i < size; i++) {
             Statistic stat = stats[i];
             if (stat instanceof Resettable) {
-                Resettable r = (Resettable)stat;
+                Resettable r = (Resettable) stat;
                 r.reset();
             }
         }
     }
 
     public Statistic getStatistic(String name) {
-        return map.get(name);
+        for (StatisticImpl stat : this.set) {
+            if (stat.getName() != null && stat.getName().equals(name)) {
+                return stat;
+            }
+        }
+        return null;
     }
 
     public String[] getStatisticNames() {
-        Set<String> keys = map.keySet();
-        String[] answer = new String[keys.size()];
-        keys.toArray(answer);
+        List<String> names = new ArrayList<String>();
+        for (StatisticImpl stat : this.set) {
+            names.add(stat.getName());
+        }
+        String[] answer = new String[names.size()];
+        names.toArray(answer);
         return answer;
     }
 
     public Statistic[] getStatistics() {
-        Collection<StatisticImpl> values = map.values();
-        Statistic[] answer = new Statistic[values.size()];
-        values.toArray(answer);
+        Statistic[] answer = new Statistic[this.set.size()];
+        set.toArray(answer);
         return answer;
     }
 
     protected void addStatistic(String name, StatisticImpl statistic) {
-        map.put(name, statistic);
+        this.set.add(statistic);
     }
 }
