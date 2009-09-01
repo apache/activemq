@@ -43,6 +43,9 @@ public class XATransaction extends Transaction {
         this.transactionStore = transactionStore;
         this.xid = xid;
         this.broker = broker;
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("XA Transaction new/begin : " + xid);
+        }
     }
 
     public void commit(boolean onePhase) throws XAException, IOException {
