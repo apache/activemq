@@ -16,16 +16,14 @@
  */
 package org.apache.activemq;
 
-import javax.jms.Connection;
-import javax.jms.ConnectionFactory;
-import javax.jms.Destination;
-
-import junit.framework.TestCase;
-
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.springframework.jms.core.JmsTemplate;
+import javax.jms.Connection;
+import javax.jms.ConnectionFactory;
+import javax.jms.Destination;
 
 /**
  * A useful base class which creates and closes an embedded broker
@@ -39,7 +37,7 @@ public abstract class EmbeddedBrokerTestSupport extends CombinationTestSupport {
     protected String bindAddress = "vm://localhost";
     protected ConnectionFactory connectionFactory;
     protected boolean useTopic;
-    protected Destination destination;
+    protected ActiveMQDestination destination;
     protected JmsTemplate template;
     
     protected void setUp() throws Exception {
@@ -78,7 +76,7 @@ public abstract class EmbeddedBrokerTestSupport extends CombinationTestSupport {
      * 
      * @return newly created Destinaiton
      */
-    protected Destination createDestination() {
+    protected ActiveMQDestination createDestination() {
         return createDestination(getDestinationString());
     }
 
@@ -86,7 +84,7 @@ public abstract class EmbeddedBrokerTestSupport extends CombinationTestSupport {
      * Factory method to create the destination in either the queue or topic
      * space based on the value of the {@link #useTopic} field
      */
-    protected Destination createDestination(String subject) {
+    protected ActiveMQDestination createDestination(String subject) {
         if (useTopic) {
             return new ActiveMQTopic(subject);
         } else {

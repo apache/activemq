@@ -16,8 +16,11 @@
  */
 package org.apache.activemq.advisory;
 
+import org.apache.activemq.EmbeddedBrokerTestSupport;
+import org.apache.activemq.broker.region.RegionBroker;
+import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.command.ActiveMQQueue;
 import java.util.Vector;
-
 import javax.jms.Connection;
 import javax.jms.Destination;
 import javax.jms.JMSException;
@@ -27,9 +30,6 @@ import javax.jms.MessageListener;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.jms.TemporaryQueue;
-import org.apache.activemq.EmbeddedBrokerTestSupport;
-import org.apache.activemq.broker.region.RegionBroker;
-import org.apache.activemq.command.ActiveMQQueue;
 
 /**
  * @version $Revision: 397249 $
@@ -166,7 +166,7 @@ public class TempQueueMemoryTest extends EmbeddedBrokerTestSupport {
         messagesToSend = 2000;
     }
     
-    protected Destination createDestination() {
+    protected ActiveMQDestination createDestination() {
         return new ActiveMQQueue(getClass().getName());
     }
     
