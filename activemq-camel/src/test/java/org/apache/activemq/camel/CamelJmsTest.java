@@ -73,8 +73,9 @@ public class CamelJmsTest extends SpringTestSupport {
         // lets create a message
         Destination destination = getMandatoryBean(Destination.class, "consumeFrom");
         ConnectionFactory factory = getMandatoryBean(ConnectionFactory.class, "connectionFactory");
-        DefaultProducerTemplate template = getMandatoryBean(DefaultProducerTemplate.class, "camelTemplate");
-
+        ProducerTemplate template = getMandatoryBean(ProducerTemplate.class, "camelTemplate");
+        assertNotNull("template is valid", template);
+        
         Connection connection = factory.createConnection();
         connection.start();
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);

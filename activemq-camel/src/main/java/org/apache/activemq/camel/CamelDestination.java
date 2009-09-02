@@ -31,6 +31,7 @@ import org.apache.camel.CamelContext;
 import org.apache.camel.CamelContextAware;
 import org.apache.camel.Endpoint;
 import org.apache.camel.component.jms.JmsBinding;
+import org.apache.camel.component.jms.JmsEndpoint;
 
 /**
  * @version $Revision: $
@@ -39,7 +40,9 @@ public class CamelDestination implements CustomDestination, CamelContextAware {
     private String uri;
     private Endpoint endpoint;
     private CamelContext camelContext;
-    private JmsBinding binding = new JmsBinding();
+    // add in dummy endpoint pending camel release with 
+    // https://issues.apache.org/activemq/browse/CAMEL-1982
+    private JmsBinding binding = new JmsBinding(new JmsEndpoint());
 
     public CamelDestination() {
     }
