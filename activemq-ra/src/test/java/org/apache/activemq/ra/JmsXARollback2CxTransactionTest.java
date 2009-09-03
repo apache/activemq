@@ -63,8 +63,14 @@ public class JmsXARollback2CxTransactionTest extends JmsQueueTransactionTest {
         return (ConnectionFactory) managedConnectionFactory.createConnectionFactory(connectionManager);
     }
 
-    public void xtestRepeatReceiveTwoThenRollback() throws Exception {
+    public void testReconnectWithClientId() throws Exception {
         for (index = 0; index< 20; index ++) {
+            reconnect();
+        }
+    }
+
+    public void testRepeatReceiveTwoThenRollback() throws Exception {
+        for (index = 0; index< 2; index ++) {
             testReceiveTwoThenRollback();
         }
     }

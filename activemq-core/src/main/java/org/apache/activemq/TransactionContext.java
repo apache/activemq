@@ -64,7 +64,7 @@ public class TransactionContext implements XAResource {
     private static final Log LOG = LogFactory.getLog(TransactionContext.class);
 
     // XATransactionId -> ArrayList of TransactionContext objects
-    private final ConcurrentHashMap<TransactionId, List<TransactionContext>> ENDED_XA_TRANSACTION_CONTEXTS = new ConcurrentHashMap<TransactionId, List<TransactionContext>>();
+    private final static ConcurrentHashMap<TransactionId, List<TransactionContext>> ENDED_XA_TRANSACTION_CONTEXTS = new ConcurrentHashMap<TransactionId, List<TransactionContext>>();
 
     private final ActiveMQConnection connection;
     private final LongSequenceGenerator localTransactionIdGenerator;

@@ -1435,7 +1435,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
 
         if (isConnectionInfoSentToBroker) {
             if (!transportFailed.get() && !closing.get()) {
-                asyncSendPacket(info.createRemoveCommand());
+                syncSendPacket(info.createRemoveCommand());
             }
             isConnectionInfoSentToBroker = false;
         }
