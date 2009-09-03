@@ -70,23 +70,43 @@ public class DefaultDatabaseLocker implements DatabaseLocker {
                 statement.execute();
                 break;
             } catch (Exception e) {
-                if (stopping) {
-                    throw new Exception("Cannot start broker as being asked to shut down. Interrupted attempt to acquire lock: " + e, e);
-                }
-
-                if (exceptionHandler != null) {
-                    try {
-                        exceptionHandler.handle(e);
-                    } catch (Throwable handlerException) {
-                        LOG.error("The exception handler " + exceptionHandler.getClass().getCanonicalName() + " threw this exception: " + handlerException
-                                + " while trying to handle this excpetion: " + e, handlerException);
+                try {
+                    if (stopping) {
+                        throw new Exception(
+                                "Cannot start broker as being asked to shut down. " 
+                                        + "Interrupted attempt to acquire lock: "
+                                        + e, e);
                     }
+                    if (exceptionHandler != null) {
+                        try {
+                            exceptionHandler.handle(e);
+                        } catch (Throwable handlerException) {
+                            LOG.error( "The exception handler "
+                                    + exceptionHandler.getClass().getCanonicalName()
+                                    + " threw this exception: "
+                                    + handlerException
+                                    + " while trying to handle this excpetion: "
+                                    + e, handlerException);
+                        }
 
-                } else {
-                    LOG.error("Failed to acquire lock: " + e, e);
+                    } else {
+                        LOG.error("Failed to acquire lock: " + e, e);
+                    }
+                } finally {
+                    // Let's make sure the database connection is properly
+                    // closed when an error occurs so that we're not leaking
+                    // connections 
+                    if (null != connection) {
+                        try {
+                            connection.close();
+                        } catch (SQLException e1) {
+                            LOG.error("Caught exception while closing connection: " + e1, e1);
+                        }
+                        
+                        connection = null;
+                    }
                 }
             } finally {
-
                 if (null != statement) {
                     try {
                         statement.close();
@@ -99,9 +119,9 @@ public class DefaultDatabaseLocker implements DatabaseLocker {
 
             LOG.debug("Sleeping for " + lockAcquireSleepInterval + " milli(s) before trying again to get the lock...");
             try {
-            	Thread.sleep(lockAcquireSleepInterval);
+                Thread.sleep(lockAcquireSleepInterval);
             } catch (InterruptedException ie) {
-            	LOG.warn("Master lock retry sleep interrupted", ie);
+                LOG.warn("Master lock retry sleep interrupted", ie);
             }
         }
 
@@ -162,11 +182,11 @@ public class DefaultDatabaseLocker implements DatabaseLocker {
     }
     
     public Handler getExceptionHandler() {
-		return exceptionHandler;
-	}
+        return exceptionHandler;
+    }
 
-	public void setExceptionHandler(Handler exceptionHandler) {
-		this.exceptionHandler = exceptionHandler;
-	}
+    public void setExceptionHandler(Handler exceptionHandler) {
+        this.exceptionHandler = exceptionHandler;
+    }
 
 }
