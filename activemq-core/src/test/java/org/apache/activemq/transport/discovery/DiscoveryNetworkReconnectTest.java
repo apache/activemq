@@ -141,13 +141,13 @@ public class DiscoveryNetworkReconnectTest {
                    return proxy.connections.size() == 1;
                 }
             }));
-            Thread.sleep(1000);
+            Thread.sleep(3000);
             
             // force an inactivity timeout timeout
             proxy.pause();
         
             // wait for the inactivity timeout
-            Thread.sleep(3000);
+            Thread.sleep(6000);
         
             // let a reconnect succeed
             proxy.goOn();       
