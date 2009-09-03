@@ -129,7 +129,10 @@ public class ConfigTest extends TestCase {
      */
     public void testJdbcConfig() throws Exception {
         // System.out.print("Checking jdbc persistence adapter configuration...
-        // ");
+        // ");     
+        File journalFile = new File(JOURNAL_ROOT + "testJDBCConfig/journal");
+        recursiveDelete(journalFile);
+        
         File derbyFile = new File(DERBY_ROOT + "testJDBCConfig/derbydb"); // Default
                                                                             // derby
                                                                             // name
