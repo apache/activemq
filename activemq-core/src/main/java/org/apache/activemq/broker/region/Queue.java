@@ -16,29 +16,6 @@
  */
 package org.apache.activemq.broker.region;
 
-import java.io.IOException;
-import java.util.AbstractList;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.CopyOnWriteArraySet;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.ReentrantLock;
-
-import javax.jms.InvalidSelectorException;
-import javax.jms.JMSException;
-
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.ProducerBrokerExchange;
@@ -77,6 +54,26 @@ import org.apache.activemq.usage.UsageListener;
 import org.apache.activemq.util.BrokerSupport;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import java.io.IOException;
+import java.util.AbstractList;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
+import javax.jms.InvalidSelectorException;
+import javax.jms.JMSException;
 
 
 /**
@@ -100,7 +97,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
     private final Object sendLock = new Object();
     private ExecutorService executor;
     protected final LinkedList<Runnable> messagesWaitingForSpace = new LinkedList<Runnable>();
-    private final ReentrantLock dispatchLock = new ReentrantLock();
+    private final Object dispatchMutex = new Object();
     private boolean useConsumerPriority=true;
     private boolean strictOrderDispatch=false;
     private QueueDispatchSelector dispatchSelector;
@@ -276,8 +273,8 @@ public class Queue extends BaseDestination implements Task, UsageListener {
         // synchronize with dispatch method so that no new messages are sent
         // while setting up a subscription. avoid out of order messages,
         // duplicates, etc.
-        dispatchLock.lock();
-        try {
+        synchronized(dispatchMutex) {
+        
             sub.add(context, this);
             destinationStatistics.getConsumers().increment();
 
@@ -324,8 +321,6 @@ public class Queue extends BaseDestination implements Task, UsageListener {
             if (!(this.optimizedDispatch || isSlave())) {
                 wakeup();
             }
-        }finally {
-            dispatchLock.unlock();
         }
         if (this.optimizedDispatch || isSlave()) {
             // Outside of dispatchLock() to maintain the lock hierarchy of
@@ -339,8 +334,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
         destinationStatistics.getConsumers().decrement();
         // synchronize with dispatch method so that no new messages are sent
         // while removing up a subscription.
-        dispatchLock.lock();
-        try {
+        synchronized(dispatchMutex) {
             if (LOG.isDebugEnabled()) {
                 LOG.debug("remove sub: " + sub + ", lastDeliveredSeqId: " + lastDeiveredSequenceId
                         + ", dequeues: " + getDestinationStatistics().getDequeues().getCount()
@@ -390,8 +384,6 @@ public class Queue extends BaseDestination implements Task, UsageListener {
             if (!(this.optimizedDispatch || isSlave())) {
                 wakeup();
             }
-        }finally {
-            dispatchLock.unlock();
         }
         if (this.optimizedDispatch || isSlave()) {
             // Outside of dispatchLock() to maintain the lock hierarchy of
@@ -750,8 +742,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
         try {
             pageInMessages(forcePageIn);
             List<MessageReference> toExpire = new ArrayList<MessageReference>();
-            dispatchLock.lock();
-            try {
+            synchronized(dispatchMutex) {
                 synchronized (pagedInPendingDispatch) {
                     addAll(pagedInPendingDispatch, l, max, toExpire);
                     for (MessageReference ref : toExpire) {
@@ -796,9 +787,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                         }
                     }
                 }
-            } finally {
-                dispatchLock.unlock();
-            }
+            } 
         } catch (Exception e) {
             LOG.error("Problem retrieving message for browse", e);
         }
@@ -1161,12 +1150,9 @@ public class Queue extends BaseDestination implements Task, UsageListener {
 	        
 	        // Kinda ugly.. but I think dispatchLock is the only mutex protecting the 
 	        // pagedInPendingDispatch variable. 	        
-	        dispatchLock.lock();
-	        try {
+	        synchronized(dispatchMutex) {
 	            pageInMoreMessages |= !pagedInPendingDispatch.isEmpty();
-	        } finally {
-	            dispatchLock.unlock();
-	        }
+	        } 
 	        
 	        // Perhaps we should page always into the pagedInPendingDispatch list is 
 	        // !messages.isEmpty(), and then if !pagedInPendingDispatch.isEmpty()
@@ -1328,8 +1314,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
     private List<QueueMessageReference> doPageIn(boolean force) throws Exception {
         List<QueueMessageReference> result = null;
         List<QueueMessageReference> resultList = null;
-        dispatchLock.lock();
-        try{
+        synchronized(dispatchMutex) {
             int toPageIn = getMaxPageSize() + Math.max(0, (int)destinationStatistics.getInflight().getCount()) - pagedInMessages.size();
          
             if (LOG.isDebugEnabled()) {
@@ -1381,15 +1366,13 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                 // Avoid return null list, if condition is not validated
                 resultList = new ArrayList<QueueMessageReference>();
             }
-        }finally {
-            dispatchLock.unlock();
         }
         return resultList;
     }
 
     private void doDispatch(List<QueueMessageReference> list) throws Exception {
-        dispatchLock.lock();
-        try {
+        synchronized(dispatchMutex) {
+       
             synchronized (pagedInPendingDispatch) {
                 if (!pagedInPendingDispatch.isEmpty()) {
                     // Try to first dispatch anything that had not been
@@ -1412,9 +1395,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                     }
                 }
             }
-        } finally {
-            dispatchLock.unlock();
-        }
+        } 
     }
     
     /**
@@ -1545,8 +1526,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
         QueueMessageReference message = null;
         MessageId messageId = messageDispatchNotification.getMessageId();
         
-        dispatchLock.lock();
-        try {
+       synchronized(dispatchMutex) {
             synchronized (pagedInPendingDispatch) {
                for(QueueMessageReference ref : pagedInPendingDispatch) {
                    if (messageId.equals(ref.getMessageId())) {
@@ -1590,9 +1570,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                 }
             }          
             
-        } finally {
-            dispatchLock.unlock();        
-        }
+        } 
         if (message == null) {
             throw new JMSException(
                     "Slave broker out of sync with master - Message: "

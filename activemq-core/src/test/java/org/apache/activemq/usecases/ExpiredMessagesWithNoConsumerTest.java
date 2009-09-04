@@ -76,6 +76,7 @@ public class ExpiredMessagesWithNoConsumerTest extends CombinationTestSupport {
 
         PolicyMap policyMap = new PolicyMap();
         PolicyEntry defaultEntry = new PolicyEntry();
+        defaultEntry.setOptimizedDispatch(true);
         defaultEntry.setExpireMessagesPeriod(100);
         defaultEntry.setMaxExpirePageSize(800);
 
