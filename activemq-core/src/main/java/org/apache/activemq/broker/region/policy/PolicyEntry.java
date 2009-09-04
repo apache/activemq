@@ -59,7 +59,7 @@ public class PolicyEntry extends DestinationMapEntry {
     private int maxAuditDepth=2048;
     private int maxQueueAuditDepth=2048;
     private boolean enableAudit=true;
-    private boolean producerFlowControl = true;
+    private boolean producerFlowControl = false;
     private boolean optimizedDispatch=false;
     private int maxPageSize=BaseDestination.MAX_PAGE_SIZE;
     private int maxBrowsePageSize=BaseDestination.MAX_BROWSE_PAGE_SIZE;
