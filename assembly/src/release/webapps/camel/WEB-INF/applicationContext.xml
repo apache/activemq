@@ -25,23 +25,38 @@
        http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd
     ">
 
+    <bean id="placeholderConfig" class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+        <property name="locations">
+                <value>file:${activemq.base}/conf/credentials.properties</value>
+        </property>  
+    </bean>
 
-  <camelContext xmlns="http://camel.apache.org/schema/spring">
-    <route>
-        <from uri="activemq:example.A"/>
-        <to uri="activemq:example.B"/>
-    </route>
-  </camelContext>
+    <camelContext id="camel" xmlns="http://camel.apache.org/schema/spring">
 
-  <!-- configure the camel activemq component to use the current broker -->
-  <bean id="activemq" class="org.apache.activemq.camel.component.ActiveMQComponent" >
-    <property name="exposeAllQueues" value="true"/>
-      <property name="connectionFactory">
-        <bean class="org.apache.activemq.ActiveMQConnectionFactory">
-          <property name="brokerURL" value="vm://localhost?create=false&amp;waitForStart=10000" />
-          <property name="userName" value="${activemq.username}"/>
-          <property name="password" value="${activemq.password}"/>
-        </bean>
-      </property>
-  </bean>
+        <!-- You can use a <package> element for each root package to search for Java routes -->
+        <package>org.foo.bar</package>
+
+        <!-- You can use Spring XML syntax to define the routes here using the <route> element -->
+        <route>
+            <from uri="activemq:example.A"/>
+            <to uri="activemq:example.B"/>
+        </route>
+    </camelContext>
+
+    <!--
+       Lets configure some Camel endpoints
+    
+       http://activemq.apache.org/camel/components.html
+    -->
+
+    <!-- configure the camel activemq component to use the current broker -->
+    <bean id="activemq" class="org.apache.activemq.camel.component.ActiveMQComponent" >
+        <property name="connectionFactory">
+          <bean class="org.apache.activemq.ActiveMQConnectionFactory">
+            <property name="brokerURL" value="vm://localhost?create=false&amp;waitForStart=10000" />
+            <property name="userName" value="${activemq.username}"/>
+            <property name="password" value="${activemq.password}"/>
+          </bean>
+        </property>
+    </bean>
 </beans>
