@@ -377,8 +377,8 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                             
                         }
                     });
-                    if( !sendShutdown.await(5, TimeUnit.SECONDS) ) {
-                        LOG.debug("Network Could not shutdown in a timely manner");
+                    if( !sendShutdown.await(10, TimeUnit.SECONDS) ) {
+                        LOG.info("Network Could not shutdown in a timely manner");
                     }
                 } finally {
                     ServiceStopper ss = new ServiceStopper();
