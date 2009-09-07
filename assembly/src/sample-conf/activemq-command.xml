@@ -14,22 +14,17 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 -->
-<!-- START SNIPPET: example -->
 <beans>
-
-  <broker name="b1" persistent="false" useJmx="false" xmlns="http://activemq.apache.org/schema/core">
-    <transportConnectors>
-      <transportConnector uri="tcp://localhost:61001" discoveryUri="multicast://default"/>
-    </transportConnectors>
-
-    <networkConnectors>
-      <networkConnector uri="multicast://default"/>
-    </networkConnectors>
-
-    <persistenceAdapter>
-      <memoryPersistenceAdapter/>
-    </persistenceAdapter>
-  </broker>
-
+    <broker xmlns="http://activemq.apache.org/schema/core" brokerName="command-broker" dataDirectory="${activemq.base}/data">
+        <managementContext>
+            <managementContext createConnector="true"/>
+        </managementContext>
+    
+        <transportConnectors>
+            <!-- Create a XMPP transport for XMPP clients. -->
+            <transportConnector name="xmpp" uri="xmpp://localhost:61222"/>
+        </transportConnectors>
+    </broker>
+    <!-- Create a command agent -->
+    <commandAgent xmlns="http://activemq.apache.org/schema/core" brokerUrl="vm://localhost"/>
 </beans>
-<!-- END SNIPPET: example -->

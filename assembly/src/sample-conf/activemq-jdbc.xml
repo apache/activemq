@@ -14,7 +14,6 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 -->
-<!-- START SNIPPET: xbean -->
 <beans>
   
   <broker useJmx="false" brokerName="jdbcBroker" xmlns="http://activemq.apache.org/schema/core">
@@ -23,13 +22,18 @@
     </persistenceAdapter>
   
     <transportConnectors>
-       <transportConnector name="default" uri="tcp://localhost:61616"/>
+       <transportConnector name="default" uri="tcp://0.0.0.0:61616"/>
     </transportConnectors>
   </broker>
-  <!--  This xbean configuration file supports all the standard spring xml configuration options -->
-  
+ 
+  <!-- Embedded Derby DataSource Sample Setup -->
+  <bean id="derby-ds" class="org.apache.derby.jdbc.EmbeddedDataSource">
+    <property name="databaseName" value="derbydb"/>
+    <property name="createDatabase" value="create"/>
+  </bean>
+ 
   <!-- Postgres DataSource Sample Setup -->
-  <!-- 
+  <!--
   <bean id="postgres-ds" class="org.postgresql.ds.PGPoolingDataSource">
     <property name="serverName" value="localhost"/>
     <property name="databaseName" value="activemq"/>
@@ -41,7 +45,7 @@
     <property name="maxConnections" value="10"/>
   </bean>
   -->
-  
+
   <!-- MySql DataSource Sample Setup -->
   <!--
   <bean id="mysql-ds" class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close">
@@ -49,15 +53,21 @@
     <property name="url" value="jdbc:mysql://localhost/activemq?relaxAutoCommit=true"/>
     <property name="username" value="activemq"/>
     <property name="password" value="activemq"/>
+    <property name="maxActive" value="200"/>
     <property name="poolPreparedStatements" value="true"/>
   </bean>
   -->
-   
-  <!-- Embedded Derby DataSource Sample Setup -->
-  <bean id="derby-ds" class="org.apache.derby.jdbc.EmbeddedDataSource">
-    <property name="databaseName" value="derbydb"/>
-    <property name="createDatabase" value="create"/>
+
+  <!-- Oracle DataSource Sample Setup -->
+  <!--
+  <bean id="oracle-ds" class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close">
+    <property name="driverClassName" value="oracle.jdbc.driver.OracleDriver"/>
+    <property name="url" value="jdbc:oracle:thin:@localhost:1521:AMQDB"/>
+    <property name="username" value="scott"/>
+    <property name="password" value="tiger"/>
+    <property name="maxActive" value="200"/>
+    <property name="poolPreparedStatements" value="true"/>
   </bean>
+  -->
 
 </beans>
-<!-- END SNIPPET: xbean -->

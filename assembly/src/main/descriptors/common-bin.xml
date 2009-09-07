@@ -30,6 +30,15 @@
         <include>conf/*.cert</include>
       </includes>
     </fileSet>
+    
+    <!-- Copy over all sample configurations -->
+    <fileSet>
+      <directory>src/sample-conf</directory>
+      <outputDirectory>conf/</outputDirectory>
+      <includes>
+        <include>activemq-*.xml</include>
+      </includes>
+    </fileSet>
 
     <!-- lets copy the portions of the admin web app we need - as we can't exclude stuff from the WAR -->
     <fileSet>

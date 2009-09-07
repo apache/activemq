@@ -1,4 +1,4 @@
-<!--
+ <!--
     Licensed to the Apache Software Foundation (ASF) under one or more
     contributor license agreements.  See the NOTICE file distributed with
     this work for additional information regarding copyright ownership.
@@ -14,23 +14,20 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 -->
-<!-- START SNIPPET: example -->
 <beans>
+    <!-- 
+        An embedded servlet engine for serving up the Admin consoles, REST and Ajax APIs and some demos 
+    -->
+    <jetty xmlns="http://mortbay.com/schemas/jetty/1.0">
+        <connectors>
+            <nioConnector port="8161"/>
+        </connectors>
 
-  <broker brokerName="broker" persistent="false" useJmx="false" xmlns="http://activemq.apache.org/schema/core">
-    <transportConnectors>
-      <transportConnector uri="tcp://localhost:62001"/>
-    </transportConnectors>
-
-    <networkConnectors>
-      <!-- This broker will connect to the brokers specified in networkConnector uri -->
-      <networkConnector uri="static:(tcp://localhost:62002,tcp://localhost:62003)" failover="true"/>
-    </networkConnectors>
-
-    <persistenceAdapter>
-      <memoryPersistenceAdapter/>
-    </persistenceAdapter>
-  </broker>
-
-</beans>
-<!-- END SNIPPET: example -->
+        <handlers>
+            <webAppContext contextPath="/admin" resourceBase="${activemq.base}/webapps/admin" logUrlOnStart="true"/>
+            <webAppContext contextPath="/camel" resourceBase="${activemq.base}/webapps/camel" logUrlOnStart="true"/>
+            <webAppContext contextPath="/demo" resourceBase="${activemq.base}/webapps/demo" logUrlOnStart="true"/>
+            <webAppContext contextPath="/fileserver" resourceBase="${activemq.base}/webapps/fileserver" logUrlOnStart="true"/>
+        </handlers>
+    </jetty>
+ </beans>

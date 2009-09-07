@@ -14,80 +14,52 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 -->
-<!-- START SNIPPET: example -->
 <beans
   xmlns="http://www.springframework.org/schema/beans"
   xmlns:amq="http://activemq.apache.org/schema/core"
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.0.xsd
-  http://activemq.apache.org/schema/core http://activemq.apache.org/schema/core/activemq-core.xsd   
-  http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd">
+  http://activemq.apache.org/schema/core http://activemq.apache.org/schema/core/activemq-core.xsd">
 
     <!-- Allows us to use system properties as variables in this configuration file -->
-    <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
-         <property name="locations">
-            <value>file:${activemq.base}/conf/credentials.properties</value>
-         </property>      
-    </bean>
+    <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer"/>
 
+    <!-- 
+        The <broker> element is used to configure the ActiveMQ broker. 
+        
+        Tips: 
+          - Change the brokerName attribute to something unique  
+    -->
     <broker xmlns="http://activemq.apache.org/schema/core" brokerName="localhost" dataDirectory="${activemq.base}/data">
 
-        <!-- Destination specific policies using destination names or wildcards -->
-        <destinationPolicy>
-            <policyMap>
-                <policyEntries>
-                    <policyEntry queue=">" memoryLimit="5mb"/>
-                    <policyEntry topic=">" memoryLimit="5mb">
-                      <!-- you can add other policies too such as these
-                        <dispatchPolicy>
-                            <strictOrderDispatchPolicy/>
-                        </dispatchPolicy>
-                        <subscriptionRecoveryPolicy>
-                            <lastImageSubscriptionRecoveryPolicy/>
-                        </subscriptionRecoveryPolicy>
-                      -->
-                    </policyEntry>
-                </policyEntries>
-            </policyMap>
-        </destinationPolicy>
-
-        <!-- Use the following to configure how ActiveMQ is exposed in JMX -->
+        <!-- 
+            The managementContext is used to configure how ActiveMQ is exposed in 
+            JMX. By default, ActiveMQ uses the MBean server that is started by 
+            the JVM. For more information, see: 
+            
+            http://activemq.apache.org/jmx.html 
+        -->
         <managementContext>
             <managementContext createConnector="false"/>
         </managementContext>
 
-        <!-- The store and forward broker networks ActiveMQ will listen to -->
-        <networkConnectors>
-            <!-- by default just auto discover the other brokers -->
-            <networkConnector name="default-nc" uri="multicast://default"/>
-            <!-- Example of a static configuration:
-            <networkConnector name="host1 and host2" uri="static://(tcp://host1:61616,tcp://host2:61616)"/>
-            -->
-        </networkConnectors>
-
-        <persistenceAdapter>
-            <amqPersistenceAdapter syncOnWrite="false" directory="${activemq.base}/data" maxFileLength="20 mb"/>
-        </persistenceAdapter>
-
-        <!-- Use the following if you wish to configure the journal with JDBC -->
-        <!--
-        <persistenceAdapter>
-            <journaledJDBC dataDirectory="${activemq.base}/data" dataSource="#postgres-ds"/>
-        </persistenceAdapter>
+        <!-- 
+            Configure message persistence for the broker. The default persistence
+            mechanism is the KahaDB store (identified by the kahaDB tag). 
+            For more information, see: 
+            
+            http://activemq.apache.org/persistence.html 
         -->
-
-        <!-- Or if you want to use pure JDBC without a journal -->
-        <!--
         <persistenceAdapter>
-            <jdbcPersistenceAdapter dataSource="#postgres-ds"/>
+            <kahaDB directory="${activemq.base}/data/kahadb" indexWriteBatchSize="1000" enableIndexWriteAsync="true" enableJournalDiskSyncs="false" />
         </persistenceAdapter>
-        -->
-
-        <sslContext>
-            <sslContext keyStore="file:${activemq.base}/conf/broker.ks" keyStorePassword="password" trustStore="file:${activemq.base}/conf/broker.ts" trustStorePassword="password"/>
-        </sslContext>
         
-        <!--  The maximum about of space the broker will use before slowing down producers -->
+        <!--  
+            The systemUsage controls the maximum amount of space the broker will 
+            use before slowing down producers. For more information, see: 
+            
+            http://activemq.apache.org/producer-flow-control.html 
+        -->
         <systemUsage>
             <systemUsage>
                 <memoryUsage>
@@ -103,120 +75,28 @@
         </systemUsage>
 
 
-        <!-- The transport connectors ActiveMQ will listen to -->
+        <!-- 
+            The transport connectors expose ActiveMQ over a given protocol to
+            clients and other brokers. For more information, see: 
+            
+            http://activemq.apache.org/configuring-transports.html 
+        -->
         <transportConnectors>
-            <transportConnector name="openwire" uri="tcp://0.0.0.0:61616" discoveryUri="multicast://default"/>
-            <transportConnector name="ssl" uri="ssl://0.0.0.0:61617"/>
-            <transportConnector name="stomp" uri="stomp://0.0.0.0:61613"/>
-            <transportConnector name="xmpp" uri="xmpp://0.0.0.0:61222"/>
+            <transportConnector name="openwire" uri="tcp://0.0.0.0:61616"/>
         </transportConnectors>
 
     </broker>
 
-    <!--
-    ** Lets deploy some Enterprise Integration Patterns inside the ActiveMQ Message Broker
-    ** For more details see
-    **
-    ** http://activemq.apache.org/enterprise-integration-patterns.html
-    -->
-    <camelContext id="camel" xmlns="http://camel.apache.org/schema/spring">
-
-        <!-- You can use a <package> element for each root package to search for Java routes -->
-        <package>org.foo.bar</package>
-
-        <!-- You can use Spring XML syntax to define the routes here using the <route> element -->
-        <route>
-            <from uri="activemq:example.A"/>
-            <to uri="activemq:example.B"/>
-        </route>
-    </camelContext>
-
-    <!--
-    ** Lets configure some Camel endpoints
-    **
-    ** http://activemq.apache.org/camel/components.html
+    <!-- 
+        Uncomment to enable Camel
+        Take a look at activemq-camel.xml for more details
+         
+    <import resource="activemq-camel.xml"/>
     -->
 
-    <!-- configure the camel activemq component to use the current broker -->
-    <bean id="activemq" class="org.apache.activemq.camel.component.ActiveMQComponent" >
-        <property name="connectionFactory">
-          <bean class="org.apache.activemq.ActiveMQConnectionFactory">
-            <property name="brokerURL" value="vm://localhost?create=false&amp;waitForStart=10000" />
-            <property name="userName" value="${activemq.username}"/>
-            <property name="password" value="${activemq.password}"/>
-          </bean>
-        </property>
-    </bean>
-
-
-
-    <!-- Uncomment to create a command agent to respond to message based admin commands on the ActiveMQ.Agent topic -->
-    <!--
-    <commandAgent xmlns="http://activemq.apache.org/schema/core" brokerUrl="vm://localhost" username="${activemq.username}" password="${activemq.password}"/>
+    <!-- 
+        Enable web consoles, REST and Ajax APIs and demos
+        Take a look at activemq-jetty.xml for more details
+    <import resource="activemq-jetty.xml"/>
     -->
-
-
-    <!-- An embedded servlet engine for serving up the Admin console -->
-    <jetty xmlns="http://mortbay.com/schemas/jetty/1.0">
-        <connectors>
-            <nioConnector port="8161"/>
-        </connectors>
-
-        <handlers>
-            <webAppContext contextPath="/admin" resourceBase="${activemq.base}/webapps/admin" logUrlOnStart="true"/>
-            <webAppContext contextPath="/camel" resourceBase="${activemq.base}/webapps/camel" logUrlOnStart="true"/>
-            <webAppContext contextPath="/demo" resourceBase="${activemq.base}/webapps/demo" logUrlOnStart="true"/>
-            <webAppContext contextPath="/fileserver" resourceBase="${activemq.base}/webapps/fileserver" logUrlOnStart="true"/>
-        </handlers>
-    </jetty>
-
-    <!--  This xbean configuration file supports all the standard spring xml configuration options -->
-
-    <!-- Postgres DataSource Sample Setup -->
-    <!--
-    <bean id="postgres-ds" class="org.postgresql.ds.PGPoolingDataSource">
-      <property name="serverName" value="localhost"/>
-      <property name="databaseName" value="activemq"/>
-      <property name="portNumber" value="0"/>
-      <property name="user" value="activemq"/>
-      <property name="password" value="activemq"/>
-      <property name="dataSourceName" value="postgres"/>
-      <property name="initialConnections" value="1"/>
-      <property name="maxConnections" value="10"/>
-    </bean>
-    -->
-
-    <!-- MySql DataSource Sample Setup -->
-    <!--
-    <bean id="mysql-ds" class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close">
-      <property name="driverClassName" value="com.mysql.jdbc.Driver"/>
-      <property name="url" value="jdbc:mysql://localhost/activemq?relaxAutoCommit=true"/>
-      <property name="username" value="activemq"/>
-      <property name="password" value="activemq"/>
-      <property name="maxActive" value="200"/>
-      <property name="poolPreparedStatements" value="true"/>
-    </bean>
-    -->
-
-    <!-- Oracle DataSource Sample Setup -->
-    <!--
-    <bean id="oracle-ds" class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close">
-      <property name="driverClassName" value="oracle.jdbc.driver.OracleDriver"/>
-      <property name="url" value="jdbc:oracle:thin:@localhost:1521:AMQDB"/>
-      <property name="username" value="scott"/>
-      <property name="password" value="tiger"/>
-      <property name="maxActive" value="200"/>
-      <property name="poolPreparedStatements" value="true"/>
-    </bean>
-    -->
-
-    <!-- Embedded Derby DataSource Sample Setup -->
-    <!--
-    <bean id="derby-ds" class="org.apache.derby.jdbc.EmbeddedDataSource">
-      <property name="databaseName" value="derbydb"/>
-      <property name="createDatabase" value="create"/>
-    </bean>
-    -->
-
 </beans>
-<!-- END SNIPPET: example -->
