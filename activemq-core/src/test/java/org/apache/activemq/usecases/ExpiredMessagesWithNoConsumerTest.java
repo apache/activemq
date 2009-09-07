@@ -49,6 +49,7 @@ public class ExpiredMessagesWithNoConsumerTest extends CombinationTestSupport {
 	Session session;
 	MessageProducer producer;
 	public ActiveMQDestination destination = new ActiveMQQueue("test");
+    public boolean optimizedDispatch = true;
 	
     public static Test suite() {
         return suite(ExpiredMessagesWithNoConsumerTest.class);
@@ -75,8 +76,7 @@ public class ExpiredMessagesWithNoConsumerTest extends CombinationTestSupport {
 
         PolicyMap policyMap = new PolicyMap();
         PolicyEntry defaultEntry = new PolicyEntry();
-        // TODO Optimize dispatch makes this test hang
-        defaultEntry.setOptimizedDispatch(true);
+        defaultEntry.setOptimizedDispatch(optimizedDispatch );
         defaultEntry.setExpireMessagesPeriod(100);
         defaultEntry.setMaxExpirePageSize(800);
 
@@ -94,6 +94,10 @@ public class ExpiredMessagesWithNoConsumerTest extends CombinationTestSupport {
         broker.waitUntilStarted();
     }
 		
+    public void initCombosForTestExpiredMessagesWithNoConsumer() {
+        addCombinationValues("optimizedDispatch", new Object[] {Boolean.TRUE, Boolean.FALSE});
+    }
+    
 	public void testExpiredMessagesWithNoConsumer() throws Exception {
 		
 	    createBrokerWithMemoryLimit();
