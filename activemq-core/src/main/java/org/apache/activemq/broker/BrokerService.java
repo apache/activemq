@@ -913,7 +913,6 @@ public class BrokerService implements Service {
                 String scheme = uri.getScheme();
                 if (scheme != null) {
                     answer.put(scheme.toLowerCase(), uri.toString());
-                    System.err.println(scheme + " = " + uri);
                 }
             } catch (Exception e) {
                 LOG.debug("Failed to read URI to build transportURIsAsMap", e);
