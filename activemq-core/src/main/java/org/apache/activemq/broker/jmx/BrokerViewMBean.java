@@ -223,4 +223,19 @@ public interface BrokerViewMBean extends Service {
     @MBeanInfo(value="Reloads log4j.properties from the classpath.")
     public void reloadLog4jProperties() throws Throwable;
     
+    @MBeanInfo("The url of the openwire connector")
+    String getOpenWireURL();
+    
+    @MBeanInfo("The url of the stomp connector")
+    String getStompURL();
+    
+    @MBeanInfo("The url of the SSL connector")
+    String getSslURL();
+    
+    @MBeanInfo("The url of the Stomp SSL connector")
+    String getStompSslURL();
+    
+    @MBeanInfo("The url of the VM connector")
+    String getVMURL();
+    
 }

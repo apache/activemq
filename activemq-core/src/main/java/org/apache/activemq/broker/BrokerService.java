@@ -904,6 +904,23 @@ public class BrokerService implements Service {
         }
         return null;
     }
+    
+    public Map<String, String> getTransportConnectorURIsAsMap() {
+        Map<String, String> answer = new HashMap<String, String>();
+        for (TransportConnector connector : transportConnectors) {
+            try {
+                URI uri = connector.getConnectUri();
+                String scheme = uri.getScheme();
+                if (scheme != null) {
+                    answer.put(scheme.toLowerCase(), uri.toString());
+                    System.err.println(scheme + " = " + uri);
+                }
+            } catch (Exception e) {
+                LOG.debug("Failed to read URI to build transportURIsAsMap", e);
+            }
+        }
+        return answer;
+    }
 
     public String[] getTransportConnectorURIs() {
         return transportConnectorURIs;
@@ -1958,4 +1975,6 @@ public class BrokerService implements Service {
     public CountDownLatch getSlaveStartSignal() {
         return slaveStartSignal;
     }
+    
+   
 }

@@ -18,6 +18,7 @@ package org.apache.activemq.broker.jmx;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.net.URI;
 import java.net.URL;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -318,5 +319,31 @@ public class BrokerView implements BrokerViewMBean {
         } catch (InvocationTargetException e) {
             throw e.getTargetException();
         }
+    }
+    
+
+    public String getOpenWireURL() {
+        String answer = brokerService.getTransportConnectorURIsAsMap().get("tcp");
+        return answer != null ? answer : "";
+    }
+
+    public String getStompURL() {
+        String answer = brokerService.getTransportConnectorURIsAsMap().get("stomp");
+        return answer != null ? answer : "";
+    }
+
+    public String getSslURL() {
+        String answer = brokerService.getTransportConnectorURIsAsMap().get("ssl");
+        return answer != null ? answer : "";
+    }
+
+    public String getStompSslURL() {
+        String answer = brokerService.getTransportConnectorURIsAsMap().get("stomp+ssl");
+        return answer != null ? answer : "";
+    }
+
+    public String getVMURL() {
+        URI answer = brokerService.getVmConnectorURI();
+        return answer != null ? answer.toString() : "";
     }
 }

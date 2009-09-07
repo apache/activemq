@@ -71,6 +71,13 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         waitForKeyPress = true;
         TestRunner.run(MBeanTest.class);
     }
+    
+    public void testConnectors() throws Exception{
+        ObjectName brokerName = assertRegisteredObjectName(domain + ":Type=Broker,BrokerName=localhost");
+        BrokerViewMBean broker = (BrokerViewMBean)MBeanServerInvocationHandler.newProxyInstance(mbeanServer, brokerName, BrokerViewMBean.class, true);
+        assertEquals("openwire URL doesn't equal bind Address",broker.getOpenWireURL(),this.bindAddress);
+
+    }
 
     public void testMBeans() throws Exception {
         connection = connectionFactory.createConnection();
