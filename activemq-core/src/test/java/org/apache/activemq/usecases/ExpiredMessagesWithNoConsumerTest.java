@@ -138,7 +138,7 @@ public class ExpiredMessagesWithNoConsumerTest extends CombinationTestSupport {
             public boolean isSatisified() throws Exception {
                 return sendCount == view.getExpiredCount();
             }
-        }, 5*1000l);
+        });
         LOG.info("enqueue=" + view.getEnqueueCount() + ", dequeue=" + view.getDequeueCount()
                 + ", inflight=" + view.getInFlightCount() + ", expired= " + view.getExpiredCount()
                 + ", size= " + view.getQueueSize());
