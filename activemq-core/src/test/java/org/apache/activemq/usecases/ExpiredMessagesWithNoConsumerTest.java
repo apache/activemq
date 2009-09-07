@@ -76,7 +76,7 @@ public class ExpiredMessagesWithNoConsumerTest extends CombinationTestSupport {
         PolicyMap policyMap = new PolicyMap();
         PolicyEntry defaultEntry = new PolicyEntry();
         // TODO Optimize dispatch makes this test hang
-        //defaultEntry.setOptimizedDispatch(true);
+        defaultEntry.setOptimizedDispatch(true);
         defaultEntry.setExpireMessagesPeriod(100);
         defaultEntry.setMaxExpirePageSize(800);
 
