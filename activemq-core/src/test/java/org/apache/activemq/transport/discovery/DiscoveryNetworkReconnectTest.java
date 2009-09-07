@@ -32,6 +32,8 @@ import org.apache.activemq.util.SocketProxy;
 import org.apache.activemq.util.Wait;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.hamcrest.BaseMatcher;
+import org.hamcrest.Description;
 import org.jmock.Expectations;
 import org.jmock.Mockery;
 import org.jmock.api.Invocation;
@@ -50,25 +52,40 @@ public class DiscoveryNetworkReconnectTest {
 
     private static final Log LOG = LogFactory.getLog(DiscoveryNetworkReconnectTest.class);
     final int maxReconnects = 5;
-    BrokerService brokerA, brokerB;
-    Mockery context;
-    ManagementContext managementContext;
-    
     final String groupName = "GroupID-" + "DiscoveryNetworkReconnectTest";
     final String discoveryAddress = "multicast://default?group=" + groupName + "&initialReconnectDelay=1000";
     final Semaphore mbeanRegistered = new Semaphore(0);
     final Semaphore mbeanUnregistered = new Semaphore(0);
-
-    
-    private DiscoveryAgent agent;
+    BrokerService brokerA, brokerB;
+    Mockery context;
+    ManagementContext managementContext;
+    DiscoveryAgent agent;
     SocketProxy proxy;
+    
+    // ignore the hostname resolution component as this is machine dependent
+    class NetworkBridgeObjectNameMatcher<T> extends BaseMatcher<T> {
+        T name;
+        NetworkBridgeObjectNameMatcher(T o) {
+            name = o;
+        }
+        
+        public boolean matches(Object arg0) {
+            ObjectName other = (ObjectName) arg0;
+            ObjectName mine = (ObjectName) name;
+            return other.getKeyProperty("Type").equals(mine.getKeyProperty("Type")) &&
+                other.getKeyProperty("NetworkConnectorName").equals(mine.getKeyProperty("NetworkConnectorName"));
+        }
+
+        public void describeTo(Description arg0) {
+            arg0.appendText(this.getClass().getName());
+        }       
+    }
     
     @Before
     public void setUp() throws Exception {
         context = new JUnit4Mockery() {{
             setImposteriser(ClassImposteriser.INSTANCE);
         }};
-            
         brokerA = new BrokerService();
         brokerA.setBrokerName("BrokerA");
         configure(brokerA);
@@ -91,7 +108,7 @@ public class DiscoveryNetworkReconnectTest {
             allowing (managementContext).registerMBean(with(any(Object.class)), with(equal(            
                     new ObjectName("Test:BrokerName=BrokerNC,Type=Topic,Destination=ActiveMQ.Advisory.Connection"))));
             
-            atLeast(maxReconnects - 1).of (managementContext).registerMBean(with(any(Object.class)), with(equal(
+            atLeast(maxReconnects - 1).of (managementContext).registerMBean(with(any(Object.class)), with(new NetworkBridgeObjectNameMatcher<ObjectName>(
                         new ObjectName("Test:BrokerName=BrokerNC,Type=NetworkBridge,NetworkConnectorName=localhost,Name=localhost/127.0.0.1_" 
                             + proxy.getUrl().getPort())))); will(new CustomAction("signal register network mbean") {
                                 public Object invoke(Invocation invocation) throws Throwable {
@@ -100,7 +117,7 @@ public class DiscoveryNetworkReconnectTest {
                                     return new ObjectInstance((ObjectName)invocation.getParameter(0), "dscription");
                                 }
                             });
-            atLeast(maxReconnects - 1).of (managementContext).unregisterMBean(with(equal(
+            atLeast(maxReconnects - 1).of (managementContext).unregisterMBean(with(new NetworkBridgeObjectNameMatcher<ObjectName>(
                     new ObjectName("Test:BrokerName=BrokerNC,Type=NetworkBridge,NetworkConnectorName=localhost,Name=localhost/127.0.0.1_" 
                             + proxy.getUrl().getPort())))); will(new CustomAction("signal unregister network mbean") {
                                 public Object invoke(Invocation invocation) throws Throwable {
