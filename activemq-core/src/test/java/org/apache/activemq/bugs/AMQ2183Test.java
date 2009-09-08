@@ -32,6 +32,7 @@ import javax.jms.Session;
 import junit.framework.TestCase;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.AutoFailTestSupport;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
@@ -40,7 +41,7 @@ import org.apache.activemq.util.Wait.Condition;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-public class AMQ2183Test extends TestCase implements UncaughtExceptionHandler, MessageListener {
+public class AMQ2183Test extends AutoFailTestSupport implements UncaughtExceptionHandler, MessageListener {
        
     private static final Log LOG = LogFactory.getLog(AMQ2183Test.class);
     private static final int maxSent = 2000;    
@@ -55,7 +56,8 @@ public class AMQ2183Test extends TestCase implements UncaughtExceptionHandler, M
     }
     
     public void setUp() throws Exception {
-    
+        setAutoFail(true);
+        super.setUp();
         master = new BrokerService();
         slave = new BrokerService();
         

@@ -17,6 +17,7 @@
 package org.apache.activemq.bugs;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.AutoFailTestSupport;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.util.Wait;
 import org.apache.log4j.Logger;
@@ -200,23 +201,14 @@ public class AMQ1936Test extends TestCase{
             }
         }, 1*60*1000);
         if (!ok) {
-            dumpAllThreads("--STUCK?--");
+            AutoFailTestSupport.dumpAllThreads("--STUCK?--");
         }
         assertEquals( "Number of messages received does not match the number sent", TEST_MESSAGE_COUNT, messages.size( ) );
         assertEquals( TEST_MESSAGE_COUNT,  messageCount.get() );
     }
     
     
-    private void dumpAllThreads(String prefix) {
-        Map<Thread, StackTraceElement[]> stacks = Thread.getAllStackTraces();
-        for (Entry<Thread, StackTraceElement[]> stackEntry : stacks.entrySet()) {
-            System.err.println(prefix + stackEntry.getKey());
-            for(StackTraceElement element : stackEntry.getValue()) {
-                System.err.println("     " + element);
-            }
-        }
-        
-    }
+    
     private final static class ThreadedMessageReceiver implements Runnable {
        
         private String queueName            = null;

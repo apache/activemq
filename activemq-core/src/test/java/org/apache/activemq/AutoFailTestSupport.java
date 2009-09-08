@@ -16,6 +16,8 @@
  */
 package org.apache.activemq;
 
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import junit.framework.TestCase;
@@ -78,6 +80,7 @@ public abstract class AutoFailTestSupport extends TestCase {
                     if (!isTestSuccess.get()) {
                         LOG.error("Test case has exceeded the maximum allotted time to run of: " + getMaxTestTime() + " ms.");
                         LOG.fatal("Test case has exceeded the maximum allotted time to run of: " + getMaxTestTime() + " ms.");
+                        dumpAllThreads(getName());
                         System.exit(EXIT_ERROR);
                     }
                 }
@@ -137,5 +140,16 @@ public abstract class AutoFailTestSupport extends TestCase {
 
     public long getMaxTestTime() {
         return this.maxTestTime;
+    }
+    
+    
+    public static void dumpAllThreads(String prefix) {
+        Map<Thread, StackTraceElement[]> stacks = Thread.getAllStackTraces();
+        for (Entry<Thread, StackTraceElement[]> stackEntry : stacks.entrySet()) {
+            System.err.println(prefix + " " + stackEntry.getKey());
+            for(StackTraceElement element : stackEntry.getValue()) {
+                System.err.println("     " + element);
+            }
+        }
     }
 }
