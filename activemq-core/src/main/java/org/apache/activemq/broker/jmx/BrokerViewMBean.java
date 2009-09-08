@@ -238,4 +238,7 @@ public interface BrokerViewMBean extends Service {
     @MBeanInfo("The url of the VM connector")
     String getVMURL();
     
+    @MBeanInfo("The location of the data directory")
+    public String getDataDirectory();
+    
 }

@@ -569,7 +569,7 @@ other brokers in a federated network
         <xs:element name='plugins' minOccurs='0' maxOccurs='1'>
           <xs:annotation>
             <xs:documentation><![CDATA[
-              Sets a number of broker plugins to install such as for security
+              Sets a number of broker plugins to install to extend the Broker functionality - such as for security
 authentication or authorization
             ]]></xs:documentation>
           </xs:annotation>
@@ -586,6 +586,9 @@ authentication or authorization
               <xs:element ref='tns:timeStampingBrokerPlugin'/>
               <xs:element ref='tns:udpTraceBrokerPlugin'/>
               <xs:element ref='tns:traceBrokerPathPlugin'/>
+              <xs:element ref='tns:statisticsBrokerPlugin'/>
+              <xs:element ref='tns:discardingDLQBrokerPlugin'/>
+              <xs:element ref='tns:forcePersistencyModeBrokerPlugin'/>
               <xs:any namespace='##other'/>
             </xs:choice>
           </xs:complexType>
@@ -617,6 +620,9 @@ other brokers in a federated network
               <xs:element ref='tns:timeStampingBrokerPlugin'/>
               <xs:element ref='tns:udpTraceBrokerPlugin'/>
               <xs:element ref='tns:traceBrokerPathPlugin'/>
+              <xs:element ref='tns:statisticsBrokerPlugin'/>
+              <xs:element ref='tns:discardingDLQBrokerPlugin'/>
+              <xs:element ref='tns:forcePersistencyModeBrokerPlugin'/>
               <xs:any namespace='##other'/>
             </xs:choice>
           </xs:complexType>
@@ -5888,6 +5894,43 @@ warning if the user forgets. To disable the warning just set the value to <
       <xs:anyAttribute namespace='##other' processContents='lax'/>
     </xs:complexType>
   </xs:element>
-
-
+  
+  <!-- element for type: org.apache.activemq.plugin.DiscardingDLQBrokerPlugin -->
+  <xs:element name='discardingDLQBrokerPlugin'>
+    <xs:annotation>
+      <xs:documentation><![CDATA[
+        Filter Plugin for DLQ
+      ]]></xs:documentation>
+    </xs:annotation>
+    <xs:complexType>
+      <xs:attribute name='dropTemporaryTopics' type='xs:boolean'/>
+      <xs:attribute name='dropTemporaryQueues' type='xs:boolean'/>
+      <xs:attribute name='dropAll' type='xs:boolean'/>
+      <xs:attribute name='dropOnly' type='xs:string'/>
+      <xs:attribute name='reportInterval' type='xs:integer'/>
+    </xs:complexType>
+  </xs:element>
+  
+  <!-- element for type: org.apache.activemq.plugin.ForcePersistencyModeBrokerPlugin -->
+  <xs:element name='forcePersistencyModeBrokerPlugin'>
+    <xs:annotation>
+      <xs:documentation><![CDATA[
+        A helper plugin to force a mode of persistence on messages
+      ]]></xs:documentation>
+    </xs:annotation>
+    <xs:complexType>
+      <xs:attribute name='persistenceFlag' type='xs:boolean'/>
+    </xs:complexType>
+  </xs:element>
+  
+   <!-- element for type: org.apache.activemq.plugin.StatisticsBrokerPlugin -->
+  <xs:element name='statisticsBrokerPlugin'>
+    <xs:annotation>
+      <xs:documentation><![CDATA[
+        Enable statistic messages 
+      ]]></xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  
+ 
 </xs:schema>

@@ -16,31 +16,9 @@
  */
 package org.apache.activemq.broker.jmx;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.io.IOException;
-
-import javax.jms.Connection;
-import javax.jms.InvalidSelectorException;
-import javax.jms.MessageProducer;
-import javax.jms.Session;
-import javax.management.openmbean.CompositeData;
-import javax.management.openmbean.CompositeDataSupport;
-import javax.management.openmbean.CompositeType;
-import javax.management.openmbean.OpenDataException;
-import javax.management.openmbean.TabularData;
-import javax.management.openmbean.TabularDataSupport;
-import javax.management.openmbean.TabularType;
-import javax.management.ObjectName;
-import javax.management.MalformedObjectNameException;
-
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.jmx.OpenTypeSupport.OpenTypeFactory;
 import org.apache.activemq.broker.region.Destination;
-import org.apache.activemq.broker.region.Queue;
 import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQMessage;
@@ -51,6 +29,25 @@ import org.apache.activemq.filter.MessageEvaluationContext;
 import org.apache.activemq.selector.SelectorParser;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import javax.jms.Connection;
+import javax.jms.InvalidSelectorException;
+import javax.jms.MessageProducer;
+import javax.jms.Session;
+import javax.management.MalformedObjectNameException;
+import javax.management.ObjectName;
+import javax.management.openmbean.CompositeData;
+import javax.management.openmbean.CompositeDataSupport;
+import javax.management.openmbean.CompositeType;
+import javax.management.openmbean.OpenDataException;
+import javax.management.openmbean.TabularData;
+import javax.management.openmbean.TabularDataSupport;
+import javax.management.openmbean.TabularType;
 
 public class DestinationView implements DestinationViewMBean {
     private static final Log LOG = LogFactory.getLog(DestinationViewMBean.class);

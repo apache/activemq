@@ -28,12 +28,16 @@ import org.apache.commons.logging.LogFactory;
  * 
  * Useful, if you have set the broker usage policy to process ONLY persistent or ONLY non-persistent
  * messages. 
+ *  @org.apache.xbean.XBean element="forcePersistencyModeBrokerPlugin"
  */
 public class ForcePersistencyModeBrokerPlugin implements BrokerPlugin {
-  public static Log log = LogFactory.getLog(ForcePersistencyModeBrokerPlugin.class);
+  private static Log LOG = LogFactory.getLog(ForcePersistencyModeBrokerPlugin.class);
   private boolean persistenceFlag = false;
   
-  public ForcePersistencyModeBrokerPlugin() {
+  /**
+ * Constructor
+ */
+public ForcePersistencyModeBrokerPlugin() {
   }
 
   /** 
@@ -46,7 +50,7 @@ public class ForcePersistencyModeBrokerPlugin implements BrokerPlugin {
   public Broker installPlugin(Broker broker) throws Exception{
     ForcePersistencyModeBroker pB = new ForcePersistencyModeBroker(broker);
     pB.setPersistenceFlag(isPersistenceForced());
-    log.info("Installing ForcePersistencyModeBroker plugin: persistency enforced=" + pB.isPersistent());
+    LOG.info("Installing ForcePersistencyModeBroker plugin: persistency enforced=" + pB.isPersistent());
     return pB;
   }
 

@@ -267,3 +267,11 @@ vmQueueCursor = org.apache.activemq.broker.region.policy.VMPendingQueueMessageSt
 
 xaConnectionFactory = org.apache.activemq.spring.ActiveMQXAConnectionFactory
 
+statisticsBrokerPlugin = org.apache.activemq.plugin.StatisticsBrokerPlugin
+
+forcePersistencyModeBrokerPlugin = org.apache.activemq.plugin.ForcePersistencyModeBrokerPlugin
+
+discardingDLQBrokerPlugin = org.apache.activemq.plugin.DiscardingDLQBrokerPlugin
+
+
+

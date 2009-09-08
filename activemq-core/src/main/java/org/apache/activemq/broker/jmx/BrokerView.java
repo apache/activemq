@@ -16,6 +16,8 @@
  */
 package org.apache.activemq.broker.jmx;
 
+import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URI;
@@ -345,5 +347,14 @@ public class BrokerView implements BrokerViewMBean {
     public String getVMURL() {
         URI answer = brokerService.getVmConnectorURI();
         return answer != null ? answer.toString() : "";
+    }
+    
+    public String getDataDirectory() {
+        File file = brokerService.getDataDirectoryFile();
+        try {
+            return file != null ? file.getCanonicalPath():"";
+        } catch (IOException e) {
+            return "";
+        }
     }
 }

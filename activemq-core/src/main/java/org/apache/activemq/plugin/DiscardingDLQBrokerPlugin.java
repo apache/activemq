@@ -27,6 +27,7 @@ import org.apache.commons.logging.LogFactory;
 
 /**
  * @author Filip Hanik
+ *  @org.apache.xbean.XBean element="discardingDLQBrokerPlugin"
  * @version 1.0
  */
 public class DiscardingDLQBrokerPlugin implements BrokerPlugin {
