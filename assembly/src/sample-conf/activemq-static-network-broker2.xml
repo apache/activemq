@@ -14,6 +14,22 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 -->
+<!--  
+    Create a static network of brokers
+    For more information, see:
+    
+    http://activemq.apache.org/networks-of-brokers.html
+    
+    To run this example network of ActiveMQ brokers run
+    
+    $ bin/activemq xbean:conf/activemq-static-network-broker1.xml
+    
+    and
+    
+    $ bin/activemq xbean:conf/activemq-static-network-broker2.xml
+    
+    in separate consoles
+ -->
 <beans
   xmlns="http://www.springframework.org/schema/beans"
   xmlns:amq="http://activemq.apache.org/schema/core"
@@ -26,6 +42,23 @@
     <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer"/>
 
     <broker xmlns="http://activemq.apache.org/schema/core" brokerName="static-broker1" dataDirectory="${activemq.base}/data">
+
+        <!-- First let's configure connectors -->
+        
+        <!-- 
+            The store and forward broker networks ActiveMQ will listen to
+            Create a duplex connector to the first broker 
+        -->
+        <networkConnectors>
+            <networkConnector uri="static:(tcp://localhost:61616)" duplex="true"/>
+        </networkConnectors>
+        
+        <!-- The transport connectors ActiveMQ will listen to -->
+        <transportConnectors>
+            <transportConnector name="openwire" uri="tcp://0.0.0.0:61618"/>
+        </transportConnectors>
+        
+        <!-- Now configure the rest of the desired broker behavior -->
 
         <!-- Destination specific policies using destination names or wildcards -->
         <destinationPolicy>
@@ -47,16 +80,11 @@
             <managementContext createConnector="true" connectorPort="1100"/>
         </managementContext>
 
-        <!-- The store and forward broker networks ActiveMQ will listen to -->
-        <networkConnectors>
-            <networkConnector uri="static:(tcp://localhost:61616)" duplex="true" prefetchSize="1"/>
-        </networkConnectors>
-
         <persistenceAdapter>
-            <kahaDB directory="${activemq.base}/data/static-broker2/kahadb" indexWriteBatchSize="1000" enableIndexWriteAsync="true" enableJournalDiskSyncs="false" />
+            <kahaDB directory="${activemq.base}/data/static-broker2/kahadb" />
         </persistenceAdapter>
         
-        <!--  The maximum about of space the broker will use before slowing down producers -->
+        <!--  The maximum amount of space the broker will use before slowing down producers -->
         <systemUsage>
             <systemUsage>
                 <memoryUsage>
@@ -70,12 +98,6 @@
                 </tempUsage>
             </systemUsage>
         </systemUsage>
-
-
-        <!-- The transport connectors ActiveMQ will listen to -->
-        <transportConnectors>
-            <transportConnector name="openwire" uri="tcp://0.0.0.0:61618"/>
-        </transportConnectors>
 
     </broker>
 

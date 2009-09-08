@@ -15,6 +15,16 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
+<!--  
+    Secure ActiveMQ broker
+    For more information, see:
+    
+    http://activemq.apache.org/security.html
+    
+    To run ActiveMQ with this configuration add xbean:conf/activemq-security.xml to your command
+    
+    e.g. $ bin/activemq xbean:conf/activemq-security.xml
+ -->
 <beans
   xmlns="http://www.springframework.org/schema/beans"
   xmlns:amq="http://activemq.apache.org/schema/core"
@@ -31,6 +41,7 @@
   <broker useJmx="true" persistent="false" xmlns="http://activemq.apache.org/schema/core">
 
     <plugins>
+        <!-- Configure authentication; Username, passwords and groups -->
         <simpleAuthenticationPlugin>
             <users>
                 <authenticationUser username="system" password="manager"
@@ -42,7 +53,7 @@
         </simpleAuthenticationPlugin>
 
 
-      <!--  lets configure a destination based authorization mechanism -->
+      <!--  Lets configure a destination based authorization mechanism -->
       <authorizationPlugin>
         <map>
           <authorizationMap>
@@ -70,8 +81,14 @@
     
   </broker>
 
+  <!-- 
+      Configure command agent to be used in secured broker environment
+      Notice how we used ${activemq.username} and ${activemq.password} configured in credential.properties
+  -->
   <commandAgent xmlns="http://activemq.apache.org/schema/core" brokerUrl="vm://localhost" username="${activemq.username}" password="${activemq.password}"/>
 
+  <!-- Use Web applications and Camel in secured broker environment -->
   <import resource="activemq-jetty.xml"/>
+  <import resource="activemq-camel.xml"/>
 
 </beans>

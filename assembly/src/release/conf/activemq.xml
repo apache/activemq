@@ -22,16 +22,17 @@
   http://activemq.apache.org/schema/core http://activemq.apache.org/schema/core/activemq-core.xsd">
 
     <!-- Allows us to use system properties as variables in this configuration file -->
-    <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer"/>
+    <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+        <property name="locations">
+            <value>file:${activemq.base}/conf/credentials.properties</value>
+        </property>      
+    </bean>
 
     <!-- 
         The <broker> element is used to configure the ActiveMQ broker. 
-        
-        Tips: 
-          - Change the brokerName attribute to something unique  
     -->
     <broker xmlns="http://activemq.apache.org/schema/core" brokerName="localhost" dataDirectory="${activemq.base}/data">
-
+        
         <!-- 
             The managementContext is used to configure how ActiveMQ is exposed in 
             JMX. By default, ActiveMQ uses the MBean server that is started by 
@@ -51,15 +52,28 @@
             http://activemq.apache.org/persistence.html 
         -->
         <persistenceAdapter>
-            <kahaDB directory="${activemq.base}/data/kahadb" indexWriteBatchSize="1000" enableIndexWriteAsync="true" enableJournalDiskSyncs="false" />
+            <kahaDB directory="${activemq.base}/data/kahadb"/>
         </persistenceAdapter>
         
-        <!--  
+        
+        <!--
+            It's advisable to turn on producer flow control in the production system
+
             The systemUsage controls the maximum amount of space the broker will 
-            use before slowing down producers. For more information, see: 
+            use before slowing down producers. For more information, see:
             
-            http://activemq.apache.org/producer-flow-control.html 
-        -->
+            http://activemq.apache.org/producer-flow-control.html
+              
+        <destinationPolicy>
+            <policyMap>
+                <policyEntries>
+                    <policyEntry queue=">" producerFlowControl="true" />
+                    <policyEntry topic=">" producerFlowControl="true" />
+                </policyEntries>
+            </policyMap>
+        </destinationPolicy> 
+ 
+        
         <systemUsage>
             <systemUsage>
                 <memoryUsage>
@@ -73,7 +87,7 @@
                 </tempUsage>
             </systemUsage>
         </systemUsage>
-
+        -->
 
         <!-- 
             The transport connectors expose ActiveMQ over a given protocol to
@@ -96,7 +110,8 @@
 
     <!-- 
         Enable web consoles, REST and Ajax APIs and demos
-        Take a look at activemq-jetty.xml for more details
-    <import resource="activemq-jetty.xml"/>
+        Take a look at activemq-jetty.xml for more details 
     -->
+    <import resource="activemq-jetty.xml"/>
+    
 </beans>

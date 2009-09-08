@@ -14,6 +14,13 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 -->
+<!--  
+    Demonstrates various ActiveMQ configuration options
+    
+    To run ActiveMQ with this configuration add xbean:conf/activemq-demo.xml to your command
+    
+    e.g. $ bin/activemq xbean:conf/activemq-demo.xml
+ -->
 <beans
   xmlns="http://www.springframework.org/schema/beans"
   xmlns:amq="http://activemq.apache.org/schema/core"

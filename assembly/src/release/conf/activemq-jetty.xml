@@ -14,10 +14,13 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 -->
+<!-- 
+    An embedded servlet engine for serving up the Admin consoles, REST and Ajax APIs and some demos 
+    Include this file in your configuration to enable ActiveMQ web components
+    
+    e.g. <import resource="activemq-jetty.xml"/>
+-->
 <beans>
-    <!-- 
-        An embedded servlet engine for serving up the Admin consoles, REST and Ajax APIs and some demos 
-    -->
     <jetty xmlns="http://mortbay.com/schemas/jetty/1.0">
         <connectors>
             <nioConnector port="8161"/>

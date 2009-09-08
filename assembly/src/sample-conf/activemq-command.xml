@@ -14,6 +14,17 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 -->
+<!--  
+    Communicate with a broker using command agent over XMPP 
+    For more information, see:
+    
+    http://activemq.apache.org/command-agent.html and
+    http://activemq.apache.org/xmpp.html
+    
+    To run ActiveMQ with this configuration add xbean:conf/activemq-command.xml to your command
+    
+    e.g. $ bin/activemq xbean:conf/activemq-command.xml
+ -->
 <beans>
     <broker xmlns="http://activemq.apache.org/schema/core" brokerName="command-broker" dataDirectory="${activemq.base}/data">
         <managementContext>
@@ -25,6 +36,7 @@
             <transportConnector name="xmpp" uri="xmpp://localhost:61222"/>
         </transportConnectors>
     </broker>
+    
     <!-- Create a command agent -->
     <commandAgent xmlns="http://activemq.apache.org/schema/core" brokerUrl="vm://localhost"/>
 </beans>

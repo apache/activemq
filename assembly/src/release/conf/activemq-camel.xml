@@ -14,15 +14,20 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 -->
+<!-- 
+
+    Lets deploy some Enterprise Integration Patterns inside the ActiveMQ Message Broker
+    For more information, see:
+    
+    http://camel.apache.org
+    
+    Include this file in your configuration to enable Camel
+    
+    e.g. <import resource="activemq-camel.xml"/>
+-->
 <beans
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd">
-    <!--
-       Lets deploy some Enterprise Integration Patterns inside the ActiveMQ Message Broker
-       For more details see
-      
-       http://activemq.apache.org/enterprise-integration-patterns.html
-    -->
     <camelContext id="camel" xmlns="http://camel.apache.org/schema/spring">
 
         <!-- You can use a <package> element for each root package to search for Java routes -->
@@ -38,7 +43,7 @@
     <!--
        Lets configure some Camel endpoints
     
-       http://activemq.apache.org/camel/components.html
+       http://camel.apache.org/components.html
     -->
 
     <!-- configure the camel activemq component to use the current broker -->

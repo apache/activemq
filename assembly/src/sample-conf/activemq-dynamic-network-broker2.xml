@@ -14,6 +14,22 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 -->
+<!--  
+    Create a dynamic network of brokers
+    For more information, see:
+    
+    http://activemq.apache.org/networks-of-brokers.html
+    
+    To run this example network of ActiveMQ brokers run
+    
+    $ bin/activemq xbean:conf/activemq-dynamic-network-broker1.xml
+    
+    and
+    
+    $ bin/activemq xbean:conf/activemq-dynamic-network-broker2.xml
+    
+    in separate consoles
+ -->
 <beans
   xmlns="http://www.springframework.org/schema/beans"
   xmlns:amq="http://activemq.apache.org/schema/core"
@@ -25,6 +41,32 @@
     <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer"/>
 
     <broker xmlns="http://activemq.apache.org/schema/core" brokerName="dynamic-broker2" dataDirectory="${activemq.base}/data">
+
+        <!-- First let's configure connectors -->
+
+        <!--
+            Configure network connector to use multicast protocol
+            For more information, see
+            
+            http://activemq.apache.org/multicast-transport-reference.html
+        -->
+        <networkConnectors>
+          <networkConnector uri="multicast://default"
+            dynamicOnly="true" 
+            networkTTL="3" 
+            prefetchSize="1" 
+            decreaseNetworkConsumerPriority="true" />
+        </networkConnectors>
+        
+        <!-- 
+            The transport connectors ActiveMQ will listen to
+            Configure discovery URI to use multicast protocol
+        -->
+        <transportConnectors>
+            <transportConnector name="openwire" uri="tcp://0.0.0.0:61618" discoveryUri="multicast://default" />
+        </transportConnectors>
+
+        <!-- Now configure the rest of the desired broker behavior -->
 
         <!-- Destination specific policies using destination names or wildcards -->
         <destinationPolicy>
@@ -45,20 +87,12 @@
         <managementContext>
             <managementContext createConnector="true" connectorPort="1100"/>
         </managementContext>
-
-	    <networkConnectors>
-	      <networkConnector uri="multicast://default"
-	        dynamicOnly="true" 
-	        networkTTL="3" 
-	        prefetchSize="1" 
-	        decreaseNetworkConsumerPriority="true" />
-	    </networkConnectors>
 	
 	    <persistenceAdapter>
-	        <kahaDB directory="${activemq.base}/data/dynamic-broker2/kahadb" indexWriteBatchSize="1000" enableIndexWriteAsync="true" enableJournalDiskSyncs="false" />
+	        <kahaDB directory="${activemq.base}/data/dynamic-broker2/kahadb" />
 	    </persistenceAdapter>
 	    
-	    <!--  The maximum about of space the broker will use before slowing down producers -->
+	    <!--  The maximum amount of space the broker will use before slowing down producers -->
 	    <systemUsage>
 	        <systemUsage>
 	            <memoryUsage>
@@ -72,12 +106,6 @@
 	            </tempUsage>
 	        </systemUsage>
 	    </systemUsage>
-	
-	
-	    <!-- The transport connectors ActiveMQ will listen to -->
-	    <transportConnectors>
-	        <transportConnector name="openwire" uri="tcp://0.0.0.0:61618" discoveryUri="multicast://default" />
-	    </transportConnectors>
 
     </broker>
 
