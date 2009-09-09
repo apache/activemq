@@ -25,6 +25,7 @@ import org.apache.activemq.broker.jmx.BrokerView;
 import org.apache.activemq.broker.jmx.BrokerViewMBean;
 import org.apache.activemq.broker.jmx.ManagedRegionBroker;
 import org.apache.activemq.broker.jmx.ManagementContext;
+import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.Queue;
 import org.apache.activemq.command.ActiveMQDestination;
 
@@ -66,8 +67,11 @@ public class LocalBrokerFacade extends BrokerFacadeSupport {
     public void purgeQueue(ActiveMQDestination destination) throws Exception {
         Set destinations = getManagedBroker().getQueueRegion().getDestinations(destination);
         for (Iterator i = destinations.iterator(); i.hasNext();) {
-            Queue regionQueue = (Queue)i.next();
-            regionQueue.purge();
+            Destination dest = (Destination) i.next();
+            if (dest instanceof Queue) {
+                Queue regionQueue = (Queue) dest;
+                regionQueue.purge();
+            }
         }
     }
     
