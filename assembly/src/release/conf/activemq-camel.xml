@@ -30,8 +30,10 @@
     xsi:schemaLocation="http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd">
     <camelContext id="camel" xmlns="http://camel.apache.org/schema/spring">
 
-        <!-- You can use a <package> element for each root package to search for Java routes -->
-        <package>org.foo.bar</package>
+        <!-- You can use a <packages> element for each root package to search for Java routes -->
+        <packageScan>
+           <packages>org.foo.bar</packages>
+        </packageScan>
 
         <!-- You can use Spring XML syntax to define the routes here using the <route> element -->
         <route>
