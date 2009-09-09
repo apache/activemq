@@ -37,7 +37,7 @@ public class RedeliveryPolicy implements Cloneable, Serializable {
     private long initialRedeliveryDelay = 1000L;
     private boolean useCollisionAvoidance;
     private boolean useExponentialBackOff;
-    private short backOffMultiplier = 5;
+    private double backOffMultiplier = 5.0;
 
     public RedeliveryPolicy() {
     }
@@ -50,11 +50,11 @@ public class RedeliveryPolicy implements Cloneable, Serializable {
         }
     }
 
-    public short getBackOffMultiplier() {
+    public double getBackOffMultiplier() {
         return backOffMultiplier;
     }
 
-    public void setBackOffMultiplier(short backOffMultiplier) {
+    public void setBackOffMultiplier(double backOffMultiplier) {
         this.backOffMultiplier = backOffMultiplier;
     }
 
@@ -88,7 +88,7 @@ public class RedeliveryPolicy implements Cloneable, Serializable {
         if (previousDelay == 0) {
             redeliveryDelay = initialRedeliveryDelay;
         } else if (useExponentialBackOff && backOffMultiplier > 1) {
-            redeliveryDelay = previousDelay * backOffMultiplier;
+            redeliveryDelay = (long) (previousDelay * backOffMultiplier);
         } else {
             redeliveryDelay = previousDelay;
         }
