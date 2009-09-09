@@ -23,7 +23,7 @@
     
     Include this file in your configuration to enable Camel
     
-    e.g. <import resource="activemq-camel.xml"/>
+    e.g. <import resource="camel.xml"/>
 -->
 <beans
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"

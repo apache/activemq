@@ -88,7 +88,7 @@
   <commandAgent xmlns="http://activemq.apache.org/schema/core" brokerUrl="vm://localhost" username="${activemq.username}" password="${activemq.password}"/>
 
   <!-- Use Web applications and Camel in secured broker environment -->
-  <import resource="activemq-jetty.xml"/>
-  <import resource="activemq-camel.xml"/>
+  <import resource="jetty.xml"/>
+  <import resource="camel.xml"/>
 
 </beans>

@@ -18,7 +18,7 @@
     An embedded servlet engine for serving up the Admin consoles, REST and Ajax APIs and some demos 
     Include this file in your configuration to enable ActiveMQ web components
     
-    e.g. <import resource="activemq-jetty.xml"/>
+    e.g. <import resource="jetty.xml"/>
 -->
 <beans>
     <jetty xmlns="http://mortbay.com/schemas/jetty/1.0">

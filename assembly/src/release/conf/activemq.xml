@@ -105,13 +105,13 @@
         Uncomment to enable Camel
         Take a look at activemq-camel.xml for more details
          
-    <import resource="activemq-camel.xml"/>
+    <import resource="camel.xml"/>
     -->
 
     <!-- 
         Enable web consoles, REST and Ajax APIs and demos
         Take a look at activemq-jetty.xml for more details 
     -->
-    <import resource="activemq-jetty.xml"/>
+    <import resource="jetty.xml"/>
     
 </beans>
