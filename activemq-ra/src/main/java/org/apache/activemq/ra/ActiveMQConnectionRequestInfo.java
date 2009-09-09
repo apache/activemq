@@ -197,8 +197,8 @@ public class ActiveMQConnectionRequestInfo implements ConnectionRequestInfo, Ser
         return useInboundSession != null && useInboundSession.booleanValue();
     }
 
-    public Short getRedeliveryBackOffMultiplier() {
-        return Short.valueOf(redeliveryPolicy().getBackOffMultiplier());
+    public Double getRedeliveryBackOffMultiplier() {
+        return Double.valueOf(redeliveryPolicy().getBackOffMultiplier());
     }
 
     public Long getInitialRedeliveryDelay() {

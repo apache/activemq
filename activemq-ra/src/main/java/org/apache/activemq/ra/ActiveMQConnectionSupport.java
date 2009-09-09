@@ -306,7 +306,7 @@ public class ActiveMQConnectionSupport {
     /**
      * @return redelivery backoff multiplier
      */
-    public Short getRedeliveryBackOffMultiplier() {
+    public Double getRedeliveryBackOffMultiplier() {
         return info.getRedeliveryBackOffMultiplier();
     }
 

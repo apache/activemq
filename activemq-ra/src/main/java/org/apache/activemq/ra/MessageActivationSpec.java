@@ -115,7 +115,7 @@ public interface MessageActivationSpec extends ActivationSpec {
 
     String getMaxMessagesPerBatch();
 
-    short getBackOffMultiplier();
+    double getBackOffMultiplier();
 
     long getInitialRedeliveryDelay();
 

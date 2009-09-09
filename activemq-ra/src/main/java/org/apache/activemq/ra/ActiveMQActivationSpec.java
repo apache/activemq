@@ -587,7 +587,7 @@ public class ActiveMQActivationSpec implements MessageActivationSpec, Serializab
         }
     }
 
-    public short getBackOffMultiplier() {
+    public double getBackOffMultiplier() {
         if (redeliveryPolicy == null) {
             return 0;
         }
