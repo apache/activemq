@@ -104,7 +104,9 @@ public class ProducerFlowControlSendFailTest extends ProducerFlowControlTest {
         TextMessage msg;
         for (int idx = 0; idx < 10; ++idx) {
             msg = (TextMessage) consumer.receive(1000);
-            msg.acknowledge();
+            if (msg != null) {
+                msg.acknowledge();
+            }
         }
         keepGoing.set(false);
     }
