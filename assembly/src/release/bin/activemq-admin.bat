@@ -71,11 +71,6 @@ echo.
 
 if "%ACTIVEMQ_BASE%" == "" set ACTIVEMQ_BASE=%ACTIVEMQ_HOME%
 
-if "%ACTIVEMQ_OPTS%" == "" set ACTIVEMQ_OPTS=-Xmx512M -Dorg.apache.activemq.UseDedicatedTaskRunner=true
-
-if "%SUNJMX%" == "" set SUNJMX=-Dcom.sun.management.jmxremote
-REM set SUNJMX=-Dcom.sun.management.jmxremote.port=1616 -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false
-
 REM Uncomment to enable YourKit profiling
 REM SET ACTIVEMQ_DEBUG_OPTS="-agentlib:yjpagent"
 
@@ -85,7 +80,7 @@ REM SET ACTIVEMQ_DEBUG_OPTS=-Xdebug -Xnoagent -Djava.compiler=NONE -Xrunjdwp:tra
 REM Setup ActiveMQ Classpath. Default is the conf directory.
 set ACTIVEMQ_CLASSPATH=%ACTIVEMQ_BASE%/conf;%ACTIVEMQ_CLASSPATH%
 
-"%_JAVACMD%" %SUNJMX% %ACTIVEMQ_DEBUG_OPTS% %ACTIVEMQ_OPTS% %SSL_OPTS% -Dactivemq.classpath="%ACTIVEMQ_CLASSPATH%" -Dactivemq.home="%ACTIVEMQ_HOME%" -Dactivemq.base="%ACTIVEMQ_BASE%" -jar "%ACTIVEMQ_HOME%/bin/run.jar" %*
+"%_JAVACMD%" %ACTIVEMQ_DEBUG_OPTS% -Dactivemq.classpath="%ACTIVEMQ_CLASSPATH%" -Dactivemq.home="%ACTIVEMQ_HOME%" -Dactivemq.base="%ACTIVEMQ_BASE%" -jar "%ACTIVEMQ_HOME%/bin/run.jar" %*
 
 goto end
 
