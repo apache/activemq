@@ -120,6 +120,7 @@ public class PooledSession implements Session, TopicSession, QueueSession, XASes
                         LOG.trace("Ignoring exception as discarding session: " + e1, e1);
                     }
                     session = null;
+                    sessionPool.invalidateSession(this);
                     return;
                 }
             }

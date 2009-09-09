@@ -69,6 +69,15 @@ public class SessionPool implements PoolableObjectFactory {
             throw JMSExceptionSupport.create("Failed to return session to pool: " + e, e);
         }
     }
+    
+    public void invalidateSession(PooledSession session) throws JMSException {
+        try {
+            getSessionPool().invalidateObject(session);
+        } catch (Exception e) {
+            throw JMSExceptionSupport.create("Failed to invalidate session: " + e, e);
+        }
+    }
+         
 
     // PoolableObjectFactory methods
     // -------------------------------------------------------------------------
