@@ -138,7 +138,7 @@ public class MessageDatabase {
     protected boolean deleteAllMessages;
     protected File directory;
     protected Thread checkpointThread;
-    protected boolean enableJournalDiskSyncs=true;
+    protected boolean enableJournalDiskSyncs=false;
     long checkpointInterval = 5*1000;
     long cleanupInterval = 30*1000;
     int journalMaxFileLength = Journal.DEFAULT_MAX_FILE_LENGTH;

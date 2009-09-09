@@ -15,19 +15,11 @@
     limitations under the License.
 -->
 <!--  
-    Tune ActiveMQ broker so it can handle large number of queues (tens of thousands)
+    Tune ActiveMQ broker for high throughput of messages
+    Be sure to make necessary changes in your producer and consumer, since there you can make the most notable difference
+    
     For more information, see:
-    http://activemq.apache.org/how-do-i-configure-10s-of-1000s-of-queues-in-a-single-broker-.html
-    
-    Be sure to make necessary changes in your startup script, to 
-    
-    1. Give broker enough memory 
-    2. Disable dedicated task runner
-    
-    e.g. ACTIVEMQ_OPTS="-Xmx1024M -Dorg.apache.activemq.UseDedicatedTaskRunner=false"
-    
-    To run ActiveMQ with this configuration add xbean:conf/activemq-scalability.xml to your command
-    e.g. $ bin/activemq xbean:conf/activemq-scalability.xml
+    http://activemq.apache.org/performance-tuning.html
  -->
 <beans
   xmlns="http://www.springframework.org/schema/beans"
@@ -42,34 +34,39 @@
     <broker xmlns="http://activemq.apache.org/schema/core" brokerName="localhost" dataDirectory="${activemq.base}/data" useJmx="false" advisorySupport="false">
 
         <!-- 
-            Turn on optimizedDispatch
-            For more information, see:
-            http://activemq.apache.org/per-destination-policies.html 
+            Use VM cursor
+            For more information, see:           
+            http://activemq.apache.org/message-cursors.html
         -->
         <destinationPolicy>
             <policyMap>
                 <policyEntries>
-                    <policyEntry queue=">" optimizedDispatch="true" />
+                    <policyEntry queue=">">
+                        <pendingQueuePolicy>
+                            <vmQueueCursor />
+                        </pendingQueuePolicy>
+                    </policyEntry>
                 </policyEntries>
             </policyMap>
         </destinationPolicy>
 
         <!-- 
             Use KahaDB for persistence
-            For more information, see:
+            Tune it a bit so we minimize IO operations
+            For more information, see:            
             http://activemq.apache.org/kahadb.html
         -->
         <persistenceAdapter>
-            <kahaDB directory="${activemq.base}/data/kahadb" enableIndexWriteAsync="true"/>
+            <kahaDB directory="${activemq.base}/data/kahadb" indexWriteBatchSize="10000" />
         </persistenceAdapter>
 
         <!-- 
-            Use NIO transport 
-            For more information, see:
-            http://activemq.apache.org/configuring-transports.html#ConfiguringTransports-TheNIOTransport
+            Use TCP transport 
+            For more information, see:            
+            http://activemq.apache.org/configuring-transports.html
         -->
         <transportConnectors>
-            <transportConnector name="nio" uri="nio://0.0.0.0:61616"/>
+            <transportConnector name="openwire" uri="tcp://0.0.0.0:61616"/>
         </transportConnectors>
 
     </broker>
