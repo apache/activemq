@@ -18,26 +18,30 @@ package org.apache.activemq.broker.jmx;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
-import java.util.Map;
+import java.net.URI;
 import java.util.HashMap;
+import java.util.Map;
+
 import javax.jms.Connection;
 import javax.jms.Message;
+import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
-import javax.jms.MessageConsumer;
 import javax.management.MBeanServer;
 import javax.management.MBeanServerInvocationHandler;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 import javax.management.openmbean.CompositeData;
 import javax.management.openmbean.TabularData;
+
 import junit.textui.TestRunner;
-import org.apache.activemq.EmbeddedBrokerTestSupport;
+
 import org.apache.activemq.ActiveMQConnectionFactory;
-import org.apache.activemq.command.ActiveMQQueue;
+import org.apache.activemq.EmbeddedBrokerTestSupport;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.region.BaseDestination;
 import org.apache.activemq.broker.region.policy.SharedDeadLetterStrategy;
+import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -75,7 +79,7 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
     public void testConnectors() throws Exception{
         ObjectName brokerName = assertRegisteredObjectName(domain + ":Type=Broker,BrokerName=localhost");
         BrokerViewMBean broker = (BrokerViewMBean)MBeanServerInvocationHandler.newProxyInstance(mbeanServer, brokerName, BrokerViewMBean.class, true);
-        assertEquals("openwire URL doesn't equal bind Address",broker.getOpenWireURL(),this.bindAddress);
+        assertEquals("openwire URL port doesn't equal bind Address", new URI(broker.getOpenWireURL()).getPort(), new URI(this.bindAddress).getPort());
 
     }
 
