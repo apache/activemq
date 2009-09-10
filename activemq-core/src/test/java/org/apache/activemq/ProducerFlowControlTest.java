@@ -269,6 +269,7 @@ public class ProducerFlowControlTest extends JmsTestSupport {
         policy.setMemoryLimit(1);
         policy.setPendingSubscriberPolicy(new VMPendingSubscriberMessageStoragePolicy());
         policy.setPendingQueuePolicy(new VMPendingQueueMessageStoragePolicy());
+        policy.setProducerFlowControl(true);
         policyMap.setDefaultEntry(policy);
         service.setDestinationPolicy(policyMap);
 
