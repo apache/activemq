@@ -282,7 +282,7 @@ public class KahaPersistenceAdapter implements PersistenceAdapter {
 	}
 
     /**
-     * @param maxDataFileLength the maxDataFileLength to set
+     * When set using Xbean, values of the form "20 Mb", "1024kb", and "1g" can be used
      * @org.apache.xbean.Property propertyEditor="org.apache.activemq.util.MemoryPropertyEditor"
      */
     public void setMaxDataFileLength(long maxDataFileLength) {

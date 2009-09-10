@@ -798,11 +798,9 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
         return maxCheckpointMessageAddSize;
     }
 
-    /**
-     * When set using XBean, you can use values such as: "20
-     * mb", "1024 kb", or "1 gb"
-     * 
-     * @org.apache.xbean.Property propertyEditor="org.apache.activemq.util.MemoryPropertyEditor"
+    /** 
+     * When set using Xbean, values of the form "20 Mb", "1024kb", and "1g" can be used
+     * @org.apache.xbean.Property propertyEditor="org.apache.activemq.util.MemoryIntPropertyEditor"
      */
     public void setMaxCheckpointMessageAddSize(int maxCheckpointMessageAddSize) {
         this.maxCheckpointMessageAddSize = maxCheckpointMessageAddSize;
@@ -857,11 +855,9 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
 	}
 
 	 /**
-     * When set using XBean, you can use values such as: "20
-     * mb", "1024 kb", or "1 gb"
-     * 
-     * @org.apache.xbean.Property propertyEditor="org.apache.activemq.util.MemoryPropertyEditor"
-     */
+      * When set using Xbean, values of the form "20 Mb", "1024kb", and "1g" can be used
+      * @org.apache.xbean.Property propertyEditor="org.apache.activemq.util.MemoryPropertyEditor"
+      */
 	public void setMaxFileLength(int maxFileLength) {
 		this.maxFileLength = maxFileLength;
 	}
@@ -911,9 +907,7 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
     }
 
     /**
-     * When set using XBean, you can use values such as: "20
-     * mb", "1024 kb", or "1 gb"
-     * 
+     * When set using Xbean, values of the form "20 Mb", "1024kb", and "1g" can be used
      * @org.apache.xbean.Property propertyEditor="org.apache.activemq.util.MemoryPropertyEditor"
      */
     public void setIndexPageSize(int indexPageSize) {
@@ -933,9 +927,7 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
     }
 
     /**
-     * When set using XBean, you can use values such as: "20
-     * mb", "1024 kb", or "1 gb"
-     * 
+     * When set using Xbean, values of the form "20 Mb", "1024kb", and "1g" can be used
      * @org.apache.xbean.Property propertyEditor="org.apache.activemq.util.MemoryPropertyEditor"
      */
     public void setMaxReferenceFileLength(int maxReferenceFileLength) {

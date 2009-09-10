@@ -134,8 +134,8 @@ public abstract class Usage<T extends Usage> implements Service {
     /**
      * Sets the memory limit in bytes. Setting the limit in bytes will set the
      * usagePortion to 0 since the UsageManager is not going to be portion based
-     * off the parent. When set using XBean, you can use values such as: "20
-     * mb", "1024 kb", or "1 gb"
+     * off the parent.
+     * When set using Xbean, values of the form "20 Mb", "1024kb", and "1g" can be used
      * 
      * @org.apache.xbean.Property propertyEditor="org.apache.activemq.util.MemoryPropertyEditor"
      */

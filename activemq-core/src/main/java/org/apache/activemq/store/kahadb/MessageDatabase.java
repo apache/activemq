@@ -142,6 +142,7 @@ public class MessageDatabase {
     long checkpointInterval = 5*1000;
     long cleanupInterval = 30*1000;
     int journalMaxFileLength = Journal.DEFAULT_MAX_FILE_LENGTH;
+    int journalMaxWriteBatchSize = Journal.DEFAULT_MAX_WRITE_BATCH_SIZE;
     boolean enableIndexWriteAsync = false;
     int setIndexWriteBatchSize = PageFile.DEFAULT_WRITE_BATCH_SIZE; 
     
@@ -1337,7 +1338,16 @@ public class MessageDatabase {
         Journal manager = new Journal();
         manager.setDirectory(directory);
         manager.setMaxFileLength(getJournalMaxFileLength());
+        manager.setWriteBatchSize(getJournalMaxWriteBatchSize());
         return manager;
+    }
+
+    public int getJournalMaxWriteBatchSize() {
+        return journalMaxWriteBatchSize;
+    }
+    
+    public void setJournalMaxWriteBatchSize(int journalMaxWriteBatchSize) {
+        this.journalMaxWriteBatchSize = journalMaxWriteBatchSize;
     }
 
     public File getDirectory() {

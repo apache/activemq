@@ -34,7 +34,7 @@ import java.util.Set;
  * {@link Journal} and then check pointing asynchronously on a timeout with some
  * other long term persistent storage.
  * 
- * @org.apache.xbean.XBean element="KahaDB"
+ * @org.apache.xbean.XBean element="kahaDB"
  * @version $Revision: 1.17 $
  */
 public class KahaDBPersistenceAdapter implements PersistenceAdapter {
@@ -193,19 +193,16 @@ public class KahaDBPersistenceAdapter implements PersistenceAdapter {
      * Get the journalMaxFileLength
      * @return the journalMaxFileLength
      */
-    public long getJournalMaxFileLength() {
+    public int getJournalMaxFileLength() {
         return this.letter.getJournalMaxFileLength();
     }
 
     /**
-     * @param journalMaxFileLength which is rounded to an integer
-     * When set using XBean, you can use values such as: "20
-     * mb", "1024 kb", or "1 gb"
-     * 
-     * @org.apache.xbean.Property propertyEditor="org.apache.activemq.util.MemoryPropertyEditor"
+     * When set using Xbean, values of the form "20 Mb", "1024kb", and "1g" can be used
+     * @org.apache.xbean.Property propertyEditor="org.apache.activemq.util.MemoryIntPropertyEditor"
      */
-    public void setJournalMaxFileLength(long journalMaxFileLength) {
-        this.letter.setJournalMaxFileLength(Long.valueOf(journalMaxFileLength).intValue());
+    public void setJournalMaxFileLength(int journalMaxFileLength) {
+        this.letter.setJournalMaxFileLength(journalMaxFileLength);
     }
 
     /**
@@ -256,6 +253,22 @@ public class KahaDBPersistenceAdapter implements PersistenceAdapter {
         this.letter.setIndexWriteBatchSize(indexWriteBatchSize);
     }
 
+    /**
+     * Get the journalMaxWriteBatchSize
+     * @return the journalMaxWriteBatchSize
+     */
+    public int getJournalMaxWriteBatchSize() {
+        return this.letter.getJournalMaxWriteBatchSize();
+    }
+
+    /**
+     * Set the journalMaxWriteBatchSize
+     * @param journalMaxWriteBatchSize the journalMaxWriteBatchSize to set
+     */
+    public void setJournalMaxWriteBatchSize(int journalMaxWriteBatchSize) {
+        this.letter.setJournalMaxWriteBatchSize(journalMaxWriteBatchSize);
+    }
+    
     /**
      * Get the enableIndexWriteAsync
      * @return the enableIndexWriteAsync

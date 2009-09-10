@@ -30,6 +30,7 @@ import org.apache.commons.logging.LogFactory;
  * 
  * Useful, if you have set the broker usage policy to process ONLY persistent or ONLY non-persistent
  * messages. 
+ * @org.apache.xbean.XBean element="forcePersistencyModeBroker"
  */
 public class ForcePersistencyModeBroker extends BrokerFilter{
   public static Log log = LogFactory.getLog(ForcePersistencyModeBroker.class);

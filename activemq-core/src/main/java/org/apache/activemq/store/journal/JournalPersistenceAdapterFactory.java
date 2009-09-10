@@ -81,7 +81,7 @@ public class JournalPersistenceAdapterFactory extends DataSourceSupport implemen
 
     /**
      * Sets the size of the journal log files
-     * 
+     * When set using Xbean, values of the form "20 Mb", "1024kb", and "1g" can be used
      * @org.apache.xbean.Property propertyEditor="org.apache.activemq.util.MemoryIntPropertyEditor"
      */
     public void setJournalLogFileSize(int journalLogFileSize) {
