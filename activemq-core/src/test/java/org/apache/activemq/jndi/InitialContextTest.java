@@ -79,6 +79,6 @@ public class InitialContextTest extends TestCase {
 
         assertEquals(777, connectionFactory.getPrefetchPolicy().getQueuePrefetch());
         assertEquals(15, connectionFactory.getRedeliveryPolicy().getMaximumRedeliveries());
-        assertEquals(32, connectionFactory.getRedeliveryPolicy().getBackOffMultiplier());
+        assertEquals(32d, connectionFactory.getRedeliveryPolicy().getBackOffMultiplier());
     }
 }
