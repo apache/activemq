@@ -38,8 +38,6 @@ import org.apache.kahadb.util.LinkedNodeList;
  */
 class DataFileAppender {
 
-    protected static final int DEFAULT_MAX_BATCH_SIZE = 1024 * 1024 * 4;
-
     protected final Journal journal;
     protected final Map<WriteKey, WriteCommand> inflightWrites;
     protected final Object enqueueMutex = new Object() {
@@ -49,7 +47,7 @@ class DataFileAppender {
     protected boolean shutdown;
     protected IOException firstAsyncException;
     protected final CountDownLatch shutdownDone = new CountDownLatch(1);
-    protected int maxWriteBatchSize = DEFAULT_MAX_BATCH_SIZE;
+    protected int maxWriteBatchSize;
 
     private boolean running;
     private Thread thread;
@@ -145,6 +143,7 @@ class DataFileAppender {
     public DataFileAppender(Journal dataManager) {
         this.journal = dataManager;
         this.inflightWrites = this.journal.getInflightWrites();
+        this.maxWriteBatchSize = this.journal.getWriteBatchSize();
     }
 
     /**

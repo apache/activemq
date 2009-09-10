@@ -73,7 +73,8 @@ public class Journal {
     public static final int DEFAULT_MAX_FILE_LENGTH = 1024 * 1024 * 32;
     public static final int DEFAULT_CLEANUP_INTERVAL = 1000 * 30;
     public static final int PREFERED_DIFF = 1024 * 512;
-
+    public static final int DEFAULT_MAX_WRITE_BATCH_SIZE = 1024 * 1024 * 4;
+    
     private static final Log LOG = LogFactory.getLog(Journal.class);
 
     protected final Map<WriteKey, WriteCommand> inflightWrites = new ConcurrentHashMap<WriteKey, WriteCommand>();
@@ -86,7 +87,8 @@ public class Journal {
     
     protected int maxFileLength = DEFAULT_MAX_FILE_LENGTH;
     protected int preferedFileLength = DEFAULT_MAX_FILE_LENGTH - PREFERED_DIFF;
-
+    protected int writeBatchSize = DEFAULT_MAX_WRITE_BATCH_SIZE;
+    
     protected DataFileAppender appender;
     protected DataFileAccessorPool accessorPool;
 
@@ -101,6 +103,8 @@ public class Journal {
 	private ReplicationTarget replicationTarget;
     protected boolean checksum;
     protected boolean checkForCorruptionOnStartup;
+
+   
 
     public synchronized void start() throws IOException {
         if (started) {
@@ -175,9 +179,6 @@ public class Journal {
 	}
 
 	protected Location recoveryCheck(DataFile dataFile) throws IOException {
-    	byte controlRecord[] = new byte[BATCH_CONTROL_RECORD_SIZE];
-    	DataByteArrayInputStream controlIs = new DataByteArrayInputStream(controlRecord);
-    	
         Location location = new Location();
         location.setDataFileId(dataFile.getDataFileId());
         location.setOffset(0);
@@ -706,5 +707,13 @@ public class Journal {
 
     public void setCheckForCorruptionOnStartup(boolean checkForCorruptionOnStartup) {
         this.checkForCorruptionOnStartup = checkForCorruptionOnStartup;
+    }
+
+    public void setWriteBatchSize(int writeBatchSize) {
+        this.writeBatchSize = writeBatchSize;
+    }
+    
+    public int getWriteBatchSize() {
+        return writeBatchSize;
     }
 }
