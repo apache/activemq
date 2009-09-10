@@ -38,6 +38,7 @@ import org.apache.activemq.command.SessionInfo;
 import org.apache.activemq.command.ShutdownInfo;
 import org.apache.activemq.transport.DefaultTransportListener;
 import org.apache.activemq.transport.Transport;
+import org.apache.activemq.transport.TransportDisposedIOException;
 import org.apache.activemq.transport.TransportFactory;
 import org.apache.activemq.util.IdGenerator;
 import org.apache.activemq.util.ServiceStopper;
@@ -63,6 +64,7 @@ public class MasterConnector implements Service, BrokerServiceAware {
     private Transport remoteBroker;
     private TransportConnector connector;
     private AtomicBoolean started = new AtomicBoolean(false);
+    private AtomicBoolean stoppedBeforeStart = new AtomicBoolean(false);
     private final IdGenerator idGenerator = new IdGenerator();
     private String userName;
     private String password;
@@ -70,6 +72,8 @@ public class MasterConnector implements Service, BrokerServiceAware {
     private SessionInfo sessionInfo;
     private ProducerInfo producerInfo;
     private final AtomicBoolean masterActive = new AtomicBoolean();
+    private BrokerInfo brokerInfo;
+    private boolean firstConnection=true;
 
     public MasterConnector() {
     }
@@ -95,6 +99,15 @@ public class MasterConnector implements Service, BrokerServiceAware {
         return masterActive.get();
     }
 
+    protected void restartBridge() throws Exception {
+        localBroker.oneway(connectionInfo);
+        remoteBroker.oneway(connectionInfo);
+        localBroker.oneway(sessionInfo);
+        remoteBroker.oneway(sessionInfo);
+        remoteBroker.oneway(producerInfo);
+        remoteBroker.oneway(brokerInfo);
+    }
+    
     public void start() throws Exception {
         if (!started.compareAndSet(false, true)) {
             return;
@@ -130,6 +143,35 @@ public class MasterConnector implements Service, BrokerServiceAware {
                     serviceRemoteException(error);
                 }
             }
+            
+            public void transportResumed() {
+            	try{
+            		if(!firstConnection){
+	            		localBroker = TransportFactory.connect(localURI);
+	            		localBroker.setTransportListener(new DefaultTransportListener() {
+	
+	                        public void onCommand(Object command) {
+	                        }
+	
+	                        public void onException(IOException error) {
+	                            if (started.get()) {
+	                                serviceLocalException(error);
+	                            }
+	                        }
+	                    });
+	            		localBroker.start();
+	            		restartBridge();
+	            		LOG.info("Slave connection between " + localBroker + " and " + remoteBroker + " has been reestablished.");
+            		}else{
+            			firstConnection=false;
+            		}
+            	}catch(IOException e){
+            		LOG.error("MasterConnector failed to send BrokerInfo in transportResumed:", e);
+            	}catch(Exception e){
+            		LOG.error("MasterConnector failed to restart localBroker in transportResumed:", e);
+            	}
+            	
+            }
         });
         try {
             localBroker.start();
@@ -138,8 +180,12 @@ public class MasterConnector implements Service, BrokerServiceAware {
             masterActive.set(true);
         } catch (Exception e) {
             masterActive.set(false);
-            LOG.error("Failed to start network bridge: " + e, e);
-        }   
+            if(!stoppedBeforeStart.get()){
+            	LOG.error("Failed to start network bridge: " + e, e);
+            }else{
+            	LOG.info("Slave stopped before connected to the master.");
+            }
+        }    
     }
 
     protected void startBridge() throws Exception {
@@ -149,15 +195,9 @@ public class MasterConnector implements Service, BrokerServiceAware {
         connectionInfo.setUserName(userName);
         connectionInfo.setPassword(password);
         connectionInfo.setBrokerMasterConnector(true);
-        localBroker.oneway(connectionInfo);
-        remoteBroker.oneway(connectionInfo);
         sessionInfo = new SessionInfo(connectionInfo, 1);
-        localBroker.oneway(sessionInfo);
-        remoteBroker.oneway(sessionInfo);
         producerInfo = new ProducerInfo(sessionInfo, 1);
         producerInfo.setResponseRequired(false);
-        remoteBroker.oneway(producerInfo);
-        BrokerInfo brokerInfo = null;
         if (connector != null) {
             brokerInfo = connector.getBrokerInfo();
         } else {
@@ -166,12 +206,12 @@ public class MasterConnector implements Service, BrokerServiceAware {
         brokerInfo.setBrokerName(broker.getBrokerName());
         brokerInfo.setPeerBrokerInfos(broker.getBroker().getPeerBrokerInfos());
         brokerInfo.setSlaveBroker(true);
-        remoteBroker.oneway(brokerInfo);
+        restartBridge();
         LOG.info("Slave connection between " + localBroker + " and " + remoteBroker + " has been established.");
     }
 
     public void stop() throws Exception {
-        if (!started.compareAndSet(true, false)) {
+        if (!started.compareAndSet(true, false)||!masterActive.get()) {
             return;
         }
         masterActive.set(false);
@@ -191,6 +231,15 @@ public class MasterConnector implements Service, BrokerServiceAware {
             ss.stop(remoteBroker);
             ss.throwFirstException();
         }
+    }
+    
+    public void stopBeforeConnected()throws Exception{
+        masterActive.set(false);
+        started.set(false);
+        stoppedBeforeStart.set(true);
+        ServiceStopper ss = new ServiceStopper();
+        ss.stop(localBroker);
+        ss.stop(remoteBroker);
     }
 
     protected void serviceRemoteException(IOException error) {
@@ -224,8 +273,12 @@ public class MasterConnector implements Service, BrokerServiceAware {
     }
 
     protected void serviceLocalException(Throwable error) {
-        LOG.info("Network connection between " + localBroker + " and " + remoteBroker + " shutdown: " + error.getMessage(), error);
-        ServiceSupport.dispose(this);
+    	if (!(error instanceof TransportDisposedIOException) || localBroker.isDisposed()){
+	        LOG.info("Network connection between " + localBroker + " and " + remoteBroker + " shutdown: " + error.getMessage(), error);
+	        ServiceSupport.dispose(this);
+    	}else{
+    		LOG.info(error.getMessage());
+    	}
     }
 
     /**
@@ -289,4 +342,9 @@ public class MasterConnector implements Service, BrokerServiceAware {
         broker.masterFailed();
         ServiceSupport.dispose(this);
     }
+
+	public boolean isStoppedBeforeStart() {
+		return stoppedBeforeStart.get();
+	}
+
 }

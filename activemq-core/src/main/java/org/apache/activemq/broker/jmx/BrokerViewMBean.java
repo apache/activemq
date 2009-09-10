@@ -114,7 +114,10 @@ public interface BrokerViewMBean extends Service {
     /**
      * Stop the broker and all it's components.
      */
+    @MBeanInfo("Stop the broker and all its components.")
     void stop() throws Exception;
+    @MBeanInfo("Poll for queues matching queueName are empty before stopping")
+    void stopGracefully(String connectorName, String queueName, long timeout, long pollInterval) throws Exception;
 
     @MBeanInfo("Topics (broadcasted 'queues'); generally system information.")
     ObjectName[] getTopics();

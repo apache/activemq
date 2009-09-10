@@ -31,7 +31,6 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import javax.management.MBeanServer;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 import org.apache.activemq.ActiveMQConnectionMetaData;
@@ -386,7 +385,8 @@ public class BrokerService implements Service {
      * @return true if this Broker is a slave to a Master
      */
     public boolean isSlave() {
-        return masterConnector != null && masterConnector.isSlave();
+        return (masterConnector != null && masterConnector.isSlave()) ||
+            (masterConnector != null && masterConnector.isStoppedBeforeStart());
     }
 
     public void masterFailed() {
@@ -420,7 +420,7 @@ public class BrokerService implements Service {
     // Service interface
     // -------------------------------------------------------------------------
     public void start() throws Exception {
-        if (!started.compareAndSet(false, true)) {
+        if (stopped.get() || !started.compareAndSet(false, true)) {
             // lets just ignore redundant start() calls
             // as its way too easy to not be completely sure if start() has been
             // called or not with the gazillion of different configuration
@@ -467,8 +467,10 @@ public class BrokerService implements Service {
             if (!isSlave()) {
                 startAllConnectors();
             }
-            if (isUseJmx() && masterConnector != null) {
-                registerFTConnectorMBean(masterConnector);
+            if (!stopped.get()) {
+                if (isUseJmx() && masterConnector != null) {
+                    registerFTConnectorMBean(masterConnector);
+                }
             }
             brokerId = broker.getBrokerId();
             LOG.info("ActiveMQ JMS Message Broker (" + getBrokerName() + ", " + brokerId + ") started");
@@ -477,7 +479,9 @@ public class BrokerService implements Service {
         } catch (Exception e) {
             LOG.error("Failed to start ActiveMQ JMS Message Broker. Reason: " + e, e);
             try {
-                stop();
+                if (!stopped.get()) {
+                    stop();
+                }
             } catch (Exception ex) {
                 LOG.warn("Failed to stop broker after failure in start ", ex);
             }
@@ -517,6 +521,24 @@ public class BrokerService implements Service {
         SelectorParser.clearCache();
         stopped.set(true);
         stoppedLatch.countDown();
+        if (masterConnectorURI == null) {
+            // master start has not finished yet
+            if (slaveStartSignal.getCount() == 1) {
+                started.set(false);
+                slaveStartSignal.countDown();
+            }
+        } else {
+            for (Service service : services) {
+                if (service instanceof MasterConnector) {
+                    MasterConnector mConnector = (MasterConnector) service;
+                    if (!mConnector.isSlave()) {
+                        // means should be slave but not connected to master yet
+                        started.set(false);
+                        mConnector.stopBeforeConnected();
+                    }
+                }
+            }
+        }
         LOG.info("ActiveMQ JMS Message Broker (" + getBrokerName() + ", " + brokerId + ") stopped");
         synchronized (shutdownHooks) {
             for (Runnable hook : shutdownHooks) {
@@ -528,6 +550,77 @@ public class BrokerService implements Service {
             }
         }
         stopper.throwFirstException();
+    }
+    
+        public boolean checkQueueSize(String queueName) {
+        long count = 0;
+        long queueSize = 0;
+        Map<ActiveMQDestination, Destination> destinationMap = regionBroker.getDestinationMap();
+        for (Map.Entry<ActiveMQDestination, Destination> entry : destinationMap.entrySet()) {
+            if (entry.getKey().isQueue()) {
+                if (entry.getValue().getName().matches(queueName)) {
+                    queueSize = entry.getValue().getDestinationStatistics().getMessages().getCount();
+                    count = queueSize;
+                    if (queueSize > 0) {
+                        LOG.info("Queue has pending message:" + entry.getValue().getName() + " queueSize is:"
+                                + queueSize);
+                    }
+                }
+            }
+        }
+        return count == 0;
+    }
+
+    /**
+     * This method (both connectorName and queueName are using regex to match)
+     * 1. stop the connector (supposed the user input the connector which the
+     * clients connect to) 2. to check whether there is any pending message on
+     * the queues defined by queueName 3. supposedly, after stop the connector,
+     * client should failover to other broker and pending messages should be
+     * forwarded. if no pending messages, the method finally call stop to stop
+     * the broker.
+     * 
+     * @param connectorName
+     * @param queueName
+     * @param timeout
+     * @param pollInterval
+     * @throws Exception
+     */
+    public void stopGracefully(String connectorName, String queueName, long timeout, long pollInterval)
+            throws Exception {
+        if (isUseJmx()) {
+            if (connectorName == null || queueName == null || timeout <= 0) {
+                throw new Exception(
+                        "connectorName and queueName cannot be null and timeout should be >0 for stopGracefully.");
+            }
+            if (pollInterval <= 0) {
+                pollInterval = 30;
+            }
+            LOG.info("Stop gracefully with connectorName:" + connectorName + " queueName:" + queueName + " timeout:"
+                    + timeout + " pollInterval:" + pollInterval);
+            TransportConnector connector;
+            for (int i = 0; i < transportConnectors.size(); i++) {
+                connector = transportConnectors.get(i);
+                if (connector != null && connector.getName() != null && connector.getName().matches(connectorName)) {
+                    connector.stop();
+                }
+            }
+            long start = System.currentTimeMillis();
+            while (System.currentTimeMillis() - start < timeout * 1000) {
+                // check quesize until it gets zero
+                if (checkQueueSize(queueName)) {
+                    stop();
+                    break;
+                } else {
+                    Thread.sleep(pollInterval * 1000);
+                }
+            }
+            if (stopped.get()) {
+                LOG.info("Successfully stop the broker.");
+            } else {
+                LOG.info("There is still pending message on the queue. Please check and stop the broker manually.");
+            }
+        }
     }
 
     /**
@@ -1828,24 +1921,26 @@ public class BrokerService implements Service {
             if (isWaitForSlave()) {
                 waitForSlave();
             }
-            for (Iterator<NetworkConnector> iter = getNetworkConnectors().iterator(); iter.hasNext();) {
-                NetworkConnector connector = iter.next();
-                connector.setLocalUri(uri);
-                connector.setBrokerName(getBrokerName());
-                connector.setDurableDestinations(durableDestinations);
-                connector.start();
-            }
-            for (Iterator<ProxyConnector> iter = getProxyConnectors().iterator(); iter.hasNext();) {
-                ProxyConnector connector = iter.next();
-                connector.start();
-            }
-            for (Iterator<JmsConnector> iter = jmsConnectors.iterator(); iter.hasNext();) {
-                JmsConnector connector = iter.next();
-                connector.start();
-            }
-            for (Service service : services) {
-                configureService(service);
-                service.start();
+            if (!stopped.get()) {
+                for (Iterator<NetworkConnector> iter = getNetworkConnectors().iterator(); iter.hasNext();) {
+                    NetworkConnector connector = iter.next();
+                    connector.setLocalUri(uri);
+                    connector.setBrokerName(getBrokerName());
+                    connector.setDurableDestinations(durableDestinations);
+                    connector.start();
+                }
+                for (Iterator<ProxyConnector> iter = getProxyConnectors().iterator(); iter.hasNext();) {
+                    ProxyConnector connector = iter.next();
+                    connector.start();
+                }
+                for (Iterator<JmsConnector> iter = jmsConnectors.iterator(); iter.hasNext();) {
+                    JmsConnector connector = iter.next();
+                    connector.start();
+                }
+                for (Service service : services) {
+                    configureService(service);
+                    service.start();
+                }
             }
         }
     }

@@ -75,7 +75,13 @@ public class BrokerView implements BrokerViewMBean {
     public void stop() throws Exception {
         brokerService.stop();
     }
+    
+    public void stopGracefully(String connectorName, String queueName, long timeout, long pollInterval)
+            throws Exception {
+        brokerService.stopGracefully(connectorName, queueName, timeout, pollInterval);
+    }
 
+    
     public long getTotalEnqueueCount() {
         return broker.getDestinationStatistics().getEnqueues().getCount();
     }

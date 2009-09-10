@@ -218,7 +218,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
 		    	if(brokerInfo.isSlaveBroker()){
 		        	LOG.error("Slave has exception: " + e.getMessage()+" shutting down master now.", e);
 		            try {
-		                broker.stop();
+		                doStop();
 		                bService.stop();
 		        	}catch(Exception ex){
 		                LOG.warn("Failed to stop the master",ex);
