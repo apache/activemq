@@ -21,6 +21,7 @@ import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.MulticastSocket;
+import java.net.NetworkInterface;
 import java.net.SocketAddress;
 import java.net.SocketTimeoutException;
 import java.net.URI;
@@ -52,8 +53,7 @@ public class MulticastDiscoveryAgent implements DiscoveryAgent, Runnable {
     public static final String DEFAULT_HOST_STR = "default"; 
     public static final String DEFAULT_HOST_IP  = System.getProperty("activemq.partition.discovery", "239.255.2.3"); 
     public static final int    DEFAULT_PORT  = 6155; 
-    
-    
+        
     private static final Log LOG = LogFactory.getLog(MulticastDiscoveryAgent.class);
     private static final String TYPE_SUFFIX = "ActiveMQ-4.";
     private static final String ALIVE = "alive.";
@@ -68,6 +68,25 @@ public class MulticastDiscoveryAgent implements DiscoveryAgent, Runnable {
     private long backOffMultiplier = 2;
     private boolean useExponentialBackOff;
     private int maxReconnectAttempts;
+
+    private int timeToLive = 1;
+    private boolean loopBackMode;
+    private Map<String, RemoteBrokerData> brokersByService = new ConcurrentHashMap<String, RemoteBrokerData>();
+    private String group = "default";
+    private URI discoveryURI;
+    private InetAddress inetAddress;
+    private SocketAddress sockAddress;
+    private DiscoveryListener discoveryListener;
+    private String selfService;
+    private MulticastSocket mcast;
+    private Thread runner;
+    private long keepAliveInterval = DEFAULT_IDLE_TIME;
+    private String mcInterface;
+    private String mcNetworkInterface;
+    private long lastAdvertizeTime;
+    private AtomicBoolean started = new AtomicBoolean(false);
+    private boolean reportAdvertizeFailed = true;
+    private ExecutorService executor = null;
 
     class RemoteBrokerData {
         final String brokerName;
@@ -161,23 +180,6 @@ public class MulticastDiscoveryAgent implements DiscoveryAgent, Runnable {
         }
     }
 
-    private int timeToLive = 1;
-    private boolean loopBackMode;
-    private Map<String, RemoteBrokerData> brokersByService = new ConcurrentHashMap<String, RemoteBrokerData>();
-    private String group = "default";
-    private URI discoveryURI;
-    private InetAddress inetAddress;
-    private SocketAddress sockAddress;
-    private DiscoveryListener discoveryListener;
-    private String selfService;
-    private MulticastSocket mcast;
-    private Thread runner;
-    private long keepAliveInterval = DEFAULT_IDLE_TIME;
-    private long lastAdvertizeTime;
-    private AtomicBoolean started = new AtomicBoolean(false);
-    private boolean reportAdvertizeFailed = true;
-    private ExecutorService executor = null;
-
     /**
      * Set the discovery listener
      * 
@@ -248,7 +250,15 @@ public class MulticastDiscoveryAgent implements DiscoveryAgent, Runnable {
     public void setKeepAliveInterval(long keepAliveInterval) {
         this.keepAliveInterval = keepAliveInterval;
     }
-
+    
+    public void setInterface(String mcInterface) {
+        this.mcInterface = mcInterface;
+    }
+    
+    public void setNetworkInterface(String mcNetworkInterface) {
+        this.mcNetworkInterface = mcNetworkInterface;    
+    }
+    
     /**
      * start the discovery agent
      * 
@@ -286,7 +296,9 @@ public class MulticastDiscoveryAgent implements DiscoveryAgent, Runnable {
         	  if (LOG.isTraceEnabled()) {
         	  	LOG.trace("start - myHost = " + myHost); 
         	  	LOG.trace("start - myPort = " + myPort);   	
-        	  	LOG.trace("start - group  = " + group );   		       	  	
+        	  	LOG.trace("start - group  = " + group );		       	  	
+        	  	LOG.trace("start - interface  = " + mcInterface );
+        	  	LOG.trace("start - network interface  = " + mcNetworkInterface );
         	  }	
         	  
             this.inetAddress = InetAddress.getByName(myHost);
@@ -296,6 +308,12 @@ public class MulticastDiscoveryAgent implements DiscoveryAgent, Runnable {
             mcast.setTimeToLive(getTimeToLive());
             mcast.joinGroup(inetAddress);
             mcast.setSoTimeout((int)keepAliveInterval);
+            if (mcInterface != null) {
+                mcast.setInterface(InetAddress.getByName(mcInterface));
+            }
+            if (mcNetworkInterface != null) {
+                mcast.setNetworkInterface(NetworkInterface.getByName(mcNetworkInterface));
+            }
             runner = new Thread(this);
             runner.setName(this.toString() + ":" + runner.getName());
             runner.setDaemon(true);
