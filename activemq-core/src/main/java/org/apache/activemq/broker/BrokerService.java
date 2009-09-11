@@ -111,6 +111,7 @@ public class BrokerService implements Service {
     private boolean shutdownOnMasterFailure;
     private boolean shutdownOnSlaveFailure;
     private boolean waitForSlave;
+    private boolean passiveSlave;
     private String brokerName = DEFAULT_BROKER_NAME;
     private File dataDirectoryFile;
     private File tmpDataDirectory;
@@ -1551,7 +1552,7 @@ public class BrokerService implements Service {
                 getManagementContext().unregisterMBean(objectName);
             } catch (Throwable e) {
                 throw IOExceptionSupport.create(
-                        "Transport Connector could not be registered in JMX: " + e.getMessage(), e);
+                        "Transport Connector could not be unregistered in JMX: " + e.getMessage(), e);
             }
         }
     }
@@ -2068,6 +2069,22 @@ public class BrokerService implements Service {
 
     public CountDownLatch getSlaveStartSignal() {
         return slaveStartSignal;
+    }
+
+    /**
+     * Get the passiveSlave
+     * @return the passiveSlave
+     */
+    public boolean isPassiveSlave() {
+        return this.passiveSlave;
+    }
+
+    /**
+     * Set the passiveSlave
+     * @param passiveSlave the passiveSlave to set
+     */
+    public void setPassiveSlave(boolean passiveSlave) {
+        this.passiveSlave = passiveSlave;
     }
     
    

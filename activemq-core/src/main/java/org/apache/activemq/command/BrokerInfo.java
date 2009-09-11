@@ -16,7 +16,13 @@
  */
 package org.apache.activemq.command;
 
+import org.apache.activemq.plugin.StatisticsBrokerPlugin;
 import org.apache.activemq.state.CommandVisitor;
+import org.apache.activemq.util.MarshallingSupport;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import java.io.IOException;
+import java.util.Properties;
 
 /**
  * When a client connects to a broker, the broker send the client a BrokerInfo
@@ -28,6 +34,8 @@ import org.apache.activemq.state.CommandVisitor;
  * @version $Revision: 1.7 $
  */
 public class BrokerInfo extends BaseCommand {
+    private static Log LOG = LogFactory.getLog(BrokerInfo.class);
+    private static final String PASSIVE_SLAVE_KEY = "passiveSlave";
     public static final byte DATA_STRUCTURE_TYPE = CommandTypes.BROKER_INFO;
     BrokerId brokerId;
     String brokerURL;
@@ -208,5 +216,34 @@ public class BrokerInfo extends BaseCommand {
      */
     public void setNetworkProperties(String networkProperties) {
         this.networkProperties = networkProperties;
+    }
+    
+    public boolean isPassiveSlave() {
+        boolean result = false;
+        Properties props = getProperties();
+        if (props != null) {
+            result = Boolean.parseBoolean(props.getProperty(PASSIVE_SLAVE_KEY, "false"));
+        }
+        return result;
+    }
+    
+    public void setPassiveSlave(boolean value) {
+        Properties props = new Properties();
+        props.put(PASSIVE_SLAVE_KEY, Boolean.toString(value));
+        try {
+            this.networkProperties=MarshallingSupport.propertiesToString(props);
+        } catch (IOException e) {
+            LOG.error("Failed to marshall props to a String",e);
+        }
+    }
+    
+    public Properties getProperties() {
+        Properties result = null;
+        try {
+            result = MarshallingSupport.stringToProperties(getNetworkProperties());
+        } catch (IOException e) {
+            LOG.error("Failed to marshall properties", e);
+        }
+        return result;
     }
 }

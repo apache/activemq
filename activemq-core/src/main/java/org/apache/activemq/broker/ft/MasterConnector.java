@@ -139,7 +139,7 @@ public class MasterConnector implements Service, BrokerServiceAware {
             }
 
             public void onException(IOException error) {
-                if (started.get()) {
+                if (started.get() && remoteBroker.isDisposed()) {
                     serviceRemoteException(error);
                 }
             }
@@ -206,6 +206,7 @@ public class MasterConnector implements Service, BrokerServiceAware {
         brokerInfo.setBrokerName(broker.getBrokerName());
         brokerInfo.setPeerBrokerInfos(broker.getBroker().getPeerBrokerInfos());
         brokerInfo.setSlaveBroker(true);
+        brokerInfo.setPassiveSlave(broker.isPassiveSlave());
         restartBridge();
         LOG.info("Slave connection between " + localBroker + " and " + remoteBroker + " has been established.");
     }
