@@ -23,6 +23,14 @@ import org.apache.commons.logging.LogFactory;
 
 /**
  * A StatisticsBrokerPlugin
+ * You can retrieve a Map Message for a Destination - or
+ * Broker containing statistics as key-value pairs The message must contain a
+ * replyTo Destination - else its ignored
+ * To retrieve stats on the broker send a empty message to ActiveMQ.Statistics.Broker (Queue or Topic)
+ * With a replyTo set to the destination you want the stats returned to.
+ * To retrieve stats for a destination - e.g. foo - send an empty message to ActiveMQ.Statistics.Destination.foo
+ * - this works with wildcards to - you get a message for each wildcard match on the replyTo destination.
+ * The stats message is a MapMessage populated with statistics for the target
  * @org.apache.xbean.XBean element="statisticsBrokerPlugin"
  *
  */
