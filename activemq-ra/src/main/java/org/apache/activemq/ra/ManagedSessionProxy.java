@@ -47,7 +47,7 @@ import org.apache.activemq.ActiveMQSession;
 
 /**
  * Acts as a pass through proxy for a JMS Session object. It intercepts events
- * that are of interest of the ActiveMQManagedConnection.
+ * that are of interest of the ActiveMQManagedConnection. There is one proxy for each session.
  * 
  * @version $Revision$
  */
@@ -55,9 +55,11 @@ public class ManagedSessionProxy implements Session, QueueSession, TopicSession 
 
     private final ActiveMQSession session;
     private boolean closed;
+    private ManagedConnectionProxy connectionProxy;
 
-    public ManagedSessionProxy(ActiveMQSession session) {
+    public ManagedSessionProxy(ActiveMQSession session, ManagedConnectionProxy connectionProxy) {
         this.session = session;
+        this.connectionProxy = connectionProxy;
     }
 
     public void setUseSharedTxContext(boolean enable) throws JMSException {
@@ -70,14 +72,17 @@ public class ManagedSessionProxy implements Session, QueueSession, TopicSession 
      * @throws JMSException
      */
     public void close() throws JMSException {
+    	if (closed) {
+    		return;
+        }
         cleanup();
+        connectionProxy.sessionClosed(this);
     }
 
     /**
-     * Called by the ActiveMQManagedConnection to invalidate this proxy.
+     * Called by the ManagedConnectionProxy to invalidate this proxy.
      * 
-     * @throws JMSException
-     * @throws JMSException
+     * @throws JMSException if session proxy has a problem
      */
     public void cleanup() throws JMSException {
         closed = true;
@@ -85,7 +90,9 @@ public class ManagedSessionProxy implements Session, QueueSession, TopicSession 
     }
 
     /**
-     * 
+     *
+     * @return underlying session, unless this proxy is closed
+     * @throws javax.jms.JMSException if session is closed
      */
     private Session getSession() throws JMSException {
         if (closed) {
