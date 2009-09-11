@@ -465,7 +465,7 @@ public class BrokerService implements Service {
                     service.start();
                 }
             }
-            if (!isSlave()) {
+            if (!isSlave() && (this.masterConnector == null || isShutdownOnMasterFailure() == false)) {
                 startAllConnectors();
             }
             if (!stopped.get()) {

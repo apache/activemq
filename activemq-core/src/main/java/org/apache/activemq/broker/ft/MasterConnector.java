@@ -74,6 +74,7 @@ public class MasterConnector implements Service, BrokerServiceAware {
     private final AtomicBoolean masterActive = new AtomicBoolean();
     private BrokerInfo brokerInfo;
     private boolean firstConnection=true;
+    private boolean failedToStart;
 
     public MasterConnector() {
     }
@@ -185,6 +186,7 @@ public class MasterConnector implements Service, BrokerServiceAware {
             }else{
             	LOG.info("Slave stopped before connected to the master.");
             }
+            setFailedToStart(true);
         }    
     }
 
@@ -347,5 +349,21 @@ public class MasterConnector implements Service, BrokerServiceAware {
 	public boolean isStoppedBeforeStart() {
 		return stoppedBeforeStart.get();
 	}
+
+    /**
+     * Get the failedToStart
+     * @return the failedToStart
+     */
+    public boolean isFailedToStart() {
+        return this.failedToStart;
+    }
+
+    /**
+     * Set the failedToStart
+     * @param failedToStart the failedToStart to set
+     */
+    public void setFailedToStart(boolean failedToStart) {
+        this.failedToStart = failedToStart;
+    }
 
 }
