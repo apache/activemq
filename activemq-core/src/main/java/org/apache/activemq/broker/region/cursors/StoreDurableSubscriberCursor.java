@@ -66,8 +66,8 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
         }else {
             this.nonPersistent = new VMPendingMessageCursor();
         }
-        //TODO is this correct? we are ignoring the constructor parameter matchBatchSize
-//        this.nonPersistent.setMaxBatchSize(getMaxBatchSize());
+        
+        this.nonPersistent.setMaxBatchSize(maxBatchSize);
         this.nonPersistent.setSystemUsage(systemUsage);
         this.storePrefetches.add(this.nonPersistent);
     }
@@ -106,6 +106,7 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
             tsp.setEnableAudit(isEnableAudit());
             tsp.setMaxAuditDepth(getMaxAuditDepth());
             tsp.setMaxProducersToAudit(getMaxProducersToAudit());
+            tsp.setMemoryUsageHighWaterMark(getMemoryUsageHighWaterMark());
             topics.put(destination, tsp);
             storePrefetches.add(tsp);
             if (isStarted()) {
@@ -259,6 +260,13 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
         }
     }
     
+    public void setMemoryUsageHighWaterMark(int memoryUsageHighWaterMark) {
+        super.setMemoryUsageHighWaterMark(memoryUsageHighWaterMark);
+        for (PendingMessageCursor cursor : storePrefetches) {
+            cursor.setMemoryUsageHighWaterMark(memoryUsageHighWaterMark);
+        }
+    }
+    
     public void setMaxProducersToAudit(int maxProducersToAudit) {
         super.setMaxProducersToAudit(maxProducersToAudit);
         for (PendingMessageCursor cursor : storePrefetches) {
@@ -304,7 +312,7 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
         }
         return currentCursor;
     }
-
+    
     public String toString() {
         return "StoreDurableSubscriber(" + clientId + ":" + subscriberName + ")";
     }
