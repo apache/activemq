@@ -762,7 +762,15 @@ public class FailoverTransport implements CompositeTransport {
                     }
                 }
             }
-            long reconnectAttempts = firstConnection ? this.startupMaxReconnectAttempts : this.maxReconnectAttempts;
+            int reconnectAttempts = 0;
+            if (firstConnection) {
+                if (this.startupMaxReconnectAttempts != 0) {
+                    reconnectAttempts = this.startupMaxReconnectAttempts;
+                }
+            }
+            if (reconnectAttempts==0) {
+                reconnectAttempts = this.maxReconnectAttempts;
+            }            
             if (reconnectAttempts > 0 && ++connectFailures >= reconnectAttempts) {
                 LOG.error("Failed to connect to transport after: " + connectFailures + " attempt(s)");
                 connectionFailure = failure;
