@@ -118,6 +118,11 @@
           <exclude>**/spring-*.jar</exclude>
           <exclude>**/standard*.jar</exclude>
           <exclude>**/stax*.jar</exclude>
+          <exclude>**/groovy*.jar</exclude>
+          <exclude>**/jruby*.jar</exclude>
+          <exclude>**/dojo/</exclude>
+          <exclude>**/dojox/</exclude>
+          <exclude>**/dijit/</exclude>
         </excludes>
       </unpackOptions>
       <includes>
