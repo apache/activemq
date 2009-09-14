@@ -202,6 +202,8 @@
         <include>xmlpull:xmlpull</include>
         <include>org.apache.hadoop.zookeeper:zookeeper</include>
         <include>org.codehaus.woodstox:wstx-asl</include>
+        <include>org.springframework.ws:spring-oxm-tiger</include>
+        <include>org.codehaus.jettison:jettison</include>
       </includes>
     </dependencySet>
     <dependencySet>

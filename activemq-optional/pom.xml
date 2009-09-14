@@ -47,7 +47,8 @@
     
     <dependency>
       <groupId>org.springframework</groupId>
-      <artifactId>spring-core</artifactId>
+      <artifactId>spring</artifactId>
+      <version>${spring-version}</version>
     </dependency>
     <dependency>
       <groupId>aopalliance</groupId>
@@ -92,7 +93,6 @@
       <groupId>commons-httpclient</groupId>
       <artifactId>commons-httpclient</artifactId>
     </dependency>
-    
     <dependency>
       <groupId>commons-logging</groupId>
       <artifactId>commons-logging</artifactId>
@@ -132,6 +132,7 @@
       <artifactId>stax-api</artifactId>
       <optional>true</optional>
     </dependency>    
+
     <dependency>
       <groupId>log4j</groupId>
       <artifactId>log4j</artifactId>
@@ -139,29 +140,9 @@
       <optional>true</optional>
     </dependency>
     <dependency>
-      <groupId>org.springframework</groupId>
-      <artifactId>spring-beans</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.springframework</groupId>
-      <artifactId>spring-context</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.springframework</groupId>
-      <artifactId>spring-aop</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.springframework</groupId>
-      <artifactId>spring-jms</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.springframework</groupId>
-      <artifactId>spring-jms</artifactId>
-      <scope>test</scope>
+    	<groupId>org.springframework.ws</groupId>
+    	<artifactId>spring-oxm-tiger</artifactId>
+    	<optional>true</optional>
     </dependency>
     <dependency>
       <groupId>org.apache.xbean</groupId>
@@ -171,9 +152,8 @@
     <dependency>
       <groupId>org.codehaus.jettison</groupId>
       <artifactId>jettison</artifactId>
-      <version>1.1</version>
       <scope>test</scope>
-    </dependency>
+    </dependency>       
   </dependencies>
 
   <build>

@@ -14,11 +14,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.activemq.util.xstream;
+
+package org.apache.activemq.util.oxm;
 
 import java.io.Serializable;
-import java.io.StringReader;
-import java.io.StringWriter;
 
 import javax.jms.JMSException;
 import javax.jms.Message;
@@ -32,29 +31,16 @@ import org.apache.activemq.MessageTransformerSupport;
 
 import com.thoughtworks.xstream.XStream;
 import com.thoughtworks.xstream.io.HierarchicalStreamDriver;
-import com.thoughtworks.xstream.io.HierarchicalStreamReader;
-import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
-import com.thoughtworks.xstream.io.xml.PrettyPrintWriter;
-import com.thoughtworks.xstream.io.xml.XppReader;
 
 /**
- * Transforms object messages to text messages and vice versa using
- * {@link XStream}
- * 
- * @deprecated as of 5.3.0 release replaced by {@link org.apache.activemq.util.oxm.XStreamMessageTransformer}
- * 
- * @version $Revision$
+ * Abstract class used as a base for implementing transformers from object to text messages (in XML/JSON format)
+ * and vice versa using.
+ * Supports plugging of custom marshallers
  */
-@Deprecated
-public class XStreamMessageTransformer extends MessageTransformerSupport {
+public abstract class AbstractXMLMessageTransformer extends
+		MessageTransformerSupport {
 
     protected MessageTransform transformType;
-    private XStream xStream;
-    
-    /**
-     * Specialized driver to be used with stream readers and writers
-     */
-    private HierarchicalStreamDriver streamDriver;
 
     /**
      * Defines the type of transformation. If XML (default), - producer
@@ -71,11 +57,11 @@ public class XStreamMessageTransformer extends MessageTransformerSupport {
     };
 
 
-    public XStreamMessageTransformer() {
+    public AbstractXMLMessageTransformer() {
         this(MessageTransform.XML);
     }
 
-    public XStreamMessageTransformer(MessageTransform transformType) {
+    public AbstractXMLMessageTransformer(MessageTransform transformType) {
         this.transformType = transformType;
     }
 
@@ -103,33 +89,6 @@ public class XStreamMessageTransformer extends MessageTransformerSupport {
         default:
         }
         return message;
-    }
-
-    // Properties
-    // -------------------------------------------------------------------------
-    public XStream getXStream() {
-        if (xStream == null) {
-            xStream = createXStream();
-        }
-        return xStream;
-    }
-
-    public void setXStream(XStream xStream) {
-        this.xStream = xStream;
-    }
-
-    public HierarchicalStreamDriver getStreamDriver() {
-		return streamDriver;
-    }
-
-	public void setStreamDriver(HierarchicalStreamDriver streamDriver) {
-		this.streamDriver = streamDriver;
-    }
-
-	// Implementation methods
-    // -------------------------------------------------------------------------
-    protected XStream createXStream() {
-        return new XStream();
     }
 
     public MessageTransform getTransformType() {
@@ -179,31 +138,12 @@ public class XStreamMessageTransformer extends MessageTransformerSupport {
      * Marshalls the Object in the {@link ObjectMessage} to a string using XML
      * encoding
      */
-    protected String marshall(Session session, ObjectMessage objectMessage) throws JMSException {
-        Serializable object = objectMessage.getObject();
-        StringWriter buffer = new StringWriter();
-        HierarchicalStreamWriter out;
-        if (streamDriver != null) {
-        	out = streamDriver.createWriter(buffer);
-        } else {
-        	out = new PrettyPrintWriter(buffer);
-        }
-        getXStream().marshal(object, out);
-        return buffer.toString();
-    }
+    protected abstract String marshall(Session session, ObjectMessage objectMessage) throws JMSException;
 
     /**
      * Unmarshalls the XML encoded message in the {@link TextMessage} to an
      * Object
      */
-    protected Object unmarshall(Session session, TextMessage textMessage) throws JMSException {
-        HierarchicalStreamReader in;
-        if (streamDriver != null) {
-        	in = streamDriver.createReader(new StringReader(textMessage.getText()));
-        } else {
-        	in = new XppReader(new StringReader(textMessage.getText()));
-        }
-        return getXStream().unmarshal(in);
-    }
+    protected abstract Object unmarshall(Session session, TextMessage textMessage) throws JMSException;
 
 }

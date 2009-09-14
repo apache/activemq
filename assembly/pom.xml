@@ -234,6 +234,14 @@
       <artifactId>spring-webmvc</artifactId>
       <optional>false</optional>
     </dependency>
+    <dependency>
+        <groupId>org.springframework.ws</groupId>
+        <artifactId>spring-oxm-tiger</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.codehaus.jettison</groupId>
+      <artifactId>jettison</artifactId>
+    </dependency>  
 
     <dependency>
       <groupId>org.mortbay.jetty</groupId>
