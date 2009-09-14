@@ -118,7 +118,7 @@ public class MasterConnector implements Service, BrokerServiceAware {
         }
         localBroker = TransportFactory.connect(localURI);
         remoteBroker = TransportFactory.connect(remoteURI);
-        LOG.info("Starting a slave connection between " + localBroker + " and " + remoteBroker + " has been established.");
+        LOG.info("Starting a slave connection between " + localBroker + " and " + remoteBroker);
         localBroker.setTransportListener(new DefaultTransportListener() {
 
             public void onCommand(Object command) {
