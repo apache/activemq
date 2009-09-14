@@ -79,7 +79,7 @@ public class FailoverTransport implements CompositeTransport {
 
     private long initialReconnectDelay = 10;
     private long maxReconnectDelay = 1000 * 30;
-    private long backOffMultiplier = 2;
+    private double backOffMultiplier = 2d;
     private long timeout = -1;
     private boolean useExponentialBackOff = true;
     private boolean randomize = true;
@@ -293,11 +293,11 @@ public class FailoverTransport implements CompositeTransport {
         this.reconnectDelay = reconnectDelay;
     }
 
-    public long getReconnectDelayExponent() {
+    public double getReconnectDelayExponent() {
         return backOffMultiplier;
     }
 
-    public void setReconnectDelayExponent(long reconnectDelayExponent) {
+    public void setReconnectDelayExponent(double reconnectDelayExponent) {
         this.backOffMultiplier = reconnectDelayExponent;
     }
 
