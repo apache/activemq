@@ -245,6 +245,7 @@ public class MessageDatabase {
 	                }
 	            }
 	        };
+	        checkpointThread.setDaemon(true);
 	        checkpointThread.start();
             recover();
 		}

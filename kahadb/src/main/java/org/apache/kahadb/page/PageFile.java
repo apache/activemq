@@ -1109,6 +1109,7 @@ public class PageFile {
                     }
                 };
                 writerThread.setPriority(Thread.MAX_PRIORITY);
+                writerThread.setDaemon(true);
                 writerThread.start();
             }
         }
