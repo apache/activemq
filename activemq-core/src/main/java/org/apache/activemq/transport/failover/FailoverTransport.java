@@ -85,6 +85,7 @@ public class FailoverTransport implements CompositeTransport {
     private boolean randomize = true;
     private boolean initialized;
     private int maxReconnectAttempts;
+    private int startupMaxReconnectAttempts;
     private int connectFailures;
     private long reconnectDelay = this.initialReconnectDelay;
     private Exception connectionFailure;
@@ -315,6 +316,14 @@ public class FailoverTransport implements CompositeTransport {
 
     public void setMaxReconnectAttempts(int maxReconnectAttempts) {
         this.maxReconnectAttempts = maxReconnectAttempts;
+    }
+    
+    public int getStartupMaxReconnectAttempts() {
+        return this.startupMaxReconnectAttempts;
+    }
+
+    public void setStartupMaxReconnectAttempts(int startupMaxReconnectAttempts) {
+        this.startupMaxReconnectAttempts = startupMaxReconnectAttempts;
     }
 
     public long getTimeout() {
@@ -753,8 +762,8 @@ public class FailoverTransport implements CompositeTransport {
                     }
                 }
             }
-            
-            if (maxReconnectAttempts > 0 && ++connectFailures >= maxReconnectAttempts) {
+            long reconnectAttempts = firstConnection ? this.startupMaxReconnectAttempts : this.maxReconnectAttempts;
+            if (reconnectAttempts > 0 && ++connectFailures >= reconnectAttempts) {
                 LOG.error("Failed to connect to transport after: " + connectFailures + " attempt(s)");
                 connectionFailure = failure;
  	
