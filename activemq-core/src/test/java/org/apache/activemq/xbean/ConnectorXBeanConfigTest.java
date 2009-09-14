@@ -61,16 +61,12 @@ public class ConnectorXBeanConfigTest extends TestCase {
 
     }
     
-    public void testBrokerRestartFails() throws Exception {
+    public void testBrokerRestartIsAllowed() throws Exception {
     	brokerService.stop();
     	brokerService.waitUntilStopped();
-    	
-    	try {
-    		brokerService.start();
-    	} catch (Exception e) {
-    		return;
-    	}
-    	fail("Error broker should have prevented us from starting it again");
+    
+    	// redundant start is now ignored
+    	brokerService.start();
     }
     
     public void testForceBrokerRestart() throws Exception {

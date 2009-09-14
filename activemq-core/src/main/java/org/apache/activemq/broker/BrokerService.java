@@ -415,6 +415,8 @@ public class BrokerService implements Service {
 
     public void start(boolean force) throws Exception {
         forceStart = force;
+        stopped.set(false);
+        started.set(false);
         start();
     }
 
