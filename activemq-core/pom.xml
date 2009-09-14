@@ -531,7 +531,7 @@
                 <echo>Running the XSDDoc task</echo>
                 <taskdef name="xsddoc" classname="net.sf.xframe.xsddoc.Task" />
                 <mkdir dir="${basedir}/target/site/xsddoc" />
-                <xsddoc file="${basedir}/target/xbean/activemq.xsd" out="${basedir}/target/site/xsddoc" doctitle="Apache ActiveMQ XML Schema Reference" header="&lt;a href='http://activemq.apache.org/'&gt;Apache ActiveMQ&lt;/a&gt;" footer="Copyright 2007 (c) the &lt;a href='http://www.apache.org/'&gt;Apache Software Foundation&lt;/a&gt;" verbose="false" />
+                <xsddoc file="${basedir}/target/classes/activemq.xsd" out="${basedir}/target/site/xsddoc" doctitle="Apache ActiveMQ XML Schema Reference" header="&lt;a href='http://activemq.apache.org/'&gt;Apache ActiveMQ&lt;/a&gt;" footer="Copyright 2007 (c) the &lt;a href='http://www.apache.org/'&gt;Apache Software Foundation&lt;/a&gt;" verbose="false" />
                 <!--
                         css="${basedir}/../etc/css/stylesheet.css"
                 -->
@@ -591,35 +591,14 @@
           <phase>process-classes</phase>
             <configuration>
               <namespace>http://activemq.apache.org/schema/core</namespace>
-              <schema>target/xbean/activemq.xsd</schema>
+              <schema>${basedir}/target/classes/activemq.xsd</schema>
+              <outputDir>${basedir}/target/classes</outputDir>
               <generateSpringSchemasFile>false</generateSpringSchemasFile>
               <excludedClasses>org.apache.activemq.broker.jmx.AnnotatedMBean,org.apache.activemq.broker.jmx.DestinationViewMBean</excludedClasses>
             </configuration>
             <goals>
               <goal>mapping</goal>
             </goals>
-          </execution>
-        </executions>
-      </plugin>
-
-      <!--  lets ensure that the XSD gets deployed  -->
-      <plugin>
-        <artifactId>maven-resources-plugin</artifactId>
-        <executions>
-          <execution>
-            <id>copy-resources</id>
-            <phase>validate</phase>
-            <goals>
-              <goal>copy-resources</goal>
-            </goals>
-            <configuration>
-              <outputDirectory>${basedir}/target/classes</outputDirectory>
-              <resources>          
-                <resource>
-                  <directory>target/xbean</directory>
-                </resource>
-              </resources>              
-            </configuration>            
           </execution>
         </executions>
       </plugin>
