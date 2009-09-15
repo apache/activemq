@@ -102,15 +102,19 @@
 
           <!-- ignore jars already in distro -->
           <exclude>**/act*.jar</exclude>
+          <exclude>**/ant*.jar</exclude>
           <exclude>**/aop*.jar</exclude>
 <!--
           <exclude>**/asm*.jar</exclude>
 -->
           <exclude>**/camel-*.jar</exclude>
           <exclude>**/commons*.jar</exclude>
+          <exclude>**/groovy*.jar</exclude>
           <exclude>**/jackson*.jar</exclude>
           <exclude>**/jaxb*.jar</exclude>
           <exclude>**/jdom*.jar</exclude>
+          <exclude>**/jettison*.jar</exclude>
+          <exclude>**/jruby*.jar</exclude>
           <exclude>**/jstl*.jar</exclude>
           <exclude>**/rome*.jar</exclude>
           <exclude>**/sitemesh*.jar</exclude>
@@ -118,11 +122,11 @@
           <exclude>**/spring-*.jar</exclude>
           <exclude>**/standard*.jar</exclude>
           <exclude>**/stax*.jar</exclude>
-          <exclude>**/groovy*.jar</exclude>
-          <exclude>**/jruby*.jar</exclude>
+          <!-- exclude unused javascript  -->
+          <exclude>**/bespin/</exclude>
+          <exclude>**/dijit/</exclude>
           <exclude>**/dojo/</exclude>
           <exclude>**/dojox/</exclude>
-          <exclude>**/dijit/</exclude>
         </excludes>
       </unpackOptions>
       <includes>
@@ -229,7 +233,7 @@
         <include>org.mortbay.jetty:jsp-2.1</include>
         <include>org.mortbay.jetty:jsp-api-2.1</include>
         <include>org.eclipse.jdt:core</include>
-        <include>ant:ant</include>
+        <include>org.apache.ant:ant</include>
 
         <!-- JSTL and other web stuff -->
         <include>opensymphony:sitemesh</include>
