@@ -140,7 +140,7 @@ public class MasterConnector implements Service, BrokerServiceAware {
             }
 
             public void onException(IOException error) {
-                if (started.get() && remoteBroker.isDisposed()) {
+                if (started.get()) {
                     serviceRemoteException(error);
                 }
             }
