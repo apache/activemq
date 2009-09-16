@@ -100,11 +100,10 @@ public class ConsumerBean extends Assert implements MessageListener {
      * @param messageCount
      */
     public void waitForMessagesToArrive(int messageCount) {
-        LOG.info("Waiting for message to arrive");
-
+        final long maxRemainingMessageCount = Math.max(0, messageCount - messages.size());
+        LOG.info("Waiting for (" + maxRemainingMessageCount + ") message(s) to arrive");     
         long start = System.currentTimeMillis();
-
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < maxRemainingMessageCount; i++) {
             try {
                 synchronized (semaphore) {
                     semaphore.wait(1000);
