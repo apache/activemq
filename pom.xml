@@ -31,7 +31,7 @@
   <inceptionYear>2005</inceptionYear>
 
   <properties>
-    <activemq-version>5.3.0</activemq-version>
+    <activemq-version>5.4-SNAPSHOT</activemq-version>
     <siteId>activemq-${activemq-version}</siteId>
     <projectName>Apache ActiveMQ</projectName>
     <!-- base url for site deployment.  See distribution management for full url.  Override this in settings.xml for staging -->
@@ -291,7 +291,7 @@
       <dependency>
         <groupId>org.apache.activemq.protobuf</groupId>
         <artifactId>activemq-protobuf</artifactId>
-        <version>1.0</version>
+        <version>1.0-SNAPSHOT</version>
       </dependency>
 
       <!-- =============================== -->
@@ -908,7 +908,7 @@
         <plugin>
           <groupId>org.apache.activemq.protobuf</groupId>
           <artifactId>activemq-protobuf</artifactId>
-          <version>1.0</version>
+          <version>1.0-SNAPSHOT</version>
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
