@@ -143,7 +143,6 @@
     <module>assembly</module>
     <module>activemq-jmdns_1.0</module>
     <module>kahadb</module>
- 	<module>activemq-groups</module>
   </modules>
 
   <scm>
