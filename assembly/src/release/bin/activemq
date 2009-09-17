@@ -127,7 +127,7 @@ if $cygwin; then
 fi
 
 if [ -z "$ACTIVEMQ_OPTS" ] ; then
-  ACTIVEMQ_OPTS="-Xmx512M -Dorg.apache.activemq.UseDedicatedTaskRunner=true"
+  ACTIVEMQ_OPTS="-Xmx512M -Dorg.apache.activemq.UseDedicatedTaskRunner=true -Djava.util.logging.config.file=${ACTIVEMQ_BASE}/logging.properties"
 fi
 
 if [ -z "$SUNJMX" ] ; then
