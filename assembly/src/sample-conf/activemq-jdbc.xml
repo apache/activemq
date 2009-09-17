@@ -20,6 +20,10 @@
     
     http://activemq.apache.org/persistence.html
     
+    You need to add Derby database to your classpath in order to make this example work.
+    Download it from http://db.apache.org/derby/ and put it in the ${ACTIVEMQ_HOME}/lib/optional/ folder
+    Optionally you can configure any other RDBM as shown below
+    
     To run ActiveMQ with this configuration add xbean:conf/activemq-jdbc.xml to your command
     
     e.g. $ bin/activemq xbean:conf/activemq-jdbc.xml
