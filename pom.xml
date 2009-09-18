@@ -401,6 +401,13 @@
       </dependency>
 
       <dependency>
+        <groupId>org.osgi</groupId>
+        <artifactId>org.osgi.core</artifactId>
+        <version>4.1.0</version>
+        <scope>provided</scope>
+      </dependency>
+
+      <dependency>
         <groupId>org.apache.hadoop.zookeeper</groupId>
         <artifactId>zookeeper</artifactId>
         <version>3.0.0</version>
