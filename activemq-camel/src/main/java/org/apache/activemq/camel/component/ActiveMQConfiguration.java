@@ -185,7 +185,9 @@ public class ActiveMQConfiguration extends JmsConfiguration {
                     throw e1;
                 }
             }
-        }
+        } else {
+            return loader.loadClass(name);
+}
         return null;
     }
 }
