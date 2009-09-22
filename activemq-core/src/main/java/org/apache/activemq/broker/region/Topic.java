@@ -281,8 +281,11 @@ public class Topic  extends BaseDestination  implements Task{
             isFull(context, memoryUsage);
             fastProducer(context, producerInfo);
             if (isProducerFlowControl() && context.isProducerFlowControl()) {
+                final String logMessage = "Usage Manager memory limit reached. Stopping producer (" + message.getProducerId() + ") to prevent flooding " +getActiveMQDestination().getQualifiedName() + "." +
+                        " See http://activemq.apache.org/producer-flow-control.html for more info";
+                LOG.info(logMessage);
                 if (systemUsage.isSendFailIfNoSpace()) {
-                    throw new javax.jms.ResourceAllocationException("Usage Manager memory limit reached");
+                    throw new javax.jms.ResourceAllocationException(logMessage);
                 }
     
                 // We can avoid blocking due to low usage if the producer is sending
@@ -390,8 +393,13 @@ public class Topic  extends BaseDestination  implements Task{
 
         if (topicStore != null && message.isPersistent()
                 && !canOptimizeOutPersistence()) {
-            if (systemUsage.isSendFailIfNoSpace() && systemUsage.getStoreUsage().isFull()) {
-                throw new javax.jms.ResourceAllocationException("Usage Manager Store is Full");
+            if (systemUsage.getStoreUsage().isFull()) {
+                final String logMessage = "Usage Manager Store is Full. Stopping producer (" + message.getProducerId() + ") to prevent flooding " + getActiveMQDestination().getQualifiedName() + "." +
+                        " See http://activemq.apache.org/producer-flow-control.html for more info";
+                LOG.info(logMessage);
+                if (systemUsage.isSendFailIfNoSpace()) {
+            	    throw new javax.jms.ResourceAllocationException(logMessage);
+                }
             }
             while (!systemUsage.getStoreUsage().waitForSpace(1000)) {
                 if (context.getStopping().get()) {
