@@ -412,11 +412,15 @@ public class Queue extends BaseDestination implements Task, UsageListener {
             isFull(context, memoryUsage);
             fastProducer(context, producerInfo);
             if (isProducerFlowControl() && context.isProducerFlowControl()) {
-                final String logMessage = "Usage Manager memory limit reached. Stopping producer (" + message.getProducerId() + ") to prevent flooding " + getActiveMQDestination().getQualifiedName() + "." +
-                        " See http://activemq.apache.org/producer-flow-control.html for more info";
-                LOG.info(logMessage);
+                if(warnOnProducerFlowControl) {
+                    warnOnProducerFlowControl = false;
+                    LOG.info("Usage Manager memory limit reached on " +getActiveMQDestination().getQualifiedName() + ". Producers will be throttled to the rate at which messages are removed from this destination to prevent flooding it." +
+                            " See http://activemq.apache.org/producer-flow-control.html for more info");
+                }
+                
                 if (systemUsage.isSendFailIfNoSpace()) {
-                    throw new javax.jms.ResourceAllocationException("SystemUsage memory limit reached");
+                    throw new javax.jms.ResourceAllocationException("Usage Manager memory limit reached. Stopping producer (" + message.getProducerId() + ") to prevent flooding " +getActiveMQDestination().getQualifiedName() + "." +
+                            " See http://activemq.apache.org/producer-flow-control.html for more info");
                 }
     
                 // We can avoid blocking due to low usage if the producer is sending
