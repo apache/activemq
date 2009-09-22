@@ -412,9 +412,9 @@ public class Queue extends BaseDestination implements Task, UsageListener {
             isFull(context, memoryUsage);
             fastProducer(context, producerInfo);
             if (isProducerFlowControl() && context.isProducerFlowControl()) {
-            	final String logMessage = "Usage Manager memory limit reached. Stopping producer (" + message.getProducerId() + ") to prevent flooding " + getActiveMQDestination().getQualifiedName() + "." +
-    					" See http://activemq.apache.org/producer-flow-control.html for more info";
-            	LOG.info(logMessage);
+                final String logMessage = "Usage Manager memory limit reached. Stopping producer (" + message.getProducerId() + ") to prevent flooding " + getActiveMQDestination().getQualifiedName() + "." +
+                        " See http://activemq.apache.org/producer-flow-control.html for more info";
+                LOG.info(logMessage);
                 if (systemUsage.isSendFailIfNoSpace()) {
                     throw new javax.jms.ResourceAllocationException("SystemUsage memory limit reached");
                 }
@@ -500,14 +500,14 @@ public class Queue extends BaseDestination implements Task, UsageListener {
         final ConnectionContext context = producerExchange.getConnectionContext();
         synchronized (sendLock) {
             if (store != null && message.isPersistent()) {
-            	if (systemUsage.getStoreUsage().isFull()) {
-                	final String logMessage = "Usage Manager Store is Full. Stopping producer (" + message.getProducerId() + ") to prevent flooding " + getActiveMQDestination().getQualifiedName() + "." +
-							" See http://activemq.apache.org/producer-flow-control.html for more info";
-                	LOG.info(logMessage);
-            		if (systemUsage.isSendFailIfNoSpace()) {
-            			throw new javax.jms.ResourceAllocationException(logMessage);
-            		}
-            	}
+                if (systemUsage.getStoreUsage().isFull()) {
+                    final String logMessage = "Usage Manager Store is Full. Stopping producer (" + message.getProducerId() + ") to prevent flooding " + getActiveMQDestination().getQualifiedName() + "." +
+                            " See http://activemq.apache.org/producer-flow-control.html for more info";
+                    LOG.info(logMessage);
+                    if (systemUsage.isSendFailIfNoSpace()) {
+                        throw new javax.jms.ResourceAllocationException(logMessage);
+                    }
+                }
                 while (!systemUsage.getStoreUsage().waitForSpace(1000)) {
                     if (context.getStopping().get()) {
                         throw new IOException(
@@ -1287,13 +1287,13 @@ public class Queue extends BaseDestination implements Task, UsageListener {
     final void sendMessage(final ConnectionContext context, Message msg) throws Exception {
         if (!msg.isPersistent() && messages.getSystemUsage() != null) {
         	if (systemUsage.getTempUsage().isFull()) {
-        		final String logMessage = "Usage Manager Temp Store is Full. Stopping producer (" + msg.getProducerId() + ") to prevent flooding " + getActiveMQDestination().getQualifiedName() + "." +
-						" See http://activemq.apache.org/producer-flow-control.html for more info";
-        		LOG.info(logMessage);
-        		if (systemUsage.isSendFailIfNoSpace()) {
-        			throw new javax.jms.ResourceAllocationException(logMessage);
-        		}
-        	}
+                final String logMessage = "Usage Manager Temp Store is Full. Stopping producer (" + msg.getProducerId() + ") to prevent flooding " + getActiveMQDestination().getQualifiedName() + "." +
+                        " See http://activemq.apache.org/producer-flow-control.html for more info";
+                LOG.info(logMessage);
+                if (systemUsage.isSendFailIfNoSpace()) {
+                    throw new javax.jms.ResourceAllocationException(logMessage);
+                }
+            }
             messages.getSystemUsage().getTempUsage().waitForSpace();
         }
         synchronized(messages) {
