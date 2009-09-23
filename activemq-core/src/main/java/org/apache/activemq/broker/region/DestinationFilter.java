@@ -265,4 +265,12 @@ public class DestinationFilter implements Destination {
             MessageDispatchNotification messageDispatchNotification) throws Exception {
         next.processDispatchNotification(messageDispatchNotification);   
     }
+
+	public int getCursorMemoryHighWaterMark() {
+		return next.getCursorMemoryHighWaterMark();
+	}
+
+	public void setCursorMemoryHighWaterMark(int cursorMemoryHighWaterMark) {
+		next.setCursorMemoryHighWaterMark(cursorMemoryHighWaterMark);
+	}
 }

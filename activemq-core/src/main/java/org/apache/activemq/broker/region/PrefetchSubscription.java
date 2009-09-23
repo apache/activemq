@@ -525,6 +525,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
         this.pending = pending;
         if (this.pending!=null) {
             this.pending.setSystemUsage(usageManager);
+            this.pending.setMemoryUsageHighWaterMark(getCursorMemoryHighWaterMark());
         }
     }
 

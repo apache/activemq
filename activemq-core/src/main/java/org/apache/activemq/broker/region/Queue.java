@@ -191,6 +191,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
             messages.setMaxAuditDepth(getMaxAuditDepth());
             messages.setMaxProducersToAudit(getMaxProducersToAudit());
             messages.setUseCache(isUseCache());
+            messages.setMemoryUsageHighWaterMark(getCursorMemoryHighWaterMark());
             if (messages.isRecoveryRequired()) {
                 store.recover(new MessageRecoveryListener() {
 

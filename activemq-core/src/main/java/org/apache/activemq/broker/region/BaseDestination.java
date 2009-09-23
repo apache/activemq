@@ -50,7 +50,7 @@ public abstract class BaseDestination implements Destination {
     protected final MessageStore store;
     protected SystemUsage systemUsage;
     protected MemoryUsage memoryUsage;
-    private boolean producerFlowControl = false;
+    private boolean producerFlowControl = true;
     protected boolean warnOnProducerFlowControl = true; 
     private int maxProducersToAudit = 1024;
     private int maxAuditDepth = 2048;
@@ -73,6 +73,7 @@ public abstract class BaseDestination implements Destination {
     protected DeadLetterStrategy deadLetterStrategy = DEFAULT_DEAD_LETTER_STRATEGY;
     protected long expireMessagesPeriod = EXPIRE_MESSAGE_PERIOD;
     private int maxExpirePageSize = MAX_BROWSE_PAGE_SIZE;
+    protected int cursorMemoryHighWaterMark = 70;
 
     /**
      * @param broker
@@ -375,6 +376,14 @@ public abstract class BaseDestination implements Destination {
     public void setDeadLetterStrategy(DeadLetterStrategy deadLetterStrategy) {
         this.deadLetterStrategy = deadLetterStrategy;
     }
+    
+    public int getCursorMemoryHighWaterMark() {
+		return this.cursorMemoryHighWaterMark;
+	}
+
+	public void setCursorMemoryHighWaterMark(int cursorMemoryHighWaterMark) {
+		this.cursorMemoryHighWaterMark = cursorMemoryHighWaterMark;
+	}
 
     /**
      * called when message is consumed
@@ -511,5 +520,4 @@ public abstract class BaseDestination implements Destination {
     public void processDispatchNotification(
             MessageDispatchNotification messageDispatchNotification) throws Exception {
     }
-
 }

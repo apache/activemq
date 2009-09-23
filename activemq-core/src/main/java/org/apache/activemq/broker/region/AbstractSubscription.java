@@ -47,6 +47,7 @@ public abstract class AbstractSubscription implements Subscription {
     protected final CopyOnWriteArrayList<Destination> destinations = new CopyOnWriteArrayList<Destination>();
     private BooleanExpression selectorExpression;
     private ObjectName objectName;
+    private int cursorMemoryHighWaterMark = 70;
 
 
     public AbstractSubscription(Broker broker,ConnectionContext context, ConsumerInfo info) throws InvalidSelectorException {
@@ -210,6 +211,14 @@ public abstract class AbstractSubscription implements Subscription {
     public void removeDestination(Destination destination) {
         
     }
+    
+    public int getCursorMemoryHighWaterMark(){
+    	return this.cursorMemoryHighWaterMark;
+    }
+
+	public void setCursorMemoryHighWaterMark(int cursorMemoryHighWaterMark){
+		this.cursorMemoryHighWaterMark=cursorMemoryHighWaterMark;
+	}
     
     public int countBeforeFull() {
         return getDispatchedQueueSize() - info.getPrefetchSize();

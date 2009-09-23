@@ -33,6 +33,7 @@ import org.apache.activemq.filter.DestinationMapEntry;
 import org.apache.activemq.usage.SystemUsage;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.derby.impl.sql.compile.GetCurrentConnectionNode;
 
 /**
  * Represents an entry in a {@link PolicyMap} for assigning policies to a
@@ -59,7 +60,7 @@ public class PolicyEntry extends DestinationMapEntry {
     private int maxAuditDepth=2048;
     private int maxQueueAuditDepth=2048;
     private boolean enableAudit=true;
-    private boolean producerFlowControl = false;
+    private boolean producerFlowControl = true;
     private boolean optimizedDispatch=false;
     private int maxPageSize=BaseDestination.MAX_PAGE_SIZE;
     private int maxBrowsePageSize=BaseDestination.MAX_BROWSE_PAGE_SIZE;
@@ -82,6 +83,7 @@ public class PolicyEntry extends DestinationMapEntry {
     private int queueBrowserPrefetch=ActiveMQPrefetchPolicy.DEFAULT_QUEUE_BROWSER_PREFETCH;
     private int topicPrefetch=ActiveMQPrefetchPolicy.DEFAULT_TOPIC_PREFETCH;
     private int durableTopicPrefetch=ActiveMQPrefetchPolicy.DEFAULT_DURABLE_TOPIC_PREFETCH;
+    private int cursorMemoryHighWaterMark=70;
     
    
     public void configure(Broker broker,Queue queue) {
@@ -140,6 +142,7 @@ public class PolicyEntry extends DestinationMapEntry {
         destination.setSendAdvisoryIfNoConsumers(sendAdvisoryIfNoConsumers);
         destination.setExpireMessagesPeriod(getExpireMessagesPeriod());
         destination.setMaxExpirePageSize(getMaxExpirePageSize());
+        destination.setCursorMemoryHighWaterMark(getCursorMemoryHighWaterMark());
     }
 
     public void configure(Broker broker, SystemUsage memoryManager, TopicSubscription subscription) {
@@ -177,8 +180,8 @@ public class PolicyEntry extends DestinationMapEntry {
         String clientId = sub.getSubscriptionKey().getClientId();
         String subName = sub.getSubscriptionKey().getSubscriptionName();
         int prefetch = sub.getPrefetchSize();
+        sub.setCursorMemoryHighWaterMark(getCursorMemoryHighWaterMark());
         //override prefetch size if not set by the Consumer
-        
         if (prefetch == ActiveMQPrefetchPolicy.DEFAULT_DURABLE_TOPIC_PREFETCH){
             sub.setPrefetchSize(getDurableTopicPrefetch());
         }
@@ -189,6 +192,7 @@ public class PolicyEntry extends DestinationMapEntry {
         }
         sub.setMaxAuditDepth(getMaxAuditDepth());
         sub.setMaxProducersToAudit(getMaxProducersToAudit());
+        
     }
     
     public void configure(Broker broker, SystemUsage memoryManager, QueueBrowserSubscription sub) {
@@ -199,6 +203,7 @@ public class PolicyEntry extends DestinationMapEntry {
         if (prefetch == ActiveMQPrefetchPolicy.DEFAULT_QUEUE_BROWSER_PREFETCH){
             sub.setPrefetchSize(getQueueBrowserPrefetch());
         }
+        sub.setCursorMemoryHighWaterMark(getCursorMemoryHighWaterMark());
     }
     
     public void configure(Broker broker, SystemUsage memoryManager, QueueSubscription sub) {
@@ -209,6 +214,7 @@ public class PolicyEntry extends DestinationMapEntry {
         if (prefetch == ActiveMQPrefetchPolicy.DEFAULT_QUEUE_PREFETCH){
             sub.setPrefetchSize(getQueuePrefetch());
         }
+        sub.setCursorMemoryHighWaterMark(getCursorMemoryHighWaterMark());
     }
 
     // Properties
@@ -661,6 +667,14 @@ public class PolicyEntry extends DestinationMapEntry {
     public void setDurableTopicPrefetch(int durableTopicPrefetch) {
         this.durableTopicPrefetch = durableTopicPrefetch;
     }
+    
+    public int getCursorMemoryHighWaterMark() {
+		return this.cursorMemoryHighWaterMark;
+	}
+
+	public void setCursorMemoryHighWaterMark(int cursorMemoryHighWaterMark) {
+		this.cursorMemoryHighWaterMark = cursorMemoryHighWaterMark;
+	}
 
 
 
