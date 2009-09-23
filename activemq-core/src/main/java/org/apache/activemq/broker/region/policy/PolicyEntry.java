@@ -33,7 +33,6 @@ import org.apache.activemq.filter.DestinationMapEntry;
 import org.apache.activemq.usage.SystemUsage;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.derby.impl.sql.compile.GetCurrentConnectionNode;
 
 /**
  * Represents an entry in a {@link PolicyMap} for assigning policies to a
