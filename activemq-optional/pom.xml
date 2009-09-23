@@ -44,7 +44,11 @@
       <groupId>${pom.groupId}</groupId>
       <artifactId>activeio-core</artifactId>
     </dependency>    
-    
+    <dependency>
+      <groupId>${pom.groupId}</groupId>
+      <artifactId>activemq-console</artifactId>
+    </dependency>
+        
     <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring</artifactId>
@@ -153,7 +157,22 @@
       <groupId>org.codehaus.jettison</groupId>
       <artifactId>jettison</artifactId>
       <scope>test</scope>
-    </dependency>       
+    </dependency>  
+    
+    <dependency>
+      <groupId>velocity</groupId>
+      <artifactId>velocity</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>net.sf.josql</groupId>
+      <artifactId>josql</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>net.sf.josql</groupId>
+      <artifactId>gentlyweb-utils</artifactId>
+    </dependency>
+    
+         
   </dependencies>
 
   <build>
