@@ -93,7 +93,12 @@ public abstract class TransportSupport extends ServiceSupport implements Transpo
      */
     public void onException(IOException e) {
         if (transportListener != null) {
-            transportListener.onException(e);
+            try {
+                transportListener.onException(e);
+            } catch (RuntimeException e2) {
+                // Handle any unexpected runtime exceptions by debug logging them.
+                LOG.debug("Unexpected runtime exception: "+e2, e2);
+            }
         }
     }
 
