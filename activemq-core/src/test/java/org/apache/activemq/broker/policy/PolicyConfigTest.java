@@ -21,4 +21,7 @@ import junit.framework.TestCase;
 
 public class PolicyConfigTest extends TestCase{
 
+    public void testNoop() {
+    }
+
 }
