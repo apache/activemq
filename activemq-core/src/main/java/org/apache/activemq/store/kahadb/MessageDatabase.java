@@ -59,11 +59,15 @@ import org.apache.kahadb.util.*;
 
 public class MessageDatabase {
 
+    public static final String PROPERTY_LOG_SLOW_ACCESS_TIME = "org.apache.activemq.store.kahadb.LOG_SLOW_ACCESS_TIME";
+    public static final int LOG_SLOW_ACCESS_TIME = Integer.parseInt(System.getProperty(PROPERTY_LOG_SLOW_ACCESS_TIME, "500"));
+
     private static final Log LOG = LogFactory.getLog(MessageDatabase.class);
     private static final int DATABASE_LOCKED_WAIT_DELAY = 10 * 1000;
 
     public static final int CLOSED_STATE = 1;
     public static final int OPEN_STATE = 2;
+
 
     protected class Metadata {
         protected Page<Metadata> page;
@@ -566,8 +570,8 @@ public class MessageDatabase {
                 });
             }
         	long end = System.currentTimeMillis();
-        	if( end-start > 100 ) { 
-        		LOG.info("KahaDB Cleanup took "+(end-start));
+        	if( LOG_SLOW_ACCESS_TIME>0 && end-start > LOG_SLOW_ACCESS_TIME) {
+        		LOG.info("Slow KahaDB access: cleanup took "+(end-start));
         	}
         } catch (IOException e) {
         	e.printStackTrace();
@@ -612,8 +616,8 @@ public class MessageDatabase {
         long start2 = System.currentTimeMillis();
         process(data, location);
     	long end = System.currentTimeMillis();
-    	if( end-start > 100 ) { 
-    		LOG.info("KahaDB long enqueue time: Journal Add Took: "+(start2-start)+" ms, Index Update took "+(end-start2)+" ms");
+    	if( LOG_SLOW_ACCESS_TIME>0 && end-start > LOG_SLOW_ACCESS_TIME) {
+    		LOG.info("Slow KahaDB access: Journal append took: "+(start2-start)+" ms, Index update took "+(end-start2)+" ms");
     	}
 
         synchronized (indexMutex) {
