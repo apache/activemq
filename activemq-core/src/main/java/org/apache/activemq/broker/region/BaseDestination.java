@@ -90,8 +90,8 @@ public abstract class BaseDestination implements Destination {
         // let's copy the enabled property from the parent DestinationStatistics
         this.destinationStatistics.setEnabled(parentStats.isEnabled());
         this.destinationStatistics.setParent(parentStats);
-        this.systemUsage = brokerService.getProducerSystemUsage();
-        this.memoryUsage = new MemoryUsage(systemUsage.getMemoryUsage(), destination.toString());
+        this.systemUsage = new SystemUsage(brokerService.getProducerSystemUsage(), destination.toString());
+        this.memoryUsage = this.systemUsage.getMemoryUsage();
         this.memoryUsage.setUsagePortion(1.0f);
         this.regionBroker = brokerService.getRegionBroker();
     }
