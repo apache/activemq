@@ -24,6 +24,8 @@ import org.apache.activemq.command.ActiveMQQueue;
 import javax.jms.*;
 import java.io.File;
 import java.io.IOException;
+import java.io.RandomAccessFile;
+import java.io.FileNotFoundException;
 
 /**
  * @author chirino
@@ -68,7 +70,7 @@ public class KahaDBTest extends TestCase {
             broker = createBroker(kaha);
             fail("expected IOException");
         } catch (IOException e) {
-            assertTrue( e.getMessage().startsWith("Detected missing journal files") );
+            assertTrue( e.getMessage().startsWith("Detected missing/corrupt journal files") );
         }
 
     }
@@ -94,6 +96,75 @@ public class KahaDBTest extends TestCase {
         // We know we won't get all the messages but we should get most of them.
         int count = receiveMessages();
         assertTrue( count > 800 ); 
+        assertTrue( count < 1000 );
+
+        broker.stop();
+    }
+
+
+    public void testCheckCorruptionNotIgnored() throws Exception {
+        KahaDBStore kaha = createStore(true);
+        assertFalse(kaha.isChecksumJournalFiles());
+        assertFalse(kaha.isCheckForCorruptJournalFiles());
+
+        kaha.setJournalMaxFileLength(1024*100);
+        kaha.setChecksumJournalFiles(true);
+        BrokerService broker = createBroker(kaha);
+        sendMessages(1000);
+        broker.stop();
+
+        // Modify/Corrupt some journal files..
+        assertExistsAndCorrupt(new File(kaha.getDirectory(), "db-4.log"));
+        assertExistsAndCorrupt(new File(kaha.getDirectory(), "db-8.log"));
+
+        kaha = createStore(false);
+        kaha.setJournalMaxFileLength(1024*100);
+        kaha.setChecksumJournalFiles(true);
+        kaha.setCheckForCorruptJournalFiles(true);
+        assertFalse(kaha.isIgnoreMissingJournalfiles());
+        try {
+            broker = createBroker(kaha);
+            fail("expected IOException");
+        } catch (IOException e) {
+            assertTrue( e.getMessage().startsWith("Detected missing/corrupt journal files") );
+        }
+
+    }
+
+    private void assertExistsAndCorrupt(File file) throws IOException {
+        assertTrue(file.exists());
+        RandomAccessFile f = new RandomAccessFile(file, "rw");
+        try {
+            f.seek(1024*5+134);
+            f.write("... corruption string ...".getBytes());
+        } finally {
+            f.close();
+        }
+    }
+
+
+    public void testCheckCorruptionIgnored() throws Exception {
+        KahaDBStore kaha = createStore(true);
+        kaha.setJournalMaxFileLength(1024*100);
+        kaha.setChecksumJournalFiles(true);
+        BrokerService broker = createBroker(kaha);
+        sendMessages(1000);
+        broker.stop();
+
+        // Delete some journal files..
+        assertExistsAndCorrupt(new File(kaha.getDirectory(), "db-4.log"));
+        assertExistsAndCorrupt(new File(kaha.getDirectory(), "db-8.log"));
+
+        kaha = createStore(false);
+        kaha.setIgnoreMissingJournalfiles(true);
+        kaha.setJournalMaxFileLength(1024*100);
+        kaha.setChecksumJournalFiles(true);
+        kaha.setCheckForCorruptJournalFiles(true);
+        broker = createBroker(kaha);
+
+        // We know we won't get all the messages but we should get most of them.
+        int count = receiveMessages();
+        assertTrue("Expected to received a min # of messages.. Got: "+count,  count > 990 );
         assertTrue( count < 1000 );
 
         broker.stop();
