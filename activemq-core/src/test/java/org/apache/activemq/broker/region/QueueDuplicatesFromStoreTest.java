@@ -285,6 +285,14 @@ public class QueueDuplicatesFromStoreTest extends TestCase {
             public void acknowledge(ConnectionContext context, MessageAck ack)
                     throws Exception {
             }
+
+			public int getCursorMemoryHighWaterMark(){
+				return 0;
+			}
+
+			public void setCursorMemoryHighWaterMark(
+					int cursorMemoryHighWaterMark) {				
+			}
         };
 
         queue.addSubscription(contextNotInTx, subscription);

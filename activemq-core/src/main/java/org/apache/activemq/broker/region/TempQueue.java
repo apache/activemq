@@ -52,6 +52,7 @@ public class TempQueue extends Queue{
     
     public void initialize() throws Exception {
         this.messages=new VMPendingMessageCursor();
+        this.messages.setMemoryUsageHighWaterMark(getCursorMemoryHighWaterMark());
         this.systemUsage = brokerService.getSystemUsage();
         memoryUsage.setParent(systemUsage.getMemoryUsage());           
         this.taskRunner = taskFactory.createTaskRunner(this, "TempQueue:  " + destination.getPhysicalName());
