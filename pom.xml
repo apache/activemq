@@ -151,14 +151,6 @@
     <url>http://svn.apache.org/viewvc/activemq/trunk/</url>
   </scm>
 
-  <!-- This is only here since the activemq-protobuf plugin has not been released yet -->
-  <pluginRepositories>
-    <pluginRepository>
-      <id>apache.snapshots</id>
-      <url>https://repository.apache.org/content/repositories/snapshots/</url>
-    </pluginRepository>
-  </pluginRepositories>
-
   <dependencyManagement>
     <dependencies>
       <!-- =============================== -->
@@ -291,7 +283,7 @@
       <dependency>
         <groupId>org.apache.activemq.protobuf</groupId>
         <artifactId>activemq-protobuf</artifactId>
-        <version>1.0-SNAPSHOT</version>
+        <version>1.0</version>
       </dependency>
 
       <!-- =============================== -->
@@ -935,7 +927,7 @@
         <plugin>
           <groupId>org.apache.activemq.protobuf</groupId>
           <artifactId>activemq-protobuf</artifactId>
-          <version>1.0-SNAPSHOT</version>
+          <version>1.0</version>
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
