@@ -34,6 +34,7 @@
     <activemq.osgi.import.pkg>
       org.apache.activemq*;resolution:=optional,
       org.springframework*;resolution:=optional,
+      sun.management*;resolution:=optional,
       *
     </activemq.osgi.import.pkg>
     <activemq.osgi.export>
