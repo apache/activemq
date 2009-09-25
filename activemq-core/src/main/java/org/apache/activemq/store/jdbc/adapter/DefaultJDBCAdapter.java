@@ -103,8 +103,8 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
                         JDBCPersistenceAdapter.log("Failure details: ", e);
                     }
                 }
+                c.getConnection().commit();
             }
-            c.getConnection().commit();
         } finally {
             try {
                 s.close();
