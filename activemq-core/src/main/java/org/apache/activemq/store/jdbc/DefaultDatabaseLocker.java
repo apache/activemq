@@ -61,12 +61,14 @@ public class DefaultDatabaseLocker implements DatabaseLocker {
         stopping = false;
 
         LOG.info("Attempting to acquire the exclusive lock to become the Master broker");
+        String sql = statements.getLockCreateStatement();
+        LOG.debug("Locking Query is "+sql);
+        
         PreparedStatement statement = null;
         while (true) {
             try {
                 connection = dataSource.getConnection();
                 connection.setAutoCommit(false);
-                String sql = statements.getLockCreateStatement();
                 statement = connection.prepareStatement(sql);
                 statement.execute();
                 break;
@@ -91,7 +93,7 @@ public class DefaultDatabaseLocker implements DatabaseLocker {
                         }
 
                     } else {
-                        LOG.error("Failed to acquire lock: " + e, e);
+                        LOG.debug("Lock failure: "+ e, e);
                     }
                 } finally {
                     // Let's make sure the database connection is properly
@@ -112,13 +114,13 @@ public class DefaultDatabaseLocker implements DatabaseLocker {
                     try {
                         statement.close();
                     } catch (SQLException e1) {
-                        LOG.warn("Caught while closing statement: " + e1, e1);
+                        LOG.debug("Caught while closing statement: " + e1, e1);
                     }
                     statement = null;
                 }
             }
 
-            LOG.debug("Sleeping for " + lockAcquireSleepInterval + " milli(s) before trying again to get the lock...");
+            LOG.info("Failed to acquire lock.  Sleeping for " + lockAcquireSleepInterval + " milli(s) before trying again...");
             try {
                 Thread.sleep(lockAcquireSleepInterval);
             } catch (InterruptedException ie) {
