@@ -20,6 +20,7 @@ import org.apache.activemq.store.jdbc.Statements;
 
 /**
  * JDBC Adapter for the MaxDB database.
+ * @org.apache.xbean.XBean element="maxdb-jdbc-adapter"
  */
 public class MaxDBJDBCAdapter extends DefaultJDBCAdapter {
 
