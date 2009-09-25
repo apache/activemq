@@ -25,18 +25,43 @@ import org.apache.activemq.store.jdbc.Statements;
  */
 public class MySqlJDBCAdapter extends DefaultJDBCAdapter {
 
+    // The transactional types..
+    public static final String INNODB = "INNODB";
+    public static final String NDBCLUSTER = "NDBCLUSTER";
+    public static final String BDB = "BDB";
+
+    // The non transactional types..
+    public static final String MYISAM = "MYISAM";
+    public static final String ISAM = "ISAM";
+    public static final String MERGE = "MERGE";
+    public static final String HEAP = "HEAP";
+
+    String engineType = INNODB;
+
     public void setStatements(Statements statements) {
-        statements.setLockCreateStatement("LOCK TABLE " + statements.getFullLockTableName() + " WRITE");
+        String type = engineType.toUpperCase();
+        if( !type.equals(INNODB) &&  !type.equals(NDBCLUSTER) ) {
+            // Don't use LOCK TABLE for the INNODB and NDBCLUSTER engine types...
+            statements.setLockCreateStatement("LOCK TABLE " + statements.getFullLockTableName() + " WRITE");
+        }
+
         statements.setBinaryDataType("LONGBLOB");
         
-        // Use INNODB table since we need transaction support.
+        // Update the create statements so they use the right type of engine 
         String[] s = statements.getCreateSchemaStatements();
         for (int i = 0; i < s.length; i++) {
             if( s[i].startsWith("CREATE TABLE")) {
-                s[i] = s[i]+" TYPE=INNODB";
+                s[i] = s[i]+" TYPE="+type;
             }
         }
-        
         super.setStatements(statements);
-    }    
+    }
+
+    public String getEngineType() {
+        return engineType;
+    }
+
+    public void setEngineType(String engineType) {
+        this.engineType = engineType;
+    }
 }
