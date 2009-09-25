@@ -34,6 +34,7 @@ import org.apache.activemq.store.jdbc.Statements;
  * <li></li>
  * </ul>
  *
+ * @org.apache.xbean.XBean element="postgresql-jdbc-adapter"
  * @version $Revision: 1.1 $
  */
 public class PostgresqlJDBCAdapter extends BytesJDBCAdapter {

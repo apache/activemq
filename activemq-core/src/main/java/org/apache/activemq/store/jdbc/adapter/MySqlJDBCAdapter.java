@@ -20,6 +20,7 @@ import org.apache.activemq.store.jdbc.Statements;
 
 /**
  * 
+ * @org.apache.xbean.XBean element="mysql-jdbc-adapter"
  * @version $Revision$
  */
 public class MySqlJDBCAdapter extends DefaultJDBCAdapter {

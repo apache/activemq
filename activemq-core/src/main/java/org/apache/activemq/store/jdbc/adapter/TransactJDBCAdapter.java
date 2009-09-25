@@ -21,6 +21,8 @@ import org.apache.activemq.store.jdbc.Statements;
 /**
  * A JDBC Adapter for Transact-SQL based databases such as SQL Server or Sybase
  *
+ * @org.apache.xbean.XBean element="transact-jdbc-adapter"
+ * 
  * @version $Revision$
  */
 public class TransactJDBCAdapter extends ImageBasedJDBCAdaptor {
