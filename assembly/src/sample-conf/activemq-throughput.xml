@@ -40,15 +40,16 @@
         -->
         <destinationPolicy>
             <policyMap>
-                <policyEntries>
-                    <policyEntry queue=">">
-                        <pendingQueuePolicy>
-                            <vmQueueCursor />
-                        </pendingQueuePolicy>
-                    </policyEntry>
-                </policyEntries>
+              <policyEntries>
+                <policyEntry topic=">" producerFlowControl="true" memoryLimit="1mb">
+                  <pendingSubscriberPolicy>
+                    <vmCursor />
+                  </pendingSubscriberPolicy>
+                </policyEntry>
+                <policyEntry queue=">" producerFlowControl="true" memoryLimit="1mb" />
+              </policyEntries>
             </policyMap>
-        </destinationPolicy>
+        </destinationPolicy> 
 
         <!-- 
             Use KahaDB for persistence
