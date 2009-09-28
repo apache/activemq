@@ -57,23 +57,35 @@
         
         
         <!--
-            It's advisable to turn on producer flow control in the production system
-
+			For better performances use VM cursor and small memory limit.
+			For more information, see:
+            
+            http://activemq.apache.org/message-cursors.html
+            
+            Also, if your producer is "hanging", it's probably due to producer flow control.
+            For more information, see:
+            http://activemq.apache.org/producer-flow-control.html
+        -->
+              
+        <destinationPolicy>
+            <policyMap>
+              <policyEntries>
+                <policyEntry topic=">" producerFlowControl="true" memoryLimit="1mb">
+                  <pendingSubscriberPolicy>
+                    <vmCursor />
+                  </pendingSubscriberPolicy>
+                </policyEntry>
+                <policyEntry queue=">" producerFlowControl="true" memoryLimit="1mb" />
+              </policyEntries>
+            </policyMap>
+        </destinationPolicy> 
+ 
+         <!--
             The systemUsage controls the maximum amount of space the broker will 
             use before slowing down producers. For more information, see:
             
             http://activemq.apache.org/producer-flow-control.html
-              
-        <destinationPolicy>
-            <policyMap>
-                <policyEntries>
-                    <policyEntry queue=">" producerFlowControl="true" />
-                    <policyEntry topic=">" producerFlowControl="true" />
-                </policyEntries>
-            </policyMap>
-        </destinationPolicy> 
- 
-        
+             
         <systemUsage>
             <systemUsage>
                 <memoryUsage>
@@ -87,8 +99,8 @@
                 </tempUsage>
             </systemUsage>
         </systemUsage>
-        -->
-
+		-->
+		  
         <!-- 
             The transport connectors expose ActiveMQ over a given protocol to
             clients and other brokers. For more information, see: 
