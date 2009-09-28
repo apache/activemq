@@ -183,6 +183,7 @@ public class AMQ2413Test extends CombinationTestSupport implements MessageListen
         try {
             while (count.get() < SEND_COUNT) {
                 if (!receivedMessages.tryAcquire(HANG_THRESHOLD, TimeUnit.SECONDS)) {
+                    if (count.get() == SEND_COUNT) break;
                     throw new TimeoutException("Message not received for more than " + HANG_THRESHOLD + " seconds");
                 }
             }
