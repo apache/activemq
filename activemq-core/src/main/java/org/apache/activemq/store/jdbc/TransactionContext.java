@@ -167,8 +167,8 @@ public class TransactionContext {
             
             throw IOExceptionSupport.create(e);
         } finally {
-            close();
             inTx = false;
+            close();
         }
     }
 
@@ -195,8 +195,8 @@ public class TransactionContext {
             JDBCPersistenceAdapter.log("Rollback failed: ", e);
             throw IOExceptionSupport.create(e);
         } finally {
-            close();
             inTx = false;
+            close();
         }
     }
 
