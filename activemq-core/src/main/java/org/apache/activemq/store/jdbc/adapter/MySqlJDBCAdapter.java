@@ -16,6 +16,9 @@
  */
 package org.apache.activemq.store.jdbc.adapter;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+
 import org.apache.activemq.store.jdbc.Statements;
 
 /**
@@ -47,13 +50,32 @@ public class MySqlJDBCAdapter extends DefaultJDBCAdapter {
 
         statements.setBinaryDataType("LONGBLOB");
         
+        
+        String typeClause = " TYPE="+type;
+        if( type.equals(NDBCLUSTER) ) {
+            // in the NDBCLUSTER case we will create as INNODB and then alter to NDBCLUSTER
+            typeClause = " TYPE="+INNODB;
+        }
+        
         // Update the create statements so they use the right type of engine 
         String[] s = statements.getCreateSchemaStatements();
         for (int i = 0; i < s.length; i++) {
             if( s[i].startsWith("CREATE TABLE")) {
-                s[i] = s[i]+" TYPE="+type;
+                s[i] = s[i]+typeClause;
             }
         }
+        
+        if( type.equals(NDBCLUSTER) ) {
+            // Add the alter statements.
+            ArrayList<String> l = new ArrayList<String>(Arrays.asList(s));
+            l.add("ALTER TABLE "+statements.getFullMessageTableName()+" ENGINE="+NDBCLUSTER);
+            l.add("ALTER TABLE "+statements.getFullAckTableName()+" ENGINE="+NDBCLUSTER);
+            l.add("ALTER TABLE "+statements.getFullLockTableName()+" ENGINE="+NDBCLUSTER);
+            l.add("FLUSH TABLES");
+            s = l.toArray(new String[l.size()]);
+            statements.setCreateSchemaStatements(s);
+        }        
+        
         super.setStatements(statements);
     }
 
