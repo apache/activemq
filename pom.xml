@@ -25,13 +25,13 @@
 
   <groupId>org.apache.activemq</groupId>
   <artifactId>activemq-parent</artifactId>
-  <version>5.3-SNAPSHOT</version>
+  <version>5.3.0</version>
   <packaging>pom</packaging>
   <name>ActiveMQ</name>
   <inceptionYear>2005</inceptionYear>
 
   <properties>
-    <activemq-version>5.3-SNAPSHOT</activemq-version>
+    <activemq-version>5.3.0</activemq-version>
     <siteId>activemq-${activemq-version}</siteId>
     <projectName>Apache ActiveMQ</projectName>
     <!-- base url for site deployment.  See distribution management for full url.  Override this in settings.xml for staging -->
@@ -142,9 +142,9 @@
   </modules>
 
   <scm>
-    <connection>scm:svn:https://svn.apache.org/repos/asf/activemq/branches/activemq-5.3</connection>
-    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/activemq/branches/activemq-5.3</developerConnection>
-    <url>http://svn.apache.org/viewvc/activemq/branches/activemq-5.3</url>
+    <connection>scm:svn:https://svn.apache.org/repos/asf/activemq/tags/activemq-5.3.0</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/activemq/tags/activemq-5.3.0</developerConnection>
+    <url>http://svn.apache.org/viewvc/activemq/tags/activemq-5.3.0</url>
   </scm>
 
   <!-- This is only here since the activemq-protobuf plugin has not been released yet -->
