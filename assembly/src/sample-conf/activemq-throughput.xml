@@ -62,7 +62,7 @@
             http://activemq.apache.org/kahadb.html
         -->
         <persistenceAdapter>
-            <kahaDB directory="${activemq.base}/data/kahadb" enableJournalDiskSyncs="false" indexWriteBatchSize="10000" />
+            <kahaDB directory="${activemq.base}/data/kahadb" enableJournalDiskSyncs="false" indexWriteBatchSize="10000" indexCacheSize="1000"/>
         </persistenceAdapter>
 
         <!-- 
