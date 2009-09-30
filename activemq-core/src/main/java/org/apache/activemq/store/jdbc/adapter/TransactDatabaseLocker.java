@@ -30,6 +30,7 @@ import org.apache.commons.logging.LogFactory;
  * Represents an exclusive lock on a database to avoid multiple brokers running
  * against the same logical database.
  * 
+ * @org.apache.xbean.XBean element="transact-database-locker"
  * @version $Revision$
  */
 public class TransactDatabaseLocker extends DefaultDatabaseLocker {

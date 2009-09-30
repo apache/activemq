@@ -76,6 +76,7 @@ public class TopicSubscription extends AbstractSubscription {
 
     public void init() throws Exception {
         this.matched.setSystemUsage(usageManager);
+        this.matched.setMemoryUsageHighWaterMark(getCursorMemoryHighWaterMark());
         this.matched.start();
     }
 

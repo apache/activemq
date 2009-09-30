@@ -16,26 +16,74 @@
  */
 package org.apache.activemq.store.jdbc.adapter;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+
 import org.apache.activemq.store.jdbc.Statements;
 
 /**
  * 
+ * @org.apache.xbean.XBean element="mysql-jdbc-adapter"
  * @version $Revision$
  */
 public class MySqlJDBCAdapter extends DefaultJDBCAdapter {
 
+    // The transactional types..
+    public static final String INNODB = "INNODB";
+    public static final String NDBCLUSTER = "NDBCLUSTER";
+    public static final String BDB = "BDB";
+
+    // The non transactional types..
+    public static final String MYISAM = "MYISAM";
+    public static final String ISAM = "ISAM";
+    public static final String MERGE = "MERGE";
+    public static final String HEAP = "HEAP";
+
+    String engineType = INNODB;
+
     public void setStatements(Statements statements) {
-        statements.setLockCreateStatement("LOCK TABLE " + statements.getFullLockTableName() + " WRITE");
+        String type = engineType.toUpperCase();
+        if( !type.equals(INNODB) &&  !type.equals(NDBCLUSTER) ) {
+            // Don't use LOCK TABLE for the INNODB and NDBCLUSTER engine types...
+            statements.setLockCreateStatement("LOCK TABLE " + statements.getFullLockTableName() + " WRITE");
+        }
+
         statements.setBinaryDataType("LONGBLOB");
         
-        // Use INNODB table since we need transaction support.
+        
+        String typeClause = " TYPE="+type;
+        if( type.equals(NDBCLUSTER) ) {
+            // in the NDBCLUSTER case we will create as INNODB and then alter to NDBCLUSTER
+            typeClause = " TYPE="+INNODB;
+        }
+        
+        // Update the create statements so they use the right type of engine 
         String[] s = statements.getCreateSchemaStatements();
         for (int i = 0; i < s.length; i++) {
             if( s[i].startsWith("CREATE TABLE")) {
-                s[i] = s[i]+" TYPE=INNODB";
+                s[i] = s[i]+typeClause;
             }
         }
         
+        if( type.equals(NDBCLUSTER) ) {
+            // Add the alter statements.
+            ArrayList<String> l = new ArrayList<String>(Arrays.asList(s));
+            l.add("ALTER TABLE "+statements.getFullMessageTableName()+" ENGINE="+NDBCLUSTER);
+            l.add("ALTER TABLE "+statements.getFullAckTableName()+" ENGINE="+NDBCLUSTER);
+            l.add("ALTER TABLE "+statements.getFullLockTableName()+" ENGINE="+NDBCLUSTER);
+            l.add("FLUSH TABLES");
+            s = l.toArray(new String[l.size()]);
+            statements.setCreateSchemaStatements(s);
+        }        
+        
         super.setStatements(statements);
-    }    
+    }
+
+    public String getEngineType() {
+        return engineType;
+    }
+
+    public void setEngineType(String engineType) {
+        this.engineType = engineType;
+    }
 }

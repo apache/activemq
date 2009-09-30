@@ -363,7 +363,7 @@ public class JMSConsumerTest extends JmsTestSupport {
 
     public void initCombosForTestMessageListenerOnMessageCloseUnackedWithPrefetch1StayInQueue() { 
         addCombinationValues("deliveryMode", new Object[] {Integer.valueOf(DeliveryMode.NON_PERSISTENT), Integer.valueOf(DeliveryMode.PERSISTENT)});
-        addCombinationValues("ackMode", new Object[] {Integer.valueOf(Session.DUPS_OK_ACKNOWLEDGE)});
+        addCombinationValues("ackMode", new Object[] {Integer.valueOf(Session.CLIENT_ACKNOWLEDGE)});
         addCombinationValues("destinationType", new Object[] {Byte.valueOf(ActiveMQDestination.QUEUE_TYPE)});
     }
 
@@ -398,6 +398,7 @@ public class JMSConsumerTest extends JmsTestSupport {
                         connection.close();
                         got2Done.countDown();
                     }
+                    tm.acknowledge();
                 } catch (Throwable e) {
                     e.printStackTrace();
                 }
@@ -442,7 +443,7 @@ public class JMSConsumerTest extends JmsTestSupport {
         assertTrue(done2.await(1000, TimeUnit.MILLISECONDS));
         Thread.sleep(200);
 
-        // assert msg 2 was redelivered as close() from onMessages() will only ack in auto_ack mode
+        // assert msg 2 was redelivered as close() from onMessages() will only ack in auto_ack and dups_ok mode
         assertEquals(5, counter.get());      
     }
 

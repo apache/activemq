@@ -249,6 +249,16 @@ public class StoreQueueCursor extends AbstractPendingMessageCursor {
             nonPersistent.setUseCache(useCache);
         }
     }
+    
+    public void setMemoryUsageHighWaterMark(int memoryUsageHighWaterMark) {
+        super.setMemoryUsageHighWaterMark(memoryUsageHighWaterMark);
+        if (persistent != null) {
+            persistent.setMemoryUsageHighWaterMark(memoryUsageHighWaterMark);
+        }
+        if (nonPersistent != null) {
+            nonPersistent.setMemoryUsageHighWaterMark(memoryUsageHighWaterMark);
+        }
+    }
 
 
 

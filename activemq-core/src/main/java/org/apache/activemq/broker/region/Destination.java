@@ -105,6 +105,10 @@ public interface Destination extends Service, Task {
 
     public void setMinimumMessageSize(int minimumMessageSize);
     
+    public int getCursorMemoryHighWaterMark();
+
+	public void setCursorMemoryHighWaterMark(int cursorMemoryHighWaterMark);
+    
     /**
      * optionally called by a Subscriber - to inform the Destination its
      * ready for more messages

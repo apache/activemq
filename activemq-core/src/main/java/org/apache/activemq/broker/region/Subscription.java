@@ -223,4 +223,8 @@ public interface Subscription extends SubscriptionRecovery {
     int countBeforeFull();
 
     ConnectionContext getContext();
+    
+    public int getCursorMemoryHighWaterMark();
+
+	public void setCursorMemoryHighWaterMark(int cursorMemoryHighWaterMark);
 }

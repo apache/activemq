@@ -52,7 +52,7 @@ public class AMQ1936Test extends TestCase{
     private final static String TEST_QUEUE_NAME     = "dynamicQueues/duplicate.message.test.queue";
     ////--
     //
-    private final static long TEST_MESSAGE_COUNT    = 60000;    // The number of test messages to use
+    private final static long TEST_MESSAGE_COUNT    = 6000;    // The number of test messages to use
     //
     ////--
     private final static int CONSUMER_COUNT         = 2;        // The number of message receiver instances

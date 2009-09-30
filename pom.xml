@@ -80,7 +80,7 @@
     <xmlpull-version>1.1.3.4d_b4_min</xmlpull-version>
     <xstream-version>1.3.1</xstream-version>
     <xbean-version>3.6</xbean-version>
-    <felix-version>1.0.0</felix-version>
+    <felix-version>2.0.1</felix-version>
     <commons-net-version>2.0</commons-net-version>
     <ftpserver-version>1.0.0</ftpserver-version>
     <site-repo-url>scpexe://people.apache.org/www/activemq.apache.org/maven/</site-repo-url>
@@ -120,21 +120,17 @@
 
   <modules>
     <module>activemq-all</module>
-    <module>activemq-book</module>
     <module>activemq-camel</module>
     <module>activemq-console</module>
     <module>activemq-core</module>
     <module>activemq-fileserver</module>
     <module>activemq-jaas</module>
-    <module>activemq-jpa-store</module>
     <module>activemq-openwire-generator</module>
     <module>activemq-optional</module>
     <module>activemq-pool</module>
-    <!-- <module>activemq-protocol-buffer</module> -->
     <module>activemq-ra</module>
     <module>activemq-rar</module>
     <module>activemq-run</module>
-    <module>activemq-test-atomikos</module>
     <module>activemq-tooling</module>
     <module>activemq-web</module>
     <module>activemq-web-demo</module>
@@ -189,11 +185,6 @@
       <dependency>
         <groupId>org.apache.activemq</groupId>
         <artifactId>activemq-jaas</artifactId>
-        <version>${activemq-version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.activemq</groupId>
-        <artifactId>activemq-jpa-store</artifactId>
         <version>${activemq-version}</version>
       </dependency>
       <dependency>
@@ -892,12 +883,32 @@
         <artifactId>geronimo-transaction</artifactId>
         <version>2.1</version>
       </dependency>
-    <!-- FTP support for BlobMessages -->
-	<dependency>
-	    <groupId>commons-net</groupId>
-	    <artifactId>commons-net</artifactId>
-	    <version>${commons-net-version}</version>
-	</dependency>
+      
+      <!-- FTP support for BlobMessages -->
+    	<dependency>
+    	    <groupId>commons-net</groupId>
+    	    <artifactId>commons-net</artifactId>
+    	    <version>${commons-net-version}</version>
+    	</dependency>
+
+      <dependency>
+        <groupId>velocity</groupId>
+        <artifactId>velocity</artifactId>
+        <version>1.4</version>
+        <optional>true</optional>
+      </dependency>
+      <dependency>
+        <groupId>net.sf.josql</groupId>
+        <artifactId>josql</artifactId>
+        <version>1.5</version>
+        <optional>true</optional>
+      </dependency>
+      <dependency>
+        <groupId>net.sf.josql</groupId>
+        <artifactId>gentlyweb-utils</artifactId>
+        <version>1.5</version>
+        <optional>true</optional>
+      </dependency>
 
     </dependencies>
   </dependencyManagement>
@@ -1056,6 +1067,8 @@
             <Private-Package>${activemq.osgi.private.pkg}</Private-Package>
             <Implementation-Title>Apache ActiveMQ</Implementation-Title>
             <Implementation-Version>${project.version}</Implementation-Version>
+            <_versionpolicy>[$(version;==;$(@)),$(version;=+;$(@)))</_versionpolicy>   
+            <_failok>${servicemix.osgi.failok}</_failok>
           </instructions>
         </configuration>
       </plugin>

@@ -90,7 +90,8 @@ public class StoreBasedCursorTest extends TestCase {
         systemUsage.getMemoryUsage().setLimit(systemLimit);
         
         PolicyEntry policy = new PolicyEntry();
-        policy.setMemoryLimit(memoryLimit);
+        policy.setProducerFlowControl(true);
+        policy.setUseCache(true);
         PolicyMap pMap = new PolicyMap();
         pMap.setDefaultEntry(policy);
         broker.setDestinationPolicy(pMap);
@@ -112,13 +113,15 @@ public class StoreBasedCursorTest extends TestCase {
         start();
         MessageProducer producer = session.createProducer(queue);
         producer.setDeliveryMode(deliveryMode);
+        int i =0;
         try {
-            for (int i = 0; i < 200; i++) {
+            for (i = 0; i < 200; i++) {
                 TextMessage message = session.createTextMessage(createMessageText(i));
                 producer.send(message);
             }
         } catch (javax.jms.ResourceAllocationException e) {
-            fail(e.getMessage() + ". percentUsage = " + broker.getSystemUsage().getMemoryUsage().getPercentUsage());
+        	e.printStackTrace();
+            fail(e.getMessage() + " num msgs = " + i + ". percentUsage = " + broker.getSystemUsage().getMemoryUsage().getPercentUsage());
         }
         stop();
     }
@@ -130,8 +133,8 @@ public class StoreBasedCursorTest extends TestCase {
     }
     
     public void testUseCachePersistent() throws Exception {
-        int limit = memoryLimit / 3;
-        configureBroker(limit, limit);
+        int limit = memoryLimit / 2;
+        configureBroker(limit, memoryLimit);
         sendMessages(DeliveryMode.PERSISTENT);
     }
     

@@ -21,6 +21,7 @@ import org.apache.activemq.store.jdbc.Statements;
 /**
  * A JDBC Adapter for Sybase databases
  *
+ * @org.apache.xbean.XBean element="sybase-jdbc-adapter"
  * @version $Revision$
  */
 public class SybaseJDBCAdapter extends ImageBasedJDBCAdaptor {

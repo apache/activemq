@@ -54,6 +54,7 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
         super(broker,usageManager, context, info);
         this.pending = new StoreDurableSubscriberCursor(broker,context.getClientId(), info.getSubscriptionName(), info.getPrefetchSize(), this);
         this.pending.setSystemUsage(usageManager);
+        this.pending.setMemoryUsageHighWaterMark(getCursorMemoryHighWaterMark());
         this.keepDurableSubsActive = keepDurableSubsActive;
         subscriptionKey = new SubscriptionKey(context.getClientId(), info.getSubscriptionName());
         
@@ -115,6 +116,7 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
             }
             synchronized (pending) {
                 pending.setSystemUsage(memoryManager);
+                pending.setMemoryUsageHighWaterMark(getCursorMemoryHighWaterMark());
                 pending.start();
 
                 // If nothing was in the persistent store, then try to use the

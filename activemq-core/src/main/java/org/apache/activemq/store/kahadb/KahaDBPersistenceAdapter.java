@@ -349,4 +349,19 @@ public class KahaDBPersistenceAdapter implements PersistenceAdapter {
         this.letter.setIgnoreMissingJournalfiles(ignoreMissingJournalfiles);
     }
 
+    public boolean isChecksumJournalFiles() {
+        return letter.isChecksumJournalFiles();
+    }
+
+    public boolean isCheckForCorruptJournalFiles() {
+        return letter.isCheckForCorruptJournalFiles();
+    }
+
+    public void setChecksumJournalFiles(boolean checksumJournalFiles) {
+        letter.setChecksumJournalFiles(checksumJournalFiles);
+    }
+
+    public void setCheckForCorruptJournalFiles(boolean checkForCorruptJournalFiles) {
+        letter.setCheckForCorruptJournalFiles(checkForCorruptJournalFiles);
+    }
 }

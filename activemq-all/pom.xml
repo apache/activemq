@@ -47,10 +47,6 @@
     </dependency>
     <dependency>
       <groupId>${pom.groupId}</groupId>
-      <artifactId>activemq-jpa-store</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>${pom.groupId}</groupId>
       <artifactId>kahadb</artifactId>
     </dependency>
   </dependencies>
@@ -78,7 +74,6 @@
                   <include>${project.groupId}:activemq-console</include>
                   <include>${project.groupId}:activemq-jaas</include>
                   <include>${project.groupId}:activemq-optional</include>
-                  <include>${project.groupId}:activemq-jpa-store</include>
                   <include>${project.groupId}:kahadb</include>
                   <include>org.apache.geronimo.specs:geronimo-jms_1.1_spec</include>
                   <include>org.apache.geronimo.specs:geronimo-jta_1.0.1B_spec</include>
