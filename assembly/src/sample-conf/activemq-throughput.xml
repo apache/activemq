@@ -47,9 +47,9 @@
                   </pendingSubscriberPolicy>
                 </policyEntry>
                 <policyEntry queue=">" producerFlowControl="true" memoryLimit="1mb">
-                  <pendingSubscriberPolicy>
-                    <vmCursor />
-                  </pendingSubscriberPolicy>
+                  <pendingQueuePolicy>
+                    <vmQueueCursor/>
+                  </pendingQueuePolicy>
                 </policyEntry>
               </policyEntries>
             </policyMap>
