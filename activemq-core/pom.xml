@@ -599,8 +599,8 @@
           <phase>process-classes</phase>
             <configuration>
               <namespace>http://activemq.apache.org/schema/core</namespace>
-              <schema>${basedir}/target/generated-sources/xbean/activemq.xsd</schema>
-              <outputDir>${basedir}/target/generated-sources/xbean</outputDir>
+              <schema>${basedir}/target/classes/activemq.xsd</schema>
+              <outputDir>${basedir}/target/classes</outputDir>
               <generateSpringSchemasFile>false</generateSpringSchemasFile>
               <excludedClasses>org.apache.activemq.broker.jmx.AnnotatedMBean,org.apache.activemq.broker.jmx.DestinationViewMBean</excludedClasses>
             </configuration>
