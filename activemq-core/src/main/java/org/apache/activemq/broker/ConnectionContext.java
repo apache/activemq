@@ -73,6 +73,32 @@ public class ConnectionContext {
         setUserName(info.getUserName());
         setConnectionId(info.getConnectionId());
     }
+    
+    public ConnectionContext copy() {
+        ConnectionContext rc = new ConnectionContext(this.messageEvaluationContext);
+        rc.connection = this.connection;
+        rc.connector = this.connector;
+        rc.broker = this.broker;
+        rc.inRecoveryMode = this.inRecoveryMode;
+        rc.transaction = this.transaction;
+        rc.transactions = this.transactions;
+        rc.securityContext = this.securityContext;
+        rc.connectionId = this.connectionId;
+        rc.clientId = this.clientId;
+        rc.userName = this.userName;
+        rc.haAware = this.haAware;
+        rc.wireFormatInfo = this.wireFormatInfo;
+        rc.longTermStoreContext = this.longTermStoreContext;
+        rc.producerFlowControl = this.producerFlowControl;
+        rc.messageAuthorizationPolicy = this.messageAuthorizationPolicy;
+        rc.networkConnection = this.networkConnection;
+        rc.faultTolerant = this.faultTolerant;
+        rc.stopping.set(this.stopping.get());
+        rc.dontSendReponse = this.dontSendReponse;
+        rc.clientMaster = this.clientMaster;
+        return rc;
+    }
+
 
     public SecurityContext getSecurityContext() {
         return securityContext;
@@ -293,4 +319,5 @@ public class ConnectionContext {
     public void setFaultTolerant(boolean faultTolerant) {
         this.faultTolerant = faultTolerant;
     }
+
 }
