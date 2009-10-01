@@ -75,7 +75,17 @@
                     <vmCursor />
                   </pendingSubscriberPolicy>
                 </policyEntry>
-                <policyEntry queue=">" producerFlowControl="true" memoryLimit="1mb" />
+                <policyEntry queue=">" producerFlowControl="true" memoryLimit="1mb">
+                  <!-- Use VM cursor for better latency
+                       For more information, see:
+                       
+                       http://activemq.apache.org/message-cursors.html
+                       
+                  <pendingQueuePolicy>
+                    <vmQueueCursor/>
+                  </pendingQueuePolicy>
+                  -->
+                </policyEntry>
               </policyEntries>
             </policyMap>
         </destinationPolicy> 
