@@ -36,6 +36,17 @@ public class ProducerBrokerExchange {
     public ProducerBrokerExchange() {
     }
 
+    public ProducerBrokerExchange copy() {
+        ProducerBrokerExchange rc = new ProducerBrokerExchange();
+        rc.connectionContext = connectionContext.copy();
+        rc.regionDestination = regionDestination;
+        rc.region = region;
+        rc.producerState = producerState;
+        rc.mutable = mutable;
+        return rc;
+    }
+
+    
     /**
      * @return the connectionContext
      */
@@ -105,4 +116,5 @@ public class ProducerBrokerExchange {
     public void setProducerState(ProducerState producerState) {
         this.producerState = producerState;
     }
+
 }

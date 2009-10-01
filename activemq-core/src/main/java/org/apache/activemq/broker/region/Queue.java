@@ -428,6 +428,9 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                 // a sync message or
                 // if it is using a producer window
                 if (producerInfo.getWindowSize() > 0 || message.isResponseRequired()) {
+                    // copy the exchange state since the context will be modified while we are waiting
+                    // for space.
+                    final ProducerBrokerExchange producerExchangeCopy = producerExchange.copy(); 
                     synchronized (messagesWaitingForSpace) {
                         messagesWaitingForSpace.add(new Runnable() {
                             public void run() {
@@ -439,7 +442,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                                         broker.messageExpired(context, message);
                                         destinationStatistics.getExpired().increment();
                                     } else {
-                                        doMessageSend(producerExchange, message);
+                                        doMessageSend(producerExchangeCopy, message);
                                     }
     
                                     if (sendProducerAck) {
