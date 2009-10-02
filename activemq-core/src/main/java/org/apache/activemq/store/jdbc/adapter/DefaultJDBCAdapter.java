@@ -738,6 +738,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
                         this.lastRecoveredMessagesIds.add(id);
                     } else {
                         LOG.debug("Stopped recover next messages");
+                        break;
                     }
                 }
             } else {
@@ -753,6 +754,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
                         this.lastRecoveredMessagesIds.add(id);
                     } else {
                         LOG.debug("Stopped recover next messages");
+                        break;
                     }
                 }
             }

@@ -40,6 +40,7 @@ public class ConsumerThread extends Thread {
 	private boolean running;
 	private Log log = LogFactory.getLog(ConsumerThread.class);
 	private int numberOfQueues;
+	private String consumerName;
 	
 	@Override
 	public void run() {		
@@ -69,7 +70,7 @@ public class ConsumerThread extends Thread {
 	}
 
 	private DefaultMessageListenerContainer createContainer() {
-		Random generator = new Random();
+		Random generator = new Random(consumerName.hashCode());
 		int queueSuffix = generator.nextInt(numberOfQueues);
 		
 		
@@ -94,6 +95,7 @@ public class ConsumerThread extends Thread {
 		}
 		*/
 		container.afterPropertiesSet();
+		log.info("subscribing to " + destination + queueSuffix);
 		return container;
 	}
 		
@@ -124,6 +126,11 @@ public class ConsumerThread extends Thread {
 	
 	public int getNumberOfQueues() {
 		return this.numberOfQueues;
+	}
+	
+
+	public void setConsumerName(String name) {
+		this.consumerName = name;
 	}
 
 	/**

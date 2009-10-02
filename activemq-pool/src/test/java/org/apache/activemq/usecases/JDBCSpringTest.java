@@ -36,9 +36,9 @@ public class JDBCSpringTest extends TestCase {
 	
 	private static Log log = LogFactory.getLog(JDBCSpringTest.class);
 	
-	  int numberOfConsumerThreads = 50;
-      int numberOfProducerThreads = 50;
-      int numberOfMessages = 100;
+      int numberOfConsumerThreads = 20;
+      int numberOfProducerThreads = 20;
+      int numberOfMessages = 50;
       int numberOfQueues = 5;
       String url = "tcp://localhost:61616";
 	
@@ -46,7 +46,6 @@ public class JDBCSpringTest extends TestCase {
       
     public void setUp() throws Exception {
     	broker = BrokerFactory.createBroker("xbean:activemq-spring-jdbc.xml");
-    	//broker.deleteAllMessages();
     	broker.start();
     	broker.waitUntilStarted();
     }
@@ -87,7 +86,7 @@ public class JDBCSpringTest extends TestCase {
 			thread.setMessage(twoKbMessage);
 			thread.setNumberOfMessagesToSend(numberOfMessages);
 			thread.setNumberOfQueues(numberOfQueues);
-			thread.setQueuePrefix("DEV-1786.queue.");
+			thread.setQueuePrefix("AMQ-2436.queue.");
 			thread.setConnectionFactory(connectionFactory);
 			thread.setSendDelay(100);
 			ProducerThreads.add(thread);
@@ -100,10 +99,11 @@ public class JDBCSpringTest extends TestCase {
 			thread.setMessageDrivenPojo(mdp1);
 			thread.setConcurrentConsumers(1);
 			thread.setConnectionFactory(connectionFactory);
-			thread.setDestination("DEV-1786.queue.");
+			thread.setDestination("AMQ-2436.queue.");
 			thread.setPubSubDomain(false);
 			thread.setSessionTransacted(true);
 			thread.setNumberOfQueues(numberOfQueues);
+			thread.setConsumerName("consumer" + i);
 			ConsumerThreads.add(thread);
 			thread.start();
 			
@@ -121,6 +121,7 @@ public class JDBCSpringTest extends TestCase {
 		
 		boolean finished = false;	
 		int retry = 0;
+		int previous = 0;
 		while (!finished) {
                     
 			int totalMessages = 0;	
@@ -128,8 +129,17 @@ public class JDBCSpringTest extends TestCase {
 			for (Thread thread : ConsumerThreads) {
 				totalMessages += ((ConsumerThread)thread).getMessageDrivenPojo().getMessageCount();
 			}
+			log.info(totalMessages + " received so far...");
+			if (totalMessages != 0 && previous == totalMessages) {
+				for (Thread thread : ConsumerThreads) {
+					((ConsumerThread)thread).setRun(false);
+				}
+				Thread.sleep(3000);
+				fail("Received " + totalMessages + ", expected " + (numberOfMessages * numberOfProducerThreads));
+			}
+			previous = totalMessages;
 			
-			if (totalMessages == (numberOfMessages * numberOfProducerThreads)) {
+			if (totalMessages >= (numberOfMessages * numberOfProducerThreads)) {
 				finished = true;
 				log.info("Received all " + totalMessages + " messages. Finishing.");
 				
@@ -141,11 +151,7 @@ public class JDBCSpringTest extends TestCase {
 				}
 
 			} else {
-				if (retry == 10) {
-					fail("Received " + totalMessages + ", expected " + (numberOfMessages * numberOfProducerThreads));
-				}
 				Thread.sleep(10000);
-				log.info(totalMessages + " received so far...");
 			}
 		}
 	}	

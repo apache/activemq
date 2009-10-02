@@ -23,16 +23,27 @@
   http://activemq.apache.org/schema/core http://activemq.apache.org/schema/core/activemq-core.xsd   
   http://activemq.apache.org/camel/schema/spring http://activemq.apache.org/camel/schema/spring/camel-spring.xsd">
 
-    <broker xmlns="http://activemq.apache.org/schema/core" brokerName="localhost" dataDirectory="target/" useJmx="false">
+    <broker xmlns="http://activemq.apache.org/schema/core" brokerName="localhost" dataDirectory="target/" useJmx="false" deleteAllMessagesOnStartup="true">
          
         <persistenceAdapter>
-            <jdbcPersistenceAdapter dataSource="#derby-ds" dataDirectory="traget/"/>
+            <jdbcPersistenceAdapter dataSource="#derby-ds" dataDirectory="target/"/>
         </persistenceAdapter>
+        
+        <destinationPolicy>
+            <policyMap>
+                <policyEntries>
+                    <policyEntry queue=">" memoryLimit="10240"/>
+                    <policyEntry topic=">" memoryLimit="10240">
+                    </policyEntry>
+                </policyEntries>
+            </policyMap>
+        </destinationPolicy>
+        
         
         <systemUsage>
             <systemUsage>
                 <memoryUsage>
-                    <memoryUsage limit="20 mb"/>
+                    <memoryUsage limit="102400"/>
                 </memoryUsage>
                 <storeUsage>
                     <storeUsage limit="1 gb" name="foo"/>
