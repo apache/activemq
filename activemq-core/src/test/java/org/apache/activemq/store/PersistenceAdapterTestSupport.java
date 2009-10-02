@@ -54,15 +54,21 @@ abstract public class PersistenceAdapterTestSupport extends TestCase {
 
         
         MessageStore ms = pa.createQueueMessageStore(new ActiveMQQueue("TEST"));
+        ConnectionContext context = new ConnectionContext();
 
         ActiveMQTextMessage message = new ActiveMQTextMessage();
         message.setText("test");
-        message.setMessageId(new MessageId("ID:localhost-56913-1254499826208-0:0:1:1:1"));
-        ConnectionContext context = new ConnectionContext();
-
+        MessageId messageId = new MessageId("ID:localhost-56913-1254499826208-0:0:1:1:1");
+        messageId.setBrokerSequenceId(1);
+        message.setMessageId(messageId);
         ms.addMessage(context, message);
 
         // here comes the dup...
+        message = new ActiveMQTextMessage();
+        message.setText("test");
+        messageId = new MessageId("ID:localhost-56913-1254499826208-0:0:1:1:1");
+        messageId.setBrokerSequenceId(2);
+        message.setMessageId(messageId);
         ms.addMessage(context, message);
 
         final AtomicInteger recovered = new AtomicInteger();
@@ -85,7 +91,6 @@ abstract public class PersistenceAdapterTestSupport extends TestCase {
                 return true;
             }
         });
-        
         assertEquals(1, recovered.get());
 
     }
