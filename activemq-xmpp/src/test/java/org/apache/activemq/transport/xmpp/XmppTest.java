@@ -19,8 +19,11 @@ package org.apache.activemq.transport.xmpp;
 import junit.framework.TestCase;
 import junit.textui.TestRunner;
 import org.jivesoftware.smack.Chat;
+import org.jivesoftware.smack.ConnectionConfiguration;
+import org.jivesoftware.smack.MessageListener;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
+import org.jivesoftware.smack.packet.Message;
 
 /**
  * @version $Revision$
@@ -37,21 +40,27 @@ public class XmppTest extends TestCase {
     }
 
     public void testConnect() throws Exception {
-        // ConnectionConfiguration config = new
-        // ConnectionConfiguration("localhost", 61222);
+        ConnectionConfiguration config = new
+            ConnectionConfiguration("localhost", 61222);
         // config.setDebuggerEnabled(true);
 
         try {
             // SmackConfiguration.setPacketReplyTimeout(1000);
-            // XMPPConnection con = new XMPPConnection(config);
-            XMPPConnection con = new XMPPConnection("localhost", 61222);
+            XMPPConnection con = new XMPPConnection(config);
+            con.connect(); 
             con.login("amq-user", "amq-pwd");
-            Chat chat = con.createChat("test@localhost");
+            Chat chat = con.getChatManager().createChat("test@localhost",
+                new MessageListener() {
+                    public void processMessage(Chat chat, Message message) {
+                        //
+                    }
+                });
             for (int i = 0; i < 10; i++) {
                 System.out.println("Sending message: " + i);
                 chat.sendMessage("Hello from Message: " + i);
             }
             System.out.println("Sent all messages!");
+            con.disconnect();
         } catch (XMPPException e) {
             if (block) {
                 System.out.println("Caught: " + e);
