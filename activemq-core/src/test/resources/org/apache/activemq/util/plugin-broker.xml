@@ -28,7 +28,7 @@
       <!-- lets enable detailed logging in the broker but ignore ConnectionEvents -->
       <loggingBrokerPlugin logAll="true" logConnectionEvents="false"/>
       
-      <timeStampingBrokerPlugin zeroExpirationOverride="1000" ttlCeiling="60000"/>
+      <timeStampingBrokerPlugin zeroExpirationOverride="1000" ttlCeiling="60000" futureOnly="true"/>
       
       <traceBrokerPathPlugin/>
       
