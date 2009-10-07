@@ -25,6 +25,7 @@ import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.ProducerBrokerExchange;
 import org.apache.activemq.broker.region.policy.DeadLetterStrategy;
 import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageDispatchNotification;
@@ -471,13 +472,14 @@ public abstract class BaseDestination implements Destination {
      * Provides a hook to allow messages with no consumer to be processed in
      * some way - such as to send to a dead letter queue or something..
      */
-    protected void onMessageWithNoConsumers(ConnectionContext context, Message message) throws Exception { 	
-    	if (!message.isPersistent()) {
+    protected void onMessageWithNoConsumers(ConnectionContext context, Message msg) throws Exception {
+    	if (!msg.isPersistent()) {
             if (isSendAdvisoryIfNoConsumers()) {
                 // allow messages with no consumers to be dispatched to a dead
                 // letter queue
                 if (destination.isQueue() || !AdvisorySupport.isAdvisoryTopic(destination)) {
 
+                    Message message = msg.copy();
                     // The original destination and transaction id do not get
                     // filled when the message is first sent,
                     // it is only populated if the message is routed to another
