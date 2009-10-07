@@ -16,14 +16,23 @@
  */
 package org.apache.activemq.broker.policy;
 
+import javax.jms.DeliveryMode;
 import javax.jms.Destination;
 import javax.jms.Message;
+import javax.jms.MessageConsumer;
+import javax.jms.MessageProducer;
+import javax.jms.Session;
+import javax.jms.TextMessage;
+import javax.jms.Topic;
 
+import org.apache.activemq.ActiveMQConnection;
+import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.command.ActiveMQQueue;
 
 /**
  * @version $Revision$
@@ -45,6 +54,38 @@ public class NoConsumerDeadLetterTest extends DeadLetterTestSupport {
             Message msg = dlqConsumer.receive(1000);
             assertNotNull("Should be a message for loop: " + i, msg);
         }
+    }
+    
+    public void testConsumerReceivesMessages() throws Exception {
+    	this.topic = false;
+        ActiveMQConnectionFactory factory = (ActiveMQConnectionFactory)createConnectionFactory();
+        connection = (ActiveMQConnection)factory.createConnection();
+        connection.start();
+
+        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        MessageProducer producer = session.createProducer(getDestination());
+        producer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
+   
+        Topic advisoryTopic = AdvisorySupport.getNoQueueConsumersAdvisoryTopic(getDestination());
+        MessageConsumer advisoryConsumer = session.createConsumer(advisoryTopic);
+        
+        TextMessage msg = session.createTextMessage("Message: x");
+        producer.send(msg);
+        
+        Message advisoryMessage = advisoryConsumer.receive(1000);
+        assertNotNull("Advisory message not received", advisoryMessage);
+        
+        Thread.sleep(1000);
+        
+        factory = (ActiveMQConnectionFactory)createConnectionFactory();
+        connection = (ActiveMQConnection)factory.createConnection();
+        connection.start();
+        
+        session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        
+        MessageConsumer consumer = session.createConsumer(getDestination());
+        Message received = consumer.receive(1000);
+        assertNotNull("Message not received", received);
     }
 
     protected BrokerService createBroker() throws Exception {
