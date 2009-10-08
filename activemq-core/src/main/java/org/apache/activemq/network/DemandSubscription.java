@@ -18,10 +18,13 @@ package org.apache.activemq.network;
 
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.command.ConsumerInfo;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * Represents a network bridge interface
@@ -29,10 +32,13 @@ import org.apache.activemq.command.ConsumerInfo;
  * @version $Revision: 1.1 $
  */
 public class DemandSubscription {
+    private static final Log LOG = LogFactory.getLog(DemandSubscription.class);
+    
     private final ConsumerInfo remoteInfo;
     private final ConsumerInfo localInfo;
     private Set<ConsumerId> remoteSubsIds = new CopyOnWriteArraySet<ConsumerId>();
     private AtomicInteger dispatched = new AtomicInteger(0);
+    private AtomicBoolean activeWaiter = new AtomicBoolean();
 
     DemandSubscription(ConsumerInfo info) {
         remoteInfo = info;
@@ -69,27 +75,6 @@ public class DemandSubscription {
     }
 
     /**
-     * @return Returns the dispatched.
-     */
-    public int getDispatched() {
-        return dispatched.get();
-    }
-
-    /**
-     * @param dispatched The dispatched to set.
-     */
-    public void setDispatched(int dispatched) {
-        this.dispatched.set(dispatched);
-    }
-
-    /**
-     * @return dispatched count after incremented
-     */
-    public int incrementDispatched() {
-        return dispatched.incrementAndGet();
-    }
-
-    /**
      * @return Returns the localInfo.
      */
     public ConsumerInfo getLocalInfo() {
@@ -102,5 +87,37 @@ public class DemandSubscription {
      */
     public ConsumerInfo getRemoteInfo() {
         return remoteInfo;
-    }    
+    }
+
+    public void waitForCompletion() {
+        if (dispatched.get() > 0) {
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Waiting for completion for sub: " + localInfo.getConsumerId() + ", dispatched: " + this.dispatched.get());
+            }
+            activeWaiter.set(true);
+            if (dispatched.get() > 0) {
+                synchronized (activeWaiter) {
+                    try {
+                        activeWaiter.wait();
+                    } catch (InterruptedException ignored) {
+                    }
+                }
+                if (this.dispatched.get() > 0) {
+                    LOG.warn("demand sub interrupted or timedout while waiting for outstanding responses, expect potentially " + this.dispatched.get() + " duplicate deliveried");
+                }
+            }
+        }
+    }
+
+    public void decrementOutstandingResponses() {
+        if (dispatched.decrementAndGet() == 0 && activeWaiter.get()) {
+            synchronized(activeWaiter) {
+                activeWaiter.notifyAll();
+            }
+        }
+    }
+
+    public void incrementOutstandingResponses() {
+        dispatched.incrementAndGet(); 
+    }
 }

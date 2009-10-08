@@ -53,10 +53,7 @@
     <commons-logging-version>1.1</commons-logging-version>
     <commons-pool-version>1.4</commons-pool-version>
     <commons-primitives-version>1.0</commons-primitives-version>
-    <directory-asn1-version>0.3.2</directory-asn1-version>
-    <directory-kerboros-version>0.5</directory-kerboros-version>
-    <directory-mina-version>0.7.3</directory-mina-version>
-    <directory-version>1.5.4</directory-version>
+    <directory-version>1.5.5</directory-version>
     <geronimo-version>1.0</geronimo-version>
     <howl-version>0.1.8</howl-version>
     <hsqldb-version>1.7.2.2</hsqldb-version>
@@ -64,7 +61,7 @@
     <jetty-version>6.1.9</jetty-version>
     <jettison-version>1.1</jettison-version>
     <jmock-version>2.5.1</jmock-version>
-    <junit-version>4.4</junit-version>
+    <junit-version>4.5</junit-version>
     <jxta-version>2.0</jxta-version>
     <log4j-version>1.2.14</log4j-version>
     <nlog4j-version>1.5.2</nlog4j-version>

@@ -58,6 +58,12 @@ public class TimeStampingBrokerPlugin extends BrokerPluginSupport {
     * the expiration date (in Milliseconds).  
     */
     long ttlCeiling = 0;
+    
+    /**
+     * If true, the plugin will not update timestamp to past values
+     * False by default
+     */
+    boolean futureOnly = false;
 
     /** 
     * setter method for zeroExpirationOverride
@@ -75,13 +81,16 @@ public class TimeStampingBrokerPlugin extends BrokerPluginSupport {
         this.ttlCeiling = ttlCeiling;
     }
 
-    public void send(ProducerBrokerExchange producerExchange, Message message) throws Exception {
+	public void setFutureOnly(boolean futureOnly) {
+		this.futureOnly = futureOnly;
+	}
+
+	public void send(ProducerBrokerExchange producerExchange, Message message) throws Exception {
         if (message.getTimestamp() > 0
             && (message.getBrokerPath() == null || message.getBrokerPath().length == 0)) {
             // timestamp not been disabled and has not passed through a network
             long oldExpiration = message.getExpiration();
             long newTimeStamp = System.currentTimeMillis();
-            message.setTimestamp(newTimeStamp);
             long timeToLive = zeroExpirationOverride;
             if (oldExpiration > 0) {
                 long oldTimestamp = message.getTimestamp();
@@ -91,9 +100,13 @@ public class TimeStampingBrokerPlugin extends BrokerPluginSupport {
                 timeToLive = ttlCeiling;
             }
             long expiration = timeToLive + newTimeStamp;
-            if (timeToLive > 0 && expiration > 0) {
-                message.setExpiration(expiration);
-            }
+			//In the scenario that the Broker is behind the clients we never want to set the Timestamp and Expiration in the past 
+			if(!futureOnly || (expiration > oldExpiration)) {
+				if (timeToLive > 0 && expiration > 0) {
+					message.setExpiration(expiration);
+				}
+				message.setTimestamp(newTimeStamp);
+			}
         }
         super.send(producerExchange, message);
     }

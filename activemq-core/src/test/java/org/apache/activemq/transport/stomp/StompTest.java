@@ -85,8 +85,9 @@ public class StompTest extends CombinationTestSupport {
         + "}}";
 
     protected void setUp() throws Exception {
-        // The order of the entries is different when using the ibm jdk.
-        if (System.getProperty("java.vendor").equals("IBM Corporation")) {
+        // The order of the entries is different when using ibm jdk 5.
+        if (System.getProperty("java.vendor").equals("IBM Corporation")
+            && System.getProperty("java.version").startsWith("1.5")) {
             xmlMap = "<map>\n" 
                 + "  <entry>\n" 
                 + "    <string>city</string>\n"

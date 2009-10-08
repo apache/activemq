@@ -623,13 +623,24 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
         }
     }
 
-    protected void removeSubscription(DemandSubscription sub) throws IOException {
+    protected void removeSubscription(final DemandSubscription sub) throws IOException {
         if (sub != null) {
             if (LOG.isDebugEnabled()) {
                 LOG.debug(configuration.getBrokerName() + " remove local subscription for remote " + sub.getRemoteInfo().getConsumerId());
             }
-            localBroker.oneway(sub.getLocalInfo().createRemoveCommand());
             subscriptionMapByLocalId.remove(sub.getLocalInfo().getConsumerId());
+            
+            // continue removal in separate thread to free up this thread for outstanding responses
+            ASYNC_TASKS.execute(new Runnable() {
+                public void run() {
+                    sub.waitForCompletion();
+                    try {
+                        localBroker.oneway(sub.getLocalInfo().createRemoveCommand());
+                    } catch (IOException e) {
+                        LOG.warn("failed to deliver remove command for local subscription, for remote " + sub.getRemoteInfo().getConsumerId(), e);
+                    }
+                }
+            });
         }
     }
 
@@ -652,9 +663,8 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                 if (command.isMessageDispatch()) {
                     enqueueCounter.incrementAndGet();
                     final MessageDispatch md = (MessageDispatch)command;   
-                    DemandSubscription sub = subscriptionMapByLocalId.get(md.getConsumerId());
+                    final DemandSubscription sub = subscriptionMapByLocalId.get(md.getConsumerId());
                     if (sub != null && md.getMessage()!=null) {
-                    	
                         // See if this consumer's brokerPath tells us it came from the broker at the other end
                         // of the bridge. I think we should be making this decision based on the message's
                         // broker bread crumbs and not the consumer's? However, the message's broker bread
@@ -685,8 +695,8 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                                 }
                             }
                             localBroker.oneway(new MessageAck(md, MessageAck.INDIVIDUAL_ACK_TYPE, 1));
-                            dequeueCounter.incrementAndGet();                          
-
+                            dequeueCounter.incrementAndGet();
+                            
                         } else {
 
                             // The message was not sent using async send, so we
@@ -703,16 +713,20 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                                         } else {
                                             localBroker.oneway(new MessageAck(md, MessageAck.INDIVIDUAL_ACK_TYPE, 1));
                                             dequeueCounter.incrementAndGet();
+                                           
                                         }
                                     } catch (IOException e) {
                                         serviceLocalException(e);
+                                    } finally {
+                                        sub.decrementOutstandingResponses();
                                     }
                                 }
                             };
 
                             remoteBroker.asyncRequest(message, callback);
+                            sub.incrementOutstandingResponses();
                         }
-
+                        
                     } else {
                         if (LOG.isDebugEnabled()) {
                             LOG.debug("No subscription registered with this network bridge for consumerId " + md.getConsumerId() + " for message: " + md.getMessage());

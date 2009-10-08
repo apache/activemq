@@ -357,20 +357,12 @@ public abstract class AbstractRegion implements Region {
     public void acknowledge(ConsumerBrokerExchange consumerExchange, MessageAck ack) throws Exception {
         Subscription sub = consumerExchange.getSubscription();
         if (sub == null) {
-            sub = subscriptions.get(ack.getConsumerId());
-            
+            sub = subscriptions.get(ack.getConsumerId());        
             if (sub == null) {
-                //networked subscriptions are going to acknowledge in flight messages 
-                //on behalf a subscription that is no more ...
-                if (!consumerExchange.getConnectionContext().isNetworkConnection()
-                     && !consumerExchange.getConnectionContext()
-                                .isInRecoveryMode()) {
-                    throw new IllegalArgumentException(
-                            "The subscription does not exist: "
-                                    + ack.getConsumerId());
-                } else {
-                    return;
-                }
+                LOG.warn("Ack for non existent subscription, ack:" + ack); 
+                throw new IllegalArgumentException(
+                        "The subscription does not exist: "
+                        + ack.getConsumerId());
             }
             consumerExchange.setSubscription(sub);
         }
