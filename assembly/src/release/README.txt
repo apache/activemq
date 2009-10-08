@@ -8,11 +8,11 @@ Getting Started
 To help you get started, try the following links:-
 
 Getting Started
-http://activemq.apache.org/getting-started.html
+http://activemq.apache.org/version-5-getting-started.html
 
 Building
-http://activemq.apache.org/getting-started.html#GettingStarted-WindowsSourceInstallation
-http://activemq.apache.org/getting-started.html#GettingStarted-UnixSourceInstallation
+http://activemq.apache.org/version-5-getting-started.html#GettingStarted-WindowsSourceInstallation
+http://activemq.apache.org/version-5-getting-started.html#GettingStarted-UnixSourceInstallation
 
 Examples
 http://activemq.apache.org/examples.html
