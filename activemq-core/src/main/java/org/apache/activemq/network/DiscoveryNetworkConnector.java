@@ -48,7 +48,7 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
     private static final Log LOG = LogFactory.getLog(DiscoveryNetworkConnector.class);
 
     private DiscoveryAgent discoveryAgent;
-    private ConcurrentHashMap<URI, NetworkBridge> bridges = new ConcurrentHashMap<URI, NetworkBridge>();
+    
     private Map<String, String> parameters;
     
     public DiscoveryNetworkConnector() {
