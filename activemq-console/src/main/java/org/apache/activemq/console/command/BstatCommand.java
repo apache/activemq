@@ -73,4 +73,11 @@ public class BstatCommand extends QueryCommand {
         super.runTask(queryTokens);
     }
 
+    /**
+     * Print the help messages for the browse command
+     */
+    protected void printHelp() {
+        context.printHelp(helpFile);
+    }
+
 }
