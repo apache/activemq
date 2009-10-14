@@ -17,13 +17,16 @@
 package org.apache.activemq.transport.stomp;
 
 import java.io.IOException;
+import java.security.cert.X509Certificate;
 
 import javax.jms.JMSException;
 
 import org.apache.activemq.command.Command;
+
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportFilter;
 import org.apache.activemq.transport.TransportListener;
+import org.apache.activemq.transport.tcp.SslTransport;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -64,6 +67,7 @@ public class StompTransportFilter extends TransportFilter {
             if (trace) {
                 LOG.trace("Received: \n" + command);
             }
+           
             protocolConverter.onStompCommand((StompFrame)command);
         } catch (IOException e) {
             onException(e);
@@ -93,6 +97,17 @@ public class StompTransportFilter extends TransportFilter {
         return frameTranslator;
     }
 
+    public X509Certificate[] getPeerCertificates() {
+    	if(next instanceof SslTransport) {    	
+    		X509Certificate[] peerCerts = ((SslTransport)next).getPeerCertificates();
+    		if (trace && peerCerts != null) {
+                LOG.debug("Peer Identity has been verified\n");
+            }
+    		return peerCerts;
+    	}
+    	return null;
+    }
+    
     public boolean isTrace() {
         return trace;
     }

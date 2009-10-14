@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one or more
+  contributor license agreements.  See the NOTICE file distributed with
+  this work for additional information regarding copyright ownership.
+  The ASF licenses this file to You under the Apache License, Version 2.0
+  (the "License"); you may not use this file except in compliance with
+  the License.  You may obtain a copy of the License at
+  
+  http://www.apache.org/licenses/LICENSE-2.0
+  
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+
+<!-- this file can only be parsed using the xbean-spring library -->
+<!-- START SNIPPET: example -->
+<beans 
+  xmlns="http://www.springframework.org/schema/beans" 
+  xmlns:amq="http://activemq.apache.org/schema/core"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.0.xsd
+  http://activemq.apache.org/schema/core http://activemq.apache.org/schema/core/activemq-core.xsd">
+  
+  <bean class="org.apache.activemq.util.XStreamFactoryBean" name="xstream">
+        <property name="annotatedClass"><value>org.apache.activemq.transport.stomp.SamplePojo</value></property>
+  </bean>
+  
+  <!--  lets create an embedded ActiveMQ Broker -->
+  <amq:broker useJmx="true" persistent="false" start="false">
+
+    <amq:sslContext>
+      <amq:sslContext 
+      		keyStore="server.keystore" keyStorePassword="password"
+      		trustStore="client.keystore" trustStorePassword="password"/>
+    </amq:sslContext>
+    
+    <amq:transportConnectors>
+      <amq:transportConnector name="stomp+ssl"   uri="stomp+ssl://localhost:61612?needClientAuth=true"/>
+      <amq:transportConnector name="ssl"   uri="ssl://localhost:61617?needClientAuth=true"/>
+    </amq:transportConnectors>
+    
+     <amq:plugins>
+		<amq:jaasCertificateAuthenticationPlugin configuration="cert-login"/>
+		
+		<!--  lets configure a destination based authorization mechanism -->
+        <amq:authorizationPlugin>
+			<amq:map>
+			  <amq:authorizationMap>
+			    <amq:authorizationEntries>
+			      <amq:authorizationEntry queue=">" read="admins" write="admins" admin="admins" />
+			      <amq:authorizationEntry queue="USERS.>" read="users" write="users" admin="users" />
+			      <amq:authorizationEntry queue="GUEST.>" read="guests" write="guests,users" admin="guests,users" />
+			      
+			      <amq:authorizationEntry topic=">" read="admins" write="admins" admin="admins" />
+			      <amq:authorizationEntry topic="USERS.>" read="users" write="users" admin="users" />
+			      <amq:authorizationEntry topic="GUEST.>" read="guests" write="guests,users" admin="guests,users" />
+			      
+			      <amq:authorizationEntry topic="ActiveMQ.Advisory.>" read="guests,users" write="guests,users" admin="guests,users"/>
+			    </amq:authorizationEntries>
+			    
+			    <!-- let's assign roles to temporary destinations. comment this entry if we don't want any roles assigned to temp destinations  -->
+			    <amq:tempDestinationAuthorizationEntry>  
+			      <amq:tempDestinationAuthorizationEntry read="tempDestinationAdmins" write="tempDestinationAdmins" admin="tempDestinationAdmins"/>
+			   </amq:tempDestinationAuthorizationEntry>               
+			  </amq:authorizationMap>
+			</amq:map>
+      </amq:authorizationPlugin>
+	</amq:plugins>
+	
+  </amq:broker>
+  
+</beans>

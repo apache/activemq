@@ -50,6 +50,8 @@ public class StompTest extends CombinationTestSupport {
 
     protected String bindAddress = "stomp://localhost:61613";
     protected String confUri = "xbean:org/apache/activemq/transport/stomp/stomp-auth-broker.xml";
+    protected String jmsUri = "vm://localhost";
+
 
     private BrokerService broker;
     private StompConnection stompConnection = new StompConnection();
@@ -110,7 +112,7 @@ public class StompTest extends CombinationTestSupport {
 
         stompConnect();
 
-        ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory("vm://localhost");
+        ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory(jmsUri);
         connection = cf.createConnection("system", "manager");
         session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         queue = new ActiveMQQueue(getQueueName());
@@ -131,9 +133,14 @@ public class StompTest extends CombinationTestSupport {
     }
 
     protected void tearDown() throws Exception {
-        connection.close();
-        stompDisconnect();
-        broker.stop();
+    	try {
+	        connection.close();
+	        stompDisconnect();
+    	} catch(Exception e) {
+    		// Some tests explicitly disconnect from stomp so can ignore
+    	} finally {
+	        broker.stop();
+    	}
     }
 
     private void stompDisconnect() throws IOException {

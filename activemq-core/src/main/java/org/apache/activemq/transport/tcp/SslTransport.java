@@ -27,8 +27,8 @@ import javax.net.ssl.SSLSession;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 
-import org.apache.activemq.command.Command;
 import org.apache.activemq.command.ConnectionInfo;
+
 import org.apache.activemq.wireformat.WireFormat;
 
 /**
@@ -86,22 +86,28 @@ public class SslTransport extends TcpTransport {
         // now.
         if (command instanceof ConnectionInfo) {
             ConnectionInfo connectionInfo = (ConnectionInfo)command;
-
-            SSLSocket sslSocket = (SSLSocket)this.socket;
-
-            SSLSession sslSession = sslSocket.getSession();
-
-            X509Certificate[] clientCertChain;
-            try {
-                clientCertChain = (X509Certificate[])sslSession.getPeerCertificates();
-            } catch (SSLPeerUnverifiedException e) {
-                clientCertChain = null;
-            }
-
-            connectionInfo.setTransportContext(clientCertChain);
-        }
-
+            connectionInfo.setTransportContext(getPeerCertificates());
+        } 
         super.doConsume(command);
+    }
+    
+    /**
+     * @return peer certificate chain associated with the ssl socket
+     */
+    public X509Certificate[] getPeerCertificates() {
+    	
+        SSLSocket sslSocket = (SSLSocket)this.socket;
+
+        SSLSession sslSession = sslSocket.getSession();
+
+        X509Certificate[] clientCertChain;
+        try {
+            clientCertChain = (X509Certificate[])sslSession.getPeerCertificates();
+        } catch (SSLPeerUnverifiedException e) {
+        	clientCertChain = null;
+        }
+    	
+        return clientCertChain;
     }
 
     /**
