@@ -27,6 +27,7 @@ import javax.jms.Session;
 
 import org.apache.activemq.JmsMultipleBrokersTestSupport;
 import org.apache.activemq.broker.jmx.BrokerView;
+import org.apache.activemq.util.Wait;
 
 public class AMQ2439Test extends JmsMultipleBrokersTestSupport {
     Destination dest;
@@ -39,9 +40,14 @@ public class AMQ2439Test extends JmsMultipleBrokersTestSupport {
     }
     
     private void validateQueueStats() throws Exception {
-       BrokerView brokerView = brokers.get("BrokerA").broker.getAdminView();
+       final BrokerView brokerView = brokers.get("BrokerA").broker.getAdminView();
        assertEquals("enequeue is correct", 1000, brokerView.getTotalEnqueueCount());
-       assertEquals("dequeue is correct", 1000, brokerView.getTotalDequeueCount());
+       
+       assertTrue("dequeue is correct", Wait.waitFor(new Wait.Condition() {
+           public boolean isSatisified() throws Exception {
+               return 1000 == brokerView.getTotalDequeueCount();
+           }
+       }));
     }
 
     protected int receiveExactMessages(String brokerName, int msgCount) throws Exception {
