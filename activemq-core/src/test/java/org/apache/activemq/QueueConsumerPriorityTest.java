@@ -79,9 +79,9 @@ public class QueueConsumerPriorityTest extends TestCase {
             Message msg = senderSession.createTextMessage("test");
             for (int i =0; i< 10000;i++) {
                 producer.send(msg);
-                Assert.assertNotNull("null on iteration: " + i, highConsumer.receive(200));
+                Assert.assertNotNull("null on iteration: " + i, highConsumer.receive(500));
             }
-            Assert.assertNull( lowConsumer.receive(500));
+            Assert.assertNull(lowConsumer.receive(2000));
             
            
         } finally {
