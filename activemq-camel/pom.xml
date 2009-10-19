@@ -88,6 +88,12 @@
       <artifactId>camel-web</artifactId>
       <classifier>classes</classifier>
       <version>${camel-version}</version>
+      <exclusions>
+      	<exclusion>
+      		<artifactId>spring</artifactId>
+      		<groupId>org.springframework</groupId>
+      	</exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>${pom.groupId}</groupId>
