@@ -102,7 +102,7 @@ public class AMQ2021Test extends TestCase implements ExceptionListener, Uncaught
             c1.start();
         }
         
-        assertTrue(started.await(5, TimeUnit.SECONDS));
+        assertTrue(started.await(10, TimeUnit.SECONDS));
         
         Thread producer = new Thread() {
             @Override

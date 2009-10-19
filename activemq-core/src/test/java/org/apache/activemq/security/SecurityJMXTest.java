@@ -48,16 +48,16 @@ public class SecurityJMXTest extends TestCase {
 	public void tearDown() throws Exception {
 	}
 
-	public void testMoveMessages() throws Exception {
-		JMXServiceURL url = new JMXServiceURL("service:jmx:rmi:///jndi/rmi://localhost:1099/jmxrmi");
-		JMXConnector connector = JMXConnectorFactory.connect(url, null);
-		connector.connect();
-		MBeanServerConnection connection = connector.getMBeanServerConnection();
-		ObjectName name = new ObjectName("org.apache.activemq:BrokerName=localhost,Type=Queue,Destination=TEST.Q");
-		QueueViewMBean queueMbean = (QueueViewMBean) MBeanServerInvocationHandler.newProxyInstance(connection, name, QueueViewMBean.class, true);
-		String msgId = queueMbean.sendTextMessage("test", "system", "manager");
-		queueMbean.moveMessageTo(msgId, "TEST1.Q");
-	}
+    public void testMoveMessages() throws Exception {
+        JMXServiceURL url = new JMXServiceURL("service:jmx:rmi:///jndi/rmi://localhost:1199/jmxrmi");
+        JMXConnector connector = JMXConnectorFactory.connect(url, null);
+        connector.connect();
+        MBeanServerConnection connection = connector.getMBeanServerConnection();
+        ObjectName name = new ObjectName("org.apache.activemq:BrokerName=localhost,Type=Queue,Destination=TEST.Q");
+        QueueViewMBean queueMbean = (QueueViewMBean) MBeanServerInvocationHandler.newProxyInstance(connection, name, QueueViewMBean.class, true);
+        String msgId = queueMbean.sendTextMessage("test", "system", "manager");
+        queueMbean.moveMessageTo(msgId, "TEST1.Q");
+    }
 	
     protected BrokerService createBroker() throws Exception {
         return createBroker("org/apache/activemq/security/simple-auth-broker.xml");
