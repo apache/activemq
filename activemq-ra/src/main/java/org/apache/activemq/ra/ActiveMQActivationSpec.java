@@ -169,7 +169,7 @@ public class ActiveMQActivationSpec implements MessageActivationSpec, Serializab
             }
             return true;
         } catch (Throwable e) {
-            errorMessages.add("messageSelector not set to valid message selector: " + e.getMessage());
+            errorMessages.add("messageSelector not set to valid message selector: " + e);
             return false;
         }
     }
