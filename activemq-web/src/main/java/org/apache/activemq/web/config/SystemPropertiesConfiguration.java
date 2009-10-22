@@ -55,11 +55,11 @@ public class SystemPropertiesConfiguration extends AbstractConfiguration {
 	}
 
 	public String getJmxPassword() {
-		return System.getProperty(PROPERTY_JMX_USER);
+		return System.getProperty(PROPERTY_JMX_PASSWORD);
 	}
 
 	public String getJmxUser() {
-		return System.getProperty(PROPERTY_JMX_PASSWORD);
+		return System.getProperty(PROPERTY_JMX_USER);
 	}
 
 }
