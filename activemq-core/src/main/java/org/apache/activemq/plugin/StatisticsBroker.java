@@ -104,6 +104,7 @@ public class StatisticsBroker extends BrokerFilter {
                         statsMessage.setDouble("minEnqueueTime", stats.getProcessTime().getMinTime());
                         statsMessage.setLong("consumerCount", stats.getConsumers().getCount());
                         statsMessage.setLong("producerCount", stats.getProducers().getCount());
+                        statsMessage.setJMSCorrelationID(messageSend.getCorrelationId());
                         sendStats(producerExchange.getConnectionContext(), statsMessage, replyTo);
                     }
                 }
@@ -154,6 +155,7 @@ public class StatisticsBroker extends BrokerFilter {
                 File file = brokerService.getDataDirectoryFile();
                 answer = file != null ? file.getCanonicalPath() : "";
                 statsMessage.setString("dataDirectory", answer);
+                statsMessage.setJMSCorrelationID(messageSend.getCorrelationId());
                 sendStats(producerExchange.getConnectionContext(), statsMessage, replyTo);
             } else {
                 super.send(producerExchange, messageSend);
