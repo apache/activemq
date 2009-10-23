@@ -481,6 +481,8 @@
 
             <!-- https://issues.apache.org/activemq/browse/AMQ-2050 -->
             <exclude>**/ProxyConnectorTest.*</exclude>
+            <!-- test used only to simulate load on Stomp connector -->
+            <exclude>**/StompLoadTest.*</exclude>
             
           </excludes>
         </configuration>
