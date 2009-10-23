@@ -61,9 +61,9 @@ public class SimpleTopicTest extends TestCase {
      * @see junit.framework.TestCase#setUp()
      */
     protected void setUp() throws Exception {
-        //if (broker == null) {
-        //    broker = createBroker(bindAddress);
-        //}
+        if (broker == null) {
+            broker = createBroker(bindAddress);
+        }
         factory = createConnectionFactory(clientURI);
         Connection con = factory.createConnection();
         Session session = con.createSession(false, Session.AUTO_ACKNOWLEDGE);
