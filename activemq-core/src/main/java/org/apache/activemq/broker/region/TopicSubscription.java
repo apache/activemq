@@ -82,12 +82,9 @@ public class TopicSubscription extends AbstractSubscription {
 
     public void add(MessageReference node) throws Exception {
         enqueueCounter.incrementAndGet();
-        node.incrementReferenceCount();
         if (!isFull() && matched.isEmpty()  && !isSlave()) {
-            // if maximumPendingMessages is set we will only discard messages
-            // which
-            // have not been dispatched (i.e. we allow the prefetch buffer to be
-            // filled)
+            // if maximumPendingMessages is set we will only discard messages which
+            // have not been dispatched (i.e. we allow the prefetch buffer to be filled)
             dispatch(node);
             slowConsumer=false;
         } else {
@@ -402,6 +399,7 @@ public class TopicSubscription extends AbstractSubscription {
 
     private void dispatch(final MessageReference node) throws IOException {
         Message message = (Message)node;
+        node.incrementReferenceCount();
         // Make sure we can dispatch a message.
         MessageDispatch md = new MessageDispatch();
         md.setMessage(message);
