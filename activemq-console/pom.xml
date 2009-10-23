@@ -80,6 +80,22 @@
       <scope>test</scope>
     </dependency>
 
+    <dependency>
+      <groupId>velocity</groupId>
+      <artifactId>velocity</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>commons-collections</groupId>
+      <artifactId>commons-collections</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>net.sf.josql</groupId>
+      <artifactId>josql</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>net.sf.josql</groupId>
+      <artifactId>gentlyweb-utils</artifactId>
+    </dependency>
   </dependencies>
 
   <build>

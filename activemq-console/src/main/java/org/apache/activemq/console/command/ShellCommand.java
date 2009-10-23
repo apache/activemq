@@ -23,6 +23,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.apache.activemq.console.CommandContext;
+import org.apache.activemq.console.command.store.amq.AMQJournalToolCommand;
 import org.apache.activemq.console.formatter.CommandShellOutputFormatter;
 
 public class ShellCommand extends AbstractCommand {
@@ -41,10 +42,12 @@ public class ShellCommand extends AbstractCommand {
             "",
             "Tasks (default task is start):",
             "    start           - Creates and starts a broker using a configuration file, or a broker URI.",
+            "    create          - Creates a runnable broker instance in the specified path",
             "    stop            - Stops a running broker specified by the broker name.",
             "    list            - Lists all available brokers in the specified JMX context.",
             "    query           - Display selected broker component's attributes and statistics.",
             "    browse          - Display selected messages in a specified destination.",
+            "    journal-audit   - Allows you to view records stored in the persistent journal.",
             "",
             "Task Options (Options specific to each task):",
             "    --extdir <dir>  - Add the jar files in the directory to the classpath.",
@@ -106,6 +109,8 @@ public class ShellCommand extends AbstractCommand {
             String taskToken = (String)tokens.remove(0);
             if (taskToken.equals("start")) {
                 command = new StartCommand();
+            } else if (taskToken.equals("create")) {
+                command = new CreateCommand();
             } else if (taskToken.equals("stop")) {
                 command = new ShutdownCommand();
             } else if (taskToken.equals("list")) {
@@ -118,6 +123,8 @@ public class ShellCommand extends AbstractCommand {
                 command = new AmqBrowseCommand();
             } else if (taskToken.equals("purge")) {
                 command = new PurgeCommand();
+            } else if (taskToken.equals("journal-audit")) {
+                command = new AMQJournalToolCommand();
             } else if (taskToken.equals("help")) {
                 printHelp();
             } else {
@@ -134,7 +141,7 @@ public class ShellCommand extends AbstractCommand {
 
     }
 
-    /**
+	/**
      * Print the help messages for the browse command
      */
     protected void printHelp() {
