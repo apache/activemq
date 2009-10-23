@@ -43,7 +43,9 @@ public class TransactionContext {
     private PreparedStatement addMessageStatement;
     private PreparedStatement removedMessageStatement;
     private PreparedStatement updateLastAckStatement;
-
+    // a cheap dirty level that we can live with    
+    private int transactionIsolation = Connection.TRANSACTION_READ_UNCOMMITTED;
+    
     public TransactionContext(DataSource dataSource) {
         this.dataSource = dataSource;
     }
@@ -62,7 +64,7 @@ public class TransactionContext {
             }
 
             try {
-                connection.setTransactionIsolation(Connection.TRANSACTION_READ_UNCOMMITTED);
+                connection.setTransactionIsolation(transactionIsolation);
             } catch (Throwable e) {
             }
         }
@@ -222,6 +224,10 @@ public class TransactionContext {
 
     public void setRemovedMessageStatement(PreparedStatement removedMessageStatement) {
         this.removedMessageStatement = removedMessageStatement;
+    }
+    
+    public void setTransactionIsolation(int transactionIsolation) {
+        this.transactionIsolation = transactionIsolation;
     }
 
 }
