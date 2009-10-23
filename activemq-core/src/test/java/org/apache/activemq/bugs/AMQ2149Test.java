@@ -499,6 +499,9 @@ public class AMQ2149Test extends TestCase {
             }
         }
         assertTrue("No timeout waiting for senders/receivers to complete", System.currentTimeMillis() < expiry);
+        if (!exceptions.isEmpty()) {
+            exceptions.get(0).printStackTrace();
+        }
         assertTrue("No exceptions", exceptions.isEmpty());
     }
 

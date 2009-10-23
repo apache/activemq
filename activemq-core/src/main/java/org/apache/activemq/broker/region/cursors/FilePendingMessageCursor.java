@@ -138,8 +138,17 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
             node.decrementReferenceCount();
         }
         memoryList.clear();
+        destroyDiskList();
+    }
+
+    private void destroyDiskList() {
         if (!isDiskListEmpty()) {
-            getDiskList().clear();
+            Iterator<MessageReference> iterator = diskList.iterator();
+            while (iterator.hasNext()) {
+                iterator.next();
+                iterator.remove();
+            }
+            diskList.clear();
         }
     }
 
@@ -384,7 +393,7 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
                 diskList = store.getListContainer(name, "TopicSubscription", true);
                 diskList.setMarshaller(new CommandMarshaller(new OpenWireFormat()));
             } catch (IOException e) {
-                LOG.error("Caught an IO Exception getting the DiskList ",e);
+                LOG.error("Caught an IO Exception getting the DiskList " + name, e);
                 throw new RuntimeException(e);
             }
         }
