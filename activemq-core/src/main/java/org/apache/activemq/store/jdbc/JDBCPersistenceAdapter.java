@@ -84,6 +84,7 @@ public class JDBCPersistenceAdapter extends DataSourceSupport implements Persist
     private DatabaseLocker databaseLocker;
     private boolean createTablesOnStartup = true;
     private DataSource lockDataSource;
+    private int transactionIsolation;
 
     public JDBCPersistenceAdapter() {
     }
@@ -390,7 +391,7 @@ public class JDBCPersistenceAdapter extends DataSourceSupport implements Persist
         } else {
             TransactionContext answer = (TransactionContext)context.getLongTermStoreContext();
             if (answer == null) {
-                answer = new TransactionContext(getDataSource());
+                answer = getTransactionContext();
                 context.setLongTermStoreContext(answer);
             }
             return answer;
@@ -398,7 +399,11 @@ public class JDBCPersistenceAdapter extends DataSourceSupport implements Persist
     }
 
     public TransactionContext getTransactionContext() throws IOException {
-        return new TransactionContext(getDataSource());
+        TransactionContext answer = new TransactionContext(getDataSource());
+        if (transactionIsolation > 0) {
+            answer.setTransactionIsolation(transactionIsolation);
+        }
+        return answer;
     }
 
     public void beginTransaction(ConnectionContext context) throws IOException {
@@ -565,11 +570,22 @@ public class JDBCPersistenceAdapter extends DataSourceSupport implements Persist
         return lockAcquireSleepInterval;
     }
 
-    /*
+    /**
      * millisecond interval between lock acquire attempts, applied to newly created DefaultDatabaseLocker
      * not applied if DataBaseLocker is injected.
      */
     public void setLockAcquireSleepInterval(long lockAcquireSleepInterval) {
         this.lockAcquireSleepInterval = lockAcquireSleepInterval;
+    }
+    
+    /**
+     * set the Transaction isolation level to something other that TRANSACTION_READ_UNCOMMITTED
+     * This allowable dirty isolation level may not be achievable in clustered DB environments
+     * so a more restrictive and expensive option may be needed like TRANSACTION_REPEATABE_READ
+     * see isolation level constants in {@link java.sql.Connection}
+     * @param transactionIsolation the isolation level to use
+     */
+    public void setTransactionIsolation(int transactionIsolation) {
+        this.transactionIsolation = transactionIsolation;
     }
 }
