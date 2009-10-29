@@ -215,7 +215,7 @@ public class JDBCPersistenceAdapter extends DataSourceSupport implements Persist
 
         // Cleanup the db periodically.
         if (cleanupPeriod > 0) {
-            cleanupTicket = getScheduledThreadPoolExecutor().scheduleAtFixedRate(new Runnable() {
+            cleanupTicket = getScheduledThreadPoolExecutor().scheduleWithFixedDelay(new Runnable() {
                 public void run() {
                     cleanup();
                 }
