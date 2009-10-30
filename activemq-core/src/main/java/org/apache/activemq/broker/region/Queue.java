@@ -863,8 +863,8 @@ public class Queue extends BaseDestination implements Task, UsageListener {
     public void purge() throws Exception {   
         ConnectionContext c = createConnectionContext();
         List<MessageReference> list = null;
-        do {
-            pageInMessages();
+        do {        
+            doPageIn(true);
             synchronized (pagedInMessages) {
                 list = new ArrayList<MessageReference>(pagedInMessages.values());
             }
@@ -876,6 +876,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                 } catch (IOException e) {
                 }
             }
+            
         } while (!pagedInMessages.isEmpty() || this.destinationStatistics.getMessages().getCount() > 0);
         gc();
         this.destinationStatistics.getMessages().setCount(0);
@@ -919,7 +920,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
         Set<MessageReference> set = new CopyOnWriteArraySet<MessageReference>();
         ConnectionContext context = createConnectionContext();
         do {
-            pageInMessages();
+            doPageIn(true);
             synchronized (pagedInMessages) {
                 set.addAll(pagedInMessages.values());
             }
@@ -979,7 +980,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
         do {
             int oldMaxSize=getMaxPageSize();
             setMaxPageSize((int) this.destinationStatistics.getMessages().getCount());
-            pageInMessages();
+            doPageIn(true);
             setMaxPageSize(oldMaxSize);
             synchronized (pagedInMessages) {
                 set.addAll(pagedInMessages.values());
@@ -1170,7 +1171,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
 	            pageInMoreMessages |= !pagedInPendingDispatch.isEmpty();
 	        } 
 	        
-	        // Perhaps we should page always into the pagedInPendingDispatch list is 
+	        // Perhaps we should page always into the pagedInPendingDispatch list if 
 	        // !messages.isEmpty(), and then if !pagedInPendingDispatch.isEmpty()
 	        // then we do a dispatch.
 	        if (pageInMoreMessages) {
@@ -1215,6 +1216,11 @@ public class Queue extends BaseDestination implements Task, UsageListener {
 
     protected void removeMessage(ConnectionContext c, QueueMessageReference r) throws IOException {
         removeMessage(c, null, r);
+        synchronized(dispatchMutex) {            
+            synchronized (pagedInPendingDispatch) {
+                pagedInPendingDispatch.remove(r);
+            }
+        }
     }
     
     protected void removeMessage(ConnectionContext c, Subscription subs,QueueMessageReference r) throws IOException {
@@ -1349,12 +1355,11 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                         + ", pagedInMessages.size " + pagedInMessages.size());
             }
            
-            if (isLazyDispatch()&& !force) {
+            if (isLazyDispatch() && !force) {
                 // Only page in the minimum number of messages which can be dispatched immediately.
                 toPageIn = Math.min(getConsumerMessageCountBeforeFull(), toPageIn);
             }
-            
-            if ((force || !consumers.isEmpty()) && toPageIn > 0) { 
+            if (toPageIn > 0 && (force || (!consumers.isEmpty() && pagedInPendingDispatch.size() < getMaxPageSize()))) {
                 int count = 0;
                 result = new ArrayList<QueueMessageReference>(toPageIn);
                 synchronized (messages) {
@@ -1405,8 +1410,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                     // dispatched before.
                     pagedInPendingDispatch = doActualDispatch(pagedInPendingDispatch);
                 }
-                // and now see if we can dispatch the new stuff.. and append to
-                // the pending
+                // and now see if we can dispatch the new stuff.. and append to the pending
                 // list anything that does not actually get dispatched.
                 if (list != null && !list.isEmpty()) {
                     if (pagedInPendingDispatch.isEmpty()) {
@@ -1423,7 +1427,8 @@ public class Queue extends BaseDestination implements Task, UsageListener {
             }
         } 
         if (doWakeUp) {
-            wakeup();
+            // avoid lock order contention
+            asyncWakeup();
         }
     }
     
@@ -1495,9 +1500,6 @@ public class Queue extends BaseDestination implements Task, UsageListener {
         return rc;
     }
 
-    private void pageInMessages() throws Exception {
-        pageInMessages(true);
-    }
 
     protected void pageInMessages(boolean force) throws Exception {
             doDispatch(doPageIn(force));
