@@ -18,6 +18,7 @@ package org.apache.activemq.network;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -280,6 +281,10 @@ public abstract class NetworkConnector extends NetworkBridgeConfiguration implem
             }
         }
         return removeSucceeded;
+    }
+    
+    public Collection<NetworkBridge> activeBridges() {
+        return bridges.values();
     }
 
 }

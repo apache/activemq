@@ -53,6 +53,7 @@ import org.apache.activemq.network.DiscoveryNetworkConnector;
 import org.apache.activemq.network.NetworkConnector;
 import org.apache.activemq.util.IdGenerator;
 import org.apache.activemq.util.MessageIdList;
+import org.apache.activemq.util.Wait;
 import org.apache.activemq.xbean.BrokerFactoryBean;
 import org.springframework.core.io.Resource;
 
@@ -96,10 +97,10 @@ public class JmsMultipleBrokersTestSupport extends CombinationTestSupport {
     // By default, bridge them using add network connector of the local broker
     // and the first connector of the remote broker
     protected NetworkConnector bridgeBrokers(BrokerService localBroker, BrokerService remoteBroker, boolean dynamicOnly, int networkTTL, boolean conduit) throws Exception {
-        List transportConnectors = remoteBroker.getTransportConnectors();
+        List<TransportConnector> transportConnectors = remoteBroker.getTransportConnectors();
         URI remoteURI;
         if (!transportConnectors.isEmpty()) {
-            remoteURI = ((TransportConnector)transportConnectors.get(0)).getConnectUri();
+            remoteURI = transportConnectors.get(0).getConnectUri();
             NetworkConnector connector = new DiscoveryNetworkConnector(new URI("static:" + remoteURI));
             connector.setDynamicOnly(dynamicOnly);
             connector.setNetworkTTL(networkTTL);
@@ -126,14 +127,14 @@ public class JmsMultipleBrokersTestSupport extends CombinationTestSupport {
         Collection<BrokerItem> brokerList = brokers.values();
         for (Iterator<BrokerItem> i = brokerList.iterator(); i.hasNext();) {
             BrokerService broker = i.next().broker;
-            List transportConnectors = broker.getTransportConnectors();
+            List<TransportConnector> transportConnectors = broker.getTransportConnectors();
 
             if (transportConnectors.isEmpty()) {
                 broker.addConnector(new URI(AUTO_ASSIGN_TRANSPORT));
                 transportConnectors = broker.getTransportConnectors();
             }
 
-            TransportConnector transport = (TransportConnector)transportConnectors.get(0);
+            TransportConnector transport = transportConnectors.get(0);
             transport.setDiscoveryUri(new URI("multicast://default?group=" + groupName));
             NetworkConnector nc = broker.addNetworkConnector("multicast://default?group=" + groupName);
             nc.setNetworkTTL(ttl);
@@ -143,6 +144,19 @@ public class JmsMultipleBrokersTestSupport extends CombinationTestSupport {
 
         // Multicasting may take longer to setup
         maxSetupTime = 8000;
+    }
+
+    
+    protected void waitForBridgeFormation() throws Exception {
+        for (BrokerItem brokerItem : brokers.values()) {
+            final BrokerService broker = brokerItem.broker;
+            if (!broker.getNetworkConnectors().isEmpty()) {
+                Wait.waitFor(new Wait.Condition() {
+                    public boolean isSatisified() throws Exception {
+                        return !broker.getNetworkConnectors().get(0).activeBridges().isEmpty();
+                    }});
+            }
+        }
     }
 
     protected void startAllBrokers() throws Exception {
@@ -465,6 +479,7 @@ public class JmsMultipleBrokersTestSupport extends CombinationTestSupport {
                 try {
                     c.close();
                 } catch (ConnectionClosedException e) {
+                } catch (JMSException e) {
                 }
             }
 
