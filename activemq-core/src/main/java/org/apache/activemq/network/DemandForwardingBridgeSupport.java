@@ -18,6 +18,7 @@ package org.apache.activemq.network;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
+import java.security.cert.X509Certificate;
 import java.util.Collection;
 import java.util.List;
 import java.util.Properties;
@@ -70,7 +71,9 @@ import org.apache.activemq.transport.FutureResponse;
 import org.apache.activemq.transport.ResponseCallback;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportDisposedIOException;
+import org.apache.activemq.transport.TransportFilter;
 import org.apache.activemq.transport.TransportListener;
+import org.apache.activemq.transport.tcp.SslTransport;
 import org.apache.activemq.util.IdGenerator;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.util.LongSequenceGenerator;
@@ -285,6 +288,14 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                 localConnectionInfo.setClientId(localClientId);
                 localConnectionInfo.setUserName(configuration.getUserName());
                 localConnectionInfo.setPassword(configuration.getPassword());
+                Transport originalTransport = remoteBroker;
+                while (originalTransport instanceof TransportFilter) {
+                    originalTransport = ((TransportFilter)originalTransport).getNext();
+                }
+                if (originalTransport instanceof SslTransport) {
+                    X509Certificate[] peerCerts = ((SslTransport)originalTransport).getPeerCertificates();
+                    localConnectionInfo.setTransportContext(peerCerts);
+                }
                 localBroker.oneway(localConnectionInfo);
 
                 localSessionInfo = new SessionInfo(localConnectionInfo, 1);
