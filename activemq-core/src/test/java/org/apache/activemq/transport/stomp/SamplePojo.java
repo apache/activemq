@@ -22,6 +22,8 @@ import com.thoughtworks.xstream.annotations.XStreamAlias;
 
 @XStreamAlias("pojo")
 public class SamplePojo implements Serializable {
+	private static final long serialVersionUID = 9118938642100015088L;
+	
 	@XStreamAlias("name")
     private String name;
 	@XStreamAlias("city")

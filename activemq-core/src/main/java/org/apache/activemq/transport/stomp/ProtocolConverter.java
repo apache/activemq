@@ -361,7 +361,11 @@ public class ProtocolConverter {
         }
         for (Iterator<StompSubscription> iter = subscriptionsByConsumerId.values().iterator(); iter.hasNext();) {
             StompSubscription sub = iter.next();
-            sub.onStompAbort(activemqTx);
+            try {
+            	sub.onStompAbort(activemqTx);
+            } catch (Exception e) {
+            	throw new ProtocolException("Transaction abort failed", false, e);
+            }
         }
 
         TransactionInfo tx = new TransactionInfo();
@@ -483,6 +487,7 @@ public class ProtocolConverter {
         connectionInfo.setResponseRequired(true);
         connectionInfo.setUserName(login);
         connectionInfo.setPassword(passcode);
+        connectionInfo.setTransportContext(transportFilter.getPeerCertificates());
 
         sendToActiveMQ(connectionInfo, new ResponseHandler() {
             public void onResponse(ProtocolConverter converter, Response response) throws IOException {
