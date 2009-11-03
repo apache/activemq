@@ -471,7 +471,7 @@ public class MulticastDiscoveryAgent implements DiscoveryAgent, Runnable {
     }
 
     private void fireServiceRemovedEvent(RemoteBrokerData data) {
-        if (discoveryListener != null) {
+        if (discoveryListener != null && started.get()) {
             final DiscoveryEvent event = new DiscoveryEvent(data.service);
             event.setBrokerName(data.brokerName);
 
@@ -490,7 +490,7 @@ public class MulticastDiscoveryAgent implements DiscoveryAgent, Runnable {
     }
 
     private void fireServiceAddEvent(RemoteBrokerData data) {
-        if (discoveryListener != null) {
+        if (discoveryListener != null && started.get()) {
             final DiscoveryEvent event = new DiscoveryEvent(data.service);
             event.setBrokerName(data.brokerName);
             
