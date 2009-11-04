@@ -57,7 +57,7 @@ public class DuplexNetworkMBeanTest extends TestCase {
     public void testMbeanPresenceOnNetworkBrokerRestart() throws Exception {
         BrokerService broker = createBroker();
         broker.start();
-        assertEquals(1, countMbeans(broker, "Connector", 10000));
+        assertEquals(1, countMbeans(broker, "Connector", 30000));
         assertEquals(0, countMbeans(broker, "Connection"));
         BrokerService networkedBroker = null;
         for (int i=0; i<numRestarts; i++) {       
@@ -82,7 +82,7 @@ public class DuplexNetworkMBeanTest extends TestCase {
         
         BrokerService networkedBroker = createNetworkedBroker();
         networkedBroker.start();
-        assertEquals(1, countMbeans(networkedBroker, "Connector", 10000));
+        assertEquals(1, countMbeans(networkedBroker, "Connector", 30000));
         assertEquals(0, countMbeans(networkedBroker, "Connection"));
         
         BrokerService broker = null;
@@ -147,6 +147,7 @@ public class DuplexNetworkMBeanTest extends TestCase {
                 LOG.info(bean.getObjectName());
             }
         } catch (Exception ignored) {
+            LOG.warn("getMBeanServer ex: " + ignored);
         }
         return mbsc;
     }
