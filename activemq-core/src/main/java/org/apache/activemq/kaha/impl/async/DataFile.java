@@ -88,10 +88,19 @@ public class DataFile extends LinkedNode implements Comparable<DataFile> {
     public synchronized RandomAccessFile openRandomAccessFile(boolean appender) throws IOException {
         RandomAccessFile rc = new RandomAccessFile(file, "rw");
         // When we start to write files size them up so that the OS has a chance
-        // to allocate the file contigously.
+        // to allocate the file contiguously.
         if (appender) {
             if (length < preferedSize) {
-                rc.setLength(preferedSize);
+                try {
+                    // this can throw if we run out of disk space
+                    rc.setLength(preferedSize);
+                } catch (IOException ioe) {            
+                    try {
+                        rc.close();
+                    } catch(Exception ignored) {
+                    }
+                    throw ioe;
+                }
             }
         }
         return rc;
