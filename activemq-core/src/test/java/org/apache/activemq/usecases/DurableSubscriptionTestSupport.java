@@ -110,6 +110,32 @@ public abstract class DurableSubscriptionTestSupport extends TestSupport {
     }
 
     protected abstract PersistenceAdapter createPersistenceAdapter() throws Exception;
+    
+    public void testMessageExpire() throws Exception {
+        session = connection.createSession(false, javax.jms.Session.AUTO_ACKNOWLEDGE);
+        Topic topic = session.createTopic("TestTopic");
+        consumer = session.createDurableSubscriber(topic, "sub1");
+        producer = session.createProducer(topic);
+        producer.setDeliveryMode(DeliveryMode.PERSISTENT);
+        producer.setTimeToLive(1000);
+        connection.start();
+
+        // Make sure it works when the durable sub is active.
+        producer.send(session.createTextMessage("Msg:1"));
+        assertTextMessageEquals("Msg:1", consumer.receive(1000));
+        
+        consumer.close();
+        
+        producer.send(session.createTextMessage("Msg:2"));
+        producer.send(session.createTextMessage("Msg:3"));
+        
+        consumer = session.createDurableSubscriber(topic, "sub1");
+
+        // Try to get the message.
+        assertTextMessageEquals("Msg:2", consumer.receive(1000));
+        Thread.sleep(1000);
+        assertNull(consumer.receive(1000));
+    }
 
     public void testUnsubscribeSubscription() throws Exception {
         session = connection.createSession(false, javax.jms.Session.AUTO_ACKNOWLEDGE);
