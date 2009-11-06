@@ -43,7 +43,7 @@ import org.apache.activemq.network.NetworkConnector;
  */
 public class BrokerView implements BrokerViewMBean {
 
-    final ManagedRegionBroker broker;
+    ManagedRegionBroker broker;
     private final BrokerService brokerService;
     private final AtomicInteger sessionIdCounter = new AtomicInteger(0);
 
@@ -56,6 +56,10 @@ public class BrokerView implements BrokerViewMBean {
         return broker;
     }
 
+    public void setBroker(ManagedRegionBroker broker) {
+        this.broker = broker;
+    }
+    
     public String getBrokerId() {
         return broker.getBrokerId().toString();
     }

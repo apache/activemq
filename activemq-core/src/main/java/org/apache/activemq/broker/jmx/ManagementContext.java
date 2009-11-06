@@ -212,7 +212,11 @@ public class ManagementContext implements Service {
         return findTigerMbeanServer;
     }
 
-    /**
+    public boolean isConnectorStarted() {
+		return connectorServer.isActive();
+	}
+
+	/**
      * Enables/disables the searching for the Java 5 platform MBeanServer
      */
     public void setFindTigerMbeanServer(boolean findTigerMbeanServer) {
