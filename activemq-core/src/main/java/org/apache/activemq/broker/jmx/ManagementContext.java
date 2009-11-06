@@ -19,8 +19,10 @@ package org.apache.activemq.broker.jmx;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.net.MalformedURLException;
+import java.net.ServerSocket;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
+import java.rmi.server.RMIServerSocketFactory;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -89,17 +91,20 @@ public class ManagementContext implements Service {
                 try {
                     getMBeanServer().invoke(namingServiceObjectName, "start", null, null);
                 } catch (Throwable ignore) {
+                    LOG.debug("ignored error on start invocation", ignore);
                 }
                 Thread t = new Thread("JMX connector") {
                     public void run() {
                         try {
                             JMXConnectorServer server = connectorServer;
                             if (started.get() && server != null) {
+                                LOG.debug("Starting JMX JMXConnectorServer...");
                                 server.start();
                                 LOG.info("JMX consoles can connect to " + server.getAddress());
                             }
                         } catch (IOException e) {
                             LOG.warn("Failed to start jmx connector: " + e.getMessage());
+                            LOG.debug("Reason for failed jms connector start", e);
                         }
                     }
                 };
@@ -403,9 +408,15 @@ public class ManagementContext implements Service {
     private void createConnector(MBeanServer mbeanServer) throws MalformedObjectNameException, MalformedURLException, IOException {
         // Create the NamingService, needed by JSR 160
         try {
-        	if (registry == null) {
-        		registry = LocateRegistry.createRegistry(connectorPort);
-        	}
+            if (registry == null) {
+                registry = LocateRegistry.createRegistry(connectorPort, null, new RMIServerSocketFactory() {
+                    public ServerSocket createServerSocket(int port)
+                            throws IOException {
+                        ServerSocket result = new ServerSocket(port);
+                        result.setReuseAddress(true);
+                        return result;
+                    }});
+            }
             namingServiceObjectName = ObjectName.getInstance("naming:type=rmiregistry");
             // Do not use the createMBean as the mx4j jar may not be in the
             // same class loader than the server

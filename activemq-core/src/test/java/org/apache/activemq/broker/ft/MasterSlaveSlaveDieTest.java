@@ -25,7 +25,6 @@ import junit.framework.TestCase;
 import org.apache.activemq.broker.BrokerPlugin;
 import org.apache.activemq.broker.BrokerPluginSupport;
 import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.util.SocketProxy;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -89,5 +88,7 @@ public class MasterSlaveSlaveDieTest extends TestCase {
         LOG.info("checking master still alive");
         assertTrue("master is still alive", master.isStarted());
         assertFalse("plugin was not yet stopped", pluginStopped.get());
+        master.stop();
+        master.waitUntilStopped();
     }
 }
