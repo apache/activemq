@@ -48,8 +48,6 @@ import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQTopic;
-import org.apache.activemq.store.PersistenceAdapter;
-import org.apache.activemq.store.amq.AMQPersistenceAdapter;
 import org.apache.activemq.store.amq.AMQPersistenceAdapterFactory;
 import org.apache.activemq.util.Wait;
 import org.apache.commons.logging.Log;
@@ -78,8 +76,7 @@ public class DurableConsumerTest extends TestCase {
     private class SimpleTopicSubscriber implements MessageListener, ExceptionListener {
 
         private TopicConnection topicConnection = null;
-        private String clientId;
-
+        
         public SimpleTopicSubscriber(String connectionURL, String clientId, String topicName) {
 
             ActiveMQConnectionFactory topicConnectionFactory = null;
@@ -98,7 +95,6 @@ public class DurableConsumerTest extends TestCase {
 
                 topicSession = topicConnection.createTopicSession(false, Session.AUTO_ACKNOWLEDGE);
                 topicSubscriber = topicSession.createDurableSubscriber(topic, (clientId));
-                this.clientId = clientId;
                 topicSubscriber.setMessageListener(this);
 
             } catch (JMSException e) {
@@ -281,7 +277,7 @@ public class DurableConsumerTest extends TestCase {
             public boolean isSatisified() throws Exception {
                 return receivedCount.get() > numMessages;
             } 
-        });
+        }, 60*1000);
         assertTrue("got some messages: " + receivedCount.get(), receivedCount.get() > numMessages);
         assertTrue("no exceptions, but: " + exceptions, exceptions.isEmpty());
     }
