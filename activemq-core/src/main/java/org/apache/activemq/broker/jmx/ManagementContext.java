@@ -213,7 +213,7 @@ public class ManagementContext implements Service {
     }
 
     public boolean isConnectorStarted() {
-		return connectorServer.isActive();
+		return connectorServer != null && connectorServer.isActive();
 	}
 
 	/**
