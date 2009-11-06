@@ -47,7 +47,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 /**
- * A Flow provides different dispatch policies within the NMR
+ * An abstraction over JMX mbean registration
  * 
  * @org.apache.xbean.XBean
  * @version $Revision$
@@ -91,14 +91,13 @@ public class ManagementContext implements Service {
                 try {
                     getMBeanServer().invoke(namingServiceObjectName, "start", null, null);
                 } catch (Throwable ignore) {
-                    LOG.debug("ignored error on start invocation", ignore);
                 }
                 Thread t = new Thread("JMX connector") {
                     public void run() {
                         try {
                             JMXConnectorServer server = connectorServer;
                             if (started.get() && server != null) {
-                                LOG.debug("Starting JMX JMXConnectorServer...");
+                                LOG.debug("Starting JMXConnectorServer...");
                                 server.start();
                                 LOG.info("JMX consoles can connect to " + server.getAddress());
                             }

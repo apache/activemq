@@ -195,8 +195,11 @@ public class DiscoveryNetworkReconnectTest {
             // wait for the inactivity timeout and network shutdown
             assertTrue("network connector mbean unregistered within 1 minute", mbeanUnregistered.tryAcquire(60, TimeUnit.SECONDS));
             
+            // whack all connections
+            proxy.close();
+            
             // let a reconnect succeed
-            proxy.goOn();       
+            proxy.reopen();       
         }
     }
 }
