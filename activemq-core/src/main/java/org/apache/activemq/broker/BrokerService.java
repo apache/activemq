@@ -440,6 +440,9 @@ public class BrokerService implements Service {
                 });
             }
             processHelperProperties();
+            if (isUseJmx()) {
+            	startManagementContext();
+            }
             getPersistenceAdapter().setUsageManager(getProducerSystemUsage());
             getPersistenceAdapter().setBrokerName(getBrokerName());
             LOG.info("Using Persistence Adapter: " + getPersistenceAdapter());
@@ -451,12 +454,15 @@ public class BrokerService implements Service {
             addShutdownHook();
             getBroker().start();
             if (isUseJmx()) {
-                getManagementContext().start();
+            	if (!getManagementContext().isConnectorStarted()) {
+            		// try to restart management context
+            		// typical for slaves that use the same ports as master
+            		managementContext.stop();
+            		startManagementContext();
+            	}
                 ManagedRegionBroker managedBroker = (ManagedRegionBroker) regionBroker;
                 managedBroker.setContextBroker(broker);
-                adminView = new BrokerView(this, managedBroker);
-                ObjectName objectName = getBrokerObjectName();
-                AnnotatedMBean.registerMBean(getManagementContext(), adminView, objectName);
+            	adminView.setBroker(managedBroker);
             }
             BrokerRegistry.getInstance().bind(getBrokerName(), this);
             // see if there is a MasterBroker service and if so, configure
@@ -1894,6 +1900,13 @@ public class BrokerService implements Service {
 
     protected void slaveConnectionEstablished() {
         slaveStartSignal.countDown();
+    }
+    
+    protected void startManagementContext() throws Exception {
+        getManagementContext().start();
+        adminView = new BrokerView(this, null);
+        ObjectName objectName = getBrokerObjectName();
+        AnnotatedMBean.registerMBean(getManagementContext(), adminView, objectName);
     }
 
     /**
