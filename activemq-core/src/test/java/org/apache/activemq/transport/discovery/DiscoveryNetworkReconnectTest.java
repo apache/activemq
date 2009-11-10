@@ -98,7 +98,8 @@ public class DiscoveryNetworkReconnectTest {
         context.checking(new Expectations(){{
             allowing (managementContext).getJmxDomainName(); will (returnValue("Test"));
             allowing (managementContext).start();
-            allowing (managementContext).stop();            
+            allowing (managementContext).stop();
+            allowing (managementContext).isConnectorStarted();
             
             // expected MBeans
             allowing (managementContext).registerMBean(with(any(Object.class)), with(equal(

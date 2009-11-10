@@ -98,6 +98,23 @@ public class QueuePurgeTest extends TestCase {
                 proxy.getQueueSize());
     }
 
+    public void testRepeatedExpiryProcessingOfLargeQueue() throws Exception {       
+        applyBrokerSpoolingPolicy();
+        final int exprityPeriod = 1000;
+        applyExpiryDuration(exprityPeriod);
+        createProducerAndSendMessages(90000);
+        QueueViewMBean proxy = getProxyToQueueViewMBean();
+        LOG.info("waiting for expiry to kick in a bunch of times to verify it does not blow mem");
+        Thread.sleep(10000);
+        assertEquals("Queue size is has not changed " + proxy.getQueueSize(), 90000,
+                proxy.getQueueSize());
+    }
+    
+
+    private void applyExpiryDuration(int i) {
+        broker.getDestinationPolicy().getDefaultEntry().setExpireMessagesPeriod(i);
+    }
+
     private void applyBrokerSpoolingPolicy() {
         PolicyMap policyMap = new PolicyMap();
         PolicyEntry defaultEntry = new PolicyEntry();
