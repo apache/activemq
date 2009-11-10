@@ -16,11 +16,14 @@
  */
 package org.apache.activemq.broker.ft;
 
+import java.io.File;
+import java.io.IOException;
 import java.net.URI;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
+import org.apache.activemq.store.amq.AMQPersistenceAdapter;
 
 
 public class QueueMasterSlaveSingleUrlTest extends QueueMasterSlaveTest {
@@ -33,17 +36,25 @@ public class QueueMasterSlaveSingleUrlTest extends QueueMasterSlaveTest {
 
     protected void createMaster() throws Exception {
         master = new BrokerService();
-        master.setBrokerName("shared");
+        master.setBrokerName("shared-master");
+        configureSharedPersistenceAdapter(master);
         master.addConnector(brokerUrl);
         master.start();
     }
     
+    private void configureSharedPersistenceAdapter(BrokerService broker) throws Exception {
+       AMQPersistenceAdapter adapter = new AMQPersistenceAdapter();
+       adapter.setDirectory(new File("shared"));
+       broker.setPersistenceAdapter(adapter); 
+    }
+
     protected void createSlave() throws Exception {      
         new Thread(new Runnable() {
             public void run() {
                 try {
                     BrokerService broker = new BrokerService();
-                    broker.setBrokerName("shared");
+                    broker.setBrokerName("shared-slave");
+                    configureSharedPersistenceAdapter(broker);
                     // add transport as a service so that it is bound on start, after store started                
                     final TransportConnector tConnector = new TransportConnector();
                     tConnector.setUri(new URI(brokerUrl));

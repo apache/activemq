@@ -16,6 +16,28 @@
  */
 package org.apache.activemq.broker.region;
 
+import java.io.IOException;
+import java.util.AbstractList;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
+
+import javax.jms.InvalidSelectorException;
+import javax.jms.JMSException;
+
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.ProducerBrokerExchange;
@@ -54,26 +76,6 @@ import org.apache.activemq.usage.UsageListener;
 import org.apache.activemq.util.BrokerSupport;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import java.io.IOException;
-import java.util.AbstractList;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.CopyOnWriteArraySet;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.TimeUnit;
-import javax.jms.InvalidSelectorException;
-import javax.jms.JMSException;
 
 
 /**
@@ -198,10 +200,12 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                     public boolean recoverMessage(Message message) {
                         // Message could have expired while it was being
                         // loaded..
-                        if (broker.isExpired(message)) {
-                            messageExpired(createConnectionContext(), createMessageReference(message));
-                            // drop message will decrement so counter balance here
-                            destinationStatistics.getMessages().increment();
+                        if (message.isExpired()) {
+                            if (broker.isExpired(message)) {
+                                messageExpired(createConnectionContext(), createMessageReference(message));
+                                // drop message will decrement so counter balance here
+                                destinationStatistics.getMessages().increment();
+                            }
                             return true;
                         }
                         if (hasSpace()) {
@@ -439,6 +443,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                                     // While waiting for space to free up... the
                                     // message may have expired.
                                     if (message.isExpired()) {
+                                        LOG.error("expired waiting for space..");
                                         broker.messageExpired(context, message);
                                         destinationStatistics.getExpired().increment();
                                     } else {
@@ -585,7 +590,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                 return null;
             }
         };
-        doBrowse(true, browsedMessages, this.getMaxExpirePageSize());
+        doBrowse(browsedMessages, this.getMaxExpirePageSize());
     }
 
     public void gc(){
@@ -749,14 +754,15 @@ public class Queue extends BaseDestination implements Task, UsageListener {
 
     public Message[] browse() {    
         List<Message> l = new ArrayList<Message>();
-        doBrowse(false, l, getMaxBrowsePageSize());
+        doBrowse(l, getMaxBrowsePageSize());
         return l.toArray(new Message[l.size()]);
     }
     
-    public void doBrowse(boolean forcePageIn, List<Message> l, int max) {
+    
+    public void doBrowse(List<Message> l, int max) {
         final ConnectionContext connectionContext = createConnectionContext();
         try {
-            pageInMessages(forcePageIn);
+            pageInMessages(false);
             List<MessageReference> toExpire = new ArrayList<MessageReference>();
             synchronized(dispatchMutex) {
                 synchronized (pagedInPendingDispatch) {
@@ -770,7 +776,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                 }
                 toExpire.clear();
                 synchronized (pagedInMessages) {
-                    addAll(pagedInMessages.values(), l, max, toExpire);   
+                    addAll(pagedInMessages.values(), l, max, toExpire);
                 }
                 for (MessageReference ref : toExpire) {
                     if (broker.isExpired(ref)) {
@@ -787,13 +793,16 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                         try {
                             messages.reset();
                             while (messages.hasNext() && l.size() < max) {
-                                MessageReference node = messages.next();
-                                messages.rollback(node.getMessageId());
-                                if (node != null) {
+                                MessageReference node = messages.next();        
+                                if (node.isExpired()) {
                                     if (broker.isExpired(node)) {
                                         messageExpired(connectionContext,
                                                 createMessageReference(node.getMessage()));
-                                    } else if (l.contains(node.getMessage()) == false) {
+                                    }
+                                    messages.remove();
+                                } else {
+                                    messages.rollback(node.getMessageId());
+                                    if (l.contains(node.getMessage()) == false) {
                                         l.add(node.getMessage());
                                     }
                                 }
@@ -806,7 +815,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
             } 
         } catch (Exception e) {
             LOG.error("Problem retrieving message for browse", e);
-        }
+        }     
     }
 
     private void addAll(Collection<QueueMessageReference> refs,
@@ -1278,7 +1287,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
     }
     
     public void messageExpired(ConnectionContext context,Subscription subs, MessageReference reference) {
-        if (LOG.isDebugEnabled()) {      
+        if (LOG.isDebugEnabled()) {
             LOG.debug("message expired: " + reference);
         }
         broker.messageExpired(context, reference);
@@ -1371,12 +1380,14 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                             node.incrementReferenceCount();
                             messages.remove();
                             QueueMessageReference ref = createMessageReference(node.getMessage());
-                            if (!broker.isExpired(node)) {
+                            if (ref.isExpired()) {
+                                if (broker.isExpired(ref)) {
+                                    messageExpired(createConnectionContext(), ref);
+                                }
+                            } else {
                                 result.add(ref);
                                 count++;
-                            } else {
-                                messageExpired(createConnectionContext(), ref);
-                            }
+                            }   
                         }
                     } finally {
                         messages.release();

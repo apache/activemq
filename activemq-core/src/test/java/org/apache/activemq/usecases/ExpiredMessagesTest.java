@@ -152,6 +152,8 @@ public class ExpiredMessagesTest extends CombinationTestSupport {
         
         assertTrue("all messages expired - queue size gone to zero " + view.getQueueSize(), Wait.waitFor(new Wait.Condition() {
             public boolean isSatisified() throws Exception {
+                LOG.info("Stats: received: "  + received.get() + ", size= " + view.getQueueSize() + ", enqueues: " + view.getDequeueCount() + ", dequeues: " + view.getDequeueCount()
+                        + ", dispatched: " + view.getDispatchCount() + ", inflight: " + view.getInFlightCount() + ", expiries: " + view.getExpiredCount());
                 return view.getQueueSize() == 0;
             }
         }));
@@ -282,7 +284,7 @@ public class ExpiredMessagesTest extends CombinationTestSupport {
         broker.waitUntilStarted();
         return broker;
     }
-
+	
     protected DestinationViewMBean createView(ActiveMQDestination destination) throws Exception {
         String domain = "org.apache.activemq";
         ObjectName name;
