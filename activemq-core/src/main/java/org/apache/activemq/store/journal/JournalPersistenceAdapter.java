@@ -732,7 +732,7 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
         	   try {
     	            brokerService.stop();
     	        } catch (Exception e) {
-    	            LOG.warn("Failure occured while stopping broker");
+    	            LOG.warn("Failure occured while stopping broker", e);
     	        }    			
     		}
     	}.start();

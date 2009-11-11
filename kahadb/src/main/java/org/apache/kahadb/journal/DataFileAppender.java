@@ -158,7 +158,7 @@ class DataFileAppender {
      * @throws
      */
     public Location storeItem(ByteSequence data, byte type, boolean sync) throws IOException {
-
+    	
         // Write the packet our internal buffer.
         int size = data.getLength() + Journal.RECORD_HEAD_SPACE;
 
@@ -298,6 +298,7 @@ class DataFileAppender {
     protected void processQueue() {
         DataFile dataFile = null;
         RandomAccessFile file = null;
+        WriteBatch wb = null;
         try {
 
             DataByteArrayOutputStream buff = new DataByteArrayOutputStream(maxWriteBatchSize);
@@ -321,7 +322,7 @@ class DataFileAppender {
                     enqueueMutex.notify();
                 }
 
-                WriteBatch wb = (WriteBatch)o;
+                wb = (WriteBatch)o;
                 if (dataFile != wb.dataFile) {
                     if (file != null) {
                         file.setLength(dataFile.getLength());
@@ -403,6 +404,9 @@ class DataFileAppender {
                 wb.latch.countDown();
             }
         } catch (IOException e) {
+        	if (wb != null) {
+        		wb.latch.countDown();
+        	}
             synchronized (enqueueMutex) {
                 firstAsyncException = e;
             }

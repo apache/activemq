@@ -17,6 +17,8 @@
 package org.apache.activemq.store.kahadb;
 
 import org.apache.activeio.journal.Journal;
+import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.BrokerServiceAware;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
@@ -37,7 +39,7 @@ import java.util.Set;
  * @org.apache.xbean.XBean element="kahaDB"
  * @version $Revision: 1.17 $
  */
-public class KahaDBPersistenceAdapter implements PersistenceAdapter {
+public class KahaDBPersistenceAdapter implements PersistenceAdapter, BrokerServiceAware {
     private KahaDBStore letter = new KahaDBStore();
     
 
@@ -364,4 +366,8 @@ public class KahaDBPersistenceAdapter implements PersistenceAdapter {
     public void setCheckForCorruptJournalFiles(boolean checkForCorruptJournalFiles) {
         letter.setCheckForCorruptJournalFiles(checkForCorruptJournalFiles);
     }
+
+	public void setBrokerService(BrokerService brokerService) {
+		letter.setBrokerService(brokerService);
+	}
 }

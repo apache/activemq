@@ -36,6 +36,8 @@ import java.util.TreeSet;
 import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.BrokerServiceAware;
 import org.apache.activemq.command.ConnectionId;
 import org.apache.activemq.command.LocalTransactionId;
 import org.apache.activemq.command.SubscriptionInfo;
@@ -75,8 +77,11 @@ import org.apache.kahadb.util.Sequence;
 import org.apache.kahadb.util.SequenceSet;
 import org.apache.kahadb.util.StringMarshaller;
 import org.apache.kahadb.util.VariableMarshaller;
+import org.springframework.core.enums.LetterCodedLabeledEnum;
 
-public class MessageDatabase {
+public class MessageDatabase implements BrokerServiceAware {
+	
+	private BrokerService brokerService;
 
     public static final String PROPERTY_LOG_SLOW_ACCESS_TIME = "org.apache.activemq.store.kahadb.LOG_SLOW_ACCESS_TIME";
     public static final int LOG_SLOW_ACCESS_TIME = Integer.parseInt(System.getProperty(PROPERTY_LOG_SLOW_ACCESS_TIME, "500"));
@@ -259,6 +264,9 @@ public class MessageDatabase {
 	                    }
 	                } catch (InterruptedException e) {
 	                    // Looks like someone really wants us to exit this thread...
+	                } catch (IOException ioe) {
+	                	LOG.error("Checkpoint failed", ioe);
+	                	stopBroker();
 	                }
 	            }
 	        };
@@ -575,26 +583,22 @@ public class MessageDatabase {
         return journal.getNextLocation(null);
 	}
 
-    protected void checkpointCleanup(final boolean cleanup) {
-        try {
-        	long start = System.currentTimeMillis();
-            synchronized (indexMutex) {
-            	if( !opened.get() ) {
-            		return;
-            	}
-                pageFile.tx().execute(new Transaction.Closure<IOException>() {
-                    public void execute(Transaction tx) throws IOException {
-                        checkpointUpdate(tx, cleanup);
-                    }
-                });
-            }
-        	long end = System.currentTimeMillis();
-        	if( LOG_SLOW_ACCESS_TIME>0 && end-start > LOG_SLOW_ACCESS_TIME) {
-        		LOG.info("Slow KahaDB access: cleanup took "+(end-start));
+    protected void checkpointCleanup(final boolean cleanup) throws IOException {
+    	long start = System.currentTimeMillis();
+        synchronized (indexMutex) {
+        	if( !opened.get() ) {
+        		return;
         	}
-        } catch (IOException e) {
-        	e.printStackTrace();
+            pageFile.tx().execute(new Transaction.Closure<IOException>() {
+                public void execute(Transaction tx) throws IOException {
+                    checkpointUpdate(tx, cleanup);
+                }
+            });
         }
+    	long end = System.currentTimeMillis();
+    	if( LOG_SLOW_ACCESS_TIME>0 && end-start > LOG_SLOW_ACCESS_TIME) {
+    		LOG.info("Slow KahaDB access: cleanup took "+(end-start));
+    	}
     }
 
     
@@ -623,7 +627,6 @@ public class MessageDatabase {
      * durring a recovery process.
      */
     public Location store(JournalCommand data, boolean sync) throws IOException {
-
     	
         int size = data.serializedSizeFramed();
         DataByteArrayOutputStream os = new DataByteArrayOutputStream(size + 1);
@@ -1529,5 +1532,21 @@ public class MessageDatabase {
 
     public void setChecksumJournalFiles(boolean checksumJournalFiles) {
         this.checksumJournalFiles = checksumJournalFiles;
+    }
+
+	public void setBrokerService(BrokerService brokerService) {
+		this.brokerService = brokerService;
+	}
+	
+    protected void stopBroker() {
+        new Thread() {
+           public void run() {
+        	   try {
+    	            brokerService.stop();
+    	        } catch (Exception e) {
+    	            LOG.warn("Failure occured while stopping broker", e);
+    	        }    			
+    		}
+    	}.start();
     }
 }
