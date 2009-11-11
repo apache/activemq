@@ -34,7 +34,8 @@ public class HttpTransportBrokerTest extends TransportBrokerTestSupport {
     protected void setUp() throws Exception {
         maxWait = 2000;
         super.setUp();
-        Thread.sleep(500);
+        Thread.sleep(1000);
+        Thread.yield();
     }
     
 	protected BrokerService createBroker() throws Exception {
