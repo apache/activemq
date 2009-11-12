@@ -435,7 +435,7 @@ public class BrokerService implements Service {
             if (systemExitOnShutdown) {
                 addShutdownHook(new Runnable() {
                     public void run() {
-                        System.exit(systemExitOnShutdownExitCode);
+                    	Runtime.getRuntime().halt(systemExitOnShutdownExitCode);
                     }
                 });
             }
