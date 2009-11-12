@@ -19,8 +19,8 @@ package org.apache.activemq.broker;
 import javax.jms.DeliveryMode;
 
 import junit.framework.Test;
+
 import org.apache.activemq.broker.region.policy.PolicyEntry;
-import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.broker.region.policy.VMPendingSubscriberMessageStoragePolicy;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ConnectionInfo;

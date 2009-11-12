@@ -172,6 +172,10 @@ public class ExpiredMessagesTest extends CombinationTestSupport {
         });
         assertEquals("dlq contains all expired", totalExpiredCount, dlqView.getQueueSize());
         
+        // memory check
+        assertEquals("memory usage is back to duck egg", 0, view.getMemoryPercentUsage());
+        assertTrue("memory usage is increased ", 0 < dlqView.getMemoryPercentUsage());    
+        
         // verify DQL
         MessageConsumer dlqConsumer = createDlqConsumer(connection);
         int count = 0;
