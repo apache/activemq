@@ -695,7 +695,13 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
     }
     
     public Location writeCommand(DataStructure command, boolean syncHint,boolean forceSync) throws IOException {
-        return asyncDataManager.write(wireFormat.marshal(command), (forceSync||(syncHint && syncOnWrite)));
+    	try {
+    		return asyncDataManager.write(wireFormat.marshal(command), (forceSync||(syncHint && syncOnWrite)));
+    	} catch (IOException ioe) {
+    		LOG.error("Failed to write command: " + command + ". Reason: " + ioe, ioe);
+        	stopBroker();
+        	throw ioe;
+        }
     }
 
     private Location writeTraceMessage(String message, boolean sync) throws IOException {
@@ -1085,4 +1091,16 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
 	           + ".DisableLocking",
 	           "false"));
 	}
+	
+    protected void stopBroker() {
+        new Thread() {
+           public void run() {
+        	   try {
+    	            brokerService.stop();
+    	        } catch (Exception e) {
+    	            LOG.warn("Failure occured while stopping broker", e);
+    	        }    			
+    		}
+    	}.start();
+    }
 }
