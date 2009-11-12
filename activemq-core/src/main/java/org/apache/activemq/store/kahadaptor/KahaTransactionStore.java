@@ -24,17 +24,23 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import javax.transaction.xa.XAException;
 
+import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.BrokerServiceAware;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.command.XATransactionId;
+import org.apache.activemq.kaha.RuntimeStoreException;
 import org.apache.activemq.store.MessageStore;
 import org.apache.activemq.store.ProxyMessageStore;
 import org.apache.activemq.store.ProxyTopicMessageStore;
 import org.apache.activemq.store.TopicMessageStore;
 import org.apache.activemq.store.TransactionRecoveryListener;
 import org.apache.activemq.store.TransactionStore;
+import org.apache.activemq.store.journal.JournalPersistenceAdapter;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * Provides a TransactionStore implementation that can create transaction aware
@@ -42,10 +48,14 @@ import org.apache.activemq.store.TransactionStore;
  * 
  * @version $Revision: 1.4 $
  */
-public class KahaTransactionStore implements TransactionStore {
+public class KahaTransactionStore implements TransactionStore, BrokerServiceAware {	
+    private static final Log LOG = LogFactory.getLog(KahaTransactionStore.class);
+	
     private Map transactions = new ConcurrentHashMap();
     private Map prepared;
     private KahaPersistenceAdapter adaptor;
+    
+    private BrokerService brokerService;
 
     KahaTransactionStore(KahaPersistenceAdapter adaptor, Map preparedMap) {
         this.adaptor = adaptor;
@@ -130,12 +140,17 @@ public class KahaTransactionStore implements TransactionStore {
      * @throws IOException
      */
     void addMessage(final MessageStore destination, final Message message) throws IOException {
-        if (message.isInTransaction()) {
-            KahaTransaction tx = getOrCreateTx(message.getTransactionId());
-            tx.add((KahaMessageStore)destination, message);
-        } else {
-            destination.addMessage(null, message);
-        }
+    	try {
+    		if (message.isInTransaction()) {
+    			KahaTransaction tx = getOrCreateTx(message.getTransactionId());
+    			tx.add((KahaMessageStore)destination, message);
+    		} else {
+    			destination.addMessage(null, message);
+    		}
+    	} catch (RuntimeStoreException rse) {
+    	    stopBroker();
+    	    throw rse;
+    	}
     }
 
     /**
@@ -143,12 +158,17 @@ public class KahaTransactionStore implements TransactionStore {
      * @throws IOException
      */
     final void removeMessage(final MessageStore destination, final MessageAck ack) throws IOException {
-        if (ack.isInTransaction()) {
-            KahaTransaction tx = getOrCreateTx(ack.getTransactionId());
-            tx.add((KahaMessageStore)destination, ack);
-        } else {
-            destination.removeMessage(null, ack);
-        }
+    	try {
+    		if (ack.isInTransaction()) {
+    			KahaTransaction tx = getOrCreateTx(ack.getTransactionId());
+    			tx.add((KahaMessageStore)destination, ack);
+    		} else {
+    			destination.removeMessage(null, ack);
+    		}
+    	} catch (RuntimeStoreException rse) {
+    	    stopBroker();
+    	    throw rse;
+    	}
     }
 
     protected synchronized KahaTransaction getTx(TransactionId key) {
@@ -180,5 +200,21 @@ public class KahaTransactionStore implements TransactionStore {
 
     protected MessageStore getStoreById(Object id) {
         return adaptor.retrieveMessageStore(id);
+    }
+
+	public void setBrokerService(BrokerService brokerService) {
+		this.brokerService = brokerService;
+	}
+	
+    protected void stopBroker() {
+        new Thread() {
+           public void run() {
+        	   try {
+    	            brokerService.stop();
+    	        } catch (Exception e) {
+    	            LOG.warn("Failure occured while stopping broker", e);
+    	        }    			
+    		}
+    	}.start();
     }
 }
