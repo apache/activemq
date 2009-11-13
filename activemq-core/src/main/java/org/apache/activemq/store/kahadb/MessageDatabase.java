@@ -265,8 +265,8 @@ public class MessageDatabase implements BrokerServiceAware {
 	                } catch (InterruptedException e) {
 	                    // Looks like someone really wants us to exit this thread...
 	                } catch (IOException ioe) {
-	                	LOG.error("Checkpoint failed", ioe);
-	                	stopBroker();
+	                    LOG.error("Checkpoint failed", ioe);
+	                    brokerService.handleIOException(ioe);
 	                }
 	            }
 	        };
@@ -1537,16 +1537,4 @@ public class MessageDatabase implements BrokerServiceAware {
 	public void setBrokerService(BrokerService brokerService) {
 		this.brokerService = brokerService;
 	}
-	
-    protected void stopBroker() {
-        new Thread() {
-           public void run() {
-        	   try {
-    	            brokerService.stop();
-    	        } catch (Exception e) {
-    	            LOG.warn("Failure occured while stopping broker", e);
-    	        }    			
-    		}
-    	}.start();
-    }
 }

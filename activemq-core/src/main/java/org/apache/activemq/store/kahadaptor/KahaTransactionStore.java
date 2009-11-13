@@ -148,8 +148,10 @@ public class KahaTransactionStore implements TransactionStore, BrokerServiceAwar
     			destination.addMessage(null, message);
     		}
     	} catch (RuntimeStoreException rse) {
-    	    stopBroker();
-    	    throw rse;
+            if (rse.getCause() instanceof IOException) {
+                brokerService.handleIOException((IOException)rse.getCause());
+            }
+            throw rse;
     	}
     }
 
@@ -166,8 +168,10 @@ public class KahaTransactionStore implements TransactionStore, BrokerServiceAwar
     			destination.removeMessage(null, ack);
     		}
     	} catch (RuntimeStoreException rse) {
-    	    stopBroker();
-    	    throw rse;
+            if (rse.getCause() instanceof IOException) {
+                brokerService.handleIOException((IOException)rse.getCause());
+            }
+            throw rse;
     	}
     }
 
@@ -205,16 +209,4 @@ public class KahaTransactionStore implements TransactionStore, BrokerServiceAwar
 	public void setBrokerService(BrokerService brokerService) {
 		this.brokerService = brokerService;
 	}
-	
-    protected void stopBroker() {
-        new Thread() {
-           public void run() {
-        	   try {
-    	            brokerService.stop();
-    	        } catch (Exception e) {
-    	            LOG.warn("Failure occured while stopping broker", e);
-    	        }    			
-    		}
-    	}.start();
-    }
 }

@@ -84,6 +84,8 @@ import org.apache.activemq.transport.TransportFactory;
 import org.apache.activemq.transport.TransportServer;
 import org.apache.activemq.transport.vm.VMTransportFactory;
 import org.apache.activemq.usage.SystemUsage;
+import org.apache.activemq.util.DefaultIOExceptionHandler;
+import org.apache.activemq.util.IOExceptionHandler;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.IOHelper;
 import org.apache.activemq.util.JMXSupport;
@@ -178,7 +180,9 @@ public class BrokerService implements Service {
     private int systemExitOnShutdownExitCode;
     private SslContext sslContext;
     private boolean forceStart = false;
-    static {
+    private IOExceptionHandler ioExceptionHandler;
+
+	static {
         String localHostName = "localhost";
         try {
             localHostName = java.net.InetAddress.getLocalHost().getHostName();
@@ -481,6 +485,9 @@ public class BrokerService implements Service {
                 }
             }
             brokerId = broker.getBrokerId();
+            if (ioExceptionHandler == null) {
+            	setIoExceptionHandler(new DefaultIOExceptionHandler());
+            }
             LOG.info("ActiveMQ JMS Message Broker (" + getBrokerName() + ", " + brokerId + ") started");
             getBroker().brokerServiceStarted();
             startedLatch.countDown();
@@ -2008,6 +2015,14 @@ public class BrokerService implements Service {
             }
         }
     }
+    
+    public void handleIOException(IOException exception) {
+        if (ioExceptionHandler != null) {
+            ioExceptionHandler.handle(exception);
+         } else {
+            LOG.info("Ignoring IO exception, " + exception, exception);
+         }
+    }
 
     /**
      * Starts all destiantions in persistence store. This includes all inactive
@@ -2109,6 +2124,11 @@ public class BrokerService implements Service {
      */
     public void setPassiveSlave(boolean passiveSlave) {
         this.passiveSlave = passiveSlave;
+    }
+    
+    public void setIoExceptionHandler(IOExceptionHandler ioExceptionHandler) {
+        ioExceptionHandler.setBrokerService(this);
+        this.ioExceptionHandler = ioExceptionHandler;
     }
     
    

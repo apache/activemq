@@ -699,7 +699,7 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
     		return asyncDataManager.write(wireFormat.marshal(command), (forceSync||(syncHint && syncOnWrite)));
     	} catch (IOException ioe) {
     		LOG.error("Failed to write command: " + command + ". Reason: " + ioe, ioe);
-        	stopBroker();
+        	brokerService.handleIOException(ioe);
         	throw ioe;
         }
     }
@@ -1091,16 +1091,4 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
 	           + ".DisableLocking",
 	           "false"));
 	}
-	
-    protected void stopBroker() {
-        new Thread() {
-           public void run() {
-        	   try {
-    	            brokerService.stop();
-    	        } catch (Exception e) {
-    	            LOG.warn("Failure occured while stopping broker", e);
-    	        }    			
-    		}
-    	}.start();
-    }
 }
