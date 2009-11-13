@@ -31,9 +31,12 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
+
 import org.apache.activemq.ActiveMQConnectionMetaData;
+import org.apache.activemq.ConfigurationException;
 import org.apache.activemq.Service;
 import org.apache.activemq.advisory.AdvisoryBroker;
 import org.apache.activemq.broker.cluster.ConnectionSplitBroker;
@@ -432,13 +435,9 @@ public class BrokerService implements Service {
             return;
         }
         try {
-            if (systemExitOnShutdown) {
-                addShutdownHook(new Runnable() {
-                    public void run() {
-                    	Runtime.getRuntime().halt(systemExitOnShutdownExitCode);
-                    }
-                });
-            }
+        	if (systemExitOnShutdown && useShutdownHook) {
+        		throw new ConfigurationException("'useShutdownHook' property cannot be be used with 'systemExitOnShutdown', please turn it off (useShutdownHook=false)");
+        	}
             processHelperProperties();
             if (isUseJmx()) {
             	startManagementContext();
@@ -502,6 +501,15 @@ public class BrokerService implements Service {
         if (!started.compareAndSet(true, false)) {
             return;
         }
+        
+        if (systemExitOnShutdown) {
+        	new Thread() {
+        		public void run() {
+        			System.exit(systemExitOnShutdownExitCode);
+        		}
+        	}.start();
+        }
+        
         LOG.info("ActiveMQ Message Broker (" + getBrokerName() + ", " + brokerId + ") is shutting down");
         removeShutdownHook();
         ServiceStopper stopper = new ServiceStopper();
@@ -558,6 +566,7 @@ public class BrokerService implements Service {
                 }
             }
         }
+        
         stopper.throwFirstException();
     }
     
