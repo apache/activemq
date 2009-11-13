@@ -33,10 +33,11 @@ import org.apache.commons.logging.LogFactory;
  */
 public class DemandSubscription {
     private static final Log LOG = LogFactory.getLog(DemandSubscription.class);
-    
+
     private final ConsumerInfo remoteInfo;
     private final ConsumerInfo localInfo;
     private Set<ConsumerId> remoteSubsIds = new CopyOnWriteArraySet<ConsumerId>();
+
     private AtomicInteger dispatched = new AtomicInteger(0);
     private AtomicBoolean activeWaiter = new AtomicBoolean();
 
@@ -44,7 +45,7 @@ public class DemandSubscription {
         remoteInfo = info;
         localInfo = info.copy();
         localInfo.setNetworkSubscription(true);
-        remoteSubsIds.add(info.getConsumerId());    
+        remoteSubsIds.add(info.getConsumerId());
     }
 
     /**
@@ -81,7 +82,6 @@ public class DemandSubscription {
         return localInfo;
     }
 
-    
     /**
      * @return Returns the remoteInfo.
      */
@@ -111,13 +111,18 @@ public class DemandSubscription {
 
     public void decrementOutstandingResponses() {
         if (dispatched.decrementAndGet() == 0 && activeWaiter.get()) {
-            synchronized(activeWaiter) {
+            synchronized (activeWaiter) {
                 activeWaiter.notifyAll();
             }
         }
     }
 
-    public void incrementOutstandingResponses() {
-        dispatched.incrementAndGet(); 
+    public boolean incrementOutstandingResponses() {
+        dispatched.incrementAndGet();
+        if (activeWaiter.get()) {
+            decrementOutstandingResponses();
+            return false;
+        }
+        return true;
     }
 }
