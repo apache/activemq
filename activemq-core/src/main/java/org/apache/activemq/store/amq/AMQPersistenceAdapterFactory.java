@@ -55,6 +55,7 @@ public class AMQPersistenceAdapterFactory implements PersistenceAdapterFactory {
     private boolean recoverReferenceStore=true;
     private boolean forceRecoverReferenceStore=false;
     private long checkpointInterval = 1000 * 20;
+    private boolean useDedicatedTaskRunner;
 
 
     /**
@@ -109,13 +110,21 @@ public class AMQPersistenceAdapterFactory implements PersistenceAdapterFactory {
         this.dataDirectory = dataDirectory;
     }
 
+    public boolean isUseDedicatedTaskRunner() {
+        return useDedicatedTaskRunner;
+    }
+    
+    public void setUseDedicatedTaskRunner(boolean useDedicatedTaskRunner) {
+        this.useDedicatedTaskRunner = useDedicatedTaskRunner;
+    }
+    
     /**
      * @return the taskRunnerFactory
      */
     public TaskRunnerFactory getTaskRunnerFactory() {
         if (taskRunnerFactory == null) {
             taskRunnerFactory = new TaskRunnerFactory("AMQPersistenceAdaptor Task", journalThreadPriority,
-                                                      true, 1000);
+                                                      true, 1000, isUseDedicatedTaskRunner());
         }
         return taskRunnerFactory;
     }

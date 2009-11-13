@@ -107,12 +107,13 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     private boolean watchTopicAdvisories = true;
     private int producerWindowSize = DEFAULT_PRODUCER_WINDOW_SIZE;
     private long warnAboutUnstartedConnectionTimeout = 500L;
-    private int sendTimeout =0;
+    private int sendTimeout = 0;
     private boolean sendAcksAsync=true;
     private TransportListener transportListener;
-	private ExceptionListener exceptionListener;
-	private int auditDepth = ActiveMQMessageAudit.DEFAULT_WINDOW_SIZE;
-	private int auditMaximumProducerNumber = ActiveMQMessageAudit.MAXIMUM_PRODUCER_COUNT;
+    private ExceptionListener exceptionListener;
+    private int auditDepth = ActiveMQMessageAudit.DEFAULT_WINDOW_SIZE;
+    private int auditMaximumProducerNumber = ActiveMQMessageAudit.MAXIMUM_PRODUCER_COUNT;
+    private boolean useDedicatedTaskRunner;
 
     // /////////////////////////////////////////////
     //
@@ -313,6 +314,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
         connection.setSendAcksAsync(isSendAcksAsync());
         connection.setAuditDepth(getAuditDepth());
         connection.setAuditMaximumProducerNumber(getAuditMaximumProducerNumber());
+        connection.setUseDedicatedTaskRunner(isUseDedicatedTaskRunner());
         if (transportListener != null) {
             connection.addTransportListener(transportListener);
         }
@@ -903,4 +905,12 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
 	public void setAuditMaximumProducerNumber(int auditMaximumProducerNumber) {
 		this.auditMaximumProducerNumber = auditMaximumProducerNumber;
 	}
+
+    public void setUseDedicatedTaskRunner(boolean useDedicatedTaskRunner) {
+        this.useDedicatedTaskRunner = useDedicatedTaskRunner;
+    }
+    
+    public boolean isUseDedicatedTaskRunner() {
+        return useDedicatedTaskRunner;
+    }
 }

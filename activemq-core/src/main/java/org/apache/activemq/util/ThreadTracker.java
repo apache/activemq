@@ -55,7 +55,7 @@ public class ThreadTracker {
 
 @SuppressWarnings("serial")
 class Trace extends Throwable {
-    public int count;
+    public int count = 1;
     public final int size;
     Trace() {
         super();

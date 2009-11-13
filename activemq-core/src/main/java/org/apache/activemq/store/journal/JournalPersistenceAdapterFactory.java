@@ -53,6 +53,7 @@ public class JournalPersistenceAdapterFactory extends DataSourceSupport implemen
     private boolean failIfJournalIsLocked;
     private int journalThreadPriority = Thread.MAX_PRIORITY;
     private JDBCPersistenceAdapter jdbcPersistenceAdapter = new JDBCPersistenceAdapter();
+    private boolean useDedicatedTaskRunner;
 
     public PersistenceAdapter createPersistenceAdapter() throws IOException {
         jdbcPersistenceAdapter.setDataSource(getDataSource());
@@ -110,10 +111,18 @@ public class JournalPersistenceAdapterFactory extends DataSourceSupport implemen
         this.useJournal = useJournal;
     }
 
+    public boolean isUseDedicatedTaskRunner() {
+        return useDedicatedTaskRunner;
+    }
+    
+    public void setUseDedicatedTaskRunner(boolean useDedicatedTaskRunner) {
+        this.useDedicatedTaskRunner = useDedicatedTaskRunner;
+    }
+    
     public TaskRunnerFactory getTaskRunnerFactory() {
         if (taskRunnerFactory == null) {
             taskRunnerFactory = new TaskRunnerFactory("Persistence Adaptor Task", journalThreadPriority,
-                                                      true, 1000);
+                                                      true, 1000, isUseDedicatedTaskRunner());
         }
         return taskRunnerFactory;
     }
