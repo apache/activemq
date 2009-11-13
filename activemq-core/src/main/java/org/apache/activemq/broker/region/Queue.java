@@ -31,9 +31,8 @@ import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 
 import javax.jms.InvalidSelectorException;
 import javax.jms.JMSException;
@@ -65,7 +64,6 @@ import org.apache.activemq.filter.NonCachedMessageEvaluationContext;
 import org.apache.activemq.selector.SelectorParser;
 import org.apache.activemq.store.MessageRecoveryListener;
 import org.apache.activemq.store.MessageStore;
-import org.apache.activemq.thread.DeterministicTaskRunner;
 import org.apache.activemq.thread.Scheduler;
 import org.apache.activemq.thread.Task;
 import org.apache.activemq.thread.TaskRunner;
@@ -86,7 +84,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class Queue extends BaseDestination implements Task, UsageListener {
     protected static final Log LOG = LogFactory.getLog(Queue.class);
-    protected TaskRunnerFactory taskFactory;
+    protected final TaskRunnerFactory taskFactory;
     protected TaskRunner taskRunner;    
     protected final List<Subscription> consumers = new ArrayList<Subscription>(50);
     protected PendingMessageCursor messages;
@@ -108,9 +106,11 @@ public class Queue extends BaseDestination implements Task, UsageListener {
     private int timeBeforeDispatchStarts = 0;
     private int consumersBeforeDispatchStarts = 0;
     private CountDownLatch consumersBeforeStartsLatch;
+    private AtomicLong pendingWakeups = new AtomicLong();
+    
     private final Runnable sendMessagesWaitingForSpaceTask = new Runnable() {
         public void run() {
-            wakeup();
+            asyncWakeup();
         }
     };
     private final Runnable expireMessagesTask = new Runnable() {
@@ -164,26 +164,13 @@ public class Queue extends BaseDestination implements Task, UsageListener {
         // since it turns into a shared blocking queue which can lead to a network deadlock.  
         // If we are cursoring to disk..it's not and issue because it does not block due 
         // to large disk sizes.
-        if( messages instanceof VMPendingMessageCursor ) {
+        if (messages instanceof VMPendingMessageCursor) {
             this.systemUsage = brokerService.getSystemUsage();
             memoryUsage.setParent(systemUsage.getMemoryUsage());
         }
         
-        if (isOptimizedDispatch()) {
-            this.taskRunner = taskFactory.createTaskRunner(this, "TempQueue:  " + destination.getPhysicalName());
-        }else {
-            final Queue queue = this;
-            this.executor =  Executors.newSingleThreadExecutor(new ThreadFactory() {
-                public Thread newThread(Runnable runnable) {
-                    Thread thread = new QueueThread(runnable, "QueueThread:"+destination, queue);
-                    thread.setDaemon(true);
-                    thread.setPriority(Thread.NORM_PRIORITY);
-                    return thread;
-                }
-            });
-               
-            this.taskRunner = new DeterministicTaskRunner(this.executor,this);
-        }
+        this.taskRunner =
+            taskFactory.createTaskRunner(this, "Queue:" + destination.getPhysicalName());
         
         super.initialize();
         if (store != null) {
@@ -591,6 +578,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
             }
         };
         doBrowse(browsedMessages, this.getMaxExpirePageSize());
+        asyncWakeup();
     }
 
     public void gc(){
@@ -1190,8 +1178,8 @@ public class Queue extends BaseDestination implements Task, UsageListener {
 	            } catch (Throwable e) {
 	                LOG.error("Failed to page in more queue messages ", e);
                 }
-	        }
-	        return !messagesWaitingForSpace.isEmpty();
+	        }        
+	        return pendingWakeups.decrementAndGet() > 0;
         }
     }
 
@@ -1297,7 +1285,6 @@ public class Queue extends BaseDestination implements Task, UsageListener {
         } catch (IOException e) {
             LOG.error("Failed to remove expired Message from the store ",e);
         }
-        asyncWakeup();
     }
     
     protected ConnectionContext createConnectionContext() {
@@ -1336,14 +1323,16 @@ public class Queue extends BaseDestination implements Task, UsageListener {
     public void wakeup() {
         if (optimizedDispatch || isSlave()) {
             iterate();
+            pendingWakeups.incrementAndGet();
         } else {
             asyncWakeup();
         }
     }
-    
-    public void asyncWakeup() {
+
+    private void asyncWakeup() {
         try {
-            this.taskRunner.wakeup();
+            pendingWakeups.incrementAndGet();
+            this.taskRunner.wakeup();    
         } catch (InterruptedException e) {
             LOG.warn("Async task tunner failed to wakeup ", e);
         }
@@ -1432,7 +1421,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                                 pagedInPendingDispatch.add(qmr);
                             }
                         }
-                        doWakeUp  = true;
+                        doWakeUp = true;
                     }
                 }
             }

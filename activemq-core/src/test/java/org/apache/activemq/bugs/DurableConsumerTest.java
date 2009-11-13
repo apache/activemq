@@ -42,13 +42,15 @@ import javax.jms.TopicPublisher;
 import javax.jms.TopicSession;
 import javax.jms.TopicSubscriber;
 
-import junit.framework.TestCase;
+import junit.framework.Test;
 
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.CombinationTestSupport;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.store.amq.AMQPersistenceAdapterFactory;
+import org.apache.activemq.util.ThreadTracker;
 import org.apache.activemq.util.Wait;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -57,7 +59,7 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision: 1.5 $
  * A Test case for AMQ-1479
  */
-public class DurableConsumerTest extends TestCase {
+public class DurableConsumerTest extends CombinationTestSupport {
     private static final Log LOG = LogFactory.getLog(DurableConsumerTest.class);
     private static int COUNT = 1024*10;
     private static String CONSUMER_NAME = "DURABLE_TEST";
@@ -71,8 +73,8 @@ public class DurableConsumerTest extends TestCase {
     
     private static final String TOPIC_NAME = "failoverTopic";
     private static final String CONNECTION_URL = "failover:(tcp://localhost:61616,tcp://localhost:61617)";
-   
-    
+    public boolean useDedicatedTaskRunner = false;
+       
     private class SimpleTopicSubscriber implements MessageListener, ExceptionListener {
 
         private TopicConnection topicConnection = null;
@@ -176,8 +178,7 @@ public class DurableConsumerTest extends TestCase {
             final int id = i;
             Thread thread = new Thread( new Runnable() {
                 public void run() {
-                    
-                    SimpleTopicSubscriber sub = new SimpleTopicSubscriber(CONNECTION_URL, System.currentTimeMillis()+"-"+id, TOPIC_NAME);
+                    new SimpleTopicSubscriber(CONNECTION_URL, System.currentTimeMillis()+"-"+id, TOPIC_NAME);
                 }
             } );
             thread.start();
@@ -192,7 +193,13 @@ public class DurableConsumerTest extends TestCase {
         Thread.sleep(10000);
         assertEquals(0, exceptions.size());
     }
-  
+    
+    // makes heavy use of threads and can demonstrate https://issues.apache.org/activemq/browse/AMQ-2028
+    // with use dedicatedTaskRunner=true and produce OOM
+    public void initCombosForTestConcurrentDurableConsumer() {
+        addCombinationValues("useDedicatedTaskRunner", new Object[] {Boolean.TRUE, Boolean.FALSE});
+    }
+    
     public void testConcurrentDurableConsumer() throws Exception {
     	
     	broker.start();
@@ -247,7 +254,7 @@ public class DurableConsumerTest extends TestCase {
             }
         };
         
-        ExecutorService executor = Executors.newCachedThreadPool();
+        ExecutorService executor = Executors.newFixedThreadPool(numConsumers);
 
         for (int i=0; i<numConsumers ; i++) {
             executor.execute(consumer);
@@ -362,8 +369,7 @@ public class DurableConsumerTest extends TestCase {
     }
 
     protected void tearDown() throws Exception {
-        super.tearDown();
-        
+        super.tearDown();      
         if (broker != null) {
             broker.stop();
             broker = null;
@@ -392,11 +398,20 @@ public class DurableConsumerTest extends TestCase {
         answer.setUseShutdownHook(false);
         answer.setUseJmx(false);
         answer.setAdvisorySupport(false);
+        answer.setDedicatedTaskRunner(useDedicatedTaskRunner);
     }
 
     protected ActiveMQConnectionFactory createConnectionFactory() throws Exception {
-        return new ActiveMQConnectionFactory(bindAddress);
+        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(bindAddress);
+        factory.setUseDedicatedTaskRunner(useDedicatedTaskRunner);
+        return factory;
     }
 
-   
+    public static Test suite() {
+        return suite(DurableConsumerTest.class);
+    }
+
+    public static void main(String[] args) {
+        junit.textui.TestRunner.run(suite());
+    }
 }

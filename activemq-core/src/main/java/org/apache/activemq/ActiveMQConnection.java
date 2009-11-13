@@ -114,7 +114,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     protected boolean dispatchAsync=true;
     protected boolean alwaysSessionAsync = true;
 
-    private TaskRunnerFactory sessionTaskRunner = new TaskRunnerFactory("ActiveMQ Session Task", ThreadPriorities.INBOUND_CLIENT_SESSION, false, 1000);
+    private TaskRunnerFactory sessionTaskRunner;
     private final ThreadPoolExecutor asyncConnectionThread;
 
     // Connection state variables
@@ -186,6 +186,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     private ConnectionAudit connectionAudit = new ConnectionAudit();
     private DestinationSource destinationSource;
     private final Object ensureConnectionInfoSentMutex = new Object();
+    private boolean useDedicatedTaskRunner;
 
     /**
      * Construct an <code>ActiveMQConnection</code>
@@ -644,7 +645,9 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
                     // factory
                     // then we may need to call
                     // factory.onConnectionClose(this);
-                    sessionTaskRunner.shutdown();
+                    if (sessionTaskRunner != null) {
+                        sessionTaskRunner.shutdown();
+                    }
                     closed.set(true);
                     closing.set(false);
                 }
@@ -927,7 +930,20 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
         transportListeners.remove(transportListener);
     }
 
+    public boolean isUseDedicatedTaskRunner() {
+        return useDedicatedTaskRunner;
+    }
+    
+    public void setUseDedicatedTaskRunner(boolean useDedicatedTaskRunner) {
+        this.useDedicatedTaskRunner = useDedicatedTaskRunner;
+    }
+
     public TaskRunnerFactory getSessionTaskRunner() {
+        synchronized (this) {
+            if (sessionTaskRunner == null) {
+                sessionTaskRunner = new TaskRunnerFactory("ActiveMQ Session Task", ThreadPriorities.INBOUND_CLIENT_SESSION, false, 1000, isUseDedicatedTaskRunner());
+            }
+        }
         return sessionTaskRunner;
     }
 

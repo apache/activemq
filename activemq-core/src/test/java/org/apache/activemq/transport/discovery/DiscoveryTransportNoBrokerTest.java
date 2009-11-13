@@ -32,7 +32,6 @@ import org.apache.commons.logging.LogFactory;
 public class DiscoveryTransportNoBrokerTest extends CombinationTestSupport {
 
     private static final Log LOG = LogFactory.getLog(DiscoveryTransportNoBrokerTest.class);
-    
 
     public void testNoExtraThreads() throws Exception {
         BrokerService broker = new BrokerService();
@@ -86,7 +85,7 @@ public class DiscoveryTransportNoBrokerTest extends CombinationTestSupport {
             connection.setClientID("test");
             fail("Did not fail to connect as expected.");
         }
-        catch ( JMSException expected ) { 
+        catch ( JMSException expected ) {
             assertTrue("reason is java.io.IOException, was: " + expected.getCause(), expected.getCause() instanceof java.io.IOException);
         }
     }
@@ -107,10 +106,10 @@ public class DiscoveryTransportNoBrokerTest extends CombinationTestSupport {
             Connection connection = factory.createConnection();
             connection.setClientID("test");
             fail("Did not fail to connect as expected.");
-        } catch ( JMSException expected ) { 
+        } catch ( JMSException expected ) {
             assertTrue("reason is java.io.IOException, was: " + expected.getCause(), expected.getCause() instanceof java.io.IOException);
             long duration = System.currentTimeMillis() - startT;
-            assertTrue("took at least initialReconnectDelay time: " + duration, duration >= initialReconnectDelay);
+            assertTrue("took at least initialReconnectDelay time: " + duration + " e:" + expected, duration >= initialReconnectDelay);
         }
     }
 }

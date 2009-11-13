@@ -91,6 +91,10 @@ public class ActiveMQSessionExecutor implements Task {
                     if (taskRunner == null) {
                         synchronized (this) {
                             if (this.taskRunner == null) {
+                                if (!isRunning()) {
+                                    // stop has been called
+                                    return;
+                                }
                                 this.taskRunner = session.connection.getSessionTaskRunner().createTaskRunner(this,
                                         "ActiveMQ Session: " + session.getSessionId());
                             }
@@ -142,11 +146,12 @@ public class ActiveMQSessionExecutor implements Task {
     void stop() throws JMSException {
         try {
             if (messageQueue.isRunning()) {
-                messageQueue.stop();
-                TaskRunner taskRunner = this.taskRunner;
-                if (taskRunner != null) {
-                    this.taskRunner = null;
-                    taskRunner.shutdown();
+                synchronized(this) {
+                    messageQueue.stop();
+                    if (this.taskRunner != null) {
+                        this.taskRunner.shutdown();
+                        this.taskRunner = null;
+                    }
                 }
             }
         } catch (InterruptedException e) {

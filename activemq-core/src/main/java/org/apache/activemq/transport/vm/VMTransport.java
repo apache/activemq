@@ -43,7 +43,8 @@ public class VMTransport implements Transport, Task {
 
     private static final Object DISCONNECT = new Object();
     private static final AtomicLong NEXT_ID = new AtomicLong(0);
-    private static final TaskRunnerFactory TASK_RUNNER_FACTORY = new TaskRunnerFactory("VMTransport", Thread.NORM_PRIORITY, true, 1000);
+    // still possible to configure dedicated task runner through system property but not programmatically
+    private static final TaskRunnerFactory TASK_RUNNER_FACTORY = new TaskRunnerFactory("VMTransport", Thread.NORM_PRIORITY, true, 1000, false);
     protected VMTransport peer;
     protected TransportListener transportListener;
     protected boolean disposed;

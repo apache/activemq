@@ -47,7 +47,7 @@ import org.apache.activemq.filter.MessageEvaluationContext;
 import org.apache.activemq.state.ProducerState;
 import org.apache.activemq.store.MessageStore;
 import org.apache.activemq.store.PersistenceAdapter;
-import org.apache.activemq.store.amq.AMQPersistenceAdapter;
+import org.apache.activemq.thread.TaskRunnerFactory;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -105,7 +105,7 @@ public class QueueDuplicatesFromStoreTest extends TestCase {
         final DestinationStatistics destinationStatistics = new DestinationStatistics();
         consumerInfo.setExclusive(true);
         final Queue queue = new Queue(brokerService, destination,
-                queueMessageStore, destinationStatistics, null);
+                queueMessageStore, destinationStatistics, brokerService.getTaskRunnerFactory());
 
         // a workaround for this issue
         // queue.setUseCache(false);

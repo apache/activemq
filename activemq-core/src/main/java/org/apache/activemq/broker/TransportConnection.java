@@ -899,21 +899,26 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
             for (TransportConnectionState cs : connectionStates) {
                 cs.getContext().getStopping().set(true);
             }
-            new Thread("ActiveMQ Transport Stopper: " + transport.getRemoteAddress()) {
-                @Override
-                public void run() {
-                    serviceLock.writeLock().lock();
-                    try {
-                        doStop();
-                    } catch (Throwable e) {
-                        LOG.debug("Error occured while shutting down a connection to '" + transport.getRemoteAddress()
-                                + "': ", e);
-                    } finally {
-                        stopped.countDown();
-                        serviceLock.writeLock().unlock();
+            try {
+                new Thread("ActiveMQ Transport Stopper: " + transport.getRemoteAddress()) {
+                    @Override
+                    public void run() {
+                        serviceLock.writeLock().lock();
+                        try {
+                            doStop();
+                        } catch (Throwable e) {
+                            LOG.debug("Error occured while shutting down a connection to '" + transport.getRemoteAddress()
+                                    + "': ", e);
+                        } finally {
+                            stopped.countDown();
+                            serviceLock.writeLock().unlock();
+                        }
                     }
-                }
-            }.start();
+                }.start();
+            } catch (Throwable t) {
+                LOG.warn("cannot create async transport stopper thread.. not waiting for stop to complete, reason:", t);
+                stopped.countDown();
+            }
         }
     }
 

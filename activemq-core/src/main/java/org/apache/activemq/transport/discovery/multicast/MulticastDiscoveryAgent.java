@@ -333,7 +333,9 @@ public class MulticastDiscoveryAgent implements DiscoveryAgent, Runnable {
             if (mcast != null) {
                 mcast.close();
             }
-            runner.interrupt();
+            if (runner != null) {
+                runner.interrupt();
+            }
             getExecutor().shutdownNow();
         }
     }

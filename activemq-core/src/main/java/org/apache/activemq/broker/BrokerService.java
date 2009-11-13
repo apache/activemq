@@ -933,7 +933,7 @@ public class BrokerService implements Service {
     public TaskRunnerFactory getPersistenceTaskRunnerFactory() {
         if (taskRunnerFactory == null) {
             persistenceTaskRunnerFactory = new TaskRunnerFactory("Persistence Adaptor Task", persistenceThreadPriority,
-                    true, 1000);
+                    true, 1000, isDedicatedTaskRunner());
         }
         return persistenceTaskRunnerFactory;
     }

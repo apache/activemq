@@ -43,7 +43,7 @@ public class TaskRunnerFactory {
         this("ActiveMQ Task", Thread.NORM_PRIORITY, true, 1000);
     }
     
-    public TaskRunnerFactory(String name, int priority, boolean daemon, int maxIterationsPerRun) {
+    private TaskRunnerFactory(String name, int priority, boolean daemon, int maxIterationsPerRun) {
     	this(name,priority,daemon,maxIterationsPerRun,false);
     }
 
