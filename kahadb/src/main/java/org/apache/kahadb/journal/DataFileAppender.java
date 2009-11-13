@@ -21,6 +21,7 @@ import java.io.InterruptedIOException;
 import java.io.RandomAccessFile;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.zip.Adler32;
 import java.util.zip.Checksum;
 
@@ -85,6 +86,7 @@ class DataFileAppender {
         public final CountDownLatch latch = new CountDownLatch(1);
 		private final int offset;
         public int size = Journal.BATCH_CONTROL_RECORD_SIZE;
+        public AtomicReference<IOException> exception = new AtomicReference<IOException>();
 
         public WriteBatch(DataFile dataFile, int offset, WriteCommand write) throws IOException {
             this.dataFile = dataFile;
@@ -183,6 +185,10 @@ class DataFileAppender {
                 batch.latch.await();
             } catch (InterruptedException e) {
                 throw new InterruptedIOException();
+            }
+            IOException exception = batch.exception.get(); 
+            if (exception != null) {
+            	throw exception;
             }
         }	
 
@@ -404,11 +410,16 @@ class DataFileAppender {
                 wb.latch.countDown();
             }
         } catch (IOException e) {
-        	if (wb != null) {
-        		wb.latch.countDown();
-        	}
             synchronized (enqueueMutex) {
                 firstAsyncException = e;
+                if (wb != null) {
+                    wb.latch.countDown();
+                    wb.exception.set(e);
+                }
+                if (nextWriteBatch != null) {
+            	    nextWriteBatch.latch.countDown();
+            	    nextWriteBatch.exception.set(e);
+                }
             }
         } catch (InterruptedException e) {
         } finally {
