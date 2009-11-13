@@ -61,16 +61,23 @@ public class ResponseCorrelator extends TransportFilter {
     }
 
     public FutureResponse asyncRequest(Object o, ResponseCallback responseCallback) throws IOException {
-        Command command = (Command)o;
+        Command command = (Command) o;
         command.setCommandId(sequenceGenerator.getNextSequenceId());
         command.setResponseRequired(true);
         FutureResponse future = new FutureResponse(responseCallback);
+        IOException priorError = null;
         synchronized (requestMap) {
-            if( this.error !=null ) {
-                throw error;
+            priorError = this.error;
+            if (priorError == null) {
+                requestMap.put(new Integer(command.getCommandId()), future);
             }
-            requestMap.put(new Integer(command.getCommandId()), future);
         }
+
+        if (priorError != null) {
+            future.set(new ExceptionResponse(priorError));
+            throw priorError;
+        }
+
         next.oneway(command);
         return future;
     }
