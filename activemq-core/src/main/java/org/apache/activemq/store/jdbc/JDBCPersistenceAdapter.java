@@ -358,7 +358,7 @@ public class JDBCPersistenceAdapter extends DataSourceSupport implements Persist
                     adapter = finder.newInstance(dirverName);
                     LOG.info("Database " + kind + " driver override recognized for : [" + dirverName + "] - adapter: " + adapter.getClass());
                 } catch (Throwable e) {
-                    LOG.warn("Database " + kind + " driver override not found for : [" + dirverName
+                    LOG.info("Database " + kind + " driver override not found for : [" + dirverName
                              + "].  Will use default implementation.");
                 }
             } catch (SQLException e) {
