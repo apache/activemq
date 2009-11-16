@@ -69,6 +69,8 @@ public class BrokerTestSupport extends CombinationTestSupport {
     protected int txGenerator;
     protected int tempDestGenerator;
     protected PersistenceAdapter persistenceAdapter;
+    
+    protected String queueName = "TEST";
 
     protected int maxWait = 4000;
 
@@ -284,7 +286,7 @@ public class BrokerTestSupport extends CombinationTestSupport {
             connection.send(info);
             return info.getDestination();
         } else {
-            return ActiveMQDestination.createDestination("TEST", destinationType);
+            return ActiveMQDestination.createDestination(queueName, destinationType);
         }
     }
 
