@@ -44,6 +44,7 @@ import java.util.zip.Checksum;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.kahadb.util.DataByteArrayOutputStream;
+import org.apache.kahadb.util.IOExceptionSupport;
 import org.apache.kahadb.util.IOHelper;
 import org.apache.kahadb.util.IntrospectionSupport;
 import org.apache.kahadb.util.LRUCache;
@@ -165,8 +166,8 @@ public class PageFile {
         }
         
         void begin() {
-            diskBound = current;
-            current = null;
+           diskBound = current;
+           current = null;
         }
         
         /**
@@ -937,12 +938,18 @@ public class PageFile {
             // If there is not enough to write, wait for a notification...
 
             batch = new ArrayList<PageWrite>(writes.size());
-            // build a write batch from the current write cache. 
-            for (PageWrite write : writes.values()) {
+            // build a write batch from the current write cache.
+            Iterator<Long> it = writes.keySet().iterator();
+            while (it.hasNext()) {
+                Long key = it.next();
+                PageWrite write = writes.get(key);
                 batch.add(write);
                 // Move the current write to the diskBound write, this lets folks update the 
                 // page again without blocking for this write.
                 write.begin();
+                if (write.diskBound == null) {
+                    batch.remove(write);
+                }
             }
 
             // Grab on to the existing checkpoint latch cause once we do this write we can 
@@ -959,7 +966,11 @@ public class PageFile {
            // our write batches are going to much larger.
            Checksum checksum = new Adler32();
            for (PageWrite w : batch) {
-               checksum.update(w.diskBound, 0, pageSize);
+               try {
+                   checksum.update(w.diskBound, 0, pageSize);
+               } catch (Throwable t) {
+                   throw IOExceptionSupport.create("Cannot create recovery file. Reason: " + t, t);
+               }
            }
            
            // Can we shrink the recovery buffer??
