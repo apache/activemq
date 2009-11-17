@@ -282,7 +282,7 @@ public final class IntrospectionSupport {
         if (value instanceof ActiveMQDestination) {
             ActiveMQDestination destination = (ActiveMQDestination)value;
             buffer.append(destination.getQualifiedName());
-        } else if (key.toString().contains("password")){
+        } else if (key.toString().toLowerCase().contains("password")){
             buffer.append("*****");           
         } else {
             buffer.append(value);
