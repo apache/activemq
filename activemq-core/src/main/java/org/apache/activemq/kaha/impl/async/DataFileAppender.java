@@ -21,7 +21,6 @@ import java.io.InterruptedIOException;
 import java.io.RandomAccessFile;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.activemq.util.ByteSequence;
 import org.apache.activemq.util.DataByteArrayOutputStream;
@@ -49,7 +48,7 @@ class DataFileAppender {
     protected final CountDownLatch shutdownDone = new CountDownLatch(1);
     protected int maxWriteBatchSize = DEFAULT_MAX_BATCH_SIZE;
 
-    protected boolean running;
+    private boolean running;
     private Thread thread;
 
     public static class WriteKey {
@@ -83,7 +82,6 @@ class DataFileAppender {
         public final WriteCommand first;
         public final CountDownLatch latch = new CountDownLatch(1);
         public int size;
-        public AtomicReference<IOException> exception = new AtomicReference<IOException>();
 
         public WriteBatch(DataFile dataFile, WriteCommand write) throws IOException {
             this.dataFile = dataFile;
@@ -181,10 +179,6 @@ class DataFileAppender {
             } catch (InterruptedException e) {
                 throw new InterruptedIOException();
             }
-            IOException exception = batch.exception.get(); 
-            if (exception != null) {
-                throw exception;
-            }
         }
 
         return location;
@@ -222,7 +216,10 @@ class DataFileAppender {
             if (shutdown) {
                 throw new IOException("Async Writter Thread Shutdown");
             }
-            
+            if (firstAsyncException != null) {
+                throw firstAsyncException;
+            }
+
             if (!running) {
                 running = true;
                 thread = new Thread() {
@@ -234,11 +231,6 @@ class DataFileAppender {
                 thread.setDaemon(true);
                 thread.setName("ActiveMQ Data File Writer");
                 thread.start();
-                firstAsyncException = null;
-            }
-            
-            if (firstAsyncException != null) {
-                throw firstAsyncException;
             }
 
             if (nextWriteBatch == null) {
@@ -306,7 +298,6 @@ class DataFileAppender {
     protected void processQueue() {
         DataFile dataFile = null;
         RandomAccessFile file = null;
-        WriteBatch wb = null;
         try {
 
             DataByteArrayOutputStream buff = new DataByteArrayOutputStream(maxWriteBatchSize);
@@ -330,7 +321,7 @@ class DataFileAppender {
                     enqueueMutex.notify();
                 }
 
-                wb = (WriteBatch)o;
+                WriteBatch wb = (WriteBatch)o;
                 if (dataFile != wb.dataFile) {
                     if (file != null) {
                         dataFile.closeRandomAccessFile(file);
@@ -415,14 +406,6 @@ class DataFileAppender {
         } catch (IOException e) {
             synchronized (enqueueMutex) {
                 firstAsyncException = e;
-                if (wb != null) {
-                    wb.latch.countDown();
-                    wb.exception.set(e);
-                }
-                if (nextWriteBatch != null) {
-                    nextWriteBatch.latch.countDown();
-                    nextWriteBatch.exception.set(e);
-                }
             }
         } catch (InterruptedException e) {
         } finally {

@@ -262,28 +262,23 @@ public final class IntrospectionSupport {
         boolean first = true;
         for (Iterator iter = entrySet.iterator(); iter.hasNext();) {
             Map.Entry entry = (Map.Entry)iter.next();
-            Object value = entry.getValue();
-            Object key = entry.getKey();
             if (first) {
                 first = false;
             } else {
                 buffer.append(", ");
             }
-            buffer.append(key);
+            buffer.append(entry.getKey());
             buffer.append(" = ");
-            
-            appendToString(buffer, key, value);
+            appendToString(buffer, entry.getValue());
         }
         buffer.append("}");
         return buffer.toString();
     }
 
-    protected static void appendToString(StringBuffer buffer, Object key, Object value) {
+    protected static void appendToString(StringBuffer buffer, Object value) {
         if (value instanceof ActiveMQDestination) {
             ActiveMQDestination destination = (ActiveMQDestination)value;
             buffer.append(destination.getQualifiedName());
-        } else if (key.toString().contains("password")){
-            buffer.append("*****");           
         } else {
             buffer.append(value);
         }
