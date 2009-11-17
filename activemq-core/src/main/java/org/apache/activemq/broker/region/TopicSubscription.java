@@ -96,8 +96,14 @@ public class TopicSubscription extends AbstractSubscription {
                 }
             }
             if (maximumPendingMessages != 0) {
+            	synchronized(matchedListMutex){
+            		while (matched.isFull()){
+            			matchedListMutex.wait(20);
+            		}
+            		matched.addMessageLast(node);
+            	}
                 synchronized (matchedListMutex) {
-                    matched.addMessageLast(node);
+                    
                     // NOTE - be careful about the slaveBroker!
                     if (maximumPendingMessages > 0) {
                         // calculate the high water mark from which point we
@@ -115,7 +121,7 @@ public class TopicSubscription extends AbstractSubscription {
                             // only page in a 1000 at a time - else we could
                             // blow da memory
                             pageInSize = Math.max(1000, pageInSize);
-                            LinkedList list = null;
+                            LinkedList<MessageReference> list = null;
                             MessageReference[] oldMessages=null;
                             synchronized(matched){
                             list = matched.pageInList(pageInSize);
