@@ -50,6 +50,7 @@
     <openjpa-version>1.2.0</openjpa-version>
     <commons-dbcp-version>1.2.2</commons-dbcp-version>
     <commons-httpclient-version>3.1</commons-httpclient-version>
+    <commons-io-version>1.4</commons-io-version>
     <commons-logging-version>1.1</commons-logging-version>
     <commons-pool-version>1.4</commons-pool-version>
     <commons-primitives-version>1.0</commons-primitives-version>
@@ -812,6 +813,12 @@
         <groupId>annogen</groupId>
         <artifactId>annogen</artifactId>
         <version>${annogen-version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>commons-io</groupId>
+        <artifactId>commons-io</artifactId>
+        <version>${commons-io-version}</version>
       </dependency>
 
       <dependency>
