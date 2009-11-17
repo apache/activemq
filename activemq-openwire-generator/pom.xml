@@ -41,11 +41,6 @@
       <version>1.0-jsr-03</version>
     </dependency>
     <dependency>
-      <groupId>groovy</groupId>
-      <artifactId>groovy-all</artifactId>
-      <version>1.0-jsr-03</version>
-    </dependency>
-    <dependency>
       <groupId>annogen</groupId>
       <artifactId>annogen</artifactId>
       <version>0.1.0</version>
