@@ -32,6 +32,7 @@
 
   <properties>
     <activemq.osgi.import.pkg>
+      org.apache.activemq.pool;resolution:=optional,
       com.thoughtworks.xstream*;resolution:=optional,
       org.apache.activeio*;resolution:=optional,
       org.apache.camel*;resolution:=optional,
