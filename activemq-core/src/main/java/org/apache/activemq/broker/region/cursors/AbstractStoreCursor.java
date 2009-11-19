@@ -113,6 +113,7 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
     private synchronized void clearIterator(boolean ensureIterator) {
         boolean haveIterator = this.iterator != null;
         this.iterator=null;
+        last = null;
         if(haveIterator&&ensureIterator) {
             ensureIterator();
         }
@@ -142,11 +143,11 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
     }
     
     public final synchronized MessageReference next() {
-        Message result = null;
+        MessageReference result = null;
         if (!this.batchList.isEmpty()&&this.iterator.hasNext()) {
             result = this.iterator.next().getValue();
-            result.decrementReferenceCount();
         }
+        last = result;
         return result;
     }
     
@@ -181,6 +182,9 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
         size--;
         if (iterator!=null) {
             iterator.remove();
+        }
+        if (last != null) {
+            last.decrementReferenceCount();
         }
         if (size==0 && isStarted() && useCache && hasSpace() && getStoreSize() == 0) {
             if (LOG.isDebugEnabled()) {
