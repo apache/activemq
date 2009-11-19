@@ -43,6 +43,7 @@ public class AbstractPendingMessageCursor implements PendingMessageCursor {
     protected ActiveMQMessageAudit audit;
     protected boolean useCache=true;
     private boolean started=false;
+    protected MessageReference last = null;
   
 
     public synchronized void start() throws Exception  {

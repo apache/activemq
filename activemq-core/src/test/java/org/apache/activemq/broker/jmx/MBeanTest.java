@@ -40,6 +40,8 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.EmbeddedBrokerTestSupport;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.region.BaseDestination;
+import org.apache.activemq.broker.region.policy.PolicyEntry;
+import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.broker.region.policy.SharedDeadLetterStrategy;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.commons.logging.Log;
@@ -120,6 +122,7 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
             messageIDs[i] = messageID;
         }
 
+        assertTrue("dest has some memory usage", queue.getMemoryPercentUsage() > 0);
 
         echo("About to move " + messageCount + " messages");
 
@@ -138,11 +141,15 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         echo("Now browsing the second queue");
 
         queueViewMBeanName = assertRegisteredObjectName(domain + ":Type=Queue,Destination=" + newDestination + ",BrokerName=localhost");
-        queue = (QueueViewMBean)MBeanServerInvocationHandler.newProxyInstance(mbeanServer, queueViewMBeanName, QueueViewMBean.class, true);
+        QueueViewMBean queueNew = (QueueViewMBean)MBeanServerInvocationHandler.newProxyInstance(mbeanServer, queueViewMBeanName, QueueViewMBean.class, true);
 
-        long newQueuesize = queue.getQueueSize();
+        long newQueuesize = queueNew.getQueueSize();
         echo("Second queue size: " + newQueuesize);
         assertEquals("Unexpected number of messages ",messageCount, newQueuesize);
+        
+        // check memory usage migration
+        assertTrue("new dest has some memory usage", queueNew.getMemoryPercentUsage() > 0);
+        assertEquals("old dest has no memory usage", 0, queue.getMemoryPercentUsage());
     }
 
     public void testRetryMessages() throws Exception {
@@ -164,7 +171,7 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
 
         long initialQueueSize = queue.getQueueSize();
         echo("current queue size: " + initialQueueSize);
-
+        assertTrue("dest has some memory usage", queue.getMemoryPercentUsage() > 0);
 
         // lets create a duff consumer which keeps rolling back...
         Session session = connection.createSession(true, Session.SESSION_TRANSACTED);
@@ -203,6 +210,10 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
             messageIDs[i] = messageID;
         }
 
+        int dlqMemUsage = dlq.getMemoryPercentUsage();
+        assertTrue("dlq has some memory usage", dlqMemUsage > 0);
+        assertEquals("dest has no memory usage", 0, queue.getMemoryPercentUsage());
+        
 
         echo("About to retry " + messageCount + " messages");
 
@@ -223,6 +234,10 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         assertEquals("DLQ size", initialDlqSize - messageCount, dlqSize);
         assertEquals("queue size", initialQueueSize, queueSize);
         assertEquals("browse queue size", initialQueueSize, actualCount);
+        
+        assertEquals("dest has some memory usage", dlqMemUsage, queue.getMemoryPercentUsage());
+        assertEquals("dlq still has memory usage", dlqMemUsage, dlq.getMemoryPercentUsage());
+        
     }
 
     public void testMoveMessagesBySelector() throws Exception {
@@ -246,6 +261,7 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         queue.removeMatchingMessages("counter > 2");
 
         assertEquals("Should have no more messages in the queue: " + queueViewMBeanName, 0, queue.getQueueSize());
+        assertEquals("dest has no memory usage", 0, queue.getMemoryPercentUsage());
     }
 
     public void testCopyMessagesBySelector() throws Exception {
@@ -272,6 +288,7 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         queue.removeMatchingMessages("counter > 2");
 
         assertEquals("Should have no more messages in the queue: " + queueViewMBeanName, 0, queue.getQueueSize());
+        assertEquals("dest has no memory usage", 0, queue.getMemoryPercentUsage());
     }
 
 
@@ -528,7 +545,14 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         answer.setPersistent(false);
         answer.setDeleteAllMessagesOnStartup(true);
         answer.setUseJmx(true);
-        //answer.setEnableStatistics(true);
+       
+        // apply memory limit so that %usage is visible
+        PolicyMap policyMap = new PolicyMap();
+        PolicyEntry defaultEntry = new PolicyEntry();
+        defaultEntry.setMemoryLimit(1024*1024*4);
+        policyMap.setDefaultEntry(defaultEntry);
+        answer.setDestinationPolicy(policyMap);
+        
         answer.addConnector(bindAddress);
         return answer;
     }

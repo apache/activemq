@@ -723,11 +723,7 @@ public class RegionBroker extends EmptyBroker {
 							                .getDestination());
 							if (context.getBroker()==null) {
 								context.setBroker(getRoot());
-							}                        
-							                           
-							// Clear out the memory usage for the old queue. 
-							// We'll reset it to the DLQ below:
-							message.setMemoryUsage(null);
+							}
 							BrokerSupport.resendNoCopy(context,message,
 							        deadLetterDestination);
 						}

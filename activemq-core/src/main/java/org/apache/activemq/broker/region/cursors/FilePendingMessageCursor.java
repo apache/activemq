@@ -58,8 +58,6 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
     private boolean iterating;
     private boolean flushRequired;
     private AtomicBoolean started = new AtomicBoolean();
-    private MessageReference last = null;
-
     /**
      * @param name
      * @param store
