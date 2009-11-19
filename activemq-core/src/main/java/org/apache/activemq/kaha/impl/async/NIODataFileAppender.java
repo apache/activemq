@@ -47,6 +47,7 @@ class NIODataFileAppender extends DataFileAppender {
         DataFile dataFile = null;
         RandomAccessFile file = null;
         FileChannel channel = null;
+        WriteBatch wb = null;
 
         try {
 
@@ -81,7 +82,7 @@ class NIODataFileAppender extends DataFileAppender {
                     enqueueMutex.notify();
                 }
 
-                WriteBatch wb = (WriteBatch)o;
+                wb = (WriteBatch)o;
                 if (dataFile != wb.dataFile) {
                     if (file != null) {
                         dataFile.closeRandomAccessFile(file);
@@ -180,16 +181,32 @@ class NIODataFileAppender extends DataFileAppender {
         } catch (IOException e) {
             synchronized (enqueueMutex) {
                 firstAsyncException = e;
+                if (wb != null) {
+                    wb.latch.countDown();
+                    wb.exception.set(e);
+                }
+                if (nextWriteBatch != null) {
+                    nextWriteBatch.latch.countDown();
+                    nextWriteBatch.exception.set(e);
+                }
             }
         } catch (InterruptedException e) {
         } finally {
             try {
                 if (file != null) {
                     dataFile.closeRandomAccessFile(file);
+                    dataFile = null;
+                    file.close();
+                    file = null;
+                }
+                if (channel != null) {
+                    channel.close();
+                    channel = null;
                 }
             } catch (IOException e) {
             }
             shutdownDone.countDown();
+            running = false;
         }
     }
 
