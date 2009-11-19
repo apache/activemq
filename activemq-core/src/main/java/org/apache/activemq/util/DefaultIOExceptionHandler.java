@@ -28,11 +28,24 @@ public class DefaultIOExceptionHandler implements IOExceptionHandler {
             .getLog(DefaultIOExceptionHandler.class);
     private BrokerService broker;
     private boolean ignoreAllErrors = false;
+    private boolean ignoreNoSpaceErrors = true;
+    private String noSpaceMessage = "space";
 
     public void handle(IOException exception) {
         if (ignoreAllErrors) {
             LOG.info("Ignoring IO exception, " + exception, exception);
             return;
+        }
+        
+        if (ignoreNoSpaceErrors) {
+            Throwable cause = exception;
+            while (cause != null && cause instanceof IOException) {
+                if (cause.getMessage().contains(noSpaceMessage)) {
+                    LOG.info("Ignoring no space left exception, " + exception, exception);
+                    return;
+                }
+                cause = cause.getCause();
+            }
         }
 
         LOG.info("Stopping the broker due to IO exception, " + exception, exception);
@@ -57,6 +70,22 @@ public class DefaultIOExceptionHandler implements IOExceptionHandler {
 
     public void setIgnoreAllErrors(boolean ignoreAllErrors) {
         this.ignoreAllErrors = ignoreAllErrors;
+    }
+
+    public boolean isIgnoreNoSpaceErrors() {
+        return ignoreNoSpaceErrors;
+    }
+
+    public void setIgnoreNoSpaceErrors(boolean ignoreNoSpaceErrors) {
+        this.ignoreNoSpaceErrors = ignoreNoSpaceErrors;
+    }
+
+    public String getNoSpaceMessage() {
+        return noSpaceMessage;
+    }
+
+    public void setNoSpaceMessage(String noSpaceMessage) {
+        this.noSpaceMessage = noSpaceMessage;
     }
 
 }
