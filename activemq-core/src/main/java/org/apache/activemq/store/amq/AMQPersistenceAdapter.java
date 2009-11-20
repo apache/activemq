@@ -695,7 +695,13 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
     }
     
     public Location writeCommand(DataStructure command, boolean syncHint,boolean forceSync) throws IOException {
-        return asyncDataManager.write(wireFormat.marshal(command), (forceSync||(syncHint && syncOnWrite)));
+    	try {
+    		return asyncDataManager.write(wireFormat.marshal(command), (forceSync||(syncHint && syncOnWrite)));
+    	} catch (IOException ioe) {
+    		LOG.error("Failed to write command: " + command + ". Reason: " + ioe, ioe);
+        	brokerService.handleIOException(ioe);
+        	throw ioe;
+        }
     }
 
     private Location writeTraceMessage(String message, boolean sync) throws IOException {

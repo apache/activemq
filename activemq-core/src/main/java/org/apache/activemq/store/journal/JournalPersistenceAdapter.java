@@ -623,7 +623,7 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
         	    return journal.write(toPacket(wireFormat.marshal(command)), sync);
             } catch (IOException ioe) {
         	    LOG.error("Cannot write to the journal", ioe);
-        	    stopBroker();
+        	    brokerService.handleIOException(ioe);
         	    throw ioe;
             }
         }
@@ -724,18 +724,6 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
         if( pa instanceof BrokerServiceAware ) {
             ((BrokerServiceAware)pa).setBrokerService(brokerService);
         }
-    }
-    
-    protected void stopBroker() {
-        new Thread() {
-           public void run() {
-        	   try {
-    	            brokerService.stop();
-    	        } catch (Exception e) {
-    	            LOG.warn("Failure occured while stopping broker");
-    	        }    			
-    		}
-    	}.start();
     }
 
 }

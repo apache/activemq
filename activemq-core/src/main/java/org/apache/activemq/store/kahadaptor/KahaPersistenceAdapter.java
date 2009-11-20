@@ -24,6 +24,8 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.BrokerServiceAware;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
@@ -54,7 +56,7 @@ import org.apache.commons.logging.LogFactory;
  * @org.apache.xbean.XBean
  * @version $Revision: 1.4 $
  */
-public class KahaPersistenceAdapter implements PersistenceAdapter {
+public class KahaPersistenceAdapter implements PersistenceAdapter, BrokerServiceAware {
 
     private static final int STORE_LOCKED_WAIT_DELAY = 10 * 1000;
     private static final Log LOG = LogFactory.getLog(KahaPersistenceAdapter.class);
@@ -73,6 +75,7 @@ public class KahaPersistenceAdapter implements PersistenceAdapter {
     private boolean initialized;
     private final AtomicLong storeSize;
     private boolean persistentIndex = true;
+    private BrokerService brokerService;
 
     
     public KahaPersistenceAdapter(AtomicLong size) {
@@ -175,6 +178,7 @@ public class KahaPersistenceAdapter implements PersistenceAdapter {
                     container.setValueMarshaller(new TransactionMarshaller(wireFormat));
                     container.load();
                     transactionStore = new KahaTransactionStore(this, container);
+                    transactionStore.setBrokerService(brokerService);
                     break;
                 } catch (StoreLockedExcpetion e) {
                     LOG.info("Store is locked... waiting " + (STORE_LOCKED_WAIT_DELAY / 1000)
@@ -361,6 +365,10 @@ public class KahaPersistenceAdapter implements PersistenceAdapter {
             wireFormat.setTightEncodingEnabled(true);
         }
     }
+
+	public void setBrokerService(BrokerService brokerService) {
+		this.brokerService = brokerService;
+	}
   
 
 }

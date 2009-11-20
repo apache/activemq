@@ -36,6 +36,8 @@ import java.util.TreeSet;
 import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.BrokerServiceAware;
 import org.apache.activemq.command.ConnectionId;
 import org.apache.activemq.command.LocalTransactionId;
 import org.apache.activemq.command.SubscriptionInfo;
@@ -75,8 +77,11 @@ import org.apache.kahadb.util.Sequence;
 import org.apache.kahadb.util.SequenceSet;
 import org.apache.kahadb.util.StringMarshaller;
 import org.apache.kahadb.util.VariableMarshaller;
+import org.springframework.core.enums.LetterCodedLabeledEnum;
 
-public class MessageDatabase {
+public class MessageDatabase implements BrokerServiceAware {
+	
+	private BrokerService brokerService;
 
     public static final String PROPERTY_LOG_SLOW_ACCESS_TIME = "org.apache.activemq.store.kahadb.LOG_SLOW_ACCESS_TIME";
     public static final int LOG_SLOW_ACCESS_TIME = Integer.parseInt(System.getProperty(PROPERTY_LOG_SLOW_ACCESS_TIME, "500"));
@@ -227,6 +232,41 @@ public class MessageDatabase {
         }
 	}
 	
+	private void startCheckpoint() {
+        checkpointThread = new Thread("ActiveMQ Journal Checkpoint Worker") {
+            public void run() {
+                try {
+                    long lastCleanup = System.currentTimeMillis();
+                    long lastCheckpoint = System.currentTimeMillis();
+                    // Sleep for a short time so we can periodically check 
+                    // to see if we need to exit this thread.
+                    long sleepTime = Math.min(checkpointInterval, 500);
+                    while (opened.get()) {
+                        
+                        Thread.sleep(sleepTime);
+                        long now = System.currentTimeMillis();
+                        if( now - lastCleanup >= cleanupInterval ) {
+                            checkpointCleanup(true);
+                            lastCleanup = now;
+                            lastCheckpoint = now;
+                        } else if( now - lastCheckpoint >= checkpointInterval ) {
+                            checkpointCleanup(false);
+                            lastCheckpoint = now;
+                        }
+                    }
+                } catch (InterruptedException e) {
+                    // Looks like someone really wants us to exit this thread...
+                } catch (IOException ioe) {
+                    LOG.error("Checkpoint failed", ioe);
+                    brokerService.handleIOException(ioe);
+                }
+            }
+                    
+        };
+        checkpointThread.setDaemon(true);
+        checkpointThread.start();
+	}
+	
 	/**
 	 * @throws IOException
 	 */
@@ -236,34 +276,7 @@ public class MessageDatabase {
             
 	        loadPageFile();
 	        
-	        checkpointThread = new Thread("ActiveMQ Journal Checkpoint Worker") {
-	            public void run() {
-	                try {
-	                    long lastCleanup = System.currentTimeMillis();
-	                    long lastCheckpoint = System.currentTimeMillis();
-	                    
-	                    // Sleep for a short time so we can periodically check 
-	                    // to see if we need to exit this thread.
-	                    long sleepTime = Math.min(checkpointInterval, 500);
-	                    while (opened.get()) {
-	                        Thread.sleep(sleepTime);
-	                        long now = System.currentTimeMillis();
-	                        if( now - lastCleanup >= cleanupInterval ) {
-	                            checkpointCleanup(true);
-	                            lastCleanup = now;
-	                            lastCheckpoint = now;
-	                        } else if( now - lastCheckpoint >= checkpointInterval ) {
-	                            checkpointCleanup(false);
-	                            lastCheckpoint = now;
-	                        }
-	                    }
-	                } catch (InterruptedException e) {
-	                    // Looks like someone really wants us to exit this thread...
-	                }
-	            }
-	        };
-	        checkpointThread.setDaemon(true);
-	        checkpointThread.start();
+	        startCheckpoint();
             recover();
 		}
 	}
@@ -575,26 +588,22 @@ public class MessageDatabase {
         return journal.getNextLocation(null);
 	}
 
-    protected void checkpointCleanup(final boolean cleanup) {
-        try {
-        	long start = System.currentTimeMillis();
-            synchronized (indexMutex) {
-            	if( !opened.get() ) {
-            		return;
-            	}
-                pageFile.tx().execute(new Transaction.Closure<IOException>() {
-                    public void execute(Transaction tx) throws IOException {
-                        checkpointUpdate(tx, cleanup);
-                    }
-                });
-            }
-        	long end = System.currentTimeMillis();
-        	if( LOG_SLOW_ACCESS_TIME>0 && end-start > LOG_SLOW_ACCESS_TIME) {
-        		LOG.info("Slow KahaDB access: cleanup took "+(end-start));
+    protected void checkpointCleanup(final boolean cleanup) throws IOException {
+    	long start = System.currentTimeMillis();
+        synchronized (indexMutex) {
+        	if( !opened.get() ) {
+        		return;
         	}
-        } catch (IOException e) {
-        	e.printStackTrace();
+            pageFile.tx().execute(new Transaction.Closure<IOException>() {
+                public void execute(Transaction tx) throws IOException {
+                    checkpointUpdate(tx, cleanup);
+                }
+            });
         }
+    	long end = System.currentTimeMillis();
+    	if( LOG_SLOW_ACCESS_TIME>0 && end-start > LOG_SLOW_ACCESS_TIME) {
+    		LOG.info("Slow KahaDB access: cleanup took "+(end-start));
+    	}
     }
 
     
@@ -617,32 +626,40 @@ public class MessageDatabase {
     }
 
     /**
-     * All updated are are funneled through this method. The updates a converted
+     * All updated are are funneled through this method. The updates are converted
      * to a JournalMessage which is logged to the journal and then the data from
      * the JournalMessage is used to update the index just like it would be done
-     * durring a recovery process.
+     * during a recovery process.
      */
     public Location store(JournalCommand data, boolean sync) throws IOException {
-
-    	
-        int size = data.serializedSizeFramed();
-        DataByteArrayOutputStream os = new DataByteArrayOutputStream(size + 1);
-        os.writeByte(data.type().getNumber());
-        data.writeFramed(os);
-
-        long start = System.currentTimeMillis();
-        Location location = journal.write(os.toByteSequence(), sync);
-        long start2 = System.currentTimeMillis();
-        process(data, location);
-    	long end = System.currentTimeMillis();
-    	if( LOG_SLOW_ACCESS_TIME>0 && end-start > LOG_SLOW_ACCESS_TIME) {
-    		LOG.info("Slow KahaDB access: Journal append took: "+(start2-start)+" ms, Index update took "+(end-start2)+" ms");
+    	try {
+            int size = data.serializedSizeFramed();
+            DataByteArrayOutputStream os = new DataByteArrayOutputStream(size + 1);
+            os.writeByte(data.type().getNumber());
+            data.writeFramed(os);
+    
+            long start = System.currentTimeMillis();
+            Location location = journal.write(os.toByteSequence(), sync);
+            long start2 = System.currentTimeMillis();
+            process(data, location);
+        	long end = System.currentTimeMillis();
+        	if( LOG_SLOW_ACCESS_TIME>0 && end-start > LOG_SLOW_ACCESS_TIME) {
+        		LOG.info("Slow KahaDB access: Journal append took: "+(start2-start)+" ms, Index update took "+(end-start2)+" ms");
+        	}
+    
+            synchronized (indexMutex) {
+            	metadata.lastUpdate = location;
+            }
+            if (!checkpointThread.isAlive()) {
+                LOG.info("KahaDB: Recovering checkpoint thread after exception");
+                startCheckpoint();
+            }
+            return location;
+    	} catch (IOException ioe) {
+            LOG.error("KahaDB failed to store to Journal", ioe);
+            brokerService.handleIOException(ioe);
+    	    throw ioe;
     	}
-
-        synchronized (indexMutex) {
-        	metadata.lastUpdate = location;
-        }
-        return location;
     }
 
     /**
@@ -1530,4 +1547,8 @@ public class MessageDatabase {
     public void setChecksumJournalFiles(boolean checksumJournalFiles) {
         this.checksumJournalFiles = checksumJournalFiles;
     }
+
+	public void setBrokerService(BrokerService brokerService) {
+		this.brokerService = brokerService;
+	}
 }
