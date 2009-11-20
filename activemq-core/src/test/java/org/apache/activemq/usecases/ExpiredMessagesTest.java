@@ -37,6 +37,7 @@ import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
+import javax.management.InstanceNotFoundException;
 import javax.management.ObjectName;
 import junit.framework.Test;
 
@@ -243,25 +244,27 @@ public class ExpiredMessagesTest extends CombinationTestSupport {
         final boolean deleteAllMessages = false;
         broker = createBroker(deleteAllMessages, 5000);
         
-        view = createView(destination);
-        LOG.info("Stats: size: " + view.getQueueSize() + ", enqueues: "
-                + view.getDequeueCount() + ", dequeues: "
-                + view.getDequeueCount() + ", dispatched: "
-                + view.getDispatchCount() + ", inflight: "
-                + view.getInFlightCount() + ", expiries: "
-                + view.getExpiredCount());
+        Wait.waitFor(new Wait.Condition() {
+            public boolean isSatisified() throws Exception {
+                boolean result = false;
+                try {
+                    DestinationViewMBean view = createView(destination);
+                    LOG.info("Stats: size: " + view.getQueueSize() + ", enqueues: "
+                            + view.getDequeueCount() + ", dequeues: "
+                            + view.getDequeueCount() + ", dispatched: "
+                            + view.getDispatchCount() + ", inflight: "
+                            + view.getInFlightCount() + ", expiries: "
+                            + view.getExpiredCount());
 
-        long expiry = System.currentTimeMillis() + 30000;
-        while (view.getQueueSize() > 0 && System.currentTimeMillis() < expiry) {
-            Thread.sleep(500);
-        }
-        LOG.info("Stats: size: " + view.getQueueSize() + ", enqueues: "
-                + view.getDequeueCount() + ", dequeues: "
-                + view.getDequeueCount() + ", dispatched: "
-                + view.getDispatchCount() + ", inflight: "
-                + view.getInFlightCount() + ", expiries: "
-                + view.getExpiredCount());
-        assertEquals("Wrong QueueSize: ", 0, view.getQueueSize());
+                    result = view.getQueueSize() == 0;
+                } catch (InstanceNotFoundException expectedOnSlowMachines) {
+                }
+                return result;
+            }
+        });
+        
+        view = createView(destination);
+        assertEquals("Expect empty queue, QueueSize: ", 0, view.getQueueSize());
         assertEquals("all dequeues were expired", view.getDequeueCount(), view.getExpiredCount());
     }
 
