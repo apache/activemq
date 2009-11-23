@@ -18,7 +18,6 @@ import javax.jms.MessageNotWriteableException;
 import javax.jms.Queue;
 import javax.jms.QueueBrowser;
 import javax.jms.Session;
-import javax.management.MBeanServer;
 import javax.management.ObjectName;
 
 import junit.framework.TestCase;
@@ -29,6 +28,7 @@ import org.apache.activemq.broker.BrokerTestSupport;
 import org.apache.activemq.broker.StubConnection;
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.broker.jmx.ManagementContext;
+import org.apache.activemq.broker.jmx.QueueViewMBean;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQTextMessage;
 import org.apache.activemq.command.ConnectionId;
@@ -360,9 +360,10 @@ public class BrokerNetworkWithStuckMessagesTest extends TestCase /*NetworkTestSu
         params.put("Destination", queueName);
         ObjectName queueObjectName = ObjectName.getInstance(amqDomain, params);
         
-        ManagementContext mgmtCtx = broker.getManagementContext(); 
-        MBeanServer mbs = mgmtCtx.getMBeanServer(); 
-        Object[] messages = (Object[]) mbs.invoke(queueObjectName, "browse", new Object[0], new String[0]);
+        ManagementContext mgmtCtx = broker.getManagementContext();
+        QueueViewMBean queueView = (QueueViewMBean)mgmtCtx.newProxyInstance(queueObjectName, QueueViewMBean.class, true);
+        
+        Object[] messages = (Object[]) queueView.browse();
         
 		LOG.info("+Browsed with JMX: " + messages.length);
         
