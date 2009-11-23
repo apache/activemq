@@ -831,7 +831,13 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
             } else if (isAutoAcknowledgeBatch()) {
                 ackLater(md, MessageAck.STANDARD_ACK_TYPE);
             } else if (session.isClientAcknowledge()||session.isIndividualAcknowledge()) {
-                ackLater(md, MessageAck.DELIVERED_ACK_TYPE);
+                boolean messageUnackedByConsumer = false;
+                synchronized (deliveredMessages) {
+                    messageUnackedByConsumer = deliveredMessages.contains(md);
+                }
+                if (messageUnackedByConsumer) {
+                    ackLater(md, MessageAck.DELIVERED_ACK_TYPE);
+                }
             } 
             else {
                 throw new IllegalStateException("Invalid session state.");
