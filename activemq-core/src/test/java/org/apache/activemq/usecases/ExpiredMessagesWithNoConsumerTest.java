@@ -159,7 +159,8 @@ public class ExpiredMessagesWithNoConsumerTest extends CombinationTestSupport {
 	// first ack delivered after expiry
     public void testExpiredMessagesWithVerySlowConsumer() throws Exception {
         createBroker();  
-        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("tcp://localhost:61616");
+        final long queuePrefetch = 600;
+        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("tcp://localhost:61616?jms.prefetchPolicy.queuePrefetch=" + queuePrefetch);
         connection = factory.createConnection();
         session = connection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
         producer = session.createProducer(destination);
@@ -222,7 +223,7 @@ public class ExpiredMessagesWithNoConsumerTest extends CombinationTestSupport {
             
         assertTrue("all dispatched up to default prefetch ", Wait.waitFor(new Wait.Condition() {
             public boolean isSatisified() throws Exception {
-                return 1000 == view.getDispatchCount();
+                return queuePrefetch == view.getDispatchCount();
             }
         }));
         assertTrue("All sent have expired ", Wait.waitFor(new Wait.Condition() {
@@ -240,17 +241,29 @@ public class ExpiredMessagesWithNoConsumerTest extends CombinationTestSupport {
         
         Wait.waitFor(new Wait.Condition() {
             public boolean isSatisified() throws Exception {
-                return 0 == view.getInFlightCount();
+                // consumer ackLater(delivery ack for expired messages) is based on half the prefetch value
+                // which will leave half of the prefetch pending till consumer close
+                return (queuePrefetch/2) -1 == view.getInFlightCount();
             }
         });
         LOG.info("enqueue=" + view.getEnqueueCount() + ", dequeue=" + view.getDequeueCount()
                 + ", inflight=" + view.getInFlightCount() + ", expired= " + view.getExpiredCount()
                 + ", size= " + view.getQueueSize());
-        assertEquals("prefetch gets back to 0 ", 0, view.getInFlightCount());
+        
+        
+        assertEquals("inflight reduces to half prefetch minus single delivered message", (queuePrefetch/2) -1, view.getInFlightCount());
         assertEquals("size gets back to 0 ", 0, view.getQueueSize());
         assertEquals("dequeues match sent/expired ", sendCount, view.getDequeueCount());
         
         consumer.close();
+        
+        Wait.waitFor(new Wait.Condition() {
+            public boolean isSatisified() throws Exception {
+                return 0 == view.getInFlightCount();
+            }
+        });
+        assertEquals("inflight goes to zeor on close", 0, view.getInFlightCount());
+      
         LOG.info("done: " + getName());
     }
 
