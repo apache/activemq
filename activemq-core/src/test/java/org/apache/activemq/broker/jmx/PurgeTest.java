@@ -86,6 +86,7 @@ public class PurgeTest extends EmbeddedBrokerTestSupport {
         proxy.purge();
         count = proxy.getQueueSize();
         assertEquals("Queue size", count, 0);
+        assertEquals("Browse size", proxy.browseMessages().size(), 0);
 
         // Queues have a special case once there are more than a thousand
         // dead messages, make sure we hit that.
@@ -101,6 +102,7 @@ public class PurgeTest extends EmbeddedBrokerTestSupport {
         proxy.purge();
         count = proxy.getQueueSize();
         assertEquals("Queue size", count, 0);
+        assertEquals("Browse size", proxy.browseMessages().size(), 0);
     }
     
     public void initCombosForTestDelete() {
