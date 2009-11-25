@@ -41,6 +41,7 @@ import org.apache.activemq.thread.TaskRunner;
 import org.apache.activemq.thread.TaskRunnerFactory;
 import org.apache.activemq.thread.Valve;
 import org.apache.activemq.transaction.Synchronization;
+import org.apache.activemq.usage.Usage;
 import org.apache.activemq.util.SubscriptionKey;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -59,11 +60,11 @@ import java.util.concurrent.CopyOnWriteArraySet;
  * 
  * @version $Revision: 1.21 $
  */
-public class Topic  extends BaseDestination  implements Task{
+public class Topic extends BaseDestination implements Task {
     protected static final Log LOG = LogFactory.getLog(Topic.class);
     private final TopicMessageStore topicStore;
     protected final CopyOnWriteArrayList<Subscription> consumers = new CopyOnWriteArrayList<Subscription>();
-    protected final Valve dispatchValve = new Valve(true);   
+    protected final Valve dispatchValve = new Valve(true);
     private DispatchPolicy dispatchPolicy = new SimpleDispatchPolicy();
     private SubscriptionRecoveryPolicy subscriptionRecoveryPolicy;
     private final ConcurrentHashMap<SubscriptionKey, DurableTopicSubscription> durableSubcribers = new ConcurrentHashMap<SubscriptionKey, DurableTopicSubscription>();
@@ -71,24 +72,22 @@ public class Topic  extends BaseDestination  implements Task{
     private final LinkedList<Runnable> messagesWaitingForSpace = new LinkedList<Runnable>();
     private final Runnable sendMessagesWaitingForSpaceTask = new Runnable() {
         public void run() {
-                try {
-                    Topic.this.taskRunner.wakeup();
-                } catch (InterruptedException e) {
-                }
+            try {
+                Topic.this.taskRunner.wakeup();
+            } catch (InterruptedException e) {
+            }
         };
     };
-   
 
-    public Topic(BrokerService brokerService, ActiveMQDestination destination, TopicMessageStore store, DestinationStatistics parentStats,
-                 TaskRunnerFactory taskFactory) throws Exception {
+    public Topic(BrokerService brokerService, ActiveMQDestination destination, TopicMessageStore store, DestinationStatistics parentStats, TaskRunnerFactory taskFactory) throws Exception {
         super(brokerService, store, destination, parentStats);
-        this.topicStore=store;
+        this.topicStore = store;
         //set default subscription recovery policy
-        subscriptionRecoveryPolicy= new NoSubscriptionRecoveryPolicy();
+        subscriptionRecoveryPolicy = new NoSubscriptionRecoveryPolicy();
         this.taskRunner = taskFactory.createTaskRunner(this, "Topic  " + destination.getPhysicalName());
     }
-    
-    public void initialize() throws Exception{
+
+    public void initialize() throws Exception {
         super.initialize();
         if (store != null) {
             int messageCount = store.getMessageCount();
@@ -140,7 +139,7 @@ public class Topic  extends BaseDestination  implements Task{
             }
         } else {
             sub.add(context, this);
-            DurableTopicSubscription dsub = (DurableTopicSubscription)sub;
+            DurableTopicSubscription dsub = (DurableTopicSubscription) sub;
             durableSubcribers.put(dsub.getSubscriptionKey(), dsub);
         }
     }
@@ -171,7 +170,7 @@ public class Topic  extends BaseDestination  implements Task{
         // we are recovering a subscription to avoid out of order messages.
         dispatchValve.turnOff();
         try {
-        	
+
             if (topicStore == null) {
                 return;
             }
@@ -195,21 +194,20 @@ public class Topic  extends BaseDestination  implements Task{
                 }
             }
             // Do we need to create the subscription?
-            if(info==null){
-                info=new SubscriptionInfo();
+            if (info == null) {
+                info = new SubscriptionInfo();
                 info.setClientId(clientId);
                 info.setSelector(selector);
                 info.setSubscriptionName(subscriptionName);
-                info.setDestination(getActiveMQDestination()); 
+                info.setDestination(getActiveMQDestination());
                 // This destination is an actual destination id.
-                info.setSubscribedDestination(subscription.getConsumerInfo().getDestination()); 
+                info.setSubscribedDestination(subscription.getConsumerInfo().getDestination());
                 // This destination might be a pattern
                 synchronized (consumers) {
                     consumers.add(subscription);
-                    topicStore.addSubsciption(info,subscription.getConsumerInfo().isRetroactive());
+                    topicStore.addSubsciption(info, subscription.getConsumerInfo().isRetroactive());
                 }
             }
-            
 
             final MessageEvaluationContext msgContext = new NonCachedMessageEvaluationContext();
             msgContext.setDestination(destination);
@@ -223,7 +221,7 @@ public class Topic  extends BaseDestination  implements Task{
                                 subscription.add(message);
                             }
                         } catch (IOException e) {
-                           LOG.error("Failed to recover this message " + message);
+                            LOG.error("Failed to recover this message " + message);
                         }
                         return true;
                     }
@@ -235,7 +233,7 @@ public class Topic  extends BaseDestination  implements Task{
                     public boolean hasSpace() {
                         return true;
                     }
-                    
+
                     public boolean isDuplicate(MessageId id) {
                         return false;
                     }
@@ -277,23 +275,24 @@ public class Topic  extends BaseDestination  implements Task{
             return;
         }
 
-        if(memoryUsage.isFull()) {
+        if (memoryUsage.isFull()) {
             isFull(context, memoryUsage);
             fastProducer(context, producerInfo);
-            
+
             if (isProducerFlowControl() && context.isProducerFlowControl()) {
-                
-                if(warnOnProducerFlowControl) {
+
+                if (warnOnProducerFlowControl) {
                     warnOnProducerFlowControl = false;
-                    LOG.info("Usage Manager memory limit reached for " +getActiveMQDestination().getQualifiedName() + ". Producers will be throttled to the rate at which messages are removed from this destination to prevent flooding it." +
-                            " See http://activemq.apache.org/producer-flow-control.html for more info");
+                    LOG.info("Usage Manager memory limit reached for " + getActiveMQDestination().getQualifiedName()
+                            + ". Producers will be throttled to the rate at which messages are removed from this destination to prevent flooding it."
+                            + " See http://activemq.apache.org/producer-flow-control.html for more info");
                 }
-                
+
                 if (systemUsage.isSendFailIfNoSpace()) {
-                    throw new javax.jms.ResourceAllocationException("Usage Manager memory limit reached. Stopping producer (" + message.getProducerId() + ") to prevent flooding " +getActiveMQDestination().getQualifiedName() + "." +
-                            " See http://activemq.apache.org/producer-flow-control.html for more info");
+                    throw new javax.jms.ResourceAllocationException("Usage Manager memory limit reached. Stopping producer (" + message.getProducerId() + ") to prevent flooding "
+                            + getActiveMQDestination().getQualifiedName() + "." + " See http://activemq.apache.org/producer-flow-control.html for more info");
                 }
-   
+
                 // We can avoid blocking due to low usage if the producer is sending
                 // a sync message or
                 // if it is using a producer window
@@ -301,9 +300,9 @@ public class Topic  extends BaseDestination  implements Task{
                     synchronized (messagesWaitingForSpace) {
                         messagesWaitingForSpace.add(new Runnable() {
                             public void run() {
-                                
+
                                 try {
-    
+
                                     // While waiting for space to free up... the
                                     // message may have expired.
                                     if (message.isExpired()) {
@@ -312,7 +311,7 @@ public class Topic  extends BaseDestination  implements Task{
                                     } else {
                                         doMessageSend(producerExchange, message);
                                     }
-    
+
                                     if (sendProducerAck) {
                                         ProducerAck ack = new ProducerAck(producerInfo.getProducerId(), message.getSize());
                                         context.getConnection().dispatchAsync(ack);
@@ -321,7 +320,7 @@ public class Topic  extends BaseDestination  implements Task{
                                         response.setCorrelationId(message.getCommandId());
                                         context.getConnection().dispatchAsync(response);
                                     }
-    
+
                                 } catch (Exception e) {
                                     if (!sendProducerAck && !context.isInRecoveryMode()) {
                                         ExceptionResponse response = new ExceptionResponse(e);
@@ -329,10 +328,10 @@ public class Topic  extends BaseDestination  implements Task{
                                         context.getConnection().dispatchAsync(response);
                                     }
                                 }
-                                
+
                             }
                         });
-    
+
                         // If the user manager is not full, then the task will not
                         // get called..
                         if (!memoryUsage.notifyCallbackWhenNotFull(sendMessagesWaitingForSpaceTask)) {
@@ -342,24 +341,32 @@ public class Topic  extends BaseDestination  implements Task{
                         context.setDontSendReponse(true);
                         return;
                     }
-    
+
                 } else {
-    
                     // Producer flow control cannot be used, so we have do the flow
                     // control at the broker
                     // by blocking this thread until there is space available.
-                    int count = 0;
-                    while (!memoryUsage.waitForSpace(1000)) {
-                        if (context.getStopping().get()) {
-                            throw new IOException("Connection closed, send aborted.");
-                        }
-                        if (count > 2 && context.isInTransaction()) {
-                            count =0;
-                            int size = context.getTransaction().size();
-                            LOG.warn("Waiting for space to send  transacted message - transaction elements = " + size + " need more space to commit. Message = " + message);
+                    
+                    if (memoryUsage.isFull()) {
+                        if (context.isInTransaction()) {
+
+                            int count = 0;
+                            while (!memoryUsage.waitForSpace(1000)) {
+                                if (context.getStopping().get()) {
+                                    throw new IOException("Connection closed, send aborted.");
+                                }
+                                if (count > 2 && context.isInTransaction()) {
+                                    count = 0;
+                                    int size = context.getTransaction().size();
+                                    LOG.warn("Waiting for space to send  transacted message - transaction elements = " + size + " need more space to commit. Message = " + message);
+                                }
+                            }
+                        } else {
+                            waitForSpace(context, memoryUsage, "Usage Manager memory limit reached. Stopping producer (" + message.getProducerId() + ") to prevent flooding "
+                                    + getActiveMQDestination().getQualifiedName() + "." + " See http://activemq.apache.org/producer-flow-control.html for more info");
                         }
                     }
-    
+
                     // The usage manager could have delayed us by the time
                     // we unblock the message could have expired..
                     if (message.isExpired()) {
@@ -382,35 +389,28 @@ public class Topic  extends BaseDestination  implements Task{
     }
 
     /**
-     * do send the message - this needs to be synchronized to ensure messages are stored AND dispatched in 
-     * the right order
+     * do send the message - this needs to be synchronized to ensure messages
+     * are stored AND dispatched in the right order
+     * 
      * @param producerExchange
      * @param message
      * @throws IOException
      * @throws Exception
      */
-    synchronized void doMessageSend(
-            final ProducerBrokerExchange producerExchange, final Message message)
-            throws IOException, Exception {
-        final ConnectionContext context = producerExchange
-                .getConnectionContext();
+    synchronized void doMessageSend(final ProducerBrokerExchange producerExchange, final Message message) throws IOException, Exception {
+        final ConnectionContext context = producerExchange.getConnectionContext();
         message.setRegionDestination(this);
         message.getMessageId().setBrokerSequenceId(getDestinationSequenceId());
 
-        if (topicStore != null && message.isPersistent()
-                && !canOptimizeOutPersistence()) {
+        if (topicStore != null && message.isPersistent() && !canOptimizeOutPersistence()) {
             if (systemUsage.getStoreUsage().isFull()) {
-                final String logMessage = "Usage Manager Store is Full. Stopping producer (" + message.getProducerId() + ") to prevent flooding " + getActiveMQDestination().getQualifiedName() + "." +
-                        " See http://activemq.apache.org/producer-flow-control.html for more info";
-                LOG.info(logMessage);
+                final String logMessage = "Usage Manager Store is Full. Stopping producer (" + message.getProducerId() + ") to prevent flooding " + getActiveMQDestination().getQualifiedName() + "."
+                        + " See http://activemq.apache.org/producer-flow-control.html for more info";
                 if (systemUsage.isSendFailIfNoSpace()) {
-            	    throw new javax.jms.ResourceAllocationException(logMessage);
+                    throw new javax.jms.ResourceAllocationException(logMessage);
                 }
-            }
-            while (!systemUsage.getStoreUsage().waitForSpace(1000)) {
-                if (context.getStopping().get()) {
-                    throw new IOException("Connection closed, send aborted.");
-                }
+
+                waitForSpace(context, systemUsage.getStoreUsage(), logMessage);
             }
             topicStore.addMessage(context, message);
         }
@@ -457,14 +457,13 @@ public class Topic  extends BaseDestination  implements Task{
 
     public void acknowledge(ConnectionContext context, Subscription sub, final MessageAck ack, final MessageReference node) throws IOException {
         if (topicStore != null && node.isPersistent()) {
-            DurableTopicSubscription dsub = (DurableTopicSubscription)sub;
+            DurableTopicSubscription dsub = (DurableTopicSubscription) sub;
             SubscriptionKey key = dsub.getSubscriptionKey();
             topicStore.acknowledge(context, key.getClientId(), key.getSubscriptionName(), node.getMessageId());
         }
         messageConsumed(context, node);
     }
 
-    
     public void gc() {
     }
 
@@ -488,7 +487,7 @@ public class Topic  extends BaseDestination  implements Task{
         if (memoryUsage != null) {
             memoryUsage.stop();
         }
-        if(this.topicStore != null) {
+        if (this.topicStore != null) {
             this.topicStore.stop();
         }
     }
@@ -510,7 +509,7 @@ public class Topic  extends BaseDestination  implements Task{
                     public boolean hasSpace() {
                         return true;
                     }
-                    
+
                     public boolean isDuplicate(MessageId id) {
                         return false;
                     }
@@ -527,9 +526,9 @@ public class Topic  extends BaseDestination  implements Task{
         }
         return result.toArray(new Message[result.size()]);
     }
-    
+
     public boolean iterate() {
-        synchronized(messagesWaitingForSpace) {
+        synchronized (messagesWaitingForSpace) {
             while (!memoryUsage.isFull() && !messagesWaitingForSpace.isEmpty()) {
                 Runnable op = messagesWaitingForSpace.removeFirst();
                 op.run();
@@ -538,11 +537,8 @@ public class Topic  extends BaseDestination  implements Task{
         return false;
     }
 
-
     // Properties
     // -------------------------------------------------------------------------
-
-    
 
     public DispatchPolicy getDispatchPolicy() {
         return dispatchPolicy;
@@ -560,17 +556,16 @@ public class Topic  extends BaseDestination  implements Task{
         this.subscriptionRecoveryPolicy = subscriptionRecoveryPolicy;
     }
 
-    
     // Implementation methods
     // -------------------------------------------------------------------------
-    
+
     public final void wakeup() {
     }
-    
+
     protected void dispatch(final ConnectionContext context, Message message) throws Exception {
         destinationStatistics.getMessages().increment();
         destinationStatistics.getEnqueues().increment();
-        dispatchValve.increment();   
+        dispatchValve.increment();
         MessageEvaluationContext msgContext = null;
         try {
             if (!subscriptionRecoveryPolicy.add(context, message)) {
@@ -587,17 +582,17 @@ public class Topic  extends BaseDestination  implements Task{
             msgContext.setMessageReference(message);
             if (!dispatchPolicy.dispatch(message, msgContext, consumers)) {
                 onMessageWithNoConsumers(context, message);
-            }  
-            
+            }
+
         } finally {
             dispatchValve.decrement();
-            if(msgContext != null) {
+            if (msgContext != null) {
                 msgContext.clear();
             }
         }
     }
-    
-    public void messageExpired(ConnectionContext context,Subscription subs, MessageReference reference) {
+
+    public void messageExpired(ConnectionContext context, Subscription subs, MessageReference reference) {
         broker.messageExpired(context, reference);
         destinationStatistics.getMessages().decrement();
         destinationStatistics.getEnqueues().decrement();
@@ -609,9 +604,24 @@ public class Topic  extends BaseDestination  implements Task{
         try {
             acknowledge(context, subs, ack, reference);
         } catch (IOException e) {
-            LOG.error("Failed to remove expired Message from the store ",e);
+            LOG.error("Failed to remove expired Message from the store ", e);
         }
     }
 
+    private final void waitForSpace(ConnectionContext context, Usage<?> usage, String warning) throws IOException, InterruptedException {
+        long start = System.currentTimeMillis();
+        long nextWarn = start + blockedProducerWarningInterval;
+        while (!usage.waitForSpace(1000)) {
+            if (context.getStopping().get()) {
+                throw new IOException("Connection closed, send aborted.");
+            }
+
+            long now = System.currentTimeMillis();
+            if (now >= nextWarn) {
+                LOG.info(warning + " (blocking for: " + (now - start) / 1000 + "s)");
+                nextWarn = now + blockedProducerWarningInterval;
+            }
+        }
+    }
 
 }

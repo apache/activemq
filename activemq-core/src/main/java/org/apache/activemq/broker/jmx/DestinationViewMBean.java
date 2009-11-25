@@ -248,10 +248,29 @@ public interface DestinationViewMBean {
      */
     @MBeanInfo("Producers are flow controlled")
     boolean isProducerFlowControl();
+    
     /**
      * @param producerFlowControl the producerFlowControl to set
      */
     public void setProducerFlowControl(@MBeanInfo("producerFlowControl") boolean producerFlowControl);
+    
+    /**
+     * Set's the interval at which warnings about producers being blocked by
+     * resource usage will be triggered. Values of 0 or less will disable
+     * warnings
+     * 
+     * @param blockedProducerWarningInterval the interval at which warning about
+     *            blocked producers will be triggered.
+     */
+    public void setBlockedProducerWarningInterval(@MBeanInfo("blockedProducerWarningInterval")  long blockedProducerWarningInterval);
+
+    /**
+     * 
+     * @return the interval at which warning about blocked producers will be
+     *         triggered.
+     */
+    @MBeanInfo("Blocked Producer Warning Interval")
+    public long getBlockedProducerWarningInterval();
     
     /**
      * @return the maxProducersToAudit
