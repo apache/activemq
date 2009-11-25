@@ -43,7 +43,7 @@ public class TcpBufferedInputStream extends FilterInputStream {
         internalBuffer = new byte[size];
     }
 
-    private void fill() throws IOException {
+    protected void fill() throws IOException {
         byte[] buffer = internalBuffer;
         count = 0;
         position = 0;

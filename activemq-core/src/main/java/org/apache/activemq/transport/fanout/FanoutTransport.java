@@ -586,4 +586,16 @@ public class FanoutTransport implements CompositeTransport {
     public boolean isConnected() {
         return connected;
     }
+
+    public int getReceiveCounter() {
+        int rc = 0;
+        synchronized (reconnectMutex) {
+            for (FanoutTransportHandler th : transports) {
+                if (th.transport != null) {
+                    rc += th.transport.getReceiveCounter();
+                }
+            }
+        }
+        return rc;
+    }
 }

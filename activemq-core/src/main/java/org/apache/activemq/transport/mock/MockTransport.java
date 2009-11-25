@@ -151,4 +151,8 @@ public class MockTransport extends DefaultTransportListener implements Transport
 	public void reconnect(URI uri) throws IOException {
 		getNext().reconnect(uri);
 	}
+
+    public int getReceiveCounter() {
+        return getNext().getReceiveCounter();
+    }
 }

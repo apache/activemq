@@ -60,6 +60,7 @@ public class VMTransport implements Transport, Task {
     private final Object lazyInitMutext = new Object();
     private final Valve enqueueValve = new Valve(true);
     private final AtomicBoolean stopping = new AtomicBoolean();
+    private volatile int receiveCounter;
     
     public VMTransport(URI location) {
         this.location = location;
@@ -110,6 +111,7 @@ public class VMTransport implements Transport, Task {
             if( command == DISCONNECT ) {
                 transportListener.onException(new TransportDisposedIOException("Peer (" + peer.toString() + ") disposed."));
             } else {
+                peer.receiveCounter++;
                 transportListener.onCommand(command);
             }
         }
@@ -124,6 +126,7 @@ public class VMTransport implements Transport, Task {
             if (messageQueue != null && !async) {
                 Object command;
                 while ((command = messageQueue.poll()) != null && !stopping.get() ) {
+                    receiveCounter++;
                     transportListener.onCommand(command);
                 }
             }
@@ -341,4 +344,8 @@ public class VMTransport implements Transport, Task {
 	public void reconnect(URI uri) throws IOException {
 		throw new IOException("Not supported");
 	}
+
+    public int getReceiveCounter() {
+        return receiveCounter;
+    }
 }
