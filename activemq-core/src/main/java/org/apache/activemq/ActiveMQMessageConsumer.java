@@ -134,6 +134,9 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
     private long lastDeliveredSequenceId;
 
     private IOException failureError;
+    
+    private long optimizeAckTimestamp = System.currentTimeMillis();
+    private long optimizeAckTimeout = 300;
 
     /**
      * Create a MessageConsumer
@@ -788,7 +791,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
             }
         }
     }
-
+    
     private void afterMessageIsConsumed(MessageDispatch md, boolean messageExpired) throws JMSException {
         if (unconsumedMessages.isClosed()) {
             return;
@@ -809,12 +812,13 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                         if (!deliveredMessages.isEmpty()) {
                             if (optimizeAcknowledge) {
                                 ackCounter++;
-                                if (ackCounter >= (info.getCurrentPrefetchSize() * .65)) {
+                                if (ackCounter >= (info.getPrefetchSize() * .65) || System.currentTimeMillis() >= (optimizeAckTimestamp + optimizeAckTimeout)) {
                                 	MessageAck ack = makeAckForAllDeliveredMessages(MessageAck.STANDARD_ACK_TYPE);
                                 	if (ack != null) {
                             		    deliveredMessages.clear();
                             		    ackCounter = 0;
                             		    session.sendAck(ack);
+                            		    optimizeAckTimestamp = System.currentTimeMillis();
                                 	}
                                 }
                             } else {
@@ -1074,14 +1078,13 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                             session.connection.rollbackDuplicate(this, old.getMessage());
                         }
                     }
-                    if (pendingAck != null && pendingAck.isDeliveredAck()) {
-                        // on resumption a pending delivered ack will be out of sync with
-                        // re deliveries.
-                        if (LOG.isDebugEnabled()) {
-                            LOG.debug("removing pending delivered ack on transport interupt: " + pendingAck);
-                        }   
-                        pendingAck = null;
+                    if (!session.isTransacted()) {
+                        // clean, so we don't have duplicates with optimizeAcknowledge 
+                        synchronized (deliveredMessages) {
+                            deliveredMessages.clear();
+                        }
                     }
+                    pendingAck = null;
                 }
                 if (!unconsumedMessages.isClosed()) {
                     if (this.info.isBrowser() || !session.connection.isDuplicate(this, md.getMessage())) {
