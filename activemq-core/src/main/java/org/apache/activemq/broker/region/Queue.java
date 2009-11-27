@@ -61,6 +61,7 @@ import org.apache.activemq.command.Response;
 import org.apache.activemq.filter.BooleanExpression;
 import org.apache.activemq.filter.MessageEvaluationContext;
 import org.apache.activemq.filter.NonCachedMessageEvaluationContext;
+import org.apache.activemq.security.SecurityContext;
 import org.apache.activemq.selector.SelectorParser;
 import org.apache.activemq.store.MessageRecoveryListener;
 import org.apache.activemq.store.MessageStore;
@@ -1291,6 +1292,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
         ConnectionContext answer = new ConnectionContext(new NonCachedMessageEvaluationContext());
         answer.setBroker(this.broker);
         answer.getMessageEvaluationContext().setDestination(getActiveMQDestination());
+        answer.setSecurityContext(SecurityContext.BROKER_SECURITY_CONTEXT);
         return answer;
     }
 
