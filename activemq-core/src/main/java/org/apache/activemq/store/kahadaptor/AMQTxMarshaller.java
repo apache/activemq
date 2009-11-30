@@ -19,6 +19,7 @@ package org.apache.activemq.store.kahadaptor;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import org.apache.activemq.kaha.Marshaller;
 import org.apache.activemq.kaha.impl.async.Location;
@@ -55,8 +56,15 @@ public class AMQTxMarshaller implements Marshaller<AMQTx> {
     public void writePayload(AMQTx amqtx, DataOutput dataOut) throws IOException {
         amqtx.getLocation().writeExternal(dataOut);
         List<AMQTxOperation> list = amqtx.getOperations();
-        dataOut.writeInt(list.size());
+        List<AMQTxOperation> ops = new ArrayList<AMQTxOperation>();
+        
         for (AMQTxOperation op : list) {
+            if (op.getOperationType() == op.ADD_OPERATION_TYPE) {
+                ops.add(op);
+            }
+        }
+        dataOut.writeInt(ops.size());
+        for (AMQTxOperation op : ops) {
             op.writeExternal(wireFormat, dataOut);
         }
     }

@@ -359,10 +359,14 @@ public abstract class AbstractRegion implements Region {
         if (sub == null) {
             sub = subscriptions.get(ack.getConsumerId());        
             if (sub == null) {
-                LOG.warn("Ack for non existent subscription, ack:" + ack); 
-                throw new IllegalArgumentException(
+                if (!consumerExchange.getConnectionContext().isInRecoveryMode()) {
+                    LOG.warn("Ack for non existent subscription, ack:" + ack); 
+                    throw new IllegalArgumentException(
                         "The subscription does not exist: "
                         + ack.getConsumerId());
+                } else {
+                    return;
+                }
             }
             consumerExchange.setSubscription(sub);
         }
