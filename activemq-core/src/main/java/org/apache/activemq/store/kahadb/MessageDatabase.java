@@ -589,8 +589,9 @@ public class MessageDatabase implements BrokerServiceAware {
 	}
 
     protected void checkpointCleanup(final boolean cleanup) throws IOException {
-    	long start = System.currentTimeMillis();
+    	long start;
         synchronized (indexMutex) {
+            start = System.currentTimeMillis();
         	if( !opened.get() ) {
         		return;
         	}
