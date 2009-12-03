@@ -53,7 +53,7 @@ public class ConsumerThread extends Thread {
 		
 		while (run) {
 			try {
-				Thread.sleep(3000);
+				Thread.sleep(100);
 			} catch (InterruptedException e) {
 				e.printStackTrace();			
 			}			
@@ -66,7 +66,7 @@ public class ConsumerThread extends Thread {
 			((SingleConnectionFactory)connectionFactory).destroy();
 		}
 		
-		log.info("ConsumerThread1 closing down");
+		log.info("ConsumerThread closing down");
 	}
 
 	private DefaultMessageListenerContainer createContainer() {
@@ -82,18 +82,6 @@ public class ConsumerThread extends Thread {
 		container.setConcurrentConsumers(concurrentConsumers);
 		container.setSessionTransacted(sessionTransacted);
 
-		//container.setCacheLevel(DefaultMessageListenerContainer.CACHE_CONSUMER);
-		//container.setMaxConcurrentConsumers(concurrentConsumers);
-		//container.setAcceptMessagesWhileStopping(false);				
-		//container.setAutoStartup(false);
-		//without setting a tx manager, this will use local JMS tx.
-
-		/*
-		if (durable) {
-			container.setSubscriptionDurable(true);
-			container.setDurableSubscriptionName("ConsumerThread1" + Thread.currentThread().getId());
-		}
-		*/
 		container.afterPropertiesSet();
 		log.info("subscribing to " + destination + queueSuffix);
 		return container;

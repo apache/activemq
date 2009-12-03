@@ -34,7 +34,7 @@ public class ProducerThread extends Thread {
 	private int numberOfTopics;
 	private int numberOfMessagesToSend;	
 	private int messagesSent;
-	private Random generator = new Random();
+	private Random generator;
 	private String queuePrefix;
 	private ConnectionFactory connectionFactory;
 	private String message;	
@@ -45,6 +45,7 @@ public class ProducerThread extends Thread {
 	@Override
 	public void run() {
 		initialize();
+		Random generator = new Random(Thread.currentThread().getName().hashCode());
 		
 		while (messagesSent < numberOfMessagesToSend) {
 			int queueSuffix = generator.nextInt(numberOfTopics);			

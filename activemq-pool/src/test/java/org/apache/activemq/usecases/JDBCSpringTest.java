@@ -88,7 +88,7 @@ public class JDBCSpringTest extends TestCase {
 			thread.setNumberOfQueues(numberOfQueues);
 			thread.setQueuePrefix("AMQ-2436.queue.");
 			thread.setConnectionFactory(connectionFactory);
-			thread.setSendDelay(100);
+			//thread.setSendDelay(100);
 			ProducerThreads.add(thread);
 		}
 		
@@ -106,13 +106,7 @@ public class JDBCSpringTest extends TestCase {
 			thread.setConsumerName("consumer" + i);
 			ConsumerThreads.add(thread);
 			thread.start();
-			
-			while (!thread.isRunning()) {
-				Thread.sleep(200);
-			}
-		}	
-
-		Thread.sleep(5000);
+		}
 		
 		
 		for (ProducerThread thread : ProducerThreads) {
@@ -120,12 +114,10 @@ public class JDBCSpringTest extends TestCase {
 		}
 		
 		boolean finished = false;	
-		int retry = 0;
 		int previous = 0;
 		while (!finished) {
                     
 			int totalMessages = 0;	
-			retry++;
 			for (Thread thread : ConsumerThreads) {
 				totalMessages += ((ConsumerThread)thread).getMessageDrivenPojo().getMessageCount();
 			}
@@ -134,7 +126,6 @@ public class JDBCSpringTest extends TestCase {
 				for (Thread thread : ConsumerThreads) {
 					((ConsumerThread)thread).setRun(false);
 				}
-				Thread.sleep(3000);
 				fail("Received " + totalMessages + ", expected " + (numberOfMessages * numberOfProducerThreads));
 			}
 			previous = totalMessages;
@@ -151,7 +142,7 @@ public class JDBCSpringTest extends TestCase {
 				}
 
 			} else {
-				Thread.sleep(10000);
+				Thread.sleep(1000);
 			}
 		}
 	}	
