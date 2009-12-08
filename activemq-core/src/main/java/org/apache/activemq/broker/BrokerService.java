@@ -457,7 +457,7 @@ public class BrokerService implements Service {
             addShutdownHook();
             getBroker().start();
             if (isUseJmx()) {
-            	if (!getManagementContext().isConnectorStarted()) {
+            	if (getManagementContext().isCreateConnector() && !getManagementContext().isConnectorStarted()) {
             		// try to restart management context
             		// typical for slaves that use the same ports as master
             		managementContext.stop();
