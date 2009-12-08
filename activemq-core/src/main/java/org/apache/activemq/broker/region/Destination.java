@@ -41,10 +41,12 @@ import org.apache.activemq.usage.Usage;
 public interface Destination extends Service, Task {
 
     public static final DeadLetterStrategy DEFAULT_DEAD_LETTER_STRATEGY = new SharedDeadLetterStrategy();
+    public static final long DEFAULT_BLOCKED_PRODUCER_WARNING_INTERVAL = 30000;
+
     void addSubscription(ConnectionContext context, Subscription sub) throws Exception;
 
     void removeSubscription(ConnectionContext context, Subscription sub, long lastDeliveredSequenceId) throws Exception;
-    
+
     void addProducer(ConnectionContext context, ProducerInfo info) throws Exception;
 
     void removeProducer(ConnectionContext context, ProducerInfo info) throws Exception;
@@ -70,122 +72,146 @@ public interface Destination extends Service, Task {
     String getName();
 
     MessageStore getMessageStore();
-    
+
     boolean isProducerFlowControl();
-    
+
     void setProducerFlowControl(boolean value);
-    
+
+    /**
+     * Set's the interval at which warnings about producers being blocked by
+     * resource usage will be triggered. Values of 0 or less will disable
+     * warnings
+     * 
+     * @param blockedProducerWarningInterval the interval at which warning about
+     *            blocked producers will be triggered.
+     */
+    public void setBlockedProducerWarningInterval(long blockedProducerWarningInterval);
+
+    /**
+     * 
+     * @return the interval at which warning about blocked producers will be
+     *         triggered.
+     */
+    public long getBlockedProducerWarningInterval();
+
     int getMaxProducersToAudit();
-    
+
     void setMaxProducersToAudit(int maxProducersToAudit);
-   
+
     int getMaxAuditDepth();
-   
+
     void setMaxAuditDepth(int maxAuditDepth);
-  
+
     boolean isEnableAudit();
-    
+
     void setEnableAudit(boolean enableAudit);
-    
-    boolean isActive();   
-    
+
+    boolean isActive();
+
     int getMaxPageSize();
-    
+
     public void setMaxPageSize(int maxPageSize);
-    
+
     public int getMaxBrowsePageSize();
 
     public void setMaxBrowsePageSize(int maxPageSize);
-    
+
     public boolean isUseCache();
-    
+
     public void setUseCache(boolean useCache);
-    
+
     public int getMinimumMessageSize();
 
     public void setMinimumMessageSize(int minimumMessageSize);
-    
+
     public int getCursorMemoryHighWaterMark();
 
-	public void setCursorMemoryHighWaterMark(int cursorMemoryHighWaterMark);
-    
+    public void setCursorMemoryHighWaterMark(int cursorMemoryHighWaterMark);
+
     /**
-     * optionally called by a Subscriber - to inform the Destination its
-     * ready for more messages
+     * optionally called by a Subscriber - to inform the Destination its ready
+     * for more messages
      */
     public void wakeup();
-    
+
     /**
      * @return true if lazyDispatch is enabled
      */
     public boolean isLazyDispatch();
-    
-    
+
     /**
      * set the lazy dispatch - default is false
+     * 
      * @param value
      */
     public void setLazyDispatch(boolean value);
 
-        
     /**
      * Inform the Destination a message has expired
+     * 
      * @param context
-     * @param subs 
+     * @param subs
      * @param node
      */
-    void messageExpired(ConnectionContext context, Subscription subs,MessageReference node);
+    void messageExpired(ConnectionContext context, Subscription subs, MessageReference node);
 
     /**
      * called when message is consumed
+     * 
      * @param context
      * @param messageReference
      */
-     void messageConsumed(ConnectionContext context, MessageReference messageReference);
-    
+    void messageConsumed(ConnectionContext context, MessageReference messageReference);
+
     /**
      * Called when message is delivered to the broker
+     * 
      * @param context
      * @param messageReference
      */
-     void messageDelivered(ConnectionContext context, MessageReference messageReference);
-    
+    void messageDelivered(ConnectionContext context, MessageReference messageReference);
+
     /**
-     * Called when a message is discarded - e.g. running low on memory
-     * This will happen only if the policy is enabled - e.g. non durable topics
+     * Called when a message is discarded - e.g. running low on memory This will
+     * happen only if the policy is enabled - e.g. non durable topics
+     * 
      * @param context
      * @param messageReference
      */
-     void messageDiscarded(ConnectionContext context, MessageReference messageReference);
-    
+    void messageDiscarded(ConnectionContext context, MessageReference messageReference);
+
     /**
      * Called when there is a slow consumer
+     * 
      * @param context
      * @param subs
      */
-     void slowConsumer(ConnectionContext context, Subscription subs);
-    
+    void slowConsumer(ConnectionContext context, Subscription subs);
+
     /**
      * Called to notify a producer is too fast
+     * 
      * @param context
      * @param producerInfo
      */
-     void fastProducer(ConnectionContext context,ProducerInfo producerInfo);
-    
+    void fastProducer(ConnectionContext context, ProducerInfo producerInfo);
+
     /**
      * Called when a Usage reaches a limit
+     * 
      * @param context
      * @param usage
      */
-     void isFull(ConnectionContext context,Usage usage);
+    void isFull(ConnectionContext context, Usage usage);
 
     List<Subscription> getConsumers();
 
     /**
-     * called on Queues in slave mode to allow dispatch to follow subscription choice of master
+     * called on Queues in slave mode to allow dispatch to follow subscription
+     * choice of master
+     * 
      * @param messageDispatchNotification
      * @throws Exception
      */
-    void processDispatchNotification(
-            MessageDispatchNotification messageDispatchNotification) throws Exception;
+    void processDispatchNotification(MessageDispatchNotification messageDispatchNotification) throws Exception;
 }

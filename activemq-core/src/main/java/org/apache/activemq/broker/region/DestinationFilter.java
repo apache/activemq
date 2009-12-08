@@ -45,8 +45,7 @@ public class DestinationFilter implements Destination {
         this.next = next;
     }
 
-    public void acknowledge(ConnectionContext context, Subscription sub, MessageAck ack, MessageReference node)
-        throws IOException {
+    public void acknowledge(ConnectionContext context, Subscription sub, MessageAck ack, MessageReference node) throws IOException {
         next.acknowledge(context, sub, ack, node);
     }
 
@@ -108,13 +107,13 @@ public class DestinationFilter implements Destination {
 
     /**
      * Sends a message to the given destination which may be a wildcard
+     * 
      * @param context broker context
      * @param message message to send
      * @param destination possibly wildcard destination to send the message to
      * @throws Exception on error
      */
-    protected void send(ProducerBrokerExchange context, Message message, ActiveMQDestination destination)
-        throws Exception {
+    protected void send(ProducerBrokerExchange context, Message message, ActiveMQDestination destination) throws Exception {
         Broker broker = context.getConnectionContext().getBroker();
         Set<Destination> destinations = broker.getDestinations(destination);
 
@@ -130,24 +129,30 @@ public class DestinationFilter implements Destination {
     public boolean isProducerFlowControl() {
         return next.isProducerFlowControl();
     }
-    
-    public void setProducerFlowControl(boolean value){
+
+    public void setProducerFlowControl(boolean value) {
         next.setProducerFlowControl(value);
     }
 
-    public void addProducer(ConnectionContext context, ProducerInfo info)
-            throws Exception {
-        next.addProducer(context, info);
-        
+    public void setBlockedProducerWarningInterval(long blockedProducerWarningInterval) {
+        next.setBlockedProducerWarningInterval(blockedProducerWarningInterval);
+    }
+    
+    public long getBlockedProducerWarningInterval() {
+        return next.getBlockedProducerWarningInterval();
     }
 
-    public void removeProducer(ConnectionContext context, ProducerInfo info)
-            throws Exception {
-       next.removeProducer(context, info);
+    public void addProducer(ConnectionContext context, ProducerInfo info) throws Exception {
+        next.addProducer(context, info);
+
+    }
+
+    public void removeProducer(ConnectionContext context, ProducerInfo info) throws Exception {
+        next.removeProducer(context, info);
     }
 
     public int getMaxAuditDepth() {
-       return next.getMaxAuditDepth();
+        return next.getMaxAuditDepth();
     }
 
     public int getMaxProducersToAudit() {
@@ -157,20 +162,19 @@ public class DestinationFilter implements Destination {
     public boolean isEnableAudit() {
         return next.isEnableAudit();
     }
-    
+
     public void setEnableAudit(boolean enableAudit) {
         next.setEnableAudit(enableAudit);
     }
 
     public void setMaxAuditDepth(int maxAuditDepth) {
-       next.setMaxAuditDepth(maxAuditDepth);
+        next.setMaxAuditDepth(maxAuditDepth);
     }
 
-    
     public void setMaxProducersToAudit(int maxProducersToAudit) {
-       next.setMaxProducersToAudit(maxProducersToAudit);
+        next.setMaxProducersToAudit(maxProducersToAudit);
     }
-    
+
     public boolean isActive() {
         return next.isActive();
     }
@@ -189,88 +193,81 @@ public class DestinationFilter implements Destination {
 
     public void setUseCache(boolean useCache) {
         next.setUseCache(useCache);
-    }   
-    
+    }
+
     public int getMinimumMessageSize() {
         return next.getMinimumMessageSize();
     }
 
     public void setMinimumMessageSize(int minimumMessageSize) {
         next.setMinimumMessageSize(minimumMessageSize);
-    }   
-    
+    }
+
     public void wakeup() {
         next.wakeup();
     }
 
     public boolean isLazyDispatch() {
-       return next.isLazyDispatch();
+        return next.isLazyDispatch();
     }
 
     public void setLazyDispatch(boolean value) {
-      next.setLazyDispatch(value);        
+        next.setLazyDispatch(value);
     }
 
     public void messageExpired(ConnectionContext context, PrefetchSubscription prefetchSubscription, MessageReference node) {
-        next.messageExpired(context, prefetchSubscription, node);        
+        next.messageExpired(context, prefetchSubscription, node);
     }
 
-	public boolean iterate() {
-		return next.iterate();
-	}
-
-    public void fastProducer(ConnectionContext context,ProducerInfo producerInfo) {
-       next.fastProducer(context, producerInfo);       
+    public boolean iterate() {
+        return next.iterate();
     }
 
-   
+    public void fastProducer(ConnectionContext context, ProducerInfo producerInfo) {
+        next.fastProducer(context, producerInfo);
+    }
+
     public void isFull(ConnectionContext context, Usage usage) {
-       next.isFull(context, usage);
+        next.isFull(context, usage);
     }
 
-   
-    public void messageConsumed(ConnectionContext context,MessageReference messageReference) {
+    public void messageConsumed(ConnectionContext context, MessageReference messageReference) {
         next.messageConsumed(context, messageReference);
     }
 
-    
-    public void messageDelivered(ConnectionContext context,MessageReference messageReference) {
+    public void messageDelivered(ConnectionContext context, MessageReference messageReference) {
         next.messageDelivered(context, messageReference);
     }
 
-    
-    public void messageDiscarded(ConnectionContext context,MessageReference messageReference) {
+    public void messageDiscarded(ConnectionContext context, MessageReference messageReference) {
         next.messageDiscarded(context, messageReference);
     }
 
-    
     public void slowConsumer(ConnectionContext context, Subscription subs) {
-       next.slowConsumer(context, subs);
+        next.slowConsumer(context, subs);
     }
 
-   
-    public void messageExpired(ConnectionContext context, Subscription subs,MessageReference node) {
-       next.messageExpired(context,subs, node);    
+    public void messageExpired(ConnectionContext context, Subscription subs, MessageReference node) {
+        next.messageExpired(context, subs, node);
     }
 
     public int getMaxBrowsePageSize() {
-       return next.getMaxBrowsePageSize();
+        return next.getMaxBrowsePageSize();
     }
 
     public void setMaxBrowsePageSize(int maxPageSize) {
         next.setMaxBrowsePageSize(maxPageSize);
     }
 
-    public void processDispatchNotification(
-            MessageDispatchNotification messageDispatchNotification) throws Exception {
-        next.processDispatchNotification(messageDispatchNotification);   
+    public void processDispatchNotification(MessageDispatchNotification messageDispatchNotification) throws Exception {
+        next.processDispatchNotification(messageDispatchNotification);
     }
 
-	public int getCursorMemoryHighWaterMark() {
-		return next.getCursorMemoryHighWaterMark();
-	}
+    public int getCursorMemoryHighWaterMark() {
+        return next.getCursorMemoryHighWaterMark();
+    }
 
-	public void setCursorMemoryHighWaterMark(int cursorMemoryHighWaterMark) {
-		next.setCursorMemoryHighWaterMark(cursorMemoryHighWaterMark);
-	}
+    public void setCursorMemoryHighWaterMark(int cursorMemoryHighWaterMark) {
+        next.setCursorMemoryHighWaterMark(cursorMemoryHighWaterMark);
+    }
 }

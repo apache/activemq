@@ -60,6 +60,7 @@ public class PolicyEntry extends DestinationMapEntry {
     private int maxQueueAuditDepth=2048;
     private boolean enableAudit=true;
     private boolean producerFlowControl = true;
+    private long blockedProducerWarningInterval = Destination.DEFAULT_BLOCKED_PRODUCER_WARNING_INTERVAL;
     private boolean optimizedDispatch=false;
     private int maxPageSize=BaseDestination.MAX_PAGE_SIZE;
     private int maxBrowsePageSize=BaseDestination.MAX_BROWSE_PAGE_SIZE;
@@ -125,6 +126,7 @@ public class PolicyEntry extends DestinationMapEntry {
     
     public void baseConfiguration(BaseDestination destination) {
         destination.setProducerFlowControl(isProducerFlowControl());
+        destination.setBlockedProducerWarningInterval(getBlockedProducerWarningInterval());
         destination.setEnableAudit(isEnableAudit());
         destination.setMaxAuditDepth(getMaxQueueAuditDepth());
         destination.setMaxProducersToAudit(getMaxProducersToAudit());
@@ -372,6 +374,27 @@ public class PolicyEntry extends DestinationMapEntry {
         this.producerFlowControl = producerFlowControl;
     }
 
+    /**
+     * Set's the interval at which warnings about producers being blocked by
+     * resource usage will be triggered. Values of 0 or less will disable
+     * warnings
+     * 
+     * @param blockedProducerWarningInterval the interval at which warning about
+     *            blocked producers will be triggered.
+     */
+    public void setBlockedProducerWarningInterval(long blockedProducerWarningInterval) {
+        this.blockedProducerWarningInterval = blockedProducerWarningInterval;
+    }
+
+    /**
+     * 
+     * @return the interval at which warning about blocked producers will be
+     *         triggered.
+     */
+    public long getBlockedProducerWarningInterval() {
+        return blockedProducerWarningInterval;
+    }
+    
     /**
      * @return the maxProducersToAudit
      */

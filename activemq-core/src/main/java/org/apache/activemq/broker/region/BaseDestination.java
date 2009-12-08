@@ -40,18 +40,21 @@ import org.apache.activemq.usage.Usage;
  */
 public abstract class BaseDestination implements Destination {
     /**
-     * The maximum number of messages to page in to the destination from persistent storage
+     * The maximum number of messages to page in to the destination from
+     * persistent storage
      */
     public static final int MAX_PAGE_SIZE = 200;
     public static final int MAX_BROWSE_PAGE_SIZE = MAX_PAGE_SIZE * 2;
-    public static final long EXPIRE_MESSAGE_PERIOD = 30*1000;
+    public static final long EXPIRE_MESSAGE_PERIOD = 30 * 1000;
     protected final ActiveMQDestination destination;
     protected final Broker broker;
     protected final MessageStore store;
     protected SystemUsage systemUsage;
     protected MemoryUsage memoryUsage;
     private boolean producerFlowControl = true;
-    protected boolean warnOnProducerFlowControl = true; 
+    protected boolean warnOnProducerFlowControl = true;
+    protected long blockedProducerWarningInterval = DEFAULT_BLOCKED_PRODUCER_WARNING_INTERVAL;
+
     private int maxProducersToAudit = 1024;
     private int maxAuditDepth = 2048;
     private boolean enableAudit = true;
@@ -82,8 +85,7 @@ public abstract class BaseDestination implements Destination {
      * @param parentStats
      * @throws Exception
      */
-    public BaseDestination(BrokerService brokerService, MessageStore store, ActiveMQDestination destination,
-            DestinationStatistics parentStats) throws Exception {
+    public BaseDestination(BrokerService brokerService, MessageStore store, ActiveMQDestination destination, DestinationStatistics parentStats) throws Exception {
         this.brokerService = brokerService;
         this.broker = brokerService.getBroker();
         this.store = store;
@@ -118,11 +120,31 @@ public abstract class BaseDestination implements Destination {
     }
 
     /**
-     * @param producerFlowControl
-     *            the producerFlowControl to set
+     * @param producerFlowControl the producerFlowControl to set
      */
     public void setProducerFlowControl(boolean producerFlowControl) {
         this.producerFlowControl = producerFlowControl;
+    }
+
+    /**
+     * Set's the interval at which warnings about producers being blocked by
+     * resource usage will be triggered. Values of 0 or less will disable
+     * warnings
+     * 
+     * @param blockedProducerWarningInterval the interval at which warning about
+     *            blocked producers will be triggered.
+     */
+    public void setBlockedProducerWarningInterval(long blockedProducerWarningInterval) {
+        this.blockedProducerWarningInterval = blockedProducerWarningInterval;
+    }
+
+    /**
+     * 
+     * @return the interval at which warning about blocked producers will be
+     *         triggered.
+     */
+    public long getBlockedProducerWarningInterval() {
+        return blockedProducerWarningInterval;
     }
 
     /**
@@ -133,8 +155,7 @@ public abstract class BaseDestination implements Destination {
     }
 
     /**
-     * @param maxProducersToAudit
-     *            the maxProducersToAudit to set
+     * @param maxProducersToAudit the maxProducersToAudit to set
      */
     public void setMaxProducersToAudit(int maxProducersToAudit) {
         this.maxProducersToAudit = maxProducersToAudit;
@@ -148,8 +169,7 @@ public abstract class BaseDestination implements Destination {
     }
 
     /**
-     * @param maxAuditDepth
-     *            the maxAuditDepth to set
+     * @param maxAuditDepth the maxAuditDepth to set
      */
     public void setMaxAuditDepth(int maxAuditDepth) {
         this.maxAuditDepth = maxAuditDepth;
@@ -163,8 +183,7 @@ public abstract class BaseDestination implements Destination {
     }
 
     /**
-     * @param enableAudit
-     *            the enableAudit to set
+     * @param enableAudit the enableAudit to set
      */
     public void setEnableAudit(boolean enableAudit) {
         this.enableAudit = enableAudit;
@@ -199,8 +218,7 @@ public abstract class BaseDestination implements Destination {
     }
 
     public final boolean isActive() {
-        return destinationStatistics.getConsumers().getCount() != 0
-                || destinationStatistics.getProducers().getCount() != 0;
+        return destinationStatistics.getConsumers().getCount() != 0 || destinationStatistics.getProducers().getCount() != 0;
     }
 
     public int getMaxPageSize() {
@@ -218,13 +236,13 @@ public abstract class BaseDestination implements Destination {
     public void setMaxBrowsePageSize(int maxPageSize) {
         this.maxBrowsePageSize = maxPageSize;
     }
-    
+
     public int getMaxExpirePageSize() {
         return this.maxExpirePageSize;
     }
 
     public void setMaxExpirePageSize(int maxPageSize) {
-        this.maxExpirePageSize  = maxPageSize;
+        this.maxExpirePageSize = maxPageSize;
     }
 
     public void setExpireMessagesPeriod(long expireMessagesPeriod) {
@@ -234,7 +252,7 @@ public abstract class BaseDestination implements Destination {
     public long getExpireMessagesPeriod() {
         return expireMessagesPeriod;
     }
-    
+
     public boolean isUseCache() {
         return useCache;
     }
@@ -271,8 +289,7 @@ public abstract class BaseDestination implements Destination {
     }
 
     /**
-     * @param advisoryForSlowConsumers
-     *            the advisoryForSlowConsumers to set
+     * @param advisoryForSlowConsumers the advisoryForSlowConsumers to set
      */
     public void setAdvisoryForSlowConsumers(boolean advisoryForSlowConsumers) {
         this.advisoryForSlowConsumers = advisoryForSlowConsumers;
@@ -286,8 +303,8 @@ public abstract class BaseDestination implements Destination {
     }
 
     /**
-     * @param advisoryForDiscardingMessages
-     *            the advisoryForDiscardingMessages to set
+     * @param advisoryForDiscardingMessages the advisoryForDiscardingMessages to
+     *            set
      */
     public void setAdvisoryForDiscardingMessages(boolean advisoryForDiscardingMessages) {
         this.advisoryForDiscardingMessages = advisoryForDiscardingMessages;
@@ -301,8 +318,7 @@ public abstract class BaseDestination implements Destination {
     }
 
     /**
-     * @param advisoryWhenFull
-     *            the advisoryWhenFull to set
+     * @param advisoryWhenFull the advisoryWhenFull to set
      */
     public void setAdvisoryWhenFull(boolean advisoryWhenFull) {
         this.advisoryWhenFull = advisoryWhenFull;
@@ -316,8 +332,7 @@ public abstract class BaseDestination implements Destination {
     }
 
     /**
-     * @param advisoryForDelivery
-     *            the advisoryForDelivery to set
+     * @param advisoryForDelivery the advisoryForDelivery to set
      */
     public void setAdvisoryForDelivery(boolean advisoryForDelivery) {
         this.advisoryForDelivery = advisoryForDelivery;
@@ -331,8 +346,7 @@ public abstract class BaseDestination implements Destination {
     }
 
     /**
-     * @param advisoryForConsumed
-     *            the advisoryForConsumed to set
+     * @param advisoryForConsumed the advisoryForConsumed to set
      */
     public void setAdvisoryForConsumed(boolean advisoryForConsumed) {
         this.advisoryForConsumed = advisoryForConsumed;
@@ -346,13 +360,12 @@ public abstract class BaseDestination implements Destination {
     }
 
     /**
-     * @param advisdoryForFastProducers
-     *            the advisdoryForFastProducers to set
+     * @param advisdoryForFastProducers the advisdoryForFastProducers to set
      */
     public void setAdvisdoryForFastProducers(boolean advisdoryForFastProducers) {
         this.advisdoryForFastProducers = advisdoryForFastProducers;
     }
-    
+
     public boolean isSendAdvisoryIfNoConsumers() {
         return sendAdvisoryIfNoConsumers;
     }
@@ -376,14 +389,14 @@ public abstract class BaseDestination implements Destination {
     public void setDeadLetterStrategy(DeadLetterStrategy deadLetterStrategy) {
         this.deadLetterStrategy = deadLetterStrategy;
     }
-    
-    public int getCursorMemoryHighWaterMark() {
-		return this.cursorMemoryHighWaterMark;
-	}
 
-	public void setCursorMemoryHighWaterMark(int cursorMemoryHighWaterMark) {
-		this.cursorMemoryHighWaterMark = cursorMemoryHighWaterMark;
-	}
+    public int getCursorMemoryHighWaterMark() {
+        return this.cursorMemoryHighWaterMark;
+    }
+
+    public void setCursorMemoryHighWaterMark(int cursorMemoryHighWaterMark) {
+        this.cursorMemoryHighWaterMark = cursorMemoryHighWaterMark;
+    }
 
     /**
      * called when message is consumed
@@ -410,8 +423,8 @@ public abstract class BaseDestination implements Destination {
     }
 
     /**
-     * Called when a message is discarded - e.g. running low on memory This will happen only if the policy is enabled -
-     * e.g. non durable topics
+     * Called when a message is discarded - e.g. running low on memory This will
+     * happen only if the policy is enabled - e.g. non durable topics
      * 
      * @param context
      * @param messageReference
@@ -460,19 +473,19 @@ public abstract class BaseDestination implements Destination {
 
     public void dispose(ConnectionContext context) throws IOException {
         if (this.store != null) {
-        	this.store.removeAllMessages(context);
+            this.store.removeAllMessages(context);
             this.store.dispose(context);
         }
         this.destinationStatistics.setParent(null);
         this.memoryUsage.stop();
     }
-    
+
     /**
      * Provides a hook to allow messages with no consumer to be processed in
      * some way - such as to send to a dead letter queue or something..
      */
     protected void onMessageWithNoConsumers(ConnectionContext context, Message msg) throws Exception {
-    	if (!msg.isPersistent()) {
+        if (!msg.isPersistent()) {
             if (isSendAdvisoryIfNoConsumers()) {
                 // allow messages with no consumers to be dispatched to a dead
                 // letter queue
@@ -489,12 +502,12 @@ public abstract class BaseDestination implements Destination {
                     if (message.getOriginalTransactionId() != null) {
                         message.setOriginalTransactionId(message.getTransactionId());
                     }
-                    
+
                     ActiveMQTopic advisoryTopic;
                     if (destination.isQueue()) {
-                    	advisoryTopic = AdvisorySupport.getNoQueueConsumersAdvisoryTopic(destination);
+                        advisoryTopic = AdvisorySupport.getNoQueueConsumersAdvisoryTopic(destination);
                     } else {
-                    	advisoryTopic = AdvisorySupport.getNoTopicConsumersAdvisoryTopic(destination);
+                        advisoryTopic = AdvisorySupport.getNoTopicConsumersAdvisoryTopic(destination);
                     }
                     message.setDestination(advisoryTopic);
                     message.setTransactionId(null);
@@ -517,8 +530,9 @@ public abstract class BaseDestination implements Destination {
             }
         }
     }
-    
-    public void processDispatchNotification(
-            MessageDispatchNotification messageDispatchNotification) throws Exception {
+
+    public void processDispatchNotification(MessageDispatchNotification messageDispatchNotification) throws Exception {
     }
+    
+    
 }

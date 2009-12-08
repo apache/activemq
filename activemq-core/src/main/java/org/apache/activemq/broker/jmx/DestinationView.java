@@ -82,11 +82,11 @@ public class DestinationView implements DestinationViewMBean {
     public long getDispatchCount() {
         return destination.getDestinationStatistics().getDispatched().getCount();
     }
-    
+
     public long getInFlightCount() {
         return destination.getDestinationStatistics().getInflight().getCount();
     }
-    
+
     public long getExpiredCount() {
         return destination.getDestinationStatistics().getExpired().getCount();
     }
@@ -220,7 +220,7 @@ public class DestinationView implements DestinationViewMBean {
         OpenTypeFactory factory = OpenTypeSupport.getFactory(ActiveMQMessage.class);
         Message[] messages = destination.browse();
         CompositeType ct = factory.getCompositeType();
-        TabularType tt = new TabularType("MessageList", "MessageList", ct, new String[] {"JMSMessageID"});
+        TabularType tt = new TabularType("MessageList", "MessageList", ct, new String[] { "JMSMessageID" });
         TabularDataSupport rc = new TabularDataSupport(tt);
 
         MessageEvaluationContext ctx = new MessageEvaluationContext();
@@ -248,16 +248,16 @@ public class DestinationView implements DestinationViewMBean {
     public String sendTextMessage(String body) throws Exception {
         return sendTextMessage(Collections.EMPTY_MAP, body);
     }
-    
+
     public String sendTextMessage(Map headers, String body) throws Exception {
-        return sendTextMessage(headers,body,null,null);
+        return sendTextMessage(headers, body, null, null);
     }
 
     public String sendTextMessage(String body, String user, String password) throws Exception {
-        return sendTextMessage(Collections.EMPTY_MAP,body,user,password);
+        return sendTextMessage(Collections.EMPTY_MAP, body, user, password);
     }
 
-    public String sendTextMessage(Map headers, String body,String userName,String password) throws Exception {
+    public String sendTextMessage(Map headers, String body, String userName, String password) throws Exception {
 
         String brokerUrl = "vm://" + broker.getBrokerName();
         ActiveMQDestination dest = destination.getActiveMQDestination();
@@ -266,14 +266,14 @@ public class DestinationView implements DestinationViewMBean {
         Connection connection = null;
         try {
 
-            connection = cf.createConnection(userName,password);
+            connection = cf.createConnection(userName, password);
             Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
             MessageProducer producer = session.createProducer(dest);
-            ActiveMQTextMessage msg = (ActiveMQTextMessage)session.createTextMessage(body);
+            ActiveMQTextMessage msg = (ActiveMQTextMessage) session.createTextMessage(body);
 
             for (Iterator iter = headers.entrySet().iterator(); iter.hasNext();) {
-                Map.Entry entry = (Map.Entry)iter.next();
-                msg.setObjectProperty((String)entry.getKey(), entry.getValue());
+                Map.Entry entry = (Map.Entry) iter.next();
+                msg.setObjectProperty((String) entry.getKey(), entry.getValue());
             }
 
             producer.setDeliveryMode(msg.getJMSDeliveryMode());
@@ -292,30 +292,28 @@ public class DestinationView implements DestinationViewMBean {
 
     public int getMaxAuditDepth() {
         return destination.getMaxAuditDepth();
-     }
+    }
 
-     public int getMaxProducersToAudit() {
-         return destination.getMaxProducersToAudit();
-     }
+    public int getMaxProducersToAudit() {
+        return destination.getMaxProducersToAudit();
+    }
 
-     public boolean isEnableAudit() {
-         return destination.isEnableAudit();
-     }
+    public boolean isEnableAudit() {
+        return destination.isEnableAudit();
+    }
 
-     
-     public void setEnableAudit(boolean enableAudit) {
-         destination.setEnableAudit(enableAudit);
-     }
+    public void setEnableAudit(boolean enableAudit) {
+        destination.setEnableAudit(enableAudit);
+    }
 
-     public void setMaxAuditDepth(int maxAuditDepth) {
-         destination.setMaxAuditDepth(maxAuditDepth);
-     }
- 
-     public void setMaxProducersToAudit(int maxProducersToAudit) {
-         destination.setMaxProducersToAudit(maxProducersToAudit);
-     }
+    public void setMaxAuditDepth(int maxAuditDepth) {
+        destination.setMaxAuditDepth(maxAuditDepth);
+    }
 
-    
+    public void setMaxProducersToAudit(int maxProducersToAudit) {
+        destination.setMaxProducersToAudit(maxProducersToAudit);
+    }
+
     public float getMemoryUsagePortion() {
         return destination.getMemoryUsage().getUsagePortion();
     }
@@ -325,31 +323,52 @@ public class DestinationView implements DestinationViewMBean {
     }
 
     public boolean isProducerFlowControl() {
-       return destination.isProducerFlowControl();
+        return destination.isProducerFlowControl();
     }
-    
+
     public void setMemoryUsagePortion(float value) {
         destination.getMemoryUsage().setUsagePortion(value);
     }
 
     public void setProducerFlowControl(boolean producerFlowControl) {
-      destination.setProducerFlowControl(producerFlowControl);      
+        destination.setProducerFlowControl(producerFlowControl);
+    }
+
+    /**
+     * Set's the interval at which warnings about producers being blocked by
+     * resource usage will be triggered. Values of 0 or less will disable
+     * warnings
+     * 
+     * @param blockedProducerWarningInterval the interval at which warning about
+     *            blocked producers will be triggered.
+     */
+    public void setBlockedProducerWarningInterval(long blockedProducerWarningInterval) {
+        destination.setBlockedProducerWarningInterval(blockedProducerWarningInterval);
+    }
+
+    /**
+     * 
+     * @return the interval at which warning about blocked producers will be
+     *         triggered.
+     */
+    public long getBlockedProducerWarningInterval() {
+        return destination.getBlockedProducerWarningInterval();
     }
 
     public int getMaxPageSize() {
         return destination.getMaxPageSize();
     }
-    
+
     public void setMaxPageSize(int pageSize) {
         destination.setMaxPageSize(pageSize);
     }
-    
+
     public boolean isUseCache() {
         return destination.isUseCache();
     }
 
     public void setUseCache(boolean value) {
-        destination.setUseCache(value);    
+        destination.setUseCache(value);
     }
 
     public ObjectName[] getSubscriptions() throws IOException, MalformedObjectNameException {
