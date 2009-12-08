@@ -68,6 +68,7 @@ public class ManagementContext implements Service {
     private int rmiServerPort;
     private String connectorPath = "/jmxrmi";
     private AtomicBoolean started = new AtomicBoolean(false);
+    private AtomicBoolean connectorStarting = new AtomicBoolean(false);
     private JMXConnectorServer connectorServer;
     private ObjectName namingServiceObjectName;
     private Registry registry;
@@ -95,7 +96,12 @@ public class ManagementContext implements Service {
                         try {
                             JMXConnectorServer server = connectorServer;
                             if (started.get() && server != null) {
-                                server.start();
+                                connectorStarting.set(true);
+                                try {
+                                	server.start();
+                                } finally {
+                                	connectorStarting.set(false);
+                                }
                                 LOG.info("JMX consoles can connect to " + server.getAddress());
                             }
                         } catch (IOException e) {
@@ -125,7 +131,9 @@ public class ManagementContext implements Service {
             connectorServer = null;
             if (server != null) {
                 try {
-                    server.stop();
+                	if (!connectorStarting.get()) {
+                		server.stop();
+                	}
                 } catch (IOException e) {
                     LOG.warn("Failed to stop jmx connector: " + e.getMessage());
                 }
@@ -213,7 +221,7 @@ public class ManagementContext implements Service {
     }
 
     public boolean isConnectorStarted() {
-		return connectorServer != null && connectorServer.isActive();
+		return connectorStarting.get() || (connectorServer != null && connectorServer.isActive());
 	}
 
 	/**
