@@ -176,3 +176,35 @@ kkdmWVT4/VQ8AKC2tL9ynro1zsvntXCE0pmSH96ibg==
 =tR92
 -----END PGP PUBLIC KEY BLOCK-----
 
+pub   2048R/2C983957 2006-04-21
+uid                  Bruce Snyder <bsnyder@apache.org>
+sig 3        2C983957 2008-04-10  Bruce Snyder <bsnyder@apache.org>
+uid                  Bruce Snyder <bruce.snyder@gmail.com>
+sig 3        2C983957 2006-04-21  Bruce Snyder <bsnyder@apache.org>
+
+-----BEGIN PGP PUBLIC KEY BLOCK-----
+Version: GnuPG v1.4.10 (Darwin)
+
+mQELBERJPzYBCACxRfC0PROVsuErkKAtaCgAtvdCmF61cnC16s7m95r+KO9scznf
+nMKsjDj/xBcf+A3Hu0cizpSomgTe6GAW4ZLvrMbAsrAVkqkLoa03JDWykjBAibNZ
+1lTf441u6jX4h0z6pGDw0PDpjL99ybJicBQgIA76cXyXHwbNV7X0z6LwiUcQLvZM
+y+tnlXrsk6stiLXsPXh5y0Rqnz7PLFzBk4gxjxYCV7XmEV1lBisFR/hXT7wPnJQR
+x8JH4TPG3QAEH5gA+TNxnr3QO0PdQRATQ5nVaqQ50mtG80EahohovfMQp4lIJCZq
+i2wJNxN2fv8dzGq3kBpmB7C1vCA7HaljParPAAYptCVCcnVjZSBTbnlkZXIgPGJy
+dWNlLnNueWRlckBnbWFpbC5jb20+iQE2BBMBAgAgBQJEST82AhsDBgsJCAcDAgQV
+AggDBBYCAwECHgECF4AACgkQ/upbIyyYOVctjwf+J0NbBP6kBDQOZmYoVlosPsY5
+tpvINO89Bx3vgzIh8U4xnzztzMqtz72kvVC7Kr0K67pMJHu+1aPAxwpEkGtKgu8F
+XuQf4NqNpe8GkYTAuoNAh5SRn5Uj/Y6V6maQ8Ww4YMvVaaI3tbBjaOndfdLXxVdG
+i5t1WXQqxd0D/pti8uqwCrqrbyCR3zCV9OASolAGqq/9whuDR0UAVSfhW5JmPbIQ
+eQepyGBt2U5cQpzbB3J/5IEKxFWED94pEs5NtYTCzAaRdHDEDMqS1x1sosnQehbg
+m5J70/2ykza7DT0fpMcMgtMPCSDUdKBrS9V/2sdqk1UzK7N2DmlO0i998eXksLQh
+QnJ1Y2UgU255ZGVyIDxic255ZGVyQGFwYWNoZS5vcmc+iQE2BBMBAgAgBQJH/jgb
+AhsDBgsJCAcDAgQVAggDBBYCAwECHgECF4AACgkQ/upbIyyYOVecJQf9G4DCKkut
+xyeyEr5ThxXwlomScx7sncoH8hKmjnru3gyx+u55vayDXVvL2PbI30sN575CAW+i
+8IAbrDcbmgqlgM42LJcZvAyLirq0Mt779qaai/p58wFwbtKS8mAPPjrh6dLCvcAX
+Cg/sxNQMUhQDR+JTTmJSGADHRafZo6RY/jL1ptKX/2Dx6x7Ua/SCQL5bTLxJ/owL
+nTzrf69UaOPSrIdAXmnNIeysSuqIfzTq3aakEh05vY0LPJ4/VjO5H1RAAgNLSKsW
+o1gqHiKSDpHv47c8vi9BtjlKUsuV4gvdXYTqxqF++GoJ+LFJ6TpZILnCP+5We9jo
+vdvvY9eS2HTMVw==
+=nJYJ
+-----END PGP PUBLIC KEY BLOCK-----
