@@ -98,6 +98,7 @@ public class DiscoveryNetworkReconnectTest {
         context.checking(new Expectations(){{
             allowing (managementContext).getJmxDomainName(); will (returnValue("Test"));
             allowing (managementContext).start();
+            allowing (managementContext).isCreateConnector();
             allowing (managementContext).stop();
             allowing (managementContext).isConnectorStarted();
             
