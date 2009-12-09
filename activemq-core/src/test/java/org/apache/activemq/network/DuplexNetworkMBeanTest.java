@@ -16,6 +16,9 @@
  */
 package org.apache.activemq.network;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assume.assumeNotNull;
+
 import java.net.MalformedURLException;
 import java.util.Set;
 
@@ -26,13 +29,13 @@ import javax.management.remote.JMXConnector;
 import javax.management.remote.JMXConnectorFactory;
 import javax.management.remote.JMXServiceURL;
 
-import junit.framework.TestCase;
-
 import org.apache.activemq.broker.BrokerService;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-public class DuplexNetworkMBeanTest extends TestCase {
+import org.junit.Test;
+
+public class DuplexNetworkMBeanTest {
 
     protected static final Log LOG = LogFactory.getLog(DuplexNetworkMBeanTest.class);
     protected final int numRestarts = 3;
@@ -54,6 +57,7 @@ public class DuplexNetworkMBeanTest extends TestCase {
         return broker;
     }
     
+    @Test
     public void testMbeanPresenceOnNetworkBrokerRestart() throws Exception {
         BrokerService broker = createBroker();
         broker.start();
@@ -78,6 +82,7 @@ public class DuplexNetworkMBeanTest extends TestCase {
         broker.waitUntilStopped();
     }
 
+    @Test
     public void testMbeanPresenceOnBrokerRestart() throws Exception {
         
         BrokerService networkedBroker = createNetworkedBroker();
@@ -129,6 +134,14 @@ public class DuplexNetworkMBeanTest extends TestCase {
                 }
             }
         } while ((mbeans == null || mbeans.isEmpty()) && expiryTime > System.currentTimeMillis());
+        
+        // If port 1099 is in use when the Broker starts, starting the jmx
+        // connector will fail.  So, if we have no mbsc to query, skip the
+        // test.
+        if (timeout > 0) {
+            assumeNotNull(mbeans);
+        }
+        
         return count;
     }
 

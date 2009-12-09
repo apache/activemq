@@ -16,11 +16,13 @@
  */
 package org.apache.activemq.network;
 
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeNotNull;
+
 import java.net.MalformedURLException;
 
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
-import javax.jms.MessageConsumer;
 import javax.jms.Session;
 import javax.management.InstanceNotFoundException;
 import javax.management.MBeanServerConnection;
@@ -29,8 +31,6 @@ import javax.management.remote.JMXConnector;
 import javax.management.remote.JMXConnectorFactory;
 import javax.management.remote.JMXServiceURL;
 
-import junit.framework.TestCase;
-
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.ActiveMQPrefetchPolicy;
 import org.apache.activemq.broker.BrokerService;
@@ -38,8 +38,9 @@ import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.util.Wait;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.junit.Test;
 
-public class NetworkBrokerDetachTest extends TestCase {
+public class NetworkBrokerDetachTest {
 
 	private final static String BROKER_NAME = "broker";
 	private final static String REM_BROKER_NAME = "networkedBroker";
@@ -65,6 +66,7 @@ public class NetworkBrokerDetachTest extends TestCase {
         return broker;
     }
     
+    @Test
     public void testNetworkedBrokerDetach() throws Exception {
         BrokerService broker = createBroker();
         broker.start();
@@ -162,6 +164,10 @@ public class NetworkBrokerDetachTest extends TestCase {
         } catch (Exception ignored) {
             LOG.warn("getMBeanServer ex: " + ignored);
         }
+        // If port 1099 is in use when the Broker starts, starting the jmx
+        // connector will fail.  So, if we have no mbsc to query, skip the
+        // test.
+        assumeNotNull(mbsc);
         return mbsc;
     }
     

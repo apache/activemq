@@ -116,6 +116,7 @@ public class BrokerService implements Service {
     private boolean shutdownOnMasterFailure;
     private boolean shutdownOnSlaveFailure;
     private boolean waitForSlave;
+    private long waitForSlaveTimeout = 600000L;
     private boolean passiveSlave;
     private String brokerName = DEFAULT_BROKER_NAME;
     private File dataDirectoryFile;
@@ -1908,7 +1909,9 @@ public class BrokerService implements Service {
 
     protected void waitForSlave() {
         try {
-            slaveStartSignal.await();
+            if (!slaveStartSignal.await(waitForSlaveTimeout, TimeUnit.MILLISECONDS)) {
+            	throw new IllegalStateException("Gave up waiting for slave to start after " + waitForSlaveTimeout + " milliseconds."); 
+            }
         } catch (InterruptedException e) {
             LOG.error("Exception waiting for slave:" + e);
         }
@@ -2105,7 +2108,15 @@ public class BrokerService implements Service {
     public void setWaitForSlave(boolean waitForSlave) {
         this.waitForSlave = waitForSlave;
     }
-
+  
+    public long getWaitForSlaveTimeout() {
+        return this.waitForSlaveTimeout;
+    }
+    
+    public void setWaitForSlaveTimeout(long waitForSlaveTimeout) {
+        this.waitForSlaveTimeout = waitForSlaveTimeout;
+    }
+    
     public CountDownLatch getSlaveStartSignal() {
         return slaveStartSignal;
     }
