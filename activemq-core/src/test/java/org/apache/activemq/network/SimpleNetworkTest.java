@@ -81,7 +81,7 @@ public class SimpleNetworkTest extends TestCase {
 
         TopicRequestor requestor = new TopicRequestor((TopicSession)localSession, included);
         // allow for consumer infos to perculate arround
-        Thread.sleep(2000);
+        Thread.sleep(5000);
         for (int i = 0; i < MESSAGE_COUNT; i++) {
             TextMessage msg = localSession.createTextMessage("test msg: " + i);
             TextMessage result = (TextMessage)requestor.request(msg);
@@ -110,16 +110,16 @@ public class SimpleNetworkTest extends TestCase {
         MessageConsumer consumer2 = remoteSession.createConsumer(included);
         MessageProducer producer = localSession.createProducer(included);
         producer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
-        Thread.sleep(1000);
+        Thread.sleep(2000);
         for (int i = 0; i < MESSAGE_COUNT; i++) {
             Message test = localSession.createTextMessage("test-" + i);
             producer.send(test);
-            assertNotNull(consumer1.receive(500));
-            assertNotNull(consumer2.receive(500));
+            assertNotNull(consumer1.receive(1000));
+            assertNotNull(consumer2.receive(1000));
         }
         // ensure no more messages received
-        assertNull(consumer1.receive(500));
-        assertNull(consumer2.receive(500));
+        assertNull(consumer1.receive(1000));
+        assertNull(consumer2.receive(1000));
     }
 
     public void testDurableStoreAndForward() throws Exception {

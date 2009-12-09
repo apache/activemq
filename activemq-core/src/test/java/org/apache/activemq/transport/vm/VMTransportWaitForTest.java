@@ -57,7 +57,7 @@ public class VMTransportWaitForTest extends TestCase {
                    
                     } catch (Exception e) {
                         e.printStackTrace();
-                        fail("unexpected exception:" + e);
+                        fail("unexpected exception: " + e);
                     }
             }
         };
@@ -70,7 +70,7 @@ public class VMTransportWaitForTest extends TestCase {
         broker.setPersistent(false);
         broker.addConnector("tcp://localhost:61616");
         broker.start();
-        assertTrue("has got connection", gotConnection.await(200, TimeUnit.MILLISECONDS));
+        assertTrue("has got connection", gotConnection.await(400, TimeUnit.MILLISECONDS));
         broker.stop(); 
     }
 }

@@ -54,7 +54,10 @@ public class MasterSlaveSlaveDieTest extends TestCase {
         final BrokerService master = new BrokerService();
         master.setBrokerName("master");
         master.setPersistent(false);
-        master.addConnector("tcp://localhost:0");
+        // The wireformat negotiation timeout (defaults to same as
+        // MaxInactivityDurationInitalDelay) needs to be a bit longer
+        // on slow running machines - set it to 90 seconds.
+        master.addConnector("tcp://localhost:0?wireFormat.maxInactivityDurationInitalDelay=90000");
         master.setWaitForSlave(true);
         master.setPlugins(new BrokerPlugin[] { new Plugin() });
         
@@ -73,6 +76,7 @@ public class MasterSlaveSlaveDieTest extends TestCase {
                 try {
                     master.start();
                 } catch (Exception e) {
+                    LOG.warn("Exception starting master: " + e);
                     e.printStackTrace();
                 }
             }

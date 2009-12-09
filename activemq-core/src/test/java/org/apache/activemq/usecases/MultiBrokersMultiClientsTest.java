@@ -65,7 +65,7 @@ public class MultiBrokersMultiClientsTest extends JmsMultipleBrokersTestSupport 
         // wait for consumers to get propagated
         for (int i = 1; i <= BROKER_COUNT; i++) {
         	// all consumers on the remote brokers look like 1 consumer to the local broker.
-        	assertConsumersConnect("Broker" + i, dest, (BROKER_COUNT-1)+CONSUMER_COUNT, 30000);
+        	assertConsumersConnect("Broker" + i, dest, (BROKER_COUNT-1)+CONSUMER_COUNT, 65000);
         }
 
         // Send messages
@@ -115,7 +115,7 @@ public class MultiBrokersMultiClientsTest extends JmsMultipleBrokersTestSupport 
         // wait for consumers to get propagated
         for (int i = 1; i <= BROKER_COUNT; i++) {
         	// all consumers on the remote brokers look like 1 consumer to the local broker.
-        	assertConsumersConnect("Broker" + i, dest, (BROKER_COUNT-1)+CONSUMER_COUNT, 30000);
+        	assertConsumersConnect("Broker" + i, dest, (BROKER_COUNT-1)+CONSUMER_COUNT, 65000);
         }
 
         // Send messages

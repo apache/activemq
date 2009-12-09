@@ -16,28 +16,31 @@
  */
 package org.apache.activemq.network;
 
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeNotNull;
+
 import java.net.MalformedURLException;
 
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
-import javax.jms.MessageConsumer;
 import javax.jms.Session;
+import javax.management.InstanceNotFoundException;
 import javax.management.MBeanServerConnection;
 import javax.management.ObjectName;
 import javax.management.remote.JMXConnector;
 import javax.management.remote.JMXConnectorFactory;
 import javax.management.remote.JMXServiceURL;
 
-import junit.framework.TestCase;
-
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.ActiveMQPrefetchPolicy;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
+import org.apache.activemq.util.Wait;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.junit.Test;
 
-public class NetworkBrokerDetachTest extends TestCase {
+public class NetworkBrokerDetachTest {
 
 	private final static String BROKER_NAME = "broker";
 	private final static String REM_BROKER_NAME = "networkedBroker";
@@ -63,6 +66,7 @@ public class NetworkBrokerDetachTest extends TestCase {
         return broker;
     }
     
+    @Test
     public void testNetworkedBrokerDetach() throws Exception {
         BrokerService broker = createBroker();
         broker.start();
@@ -77,29 +81,52 @@ public class NetworkBrokerDetachTest extends TestCase {
         Session consSession = consConn.createSession(false, Session.AUTO_ACKNOWLEDGE);
         
         for(int i=0; i<NUM_CONSUMERS; i++) {
-          MessageConsumer consumer = consSession.createConsumer(consSession.createQueue(QUEUE_NAME));
+          consSession.createConsumer(consSession.createQueue(QUEUE_NAME));
         }
+        
+        assertTrue("got expected consumer count from mbean within time limit", Wait.waitFor(new Wait.Condition() {
 
-        
-        Thread.sleep(5000);
-        
-        MBeanServerConnection mbsc = getMBeanServerConnection();
-        // We should have 1 consumer for the queue on the local broker
-        Object consumers = getAttribute(mbsc, "Queue", "Destination=" + QUEUE_NAME, "ConsumerCount");
-        LOG.info("Consumers for " + QUEUE_NAME + " on " + BROKER_NAME + " : " + consumers);
-        assertEquals(1L, ((Long)consumers).longValue());       
+            public boolean isSatisified() throws Exception {
+                boolean result = false;
+                MBeanServerConnection mbsc = getMBeanServerConnection();
+                if (mbsc != null) {                
+                    // We should have 1 consumer for the queue on the local broker
+                    Object consumers = getAttribute(mbsc, "Queue", "Destination=" + QUEUE_NAME, "ConsumerCount");
+                    if (consumers != null) {
+                        LOG.info("Consumers for " + QUEUE_NAME + " on " + BROKER_NAME + " : " + consumers);
+                        if (1L == ((Long)consumers).longValue()) {
+                            result = true;
+                        }
+                    }
+                }
+                return result;
+            }      
+        }));
         
         
         LOG.info("Stopping Consumer on the networked broker ...");
         // Closing the connection will also close the consumer 
         consConn.close();
         
-        Thread.sleep(5000);
-        
         // We should have 0 consumer for the queue on the local broker
-        consumers = getAttribute(mbsc, "Queue", "Destination=" + QUEUE_NAME, "ConsumerCount");
-        LOG.info("Consumers for " + QUEUE_NAME + " on " + BROKER_NAME + " : " + consumers);
-        assertEquals(0L, ((Long)consumers).longValue());       
+        assertTrue("got expected 0 count from mbean within time limit", Wait.waitFor(new Wait.Condition() {
+
+            public boolean isSatisified() throws Exception {
+                boolean result = false;
+                MBeanServerConnection mbsc = getMBeanServerConnection();
+                if (mbsc != null) {                
+                    // We should have 1 consumer for the queue on the local broker
+                    Object consumers = getAttribute(mbsc, "Queue", "Destination=" + QUEUE_NAME, "ConsumerCount");
+                    if (consumers != null) {
+                        LOG.info("Consumers for " + QUEUE_NAME + " on " + BROKER_NAME + " : " + consumers);
+                        if (0L == ((Long)consumers).longValue()) {
+                            result = true;
+                        }
+                    }
+                }
+                return result;
+            }      
+        }));
         
         networkedBroker.stop();
         networkedBroker.waitUntilStopped();
@@ -134,21 +161,23 @@ public class NetworkBrokerDetachTest extends TestCase {
         try {
             JMXConnector jmxc = JMXConnectorFactory.connect(url, null);
             mbsc = jmxc.getMBeanServerConnection();
-
-//            // trace all existing MBeans
-//            Set<?> all = mbsc.queryMBeans(null, null);
-//            LOG.info("Total MBean count=" + all.size());
-//            for (Object o : all) {
-//                ObjectInstance bean = (ObjectInstance)o;
-//                LOG.info(bean.getObjectName());
-//            }
         } catch (Exception ignored) {
+            LOG.warn("getMBeanServer ex: " + ignored);
         }
+        // If port 1099 is in use when the Broker starts, starting the jmx
+        // connector will fail.  So, if we have no mbsc to query, skip the
+        // test.
+        assumeNotNull(mbsc);
         return mbsc;
     }
     
     private Object getAttribute(MBeanServerConnection mbsc, String type, String pattern, String attrName) throws Exception {
-        Object obj = mbsc.getAttribute(getObjectName(BROKER_NAME, type, pattern), attrName);
+        Object obj = null;
+        try {
+            obj = mbsc.getAttribute(getObjectName(BROKER_NAME, type, pattern), attrName);
+        } catch (InstanceNotFoundException ignored) {
+            LOG.warn("getAttribute ex: " + ignored);
+        }
         return obj;
     }
     
