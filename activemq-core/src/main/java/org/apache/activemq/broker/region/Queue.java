@@ -395,7 +395,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
             if (isProducerFlowControl() && context.isProducerFlowControl()) {
                 if (warnOnProducerFlowControl) {
                     warnOnProducerFlowControl = false;
-                    LOG.info("Usage Manager Memory Limit reached on " + getActiveMQDestination().getQualifiedName()
+                    LOG.info("Usage Manager Memory Limit ("+ memoryUsage.getLimit() + ") reached on " + getActiveMQDestination().getQualifiedName()
                             + ". Producers will be throttled to the rate at which messages are removed from this destination to prevent flooding it."
                             + " See http://activemq.apache.org/producer-flow-control.html for more info");
                 }
