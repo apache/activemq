@@ -28,6 +28,7 @@ import java.util.concurrent.TimeUnit;
 
 import javax.sql.DataSource;
 
+import org.apache.activemq.ActiveMQMessageAudit;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.BrokerServiceAware;
 import org.apache.activemq.broker.ConnectionContext;
@@ -85,6 +86,11 @@ public class JDBCPersistenceAdapter extends DataSourceSupport implements Persist
     private boolean createTablesOnStartup = true;
     private DataSource lockDataSource;
     private int transactionIsolation;
+    
+    protected int maxProducersToAudit=1024;
+    protected int maxAuditDepth=1000;
+    protected boolean enableAudit=true;
+    protected ActiveMQMessageAudit audit;
 
     public JDBCPersistenceAdapter() {
     }
@@ -119,9 +125,16 @@ public class JDBCPersistenceAdapter extends DataSourceSupport implements Persist
     private Set<ActiveMQDestination> emptyDestinationSet() {
         return Collections.EMPTY_SET;
     }
+    
+    protected ActiveMQMessageAudit createMessageAudit() {
+    	if (enableAudit && audit == null) {
+    		audit = new ActiveMQMessageAudit(maxAuditDepth,maxProducersToAudit);
+    	}
+    	return audit;
+    }
 
     public MessageStore createQueueMessageStore(ActiveMQQueue destination) throws IOException {
-        MessageStore rc = new JDBCMessageStore(this, getAdapter(), wireFormat, destination);
+        MessageStore rc = new JDBCMessageStore(this, getAdapter(), wireFormat, destination, createMessageAudit());
         if (transactionStore != null) {
             rc = transactionStore.proxy(rc);
         }
@@ -129,7 +142,7 @@ public class JDBCPersistenceAdapter extends DataSourceSupport implements Persist
     }
 
     public TopicMessageStore createTopicMessageStore(ActiveMQTopic destination) throws IOException {
-        TopicMessageStore rc = new JDBCTopicMessageStore(this, getAdapter(), wireFormat, destination);
+        TopicMessageStore rc = new JDBCTopicMessageStore(this, getAdapter(), wireFormat, destination, createMessageAudit());
         if (transactionStore != null) {
             rc = transactionStore.proxy(rc);
         }
@@ -588,4 +601,30 @@ public class JDBCPersistenceAdapter extends DataSourceSupport implements Persist
     public void setTransactionIsolation(int transactionIsolation) {
         this.transactionIsolation = transactionIsolation;
     }
+
+	public int getMaxProducersToAudit() {
+		return maxProducersToAudit;
+	}
+
+	public void setMaxProducersToAudit(int maxProducersToAudit) {
+		this.maxProducersToAudit = maxProducersToAudit;
+	}
+
+	public int getMaxAuditDepth() {
+		return maxAuditDepth;
+	}
+
+	public void setMaxAuditDepth(int maxAuditDepth) {
+		this.maxAuditDepth = maxAuditDepth;
+	}
+
+	public boolean isEnableAudit() {
+		return enableAudit;
+	}
+
+	public void setEnableAudit(boolean enableAudit) {
+		this.enableAudit = enableAudit;
+	}
+    
+    
 }

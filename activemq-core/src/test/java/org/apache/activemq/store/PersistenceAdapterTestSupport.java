@@ -32,7 +32,7 @@ import org.apache.activemq.command.MessageId;
  */
 abstract public class PersistenceAdapterTestSupport extends TestCase {
 
-    private PersistenceAdapter pa;
+    protected PersistenceAdapter pa;
 
     abstract protected PersistenceAdapter createPersistenceAdapter(boolean delete) throws Exception;
 

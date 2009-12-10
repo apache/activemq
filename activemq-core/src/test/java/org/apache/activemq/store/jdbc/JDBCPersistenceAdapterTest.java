@@ -20,19 +20,10 @@ import java.io.IOException;
 
 import junit.framework.AssertionFailedError;
 
-import org.apache.activemq.broker.ConnectionContext;
-import org.apache.activemq.command.ActiveMQQueue;
-import org.apache.activemq.command.ActiveMQTextMessage;
-import org.apache.activemq.command.MessageId;
-import org.apache.activemq.store.MessageStore;
 import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.PersistenceAdapterTestSupport;
 import org.apache.derby.jdbc.EmbeddedDataSource;
 
-/**
- * 
- * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
- */
 public class JDBCPersistenceAdapterTest extends PersistenceAdapterTestSupport {
     
     protected PersistenceAdapter createPersistenceAdapter(boolean delete) throws IOException {
@@ -45,6 +36,20 @@ public class JDBCPersistenceAdapterTest extends PersistenceAdapterTestSupport {
             jdbc.deleteAllMessages();
         }
         return jdbc;
+    }
+    
+    public void testAuditOff() throws Exception {
+    	((JDBCPersistenceAdapter)pa).setEnableAudit(false);
+    	boolean failed = true;
+    	try {
+    		testStoreCanHandleDupMessages();
+    		failed = false;
+    	} catch (AssertionFailedError e) {
+    	}
+    	
+    	if (!failed) {
+    		fail("Should have failed with audit turned off");
+    	}
     }
     
 }

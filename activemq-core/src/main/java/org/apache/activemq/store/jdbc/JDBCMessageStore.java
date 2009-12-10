@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.apache.activemq.ActiveMQMessageAudit;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.Message;
@@ -48,22 +49,24 @@ public class JDBCMessageStore extends AbstractMessageStore {
     protected final JDBCAdapter adapter;
     protected final JDBCPersistenceAdapter persistenceAdapter;
     protected AtomicLong lastMessageId = new AtomicLong(-1);
-    protected Map<ProducerId, Long> addedMessages = new HashMap<ProducerId, Long>();
+    protected ActiveMQMessageAudit audit;
 
-    public JDBCMessageStore(JDBCPersistenceAdapter persistenceAdapter, JDBCAdapter adapter, WireFormat wireFormat, ActiveMQDestination destination) {
+    public JDBCMessageStore(JDBCPersistenceAdapter persistenceAdapter, JDBCAdapter adapter, WireFormat wireFormat, ActiveMQDestination destination, ActiveMQMessageAudit audit) {
         super(destination);
         this.persistenceAdapter = persistenceAdapter;
         this.adapter = adapter;
         this.wireFormat = wireFormat;
+        this.audit = audit;
     }
 
     public void addMessage(ConnectionContext context, Message message) throws IOException {
 
         MessageId messageId = message.getMessageId();
-        Long lastAddedMessage = addedMessages.get(messageId.getProducerId());
-        if (lastAddedMessage != null && lastAddedMessage >= messageId.getProducerSequenceId()) {
+        if (audit != null && audit.isDuplicate(message)) {
             if (LOG.isDebugEnabled()) {
-                LOG.debug("Message " + message + " already added to the database. Skipping.");
+                LOG.debug(destination.getPhysicalName()
+                    + " ignoring duplicated (add) message, already stored: "
+                    + messageId);
             }
             return;
         }
@@ -81,7 +84,6 @@ public class JDBCMessageStore extends AbstractMessageStore {
         TransactionContext c = persistenceAdapter.getTransactionContext(context);
         try {
             adapter.doAddMessage(c, messageId, destination, data, message.getExpiration());
-            addedMessages.put(messageId.getProducerId(), messageId.getProducerSequenceId());
         } catch (SQLException e) {
             JDBCPersistenceAdapter.log("JDBC Failure: ", e);
             throw IOExceptionSupport.create("Failed to broker message: " + messageId + " in container: " + e, e);
