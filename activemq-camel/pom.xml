@@ -35,7 +35,7 @@
       org.apache.activemq.pool;resolution:=optional,
       com.thoughtworks.xstream*;resolution:=optional,
       org.apache.activeio*;resolution:=optional,
-      org.apache.camel*;resolution:=optional,
+      org.apache.camel*;version="[2,3)";resolution:=optional,
       org.apache.commons.pool*;resolution:=optional,
       org.apache.derby*;resolution:=optional,
       org.apache.tools.ant*;resolution:=optional,
