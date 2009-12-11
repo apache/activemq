@@ -36,6 +36,8 @@ import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
+import javax.jms.Queue;
+import javax.jms.QueueBrowser;
 import javax.jms.Session;
 import javax.jms.TextMessage;
 import javax.jms.Topic;
@@ -226,6 +228,14 @@ public class JmsMultipleBrokersTestSupport extends CombinationTestSupport {
         BrokerItem brokerItem = brokers.get(brokerName);
         if (brokerItem != null) {
             return brokerItem.createConsumer(dest, latch, messageSelector);
+        }
+        return null;
+    }
+    
+    protected QueueBrowser createBrowser(String brokerName, Destination dest) throws Exception {
+        BrokerItem brokerItem = brokers.get(brokerName);
+        if (brokerItem != null) {
+            return brokerItem.createBrowser(dest);
         }
         return null;
     }
@@ -433,6 +443,13 @@ public class JmsMultipleBrokersTestSupport extends CombinationTestSupport {
             client.setMessageListener(messageIdList);
             consumers.put(client, messageIdList);
             return client;
+        }
+        
+        public QueueBrowser createBrowser(Destination dest) throws Exception {
+            Connection c = createConnection();
+            c.start();
+            Session s = c.createSession(false, Session.AUTO_ACKNOWLEDGE);
+            return s.createBrowser((Queue)dest);
         }
 
         public MessageConsumer createDurableSubscriber(Topic dest, String name) throws Exception {
