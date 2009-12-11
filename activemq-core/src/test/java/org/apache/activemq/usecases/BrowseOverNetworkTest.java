@@ -69,7 +69,6 @@ public class BrowseOverNetworkTest extends JmsMultipleBrokersTestSupport {
             browsedMessage++;
             msgs.nextElement();
         }
-        System.out.println(browsedMessage);
     }
 
     public void setUp() throws Exception {
