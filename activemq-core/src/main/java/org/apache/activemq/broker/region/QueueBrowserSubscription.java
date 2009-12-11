@@ -67,6 +67,9 @@ public class QueueBrowserSubscription extends QueueSubscription {
      */
     protected void acknowledge(ConnectionContext context, final MessageAck ack, final MessageReference n)
         throws IOException {
+    	if (info.isNetworkSubscription()) {
+    		super.acknowledge(context, ack, n);
+    	}
     }
 
     synchronized public void incrementQueueRef() {
