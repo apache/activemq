@@ -28,6 +28,7 @@ import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.command.ConsumerInfo;
+import org.apache.activemq.command.DestinationInfo;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.ProducerInfo;
 
@@ -44,6 +45,11 @@ public class AuthorizationBroker extends BrokerFilter implements SecurityAdminMB
     public AuthorizationBroker(Broker next, AuthorizationMap authorizationMap) {
         super(next);
         this.authorizationMap = authorizationMap;
+    }
+           
+    public void addDestinationInfo(ConnectionContext context, DestinationInfo info) throws Exception {
+        addDestination(context, info.getDestination());
+        super.addDestinationInfo(context, info);
     }
 
     public Destination addDestination(ConnectionContext context, ActiveMQDestination destination) throws Exception {
