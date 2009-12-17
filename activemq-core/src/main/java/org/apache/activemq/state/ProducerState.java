@@ -21,6 +21,7 @@ import org.apache.activemq.command.ProducerInfo;
 
 public class ProducerState {
     final ProducerInfo info;
+    private TransactionState transactionState;
 
     public ProducerState(ProducerInfo info) {
         this.info = info;
@@ -34,4 +35,11 @@ public class ProducerState {
         return info;
     }
 
+    public void setTransactionState(TransactionState transactionState) {
+        this.transactionState = transactionState;
+    }
+
+    public TransactionState getTransactionState() {
+        return transactionState;
+    }
 }

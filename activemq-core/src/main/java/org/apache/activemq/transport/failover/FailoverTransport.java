@@ -95,6 +95,7 @@ public class FailoverTransport implements CompositeTransport {
     private List<BackupTransport> backups=new CopyOnWriteArrayList<BackupTransport>();
     private int backupPoolSize=1;
     private boolean trackMessages = false;
+    private boolean trackTransactionProducers = true;
     private int maxCacheSize = 128 * 1024;
     private TransportListener disposedListener = new DefaultTransportListener() {};
     
@@ -233,6 +234,7 @@ public class FailoverTransport implements CompositeTransport {
             started = true;
             stateTracker.setMaxCacheSize(getMaxCacheSize());
             stateTracker.setTrackMessages(isTrackMessages());
+            stateTracker.setTrackTransactionProducers(isTrackTransactionProducers());
             if (connectedTransport.get() != null) {
                 stateTracker.restore(connectedTransport.get());
             } else {
@@ -372,6 +374,14 @@ public class FailoverTransport implements CompositeTransport {
         this.trackMessages = trackMessages;
     }
 
+    public boolean isTrackTransactionProducers() {
+        return this.trackTransactionProducers;
+    }
+
+    public void setTrackTransactionProducers(boolean trackTransactionProducers) {
+        this.trackTransactionProducers = trackTransactionProducers;
+    }
+
     public int getMaxCacheSize() {
         return maxCacheSize;
     }
@@ -495,7 +505,7 @@ public class FailoverTransport implements CompositeTransport {
 
                     } catch (IOException e) {
                         if (LOG.isDebugEnabled()) {
-                            LOG.debug("Send oneway attempt: " + i + " failed for command:" + command);   
+                            LOG.debug("Send oneway attempt: " + i + " failed for command:" + command);
                         }
                         handleTransportFailure(e);
                     }

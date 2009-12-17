@@ -50,9 +50,16 @@ public class SessionState {
     }
 
     public ProducerState removeProducer(ProducerId id) {
-        return producers.remove(id);
+        ProducerState producerState = producers.remove(id);
+        if (producerState != null) {
+            if (producerState.getTransactionState() != null) {
+                // allow the transaction to recreate dependent producer on recovery
+                producerState.getTransactionState().addProducerState(producerState);
+            }
+        }
+        return producerState;
     }
-
+    
     public void addConsumer(ConsumerInfo info) {
         checkShutdown();
         consumers.put(info.getConsumerId(), new ConsumerState(info));
