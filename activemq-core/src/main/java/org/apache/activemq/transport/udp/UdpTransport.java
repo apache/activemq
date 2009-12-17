@@ -462,4 +462,11 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
         }
         return null;
     }
+
+    public int getReceiveCounter() {
+        if (commandChannel == null) {
+            return 0;
+        }
+        return commandChannel.getReceiveCounter();
+    }
 }

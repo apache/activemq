@@ -868,4 +868,12 @@ public class FailoverTransport implements CompositeTransport {
     public void reconnect(URI uri) throws IOException {
     	add(new URI[] {uri});
     }
+
+    public int getReceiveCounter() {
+        Transport transport = connectedTransport.get();
+        if( transport == null ) {
+            return 0;
+        }
+        return transport.getReceiveCounter();
+    }
 }

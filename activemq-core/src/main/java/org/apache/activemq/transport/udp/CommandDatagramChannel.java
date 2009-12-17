@@ -54,6 +54,7 @@ public class CommandDatagramChannel extends CommandChannelSupport {
     // writing
     private Object writeLock = new Object();
     private int defaultMarshalBufferSize = 64 * 1024;
+    private volatile int receiveCounter;
 
     public CommandDatagramChannel(UdpTransport transport, OpenWireFormat wireFormat, int datagramSize, SocketAddress targetAddress, DatagramHeaderMarshaller headerMarshaller,
                                   DatagramChannel channel, ByteBufferPool bufferPool) {
@@ -85,6 +86,8 @@ public class CommandDatagramChannel extends CommandChannelSupport {
                 if (readBuffer.limit() == 0) {
                     continue;
                 }
+                
+                receiveCounter++;
                 from = headerMarshaller.createEndpoint(readBuffer, address);
 
                 int remaining = readBuffer.remaining();
@@ -250,6 +253,10 @@ public class CommandDatagramChannel extends CommandChannelSupport {
                 LOG.warn("Request for buffer: " + commandId + " is no longer present");
             }
         }
+    }
+
+    public int getReceiveCounter() {
+        return receiveCounter;
     }
 
 }

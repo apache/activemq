@@ -61,9 +61,4 @@ public interface WireFormat {
      */
     int getVersion();
     
-    /**
-     * @return true if message is being received
-     */
-    boolean inReceive();
-    
 }

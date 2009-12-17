@@ -75,11 +75,4 @@ public class ObjectStreamWireFormat implements WireFormat {
         return 0;
     }
 
-	public boolean inReceive() {
-		// TODO implement the inactivity monitor
-		return false;
-	}
-    
-    
-
 }

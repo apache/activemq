@@ -50,4 +50,7 @@ public interface CommandChannel extends Replayer, Service {
     void setReplayAddress(SocketAddress address);
 
     void setReplayBuffer(ReplayBuffer replayBuffer);
+    
+    public int getReceiveCounter();
+
 }

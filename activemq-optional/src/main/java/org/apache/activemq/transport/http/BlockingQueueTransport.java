@@ -64,5 +64,9 @@ public class BlockingQueueTransport extends TransportSupport {
     }
 
     protected void doStop(ServiceStopper stopper) throws Exception {
+    }
+
+    public int getReceiveCounter() {
+        return 0;
     }   
 }

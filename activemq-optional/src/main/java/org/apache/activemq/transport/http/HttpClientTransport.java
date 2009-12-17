@@ -58,6 +58,7 @@ public class HttpClientTransport extends HttpTransportSupport {
     private final String clientID = CLIENT_ID_GENERATOR.generateId();
     private boolean trace;
     private GetMethod httpMethod;
+    private volatile int receiveCounter;
     
     public HttpClientTransport(TextWireFormat wireFormat, URI remoteUrl) {
         super(wireFormat, remoteUrl);
@@ -135,6 +136,7 @@ public class HttpClientTransport extends HttpTransportSupport {
                         break;
                     }
                 } else {
+                    receiveCounter++;
                     DataInputStream stream = new DataInputStream(httpMethod.getResponseBodyAsStream());
                     Object command = (Object)getTextWireFormat().unmarshal(stream);
                     if (command == null) {
@@ -219,6 +221,10 @@ public class HttpClientTransport extends HttpTransportSupport {
 
     public void setTrace(boolean trace) {
         this.trace = trace;
+    }
+
+    public int getReceiveCounter() {
+        return receiveCounter;
     }
 
 }

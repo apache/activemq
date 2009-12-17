@@ -47,7 +47,8 @@ public class HttpTransport extends HttpTransportSupport {
     private HttpURLConnection receiveConnection;
     private URL url;
     private String clientID;
-
+    private volatile int receiveCounter;
+    
     // private String sessionID;
 
     public HttpTransport(TextWireFormat wireFormat, URI remoteUrl) throws MalformedURLException {
@@ -102,6 +103,7 @@ public class HttpTransport extends HttpTransportSupport {
                     // checkSession(connection);
 
                     // Create a String for the UTF content
+                    receiveCounter++;
                     InputStream is = connection.getInputStream();
                     ByteArrayOutputStream baos = new ByteArrayOutputStream(connection.getContentLength() > 0 ? connection.getContentLength() : 1024);
                     int c = 0;
@@ -226,6 +228,10 @@ public class HttpTransport extends HttpTransportSupport {
         if (connection != null) {
             connection.disconnect();
         }
+    }
+
+    public int getReceiveCounter() {
+        return receiveCounter;
     }
 
 }

@@ -29,6 +29,7 @@ import org.apache.activemq.util.ServiceStopper;
 public class StubTransport extends TransportSupport {
 
     private Queue<Object> queue = new ConcurrentLinkedQueue<Object>();
+    private volatile int receiveCounter;
 
     protected void doStop(ServiceStopper stopper) throws Exception {
     }
@@ -37,6 +38,7 @@ public class StubTransport extends TransportSupport {
     }
 
     public void oneway(Object command) throws IOException {
+        receiveCounter++;
         queue.add(command);
     }
 
@@ -46,6 +48,10 @@ public class StubTransport extends TransportSupport {
 
     public String getRemoteAddress() {
         return null;
+    }
+
+    public int getReceiveCounter() {
+        return receiveCounter;
     }
 
 }

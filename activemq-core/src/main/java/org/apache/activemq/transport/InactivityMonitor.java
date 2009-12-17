@@ -23,6 +23,7 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.activemq.command.KeepAliveInfo;
 import org.apache.activemq.command.WireFormatInfo;
@@ -56,6 +57,8 @@ public class InactivityMonitor extends TransportFilter {
 
     private final AtomicBoolean commandReceived = new AtomicBoolean(true);
     private final AtomicBoolean inReceive = new AtomicBoolean(false);
+    private final AtomicInteger lastReceiveCounter = new AtomicInteger(0);
+    
     private SchedulerTimerTask writeCheckerTask;
     private SchedulerTimerTask readCheckerTask;
     
@@ -153,7 +156,9 @@ public class InactivityMonitor extends TransportFilter {
     }
 
     final void readCheck() {
-        if (inReceive.get() || wireFormat.inReceive()) {
+        int currentCounter = next.getReceiveCounter();
+        int previousCounter = lastReceiveCounter.getAndSet(currentCounter);
+        if (inReceive.get() || currentCounter!=previousCounter ) {
             if (LOG.isTraceEnabled()) {
                 LOG.trace("A receive is in progress");
             }

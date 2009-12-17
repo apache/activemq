@@ -137,4 +137,8 @@ public class TransportFilter implements TransportListener, Transport {
 	public void reconnect(URI uri) throws IOException {
 		next.reconnect(uri);
 	}
+
+    public int getReceiveCounter() {
+        return next.getReceiveCounter();
+    }
 }

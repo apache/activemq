@@ -118,6 +118,7 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
     private Boolean keepAlive;
     private Boolean tcpNoDelay;
     private Thread runnerThread;
+    private volatile int receiveCounter;
 
     /**
      * Connect to a remote Node - e.g. a Broker
@@ -504,7 +505,28 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
     }
 
     protected void initializeStreams() throws Exception {
-        TcpBufferedInputStream buffIn = new TcpBufferedInputStream(socket.getInputStream(), ioBufferSize);
+        TcpBufferedInputStream buffIn = new TcpBufferedInputStream(socket.getInputStream(), ioBufferSize) {
+            @Override
+            public int read() throws IOException {
+                receiveCounter++;
+                return super.read();
+            }
+            @Override
+            public int read(byte[] b, int off, int len) throws IOException {
+                receiveCounter++;
+                return super.read(b, off, len);
+            }
+            @Override
+            public long skip(long n) throws IOException {
+                receiveCounter++;
+                return super.skip(n);
+            }
+            @Override
+            protected void fill() throws IOException {
+                receiveCounter++;
+                super.fill();
+            }
+        };
         this.dataIn = new DataInputStream(buffIn);
         buffOut = new TcpBufferedOutputStream(socket.getOutputStream(), ioBufferSize);
         this.dataOut = new DataOutputStream(buffOut);
@@ -550,5 +572,10 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
                 return thread;
             }
         });
+    }
+
+
+    public int getReceiveCounter() {
+        return receiveCounter;
     }
 }

@@ -48,6 +48,8 @@ public class CommandDatagramSocket extends CommandChannelSupport {
     private Object readLock = new Object();
     private Object writeLock = new Object();
 
+    private volatile int receiveCounter;
+
     public CommandDatagramSocket(UdpTransport transport, OpenWireFormat wireFormat, int datagramSize, SocketAddress targetAddress, DatagramHeaderMarshaller headerMarshaller,
                                  DatagramSocket channel) {
         super(transport, wireFormat, datagramSize, targetAddress, headerMarshaller);
@@ -70,8 +72,9 @@ public class CommandDatagramSocket extends CommandChannelSupport {
 
                 // TODO could use a DataInput implementation that talks direct
                 // to the byte[] to avoid object allocation
-                DataInputStream dataIn = new DataInputStream(new ByteArrayInputStream(datagram.getData()));
-
+                receiveCounter++;
+                DataInputStream dataIn = new DataInputStream(new ByteArrayInputStream(datagram.getData(), 0, datagram.getLength()));
+                
                 from = headerMarshaller.createEndpoint(datagram, dataIn);
                 answer = (Command)wireFormat.unmarshal(dataIn);
                 break;
@@ -231,5 +234,9 @@ public class CommandDatagramSocket extends CommandChannelSupport {
 
     protected ByteArrayOutputStream createByteArrayOutputStream() {
         return new ByteArrayOutputStream(datagramSize);
+    }
+
+    public int getReceiveCounter() {
+        return receiveCounter;
     }
 }

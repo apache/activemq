@@ -154,4 +154,12 @@ public interface Transport extends Service {
      */
     void reconnect(URI uri) throws IOException;
 
+    /**
+     * Returns a counter which gets incremented as data is read from the transport.
+     * It should only be used to determine if there is progress being made in reading the next command from the transport.  
+     * The value may wrap into the negative numbers. 
+     * 
+     * @return a counter which gets incremented as data is read from the transport.
+     */
+    int getReceiveCounter();    
 }
