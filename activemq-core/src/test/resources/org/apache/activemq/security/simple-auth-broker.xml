@@ -60,6 +60,9 @@
               
               <authorizationEntry topic="ActiveMQ.Advisory.>" read="guests,users" write="guests,users" admin="guests,users"/>
             </authorizationEntries>
+            <tempDestinationAuthorizationEntry>  
+                <tempDestinationAuthorizationEntry read="admin" write="admin" admin="admin"/> 
+            </tempDestinationAuthorizationEntry>     
           </authorizationMap>
         </map>
       </authorizationPlugin>
