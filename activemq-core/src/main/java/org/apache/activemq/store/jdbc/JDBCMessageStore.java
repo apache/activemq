@@ -18,8 +18,6 @@ package org.apache.activemq.store.jdbc;
 
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.activemq.ActiveMQMessageAudit;
@@ -28,10 +26,8 @@ import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageId;
-import org.apache.activemq.command.ProducerId;
 import org.apache.activemq.store.AbstractMessageStore;
 import org.apache.activemq.store.MessageRecoveryListener;
-import org.apache.activemq.store.jdbc.adapter.DefaultJDBCAdapter;
 import org.apache.activemq.util.ByteSequence;
 import org.apache.activemq.util.ByteSequenceData;
 import org.apache.activemq.util.IOExceptionSupport;
@@ -57,8 +53,28 @@ public class JDBCMessageStore extends AbstractMessageStore {
         this.adapter = adapter;
         this.wireFormat = wireFormat;
         this.audit = audit;
+        initAudit();
     }
 
+    /*
+     * revisit: This can be destination agnostic and back in the jdbc persistence adapter start
+     */
+    public void initAudit() {
+        if (audit != null) {
+            try {
+                TransactionContext c = persistenceAdapter.getTransactionContext(null);
+                adapter.doMessageIdScan(c, destination, 100, new JDBCMessageIdScanListener() {
+                    public boolean messageId(MessageId id) {
+                        audit.isDuplicate(id);
+                        return true;
+                    }
+                });
+            } catch (Exception e) {
+                LOG.error("Failed to reload store message audit for queue store " + destination);
+            }
+        }
+    }
+    
     public void addMessage(ConnectionContext context, Message message) throws IOException {
 
         MessageId messageId = message.getMessageId();

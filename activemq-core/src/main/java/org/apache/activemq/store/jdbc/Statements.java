@@ -145,6 +145,16 @@ public class Statements {
         }
         return findAllMessagesStatement;
     }
+    
+    public String getFindAllMessageIds() {
+        //  this needs to be limited maybe need to use getFindLastSequenceIdInMsgsStatement
+        // and work back for X
+        if (findAllMessagesStatement == null) {
+            findAllMessagesStatement = "SELECT ID, MSGID_PROD, MSGID_SEQ FROM " + getFullMessageTableName()
+                                       + " WHERE CONTAINER=? ORDER BY ID DESC";
+        }
+        return findAllMessagesStatement;
+    }
 
     public String getFindLastSequenceIdInMsgsStatement() {
         if (findLastSequenceIdInMsgsStatement == null) {

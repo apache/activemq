@@ -18,10 +18,14 @@ package org.apache.activemq.transport.failover;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import javax.jms.Connection;
+import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
 import javax.jms.Queue;
@@ -34,10 +38,10 @@ import org.apache.activemq.broker.BrokerPluginSupport;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.TransactionId;
+import org.apache.activemq.store.jdbc.JDBCPersistenceAdapter;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 
 // see https://issues.apache.org/activemq/browse/AMQ-2473
@@ -48,7 +52,6 @@ public class FailoverTransactionTest {
 	private String url = "tcp://localhost:61616";
 	BrokerService broker;
 	
-	@Before
 	public void startCleanBroker() throws Exception {
 	    startBroker(true);
 	}
@@ -69,13 +72,13 @@ public class FailoverTransactionTest {
 	    broker = new BrokerService();
 	    broker.setUseJmx(false);
 	    broker.addConnector(url);
-	    broker.setDeleteAllMessagesOnStartup(true);
+	    broker.setDeleteAllMessagesOnStartup(deleteAllMessagesOnStartup);
 	    return broker;
 	}
 
-	@Test
+	//@Test
 	public void testFailoverProducerCloseBeforeTransaction() throws Exception {
-		
+	    startCleanBroker();
 		ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory("failover:(" + url + ")");
 		Connection connection = cf.createConnection();
 		connection.start();
@@ -103,10 +106,20 @@ public class FailoverTransactionTest {
 	
     @Test
     public void testFailoverCommitReplyLost() throws Exception {
-        
-        broker.stop();
+        doTestFailoverCommitReplyLost(false);
+    }  
+    
+    @Test
+    public void testFailoverCommitReplyLostJdbc() throws Exception {
+        doTestFailoverCommitReplyLost(true);
+    }
+    
+    public void doTestFailoverCommitReplyLost(boolean useJdbcPersistenceAdapter) throws Exception {
         
         broker = createBroker(true);
+        if (useJdbcPersistenceAdapter) {
+            broker.setPersistenceAdapter(new JDBCPersistenceAdapter());
+        }
         broker.setPlugins(new BrokerPlugin[] {
                 new BrokerPluginSupport() {
                     @Override
@@ -141,13 +154,15 @@ public class FailoverTransactionTest {
         
         TextMessage message = session.createTextMessage("Test message");
         producer.send(message);
-
+        
+        final CountDownLatch commitDoneLatch = new CountDownLatch(1);
         // broker will die on commit reply so this will hang till restart
         Executors.newSingleThreadExecutor().execute(new Runnable() {   
             public void run() {
                 LOG.info("doing async commit...");
                 try {
                     session.commit();
+                    commitDoneLatch.countDown();
                     LOG.info("done async commit");
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -155,18 +170,54 @@ public class FailoverTransactionTest {
             }
         });
        
+        // will be stopped by the plugin
         broker.waitUntilStopped();
-        startBroker(false);
+        broker = createBroker(false);
+        if (useJdbcPersistenceAdapter) {
+            broker.setPersistenceAdapter(new JDBCPersistenceAdapter());
+        }
+        broker.start();
 
-        assertNotNull("we got the message", consumer.receive(20000));
+        assertTrue("tx committed trough failover", commitDoneLatch.await(30, TimeUnit.SECONDS));
+        
+        // new transaction
+        Message msg = consumer.receive(20000);
+        LOG.info("Received: " + msg);
+        assertNotNull("we got the message", msg);
         assertNull("we got just one message", consumer.receive(2000));
-        session.commit();   
+        session.commit();
+        consumer.close();
+        connection.close();
+        
+        // ensure no dangling messages with fresh broker etc
+        broker.stop();
+        broker.waitUntilStopped();
+        
+        LOG.info("Checking for remaining/hung messages..");
+        broker = createBroker(false);
+        if (useJdbcPersistenceAdapter) {
+            broker.setPersistenceAdapter(new JDBCPersistenceAdapter());
+        }
+        broker.start();
+        
+        // after restart, ensure no dangling messages
+        cf = new ActiveMQConnectionFactory("failover:(" + url + ")");
+        connection = cf.createConnection();
+        connection.start();
+        Session session2 = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        consumer = session2.createConsumer(destination);
+        msg = consumer.receive(1000);
+        if (msg == null) {
+            msg = consumer.receive(5000);
+        }
+        LOG.info("Received: " + msg);
+        assertNull("no messges left dangling but got: " + msg, msg);
         connection.close();
     }
 
 	@Test
 	public void testFailoverProducerCloseBeforeTransactionFailWhenDisabled() throws Exception {
-	        
+	    startCleanBroker();        
 	    ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory("failover:(" + url + ")?trackTransactionProducers=false");
 	    Connection connection = cf.createConnection();
 	    connection.start();
@@ -188,15 +239,15 @@ public class FailoverTransactionTest {
 	    
 	    session.commit();
 	    
-	    // withough tracking producers, message will not be replayed on recovery
-	    assertNull("we got the message", consumer.receive(2000));
+	    // without tracking producers, message will not be replayed on recovery
+	    assertNull("we got the message", consumer.receive(5000));
 	    session.commit();   
 	    connection.close();
 	}
 	
 	@Test
 	public void testFailoverMultipleProducerCloseBeforeTransaction() throws Exception {
-	        
+	    startCleanBroker();	        
 	    ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory("failover:(" + url + ")");
 	    Connection connection = cf.createConnection();
 	    connection.start();

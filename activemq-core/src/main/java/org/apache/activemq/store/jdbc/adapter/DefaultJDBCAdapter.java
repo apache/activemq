@@ -33,6 +33,7 @@ import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.command.SubscriptionInfo;
 import org.apache.activemq.store.jdbc.JDBCAdapter;
+import org.apache.activemq.store.jdbc.JDBCMessageIdScanListener;
 import org.apache.activemq.store.jdbc.JDBCMessageRecoveryListener;
 import org.apache.activemq.store.jdbc.JDBCPersistenceAdapter;
 import org.apache.activemq.store.jdbc.Statements;
@@ -326,6 +327,27 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         }
     }
 
+    public void doMessageIdScan(TransactionContext c, ActiveMQDestination destination, long limit, 
+            JDBCMessageIdScanListener listener) throws SQLException, IOException {
+        PreparedStatement s = null;
+        ResultSet rs = null;
+        try {
+            s = c.getConnection().prepareStatement(this.statements.getFindAllMessageIds());
+            s.setString(1, destination.getQualifiedName());
+            // limit the query. just need the the last few messages that could be replayed 
+            // on recovery. send or commit reply lost so it gets replayed.
+            rs = s.executeQuery();
+            while (rs.next()) {
+                if (!listener.messageId(new MessageId(rs.getString(2), rs.getLong(3)))) { 
+                    break;
+                }
+            }
+        } finally {
+            close(rs);
+            close(s);
+        }
+    }
+    
     public void doSetLastAck(TransactionContext c, ActiveMQDestination destination, String clientId,
             String subscriptionName, long seq) throws SQLException, IOException {
         PreparedStatement s = c.getUpdateLastAckStatement();

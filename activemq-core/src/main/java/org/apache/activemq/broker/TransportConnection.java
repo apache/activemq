@@ -541,6 +541,10 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         SessionId sessionId = id.getParentId();
         ConnectionId connectionId = sessionId.getParentId();
         TransportConnectionState cs = lookupConnectionState(connectionId);
+        if (cs == null) {
+            throw new IllegalStateException("Cannot remove a consumer from a connection that had not been registered: "
+                    + connectionId);
+        }
         SessionState ss = cs.getSessionState(sessionId);
         if (ss == null) {
             throw new IllegalStateException("Cannot remove a consumer from a session that had not been registered: "
@@ -576,6 +580,9 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
     public Response processRemoveSession(SessionId id, long lastDeliveredSequenceId) throws Exception {
         ConnectionId connectionId = id.getParentId();
         TransportConnectionState cs = lookupConnectionState(connectionId);
+        if (cs == null) {
+            throw new IllegalStateException("Cannot remove session from connection that had not been registered: " + connectionId);
+        }
         SessionState session = cs.getSessionState(id);
         if (session == null) {
             throw new IllegalStateException("Cannot remove session that had not been registered: " + id);
@@ -643,7 +650,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
             }
         }
         registerConnectionState(info.getConnectionId(), state);
-        LOG.debug("Setting up new connection: " + getRemoteAddress());
+        LOG.debug("Setting up new connection id: " + info.getConnectionId() + ", address: " + getRemoteAddress());
         // Setup the context.
         String clientId = info.getClientId();
         context = new ConnectionContext();
@@ -680,6 +687,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
 
     public synchronized Response processRemoveConnection(ConnectionId id, long lastDeliveredSequenceId)
             throws InterruptedException {
+        LOG.debug("remove connection id: " + id);
         TransportConnectionState cs = lookupConnectionState(id);
         if (cs != null) {
             // Don't allow things to be added to the connection state while we

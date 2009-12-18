@@ -118,6 +118,9 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
         // Restore the connections.
         for (Iterator<ConnectionState> iter = connectionStates.values().iterator(); iter.hasNext();) {
             ConnectionState connectionState = iter.next();
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("conn: " + connectionState.getInfo().getConnectionId());
+            }
             transport.oneway(connectionState.getInfo());
             restoreTempDestinations(transport, connectionState);
 
@@ -173,6 +176,9 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
         // Restore the connection's sessions
         for (Iterator iter2 = connectionState.getSessionStates().iterator(); iter2.hasNext();) {
             SessionState sessionState = (SessionState)iter2.next();
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("session: " + sessionState.getInfo().getSessionId());
+            }
             transport.oneway(sessionState.getInfo());
 
             if (restoreProducers) {
@@ -207,6 +213,9 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
         // Restore the session's producers
         for (Iterator iter3 = sessionState.getProducerStates().iterator(); iter3.hasNext();) {
             ProducerState producerState = (ProducerState)iter3.next();
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("producer: " + producerState.getInfo().getProducerId());
+            }
             transport.oneway(producerState.getInfo());
         }
     }
