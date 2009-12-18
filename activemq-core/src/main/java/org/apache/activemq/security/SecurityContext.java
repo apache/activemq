@@ -18,6 +18,7 @@ package org.apache.activemq.security;
 
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -52,9 +53,17 @@ public abstract class SecurityContext {
     }
 
     public boolean isInOneOf(Set<?> allowedPrincipals) {
-        HashSet<?> set = new HashSet<Object>(getPrincipals());
-        set.retainAll(allowedPrincipals);
-        return set.size() > 0;
+    	Iterator allowedIter = allowedPrincipals.iterator();
+    	HashSet<?> userPrincipals = new HashSet<Object>(getPrincipals());
+    	while (allowedIter.hasNext()) {
+    		Iterator userIter = userPrincipals.iterator();
+    		Object allowedPrincipal = allowedIter.next(); 
+    		while (userIter.hasNext()) {
+    			if (allowedPrincipal.equals(userIter.next()))
+    				return true;
+    		}
+    	}
+    	return false;
     }
 
     public abstract Set<?> getPrincipals();
