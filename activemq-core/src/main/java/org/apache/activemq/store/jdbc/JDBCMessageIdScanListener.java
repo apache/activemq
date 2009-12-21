@@ -19,5 +19,5 @@ package org.apache.activemq.store.jdbc;
 import org.apache.activemq.command.MessageId;
 
 public interface JDBCMessageIdScanListener {
-    boolean messageId(MessageId id);
+    void messageId(MessageId id);
 }

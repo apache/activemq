@@ -152,7 +152,7 @@ public class Statements {
         // and work back for X
         if (findAllMessageIdsStatement == null) {
             findAllMessageIdsStatement = "SELECT ID, MSGID_PROD, MSGID_SEQ FROM " + getFullMessageTableName()
-                                       + " WHERE CONTAINER=? ORDER BY ID DESC";
+                                       + " ORDER BY ID DESC";
         }
         return findAllMessageIdsStatement;
     }

@@ -35,6 +35,7 @@ import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
+import org.apache.activemq.command.MessageId;
 import org.apache.activemq.openwire.OpenWireFormat;
 import org.apache.activemq.store.MessageStore;
 import org.apache.activemq.store.PersistenceAdapter;
@@ -90,6 +91,7 @@ public class JDBCPersistenceAdapter extends DataSourceSupport implements Persist
     protected int maxProducersToAudit=1024;
     protected int maxAuditDepth=1000;
     protected boolean enableAudit=true;
+    protected int auditRecoveryDepth = 1024;
     protected ActiveMQMessageAudit audit;
 
     public JDBCPersistenceAdapter() {
@@ -126,15 +128,33 @@ public class JDBCPersistenceAdapter extends DataSourceSupport implements Persist
         return Collections.EMPTY_SET;
     }
     
-    protected ActiveMQMessageAudit createMessageAudit() {
-    	if (enableAudit && audit == null) {
-    		audit = new ActiveMQMessageAudit(maxAuditDepth,maxProducersToAudit);
+    protected void createMessageAudit() {
+        if (enableAudit && audit == null) {
+            audit = new ActiveMQMessageAudit(maxAuditDepth,maxProducersToAudit);
+            TransactionContext c = null;
+            
+            try {
+                c = getTransactionContext();
+                getAdapter().doMessageIdScan(c, auditRecoveryDepth, new JDBCMessageIdScanListener() {
+                    public void messageId(MessageId id) {
+                        audit.isDuplicate(id);
+                    }
+                });
+            } catch (Exception e) {
+                LOG.error("Failed to reload store message audit for JDBC persistence adapter", e);
+            } finally {
+                if (c != null) {
+                    try {
+                        c.close();
+                    } catch (Throwable e) {
+                    }
+                }
+            }
     	}
-    	return audit;
     }
 
     public MessageStore createQueueMessageStore(ActiveMQQueue destination) throws IOException {
-        MessageStore rc = new JDBCMessageStore(this, getAdapter(), wireFormat, destination, createMessageAudit());
+        MessageStore rc = new JDBCMessageStore(this, getAdapter(), wireFormat, destination, audit);
         if (transactionStore != null) {
             rc = transactionStore.proxy(rc);
         }
@@ -142,7 +162,7 @@ public class JDBCPersistenceAdapter extends DataSourceSupport implements Persist
     }
 
     public TopicMessageStore createTopicMessageStore(ActiveMQTopic destination) throws IOException {
-        TopicMessageStore rc = new JDBCTopicMessageStore(this, getAdapter(), wireFormat, destination, createMessageAudit());
+        TopicMessageStore rc = new JDBCTopicMessageStore(this, getAdapter(), wireFormat, destination, audit);
         if (transactionStore != null) {
             rc = transactionStore.proxy(rc);
         }
@@ -234,6 +254,8 @@ public class JDBCPersistenceAdapter extends DataSourceSupport implements Persist
                 }
             }, cleanupPeriod, cleanupPeriod, TimeUnit.MILLISECONDS);
         }
+        
+        createMessageAudit();
     }
 
     public synchronized void stop() throws Exception {
@@ -625,6 +647,13 @@ public class JDBCPersistenceAdapter extends DataSourceSupport implements Persist
 	public void setEnableAudit(boolean enableAudit) {
 		this.enableAudit = enableAudit;
 	}
-    
+
+    public int getAuditRecoveryDepth() {
+        return auditRecoveryDepth;
+    }
+
+    public void setAuditRecoveryDepth(int auditRecoveryDepth) {
+        this.auditRecoveryDepth = auditRecoveryDepth;
+    }
     
 }

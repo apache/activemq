@@ -327,20 +327,16 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         }
     }
 
-    public void doMessageIdScan(TransactionContext c, ActiveMQDestination destination, long limit, 
+    public void doMessageIdScan(TransactionContext c, int limit, 
             JDBCMessageIdScanListener listener) throws SQLException, IOException {
         PreparedStatement s = null;
         ResultSet rs = null;
         try {
             s = c.getConnection().prepareStatement(this.statements.getFindAllMessageIdsStatement());
-            s.setString(1, destination.getQualifiedName());
-            // limit the query. just need the the last few messages that could be replayed 
-            // on recovery. send or commit reply lost so it gets replayed.
+            s.setMaxRows(limit);
             rs = s.executeQuery();
             while (rs.next()) {
-                if (!listener.messageId(new MessageId(rs.getString(2), rs.getLong(3)))) { 
-                    break;
-                }
+                listener.messageId(new MessageId(rs.getString(2), rs.getLong(3)));
             }
         } finally {
             close(rs);

@@ -53,26 +53,6 @@ public class JDBCMessageStore extends AbstractMessageStore {
         this.adapter = adapter;
         this.wireFormat = wireFormat;
         this.audit = audit;
-        initAudit();
-    }
-
-    /*
-     * revisit: This can be destination agnostic and back in the jdbc persistence adapter start
-     */
-    public void initAudit() {
-        if (audit != null) {
-            try {
-                TransactionContext c = persistenceAdapter.getTransactionContext(null);
-                adapter.doMessageIdScan(c, destination, 100, new JDBCMessageIdScanListener() {
-                    public boolean messageId(MessageId id) {
-                        audit.isDuplicate(id);
-                        return true;
-                    }
-                });
-            } catch (Exception e) {
-                LOG.error("Failed to reload store message audit for queue store " + destination);
-            }
-        }
     }
     
     public void addMessage(ConnectionContext context, Message message) throws IOException {
