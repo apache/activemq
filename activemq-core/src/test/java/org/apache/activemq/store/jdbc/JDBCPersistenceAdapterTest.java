@@ -39,7 +39,10 @@ public class JDBCPersistenceAdapterTest extends PersistenceAdapterTestSupport {
     }
     
     public void testAuditOff() throws Exception {
-    	((JDBCPersistenceAdapter)pa).setEnableAudit(false);
+        pa.stop();
+        pa = createPersistenceAdapter(true);
+        ((JDBCPersistenceAdapter)pa).setEnableAudit(false);
+        pa.start();
     	boolean failed = true;
     	try {
     		testStoreCanHandleDupMessages();
