@@ -332,7 +332,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         PreparedStatement s = null;
         ResultSet rs = null;
         try {
-            s = c.getConnection().prepareStatement(this.statements.getFindAllMessageIds());
+            s = c.getConnection().prepareStatement(this.statements.getFindAllMessageIdsStatement());
             s.setString(1, destination.getQualifiedName());
             // limit the query. just need the the last few messages that could be replayed 
             // on recovery. send or commit reply lost so it gets replayed.

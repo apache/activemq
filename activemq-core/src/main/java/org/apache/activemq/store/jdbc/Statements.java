@@ -65,6 +65,7 @@ public class Statements {
     private String destinationMessageCountStatement;
     private String findNextMessagesStatement;
     private boolean useLockCreateWhereClause;
+    private String findAllMessageIdsStatement;
 
     public String[] getCreateSchemaStatements() {
         if (createSchemaStatements == null) {
@@ -146,14 +147,14 @@ public class Statements {
         return findAllMessagesStatement;
     }
     
-    public String getFindAllMessageIds() {
+    public String getFindAllMessageIdsStatement() {
         //  this needs to be limited maybe need to use getFindLastSequenceIdInMsgsStatement
         // and work back for X
-        if (findAllMessagesStatement == null) {
-            findAllMessagesStatement = "SELECT ID, MSGID_PROD, MSGID_SEQ FROM " + getFullMessageTableName()
+        if (findAllMessageIdsStatement == null) {
+            findAllMessageIdsStatement = "SELECT ID, MSGID_PROD, MSGID_SEQ FROM " + getFullMessageTableName()
                                        + " WHERE CONTAINER=? ORDER BY ID DESC";
         }
-        return findAllMessagesStatement;
+        return findAllMessageIdsStatement;
     }
 
     public String getFindLastSequenceIdInMsgsStatement() {
