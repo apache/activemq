@@ -14,32 +14,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package org.apache.activemq.store.jdbc;
 
-package org.apache.activemq.state;
+import org.apache.activemq.command.MessageId;
 
-import org.apache.activemq.command.ProducerInfo;
-
-public class ProducerState {
-    final ProducerInfo info;
-    private TransactionState transactionState;
-
-    public ProducerState(ProducerInfo info) {
-        this.info = info;
-    }
-
-    public String toString() {
-        return info.toString();
-    }
-
-    public ProducerInfo getInfo() {
-        return info;
-    }
-
-    public void setTransactionState(TransactionState transactionState) {
-        this.transactionState = transactionState;
-    }
-
-    public TransactionState getTransactionState() {
-        return transactionState;
-    }
+public interface JDBCMessageIdScanListener {
+    void messageId(MessageId id);
 }

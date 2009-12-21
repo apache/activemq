@@ -28,7 +28,6 @@ import junit.framework.TestCase;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.broker.TransportConnector;
 
 public class FailoverTimeoutTest extends TestCase {
 	
@@ -43,7 +42,7 @@ public class FailoverTimeoutTest extends TestCase {
 		bs.addConnector(tcpUri);
 		bs.start();
 		
-		ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory("failover:(" + tcpUri + ")?timeout=" + timeout);
+		ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory("failover:(" + tcpUri + ")?timeout=" + timeout + "&useExponentialBackOff=false");
 		Connection connection = cf.createConnection();
 		Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
 		MessageProducer producer = session.createProducer(session
@@ -59,11 +58,11 @@ public class FailoverTimeoutTest extends TestCase {
 			assertEquals("Failover timeout of " + timeout + " ms reached.", jmse.getMessage());
 		}
 		
-		bs = new BrokerService();
-		
+		bs = new BrokerService();		
 		bs.setUseJmx(false);
 		bs.addConnector(tcpUri);
 		bs.start();
+		bs.waitUntilStarted();
 		
 		producer.send(message);
 		

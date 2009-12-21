@@ -18,9 +18,12 @@ package org.apache.activemq.state;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.activemq.command.Command;
+import org.apache.activemq.command.ProducerId;
 import org.apache.activemq.command.TransactionId;
 
 public class TransactionState {
@@ -30,6 +33,7 @@ public class TransactionState {
     private final AtomicBoolean shutdown = new AtomicBoolean(false);
     private boolean prepared;
     private int preparedResult;
+    private final Map<ProducerId, ProducerState> producers = new ConcurrentHashMap<ProducerId, ProducerState>();
 
     public TransactionState(TransactionId id) {
         this.id = id;
@@ -76,6 +80,16 @@ public class TransactionState {
 
     public int getPreparedResult() {
         return preparedResult;
+    }
+
+    public void addProducerState(ProducerState producerState) {
+        if (producerState != null) {
+            producers.put(producerState.getInfo().getProducerId(), producerState);
+        }
+    }
+
+    public Map<ProducerId, ProducerState> getProducerStates() {
+        return producers;
     }
 
 }

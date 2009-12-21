@@ -29,7 +29,6 @@ import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.DestinationInfo;
 import org.apache.activemq.command.Message;
-import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.command.ProducerId;
 import org.apache.activemq.command.ProducerInfo;
@@ -61,6 +60,7 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
     private boolean restoreProducers = true;
     private boolean restoreTransaction = true;
     private boolean trackMessages = true;
+    private boolean trackTransactionProducers = true;
     private int maxCacheSize = 128 * 1024;
     private int currentCacheSize;
     private Map<MessageId,Message> messageCache = new LinkedHashMap<MessageId,Message>(){
@@ -118,6 +118,9 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
         // Restore the connections.
         for (Iterator<ConnectionState> iter = connectionStates.values().iterator(); iter.hasNext();) {
             ConnectionState connectionState = iter.next();
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("conn: " + connectionState.getInfo().getConnectionId());
+            }
             transport.oneway(connectionState.getInfo());
             restoreTempDestinations(transport, connectionState);
 
@@ -136,17 +139,30 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
     }
 
     private void restoreTransactions(Transport transport, ConnectionState connectionState) throws IOException {
-        for (Iterator iter = connectionState.getTransactionStates().iterator(); iter.hasNext();) {
-            TransactionState transactionState = (TransactionState)iter.next();
+        for (TransactionState transactionState : connectionState.getTransactionStates()) {
             if (LOG.isDebugEnabled()) {
                 LOG.debug("tx: " + transactionState.getId());
             }
-            for (Iterator iterator = transactionState.getCommands().iterator(); iterator.hasNext();) {
-                Command command = (Command)iterator.next();
+            
+            for (ProducerState producerState : transactionState.getProducerStates().values()) {
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("tx replay producer :" + producerState.getInfo());
+                }
+                transport.oneway(producerState.getInfo());
+            }
+            
+            for (Command command : transactionState.getCommands()) {
                 if (LOG.isDebugEnabled()) {
                     LOG.debug("tx replay: " + command);
                 }
                 transport.oneway(command);
+            }
+            
+            for (ProducerState producerState : transactionState.getProducerStates().values()) {
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("tx remove replayed producer :" + producerState.getInfo());
+                }
+                transport.oneway(producerState.getInfo().createRemoveCommand());
             }
         }
     }
@@ -160,6 +176,9 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
         // Restore the connection's sessions
         for (Iterator iter2 = connectionState.getSessionStates().iterator(); iter2.hasNext();) {
             SessionState sessionState = (SessionState)iter2.next();
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("session: " + sessionState.getInfo().getSessionId());
+            }
             transport.oneway(sessionState.getInfo());
 
             if (restoreProducers) {
@@ -194,6 +213,9 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
         // Restore the session's producers
         for (Iterator iter3 = sessionState.getProducerStates().iterator(); iter3.hasNext();) {
             ProducerState producerState = (ProducerState)iter3.next();
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("producer: " + producerState.getInfo().getProducerId());
+            }
             transport.oneway(producerState.getInfo());
         }
     }
@@ -350,13 +372,22 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
     public Response processMessage(Message send) throws Exception {
         if (send != null) {
             if (trackTransactions && send.getTransactionId() != null) {
-                ConnectionId connectionId = send.getProducerId().getParentId().getParentId();
+                ProducerId producerId = send.getProducerId();
+                ConnectionId connectionId = producerId.getParentId().getParentId();
                 if (connectionId != null) {
                     ConnectionState cs = connectionStates.get(connectionId);
                     if (cs != null) {
                         TransactionState transactionState = cs.getTransactionState(send.getTransactionId());
                         if (transactionState != null) {
                             transactionState.addCommand(send);
+                            
+                            if (trackTransactionProducers) {
+                                // for jmstemplate, track the producer in case it is closed before commit
+                                // and needs to be replayed
+                                SessionState ss = cs.getSessionState(producerId.getParentId());
+                                ProducerState producerState = ss.getProducerState(producerId);
+                                producerState.setTransactionState(transactionState);            
+                            }
                         }
                     }
                 }
@@ -500,7 +531,15 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
     public void setTrackTransactions(boolean trackTransactions) {
         this.trackTransactions = trackTransactions;
     }
+    
+    public boolean isTrackTransactionProducers() {
+        return this.trackTransactionProducers;
+    }
 
+    public void setTrackTransactionProducers(boolean trackTransactionProducers) {
+        this.trackTransactionProducers = trackTransactionProducers;
+    }
+    
     public boolean isRestoreTransaction() {
         return restoreTransaction;
     }

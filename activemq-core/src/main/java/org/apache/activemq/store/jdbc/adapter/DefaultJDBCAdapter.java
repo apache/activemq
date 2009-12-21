@@ -31,6 +31,7 @@ import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.command.SubscriptionInfo;
 import org.apache.activemq.store.jdbc.JDBCAdapter;
+import org.apache.activemq.store.jdbc.JDBCMessageIdScanListener;
 import org.apache.activemq.store.jdbc.JDBCMessageRecoveryListener;
 import org.apache.activemq.store.jdbc.JDBCPersistenceAdapter;
 import org.apache.activemq.store.jdbc.Statements;
@@ -324,6 +325,23 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         }
     }
 
+    public void doMessageIdScan(TransactionContext c, int limit, 
+            JDBCMessageIdScanListener listener) throws SQLException, IOException {
+        PreparedStatement s = null;
+        ResultSet rs = null;
+        try {
+            s = c.getConnection().prepareStatement(this.statements.getFindAllMessageIdsStatement());
+            s.setMaxRows(limit);
+            rs = s.executeQuery();
+            while (rs.next()) {
+                listener.messageId(new MessageId(rs.getString(2), rs.getLong(3)));
+            }
+        } finally {
+            close(rs);
+            close(s);
+        }
+    }
+    
     public void doSetLastAck(TransactionContext c, ActiveMQDestination destination, String clientId,
             String subscriptionName, long seq) throws SQLException, IOException {
         PreparedStatement s = c.getUpdateLastAckStatement();
