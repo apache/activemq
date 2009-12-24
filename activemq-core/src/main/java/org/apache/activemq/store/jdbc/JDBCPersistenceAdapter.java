@@ -519,7 +519,7 @@ public class JDBCPersistenceAdapter extends DataSourceSupport implements Persist
             e = e.getNextException();
             s += ", due to: " + e.getMessage();
         }
-        LOG.debug(s, e);
+        LOG.warn(s, e);
     }
 
     public Statements getStatements() {

@@ -24,6 +24,7 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
@@ -333,8 +334,13 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
             s = c.getConnection().prepareStatement(this.statements.getFindAllMessageIdsStatement());
             s.setMaxRows(limit);
             rs = s.executeQuery();
+            // jdbc scrollable cursor requires jdbc ver > 1.0 andis  often implemented locally so avoid
+            LinkedList<MessageId> reverseOrderIds = new LinkedList<MessageId>();
             while (rs.next()) {
-                listener.messageId(new MessageId(rs.getString(2), rs.getLong(3)));
+                reverseOrderIds.addFirst(new MessageId(rs.getString(2), rs.getLong(3)));
+            }
+            for (MessageId id : reverseOrderIds) {
+                listener.messageId(id);
             }
         } finally {
             close(rs);
