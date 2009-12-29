@@ -29,8 +29,8 @@ public class StompLoadTest extends TestCase {
     final int msgCount = 10000;
     final int producerCount = 5;
     final int consumerCount = 5;
-    final int testTime = 10 * 60 * 1000;
-    final String bindAddress = "stomp://0.0.0.0:61613";
+    final int testTime = 30 * 60 * 1000;
+    final String bindAddress = "stomp://0.0.0.0:61612";
 
     public void testLoad() throws Exception {
 

@@ -23,6 +23,8 @@ import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
+import javax.jms.Queue;
+import javax.jms.QueueBrowser;
 import javax.jms.Session;
 import javax.jms.TextMessage;
 import javax.jms.Topic;
@@ -51,6 +53,7 @@ public abstract class DeadLetterTestSupport extends TestSupport {
     protected boolean durableSubscriber;
     protected Destination dlqDestination;
     protected MessageConsumer dlqConsumer;
+    protected QueueBrowser dlqBrowser;
     protected BrokerService broker;
     protected boolean transactedMode;
     protected int acknowledgeMode = Session.CLIENT_ACKNOWLEDGE;
@@ -107,6 +110,13 @@ public abstract class DeadLetterTestSupport extends TestSupport {
 
         LOG.info("Consuming from dead letter on: " + dlqDestination);
         dlqConsumer = session.createConsumer(dlqDestination);
+    }
+    
+    protected void makeDlqBrowser() throws JMSException {
+        dlqDestination = createDlqDestination();
+
+        LOG.info("Browsing dead letter on: " + dlqDestination);
+        dlqBrowser = session.createBrowser((Queue)dlqDestination);    	
     }
 
     protected void sendMessages() throws JMSException {
