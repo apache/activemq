@@ -16,19 +16,29 @@
  */
 package org.apache.activemq.broker.policy;
 
-import javax.jms.Destination;
+import java.util.Enumeration;
 
+import javax.jms.DeliveryMode;
+import javax.jms.Destination;
+import javax.jms.Message;
+import javax.jms.MessageConsumer;
+import javax.jms.Queue;
+
+import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.region.policy.DeadLetterStrategy;
 import org.apache.activemq.broker.region.policy.IndividualDeadLetterStrategy;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.ActiveMQQueue;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * @version $Revision$
  */
 public class IndividualDeadLetterTest extends DeadLetterTest {
+    private static final Log LOG = LogFactory.getLog(IndividualDeadLetterTest.class);
 
     protected BrokerService createBroker() throws Exception {
         BrokerService broker = super.createBroker();
@@ -49,5 +59,49 @@ public class IndividualDeadLetterTest extends DeadLetterTest {
     protected Destination createDlqDestination() {
         String prefix = topic ? "ActiveMQ.DLQ.Topic." : "ActiveMQ.DLQ.Queue.";
         return new ActiveMQQueue(prefix + getClass().getName() + "." + getName());
+    }
+    
+    public void testDLQBrowsing() throws Exception {
+        super.topic = false;
+        deliveryMode = DeliveryMode.PERSISTENT;
+        durableSubscriber = false;
+        messageCount = 1;
+
+        connection.start();
+
+        ActiveMQConnection amqConnection = (ActiveMQConnection) connection;
+        rollbackCount = amqConnection.getRedeliveryPolicy().getMaximumRedeliveries() + 1;
+        LOG.info("Will redeliver messages: " + rollbackCount + " times");
+
+        sendMessages();
+
+        // now lets receive and rollback N times
+        for (int i = 0; i < rollbackCount; i++) {
+            makeConsumer();
+            Message message = consumer.receive(5000);
+            assertNotNull("No message received: ", message);
+
+            session.rollback();
+            LOG.info("Rolled back: " + rollbackCount + " times");
+            consumer.close();
+        }
+
+        makeDlqBrowser();
+        browseDlq();
+        dlqBrowser.close();
+        session.close();
+        Thread.sleep(1000);
+        session = connection.createSession(transactedMode, acknowledgeMode);
+        Queue testQueue = new ActiveMQQueue("ActiveMQ.DLQ.Queue.ActiveMQ.DLQ.Queue." + getClass().getName() + "." + getName());
+        MessageConsumer testConsumer = session.createConsumer(testQueue);
+        assertNull("The message shouldn't be sent to another DLQ", testConsumer.receive(1000));
+
+    }
+    
+    protected void browseDlq() throws Exception {
+        Enumeration messages = dlqBrowser.getEnumeration();
+        while (messages.hasMoreElements()) {
+            LOG.info("Browsing: " + messages.nextElement());
+        }
     }
 }

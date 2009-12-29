@@ -33,7 +33,7 @@ import org.apache.commons.logging.LogFactory;
 public class DeadLetterTest extends DeadLetterTestSupport {
     private static final Log LOG = LogFactory.getLog(DeadLetterTest.class);
 
-    private int rollbackCount;
+    protected int rollbackCount;
 
     protected void doTest() throws Exception {
         connection.start();

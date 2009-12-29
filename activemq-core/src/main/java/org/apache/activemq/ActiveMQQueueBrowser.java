@@ -113,6 +113,9 @@ public class ActiveMQQueueBrowser implements QueueBrowser, Enumeration {
             return;
         }
         try {
+            if (session.getTransacted()) {
+                session.commit();
+            }
             consumer.close();
             consumer = null;
         } catch (JMSException e) {
