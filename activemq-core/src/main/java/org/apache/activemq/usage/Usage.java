@@ -43,6 +43,7 @@ import org.apache.commons.logging.LogFactory;
 public abstract class Usage<T extends Usage> implements Service {
 
     private static final Log LOG = LogFactory.getLog(Usage.class);
+    private static ThreadPoolExecutor executor;
     protected final Object usageMutex = new Object();
     protected int percentUsage;
     protected T parent;
@@ -55,7 +56,7 @@ public abstract class Usage<T extends Usage> implements Service {
     private List<T> children = new CopyOnWriteArrayList<T>();
     private final List<Runnable> callbacks = new LinkedList<Runnable>();
     private int pollingTime = 100;
-    private volatile ThreadPoolExecutor executor;
+    
     private AtomicBoolean started=new AtomicBoolean();
 
     public Usage(T parent, String name, float portion) {
@@ -247,28 +248,30 @@ public abstract class Usage<T extends Usage> implements Service {
             if (oldPercentUsage >= 100 && newPercentUsage < 100) {
                 synchronized (usageMutex) {
                     usageMutex.notifyAll();
-                    for (Iterator<Runnable> iter = new ArrayList<Runnable>(callbacks).iterator(); iter.hasNext();) {
-                        Runnable callback = iter.next();
-                        getExecutor().execute(callback);
+                    if (!callbacks.isEmpty()) {
+                        for (Iterator<Runnable> iter = new ArrayList<Runnable>(callbacks).iterator(); iter.hasNext();) {
+                            Runnable callback = iter.next();
+                            getExecutor().execute(callback);
+                        }
+                        callbacks.clear();
                     }
-                    callbacks.clear();
                 }
             }
-            // Let the listeners know on a separate thread
-            Runnable listenerNotifier = new Runnable() {
-            
-                public void run() {
-                    for (Iterator<UsageListener> iter = listeners.iterator(); iter.hasNext();) {
-                        UsageListener l = iter.next();
-                        l.onUsageChanged(Usage.this, oldPercentUsage, newPercentUsage);
+            if (!listeners.isEmpty()) {
+                // Let the listeners know on a separate thread
+                Runnable listenerNotifier = new Runnable() {
+                    public void run() {
+                        for (Iterator<UsageListener> iter = listeners.iterator(); iter.hasNext();) {
+                            UsageListener l = iter.next();
+                            l.onUsageChanged(Usage.this, oldPercentUsage, newPercentUsage);
+                        }
                     }
+                };
+                if (started.get()) {
+                    getExecutor().execute(listenerNotifier);
+                } else {
+                    LOG.warn("Not notifying memory usage change to listeners on shutdown");
                 }
-            
-            };
-            if (started.get()) {
-                getExecutor().execute(listenerNotifier);
-            } else {
-                LOG.warn("Not notifying memory usage change to listeners on shutdown");
             }
         }
     }
@@ -299,9 +302,7 @@ public abstract class Usage<T extends Usage> implements Service {
             if (parent != null) {
                 parent.removeChild(this);
             }
-            if (this.executor != null){
-                this.executor.shutdownNow();
-            }
+            
             //clear down any callbacks
             synchronized (usageMutex) {
                 usageMutex.notifyAll();
@@ -402,22 +403,17 @@ public abstract class Usage<T extends Usage> implements Service {
     }
     
     protected Executor getExecutor() {
-        if (this.executor == null) {
-        	synchronized(usageMutex) {
-        		if (this.executor == null) {
-		            this.executor = new ThreadPoolExecutor(1, 1, 0,
-		                    TimeUnit.NANOSECONDS,
-		                    new LinkedBlockingQueue<Runnable>(), new ThreadFactory() {
-		                        public Thread newThread(Runnable runnable) {
-		                            Thread thread = new Thread(runnable, getName()
-		                                    + " Usage Thread Pool");
-		                            thread.setDaemon(true);
-		                            return thread;
-		                        }
-		                    });
-        		}
-        	}
-        }
-        return this.executor;
+        return executor;
     }
+    
+    static {
+        executor = new ThreadPoolExecutor(10, Integer.MAX_VALUE, 10, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>(), new ThreadFactory() {
+            public Thread newThread(Runnable runnable) {
+                Thread thread = new Thread(runnable, "Usage Async Task");
+                thread.setDaemon(true);
+                return thread;
+            }
+        });
+    }
+
 }
