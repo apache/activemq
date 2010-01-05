@@ -139,7 +139,7 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
         destroyDiskList();
     }
 
-    private void destroyDiskList() {
+    private void destroyDiskList() throws Exception {
         if (!isDiskListEmpty()) {
             Iterator<MessageReference> iterator = diskList.iterator();
             while (iterator.hasNext()) {
@@ -147,7 +147,8 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
                 iterator.remove();
             }
             diskList.clear();
-        }
+        }   
+	    store.deleteListContainer(name, "TopicSubscription");
     }
 
     public synchronized LinkedList<MessageReference> pageInList(int maxItems) {
@@ -316,10 +317,12 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
         last=null;
     }
 
-    public synchronized boolean isFull() {
-        // we always have space - as we can persist to disk
-        return false;
-    }
+	public synchronized boolean isFull() {
+
+		return super.isFull()
+				|| (systemUsage != null && systemUsage.getTempUsage().isFull());
+
+	}
 
     public boolean hasMessagesBufferedToDeliver() {
         return !isEmpty();
