@@ -63,6 +63,11 @@ public class ProducerFlowControlSendFailTest extends ProducerFlowControlTest {
     }
     
     @Override
+    public void testAsyncPubisherRecoverAfterBlock() throws Exception {
+        // sendFail means no flowControllwindow as there is no producer ack, just an exception
+    }
+    
+    @Override
     public void testPubisherRecoverAfterBlock() throws Exception {
         ActiveMQConnectionFactory factory = (ActiveMQConnectionFactory)createConnectionFactory();
         // with sendFail, there must be no flowControllwindow

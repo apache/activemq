@@ -406,8 +406,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                 }
 
                 // We can avoid blocking due to low usage if the producer is sending
-                // a sync message or
-                // if it is using a producer window
+                // a sync message or if it is using a producer window
                 if (producerInfo.getWindowSize() > 0 || message.isResponseRequired()) {
                     // copy the exchange state since the context will be modified while we are waiting
                     // for space.
@@ -441,17 +440,14 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                                         ExceptionResponse response = new ExceptionResponse(e);
                                         response.setCorrelationId(message.getCommandId());
                                         context.getConnection().dispatchAsync(response);
+                                    } else {
+                                        LOG.debug("unexpected exception on deferred send of :" + message, e);
                                     }
                                 }
                             }
                         });
 
-                        // If the user manager is not full, then the task will not
-                        // get called..
-                        if (!memoryUsage.notifyCallbackWhenNotFull(sendMessagesWaitingForSpaceTask)) {
-                            // so call it directly here.
-                            sendMessagesWaitingForSpaceTask.run();
-                        }
+                        registerCallbackForNotFullNotification();
                         context.setDontSendReponse(true);
                         return;
                     }
@@ -479,6 +475,15 @@ public class Queue extends BaseDestination implements Task, UsageListener {
         if (sendProducerAck) {
             ProducerAck ack = new ProducerAck(producerInfo.getProducerId(), message.getSize());
             context.getConnection().dispatchAsync(ack);
+        }
+    }
+
+    private void registerCallbackForNotFullNotification() {
+        // If the usage manager is not full, then the task will not
+        // get called..
+        if (!memoryUsage.notifyCallbackWhenNotFull(sendMessagesWaitingForSpaceTask)) {
+            // so call it directly here.
+            sendMessagesWaitingForSpaceTask.run();
         }
     }
 
@@ -1069,9 +1074,14 @@ public class Queue extends BaseDestination implements Task, UsageListener {
 
             // do early to allow dispatch of these waiting messages
             synchronized (messagesWaitingForSpace) {
-                while (!messagesWaitingForSpace.isEmpty() && !memoryUsage.isFull()) {
-                    Runnable op = messagesWaitingForSpace.removeFirst();
-                    op.run();
+                while (!messagesWaitingForSpace.isEmpty()) {
+                    if (!memoryUsage.isFull()) {
+                        Runnable op = messagesWaitingForSpace.removeFirst();
+                        op.run();
+                    } else {
+                        registerCallbackForNotFullNotification();
+                        break;
+                    }
                 }
             }
 
