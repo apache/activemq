@@ -43,7 +43,7 @@ public class HttpsTransportBrokerTest extends HttpTransportBrokerTest {
     protected void tearDown() throws Exception {
         super.tearDown();
         // Give the jetty server more time to shutdown before starting another one
-        Thread.sleep(1000);
+        Thread.sleep(2000);
     }
     
     public static Test suite() {
