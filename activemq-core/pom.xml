@@ -487,8 +487,6 @@
 
             <!-- https://issues.apache.org/activemq/browse/AMQ-2050 -->
             <exclude>**/ProxyConnectorTest.*</exclude>
-            <!-- test used only to simulate load on Stomp connector -->
-            <exclude>**/StompLoadTest.*</exclude>
 
             <!-- breaks hudson: disable till we get a chance to give it the time that it needs - http://hudson.zones.apache.org/hudson/job/ActiveMQ/org.apache.activemq$activemq-core/199/testReport/org.apache.activemq.network/BrokerNetworkWithStuckMessagesTest/testBrokerNetworkWithStuckMessages/ -->
             <exclude>**/BrokerNetworkWithStuckMessagesTest.*</exclude>
