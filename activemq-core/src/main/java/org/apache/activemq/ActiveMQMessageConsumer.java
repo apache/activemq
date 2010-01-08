@@ -755,6 +755,9 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
      * broker to pull a message we are about to receive
      */
     protected void sendPullCommand(long timeout) throws JMSException {
+        synchronized (unconsumedMessages.getMutex()) {
+            clearDispatchListOnReconnect();
+        }
         if (info.getPrefetchSize() == 0 && unconsumedMessages.isEmpty()) {
             MessagePull messagePull = new MessagePull();
             messagePull.configure(info);
@@ -1067,25 +1070,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
         MessageListener listener = this.messageListener.get();
         try {
             synchronized (unconsumedMessages.getMutex()) {
-                if (clearDispatchList) {
-                    // we are reconnecting so lets flush the in progress
-                    // messages
-                    clearDispatchList = false;
-                    List<MessageDispatch> list = unconsumedMessages.removeAll();
-                    if (!this.info.isBrowser()) {
-                        for (MessageDispatch old : list) {
-                            // ensure we don't filter this as a duplicate
-                            session.connection.rollbackDuplicate(this, old.getMessage());
-                        }
-                    }
-                    if (!session.isTransacted()) {
-                        // clean, so we don't have duplicates with optimizeAcknowledge 
-                        synchronized (deliveredMessages) {
-                            deliveredMessages.clear();
-                        }
-                    }
-                    pendingAck = null;
-                }
+                clearDispatchListOnReconnect();
                 if (!unconsumedMessages.isClosed()) {
                     if (this.info.isBrowser() || !session.connection.isDuplicate(this, md.getMessage())) {
                         if (listener != null && unconsumedMessages.isRunning()) {
@@ -1118,13 +1103,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                         if (LOG.isDebugEnabled()) {
                             LOG.debug(getConsumerId() + " ignoring(auto acking) duplicate: " + md.getMessage());
                         }
-                        // in a transaction ack delivery of duplicates to ensure prefetch extension kicks in.
-                        // the normal ack will happen in the transaction.
-                        if (session.isTransacted()) {
-                            ackLater(md, MessageAck.DELIVERED_ACK_TYPE);
-                        } else {
-                            acknowledge(md);
-                        }
+                        acknowledge(md);
                     }
                 }
             }
@@ -1134,6 +1113,28 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
             }
         } catch (Exception e) {
             session.connection.onClientInternalException(e);
+        }
+    }
+
+    // called holding unconsumedMessages.getMutex()
+    private void clearDispatchListOnReconnect() {
+        if (clearDispatchList) {
+            // we are reconnecting so lets flush the in progress
+            // messages
+            clearDispatchList = false;
+            List<MessageDispatch> list = unconsumedMessages.removeAll();
+            if (!this.info.isBrowser()) {
+                for (MessageDispatch old : list) {
+                    // ensure we don't filter this as a duplicate
+                    session.connection.rollbackDuplicate(this, old.getMessage());
+                }
+            }
+           
+            // clean, so we don't have duplicates with optimizeAcknowledge 
+            synchronized (deliveredMessages) {
+                deliveredMessages.clear();        
+            }
+            pendingAck = null;
         }
     }
 

@@ -336,10 +336,13 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
             s = c.getConnection().prepareStatement(this.statements.getFindAllMessageIdsStatement());
             s.setMaxRows(limit);
             rs = s.executeQuery();
-            // jdbc scrollable cursor requires jdbc ver > 1.0 andis  often implemented locally so avoid
+            // jdbc scrollable cursor requires jdbc ver > 1.0 and is often implemented locally so avoid
             LinkedList<MessageId> reverseOrderIds = new LinkedList<MessageId>();
             while (rs.next()) {
                 reverseOrderIds.addFirst(new MessageId(rs.getString(2), rs.getLong(3)));
+            }
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("messageIdScan with limit (" + limit + "), resulted in: " + reverseOrderIds.size() + " ids");
             }
             for (MessageId id : reverseOrderIds) {
                 listener.messageId(id);
