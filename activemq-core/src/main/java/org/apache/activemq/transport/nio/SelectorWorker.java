@@ -117,7 +117,7 @@ public class SelectorWorker implements Runnable {
             }
         } catch (IOException e) {
 
-            // Don't accept any more slections
+            // Don't accept any more selections
             manager.onWorkerEmptyEvent(this);
 
             // Notify all the selections that the error occurred.
@@ -147,4 +147,7 @@ public class SelectorWorker implements Runnable {
 	    selectorLock.readLock().unlock();
 	}
 	
+    public void close() throws IOException {
+        selector.close();
+    }
 }

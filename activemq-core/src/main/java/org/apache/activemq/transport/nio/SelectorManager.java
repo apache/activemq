@@ -79,6 +79,11 @@ public final class SelectorManager {
 
     public synchronized void onWorkerEmptyEvent(SelectorWorker worker) {
         freeWorkers.remove(worker);
+        try {
+            // no more connections on worker, close it
+            worker.close();
+        } catch (IOException e) {
+        }
     }
 
     public synchronized void onWorkerNotFullEvent(SelectorWorker worker) {
