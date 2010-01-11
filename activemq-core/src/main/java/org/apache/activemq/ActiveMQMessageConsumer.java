@@ -937,6 +937,9 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
      * @throws JMSException
      */
     public void acknowledge() throws JMSException {
+        synchronized (unconsumedMessages.getMutex()) {
+            clearDispatchListOnReconnect();
+        }
         synchronized(deliveredMessages) {
             // Acknowledge all messages so far.
             MessageAck ack = makeAckForAllDeliveredMessages(MessageAck.STANDARD_ACK_TYPE);

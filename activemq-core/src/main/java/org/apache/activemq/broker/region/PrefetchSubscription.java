@@ -199,7 +199,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
             }
         }
         if (LOG.isTraceEnabled()) {
-            LOG.trace("ack:" + ack);
+            LOG.info("ack:" + ack);
         }
         synchronized(dispatchLock) {
             if (ack.isStandardAck()) {
@@ -256,9 +256,6 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                                     prefetchExtension = Math.max(
                                             prefetchExtension, index );
                                 }
-                            } else {
-                                prefetchExtension = Math.max(0,
-                                        prefetchExtension - index);
                             }
                             destination = node.getRegionDestination();
                             callDispatchMatched = true;
@@ -319,8 +316,6 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
             } else if (ack.isRedeliveredAck()) {
                 // Message was re-delivered but it was not yet considered to be
                 // a DLQ message.
-                // Acknowledge all dispatched messages up till the message id of
-                // the ack.
                 boolean inAckRange = false;
                 for (final MessageReference node : dispatched) {
                     MessageId messageId = node.getMessageId();
@@ -349,9 +344,6 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                     throw new JMSException("Poison ack cannot be transacted: "
                             + ack);
                 }
-                // Acknowledge all dispatched messages up till the message id of
-                // the
-                // acknowledgment.
                 int index = 0;
                 boolean inAckRange = false;
                 List<MessageReference> removeList = new ArrayList<MessageReference>();
