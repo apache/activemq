@@ -53,6 +53,7 @@
       org.apache.activemq*;version=${project.version},
       '=META-INF.services.org.apache.xbean.spring.http.activemq.apache.org.schema'
     </activemq.osgi.export>
+    <activemq.osgi.dynamic.import>*</activemq.osgi.dynamic.import>
   </properties>
 
   <dependencies>

@@ -88,6 +88,7 @@
     <activemq.osgi.export>${activemq.osgi.export.pkg}*;version=${activemq.osgi.export.version}</activemq.osgi.export>
     <activemq.osgi.export.version>${project.version}</activemq.osgi.export.version>
     <activemq.osgi.import>${activemq.osgi.import.pkg}</activemq.osgi.import>
+    <activemq.osgi.dynamic.import/>
     <activemq.osgi.symbolic.name>${groupId}.${artifactId}</activemq.osgi.symbolic.name>
   </properties>
   <prerequisites>
@@ -1061,6 +1062,7 @@
             <Bundle-SymbolicName>${activemq.osgi.symbolic.name}</Bundle-SymbolicName>
             <Export-Package>${activemq.osgi.export}</Export-Package>
             <Import-Package>${activemq.osgi.import}</Import-Package>
+            <DynamicImport-Package>${activemq.osgi.dynamic.import}</DynamicImport-Package>
             <Private-Package>${activemq.osgi.private.pkg}</Private-Package>
             <Implementation-Title>Apache ActiveMQ</Implementation-Title>
             <Implementation-Version>${project.version}</Implementation-Version>
