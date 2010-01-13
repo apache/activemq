@@ -370,19 +370,20 @@ public class KahaDBPersistenceAdapter implements PersistenceAdapter, BrokerServi
 	public void setBrokerService(BrokerService brokerService) {
 		letter.setBrokerService(brokerService);
 	}
-	
 
-    /**
-     * @return the archiveDataLogs
-     */
     public boolean isArchiveDataLogs() {
         return letter.isArchiveDataLogs();
     }
 
-    /**
-     * @param archiveDataLogs the archiveDataLogs to set
-     */
     public void setArchiveDataLogs(boolean archiveDataLogs) {
         letter.setArchiveDataLogs(archiveDataLogs);
+    }
+    
+    public File getDirectoryArchive() {
+        return letter.getDirectoryArchive();
+    }
+
+    public void setDirectoryArchive(File directoryArchive) {
+        letter.setDirectoryArchive(directoryArchive);
     }
 }

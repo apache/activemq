@@ -56,6 +56,7 @@ import org.apache.activemq.store.kahadb.data.KahaTraceCommand;
 import org.apache.activemq.store.kahadb.data.KahaTransactionInfo;
 import org.apache.activemq.store.kahadb.data.KahaXATransactionId;
 import org.apache.activemq.util.Callback;
+import org.apache.activemq.util.IOHelper;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.kahadb.index.BTreeIndex;
@@ -158,6 +159,7 @@ public class MessageDatabase implements BrokerServiceAware {
     protected Thread checkpointThread;
     protected boolean enableJournalDiskSyncs=true;
     protected boolean archiveDataLogs;
+    protected File directoryArchive;
     long checkpointInterval = 5*1000;
     long cleanupInterval = 30*1000;
     int journalMaxFileLength = Journal.DEFAULT_MAX_FILE_LENGTH;
@@ -1417,7 +1419,7 @@ public class MessageDatabase implements BrokerServiceAware {
         return index;
     }
 
-    private Journal createJournal() {
+    private Journal createJournal() throws IOException {
         Journal manager = new Journal();
         manager.setDirectory(directory);
         manager.setMaxFileLength(getJournalMaxFileLength());
@@ -1425,6 +1427,10 @@ public class MessageDatabase implements BrokerServiceAware {
         manager.setChecksum(checksumJournalFiles || checkForCorruptJournalFiles);
         manager.setWriteBatchSize(getJournalMaxWriteBatchSize());
         manager.setArchiveDataLogs(isArchiveDataLogs());
+        if (getDirectoryArchive() != null) {
+            IOHelper.mkdirs(getDirectoryArchive());
+            manager.setDirectoryArchive(getDirectoryArchive());
+        }
         return manager;
     }
 
@@ -1507,7 +1513,7 @@ public class MessageDatabase implements BrokerServiceAware {
 		return pageFile;
 	}
 
-	public Journal getJournal() {
+	public Journal getJournal() throws IOException {
         if (journal == null) {
             journal = createJournal();
         }
@@ -1570,5 +1576,19 @@ public class MessageDatabase implements BrokerServiceAware {
      */
     public void setArchiveDataLogs(boolean archiveDataLogs) {
         this.archiveDataLogs = archiveDataLogs;
+    }
+
+    /**
+     * @return the directoryArchive
+     */
+    public File getDirectoryArchive() {
+        return this.directoryArchive;
+    }
+
+    /**
+     * @param directoryArchive the directoryArchive to set
+     */
+    public void setDirectoryArchive(File directoryArchive) {
+        this.directoryArchive = directoryArchive;
     }
 }
