@@ -441,7 +441,9 @@ public class AMQ2102Test extends CombinationTestSupport implements UncaughtExcep
     String masterUrl;
 
     public void setUp() throws Exception {
+        setMaxTestTime(10 * 60 * 1000);
         setAutoFail(true);
+        super.setUp();
         master.setBrokerName("Master");
         master.addConnector("tcp://localhost:0");
         master.deleteAllMessages();
