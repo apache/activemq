@@ -17,11 +17,11 @@
 package org.apache.activemq.transport.nio;
 
 import java.io.IOException;
+import java.nio.channels.ClosedSelectorException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.util.Iterator;
 import java.util.Set;
-
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -72,7 +72,8 @@ public class SelectorWorker implements Runnable {
             Thread.currentThread().setName("Selector Worker: " + id);
             while (isRunning()) {
                 
-                lockBarrier();       	
+                lockBarrier();
+                
                 int count = selector.select(10);
                 if (count == 0) {
                     continue;
@@ -115,8 +116,10 @@ public class SelectorWorker implements Runnable {
                 }
 
             }
+        } catch (ClosedSelectorException cse) {
+            // Don't accept any more selections
+            manager.onWorkerEmptyEvent(this);
         } catch (IOException e) {
-
             // Don't accept any more selections
             manager.onWorkerEmptyEvent(this);
 

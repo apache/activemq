@@ -17,7 +17,6 @@
 package org.apache.activemq.transport.stomp;
 
 import java.io.ByteArrayInputStream;
-import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.EOFException;
 import java.io.IOException;
@@ -32,7 +31,6 @@ import javax.net.SocketFactory;
 
 import org.apache.activemq.command.Command;
 import org.apache.activemq.transport.Transport;
-import org.apache.activemq.transport.nio.NIOInputStream;
 import org.apache.activemq.transport.nio.NIOOutputStream;
 import org.apache.activemq.transport.nio.SelectorManager;
 import org.apache.activemq.transport.nio.SelectorSelection;
@@ -131,8 +129,7 @@ public class StompNIOTransport extends TcpTransport {
                
            }
         } catch (IOException e) {
-            selection.close();
-            onException(e);
+            onException(e);  
         } catch (Throwable e) {
             onException(IOExceptionSupport.create(e));
         }
@@ -145,7 +142,10 @@ public class StompNIOTransport extends TcpTransport {
     }
 
     protected void doStop(ServiceStopper stopper) throws Exception {
-        selection.disable();
+        try {
+            selection.close();
+        } catch (Exception e) {
+        }
         super.doStop(stopper);
     }
 }

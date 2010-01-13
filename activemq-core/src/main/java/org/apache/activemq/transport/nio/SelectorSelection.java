@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.transport.nio;
 
+import java.io.IOException;
 import java.nio.channels.ClosedChannelException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
@@ -64,11 +65,15 @@ public final class SelectorSelection {
 
     public void close() {
         worker.decrementUseCounter();
-    	
+        
         // Lock when mutating state of the selector
         worker.lock();
         try {
             key.cancel();
+            if (!worker.isRunning()) {
+                worker.close();
+            }
+        } catch (IOException e) {
         } finally {
             worker.unlock();
         }
