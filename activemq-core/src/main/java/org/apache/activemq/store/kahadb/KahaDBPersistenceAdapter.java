@@ -16,6 +16,9 @@
  */
 package org.apache.activemq.store.kahadb;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.Set;
 import org.apache.activeio.journal.Journal;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.BrokerServiceAware;
@@ -28,9 +31,6 @@ import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.TopicMessageStore;
 import org.apache.activemq.store.TransactionStore;
 import org.apache.activemq.usage.SystemUsage;
-import java.io.File;
-import java.io.IOException;
-import java.util.Set;
 /**
  * An implementation of {@link PersistenceAdapter} designed for use with a
  * {@link Journal} and then check pointing asynchronously on a timeout with some
@@ -40,7 +40,7 @@ import java.util.Set;
  * @version $Revision: 1.17 $
  */
 public class KahaDBPersistenceAdapter implements PersistenceAdapter, BrokerServiceAware {
-    private KahaDBStore letter = new KahaDBStore();
+    private final KahaDBStore letter = new KahaDBStore();
     
 
     /**
@@ -370,4 +370,19 @@ public class KahaDBPersistenceAdapter implements PersistenceAdapter, BrokerServi
 	public void setBrokerService(BrokerService brokerService) {
 		letter.setBrokerService(brokerService);
 	}
+	
+
+    /**
+     * @return the archiveDataLogs
+     */
+    public boolean isArchiveDataLogs() {
+        return letter.isArchiveDataLogs();
+    }
+
+    /**
+     * @param archiveDataLogs the archiveDataLogs to set
+     */
+    public void setArchiveDataLogs(boolean archiveDataLogs) {
+        letter.setArchiveDataLogs(archiveDataLogs);
+    }
 }

@@ -35,7 +35,6 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicBoolean;
-
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.BrokerServiceAware;
 import org.apache.activemq.command.ConnectionId;
@@ -77,7 +76,6 @@ import org.apache.kahadb.util.Sequence;
 import org.apache.kahadb.util.SequenceSet;
 import org.apache.kahadb.util.StringMarshaller;
 import org.apache.kahadb.util.VariableMarshaller;
-import org.springframework.core.enums.LetterCodedLabeledEnum;
 
 public class MessageDatabase implements BrokerServiceAware {
 	
@@ -159,6 +157,7 @@ public class MessageDatabase implements BrokerServiceAware {
     protected File directory;
     protected Thread checkpointThread;
     protected boolean enableJournalDiskSyncs=true;
+    protected boolean archiveDataLogs;
     long checkpointInterval = 5*1000;
     long cleanupInterval = 30*1000;
     int journalMaxFileLength = Journal.DEFAULT_MAX_FILE_LENGTH;
@@ -173,6 +172,7 @@ public class MessageDatabase implements BrokerServiceAware {
     private int indexCacheSize = 100;
     private boolean checkForCorruptJournalFiles = false;
     private boolean checksumJournalFiles = false;
+    
 
     public MessageDatabase() {
     }
@@ -234,6 +234,7 @@ public class MessageDatabase implements BrokerServiceAware {
 	
 	private void startCheckpoint() {
         checkpointThread = new Thread("ActiveMQ Journal Checkpoint Worker") {
+            @Override
             public void run() {
                 try {
                     long lastCleanup = System.currentTimeMillis();
@@ -510,6 +511,7 @@ public class MessageDatabase implements BrokerServiceAware {
 
                 final ArrayList<Long> matches = new ArrayList<Long>();
                 sd.locationIndex.visit(tx, new BTreeVisitor.OrVisitor<Location, Long>(missingPredicates) {
+                    @Override
                     protected void matched(Location key, Long value) {
                         matches.add(value);
                     }
@@ -1375,6 +1377,7 @@ public class MessageDatabase implements BrokerServiceAware {
             this.command = command;
         }
 
+        @Override
         public void execute(Transaction tx) throws IOException {
             upadateIndex(tx, command, location);
         }
@@ -1392,6 +1395,7 @@ public class MessageDatabase implements BrokerServiceAware {
             this.command = command;
         }
 
+        @Override
         public void execute(Transaction tx) throws IOException {
             updateIndex(tx, command, location);
         }
@@ -1420,6 +1424,7 @@ public class MessageDatabase implements BrokerServiceAware {
         manager.setCheckForCorruptionOnStartup(checkForCorruptJournalFiles);
         manager.setChecksum(checksumJournalFiles || checkForCorruptJournalFiles);
         manager.setWriteBatchSize(getJournalMaxWriteBatchSize());
+        manager.setArchiveDataLogs(isArchiveDataLogs());
         return manager;
     }
 
@@ -1552,4 +1557,18 @@ public class MessageDatabase implements BrokerServiceAware {
 	public void setBrokerService(BrokerService brokerService) {
 		this.brokerService = brokerService;
 	}
+
+    /**
+     * @return the archiveDataLogs
+     */
+    public boolean isArchiveDataLogs() {
+        return this.archiveDataLogs;
+    }
+
+    /**
+     * @param archiveDataLogs the archiveDataLogs to set
+     */
+    public void setArchiveDataLogs(boolean archiveDataLogs) {
+        this.archiveDataLogs = archiveDataLogs;
+    }
 }
