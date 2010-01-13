@@ -170,7 +170,7 @@ public class InactivityMonitor extends TransportFilter {
             }
             ASYNC_TASKS.execute(new Runnable() {  
                 public void run() {
-                    onException(new InactivityIOException("Channel was inactive for too long: "+next.getRemoteAddress()));
+                    onException(new InactivityIOException("Channel was inactive for too (>" + readCheckTime + ") long: "+next.getRemoteAddress()));
                 };
                 
             });

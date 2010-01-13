@@ -185,6 +185,7 @@ public class InactivityMonitorTest extends CombinationTestSupport implements Tra
         });
         clientTransport.start();
         WireFormatInfo info = new WireFormatInfo();
+        info.setVersion(OpenWireFormat.DEFAULT_VERSION);
         info.setMaxInactivityDuration(1000);
         clientTransport.oneway(info);
 
@@ -193,7 +194,7 @@ public class InactivityMonitorTest extends CombinationTestSupport implements Tra
 
         // Server should consider the client timed out right away since the
         // client is not hart beating fast enough.
-        Thread.sleep(3000);
+        Thread.sleep(6000);
 
         assertEquals(0, clientErrorCount.get());
         assertTrue(serverErrorCount.get() > 0);
