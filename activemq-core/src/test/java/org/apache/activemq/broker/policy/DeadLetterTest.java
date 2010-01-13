@@ -57,6 +57,7 @@ public class DeadLetterTest extends DeadLetterTestSupport {
             assertMessage(msg, i);
             assertNotNull("Should be a DLQ message for loop: " + i, msg);
         }
+        session.commit();
     }
 
     protected void consumeAndRollback(int messageCounter) throws Exception {

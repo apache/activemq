@@ -467,8 +467,8 @@ public class FailoverTransactionTest {
                     TimeUnit.SECONDS.sleep(7);
                     
                     // should not get a second message as there are two messages and two consumers
-                    // but with failover and unordered connection reinit it can get the second
-                    // message which will have a problem for the ack
+                    // but with failover and unordered connection restore it can get the second
+                    // message which could create a problem for a pending ack
                     msg = consumer1.receive(5000);
                     LOG.info("consumer1 second attempt got message: " + msg);
                     if (msg != null) {
@@ -503,10 +503,12 @@ public class FailoverTransactionTest {
         assertNull("should be nothing left for consumer1", msg);
         consumerSession1.commit();
         
-        // consumer2 should get other message
+        // consumer2 should get other message provided consumer1 did not get 2
         msg = consumer2.receive(5000);
         LOG.info("post: from consumer2 received: " + msg);
-        assertNotNull("got message on consumer2", msg);
+        if (receivedMessages.size() == 1) {
+            assertNotNull("got second message on consumer2", msg);
+        }
         consumerSession2.commit();
         
         for (Connection c: connections) {
@@ -532,7 +534,7 @@ public class FailoverTransactionTest {
         if (msg == null) {
             msg = sweeper.receive(5000);
         }
-        LOG.info("Received: " + msg);
+        LOG.info("Sweep received: " + msg);
         assertNull("no messges left dangling but got: " + msg, msg);
         connection.close();
     }
