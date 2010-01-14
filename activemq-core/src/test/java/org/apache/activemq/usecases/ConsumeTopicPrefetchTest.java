@@ -22,7 +22,12 @@ import javax.jms.Message;
 import javax.jms.TextMessage;
 
 import org.apache.activemq.ActiveMQConnection;
+import org.apache.activemq.broker.BrokerRegistry;
 import org.apache.activemq.broker.policy.IndividualDeadLetterViaXmlTest;
+import org.apache.activemq.broker.region.DestinationStatistics;
+import org.apache.activemq.broker.region.RegionBroker;
+import org.apache.activemq.util.Wait;
+import org.apache.activemq.util.Wait.Condition;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -59,6 +64,8 @@ public class ConsumeTopicPrefetchTest extends ProducerConsumerTestSupport {
             producer.send(message);
         }
 
+        validateConsumerPrefetch(this.getSubject(), prefetchSize);
+        
         // lets consume them in two fetch batches
         for (int i = 0; i < messageCount; i++) {
             consumeMessge(i);
@@ -72,12 +79,13 @@ public class ConsumeTopicPrefetchTest extends ProducerConsumerTestSupport {
         return connection;
     }
 
-    protected void consumeMessge(int i) throws JMSException {
+    protected TextMessage consumeMessge(int i) throws JMSException {
         Message message = consumer.receive(consumerTimeout);
         assertTrue("Should have received a message by now for message: " + i, message != null);
         assertTrue("Should be a TextMessage: " + message, message instanceof TextMessage);
         TextMessage textMessage = (TextMessage) message;
         assertEquals("Message content", messageTexts[i], textMessage.getText());
+        return textMessage;
     }
 
 
@@ -88,4 +96,27 @@ public class ConsumeTopicPrefetchTest extends ProducerConsumerTestSupport {
         }
     }
 
+    protected void validateConsumerPrefetch(String destination, final long expectedCount) throws JMSException {
+        RegionBroker regionBroker = (RegionBroker) BrokerRegistry.getInstance().lookup("localhost").getRegionBroker();
+        for (org.apache.activemq.broker.region.Destination dest : regionBroker.getQueueRegion().getDestinationMap().values()) {
+            final org.apache.activemq.broker.region.Destination target = dest;
+            if (dest.getName().equals(destination)) {
+                try {
+                    Wait.waitFor(new Condition() {
+                        public boolean isSatisified() throws Exception {
+                            DestinationStatistics stats = target.getDestinationStatistics();
+                            LOG.info("inflight for : " + target.getName() + ": " +  stats.getInflight().getCount());
+                            return stats.getInflight().getCount() == expectedCount;
+                        }
+                    });
+                } catch (Exception e) {
+                    throw new JMSException(e.toString());
+                }
+                DestinationStatistics stats = dest.getDestinationStatistics();
+                LOG.info("inflight for : " + dest.getName() + ": " + stats.getInflight().getCount());
+                assertEquals("inflight for: " + dest.getName() + ": " + stats.getInflight().getCount() + " matches", 
+                        expectedCount, stats.getInflight().getCount());      
+            }
+        }
+    }
 }
