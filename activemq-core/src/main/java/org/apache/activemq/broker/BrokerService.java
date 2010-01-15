@@ -31,10 +31,8 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
-
 import org.apache.activemq.ActiveMQConnectionMetaData;
 import org.apache.activemq.ConfigurationException;
 import org.apache.activemq.Service;
@@ -63,6 +61,7 @@ import org.apache.activemq.broker.region.virtual.MirroredQueue;
 import org.apache.activemq.broker.region.virtual.VirtualDestination;
 import org.apache.activemq.broker.region.virtual.VirtualDestinationInterceptor;
 import org.apache.activemq.broker.region.virtual.VirtualTopic;
+import org.apache.activemq.broker.scheduler.SchedulerBroker;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.BrokerId;
 import org.apache.activemq.kaha.Store;
@@ -134,11 +133,11 @@ public class BrokerService implements Service {
     private PersistenceAdapterFactory persistenceFactory;
     protected DestinationFactory destinationFactory;
     private MessageAuthorizationPolicy messageAuthorizationPolicy;
-    private List<TransportConnector> transportConnectors = new CopyOnWriteArrayList<TransportConnector>();
-    private List<NetworkConnector> networkConnectors = new CopyOnWriteArrayList<NetworkConnector>();
-    private List<ProxyConnector> proxyConnectors = new CopyOnWriteArrayList<ProxyConnector>();
-    private List<JmsConnector> jmsConnectors = new CopyOnWriteArrayList<JmsConnector>();
-    private List<Service> services = new ArrayList<Service>();
+    private final List<TransportConnector> transportConnectors = new CopyOnWriteArrayList<TransportConnector>();
+    private final List<NetworkConnector> networkConnectors = new CopyOnWriteArrayList<NetworkConnector>();
+    private final List<ProxyConnector> proxyConnectors = new CopyOnWriteArrayList<ProxyConnector>();
+    private final List<JmsConnector> jmsConnectors = new CopyOnWriteArrayList<JmsConnector>();
+    private final List<Service> services = new ArrayList<Service>();
     private MasterConnector masterConnector;
     private String masterConnectorURI;
     private transient Thread shutdownHook;
@@ -151,8 +150,8 @@ public class BrokerService implements Service {
     private boolean advisorySupport = true;
     private URI vmConnectorURI;
     private PolicyMap destinationPolicy;
-    private AtomicBoolean started = new AtomicBoolean(false);
-    private AtomicBoolean stopped = new AtomicBoolean(false);
+    private final AtomicBoolean started = new AtomicBoolean(false);
+    private final AtomicBoolean stopped = new AtomicBoolean(false);
     private BrokerPlugin[] plugins;
     private boolean keepDurableSubsActive = true;
     private boolean useVirtualTopics = true;
@@ -164,8 +163,8 @@ public class BrokerService implements Service {
     private Store tempDataStore;
     private int persistenceThreadPriority = Thread.MAX_PRIORITY;
     private boolean useLocalHostBrokerName;
-    private CountDownLatch stoppedLatch = new CountDownLatch(1);
-    private CountDownLatch startedLatch = new CountDownLatch(1);
+    private final CountDownLatch stoppedLatch = new CountDownLatch(1);
+    private final CountDownLatch startedLatch = new CountDownLatch(1);
     private boolean supportFailOver;
     private Broker regionBroker;
     private int producerSystemUsagePortion = 60;
@@ -176,12 +175,14 @@ public class BrokerService implements Service {
     private boolean dedicatedTaskRunner;
     private boolean cacheTempDestinations = false;// useful for failover
     private int timeBeforePurgeTempDestinations = 5000;
-    private List<Runnable> shutdownHooks = new ArrayList<Runnable>();
+    private final List<Runnable> shutdownHooks = new ArrayList<Runnable>();
     private boolean systemExitOnShutdown;
     private int systemExitOnShutdownExitCode;
     private SslContext sslContext;
     private boolean forceStart = false;
     private IOExceptionHandler ioExceptionHandler;
+    private boolean schedulerSupport = true;
+    private File schedulerDirectoryFile;
 
 	static {
         String localHostName = "localhost";
@@ -512,7 +513,8 @@ public class BrokerService implements Service {
         
         if (systemExitOnShutdown) {
         	new Thread() {
-        		public void run() {
+        		@Override
+                public void run() {
         			System.exit(systemExitOnShutdownExitCode);
         		}
         	}.start();
@@ -1064,7 +1066,7 @@ public class BrokerService implements Service {
     }
 
     public Service[] getServices() {
-        return (Service[]) services.toArray(new Service[0]);
+        return services.toArray(new Service[0]);
     }
 
     /**
@@ -1675,15 +1677,18 @@ public class BrokerService implements Service {
         broker = new MutableBrokerFilter(broker) {
             Broker old;
 
+            @Override
             public void stop() throws Exception {
                 old = this.next.getAndSet(new ErrorBroker("Broker has been stopped: " + this) {
                     // Just ignore additional stop actions.
+                    @Override
                     public void stop() throws Exception {
                     }
                 });
                 old.stop();
             }
 
+            @Override
             public void start() throws Exception {
                 if (forceStart && old != null) {
                     this.next.set(old);
@@ -1757,6 +1762,9 @@ public class BrokerService implements Service {
      */
     protected Broker addInterceptors(Broker broker) throws Exception {
         broker = new TransactionBroker(broker, getPersistenceAdapter().createTransactionStore());
+        if (isSchedulerSupport()) {
+            broker = new SchedulerBroker(broker,getSchedulerDirectoryFile());
+        }
         if (isAdvisorySupport()) {
             broker = new AdvisoryBroker(broker);
         }
@@ -1821,6 +1829,7 @@ public class BrokerService implements Service {
     protected void addShutdownHook() {
         if (useShutdownHook) {
             shutdownHook = new Thread("ActiveMQ ShutdownHook") {
+                @Override
                 public void run() {
                     containerShutdown();
                 }
@@ -2140,6 +2149,41 @@ public class BrokerService implements Service {
     public void setIoExceptionHandler(IOExceptionHandler ioExceptionHandler) {
         ioExceptionHandler.setBrokerService(this);
         this.ioExceptionHandler = ioExceptionHandler;
+    }
+
+    /**
+     * @return the schedulerSupport
+     */
+    public boolean isSchedulerSupport() {
+        return this.schedulerSupport;
+    }
+
+    /**
+     * @param schedulerSupport the schedulerSupport to set
+     */
+    public void setSchedulerSupport(boolean schedulerSupport) {
+        this.schedulerSupport = schedulerSupport;
+    }
+
+    /**
+     * @return the schedulerDirectory
+     */
+    public File getSchedulerDirectoryFile() {
+        if (this.schedulerDirectoryFile == null) {
+            this.schedulerDirectoryFile = new File(IOHelper.getDefaultDataDirectory(),"scheduler");
+        }
+        return schedulerDirectoryFile;
+    }
+
+    /**
+     * @param schedulerDirectory the schedulerDirectory to set
+     */
+    public void setSchedulerDirectoryFile(File schedulerDirectory) {
+        this.schedulerDirectoryFile = schedulerDirectory;
+    }
+    
+    public void setSchedulerDirectory(String schedulerDirectory) {
+        setSchedulerDirectoryFile(new File(schedulerDirectory));
     }
     
    

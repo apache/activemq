@@ -24,14 +24,13 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Vector;
-
 import javax.jms.DeliveryMode;
 import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.MessageFormatException;
 import javax.jms.MessageNotWriteableException;
-
 import org.apache.activemq.ActiveMQConnection;
+import org.apache.activemq.ScheduledMessage;
 import org.apache.activemq.filter.PropertyExpression;
 import org.apache.activemq.state.CommandVisitor;
 import org.apache.activemq.util.Callback;
@@ -42,8 +41,7 @@ import org.apache.activemq.util.TypeConversionSupport;
  * @version $Revision:$
  * @openwire:marshaller code="23"
  */
-public class ActiveMQMessage extends Message implements org.apache.activemq.Message {
-
+public class ActiveMQMessage extends Message implements org.apache.activemq.Message, ScheduledMessage {
     public static final byte DATA_STRUCTURE_TYPE = CommandTypes.ACTIVEMQ_MESSAGE;
     private static final Map<String, PropertySetter> JMS_PROPERTY_SETERS = new HashMap<String, PropertySetter>();
 
@@ -54,6 +52,7 @@ public class ActiveMQMessage extends Message implements org.apache.activemq.Mess
     }
 
 
+    @Override
     public Message copy() {
         ActiveMQMessage copy = new ActiveMQMessage();
         copy(copy);
@@ -65,6 +64,7 @@ public class ActiveMQMessage extends Message implements org.apache.activemq.Mess
         copy.acknowledgeCallback = acknowledgeCallback;
     }
 
+    @Override
     public int hashCode() {
         MessageId id = getMessageId();
         if (id != null) {
@@ -74,6 +74,7 @@ public class ActiveMQMessage extends Message implements org.apache.activemq.Mess
         }
     }
 
+    @Override
     public boolean equals(Object o) {
         if (this == o) {
             return true;
@@ -100,6 +101,7 @@ public class ActiveMQMessage extends Message implements org.apache.activemq.Mess
         }
     }
 
+    @Override
     public void clearBody() throws JMSException {
         setContent(null);
         readOnlyBody = false;
@@ -262,6 +264,7 @@ public class ActiveMQMessage extends Message implements org.apache.activemq.Mess
         this.setPriority((byte) priority);
     }
 
+    @Override
     public void clearProperties() {
         super.clearProperties();
         readOnlyProperties = false;

@@ -23,7 +23,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import javax.jms.JMSException;
-
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.broker.region.Destination;
@@ -172,6 +171,11 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
     public void setProperty(String name, Object value) throws IOException {
         lazyCreateProperties();
         properties.put(name, value);
+    }
+    
+    public void removeProperty(String name) throws IOException {
+        lazyCreateProperties();
+        properties.remove(name);
     }
 
     protected void lazyCreateProperties() throws IOException {
@@ -583,6 +587,7 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
         this.memoryUsage=usage;
     }
 
+    @Override
     public boolean isMarshallAware() {
         return true;
     }
@@ -687,6 +692,7 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
         this.cluster = cluster;
     }
 
+    @Override
     public boolean isMessage() {
         return true;
     }
@@ -717,10 +723,12 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
         return false;
     }
     
+    @Override
     public String toString() {
         return toString(null);
     }
     
+    @Override
     public String toString(Map<String, Object>overrideFields) {
         try {
             getProperties();
