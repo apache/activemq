@@ -124,6 +124,7 @@
     <module>activemq-core</module>
     <module>activemq-fileserver</module>
     <module>activemq-jaas</module>
+    <module>activemq-karaf</module>
     <module>activemq-openwire-generator</module>
     <module>activemq-optional</module>
     <module>activemq-pool</module>
