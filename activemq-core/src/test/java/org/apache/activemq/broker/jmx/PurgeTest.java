@@ -39,7 +39,7 @@ import org.apache.commons.logging.LogFactory;
 
 /**
  * A specific test of Queue.purge() functionality
- * 
+ *
  * @version $Revision$
  */
 public class PurgeTest extends EmbeddedBrokerTestSupport {
@@ -53,14 +53,14 @@ public class PurgeTest extends EmbeddedBrokerTestSupport {
     protected boolean transacted;
     protected int authMode = Session.AUTO_ACKNOWLEDGE;
     protected int messageCount = 10;
-    public PersistenceAdapter persistenceAdapter; 
+    public PersistenceAdapter persistenceAdapter;
 
     public static void main(String[] args) {
         TestRunner.run(PurgeTest.class);
     }
-    
+
     public static Test suite() {
-    	return suite(PurgeTest.class);
+        return suite(PurgeTest.class);
     }
 
     public void testPurge() throws Exception {
@@ -103,12 +103,14 @@ public class PurgeTest extends EmbeddedBrokerTestSupport {
         count = proxy.getQueueSize();
         assertEquals("Queue size", count, 0);
         assertEquals("Browse size", proxy.browseMessages().size(), 0);
+
+        producer.close();
     }
-    
+
     public void initCombosForTestDelete() {
-    	addCombinationValues("persistenceAdapter", new Object[] {new MemoryPersistenceAdapter(), new AMQPersistenceAdapter(), new JDBCPersistenceAdapter()});
+        addCombinationValues("persistenceAdapter", new Object[] {new MemoryPersistenceAdapter(), new AMQPersistenceAdapter(), new JDBCPersistenceAdapter()});
     }
-    
+
     public void testDelete() throws Exception {
         // Send some messages
         connection = connectionFactory.createConnection();
@@ -121,7 +123,7 @@ public class PurgeTest extends EmbeddedBrokerTestSupport {
         // Now get the QueueViewMBean and purge
         ObjectName queueViewMBeanName = assertRegisteredObjectName(domain + ":Type=Queue,Destination=" + getDestinationString() + ",BrokerName=localhost");
         QueueViewMBean queueProxy = (QueueViewMBean)MBeanServerInvocationHandler.newProxyInstance(mbeanServer, queueViewMBeanName, QueueViewMBean.class, true);
-        
+
         ObjectName brokerViewMBeanName = assertRegisteredObjectName(domain + ":Type=Broker,BrokerName=localhost");
         BrokerViewMBean brokerProxy = (BrokerViewMBean)MBeanServerInvocationHandler.newProxyInstance(mbeanServer, brokerViewMBeanName, BrokerViewMBean.class, true);
 
@@ -129,15 +131,15 @@ public class PurgeTest extends EmbeddedBrokerTestSupport {
         assertEquals("Queue size", count, messageCount);
 
         brokerProxy.removeQueue(getDestinationString());
-        
+
         sendMessages(session, messageCount);
-        
+
         queueViewMBeanName = assertRegisteredObjectName(domain + ":Type=Queue,Destination=" + getDestinationString() + ",BrokerName=localhost");
         queueProxy = (QueueViewMBean)MBeanServerInvocationHandler.newProxyInstance(mbeanServer, queueViewMBeanName, QueueViewMBean.class, true);
-        
+
         count = queueProxy.getQueueSize();
         assertEquals("Queue size", count, messageCount);
-        
+
         queueProxy.purge();
 
         // Queues have a special case once there are more than a thousand
@@ -151,16 +153,16 @@ public class PurgeTest extends EmbeddedBrokerTestSupport {
         brokerProxy.removeQueue(getDestinationString());
 
         sendMessages(session, messageCount);
-        
+
         queueViewMBeanName = assertRegisteredObjectName(domain + ":Type=Queue,Destination=" + getDestinationString() + ",BrokerName=localhost");
         queueProxy = (QueueViewMBean)MBeanServerInvocationHandler.newProxyInstance(mbeanServer, queueViewMBeanName, QueueViewMBean.class, true);
-        
+
         count = queueProxy.getQueueSize();
         assertEquals("Queue size", count, messageCount);
     }
-    
+
     private void sendMessages(Session session, int count) throws Exception {
-    	MessageProducer producer = session.createProducer(destination);
+        MessageProducer producer = session.createProducer(destination);
         for (int i = 0; i < messageCount; i++) {
             Message message = session.createTextMessage("Message: " + i);
             producer.send(message);
@@ -205,7 +207,7 @@ public class PurgeTest extends EmbeddedBrokerTestSupport {
     protected void echo(String text) {
         LOG.info(text);
     }
-    
+
     /**
      * Returns the name of the destination used in this test case
      */
