@@ -63,7 +63,7 @@ public class AMQ2102Test extends CombinationTestSupport implements UncaughtExcep
         private boolean running;
         private org.omg.CORBA.IntHolder startup;
         private Thread thread;
-        private int numToProcessPerIteration;
+        private final int numToProcessPerIteration;
 
         Consumer(ActiveMQConnectionFactory connectionFactory, String queueName, org.omg.CORBA.IntHolder startup, int id, int numToProcess) {
             this.connectionFactory = connectionFactory;
@@ -206,12 +206,15 @@ public class AMQ2102Test extends CombinationTestSupport implements UncaughtExcep
                     try {
                         processMessage(session, producer, message);
                         session.commit();
+                        numToProcess--;
                     } catch (Throwable t) {
                         error("message=" + message + " failure", t);
                         session.rollback();
                     }
+                } else {
+                    info("got null message on: " + numToProcess);
                 }
-            } while ((numToProcess == CONSUME_ALL || --numToProcess > 0) && isRunning());
+            } while ((numToProcessPerIteration == CONSUME_ALL || numToProcess > 0) && isRunning());
         }
 
         public void run() {
@@ -360,7 +363,7 @@ public class AMQ2102Test extends CombinationTestSupport implements UncaughtExcep
                                     error("Failed to commit with count: " + messageCount.value, e);
                                 }
                             }
-                            messageCount.notify();
+                            messageCount.notifyAll();
                         }
                     } else {
                         error("Producer cannot process " + reply.getClass().getSimpleName());
@@ -441,7 +444,7 @@ public class AMQ2102Test extends CombinationTestSupport implements UncaughtExcep
     String masterUrl;
 
     public void setUp() throws Exception {
-        setMaxTestTime(10 * 60 * 1000);
+        setMaxTestTime(6 * 60 * 1000);
         setAutoFail(true);
         super.setUp();
         master.setBrokerName("Master");

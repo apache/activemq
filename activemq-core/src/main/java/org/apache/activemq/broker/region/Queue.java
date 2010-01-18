@@ -1160,7 +1160,10 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                     LOG.error("Failed to page in more queue messages ", e);
                 }
             }
-            return pendingWakeups.decrementAndGet() > 0;
+            if (pendingWakeups.get() > 0) {
+                pendingWakeups.decrementAndGet();
+            }
+            return pendingWakeups.get() > 0;
         }
     }
 
@@ -1333,7 +1336,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
             int toPageIn = Math.min(getMaxPageSize(), messages.size());
             if (LOG.isDebugEnabled()) {
                 LOG.debug(destination.getPhysicalName() + " toPageIn: " + toPageIn + ", Inflight: " + destinationStatistics.getInflight().getCount() + ", pagedInMessages.size "
-                        + pagedInMessages.size());
+                        + pagedInMessages.size() + ", enqueueSize: " + destinationStatistics.getEnqueues().getCount());
             }
 
             if (isLazyDispatch() && !force) {
