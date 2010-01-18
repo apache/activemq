@@ -729,6 +729,8 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                     deliveredMessages.clear();
                 }
             }
+            unconsumedMessages.close();
+            this.session.removeConsumer(this);
             List<MessageDispatch> list = unconsumedMessages.removeAll();
             if (!this.info.isBrowser()) {
                 for (MessageDispatch old : list) {
@@ -736,8 +738,6 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                     session.connection.rollbackDuplicate(this, old.getMessage());
                 }
             }
-            unconsumedMessages.close();
-            this.session.removeConsumer(this);
         }
     }
 
