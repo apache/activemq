@@ -31,6 +31,8 @@ import javax.jms.Topic;
 
 import org.apache.activemq.TestSupport;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.region.DestinationStatistics;
+import org.apache.activemq.broker.region.RegionBroker;
 import org.apache.activemq.broker.region.policy.DeadLetterStrategy;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
@@ -169,13 +171,15 @@ public abstract class DeadLetterTestSupport extends TestSupport {
         deliveryMode = DeliveryMode.NON_PERSISTENT;
         durableSubscriber = false;
         doTest();
+        validateConsumerPrefetch(this.getDestinationString(), 0);        
     }
-
+        
     public void testDurableQueueMessage() throws Exception {
         super.topic = false;
         deliveryMode = DeliveryMode.PERSISTENT;
         durableSubscriber = false;
         doTest();
+        validateConsumerPrefetch(this.getDestinationString(), 0);
     }
 
     public Destination getDestination() {
@@ -183,5 +187,17 @@ public abstract class DeadLetterTestSupport extends TestSupport {
             destination = createDestination();
         }
         return destination;
+    }
+    
+    private void validateConsumerPrefetch(String destination, long expectedCount) {
+        RegionBroker regionBroker = (RegionBroker) broker.getRegionBroker();
+        for (org.apache.activemq.broker.region.Destination dest : regionBroker.getQueueRegion().getDestinationMap().values()) {
+            if (dest.getName().equals(destination)) {
+                DestinationStatistics stats = dest.getDestinationStatistics();
+                LOG.info("inflight for : " + dest.getName() + ": " + stats.getInflight().getCount());
+                assertEquals("inflight for: " + dest.getName() + ": " + stats.getInflight().getCount() + " matches", 
+                        expectedCount, stats.getInflight().getCount());      
+            }
+        }
     }
 }

@@ -199,7 +199,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
             }
         }
         if (LOG.isTraceEnabled()) {
-            LOG.info("ack:" + ack);
+            LOG.trace("ack:" + ack);
         }
         synchronized(dispatchLock) {
             if (ack.isStandardAck()) {
@@ -241,7 +241,11 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
 
                                         public void afterRollback() throws Exception {
                                             synchronized(dispatchLock) {
-                                                node.getRegionDestination().getDestinationStatistics().getInflight().decrement();
+                                                if (isSlave()) {
+                                                    node.getRegionDestination().getDestinationStatistics().getInflight().decrement();
+                                                } else {
+                                                    // poisionAck will decrement - otherwise still inflight on client
+                                                }
                                             }
                                         }
                                     });
@@ -362,8 +366,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                     if (inAckRange) {
                         sendToDLQ(context, node);
                         node.getRegionDestination().getDestinationStatistics()
-                                .getInflight().increment();
-
+                                .getInflight().decrement();
                         removeList.add(node);
                         dequeueCounter++;
                         index++;
