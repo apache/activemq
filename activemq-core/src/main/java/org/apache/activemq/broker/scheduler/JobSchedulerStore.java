@@ -172,6 +172,17 @@ public class JobSchedulerStore extends ServiceSupport {
     public void setDirectory(File directory) {
         this.directory = directory;
     }
+    
+    public long size() {
+        if ( !isStarted() ) {
+            return 0;
+        }
+        try {
+            return journal.getDiskSize() + pageFile.getDiskSize();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     public JobScheduler getJobScheduler(final String name) throws Exception {
         JobSchedulerImpl result = this.schedulers.get(name);
