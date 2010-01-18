@@ -16,13 +16,16 @@
  */
 package org.apache.activemq.broker;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 /**
  * A useful base class for implementing broker plugins.
  * 
  * @version $Revision$
  */
 public abstract class BrokerPluginSupport extends MutableBrokerFilter implements BrokerPlugin {
-
+    private static final Log LOG = LogFactory.getLog(BrokerPluginSupport.class);
     public BrokerPluginSupport() {
         super(null);
     }
@@ -30,6 +33,18 @@ public abstract class BrokerPluginSupport extends MutableBrokerFilter implements
     public Broker installPlugin(Broker broker) throws Exception {
         setNext(broker);
         return this;
+    }
+    
+    @Override
+    public void start() throws Exception {
+        super.start();
+        LOG.info("Broker Plugin " + getClass().getName() + " started");
+    }
+    
+    @Override
+    public void stop() throws Exception {
+        super.stop();
+        LOG.info("Broker Plugin " + getClass().getName() + " stopped");
     }
     
 }

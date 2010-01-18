@@ -45,7 +45,7 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision$
  */
 public class TimeStampingBrokerPlugin extends BrokerPluginSupport {
-
+    private static final Log LOG = LogFactory.getLog(TimeStampingBrokerPlugin.class);
     /** 
     * variable which (when non-zero) is used to override
     * the expiration date for messages that arrive with
@@ -85,15 +85,16 @@ public class TimeStampingBrokerPlugin extends BrokerPluginSupport {
 		this.futureOnly = futureOnly;
 	}
 
-	public void send(ProducerBrokerExchange producerExchange, Message message) throws Exception {
+	@Override
+    public void send(ProducerBrokerExchange producerExchange, Message message) throws Exception {
         if (message.getTimestamp() > 0
             && (message.getBrokerPath() == null || message.getBrokerPath().length == 0)) {
             // timestamp not been disabled and has not passed through a network
             long oldExpiration = message.getExpiration();
             long newTimeStamp = System.currentTimeMillis();
             long timeToLive = zeroExpirationOverride;
+            long oldTimestamp = message.getTimestamp();
             if (oldExpiration > 0) {
-                long oldTimestamp = message.getTimestamp();
                 timeToLive = oldExpiration - oldTimestamp;
             }
             if (timeToLive > 0 && ttlCeiling > 0 && timeToLive > ttlCeiling) {
@@ -106,6 +107,9 @@ public class TimeStampingBrokerPlugin extends BrokerPluginSupport {
 					message.setExpiration(expiration);
 				}
 				message.setTimestamp(newTimeStamp);
+				if (LOG.isDebugEnabled()) {
+				    LOG.debug("Set message " + message.getMessageId() + " timestamp from " + oldTimestamp + " to " + newTimeStamp);
+				}
 			}
         }
         super.send(producerExchange, message);
