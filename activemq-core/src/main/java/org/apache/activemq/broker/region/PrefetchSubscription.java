@@ -437,15 +437,15 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
             }
         }
         if (!checkFoundStart && firstAckedMsg != null)
-            throw new JMSException("Unmatched acknowledege: " + ack
+            throw new JMSException("Unmatched acknowledge: " + ack
                     + "; Could not find Message-ID " + firstAckedMsg
                     + " in dispatched-list (start of ack)");
         if (!checkFoundEnd && lastAckedMsg != null)
-            throw new JMSException("Unmatched acknowledege: " + ack
+            throw new JMSException("Unmatched acknowledge: " + ack
                     + "; Could not find Message-ID " + lastAckedMsg
                     + " in dispatched-list (end of ack)");
         if (ack.getMessageCount() != checkCount && !ack.isInTransaction()) {
-            throw new JMSException("Unmatched acknowledege: " + ack
+            throw new JMSException("Unmatched acknowledge: " + ack
                     + "; Expected message count (" + ack.getMessageCount()
                     + ") differs from count in dispatched-list (" + checkCount
                     + ")");
@@ -663,9 +663,8 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                 node.getRegionDestination().getDestinationStatistics().getDispatched().increment();
                 node.getRegionDestination().getDestinationStatistics().getInflight().increment();   
                 if (LOG.isTraceEnabled()) {
-                    LOG.trace(info.getDestination().getPhysicalName() + " dispatched: " + message.getMessageId() 
-                            + ", dispatched: " + node.getRegionDestination().getDestinationStatistics().getDispatched().getCount()
-                            + ", inflight: " + node.getRegionDestination().getDestinationStatistics().getInflight().getCount());
+                    LOG.trace(info.getConsumerId() + " dispatched: " + message.getMessageId() 
+                            + ", dispatched: " + dispatchCounter + ", inflight: " + dispatched.size());
                 }
             }
         }
