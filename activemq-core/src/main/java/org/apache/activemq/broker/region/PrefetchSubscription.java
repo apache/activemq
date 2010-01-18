@@ -249,12 +249,18 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                         index++;
                         acknowledge(context, ack, node);
                         if (ack.getLastMessageId().equals(messageId)) {
+                            
                             if (context.isInTransaction()) {
                                 // extend prefetch window only if not a pulling
                                 // consumer
                                 if (getPrefetchSize() != 0) {
                                     prefetchExtension = Math.max(
                                             prefetchExtension, index );
+                                }
+                            } else {
+                                // contract prefetch if dispatch required a pull
+                                if (getPrefetchSize() == 0) {
+                                    prefetchExtension = Math.max(0, prefetchExtension - index);
                                 }
                             }
                             destination = node.getRegionDestination();
