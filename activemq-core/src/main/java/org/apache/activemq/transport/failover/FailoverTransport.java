@@ -201,25 +201,26 @@ public class FailoverTransport implements CompositeTransport {
             transport.setTransportListener(disposedListener);
             ServiceSupport.dispose(transport);
             
+            boolean reconnectOk = false;
             synchronized (reconnectMutex) {
-                boolean reconnectOk = false;
                 if(started) {
                     LOG.warn("Transport failed to " + connectedTransportURI+ " , attempting to automatically reconnect due to: " + e);
                     LOG.debug("Transport failed with the following exception:", e);
                     reconnectOk = true;
-                }
-                
+                }          
                 initialized = false;
                 failedConnectTransportURI=connectedTransportURI;
                 connectedTransportURI = null;
                 connected=false;
-                if(reconnectOk) {
+            
+                // notify before any reconnect attempt so ack state can be whacked
+                if (transportListener != null) {
+                    transportListener.transportInterupted();
+                }
+            
+                if (reconnectOk) {
                     reconnectTask.wakeup();
                 }
-            }
-
-            if (transportListener != null) {
-                transportListener.transportInterupted();
             }
         }
 
@@ -412,8 +413,8 @@ public class FailoverTransport implements CompositeTransport {
                         // Skipping send of ShutdownInfo command when not connected.
                         return;
                     }
-                    if(command instanceof RemoveInfo) {
-                        // Simulate response to RemoveInfo command
+                    if(command instanceof RemoveInfo || command.isMessageAck()) {
+                        // Simulate response to RemoveInfo command or ack (as it will be stale)
                         stateTracker.track(command);
                         Response response = new Response();
                         response.setCorrelationId(command.getCommandId());
@@ -432,7 +433,7 @@ public class FailoverTransport implements CompositeTransport {
                         while (transport == null && !disposed
                                 && connectionFailure == null
                                 && !Thread.currentThread().isInterrupted()) {
-                            LOG.trace("Waiting for transport to reconnect.");
+                            LOG.trace("Waiting for transport to reconnect..: " + command);
                             long end = System.currentTimeMillis();
                             if (timeout > 0 && (end - start > timeout)) {
                             	timedout = true;
@@ -698,7 +699,7 @@ public class FailoverTransport implements CompositeTransport {
                             t.setTransportListener(myTransportListener);
                             try {
                                 if (started) { 
-                                        restoreTransport(t);  
+                                    restoreTransport(t);  
                                 }
                                 reconnectDelay = initialReconnectDelay;
                                 failedConnectTransportURI=null;
@@ -856,7 +857,7 @@ public class FailoverTransport implements CompositeTransport {
 		                       bt.setTransport(t);
 		                       backups.add(bt);
 						   }
-					   }catch(Exception e) {
+					   } catch(Exception e) {
 						   LOG.debug("Failed to build backup ",e);
 					   }
 				   }
