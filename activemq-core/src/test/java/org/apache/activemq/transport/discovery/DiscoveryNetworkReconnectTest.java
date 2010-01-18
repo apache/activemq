@@ -91,6 +91,7 @@ public class DiscoveryNetworkReconnectTest {
         configure(brokerA);
         brokerA.addConnector("tcp://localhost:0");
         brokerA.start();
+        brokerA.waitUntilStarted();
         
         proxy = new SocketProxy(brokerA.getTransportConnectors().get(0).getConnectUri());
         managementContext = context.mock(ManagementContext.class);
@@ -146,7 +147,9 @@ public class DiscoveryNetworkReconnectTest {
     @After
     public void tearDown() throws Exception {
         brokerA.stop();
+        brokerA.waitUntilStopped();
         brokerB.stop();
+        brokerB.waitUntilStopped();
         proxy.close();
     }
     
@@ -165,6 +168,7 @@ public class DiscoveryNetworkReconnectTest {
 
         brokerB.addNetworkConnector(discoveryAddress + "&wireFormat.maxInactivityDuration=1000&wireFormat.maxInactivityDurationInitalDelay=1000");
         brokerB.start();
+        brokerB.waitUntilStarted();
         doReconnect();
     }
     
@@ -174,7 +178,8 @@ public class DiscoveryNetworkReconnectTest {
     public void testSimpleReconnect() throws Exception {
         brokerB.addNetworkConnector("simple://(" + proxy.getUrl() 
                 + ")?useExponentialBackOff=false&initialReconnectDelay=500&wireFormat.maxInactivityDuration=1000&wireFormat.maxInactivityDurationInitalDelay=1000");
-        brokerB.start();       
+        brokerB.start();   
+        brokerB.waitUntilStarted();
         doReconnect();
     }
 
@@ -189,7 +194,7 @@ public class DiscoveryNetworkReconnectTest {
             }));
             
             // wait for network connector
-            assertTrue("network connector mbean registered within 1 minute", mbeanRegistered.tryAcquire(60, TimeUnit.SECONDS));
+            assertTrue("network connector mbean registered within 2 minute", mbeanRegistered.tryAcquire(120, TimeUnit.SECONDS));
             
             // force an inactivity timeout via the proxy
             proxy.pause();
