@@ -17,26 +17,41 @@
 package org.apache.activemq.usecases;
 
 import javax.jms.JMSException;
+import javax.jms.Message;
 
-/**
- * @version $Revision: 1.1.1.1 $
- */
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 public class ConsumeQueuePrefetchTest extends ConsumeTopicPrefetchTest {
-
-    /**
-     * TODO disabled failing test cases until we fix queue dispatching
-     */
-    public void testSendDoublePrefetchSize() throws JMSException {
-    }
-
-    /**
-     * TODO disabled failing test cases until we fix queue dispatching
-     */
-    public void testSendPrefetchSizePlusOne() throws JMSException {
-    }
-
+    private static final Log LOG = LogFactory.getLog(ConsumeQueuePrefetchTest.class);
+    
     protected void setUp() throws Exception {
         topic = false;
         super.setUp();
+    }
+    
+    public void testInflightWithConsumerPerMessage() throws JMSException {
+        makeMessages(prefetchSize);
+
+        LOG.info("About to send and receive: " + prefetchSize + " on destination: " + destination
+                + " of type: " + destination.getClass().getName());
+
+        for (int i = 0; i < prefetchSize; i++) {
+            Message message = session.createTextMessage(messageTexts[i]);
+            producer.send(message);
+        }
+
+        validateConsumerPrefetch(this.getSubject(), prefetchSize);
+        
+        // new consumer per 20 messages
+        for (int i = 0; i < prefetchSize; i+=20) {
+            consumer.close();
+            consumer = session.createConsumer(destination);
+            validateConsumerPrefetch(this.getSubject(), prefetchSize - i);
+            for (int j=0; j<20; j++) {
+                Message message = consumeMessge(i+j);
+                message.acknowledge();
+            }
+        }
     }
 }
