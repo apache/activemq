@@ -36,6 +36,7 @@
       org.springframework*;resolution:=optional,
       sun.management*;resolution:=optional,
       org.josql*;resolution:=optional,
+      org.apache.velocity*;resolution:=optional,
       *
     </activemq.osgi.import.pkg>
     <activemq.osgi.export>
@@ -97,12 +98,17 @@
     </dependency>
 
     <dependency>
-      <groupId>velocity</groupId>
+      <groupId>org.apache.velocity</groupId>
       <artifactId>velocity</artifactId>
     </dependency>
     <dependency>
       <groupId>commons-collections</groupId>
       <artifactId>commons-collections</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>commons-lang</groupId>
+      <artifactId>commons-lang</artifactId>
+      <version>${commons-lang-version}</version>
     </dependency>
     <dependency>
       <groupId>net.sf.josql</groupId>
