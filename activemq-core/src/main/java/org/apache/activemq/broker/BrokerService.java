@@ -64,8 +64,6 @@ import org.apache.activemq.broker.region.virtual.VirtualTopic;
 import org.apache.activemq.broker.scheduler.SchedulerBroker;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.BrokerId;
-import org.apache.activemq.kaha.Store;
-import org.apache.activemq.kaha.StoreFactory;
 import org.apache.activemq.network.ConnectionFilter;
 import org.apache.activemq.network.DiscoveryNetworkConnector;
 import org.apache.activemq.network.NetworkConnector;
@@ -77,6 +75,7 @@ import org.apache.activemq.selector.SelectorParser;
 import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.PersistenceAdapterFactory;
 import org.apache.activemq.store.amq.AMQPersistenceAdapterFactory;
+import org.apache.activemq.store.kahadb.plist.PListStore;
 import org.apache.activemq.store.memory.MemoryPersistenceAdapter;
 import org.apache.activemq.thread.TaskRunnerFactory;
 import org.apache.activemq.transport.TransportFactory;
@@ -160,7 +159,7 @@ public class BrokerService implements Service {
     private BrokerId brokerId;
     private DestinationInterceptor[] destinationInterceptors;
     private ActiveMQDestination[] destinations;
-    private Store tempDataStore;
+    private PListStore tempDataStore;
     private int persistenceThreadPriority = Thread.MAX_PRIORITY;
     private boolean useLocalHostBrokerName;
     private final CountDownLatch stoppedLatch = new CountDownLatch(1);
@@ -538,7 +537,7 @@ public class BrokerService implements Service {
             stopper.stop(broker);
         }
         if (tempDataStore != null) {
-            tempDataStore.close();
+            tempDataStore.stop();
         }
         stopper.stop(persistenceAdapter);
         if (isUseJmx()) {
@@ -1330,7 +1329,7 @@ public class BrokerService implements Service {
     /**
      * @return the tempDataStore
      */
-    public synchronized Store getTempDataStore() {
+    public synchronized PListStore getTempDataStore() {
         if (tempDataStore == null) {
             if (!isPersistent()) {
                 return null;
@@ -1355,8 +1354,10 @@ public class BrokerService implements Service {
                     String str = result ? "Successfully deleted" : "Failed to delete";
                     LOG.info(str + " temporary storage");
                 }
-                tempDataStore = StoreFactory.open(getTmpDataDirectory(), "rw");
-            } catch (IOException e) {
+                this.tempDataStore = new PListStore();
+                this.tempDataStore.setDirectory(getTmpDataDirectory());
+                this.tempDataStore.start();
+            } catch (Exception e) {
                 throw new RuntimeException(e);
             }
         }
@@ -1367,7 +1368,7 @@ public class BrokerService implements Service {
      * @param tempDataStore
      *            the tempDataStore to set
      */
-    public void setTempDataStore(Store tempDataStore) {
+    public void setTempDataStore(PListStore tempDataStore) {
         this.tempDataStore = tempDataStore;
     }
 

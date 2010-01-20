@@ -32,7 +32,7 @@ import org.apache.activemq.command.MessageDispatch;
 import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.command.SessionInfo;
 import org.apache.activemq.command.TransactionId;
-import org.apache.activemq.kaha.Store;
+import org.apache.activemq.store.kahadb.plist.PListStore;
 import org.apache.activemq.usage.Usage;
 
 /**
@@ -266,7 +266,7 @@ public interface Broker extends Region, Service {
     /**
      * @return the temp data store
      */
-    Store getTempDataStore();
+    PListStore getTempDataStore();
 
     /**
      * @return the URI that can be used to connect to the local Broker

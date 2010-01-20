@@ -25,7 +25,6 @@ import javax.jms.MessageConsumer;
 import javax.jms.MessageListener;
 import javax.jms.Session;
 import javax.jms.Topic;
-
 import org.apache.activemq.ActiveMQMessageAudit;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -42,6 +41,7 @@ public class PerfConsumer implements MessageListener {
     protected boolean enableAudit = false;
     protected ActiveMQMessageAudit audit = new ActiveMQMessageAudit(16 * 1024,20);
     protected boolean firstMessage =true;
+    protected String lastMsgId;
 
     protected PerfRate rate = new PerfRate();
 
@@ -91,11 +91,12 @@ public class PerfConsumer implements MessageListener {
         rate.increment();
         try {
             if (enableAudit && !this.audit.isInOrder(msg.getJMSMessageID())) {
-                LOG.error("Message out of order!!" + msg);
+                LOG.error("Message out of order!!" + msg.getJMSMessageID() + " LAST = " + lastMsgId);
             }
             if (enableAudit && this.audit.isDuplicate(msg)){
                 LOG.error("Duplicate Message!" + msg);
             }
+            lastMsgId=msg.getJMSMessageID();
         } catch (JMSException e1) {
             // TODO Auto-generated catch block
             e1.printStackTrace();

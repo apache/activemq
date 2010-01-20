@@ -25,7 +25,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
-
 import javax.jms.InvalidClientIDException;
 import javax.jms.JMSException;
 import org.apache.activemq.broker.Broker;
@@ -53,8 +52,8 @@ import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.command.RemoveSubscriptionInfo;
 import org.apache.activemq.command.Response;
 import org.apache.activemq.command.TransactionId;
-import org.apache.activemq.kaha.Store;
 import org.apache.activemq.state.ConnectionState;
+import org.apache.activemq.store.kahadb.plist.PListStore;
 import org.apache.activemq.thread.TaskRunnerFactory;
 import org.apache.activemq.usage.SystemUsage;
 import org.apache.activemq.util.BrokerSupport;
@@ -112,12 +111,14 @@ public class RegionBroker extends EmptyBroker {
         tempTopicRegion = createTempTopicRegion(memoryManager, taskRunnerFactory, destinationFactory);
     }
 
+    @Override
     public Map<ActiveMQDestination, Destination> getDestinationMap() {
         Map<ActiveMQDestination, Destination> answer = getQueueRegion().getDestinationMap();
         answer.putAll(getTopicRegion().getDestinationMap());
         return answer;
     }
 
+    @Override
     public Set <Destination> getDestinations(ActiveMQDestination destination) {
         switch (destination.getDestinationType()) {
         case ActiveMQDestination.QUEUE_TYPE:
@@ -133,6 +134,7 @@ public class RegionBroker extends EmptyBroker {
         }
     }
 
+    @Override
     public Broker getAdaptor(Class type) {
         if (type.isInstance(this)) {
             return this;
@@ -172,6 +174,7 @@ public class RegionBroker extends EmptyBroker {
         return new QueueRegion(this, destinationStatistics, memoryManager, taskRunnerFactory, destinationFactory);
     }
 
+    @Override
     public void start() throws Exception {
         ((TopicRegion)topicRegion).setKeepDurableSubsActive(keepDurableSubsActive);
         started = true;
@@ -181,6 +184,7 @@ public class RegionBroker extends EmptyBroker {
         tempTopicRegion.start();
     }
 
+    @Override
     public void stop() throws Exception {
         started = false;
         ServiceStopper ss = new ServiceStopper();
@@ -197,6 +201,7 @@ public class RegionBroker extends EmptyBroker {
         return brokerService != null ? brokerService.getDestinationPolicy() : null;
     }
 
+    @Override
     public void addConnection(ConnectionContext context, ConnectionInfo info) throws Exception {
         String clientId = info.getClientId();
         if (clientId == null) {
@@ -224,6 +229,7 @@ public class RegionBroker extends EmptyBroker {
         connections.add(context.getConnection());
     }
 
+    @Override
     public void removeConnection(ConnectionContext context, ConnectionInfo info, Throwable error) throws Exception {
         String clientId = info.getClientId();
         if (clientId == null) {
@@ -247,6 +253,7 @@ public class RegionBroker extends EmptyBroker {
         return connectionId == connectionId2 || (connectionId != null && connectionId.equals(connectionId2));
     }
 
+    @Override
     public Connection[] getClients() throws Exception {
         ArrayList<Connection> l = new ArrayList<Connection>(connections);
         Connection rc[] = new Connection[l.size()];
@@ -254,6 +261,7 @@ public class RegionBroker extends EmptyBroker {
         return rc;
     }
 
+    @Override
     public Destination addDestination(ConnectionContext context, ActiveMQDestination destination) throws Exception {
 
         Destination answer;
@@ -285,6 +293,7 @@ public class RegionBroker extends EmptyBroker {
 
     }
 
+    @Override
     public void removeDestination(ConnectionContext context, ActiveMQDestination destination, long timeout) throws Exception {
 
         if (destinations.containsKey(destination)) {
@@ -309,16 +318,19 @@ public class RegionBroker extends EmptyBroker {
 
     }
 
+    @Override
     public void addDestinationInfo(ConnectionContext context, DestinationInfo info) throws Exception {
         addDestination(context, info.getDestination());
 
     }
 
+    @Override
     public void removeDestinationInfo(ConnectionContext context, DestinationInfo info) throws Exception {
         removeDestination(context, info.getDestination(), info.getTimeout());
 
     }
 
+    @Override
     public ActiveMQDestination[] getDestinations() throws Exception {
         ArrayList<ActiveMQDestination> l;
 
@@ -329,6 +341,7 @@ public class RegionBroker extends EmptyBroker {
         return rc;
     }
 
+    @Override
     public void addProducer(ConnectionContext context, ProducerInfo info)
             throws Exception {
         ActiveMQDestination destination = info.getDestination();
@@ -353,6 +366,7 @@ public class RegionBroker extends EmptyBroker {
         }
     }
 
+    @Override
     public void removeProducer(ConnectionContext context, ProducerInfo info) throws Exception {
         ActiveMQDestination destination = info.getDestination();
         if (destination != null) {
@@ -373,6 +387,7 @@ public class RegionBroker extends EmptyBroker {
         }
     }
 
+    @Override
     public Subscription addConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
         ActiveMQDestination destination = info.getDestination();
         switch (destination.getDestinationType()) {
@@ -393,6 +408,7 @@ public class RegionBroker extends EmptyBroker {
         }
     }
 
+    @Override
     public void removeConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
         ActiveMQDestination destination = info.getDestination();
         switch (destination.getDestinationType()) {
@@ -413,10 +429,12 @@ public class RegionBroker extends EmptyBroker {
         }
     }
 
+    @Override
     public void removeSubscription(ConnectionContext context, RemoveSubscriptionInfo info) throws Exception {
         topicRegion.removeSubscription(context, info);
     }
 
+    @Override
     public void send(ProducerBrokerExchange producerExchange, Message message) throws Exception {
         message.setBrokerInTime(System.currentTimeMillis());
         if (producerExchange.isMutable() || producerExchange.getRegion() == null) {
@@ -445,6 +463,7 @@ public class RegionBroker extends EmptyBroker {
         producerExchange.getRegion().send(producerExchange, message);
     }
 
+    @Override
     public void acknowledge(ConsumerBrokerExchange consumerExchange, MessageAck ack) throws Exception {
         if (consumerExchange.isWildcard() || consumerExchange.getRegion() == null) {
             ActiveMQDestination destination = ack.getDestination();
@@ -470,6 +489,7 @@ public class RegionBroker extends EmptyBroker {
         consumerExchange.getRegion().acknowledge(consumerExchange, ack);
     }
 
+    @Override
     public Response messagePull(ConnectionContext context, MessagePull pull) throws Exception {
         ActiveMQDestination destination = pull.getDestination();
         switch (destination.getDestinationType()) {
@@ -489,35 +509,43 @@ public class RegionBroker extends EmptyBroker {
         }
     }
 
+    @Override
     public TransactionId[] getPreparedTransactions(ConnectionContext context) throws Exception {
         throw new IllegalAccessException("Transaction operation not implemented by this broker.");
     }
 
+    @Override
     public void beginTransaction(ConnectionContext context, TransactionId xid) throws Exception {
         throw new IllegalAccessException("Transaction operation not implemented by this broker.");
     }
 
+    @Override
     public int prepareTransaction(ConnectionContext context, TransactionId xid) throws Exception {
         throw new IllegalAccessException("Transaction operation not implemented by this broker.");
     }
 
+    @Override
     public void rollbackTransaction(ConnectionContext context, TransactionId xid) throws Exception {
         throw new IllegalAccessException("Transaction operation not implemented by this broker.");
     }
 
+    @Override
     public void commitTransaction(ConnectionContext context, TransactionId xid, boolean onePhase) throws Exception {
         throw new IllegalAccessException("Transaction operation not implemented by this broker.");
     }
 
+    @Override
     public void forgetTransaction(ConnectionContext context, TransactionId transactionId) throws Exception {
         throw new IllegalAccessException("Transaction operation not implemented by this broker.");
     }
 
+    @Override
     public void gc() {
         queueRegion.gc();
         topicRegion.gc();
     }
 
+    @Override
     public BrokerId getBrokerId() {
         if (brokerId == null) {
             brokerId = new BrokerId(BROKER_ID_GENERATOR.generateId());
@@ -529,6 +557,7 @@ public class RegionBroker extends EmptyBroker {
         this.brokerId = brokerId;
     }
 
+    @Override
     public String getBrokerName() {
         if (brokerName == null) {
             try {
@@ -552,22 +581,26 @@ public class RegionBroker extends EmptyBroker {
         return new JMSException("Unknown destination type: " + destination.getDestinationType());
     }
 
+    @Override
     public synchronized void addBroker(Connection connection, BrokerInfo info) {
         brokerInfos.add(info);
     }
 
+    @Override
     public synchronized void removeBroker(Connection connection, BrokerInfo info) {
         if (info != null) {
             brokerInfos.remove(info);
         }
     }
 
+    @Override
     public synchronized BrokerInfo[] getPeerBrokerInfos() {
         BrokerInfo[] result = new BrokerInfo[brokerInfos.size()];
         result = brokerInfos.toArray(result);
         return result;
     }
 
+    @Override
     public void preProcessDispatch(MessageDispatch messageDispatch) {
         Message message = messageDispatch.getMessage();
         if (message != null) {
@@ -580,9 +613,11 @@ public class RegionBroker extends EmptyBroker {
         }
     }
 
+    @Override
     public void postProcessDispatch(MessageDispatch messageDispatch) {
     }
 
+    @Override
     public void processDispatchNotification(MessageDispatchNotification messageDispatchNotification) throws Exception {
         ActiveMQDestination destination = messageDispatchNotification.getDestination();
         switch (destination.getDestinationType()) {
@@ -607,10 +642,12 @@ public class RegionBroker extends EmptyBroker {
         return brokerService.isSlave();
     }
 
+    @Override
     public boolean isStopped() {
         return !started;
     }
 
+    @Override
     public Set<ActiveMQDestination> getDurableDestinations() {
         return destinationFactory.getDestinations();
     }
@@ -634,10 +671,12 @@ public class RegionBroker extends EmptyBroker {
         return destinationInterceptor;
     }
 
+    @Override
     public ConnectionContext getAdminConnectionContext() {
         return adminConnectionContext;
     }
 
+    @Override
     public void setAdminConnectionContext(ConnectionContext adminConnectionContext) {
         this.adminConnectionContext = adminConnectionContext;
     }
@@ -646,21 +685,26 @@ public class RegionBroker extends EmptyBroker {
         return connectionStates;
     }
 
-    public Store getTempDataStore() {
+    @Override
+    public PListStore getTempDataStore() {
         return brokerService.getTempDataStore();
     }
 
+    @Override
     public URI getVmConnectorURI() {
         return brokerService.getVmConnectorURI();
     }
 
+    @Override
     public void brokerServiceStarted() {
     }
 
+    @Override
     public BrokerService getBrokerService() {
         return brokerService;
     }
 
+    @Override
     public boolean isExpired(MessageReference messageReference) {
         boolean expired = false;
         if (messageReference.isExpired()) {
@@ -688,6 +732,7 @@ public class RegionBroker extends EmptyBroker {
     }
 
     
+    @Override
     public void messageExpired(ConnectionContext context, MessageReference node) {
         if (LOG.isDebugEnabled()) {
             LOG.debug("Message expired " + node);
@@ -695,6 +740,7 @@ public class RegionBroker extends EmptyBroker {
         getRoot().sendToDeadLetterQueue(context, node);
     }
     
+    @Override
     public void sendToDeadLetterQueue(ConnectionContext context,
 	        MessageReference node){
 		try{
@@ -739,6 +785,7 @@ public class RegionBroker extends EmptyBroker {
 		}
 	}
 
+    @Override
     public Broker getRoot() {
         try {
             return getBrokerService().getBroker();
@@ -751,6 +798,7 @@ public class RegionBroker extends EmptyBroker {
     /**
      * @return the broker sequence id
      */
+    @Override
     public long getBrokerSequenceId() {
         synchronized(sequenceGenerator) {
             return sequenceGenerator.getNextSequenceId();

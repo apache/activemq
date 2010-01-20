@@ -17,7 +17,6 @@
 package org.apache.activemq.bugs;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import java.io.File;
 import java.util.concurrent.atomic.AtomicInteger;
 import javax.jms.Connection;
@@ -33,8 +32,8 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.ActiveMQTopic;
-import org.apache.activemq.kaha.Store;
 import org.apache.activemq.store.amq.AMQPersistenceAdapter;
+import org.apache.activemq.store.kahadb.plist.PListStore;
 import org.apache.activemq.usage.MemoryUsage;
 import org.apache.activemq.usage.StoreUsage;
 import org.apache.activemq.usage.SystemUsage;
@@ -82,6 +81,7 @@ public class TempStorageBlockedBrokerTest {
         producerConnection.start();
 
         Thread producingThread = new Thread("Producing thread") {
+            @Override
             public void run() {
                 try {
                     Session session = producerConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -180,7 +180,9 @@ public class TempStorageBlockedBrokerTest {
         persistence.setDirectory(directory);
         File tmpDir = new File(directory, "tmp");
         IOHelper.deleteChildren(tmpDir);
-        Store tempStore = new org.apache.activemq.kaha.impl.KahaStore(tmpDir, "rw");
+        PListStore tempStore = new PListStore();
+        tempStore.setDirectory(tmpDir);
+        tempStore.start();
 
         SystemUsage sysUsage = new SystemUsage("mySysUsage", persistence, tempStore);
         MemoryUsage memUsage = new MemoryUsage();

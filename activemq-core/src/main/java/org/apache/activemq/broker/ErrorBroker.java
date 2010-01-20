@@ -39,7 +39,7 @@ import org.apache.activemq.command.RemoveSubscriptionInfo;
 import org.apache.activemq.command.Response;
 import org.apache.activemq.command.SessionInfo;
 import org.apache.activemq.command.TransactionId;
-import org.apache.activemq.kaha.Store;
+import org.apache.activemq.store.kahadb.plist.PListStore;
 import org.apache.activemq.usage.Usage;
 
 /**
@@ -233,7 +233,7 @@ public class ErrorBroker implements Broker {
         throw new BrokerStoppedException(this.message);
     }
 
-    public Store getTempDataStore() {
+    public PListStore getTempDataStore() {
         throw new BrokerStoppedException(this.message);
     }
 

@@ -26,21 +26,24 @@ import javax.jms.Session;
  */
 public class SimpleQueueTest extends SimpleTopicTest {
 
+    @Override
     protected Destination createDestination(Session s, String destinationName) throws JMSException {
         return s.createQueue(destinationName);
     }
     
+    @Override
     protected void setUp() throws Exception {
         numberOfConsumers = 1;
         super.setUp();
     }
     
+    @Override
     protected PerfConsumer createConsumer(ConnectionFactory fac, Destination dest, int number) throws JMSException {
         PerfConsumer consumer =  new PerfConsumer(fac, dest);
-        //consumer.setInitialDelay(2000);
+        consumer.setInitialDelay(10000);
         //consumer.setSleepDuration(10);
         boolean enableAudit = numberOfConsumers <= 1;
-        System.out.println("Enable Audit = " + enableAudit);
+        System.err.println("Enable Audit = " + enableAudit);
         consumer.setEnableAudit(enableAudit);
         return consumer;
     }

@@ -20,7 +20,6 @@ import java.net.URI;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
-
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.broker.region.Subscription;
@@ -40,7 +39,7 @@ import org.apache.activemq.command.RemoveSubscriptionInfo;
 import org.apache.activemq.command.Response;
 import org.apache.activemq.command.SessionInfo;
 import org.apache.activemq.command.TransactionId;
-import org.apache.activemq.kaha.Store;
+import org.apache.activemq.store.kahadb.plist.PListStore;
 import org.apache.activemq.usage.Usage;
 
 /**
@@ -243,7 +242,7 @@ public class MutableBrokerFilter implements Broker {
         return getNext().messagePull(context, pull);
     }
 
-    public Store getTempDataStore() {
+    public PListStore getTempDataStore() {
         return getNext().getTempDataStore();
     }
 

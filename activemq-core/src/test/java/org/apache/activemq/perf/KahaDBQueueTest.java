@@ -17,7 +17,6 @@
 package org.apache.activemq.perf;
 
 import java.io.File;
-
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.store.kahadb.KahaDBStore;
 
@@ -26,19 +25,22 @@ import org.apache.activemq.store.kahadb.KahaDBStore;
  */
 public class KahaDBQueueTest extends SimpleQueueTest {
 
+    @Override
     protected void configureBroker(BrokerService answer,String uri) throws Exception {
 
         File dataFileDir = new File("target/test-amq-data/perfTest/kahadb");
-
+        File archiveDir = new File(dataFileDir,"archive");
         KahaDBStore kaha = new KahaDBStore();
         kaha.setDirectory(dataFileDir);
+        kaha.setDirectoryArchive(archiveDir);
+        kaha.setArchiveDataLogs(true);
 
         // The setEnableJournalDiskSyncs(false) setting is a little dangerous right now, as I have not verified 
         // what happens if the index is updated but a journal update is lost.
         // Index is going to be in consistent, but can it be repaired?
         kaha.setEnableJournalDiskSyncs(false);
         // Using a bigger journal file size makes he take fewer spikes as it is not switching files as often.
-        kaha.setJournalMaxFileLength(1024*100);
+        //kaha.setJournalMaxFileLength(1024*1024*100);
         
         // small batch means more frequent and smaller writes
         kaha.setIndexWriteBatchSize(100);

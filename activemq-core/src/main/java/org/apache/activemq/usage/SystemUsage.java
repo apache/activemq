@@ -19,8 +19,8 @@ package org.apache.activemq.usage;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import org.apache.activemq.Service;
-import org.apache.activemq.kaha.Store;
 import org.apache.activemq.store.PersistenceAdapter;
+import org.apache.activemq.store.kahadb.plist.PListStore;
 
 /**
  * Holder for Usage instances for memory, store and temp files Main use case is
@@ -43,13 +43,13 @@ public class SystemUsage implements Service {
      */
     private boolean sendFailIfNoSpaceExplicitySet;
     private boolean sendFailIfNoSpace;
-    private List<SystemUsage> children = new CopyOnWriteArrayList<SystemUsage>();
+    private final List<SystemUsage> children = new CopyOnWriteArrayList<SystemUsage>();
 
     public SystemUsage() {
         this("default", null, null);
     }
 
-    public SystemUsage(String name, PersistenceAdapter adapter, Store tempStore) {
+    public SystemUsage(String name, PersistenceAdapter adapter, PListStore tempStore) {
         this.parent = null;
         this.name = name;
         this.memoryUsage = new MemoryUsage(name + ":memory");
@@ -90,6 +90,7 @@ public class SystemUsage implements Service {
         return this.tempUsage;
     }
 
+    @Override
     public String toString() {
         return "UsageManager(" + getName() + ")";
     }
