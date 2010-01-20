@@ -187,6 +187,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     private DestinationSource destinationSource;
     private final Object ensureConnectionInfoSentMutex = new Object();
     private boolean useDedicatedTaskRunner;
+    protected CountDownLatch transportInterruptionProcessingComplete;
 
     /**
      * Construct an <code>ActiveMQConnection</code>
@@ -1674,6 +1675,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
                 command.visit(new CommandVisitorAdapter() {
                     @Override
                     public Response processMessageDispatch(MessageDispatch md) throws Exception {
+                        waitForTransportInterruptionProcessing();
                         ActiveMQDispatcher dispatcher = dispatchers.get(md.getConsumerId());
                         if (dispatcher != null) {
                             // Copy in case a embedded broker is dispatching via
@@ -1837,6 +1839,10 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
 	}
 
     public void transportInterupted() {
+        transportInterruptionProcessingComplete = new CountDownLatch(dispatchers.size() - (advisoryConsumer != null ? 1:0));
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("transport interrupted, dispatchers: " + transportInterruptionProcessingComplete.getCount());
+        }
         for (Iterator<ActiveMQSession> i = this.sessions.iterator(); i.hasNext();) {
             ActiveMQSession s = i.next();
             s.clearMessagesInProgress();
@@ -2234,5 +2240,22 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
 
 	public IOException getFirstFailureError() {
 		return firstFailureError;
+	}
+	
+	protected void waitForTransportInterruptionProcessing() throws InterruptedException {
+        if (transportInterruptionProcessingComplete != null) {
+            while (!closed.get() && !transportFailed.get() && !transportInterruptionProcessingComplete.await(15, TimeUnit.SECONDS)) {
+                LOG.warn("dispatch paused, waiting for outstanding dispatch interruption processing (" + transportInterruptionProcessingComplete.getCount() + ") to complete..");
+            }
+            synchronized (this) {
+                transportInterruptionProcessingComplete = null;
+            }
+        }
+    }
+	
+	protected synchronized void transportInterruptionProcessingComplete() {
+	    if (transportInterruptionProcessingComplete != null) {
+	        transportInterruptionProcessingComplete.countDown();
+	    }
 	}
 }
