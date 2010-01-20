@@ -20,12 +20,16 @@ import java.io.IOException;
 
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.usage.SystemUsage;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.osgi.framework.BundleException;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.osgi.context.support.OsgiBundleXmlApplicationContext;
 
 /**
  * An ActiveMQ Message Broker. It consists of a number of transport
@@ -42,7 +46,8 @@ import org.springframework.context.ConfigurableApplicationContext;
  * @version $Revision: 1.1 $
  */
 public class XBeanBrokerService extends BrokerService implements InitializingBean, DisposableBean, ApplicationContextAware {
-
+    private static final transient Log LOG = LogFactory.getLog(XBeanBrokerService.class);
+    
     private boolean start = true;
     private ApplicationContext applicationContext = null;
     private boolean destroyApplicationContextOnShutdown = false;
@@ -61,6 +66,14 @@ public class XBeanBrokerService extends BrokerService implements InitializingBea
                     if (applicationContext instanceof ConfigurableApplicationContext) {
 	                    ((ConfigurableApplicationContext) applicationContext).close();
                     }
+                    if (applicationContext instanceof OsgiBundleXmlApplicationContext){
+                        try {
+                            ((OsgiBundleXmlApplicationContext)applicationContext).getBundle().stop();
+                        } catch (BundleException e) {
+                            LOG.info("Error stopping OSGi bundle " + e, e);
+                        }
+                    }
+
                 }
             });
         }
