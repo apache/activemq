@@ -85,11 +85,23 @@
       <groupId>org.apache.activemq.protobuf</groupId>
       <artifactId>activemq-protobuf</artifactId>
       <optional>false</optional>
-    </dependency>  
-    
+    </dependency>
+
     <!-- =============================== -->
     <!-- Optional Dependencies           -->
     <!-- =============================== -->
+
+    <dependency>
+      <groupId>org.osgi</groupId>
+      <artifactId>org.osgi.core</artifactId>
+    </dependency>
+    
+    <dependency>
+        <groupId>org.springframework.osgi</groupId>
+        <artifactId>spring-osgi-core</artifactId>
+    </dependency>
+    
+
     <dependency>
       <groupId>org.apache.activemq</groupId>
       <artifactId>activemq-jaas</artifactId>
