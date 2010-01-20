@@ -390,7 +390,7 @@ public class FailoverTransactionTest {
     @Test
     public void testFailoverConsumerAckLost() throws Exception {
         // as failure depends on hash order, do a few times
-        for (int i=0; i<4; i++) {
+        for (int i=0; i<3; i++) {
             try {
                 doTestFailoverConsumerAckLost();
             } finally {

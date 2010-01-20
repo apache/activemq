@@ -103,7 +103,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
     protected final ConsumerInfo info;
 
     // These are the messages waiting to be delivered to the client
-    private final MessageDispatchChannel unconsumedMessages = new MessageDispatchChannel();
+    protected final MessageDispatchChannel unconsumedMessages = new MessageDispatchChannel();
 
     // The are the messages that were delivered to the consumer but that have
     // not been acknowledged. It's kept in reverse order since we
@@ -640,14 +640,22 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
     }
     
     void clearMessagesInProgress() {
-        // we are called from inside the transport reconnection logic
-        // which involves us clearing all the connections' consumers
-        // dispatch lists and clearing them
-        // so rather than trying to grab a mutex (which could be already
-        // owned by the message listener calling the send) we will just set
-        // a flag so that the list can be cleared as soon as the
-        // dispatch thread is ready to flush the dispatch list
+        // deal with delivered messages async to avoid lock contention with in pogress acks
         clearDispatchList = true;
+        synchronized (unconsumedMessages.getMutex()) {            
+            if (LOG.isDebugEnabled()) {
+                LOG.debug(getConsumerId() + " clearing dispatched list (" + unconsumedMessages.size() + ") on transport interrupt");
+            }
+            // ensure unconsumed are rolledback up front as they may get redelivered to another consumer
+            List<MessageDispatch> list = unconsumedMessages.removeAll();
+            if (!this.info.isBrowser()) {
+                for (MessageDispatch old : list) {
+                    session.connection.rollbackDuplicate(this, old.getMessage());
+                }
+            }
+        }
+        // allow dispatch on this connection to resume
+        session.connection.transportInterruptionProcessingComplete();
     }
 
     void deliverAcks() {
@@ -755,9 +763,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
      * broker to pull a message we are about to receive
      */
     protected void sendPullCommand(long timeout) throws JMSException {
-        synchronized (unconsumedMessages.getMutex()) {
-            clearDispatchListOnReconnect();
-        }
+        clearDispatchList();
         if (info.getPrefetchSize() == 0 && unconsumedMessages.isEmpty()) {
             MessagePull messagePull = new MessagePull();
             messagePull.configure(info);
@@ -937,9 +943,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
      * @throws JMSException
      */
     public void acknowledge() throws JMSException {
-        synchronized (unconsumedMessages.getMutex()) {
-            clearDispatchListOnReconnect();
-        }
+        clearDispatchList();
         synchronized(deliveredMessages) {
             // Acknowledge all messages so far.
             MessageAck ack = makeAckForAllDeliveredMessages(MessageAck.STANDARD_ACK_TYPE);
@@ -1072,8 +1076,8 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
     public void dispatch(MessageDispatch md) {
         MessageListener listener = this.messageListener.get();
         try {
+            clearDispatchList();
             synchronized (unconsumedMessages.getMutex()) {
-                clearDispatchListOnReconnect();
                 if (!unconsumedMessages.isClosed()) {
                     if (this.info.isBrowser() || !session.connection.isDuplicate(this, md.getMessage())) {
                         if (listener != null && unconsumedMessages.isRunning()) {
@@ -1119,25 +1123,19 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
         }
     }
 
-    // called holding unconsumedMessages.getMutex()
-    private void clearDispatchListOnReconnect() {
+    // async (on next call) clear delivered as they will be auto-acked as duplicates if they arrive again
+    private void clearDispatchList() {
         if (clearDispatchList) {
-            // we are reconnecting so lets flush the in progress
-            // messages
-            clearDispatchList = false;
-            List<MessageDispatch> list = unconsumedMessages.removeAll();
-            if (!this.info.isBrowser()) {
-                for (MessageDispatch old : list) {
-                    // ensure we don't filter this as a duplicate
-                    session.connection.rollbackDuplicate(this, old.getMessage());
+            synchronized (deliveredMessages) {
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug(getConsumerId() + " async clearing delivered list (" + deliveredMessages.size() + ") on transport interrupt");
+                }
+                if (clearDispatchList) {
+                    deliveredMessages.clear();
+                    pendingAck = null;
+                    clearDispatchList = false;
                 }
             }
-           
-            // clean, so we don't have duplicates with optimizeAcknowledge 
-            synchronized (deliveredMessages) {
-                deliveredMessages.clear();        
-            }
-            pendingAck = null;
         }
     }
 
