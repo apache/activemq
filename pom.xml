@@ -149,6 +149,14 @@
     <developerConnection>scm:svn:https://svn.apache.org/repos/asf/activemq/trunk</developerConnection>
     <url>http://svn.apache.org/viewvc/activemq/trunk/</url>
   </scm>
+  
+  <repositories>
+    <repository>
+        <id>com.springsource.repository.bundles.external</id>
+        <name>SpringSource Enterprise Bundle Repository - External Bundle Releases</name>
+        <url>http://repository.springsource.com/maven/bundles/external</url>
+    </repository>
+  </repositories>
 
   <dependencyManagement>
     <dependencies>
