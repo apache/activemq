@@ -207,13 +207,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
                     public Boolean execute(Transaction tx) throws IOException {
                         // Iterate through all index entries to get a count of messages in the destination.
                         StoredDestination sd = getStoredDestination(dest, tx);
-                        boolean result = true;
-                        for (Iterator<Entry<Location, Long>> iterator = sd.locationIndex.iterator(tx); iterator.hasNext();) {
-                            iterator.next();
-                            result = false;
-                            break;
-                        }
-                        return result;
+                        return sd.locationIndex.isEmpty(tx);
                     }
                 });
             }

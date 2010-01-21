@@ -220,6 +220,10 @@ public class BTreeIndex<Key,Value> implements Index<Key,Value> {
         pw.flush();
     }
 
+    synchronized public boolean isEmpty(final Transaction tx) throws IOException {
+        return getRoot(tx).isEmpty(tx);
+    }
+
     synchronized public Iterator<Map.Entry<Key,Value>> iterator(final Transaction tx) throws IOException {
         return getRoot(tx).iterator(tx);
     }
