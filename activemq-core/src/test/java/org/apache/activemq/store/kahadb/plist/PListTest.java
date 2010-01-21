@@ -34,28 +34,7 @@ public class PListTest {
     private PList plist;
     
 
-    @Test
-    public void testIterator() throws Exception {
-        final int COUNT = 10;
-        Map<String, ByteSequence> map = new LinkedHashMap<String, ByteSequence>();
-        for (int i = 0; i < COUNT; i++) {
-            String test = new String("test" + i);
-            ByteSequence bs = new ByteSequence(test.getBytes());
-            map.put(test, bs);
-            plist.addLast(test, bs);
-        }
-        assertEquals(plist.size(), COUNT);
-        int number = 0;
-        PListEntry entry = plist.getFirst();
-        while (entry != null) {
-            entry = plist.getNext(entry);
-            number++;
-            if (entry != null) {
-            plist.remove(entry.copy());
-            }
-        }
-        assertEquals(COUNT, number);
-    }
+   
 
     @Test
     public void testAddLast() throws Exception {
