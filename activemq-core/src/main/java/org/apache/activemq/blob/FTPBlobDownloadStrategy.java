@@ -18,6 +18,7 @@ package org.apache.activemq.blob;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.FilterInputStream;
 import java.net.ConnectException;
 import java.net.URL;
 
@@ -35,36 +36,42 @@ public class FTPBlobDownloadStrategy implements BlobDownloadStrategy {
 
     public InputStream getInputStream(ActiveMQBlobMessage message) throws IOException, JMSException {
         URL url = message.getURL();
-        
+
         setUserInformation(url.getUserInfo());
         String connectUrl = url.getHost();
         int port = url.getPort() < 1 ? 21 : url.getPort();
 
-        FTPClient ftp = new FTPClient();
+        final FTPClient ftp = new FTPClient();
         try {
-        	ftp.connect(connectUrl, port);
+            ftp.connect(connectUrl, port);
         } catch(ConnectException e) {
-        	throw new JMSException("Problem connecting the FTP-server");
+            throw new JMSException("Problem connecting the FTP-server");
         }
-        
+
         if(!ftp.login(ftpUser, ftpPass)) {
-        	ftp.quit();
+            ftp.quit();
             ftp.disconnect();
             throw new JMSException("Cant Authentificate to FTP-Server");
         }
         String path = url.getPath();
         String workingDir = path.substring(0, path.lastIndexOf("/"));
         String file = path.substring(path.lastIndexOf("/")+1);
-        
+
         ftp.changeWorkingDirectory(workingDir);
         ftp.setFileType(FTPClient.BINARY_FILE_TYPE);
-        InputStream input = ftp.retrieveFileStream(file);
-        ftp.quit();
-        ftp.disconnect();
-        
+
+        InputStream input = new FilterInputStream(ftp.retrieveFileStream(file)) {
+
+            public void close() throws IOException {
+                in.close();
+                ftp.quit();
+                ftp.disconnect();
+            }
+        };
+
         return input;
     }
-    
+
     private void setUserInformation(String userInfo) {
         if(userInfo != null) {
             String[] userPass = userInfo.split(":");
