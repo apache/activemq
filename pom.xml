@@ -145,6 +145,14 @@
     <developerConnection>scm:svn:https://svn.apache.org/repos/asf/activemq/branches/activemq-5.3</developerConnection>
     <url>http://svn.apache.org/viewvc/activemq/branches/activemq-5.3</url>
   </scm>
+  
+  <repositories>
+    <repository>
+        <id>com.springsource.repository.bundles.external</id>
+        <name>SpringSource Enterprise Bundle Repository - External Bundle Releases</name>
+        <url>http://repository.springsource.com/maven/bundles/external</url>
+    </repository>
+  </repositories>
 
   <!-- This is only here since the activemq-protobuf plugin has not been released yet -->
   <pluginRepositories>
