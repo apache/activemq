@@ -1,5 +1,6 @@
 <features>
     <repository>mvn:org.apache.felix.karaf/apache-felix-karaf/1.1.0-SNAPSHOT/xml/features</repository>
+    <repository>mvn:org.ops4j.pax.web/features/0.7.2/xml/features</repository>
     
     <feature name="transaction" version="1.0.0"> 
         <bundle>mvn:org.apache.geronimo.specs/geronimo-jta_1.1_spec/1.1.1</bundle> 
@@ -17,11 +18,19 @@
         <bundle>mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.jencks/2.1_1</bundle> 
     </feature>
     
-    <feature name="activemq" version="${activemq-version}"> 
-        <feature version="4.0.0">connector</feature>
-        <config name="org.apache.servicemix.transaction">
-            transactionLogDir = data/txlog/
-        </config> 
+    <feature name="spring" version="${spring-version}">
+        <bundle>mvn:org.springframework/spring-core/${spring-version}</bundle>
+        <bundle>mvn:org.springframework/spring-beans/${spring-version}</bundle>
+        <bundle>mvn:org.springframework/spring-aop/${spring-version}</bundle>
+        <bundle>mvn:org.springframework/spring-context/${spring-version}</bundle>
+        <bundle>mvn:org.springframework/spring-context-support/${spring-version}</bundle>
+    </feature>
+    
+    <feature name="activemq" version="${activemq-version}">
+        <feature version="1.2.0">http</feature>
+        <feature version="${spring-version}">spring</feature>
+        <feature version="1.2.0">spring-dm</feature> 
+        <feature version="4.0.0">connector</feature> 
         <bundle>mvn:org.apache.geronimo.specs/geronimo-j2ee-management_1.1_spec/1.0.1</bundle> 
         <bundle>mvn:commons-pool/commons-pool/${commons-pool-version}</bundle> 
         <bundle>mvn:commons-collections/commons-collections/${commons-collections-version}</bundle>
@@ -35,5 +44,12 @@
         <bundle>mvn:org.apache.activemq/activemq-console/${activemq-version}</bundle> 
         <bundle>mvn:org.apache.activemq/activemq-pool/${activemq-version}</bundle> 
         <bundle>mvn:org.apache.servicemix.activemq/org.apache.servicemix.activemq.commands/4.1.0-SNAPSHOT</bundle> 
+    </feature>
+    
+    <feature name="activemq-web-console" version="${activemq-version}">
+        <feature version="${activemq-version}">activemq</feature>
+        <feature version='0.7.2'>pax-web-extenders</feature> 
+        <feature version='1.1.1'>pax-url-war</feature> 
+        <bundle>mvn:org.apache.activemq/activemq-web-console/${activemq-version}/war</bundle>
     </feature>
 </features>
