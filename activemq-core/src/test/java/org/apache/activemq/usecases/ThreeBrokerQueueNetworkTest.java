@@ -23,10 +23,8 @@ import java.util.Iterator;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-
 import javax.jms.Destination;
 import javax.jms.MessageConsumer;
-
 import org.apache.activemq.JmsMultipleBrokersTestSupport;
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.BrokerFilter;
@@ -367,7 +365,14 @@ public class ThreeBrokerQueueNetworkTest extends JmsMultipleBrokersTestSupport {
         assertEquals(messageCount, msgsA.getMessageCount());
     }
     
-    public void testMigrateConsumerStuckMessages() throws Exception {
+    /*
+     * This test is disabled - as it fails with a fix for 
+     * http://issues.apache.org/activemq/browse/AMQ-2530 - which highlights that 
+     * For a Conduit bridge - local subscription Ids weren't removed in a ConduitBridge
+     * The test fails because on closing clientA - clientB correctly receives all the 
+     * messages - ie. half dont get stuck on BrokerA - 
+     */
+    public void XtestMigrateConsumerStuckMessages() throws Exception {
         boolean suppressQueueDuplicateSubscriptions = false;
         bridgeAllBrokers("default", 3, suppressQueueDuplicateSubscriptions);
         startAllBrokers();
@@ -626,6 +631,7 @@ public class ThreeBrokerQueueNetworkTest extends JmsMultipleBrokersTestSupport {
         }
     }
     
+    @Override
     public void setUp() throws Exception {
         super.setAutoFail(true);
         super.setUp();
