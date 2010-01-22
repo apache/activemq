@@ -27,7 +27,7 @@
     </feature>
     
     <feature name="activemq" version="${activemq-version}">
-        <feature version="1.2.0">http</feature>
+        <feature version="1.1.1">servlet-2.5</feature>
         <feature version="${spring-version}">spring</feature>
         <feature version="1.2.0">spring-dm</feature> 
         <feature version="4.0.0">connector</feature> 
@@ -46,10 +46,9 @@
         <bundle>mvn:org.apache.servicemix.activemq/org.apache.servicemix.activemq.commands/4.1.0-SNAPSHOT</bundle> 
     </feature>
     
+    <!-- do "features:install pax-web" before installing this one  -->
     <feature name="activemq-web-console" version="${activemq-version}">
-        <feature version="${activemq-version}">activemq</feature>
-        <feature version='0.7.2'>pax-web-extenders</feature> 
-        <feature version='1.1.1'>pax-url-war</feature> 
-        <bundle>mvn:org.apache.activemq/activemq-web-console/${activemq-version}/war</bundle>
+        <!-- <feature version="0.7.2">pax-web</feature> - it doesn't see 'war' protocol since they are installed as the same feature -->
+        <bundle>war:mvn:org.apache.activemq/activemq-web-console/${activemq-version}/war?Webapp-Context=activemq-web-console</bundle>
     </feature>
 </features>
