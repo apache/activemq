@@ -506,7 +506,7 @@ public class BrokerService implements Service {
     }
 
     public void stop() throws Exception {
-        if (!started.compareAndSet(true, false)) {
+        if (!started.get()) {
             return;
         }
         

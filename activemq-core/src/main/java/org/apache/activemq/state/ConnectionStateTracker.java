@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.activemq.command.Command;
@@ -139,11 +140,28 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
     }
 
     private void restoreTransactions(Transport transport, ConnectionState connectionState) throws IOException {
+        Vector<Command> toIgnore = new Vector<Command>();
         for (TransactionState transactionState : connectionState.getTransactionStates()) {
             if (LOG.isDebugEnabled()) {
                 LOG.debug("tx: " + transactionState.getId());
             }
             
+            // ignore any empty (ack) transaction
+            if (transactionState.getCommands().size() == 2) {
+                Command lastCommand = transactionState.getCommands().get(1);
+                if (lastCommand instanceof TransactionInfo) {
+                    TransactionInfo transactionInfo = (TransactionInfo) lastCommand;
+                    if (transactionInfo.getType() == TransactionInfo.COMMIT_ONE_PHASE) {
+                        if (LOG.isDebugEnabled()) {
+                            LOG.debug("not replaying empty (ack) tx: " + transactionState.getId());
+                        }
+                        toIgnore.add(lastCommand);
+                        continue;
+                    }
+                }
+            }
+            
+            // replay short lived producers that may have been involved in the transaction
             for (ProducerState producerState : transactionState.getProducerStates().values()) {
                 if (LOG.isDebugEnabled()) {
                     LOG.debug("tx replay producer :" + producerState.getInfo());
@@ -164,6 +182,13 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
                 }
                 transport.oneway(producerState.getInfo().createRemoveCommand());
             }
+        }
+        
+        for (Command command: toIgnore) {
+            // respond to the outstanding commit
+            Response response = new Response();
+            response.setCorrelationId(command.getCommandId());
+            transport.getTransportListener().onCommand(response);
         }
     }
 
@@ -200,6 +225,9 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
         // Restore the session's consumers
         for (Iterator iter3 = sessionState.getConsumerStates().iterator(); iter3.hasNext();) {
             ConsumerState consumerState = (ConsumerState)iter3.next();
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("restore consumer: " + consumerState.getInfo().getConsumerId());
+            }
             transport.oneway(consumerState.getInfo());
         }
     }
