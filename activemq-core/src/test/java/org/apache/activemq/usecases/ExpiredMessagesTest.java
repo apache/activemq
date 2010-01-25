@@ -16,6 +16,21 @@
  */
 package org.apache.activemq.usecases;
 
+import java.io.File;
+import java.util.concurrent.atomic.AtomicLong;
+
+import javax.jms.Connection;
+import javax.jms.DeliveryMode;
+import javax.jms.Message;
+import javax.jms.MessageConsumer;
+import javax.jms.MessageListener;
+import javax.jms.MessageProducer;
+import javax.jms.Session;
+import javax.management.InstanceNotFoundException;
+import javax.management.ObjectName;
+
+import junit.framework.Test;
+
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.CombinationTestSupport;
 import org.apache.activemq.broker.BrokerService;
@@ -29,17 +44,6 @@ import org.apache.activemq.store.amq.AMQPersistenceAdapter;
 import org.apache.activemq.util.Wait;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import java.io.File;
-import java.util.concurrent.atomic.AtomicLong;
-import javax.jms.Connection;
-import javax.jms.DeliveryMode;
-import javax.jms.Message;
-import javax.jms.MessageConsumer;
-import javax.jms.MessageProducer;
-import javax.jms.Session;
-import javax.management.InstanceNotFoundException;
-import javax.management.ObjectName;
-import junit.framework.Test;
 
 public class ExpiredMessagesTest extends CombinationTestSupport {
 
@@ -177,16 +181,30 @@ public class ExpiredMessagesTest extends CombinationTestSupport {
         assertEquals("memory usage is back to duck egg", 0, view.getMemoryPercentUsage());
         assertTrue("memory usage is increased ", 0 < dlqView.getMemoryPercentUsage());    
         
-        // verify DQL
+        // verify DLQ
         MessageConsumer dlqConsumer = createDlqConsumer(connection);
-        int count = 0;
-        while (dlqConsumer.receive(4000) != null) {
-            count++;
-        }
-        assertEquals("dlq returned all expired", count, totalExpiredCount);
+        final DLQListener dlqListener = new DLQListener();
+        dlqConsumer.setMessageListener(dlqListener);
+        
+        Wait.waitFor(new Wait.Condition() {
+            public boolean isSatisified() throws Exception {
+                return totalExpiredCount == dlqListener.count;
+            }
+        }, 60 * 1000);
+        
+        assertEquals("dlq returned all expired", dlqListener.count, totalExpiredCount);
 	}
 
-	
+    class DLQListener implements MessageListener {
+        
+        int count = 0;
+        
+        public void onMessage(Message message) {
+            count++;
+        }
+        
+    };
+    
 	private MessageConsumer createDlqConsumer(Connection connection) throws Exception {
 	    return connection.createSession(false, Session.AUTO_ACKNOWLEDGE).createConsumer(dlqDestination);
     }
@@ -272,7 +290,7 @@ public class ExpiredMessagesTest extends CombinationTestSupport {
 	    BrokerService broker = new BrokerService();
         broker.setBrokerName("localhost");
         AMQPersistenceAdapter adaptor = new AMQPersistenceAdapter();
-        adaptor.setDirectory(new File("data/"));
+        adaptor.setDirectory(new File("target/expiredtest-data/"));
         adaptor.setForceRecoverReferenceStore(true);
         broker.setPersistenceAdapter(adaptor);
         
