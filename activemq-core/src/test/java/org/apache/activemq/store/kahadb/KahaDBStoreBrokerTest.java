@@ -22,6 +22,7 @@ import junit.framework.Test;
 
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.BrokerTest;
+import org.apache.activemq.util.IOHelper;
 
 /**
  * Once the wire format is completed we can test against real persistence storage.
@@ -33,7 +34,9 @@ public class KahaDBStoreBrokerTest extends BrokerTest {
     protected BrokerService createBroker() throws Exception {
         BrokerService broker = new BrokerService();
         KahaDBStore kaha = new KahaDBStore();
-        kaha.setDirectory(new File("target/activemq-data/kahadb"));
+        File directory = new File("target/activemq-data/kahadb");
+        IOHelper.deleteChildren(directory);
+        kaha.setDirectory(directory);
         kaha.deleteAllMessages();
         broker.setPersistenceAdapter(kaha);
         return broker;
