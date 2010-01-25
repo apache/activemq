@@ -23,7 +23,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
@@ -35,19 +34,13 @@ import javax.jms.TextMessage;
 
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
-import org.apache.activemq.ActiveMQMessageConsumer;
-import org.apache.activemq.ActiveMQMessageTransformation;
-import org.apache.activemq.ActiveMQSession;
 import org.apache.activemq.broker.BrokerPlugin;
 import org.apache.activemq.broker.BrokerPluginSupport;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
-import org.apache.activemq.command.ConsumerId;
-import org.apache.activemq.command.SessionId;
 import org.apache.activemq.command.TransactionId;
-import org.apache.activemq.util.Wait;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.junit.After;
@@ -138,6 +131,8 @@ public class FailoverConsumerOutstandingCommitTest {
 
 
         final CountDownLatch commitDoneLatch = new CountDownLatch(1);
+        final CountDownLatch messagesReceived = new CountDownLatch(2);
+
         final MessageConsumer testConsumer = consumerSession.createConsumer(destination);
         testConsumer.setMessageListener(new MessageListener() {
 
@@ -145,12 +140,14 @@ public class FailoverConsumerOutstandingCommitTest {
                 LOG.info("consume one and commit");
                
                 assertNotNull("got message", message);
+               
                 try {
                     consumerSession.commit();
                 } catch (JMSException e) {
                     e.printStackTrace();
                 }
                 commitDoneLatch.countDown();
+                messagesReceived.countDown();
                 LOG.info("done commit");
             }
         });
@@ -163,10 +160,85 @@ public class FailoverConsumerOutstandingCommitTest {
         broker.start();
 
         assertTrue("consumer added through failover", commitDoneLatch.await(20, TimeUnit.SECONDS));
-          
+        assertTrue("another message was recieved after failover", messagesReceived.await(20, TimeUnit.SECONDS));
+        
         connection.close();
     }
+
+	@Test
+	public void testFailoverConsumerOutstandingSendTx() throws Exception {
+        final boolean watchTopicAdvisories = true;
+        broker = createBroker(true);
+
+        broker.setPlugins(new BrokerPlugin[] { new BrokerPluginSupport() {
+            @Override
+            public void commitTransaction(ConnectionContext context,
+                    TransactionId xid, boolean onePhase) throws Exception {
+                // so commit will hang as if reply is lost
+                context.setDontSendReponse(true);
+                Executors.newSingleThreadExecutor().execute(new Runnable() {
+                    public void run() {
+                        LOG.info("Stopping broker before commit...");
+                        try {
+                            broker.stop();
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+                });
+            }
+        } });
+        broker.start();
+
+        ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory("failover:(" + url + ")");
+        cf.setWatchTopicAdvisories(watchTopicAdvisories);
+        cf.setDispatchAsync(false);
+
+        final ActiveMQConnection connection = (ActiveMQConnection) cf.createConnection();
+        connection.start();
+
+        final Session producerSession = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        final Queue destination = producerSession.createQueue(QUEUE_NAME
+                + "?jms.consumer.prefetch=" + prefetch);
+
+        final Session consumerSession = connection.createSession(true, Session.SESSION_TRANSACTED);
+
+        final CountDownLatch commitDoneLatch = new CountDownLatch(1);
+        final CountDownLatch messagesReceived = new CountDownLatch(2);
+
+        final MessageConsumer testConsumer = consumerSession.createConsumer(destination);
+        testConsumer.setMessageListener(new MessageListener() {
+
+            public void onMessage(Message message) {
+                LOG.info("consume one and commit");
+
+                assertNotNull("got message", message);
+                try {
+                    produceMessage(consumerSession, destination, 1);
+                    consumerSession.commit();
+                } catch (JMSException e) {
+                    e.printStackTrace();
+                }
+                commitDoneLatch.countDown();
+                messagesReceived.countDown();
+                LOG.info("done commit");
+            }
+        });
+
+        produceMessage(producerSession, destination, prefetch * 2);
+
+        // will be stopped by the plugin
+        broker.waitUntilStopped();
+        broker = createBroker(false);
+        broker.start();
+
+        assertTrue("consumer added through failover", commitDoneLatch.await(20, TimeUnit.SECONDS));
+
+        assertTrue("another message was received after failover", messagesReceived.await(20, TimeUnit.SECONDS));
         
+        connection.close();
+    }
+
     private void produceMessage(final Session producerSession, Queue destination, long count)
         throws JMSException {
         MessageProducer producer = producerSession.createProducer(destination);

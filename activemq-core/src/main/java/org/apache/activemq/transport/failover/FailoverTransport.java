@@ -30,6 +30,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.apache.activemq.command.BrokerInfo;
 import org.apache.activemq.command.Command;
 import org.apache.activemq.command.ConnectionControl;
+import org.apache.activemq.command.ConnectionId;
 import org.apache.activemq.command.RemoveInfo;
 import org.apache.activemq.command.Response;
 import org.apache.activemq.state.ConnectionStateTracker;
@@ -98,7 +99,7 @@ public class FailoverTransport implements CompositeTransport {
     private boolean trackTransactionProducers = true;
     private int maxCacheSize = 128 * 1024;
     private TransportListener disposedListener = new DefaultTransportListener() {};
-    
+    private boolean connectionInterruptProcessingComplete;
 
     private final TransportListener myTransportListener = createTransportListener();
 
@@ -204,7 +205,7 @@ public class FailoverTransport implements CompositeTransport {
             boolean reconnectOk = false;
             synchronized (reconnectMutex) {
                 if(started) {
-                    LOG.warn("Transport failed to " + connectedTransportURI+ " , attempting to automatically reconnect due to: " + e);
+                    LOG.warn("Transport (" + transport.getRemoteAddress() + ") failed to " + connectedTransportURI+ " , attempting to automatically reconnect due to: " + e);
                     LOG.debug("Transport failed with the following exception:", e);
                     reconnectOk = true;
                 }          
@@ -217,6 +218,7 @@ public class FailoverTransport implements CompositeTransport {
                 if (transportListener != null) {
                     transportListener.transportInterupted();
                 }
+                stateTracker.transportInterrupted();
             
                 if (reconnectOk) {
                     reconnectTask.wakeup();
@@ -886,5 +888,11 @@ public class FailoverTransport implements CompositeTransport {
             return 0;
         }
         return transport.getReceiveCounter();
+    }
+
+    public void connectionInterruptProcessingComplete(ConnectionId connectionId) {
+        synchronized (reconnectMutex) {
+            stateTracker.connectionInterruptProcessingComplete(this, connectionId);
+        }
     }
 }

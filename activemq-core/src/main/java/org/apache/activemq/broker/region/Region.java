@@ -24,6 +24,7 @@ import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.ConsumerBrokerExchange;
 import org.apache.activemq.broker.ProducerBrokerExchange;
 import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.command.ConsumerControl;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
@@ -148,5 +149,7 @@ public interface Region extends Service {
      * @return a set of matching destination objects.
      */
     Set <Destination>getDestinations(ActiveMQDestination destination);
+    
+    void processConsumerControl(ConsumerBrokerExchange consumerExchange, ConsumerControl control);
     
 }

@@ -686,7 +686,7 @@
                   <tasks>
                     <echo>Running OpenWire Generator</echo>
                     <taskdef name="generate" classname="org.apache.activemq.openwire.tool.JavaGeneratorTask" classpathref="maven.compile.classpath" />
-                    <generate version="5" basedir="${basedir}" />
+                    <generate version="6" basedir="${basedir}" />
                   </tasks>
                 </configuration>
                 <goals>

@@ -212,10 +212,10 @@ public class WireformatNegociationTest extends CombinationTestSupport {
         assertNull("Async error: " + asyncError, asyncError.get());
 
         assertNotNull(clientWF.get());
-        assertEquals(5, clientWF.get().getVersion());
+        assertEquals(CommandTypes.PROTOCOL_VERSION, clientWF.get().getVersion());
 
         assertNotNull(serverWF.get());
-        assertEquals(5, serverWF.get().getVersion());
+        assertEquals(CommandTypes.PROTOCOL_VERSION, serverWF.get().getVersion());
     }
 
 }

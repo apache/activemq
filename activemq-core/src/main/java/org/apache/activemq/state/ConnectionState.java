@@ -20,14 +20,18 @@ package org.apache.activemq.state;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ConnectionInfo;
+import org.apache.activemq.command.ConsumerId;
+import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.DestinationInfo;
 import org.apache.activemq.command.SessionId;
 import org.apache.activemq.command.SessionInfo;
@@ -40,6 +44,8 @@ public class ConnectionState {
     private final ConcurrentHashMap<SessionId, SessionState> sessions = new ConcurrentHashMap<SessionId, SessionState>();
     private final List<DestinationInfo> tempDestinations = Collections.synchronizedList(new ArrayList<DestinationInfo>());
     private final AtomicBoolean shutdown = new AtomicBoolean(false);
+    private boolean connectionInterruptProcessingComplete = true;
+    private HashMap<ConsumerId, ConsumerInfo> recoveringPullConsumers;
 
     public ConnectionState(ConnectionInfo info) {
         this.info = info;
@@ -134,5 +140,20 @@ public class ConnectionState {
                 ss.shutdown();
             }
         }
+    }
+
+    public Map<ConsumerId, ConsumerInfo> getRecoveringPullConsumers() {
+        if (recoveringPullConsumers == null) {
+            recoveringPullConsumers = new HashMap<ConsumerId, ConsumerInfo>();
+        }
+        return recoveringPullConsumers;
+    }
+
+    public void setConnectionInterruptProcessingComplete(boolean connectionInterruptProcessingComplete) {
+        this.connectionInterruptProcessingComplete = connectionInterruptProcessingComplete;
+    }
+    
+    public boolean isConnectionInterruptProcessingComplete() {
+        return connectionInterruptProcessingComplete;
     }
 }

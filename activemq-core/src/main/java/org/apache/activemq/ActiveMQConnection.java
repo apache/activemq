@@ -91,6 +91,7 @@ import org.apache.activemq.state.CommandVisitorAdapter;
 import org.apache.activemq.thread.TaskRunnerFactory;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportListener;
+import org.apache.activemq.transport.failover.FailoverTransport;
 import org.apache.activemq.util.IdGenerator;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.util.JMSExceptionSupport;
@@ -1675,7 +1676,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
                 command.visit(new CommandVisitorAdapter() {
                     @Override
                     public Response processMessageDispatch(MessageDispatch md) throws Exception {
-                        waitForTransportInterruptionProcessing();
+                        waitForTransportInterruptionProcessingToComplete();
                         ActiveMQDispatcher dispatcher = dispatchers.get(md.getConsumerId());
                         if (dispatcher != null) {
                             // Copy in case a embedded broker is dispatching via
@@ -2242,20 +2243,36 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
 		return firstFailureError;
 	}
 	
-	protected void waitForTransportInterruptionProcessing() throws InterruptedException {
+	protected void waitForTransportInterruptionProcessingToComplete() throws InterruptedException {
         if (transportInterruptionProcessingComplete != null) {
             while (!closed.get() && !transportFailed.get() && !transportInterruptionProcessingComplete.await(15, TimeUnit.SECONDS)) {
                 LOG.warn("dispatch paused, waiting for outstanding dispatch interruption processing (" + transportInterruptionProcessingComplete.getCount() + ") to complete..");
             }
-            synchronized (this) {
-                transportInterruptionProcessingComplete = null;
-            }
+            signalInterruptionProcessingComplete();
         }
     }
 	
 	protected synchronized void transportInterruptionProcessingComplete() {
 	    if (transportInterruptionProcessingComplete != null) {
 	        transportInterruptionProcessingComplete.countDown();
+	        try {
+	            signalInterruptionProcessingComplete();
+	        } catch (InterruptedException ignored) {}
 	    }
 	}
+
+    private void signalInterruptionProcessingComplete() throws InterruptedException {
+        if (transportInterruptionProcessingComplete.await(0, TimeUnit.SECONDS)) {
+            synchronized (this) {
+                transportInterruptionProcessingComplete = null;
+                FailoverTransport failoverTransport = transport.narrow(FailoverTransport.class);
+                if (failoverTransport != null) {
+                    failoverTransport.connectionInterruptProcessingComplete(this.getConnectionInfo().getConnectionId());
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug("transportInterruptionProcessingComplete for: " + this.getConnectionInfo().getConnectionId());
+                    }
+                } 
+            }
+        }
+    }
 }

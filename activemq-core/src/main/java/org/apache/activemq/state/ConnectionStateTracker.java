@@ -21,11 +21,13 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Vector;
+import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.activemq.command.Command;
 import org.apache.activemq.command.ConnectionId;
 import org.apache.activemq.command.ConnectionInfo;
+import org.apache.activemq.command.ConsumerControl;
 import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.DestinationInfo;
@@ -53,8 +55,8 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
 
     private static final Tracked TRACKED_RESPONSE_MARKER = new Tracked(null);
 
-    protected final ConcurrentHashMap<ConnectionId, ConnectionState> connectionStates = new ConcurrentHashMap<ConnectionId, ConnectionState>();
-     
+    protected final ConcurrentHashMap<ConnectionId, ConnectionState> connectionStates = new ConcurrentHashMap<ConnectionId, ConnectionState>(); 
+
     private boolean trackTransactions;
     private boolean restoreSessions = true;
     private boolean restoreConsumers = true;
@@ -73,7 +75,6 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
             return result;
         }
     };
-    
     
     private class RemoveTransactionAction implements Runnable {
         private final TransactionInfo info;
@@ -222,13 +223,23 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
      * @throws IOException
      */
     protected void restoreConsumers(Transport transport, SessionState sessionState) throws IOException {
-        // Restore the session's consumers
-        for (Iterator iter3 = sessionState.getConsumerStates().iterator(); iter3.hasNext();) {
-            ConsumerState consumerState = (ConsumerState)iter3.next();
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("restore consumer: " + consumerState.getInfo().getConsumerId());
+        // Restore the session's consumers but possibly in pull only (prefetch 0 state) till recovery complete
+        final ConnectionState connectionState = connectionStates.get(sessionState.getInfo().getSessionId().getParentId());
+        final boolean connectionInterruptionProcessingComplete = connectionState.isConnectionInterruptProcessingComplete();
+        for (ConsumerState consumerState : sessionState.getConsumerStates()) {   
+            ConsumerInfo infoToSend = consumerState.getInfo();
+            if (!connectionInterruptionProcessingComplete && infoToSend.getPrefetchSize() > 0) {
+                infoToSend = consumerState.getInfo().copy();
+                connectionState.getRecoveringPullConsumers().put(infoToSend.getConsumerId(), consumerState.getInfo());
+                infoToSend.setPrefetchSize(0);
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("restore consumer: " + infoToSend.getConsumerId() + " in pull mode pending recovery, overriding prefetch: " + consumerState.getInfo().getPrefetchSize());
+                }
             }
-            transport.oneway(consumerState.getInfo());
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("restore consumer: " + infoToSend.getConsumerId());
+            }
+            transport.oneway(infoToSend);
         }
     }
 
@@ -592,4 +603,35 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
         this.maxCacheSize = maxCacheSize;
     }
 
+    public void connectionInterruptProcessingComplete(Transport transport, ConnectionId connectionId) {
+        ConnectionState connectionState = connectionStates.get(connectionId);
+        if (connectionState != null) {
+            connectionState.setConnectionInterruptProcessingComplete(true);
+            Map<ConsumerId, ConsumerInfo> stalledConsumers = connectionState.getRecoveringPullConsumers();
+            for (Entry<ConsumerId, ConsumerInfo> entry: stalledConsumers.entrySet()) {
+                ConsumerControl control = new ConsumerControl();
+                control.setConsumerId(entry.getKey());
+                control.setPrefetch(entry.getValue().getPrefetchSize());
+                control.setDestination(entry.getValue().getDestination());
+                try {
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug("restored recovering consumer: " + control.getConsumerId() + " with: " + control.getPrefetch());
+                    }
+                    transport.oneway(control);  
+                } catch (Exception ex) {
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug("Failed to submit control for consumer: " + control.getConsumerId()
+                                + " with: " + control.getPrefetch(), ex);
+                    }
+                }
+            }
+            stalledConsumers.clear();
+        }
+    }
+
+    public void transportInterrupted() {
+        for (ConnectionState connectionState : connectionStates.values()) {
+            connectionState.setConnectionInterruptProcessingComplete(false);
+        }
+    }
 }

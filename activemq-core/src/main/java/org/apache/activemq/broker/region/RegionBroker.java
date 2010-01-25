@@ -41,6 +41,7 @@ import org.apache.activemq.command.BrokerId;
 import org.apache.activemq.command.BrokerInfo;
 import org.apache.activemq.command.ConnectionId;
 import org.apache.activemq.command.ConnectionInfo;
+import org.apache.activemq.command.ConsumerControl;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.DestinationInfo;
 import org.apache.activemq.command.Message;
@@ -802,6 +803,31 @@ public class RegionBroker extends EmptyBroker {
     public long getBrokerSequenceId() {
         synchronized(sequenceGenerator) {
             return sequenceGenerator.getNextSequenceId();
+        }
+    }
+    
+    @Override
+    public void processConsumerControl(ConsumerBrokerExchange consumerExchange, ConsumerControl control) {
+        ActiveMQDestination destination = control.getDestination();
+        switch (destination.getDestinationType()) {
+        case ActiveMQDestination.QUEUE_TYPE:
+            queueRegion.processConsumerControl(consumerExchange, control);
+            break;
+
+        case ActiveMQDestination.TOPIC_TYPE:
+            topicRegion.processConsumerControl(consumerExchange, control);
+            break;
+            
+        case ActiveMQDestination.TEMP_QUEUE_TYPE:
+            tempQueueRegion.processConsumerControl(consumerExchange, control);
+            break;
+            
+        case ActiveMQDestination.TEMP_TOPIC_TYPE:
+            tempTopicRegion.processConsumerControl(consumerExchange, control);
+            break;
+            
+        default:
+            LOG.warn("unmatched destination: " + destination + ", in consumerControl: "  + control);
         }
     }
 }

@@ -1312,6 +1312,8 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
     }
 
     public Response processConsumerControl(ConsumerControl control) throws Exception {
+        ConsumerBrokerExchange consumerExchange = getConsumerBrokerExchange(control.getConsumerId());
+        broker.processConsumerControl(consumerExchange, control);
         return null;
     }
 

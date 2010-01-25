@@ -34,6 +34,19 @@ public class ConsumerControl extends BaseCommand {
     protected boolean start;
     protected boolean flush;
     protected int prefetch;
+    protected ActiveMQDestination destination;
+
+    /**
+     * @openwire:property version=6
+     * @return Returns the destination.
+     */
+    public ActiveMQDestination getDestination() {
+        return destination;
+    }
+
+    public void setDestination(ActiveMQDestination destination) {
+        this.destination = destination;
+    }
 
     public byte getDataStructureType() {
         return DATA_STRUCTURE_TYPE;

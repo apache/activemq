@@ -29,6 +29,7 @@ import org.apache.activemq.broker.ConsumerBrokerExchange;
 import org.apache.activemq.broker.DestinationAlreadyExistsException;
 import org.apache.activemq.broker.ProducerBrokerExchange;
 import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.command.ConsumerControl;
 import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.Message;
@@ -499,5 +500,19 @@ public abstract class AbstractRegion implements Region {
         dest.dispose(context);
         dest.stop();
         destinationFactory.removeDestination(dest);
+    }
+    
+    public void processConsumerControl(ConsumerBrokerExchange consumerExchange,
+            ConsumerControl control) {
+        Subscription sub = subscriptions.get(control.getConsumerId());
+        if (sub != null && sub instanceof AbstractSubscription) {
+            ((AbstractSubscription)sub).setPrefetchSize(control.getPrefetch());
+            LOG.info("setting prefetch: " + control.getPrefetch() + ", on subscription: " + control.getConsumerId());
+            try {
+                lookup(consumerExchange.getConnectionContext(), control.getDestination()).wakeup();
+            } catch (Exception e) {
+                LOG.warn("failed to deliver consumerControl to destination: " + control.getDestination(), e);
+            }
+        }
     }
 }

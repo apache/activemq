@@ -26,6 +26,7 @@ import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.BrokerId;
 import org.apache.activemq.command.BrokerInfo;
 import org.apache.activemq.command.ConnectionInfo;
+import org.apache.activemq.command.ConsumerControl;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.DestinationInfo;
 import org.apache.activemq.command.Message;
@@ -293,5 +294,10 @@ public class BrokerFilter implements Broker {
     
     public void nowMasterBroker() {   
         next.nowMasterBroker();
+    }
+
+    public void processConsumerControl(ConsumerBrokerExchange consumerExchange,
+            ConsumerControl control) {
+        next.processConsumerControl(consumerExchange, control);
     }
 }
