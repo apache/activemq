@@ -29,7 +29,7 @@
   <packaging>war</packaging>
   <name>ActiveMQ :: Web Console</name>
   <description>Web Console for ActiveMQ</description>
-
+    
   <build>
     <plugins>
       <plugin>
@@ -44,6 +44,10 @@
             WEB-INF/lib/xml-apis*.jar,
             WEB-INF/lib/xerces*.jar
           </warSourceExcludes>
+          <!--  <archive>
+            <manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>
+          </archive>
+          -->
         </configuration>
       </plugin>
       <plugin>
@@ -94,6 +98,35 @@
           <scanIntervalSeconds>10</scanIntervalSeconds>
         </configuration>
       </plugin>
+ <!--       <plugin>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>maven-bundle-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>bundle-manifest</id>
+            <phase>process-classes</phase>
+            <goals>
+              <goal>manifest</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <supportedProjectTypes>
+            <supportedProjectType>jar</supportedProjectType>
+            <supportedProjectType>bundle</supportedProjectType>
+            <supportedProjectType>war</supportedProjectType>
+          </supportedProjectTypes>
+          <instructions>
+            <Webapp-Context>activemqweb</Webapp-Context>
+            <Web-ContextPath>activemqweb</Web-ContextPath>
+            <Bundle-ClassPath>.,WEB-INF/classes</Bundle-ClassPath>
+            <Embed-Directory>WEB-INF/lib</Embed-Directory>
+            <Embed-Dependency>*;scope=compile|runtime</Embed-Dependency>
+            <Embed-Transitive>true</Embed-Transitive>
+            <Import-Package>*;resolution:=optional</Import-Package>
+          </instructions>
+        </configuration>
+      </plugin> -->
     </plugins>
   </build>
 
@@ -258,5 +291,11 @@
 
   <properties>
     <jetty.port>8080</jetty.port>
+<!--      <activemq.osgi.dynamic.import>
+        javax.naming,
+        org.xml.*,
+        javax.xml.*,
+        org.w3c.*,
+    </activemq.osgi.dynamic.import> -->
   </properties>
 </project>
