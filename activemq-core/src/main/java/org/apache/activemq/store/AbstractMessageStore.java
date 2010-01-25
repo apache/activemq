@@ -17,10 +17,9 @@
 package org.apache.activemq.store;
 
 import java.io.IOException;
-
+import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.MessageId;
-import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.usage.MemoryUsage;
 
 abstract public class AbstractMessageStore implements MessageStore {
@@ -48,4 +47,13 @@ abstract public class AbstractMessageStore implements MessageStore {
     
     public void setBatch(MessageId messageId) throws IOException, Exception {
     }
+    
+    /**
+     * flag to indicate if the store is empty
+     * @return true if the message count is 0
+     * @throws Exception 
+     */
+     public boolean isEmpty() throws Exception{
+         return getMessageCount()==0;
+     }
 }

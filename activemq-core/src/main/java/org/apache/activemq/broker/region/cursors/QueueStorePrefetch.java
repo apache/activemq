@@ -17,7 +17,6 @@
 package org.apache.activemq.broker.region.cursors;
 
 import java.io.IOException;
-
 import org.apache.activemq.broker.region.Queue;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageId;
@@ -33,7 +32,7 @@ import org.apache.commons.logging.LogFactory;
  */
 class QueueStorePrefetch extends AbstractStoreCursor {
     private static final Log LOG = LogFactory.getLog(QueueStorePrefetch.class);
-    private MessageStore store;
+    private final MessageStore store;
    
     /**
      * Construct it
@@ -41,7 +40,7 @@ class QueueStorePrefetch extends AbstractStoreCursor {
      */
     public QueueStorePrefetch(Queue queue) {
         super(queue);
-        this.store = (MessageStore)queue.getMessageStore();
+        this.store = queue.getMessageStore();
 
     }
 
@@ -58,29 +57,47 @@ class QueueStorePrefetch extends AbstractStoreCursor {
 
    
         
+    @Override
     protected synchronized int getStoreSize() {
         try {
-            return this.store.getMessageCount();
+            int result = this.store.getMessageCount();
+            return result;
+            
         } catch (IOException e) {
             LOG.error("Failed to get message count", e);
             throw new RuntimeException(e);
         }
     }
     
+    @Override
+    protected synchronized boolean isStoreEmpty() {
+        try {
+            return this.store.isEmpty();
+            
+        } catch (Exception e) {
+            LOG.error("Failed to get message count", e);
+            throw new RuntimeException(e);
+        }
+    }
+    
+    @Override
     protected void resetBatch() {
         this.store.resetBatching();
     }
     
+    @Override
     protected void setBatch(MessageId messageId) throws Exception {
         store.setBatch(messageId);
         batchResetNeeded = false;
     }
 
     
+    @Override
     protected void doFillBatch() throws Exception {
         this.store.recoverNextMessages(this.maxBatchSize, this);
     }
 
+    @Override
     public String toString() {
         return "QueueStorePrefetch" + System.identityHashCode(this);
     }

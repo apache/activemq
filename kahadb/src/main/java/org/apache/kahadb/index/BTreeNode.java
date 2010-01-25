@@ -507,6 +507,10 @@ public final class BTreeNode<Key,Value> {
         }
     }
     
+    public boolean isEmpty(final Transaction tx) throws IOException {
+        return keys.length==0;
+    }
+
     public void visit(Transaction tx, BTreeVisitor<Key, Value> visitor) throws IOException {
         if (visitor == null) {
             throw new IllegalArgumentException("Visitor cannot be null");

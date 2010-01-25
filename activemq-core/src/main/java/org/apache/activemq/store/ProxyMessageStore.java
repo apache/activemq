@@ -96,4 +96,8 @@ public class ProxyMessageStore implements MessageStore {
     public void setBatch(MessageId messageId) throws Exception {
         delegate.setBatch(messageId);
     }
+
+    public boolean isEmpty() throws Exception {
+       return delegate.isEmpty();
+    }
 }

@@ -17,7 +17,6 @@
 package org.apache.activemq.store;
 
 import java.io.IOException;
-
 import org.apache.activemq.Service;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQDestination;
@@ -25,7 +24,6 @@ import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.usage.MemoryUsage;
-import org.apache.activemq.usage.SystemUsage;
 
 /**
  * Represents a message store which is used by the persistent implementations
@@ -114,7 +112,15 @@ public interface MessageStore extends Service {
     /**
      * allow caching cursors to set the current batch offset when cache is exhausted
      * @param messageId
+     * @throws Exception 
      */
     void setBatch(MessageId messageId) throws Exception;
+    
+    /**
+     * flag to indicate if the store is empty
+     * @return true if the message count is 0
+     * @throws Exception 
+     */
+    boolean isEmpty() throws Exception;
     
 }

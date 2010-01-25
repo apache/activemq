@@ -17,7 +17,6 @@
 package org.apache.activemq.broker.region.cursors;
 
 import java.io.IOException;
-
 import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.broker.region.Topic;
 import org.apache.activemq.command.Message;
@@ -36,10 +35,10 @@ import org.apache.commons.logging.LogFactory;
  */
 class TopicStorePrefetch extends AbstractStoreCursor {
     private static final Log LOG = LogFactory.getLog(TopicStorePrefetch.class);
-    private TopicMessageStore store;
-    private String clientId;
-    private String subscriberName;
-    private Subscription subscription;
+    private final TopicMessageStore store;
+    private final String clientId;
+    private final String subscriberName;
+    private final Subscription subscription;
     
     /**
      * @param topic
@@ -62,6 +61,7 @@ class TopicStorePrefetch extends AbstractStoreCursor {
     }
     
         
+    @Override
     public synchronized boolean recoverMessage(Message message, boolean cached) throws Exception {
         MessageEvaluationContext messageEvaluationContext = new NonCachedMessageEvaluationContext();
         messageEvaluationContext.setMessageReference(message);
@@ -73,6 +73,7 @@ class TopicStorePrefetch extends AbstractStoreCursor {
     }
 
    
+    @Override
     protected synchronized int getStoreSize() {
         try {
             return store.getMessageCount(clientId, subscriberName);
@@ -81,17 +82,31 @@ class TopicStorePrefetch extends AbstractStoreCursor {
             throw new RuntimeException(e);
         }
     }
+    
+    @Override
+    protected synchronized boolean isStoreEmpty() {
+        try {
+            return this.store.isEmpty();
+            
+        } catch (Exception e) {
+            LOG.error("Failed to get message count", e);
+            throw new RuntimeException(e);
+        }
+    }
 
             
+    @Override
     protected void resetBatch() {
         this.store.resetBatching(clientId, subscriberName);
     }
     
+    @Override
     protected void doFillBatch() throws Exception {
         this.store.recoverNextMessages(clientId, subscriberName,
                 maxBatchSize, this);
     }
 
+    @Override
     public String toString() {
         return "TopicStorePrefetch" + System.identityHashCode(this) + "(" + clientId + "," + subscriberName + ")";
     }

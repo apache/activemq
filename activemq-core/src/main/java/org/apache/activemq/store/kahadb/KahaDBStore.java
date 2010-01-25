@@ -24,7 +24,6 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.Map.Entry;
-
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
@@ -69,7 +68,7 @@ import org.apache.kahadb.page.Transaction;
 
 public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
 
-    private WireFormat wireFormat = new OpenWireFormat();
+    private final WireFormat wireFormat = new OpenWireFormat();
 
     public void setBrokerName(String brokerName) {
     }
@@ -128,6 +127,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
             this.dest = convert( destination );
         }
 
+        @Override
         public ActiveMQDestination getDestination() {
             return destination;
         }
@@ -200,6 +200,19 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
                 });
             }
         }
+        
+        public boolean isEmpty() throws IOException {
+            synchronized(indexMutex) {
+                return pageFile.tx().execute(new Transaction.CallableClosure<Boolean, IOException>(){
+                    public Boolean execute(Transaction tx) throws IOException {
+                        // Iterate through all index entries to get a count of messages in the destination.
+                        StoredDestination sd = getStoredDestination(dest, tx);
+                        return sd.locationIndex.isEmpty(tx);
+                    }
+                });
+            }
+        }
+
 
         public void recover(final MessageRecoveryListener listener) throws Exception {
             synchronized(indexMutex) {
@@ -266,10 +279,13 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
             
         }
 
+        @Override
         public void setMemoryUsage(MemoryUsage memoeyUSage) {
         }
+        @Override
         public void start() throws Exception {
         }
+        @Override
         public void stop() throws Exception {
         }
         
