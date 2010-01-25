@@ -282,6 +282,11 @@
         <artifactId>kahadb</artifactId>
         <version>${activemq-version}</version>
       </dependency>
+     <dependency>
+        <groupId>org.apache.activemq</groupId>
+        <artifactId>activemq-karaf</artifactId>
+        <version>${activemq-version}</version>
+      </dependency>
       <dependency>
         <groupId>org.apache.activemq.protobuf</groupId>
         <artifactId>activemq-protobuf</artifactId>
