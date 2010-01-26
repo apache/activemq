@@ -246,7 +246,7 @@ class DataFileAppender {
 	            	}
 	            	
 	                nextWriteBatch = new WriteBatch(file, file.getLength(), write);
-	                enqueueMutex.notify();
+	                enqueueMutex.notifyAll();
 	                break;
 	            } else {
 	                // Append to current batch if possible..
@@ -327,7 +327,7 @@ class DataFileAppender {
                         }
                         enqueueMutex.wait();
                     }
-                    enqueueMutex.notify();
+                    enqueueMutex.notifyAll();
                 }
 
                 wb = (WriteBatch)o;
