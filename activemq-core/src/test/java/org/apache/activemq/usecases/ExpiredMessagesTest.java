@@ -275,7 +275,7 @@ public class ExpiredMessagesTest extends CombinationTestSupport {
                             + view.getExpiredCount());
 
                     result = view.getQueueSize() == 0;
-                } catch (InstanceNotFoundException expectedOnSlowMachines) {
+                } catch (Exception notFoundExpectedOnSlowMachines) {
                 }
                 return result;
             }
