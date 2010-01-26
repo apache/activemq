@@ -27,7 +27,7 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.EmbeddedBrokerTestSupport;
 import org.apache.activemq.broker.BrokerService;
 
-public class AMQ2571 extends EmbeddedBrokerTestSupport {
+public class AMQ2571Test extends EmbeddedBrokerTestSupport {
 
     public void testTempQueueClosing() {
         try {
