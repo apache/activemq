@@ -21,7 +21,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
-
 import org.apache.activemq.command.BrokerId;
 import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.command.ConsumerInfo;
@@ -48,6 +47,7 @@ public class ConduitBridge extends DemandForwardingBridge {
         super(configuration, localBroker, remoteBroker);
     }
 
+    @Override
     protected DemandSubscription createDemandSubscription(ConsumerInfo info) throws IOException {
         if (addToAlreadyInterestedConsumers(info)) {
             return null; // don't want this subscription added
@@ -94,7 +94,9 @@ public class ConduitBridge extends DemandForwardingBridge {
         return matched;
     }
 
+    @Override
     protected void removeDemandSubscription(ConsumerId id) throws IOException {
+        super.removeDemandSubscription(id);
         List<DemandSubscription> tmpList = new ArrayList<DemandSubscription>();
 
         for (Iterator i = subscriptionMapByLocalId.values().iterator(); i.hasNext();) {
