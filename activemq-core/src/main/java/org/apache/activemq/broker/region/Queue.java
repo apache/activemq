@@ -591,9 +591,12 @@ public class Queue extends BaseDestination implements Task, UsageListener {
     }
 
     Message loadMessage(MessageId messageId) throws IOException {
-        Message msg = store.getMessage(messageId);
-        if (msg != null) {
-            msg.setRegionDestination(this);
+        Message msg = null;
+        if (store != null) { // can be null for a temp q
+            msg = store.getMessage(messageId);
+            if (msg != null) {
+                msg.setRegionDestination(this);
+            }
         }
         return msg;
     }
