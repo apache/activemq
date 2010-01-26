@@ -194,13 +194,13 @@ public class DiscoveryNetworkReconnectTest {
             }));
             
             // wait for network connector
-            assertTrue("network connector mbean registered within 2 minute", mbeanRegistered.tryAcquire(120, TimeUnit.SECONDS));
+            assertTrue("network connector mbean registered within 3 minute", mbeanRegistered.tryAcquire(180, TimeUnit.SECONDS));
             
             // force an inactivity timeout via the proxy
             proxy.pause();
         
             // wait for the inactivity timeout and network shutdown
-            assertTrue("network connector mbean unregistered within 2 minute", mbeanUnregistered.tryAcquire(120, TimeUnit.SECONDS));
+            assertTrue("network connector mbean unregistered within 3 minute", mbeanUnregistered.tryAcquire(180, TimeUnit.SECONDS));
             
             // let a reconnect succeed
             proxy.goOn();       
