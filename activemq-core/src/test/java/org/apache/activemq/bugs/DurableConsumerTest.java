@@ -206,7 +206,7 @@ public class DurableConsumerTest extends CombinationTestSupport{
         final String topicName = getName();
         final int numMessages = 500;
         int numConsumers = 1;
-        final CountDownLatch counsumerStarted = new CountDownLatch(0);
+        final CountDownLatch counsumerStarted = new CountDownLatch(numConsumers);
         final AtomicInteger receivedCount = new AtomicInteger();
         Runnable consumer = new Runnable(){
             public void run(){
@@ -232,7 +232,10 @@ public class DurableConsumerTest extends CombinationTestSupport{
                             msg = consumer.receive(5000);
                             if (msg != null) {
                                 receivedCount.incrementAndGet();
-                                if (received++ % 2 == 0) {
+                                if (received != 0 && received % 100 == 0) {
+                                    LOG.info("Received msg: " + msg.getJMSMessageID());
+                                }
+                                if (++received % 2 == 0) {
                                     msg.acknowledge();
                                     acked++;
                                 }
@@ -277,10 +280,11 @@ public class DurableConsumerTest extends CombinationTestSupport{
         
         Wait.waitFor(new Wait.Condition(){
             public boolean isSatisified() throws Exception{
-                return receivedCount.get() > numMessages;
+                LOG.info("receivedCount: " + receivedCount.get());
+                return receivedCount.get() == numMessages;
             }
         }, 60 * 1000);
-        assertTrue("got some messages: " + receivedCount.get(), receivedCount.get() > numMessages);
+        assertEquals("got required some messages", numMessages, receivedCount.get());
         assertTrue("no exceptions, but: " + exceptions, exceptions.isEmpty());
     }
     

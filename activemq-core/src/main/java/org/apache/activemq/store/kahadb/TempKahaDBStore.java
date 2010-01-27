@@ -400,7 +400,7 @@ public class TempKahaDBStore extends TempMessageDatabase implements PersistenceA
                             }
                         }
                         if( entry!=null ) {
-                            sd.subscriptionCursors.put(subscriptionKey, cursorPos+1);
+                            sd.subscriptionCursors.put(subscriptionKey, entry.getKey() + 1);
                         }
                     }
                 });

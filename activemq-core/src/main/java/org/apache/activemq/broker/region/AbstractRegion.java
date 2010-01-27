@@ -507,7 +507,9 @@ public abstract class AbstractRegion implements Region {
         Subscription sub = subscriptions.get(control.getConsumerId());
         if (sub != null && sub instanceof AbstractSubscription) {
             ((AbstractSubscription)sub).setPrefetchSize(control.getPrefetch());
-            LOG.info("setting prefetch: " + control.getPrefetch() + ", on subscription: " + control.getConsumerId());
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("setting prefetch: " + control.getPrefetch() + ", on subscription: " + control.getConsumerId());
+            }
             try {
                 lookup(consumerExchange.getConnectionContext(), control.getDestination()).wakeup();
             } catch (Exception e) {
