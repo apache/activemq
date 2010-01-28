@@ -429,7 +429,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
                             }
                         }
                         if( entry!=null ) {
-                            sd.subscriptionCursors.put(subscriptionKey, cursorPos+1);
+                            sd.subscriptionCursors.put(subscriptionKey, entry.getKey() + 1);
                         }
                     }
                 });
