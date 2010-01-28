@@ -43,6 +43,9 @@ public class SystemUsage implements Service {
      */
     private boolean sendFailIfNoSpaceExplicitySet;
     private boolean sendFailIfNoSpace;
+    private boolean sendFailIfNoSpaceAfterTimeoutExplicitySet;
+    private long sendFailIfNoSpaceAfterTimeout = 0;
+    
     private final List<SystemUsage> children = new CopyOnWriteArrayList<SystemUsage>();
 
     public SystemUsage() {
@@ -153,6 +156,19 @@ public class SystemUsage implements Service {
 
     public void setSendFailIfNoSpaceExplicitySet(boolean sendFailIfNoSpaceExplicitySet) {
         this.sendFailIfNoSpaceExplicitySet = sendFailIfNoSpaceExplicitySet;
+    }
+
+    public long getSendFailIfNoSpaceAfterTimeout() {
+        if (sendFailIfNoSpaceAfterTimeoutExplicitySet || parent == null) {
+            return sendFailIfNoSpaceAfterTimeout;
+        } else {
+            return parent.getSendFailIfNoSpaceAfterTimeout();
+        }
+    }
+
+    public void setSendFailIfNoSpaceAfterTimeout(long sendFailIfNoSpaceAfterTimeout) {
+        this.sendFailIfNoSpaceAfterTimeoutExplicitySet = true;
+        this.sendFailIfNoSpaceAfterTimeout = sendFailIfNoSpaceAfterTimeout;
     }
 
     public void setName(String name) {
