@@ -686,7 +686,7 @@ public class JMSConsumerTest extends JmsTestSupport {
         assertNotNull(message1);
 
         // Pick up the 2nd messages.
-        Message message2 = consumer2.receive(1000);
+        Message message2 = consumer2.receive(5000);
         assertNotNull(message2);
 
         session.commit();
