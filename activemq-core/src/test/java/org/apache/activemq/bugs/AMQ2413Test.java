@@ -18,7 +18,6 @@ package org.apache.activemq.bugs;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -35,6 +34,8 @@ import javax.jms.MessageListener;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
 
+import junit.framework.Test;
+
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.CombinationTestSupport;
@@ -43,18 +44,11 @@ import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.broker.region.policy.VMPendingQueueMessageStoragePolicy;
 
-import junit.framework.Test;
-import junit.framework.TestCase;
-
-/**
- * An AMQ-1282 Test
- * 
- */
 public class AMQ2413Test extends CombinationTestSupport implements MessageListener {
     BrokerService broker;
     private ActiveMQConnectionFactory factory;
 
-    private static final int HANG_THRESHOLD = 5;
+    private static final int HANG_THRESHOLD = 30;
     private static final int SEND_COUNT = 10000;
     private static final int RECEIVER_THINK_TIME = 1;
     private static final int CONSUMER_COUNT = 1;
