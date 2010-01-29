@@ -35,7 +35,6 @@ import javax.jms.MessageProducer;
 import javax.jms.Queue;
 import javax.jms.Session;
 import javax.jms.TextMessage;
-import javax.management.MBeanServerInvocationHandler;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 
@@ -51,6 +50,7 @@ import org.apache.activemq.usage.MemoryUsage;
 import org.apache.activemq.usage.StoreUsage;
 import org.apache.activemq.usage.SystemUsage;
 import org.apache.activemq.usage.TempUsage;
+import org.apache.activemq.util.Wait;
 
 /**
  * Modified CursorSupport Unit test to reproduce the negative queue issue.
@@ -224,8 +224,17 @@ public class NegativeQueueTest extends TestCase {
             System.out.println("Queue2 Size = "+proxyQueue2.getQueueSize());
             System.out.println("Queue2 Memory % Used = "+proxyQueue2.getMemoryPercentUsage());
         }
-        
+
+        Wait.waitFor(new Wait.Condition() {
+            public boolean isSatisified() throws Exception {
+                return 0 == proxyQueue1.getQueueSize();
+            }});
         assertEquals("Queue1 has gone negative,",0, proxyQueue1.getQueueSize());
+        
+        Wait.waitFor(new Wait.Condition() {
+            public boolean isSatisified() throws Exception {
+                return 0 == proxyQueue2.getQueueSize();
+            }});
         assertEquals("Queue2 has gone negative,",0, proxyQueue2.getQueueSize());
         proxyConnection.close();
         
