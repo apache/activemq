@@ -289,6 +289,7 @@ public class ExpiredMessagesTest extends CombinationTestSupport {
 	private BrokerService createBroker(boolean deleteAllMessages, long expireMessagesPeriod) throws Exception {
 	    BrokerService broker = new BrokerService();
         broker.setBrokerName("localhost");
+        broker.setDestinations(new ActiveMQDestination[]{destination});
         AMQPersistenceAdapter adaptor = new AMQPersistenceAdapter();
         adaptor.setDirectory(new File("target/expiredtest-data/"));
         adaptor.setForceRecoverReferenceStore(true);
