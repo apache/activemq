@@ -347,7 +347,7 @@ public class DurableConsumerTest extends CombinationTestSupport{
         
         consumer = consumerSession.createDurableSubscriber(topic, CONSUMER_NAME);
         for (int i = 0; i < COUNT; i++) {
-            Message msg = consumer.receive(5000);
+            Message msg = consumer.receive(10000);
             assertNotNull("Missing message: " + i, msg);
             if (i != 0 && i % 1000 == 0) {
                 LOG.info("Received msg " + i);
