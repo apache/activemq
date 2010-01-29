@@ -145,7 +145,7 @@ public class ActiveMQTextMessage extends ActiveMQMessage implements TextMessage 
             if (marshalledProperties != null) {
                 size += marshalledProperties.getLength();
             }
-            size = text.length() * 2;
+            size += text.length() * 2;
         }
         return super.getSize();
     }
