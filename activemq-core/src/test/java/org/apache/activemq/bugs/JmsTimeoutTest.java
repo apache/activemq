@@ -55,8 +55,10 @@ public class JmsTimeoutTest extends EmbeddedBrokerTestSupport {
 	                    logger.info("Done sending..");
 	                } catch (JMSException e) {
 	                    e.printStackTrace();
-	                	exceptionCount.incrementAndGet();
-	                	return;
+	                    if (e instanceof ResourceAllocationException) {
+	                        exceptionCount.incrementAndGet();
+	                    }
+	                    return;
 	                }
 	            }
 	        };
@@ -66,7 +68,7 @@ public class JmsTimeoutTest extends EmbeddedBrokerTestSupport {
 	        producerThread.join(30000);
 	        cx.close();
 	        // We should have a few timeout exceptions as memory store will fill up
-	        assertTrue(exceptionCount.get() > 0);
+	        assertTrue("No exception from the broker", exceptionCount.get() > 0);
 	    }
 
 	    protected void setUp() throws Exception {
