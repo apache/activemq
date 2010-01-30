@@ -131,7 +131,7 @@ public class ExpiredMessagesTest extends CombinationTestSupport {
         assertTrue("all inflight messages expired ", Wait.waitFor(new Wait.Condition() {
             public boolean isSatisified() throws Exception {
                 return view.getInFlightCount() == 0;
-            }           
+            }        
         }));
         assertEquals("Wrong inFlightCount: ", 0, view.getInFlightCount());
         
@@ -321,8 +321,21 @@ public class ExpiredMessagesTest extends CombinationTestSupport {
             name = new ObjectName(domain + ":BrokerName=localhost,Type=Topic,Destination="
                     + destination.getPhysicalName());
         }
-        return (DestinationViewMBean) broker.getManagementContext().newProxyInstance(name, DestinationViewMBean.class,
-                true);
+        final DestinationViewMBean view = (DestinationViewMBean) 
+            broker.getManagementContext().newProxyInstance(name, DestinationViewMBean.class, true);
+        
+        assertTrue("validation: Mbean view for " + destination + " exists", Wait.waitFor(new Wait.Condition() {            
+            public boolean isSatisified() throws Exception {
+                boolean mbeanExists = false;
+                try {
+                    view.getConsumerCount();
+                    mbeanExists = true;
+                } catch (Exception notFoundExpectedOnSlowMachines) {
+                }
+                return mbeanExists;
+            }   
+        }));
+        return view;
     }
 
 	protected void tearDown() throws Exception {
