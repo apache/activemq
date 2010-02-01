@@ -873,7 +873,9 @@ public class MessageDatabase implements BrokerServiceAware {
             Long sequenceId = sd.messageIdIndex.remove(tx, command.getMessageId());
             if (sequenceId != null) {
                 MessageKeys keys = sd.orderIndex.remove(tx, sequenceId);
-                sd.locationIndex.remove(tx, keys.location);
+                if (keys != null) {
+                    sd.locationIndex.remove(tx, keys.location);
+                }
             }
         } else {
             // In the topic case we need remove the message once it's been acked
