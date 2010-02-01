@@ -24,6 +24,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import javax.jms.JMSException;
 import javax.jms.TransactionInProgressException;
+import javax.jms.TransactionRolledBackException;
 import javax.transaction.xa.XAException;
 import javax.transaction.xa.XAResource;
 import javax.transaction.xa.Xid;
@@ -235,7 +236,11 @@ public class TransactionContext implements XAResource {
             throw new TransactionInProgressException("Cannot rollback() if an XA transaction is already in progress ");
         }
         
-        beforeEnd();
+        try {
+            beforeEnd();
+        } catch (TransactionRolledBackException canOcurrOnFailover) {
+            LOG.warn("rollback processing error", canOcurrOnFailover);
+        }
         if (transactionId != null) {
             if (LOG.isDebugEnabled()) {
                 LOG.debug("Rollback: "  + transactionId
@@ -270,7 +275,12 @@ public class TransactionContext implements XAResource {
             throw new TransactionInProgressException("Cannot commit() if an XA transaction is already in progress ");
         }
         
-        beforeEnd();
+        try {
+            beforeEnd();
+        } catch (JMSException e) {
+            rollback();
+            throw e;
+        }
 
         // Only send commit if the transaction was started.
         if (transactionId != null) {

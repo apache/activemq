@@ -17,6 +17,7 @@
 package org.apache.activemq.transport.failover;
 
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.concurrent.CountDownLatch;
@@ -237,6 +238,62 @@ public class FailoverConsumerOutstandingCommitTest {
         assertTrue("another message was received after failover", messagesReceived.await(20, TimeUnit.SECONDS));
         
         connection.close();
+    }
+
+    @Test
+    public void testRollbackFailoverConsumerTx() throws Exception {
+        broker = createBroker(true);
+        broker.start();
+
+        ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory("failover:(" + url + ")");        
+        final ActiveMQConnection connection = (ActiveMQConnection) cf.createConnection();
+        connection.start();
+
+        final Session producerSession = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        final Queue destination = producerSession.createQueue(QUEUE_NAME);
+
+        final Session consumerSession = connection.createSession(true, Session.SESSION_TRANSACTED);
+        final MessageConsumer testConsumer = consumerSession.createConsumer(destination);
+        assertNull("no message yet", testConsumer.receiveNoWait());
+        
+        produceMessage(producerSession, destination, 1);
+        producerSession.close();
+
+        // consume then rollback after restart
+        Message msg = testConsumer.receive(5000);
+        assertNotNull(msg);
+        
+        // restart with out standing delivered message
+        broker.stop();
+        broker.waitUntilStopped();
+        broker = createBroker(false);
+        broker.start();
+        
+        consumerSession.rollback();
+        
+        // receive again
+        msg = testConsumer.receive(10000);
+        assertNotNull("got message again after rollback", msg);
+
+        consumerSession.commit();
+        
+        // close before sweep
+        consumerSession.close();
+        msg = receiveMessage(cf, destination);
+        assertNull("should be nothing left after commit", msg);
+        connection.close();
+    }
+
+    private Message receiveMessage(ActiveMQConnectionFactory cf,
+            Queue destination) throws Exception {
+        final ActiveMQConnection connection = (ActiveMQConnection) cf.createConnection();
+        connection.start();
+        final Session consumerSession = connection.createSession(true, Session.SESSION_TRANSACTED);
+        final MessageConsumer consumer = consumerSession.createConsumer(destination);
+        Message msg = consumer.receive(5000);
+        consumerSession.commit();
+        connection.close();
+        return msg;
     }
 
     private void produceMessage(final Session producerSession, Queue destination, long count)

@@ -46,7 +46,9 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -58,6 +60,7 @@ import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageListener;
+import javax.jms.TransactionRolledBackException;
 
 /**
  * A client uses a <CODE>MessageConsumer</CODE> object to receive messages
@@ -109,6 +112,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
     // not been acknowledged. It's kept in reverse order since we
     // Always walk list in reverse order.
     private final LinkedList<MessageDispatch> deliveredMessages = new LinkedList<MessageDispatch>();
+    private HashMap<MessageId, Boolean> previouslyDeliveredMessages;
     private int deliveredCounter;
     private int additionalWindowSize;
     private long redeliveryDelay;
@@ -146,7 +150,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
      * @param name
      * @param selector
      * @param prefetch
-     * @param maximumPendingMessageCount TODO
+     * @param maximumPendingMessageCount
      * @param noLocal
      * @param browser
      * @param dispatchAsync
@@ -640,7 +644,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
     }
     
     void clearMessagesInProgress() {
-        // deal with delivered messages async to avoid lock contention with in pogress acks
+        // deal with delivered messages async to avoid lock contention with in progress acks
         clearDispatchList = true;
         synchronized (unconsumedMessages.getMutex()) {            
             if (LOG.isDebugEnabled()) {
@@ -951,6 +955,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
             	return; // no msgs
             
             if (session.getTransacted()) {
+                rollbackOnFailedRecoveryRedelivery();
                 session.doStartTransaction();
                 ack.setTransactionId(session.getTransactionContext().getTransactionId());
             }
@@ -967,6 +972,51 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
         }
     }
     
+    /*
+     * called with deliveredMessages locked
+     */
+    private void rollbackOnFailedRecoveryRedelivery() throws JMSException {
+        if (previouslyDeliveredMessages != null) {
+            // if any previously delivered messages was not re-delivered, transaction is invalid and must rollback
+            // as messages have been dispatched else where.
+            int numberNotReplayed = 0;
+            for (Entry<MessageId, Boolean> entry: previouslyDeliveredMessages.entrySet()) {
+                if (!entry.getValue()) {
+                    numberNotReplayed++;
+                    // allow outstanding messages to get delivered again
+                    removeFromDeliveredMessages(entry.getKey());
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug("previously delivered message has not been replayed in transaction, id: " + entry.getKey());
+                    }
+                }
+            }
+            clearPreviouslyDelivered();
+            
+            if (numberNotReplayed > 0) {
+                String message = "rolling back transaction post failover recovery. " + numberNotReplayed
+                    + " previously delivered message(s) not replayed to consumer: " + this.getConsumerId();
+                LOG.warn(message);
+                throw new TransactionRolledBackException(message);
+            }
+        }
+        
+    }
+
+    /*
+     * called with deliveredMessages locked
+     */
+    private void removeFromDeliveredMessages(MessageId key) {
+        ListIterator<MessageDispatch> iterator = deliveredMessages.listIterator(deliveredMessages.size());
+        while (iterator.hasPrevious()) {
+            MessageDispatch candidate = iterator.previous();
+            if (key.equals(candidate.getMessage().getMessageId())) {
+                session.connection.rollbackDuplicate(this, candidate.getMessage());
+                iterator.remove();
+                break;
+            }
+        }
+    }
+
     void acknowledge(MessageDispatch md) throws JMSException {
         MessageAck ack = new MessageAck(md,MessageAck.INDIVIDUAL_ACK_TYPE,1);
         session.sendAck(ack);
@@ -978,6 +1028,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
     public void commit() throws JMSException {
         synchronized (deliveredMessages) {
             deliveredMessages.clear();
+            clearPreviouslyDelivered();
         }
         redeliveryDelay = 0;
     }
@@ -998,6 +1049,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                 }
             }
             synchronized(deliveredMessages) {
+                clearPreviouslyDelivered();
                 if (deliveredMessages.isEmpty()) {
                     return;
                 }
@@ -1073,6 +1125,16 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
         }
     }
 
+    /*
+     * called with deliveredMessages locked
+     */
+    private void clearPreviouslyDelivered() {
+        if (previouslyDeliveredMessages != null) {
+            previouslyDeliveredMessages.clear();
+            previouslyDeliveredMessages = null;
+        }
+    }
+
     public void dispatch(MessageDispatch md) {
         MessageListener listener = this.messageListener.get();
         try {
@@ -1106,11 +1168,23 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                             }
                         }
                     } else {
-                        // ignore duplicate
-                        if (LOG.isDebugEnabled()) {
-                            LOG.debug(getConsumerId() + " ignoring(auto acking) duplicate: " + md.getMessage());
+                        if (!session.isTransacted()) {
+                            if (LOG.isDebugEnabled()) {
+                                LOG.debug(getConsumerId() + " ignoring(auto acking) duplicate: " + md.getMessage());
+                            }
+                            MessageAck ack = new MessageAck(md, MessageAck.STANDARD_ACK_TYPE, 1);
+                            session.sendAck(ack);
+                        } else {
+                            if (LOG.isDebugEnabled()) {
+                                LOG.debug(getConsumerId() + " tracking transacted redlivery of duplicate: " + md.getMessage());
+                            }
+                            synchronized (deliveredMessages) {
+                                if (previouslyDeliveredMessages != null) {
+                                    previouslyDeliveredMessages.put(md.getMessage().getMessageId(), true);
+                                }
+                            }
+                            ackLater(md, MessageAck.DELIVERED_ACK_TYPE);
                         }
-                        acknowledge(md);
                     }
                 }
             }
@@ -1126,13 +1200,27 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
     // async (on next call) clear delivered as they will be auto-acked as duplicates if they arrive again
     private void clearDispatchList() {
         if (clearDispatchList) {
-            synchronized (deliveredMessages) {
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug(getConsumerId() + " async clearing delivered list (" + deliveredMessages.size() + ") on transport interrupt");
-                }
+            synchronized (deliveredMessages) {  
                 if (clearDispatchList) {
-                    deliveredMessages.clear();
-                    pendingAck = null;
+                    if (!deliveredMessages.isEmpty()) {
+                        if (session.isTransacted()) {    
+                            if (LOG.isDebugEnabled()) {
+                                LOG.debug(getConsumerId() + " tracking delivered list (" + deliveredMessages.size() + ") on transport interrupt");
+                            }
+                            if (previouslyDeliveredMessages == null) {
+                                previouslyDeliveredMessages = new HashMap<MessageId, Boolean>();
+                            }
+                            for (MessageDispatch delivered : deliveredMessages) {
+                                previouslyDeliveredMessages.put(delivered.getMessage().getMessageId(), false);
+                            }
+                        } else {
+                            if (LOG.isDebugEnabled()) {
+                                LOG.debug(getConsumerId() + " clearing delivered list (" + deliveredMessages.size() + ") on transport interrupt");
+                            }
+                            deliveredMessages.clear();
+                            pendingAck = null;
+                        }
+                    }
                     clearDispatchList = false;
                 }
             }
