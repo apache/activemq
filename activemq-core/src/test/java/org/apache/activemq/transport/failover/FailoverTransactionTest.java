@@ -36,6 +36,7 @@ import javax.jms.MessageProducer;
 import javax.jms.Queue;
 import javax.jms.Session;
 import javax.jms.TextMessage;
+import javax.jms.TransactionRolledBackException;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerPlugin;
@@ -468,7 +469,8 @@ public class FailoverTransactionTest {
                     
                     // should not get a second message as there are two messages and two consumers
                     // but with failover and unordered connection restore it can get the second
-                    // message which could create a problem for a pending ack
+                    // message which could create a problem for a pending ack and also invalidate
+                    // the transaction in which the first was consumed and acked
                     msg = consumer1.receive(5000);
                     LOG.info("consumer1 second attempt got message: " + msg);
                     if (msg != null) {
@@ -476,7 +478,17 @@ public class FailoverTransactionTest {
                     }
                     
                     LOG.info("committing consumer1 session: " + receivedMessages.size() + " messsage(s)");
-                    consumerSession1.commit();
+                    try {
+                        consumerSession1.commit();
+                    } catch (JMSException expectedSometimes) {
+                        LOG.info("got rollback ex on commit", expectedSometimes);
+                        if (expectedSometimes instanceof TransactionRolledBackException && receivedMessages.size() == 2) {
+                            // ok, message one was not replayed so we expect the rollback
+                        } else {
+                            throw expectedSometimes;
+                        }
+                        
+                    }
                     commitDoneLatch.countDown();
                     LOG.info("done async commit");
                 } catch (Exception e) {
@@ -494,21 +506,23 @@ public class FailoverTransactionTest {
 
         assertTrue("tx committed trough failover", commitDoneLatch.await(30, TimeUnit.SECONDS));
         
-        // getting 2 is indicative of a problem - proven with dangling message found after restart
+        // getting 2 is indicative of orderiing issue. a problem if dangling message found after restart
         LOG.info("received message count: " + receivedMessages.size());
         
         // new transaction
         Message msg = consumer1.receive(2000);
         LOG.info("post: from consumer1 received: " + msg);
-        assertNull("should be nothing left for consumer1", msg);
+        if (receivedMessages.size() == 1) {
+            assertNull("should be nothing left for consumer as recieve should have committed", msg);
+        } else {
+            assertNotNull("should be available again after commit rollback ex", msg);
+        }
         consumerSession1.commit();
         
-        // consumer2 should get other message provided consumer1 did not get 2
+        // consumer2 should get other message
         msg = consumer2.receive(5000);
         LOG.info("post: from consumer2 received: " + msg);
-        if (receivedMessages.size() == 1) {
-            assertNotNull("got second message on consumer2", msg);
-        }
+        assertNotNull("got second message on consumer2", msg);
         consumerSession2.commit();
         
         for (Connection c: connections) {

@@ -516,7 +516,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      */
     public boolean getTransacted() throws JMSException {
         checkClosed();
-        return (acknowledgementMode == Session.SESSION_TRANSACTED) || (transactionContext.isInXATransaction());
+        return isTransacted();
     }
 
     /**
@@ -1784,7 +1784,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      * @return true - if the session uses transactions.
      */
     public boolean isTransacted() {
-        return this.acknowledgementMode == Session.SESSION_TRANSACTED;
+        return this.acknowledgementMode == Session.SESSION_TRANSACTED || (transactionContext.isInXATransaction());
     }
 
     /**
