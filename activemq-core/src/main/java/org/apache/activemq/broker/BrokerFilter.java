@@ -139,8 +139,8 @@ public class BrokerFilter implements Broker {
         return next.getClients();
     }
 
-    public Destination addDestination(ConnectionContext context, ActiveMQDestination destination) throws Exception {
-        return next.addDestination(context, destination);
+    public Destination addDestination(ConnectionContext context, ActiveMQDestination destination,boolean createIfTemporary) throws Exception {
+        return next.addDestination(context, destination,createIfTemporary);
     }
 
     public void removeDestination(ConnectionContext context, ActiveMQDestination destination, long timeout) throws Exception {

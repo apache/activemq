@@ -19,7 +19,6 @@ package org.apache.activemq.broker.view;
 import java.io.PrintWriter;
 import java.util.Collection;
 import java.util.Iterator;
-
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.Destination;
@@ -38,17 +37,20 @@ public class DestinationDotFileInterceptor extends DotFileInterceptorSupport {
         super(next, file);
     }
 
-    public Destination addDestination(ConnectionContext context, ActiveMQDestination destination) throws Exception {
-        Destination answer = super.addDestination(context, destination);
+    @Override
+    public Destination addDestination(ConnectionContext context, ActiveMQDestination destination,boolean create) throws Exception {
+        Destination answer = super.addDestination(context, destination,create);
         generateFile();
         return answer;
     }
 
+    @Override
     public void removeDestination(ConnectionContext context, ActiveMQDestination destination, long timeout) throws Exception {
         super.removeDestination(context, destination, timeout);
         generateFile();
     }
 
+    @Override
     protected void generateFile(PrintWriter writer) throws Exception {
         ActiveMQDestination[] destinations = getDestinations();
 

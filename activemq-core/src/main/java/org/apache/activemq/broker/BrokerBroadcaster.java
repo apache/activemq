@@ -43,6 +43,7 @@ public class BrokerBroadcaster extends BrokerFilter {
         super(next);
     }
 
+    @Override
     public void acknowledge(ConsumerBrokerExchange consumerExchange, MessageAck ack) throws Exception {
         next.acknowledge(consumerExchange, ack);
         Broker brokers[] = getListeners();
@@ -51,6 +52,7 @@ public class BrokerBroadcaster extends BrokerFilter {
         }
     }
 
+    @Override
     public void addConnection(ConnectionContext context, ConnectionInfo info) throws Exception {
         next.addConnection(context, info);
         Broker brokers[] = getListeners();
@@ -59,6 +61,7 @@ public class BrokerBroadcaster extends BrokerFilter {
         }
     }
 
+    @Override
     public Subscription addConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
         Subscription answer = next.addConsumer(context, info);
         Broker brokers[] = getListeners();
@@ -68,6 +71,7 @@ public class BrokerBroadcaster extends BrokerFilter {
         return answer;
     }
 
+    @Override
     public void addProducer(ConnectionContext context, ProducerInfo info) throws Exception {
         next.addProducer(context, info);
         Broker brokers[] = getListeners();
@@ -76,6 +80,7 @@ public class BrokerBroadcaster extends BrokerFilter {
         }
     }
 
+    @Override
     public void commitTransaction(ConnectionContext context, TransactionId xid, boolean onePhase) throws Exception {
         next.commitTransaction(context, xid, onePhase);
         Broker brokers[] = getListeners();
@@ -84,6 +89,7 @@ public class BrokerBroadcaster extends BrokerFilter {
         }
     }
 
+    @Override
     public void removeSubscription(ConnectionContext context, RemoveSubscriptionInfo info) throws Exception {
         next.removeSubscription(context, info);
         Broker brokers[] = getListeners();
@@ -92,6 +98,7 @@ public class BrokerBroadcaster extends BrokerFilter {
         }
     }
 
+    @Override
     public int prepareTransaction(ConnectionContext context, TransactionId xid) throws Exception {
         int result = next.prepareTransaction(context, xid);
         Broker brokers[] = getListeners();
@@ -102,6 +109,7 @@ public class BrokerBroadcaster extends BrokerFilter {
         return result;
     }
 
+    @Override
     public void removeConnection(ConnectionContext context, ConnectionInfo info, Throwable error) throws Exception {
         next.removeConnection(context, info, error);
         Broker brokers[] = getListeners();
@@ -110,6 +118,7 @@ public class BrokerBroadcaster extends BrokerFilter {
         }
     }
 
+    @Override
     public void removeConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
         next.removeConsumer(context, info);
         Broker brokers[] = getListeners();
@@ -118,6 +127,7 @@ public class BrokerBroadcaster extends BrokerFilter {
         }
     }
 
+    @Override
     public void removeProducer(ConnectionContext context, ProducerInfo info) throws Exception {
         next.removeProducer(context, info);
         Broker brokers[] = getListeners();
@@ -126,6 +136,7 @@ public class BrokerBroadcaster extends BrokerFilter {
         }
     }
 
+    @Override
     public void rollbackTransaction(ConnectionContext context, TransactionId xid) throws Exception {
         next.rollbackTransaction(context, xid);
         Broker brokers[] = getListeners();
@@ -134,6 +145,7 @@ public class BrokerBroadcaster extends BrokerFilter {
         }
     }
 
+    @Override
     public void send(ProducerBrokerExchange producerExchange, Message messageSend) throws Exception {
         next.send(producerExchange, messageSend);
         Broker brokers[] = getListeners();
@@ -142,6 +154,7 @@ public class BrokerBroadcaster extends BrokerFilter {
         }
     }
 
+    @Override
     public void beginTransaction(ConnectionContext context, TransactionId xid) throws Exception {
         next.beginTransaction(context, xid);
         Broker brokers[] = getListeners();
@@ -150,6 +163,7 @@ public class BrokerBroadcaster extends BrokerFilter {
         }
     }
 
+    @Override
     public void forgetTransaction(ConnectionContext context, TransactionId transactionId) throws Exception {
         next.forgetTransaction(context, transactionId);
         Broker brokers[] = getListeners();
@@ -158,15 +172,17 @@ public class BrokerBroadcaster extends BrokerFilter {
         }
     }
 
-    public Destination addDestination(ConnectionContext context, ActiveMQDestination destination) throws Exception {
-        Destination result = next.addDestination(context, destination);
+    @Override
+    public Destination addDestination(ConnectionContext context, ActiveMQDestination destination,boolean createIfTemporary) throws Exception {
+        Destination result = next.addDestination(context, destination,createIfTemporary);
         Broker brokers[] = getListeners();
         for (int i = 0; i < brokers.length; i++) {
-            brokers[i].addDestination(context, destination);
+            brokers[i].addDestination(context, destination,createIfTemporary);
         }
         return result;
     }
 
+    @Override
     public void removeDestination(ConnectionContext context, ActiveMQDestination destination, long timeout) throws Exception {
         next.removeDestination(context, destination, timeout);
         Broker brokers[] = getListeners();
@@ -175,6 +191,7 @@ public class BrokerBroadcaster extends BrokerFilter {
         }
     }
 
+    @Override
     public void start() throws Exception {
         next.start();
         Broker brokers[] = getListeners();
@@ -183,6 +200,7 @@ public class BrokerBroadcaster extends BrokerFilter {
         }
     }
 
+    @Override
     public void stop() throws Exception {
         next.stop();
         Broker brokers[] = getListeners();
@@ -191,6 +209,7 @@ public class BrokerBroadcaster extends BrokerFilter {
         }
     }
 
+    @Override
     public void addSession(ConnectionContext context, SessionInfo info) throws Exception {
         next.addSession(context, info);
         Broker brokers[] = getListeners();
@@ -199,6 +218,7 @@ public class BrokerBroadcaster extends BrokerFilter {
         }
     }
 
+    @Override
     public void removeSession(ConnectionContext context, SessionInfo info) throws Exception {
         next.removeSession(context, info);
         Broker brokers[] = getListeners();
@@ -207,6 +227,7 @@ public class BrokerBroadcaster extends BrokerFilter {
         }
     }
 
+    @Override
     public void gc() {
         next.gc();
         Broker brokers[] = getListeners();
@@ -215,6 +236,7 @@ public class BrokerBroadcaster extends BrokerFilter {
         }
     }
 
+    @Override
     public void addBroker(Connection connection, BrokerInfo info) {
         next.addBroker(connection, info);
         Broker brokers[] = getListeners();

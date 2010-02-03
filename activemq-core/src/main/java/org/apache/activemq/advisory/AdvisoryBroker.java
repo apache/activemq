@@ -20,7 +20,6 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.BrokerFilter;
 import org.apache.activemq.broker.ConnectionContext;
@@ -73,6 +72,7 @@ public class AdvisoryBroker extends BrokerFilter {
         advisoryProducerId.setConnectionId(ID_GENERATOR.generateId());
     }
 
+    @Override
     public void addConnection(ConnectionContext context, ConnectionInfo info) throws Exception {
         super.addConnection(context, info);
 
@@ -85,6 +85,7 @@ public class AdvisoryBroker extends BrokerFilter {
         connections.put(copy.getConnectionId(), copy);
     }
 
+    @Override
     public Subscription addConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
         Subscription answer = super.addConsumer(context, info);
         
@@ -138,6 +139,7 @@ public class AdvisoryBroker extends BrokerFilter {
         return answer;
     }
 
+    @Override
     public void addProducer(ConnectionContext context, ProducerInfo info) throws Exception {
         super.addProducer(context, info);
 
@@ -149,8 +151,9 @@ public class AdvisoryBroker extends BrokerFilter {
         }
     }
 
-    public Destination addDestination(ConnectionContext context, ActiveMQDestination destination) throws Exception {
-        Destination answer = super.addDestination(context, destination);
+    @Override
+    public Destination addDestination(ConnectionContext context, ActiveMQDestination destination,boolean create) throws Exception {
+        Destination answer = super.addDestination(context, destination,create);
         if (!AdvisorySupport.isAdvisoryTopic(destination)) {
             DestinationInfo info = new DestinationInfo(context.getConnectionId(), DestinationInfo.ADD_OPERATION_TYPE, destination);
             DestinationInfo previous = destinations.putIfAbsent(destination, info);
@@ -162,6 +165,7 @@ public class AdvisoryBroker extends BrokerFilter {
         return answer;
     }
 
+    @Override
     public void addDestinationInfo(ConnectionContext context, DestinationInfo info) throws Exception {
         ActiveMQDestination destination = info.getDestination();
         next.addDestinationInfo(context, info);
@@ -175,6 +179,7 @@ public class AdvisoryBroker extends BrokerFilter {
         }
     }
 
+    @Override
     public void removeDestination(ConnectionContext context, ActiveMQDestination destination, long timeout) throws Exception {
         super.removeDestination(context, destination, timeout);
         DestinationInfo info = destinations.remove(destination);
@@ -195,6 +200,7 @@ public class AdvisoryBroker extends BrokerFilter {
 
     }
 
+    @Override
     public void removeDestinationInfo(ConnectionContext context, DestinationInfo destInfo) throws Exception {
         super.removeDestinationInfo(context, destInfo);   
         DestinationInfo info = destinations.remove(destInfo.getDestination());
@@ -216,6 +222,7 @@ public class AdvisoryBroker extends BrokerFilter {
 
     }
 
+    @Override
     public void removeConnection(ConnectionContext context, ConnectionInfo info, Throwable error) throws Exception {
         super.removeConnection(context, info, error);
 
@@ -224,6 +231,7 @@ public class AdvisoryBroker extends BrokerFilter {
         connections.remove(info.getConnectionId());
     }
 
+    @Override
     public void removeConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
         super.removeConsumer(context, info);
 
@@ -238,6 +246,7 @@ public class AdvisoryBroker extends BrokerFilter {
         }
     }
 
+    @Override
     public void removeProducer(ConnectionContext context, ProducerInfo info) throws Exception {
         super.removeProducer(context, info);
 
@@ -252,6 +261,7 @@ public class AdvisoryBroker extends BrokerFilter {
         }
     }
 
+    @Override
     public void messageExpired(ConnectionContext context, MessageReference messageReference) {
         super.messageExpired(context, messageReference);
         try {
@@ -268,6 +278,7 @@ public class AdvisoryBroker extends BrokerFilter {
         }
     }
     
+    @Override
     public void messageConsumed(ConnectionContext context, MessageReference messageReference) {
         super.messageConsumed(context, messageReference);
         try {
@@ -282,6 +293,7 @@ public class AdvisoryBroker extends BrokerFilter {
         }
     }
     
+    @Override
     public void messageDelivered(ConnectionContext context, MessageReference messageReference) {
         super.messageDelivered(context, messageReference);
         try {
@@ -296,6 +308,7 @@ public class AdvisoryBroker extends BrokerFilter {
         }
     }
     
+    @Override
     public void messageDiscarded(ConnectionContext context, MessageReference messageReference) {
         super.messageDiscarded(context, messageReference);
         try {
@@ -310,6 +323,7 @@ public class AdvisoryBroker extends BrokerFilter {
         }
     }
     
+    @Override
     public void slowConsumer(ConnectionContext context, Destination destination,Subscription subs) {
         super.slowConsumer(context, destination,subs);
         try {
@@ -322,6 +336,7 @@ public class AdvisoryBroker extends BrokerFilter {
         }
     }
     
+    @Override
     public void fastProducer(ConnectionContext context,ProducerInfo producerInfo) {
         super.fastProducer(context, producerInfo);
         try {
@@ -334,6 +349,7 @@ public class AdvisoryBroker extends BrokerFilter {
         }
     }
     
+    @Override
     public void isFull(ConnectionContext context,Destination destination,Usage usage) {
         super.isFull(context,destination, usage);
         try {
@@ -346,6 +362,7 @@ public class AdvisoryBroker extends BrokerFilter {
         }
     }
     
+    @Override
     public void nowMasterBroker() {   
         super.nowMasterBroker();
         try {

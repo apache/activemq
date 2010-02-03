@@ -40,7 +40,7 @@ public class SimpleQueueTest extends SimpleTopicTest {
     @Override
     protected PerfConsumer createConsumer(ConnectionFactory fac, Destination dest, int number) throws JMSException {
         PerfConsumer consumer =  new PerfConsumer(fac, dest);
-        consumer.setInitialDelay(10000);
+        //consumer.setInitialDelay(10000);
         //consumer.setSleepDuration(10);
         boolean enableAudit = numberOfConsumers <= 1;
         System.err.println("Enable Audit = " + enableAudit);

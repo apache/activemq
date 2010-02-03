@@ -1418,7 +1418,7 @@ public class BrokerService implements Service {
      * JMS name
      */
     public Destination getDestination(ActiveMQDestination destination) throws Exception {
-        return getBroker().addDestination(getAdminConnectionContext(), destination);
+        return getBroker().addDestination(getAdminConnectionContext(), destination,false);
     }
 
     public void removeDestination(ActiveMQDestination destination) throws Exception {
@@ -1886,7 +1886,7 @@ public class BrokerService implements Service {
             ConnectionContext adminConnectionContext = getAdminConnectionContext();
             for (int i = 0; i < destinations.length; i++) {
                 ActiveMQDestination destination = destinations[i];
-                getBroker().addDestination(adminConnectionContext, destination);
+                getBroker().addDestination(adminConnectionContext, destination,true);
             }
         }
     }
@@ -2054,7 +2054,7 @@ public class BrokerService implements Service {
             }
             while (iter.hasNext()) {
                 ActiveMQDestination destination = (ActiveMQDestination) iter.next();
-                broker.addDestination(adminConnectionContext, destination);
+                broker.addDestination(adminConnectionContext, destination,false);
             }
         }
     }

@@ -17,9 +17,7 @@
 package org.apache.activemq.xbean;
 
 import java.net.URI;
-
 import junit.framework.TestCase;
-
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
@@ -54,7 +52,7 @@ public class XBeanConfigTest extends TestCase {
         // Validate the system properties are being evaluated in xbean.
         assertEquals("testbroker", brokerService.getBrokerName());
 
-        Topic topic = (Topic)broker.addDestination(context, new ActiveMQTopic("FOO.BAR"));
+        Topic topic = (Topic)broker.addDestination(context, new ActiveMQTopic("FOO.BAR"),true);
         DispatchPolicy dispatchPolicy = topic.getDispatchPolicy();
         assertTrue("dispatchPolicy should be RoundRobinDispatchPolicy: " + dispatchPolicy, dispatchPolicy instanceof RoundRobinDispatchPolicy);
 
@@ -66,7 +64,7 @@ public class XBeanConfigTest extends TestCase {
         LOG.info("dispatchPolicy: " + dispatchPolicy);
         LOG.info("subscriptionRecoveryPolicy: " + subscriptionRecoveryPolicy);
 
-        topic = (Topic)broker.addDestination(context, new ActiveMQTopic("ORDERS.BOOKS"));
+        topic = (Topic)broker.addDestination(context, new ActiveMQTopic("ORDERS.BOOKS"),true);
         dispatchPolicy = topic.getDispatchPolicy();
         assertTrue("dispatchPolicy should be StrictOrderDispatchPolicy: " + dispatchPolicy, dispatchPolicy instanceof StrictOrderDispatchPolicy);
 
@@ -81,6 +79,7 @@ public class XBeanConfigTest extends TestCase {
         LOG.info("subscriptionRecoveryPolicy: " + subscriptionRecoveryPolicy);
     }
 
+    @Override
     protected void setUp() throws Exception {
         System.setProperty("brokername", "testbroker");
         brokerService = createBroker();
@@ -106,6 +105,7 @@ public class XBeanConfigTest extends TestCase {
         assertNotNull("No broker created!");
     }
 
+    @Override
     protected void tearDown() throws Exception {
         if (brokerService != null) {
             brokerService.stop();

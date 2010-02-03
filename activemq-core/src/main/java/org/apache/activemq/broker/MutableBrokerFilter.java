@@ -145,8 +145,8 @@ public class MutableBrokerFilter implements Broker {
         return getNext().getClients();
     }
 
-    public Destination addDestination(ConnectionContext context, ActiveMQDestination destination) throws Exception {
-        return getNext().addDestination(context, destination);
+    public Destination addDestination(ConnectionContext context, ActiveMQDestination destination,boolean createIfTemporary) throws Exception {
+        return getNext().addDestination(context, destination,createIfTemporary);
     }
 
     public void removeDestination(ConnectionContext context, ActiveMQDestination destination, long timeout) throws Exception {

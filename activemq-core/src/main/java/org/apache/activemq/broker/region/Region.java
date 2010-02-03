@@ -18,7 +18,6 @@ package org.apache.activemq.broker.region;
 
 import java.util.Map;
 import java.util.Set;
-
 import org.apache.activemq.Service;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.ConsumerBrokerExchange;
@@ -49,10 +48,11 @@ public interface Region extends Service {
      * 
      * @param context
      * @param destination the destination to create.
+     * @param createIfTemporary 
      * @return TODO
      * @throws Exception TODO
      */
-    Destination addDestination(ConnectionContext context, ActiveMQDestination destination) throws Exception;
+    Destination addDestination(ConnectionContext context, ActiveMQDestination destination, boolean createIfTemporary) throws Exception;
     
     /**
      * Used to destroy a destination.  

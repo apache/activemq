@@ -18,7 +18,6 @@ package org.apache.activemq.broker.util;
 
 import java.io.IOException;
 import java.util.Set;
-
 import org.apache.activemq.broker.BrokerPluginSupport;
 import org.apache.activemq.broker.Connection;
 import org.apache.activemq.broker.ConnectionContext;
@@ -147,6 +146,7 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport implements
         this.logInternalEvents = logInternalEvents;
     }
 
+    @Override
     public void acknowledge(ConsumerBrokerExchange consumerExchange,
             MessageAck ack) throws Exception {
         if (isLogAll() || isLogConsumerEvents()) {
@@ -162,6 +162,7 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport implements
         super.acknowledge(consumerExchange, ack);
     }
 
+    @Override
     public Response messagePull(ConnectionContext context, MessagePull pull)
             throws Exception {
         if (isLogAll() || isLogConsumerEvents()) {
@@ -171,6 +172,7 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport implements
         return super.messagePull(context, pull);
     }
 
+    @Override
     public void addConnection(ConnectionContext context, ConnectionInfo info)
             throws Exception {
         if (isLogAll() || isLogConnectionEvents()) {
@@ -179,6 +181,7 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport implements
         super.addConnection(context, info);
     }
 
+    @Override
     public Subscription addConsumer(ConnectionContext context, ConsumerInfo info)
             throws Exception {
         if (isLogAll() || isLogConsumerEvents()) {
@@ -187,6 +190,7 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport implements
         return super.addConsumer(context, info);
     }
 
+    @Override
     public void addProducer(ConnectionContext context, ProducerInfo info)
             throws Exception {
         if (isLogAll() || isLogProducerEvents()) {
@@ -195,6 +199,7 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport implements
         super.addProducer(context, info);
     }
 
+    @Override
     public void commitTransaction(ConnectionContext context, TransactionId xid,
             boolean onePhase) throws Exception {
         if (isLogAll() || isLogTransactionEvents()) {
@@ -203,6 +208,7 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport implements
         super.commitTransaction(context, xid, onePhase);
     }
 
+    @Override
     public void removeSubscription(ConnectionContext context,
             RemoveSubscriptionInfo info) throws Exception {
         if (isLogAll() || isLogConsumerEvents()) {
@@ -211,6 +217,7 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport implements
         super.removeSubscription(context, info);
     }
 
+    @Override
     public TransactionId[] getPreparedTransactions(ConnectionContext context)
             throws Exception {
 
@@ -228,6 +235,7 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport implements
         return result;
     }
 
+    @Override
     public int prepareTransaction(ConnectionContext context, TransactionId xid)
             throws Exception {
         if (isLogAll() || isLogTransactionEvents()) {
@@ -236,6 +244,7 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport implements
         return super.prepareTransaction(context, xid);
     }
 
+    @Override
     public void removeConnection(ConnectionContext context,
             ConnectionInfo info, Throwable error) throws Exception {
         if (isLogAll() || isLogConnectionEvents()) {
@@ -244,6 +253,7 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport implements
         super.removeConnection(context, info, error);
     }
 
+    @Override
     public void removeConsumer(ConnectionContext context, ConsumerInfo info)
             throws Exception {
         if (isLogAll() || isLogConsumerEvents()) {
@@ -252,6 +262,7 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport implements
         super.removeConsumer(context, info);
     }
 
+    @Override
     public void removeProducer(ConnectionContext context, ProducerInfo info)
             throws Exception {
         if (isLogAll() || isLogProducerEvents()) {
@@ -260,6 +271,7 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport implements
         super.removeProducer(context, info);
     }
 
+    @Override
     public void rollbackTransaction(ConnectionContext context, TransactionId xid)
             throws Exception {
         if (isLogAll() || isLogTransactionEvents()) {
@@ -268,6 +280,7 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport implements
         super.rollbackTransaction(context, xid);
     }
 
+    @Override
     public void send(ProducerBrokerExchange producerExchange,
             Message messageSend) throws Exception {
         if (isLogAll() || isLogProducerEvents()) {
@@ -276,6 +289,7 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport implements
         super.send(producerExchange, messageSend);
     }
 
+    @Override
     public void beginTransaction(ConnectionContext context, TransactionId xid)
             throws Exception {
         if (isLogAll() || isLogTransactionEvents()) {
@@ -284,6 +298,7 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport implements
         super.beginTransaction(context, xid);
     }
 
+    @Override
     public void forgetTransaction(ConnectionContext context,
             TransactionId transactionId) throws Exception {
         if (isLogAll() || isLogTransactionEvents()) {
@@ -293,6 +308,7 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport implements
         super.forgetTransaction(context, transactionId);
     }
 
+    @Override
     public Connection[] getClients() throws Exception {
         Connection[] result = super.getClients();
 
@@ -311,17 +327,19 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport implements
         return super.getClients();
     }
 
+    @Override
     public org.apache.activemq.broker.region.Destination addDestination(
-            ConnectionContext context, ActiveMQDestination destination)
+            ConnectionContext context, ActiveMQDestination destination,boolean create)
             throws Exception {
         if (isLogAll() || isLogInternalEvents()) {
             LOG.info("Adding destination : "
                     + destination.getDestinationTypeAsString() + ":"
                     + destination.getPhysicalName());
         }
-        return super.addDestination(context, destination);
+        return super.addDestination(context, destination,create);
     }
 
+    @Override
     public void removeDestination(ConnectionContext context,
             ActiveMQDestination destination, long timeout) throws Exception {
         if (isLogAll() || isLogInternalEvents()) {
@@ -332,6 +350,7 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport implements
         super.removeDestination(context, destination, timeout);
     }
 
+    @Override
     public ActiveMQDestination[] getDestinations() throws Exception {
         ActiveMQDestination[] result = super.getDestinations();
         if (isLogAll() || isLogInternalEvents()) {
@@ -349,6 +368,7 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport implements
         return result;
     }
 
+    @Override
     public void start() throws Exception {
         if (isLogAll() || isLogInternalEvents()) {
             LOG.info("Starting " + getBrokerName());
@@ -356,6 +376,7 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport implements
         super.start();
     }
 
+    @Override
     public void stop() throws Exception {
         if (isLogAll() || isLogInternalEvents()) {
             LOG.info("Stopping " + getBrokerName());
@@ -363,6 +384,7 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport implements
         super.stop();
     }
 
+    @Override
     public void addSession(ConnectionContext context, SessionInfo info)
             throws Exception {
         if (isLogAll() || isLogConnectionEvents()) {
@@ -371,6 +393,7 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport implements
         super.addSession(context, info);
     }
 
+    @Override
     public void removeSession(ConnectionContext context, SessionInfo info)
             throws Exception {
         if (isLogAll() || isLogConnectionEvents()) {
@@ -379,6 +402,7 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport implements
         super.removeSession(context, info);
     }
 
+    @Override
     public void addBroker(Connection connection, BrokerInfo info) {
         if (isLogAll() || isLogInternalEvents()) {
             LOG.info("Adding Broker " + info.getBrokerName());
@@ -386,6 +410,7 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport implements
         super.addBroker(connection, info);
     }
 
+    @Override
     public void removeBroker(Connection connection, BrokerInfo info) {
         if (isLogAll() || isLogInternalEvents()) {
             LOG.info("Removing Broker " + info.getBrokerName());
@@ -393,6 +418,7 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport implements
         super.removeBroker(connection, info);
     }
 
+    @Override
     public BrokerInfo[] getPeerBrokerInfos() {
         BrokerInfo[] result = super.getPeerBrokerInfos();
         if (isLogAll() || isLogInternalEvents()) {
@@ -410,6 +436,7 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport implements
         return result;
     }
 
+    @Override
     public void preProcessDispatch(MessageDispatch messageDispatch) {
         if (isLogAll() || isLogInternalEvents() || isLogConsumerEvents()) {
             LOG.info("preProcessDispatch :" + messageDispatch);
@@ -417,6 +444,7 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport implements
         super.preProcessDispatch(messageDispatch);
     }
 
+    @Override
     public void postProcessDispatch(MessageDispatch messageDispatch) {
         if (isLogAll() || isLogInternalEvents() || isLogConsumerEvents()) {
             LOG.info("postProcessDispatch :" + messageDispatch);
@@ -424,6 +452,7 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport implements
         super.postProcessDispatch(messageDispatch);
     }
 
+    @Override
     public void processDispatchNotification(
             MessageDispatchNotification messageDispatchNotification)
             throws Exception {
@@ -434,6 +463,7 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport implements
         super.processDispatchNotification(messageDispatchNotification);
     }
 
+    @Override
     public Set<ActiveMQDestination> getDurableDestinations() {
         Set<ActiveMQDestination> result = super.getDurableDestinations();
         if (isLogAll() || isLogInternalEvents()) {
@@ -451,6 +481,7 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport implements
         return result;
     }
 
+    @Override
     public void addDestinationInfo(ConnectionContext context,
             DestinationInfo info) throws Exception {
         if (isLogAll() || isLogInternalEvents()) {
@@ -459,6 +490,7 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport implements
         super.addDestinationInfo(context, info);
     }
 
+    @Override
     public void removeDestinationInfo(ConnectionContext context,
             DestinationInfo info) throws Exception {
         if (isLogAll() || isLogInternalEvents()) {
@@ -467,6 +499,7 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport implements
         super.removeDestinationInfo(context, info);
     }
 
+    @Override
     public void messageExpired(ConnectionContext context,
             MessageReference message) {
         if (isLogAll() || isLogInternalEvents()) {
@@ -480,6 +513,7 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport implements
         super.messageExpired(context, message);
     }
 
+    @Override
     public void sendToDeadLetterQueue(ConnectionContext context,
             MessageReference messageReference) {
         if (isLogAll() || isLogInternalEvents()) {
@@ -492,6 +526,7 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport implements
         }
     }
 
+    @Override
     public void fastProducer(ConnectionContext context,
             ProducerInfo producerInfo) {
         if (isLogAll() || isLogProducerEvents() || isLogInternalEvents()) {
@@ -500,6 +535,7 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport implements
         super.fastProducer(context, producerInfo);
     }
 
+    @Override
     public void isFull(ConnectionContext context, Destination destination,
             Usage usage) {
         if (isLogAll() || isLogProducerEvents() || isLogInternalEvents()) {
@@ -508,6 +544,7 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport implements
         super.isFull(context, destination, usage);
     }
 
+    @Override
     public void messageConsumed(ConnectionContext context,
             MessageReference messageReference) {
         if (isLogAll() || isLogConsumerEvents() || isLogInternalEvents()) {
@@ -521,6 +558,7 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport implements
         super.messageConsumed(context, messageReference);
     }
 
+    @Override
     public void messageDelivered(ConnectionContext context,
             MessageReference messageReference) {
         if (isLogAll() || isLogConsumerEvents() || isLogInternalEvents()) {
@@ -534,6 +572,7 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport implements
         super.messageDelivered(context, messageReference);
     }
 
+    @Override
     public void messageDiscarded(ConnectionContext context,
             MessageReference messageReference) {
         if (isLogAll() || isLogInternalEvents()) {
@@ -547,6 +586,7 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport implements
         super.messageDiscarded(context, messageReference);
     }
 
+    @Override
     public void slowConsumer(ConnectionContext context,
             Destination destination, Subscription subs) {
         if (isLogAll() || isLogConsumerEvents() || isLogInternalEvents()) {
@@ -561,6 +601,7 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport implements
         super.slowConsumer(context, destination, subs);
     }
 
+    @Override
     public void nowMasterBroker() {
         if (isLogAll() || isLogInternalEvents()) {
             LOG.info("Is now the master broker : " + getBrokerName());
@@ -568,6 +609,7 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport implements
         super.nowMasterBroker();
     }
 
+    @Override
     public String toString() {
         StringBuffer buf = new StringBuffer();
         buf.append("LoggingBrokerPlugin(");

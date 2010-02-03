@@ -137,7 +137,7 @@ public class ErrorBroker implements Broker {
         throw new BrokerStoppedException(this.message);
     }
 
-    public Destination addDestination(ConnectionContext context, ActiveMQDestination destination) throws Exception {
+    public Destination addDestination(ConnectionContext context, ActiveMQDestination destination,boolean flag) throws Exception {
         throw new BrokerStoppedException(this.message);
     }
 

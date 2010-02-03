@@ -17,7 +17,6 @@
 package org.apache.activemq.broker.region;
 
 import junit.framework.Test;
-
 import org.apache.activemq.CombinationTestSupport;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQDestination;
@@ -28,6 +27,7 @@ public class DestinationRemoveRestartTest extends CombinationTestSupport {
     public byte destinationType;
     BrokerService broker;
 
+    @Override
     protected void setUp() throws Exception {
         broker = createBroker();
     }
@@ -40,6 +40,7 @@ public class DestinationRemoveRestartTest extends CombinationTestSupport {
         return broker;
     }
 
+    @Override
     protected void tearDown() throws Exception {
         broker.stop();
     }
@@ -63,7 +64,7 @@ public class DestinationRemoveRestartTest extends CombinationTestSupport {
         
         ActiveMQDestination amqDestination = 
             ActiveMQDestination.createDestination(destinationName, destinationType);
-        broker.getRegionBroker().addDestination(broker.getAdminConnectionContext(), (ActiveMQDestination) amqDestination);
+        broker.getRegionBroker().addDestination(broker.getAdminConnectionContext(), amqDestination,true);
         
         final ActiveMQDestination[] list = broker.getRegionBroker().getDestinations();
         for (final ActiveMQDestination element : list) {

@@ -17,7 +17,6 @@
 package org.apache.activemq.security;
 
 import java.util.Set;
-
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.BrokerFilter;
 import org.apache.activemq.broker.ConnectionContext;
@@ -47,20 +46,22 @@ public class AuthorizationBroker extends BrokerFilter implements SecurityAdminMB
         this.authorizationMap = authorizationMap;
     }
            
+    @Override
     public void addDestinationInfo(ConnectionContext context, DestinationInfo info) throws Exception {
-        addDestination(context, info.getDestination());
+        addDestination(context, info.getDestination(),true);
         super.addDestinationInfo(context, info);
     }
 
-    public Destination addDestination(ConnectionContext context, ActiveMQDestination destination) throws Exception {
-        final SecurityContext securityContext = (SecurityContext)context.getSecurityContext();
+    @Override
+    public Destination addDestination(ConnectionContext context, ActiveMQDestination destination,boolean create) throws Exception {
+        final SecurityContext securityContext = context.getSecurityContext();
         if (securityContext == null) {
             throw new SecurityException("User is not authenticated.");
         }
         
         Destination existing = this.getDestinationMap().get(destination);
         if (existing != null) {
-        	return super.addDestination(context, destination);
+        	return super.addDestination(context, destination,create);
         }
         
         if (!securityContext.isBrokerContext()) {
@@ -77,12 +78,13 @@ public class AuthorizationBroker extends BrokerFilter implements SecurityAdminMB
 
         }
 
-        return super.addDestination(context, destination);
+        return super.addDestination(context, destination,create);
     }
 
+    @Override
     public void removeDestination(ConnectionContext context, ActiveMQDestination destination, long timeout) throws Exception {
 
-        final SecurityContext securityContext = (SecurityContext)context.getSecurityContext();
+        final SecurityContext securityContext = context.getSecurityContext();
         if (securityContext == null) {
             throw new SecurityException("User is not authenticated.");
         }
@@ -99,9 +101,10 @@ public class AuthorizationBroker extends BrokerFilter implements SecurityAdminMB
         super.removeDestination(context, destination, timeout);
     }
 
+    @Override
     public Subscription addConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
 
-        final SecurityContext subject = (SecurityContext)context.getSecurityContext();
+        final SecurityContext subject = context.getSecurityContext();
         if (subject == null) {
             throw new SecurityException("User is not authenticated.");
         }
@@ -141,9 +144,10 @@ public class AuthorizationBroker extends BrokerFilter implements SecurityAdminMB
         return super.addConsumer(context, info);
     }
 
+    @Override
     public void addProducer(ConnectionContext context, ProducerInfo info) throws Exception {
 
-        SecurityContext subject = (SecurityContext)context.getSecurityContext();
+        SecurityContext subject = context.getSecurityContext();
         if (subject == null) {
             throw new SecurityException("User is not authenticated.");
         }
@@ -164,8 +168,9 @@ public class AuthorizationBroker extends BrokerFilter implements SecurityAdminMB
         super.addProducer(context, info);
     }
 
+    @Override
     public void send(ProducerBrokerExchange producerExchange, Message messageSend) throws Exception {
-        SecurityContext subject = (SecurityContext)producerExchange.getConnectionContext().getSecurityContext();
+        SecurityContext subject = producerExchange.getConnectionContext().getSecurityContext();
         if (subject == null) {
             throw new SecurityException("User is not authenticated.");
         }

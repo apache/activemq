@@ -21,10 +21,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-
 import javax.jms.InvalidDestinationException;
 import javax.jms.JMSException;
-
 import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
@@ -59,12 +57,13 @@ public class TopicRegion extends AbstractRegion {
 
     }
 
+    @Override
     public Subscription addConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
         if (info.isDurable()) {
             ActiveMQDestination destination = info.getDestination();
             if (!destination.isPattern()) {
                 // Make sure the destination is created.
-                lookup(context, destination);
+                lookup(context, destination,true);
             }
             String clientId = context.getClientId();
             String subscriptionName = info.getSubscriptionName();
@@ -113,6 +112,7 @@ public class TopicRegion extends AbstractRegion {
         }
     }
 
+    @Override
     public void removeConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
         if (info.isDurable()) {
 
@@ -127,6 +127,7 @@ public class TopicRegion extends AbstractRegion {
         }
     }
 
+    @Override
     public void removeSubscription(ConnectionContext context, RemoveSubscriptionInfo info) throws Exception {
         SubscriptionKey key = new SubscriptionKey(info.getClientId(), info.getSubscriptionName());
         DurableTopicSubscription sub = durableSubscriptions.get(key);
@@ -151,6 +152,7 @@ public class TopicRegion extends AbstractRegion {
         super.removeConsumer(context, sub.getConsumerInfo());
     }
 
+    @Override
     public String toString() {
         return "TopicRegion: destinations=" + destinations.size() + ", subscriptions=" + subscriptions.size() + ", memory=" + usageManager.getMemoryUsage().getPercentUsage() + "%";
     }
@@ -234,6 +236,7 @@ public class TopicRegion extends AbstractRegion {
         }
     }
 
+    @Override
     protected Subscription createSubscription(ConnectionContext context, ConsumerInfo info) throws JMSException {
         ActiveMQDestination destination = info.getDestination();
         
@@ -290,6 +293,7 @@ public class TopicRegion extends AbstractRegion {
         return !info1.getDestination().equals(info2.getDestination());
     }
 
+    @Override
     protected Set<ActiveMQDestination> getInactiveDestinations() {
         Set<ActiveMQDestination> inactiveDestinations = super.getInactiveDestinations();
         for (Iterator<ActiveMQDestination> iter = inactiveDestinations.iterator(); iter.hasNext();) {

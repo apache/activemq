@@ -23,9 +23,7 @@ import java.lang.reflect.Method;
 import java.net.URI;
 import java.net.URL;
 import java.util.concurrent.atomic.AtomicInteger;
-
 import javax.management.ObjectName;
-
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.ConnectionContext;
@@ -237,11 +235,11 @@ public class BrokerView implements BrokerViewMBean {
     }
 
     public void addTopic(String name) throws Exception {
-        broker.addDestination(getConnectionContext(broker.getContextBroker()), new ActiveMQTopic(name));
+        broker.addDestination(getConnectionContext(broker.getContextBroker()), new ActiveMQTopic(name),true);
     }
 
     public void addQueue(String name) throws Exception {
-        broker.addDestination(getConnectionContext(broker.getContextBroker()), new ActiveMQQueue(name));
+        broker.addDestination(getConnectionContext(broker.getContextBroker()), new ActiveMQQueue(name),true);
     }
 
     public void removeTopic(String name) throws Exception {

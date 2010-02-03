@@ -56,7 +56,7 @@ public class AMQ2571Test extends EmbeddedBrokerTestSupport {
             Thread sendingThread = new Thread(new Runnable() {
                 public void run() {
                     try {
-                        for (int i = 0; i < 5000; i++) {
+                        for (int i = 0; i < 100000; i++) {
                             producerB.send(message);
                         }
                     } catch (JMSException e) {
@@ -76,7 +76,7 @@ public class AMQ2571Test extends EmbeddedBrokerTestSupport {
 
             // Sleep for a while to make sure that we should know that the
             // TempQueue is gone.
-            Thread.sleep(5000);
+            //Thread.sleep(50);
 
             // Now we test if we are able to send again.
             try {

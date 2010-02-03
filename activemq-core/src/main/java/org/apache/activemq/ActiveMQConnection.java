@@ -33,7 +33,6 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-
 import javax.jms.Connection;
 import javax.jms.ConnectionConsumer;
 import javax.jms.ConnectionMetaData;
@@ -41,6 +40,7 @@ import javax.jms.DeliveryMode;
 import javax.jms.Destination;
 import javax.jms.ExceptionListener;
 import javax.jms.IllegalStateException;
+import javax.jms.InvalidDestinationException;
 import javax.jms.JMSException;
 import javax.jms.Queue;
 import javax.jms.QueueConnection;
@@ -51,8 +51,7 @@ import javax.jms.Topic;
 import javax.jms.TopicConnection;
 import javax.jms.TopicSession;
 import javax.jms.XAConnection;
-import javax.jms.InvalidDestinationException;
-
+import org.apache.activemq.advisory.DestinationSource;
 import org.apache.activemq.blob.BlobTransferPolicy;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQMessage;
@@ -97,7 +96,6 @@ import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.util.JMSExceptionSupport;
 import org.apache.activemq.util.LongSequenceGenerator;
 import org.apache.activemq.util.ServiceSupport;
-import org.apache.activemq.advisory.DestinationSource;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -182,9 +180,9 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
 
     // Assume that protocol is the latest. Change to the actual protocol
     // version when a WireFormatInfo is received.
-    private AtomicInteger protocolVersion = new AtomicInteger(CommandTypes.PROTOCOL_VERSION);
-    private long timeCreated;
-    private ConnectionAudit connectionAudit = new ConnectionAudit();
+    private final AtomicInteger protocolVersion = new AtomicInteger(CommandTypes.PROTOCOL_VERSION);
+    private final long timeCreated;
+    private final ConnectionAudit connectionAudit = new ConnectionAudit();
     private DestinationSource destinationSource;
     private final Object ensureConnectionInfoSentMutex = new Object();
     private boolean useDedicatedTaskRunner;
@@ -1906,12 +1904,12 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
 
         activeTempDestinations.remove(destination);
 
-        DestinationInfo info = new DestinationInfo();
-        info.setConnectionId(this.info.getConnectionId());
-        info.setOperationType(DestinationInfo.REMOVE_OPERATION_TYPE);
-        info.setDestination(destination);
-        info.setTimeout(0);
-        syncSendPacket(info);
+        DestinationInfo destInfo = new DestinationInfo();
+        destInfo.setConnectionId(this.info.getConnectionId());
+        destInfo.setOperationType(DestinationInfo.REMOVE_OPERATION_TYPE);
+        destInfo.setDestination(destination);
+        destInfo.setTimeout(0);
+        syncSendPacket(destInfo);
     }
 
     public boolean isDeleted(ActiveMQDestination dest) {
@@ -2199,6 +2197,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
         this.copyMessageOnSend = copyMessageOnSend;
     }
 
+    @Override
     public String toString() {
         return "ActiveMQConnection {id=" + info.getConnectionId() + ",clientId=" + info.getClientId() + ",started=" + started.get() + "}";
     }

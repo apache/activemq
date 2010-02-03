@@ -263,7 +263,7 @@ public class RegionBroker extends EmptyBroker {
     }
 
     @Override
-    public Destination addDestination(ConnectionContext context, ActiveMQDestination destination) throws Exception {
+    public Destination addDestination(ConnectionContext context, ActiveMQDestination destination,boolean create) throws Exception {
 
         Destination answer;
 
@@ -274,16 +274,16 @@ public class RegionBroker extends EmptyBroker {
 
         switch (destination.getDestinationType()) {
         case ActiveMQDestination.QUEUE_TYPE:
-            answer = queueRegion.addDestination(context, destination);
+            answer = queueRegion.addDestination(context, destination,true);
             break;
         case ActiveMQDestination.TOPIC_TYPE:
-            answer = topicRegion.addDestination(context, destination);
+            answer = topicRegion.addDestination(context, destination,true);
             break;
         case ActiveMQDestination.TEMP_QUEUE_TYPE:
-            answer = tempQueueRegion.addDestination(context, destination);
+            answer = tempQueueRegion.addDestination(context, destination,create);
             break;
         case ActiveMQDestination.TEMP_TOPIC_TYPE:
-            answer = tempTopicRegion.addDestination(context, destination);
+            answer = tempTopicRegion.addDestination(context, destination,create);
             break;
         default:
             throw createUnknownDestinationTypeException(destination);
@@ -321,7 +321,7 @@ public class RegionBroker extends EmptyBroker {
 
     @Override
     public void addDestinationInfo(ConnectionContext context, DestinationInfo info) throws Exception {
-        addDestination(context, info.getDestination());
+        addDestination(context, info.getDestination(),true);
 
     }
 
@@ -349,7 +349,7 @@ public class RegionBroker extends EmptyBroker {
         if (destination != null) {
 
             // This seems to cause the destination to be added but without advisories firing...
-            context.getBroker().addDestination(context, destination);
+            context.getBroker().addDestination(context, destination,false);
             switch (destination.getDestinationType()) {
             case ActiveMQDestination.QUEUE_TYPE:
                 queueRegion.addProducer(context, info);
@@ -441,7 +441,7 @@ public class RegionBroker extends EmptyBroker {
         if (producerExchange.isMutable() || producerExchange.getRegion() == null) {
             ActiveMQDestination destination = message.getDestination();
             // ensure the destination is registered with the RegionBroker
-            producerExchange.getConnectionContext().getBroker().addDestination(producerExchange.getConnectionContext(), destination);
+            producerExchange.getConnectionContext().getBroker().addDestination(producerExchange.getConnectionContext(), destination,false);
             Region region;
             switch (destination.getDestinationType()) {
             case ActiveMQDestination.QUEUE_TYPE:

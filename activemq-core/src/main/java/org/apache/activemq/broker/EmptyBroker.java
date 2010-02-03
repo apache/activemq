@@ -134,7 +134,7 @@ public class EmptyBroker implements Broker {
 
     }
 
-    public Destination addDestination(ConnectionContext context, ActiveMQDestination destination) throws Exception {
+    public Destination addDestination(ConnectionContext context, ActiveMQDestination destination,boolean flag) throws Exception {
 
         return null;
     }
