@@ -54,7 +54,7 @@
     <commons-io-version>1.4</commons-io-version>
     <commons-lang-version>2.4</commons-lang-version>
     <commons-logging-version>1.1</commons-logging-version>
-    <commons-pool-version>1.4</commons-pool-version>
+    <commons-pool-version>1.5.4</commons-pool-version>
     <commons-primitives-version>1.0</commons-primitives-version>
     <directory-version>1.5.5</directory-version>
     <geronimo-version>1.0</geronimo-version>
