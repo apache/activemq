@@ -40,6 +40,8 @@
       <outputDirectory>/</outputDirectory>
       <includes>
         <include>bin/*.bat</include>
+		 <include>bin/activemq</include>
+		 <include>bin/activemq-admin</include>
         <include>bin/win32/*.bat</include>
         <include>bin/win32/*.conf</include>
       </includes>
