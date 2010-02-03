@@ -165,7 +165,7 @@ public class URISupport {
 
         CompositeData rc = new CompositeData();
         rc.scheme = uri.getScheme();
-        String ssp = stripPrefix(uri.getSchemeSpecificPart().trim(), "//").trim();
+        String ssp = stripPrefix(uri.getRawSchemeSpecificPart().trim(), "//").trim();
 
         parseComposite(uri, rc, ssp);
 
