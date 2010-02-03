@@ -498,6 +498,9 @@
              
              <exclude>**/NetworkConnectionsCleanedupTest.*/**</exclude>
              
+             <!-- used just to test potential memory leaks manually -->
+             <exclude>**/JDBCTestMemory.*</exclude>
+             
              <exclude>**/amq1490/*</exclude>
              <exclude>**/AMQ1925*</exclude>
              <exclude>**/archive/*</exclude>

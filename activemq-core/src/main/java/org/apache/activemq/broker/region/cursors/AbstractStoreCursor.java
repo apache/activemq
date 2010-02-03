@@ -86,7 +86,9 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
             clearIterator(true);
             recovered = true;
         } else {
-            LOG.error(regionDestination.getActiveMQDestination().getPhysicalName() + " cursor got duplicate: " + message);
+            if (LOG.isDebugEnabled()) {
+                LOG.debug(regionDestination.getActiveMQDestination().getPhysicalName() + " cursor got duplicate: " + message);
+            }
             storeHasMessages = true;
         }
         return recovered;
@@ -160,6 +162,10 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
             recoverMessage(node.getMessage(),true);
             lastCachedId = node.getMessageId();
         } else {
+            if (lastCachedId != null && node.getMessageId().getBrokerSequenceId() < lastCachedId.getBrokerSequenceId()) {
+                lastCachedId = node.getMessageId();
+                setBatch(lastCachedId);
+            }
             if (cacheEnabled) {
                 cacheEnabled=false;
                 if (LOG.isDebugEnabled()) {
