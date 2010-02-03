@@ -18,6 +18,7 @@ package org.apache.activemq.broker.region.cursors;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Properties;
@@ -155,7 +156,7 @@ public class NegativeQueueTest extends TestCase {
         MessageProducer producer = session.createProducer(queue);
         List<TextMessage> senderList = new ArrayList<TextMessage>();
         for (int i = 0; i < MESSAGE_COUNT; i++) {
-            TextMessage msg = session.createTextMessage(formatter.format(new Date()));
+            TextMessage msg = session.createTextMessage(i + " " + formatter.format(new Date()));
             senderList.add(msg);
             producer.send(msg);
             if(TRANSACTED) session.commit();
@@ -259,6 +260,7 @@ public class NegativeQueueTest extends TestCase {
         super.tearDown();
         if (broker != null) {
             broker.stop();
+            broker.waitUntilStopped();
         }
     }
 
@@ -276,6 +278,7 @@ public class NegativeQueueTest extends TestCase {
         BrokerService answer = new BrokerService();
         configureBroker(answer);
         answer.start();
+        answer.waitUntilStarted();
         return answer;
     }
     

@@ -740,9 +740,6 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
             int maxReturned, JDBCMessageRecoveryListener listener) throws Exception {
         PreparedStatement s = null;
         ResultSet rs = null;
-        long id = 0;
-        List<Long> cleanupIds = new ArrayList<Long>();
-        int index = 0;
         try {
             s = c.getConnection().prepareStatement(this.statements.getFindNextMessagesStatement());
             s.setMaxRows(maxReturned * 2);
@@ -752,15 +749,8 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
             int count = 0;
             if (this.statements.isUseExternalMessageReferences()) {
                 while (rs.next() && count < maxReturned) {
-                    id = rs.getLong(1);
-                    if (this.lastRecoveredMessagesIds.contains(id)) {
-                        // this message was already recovered
-                        cleanupIds.add(id);
-                        continue;
-                    }
                     if (listener.recoverMessageReference(rs.getString(1))) {
                         count++;
-                        this.lastRecoveredMessagesIds.add(id);
                     } else {
                         LOG.debug("Stopped recover next messages");
                         break;
@@ -768,26 +758,13 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
                 }
             } else {
                 while (rs.next() && count < maxReturned) {
-                    id = rs.getLong(1);
-                    if (this.lastRecoveredMessagesIds.contains(id)) {
-                        // this message was already recovered
-                        cleanupIds.add(id);
-                        continue;
-                    }
                     if (listener.recoverMessage(rs.getLong(1), getBinaryData(rs, 2))) {
                         count++;
-                        this.lastRecoveredMessagesIds.add(id);
                     } else {
                         LOG.debug("Stopped recover next messages");
                         break;
                     }
                 }
-            }
-            // not cleanup the list of recovered messages
-            index = 0;
-            Iterator<Long> it = cleanupIds.iterator();
-            while (it.hasNext() && index < count) {
-                this.lastRecoveredMessagesIds.remove(it.next());
             }
         } catch (Exception e) {
             e.printStackTrace();
