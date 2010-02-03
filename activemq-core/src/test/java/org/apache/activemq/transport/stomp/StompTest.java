@@ -273,6 +273,57 @@ public class StompTest extends CombinationTestSupport {
         assertEquals("GroupID", "abc", amqMessage.getGroupID());
     }
 
+    public void testReceipts() throws Exception {
+
+        StompConnection receiver = new StompConnection();
+        URI connectUri = new URI(bindAddress);
+        receiver.open(createSocket(connectUri));
+        String frame = "CONNECT\n" + "login: system\n" + "passcode: manager\n\n" + Stomp.NULL;
+        receiver.sendFrame(frame);
+
+        frame = receiver.receiveFrame();
+        assertTrue(frame.startsWith("CONNECTED"));
+
+        frame = "SUBSCRIBE\n" + "destination:/queue/" + getQueueName() + "\n" + "ack:auto\n\n" + Stomp.NULL;
+        receiver.sendFrame(frame);
+
+        frame = "CONNECT\n" + "login: system\n" + "passcode: manager\n\n" + Stomp.NULL;
+        stompConnection.sendFrame(frame);
+
+        frame = stompConnection.receiveFrame();
+        assertTrue(frame.startsWith("CONNECTED"));
+
+        frame = "SEND\n" + "destination:/queue/" + getQueueName() + "\n" + "receipt: msg-1\n" + "\n\n" + "Hello World" + Stomp.NULL;
+        stompConnection.sendFrame(frame);
+
+        frame = receiver.receiveFrame();
+        assertTrue(frame.startsWith("MESSAGE"));
+        assertTrue("Stomp Message does not contain receipt request", frame.indexOf(Stomp.Headers.RECEIPT_REQUESTED) == -1);
+
+        frame = stompConnection.receiveFrame();
+        assertTrue(frame.startsWith("RECEIPT"));
+        assertTrue("Receipt contains correct receipt-id", frame.indexOf(Stomp.Headers.Response.RECEIPT_ID) >= 0);
+
+        receiver.disconnect();
+
+
+        MessageConsumer consumer = session.createConsumer(queue);
+
+        frame = "SEND\n" + "destination:/queue/" + getQueueName() + "\n" + "receipt: msg-1\n" + "\n\n" + "Hello World" + Stomp.NULL;
+        stompConnection.sendFrame(frame);
+
+        frame = stompConnection.receiveFrame();
+        assertTrue(frame.startsWith("RECEIPT"));
+        assertTrue("Receipt contains correct receipt-id", frame.indexOf(Stomp.Headers.Response.RECEIPT_ID) >= 0);
+
+        TextMessage message = (TextMessage)consumer.receive(2500);
+        assertNotNull(message);
+        assertNull("JMS Message does not contain receipt request", message.getStringProperty(Stomp.Headers.RECEIPT_REQUESTED));
+
+        stompConnection.disconnect();
+
+    }
+
     public void testSubscribeWithAutoAck() throws Exception {
 
         String frame = "CONNECT\n" + "login: system\n" + "passcode: manager\n\n" + Stomp.NULL;

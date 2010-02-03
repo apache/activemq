@@ -120,6 +120,9 @@ public interface FrameTranslator {
                 msg.setPersistent("true".equals(o));
             }
 
+            // Stomp specific headers
+            o = headers.remove(Stomp.Headers.RECEIPT_REQUESTED);
+            
             // now the general headers
             msg.setProperties(headers);
         }
