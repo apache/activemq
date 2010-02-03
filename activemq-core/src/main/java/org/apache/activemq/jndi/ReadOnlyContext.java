@@ -23,7 +23,6 @@ import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Map;
-
 import javax.naming.Binding;
 import javax.naming.CompositeName;
 import javax.naming.Context;
@@ -38,6 +37,8 @@ import javax.naming.NotContextException;
 import javax.naming.OperationNotSupportedException;
 import javax.naming.Reference;
 import javax.naming.spi.NamingManager;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * A read-only Context <p/> This version assumes it and all its subcontext are
@@ -61,7 +62,7 @@ import javax.naming.spi.NamingManager;
  */
 @SuppressWarnings("unchecked")
 public class ReadOnlyContext implements Context, Serializable {
-
+    private static final Log LOG = LogFactory.getLog(ReadOnlyContext.class);
     public static final String SEPARATOR = "/";
     protected static final NameParser NAME_PARSER = new NameParserImpl();
     private static final long serialVersionUID = -5754338187296859149L;
@@ -95,7 +96,17 @@ public class ReadOnlyContext implements Context, Serializable {
         } else {
             this.environment = new Hashtable<String, Object>(environment);
         }
-        this.bindings = bindings;
+        this.bindings = new HashMap<String, Object>();
+        if (bindings != null) {
+            for (Map.Entry<String, Object> binding : bindings.entrySet()) {
+                try {
+                    internalBind(binding.getKey(), binding.getValue());
+                } catch (NamingException e) {
+                    LOG.error("Failed to bind " + binding.getKey() + "=" + binding.getValue(), e);
+                }
+            }
+        }
+
         treeBindings = new HashMap<String, Object>();
         frozen = true;
     }
@@ -373,7 +384,7 @@ public class ReadOnlyContext implements Context, Serializable {
     }
 
     private abstract class LocalNamingEnumeration implements NamingEnumeration {
-        private Iterator i = bindings.entrySet().iterator();
+        private final Iterator i = bindings.entrySet().iterator();
 
         public boolean hasMore() throws NamingException {
             return i.hasNext();
