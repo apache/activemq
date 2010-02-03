@@ -304,8 +304,10 @@ public class StompTest extends CombinationTestSupport {
         assertTrue(frame.startsWith("RECEIPT"));
         assertTrue("Receipt contains correct receipt-id", frame.indexOf(Stomp.Headers.Response.RECEIPT_ID) >= 0);
 
-        receiver.disconnect();
+        frame = "DISCONNECT\n" + "\n\n" + Stomp.NULL;
+        receiver.sendFrame(frame);
 
+        waitForFrameToTakeEffect();
 
         MessageConsumer consumer = session.createConsumer(queue);
 
@@ -320,8 +322,8 @@ public class StompTest extends CombinationTestSupport {
         assertNotNull(message);
         assertNull("JMS Message does not contain receipt request", message.getStringProperty(Stomp.Headers.RECEIPT_REQUESTED));
 
-        stompConnection.disconnect();
-
+        frame = "DISCONNECT\n" + "\n\n" + Stomp.NULL;
+        stompConnection.sendFrame(frame);
     }
 
     public void testSubscribeWithAutoAck() throws Exception {
