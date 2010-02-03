@@ -97,17 +97,16 @@ public class ReadOnlyContext implements Context, Serializable {
             this.environment = new Hashtable<String, Object>(environment);
         }
         this.bindings = new HashMap<String, Object>();
+        treeBindings = new HashMap<String, Object>();
         if (bindings != null) {
             for (Map.Entry<String, Object> binding : bindings.entrySet()) {
                 try {
                     internalBind(binding.getKey(), binding.getValue());
-                } catch (NamingException e) {
+                } catch (Throwable e) {
                     LOG.error("Failed to bind " + binding.getKey() + "=" + binding.getValue(), e);
                 }
             }
         }
-
-        treeBindings = new HashMap<String, Object>();
         frozen = true;
     }
 
