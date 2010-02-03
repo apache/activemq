@@ -41,11 +41,17 @@ public abstract class TextWireFormat implements WireFormat {
     public abstract String marshalText(Object command);
 
     public void marshal(Object command, DataOutput out) throws IOException {
-        out.writeUTF(marshalText(command));
+        String text = marshalText(command);
+        byte[] utf8 = text.getBytes("UTF-8");
+        out.writeInt(utf8.length);
+        out.write(utf8);
     }
 
     public Object unmarshal(DataInput in) throws IOException {
-        String text = in.readUTF();
+        int length = in.readInt();
+        byte[] utf8 = new byte[length];
+        in.readFully(utf8);
+        String text = new String(utf8, "UTF-8");
         return unmarshalText(text);
     }
 
@@ -63,9 +69,9 @@ public abstract class TextWireFormat implements WireFormat {
         return unmarshal(dis);
     }
 
-	public boolean inReceive() {
-		// TODO Implement for inactivity monitor
-		return false;
-	}
-    
+    public boolean inReceive() {
+        // TODO Implement for inactivity monitor
+        return false;
+    }
+
 }

@@ -19,16 +19,16 @@ package org.apache.activemq.transport.http;
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
-
 import javax.servlet.ServletException;
+import javax.servlet.ServletInputStream;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
 import org.apache.activemq.command.Command;
 import org.apache.activemq.command.WireFormatInfo;
 import org.apache.activemq.transport.TransportAcceptListener;
@@ -50,9 +50,10 @@ public class HttpTunnelServlet extends HttpServlet {
 
     private TransportAcceptListener listener;
     private TextWireFormat wireFormat;
-    private Map<String, BlockingQueueTransport> clients = new HashMap<String, BlockingQueueTransport>();
-    private long requestTimeout = 30000L;
+    private final Map<String, BlockingQueueTransport> clients = new HashMap<String, BlockingQueueTransport>();
+    private final long requestTimeout = 30000L;
 
+    @Override
     public void init() throws ServletException {
         super.init();
         listener = (TransportAcceptListener)getServletContext().getAttribute("acceptListener");
@@ -65,10 +66,12 @@ public class HttpTunnelServlet extends HttpServlet {
         }
     }
 
+    @Override
     protected void doHead(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         createTransportChannel(request, response);
     }
 
+    @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         // lets return the next response
         Command packet = null;
@@ -96,15 +99,19 @@ public class HttpTunnelServlet extends HttpServlet {
         }
     }
 
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException,
+            IOException {
 
-        // Read the command directly from the reader
-        Command command = (Command)wireFormat.unmarshalText(request.getReader());
+        // Read the command directly from the reader, assuming UTF8 encoding
+        ServletInputStream sis = request.getInputStream();
+        Command command = (Command) wireFormat.unmarshalText(new InputStreamReader(sis, "UTF-8"));
 
         if (command instanceof WireFormatInfo) {
-            WireFormatInfo info = (WireFormatInfo)command;
+            WireFormatInfo info = (WireFormatInfo) command;
             if (!canProcessWireFormatVersion(info.getVersion())) {
-                response.sendError(HttpServletResponse.SC_NOT_FOUND, "Cannot process wire format of version: " + info.getVersion());
+                response.sendError(HttpServletResponse.SC_NOT_FOUND, "Cannot process wire format of version: "
+                        + info.getVersion());
             }
 
         } else {
