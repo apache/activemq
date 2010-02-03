@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.test;
 
+import java.io.File;
 import java.lang.reflect.Array;
 
 import javax.jms.Connection;
@@ -168,6 +169,13 @@ public abstract class TestSupport extends TestCase {
         } else {
             assertEquals(message, m1, m2);
         }
+    }
+    
+    /**
+     * Test if base directory contains spaces
+     */
+    protected void assertBaseDirectoryContainsSpaces() {
+    	assertFalse("Base directory cannot contain spaces.", new File(System.getProperty("basedir", ".")).getAbsoluteFile().toString().contains(" "));
     }
 
     /**

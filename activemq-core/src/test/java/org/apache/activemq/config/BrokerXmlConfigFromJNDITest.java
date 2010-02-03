@@ -30,11 +30,8 @@ import org.apache.activemq.test.JmsTopicSendReceiveWithTwoConnectionsTest;
  */
 public class BrokerXmlConfigFromJNDITest extends JmsTopicSendReceiveWithTwoConnectionsTest {
     protected ActiveMQConnectionFactory createConnectionFactory() throws Exception {
-        // START SNIPPET: example
+        assertBaseDirectoryContainsSpaces();
 
-        
-//        System.err.print(System.getProperties());
-        
         // we could put these properties into a jndi.properties
         // on the classpath instead
         Hashtable properties = new Hashtable();
@@ -42,7 +39,6 @@ public class BrokerXmlConfigFromJNDITest extends JmsTopicSendReceiveWithTwoConne
 
         // configure the embedded broker using an XML config file
         // which is either a URL or a resource on the classpath
-        
         File f = new File(System.getProperty("basedir", "."), "/src/test/resources/activemq.xml");
         properties.put(Context.PROVIDER_URL, "vm://localhost?brokerConfig=xbean:" + f.toURI());
 
