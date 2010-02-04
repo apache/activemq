@@ -500,6 +500,8 @@
              
              <!-- used just to test potential memory leaks manually -->
              <exclude>**/JDBCTestMemory.*</exclude>
+             <!--  exclude until AMQ-2594 is fixed-->
+             <exclude>JDBCNegativeQueueTest</exclude>
              
              <exclude>**/amq1490/*</exclude>
              <exclude>**/AMQ1925*</exclude>

@@ -231,9 +231,8 @@ public class JDBCMessageStore extends AbstractMessageStore {
                     if (listener.hasSpace()) {
                         Message msg = (Message)wireFormat.unmarshal(new ByteSequence(data));
                         msg.getMessageId().setBrokerSequenceId(sequenceId);
-                        if (listener.recoverMessage(msg)) {
-                            lastMessageId.set(sequenceId);
-                        }
+                        listener.recoverMessage(msg);
+                        lastMessageId.set(sequenceId);
                         return true;
                     }
                     return false;
