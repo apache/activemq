@@ -31,7 +31,7 @@
 	    <script type='text/javascript' src='<c:url value="/js/css.js"/>'></script>
 	    <script type='text/javascript' src='<c:url value="/js/standardista-table-sorting.js"/>'></script>
 	    <script type='text/javascript' src='<c:url value="/js/prettify.js"/>'></script>
-	    <script>addEvent(window, 'load', prettyPrint)</script>
+	    <script>addEvent(window, 'load',  function (event) { prettyPrint() })</script>
     </c:if>
 
 	<decorator:head />
