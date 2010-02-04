@@ -423,10 +423,12 @@ var standardistaTableSorting = {
 
 function standardistaTableSortingInit() {
 	standardistaTableSorting.init();
-    var e = {};
-    var obj = document.getElementsByTagName("TH")[0].firstChild; // 0 points to the first column, use 3 if you want to sort on the 4th column
-    e.target = obj;
-    standardistaTableSorting.headingClicked(e);  // will sort Ascending 
+	if (document.getElementsByTagName("TH")[0] != null) {
+		var e = {};
+		var obj = document.getElementsByTagName("TH")[0].firstChild; // 0 points to the first column, use 3 if you want to sort on the 4th column
+		e.target = obj;
+		standardistaTableSorting.headingClicked(e);  // will sort Ascending
+	}
 }
 
 addEvent(window, 'load', standardistaTableSortingInit)
