@@ -16,13 +16,16 @@
  */
 package org.apache.activemq.transport.failover;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import java.util.ArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.jms.JMSException;
 import javax.jms.Message;
@@ -51,6 +54,7 @@ public class FailoverConsumerOutstandingCommitTest {
 	
     private static final Log LOG = LogFactory.getLog(FailoverConsumerOutstandingCommitTest.class);
 	private static final String QUEUE_NAME = "FailoverWithOutstandingCommit";
+    private static final String MESSAGE_TEXT = "Test message ";
 	private String url = "tcp://localhost:61616";
 	final int prefetch = 10;
 	BrokerService broker;
@@ -126,7 +130,7 @@ public class FailoverConsumerOutstandingCommitTest {
         connection.start();
         
         final Session producerSession = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        final Queue destination = producerSession.createQueue(QUEUE_NAME + "?jms.consumer.prefetch=" + prefetch);
+        final Queue destination = producerSession.createQueue(QUEUE_NAME + "?consumer.prefetchSize=" + prefetch);
         
         final Session consumerSession = connection.createSession(true, Session.AUTO_ACKNOWLEDGE);
 
@@ -166,8 +170,17 @@ public class FailoverConsumerOutstandingCommitTest {
         connection.close();
     }
 
-	@Test
-	public void testFailoverConsumerOutstandingSendTx() throws Exception {
+    @Test
+    public void TestFailoverConsumerOutstandingSendTxIncomplete() throws Exception {
+        doTestFailoverConsumerOutstandingSendTx(false);
+    }
+	
+    @Test
+    public void TestFailoverConsumerOutstandingSendTxComplete() throws Exception {
+        doTestFailoverConsumerOutstandingSendTx(true);
+    }
+    
+    public void doTestFailoverConsumerOutstandingSendTx(final boolean doActualBrokerCommit) throws Exception {
         final boolean watchTopicAdvisories = true;
         broker = createBroker(true);
 
@@ -175,6 +188,10 @@ public class FailoverConsumerOutstandingCommitTest {
             @Override
             public void commitTransaction(ConnectionContext context,
                     TransactionId xid, boolean onePhase) throws Exception {
+                if (doActualBrokerCommit) {
+                    LOG.info("doing actual broker commit...");
+                    super.commitTransaction(context, xid, onePhase);
+                }
                 // so commit will hang as if reply is lost
                 context.setDontSendReponse(true);
                 Executors.newSingleThreadExecutor().execute(new Runnable() {
@@ -200,25 +217,27 @@ public class FailoverConsumerOutstandingCommitTest {
 
         final Session producerSession = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         final Queue destination = producerSession.createQueue(QUEUE_NAME
-                + "?jms.consumer.prefetch=" + prefetch);
+                + "?consumer.prefetchSize=" + prefetch);
 
         final Session consumerSession = connection.createSession(true, Session.SESSION_TRANSACTED);
 
         final CountDownLatch commitDoneLatch = new CountDownLatch(1);
-        final CountDownLatch messagesReceived = new CountDownLatch(2);
-
+        final CountDownLatch messagesReceived = new CountDownLatch(3);
+        final AtomicBoolean gotCommitException = new AtomicBoolean(false);
+        final ArrayList<TextMessage> receivedMessages = new ArrayList<TextMessage>();
         final MessageConsumer testConsumer = consumerSession.createConsumer(destination);
         testConsumer.setMessageListener(new MessageListener() {
 
             public void onMessage(Message message) {
-                LOG.info("consume one and commit");
-
+                LOG.info("consume one and commit: " + message);
                 assertNotNull("got message", message);
+                receivedMessages.add((TextMessage) message);
                 try {
                     produceMessage(consumerSession, destination, 1);
                     consumerSession.commit();
                 } catch (JMSException e) {
-                    e.printStackTrace();
+                    LOG.info("commit exception", e);
+                    gotCommitException.set(true);
                 }
                 commitDoneLatch.countDown();
                 messagesReceived.countDown();
@@ -233,9 +252,14 @@ public class FailoverConsumerOutstandingCommitTest {
         broker = createBroker(false);
         broker.start();
 
-        assertTrue("consumer added through failover", commitDoneLatch.await(20, TimeUnit.SECONDS));
-
+        assertTrue("commit done through failover", commitDoneLatch.await(20, TimeUnit.SECONDS));
+        assertTrue("commit failed", gotCommitException.get());
         assertTrue("another message was received after failover", messagesReceived.await(20, TimeUnit.SECONDS));
+        assertEquals("get message 0 first", MESSAGE_TEXT + "0", receivedMessages.get(0).getText());
+        // it was redelivered
+        assertEquals("get message 0 second", MESSAGE_TEXT + "0", receivedMessages.get(1).getText());
+        assertTrue("another message was received", messagesReceived.await(20, TimeUnit.SECONDS));
+        assertEquals("get message 1 eventually", MESSAGE_TEXT + "1", receivedMessages.get(2).getText());
         
         connection.close();
     }
@@ -245,7 +269,8 @@ public class FailoverConsumerOutstandingCommitTest {
         broker = createBroker(true);
         broker.start();
 
-        ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory("failover:(" + url + ")");        
+        ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory("failover:(" + url + ")");
+        cf.setConsumerFailoverRedeliveryWaitPeriod(10000);
         final ActiveMQConnection connection = (ActiveMQConnection) cf.createConnection();
         connection.start();
 
@@ -300,7 +325,7 @@ public class FailoverConsumerOutstandingCommitTest {
         throws JMSException {
         MessageProducer producer = producerSession.createProducer(destination);
         for (int i=0; i<count; i++) {
-            TextMessage message = producerSession.createTextMessage("Test message " + i);
+            TextMessage message = producerSession.createTextMessage(MESSAGE_TEXT + i);
             producer.send(message);
         }
         producer.close();

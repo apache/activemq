@@ -293,11 +293,21 @@ public class TransactionContext implements XAResource {
             TransactionInfo info = new TransactionInfo(getConnectionId(), transactionId, TransactionInfo.COMMIT_ONE_PHASE);
             this.transactionId = null;
             // Notify the listener that the tx was committed back
-            syncSendPacketWithInterruptionHandling(info);
-            if (localTransactionEventListener != null) {
-                localTransactionEventListener.commitEvent();
+            try {
+                syncSendPacketWithInterruptionHandling(info);
+                if (localTransactionEventListener != null) {
+                    localTransactionEventListener.commitEvent();
+                }
+                afterCommit();
+            } catch (JMSException cause) {
+                LOG.info("commit failed for transaction " + info.getTransactionId(), cause);
+                if (localTransactionEventListener != null) {
+                    localTransactionEventListener.rollbackEvent();
+                }
+                afterRollback();
+                throw cause;
             }
-            afterCommit();
+            
         }
     }
 

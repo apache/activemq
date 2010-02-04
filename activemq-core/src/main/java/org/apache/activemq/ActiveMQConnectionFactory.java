@@ -114,6 +114,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     private int auditDepth = ActiveMQMessageAudit.DEFAULT_WINDOW_SIZE;
     private int auditMaximumProducerNumber = ActiveMQMessageAudit.MAXIMUM_PRODUCER_COUNT;
     private boolean useDedicatedTaskRunner;
+    private long consumerFailoverRedeliveryWaitPeriod = 0;
 
     // /////////////////////////////////////////////
     //
@@ -315,6 +316,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
         connection.setAuditDepth(getAuditDepth());
         connection.setAuditMaximumProducerNumber(getAuditMaximumProducerNumber());
         connection.setUseDedicatedTaskRunner(isUseDedicatedTaskRunner());
+        connection.setConsumerFailoverRedeliveryWaitPeriod(getConsumerFailoverRedeliveryWaitPeriod());
         if (transportListener != null) {
             connection.addTransportListener(transportListener);
         }
@@ -912,5 +914,13 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     
     public boolean isUseDedicatedTaskRunner() {
         return useDedicatedTaskRunner;
+    }
+    
+    public void setConsumerFailoverRedeliveryWaitPeriod(long consumerFailoverRedeliveryWaitPeriod) {
+        this.consumerFailoverRedeliveryWaitPeriod = consumerFailoverRedeliveryWaitPeriod;
+    }
+    
+    public long getConsumerFailoverRedeliveryWaitPeriod() {
+        return consumerFailoverRedeliveryWaitPeriod;
     }
 }

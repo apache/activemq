@@ -24,6 +24,8 @@ import java.util.Vector;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 
+import javax.jms.TransactionRolledBackException;
+
 import org.apache.activemq.command.Command;
 import org.apache.activemq.command.ConnectionId;
 import org.apache.activemq.command.ConnectionInfo;
@@ -31,6 +33,7 @@ import org.apache.activemq.command.ConsumerControl;
 import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.DestinationInfo;
+import org.apache.activemq.command.ExceptionResponse;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.command.ProducerId;
@@ -141,22 +144,24 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
     }
 
     private void restoreTransactions(Transport transport, ConnectionState connectionState) throws IOException {
-        Vector<Command> toIgnore = new Vector<Command>();
+        Vector<TransactionInfo> toRollback = new Vector<TransactionInfo>();
         for (TransactionState transactionState : connectionState.getTransactionStates()) {
             if (LOG.isDebugEnabled()) {
                 LOG.debug("tx: " + transactionState.getId());
             }
             
-            // ignore any empty (ack) transaction
-            if (transactionState.getCommands().size() == 2) {
-                Command lastCommand = transactionState.getCommands().get(1);
+            // rollback any completed transactions - no way to know if commit got there
+            // or if reply went missing
+            //
+            if (!transactionState.getCommands().isEmpty()) {
+                Command lastCommand = transactionState.getCommands().get(transactionState.getCommands().size() - 1);
                 if (lastCommand instanceof TransactionInfo) {
                     TransactionInfo transactionInfo = (TransactionInfo) lastCommand;
                     if (transactionInfo.getType() == TransactionInfo.COMMIT_ONE_PHASE) {
                         if (LOG.isDebugEnabled()) {
-                            LOG.debug("not replaying empty (ack) tx: " + transactionState.getId());
+                            LOG.debug("rolling back potentially completed tx: " + transactionState.getId());
                         }
-                        toIgnore.add(lastCommand);
+                        toRollback.add(transactionInfo);
                         continue;
                     }
                 }
@@ -185,9 +190,10 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
             }
         }
         
-        for (Command command: toIgnore) {
+        for (TransactionInfo command: toRollback) {
             // respond to the outstanding commit
-            Response response = new Response();
+            ExceptionResponse response = new ExceptionResponse();
+            response.setException(new TransactionRolledBackException("Transaction completion in doubt due to failover. Forcing rollback of " + command.getTransactionId()));
             response.setCorrelationId(command.getCommandId());
             transport.getTransportListener().onCommand(response);
         }
