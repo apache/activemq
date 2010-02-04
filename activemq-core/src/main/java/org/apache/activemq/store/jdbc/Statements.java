@@ -345,7 +345,7 @@ public class Statements {
     public String getFindNextMessagesStatement() {
         if (findNextMessagesStatement == null) {
             findNextMessagesStatement = "SELECT ID, MSG FROM " + getFullMessageTableName()
-                                        + " WHERE CONTAINER=? AND ID >= ? ORDER BY ID";
+                                        + " WHERE CONTAINER=? AND ID > ? ORDER BY ID";
         }
         return findNextMessagesStatement;
     }
