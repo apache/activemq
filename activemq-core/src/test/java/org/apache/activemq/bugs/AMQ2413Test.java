@@ -54,7 +54,7 @@ public class AMQ2413Test extends CombinationTestSupport implements MessageListen
     BrokerService broker;
     private ActiveMQConnectionFactory factory;
 
-    private static final int HANG_THRESHOLD = 5;
+    private static final int HANG_THRESHOLD = 60;
     private static final int SEND_COUNT = 10000;
     private static final int RECEIVER_THINK_TIME = 1;
     private static final int CONSUMER_COUNT = 1;
@@ -100,7 +100,7 @@ public class AMQ2413Test extends CombinationTestSupport implements MessageListen
 
         factory = new ActiveMQConnectionFactory("tcp://0.0.0.0:2401");
         //factory = new ActiveMQConnectionFactory("vm://localhost?broker.useJmx=false&broker.persistent=false");
-
+        setAutoFail(true);
         super.setUp();
     }
 
@@ -139,7 +139,7 @@ public class AMQ2413Test extends CombinationTestSupport implements MessageListen
                 producer.start();
                 services.add(producer);
             }
-            waitForMessageReceipt(300000);
+            waitForMessageReceipt();
 
         } finally {
             if (p != null) {
@@ -178,8 +178,7 @@ public class AMQ2413Test extends CombinationTestSupport implements MessageListen
      * @throws TimeoutException
      * 
      */
-    private void waitForMessageReceipt(long timeout) throws InterruptedException, TimeoutException {
-        // TODO Auto-generated method stub
+    private void waitForMessageReceipt() throws InterruptedException, TimeoutException {
         try {
             while (count.get() < SEND_COUNT) {
                 if (!receivedMessages.tryAcquire(HANG_THRESHOLD, TimeUnit.SECONDS)) {
