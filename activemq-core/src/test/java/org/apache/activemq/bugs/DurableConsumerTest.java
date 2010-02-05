@@ -283,7 +283,7 @@ public class DurableConsumerTest extends CombinationTestSupport{
                 LOG.info("receivedCount: " + receivedCount.get());
                 return receivedCount.get() == numMessages;
             }
-        }, 120 * 1000);
+        }, 240 * 1000);
         assertEquals("got required some messages", numMessages, receivedCount.get());
         assertTrue("no exceptions, but: " + exceptions, exceptions.isEmpty());
     }
