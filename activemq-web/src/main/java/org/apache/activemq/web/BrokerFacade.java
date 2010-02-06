@@ -17,11 +17,11 @@
 package org.apache.activemq.web;
 
 import java.util.Collection;
-
 import org.apache.activemq.broker.jmx.BrokerViewMBean;
 import org.apache.activemq.broker.jmx.ConnectionViewMBean;
 import org.apache.activemq.broker.jmx.ConnectorViewMBean;
 import org.apache.activemq.broker.jmx.DurableSubscriptionViewMBean;
+import org.apache.activemq.broker.jmx.JobSchedulerViewMBean;
 import org.apache.activemq.broker.jmx.NetworkConnectorViewMBean;
 import org.apache.activemq.broker.jmx.QueueViewMBean;
 import org.apache.activemq.broker.jmx.SubscriptionViewMBean;
@@ -178,4 +178,19 @@ public interface BrokerFacade {
 	 * @throws Exception
 	 */
 	TopicViewMBean getTopic(String name) throws Exception;
+	
+	/**
+	 * Get the JobScheduler MBean
+	 * @return the jobScheduler or null if not configured
+	 * @throws Exception
+	 */
+	JobSchedulerViewMBean getJobScheduler() throws Exception;
+	
+	/**
+     * Get the JobScheduler MBean
+     * @return the jobScheduler or null if not configured
+     * @throws Exception
+     */
+    Collection<JobFacade> getScheduledJobs() throws Exception;
+
 }

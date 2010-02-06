@@ -16,17 +16,6 @@
  */
 package org.apache.activemq.web;
 
-import org.apache.activemq.broker.jmx.BrokerViewMBean;
-import org.apache.activemq.broker.jmx.ConnectionViewMBean;
-import org.apache.activemq.broker.jmx.ConnectorViewMBean;
-import org.apache.activemq.broker.jmx.DestinationViewMBean;
-import org.apache.activemq.broker.jmx.DurableSubscriptionViewMBean;
-import org.apache.activemq.broker.jmx.ManagementContext;
-import org.apache.activemq.broker.jmx.NetworkConnectorViewMBean;
-import org.apache.activemq.broker.jmx.QueueViewMBean;
-import org.apache.activemq.broker.jmx.SubscriptionViewMBean;
-import org.apache.activemq.broker.jmx.TopicViewMBean;
-import org.springframework.util.StringUtils;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -34,6 +23,21 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import javax.management.ObjectName;
+import javax.management.openmbean.CompositeData;
+import javax.management.openmbean.TabularData;
+import org.apache.activemq.broker.jmx.BrokerViewMBean;
+import org.apache.activemq.broker.jmx.ConnectionViewMBean;
+import org.apache.activemq.broker.jmx.ConnectorViewMBean;
+import org.apache.activemq.broker.jmx.DestinationViewMBean;
+import org.apache.activemq.broker.jmx.DurableSubscriptionViewMBean;
+import org.apache.activemq.broker.jmx.JobSchedulerViewMBean;
+import org.apache.activemq.broker.jmx.ManagementContext;
+import org.apache.activemq.broker.jmx.NetworkConnectorViewMBean;
+import org.apache.activemq.broker.jmx.QueueViewMBean;
+import org.apache.activemq.broker.jmx.SubscriptionViewMBean;
+import org.apache.activemq.broker.jmx.TopicViewMBean;
+import org.springframework.util.StringUtils;
+
 /**
  * A useful base class for an implementation of {@link BrokerFacade}
  * 
@@ -102,13 +106,10 @@ public abstract class BrokerFacadeSupport implements BrokerFacade {
         return answer;
     }
 
-   
-
     @SuppressWarnings("unchecked")
     public Collection<ConnectionViewMBean> getConnections() throws Exception {
         String brokerName = getBrokerName();
         ObjectName query = new ObjectName("org.apache.activemq:BrokerName=" + brokerName + ",Type=Connection,*");
-        System.out.println(query);
         Set<ObjectName> queryResult = getManagementContext().queryNames(query, null);
         return getManagedObjects(queryResult.toArray(new ObjectName[queryResult.size()]), ConnectionViewMBean.class);
     }
@@ -137,8 +138,8 @@ public abstract class BrokerFacadeSupport implements BrokerFacade {
         if (queryResult.size() == 0)
             return null;
         ObjectName objectName = queryResult.iterator().next();
-        return (ConnectionViewMBean) getManagementContext().newProxyInstance(objectName,
-                ConnectionViewMBean.class, true);
+        return (ConnectionViewMBean) getManagementContext().newProxyInstance(objectName, ConnectionViewMBean.class,
+                true);
     }
 
     @SuppressWarnings("unchecked")
@@ -156,8 +157,7 @@ public abstract class BrokerFacadeSupport implements BrokerFacade {
         String brokerName = getBrokerName();
         ObjectName objectName = new ObjectName("org.apache.activemq:BrokerName=" + brokerName
                 + ",Type=Connector,ConnectorName=" + name);
-        return (ConnectorViewMBean) getManagementContext().newProxyInstance(objectName,
-                ConnectorViewMBean.class, true);
+        return (ConnectorViewMBean) getManagementContext().newProxyInstance(objectName, ConnectorViewMBean.class, true);
     }
 
     @SuppressWarnings("unchecked")
@@ -186,5 +186,22 @@ public abstract class BrokerFacadeSupport implements BrokerFacade {
                 + ",Type=Subscription,clientId=" + connectionName + ",*");
         Set<ObjectName> queryResult = getManagementContext().queryNames(query, null);
         return getManagedObjects(queryResult.toArray(new ObjectName[queryResult.size()]), SubscriptionViewMBean.class);
+    }
+
+    public JobSchedulerViewMBean getJobScheduler() throws Exception {
+        ObjectName name = getBrokerAdmin().getJMSJobScheduler();
+        return (JobSchedulerViewMBean) getManagementContext().newProxyInstance(name, JobSchedulerViewMBean.class, true);
+    }
+
+    public Collection<JobFacade> getScheduledJobs() throws Exception {
+        JobSchedulerViewMBean jobScheduler = getJobScheduler();
+        List<JobFacade> result = new ArrayList<JobFacade>();
+        TabularData table = jobScheduler.getAllJobs();
+        for (Object object : table.values()) {
+            CompositeData cd = (CompositeData) object;
+            JobFacade jf = new JobFacade(cd);
+            result.add(jf);
+        }
+        return result;
     }
 }
