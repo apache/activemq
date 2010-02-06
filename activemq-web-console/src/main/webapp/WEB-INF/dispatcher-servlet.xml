@@ -35,6 +35,7 @@
   <bean name="/deleteMessage.action" class="org.apache.activemq.web.controller.DeleteMessage" autowire="constructor"  singleton="false"/>
   <bean name="/copyMessage.action" class="org.apache.activemq.web.controller.CopyMessage" autowire="constructor"  singleton="false"/>	
   <bean name="/moveMessage.action" class="org.apache.activemq.web.controller.MoveMessage" autowire="constructor"  singleton="false"/>
+  <bean name="/deleteJob.action" class="org.apache.activemq.web.controller.DeleteJob" autowire="constructor"  singleton="false"/>
 
   <!--
     - This bean resolves specific types of exception to corresponding error views.

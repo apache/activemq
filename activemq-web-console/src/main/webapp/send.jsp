@@ -37,7 +37,7 @@
 	    <label for="JMSDestination">Destination</label>
 	</td>
 	<td>
-	    <form:text name="JMSDestination"/>
+	    <form:text name="JMSDestination" defaultValue="foo.bar"/>
 	</td>
 	<td class="label">
 	    <label for="queue">Queue or Topic</label>
@@ -103,6 +103,34 @@
 	</td>
 	<td>
 	    <form:text name="JMSXGroupSeq"/>
+	</td>
+</tr>
+<tr>
+	<td class="label">
+	    <label for="AMQ_SCHEDULED_START_TIME">Scheduled start(ms)</label>
+	</td>
+	<td>
+	    <form:text name="AMQ_SCHEDULED_START_TIME"/>
+	</td>
+	<td class="label">
+	    <label for="AMQ_SCHEDULED_PERIOD">Time(ms) to wait before scheduling again</label>
+	</td>
+	<td>
+	    <form:text name="AMQ_SCHEDULED_PERIOD"/>
+	</td>
+</tr>
+<tr>
+	<td class="label">
+	    <label for="AMQ_SCHEDULED_REPEAT">Number of repeats</label>
+	</td>
+	<td>
+	    <form:text name="AMQ_SCHEDULED_REPEAT"/>
+	</td>
+	<td class="label">
+	    <label for="AMQ_SCHEDULED_CRON">Use a CRON string for scheduling</label>
+	</td>
+	<td>
+	    <form:text name="AMQ_SCHEDULED_CRON"/>
 	</td>
 </tr>
 <tr>

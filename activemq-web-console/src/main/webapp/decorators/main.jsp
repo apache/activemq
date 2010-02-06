@@ -31,7 +31,7 @@
 	    <script type='text/javascript' src='<c:url value="/js/css.js"/>'></script>
 	    <script type='text/javascript' src='<c:url value="/js/standardista-table-sorting.js"/>'></script>
 	    <script type='text/javascript' src='<c:url value="/js/prettify.js"/>'></script>
-	    <script>addEvent(window, 'load',  function (event) { prettyPrint() })</script>
+	    <script>addEvent(window, 'load', prettyPrint)</script>
     </c:if>
 
 	<decorator:head />
@@ -76,6 +76,8 @@
                             <a href="<c:url value='/subscribers.jsp'/>" title="Subscribers">Subscribers</a>
                             &#124;
                             <a href="<c:url value='/connections.jsp'/>" title="Connections">Connections</a>
+                            &#124;
+ 							<a href="<c:url value='/scheduled.jsp'/>" title="Scheduled">Scheduled</a>
                             &#124;
                             <a href="<c:url value='/send.jsp'/>"
                                title="Send">Send</a>
