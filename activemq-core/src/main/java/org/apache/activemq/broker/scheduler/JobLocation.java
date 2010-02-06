@@ -30,6 +30,7 @@ class JobLocation {
     private int repeat;
     private long start;
     private long period;
+    private String cronEntry;
     private final Location location;
 
     public JobLocation(Location location) {
@@ -46,14 +47,19 @@ class JobLocation {
         this.repeat = in.readInt();
         this.start = in.readLong();
         this.period = in.readLong();
+        this.cronEntry=in.readUTF();
         this.location.readExternal(in);
     }
 
     public void writeExternal(DataOutput out) throws IOException {
         out.writeUTF(this.jobId);
-        out.writeInt(repeat);
-        out.writeLong(start);
-        out.writeLong(period);
+        out.writeInt(this.repeat);
+        out.writeLong(this.start);
+        out.writeLong(this.period);
+        if (this.cronEntry==null) {
+            this.cronEntry="";
+        }
+        out.writeUTF(this.cronEntry);
         this.location.writeExternal(out);
     }
 
@@ -116,6 +122,20 @@ class JobLocation {
      */
     public void setPeriod(long period) {
         this.period = period;
+    }
+    
+    /**
+     * @return the cronEntry
+     */
+    public synchronized String getCronEntry() {
+        return this.cronEntry;
+    }
+
+    /**
+     * @param cronEntry the cronEntry to set
+     */
+    public synchronized void setCronEntry(String cronEntry) {
+        this.cronEntry = cronEntry;
     }
 
     /**

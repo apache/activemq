@@ -16,35 +16,37 @@
  */
 package org.apache.activemq.broker.scheduler;
 
-import java.io.IOException;
 import java.util.List;
 import org.apache.kahadb.util.ByteSequence;
 
-interface JobScheduler {
+public interface JobScheduler {
 
     /**
      * @return the name of the scheduler
+     * @throws Exception 
      */
-    public abstract String getName();
+    public abstract String getName() throws Exception;
 /**
  * Add a Job listener
  * @param l
+ * @throws Exception 
  */
-    public abstract void addListener(JobListener l);
+    public abstract void addListener(JobListener l) throws Exception;
 /**
  * remove a JobListener
  * @param l
+ * @throws Exception 
  */
-    public abstract void removeListener(JobListener l);
+    public abstract void removeListener(JobListener l) throws Exception;
 
     /**
      * Add a job to be scheduled
      * @param jobId a unique identifier for the job
      * @param payload the message to be sent when the job is scheduled
      * @param delay the time in milliseconds before the job will be run
-     * @throws IOException
+     * @throws Exception
      */
-    public abstract void schedule(String jobId, ByteSequence payload,long delay) throws IOException;
+    public abstract void schedule(String jobId, ByteSequence payload,long delay) throws Exception;
 
     
     /**
@@ -54,36 +56,68 @@ interface JobScheduler {
      * @param start 
      * @param period the time in milliseconds between successive executions of the Job
      * @param repeat the number of times to execute the job - less than 0 will be repeated forever
-     * @throws IOException
+     * @throws Exception
      */
-    public abstract void schedule(String jobId, ByteSequence payload,long start, long period, int repeat) throws IOException;
+    public abstract void schedule(String jobId, ByteSequence payload,long start, long period, int repeat) throws Exception;
 
     /**
      * remove all jobs scheduled to run at this time
      * @param time
-     * @throws IOException
+     * @throws Exception 
      */
-    public abstract void remove(long time) throws IOException;
+    public abstract void remove(long time) throws  Exception;
 
     /**
      * remove a job with the matching jobId
      * @param jobId
-     * @throws IOException
+     * @throws Exception 
      */
-    public abstract void remove(String jobId) throws IOException;
-
+    public abstract void remove(String jobId) throws  Exception;
+    
     /**
-     * Get all the jobs scheduled to run next
-     * @return a list of messages that will be scheduled next
-     * @throws IOException
+     * remove all the Jobs from the scheduler
+     * @throws Exception
      */
-    public abstract List<ByteSequence> getNextScheduleJobs() throws IOException;
+    public abstract void removeAllJobs() throws Exception;
+    
+    /**
+     * remove all the Jobs from the scheduler that are due between the start and finish times
+     * @param start time in milliseconds
+     * @param finish time in milliseconds
+     * @throws Exception
+     */
+    public abstract void removeAllJobs(long start,long finish) throws Exception;
+    
+
     
     /**
      * Get the next time jobs will be fired
      * @return the time in milliseconds
-     * @throws IOException 
+     * @throws Exception 
      */
-    public abstract long getNextScheduleTime() throws IOException;
+    public abstract long getNextScheduleTime() throws Exception;
+    
+    /**
+     * Get all the jobs scheduled to run next
+     * @return a list of jobs that will be scheduled next
+     * @throws Exception
+     */
+    public abstract List<Job> getNextScheduleJobs() throws Exception;
+    
+    /**
+     * Get all the outstanding Jobs
+     * @return a  list of all jobs
+     * @throws Exception 
+     */
+    public abstract List<Job> getAllJobs() throws Exception;
+    
+    /**
+     * Get all outstanding jobs due to run between start and finish
+     * @param start
+     * @param finish
+     * @return a list of jobs
+     * @throws Exception
+     */
+    public abstract List<Job> getAllJobs(long start,long finish)throws Exception;
 
 }

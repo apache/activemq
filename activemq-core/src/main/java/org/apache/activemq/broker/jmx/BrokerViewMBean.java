@@ -17,7 +17,6 @@
 package org.apache.activemq.broker.jmx;
 
 import javax.management.ObjectName;
-
 import org.apache.activemq.Service;
 
 
@@ -243,5 +242,8 @@ public interface BrokerViewMBean extends Service {
     
     @MBeanInfo("The location of the data directory")
     public String getDataDirectory();
+    
+    @MBeanInfo("JMSJobScheduler")
+    ObjectName getJMSJobScheduler();
     
 }

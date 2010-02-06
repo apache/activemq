@@ -14,25 +14,51 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.activemq;
+package org.apache.activemq.broker.scheduler;
 
-public interface ScheduledMessage {
+
+public interface Job {
+
     /**
-     * The time in milliseconds that a message will be scheduled to be delivered by the broker
+     * @return the jobId
      */
-    public static final String AMQ_SCHEDULED_START = "AMQ_SCHEDULED_START_TIME";
+    public abstract String getJobId();
+
     /**
-     * The time in milliseconds to wait after the start time to wait before scheduling the message again
+     * @return the repeat
      */
-    public static final String AMQ_SCHEDULED_PERIOD = "AMQ_SCHEDULED_PERIOD";
+    public abstract int getRepeat();
+
     /**
-     * The number of times to repeat scheduling a message for delivery
+     * @return the start
      */
-    public static final String AMQ_SCHEDULED_REPEAT = "AMQ_SCHEDULED_REPEAT";
+    public abstract long getStart();
+
     /**
-     * Use a Cron tab entry to set the schedule
+     * @return the period
      */
-    public static final String AMQ_SCHEDULED_CRON = "AMQ_SCHEDULED_CRON";
+    public abstract long getPeriod();
     
+    /**
+     * @return the cron entry
+     */
+    public abstract String getCronEntry();
+
+    /**
+     * @return the payload
+     */
+    public abstract byte[] getPayload();
+    
+    /**
+     * Get the start time as a Date time string
+     * @return the date time
+     */
+    public String getStartTime();
+    
+    /**
+     * Get the time the job is next due to execute 
+     * @return the date time
+     */
+    public String getNextExecutionTime();
 
 }

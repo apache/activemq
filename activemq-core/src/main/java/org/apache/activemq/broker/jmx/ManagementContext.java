@@ -28,7 +28,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
-
 import javax.management.Attribute;
 import javax.management.JMException;
 import javax.management.MBeanServer;
@@ -41,7 +40,6 @@ import javax.management.QueryExp;
 import javax.management.remote.JMXConnectorServer;
 import javax.management.remote.JMXConnectorServerFactory;
 import javax.management.remote.JMXServiceURL;
-
 import org.apache.activemq.Service;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -69,12 +67,12 @@ public class ManagementContext implements Service {
     private int connectorPort = 1099;
     private int rmiServerPort;
     private String connectorPath = "/jmxrmi";
-    private AtomicBoolean started = new AtomicBoolean(false);
-    private AtomicBoolean connectorStarting = new AtomicBoolean(false);
+    private final AtomicBoolean started = new AtomicBoolean(false);
+    private final AtomicBoolean connectorStarting = new AtomicBoolean(false);
     private JMXConnectorServer connectorServer;
     private ObjectName namingServiceObjectName;
     private Registry registry;
-    private List<ObjectName> registeredMBeanNames = new CopyOnWriteArrayList<ObjectName>();
+    private final List<ObjectName> registeredMBeanNames = new CopyOnWriteArrayList<ObjectName>();
 
     public ManagementContext() {
         this(null);
@@ -94,6 +92,7 @@ public class ManagementContext implements Service {
                 } catch (Throwable ignore) {
                 }
                 Thread t = new Thread("JMX connector") {
+                    @Override
                     public void run() {
                         try {
                             JMXConnectorServer server = connectorServer;
@@ -312,6 +311,10 @@ public class ManagementContext implements Service {
     
     public Set queryNames(ObjectName name, QueryExp query) throws Exception{
         return getMBeanServer().queryNames(name, query);
+    }
+    
+    public ObjectInstance getObjectInstance(ObjectName name) throws Exception {
+        return getMBeanServer().getObjectInstance(name);
     }
     
     /**

@@ -44,6 +44,7 @@ public class BrokerView implements BrokerViewMBean {
     ManagedRegionBroker broker;
     private final BrokerService brokerService;
     private final AtomicInteger sessionIdCounter = new AtomicInteger(0);
+    private ObjectName jmsJobScheduler;
 
     public BrokerView(BrokerService brokerService, ManagedRegionBroker managedBroker) throws Exception {
         this.brokerService = brokerService;
@@ -364,5 +365,13 @@ public class BrokerView implements BrokerViewMBean {
         } catch (IOException e) {
             return "";
         }
+    }
+
+    public ObjectName getJMSJobScheduler() {
+        return this.jmsJobScheduler;
+    }
+    
+    public void setJMSJobScheduler(ObjectName name) {
+        this.jmsJobScheduler=name;
     }
 }

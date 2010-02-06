@@ -45,6 +45,8 @@ import org.apache.activemq.broker.jmx.ConnectorView;
 import org.apache.activemq.broker.jmx.ConnectorViewMBean;
 import org.apache.activemq.broker.jmx.FTConnectorView;
 import org.apache.activemq.broker.jmx.JmsConnectorView;
+import org.apache.activemq.broker.jmx.JobSchedulerView;
+import org.apache.activemq.broker.jmx.JobSchedulerViewMBean;
 import org.apache.activemq.broker.jmx.ManagedRegionBroker;
 import org.apache.activemq.broker.jmx.ManagementContext;
 import org.apache.activemq.broker.jmx.NetworkConnectorView;
@@ -1764,7 +1766,23 @@ public class BrokerService implements Service {
     protected Broker addInterceptors(Broker broker) throws Exception {
         broker = new TransactionBroker(broker, getPersistenceAdapter().createTransactionStore());
         if (isSchedulerSupport()) {
-            broker = new SchedulerBroker(broker,getSchedulerDirectoryFile());
+            SchedulerBroker sb = new SchedulerBroker(broker, getSchedulerDirectoryFile());
+            if (isUseJmx()) {
+                JobSchedulerViewMBean view = new JobSchedulerView(sb.getJobScheduler());
+                try {
+                    ObjectName objectName = new ObjectName(getManagementContext().getJmxDomainName() + ":"
+                            + "BrokerName=" + JMXSupport.encodeObjectNamePart(getBrokerName()) + ","
+                            + "Type=jobScheduler," + "jobSchedulerName=JMS");
+
+                    AnnotatedMBean.registerMBean(getManagementContext(), view, objectName);
+                    this.adminView.setJMSJobScheduler(objectName);
+                } catch (Throwable e) {
+                    throw IOExceptionSupport.create("JobScheduler could not be registered in JMX: "
+                            + e.getMessage(), e);
+                }
+
+            }
+            broker = sb;
         }
         if (isAdvisorySupport()) {
             broker = new AdvisoryBroker(broker);

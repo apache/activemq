@@ -82,7 +82,6 @@ class JobSchedulerImpl extends ServiceSupport implements Runnable, JobScheduler 
         this.jobListeners.remove(l);
     }
 
-   
     public void schedule(final String jobId, final ByteSequence payload, final long delay) throws IOException {
         this.store.getPageFile().tx().execute(new Transaction.Closure<IOException>() {
             public void execute(Transaction tx) throws IOException {
@@ -91,14 +90,14 @@ class JobSchedulerImpl extends ServiceSupport implements Runnable, JobScheduler 
         });
     }
 
-   
-    public void schedule(final String jobId, final ByteSequence payload, final long start, final long period, final int repeat) throws IOException {
+    public void schedule(final String jobId, final ByteSequence payload, final long start, final long period,
+            final int repeat) throws IOException {
         this.store.getPageFile().tx().execute(new Transaction.Closure<IOException>() {
             public void execute(Transaction tx) throws IOException {
                 schedule(tx, jobId, payload, start, period, repeat);
             }
         });
-       
+
     }
 
     /*
@@ -147,8 +146,8 @@ class JobSchedulerImpl extends ServiceSupport implements Runnable, JobScheduler 
      * (non-Javadoc)
      * @see org.apache.activemq.beanstalk.JobScheduler#getNextScheduleJobs()
      */
-    public synchronized List<ByteSequence> getNextScheduleJobs() throws IOException {
-        final List<ByteSequence> result = new ArrayList<ByteSequence>();
+    public synchronized List<Job> getNextScheduleJobs() throws IOException {
+        final List<Job> result = new ArrayList<Job>();
 
         this.store.getPageFile().tx().execute(new Transaction.Closure<IOException>() {
             public void execute(Transaction tx) throws IOException {
@@ -156,7 +155,8 @@ class JobSchedulerImpl extends ServiceSupport implements Runnable, JobScheduler 
                 if (first != null) {
                     for (JobLocation jl : first.getValue()) {
                         ByteSequence bs = getJob(jl.getLocation());
-                        result.add(bs);
+                        Job job = new JobImpl(jl, bs);
+                        result.add(job);
                     }
                 }
             }
@@ -164,18 +164,81 @@ class JobSchedulerImpl extends ServiceSupport implements Runnable, JobScheduler 
         return result;
     }
 
+    public synchronized List<Job> getAllJobs() throws IOException {
+        final List<Job> result = new ArrayList<Job>();
+        this.store.getPageFile().tx().execute(new Transaction.Closure<IOException>() {
+            public void execute(Transaction tx) throws IOException {
+                Iterator<Map.Entry<Long, List<JobLocation>>> iter = index.iterator(store.getPageFile().tx());
+                while (iter.hasNext()) {
+                    Map.Entry<Long, List<JobLocation>> next = iter.next();
+                    if (next != null) {
+                        for (JobLocation jl : next.getValue()) {
+                            ByteSequence bs = getJob(jl.getLocation());
+                            Job job = new JobImpl(jl, bs);
+                            result.add(job);
+                        }
+                    } else {
+                        break;
+                    }
+                }
+
+            }
+        });
+        return result;
+    }
+
+    public synchronized List<Job> getAllJobs(final long start, final long finish) throws IOException {
+        final List<Job> result = new ArrayList<Job>();
+        this.store.getPageFile().tx().execute(new Transaction.Closure<IOException>() {
+            public void execute(Transaction tx) throws IOException {
+                Iterator<Map.Entry<Long, List<JobLocation>>> iter = index.iterator(store.getPageFile().tx(), start);
+                while (iter.hasNext()) {
+                    Map.Entry<Long, List<JobLocation>> next = iter.next();
+                    if (next != null && next.getKey().longValue() <= finish) {
+                        for (JobLocation jl : next.getValue()) {
+                            ByteSequence bs = getJob(jl.getLocation());
+                            Job job = new JobImpl(jl, bs);
+                            result.add(job);
+                        }
+                    } else {
+                        break;
+                    }
+                }
+
+            }
+        });
+        return result;
+    }
+
+    public synchronized void removeAllJobs() throws IOException {
+        this.store.getPageFile().tx().execute(new Transaction.Closure<IOException>() {
+            public void execute(Transaction tx) throws IOException {
+                destroy(tx);
+            }
+        });
+    }
+
+    public synchronized void removeAllJobs(final long start, final long finish) throws IOException {
+        this.store.getPageFile().tx().execute(new Transaction.Closure<IOException>() {
+            public void execute(Transaction tx) throws IOException {
+                destroy(tx,start,finish);
+            }
+        });
+
+    }
+
     ByteSequence getJob(Location location) throws IllegalStateException, IOException {
         return this.store.getJob(location);
     }
 
-    void schedule(Transaction tx,  String jobId, ByteSequence payload,long start, long period, int repeat)
+    void schedule(Transaction tx, String jobId, ByteSequence payload, long start, long period, int repeat)
             throws IOException {
         List<JobLocation> values = null;
         long startTime;
         long time;
         if (start > 0) {
             time = startTime = start;
-        }else {
+        } else {
             startTime = System.currentTimeMillis();
             time = startTime + period;
         }
@@ -239,15 +302,40 @@ class JobSchedulerImpl extends ServiceSupport implements Runnable, JobScheduler 
     }
 
     synchronized void destroy(Transaction tx) throws IOException {
+        List<Long> keys = new ArrayList<Long>();
         for (Iterator<Map.Entry<Long, List<JobLocation>>> i = this.index.iterator(tx); i.hasNext();) {
             Map.Entry<Long, List<JobLocation>> entry = i.next();
+            keys.add(entry.getKey());
             List<JobLocation> values = entry.getValue();
             if (values != null) {
                 for (JobLocation jl : values) {
                     this.store.decrementJournalCount(tx, jl.getLocation());
                 }
             }
+        }
+        for (Long l : keys) {
+            this.index.remove(tx, l);
+        }
+    }
 
+    synchronized void destroy(Transaction tx, long start, long finish) throws IOException {
+        List<Long> keys = new ArrayList<Long>();
+        for (Iterator<Map.Entry<Long, List<JobLocation>>> i = this.index.iterator(tx, start); i.hasNext();) {
+            Map.Entry<Long, List<JobLocation>> entry = i.next();
+            if (entry.getKey().longValue() <= finish) {
+                keys.add(entry.getKey());
+                List<JobLocation> values = entry.getValue();
+                if (values != null) {
+                    for (JobLocation jl : values) {
+                        this.store.decrementJournalCount(tx, jl.getLocation());
+                    }
+                }
+            } else {
+                break;
+            }
+        }
+        for (Long l : keys) {
+            this.index.remove(tx, l);
         }
     }
 
@@ -311,7 +399,7 @@ class JobSchedulerImpl extends ServiceSupport implements Runnable, JobScheduler 
                                 ByteSequence payload = this.store.getJob(jl.getLocation());
                                 String jobId = jl.getJobId();
                                 long period = jl.getPeriod();
-                                schedule(jobId, payload,0, period, repeat);
+                                schedule(jobId, payload, 0, period, repeat);
                             }
                         }
                         // now remove jobs from this execution time
@@ -408,7 +496,4 @@ class JobSchedulerImpl extends ServiceSupport implements Runnable, JobScheduler 
             }
         }
     }
-
- 
-
 }

@@ -16,6 +16,13 @@
  */
 package org.apache.activemq.broker.jmx;
 
+import static org.apache.activemq.broker.jmx.CompositeDataConstants.BODY_LENGTH;
+import static org.apache.activemq.broker.jmx.CompositeDataConstants.BODY_PREVIEW;
+import static org.apache.activemq.broker.jmx.CompositeDataConstants.CONTENT_MAP;
+import static org.apache.activemq.broker.jmx.CompositeDataConstants.JMSXGROUP_ID;
+import static org.apache.activemq.broker.jmx.CompositeDataConstants.JMSXGROUP_SEQ;
+import static org.apache.activemq.broker.jmx.CompositeDataConstants.MESSAGE_TEXT;
+import static org.apache.activemq.broker.jmx.CompositeDataConstants.ORIGINAL_DESTINATION;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
@@ -23,10 +30,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
 import javax.jms.DeliveryMode;
 import javax.jms.JMSException;
-import javax.jms.Destination;
 import javax.management.openmbean.ArrayType;
 import javax.management.openmbean.CompositeData;
 import javax.management.openmbean.CompositeDataSupport;
@@ -34,9 +39,9 @@ import javax.management.openmbean.CompositeType;
 import javax.management.openmbean.OpenDataException;
 import javax.management.openmbean.OpenType;
 import javax.management.openmbean.SimpleType;
-import javax.management.openmbean.TabularType;
 import javax.management.openmbean.TabularDataSupport;
-
+import javax.management.openmbean.TabularType;
+import org.apache.activemq.broker.scheduler.Job;
 import org.apache.activemq.command.ActiveMQBytesMessage;
 import org.apache.activemq.command.ActiveMQMapMessage;
 import org.apache.activemq.command.ActiveMQMessage;
@@ -44,7 +49,6 @@ import org.apache.activemq.command.ActiveMQObjectMessage;
 import org.apache.activemq.command.ActiveMQStreamMessage;
 import org.apache.activemq.command.ActiveMQTextMessage;
 import org.apache.activemq.command.Message;
-import static org.apache.activemq.broker.jmx.CompositeDataConstants.*;
 
 public final class OpenTypeSupport {
 
@@ -54,14 +58,14 @@ public final class OpenTypeSupport {
         Map<String, Object> getFields(Object o) throws OpenDataException;
     }
 
-    private static final Map<Class, MessageOpenTypeFactory> OPEN_TYPE_FACTORIES = new HashMap<Class, MessageOpenTypeFactory>();
+    private static final Map<Class, AbstractOpenTypeFactory> OPEN_TYPE_FACTORIES = new HashMap<Class, AbstractOpenTypeFactory>();
 
     abstract static class AbstractOpenTypeFactory implements OpenTypeFactory {
 
         private CompositeType compositeType;
-        private List<String> itemNamesList = new ArrayList<String>();
-        private List<String> itemDescriptionsList = new ArrayList<String>();
-        private List<OpenType> itemTypesList = new ArrayList<OpenType>();
+        private final List<String> itemNamesList = new ArrayList<String>();
+        private final List<String> itemDescriptionsList = new ArrayList<String>();
+        private final List<OpenType> itemTypesList = new ArrayList<OpenType>();
 
         public CompositeType getCompositeType() throws OpenDataException {
             if (compositeType == null) {
@@ -109,10 +113,12 @@ public final class OpenTypeSupport {
         protected TabularType floatPropertyTabularType;
         protected TabularType doublePropertyTabularType;
 
+        @Override
         protected String getTypeName() {
             return ActiveMQMessage.class.getName();
         }
 
+        @Override
         protected void init() throws OpenDataException {
             super.init();
             addItem("JMSCorrelationID", "JMSCorrelationID", SimpleType.STRING);
@@ -150,6 +156,7 @@ public final class OpenTypeSupport {
             addItem(CompositeDataConstants.DOUBLE_PROPERTIES, "User Double Properties", doublePropertyTabularType);
         }
 
+        @Override
         public Map<String, Object> getFields(Object o) throws OpenDataException {
             ActiveMQMessage m = (ActiveMQMessage)o;
             Map<String, Object> rc = super.getFields(o);
@@ -255,16 +262,19 @@ public final class OpenTypeSupport {
     static class ByteMessageOpenTypeFactory extends MessageOpenTypeFactory {
 
 
+        @Override
         protected String getTypeName() {
             return ActiveMQBytesMessage.class.getName();
         }
 
+        @Override
         protected void init() throws OpenDataException {
             super.init();
             addItem(BODY_LENGTH, "Body length", SimpleType.LONG);
             addItem(BODY_PREVIEW, "Body preview", new ArrayType(1, SimpleType.BYTE));
         }
 
+        @Override
         public Map<String, Object> getFields(Object o) throws OpenDataException {
             ActiveMQBytesMessage m = (ActiveMQBytesMessage)o;
             Map<String, Object> rc = super.getFields(o);
@@ -298,15 +308,18 @@ public final class OpenTypeSupport {
 
     static class MapMessageOpenTypeFactory extends MessageOpenTypeFactory {
 
+        @Override
         protected String getTypeName() {
             return ActiveMQMapMessage.class.getName();
         }
 
+        @Override
         protected void init() throws OpenDataException {
             super.init();
             addItem(CONTENT_MAP, "Content map", SimpleType.STRING);
         }
 
+        @Override
         public Map<String, Object> getFields(Object o) throws OpenDataException {
             ActiveMQMapMessage m = (ActiveMQMapMessage)o;
             Map<String, Object> rc = super.getFields(o);
@@ -320,14 +333,17 @@ public final class OpenTypeSupport {
     }
 
     static class ObjectMessageOpenTypeFactory extends MessageOpenTypeFactory {
+        @Override
         protected String getTypeName() {
             return ActiveMQObjectMessage.class.getName();
         }
 
+        @Override
         protected void init() throws OpenDataException {
             super.init();
         }
 
+        @Override
         public Map<String, Object> getFields(Object o) throws OpenDataException {
             Map<String, Object> rc = super.getFields(o);
             return rc;
@@ -335,14 +351,17 @@ public final class OpenTypeSupport {
     }
 
     static class StreamMessageOpenTypeFactory extends MessageOpenTypeFactory {
+        @Override
         protected String getTypeName() {
             return ActiveMQStreamMessage.class.getName();
         }
 
+        @Override
         protected void init() throws OpenDataException {
             super.init();
         }
 
+        @Override
         public Map<String, Object> getFields(Object o) throws OpenDataException {
             Map<String, Object> rc = super.getFields(o);
             return rc;
@@ -351,15 +370,18 @@ public final class OpenTypeSupport {
 
     static class TextMessageOpenTypeFactory extends MessageOpenTypeFactory {
 
+        @Override
         protected String getTypeName() {
             return ActiveMQTextMessage.class.getName();
         }
 
+        @Override
         protected void init() throws OpenDataException {
             super.init();
             addItem(MESSAGE_TEXT, MESSAGE_TEXT, SimpleType.STRING);
         }
 
+        @Override
         public Map<String, Object> getFields(Object o) throws OpenDataException {
             ActiveMQTextMessage m = (ActiveMQTextMessage)o;
             Map<String, Object> rc = super.getFields(o);
@@ -371,6 +393,41 @@ public final class OpenTypeSupport {
             return rc;
         }
     }
+    
+
+    static class JobOpenTypeFactory extends AbstractOpenTypeFactory {
+
+        @Override
+        protected String getTypeName() {
+            return Job.class.getName();
+        }
+
+        @Override
+        protected void init() throws OpenDataException {
+            super.init();
+            addItem("jobId", "jobId", SimpleType.STRING);
+            addItem("cronEntry", "Cron entry", SimpleType.STRING);
+            addItem("start", "start time", SimpleType.STRING);
+            addItem("next", "next time", SimpleType.STRING);
+            addItem("period", "period between jobs", SimpleType.LONG);
+            addItem("repeat", "number of times to repeat", SimpleType.INTEGER);
+        }
+
+        @Override
+        public Map<String, Object> getFields(Object o) throws OpenDataException {
+            Job job = (Job) o;
+            Map<String, Object> rc = super.getFields(o);
+            rc.put("jobId", job.getJobId());
+            rc.put("cronEntry", "" + job.getCronEntry());
+            rc.put("start", job.getStartTime());
+            rc.put("next", job.getNextExecutionTime());
+            rc.put("period", job.getPeriod());
+            rc.put("repeat", job.getRepeat());
+            return rc;
+        }
+    }
+
+
 
     static {
         OPEN_TYPE_FACTORIES.put(ActiveMQMessage.class, new MessageOpenTypeFactory());
@@ -379,12 +436,13 @@ public final class OpenTypeSupport {
         OPEN_TYPE_FACTORIES.put(ActiveMQObjectMessage.class, new ObjectMessageOpenTypeFactory());
         OPEN_TYPE_FACTORIES.put(ActiveMQStreamMessage.class, new StreamMessageOpenTypeFactory());
         OPEN_TYPE_FACTORIES.put(ActiveMQTextMessage.class, new TextMessageOpenTypeFactory());
+        OPEN_TYPE_FACTORIES.put(Job.class, new JobOpenTypeFactory());
     }
 
     private OpenTypeSupport() {
     }
     
-    public static OpenTypeFactory getFactory(Class<? extends Message> clazz) throws OpenDataException {
+    public static OpenTypeFactory getFactory(Class<?> clazz) throws OpenDataException {
         return OPEN_TYPE_FACTORIES.get(clazz);
     }
 

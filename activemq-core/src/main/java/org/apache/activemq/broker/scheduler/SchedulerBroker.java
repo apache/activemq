@@ -60,6 +60,11 @@ public class SchedulerBroker extends BrokerFilter implements JobListener {
         LOG.info("Scheduler using directory: " + directory);
 
     }
+   
+    public synchronized  JobScheduler getJobScheduler() throws Exception {
+        return new JobSchedulerFacade(this);
+    }
+   
     /**
      * @return the directory
      */
@@ -114,7 +119,7 @@ public class SchedulerBroker extends BrokerFilter implements JobListener {
                 repeat = (Integer) TypeConversionSupport.convert(repeatValue, Integer.class);
             }
             org.apache.activemq.util.ByteSequence packet = wireFormat.marshal(messageSend);
-            getScheduler().schedule( messageSend.getMessageId().toString(),
+            getInternalScheduler().schedule( messageSend.getMessageId().toString(),
                     new ByteSequence(packet.data, packet.offset, packet.length),start, period, repeat);
 
         } else {
@@ -137,11 +142,14 @@ public class SchedulerBroker extends BrokerFilter implements JobListener {
                     messageSend.setMessageId(new MessageId(this.producerId, this.messageIdGenerator.getNextSequenceId()));
                 }
             }   
+            //Add the jobId as a property
+            messageSend.setProperty("scheduledJobId", id);
            
             //if this goes across a network - we don't want it rescheduled
             messageSend.removeProperty(ScheduledMessage.AMQ_SCHEDULED_PERIOD);
             messageSend.removeProperty(ScheduledMessage.AMQ_SCHEDULED_START);
             messageSend.removeProperty(ScheduledMessage.AMQ_SCHEDULED_REPEAT);
+            
             
             final ProducerBrokerExchange producerExchange = new ProducerBrokerExchange();
             producerExchange.setConnectionContext(context);
@@ -153,17 +161,19 @@ public class SchedulerBroker extends BrokerFilter implements JobListener {
         }
 
     }
-
-    private JobScheduler getScheduler() throws Exception {
+    
+    protected synchronized  JobScheduler getInternalScheduler() throws Exception {
         if (this.started.get()) {
             if (this.scheduler == null) {
-                this.scheduler = getStore().getJobScheduler("ActiveMQ");
+                this.scheduler = getStore().getJobScheduler("JMS");
                 this.scheduler.addListener(this);
             }
             return this.scheduler;
         }
         return null;
     }
+
+    
 
     private JobSchedulerStore getStore() throws Exception {
         if (started.get()) {

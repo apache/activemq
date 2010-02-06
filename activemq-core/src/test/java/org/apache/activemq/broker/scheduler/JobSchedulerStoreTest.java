@@ -44,7 +44,7 @@ public class JobSchedulerStoreTest extends TestCase {
 		for (ByteSequence job:list) {
 		    js.schedule("id:"+(count++), job,startTime,10000,-1);	    
 		}
-		List<ByteSequence>test = js.getNextScheduleJobs();
+		List<Job>test = js.getNextScheduleJobs();
 		assertEquals(list.size(),test.size());
 		store.stop();
 		
@@ -54,7 +54,7 @@ public class JobSchedulerStoreTest extends TestCase {
 		assertEquals(list.size(),test.size());
 		for (int i = 0; i < list.size();i++) {
 		    String orig = new String(list.get(i).getData());
-		    String payload = new String(test.get(i).getData());
+		    String payload = new String(test.get(i).getPayload());
 		    assertEquals(orig,payload);
 		}
 	}
