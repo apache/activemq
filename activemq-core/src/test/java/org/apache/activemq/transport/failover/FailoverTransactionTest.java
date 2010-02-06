@@ -16,9 +16,11 @@
  */
 package org.apache.activemq.transport.failover;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.io.File;
 import java.io.IOException;
@@ -291,8 +293,8 @@ public class FailoverTransactionTest {
 		
     @Test
     public void testFailoverConsumerAckLost() throws Exception {
-        // as failure depends on hash order, do a few times
-        for (int i=0; i<4; i++) {
+        // as failure depends on hash order of state tracker recovery, do a few times
+        for (int i=0; i<3; i++) {
             try {
                 doTestFailoverConsumerAckLost(i);
             } finally {
@@ -482,14 +484,14 @@ public class FailoverTransactionTest {
         
         broker.stop();
         broker = createBroker(false);
-        // use empty jdbc store so that default wait for redeliveries will timeout after failover
+        // use empty jdbc store so that default wait(0) for redeliveries will timeout after failover
         setPersistenceAdapter(1);
         broker.start();
         
         try {
             consumerSession.commit();
-        } catch (JMSException expectedRolledback) {
-            assertTrue(expectedRolledback instanceof TransactionRolledBackException);
+            fail("expected transaciton rolledback ex");
+        } catch (TransactionRolledBackException expected) {
         }
         
         broker.stop(); 
@@ -547,6 +549,65 @@ public class FailoverTransactionTest {
         assertTrue("commit was successfull", commitDone.await(30, TimeUnit.SECONDS));
         
         assertNull("should not get committed message", consumer.receive(5000));
+        connection.close();
+    }
+
+    
+    @Test
+    public void testPoisonOnDeliveryWhilePending() throws Exception {
+        LOG.info("testWaitForMissingRedeliveries()");
+        broker = createBroker(true);
+        broker.start();
+        ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory("failover:(" + url + ")?jms.consumerFailoverRedeliveryWaitPeriod=10000");
+        Connection connection = cf.createConnection();
+        connection.start();
+        final Session producerSession = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        final Queue destination = producerSession.createQueue(QUEUE_NAME + "?consumer.prefetchSize=0");
+        final Session consumerSession = connection.createSession(true, Session.SESSION_TRANSACTED);
+        MessageConsumer consumer = consumerSession.createConsumer(destination);
+        
+        produceMessage(producerSession, destination);
+        Message msg = consumer.receive(20000);
+        if (msg == null) {
+            AutoFailTestSupport.dumpAllThreads("missing-");
+        }
+        assertNotNull("got message just produced", msg);
+        
+        broker.stop(); 
+        broker = createBroker(false);
+        broker.start();
+
+        final CountDownLatch commitDone = new CountDownLatch(1);
+        
+
+        // with prefetch=0, it will not get redelivered as there will not be another receive
+        // for this consumer. so it will block till it timeout with an exception
+        // will block pending re-deliveries
+        Executors.newSingleThreadExecutor().execute(new Runnable() {   
+            public void run() {
+                LOG.info("doing async commit...");
+                try {
+                    consumerSession.commit();
+                } catch (JMSException ignored) {
+                    commitDone.countDown();
+                }
+            }
+        });
+        
+        // pull the pending message to this consumer where it will be poison as it is a duplicate without a tx
+        MessageConsumer consumer2 = consumerSession.createConsumer(consumerSession.createQueue(QUEUE_NAME + "?consumer.prefetchSize=1"));
+        assertNull("consumer2 not get a message while pending to 1", consumer2.receive(2000));
+        
+        assertTrue("commit completed with ex", commitDone.await(15, TimeUnit.SECONDS));
+        assertNull("consumer should not get rolledback and non redelivered message", consumer.receive(5000));
+        
+        // message should be in dlq
+        MessageConsumer dlqConsumer = consumerSession.createConsumer(consumerSession.createQueue("ActiveMQ.DLQ"));
+        TextMessage dlqMessage = (TextMessage) dlqConsumer.receive(5000);
+        assertNotNull("found message in dlq", dlqMessage);
+        assertEquals("text matches", "Test message", dlqMessage.getText());
+        consumerSession.commit();
+        
         connection.close();
     }
 

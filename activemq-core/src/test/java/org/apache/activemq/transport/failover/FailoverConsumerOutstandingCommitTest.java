@@ -288,7 +288,7 @@ public class FailoverConsumerOutstandingCommitTest {
         Message msg = testConsumer.receive(5000);
         assertNotNull(msg);
         
-        // restart with out standing delivered message
+        // restart with outstanding delivered message
         broker.stop();
         broker.waitUntilStopped();
         broker = createBroker(false);

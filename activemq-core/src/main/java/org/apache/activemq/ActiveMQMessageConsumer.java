@@ -16,6 +16,28 @@
  */
 package org.apache.activemq;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
+
+import javax.jms.IllegalStateException;
+import javax.jms.InvalidDestinationException;
+import javax.jms.JMSException;
+import javax.jms.Message;
+import javax.jms.MessageConsumer;
+import javax.jms.MessageListener;
+import javax.jms.TransactionRolledBackException;
+
 import org.apache.activemq.blob.BlobDownloader;
 import org.apache.activemq.command.ActiveMQBlobMessage;
 import org.apache.activemq.command.ActiveMQDestination;
@@ -29,6 +51,7 @@ import org.apache.activemq.command.MessageDispatch;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.command.MessagePull;
 import org.apache.activemq.command.RemoveInfo;
+import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.management.JMSConsumerStatsImpl;
 import org.apache.activemq.management.StatsCapable;
 import org.apache.activemq.management.StatsImpl;
@@ -40,27 +63,6 @@ import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.util.JMSExceptionSupport;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.ListIterator;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicReference;
-import javax.jms.IllegalStateException;
-import javax.jms.InvalidDestinationException;
-import javax.jms.JMSException;
-import javax.jms.Message;
-import javax.jms.MessageConsumer;
-import javax.jms.MessageListener;
-import javax.jms.TransactionRolledBackException;
 
 /**
  * A client uses a <CODE>MessageConsumer</CODE> object to receive messages
@@ -100,6 +102,14 @@ import javax.jms.TransactionRolledBackException;
  */
 public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsCapable, ActiveMQDispatcher {
 
+    @SuppressWarnings("serial")
+    class PreviouslyDeliveredMap<K, V> extends HashMap<K, V> {
+        final TransactionId transactionId;
+        public PreviouslyDeliveredMap(TransactionId transactionId) {
+            this.transactionId = transactionId;
+        }
+    }
+
     private static final Log LOG = LogFactory.getLog(ActiveMQMessageConsumer.class);
     protected static final Scheduler scheduler = Scheduler.getInstance();
     protected final ActiveMQSession session;
@@ -113,7 +123,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
     // Always walk list in reverse order.
     private final LinkedList<MessageDispatch> deliveredMessages = new LinkedList<MessageDispatch>();
     // track duplicate deliveries in a transaction such that the tx integrity can be validated
-    private HashMap<MessageId, Boolean> previouslyDeliveredMessages;
+    private PreviouslyDeliveredMap<MessageId, Boolean> previouslyDeliveredMessages;
     private int deliveredCounter;
     private int additionalWindowSize;
     private long redeliveryDelay;
@@ -143,7 +153,6 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
     private long optimizeAckTimestamp = System.currentTimeMillis();
     private long optimizeAckTimeout = 300;
     private long failoverRedeliveryWaitPeriod = 0;
-    private boolean rollbackInitiated;
 
     /**
      * Create a MessageConsumer
@@ -558,8 +567,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
 
             MessageDispatch md;
             if (info.getPrefetchSize() == 0) {
-                md = dequeue(-1); // We let the broker let us know when we
-                // timeout.
+                md = dequeue(-1); // We let the broker let us know when we timeout.
             } else {
                 md = dequeue(timeout);
             }
@@ -992,7 +1000,8 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                     }
                 }
                 if (numberNotReplayed > 0) {
-                    LOG.info("waiting for redelivery of " + numberNotReplayed + " to consumer :" + this.getConsumerId());
+                    LOG.info("waiting for redelivery of " + numberNotReplayed + " in transaction: "
+                            + previouslyDeliveredMessages.transactionId +  ", to consumer :" + this.getConsumerId());
                     try {
                         Thread.sleep(Math.max(500, failoverRedeliveryWaitPeriod/4));
                     } catch (InterruptedException outOfhere) {
@@ -1008,12 +1017,6 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
      */
     private void rollbackOnFailedRecoveryRedelivery() throws JMSException {
         if (previouslyDeliveredMessages != null) {
-            if (rollbackInitiated) {
-                // second call from rollback, nothing more to do
-                // REVISIT - should beforeEnd be called again by transaction context?
-                rollbackInitiated = false;
-                return;
-            }
             // if any previously delivered messages was not re-delivered, transaction is invalid and must rollback
             // as messages have been dispatched else where.
             int numberNotReplayed = 0;
@@ -1021,20 +1024,20 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                 if (!entry.getValue()) {
                     numberNotReplayed++;
                     if (LOG.isDebugEnabled()) {
-                        LOG.debug("previously delivered message has not been replayed in transaction, id: " + entry.getKey());
+                        LOG.debug("previously delivered message has not been replayed in transaction: "
+                                + previouslyDeliveredMessages.transactionId 
+                                + " , messageId: " + entry.getKey());
                     }
                 }
             }
-            
             if (numberNotReplayed > 0) {
-                String message = "rolling back transaction post failover recovery. " + numberNotReplayed
+                String message = "rolling back transaction (" 
+                    + previouslyDeliveredMessages.transactionId + ") post failover recovery. " + numberNotReplayed
                     + " previously delivered message(s) not replayed to consumer: " + this.getConsumerId();
                 LOG.warn(message);
-                rollbackInitiated = true;
-                throw new TransactionRolledBackException(message);
+                throw new TransactionRolledBackException(message);   
             }
         }
-        
     }
 
     void acknowledge(MessageDispatch md) throws JMSException {
@@ -1157,7 +1160,6 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                     removeFromDeliveredMessages(entry.getKey());
                 }
             }
-            rollbackInitiated = false;
             clearPreviouslyDelivered();
         }
     }
@@ -1166,9 +1168,9 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
      * called with deliveredMessages locked
      */
     private void removeFromDeliveredMessages(MessageId key) {
-        ListIterator<MessageDispatch> iterator = deliveredMessages.listIterator(deliveredMessages.size());
-        while (iterator.hasPrevious()) {
-            MessageDispatch candidate = iterator.previous();
+        Iterator<MessageDispatch> iterator = deliveredMessages.iterator();
+        while (iterator.hasNext()) {
+            MessageDispatch candidate = iterator.next();
             if (key.equals(candidate.getMessage().getMessageId())) {
                 session.connection.rollbackDuplicate(this, candidate.getMessage());
                 iterator.remove();
@@ -1234,13 +1236,15 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                                 if (previouslyDeliveredMessages != null) {
                                     previouslyDeliveredMessages.put(md.getMessage().getMessageId(), true);
                                 } else {
-                                    // existing transaction gone but still a duplicate!, lets mark as poison ftm,
-                                    // possibly could allow redelivery..
+                                    // delivery while pending redelivery to another consumer on the same connection
+                                    // not waiting for redelivery will help here
                                     needsPoisonAck = true;
                                 }
                             }
                             if (needsPoisonAck) {
-                                LOG.warn("acking as poison, duplicate transacted delivery but no recovering transaction for: " + md);
+                                LOG.warn("acking duplicate delivery as poison, redelivery must be pending to another"
+                                        + " consumer on this connection, failoverRedeliveryWaitPeriod=" 
+                                        + failoverRedeliveryWaitPeriod + ". Message: " + md);
                                 MessageAck poisonAck = new MessageAck(md, MessageAck.POSION_ACK_TYPE, 1);
                                 poisonAck.setFirstMessageId(md.getMessage().getMessageId());
                                 session.sendAck(poisonAck);
@@ -1271,7 +1275,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                                 LOG.debug(getConsumerId() + " tracking existing transacted delivered list (" + deliveredMessages.size() + ") on transport interrupt");
                             }
                             if (previouslyDeliveredMessages == null) {
-                                previouslyDeliveredMessages = new HashMap<MessageId, Boolean>();
+                                previouslyDeliveredMessages = new PreviouslyDeliveredMap<MessageId, Boolean>(session.getTransactionContext().getTransactionId());
                             }
                             for (MessageDispatch delivered : deliveredMessages) {
                                 previouslyDeliveredMessages.put(delivered.getMessage().getMessageId(), false);
