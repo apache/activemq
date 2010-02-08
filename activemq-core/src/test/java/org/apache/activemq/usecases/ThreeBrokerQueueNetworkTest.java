@@ -61,7 +61,8 @@ public class ThreeBrokerQueueNetworkTest extends JmsMultipleBrokersTestSupport {
         bridgeBrokers("BrokerB", "BrokerC");
 
         startAllBrokers();
-
+        waitForBridgeFormation();
+        
         // Setup destination
         Destination dest = createDestination("TEST.FOO", false);
 
@@ -88,7 +89,8 @@ public class ThreeBrokerQueueNetworkTest extends JmsMultipleBrokersTestSupport {
         bridgeBrokers("BrokerB", "BrokerC");
 
         startAllBrokers();
-
+        waitForBridgeFormation();
+        
         // Setup destination
         Destination dest = createDestination("TEST.FOO", false);
 
@@ -119,7 +121,8 @@ public class ThreeBrokerQueueNetworkTest extends JmsMultipleBrokersTestSupport {
         bridgeBrokers("BrokerB", "BrokerC", true, 1, false);
 
         startAllBrokers();
-
+        waitForBridgeFormation();
+        
         // Setup destination
         Destination dest = createDestination("TEST.FOO", false);
 
@@ -160,7 +163,8 @@ public class ThreeBrokerQueueNetworkTest extends JmsMultipleBrokersTestSupport {
         bridgeBrokers("BrokerB", "BrokerC", true, 1, false);
 
         startAllBrokers();
-
+        waitForBridgeFormation();
+        
         // Setup destination
         Destination dest = createDestination("TEST.FOO", false);
 
@@ -201,7 +205,8 @@ public class ThreeBrokerQueueNetworkTest extends JmsMultipleBrokersTestSupport {
         bridgeBrokers("BrokerC", "BrokerB");
 
         startAllBrokers();
-
+        waitForBridgeFormation();
+        
         // Setup destination
         Destination dest = createDestination("TEST.FOO", false);
 
@@ -233,7 +238,8 @@ public class ThreeBrokerQueueNetworkTest extends JmsMultipleBrokersTestSupport {
         bridgeBrokers("BrokerC", "BrokerA");
 
         startAllBrokers();
-
+        waitForBridgeFormation();
+        
         // Setup destination
         Destination dest = createDestination("TEST.FOO", false);
 
@@ -263,7 +269,8 @@ public class ThreeBrokerQueueNetworkTest extends JmsMultipleBrokersTestSupport {
         bridgeAllBrokers();
 
         startAllBrokers();
-
+        waitForBridgeFormation();
+        
         // Setup destination
         Destination dest = createDestination("TEST.FOO", false);
 
@@ -309,7 +316,8 @@ public class ThreeBrokerQueueNetworkTest extends JmsMultipleBrokersTestSupport {
     public void testAllConnectedUsingMulticastProducerConsumerOnA() throws Exception {
         bridgeAllBrokers("default", 3, false);
         startAllBrokers();
-
+        waitForBridgeFormation();
+        
         // Setup destination
         Destination dest = createDestination("TEST.FOO", false);
 
@@ -334,7 +342,8 @@ public class ThreeBrokerQueueNetworkTest extends JmsMultipleBrokersTestSupport {
     public void testAllConnectedWithSpare() throws Exception {
         bridgeAllBrokers("default", 3, false);
         startAllBrokers();
-
+        waitForBridgeFormation();
+        
         // Setup destination
         Destination dest = createDestination("TEST.FOO", false);
 
@@ -367,6 +376,7 @@ public class ThreeBrokerQueueNetworkTest extends JmsMultipleBrokersTestSupport {
         boolean suppressQueueDuplicateSubscriptions = false;
         bridgeAllBrokers("default", 3, suppressQueueDuplicateSubscriptions);
         startAllBrokers();
+        waitForBridgeFormation();
 
         // Setup destination
         Destination dest = createDestination("TEST.FOO", false);    
@@ -424,7 +434,8 @@ public class ThreeBrokerQueueNetworkTest extends JmsMultipleBrokersTestSupport {
         boolean decreaseNetworkConsumerPriority = true;
         bridgeAllBrokers("default", 3, suppressQueueDuplicateSubscriptions, decreaseNetworkConsumerPriority);
         startAllBrokers();
-
+        waitForBridgeFormation();
+        
         // Setup destination
         Destination dest = createDestination("TEST.FOO", false);    
         
@@ -467,7 +478,8 @@ public class ThreeBrokerQueueNetworkTest extends JmsMultipleBrokersTestSupport {
         bridgeAllBrokers("default", 3, true);
         
         startAllBrokers();
-
+        waitForBridgeFormation();
+        
         // Setup destination
         Destination dest = createDestination("TEST.FOO", false);
 
@@ -536,7 +548,8 @@ public class ThreeBrokerQueueNetworkTest extends JmsMultipleBrokersTestSupport {
         });
         
         startAllBrokers();
-
+        waitForBridgeFormation();
+        
     
         // Setup consumers
         String brokerName = "BrokerA";
@@ -563,7 +576,8 @@ public class ThreeBrokerQueueNetworkTest extends JmsMultipleBrokersTestSupport {
         
         bridgeAllBrokers("default", 3, false);
         startAllBrokers();
-
+        waitForBridgeFormation();
+        
         // Setup destination
         Destination dest = createDestination("TEST.FOO", false);
 

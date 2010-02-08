@@ -34,13 +34,14 @@ import javax.jms.Session;
 import javax.jms.TextMessage;
 import javax.jms.Topic;
 
+import junit.framework.TestCase;
+
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.network.NetworkConnector;
+import org.apache.activemq.util.Wait;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
-import junit.framework.TestCase;
 
 public class NoDuplicateOnTopicNetworkTest extends TestCase {
     private static final Log LOG = LogFactory
@@ -71,6 +72,25 @@ public class NoDuplicateOnTopicNetworkTest extends TestCase {
         Thread.sleep(3000);
         broker1 = createAndStartBroker("broker1", BROKER_1);
         Thread.sleep(1000);
+        
+        waitForBridgeFormation();
+    }
+    
+    protected void waitForBridgeFormation() throws Exception {
+        Wait.waitFor(new Wait.Condition() {
+            public boolean isSatisified() throws Exception {
+                return !broker3.getNetworkConnectors().get(0).activeBridges().isEmpty();
+            }});
+ 
+        Wait.waitFor(new Wait.Condition() {
+            public boolean isSatisified() throws Exception {
+                return !broker2.getNetworkConnectors().get(0).activeBridges().isEmpty();
+            }});
+
+        Wait.waitFor(new Wait.Condition() {
+            public boolean isSatisified() throws Exception {
+                return !broker1.getNetworkConnectors().get(0).activeBridges().isEmpty();
+            }});
     }
 
     private BrokerService createAndStartBroker(String name, String addr)

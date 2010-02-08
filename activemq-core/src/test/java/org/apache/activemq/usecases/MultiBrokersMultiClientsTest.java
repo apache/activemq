@@ -43,12 +43,13 @@ public class MultiBrokersMultiClientsTest extends JmsMultipleBrokersTestSupport 
 
     private static final Log LOG = LogFactory.getLog(MultiBrokersMultiClientsTest.class);
 
-    protected Map consumerMap;
+    protected Map<String, MessageConsumer> consumerMap;
     Map<Thread, Throwable> unhandeledExceptions = new HashMap<Thread, Throwable>();
 
     public void testTopicAllConnected() throws Exception {
         bridgeAllBrokers();
         startAllBrokers();
+        waitForBridgeFormation();
 
         // Setup topic destination
         Destination dest = createDestination("TEST.FOO", true);
@@ -99,6 +100,7 @@ public class MultiBrokersMultiClientsTest extends JmsMultipleBrokersTestSupport 
     public void testQueueAllConnected() throws Exception {
         bridgeAllBrokers();
         startAllBrokers();
+        this.waitForBridgeFormation();
 
         // Setup topic destination
         Destination dest = createDestination("TEST.FOO", false);
@@ -132,7 +134,7 @@ public class MultiBrokersMultiClientsTest extends JmsMultipleBrokersTestSupport 
         int totalMsg = 0;
         for (int i = 1; i <= BROKER_COUNT; i++) {
             for (int j = 0; j < CONSUMER_COUNT; j++) {
-                MessageIdList msgs = getConsumerMessages("Broker" + i, (MessageConsumer)consumerMap.get("Consumer:" + i + ":" + j));
+                MessageIdList msgs = getConsumerMessages("Broker" + i, consumerMap.get("Consumer:" + i + ":" + j));
                 totalMsg += msgs.getMessageCount();
             }
         }
@@ -153,7 +155,7 @@ public class MultiBrokersMultiClientsTest extends JmsMultipleBrokersTestSupport 
             createBroker(new URI("broker:()/Broker" + i + "?persistent=false&useJmx=false"));
         }
 
-        consumerMap = new HashMap();
+        consumerMap = new HashMap<String, MessageConsumer>();
     }
 
     public void uncaughtException(Thread t, Throwable e) {

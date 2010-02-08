@@ -46,14 +46,14 @@ public class MultiBrokersMultiClientsUsingTcpTest extends MultiBrokersMultiClien
     }
 
     protected void bridgeBrokers(BrokerService localBroker, BrokerService remoteBroker) throws Exception {
-        List remoteTransports = remoteBroker.getTransportConnectors();
-        List localTransports = localBroker.getTransportConnectors();
+        List<TransportConnector> remoteTransports = remoteBroker.getTransportConnectors();
+        List<TransportConnector> localTransports = localBroker.getTransportConnectors();
 
         URI remoteURI;
         URI localURI;
         if (!remoteTransports.isEmpty() && !localTransports.isEmpty()) {
-            remoteURI = ((TransportConnector)remoteTransports.get(0)).getConnectUri();
-            localURI = ((TransportConnector)localTransports.get(0)).getConnectUri();
+            remoteURI = remoteTransports.get(0).getConnectUri();
+            localURI = localTransports.get(0).getConnectUri();
 
             // Ensure that we are connecting using tcp
             if (remoteURI.toString().startsWith("tcp:") && localURI.toString().startsWith("tcp:")) {
@@ -77,8 +77,8 @@ public class MultiBrokersMultiClientsUsingTcpTest extends MultiBrokersMultiClien
 
         // Assign a tcp connector to each broker
         int j = 0;
-        for (Iterator i = brokers.values().iterator(); i.hasNext();) {
-            ((BrokerItem)i.next()).broker.addConnector("tcp://localhost:" + (61616 + j++));
+        for (Iterator<BrokerItem> i = brokers.values().iterator(); i.hasNext();) {
+            i.next().broker.addConnector("tcp://localhost:" + (61616 + j++));
         }
 
         bridges = new ArrayList<DemandForwardingBridge>();
