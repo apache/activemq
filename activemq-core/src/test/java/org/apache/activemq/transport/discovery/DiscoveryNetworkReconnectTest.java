@@ -110,6 +110,8 @@ public class DiscoveryNetworkReconnectTest {
                     new ObjectName("Test:BrokerName=BrokerNC,Type=NetworkConnector,NetworkConnectorName=localhost"))));
             allowing (managementContext).registerMBean(with(any(Object.class)), with(equal(            
                     new ObjectName("Test:BrokerName=BrokerNC,Type=Topic,Destination=ActiveMQ.Advisory.Connection"))));
+            allowing (managementContext).registerMBean(with(any(Object.class)), with(equal(            
+                    new ObjectName("Test:BrokerName=BrokerNC,Type=jobScheduler,jobSchedulerName=JMS"))));
             
             atLeast(maxReconnects - 1).of (managementContext).registerMBean(with(any(Object.class)), with(new NetworkBridgeObjectNameMatcher<ObjectName>(
                         new ObjectName("Test:BrokerName=BrokerNC,Type=NetworkBridge,NetworkConnectorName=localhost,Name=localhost/127.0.0.1_" 
