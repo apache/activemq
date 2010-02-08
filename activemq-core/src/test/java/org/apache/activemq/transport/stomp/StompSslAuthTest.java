@@ -30,20 +30,20 @@ import javax.net.ssl.SSLSocketFactory;
  */
 public class StompSslAuthTest extends StompTest {
 
-    
+
     protected void setUp() throws Exception {
-    	
-    	// Test mutual authentication on both stomp and standard ssl transports    	   
-    	bindAddress = "stomp+ssl://localhost:61612";
+
+        // Test mutual authentication on both stomp and standard ssl transports
+        bindAddress = "stomp+ssl://localhost:61612";
         confUri = "xbean:org/apache/activemq/transport/stomp/sslstomp-mutual-auth-broker.xml";
         jmsUri="ssl://localhost:61617";
-        
+
         System.setProperty("javax.net.ssl.trustStore", "src/test/resources/client.keystore");
         System.setProperty("javax.net.ssl.trustStorePassword", "password");
         System.setProperty("javax.net.ssl.trustStoreType", "jks");
         System.setProperty("javax.net.ssl.keyStore", "src/test/resources/server.keystore");
         System.setProperty("javax.net.ssl.keyStorePassword", "password");
-        System.setProperty("javax.net.ssl.keyStoreType", "jks");  
+        System.setProperty("javax.net.ssl.keyStoreType", "jks");
         //System.setProperty("javax.net.debug","ssl,handshake");
         super.setUp();
     }
@@ -52,18 +52,23 @@ public class StompSslAuthTest extends StompTest {
         SocketFactory factory = SSLSocketFactory.getDefault();
         return factory.createSocket("127.0.0.1", connectUri.getPort());
     }
-   
+
     // NOOP - These operations handled by jaas cert login module
     public void testConnectNotAuthenticatedWrongUser() throws Exception {
     }
-    
+
     public void testConnectNotAuthenticatedWrongPassword() throws Exception {
     }
-    
+
     public void testSendNotAuthorized() throws Exception {
     }
-    
+
     public void testSubscribeNotAuthorized() throws Exception {
     }
-    
+
+    public void testJMSXUserIDIsSetInMessage() throws Exception {
+    }
+
+    public void testJMSXUserIDIsSetInStompMessage() throws Exception {
+    }
 }

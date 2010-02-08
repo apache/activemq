@@ -76,6 +76,7 @@ public interface Stomp {
             String TIMESTAMP = "timestamp";
             String TYPE = "type";
             String SUBSCRIPTION = "subscription";
+            String USERID = "JMSXUserID";
         }
 
         public interface Subscribe {
