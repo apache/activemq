@@ -18,6 +18,8 @@ package org.apache.activemq.xbean;
 
 import java.io.IOException;
 
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.usage.SystemUsage;
 import org.apache.commons.logging.Log;
@@ -45,7 +47,7 @@ import org.springframework.osgi.context.support.OsgiBundleXmlApplicationContext;
  * {code}
  * @version $Revision: 1.1 $
  */
-public class XBeanBrokerService extends BrokerService implements InitializingBean, DisposableBean, ApplicationContextAware {
+public class XBeanBrokerService extends BrokerService implements ApplicationContextAware {
     private static final transient Log LOG = LogFactory.getLog(XBeanBrokerService.class);
     
     private boolean start = true;
@@ -55,6 +57,12 @@ public class XBeanBrokerService extends BrokerService implements InitializingBea
     public XBeanBrokerService() {
     }
 
+    /**
+     *
+     * @throws Exception
+     * @org.apache.xbean.InitMethod
+     */
+    @PostConstruct
     public void afterPropertiesSet() throws Exception {
         ensureSystemUsageHasStore();
         if (start) {
@@ -89,6 +97,12 @@ public class XBeanBrokerService extends BrokerService implements InitializingBea
         }
     }
 
+    /**
+     *
+     * @throws Exception
+     * @org.apache.xbean.DestroyMethod
+     */
+    @PreDestroy
     public void destroy() throws Exception {
         stop();
     }

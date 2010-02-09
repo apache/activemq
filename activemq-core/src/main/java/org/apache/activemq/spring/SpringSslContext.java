@@ -24,13 +24,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 
+import javax.annotation.PostConstruct;
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
-
 import org.apache.activemq.broker.SslContext;
-import org.springframework.beans.factory.InitializingBean;
 import org.springframework.core.io.Resource;
 
 /**
@@ -40,7 +39,7 @@ import org.springframework.core.io.Resource;
  * 
  * @version $Revision$
  */
-public class SpringSslContext extends SslContext implements InitializingBean {    
+public class SpringSslContext extends SslContext {    
     
     private String keyStoreType="jks";
     private String trustStoreType="jks";
@@ -55,6 +54,12 @@ public class SpringSslContext extends SslContext implements InitializingBean {
     private String keyStorePassword;
     private String trustStorePassword;
 
+    /**
+     *
+     * @throws Exception
+     * @org.apache.xbean.InitMethod
+     */
+    @PostConstruct
     public void afterPropertiesSet() throws Exception {
         keyManagers.addAll(createKeyManagers());
         trustManagers.addAll(createTrustManagers());

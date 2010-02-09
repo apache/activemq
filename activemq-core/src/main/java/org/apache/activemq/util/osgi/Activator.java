@@ -39,7 +39,7 @@ import org.osgi.framework.SynchronousBundleListener;
 
 /**
  * An OSGi bundle activator for ActiveMQ which adapts the {@link org.apache.activemq.util.FactoryFinder}
- * to the OSGi enviorment.
+ * to the OSGi environment.
  *
  */
 public class Activator implements BundleActivator, SynchronousBundleListener, ObjectFactory {
@@ -49,6 +49,15 @@ public class Activator implements BundleActivator, SynchronousBundleListener, Ob
     private final ConcurrentHashMap<String, Class> serviceCache = new ConcurrentHashMap<String, Class>();
     private final ConcurrentMap<Long, BundleWrapper> bundleWrappers = new ConcurrentHashMap<Long, BundleWrapper>();
     private BundleContext bundleContext;
+
+    /**
+     * constructor for use as a blueprint bean rather than bundle activator
+     * @param bundleContext
+     */
+    public Activator(BundleContext bundleContext) throws Exception {
+        start(bundleContext);
+    }
+
 
     // ================================================================
     // BundleActivator interface impl
