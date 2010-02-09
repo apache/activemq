@@ -349,7 +349,7 @@ public abstract class JmsTransactionTestSupport extends TestSupport implements M
 
         // lets consume any outstanding messages from prev test runs
         beginTx();
-        while (consumer.receive(1000) != null) {
+            while (consumer.receive(1000) != null) {
         }
         commitTx();
 

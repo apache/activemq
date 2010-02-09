@@ -28,13 +28,13 @@ import java.util.concurrent.ConcurrentHashMap;
 public class FactoryFinder {
 
     /**
-     * The strategey that the FactoryFinder uses to find load and instanciate Objects
-     * can be chagned out by calling the
+     * The strategy that the FactoryFinder uses to find load and instantiate Objects
+     * can be changed out by calling the
      * {@link org.apache.activemq.util.FactoryFinder#setObjectFactory(org.apache.activemq.util.FactoryFinder.ObjectFactory)}
-     * method with a custom implemenation of ObjectFactory.
+     * method with a custom implementation of ObjectFactory.
      *
      * The default ObjectFactory is typically changed out when running in a specialized container
-     * enviorment where service discovery needs to be done via the container system.  For example,
+     * environment where service discovery needs to be done via the container system.  For example,
      * in an OSGi scenario.
      */
     public interface ObjectFactory {
