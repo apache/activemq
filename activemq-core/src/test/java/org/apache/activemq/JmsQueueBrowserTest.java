@@ -29,6 +29,7 @@ import javax.jms.Session;
 import javax.jms.TextMessage;
 
 import org.apache.activemq.broker.StubConnection;
+import org.apache.activemq.broker.region.BaseDestination;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ConnectionInfo;
@@ -177,7 +178,11 @@ public class JmsQueueBrowserTest extends JmsTestSupport {
             assertNotNull("m2 is null for index: " + i, m2);
             assertEquals(m1.getJMSMessageID(), m2.getJMSMessageID());
         }
-        assertEquals("got all: ", numMessages, i);
+        
+        // currently browse max page size is ignored for a queue browser consumer
+        // only guarantee is a page size - but a snapshot of pagedinpending is
+        // used so it is most likely more
+        assertTrue("got at least our expected minimum in the browser: ", i > BaseDestination.MAX_PAGE_SIZE);
 
         assertFalse("nothing left in the browser", browserView.hasMoreElements());
         assertNull("consumer finished", consumer.receiveNoWait());
