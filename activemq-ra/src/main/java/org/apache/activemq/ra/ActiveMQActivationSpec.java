@@ -142,12 +142,12 @@ public class ActiveMQActivationSpec implements MessageActivationSpec, Serializab
 
     public boolean isValidUseRAManagedTransaction(List<String> errorMessages) {
         try {
-            new Boolean(noLocal);
+            new Boolean(useRAManagedTransaction);
             return true;
         } catch (Throwable e) {
             //
         }
-        errorMessages.add("noLocal must be set to: true or false.");
+        errorMessages.add("useRAManagedTransaction must be set to: true or false.");
         return false;
     }
 
