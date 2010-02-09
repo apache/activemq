@@ -296,16 +296,13 @@ public class Queue extends BaseDestination implements Task, UsageListener {
     }
 
     /*
-     * Holder for subscription and pagedInMessages as a browser needs access to
-     * existing messages in the queue that have already been dispatched
+     * Holder for subscription that needs attention on next iterate
+     * browser needs access to existing messages in the queue that have already been dispatched
      */
     class BrowserDispatch {
-        ArrayList<QueueMessageReference> messages;
         QueueBrowserSubscription browser;
 
-        public BrowserDispatch(QueueBrowserSubscription browserSubscription, Collection<QueueMessageReference> values) {
-
-            messages = new ArrayList<QueueMessageReference>(values);
+        public BrowserDispatch(QueueBrowserSubscription browserSubscription) {
             browser = browserSubscription;
             browser.incrementQueueRef();
         }
@@ -362,18 +359,14 @@ public class Queue extends BaseDestination implements Task, UsageListener {
             }
 
             if (sub instanceof QueueBrowserSubscription) {
+                // tee up for dispatch in next iterate
                 QueueBrowserSubscription browserSubscription = (QueueBrowserSubscription) sub;
-
-                // do again in iterate to ensure new messages are dispatched
-                pageInMessages(false);
-
                 synchronized (pagedInMessages) {
-                    if (!pagedInMessages.isEmpty()) {
-                        BrowserDispatch browserDispatch = new BrowserDispatch(browserSubscription, pagedInMessages.values());
-                        browserDispatches.addLast(browserDispatch);
-                    }
+                    BrowserDispatch browserDispatch = new BrowserDispatch(browserSubscription);
+                    browserDispatches.addLast(browserDispatch);
                 }
             }
+            
             if (!(this.optimizedDispatch || isSlave())) {
                 wakeup();
             }
@@ -1157,7 +1150,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
      * @see org.apache.activemq.thread.Task#iterate()
      */
     public boolean iterate() {
-        boolean pageInMoreMessages = false;
+        boolean pageInMoreMessages = false;       
         synchronized (iteratingMutex) {
 
             // do early to allow dispatch of these waiting messages
@@ -1172,31 +1165,6 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                         registerCallbackForNotFullNotification();
                         break;
                     }
-                }
-            }
-
-            BrowserDispatch rd;
-            while ((rd = getNextBrowserDispatch()) != null) {
-                pageInMoreMessages = true;
-
-                try {
-                    MessageEvaluationContext msgContext = new NonCachedMessageEvaluationContext();
-                    msgContext.setDestination(destination);
-
-                    QueueBrowserSubscription browser = rd.getBrowser();
-                    for (QueueMessageReference node : rd.messages) {
-                        if (!node.isAcked()) {
-                            msgContext.setMessageReference(node);
-                            if (browser.matches(node, msgContext)) {
-                                browser.add(node);
-                            }
-                        }
-                    }
-
-                    rd.done();
-
-                } catch (Exception e) {
-                    LOG.warn("exception on dispatch to browser: " + rd.getBrowser(), e);
                 }
             }
 
@@ -1228,6 +1196,8 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                     LOG.error(e);
                 }
             }
+            
+            BrowserDispatch pendingBrowserDispatch = getNextBrowserDispatch();
 
             synchronized (messages) {
                 pageInMoreMessages |= !messages.isEmpty();
@@ -1242,14 +1212,46 @@ public class Queue extends BaseDestination implements Task, UsageListener {
             // Perhaps we should page always into the pagedInPendingDispatch list if 
             // !messages.isEmpty(), and then if !pagedInPendingDispatch.isEmpty()
             // then we do a dispatch.
-            if (pageInMoreMessages) {
+            if (pageInMoreMessages || pendingBrowserDispatch != null) {
                 try {
-                    pageInMessages(false);
+                    pageInMessages(pendingBrowserDispatch != null);
 
                 } catch (Throwable e) {
                     LOG.error("Failed to page in more queue messages ", e);
                 }
             }
+            
+            if (pendingBrowserDispatch != null) {
+                ArrayList<QueueMessageReference> alreadyDispatchedMessages = null;
+                synchronized (pagedInMessages) {
+                    alreadyDispatchedMessages = new ArrayList<QueueMessageReference>(pagedInMessages.values());
+                }
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("dispatch to browser: " + pendingBrowserDispatch.getBrowser()
+                            + ", already dispatched/paged count: " + alreadyDispatchedMessages.size());
+                }
+                do {
+                    try {
+                        MessageEvaluationContext msgContext = new NonCachedMessageEvaluationContext();
+                        msgContext.setDestination(destination);
+                        
+                        QueueBrowserSubscription browser = pendingBrowserDispatch.getBrowser();
+                        for (QueueMessageReference node : alreadyDispatchedMessages) {
+                            if (!node.isAcked()) {
+                                msgContext.setMessageReference(node);
+                                if (browser.matches(node, msgContext)) {
+                                    browser.add(node);
+                                }
+                            }
+                        }
+                        pendingBrowserDispatch.done();
+                    } catch (Exception e) {
+                        LOG.warn("exception on dispatch to browser: " + pendingBrowserDispatch.getBrowser(), e);
+                    }
+                
+                } while ((pendingBrowserDispatch = getNextBrowserDispatch()) != null);
+            }
+            
             if (pendingWakeups.get() > 0) {
                 pendingWakeups.decrementAndGet();
             }

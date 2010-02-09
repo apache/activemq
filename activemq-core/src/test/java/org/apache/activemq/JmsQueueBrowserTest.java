@@ -16,7 +16,9 @@
  */
 package org.apache.activemq;
 
+import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.List;
 
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
@@ -26,7 +28,14 @@ import javax.jms.QueueBrowser;
 import javax.jms.Session;
 import javax.jms.TextMessage;
 
+import org.apache.activemq.broker.StubConnection;
+import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
+import org.apache.activemq.command.ConnectionInfo;
+import org.apache.activemq.command.ConsumerInfo;
+import org.apache.activemq.command.MessageAck;
+import org.apache.activemq.command.ProducerInfo;
+import org.apache.activemq.command.SessionInfo;
 
 /**
  * @version $Revision: 1.4 $
@@ -127,5 +136,50 @@ public class JmsQueueBrowserTest extends JmsTestSupport {
         browser.close();
         producer.close();
 
-    }    
+    }
+    
+    public void testQueueBrowserWith2Consumers() throws Exception {
+        final int numMessages = 1000;
+        connection.setAlwaysSyncSend(false);
+        Session session = connection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
+        ActiveMQQueue destination = new ActiveMQQueue("TEST");
+        ActiveMQQueue destinationPrefetch10 = new ActiveMQQueue("TEST?jms.prefetchSize=10");
+        ActiveMQQueue destinationPrefetch1 = new ActiveMQQueue("TEST?jms.prefetchsize=1");      
+        connection.start();
+
+        ActiveMQConnection connection2 = (ActiveMQConnection)factory.createConnection(userName, password);
+        connection2.start();
+        connections.add(connection2);
+        Session session2 = connection2.createSession(false, Session.AUTO_ACKNOWLEDGE);
+
+        MessageProducer producer = session.createProducer(destination);
+        MessageConsumer consumer = session.createConsumer(destinationPrefetch10);
+  
+        for (int i=0; i<numMessages; i++) {
+            TextMessage message = session.createTextMessage("Message: " + i);
+            producer.send(message);   
+        }
+        
+        QueueBrowser browser = session2.createBrowser(destinationPrefetch1);
+        Enumeration<Message> browserView = browser.getEnumeration();
+    
+        List<Message> messages = new ArrayList<Message>();
+        for (int i = 0; i < numMessages; i++) {
+            Message m1 = consumer.receive(5000);
+            assertNotNull("m1 is null for index: " + i, m1);
+            messages.add(m1);
+        }
+
+        int i = 0;
+        for (; i < numMessages && browserView.hasMoreElements(); i++) {
+            Message m1 = messages.get(i);
+            Message m2 = browserView.nextElement();
+            assertNotNull("m2 is null for index: " + i, m2);
+            assertEquals(m1.getJMSMessageID(), m2.getJMSMessageID());
+        }
+        assertEquals("got all: ", numMessages, i);
+
+        assertFalse("nothing left in the browser", browserView.hasMoreElements());
+        assertNull("consumer finished", consumer.receiveNoWait());
+    }
 }
