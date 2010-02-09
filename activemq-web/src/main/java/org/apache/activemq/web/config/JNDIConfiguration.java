@@ -26,79 +26,79 @@ import javax.naming.NamingException;
 
 /**
  * Configuration based on JNDI values.
- * 
+ *
  * @version $Revision: $
  */
 public class JNDIConfiguration extends AbstractConfiguration {
 
-	private static final String JNDI_JMS_CONNECTION_FACTORY = "java:comp/env/jms/connectionFactory";
-	private static final String JNDI_JMS_URL = "java:comp/env/jms/url";
-	private static final String JNDI_JMS_USER = "java:comp/env/jms/user";
-	private static final String JNDI_JMS_PASSWORD = "java:comp/env/jms/password";
+    private static final String JNDI_JMS_CONNECTION_FACTORY = "java:comp/env/jms/connectionFactory";
+    private static final String JNDI_JMS_URL = "java:comp/env/jms/url";
+    private static final String JNDI_JMS_USER = "java:comp/env/jms/user";
+    private static final String JNDI_JMS_PASSWORD = "java:comp/env/jms/password";
 
-	private static final String JNDI_JMX_URL = "java:comp/env/jmx/url";
-	private static final String JNDI_JMX_USER = "java:comp/env/jmx/user";
-	private static final String JNDI_JMX_PASSWORD = "java:comp/env/jmx/password";
+    private static final String JNDI_JMX_URL = "java:comp/env/jmx/url";
+    private static final String JNDI_JMX_USER = "java:comp/env/jmx/user";
+    private static final String JNDI_JMX_PASSWORD = "java:comp/env/jmx/password";
 
-	private InitialContext context;
+    private InitialContext context;
 
-	public JNDIConfiguration() throws NamingException {
-		this.context = new InitialContext();
-	}
+    public JNDIConfiguration() throws NamingException {
+        this.context = new InitialContext();
+    }
 
-	public JNDIConfiguration(InitialContext context) {
-		this.context = context;
-	}
+    public JNDIConfiguration(InitialContext context) {
+        this.context = context;
+    }
 
-	public ConnectionFactory getConnectionFactory() {
-		try {
-			ConnectionFactory connectionFactory = (ConnectionFactory) this.context
-					.lookup(JNDI_JMS_CONNECTION_FACTORY);
-			return connectionFactory;
-		} catch (NameNotFoundException e) {
-			// try to find an url
-		} catch (NamingException e) {
-			throw new RuntimeException(e);
-		}
+    public ConnectionFactory getConnectionFactory() {
+        try {
+            ConnectionFactory connectionFactory = (ConnectionFactory) this.context
+                    .lookup(JNDI_JMS_CONNECTION_FACTORY);
+            return connectionFactory;
+        } catch (NameNotFoundException e) {
+            // try to find an url
+        } catch (NamingException e) {
+            throw new RuntimeException(e);
+        }
 
-		try {
-			String jmsUrl = (String) this.context.lookup(JNDI_JMS_URL);
-			if (jmsUrl == null) {
-				throw new IllegalArgumentException(
-						"A JMS-url must be specified (system property "
-								+ JNDI_JMS_URL);
-			}
+        try {
+            String jmsUrl = (String) this.context.lookup(JNDI_JMS_URL);
+            if (jmsUrl == null) {
+                throw new IllegalArgumentException(
+                        "A JMS-url must be specified (system property "
+                                + JNDI_JMS_URL);
+            }
 
-			String jmsUser = getJndiString(JNDI_JMS_USER);
-			String jmsPassword = getJndiString(JNDI_JMS_PASSWORD);
-			return makeConnectionFactory(jmsUrl, jmsUser, jmsPassword);
-		} catch (NameNotFoundException e) {
-			throw new IllegalArgumentException(
-					"Neither a ConnectionFactory nor a JMS-url were specified");
-		} catch (NamingException e) {
-			throw new RuntimeException(e);
-		}
-	}
+            String jmsUser = getJndiString(JNDI_JMS_USER);
+            String jmsPassword = getJndiString(JNDI_JMS_PASSWORD);
+            return makeConnectionFactory(jmsUrl, jmsUser, jmsPassword);
+        } catch (NameNotFoundException e) {
+            throw new IllegalArgumentException(
+                    "Neither a ConnectionFactory nor a JMS-url were specified");
+        } catch (NamingException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
-	protected String getJndiString(String name) {
-		try {
-			return (String) this.context.lookup(name);
-		} catch (NamingException e) {
-			return null;
-		}
-	}
+    protected String getJndiString(String name) {
+        try {
+            return (String) this.context.lookup(name);
+        } catch (NamingException e) {
+            return null;
+        }
+    }
 
-	public Collection<JMXServiceURL> getJmxUrls() {
-		String jmxUrls = getJndiString(JNDI_JMX_URL);
-		return makeJmxUrls(jmxUrls);
-	}
+    public Collection<JMXServiceURL> getJmxUrls() {
+        String jmxUrls = getJndiString(JNDI_JMX_URL);
+        return makeJmxUrls(jmxUrls);
+    }
 
-	public String getJmxPassword() {
-		return getJndiString(JNDI_JMX_USER);
-	}
+    public String getJmxPassword() {
+        return getJndiString(JNDI_JMX_PASSWORD);
+    }
 
-	public String getJmxUser() {
-		return getJndiString(JNDI_JMX_PASSWORD);
-	}
+    public String getJmxUser() {
+        return getJndiString(JNDI_JMX_USER);
+    }
 
 }
