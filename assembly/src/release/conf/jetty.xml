@@ -20,17 +20,54 @@
     
     e.g. <import resource="jetty.xml"/>
 -->
-<beans>
-    <jetty xmlns="http://mortbay.com/schemas/jetty/1.0">
-        <connectors>
-            <nioConnector port="8161"/>
-        </connectors>
-
-        <handlers>
-            <webAppContext contextPath="/admin" resourceBase="${activemq.base}/webapps/admin" logUrlOnStart="true"/>
-            <webAppContext contextPath="/camel" resourceBase="${activemq.base}/webapps/camel" logUrlOnStart="true"/>
-            <webAppContext contextPath="/demo" resourceBase="${activemq.base}/webapps/demo" logUrlOnStart="true"/>
-            <webAppContext contextPath="/fileserver" resourceBase="${activemq.base}/webapps/fileserver" logUrlOnStart="true"/>
-        </handlers>
-    </jetty>
- </beans>
+<beans
+   xmlns="http://www.springframework.org/schema/beans"
+   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+   xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+ 
+  <!--  <bean id="contexts" class="org.eclipse.jetty.server.handler.ContextHandlerCollection"/> -->
+ 
+  <bean id="Server" class="org.eclipse.jetty.server.Server" init-method="start" destroy-method="stop">
+ 
+    <property name="connectors">
+      <list>
+        <bean id="Connector" class="org.eclipse.jetty.server.nio.SelectChannelConnector">
+          <property name="port" value="8161"/>
+        </bean>
+      </list>
+    </property>
+ 
+    <property name="handler">
+      <bean id="handlers" class="org.eclipse.jetty.server.handler.HandlerCollection">
+        <property name="handlers">
+          <list>
+            <!--  <ref bean="contexts"/>
+            <bean id="defaultHandler" class="org.eclipse.jetty.server.handler.DefaultHandler"/> -->
+            <bean class="org.eclipse.jetty.webapp.WebAppContext">
+              <property name="contextPath" value="/admin"/>
+              <property name="resourceBase" value="${activemq.base}/webapps/admin"/>
+              <property name="logUrlOnStart" value="true"/>
+            </bean>
+            <!--<bean class="org.eclipse.jetty.webapp.WebAppContext">
+              <property name="contextPath" value="/camel"/>
+              <property name="resourceBase" value="${activemq.base}/webapps/camel"/>
+              <property name="logUrlOnStart" value="true"/>
+            </bean>
+            <bean class="org.eclipse.jetty.webapp.WebAppContext">
+              <property name="contextPath" value="/demo"/>
+              <property name="resourceBase" value="${activemq.base}/webapps/demo"/>
+              <property name="logUrlOnStart" value="true"/>
+            </bean>
+            <bean class="org.eclipse.jetty.webapp.WebAppContext">
+              <property name="contextPath" value="/fileserver"/>
+              <property name="resourceBase" value="${activemq.base}/webapps/fileserver"/>
+              <property name="logUrlOnStart" value="true"/>
+            </bean>-->
+          </list>
+        </property>
+      </bean>
+    </property>
+ 
+  </bean>
+ 
+</beans>

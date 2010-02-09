@@ -27,7 +27,7 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
 
-import org.mortbay.log.Log;
+import org.eclipse.jetty.util.log.Log;
 
 public class FilenameGuardFilter implements Filter {
 

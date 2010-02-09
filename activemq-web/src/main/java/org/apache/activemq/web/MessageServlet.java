@@ -30,24 +30,18 @@ import javax.jms.MessageConsumer;
 import javax.jms.ObjectMessage;
 import javax.jms.TextMessage;
 import javax.servlet.ServletConfig;
-import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.activemq.MessageAvailableConsumer;
 import org.apache.activemq.MessageAvailableListener;
-import org.apache.activemq.camel.converter.ActiveMQMessageConverter;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQTextMessage;
-import org.apache.camel.Endpoint;
-import org.apache.camel.Exchange;
-import org.apache.camel.ExchangePattern;
-import org.apache.camel.Producer;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.mortbay.util.ajax.Continuation;
-import org.mortbay.util.ajax.ContinuationSupport;
+import org.eclipse.jetty.continuation.Continuation;
+import org.eclipse.jetty.continuation.ContinuationSupport;
 
 /**
  * A servlet for sending and receiving messages to/from JMS destinations using
@@ -204,14 +198,14 @@ public class MessageServlet extends MessageServletSupport {
                 // Get an existing Continuation or create a new one if there are
                 // no events.
                 if (message == null) {
-                    continuation = ContinuationSupport.getContinuation(request, consumer);
+                    continuation = ContinuationSupport.getContinuation(request);
 
                     // register this continuation with our listener.
                     listener.setContinuation(continuation);
 
                     // Get the continuation object (may wait and/or retry
                     // request here).
-                    continuation.suspend(timeout);
+                    continuation.suspend();
                 }
 
                 // Try again now

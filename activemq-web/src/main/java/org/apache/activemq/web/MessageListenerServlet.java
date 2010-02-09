@@ -40,8 +40,8 @@ import org.apache.activemq.MessageAvailableConsumer;
 import org.apache.activemq.MessageAvailableListener;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.mortbay.util.ajax.Continuation;
-import org.mortbay.util.ajax.ContinuationSupport;
+import org.eclipse.jetty.continuation.Continuation;
+import org.eclipse.jetty.continuation.ContinuationSupport;
 
 /**
  * A servlet for sending and receiving messages to/from JMS destinations using
@@ -263,9 +263,9 @@ public class MessageListenerServlet extends MessageServletSupport {
             LOG.debug("doMessage timeout=" + timeout);
         }
 
-        Continuation continuation = ContinuationSupport.getContinuation(request, client);
+        Continuation continuation = ContinuationSupport.getContinuation(request);
         Listener listener = getListener(request);
-        if (listener != null && continuation != null && !continuation.isPending()) {
+        if (listener != null && continuation != null && !continuation.isSuspended()) {
             listener.access();
         }
 
@@ -298,7 +298,7 @@ public class MessageListenerServlet extends MessageServletSupport {
 
                 // Get the continuation object (may wait and/or retry
                 // request here).
-                continuation.suspend(timeout);
+                continuation.suspend();
             }
             listener.setContinuation(null);
 

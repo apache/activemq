@@ -25,7 +25,7 @@ import java.net.URL;
 
 import junit.framework.TestCase;
 
-import org.mortbay.util.IO;
+import org.eclipse.jetty.util.IO;
 
 public class RestFilterTest extends TestCase {
 

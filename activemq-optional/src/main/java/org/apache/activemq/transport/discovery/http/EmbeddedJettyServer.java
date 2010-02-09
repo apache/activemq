@@ -18,10 +18,10 @@ package org.apache.activemq.transport.discovery.http;
 
 import java.net.URI;
 
-import org.mortbay.jetty.Server;
-import org.mortbay.jetty.nio.SelectChannelConnector;
-import org.mortbay.jetty.servlet.Context;
-import org.mortbay.jetty.servlet.ServletHolder;
+import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.nio.SelectChannelConnector;
+import org.eclipse.jetty.servlet.ServletHolder;
+import org.eclipse.jetty.servlet.ServletContextHandler;
 
 public class EmbeddedJettyServer implements org.apache.activemq.Service {
 
@@ -34,7 +34,7 @@ public class EmbeddedJettyServer implements org.apache.activemq.Service {
         URI uri = new URI(agent.getRegistryURL());
 
         server = new Server();
-        Context context = new Context(Context.NO_SECURITY | Context.NO_SESSIONS);
+        ServletContextHandler context = new ServletContextHandler(ServletContextHandler.NO_SECURITY | ServletContextHandler.NO_SESSIONS);
         
         context.setContextPath("/");
         ServletHolder holder = new ServletHolder();

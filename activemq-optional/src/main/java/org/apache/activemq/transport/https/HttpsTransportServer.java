@@ -19,7 +19,7 @@ package org.apache.activemq.transport.https;
 import java.net.URI;
 
 import org.apache.activemq.transport.http.HttpTransportServer;
-import org.mortbay.jetty.security.SslSocketConnector;
+import org.eclipse.jetty.server.ssl.SslSocketConnector;
 
 public class HttpsTransportServer extends HttpTransportServer {
 
