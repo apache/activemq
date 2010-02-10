@@ -188,6 +188,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     private final Object ensureConnectionInfoSentMutex = new Object();
     private boolean useDedicatedTaskRunner;
     protected CountDownLatch transportInterruptionProcessingComplete;
+    private long consumerFailoverRedeliveryWaitPeriod;
 
     /**
      * Construct an <code>ActiveMQConnection</code>
@@ -2244,7 +2245,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
 	
 	protected void waitForTransportInterruptionProcessing() throws InterruptedException {
         if (transportInterruptionProcessingComplete != null) {
-            while (!closed.get() && !transportFailed.get() && !transportInterruptionProcessingComplete.await(15, TimeUnit.SECONDS)) {
+            while (!closed.get() && !transportFailed.get() && !transportInterruptionProcessingComplete.await(10, TimeUnit.SECONDS)) {
                 LOG.warn("dispatch paused, waiting for outstanding dispatch interruption processing (" + transportInterruptionProcessingComplete.getCount() + ") to complete..");
             }
             synchronized (this) {
@@ -2258,4 +2259,35 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
 	        transportInterruptionProcessingComplete.countDown();
 	    }
 	}
+
+    private void signalInterruptionProcessingComplete() throws InterruptedException {
+        if (transportInterruptionProcessingComplete.await(0, TimeUnit.SECONDS)) {
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("transportInterruptionProcessingComplete for: " + this.getConnectionInfo().getConnectionId());
+            }
+            synchronized (this) {
+                transportInterruptionProcessingComplete = null;
+                FailoverTransport failoverTransport = transport.narrow(FailoverTransport.class);
+                if (failoverTransport != null) {
+                    failoverTransport.connectionInterruptProcessingComplete(this.getConnectionInfo().getConnectionId());
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug("notified failover transport (" + failoverTransport +") of interruption completion for: " + this.getConnectionInfo().getConnectionId());
+                    }
+                } 
+            }
+        }
+    }
+
+    /*
+     * specify the amount of time in milliseconds that a consumer with a transaction pending recovery
+     * will wait to receive re dispatched messages.
+     * default value is 0 so there is no wait by default.
+     */
+    public void setConsumerFailoverRedeliveryWaitPeriod(long consumerFailoverRedeliveryWaitPeriod) {
+        this.consumerFailoverRedeliveryWaitPeriod = consumerFailoverRedeliveryWaitPeriod;
+    }
+    
+    public long getConsumerFailoverRedeliveryWaitPeriod() {
+        return consumerFailoverRedeliveryWaitPeriod;
+    }
 }

@@ -212,7 +212,9 @@ public class FailoverTransport implements CompositeTransport {
                 failedConnectTransportURI=connectedTransportURI;
                 connectedTransportURI = null;
                 connected=false;
-            
+
+                stateTracker.transportInterrupted();
+
                 // notify before any reconnect attempt so ack state can be whacked
                 if (transportListener != null) {
                     transportListener.transportInterupted();

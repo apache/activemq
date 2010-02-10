@@ -16,7 +16,6 @@
  */
 package org.apache.activemq.transport.failover;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -40,6 +39,7 @@ import javax.jms.TextMessage;
 import javax.jms.TransactionRolledBackException;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.AutoFailTestSupport;
 import org.apache.activemq.broker.BrokerPlugin;
 import org.apache.activemq.broker.BrokerPluginSupport;
 import org.apache.activemq.broker.BrokerService;
@@ -55,6 +55,7 @@ import org.junit.After;
 import org.junit.Test;
 
 // see https://issues.apache.org/activemq/browse/AMQ-2473
+// https://issues.apache.org/activemq/browse/AMQ-2590
 public class FailoverTransactionTest {
 	
     private static final Log LOG = LogFactory.getLog(FailoverTransactionTest.class);
@@ -167,11 +168,12 @@ public class FailoverTransactionTest {
                 LOG.info("doing async commit...");
                 try {
                     session.commit();
-                    commitDoneLatch.countDown();
-                    LOG.info("done async commit");
-                } catch (Exception e) {
-                    e.printStackTrace();
+                } catch (JMSException e) {
+                    assertTrue(e instanceof TransactionRolledBackException);
+                    LOG.info("got commit exception: ", e);
                 }
+                commitDoneLatch.countDown();
+                LOG.info("done async commit");
             }
         });
        
@@ -285,110 +287,8 @@ public class FailoverTransactionTest {
 	    }
 	    session.commit();
 	    connection.close();
-	}  
-	
-	@Test
-	public void testFailoverConsumerCommitLost() throws Exception {
-	    final int adapter = 0;
-	    broker = createBroker(true);
-	    setPersistenceAdapter(adapter);
-
-	    broker.setPlugins(new BrokerPlugin[] {
-	            new BrokerPluginSupport() {
-
-	                @Override
-	                public void commitTransaction(ConnectionContext context,
-	                        TransactionId xid, boolean onePhase) throws Exception {
-	                    super.commitTransaction(context, xid, onePhase);
-	                    // so commit will hang as if reply is lost
-	                    context.setDontSendReponse(true);
-	                    Executors.newSingleThreadExecutor().execute(new Runnable() {   
-	                        public void run() {
-	                            LOG.info("Stopping broker post commit...");
-	                            try {
-	                                broker.stop();
-	                            } catch (Exception e) {
-	                                e.printStackTrace();
-	                            }
-	                        }
-	                    });
-	                }   
-	            }
-	    });
-	    broker.start();
-
-	    ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory("failover:(" + url + ")");
-	    Connection connection = cf.createConnection();
-	    connection.start();
-	    final Session producerSession = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-	    final Session consumerSession = connection.createSession(true, Session.AUTO_ACKNOWLEDGE);
-	    Queue destination = producerSession.createQueue(QUEUE_NAME);
-
-	    final MessageConsumer consumer = consumerSession.createConsumer(destination);
-
-	    produceMessage(producerSession, destination);
-
-	    final Vector<Message> receivedMessages = new Vector<Message>();
-	    final CountDownLatch commitDoneLatch = new CountDownLatch(1);  
-	    Executors.newSingleThreadExecutor().execute(new Runnable() {   
-	        public void run() {
-	            LOG.info("doing async commit after consume...");
-	            try {
-	                Message msg = consumer.receive(20000);
-	                LOG.info("Got message: " + msg);
-	                receivedMessages.add(msg);
-	                consumerSession.commit();
-	                commitDoneLatch.countDown();
-	                LOG.info("done async commit");
-	            } catch (Exception e) {
-	                e.printStackTrace();
-	            }
-	        }
-	    });
-
-
-	    // will be stopped by the plugin
-	    broker.waitUntilStopped();
-	    broker = createBroker(false);
-	    setPersistenceAdapter(adapter);
-	    broker.start();
-
-	    assertTrue("tx committed trough failover", commitDoneLatch.await(30, TimeUnit.SECONDS));
-
-	    assertEquals("we got a message", 1, receivedMessages.size());
-
-	    // new transaction
-	    Message msg = consumer.receive(20000);
-	    LOG.info("Received: " + msg);
-	    assertNull("we did not get a duplicate message", msg);
-	    consumerSession.commit();
-	    consumer.close();
-	    connection.close();
-
-	    // ensure no dangling messages with fresh broker etc
-	    broker.stop();
-	    broker.waitUntilStopped();
-
-	    LOG.info("Checking for remaining/hung messages..");
-	    broker = createBroker(false);
-	    setPersistenceAdapter(adapter);
-	    broker.start();
-
-	    // after restart, ensure no dangling messages
-	    cf = new ActiveMQConnectionFactory("failover:(" + url + ")");
-	    connection = cf.createConnection();
-	    connection.start();
-	    Session session2 = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-	    MessageConsumer consumer2 = session2.createConsumer(destination);
-	    msg = consumer2.receive(1000);
-	    if (msg == null) {
-	        msg = consumer2.receive(5000);
-	    }
-	    LOG.info("Received: " + msg);
-	    assertNull("no messges left dangling but got: " + msg, msg);
-	    connection.close();
 	}
-	
+		
     @Test
     public void testFailoverConsumerAckLost() throws Exception {
         // as failure depends on hash order, do a few times
@@ -560,6 +460,93 @@ public class FailoverTransactionTest {
         }
         LOG.info("Sweep received: " + msg);
         assertNull("no messges left dangling but got: " + msg, msg);
+        connection.close();
+    }
+
+    @Test
+    public void testAutoRollbackWithMissingRedeliveries() throws Exception {
+        broker = createBroker(true);
+        broker.start();
+        ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory("failover:(" + url + ")");
+        Connection connection = cf.createConnection();
+        connection.start();
+        final Session producerSession = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        final Queue destination = producerSession.createQueue(QUEUE_NAME + "?consumer.prefetchSize=1");
+        final Session consumerSession = connection.createSession(true, Session.SESSION_TRANSACTED);
+        MessageConsumer consumer = consumerSession.createConsumer(destination);
+        
+        produceMessage(producerSession, destination);
+        
+        Message msg = consumer.receive(20000);
+        assertNotNull(msg);
+        
+        broker.stop();
+        broker = createBroker(false);
+        // use empty jdbc store so that default wait for redeliveries will timeout after failover
+        setPersistenceAdapter(1);
+        broker.start();
+        
+        try {
+            consumerSession.commit();
+        } catch (JMSException expectedRolledback) {
+            assertTrue(expectedRolledback instanceof TransactionRolledBackException);
+        }
+        
+        broker.stop(); 
+        broker = createBroker(false);
+        broker.start();
+        
+        assertNotNull("should get rolledback message from original restarted broker", consumer.receive(20000));
+        connection.close();
+    }
+
+ 
+    @Test
+    public void testWaitForMissingRedeliveries() throws Exception {
+        LOG.info("testWaitForMissingRedeliveries()");
+        broker = createBroker(true);
+        broker.start();
+        ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory("failover:(" + url + ")?jms.consumerFailoverRedeliveryWaitPeriod=30000");
+        Connection connection = cf.createConnection();
+        connection.start();
+        final Session producerSession = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        final Queue destination = producerSession.createQueue(QUEUE_NAME);
+        final Session consumerSession = connection.createSession(true, Session.SESSION_TRANSACTED);
+        MessageConsumer consumer = consumerSession.createConsumer(destination);
+        
+        produceMessage(producerSession, destination);
+        Message msg = consumer.receive(20000);
+        if (msg == null) {
+            AutoFailTestSupport.dumpAllThreads("missing-");
+        }
+        assertNotNull("got message just produced", msg);
+        
+        broker.stop();
+        broker = createBroker(false);
+        // use empty jdbc store so that wait for re-deliveries occur when failover resumes
+        setPersistenceAdapter(1);
+        broker.start();
+
+        final CountDownLatch commitDone = new CountDownLatch(1);
+        // will block pending re-deliveries
+        Executors.newSingleThreadExecutor().execute(new Runnable() {   
+            public void run() {
+                LOG.info("doing async commit...");
+                try {
+                    consumerSession.commit();
+                    commitDone.countDown();
+                } catch (JMSException ignored) {
+                }
+            }
+        });
+        
+        broker.stop(); 
+        broker = createBroker(false);
+        broker.start();
+        
+        assertTrue("commit was successfull", commitDone.await(30, TimeUnit.SECONDS));
+        
+        assertNull("should not get committed message", consumer.receive(5000));
         connection.close();
     }
 
