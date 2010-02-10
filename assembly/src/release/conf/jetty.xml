@@ -25,7 +25,7 @@
    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
    xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
  
-  <!--  <bean id="contexts" class="org.eclipse.jetty.server.handler.ContextHandlerCollection"/> -->
+  <bean id="contexts" class="org.eclipse.jetty.server.handler.ContextHandlerCollection"/>
  
   <bean id="Server" class="org.eclipse.jetty.server.Server" init-method="start" destroy-method="stop">
  
@@ -41,8 +41,7 @@
       <bean id="handlers" class="org.eclipse.jetty.server.handler.HandlerCollection">
         <property name="handlers">
           <list>
-            <!--  <ref bean="contexts"/>
-            <bean id="defaultHandler" class="org.eclipse.jetty.server.handler.DefaultHandler"/> -->
+            <ref bean="contexts"/>
             <bean class="org.eclipse.jetty.webapp.WebAppContext">
               <property name="contextPath" value="/admin"/>
               <property name="resourceBase" value="${activemq.base}/webapps/admin"/>
@@ -53,16 +52,20 @@
               <property name="resourceBase" value="${activemq.base}/webapps/camel"/>
               <property name="logUrlOnStart" value="true"/>
             </bean>
+            -->
             <bean class="org.eclipse.jetty.webapp.WebAppContext">
               <property name="contextPath" value="/demo"/>
               <property name="resourceBase" value="${activemq.base}/webapps/demo"/>
               <property name="logUrlOnStart" value="true"/>
             </bean>
+            <!--
             <bean class="org.eclipse.jetty.webapp.WebAppContext">
               <property name="contextPath" value="/fileserver"/>
               <property name="resourceBase" value="${activemq.base}/webapps/fileserver"/>
               <property name="logUrlOnStart" value="true"/>
-            </bean>-->
+            </bean>
+            -->
+            <bean id="defaultHandler" class="org.eclipse.jetty.server.handler.DefaultHandler"/>
           </list>
         </property>
       </bean>

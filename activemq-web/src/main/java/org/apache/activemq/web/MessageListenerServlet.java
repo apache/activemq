@@ -264,6 +264,7 @@ public class MessageListenerServlet extends MessageServletSupport {
         }
 
         Continuation continuation = ContinuationSupport.getContinuation(request);
+        continuation.setTimeout(timeout);
         Listener listener = getListener(request);
         if (listener != null && continuation != null && !continuation.isSuspended()) {
             listener.access();
