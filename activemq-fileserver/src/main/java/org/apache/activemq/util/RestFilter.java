@@ -36,9 +36,11 @@ import javax.servlet.UnavailableException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.eclipse.jetty.util.IO;
 import org.eclipse.jetty.util.URIUtil;
-import org.eclipse.jetty.util.log.Log;
+
 
 /**
  * <p>
@@ -50,6 +52,7 @@ import org.eclipse.jetty.util.log.Log;
  * @author Aleksi Kallio
  */
 public class RestFilter implements Filter {
+    private static final Log LOG = LogFactory.getLog(RestFilter.class);
 
     private static final String HTTP_HEADER_DESTINATION = "Destination";
     private static final String HTTP_METHOD_MOVE = "MOVE";
@@ -73,8 +76,8 @@ public class RestFilter implements Filter {
 
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
         if (!(request instanceof HttpServletRequest && response instanceof HttpServletResponse)) {
-            if (Log.isDebugEnabled()) {
-                Log.debug("request not HTTP, can not understand: " + request.toString());
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("request not HTTP, can not understand: " + request.toString());
             }
             chain.doFilter(request, response);
             return;
@@ -100,8 +103,8 @@ public class RestFilter implements Filter {
     }
 
     protected void doMove(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        if (Log.isDebugEnabled()) {
-            Log.debug("RESTful file access: MOVE request for " + request.getRequestURI());
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("RESTful file access: MOVE request for " + request.getRequestURI());
         }
 
         if (writePermissionRole != null && !request.isUserInRole(writePermissionRole)) {
@@ -135,8 +138,8 @@ public class RestFilter implements Filter {
     }
 
     protected boolean checkGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        if (Log.isDebugEnabled()) {
-            Log.debug("RESTful file access: GET request for " + request.getRequestURI());
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("RESTful file access: GET request for " + request.getRequestURI());
         }
 
         if (readPermissionRole != null && !request.isUserInRole(readPermissionRole)) {
@@ -148,8 +151,8 @@ public class RestFilter implements Filter {
     }
 
     protected void doPut(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        if (Log.isDebugEnabled()) {
-            Log.debug("RESTful file access: PUT request for " + request.getRequestURI());
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("RESTful file access: PUT request for " + request.getRequestURI());
         }
 
         if (writePermissionRole != null && !request.isUserInRole(writePermissionRole)) {
@@ -177,7 +180,7 @@ public class RestFilter implements Filter {
         try {
             IO.copy(request.getInputStream(), out);
         } catch (IOException e) {
-            Log.warn(Log.EXCEPTION, e); // is this obsolete?
+            LOG.warn("Exception occured" , e);
             out.close();
             throw e;
         }
@@ -187,8 +190,8 @@ public class RestFilter implements Filter {
     }
 
     protected void doDelete(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        if (Log.isDebugEnabled()) {
-            Log.debug("RESTful file access: DELETE request for " + request.getRequestURI());
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("RESTful file access: DELETE request for " + request.getRequestURI());
         }
 
         if (writePermissionRole != null && !request.isUserInRole(writePermissionRole)) {

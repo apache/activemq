@@ -27,10 +27,14 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
 
-import org.eclipse.jetty.util.log.Log;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 
 public class FilenameGuardFilter implements Filter {
 
+    private static final Log LOG = LogFactory.getLog(FilenameGuardFilter.class);
+    
     public void destroy() {
         // nothing to destroy
     }
@@ -57,8 +61,8 @@ public class FilenameGuardFilter implements Filter {
 
         private String guard(String filename) {
             String guarded = filename.replace(":", "_");
-            if (Log.isDebugEnabled()) {
-                Log.debug("guarded " + filename + " to " + guarded);
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("guarded " + filename + " to " + guarded);
             }
             return guarded;
         }

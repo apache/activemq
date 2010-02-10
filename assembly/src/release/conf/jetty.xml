@@ -58,13 +58,11 @@
               <property name="resourceBase" value="${activemq.base}/webapps/demo"/>
               <property name="logUrlOnStart" value="true"/>
             </bean>
-            <!--
             <bean class="org.eclipse.jetty.webapp.WebAppContext">
               <property name="contextPath" value="/fileserver"/>
               <property name="resourceBase" value="${activemq.base}/webapps/fileserver"/>
               <property name="logUrlOnStart" value="true"/>
             </bean>
-            -->
             <bean id="defaultHandler" class="org.eclipse.jetty.server.handler.DefaultHandler"/>
           </list>
         </property>

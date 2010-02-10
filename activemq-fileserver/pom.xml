@@ -38,7 +38,7 @@
         <version>${jetty-version}</version>
         <configuration>
           <connectors>
-            <connector implementation="org.eclipse.jetty.nio.SelectChannelConnector">
+            <connector implementation="org.eclipse.jetty.server.nio.SelectChannelConnector">
               <port>${jetty.port}</port>
               <maxIdleTime>60000</maxIdleTime>
             </connector>
