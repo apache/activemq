@@ -264,9 +264,8 @@ public class MessageListenerServlet extends MessageServletSupport {
         }
 
         Continuation continuation = ContinuationSupport.getContinuation(request);
-        continuation.setTimeout(timeout);
         Listener listener = getListener(request);
-        if (listener != null && continuation != null && !continuation.isSuspended()) {
+        if (listener != null && continuation != null && !continuation.isInitial()) {
             listener.access();
         }
 
@@ -293,15 +292,16 @@ public class MessageListenerServlet extends MessageServletSupport {
             // Get an existing Continuation or create a new one if there are no
             // messages
 
-            if (message == null) {
+            if (message == null && continuation.isInitial()) {
                 // register this continuation with our listener.
                 listener.setContinuation(continuation);
 
                 // Get the continuation object (may wait and/or retry
                 // request here).
+                continuation.setTimeout(timeout);
                 continuation.suspend();
+                return;
             }
-            listener.setContinuation(null);
 
             // prepare the responds
             response.setContentType("text/xml");
