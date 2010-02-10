@@ -62,7 +62,18 @@
               <property name="resourceBase" value="${activemq.base}/webapps/fileserver"/>
               <property name="logUrlOnStart" value="true"/>
             </bean>
-            <bean id="defaultHandler" class="org.eclipse.jetty.server.handler.DefaultHandler"/>
+            <bean class="org.eclipse.jetty.server.handler.ResourceHandler">
+              <property name="directoriesListed" value="false"/>
+              <property name="welcomeFiles">
+                <list>
+                  <value>index.html</value>
+                </list>
+              </property>
+              <property name="resourceBase" value="${activemq.base}/webapps/"/>
+            </bean> 
+            <bean id="defaultHandler" class="org.eclipse.jetty.server.handler.DefaultHandler">
+                <property name="serveIcon" value="false"/>
+            </bean>
           </list>
         </property>
       </bean>
