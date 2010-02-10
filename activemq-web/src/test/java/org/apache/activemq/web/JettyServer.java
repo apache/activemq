@@ -72,9 +72,7 @@ public final class JettyServer {
         context.setResourceBase(WEBAPP_DIR);
         context.setContextPath(WEBAPP_CTX);
         context.setServer(server);
-        /*server.setHandlers(new Handler[] {
-            context
-        });*/
+        server.setHandler(context);
         server.setConnectors(new Connector[] {
             connector
         });

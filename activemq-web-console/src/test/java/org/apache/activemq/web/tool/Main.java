@@ -18,7 +18,6 @@
 package org.apache.activemq.web.tool;
 
 import org.eclipse.jetty.server.Connector;
-import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.nio.SelectChannelConnector;
 import org.eclipse.jetty.webapp.WebAppContext;
@@ -57,9 +56,7 @@ public final class Main {
         context.setResourceBase(WEBAPP_DIR);
         context.setContextPath(WEBAPP_CTX);
         context.setServer(server);
-        /*server.setHandlers(new Handler[] {
-            context
-        });*/
+        server.setHandler(context);
         server.setConnectors(new Connector[] {
             connector
         });

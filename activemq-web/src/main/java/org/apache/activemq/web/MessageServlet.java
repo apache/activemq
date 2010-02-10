@@ -205,6 +205,7 @@ public class MessageServlet extends MessageServletSupport {
 
                     // Get the continuation object (may wait and/or retry
                     // request here).
+                    continuation.setTimeout(timeout);
                     continuation.suspend();
                 }
 

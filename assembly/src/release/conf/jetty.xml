@@ -47,12 +47,11 @@
               <property name="resourceBase" value="${activemq.base}/webapps/admin"/>
               <property name="logUrlOnStart" value="true"/>
             </bean>
-            <!--<bean class="org.eclipse.jetty.webapp.WebAppContext">
+            <bean class="org.eclipse.jetty.webapp.WebAppContext">
               <property name="contextPath" value="/camel"/>
               <property name="resourceBase" value="${activemq.base}/webapps/camel"/>
               <property name="logUrlOnStart" value="true"/>
             </bean>
-            -->
             <bean class="org.eclipse.jetty.webapp.WebAppContext">
               <property name="contextPath" value="/demo"/>
               <property name="resourceBase" value="${activemq.base}/webapps/demo"/>
