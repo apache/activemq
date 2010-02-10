@@ -50,15 +50,6 @@ public class Activator implements BundleActivator, SynchronousBundleListener, Ob
     private final ConcurrentMap<Long, BundleWrapper> bundleWrappers = new ConcurrentHashMap<Long, BundleWrapper>();
     private BundleContext bundleContext;
 
-    /**
-     * constructor for use as a blueprint bean rather than bundle activator
-     * @param bundleContext
-     */
-    public Activator(BundleContext bundleContext) throws Exception {
-        start(bundleContext);
-    }
-
-
     // ================================================================
     // BundleActivator interface impl
     // ================================================================
