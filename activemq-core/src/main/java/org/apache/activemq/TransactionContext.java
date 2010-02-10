@@ -79,6 +79,7 @@ public class TransactionContext implements XAResource {
     private Xid associatedXid;
     private TransactionId transactionId;
     private LocalTransactionEventListener localTransactionEventListener;
+    private int beforeEndIndex;
 
     public TransactionContext(ActiveMQConnection connection) {
         this.connection = connection;
@@ -174,8 +175,8 @@ public class TransactionContext implements XAResource {
 
         int size = synchronizations.size();
         try {
-            for (int i = 0; i < size; i++) {
-                synchronizations.get(i).beforeEnd();
+            for (;beforeEndIndex < size;) {
+                synchronizations.get(beforeEndIndex++).beforeEnd();
             }
         } catch (JMSException e) {
             throw e;
@@ -206,6 +207,7 @@ public class TransactionContext implements XAResource {
         
         if (transactionId == null) {
             synchronizations = null;
+            beforeEndIndex = 0;
             this.transactionId = new LocalTransactionId(connectionId, localTransactionIdGenerator.getNextSequenceId());
             TransactionInfo info = new TransactionInfo(getConnectionId(), transactionId, TransactionInfo.BEGIN);
             this.connection.ensureConnectionInfoSent();
@@ -341,6 +343,7 @@ public class TransactionContext implements XAResource {
 
         // associate
         synchronizations = null;
+        beforeEndIndex = 0;
         setXid(xid);
     }
 
