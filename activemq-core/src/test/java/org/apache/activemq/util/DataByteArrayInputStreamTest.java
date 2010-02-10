@@ -26,14 +26,40 @@ public class DataByteArrayInputStreamTest extends TestCase {
     public void testNonAscii() throws Exception {
         doMarshallUnMarshallValidation("meißen");
         
+        String accumulator = new String();
+        
         int test = 0; // int to get Supplementary chars
         while(Character.isDefined(test)) {
-            doMarshallUnMarshallValidation(String.valueOf((char)test));
+            String toTest = String.valueOf((char)test);
+            accumulator += toTest;
+            doMarshallUnMarshallValidation(toTest);
             test++;
         }
         
         int massiveThreeByteCharValue = 0x0FFF;
+        String toTest = String.valueOf((char)massiveThreeByteCharValue);
+        accumulator += toTest;
         doMarshallUnMarshallValidation(String.valueOf((char)massiveThreeByteCharValue));
+        
+        // Altogether
+        doMarshallUnMarshallValidation(accumulator);
+        
+        // the three byte values
+        char t = '\u0800';
+        final char max =  '\uffff';
+        accumulator = String.valueOf(t);
+        while (t < max) {
+            String val = String.valueOf(t);
+            accumulator += val;
+            doMarshallUnMarshallValidation(val);
+            t++;
+        }
+        
+        // Altogether so long as it is not too big
+        while (accumulator.length() > 20000) {
+            accumulator = accumulator.substring(20000);
+        }
+        doMarshallUnMarshallValidation(accumulator);
     }
     
     void doMarshallUnMarshallValidation(String value) throws Exception {        
