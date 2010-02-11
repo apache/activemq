@@ -48,17 +48,27 @@ public interface JobScheduler {
      */
     public abstract void schedule(String jobId, ByteSequence payload,long delay) throws Exception;
 
+    /**
+     * Add a job to be scheduled
+     * @param jobId a unique identifier for the job
+     * @param payload the message to be sent when the job is scheduled
+     * @param cronEntry - cron entry
+     * @throws Exception
+     */
+    public abstract void schedule(String jobId, ByteSequence payload,String cronEntry) throws Exception;
+
     
     /**
      * Add a job to be scheduled
      * @param jobId a unique identifier for the job
      * @param payload the message to be sent when the job is scheduled
-     * @param start 
+     * @param cronEntry - cron entry
+     * @param delay time in ms to wait before scheduling
      * @param period the time in milliseconds between successive executions of the Job
      * @param repeat the number of times to execute the job - less than 0 will be repeated forever
      * @throws Exception
      */
-    public abstract void schedule(String jobId, ByteSequence payload,long start, long period, int repeat) throws Exception;
+    public abstract void schedule(String jobId, ByteSequence payload,String cronEntry,long delay, long period, int repeat) throws Exception;
 
     /**
      * remove all jobs scheduled to run at this time

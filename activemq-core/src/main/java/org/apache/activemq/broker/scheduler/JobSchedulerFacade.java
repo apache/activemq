@@ -119,10 +119,17 @@ public class JobSchedulerFacade implements JobScheduler {
         }
     }
 
-    public void schedule(String jobId, ByteSequence payload, long start, long period, int repeat) throws Exception {
+    public void schedule(String jobId, ByteSequence payload,String cronEntry, long start, long period, int repeat) throws Exception {
         JobScheduler js = this.broker.getInternalScheduler();
         if (js !=null) {
-            js.schedule(jobId, payload, start,period,repeat);
+            js.schedule(jobId, payload, cronEntry,start,period,repeat);
         }
+    }
+    public void schedule(String jobId, ByteSequence payload, String cronEntry) throws Exception {
+        JobScheduler js = this.broker.getInternalScheduler();
+        if (js !=null) {
+            js.schedule(jobId, payload, cronEntry);
+        }
+        
     }
 }

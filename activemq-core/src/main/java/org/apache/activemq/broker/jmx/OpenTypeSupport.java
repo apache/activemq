@@ -408,6 +408,7 @@ public final class OpenTypeSupport {
             addItem("jobId", "jobId", SimpleType.STRING);
             addItem("cronEntry", "Cron entry", SimpleType.STRING);
             addItem("start", "start time", SimpleType.STRING);
+            addItem("delay", "initial delay", SimpleType.LONG);
             addItem("next", "next time", SimpleType.STRING);
             addItem("period", "period between jobs", SimpleType.LONG);
             addItem("repeat", "number of times to repeat", SimpleType.INTEGER);
@@ -420,6 +421,7 @@ public final class OpenTypeSupport {
             rc.put("jobId", job.getJobId());
             rc.put("cronEntry", "" + job.getCronEntry());
             rc.put("start", job.getStartTime());
+            rc.put("delay", job.getDelay());
             rc.put("next", job.getNextExecutionTime());
             rc.put("period", job.getPeriod());
             rc.put("repeat", job.getRepeat());

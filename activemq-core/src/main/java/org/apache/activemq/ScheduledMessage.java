@@ -18,9 +18,10 @@ package org.apache.activemq;
 
 public interface ScheduledMessage {
     /**
-     * The time in milliseconds that a message will be scheduled to be delivered by the broker
+     * The time in milliseconds that a message will wait before being scheduled to be 
+     * delivered by the broker
      */
-    public static final String AMQ_SCHEDULED_START = "AMQ_SCHEDULED_START_TIME";
+    public static final String AMQ_SCHEDULED_DELAY = "AMQ_SCHEDULED_DELAY";
     /**
      * The time in milliseconds to wait after the start time to wait before scheduling the message again
      */

@@ -31,6 +31,7 @@ import javax.jms.MessageFormatException;
 import javax.jms.MessageNotWriteableException;
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ScheduledMessage;
+import org.apache.activemq.broker.scheduler.CronParser;
 import org.apache.activemq.filter.PropertyExpression;
 import org.apache.activemq.state.CommandVisitor;
 import org.apache.activemq.util.Callback;
@@ -413,6 +414,7 @@ public class ActiveMQMessage extends Message implements org.apache.activemq.Mess
         }
 
         checkValidObject(value);
+        checkValidScheduled(name, value);
         PropertySetter setter = JMS_PROPERTY_SETERS.get(name);
 
         if (setter != null && value != null) {
@@ -452,6 +454,17 @@ public class ActiveMQMessage extends Message implements org.apache.activemq.Mess
             } else {
                 throw new MessageFormatException("Only objectified primitive objects and String types are allowed but was: " + value + " type: " + value.getClass());
             }
+        }
+    }
+    
+    protected void  checkValidScheduled(String name, Object value) throws MessageFormatException {
+        if (AMQ_SCHEDULED_DELAY.equals(name) || AMQ_SCHEDULED_PERIOD.equals(name) || AMQ_SCHEDULED_REPEAT.equals(name)) {
+            if (value instanceof Long == false && value instanceof Integer == false) {
+                throw new MessageFormatException(name + " should be long or int value");
+            }
+        }
+        if (AMQ_SCHEDULED_CRON.equals(name)) {
+            CronParser.validate(value.toString());
         }
     }
 

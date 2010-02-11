@@ -23,17 +23,17 @@ import org.apache.kahadb.util.ByteSequence;
 
 
 public class JobImpl implements Job {
-    private final JobLocation location;
+    private final JobLocation jobLocation;
     private final byte[] payload;
     
     protected JobImpl(JobLocation location,ByteSequence bs) {
-        this.location=location;
+        this.jobLocation=location;
         this.payload = new byte[bs.getLength()];
         System.arraycopy(bs.getData(), bs.getOffset(), this.payload, 0, bs.getLength());
     }
 
     public String getJobId() {
-        return this.location.getJobId();
+        return this.jobLocation.getJobId();
     }
 
     public byte[] getPayload() {
@@ -41,26 +41,29 @@ public class JobImpl implements Job {
     }
 
     public long getPeriod() {
-       return this.location.getPeriod();
+       return this.jobLocation.getPeriod();
     }
 
     public int getRepeat() {
-       return this.location.getRepeat();
+       return this.jobLocation.getRepeat();
     }
 
     public long getStart() {
-       return this.location.getStart();
+       return this.jobLocation.getStartTime();
+    }
+    
+    public long getDelay() {
+        return this.jobLocation.getDelay();
     }
 
     public String getCronEntry() {
-        return this.location.getCronEntry();
+        return this.jobLocation.getCronEntry();
     }
     
     
 
     public String getNextExecutionTime() {
-        // TODO Auto-generated method stub
-        return null;
+        return JobImpl.getDateTime(this.jobLocation.getNextTime());
     }
 
     public String getStartTime() {

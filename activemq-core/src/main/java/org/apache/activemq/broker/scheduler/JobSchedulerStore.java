@@ -309,7 +309,7 @@ public class JobSchedulerStore extends ServiceSupport {
 
     }
 
-    synchronized ByteSequence getJob(Location location) throws IllegalStateException, IOException {
+    synchronized ByteSequence getPayload(Location location) throws IllegalStateException, IOException {
         ByteSequence result = null;
         result = this.journal.read(location);
         return result;

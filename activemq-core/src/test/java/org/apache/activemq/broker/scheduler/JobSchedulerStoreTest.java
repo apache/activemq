@@ -40,17 +40,17 @@ public class JobSchedulerStoreTest extends TestCase {
         }
 		JobScheduler js = store.getJobScheduler("test");
 		int count = 0;
-		long startTime = System.currentTimeMillis()+10000;
+		long startTime = 10000;
 		for (ByteSequence job:list) {
-		    js.schedule("id:"+(count++), job,startTime,10000,-1);	    
+		    js.schedule("id:"+(count++), job,"",startTime,10000,-1);	    
 		}
-		List<Job>test = js.getNextScheduleJobs();
+		List<Job>test = js.getAllJobs();
 		assertEquals(list.size(),test.size());
 		store.stop();
 		
 		store.start();
 		js = store.getJobScheduler("test");
-		test = js.getNextScheduleJobs();
+		test = js.getAllJobs();
 		assertEquals(list.size(),test.size());
 		for (int i = 0; i < list.size();i++) {
 		    String orig = new String(list.get(i).getData());

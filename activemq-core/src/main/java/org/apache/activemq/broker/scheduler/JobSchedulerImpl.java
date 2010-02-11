@@ -25,6 +25,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
+import javax.jms.MessageFormatException;
+import org.apache.activemq.util.IdGenerator;
 import org.apache.activemq.util.ServiceStopper;
 import org.apache.activemq.util.ServiceSupport;
 import org.apache.commons.logging.Log;
@@ -44,6 +46,8 @@ class JobSchedulerImpl extends ServiceSupport implements Runnable, JobScheduler 
     BTreeIndex<Long, List<JobLocation>> index;
     private Thread thread;
     private final List<JobListener> jobListeners = new CopyOnWriteArrayList<JobListener>();
+    private static final IdGenerator ID_GENERATOR = new IdGenerator();
+    private final ScheduleTime scheduleTime = new ScheduleTime();
 
     JobSchedulerImpl(JobSchedulerStore store) {
 
@@ -85,16 +89,25 @@ class JobSchedulerImpl extends ServiceSupport implements Runnable, JobScheduler 
     public void schedule(final String jobId, final ByteSequence payload, final long delay) throws IOException {
         this.store.getPageFile().tx().execute(new Transaction.Closure<IOException>() {
             public void execute(Transaction tx) throws IOException {
-                schedule(tx, jobId, payload, 0, delay, 0);
+                schedule(tx, jobId, payload, "", 0, delay, 0);
             }
         });
     }
 
-    public void schedule(final String jobId, final ByteSequence payload, final long start, final long period,
-            final int repeat) throws IOException {
+    public void schedule(final String jobId, final ByteSequence payload, final String cronEntry) throws Exception {
         this.store.getPageFile().tx().execute(new Transaction.Closure<IOException>() {
             public void execute(Transaction tx) throws IOException {
-                schedule(tx, jobId, payload, start, period, repeat);
+                schedule(tx, jobId, payload, cronEntry, 0, 0, 0);
+            }
+        });
+
+    }
+
+    public void schedule(final String jobId, final ByteSequence payload, final String cronEntry, final long delay,
+            final long period, final int repeat) throws IOException {
+        this.store.getPageFile().tx().execute(new Transaction.Closure<IOException>() {
+            public void execute(Transaction tx) throws IOException {
+                schedule(tx, jobId, payload, cronEntry, delay, period, repeat);
             }
         });
 
@@ -108,6 +121,14 @@ class JobSchedulerImpl extends ServiceSupport implements Runnable, JobScheduler 
         this.store.getPageFile().tx().execute(new Transaction.Closure<IOException>() {
             public void execute(Transaction tx) throws IOException {
                 remove(tx, time);
+            }
+        });
+    }
+
+    synchronized void removeFromIndex(final long time, final String jobId) throws IOException {
+        this.store.getPageFile().tx().execute(new Transaction.Closure<IOException>() {
+            public void execute(Transaction tx) throws IOException {
+                removeFromIndex(tx, time, jobId);
             }
         });
     }
@@ -154,7 +175,7 @@ class JobSchedulerImpl extends ServiceSupport implements Runnable, JobScheduler 
                 Map.Entry<Long, List<JobLocation>> first = index.getFirst(store.getPageFile().tx());
                 if (first != null) {
                     for (JobLocation jl : first.getValue()) {
-                        ByteSequence bs = getJob(jl.getLocation());
+                        ByteSequence bs = getPayload(jl.getLocation());
                         Job job = new JobImpl(jl, bs);
                         result.add(job);
                     }
@@ -173,7 +194,7 @@ class JobSchedulerImpl extends ServiceSupport implements Runnable, JobScheduler 
                     Map.Entry<Long, List<JobLocation>> next = iter.next();
                     if (next != null) {
                         for (JobLocation jl : next.getValue()) {
-                            ByteSequence bs = getJob(jl.getLocation());
+                            ByteSequence bs = getPayload(jl.getLocation());
                             Job job = new JobImpl(jl, bs);
                             result.add(job);
                         }
@@ -196,7 +217,7 @@ class JobSchedulerImpl extends ServiceSupport implements Runnable, JobScheduler 
                     Map.Entry<Long, List<JobLocation>> next = iter.next();
                     if (next != null && next.getKey().longValue() <= finish) {
                         for (JobLocation jl : next.getValue()) {
-                            ByteSequence bs = getJob(jl.getLocation());
+                            ByteSequence bs = getPayload(jl.getLocation());
                             Job job = new JobImpl(jl, bs);
                             result.add(job);
                         }
@@ -221,46 +242,85 @@ class JobSchedulerImpl extends ServiceSupport implements Runnable, JobScheduler 
     public synchronized void removeAllJobs(final long start, final long finish) throws IOException {
         this.store.getPageFile().tx().execute(new Transaction.Closure<IOException>() {
             public void execute(Transaction tx) throws IOException {
-                destroy(tx,start,finish);
+                destroy(tx, start, finish);
             }
         });
 
     }
 
-    ByteSequence getJob(Location location) throws IllegalStateException, IOException {
-        return this.store.getJob(location);
+    ByteSequence getPayload(Location location) throws IllegalStateException, IOException {
+        return this.store.getPayload(location);
     }
 
-    void schedule(Transaction tx, String jobId, ByteSequence payload, long start, long period, int repeat)
-            throws IOException {
-        List<JobLocation> values = null;
-        long startTime;
-        long time;
-        if (start > 0) {
-            time = startTime = start;
+    void schedule(Transaction tx, String jobId, ByteSequence payload, String cronEntry, long delay, long period,
+            int repeat) throws IOException {
+        long startTime = System.currentTimeMillis();
+        // round startTime - so we can schedule more jobs
+        // at the same time
+        startTime = (startTime / 1000) * 1000;
+        long time = 0;
+        if (cronEntry != null && cronEntry.length() > 0) {
+            try {
+                time = CronParser.getNextScheduledTime(cronEntry, startTime);
+            } catch (MessageFormatException e) {
+                throw new IOException(e.getMessage());
+            }
+        }
+
+        if (time == 0) {
+            // start time not set by CRON - so it it to the current time
+            time = startTime;
+        }
+        if (delay > 0) {
+            time += delay;
         } else {
-            startTime = System.currentTimeMillis();
-            time = startTime + period;
-        }
-        if (this.index.containsKey(tx, time)) {
-            values = this.index.remove(tx, time);
-        }
-        if (values == null) {
-            values = new ArrayList<JobLocation>();
+            time += period;
         }
 
         Location location = this.store.write(payload, false);
         JobLocation jobLocation = new JobLocation(location);
+        this.store.incrementJournalCount(tx, location);
         jobLocation.setJobId(jobId);
+        jobLocation.setStartTime(startTime);
+        jobLocation.setCronEntry(cronEntry);
+        jobLocation.setDelay(delay);
         jobLocation.setPeriod(period);
         jobLocation.setRepeat(repeat);
+        storeJob(tx, jobLocation, time);
+        this.scheduleTime.newJob();
+    }
+
+    synchronized void storeJob(final JobLocation jobLocation, final long nextExecutionTime) throws IOException {
+        this.store.getPageFile().tx().execute(new Transaction.Closure<IOException>() {
+            public void execute(Transaction tx) throws IOException {
+                storeJob(tx, jobLocation, nextExecutionTime);
+            }
+        });
+    }
+
+    void storeJob(final Transaction tx, final JobLocation jobLocation, final long nextExecutionTime) throws IOException {
+        List<JobLocation> values = null;
+        jobLocation.setNextTime(nextExecutionTime);
+        if (this.index.containsKey(tx, nextExecutionTime)) {
+            values = this.index.remove(tx, nextExecutionTime);
+        }
+        if (values == null) {
+            values = new ArrayList<JobLocation>();
+        }
         values.add(jobLocation);
-        this.index.put(tx, time, values);
-        this.store.incrementJournalCount(tx, location);
-        poke();
+        this.index.put(tx, nextExecutionTime, values);
+
     }
 
     void remove(Transaction tx, long time, String jobId) throws IOException {
+        JobLocation result = removeFromIndex(tx, time, jobId);
+        if (result != null) {
+            this.store.decrementJournalCount(tx, result.getLocation());
+        }
+    }
+
+    JobLocation removeFromIndex(Transaction tx, long time, String jobId) throws IOException {
+        JobLocation result = null;
         List<JobLocation> values = this.index.remove(tx, time);
         if (values != null) {
             for (int i = 0; i < values.size(); i++) {
@@ -270,11 +330,12 @@ class JobSchedulerImpl extends ServiceSupport implements Runnable, JobScheduler 
                     if (!values.isEmpty()) {
                         this.index.put(tx, time, values);
                     }
-                    this.store.decrementJournalCount(tx, jl.getLocation());
+                    result = jl;
                     break;
                 }
             }
         }
+        return result;
     }
 
     void remove(Transaction tx, long time) throws IOException {
@@ -339,7 +400,7 @@ class JobSchedulerImpl extends ServiceSupport implements Runnable, JobScheduler 
         }
     }
 
-    synchronized Map.Entry<Long, List<JobLocation>> getNextToSchedule() throws IOException {
+    private synchronized Map.Entry<Long, List<JobLocation>> getNextToSchedule() throws IOException {
         if (!this.store.isStopped() && !this.store.isStopping()) {
             Map.Entry<Long, List<JobLocation>> first = this.index.getFirst(this.store.getPageFile().tx());
             return first;
@@ -348,12 +409,10 @@ class JobSchedulerImpl extends ServiceSupport implements Runnable, JobScheduler 
 
     }
 
-    void fireJobs(List<JobLocation> list) throws IllegalStateException, IOException {
-        for (JobLocation jl : list) {
-            ByteSequence bs = this.store.getJob(jl.getLocation());
-            for (JobListener l : jobListeners) {
-                l.scheduledJob(jl.getJobId(), bs);
-            }
+    void fireJob(JobLocation job) throws IllegalStateException, IOException {
+        ByteSequence bs = this.store.getPayload(job.getLocation());
+        for (JobListener l : jobListeners) {
+            l.scheduledJob(job.getJobId(), bs);
         }
     }
 
@@ -382,6 +441,7 @@ class JobSchedulerImpl extends ServiceSupport implements Runnable, JobScheduler 
 
     protected void mainLoop() {
         while (this.running.get()) {
+            this.scheduleTime.clearNewJob();
             try {
                 // peek the next job
                 long currentTime = System.currentTimeMillis();
@@ -389,35 +449,70 @@ class JobSchedulerImpl extends ServiceSupport implements Runnable, JobScheduler 
                 Map.Entry<Long, List<JobLocation>> first = getNextToSchedule();
                 if (first != null) {
                     List<JobLocation> list = new ArrayList<JobLocation>(first.getValue());
-                    long executionTime = first.getKey();
+                    final long executionTime = first.getKey();
+                    long nextExecutionTime = 0;
                     if (executionTime <= currentTime) {
-                        fireJobs(list);
-                        for (JobLocation jl : list) {
-                            int repeat = jl.getRepeat();
-                            if (repeat != 0) {
-                                repeat--;
-                                ByteSequence payload = this.store.getJob(jl.getLocation());
-                                String jobId = jl.getJobId();
-                                long period = jl.getPeriod();
-                                schedule(jobId, payload, 0, period, repeat);
+
+                        for (final JobLocation job : list) {
+                            int repeat = job.getRepeat();
+                            nextExecutionTime = calculateNextExecutionTime(job, currentTime, repeat);
+                            long waitTime = nextExecutionTime - currentTime;
+                            this.scheduleTime.setWaitTime(waitTime);
+                            if (job.isCron() == false) {
+                                fireJob(job);
+                                if (repeat != 0) {
+                                    repeat--;
+                                    job.setRepeat(repeat);
+                                    // remove this job from the index - so it
+                                    // doesn't get destroyed
+                                    removeFromIndex(executionTime, job.getJobId());
+                                    // and re-store it
+                                    storeJob(job, nextExecutionTime);
+                                }
+                            } else {
+                                // cron job
+                                if (repeat == 0) {
+                                    // we haven't got a separate scheduler to
+                                    // execute at
+                                    // this time - just a cron job - so fire it
+                                    fireJob(job);
+                                }
+                                if (nextExecutionTime > currentTime) {
+                                    // we will run again ...
+                                    // remove this job from the index - so it
+                                    // doesn't get destroyed
+                                    removeFromIndex(executionTime, job.getJobId());
+                                    // and re-store it
+                                    storeJob(job, nextExecutionTime);
+                                    if (repeat != 0) {
+                                        // we have a separate schedule to run at
+                                        // this time
+                                        // so the cron job is used to set of a
+                                        // seperate scheule
+                                        // hence we won't fire the original cron
+                                        // job to the listeners
+                                        // but we do need to start a separate
+                                        // schedule
+                                        String jobId = ID_GENERATOR.generateId();
+                                        ByteSequence payload = getPayload(job.getLocation());
+                                        schedule(jobId, payload, "", job.getDelay(), job.getPeriod(), job.getRepeat());
+                                        waitTime = job.getDelay() != 0 ? job.getDelay() : job.getPeriod();
+                                        this.scheduleTime.setWaitTime(waitTime);
+                                    }
+                                }
                             }
                         }
-                        // now remove jobs from this execution time
+                        // now remove all jobs that have not been
+                        // rescheduled from this execution time
                         remove(executionTime);
                     } else {
-                        long waitTime = executionTime - currentTime;
-                        synchronized (this.running) {
-                            this.running.wait(waitTime);
-                        }
-                    }
-                } else {
-                    synchronized (this.running) {
-                        this.running.wait(250);
+                        this.scheduleTime.setWaitTime(executionTime - currentTime);
                     }
                 }
 
-            } catch (InterruptedException e) {
-            } catch (IOException ioe) {
+                this.scheduleTime.pause();
+
+            } catch (Exception ioe) {
                 LOG.error(this.name + " Failed to schedule job", ioe);
                 try {
                     this.store.stop();
@@ -440,7 +535,7 @@ class JobSchedulerImpl extends ServiceSupport implements Runnable, JobScheduler 
     @Override
     protected void doStop(ServiceStopper stopper) throws Exception {
         this.running.set(false);
-        poke();
+        this.scheduleTime.wakeup();
         Thread t = this.thread;
         if (t != null) {
             t.join(1000);
@@ -448,10 +543,15 @@ class JobSchedulerImpl extends ServiceSupport implements Runnable, JobScheduler 
 
     }
 
-    protected void poke() {
-        synchronized (this.running) {
-            this.running.notifyAll();
+    long calculateNextExecutionTime(final JobLocation job, long currentTime, int repeat) throws MessageFormatException {
+        long result = currentTime;
+        String cron = job.getCronEntry();
+        if (cron != null && cron.length() > 0) {
+            result = CronParser.getNextScheduledTime(cron, result);
+        } else if (job.getRepeat() != 0) {
+            result += job.getPeriod();
         }
+        return result;
     }
 
     void createIndexes(Transaction tx) throws IOException {
@@ -495,5 +595,55 @@ class JobSchedulerImpl extends ServiceSupport implements Runnable, JobScheduler 
                 jobLocation.writeExternal(dataOut);
             }
         }
+    }
+
+    static class ScheduleTime {
+        private final int DEFAULT_WAIT = 500;
+        private final int DEFAULT_NEW_JOB_WAIT = 100;
+        private boolean newJob;
+        private long waitTime = DEFAULT_WAIT;
+        private final Object mutex = new Object();
+
+        /**
+         * @return the waitTime
+         */
+        long getWaitTime() {
+            return this.waitTime;
+        }
+        /**
+         * @param waitTime
+         *            the waitTime to set
+         */
+        void setWaitTime(long waitTime) {
+            if (!this.newJob) {
+                this.waitTime = waitTime > 0 ? waitTime : DEFAULT_WAIT;
+            }
+        }
+
+        void pause() {
+            synchronized (mutex) {
+                try {
+                    mutex.wait(this.waitTime);
+                } catch (InterruptedException e) {
+                }
+            }
+        }
+
+        void newJob() {
+            this.newJob = true;
+            this.waitTime = DEFAULT_NEW_JOB_WAIT;
+            wakeup();
+        }
+
+        void clearNewJob() {
+            this.newJob = false;
+        }
+
+        void wakeup() {
+            synchronized (this.mutex) {
+                mutex.notifyAll();
+            }
+        }
+
     }
 }

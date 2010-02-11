@@ -46,10 +46,10 @@ public class JobSchedulerTest {
         });
         for (int i = 0; i < COUNT; i++) {
             String test = new String("test" + i);
-            scheduler.schedule("id" + i, new ByteSequence(test.getBytes()), 10);
+            scheduler.schedule("id" + i, new ByteSequence(test.getBytes()), 1000);
         }
-        latch.await(1, TimeUnit.SECONDS);
-        assertTrue(latch.getCount() == 0);
+        latch.await(5, TimeUnit.SECONDS);
+        assertEquals(0,latch.getCount());
     }
 
     @Test
@@ -63,10 +63,10 @@ public class JobSchedulerTest {
             }
 
         });
-        long time = System.currentTimeMillis() + 2000;
+        long time = 2000;
         for (int i = 0; i < COUNT; i++) {
             String test = new String("test" + i);
-            scheduler.schedule("id" + i, new ByteSequence(test.getBytes()), time, 10, -1);
+            scheduler.schedule("id" + i, new ByteSequence(test.getBytes()), "", time, 10, -1);
         }
         assertTrue(latch.getCount() == COUNT);
         latch.await(3000, TimeUnit.SECONDS);
@@ -77,10 +77,10 @@ public class JobSchedulerTest {
     public void testAddStopThenDeliver() throws Exception {
         final int COUNT = 10;
         final CountDownLatch latch = new CountDownLatch(COUNT);
-        long time = System.currentTimeMillis() + 2000;
+        long time =  2000;
         for (int i = 0; i < COUNT; i++) {
             String test = new String("test" + i);
-            scheduler.schedule("id" + i, new ByteSequence(test.getBytes()), time, 10, -1);
+            scheduler.schedule("id" + i, new ByteSequence(test.getBytes()), "", time, 1000, -1);
         }
         File directory = store.getDirectory();
         tearDown();
@@ -101,10 +101,10 @@ public class JobSchedulerTest {
     public void testRemoveLong() throws Exception {
         final int COUNT = 10;
 
-        long time = System.currentTimeMillis() + 20000;
+        long time = 20000;
         for (int i = 0; i < COUNT; i++) {
             String str = new String("test" + i);
-            scheduler.schedule("id" + i, new ByteSequence(str.getBytes()), time, 10, -1);
+            scheduler.schedule("id" + i, new ByteSequence(str.getBytes()), "", time, 1000, -1);
 
         }
         int size = scheduler.getNextScheduleJobs().size();
@@ -119,12 +119,12 @@ public class JobSchedulerTest {
     public void testRemoveString() throws Exception {
         final int COUNT = 10;
         final String test = "TESTREMOVE";
-        long time = System.currentTimeMillis() + 20000;
+        long time = 20000;
         for (int i = 0; i < COUNT; i++) {
             String str = new String("test" + i);
-            scheduler.schedule("id" + i, new ByteSequence(str.getBytes()), time, 10, -1);
+            scheduler.schedule("id" + i, new ByteSequence(str.getBytes()), "", time, 10, -1);
             if (i == COUNT / 2) {
-                scheduler.schedule(test, new ByteSequence(test.getBytes()), time, 10, -1);
+                scheduler.schedule(test, new ByteSequence(test.getBytes()), "", time, 10, -1);
             }
         }
 
@@ -139,11 +139,10 @@ public class JobSchedulerTest {
     public void testgetAllJobs() throws Exception {
         final int COUNT = 10;
         final String ID = "id:";
-        final String test = "TEST";
-        long time = System.currentTimeMillis() + 20000;
+        long time =  20000;
         for (int i = 0; i < COUNT; i++) {
             String str = new String("test" + i);
-            scheduler.schedule(ID + i, new ByteSequence(str.getBytes()), time, 10 + i, -1);
+            scheduler.schedule(ID + i, new ByteSequence(str.getBytes()), "", time, 10 + i, -1);
         }
         List<Job> list = scheduler.getAllJobs();
 
@@ -160,22 +159,19 @@ public class JobSchedulerTest {
     public void testgetAllJobsInRange() throws Exception {
         final int COUNT = 10;
         final String ID = "id:";
-        final String test = "TEST";
-        long start = System.currentTimeMillis() + 10000;
+        long start = 10000;
 
-        long time = System.currentTimeMillis() + 20000;
         for (int i = 0; i < COUNT; i++) {
             String str = new String("test" + i);
-            if (i < (COUNT - 2)) {
-                scheduler.schedule(ID + i, new ByteSequence(str.getBytes()), start + (i * 1000), 10000 + i, 0);
-            } else {
-                scheduler.schedule(ID + i, new ByteSequence(str.getBytes()), start + start, 10000 + i, 0);
-            }
+           
+                scheduler.schedule(ID + i, new ByteSequence(str.getBytes()), "", start + (i * 1000), 10000 + i, 0);
+           
         }
-        long finish = start + ((COUNT - 2) * 1000);
+        start = System.currentTimeMillis();
+        long finish = start + 12000+ (COUNT * 1000);
         List<Job> list = scheduler.getAllJobs(start, finish);
 
-        assertEquals(list.size(), COUNT - 2);
+        assertEquals( COUNT,list.size());
         int count = 0;
         for (Job job : list) {
 
@@ -188,27 +184,19 @@ public class JobSchedulerTest {
     public void testRemoveAllJobsInRange() throws Exception {
         final int COUNT = 10;
         final String ID = "id:";
-        final String test = "TEST";
-        long start = System.currentTimeMillis() + 10000;
+        long start = 10000;
 
-        long time = System.currentTimeMillis() + 20000;
         for (int i = 0; i < COUNT; i++) {
             String str = new String("test" + i);
-            if (i < (COUNT - 2)) {
-                scheduler.schedule(ID + i, new ByteSequence(str.getBytes()), start + (i * 1000), 10000 + i, 0);
-            } else {
-                scheduler.schedule(ID + i, new ByteSequence(str.getBytes()), start + start, 10000 + i, 0);
-            }
+           
+                scheduler.schedule(ID + i, new ByteSequence(str.getBytes()), "", start + (i * 1000), 10000 + i, 0);
+           
         }
-        long finish = start + ((COUNT - 2) * 1000);
+        start = System.currentTimeMillis();
+        long finish = start + 12000+ (COUNT * 1000);
         scheduler.removeAllJobs(start, finish);
-        List<Job> list = scheduler.getAllJobs();
-        assertEquals(list.size(), 2);
-        int count = COUNT - 2;
-        for (Job job : list) {
-            assertEquals(job.getJobId(), ID + count);
-            count++;
-        }
+
+        assertTrue(scheduler.getAllJobs().isEmpty());
     }
 
     @Before

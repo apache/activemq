@@ -60,11 +60,11 @@ public class SchedulerBroker extends BrokerFilter implements JobListener {
         LOG.info("Scheduler using directory: " + directory);
 
     }
-   
-    public synchronized  JobScheduler getJobScheduler() throws Exception {
+
+    public synchronized JobScheduler getJobScheduler() throws Exception {
         return new JobSchedulerFacade(this);
     }
-   
+
     /**
      * @return the directory
      */
@@ -102,25 +102,33 @@ public class SchedulerBroker extends BrokerFilter implements JobListener {
 
     @Override
     public void send(ProducerBrokerExchange producerExchange, Message messageSend) throws Exception {
-        long start = 0;
+        long delay = 0;
         long period = 0;
         int repeat = 0;
-
+        String cronEntry = "";
+        Object cronValue = messageSend.getProperty(ScheduledMessage.AMQ_SCHEDULED_CRON);
         Object periodValue = messageSend.getProperty(ScheduledMessage.AMQ_SCHEDULED_PERIOD);
 
-        if (periodValue != null) {
-            period = (Long) TypeConversionSupport.convert(periodValue, Long.class);
-            Object startValue = messageSend.getProperty(ScheduledMessage.AMQ_SCHEDULED_START);
-            if (startValue != null) {
-                start = (Long) TypeConversionSupport.convert(startValue, Long.class);
-            }
-            Object repeatValue = messageSend.getProperty(ScheduledMessage.AMQ_SCHEDULED_REPEAT);
-            if (repeatValue != null) {
-                repeat = (Integer) TypeConversionSupport.convert(repeatValue, Integer.class);
-            }
+        if (cronValue != null || periodValue != null) {
             org.apache.activemq.util.ByteSequence packet = wireFormat.marshal(messageSend);
-            getInternalScheduler().schedule( messageSend.getMessageId().toString(),
-                    new ByteSequence(packet.data, packet.offset, packet.length),start, period, repeat);
+                if (cronValue != null) {
+                    cronEntry = cronValue.toString();
+                }
+                if (periodValue != null) {      
+                  period = (Long) TypeConversionSupport.convert(periodValue, Long.class);
+                }
+                Object delayValue = messageSend.getProperty(ScheduledMessage.AMQ_SCHEDULED_DELAY);
+                if (delayValue != null) {
+                    delay = (Long) TypeConversionSupport.convert(delayValue, Long.class);
+                }
+                Object repeatValue = messageSend.getProperty(ScheduledMessage.AMQ_SCHEDULED_REPEAT);
+                if (repeatValue != null) {
+                    repeat = (Integer) TypeConversionSupport.convert(repeatValue, Integer.class);
+                }
+                
+                getInternalScheduler().schedule(messageSend.getMessageId().toString(),
+                        new ByteSequence(packet.data, packet.offset, packet.length),cronEntry, delay, period, repeat);
+            
 
         } else {
 
@@ -135,22 +143,29 @@ public class SchedulerBroker extends BrokerFilter implements JobListener {
             Message messageSend = (Message) this.wireFormat.unmarshal(packet);
             messageSend.setOriginalTransactionId(null);
             Object repeatValue = messageSend.getProperty(ScheduledMessage.AMQ_SCHEDULED_REPEAT);
+            Object cronValue = messageSend.getProperty(ScheduledMessage.AMQ_SCHEDULED_REPEAT);
+            String cronStr = cronValue != null ? cronValue.toString() : null;
+            int repeat = 0;
             if (repeatValue != null) {
-                int repeat = (Integer) TypeConversionSupport.convert(repeatValue, Integer.class);
-                if (repeat != 0) {
-                    //create a unique id - the original message could be sent lots of times
-                    messageSend.setMessageId(new MessageId(this.producerId, this.messageIdGenerator.getNextSequenceId()));
+                repeat = (Integer) TypeConversionSupport.convert(repeatValue, Integer.class);
+            }
+  
+                if (repeat != 0 || cronStr != null && cronStr.length() > 0) {
+                    // create a unique id - the original message could be sent
+                    // lots of times
+                    messageSend
+                            .setMessageId(new MessageId(this.producerId, this.messageIdGenerator.getNextSequenceId()));
                 }
-            }   
-            //Add the jobId as a property
+            
+            // Add the jobId as a property
             messageSend.setProperty("scheduledJobId", id);
-           
-            //if this goes across a network - we don't want it rescheduled
+
+            // if this goes across a network - we don't want it rescheduled
             messageSend.removeProperty(ScheduledMessage.AMQ_SCHEDULED_PERIOD);
-            messageSend.removeProperty(ScheduledMessage.AMQ_SCHEDULED_START);
+            messageSend.removeProperty(ScheduledMessage.AMQ_SCHEDULED_DELAY);
             messageSend.removeProperty(ScheduledMessage.AMQ_SCHEDULED_REPEAT);
-            
-            
+            messageSend.removeProperty(ScheduledMessage.AMQ_SCHEDULED_CRON);
+
             final ProducerBrokerExchange producerExchange = new ProducerBrokerExchange();
             producerExchange.setConnectionContext(context);
             producerExchange.setMutable(true);
@@ -161,8 +176,8 @@ public class SchedulerBroker extends BrokerFilter implements JobListener {
         }
 
     }
-    
-    protected synchronized  JobScheduler getInternalScheduler() throws Exception {
+
+    protected synchronized JobScheduler getInternalScheduler() throws Exception {
         if (this.started.get()) {
             if (this.scheduler == null) {
                 this.scheduler = getStore().getJobScheduler("JMS");
@@ -172,8 +187,6 @@ public class SchedulerBroker extends BrokerFilter implements JobListener {
         }
         return null;
     }
-
-    
 
     private JobSchedulerStore getStore() throws Exception {
         if (started.get()) {

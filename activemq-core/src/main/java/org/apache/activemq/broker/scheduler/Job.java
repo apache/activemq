@@ -35,6 +35,10 @@ public interface Job {
     public abstract long getStart();
 
     /**
+     * @return the Delay
+     */
+    public abstract long getDelay();
+    /**
      * @return the period
      */
     public abstract long getPeriod();

@@ -16,6 +16,8 @@
  */
 package org.apache.activemq.broker.scheduler;
 
+import java.io.File;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -29,10 +31,48 @@ import javax.jms.TextMessage;
 import org.apache.activemq.EmbeddedBrokerTestSupport;
 import org.apache.activemq.ScheduledMessage;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.util.IOHelper;
 
 public class JmsSchedulerTest extends EmbeddedBrokerTestSupport {
 
-    
+    public void testCron() throws Exception {
+        final int COUNT = 10;
+        final AtomicInteger count = new AtomicInteger();
+        Connection connection = createConnection();
+
+        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+
+        MessageConsumer consumer = session.createConsumer(destination);
+
+        final CountDownLatch latch = new CountDownLatch(COUNT);
+        consumer.setMessageListener(new MessageListener() {
+            public void onMessage(Message message) {
+                latch.countDown();
+                count.incrementAndGet();
+            }
+        });
+
+        connection.start();
+        MessageProducer producer = session.createProducer(destination);
+        TextMessage message = session.createTextMessage("test msg");
+        long time = 1000;
+        message.setStringProperty(ScheduledMessage.AMQ_SCHEDULED_CRON, "* * * * *");
+        message.setLongProperty(ScheduledMessage.AMQ_SCHEDULED_DELAY, time);
+        message.setLongProperty(ScheduledMessage.AMQ_SCHEDULED_PERIOD, 500);
+        message.setIntProperty(ScheduledMessage.AMQ_SCHEDULED_REPEAT, COUNT - 1);
+
+        producer.send(message);
+        producer.close();
+
+        Thread.sleep(500);
+        SchedulerBroker sb = (SchedulerBroker) this.broker.getBroker().getAdaptor(SchedulerBroker.class);
+        JobScheduler js = sb.getJobScheduler();
+        List<Job> list = js.getAllJobs();
+        assertEquals(1, list.size());
+        latch.await(2,TimeUnit.MINUTES);
+        assertEquals(COUNT,count.get());
+    }
+
     public void testSchedule() throws Exception {
         final int COUNT = 1;
         Connection connection = createConnection();
@@ -49,15 +89,15 @@ public class JmsSchedulerTest extends EmbeddedBrokerTestSupport {
         });
 
         connection.start();
-        long time =  5000;
+        long time = 5000;
         MessageProducer producer = session.createProducer(destination);
         TextMessage message = session.createTextMessage("test msg");
-        
+
         message.setLongProperty(ScheduledMessage.AMQ_SCHEDULED_PERIOD, time);
-      
+
         producer.send(message);
         producer.close();
-        //make sure the message isn't delivered early
+        // make sure the message isn't delivered early
         Thread.sleep(2000);
         assertEquals(latch.getCount(), COUNT);
         latch.await(5, TimeUnit.SECONDS);
@@ -84,16 +124,16 @@ public class JmsSchedulerTest extends EmbeddedBrokerTestSupport {
         connection.start();
         MessageProducer producer = session.createProducer(destination);
         TextMessage message = session.createTextMessage("test msg");
-        long time = System.currentTimeMillis() + 4000;
-        message.setLongProperty(ScheduledMessage.AMQ_SCHEDULED_START, time);
-        message.setLongProperty(ScheduledMessage.AMQ_SCHEDULED_PERIOD, 50);
-        message.setIntProperty(ScheduledMessage.AMQ_SCHEDULED_REPEAT, NUMBER-1);
+        long time = 1000;
+        message.setLongProperty(ScheduledMessage.AMQ_SCHEDULED_DELAY, time);
+        message.setLongProperty(ScheduledMessage.AMQ_SCHEDULED_PERIOD, 500);
+        message.setIntProperty(ScheduledMessage.AMQ_SCHEDULED_REPEAT, NUMBER - 1);
         producer.send(message);
         producer.close();
         assertEquals(latch.getCount(), NUMBER);
-        latch.await(5, TimeUnit.SECONDS);
-        assertEquals(latch.getCount(), 0);
-        //wait a little longer - make sure we only get NUMBER of replays
+        latch.await(10, TimeUnit.SECONDS);
+        assertEquals(0, latch.getCount());
+        // wait a little longer - make sure we only get NUMBER of replays
         Thread.sleep(1000);
         assertEquals(NUMBER, count.get());
     }
@@ -103,12 +143,17 @@ public class JmsSchedulerTest extends EmbeddedBrokerTestSupport {
         bindAddress = "vm://localhost";
         super.setUp();
     }
-    
+
     @Override
     protected BrokerService createBroker() throws Exception {
+        File schedulerDirectory = new File("target/scheduler");
+        IOHelper.mkdirs(schedulerDirectory);
+        IOHelper.deleteChildren(schedulerDirectory);
         BrokerService answer = new BrokerService();
         answer.setPersistent(isPersistent());
+        answer.setDeleteAllMessagesOnStartup(true);
         answer.setDataDirectory("target");
+        answer.setSchedulerDirectoryFile(schedulerDirectory);
         answer.setUseJmx(false);
         answer.addConnector(bindAddress);
         return answer;

@@ -28,7 +28,9 @@ class JobLocation {
    
     private String jobId;
     private int repeat;
-    private long start;
+    private long startTime;
+    private long delay;
+    private long nextTime;
     private long period;
     private String cronEntry;
     private final Location location;
@@ -41,11 +43,13 @@ class JobLocation {
     public JobLocation() {
         this(new Location());
     }
-
+   
     public void readExternal(DataInput in) throws IOException {
         this.jobId = in.readUTF();
         this.repeat = in.readInt();
-        this.start = in.readLong();
+        this.startTime = in.readLong();
+        this.delay = in.readLong();
+        this.nextTime = in.readLong();
         this.period = in.readLong();
         this.cronEntry=in.readUTF();
         this.location.readExternal(in);
@@ -54,7 +58,9 @@ class JobLocation {
     public void writeExternal(DataOutput out) throws IOException {
         out.writeUTF(this.jobId);
         out.writeInt(this.repeat);
-        out.writeLong(this.start);
+        out.writeLong(this.startTime);
+        out.writeLong(this.delay);
+        out.writeLong(this.nextTime);
         out.writeLong(this.period);
         if (this.cronEntry==null) {
             this.cronEntry="";
@@ -97,16 +103,30 @@ class JobLocation {
     /**
      * @return the start
      */
-    public long getStart() {
-        return this.start;
+    public long getStartTime() {
+        return this.startTime;
     }
 
     /**
      * @param start
      *            the start to set
      */
-    public void setStart(long start) {
-        this.start = start;
+    public void setStartTime(long start) {
+        this.startTime = start;
+    }
+    
+    /**
+     * @return the nextTime
+     */
+    public synchronized long getNextTime() {
+        return this.nextTime;
+    }
+
+    /**
+     * @param nextTime the nextTime to set
+     */
+    public synchronized void setNextTime(long nextTime) {
+        this.nextTime = nextTime;
     }
 
     /**
@@ -136,6 +156,24 @@ class JobLocation {
      */
     public synchronized void setCronEntry(String cronEntry) {
         this.cronEntry = cronEntry;
+    }
+    
+    public boolean isCron() {
+        return getCronEntry() != null && getCronEntry().length() > 0;
+    }
+    
+    /**
+     * @return the delay
+     */
+    public long getDelay() {
+        return this.delay;
+    }
+
+    /**
+     * @param delay the delay to set
+     */
+    public void setDelay(long delay) {
+        this.delay = delay;
     }
 
     /**
