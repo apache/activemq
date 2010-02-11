@@ -107,10 +107,10 @@
 </tr>
 <tr>
 	<td class="label">
-	    <label for="AMQ_SCHEDULED_START_TIME">Scheduled start(ms)</label>
+	    <label for="AMQ_SCHEDULED_DELAY">delay(ms)</label>
 	</td>
 	<td>
-	    <form:text name="AMQ_SCHEDULED_START_TIME"/>
+	    <form:text name="AMQ_SCHEDULED_DELAY"/>
 	</td>
 	<td class="label">
 	    <label for="AMQ_SCHEDULED_PERIOD">Time(ms) to wait before scheduling again</label>

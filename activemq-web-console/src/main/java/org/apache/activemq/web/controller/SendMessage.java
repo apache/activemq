@@ -18,12 +18,10 @@ package org.apache.activemq.web.controller;
 
 import java.util.Iterator;
 import java.util.Map;
-
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.web.BrokerFacade;
 import org.apache.activemq.web.DestinationFacade;
@@ -66,7 +64,8 @@ public class SendMessage extends DestinationFacade implements Controller {
         return redirectToBrowseView();
     }
 
-    protected void sendMessages(HttpServletRequest request, WebClient client, ActiveMQDestination dest) throws JMSException {
+    protected void sendMessages(HttpServletRequest request, WebClient client, ActiveMQDestination dest)
+            throws JMSException {
         if (jmsMessageCount <= 1) {
             jmsMessageCount = 1;
         }
@@ -177,34 +176,56 @@ public class SendMessage extends DestinationFacade implements Controller {
         Map map = request.getParameterMap();
         if (map != null) {
             for (Iterator iter = map.entrySet().iterator(); iter.hasNext();) {
-                Map.Entry entry = (Map.Entry)iter.next();
-                String name = (String)entry.getKey();
+                Map.Entry entry = (Map.Entry) iter.next();
+                String name = (String) entry.getKey();
                 Object value = entry.getValue();
                 if (isValidPropertyName(name)) {
                     if (value instanceof String[]) {
-                        String[] array = (String[])value;
+                        String[] array = (String[]) value;
                         if (array.length > 0) {
                             value = array[0];
                         } else {
                             value = null;
                         }
                     }
-                    if (value instanceof String) {
-                        String text = value.toString().trim();
-                        if (text.length() == 0) {
-                            value = null;
-                        } else {
-                            value = text;
+                    if ((name.equals("AMQ_SCHEDULED_DELAY") || name.equals("AMQ_SCHEDULED_PERIOD"))) {
+                        if (value != null) {
+                            String str = value.toString().trim();
+                            if (str.length() > 0) {
+                                message.setLongProperty(name, Long.parseLong(str));
+                            }
                         }
-                    }
-                    if (value != null) {
-                        message.setObjectProperty(name, value);
+                    } else if (name.equals("AMQ_SCHEDULED_REPEAT")) {
+                        if (value != null) {
+                            String str = value.toString().trim();
+                            if (str.length() > 0) {
+                                message.setIntProperty(name, Integer.parseInt(str));
+                            }
+                        }
+                    } else if (name.equals("AMQ_SCHEDULED_CRON")) {
+                        if (value != null) {
+                            String str = value.toString().trim();
+                            if (str.length() > 0) {
+                                message.setStringProperty(name, str);
+                            }
+                        }
+                    } else {
+                        if (value instanceof String) {
+                            String text = value.toString().trim();
+                            if (text.length() == 0) {
+                                value = null;
+                            } else {
+                                value = text;
+                            }
+                        }
+                        if (value != null) {
+                            message.setObjectProperty(name, value);
+                        }
                     }
                 }
             }
         }
     }
-
     protected boolean isValidPropertyName(String name) {
         // allow JMSX extensions or non JMS properties
         return name.startsWith("JMSX") || !name.startsWith("JMS");
