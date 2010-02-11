@@ -27,6 +27,7 @@
 			<th>Cron Entry</th>
 			<th>next scheduled time</th>
 			<th>start</th>
+			<th>delay</th>
 			<th>period</th>
 			<th>repeat</th>
 			<th>Operations</th>
@@ -40,6 +41,7 @@
 		 <td>${row.cronEntry}</td>
 		 <td>${row.nextExecutionTime}</td>
 		 <td>${row.start}</td>
+		 <td>${row.delay}</td>
 	 	 <td>${row.period}</td>
 	     <td>${row.repeat}</td>
 		<td>
