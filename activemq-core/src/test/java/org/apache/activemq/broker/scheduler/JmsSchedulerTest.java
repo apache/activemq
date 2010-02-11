@@ -69,7 +69,7 @@ public class JmsSchedulerTest extends EmbeddedBrokerTestSupport {
         JobScheduler js = sb.getJobScheduler();
         List<Job> list = js.getAllJobs();
         assertEquals(1, list.size());
-        latch.await(2,TimeUnit.MINUTES);
+        latch.await(120,TimeUnit.SECONDS);
         assertEquals(COUNT,count.get());
     }
 
