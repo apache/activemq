@@ -49,8 +49,8 @@
       *
     </activemq.osgi.import.pkg>
     <activemq.osgi.export>
-      org.apache.activemq.camel*;version=${project.version},
-      '=META-INF.services.org.apache.camel'
+      org.apache.activemq.camel*;version=${project.version};-noimport:=true,
+      '=META-INF.services.org.apache.camel';-noimport:=true
     </activemq.osgi.export>
   </properties>
 

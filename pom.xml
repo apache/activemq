@@ -90,7 +90,7 @@
     <activemq.osgi.import.pkg>*</activemq.osgi.import.pkg>
     <activemq.osgi.export.pkg>org.apache.activemq*</activemq.osgi.export.pkg>
     <activemq.osgi.private.pkg>!*</activemq.osgi.private.pkg>
-    <activemq.osgi.export>${activemq.osgi.export.pkg}*;version=${activemq.osgi.export.version}</activemq.osgi.export>
+    <activemq.osgi.export>${activemq.osgi.export.pkg}*;version=${activemq.osgi.export.version};-noimport:=true</activemq.osgi.export>
     <activemq.osgi.export.version>${project.version}</activemq.osgi.export.version>
     <activemq.osgi.import>${activemq.osgi.import.pkg}</activemq.osgi.import>
     <activemq.osgi.dynamic.import/>
