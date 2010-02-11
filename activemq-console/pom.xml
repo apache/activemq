@@ -40,7 +40,7 @@
       *
     </activemq.osgi.import.pkg>
     <activemq.osgi.export>
-      org.apache.activemq.console*;version=${project.version},
+      org.apache.activemq.console*;version=${project.version};-noimport:=true,
     </activemq.osgi.export>
   </properties>
   
