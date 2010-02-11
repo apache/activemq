@@ -34,6 +34,14 @@ public class JobFacade {
     public String getNextExecutionTime() {
         return toString(data.get("next"));
     }
+    
+    public long getDelay() {
+        Long result = (Long) data.get("delay");
+        if (result != null) {
+            return result.longValue();
+        }
+        return 0l;
+    }
 
     public long getPeriod() {
         Long result = (Long) data.get("period");
