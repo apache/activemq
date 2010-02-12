@@ -16,10 +16,10 @@
  */
 package org.apache.activemq.broker;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -96,5 +96,9 @@ public class BrokerRegistry {
      */
     public Object getRegistryMutext() {
         return mutex;
+    }
+    
+    public Map<String, BrokerService> getBrokers() {
+        return Collections.unmodifiableMap(this.brokers);
     }
 }
