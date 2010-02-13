@@ -38,7 +38,7 @@ public class PListTest {
 
     @Test
     public void testAddLast() throws Exception {
-        final int COUNT = 100;
+        final int COUNT = 1000;
         Map<String, ByteSequence> map = new LinkedHashMap<String, ByteSequence>();
         for (int i = 0; i < COUNT; i++) {
             String test = new String("test" + i);
@@ -60,7 +60,7 @@ public class PListTest {
 
    @Test
     public void testAddFirst() throws Exception {
-        final int COUNT = 100;
+        final int COUNT = 1000;
         Map<String, ByteSequence> map = new LinkedHashMap<String, ByteSequence>();
         for (int i = 0; i < COUNT; i++) {
             String test = new String("test" + i);
@@ -82,7 +82,7 @@ public class PListTest {
 
     @Test
     public void testRemove() throws IOException {
-        final int COUNT = 200;
+        final int COUNT = 2000;
         Map<String, ByteSequence> map = new LinkedHashMap<String, ByteSequence>();
         for (int i = 0; i < COUNT; i++) {
             String test = new String("test" + i);
