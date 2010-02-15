@@ -16,29 +16,35 @@
     limitations under the License.
 -->
 
-<beans xmlns:amq="http://activemq.apache.org/schema/core">
+<beans
+  xmlns="http://www.springframework.org/schema/beans"
+  xmlns:amq="http://activemq.apache.org/schema/core"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.0.xsd
+  http://activemq.apache.org/schema/core http://activemq.apache.org/schema/core/activemq-core.xsd">
 
     <amq:broker brokerName="journaledMemBroker" start="false" persistent="false" useShutdownHook="false" deleteAllMessagesOnStartup="true" advisorySupport="false">
+
+        <amq:persistenceAdapter>
+            <amq:journalPersistenceAdapter>
+                <amq:journal>
+                    <ref bean="myJournalImpl"/>
+                </amq:journal>
+
+                <amq:persistenceAdapter>
+                    <amq:memoryPersistenceAdapter createTransactionStore="true"/>
+                </amq:persistenceAdapter>
+
+                <amq:taskRunnerFactory>
+                    <bean id="myTaskRunnerFactory" class="org.apache.activemq.thread.TaskRunnerFactory"/>
+                </amq:taskRunnerFactory>
+            </amq:journalPersistenceAdapter>
+        </amq:persistenceAdapter>
 
         <amq:transportConnectors>
             <amq:transportConnector uri="tcp://localhost:61616"/>
         </amq:transportConnectors>
 
-        <amq:persistenceAdapter>
-            <amq:journalPersistenceAdapter>
-                <constructor-arg index="0">
-                    <ref bean="myJournalImpl"/>
-                </constructor-arg>
-
-                <constructor-arg index="1">
-                    <amq:memoryPersistenceAdapter init-method="createTransactionStore"/>
-                </constructor-arg>
-
-                <constructor-arg index="2">
-                    <bean id="myTaskRunnerFactory" class="org.apache.activemq.thread.TaskRunnerFactory"/>
-                </constructor-arg>
-            </amq:journalPersistenceAdapter>
-        </amq:persistenceAdapter>
     </amq:broker>
 
     <!-- The journal implementation that will be used -->

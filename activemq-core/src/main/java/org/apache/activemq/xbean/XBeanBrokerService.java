@@ -20,14 +20,13 @@ import java.io.IOException;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
+
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.usage.SystemUsage;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.osgi.framework.BundleException;
 import org.springframework.beans.BeansException;
-import org.springframework.beans.factory.DisposableBean;
-import org.springframework.beans.factory.InitializingBean;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.ConfigurableApplicationContext;
@@ -53,7 +52,24 @@ public class XBeanBrokerService extends BrokerService implements ApplicationCont
     private boolean start = true;
     private ApplicationContext applicationContext = null;
     private boolean destroyApplicationContextOnShutdown = false;
+    private boolean destroyApplicationContextOnStop = false;
 
+    Runnable stopContextRunnable = new Runnable() {
+        public void run() {
+            if (applicationContext instanceof ConfigurableApplicationContext) {
+                ((ConfigurableApplicationContext) applicationContext).close();
+            }
+            if (applicationContext instanceof OsgiBundleXmlApplicationContext){
+                try {
+                    ((OsgiBundleXmlApplicationContext)applicationContext).getBundle().stop();
+                } catch (BundleException e) {
+                    LOG.info("Error stopping OSGi bundle " + e, e);
+                }
+            }
+
+        }
+    };
+    
     public XBeanBrokerService() {
     }
 
@@ -69,21 +85,7 @@ public class XBeanBrokerService extends BrokerService implements ApplicationCont
             start();
         }
         if (destroyApplicationContextOnShutdown) {
-            addShutdownHook(new Runnable() {
-                public void run() {
-                    if (applicationContext instanceof ConfigurableApplicationContext) {
-	                    ((ConfigurableApplicationContext) applicationContext).close();
-                    }
-                    if (applicationContext instanceof OsgiBundleXmlApplicationContext){
-                        try {
-                            ((OsgiBundleXmlApplicationContext)applicationContext).getBundle().stop();
-                        } catch (BundleException e) {
-                            LOG.info("Error stopping OSGi bundle " + e, e);
-                        }
-                    }
-
-                }
-            });
+            addShutdownHook(stopContextRunnable);
         }
     }
 
@@ -107,9 +109,15 @@ public class XBeanBrokerService extends BrokerService implements ApplicationCont
         stop();
     }
 
-    public boolean isStart() {
-        return start;
-    }
+    
+   @Override
+   public void stop() throws Exception {      
+       if (destroyApplicationContextOnStop) {
+           stopContextRunnable.run();
+       }
+       super.stop();
+   }
+    
 
     /**
      * Sets whether or not the broker is started along with the ApplicationContext it is defined within.
@@ -121,11 +129,19 @@ public class XBeanBrokerService extends BrokerService implements ApplicationCont
     }
 
     /**
-     * Sets whether the broker should shutdown the ApplicationContext when the broker is stopped.
+     * Sets whether the broker should shutdown the ApplicationContext when the broker jvm is shutdown.
      * The broker can be stopped because the underlying JDBC store is unavailable for example.
      */
     public void setDestroyApplicationContextOnShutdown(boolean destroy) {
         this.destroyApplicationContextOnShutdown = destroy;
+    }
+    
+    /**
+     * Sets whether the broker should shutdown the ApplicationContext when the broker is stopped.
+     * The broker can be stopped because the underlying JDBC store is unavailable for example.
+     */
+    public void setDestroyApplicationContextOnStop(boolean destroy) {
+        this.destroyApplicationContextOnStop = destroy;
     }
 
 	public void setApplicationContext(ApplicationContext applicationContext)

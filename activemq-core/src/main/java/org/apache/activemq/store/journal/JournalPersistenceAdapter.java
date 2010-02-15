@@ -88,8 +88,8 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
     protected static final Scheduler scheduler = Scheduler.getInstance();
     private static final Log LOG = LogFactory.getLog(JournalPersistenceAdapter.class);
 
-    private final Journal journal;
-    private final PersistenceAdapter longTermPersistence;
+    private Journal journal;
+    private PersistenceAdapter longTermPersistence;
 
     private final WireFormat wireFormat = new OpenWireFormat();
 
@@ -114,20 +114,27 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
 
     private final Runnable periodicCheckpointTask = createPeriodicCheckpointTask();
 
+    private TaskRunnerFactory taskRunnerFactory;
+
     public JournalPersistenceAdapter(Journal journal, PersistenceAdapter longTermPersistence, TaskRunnerFactory taskRunnerFactory) throws IOException {
-
-        this.journal = journal;
-        journal.setJournalEventListener(this);
-
-        checkpointTask = taskRunnerFactory.createTaskRunner(new Task() {
-            public boolean iterate() {
-                return doCheckpoint();
-            }
-        }, "ActiveMQ Journal Checkpoint Worker");
-
-        this.longTermPersistence = longTermPersistence;
+        setJournal(journal);
+        setTaskRunnerFactory(taskRunnerFactory);
+        setPersistenceAdapter(longTermPersistence);
     }
 
+    public void setTaskRunnerFactory(TaskRunnerFactory taskRunnerFactory) {
+        this.taskRunnerFactory = taskRunnerFactory;
+    }
+
+    public void setJournal(Journal journal) {
+        this.journal = journal;
+        journal.setJournalEventListener(this);
+    }
+    
+    public void setPersistenceAdapter(PersistenceAdapter longTermPersistence) {
+        this.longTermPersistence = longTermPersistence;
+    }
+    
     final Runnable createPeriodicCheckpointTask() {
         return new Runnable() {
             public void run() {
@@ -228,6 +235,12 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
         if (!started.compareAndSet(false, true)) {
             return;
         }
+
+        checkpointTask = taskRunnerFactory.createTaskRunner(new Task() {
+            public boolean iterate() {
+                return doCheckpoint();
+            }
+        }, "ActiveMQ Journal Checkpoint Worker");
 
         checkpointExecutor = new ThreadPoolExecutor(maxCheckpointWorkers, maxCheckpointWorkers, 30, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>(), new ThreadFactory() {
             public Thread newThread(Runnable runable) {

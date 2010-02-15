@@ -45,30 +45,7 @@
         The <broker> element is used to configure the ActiveMQ broker. 
     -->
     <broker xmlns="http://activemq.apache.org/schema/core" brokerName="localhost" dataDirectory="${activemq.base}/data">
-        
-        <!-- 
-            The managementContext is used to configure how ActiveMQ is exposed in 
-            JMX. By default, ActiveMQ uses the MBean server that is started by 
-            the JVM. For more information, see: 
-            
-            http://activemq.apache.org/jmx.html 
-        -->
-        <managementContext>
-            <managementContext createConnector="false"/>
-        </managementContext>
-
-        <!-- 
-            Configure message persistence for the broker. The default persistence
-            mechanism is the KahaDB store (identified by the kahaDB tag). 
-            For more information, see: 
-            
-            http://activemq.apache.org/persistence.html 
-        -->
-        <persistenceAdapter>
-            <kahaDB directory="${activemq.base}/data/kahadb"/>
-        </persistenceAdapter>
-        
-        
+             
         <!--
             For better performances use VM cursor and small memory limit.
             For more information, see:
@@ -101,7 +78,31 @@
                 </policyEntry>
               </policyEntries>
             </policyMap>
-        </destinationPolicy> 
+        </destinationPolicy>
+        
+           
+        <!-- 
+            The managementContext is used to configure how ActiveMQ is exposed in 
+            JMX. By default, ActiveMQ uses the MBean server that is started by 
+            the JVM. For more information, see: 
+            
+            http://activemq.apache.org/jmx.html 
+        -->
+        <managementContext>
+            <managementContext createConnector="false"/>
+        </managementContext>
+
+        <!-- 
+            Configure message persistence for the broker. The default persistence
+            mechanism is the KahaDB store (identified by the kahaDB tag). 
+            For more information, see: 
+            
+            http://activemq.apache.org/persistence.html 
+        -->
+        <persistenceAdapter>
+            <kahaDB directory="${activemq.base}/data/kahadb"/>
+        </persistenceAdapter>
+         
           
         <!-- 
             The transport connectors expose ActiveMQ over a given protocol to

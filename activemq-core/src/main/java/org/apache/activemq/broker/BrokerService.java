@@ -598,7 +598,7 @@ public class BrokerService implements Service {
         stopper.throwFirstException();
     }
     
-        public boolean checkQueueSize(String queueName) {
+    public boolean checkQueueSize(String queueName) {
         long count = 0;
         long queueSize = 0;
         Map<ActiveMQDestination, Destination> destinationMap = regionBroker.getDestinationMap();

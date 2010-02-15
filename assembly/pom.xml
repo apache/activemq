@@ -322,6 +322,11 @@
       <artifactId>junit</artifactId>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>org.osgi</groupId>
+      <artifactId>org.osgi.core</artifactId>
+      <scope>test</scope>
+    </dependency>
     
     <!-- dependencies specific to this module -->
     <dependency>
@@ -367,9 +372,18 @@
       </plugin>
       <plugin>
         <artifactId>maven-surefire-plugin</artifactId>
-        <configuration>
-          <forkMode>pertest</forkMode>
-        </configuration>
+        <executions>
+          <execution>
+            <id>validate-config</id>
+            <phase>test</phase>
+            <goals>
+             <goal>test</goal>
+            </goals>
+            <configuration>
+             <forkMode>pertest</forkMode>
+            </configuration>
+          </execution>
+        </executions>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -414,6 +428,30 @@
           <url>broker:(tcp://localhost:61616)?useJmx=false</url>
         </configuration>
       </plugin -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-resources-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>copy-conf</id>
+            <phase>process-test-resources</phase>
+            <goals>
+              <goal>copy-resources</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>target/conf</outputDirectory>
+              <resources> 
+                <resource>
+                  <directory>src/release/conf</directory>
+                </resource>
+                <resource>
+                  <directory>src/sample-conf</directory>
+                </resource>
+              </resources> 
+            </configuration>            
+          </execution>
+        </executions>
+      </plugin>
     </plugins>
   </build>
 

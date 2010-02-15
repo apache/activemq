@@ -15,10 +15,14 @@
     limitations under the License.
 -->
 <!-- START SNIPPET: xbean -->
-<beans>
-  
+<beans
+  xmlns="http://www.springframework.org/schema/beans"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.0.xsd
+  http://activemq.apache.org/schema/core http://activemq.apache.org/schema/core/activemq-core.xsd">
+    
   <broker useJmx="false" brokerName="quickJdbcBroker" xmlns="http://activemq.apache.org/schema/core">
-    <persistenceAdapter>
+    <persistenceFactory>
        <journaledJDBC journalLogFiles="4" 
                       journalLogFileSize="32768" 
 		      useJournal="true" 
@@ -26,7 +30,7 @@
 		      dataSource="#derby-ds" 
 		      dataDirectory="target/quickJdbc-data"/>
 		      
-    </persistenceAdapter>
+    </persistenceFactory>
   
     <transportConnectors>
        <transportConnector name="default" uri="tcp://localhost:61616"/>

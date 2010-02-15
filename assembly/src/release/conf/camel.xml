@@ -26,13 +26,16 @@
     e.g. <import resource="camel.xml"/>
 -->
 <beans
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd">
-    <camelContext id="camel" xmlns="http://camel.apache.org/schema/spring">
+   xmlns="http://www.springframework.org/schema/beans"  
+   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+   xsi:schemaLocation="http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd
+   http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+  
+  	<camelContext id="camel" xmlns="http://camel.apache.org/schema/spring">
 
         <!-- You can use a <packages> element for each root package to search for Java routes -->
         <packageScan>
-           <packages>org.foo.bar</packages>
+           <package>org.foo.bar</package>
         </packageScan>
 
         <!-- You can use Spring XML syntax to define the routes here using the <route> element -->
