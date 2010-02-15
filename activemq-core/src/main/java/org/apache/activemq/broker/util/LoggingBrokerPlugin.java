@@ -18,7 +18,6 @@ package org.apache.activemq.broker.util;
 
 import java.io.IOException;
 import java.util.Set;
-
 import javax.annotation.PostConstruct;
 import org.apache.activemq.broker.BrokerPluginSupport;
 import org.apache.activemq.broker.Connection;
@@ -530,6 +529,7 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport {
             }
             LOG.info("Sending to DLQ : " + msg);
         }
+        super.sendToDeadLetterQueue(context, messageReference);
     }
 
     @Override
