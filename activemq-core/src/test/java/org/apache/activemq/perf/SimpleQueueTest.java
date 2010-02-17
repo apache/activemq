@@ -26,6 +26,8 @@ import javax.jms.Session;
  */
 public class SimpleQueueTest extends SimpleTopicTest {
 
+    protected long initialConsumerDelay = 0;
+    protected long consumerSleep = 0;
     @Override
     protected Destination createDestination(Session s, String destinationName) throws JMSException {
         return s.createQueue(destinationName);
@@ -40,8 +42,8 @@ public class SimpleQueueTest extends SimpleTopicTest {
     @Override
     protected PerfConsumer createConsumer(ConnectionFactory fac, Destination dest, int number) throws JMSException {
         PerfConsumer consumer =  new PerfConsumer(fac, dest);
-        //consumer.setInitialDelay(10000);
-        //consumer.setSleepDuration(10);
+        consumer.setInitialDelay(this.initialConsumerDelay);
+        consumer.setSleepDuration(this.consumerSleep);
         boolean enableAudit = numberOfConsumers <= 1;
         System.err.println("Enable Audit = " + enableAudit);
         consumer.setEnableAudit(enableAudit);

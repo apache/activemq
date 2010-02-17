@@ -28,16 +28,18 @@ import org.apache.activemq.store.amq.AMQPersistenceAdapterFactory;
  * @version $Revision: 1.3 $
  */
 public class SimpleDurableTopicTest extends SimpleTopicTest {
-    
+    protected long initialConsumerDelay = 0;
+    @Override
     protected void setUp() throws Exception {
-        numberOfDestinations=10;
-        numberOfConsumers = 10;
-        numberofProducers = 2;
+        numberOfDestinations=1;
+        numberOfConsumers = 2;
+        numberofProducers = 1;
         sampleCount=1000;
         playloadSize = 1024;
         super.setUp();
     }
     
+    @Override
     protected void configureBroker(BrokerService answer,String uri) throws Exception {
         AMQPersistenceAdapterFactory persistenceFactory = new AMQPersistenceAdapterFactory();
         persistenceFactory.setMaxFileLength(1024*16);
@@ -49,18 +51,21 @@ public class SimpleDurableTopicTest extends SimpleTopicTest {
         answer.setUseShutdownHook(false);
     }
     
+    @Override
     protected PerfProducer createProducer(ConnectionFactory fac, Destination dest, int number, byte payload[]) throws JMSException {
         PerfProducer pp = new PerfProducer(fac, dest, payload);
         pp.setDeliveryMode(DeliveryMode.PERSISTENT);
         return pp;
     }
 
+    @Override
     protected PerfConsumer createConsumer(ConnectionFactory fac, Destination dest, int number) throws JMSException {
         PerfConsumer result = new PerfConsumer(fac, dest, "subs:" + number);
-        result.setInitialDelay(0);
+        result.setInitialDelay(this.initialConsumerDelay);
         return result;
     }
     
+    @Override
     protected ActiveMQConnectionFactory createConnectionFactory(String uri) throws Exception {
         ActiveMQConnectionFactory result = super.createConnectionFactory(uri);
         //result.setSendAcksAsync(false);
