@@ -17,11 +17,13 @@
 package org.apache.activemq.store.kahadb.plist;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.assertNull;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.Map;
+
 import org.apache.activemq.util.IOHelper;
 import org.apache.kahadb.util.ByteSequence;
 import org.junit.After;
@@ -32,8 +34,6 @@ public class PListTest {
 
     private PListStore store;
     private PList plist;
-    
-
    
 
     @Test
@@ -82,7 +82,10 @@ public class PListTest {
 
     @Test
     public void testRemove() throws IOException {
-        final int COUNT = 2000;
+        doTestRemove(2000);
+    }
+    
+    protected void doTestRemove(final int COUNT) throws IOException {            
         Map<String, ByteSequence> map = new LinkedHashMap<String, ByteSequence>();
         for (int i = 0; i < COUNT; i++) {
             String test = new String("test" + i);
@@ -100,9 +103,26 @@ public class PListTest {
 
     }
 
-    //@Test
-    public void testDestroy() {
-        fail("Not yet implemented");
+    @Test
+    public void testDestroy() throws Exception {
+        doTestRemove(1);
+        plist.destroy();
+        assertEquals(0,plist.size());
+    }
+    
+    @Test
+    public void testDestroyNonEmpty() throws Exception {
+        final int COUNT = 1000;
+        Map<String, ByteSequence> map = new LinkedHashMap<String, ByteSequence>();
+        for (int i = 0; i < COUNT; i++) {
+            String test = new String("test" + i);
+            ByteSequence bs = new ByteSequence(test.getBytes());
+            map.put(test, bs);
+            plist.addLast(test, bs);
+        }
+        plist.destroy();
+        assertEquals(0,plist.size());
+        assertNull("no first entry", plist.getFirst());
     }
 
     @Before

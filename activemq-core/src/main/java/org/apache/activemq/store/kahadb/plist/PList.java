@@ -117,10 +117,10 @@ public class PList {
 
     void destroy(Transaction tx) throws IOException {
         // start from the first
-        EntryLocation entry = loadEntry(tx, getRoot(tx).getNext());
+        EntryLocation entry = getFirst(tx);
         while (entry != null) {
             EntryLocation toRemove = entry.copy();
-            entry = loadEntry(tx, entry.getNext());
+            entry = getNext(tx, entry.getNext());
             doRemove(tx, toRemove);
         }
     }

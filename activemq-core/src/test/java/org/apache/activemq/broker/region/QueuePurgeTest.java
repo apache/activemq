@@ -137,6 +137,7 @@ public class QueuePurgeTest extends TestCase {
         LOG.info("purge done: " + (System.currentTimeMillis() - start) + "ms");
         assertEquals("Queue size is not zero, it's " + proxy.getQueueSize(), 0,
                 proxy.getQueueSize());
+        assertEquals("usage goes to duck", 0, proxy.getMemoryPercentUsage());
     }
 
     private QueueViewMBean getProxyToQueueViewMBean()
