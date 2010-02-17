@@ -218,7 +218,7 @@ public final class IntrospectionSupport {
 
     private static Method findSetterMethod(Class clazz, String name) {
         // Build the method name.
-        name = "set" + name.substring(0, 1).toUpperCase() + name.substring(1);
+        name = "set" + Character.toUpperCase(name.charAt(0)) + name.substring(1);
         Method[] methods = clazz.getMethods();
         for (int i = 0; i < methods.length; i++) {
             Method method = methods[i];
