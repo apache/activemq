@@ -16,9 +16,13 @@
  */
 package org.apache.activemq.camel.component;
 
+import java.util.concurrent.CopyOnWriteArrayList;
+
+import org.apache.activemq.Service;
 import org.apache.camel.CamelContext;
 import org.apache.camel.component.jms.JmsComponent;
 import org.apache.camel.component.jms.JmsConfiguration;
+import org.springframework.jms.connection.SingleConnectionFactory;
 
 /**
  * The <a href="http://activemq.apache.org/camel/activemq.html">ActiveMQ Component</a>
@@ -26,6 +30,10 @@ import org.apache.camel.component.jms.JmsConfiguration;
  * @version $Revision$
  */
 public class ActiveMQComponent extends JmsComponent {
+    private final CopyOnWriteArrayList<SingleConnectionFactory> singleConnectionFactoryList =
+        new CopyOnWriteArrayList<SingleConnectionFactory>();
+    private final CopyOnWriteArrayList<Service> pooledConnectionFactoryServiceList =
+        new CopyOnWriteArrayList<Service>();
     private boolean exposeAllQueues;
     private CamelEndpointLoader endpointLoader;
 
@@ -110,6 +118,14 @@ public class ActiveMQComponent extends JmsComponent {
         }
     }
 
+    protected void addPooledConnectionFactoryService(Service pooledConnectionFactoryService) {
+        pooledConnectionFactoryServiceList.add(pooledConnectionFactoryService);
+    }
+
+    protected void addSingleConnectionFactory(SingleConnectionFactory singleConnectionFactory) {
+        singleConnectionFactoryList.add(singleConnectionFactory);
+    }
+
     @Override
     protected void doStart() throws Exception {
         super.doStart();
@@ -119,18 +135,35 @@ public class ActiveMQComponent extends JmsComponent {
         }
     }
 
-
     @Override
     protected void doStop() throws Exception {
         if (endpointLoader != null) {
             endpointLoader.destroy();
             endpointLoader = null;
         }
+        for (Service s : pooledConnectionFactoryServiceList) {
+            s.stop();
+        }
+        pooledConnectionFactoryServiceList.clear();
+        for (SingleConnectionFactory s : singleConnectionFactoryList) {
+            s.destroy();
+        }
+        singleConnectionFactoryList.clear();
         super.doStop();
     }
 
     @Override
+    public void setConfiguration(JmsConfiguration configuration) {
+        if (configuration instanceof ActiveMQConfiguration) {
+            ((ActiveMQConfiguration) configuration).setActiveMQComponent(this);
+        }
+        super.setConfiguration(configuration);
+    }
+
+    @Override
     protected JmsConfiguration createConfiguration() {
-        return new ActiveMQConfiguration();
+        ActiveMQConfiguration answer = new ActiveMQConfiguration();
+        answer.setActiveMQComponent(this);
+        return answer;
     }
 }

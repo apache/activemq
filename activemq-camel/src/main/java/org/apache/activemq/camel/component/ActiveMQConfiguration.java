@@ -20,6 +20,7 @@ import java.lang.reflect.Constructor;
 
 import javax.jms.ConnectionFactory;
 
+import org.apache.activemq.Service;
 import org.apache.activemq.spring.ActiveMQConnectionFactory;
 import org.apache.camel.component.jms.JmsConfiguration;
 import org.springframework.jms.connection.SingleConnectionFactory;
@@ -36,6 +37,7 @@ public class ActiveMQConfiguration extends JmsConfiguration {
     private boolean usePooledConnection = true;
     private String userName;
     private String password;
+    private ActiveMQComponent activeMQComponent;
 
     public ActiveMQConfiguration() {
     }
@@ -134,6 +136,10 @@ public class ActiveMQConfiguration extends JmsConfiguration {
         return answer;
     }
 
+    protected void setActiveMQComponent(ActiveMQComponent activeMQComponent) {
+        this.activeMQComponent = activeMQComponent;
+    }
+
     @Override
     protected ConnectionFactory createConnectionFactory() {
         ActiveMQConnectionFactory answer = new ActiveMQConnectionFactory();
@@ -148,10 +154,18 @@ public class ActiveMQConfiguration extends JmsConfiguration {
         }
         answer.setBrokerURL(getBrokerURL());
         if (isUseSingleConnection()) {
-            return new SingleConnectionFactory(answer);
+            SingleConnectionFactory scf = new SingleConnectionFactory(answer);
+            if (activeMQComponent != null) {
+                activeMQComponent.addSingleConnectionFactory(scf);
+            }
+            return scf;
         }
         else if (isUsePooledConnection()) {
-            return createPooledConnectionFactory(answer);
+            ConnectionFactory pcf = createPooledConnectionFactory(answer);
+            if (activeMQComponent != null) {
+                activeMQComponent.addPooledConnectionFactoryService((Service) pcf);
+            }
+            return pcf;
         }
         else {
             return answer;
