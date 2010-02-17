@@ -90,8 +90,9 @@ public class Topic extends BaseDestination implements Task {
     public void initialize() throws Exception {
         super.initialize();
         if (store != null) {
-            int messageCount = store.getMessageCount();
-            destinationStatistics.getMessages().setCount(messageCount);
+            // AMQ-2586: Better to leave this stat at zero than to give the user misleading metrics.
+            // int messageCount = store.getMessageCount();
+            // destinationStatistics.getMessages().setCount(messageCount);
         }
     }
 
@@ -563,7 +564,8 @@ public class Topic extends BaseDestination implements Task {
     }
 
     protected void dispatch(final ConnectionContext context, Message message) throws Exception {
-        destinationStatistics.getMessages().increment();
+        // AMQ-2586: Better to leave this stat at zero than to give the user misleading metrics.
+        // destinationStatistics.getMessages().increment();
         destinationStatistics.getEnqueues().increment();
         dispatchValve.increment();
         MessageEvaluationContext msgContext = null;
@@ -594,7 +596,8 @@ public class Topic extends BaseDestination implements Task {
 
     public void messageExpired(ConnectionContext context, Subscription subs, MessageReference reference) {
         broker.messageExpired(context, reference);
-        destinationStatistics.getMessages().decrement();
+        // AMQ-2586: Better to leave this stat at zero than to give the user misleading metrics.
+        // destinationStatistics.getMessages().decrement();
         destinationStatistics.getEnqueues().decrement();
         destinationStatistics.getExpired().increment();
         MessageAck ack = new MessageAck();
