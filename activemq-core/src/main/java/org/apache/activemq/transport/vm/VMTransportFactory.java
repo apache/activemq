@@ -68,7 +68,7 @@ public class VMTransportFactory extends TransportFactory {
                 host = "localhost";
             }
             if (brokerData.getPath() != null) {
-                host = data.getPath();
+                host = brokerData.getPath();
             }
             options = data.getParameters();
             location = new URI("vm://" + host);
