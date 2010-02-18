@@ -808,32 +808,34 @@ public class Queue extends BaseDestination implements Task, UsageListener {
     }
 
     public Message[] browse() {
-        List<Message> l = new ArrayList<Message>();
-        doBrowse(l, getMaxBrowsePageSize());
-        return l.toArray(new Message[l.size()]);
+        List<Message> browseList = new ArrayList<Message>();
+        doBrowse(browseList, getMaxBrowsePageSize());
+        return browseList.toArray(new Message[browseList.size()]);
     }
 
-    public void doBrowse(List<Message> l, int max) {
+    public void doBrowse(List<Message> browseList, int max) {
         final ConnectionContext connectionContext = createConnectionContext();
         try {
             pageInMessages(false);
             List<MessageReference> toExpire = new ArrayList<MessageReference>();
             synchronized (dispatchMutex) {
                 synchronized (pagedInPendingDispatch) {
-                    addAll(pagedInPendingDispatch, l, max, toExpire);
+                    addAll(pagedInPendingDispatch, browseList, max, toExpire);
                     for (MessageReference ref : toExpire) {
                         pagedInPendingDispatch.remove(ref);
                         if (broker.isExpired(ref)) {
+                            LOG.debug("expiring from pagedInPending: " + ref);
                             messageExpired(connectionContext, ref);
                         }
                     }
                 }
                 toExpire.clear();
                 synchronized (pagedInMessages) {
-                    addAll(pagedInMessages.values(), l, max, toExpire);
+                    addAll(pagedInMessages.values(), browseList, max, toExpire);
                 }
                 for (MessageReference ref : toExpire) {
                     if (broker.isExpired(ref)) {
+                        LOG.debug("expiring from pagedInMessages: " + ref);
                         messageExpired(connectionContext, ref);
                     } else {
                         synchronized (pagedInMessages) {
@@ -842,23 +844,25 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                     }
                 }
 
-                if (l.size() < getMaxBrowsePageSize()) {
+                if (browseList.size() < getMaxBrowsePageSize()) {
                     synchronized (messages) {
                         try {
                             messages.reset();
-                            while (messages.hasNext() && l.size() < max) {
+                            while (messages.hasNext() && browseList.size() < max) {
                                 MessageReference node = messages.next();
                                 if (node.isExpired()) {
                                     if (broker.isExpired(node)) {
+                                        LOG.debug("expiring from messages: " + node);
                                         messageExpired(connectionContext, createMessageReference(node.getMessage()));
                                     }
                                     messages.remove();
                                 } else {
                                     messages.rollback(node.getMessageId());
-                                    if (l.contains(node.getMessage()) == false) {
-                                        l.add(node.getMessage());
+                                    if (browseList.contains(node.getMessage()) == false) {
+                                        browseList.add(node.getMessage());
                                     }
                                 }
+                                node.decrementReferenceCount();
                             }
                         } finally {
                             messages.release();
@@ -897,6 +901,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                     while (messages.hasNext()) {
                         try {
                             MessageReference r = messages.next();
+                            r.decrementReferenceCount();
                             messages.rollback(r.getMessageId());
                             if (msgId.equals(r.getMessageId())) {
                                 Message m = r.getMessage();
@@ -1444,12 +1449,13 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                         messages.reset();
                         while (messages.hasNext() && count < toPageIn) {
                             MessageReference node = messages.next();
-                            node.incrementReferenceCount();
                             messages.remove();
                             QueueMessageReference ref = createMessageReference(node.getMessage());
                             if (ref.isExpired()) {
                                 if (broker.isExpired(ref)) {
                                     messageExpired(createConnectionContext(), ref);
+                                } else {
+                                    ref.decrementReferenceCount();
                                 }
                             } else {
                                 result.add(ref);
@@ -1467,6 +1473,8 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                         if (!pagedInMessages.containsKey(ref.getMessageId())) {
                             pagedInMessages.put(ref.getMessageId(), ref);
                             resultList.add(ref);
+                        } else {
+                            ref.decrementReferenceCount();
                         }
                     }
                 }
@@ -1657,7 +1665,6 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                         messages.reset();
                         while (messages.hasNext()) {
                             MessageReference node = messages.next();
-                            node.incrementReferenceCount();
                             messages.remove();
                             if (messageId.equals(node.getMessageId())) {
                                 message = this.createMessageReference(node.getMessage());

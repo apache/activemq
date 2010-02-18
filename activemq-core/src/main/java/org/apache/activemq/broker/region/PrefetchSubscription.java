@@ -164,6 +164,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                 pending.reset();
                 while (pending.hasNext()) {
                     MessageReference node = pending.next();
+                    node.decrementReferenceCount();
                     if (node.getMessageId().equals(mdn.getMessageId())) {
                         // Synchronize between dispatched list and removal of messages from pending list
                         // related to remove subscription action
@@ -575,6 +576,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                             // related to remove subscription action
                             synchronized(dispatchLock) {
                                 pending.remove();
+                                node.decrementReferenceCount();
                                 if( !isDropped(node) && canDispatch(node)) {
 
                                     // Message may have been sitting in the pending

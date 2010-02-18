@@ -17,6 +17,7 @@
 package org.apache.activemq;
 
 import java.io.File;
+import java.util.Map;
 
 import javax.jms.Connection;
 import javax.jms.Destination;
@@ -25,6 +26,11 @@ import javax.jms.Message;
 import javax.jms.TextMessage;
 
 import junit.framework.TestCase;
+
+import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.region.DestinationStatistics;
+import org.apache.activemq.broker.region.RegionBroker;
+import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
@@ -138,5 +144,33 @@ public class TestSupport extends TestCase {
         if (System.getProperty("derby.system.home") != null) {
             recursiveDelete(new File(System.getProperty("derby.system.home")));
         }
+    }
+    
+    public static DestinationStatistics getDestinationStatistics(BrokerService broker, ActiveMQDestination destination) {
+        DestinationStatistics result = null;
+        org.apache.activemq.broker.region.Destination dest = getDestination(broker, destination);
+        if (dest != null) {
+            result = dest.getDestinationStatistics();
+        }
+        return result;
+    }
+    
+    public static org.apache.activemq.broker.region.Destination getDestination(BrokerService target, ActiveMQDestination destination) {
+        org.apache.activemq.broker.region.Destination result = null;
+        for (org.apache.activemq.broker.region.Destination dest : getDestinationMap(target, destination).values()) {
+            if (dest.getName().equals(destination.getPhysicalName())) {
+                result = dest;
+                break;
+            }
+        }
+        return result;
+    }
+
+    private static Map<ActiveMQDestination, org.apache.activemq.broker.region.Destination> getDestinationMap(BrokerService target,
+            ActiveMQDestination destination) {
+        RegionBroker regionBroker = (RegionBroker) target.getRegionBroker();
+        return destination.isQueue() ?
+                    regionBroker.getQueueRegion().getDestinationMap() :
+                        regionBroker.getTopicRegion().getDestinationMap();
     }
 }

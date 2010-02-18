@@ -161,6 +161,7 @@ public class TopicSubscription extends AbstractSubscription {
             matched.reset();
             while (matched.hasNext()) {
                 MessageReference node = matched.next();
+                node.decrementReferenceCount();
                 if (broker.isExpired(node)) {
                     matched.remove();
                     dispatchedCounter.incrementAndGet();
@@ -181,6 +182,7 @@ public class TopicSubscription extends AbstractSubscription {
                 matched.reset();
                 while (matched.hasNext()) {
                     MessageReference node = matched.next();
+                    node.decrementReferenceCount();
                     if (node.getMessageId().equals(mdn.getMessageId())) {
                         matched.remove();
                         dispatchedCounter.incrementAndGet();
@@ -384,8 +386,8 @@ public class TopicSubscription extends AbstractSubscription {
                     matched.reset();
                    
                     while (matched.hasNext() && !isFull()) {
-                        MessageReference message = (MessageReference) matched
-                                .next();
+                        MessageReference message = (MessageReference) matched.next();
+                        message.decrementReferenceCount();
                         matched.remove();
                         // Message may have been sitting in the matched list a
                         // while

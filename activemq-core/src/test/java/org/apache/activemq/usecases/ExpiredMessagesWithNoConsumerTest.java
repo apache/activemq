@@ -33,8 +33,11 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.CombinationTestSupport;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.jmx.DestinationViewMBean;
+import org.apache.activemq.broker.region.policy.FilePendingQueueMessageStoragePolicy;
+import org.apache.activemq.broker.region.policy.PendingQueueMessageStoragePolicy;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
+import org.apache.activemq.broker.region.policy.VMPendingQueueMessageStoragePolicy;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.util.Wait;
@@ -53,6 +56,7 @@ public class ExpiredMessagesWithNoConsumerTest extends CombinationTestSupport {
 	MessageProducer producer;
 	public ActiveMQDestination destination = new ActiveMQQueue("test");
     public boolean optimizedDispatch = true;
+    public PendingQueueMessageStoragePolicy pendingQueuePolicy;
 	
     public static Test suite() {
         return suite(ExpiredMessagesWithNoConsumerTest.class);
@@ -82,6 +86,8 @@ public class ExpiredMessagesWithNoConsumerTest extends CombinationTestSupport {
         defaultEntry.setOptimizedDispatch(optimizedDispatch );
         defaultEntry.setExpireMessagesPeriod(800);
         defaultEntry.setMaxExpirePageSize(800);
+        
+        defaultEntry.setPendingQueuePolicy(pendingQueuePolicy);
 
         if (memoryLimit) {
             // so memory is not consumed by DLQ turn if off
@@ -99,6 +105,7 @@ public class ExpiredMessagesWithNoConsumerTest extends CombinationTestSupport {
 		
     public void initCombosForTestExpiredMessagesWithNoConsumer() {
         addCombinationValues("optimizedDispatch", new Object[] {Boolean.TRUE, Boolean.FALSE});
+        addCombinationValues("pendingQueuePolicy", new Object[] {null, new VMPendingQueueMessageStoragePolicy(), new FilePendingQueueMessageStoragePolicy()});
     }
     
 	public void testExpiredMessagesWithNoConsumer() throws Exception {
@@ -111,7 +118,7 @@ public class ExpiredMessagesWithNoConsumerTest extends CombinationTestSupport {
 		producer = session.createProducer(destination);
 		producer.setTimeToLive(1000);
 		connection.start();
-		final long sendCount = 2000;		
+		final long sendCount = 2000;
 		
 		final Thread producingThread = new Thread("Producing Thread") {
             public void run() {
@@ -154,6 +161,7 @@ public class ExpiredMessagesWithNoConsumerTest extends CombinationTestSupport {
                 + ", size= " + view.getQueueSize());
         
         assertEquals("All sent have expired", sendCount, view.getExpiredCount());
+        assertEquals("memory usage goes to duck egg", 0, view.getMemoryPercentUsage());
 	}
     
 	// first ack delivered after expiry

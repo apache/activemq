@@ -16,12 +16,23 @@
  */
 package org.apache.activemq.broker;
 
+import javax.jms.JMSException;
+
+import org.apache.activemq.TestSupport;
+import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.util.ThreadTracker;
+
 public class TopicSubscriptionTest extends QueueSubscriptionTest {
 
     protected void setUp() throws Exception {
         super.setUp();
         durable = true;
         topic = true;
+    }
+    
+    protected void tearDown() throws Exception {
+        super.tearDown();
+        ThreadTracker.result();
     }
 
     public void testManyProducersManyConsumers() throws Exception {
@@ -34,6 +45,7 @@ public class TopicSubscriptionTest extends QueueSubscriptionTest {
         doMultipleClientsTest();
 
         assertTotalMessagesReceived(messageCount * producerCount * consumerCount);
+        assertDestinationMemoryUsageGoesToZero();
     }
 
     public void testOneProducerTwoConsumersLargeMessagesOnePrefetch() throws Exception {
@@ -46,6 +58,7 @@ public class TopicSubscriptionTest extends QueueSubscriptionTest {
         doMultipleClientsTest();
 
         assertTotalMessagesReceived(messageCount * consumerCount * producerCount);
+        assertDestinationMemoryUsageGoesToZero();
     }
 
     public void testOneProducerTwoConsumersSmallMessagesOnePrefetch() throws Exception {
@@ -58,6 +71,7 @@ public class TopicSubscriptionTest extends QueueSubscriptionTest {
         doMultipleClientsTest();
 
         assertTotalMessagesReceived(messageCount * consumerCount * producerCount);
+        assertDestinationMemoryUsageGoesToZero();
     }
 
     public void testOneProducerTwoConsumersSmallMessagesLargePrefetch() throws Exception {
@@ -82,6 +96,7 @@ public class TopicSubscriptionTest extends QueueSubscriptionTest {
         doMultipleClientsTest();
 
         assertTotalMessagesReceived(messageCount * consumerCount * producerCount);
+        assertDestinationMemoryUsageGoesToZero();
     }
 
     public void testOneProducerManyConsumersFewMessages() throws Exception {
@@ -94,6 +109,7 @@ public class TopicSubscriptionTest extends QueueSubscriptionTest {
         doMultipleClientsTest();
 
         assertTotalMessagesReceived(messageCount * consumerCount * producerCount);
+        assertDestinationMemoryUsageGoesToZero();
     }
 
     public void testOneProducerManyConsumersManyMessages() throws Exception {
@@ -106,6 +122,7 @@ public class TopicSubscriptionTest extends QueueSubscriptionTest {
         doMultipleClientsTest();
 
         assertTotalMessagesReceived(messageCount * consumerCount * producerCount);
+        assertDestinationMemoryUsageGoesToZero();
     }
 
 
@@ -119,5 +136,12 @@ public class TopicSubscriptionTest extends QueueSubscriptionTest {
         doMultipleClientsTest();
 
         assertTotalMessagesReceived(messageCount * producerCount * consumerCount);
+        assertDestinationMemoryUsageGoesToZero();
     }
+    
+    private void assertDestinationMemoryUsageGoesToZero() throws Exception {
+        assertEquals("destination memory is back to 0", 0, 
+                TestSupport.getDestination(broker, ActiveMQDestination.transform(destination)).getMemoryUsage().getPercentUsage());
+    }
+
 }

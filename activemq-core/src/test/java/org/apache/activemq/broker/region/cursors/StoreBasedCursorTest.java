@@ -24,12 +24,13 @@ package org.apache.activemq.broker.region.cursors;
 import java.util.Date;
 
 import javax.jms.Connection;
-import javax.jms.ConnectionFactory;
 import javax.jms.DeliveryMode;
 import javax.jms.MessageProducer;
 import javax.jms.Queue;
 import javax.jms.Session;
 import javax.jms.TextMessage;
+
+import junit.framework.TestCase;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
@@ -37,22 +38,24 @@ import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.usage.SystemUsage;
 
-import junit.framework.TestCase;
-
 public class StoreBasedCursorTest extends TestCase {
     protected String bindAddress = "tcp://localhost:60706";
     BrokerService broker;
-    ConnectionFactory factory;
+    ActiveMQConnectionFactory factory;
     Connection connection;
     Session session;
     Queue queue;
     int messageSize = 1024;
-    int memoryLimit = 5 * messageSize;
+    // actual message is messageSize*2, and 4*MessageSize would allow 2 messages be delivered, but the flush of the cache is async so the flush
+    // triggered on 2nd message maxing out the usage may not be in effect for the 3rd message to succeed. Making the memory usage more lenient
+    // gives the usageChange listener in the cursor an opportunity to kick in.
+    int memoryLimit = 12 * messageSize;
     
     protected void setUp() throws Exception {
         super.setUp();
         if (broker == null) {
             broker = new BrokerService();
+            broker.setAdvisorySupport(false);
         }
     }
 
@@ -67,6 +70,7 @@ public class StoreBasedCursorTest extends TestCase {
     protected void start() throws Exception {
         broker.start();
         factory = new ActiveMQConnectionFactory("vm://localhost?jms.alwaysSyncSend=true");
+        factory.setWatchTopicAdvisories(false);
         connection = factory.createConnection();
         connection.start();
         session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);

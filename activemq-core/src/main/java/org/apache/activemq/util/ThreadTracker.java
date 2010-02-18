@@ -26,13 +26,14 @@ public class ThreadTracker {
      * track the stack trace of callers
      * @param name the method being tracked
      */
-    public static void track(String name) {
+    public static void track(final String name) {
         Tracker t;
+        final String key = name.intern();
         synchronized(trackers) {
-            t = trackers.get(name);
+            t = trackers.get(key);
             if (t == null) {
                 t = new Tracker();
-                trackers.put(name, t);
+                trackers.put(key, t);
             }
         }
         t.track();
@@ -56,23 +57,30 @@ public class ThreadTracker {
 @SuppressWarnings("serial")
 class Trace extends Throwable {
     public int count = 1;
-    public final int size;
+    public final long id;
     Trace() {
         super();
-        size = this.getStackTrace().length;
+        id = calculateIdentifier();
+    }
+    private long calculateIdentifier() {
+        int len = 0;
+        for (int i=0; i<this.getStackTrace().length; i++) {
+            len += this.getStackTrace()[i].toString().intern().hashCode();
+        }
+        return len;
     }
 }
 
 @SuppressWarnings("serial")
-class Tracker extends HashMap<Integer, Trace> {
+class Tracker extends HashMap<Long, Trace> {
     public void track() {
         Trace current = new Trace();
         synchronized(this) {
-            Trace exist = get(current.size);
+            Trace exist = get(current.id);
             if (exist != null) {
                 exist.count++;
             } else {
-                put(current.size, current);
+                put(current.id, current);
             }
         }
     }
