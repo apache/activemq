@@ -94,6 +94,11 @@
       <artifactId>jetty-webapp</artifactId>
       <version>${jetty-version}</version>
     </dependency>
+    <dependency>
+        <groupId>org.eclipse.jetty</groupId>
+        <artifactId>jetty-websocket</artifactId>
+        <version>${jetty-version}</version>
+    </dependency>
     
     <dependency>
       <groupId>axis</groupId>
