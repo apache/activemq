@@ -262,6 +262,9 @@ public class FailoverConsumerOutstandingCommitTest {
         assertEquals("get message 0 second", MESSAGE_TEXT + "0", receivedMessages.get(1).getText());
         assertTrue("another message was received", messagesReceived.await(20, TimeUnit.SECONDS));
         assertEquals("get message 1 eventually", MESSAGE_TEXT + "1", receivedMessages.get(2).getText());
+
+        connection.close();
+    }
         
     @Test
     public void testRollbackFailoverConsumerTx() throws Exception {

@@ -2239,13 +2239,13 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
         connectionAudit.rollbackDuplicate(dispatcher, message);
     }
 
-	public IOException getFirstFailureError() {
-		return firstFailureError;
-	}
-	
-	protected void waitForTransportInterruptionProcessing() throws InterruptedException {
+    public IOException getFirstFailureError() {
+        return firstFailureError;
+    }
+
+    protected void waitForTransportInterruptionProcessing() throws InterruptedException {
         if (transportInterruptionProcessingComplete != null) {
-            while (!closed.get() && !transportFailed.get() && !transportInterruptionProcessingComplete.await(10, TimeUnit.SECONDS)) {
+            while (!closed.get() && !transportFailed.get() && !transportInterruptionProcessingComplete.await(15, TimeUnit.SECONDS)) {
                 LOG.warn("dispatch paused, waiting for outstanding dispatch interruption processing (" + transportInterruptionProcessingComplete.getCount() + ") to complete..");
             }
             synchronized (this) {
@@ -2253,28 +2253,10 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
             }
         }
     }
-	
-	protected synchronized void transportInterruptionProcessingComplete() {
-	    if (transportInterruptionProcessingComplete != null) {
-	        transportInterruptionProcessingComplete.countDown();
-	    }
-	}
 
-    private void signalInterruptionProcessingComplete() throws InterruptedException {
-        if (transportInterruptionProcessingComplete.await(0, TimeUnit.SECONDS)) {
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("transportInterruptionProcessingComplete for: " + this.getConnectionInfo().getConnectionId());
-            }
-            synchronized (this) {
-                transportInterruptionProcessingComplete = null;
-                FailoverTransport failoverTransport = transport.narrow(FailoverTransport.class);
-                if (failoverTransport != null) {
-                    failoverTransport.connectionInterruptProcessingComplete(this.getConnectionInfo().getConnectionId());
-                    if (LOG.isDebugEnabled()) {
-                        LOG.debug("notified failover transport (" + failoverTransport +") of interruption completion for: " + this.getConnectionInfo().getConnectionId());
-                    }
-                } 
-            }
+    protected synchronized void transportInterruptionProcessingComplete() {
+        if (transportInterruptionProcessingComplete != null) {
+           transportInterruptionProcessingComplete.countDown();
         }
     }
 
