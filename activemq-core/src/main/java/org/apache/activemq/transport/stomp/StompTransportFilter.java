@@ -40,7 +40,7 @@ import org.springframework.context.ApplicationContext;
  * 
  * @author <a href="http://hiramchirino.com">chirino</a>
  */
-public class StompTransportFilter extends TransportFilter {
+public class StompTransportFilter extends TransportFilter implements StompTransport {
     private static final Log LOG = LogFactory.getLog(StompTransportFilter.class);
     private final ProtocolConverter protocolConverter;
     private final FrameTranslator frameTranslator;

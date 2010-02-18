@@ -82,7 +82,7 @@ public class ProtocolConverter {
     private final ConcurrentHashMap<String, ActiveMQDestination> tempDestinations = new ConcurrentHashMap<String, ActiveMQDestination>();
     private final ConcurrentHashMap<String, String> tempDestinationAmqToStompMap = new ConcurrentHashMap<String, String>();
     private final Map<String, LocalTransactionId> transactions = new ConcurrentHashMap<String, LocalTransactionId>();
-    private final StompTransportFilter transportFilter;
+    private final StompTransport stompTransport;
 
     private final Object commnadIdMutex = new Object();
     private int lastCommandId;
@@ -91,8 +91,8 @@ public class ProtocolConverter {
     private final FactoryFinder FRAME_TRANSLATOR_FINDER = new FactoryFinder("META-INF/services/org/apache/activemq/transport/frametranslator/");
     private final ApplicationContext applicationContext;
 
-    public ProtocolConverter(StompTransportFilter stompTransportFilter, FrameTranslator translator, ApplicationContext applicationContext) {
-        this.transportFilter = stompTransportFilter;
+    public ProtocolConverter(StompTransport stompTransport, FrameTranslator translator, ApplicationContext applicationContext) {
+        this.stompTransport = stompTransport;
         this.frameTranslator = translator;
         this.applicationContext = applicationContext;
     }
@@ -118,7 +118,7 @@ public class ProtocolConverter {
                         sc.setAction(Stomp.Responses.RECEIPT);
                         sc.setHeaders(new HashMap<String, String>(1));
                         sc.getHeaders().put(Stomp.Headers.Response.RECEIPT_ID, receiptId);
-                        transportFilter.sendToStomp(sc);
+                        stompTransport.sendToStomp(sc);
                     }
                 }
             };
@@ -132,11 +132,11 @@ public class ProtocolConverter {
             command.setResponseRequired(true);
             resposeHandlers.put(Integer.valueOf(command.getCommandId()), handler);
         }
-        transportFilter.sendToActiveMQ(command);
+        stompTransport.sendToActiveMQ(command);
     }
 
     protected void sendToStomp(StompFrame command) throws IOException {
-        transportFilter.sendToStomp(command);
+        stompTransport.sendToStomp(command);
     }
 
     protected FrameTranslator findTranslator(String header) {
@@ -195,7 +195,7 @@ public class ProtocolConverter {
             handleException(e, command);
             // Some protocol errors can cause the connection to get closed.
             if( e.isFatal() ) {
-               getTransportFilter().onException(e);
+               getStompTransport().onException(e);
             }
         }
     }
@@ -492,7 +492,7 @@ public class ProtocolConverter {
         connectionInfo.setResponseRequired(true);
         connectionInfo.setUserName(login);
         connectionInfo.setPassword(passcode);
-        connectionInfo.setTransportContext(transportFilter.getPeerCertificates());
+        connectionInfo.setTransportContext(stompTransport.getPeerCertificates());
 
         sendToActiveMQ(connectionInfo, new ResponseHandler() {
             public void onResponse(ProtocolConverter converter, Response response) throws IOException {
@@ -501,7 +501,7 @@ public class ProtocolConverter {
                     // If the connection attempt fails we close the socket.
                     Throwable exception = ((ExceptionResponse)response).getException();
                     handleException(exception, command);
-                    getTransportFilter().onException(IOExceptionSupport.create(exception));
+                    getStompTransport().onException(IOExceptionSupport.create(exception));
                     return;
                 }
 
@@ -516,7 +516,7 @@ public class ProtocolConverter {
                             // If the connection attempt fails we close the socket.
                             Throwable exception = ((ExceptionResponse)response).getException();
                             handleException(exception, command);
-                            getTransportFilter().onException(IOExceptionSupport.create(exception));
+                            getStompTransport().onException(IOExceptionSupport.create(exception));
                         }
 
                         connected.set(true);
@@ -605,8 +605,8 @@ public class ProtocolConverter {
         }
     }
 
-    public StompTransportFilter getTransportFilter() {
-        return transportFilter;
+    public StompTransport getStompTransport() {
+        return stompTransport;
     }
 
     public ActiveMQDestination createTempQueue(String name) {
