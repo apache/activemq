@@ -99,6 +99,7 @@ public class StoreQueueCursorNoDuplicateTest extends TestCase {
         underTest.reset();
         while (underTest.hasNext() && dequeueCount < count) {
             MessageReference ref = underTest.next();
+            ref.decrementReferenceCount();
             underTest.remove();
             assertEquals(dequeueCount++, ref.getMessageId()
                     .getProducerSequenceId());

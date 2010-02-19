@@ -117,6 +117,9 @@ public class VMPendingMessageCursor extends AbstractPendingMessageCursor {
      */
     public synchronized MessageReference next() {
         last = (MessageReference)iter.next();
+        if (last != null) {
+            last.incrementReferenceCount();
+        }
         return last;
     }
 

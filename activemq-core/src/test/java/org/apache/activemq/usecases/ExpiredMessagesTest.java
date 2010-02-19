@@ -43,6 +43,9 @@ import org.apache.activemq.store.amq.AMQPersistenceAdapter;
 import org.apache.activemq.util.Wait;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import static org.apache.activemq.TestSupport.getDestination;
+import static org.apache.activemq.TestSupport.getDestinationStatistics;
+
 
 public class ExpiredMessagesTest extends CombinationTestSupport {
 
@@ -124,7 +127,7 @@ public class ExpiredMessagesTest extends CombinationTestSupport {
         producingThread.join();
         session.close();
         
-        final DestinationStatistics view = this.getDestinationStatistics(destination);
+        final DestinationStatistics view = getDestinationStatistics(broker, destination);
 
         // wait for all to inflight to expire
         assertTrue("all inflight messages expired ", Wait.waitFor(new Wait.Condition() {
@@ -165,7 +168,7 @@ public class ExpiredMessagesTest extends CombinationTestSupport {
         final long expiredBeforeEnqueue = numMessagesToSend - view.getEnqueues().getCount();
         final long totalExpiredCount = view.getExpired().getCount() + expiredBeforeEnqueue;
         
-        final DestinationStatistics dlqView = getDestinationStatistics(dlqDestination);
+        final DestinationStatistics dlqView = getDestinationStatistics(broker, dlqDestination);
         LOG.info("DLQ stats: size= " + dlqView.getMessages().getCount() + ", enqueues: " + dlqView.getDequeues().getCount() + ", dequeues: " + dlqView.getDequeues().getCount()
                 + ", dispatched: " + dlqView.getDispatched().getCount() + ", inflight: " + dlqView.getInflight().getCount() + ", expiries: " + dlqView.getExpired().getCount());
         
@@ -177,8 +180,8 @@ public class ExpiredMessagesTest extends CombinationTestSupport {
         assertEquals("dlq contains all expired", totalExpiredCount, dlqView.getMessages().getCount());
         
         // memory check
-        assertEquals("memory usage is back to duck egg", 0, this.getDestination(destination).getMemoryUsage().getPercentUsage());
-        assertTrue("memory usage is increased ", 0 < this.getDestination(dlqDestination).getMemoryUsage().getPercentUsage());    
+        assertEquals("memory usage is back to duck egg", 0, getDestination(broker, destination).getMemoryUsage().getPercentUsage());
+        assertTrue("memory usage is increased ", 0 < getDestination(broker, dlqDestination).getMemoryUsage().getPercentUsage());    
         
         // verify DLQ
         MessageConsumer dlqConsumer = createDlqConsumer(connection);
@@ -243,7 +246,7 @@ public class ExpiredMessagesTest extends CombinationTestSupport {
         producingThread.start();
         producingThread.join();
 
-        DestinationStatistics view = getDestinationStatistics(destination);
+        DestinationStatistics view = getDestinationStatistics(broker, destination);
         LOG.info("Stats: size: " + view.getMessages().getCount() + ", enqueues: " 
                 + view.getEnqueues().getCount() + ", dequeues: "
                 + view.getDequeues().getCount() + ", dispatched: "
@@ -263,7 +266,7 @@ public class ExpiredMessagesTest extends CombinationTestSupport {
         
         Wait.waitFor(new Wait.Condition() {
             public boolean isSatisified() throws Exception {
-                DestinationStatistics view = getDestinationStatistics(destination);
+                DestinationStatistics view = getDestinationStatistics(broker, destination);
                 LOG.info("Stats: size: " + view.getMessages().getCount() + ", enqueues: "
                         + view.getEnqueues().getCount() + ", dequeues: "
                         + view.getDequeues().getCount() + ", dispatched: "
@@ -275,7 +278,7 @@ public class ExpiredMessagesTest extends CombinationTestSupport {
             }
         });
         
-        view = getDestinationStatistics(destination);
+        view = getDestinationStatistics(broker, destination);
         assertEquals("Expect empty queue, QueueSize: ", 0, view.getMessages().getCount());
         assertEquals("all dequeues were expired", view.getDequeues().getCount(), view.getExpired().getCount());
     }
@@ -304,26 +307,7 @@ public class ExpiredMessagesTest extends CombinationTestSupport {
         return broker;
 	}
     
-    private DestinationStatistics getDestinationStatistics(ActiveMQDestination destination) {
-        DestinationStatistics result = null;
-        org.apache.activemq.broker.region.Destination dest = getDestination(destination);
-        if (dest != null) {
-            result = dest.getDestinationStatistics();
-        }
-        return result;
-    }
     
-    private org.apache.activemq.broker.region.Destination getDestination(ActiveMQDestination destination) {
-        org.apache.activemq.broker.region.Destination result = null;
-        RegionBroker regionBroker = (RegionBroker) broker.getRegionBroker();
-        for (org.apache.activemq.broker.region.Destination dest : regionBroker.getQueueRegion().getDestinationMap().values()) {
-            if (dest.getName().equals(destination.getPhysicalName())) {
-                result = dest;
-                break;
-            }
-        }
-        return result;
-    }
 
 	protected void tearDown() throws Exception {
 		connection.stop();

@@ -151,6 +151,9 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
             result = this.iterator.next().getValue();
         }
         last = result;
+        if (result != null) {
+            result.incrementReferenceCount();
+        }
         return result;
     }
     

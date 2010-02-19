@@ -108,7 +108,7 @@ public interface PendingMessageCursor extends Service {
     boolean hasNext();
 
     /**
-     * @return the next pending message
+     * @return the next pending message with its reference count increment
      */
     MessageReference next();
 

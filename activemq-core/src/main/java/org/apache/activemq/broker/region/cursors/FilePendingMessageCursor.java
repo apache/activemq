@@ -155,7 +155,9 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
         LinkedList<MessageReference> result = new LinkedList<MessageReference>();
         int count = 0;
         for (Iterator<MessageReference> i = memoryList.iterator(); i.hasNext() && count < maxItems;) {
-            result.add(i.next());
+            MessageReference ref = i.next();
+            ref.incrementReferenceCount();
+            result.add(ref);
             count++;
         }
         if (count < maxItems && !isDiskListEmpty()) {
@@ -271,8 +273,8 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
             // got from disk
             message.setRegionDestination(regionDestination);
             message.setMemoryUsage(this.getSystemUsage().getMemoryUsage());
-            message.incrementReferenceCount();
         }
+        message.incrementReferenceCount();
         return message;
     }
 
