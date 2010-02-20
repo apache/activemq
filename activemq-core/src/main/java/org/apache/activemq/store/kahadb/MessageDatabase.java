@@ -1302,6 +1302,9 @@ public class MessageDatabase implements BrokerServiceAware {
                                 // iterating the BTree since
                                 // iterating would fail.
                                 deletes.add(entry);
+                            }else {
+                                //no point in iterating the in-order sequences anymore
+                                break;
                             }
                         }
 
