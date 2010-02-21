@@ -1,17 +1,13 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<!--
-  copyright (c) 1999-2006 The Jabber Software Foundation
-  http://www.xmpp.org/about/copyright.shtml
-
-  This XSD is licensed under the Creative Commons License 2.5
-  http://creativecommons.org/licenses/by/2.5/
--->
 
 <xs:schema
     xmlns:xs='http://www.w3.org/2001/XMLSchema'
     targetNamespace='urn:ietf:params:xml:ns:xmpp-streams'
     xmlns='urn:ietf:params:xml:ns:xmpp-streams'
     elementFormDefault='qualified'>
+
+  <xs:import namespace='http://www.w3.org/XML/1998/namespace'
+             schemaLocation='xml.xsd'/>
 
   <xs:element name='bad-format' type='empty'/>
   <xs:element name='bad-namespace-prefix' type='empty'/>

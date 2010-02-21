@@ -1,11 +1,4 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<!--
-  copyright (c) 1999-2006 The Jabber Software Foundation
-  http://www.xmpp.org/about/copyright.shtml
-
-  This XSD is licensed under the Creative Commons License 2.5
-  http://creativecommons.org/licenses/by/2.5/
--->
 
 <xs:schema
     xmlns:xs='http://www.w3.org/2001/XMLSchema'
@@ -15,8 +8,14 @@
 
   <xs:annotation>
     <xs:documentation>
-      The protocol documented by this schema is defined in
-      JEP-0078: http://www.jabber.org/jeps/jep-0078.html
+      NOTE WELL: Non-SASL Authentication via the jabber:iq:auth
+      protocol has been superseded by SASL Authentication as 
+      defined in RFC 3920, and is now obsolete.
+
+      For historical purposes, the protocol documented by this 
+      schema is defined in XEP-0078: 
+
+      http://www.xmpp.org/extensions/xep-0078.html
     </xs:documentation>
   </xs:annotation>
 

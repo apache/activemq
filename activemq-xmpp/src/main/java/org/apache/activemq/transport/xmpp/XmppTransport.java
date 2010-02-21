@@ -64,7 +64,7 @@ public class XmppTransport extends TcpTransport {
     protected OutputStream outputStream;
     protected InputStream inputStream;
 
-    private JAXBContext context;
+    private static JAXBContext context;
     private XMLEventReader xmlReader;
     private Unmarshaller unmarshaller;
     private Marshaller marshaller;
@@ -85,6 +85,7 @@ public class XmppTransport extends TcpTransport {
     }
 
     private void init() {
+        LOG.debug("Creating new instance of XmppTransport");
         converter = new ProtocolConverter(this);
     }
 
@@ -105,7 +106,7 @@ public class XmppTransport extends TcpTransport {
                 }
             } else {
                 try {
-                    converter.onActiveMQCommad(command);
+                    converter.onActiveMQCommand(command);
                 } catch (IOException e) {
                     throw e;
                 } catch (Exception e) {
@@ -170,6 +171,7 @@ public class XmppTransport extends TcpTransport {
                     // unmarshal a new object
                     Object object = unmarshaller.unmarshal(xmlReader);
                     if (object != null) {
+                        LOG.debug("Unmarshalled new incoming event - " + object.getClass().getName());
                         converter.onXmppCommand(object);
                     }
                 } else {
@@ -218,19 +220,38 @@ public class XmppTransport extends TcpTransport {
     @Override
     protected void initializeStreams() throws Exception {
         // TODO it would be preferable to use class discovery here!
-        context = JAXBContext.newInstance("jabber.client"
-        /*
-         * + ":jabber.server" + ":jabber.iq.gateway" + ":jabber.iq.last" +
-         * ":jabber.iq.oob" + ":jabber.iq.pass" + ":jabber.iq.time" +
-         * ":jabber.iq.version" + ":org.jabber.protocol.activity" +
-         * ":org.jabber.protocol.address" + ":org.jabber.protocol.amp" +
-         * ":org.jabber.protocol.amp_errors" + ":org.jabber.protocol.muc_admin" +
-         * ":org.jabber.protocol.muc_unique"
-         */
-        + ":jabber.iq._private" + ":jabber.iq.auth" + ":jabber.iq.roster" + ":org.jabber.etherx.streams" + ":org.jabber.protocol.disco_info" + ":org.jabber.protocol.disco_items"
-                                          + ":org.jabber.protocol.muc" + ":org.jabber.protocol.muc_user" + ":ietf.params.xml.ns.xmpp_sasl" + ":ietf.params.xml.ns.xmpp_stanzas"
-                                          + ":ietf.params.xml.ns.xmpp_streams" + ":ietf.params.xml.ns.xmpp_tls");
-
+        if ( context == null ) {
+            context = JAXBContext.newInstance(
+                    "jabber.server:" +
+                    "jabber.server.dialback:" +
+                    "jabber.client:" +
+                    "jabber.iq._private:" +
+                    "jabber.iq.auth:" +
+                    "jabber.iq.gateway:" +
+                    "jabber.iq.version:" +
+                    "jabber.iq.roster:" +
+                    "jabber.iq.pass:" +
+                    "jabber.iq.last:" +
+                    "jabber.iq.oob:" +
+                    "jabber.iq.time:" +
+                    "storage.rosternotes:" +
+                    "ietf.params.xml.ns.xmpp_streams:" +
+                    "ietf.params.xml.ns.xmpp_sasl:" +
+                    "ietf.params.xml.ns.xmpp_stanzas:" +
+                    "ietf.params.xml.ns.xmpp_bind:" +
+                    "ietf.params.xml.ns.xmpp_tls:" +
+                    "org.jabber.protocol.muc:" +
+                    "org.jabber.protocol.rosterx:" +
+                    "org.jabber.protocol.disco_info:" +
+                    "org.jabber.protocol.disco_items:" +
+                    "org.jabber.protocol.activity:" +
+                    "org.jabber.protocol.amp_errors:" +
+                    "org.jabber.protocol.amp:" +
+                    "org.jabber.protocol.address:" +
+                    "org.jabber.protocol.muc_user:" +
+                    "org.jabber.protocol.muc_admin:" +
+                    "org.jabber.etherx.streams");
+        }
         inputStream = new TcpBufferedInputStream(socket.getInputStream(), 8 * 1024);
         outputStream = new TcpBufferedOutputStream(socket.getOutputStream(), 16 * 1024);
 
@@ -241,11 +262,10 @@ public class XmppTransport extends TcpTransport {
 
     protected void writeOpenStream(String id, String from) throws IOException, XMLStreamException {
         LOG.debug("Sending initial stream element");
+
         XMLOutputFactory factory = XMLOutputFactory.newInstance();
         // factory.setProperty(XMLOutputFactory.IS_REPAIRING_NAMESPACES, true);
         xmlWriter = factory.createXMLStreamWriter(outputStream);
-
-        // write the dummy start tag
         xmlWriter.writeStartDocument();
         xmlWriter.writeStartElement("stream", "stream", "http://etherx.jabber.org/streams");
         xmlWriter.writeDefaultNamespace("jabber:client");
@@ -264,12 +284,14 @@ public class XmppTransport extends TcpTransport {
         // TODO support TLS
         // features.getAny().add(new Starttls());
 
-        Mechanisms mechanisms = new Mechanisms();
+        //Mechanisms mechanisms = new Mechanisms();
 
         // TODO support SASL
         // mechanisms.getMechanism().add("DIGEST-MD5");
         // mechanisms.getMechanism().add("PLAIN");
-        features.getAny().add(mechanisms);
+        //features.getAny().add(mechanisms);
+        features.getAny().add(new ietf.params.xml.ns.xmpp_bind.ObjectFactory().createBind());
+        features.getAny().add(new ietf.params.xml.ns.xmpp_session.ObjectFactory().createSession(""));
         marshall(features);
 
         LOG.debug("Initial stream element sent!");

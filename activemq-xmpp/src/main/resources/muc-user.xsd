@@ -1,11 +1,4 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<!--
-  copyright (c) 1999-2006 The Jabber Software Foundation
-  http://www.xmpp.org/about/copyright.shtml
-
-  This XSD is licensed under the Creative Commons License 2.5
-  http://creativecommons.org/licenses/by/2.5/
--->
 
 <xs:schema
     xmlns:xs='http://www.w3.org/2001/XMLSchema'
@@ -16,7 +9,7 @@
   <xs:annotation>
     <xs:documentation>
       The protocol documented by this schema is defined in
-      JEP-0045: http://www.jabber.org/jeps/jep-0045.html
+      XEP-0045: http://www.xmpp.org/extensions/xep-0045.html
     </xs:documentation>
   </xs:annotation>
 
@@ -28,7 +21,7 @@
         <xs:element ref='invite' minOccurs='0' maxOccurs='unbounded'/>
         <xs:element ref='item' minOccurs='0'/>
         <xs:element name='password' type='xs:string' minOccurs='0'/>
-        <xs:element ref='status' minOccurs='0'/>
+        <xs:element ref='status' minOccurs='0' maxOccurs='unbounded'/>
       </xs:choice>
     </xs:complexType>
   </xs:element>
@@ -110,7 +103,8 @@
       <xs:attribute name='code' use='required'>
         <xs:simpleType>
           <xs:restriction base='xs:int'>
-            <xs:length value='3'/>
+            <xs:minInclusive value='100'/>
+            <xs:maxInclusive value='999'/>
           </xs:restriction>
         </xs:simpleType>
       </xs:attribute>

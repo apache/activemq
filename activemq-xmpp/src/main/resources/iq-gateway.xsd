@@ -1,11 +1,4 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<!--
-  copyright (c) 1999-2006 The Jabber Software Foundation
-  http://www.xmpp.org/about/copyright.shtml
-
-  This XSD is licensed under the Creative Commons License 2.5
-  http://creativecommons.org/licenses/by/2.5/
--->
 
 <xs:schema
     xmlns:xs='http://www.w3.org/2001/XMLSchema'
@@ -16,7 +9,7 @@
   <xs:annotation>
     <xs:documentation>
       The protocol documented by this schema is defined in
-      JEP-0100: http://www.jabber.org/jeps/jep-0100.html
+      XEP-0100: http://www.xmpp.org/extensions/xep-0100.html
     </xs:documentation>
   </xs:annotation>
 

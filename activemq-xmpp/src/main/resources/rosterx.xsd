@@ -1,11 +1,4 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<!--
-  copyright (c) 1999-2006 The Jabber Software Foundation
-  http://www.xmpp.org/about/copyright.shtml
-
-  This XSD is licensed under the Creative Commons License 2.5
-  http://creativecommons.org/licenses/by/2.5/
--->
 
 <xs:schema
     xmlns:xs='http://www.w3.org/2001/XMLSchema'
@@ -16,7 +9,7 @@
   <xs:annotation>
     <xs:documentation>
       The protocol documented by this schema is defined in
-      JEP-0144: http://www.jabber.org/jeps/jep-0144.html
+      XEP-0144: http://www.xmpp.org/extensions/xep-0144.html
     </xs:documentation>
   </xs:annotation>
 
@@ -33,9 +26,9 @@
       <xs:sequence>
         <xs:element name='group' type='xs:string' minOccurs='0' maxOccurs='unbounded'/>
       </xs:sequence>
-      <xs:attribute name='action' use='optional'>
+      <xs:attribute name='action' use='optional' default='add'>
         <xs:simpleType>
-          <xs:restriction base='xs:NCName' default='add'>
+          <xs:restriction base='xs:NCName'>
             <xs:enumeration value='add'/>
             <xs:enumeration value='delete'/>
             <xs:enumeration value='modify'/>

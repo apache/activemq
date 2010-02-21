@@ -22,7 +22,10 @@ import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.FutureTask;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.jms.JMSException;
@@ -96,7 +99,7 @@ public class ProtocolConverter {
     private final LongSequenceGenerator messageIdGenerator = new LongSequenceGenerator();
     private final IntSequenceGenerator tempDestinationIdGenerator = new IntSequenceGenerator();
 
-    private final Map<Integer, Handler<Response>> resposeHandlers = new ConcurrentHashMap<Integer, Handler<Response>>();
+    private final Map<Integer, Handler<Response>> responseHandlers = new ConcurrentHashMap<Integer, Handler<Response>>();
     private final Map<ConsumerId, Handler<MessageDispatch>> subscriptionsByConsumerId = new ConcurrentHashMap<ConsumerId, Handler<MessageDispatch>>();
     private final Map<String, ConsumerInfo> jidToConsumerMap = new HashMap<String, ConsumerInfo>();
     private final Map<String, ConsumerInfo> jidToInboxConsumerMap = new HashMap<String, ConsumerInfo>();
@@ -105,6 +108,9 @@ public class ProtocolConverter {
     private int lastCommandId;
     private final AtomicBoolean connected = new AtomicBoolean(false);
     private ActiveMQTempQueue inboxDestination;
+
+    //to avoid calling into sendToActiveMq from a handler
+    private ScheduledThreadPoolExecutor scheduledThreadPoolExecutor = new ScheduledThreadPoolExecutor(1);
 
     public ProtocolConverter(XmppTransport transport) {
         this.transport = transport;
@@ -159,10 +165,10 @@ public class ProtocolConverter {
         }
     }
 
-    public void onActiveMQCommad(Command command) throws Exception {
+    public void onActiveMQCommand(Command command) throws Exception {
         if (command.isResponse()) {
             Response response = (Response)command;
-            Handler<Response> handler = resposeHandlers.remove(new Integer(response.getCorrelationId()));
+            Handler<Response> handler = responseHandlers.remove(new Integer(response.getCorrelationId()));
             if (handler != null) {
                 handler.handle(response);
             } else {
@@ -230,7 +236,7 @@ public class ProtocolConverter {
         }
     }
 
-    protected void onAuthQuery(Object any, final Iq iq) throws IOException {
+    protected void onAuthQuery(Object any, final Iq iq) throws IOException, JMSException {
         Query query = (Query)any;
         if (LOG.isDebugEnabled()) {
             LOG.debug("Iq Auth Query " + debugString(iq) + " resource: " + query.getResource() + " username: " + query.getUsername());
@@ -281,10 +287,38 @@ public class ProtocolConverter {
                 sendToActiveMQ(producerInfo, createErrorHandler("create producer"));
             }
         });
+
+        // create a destination for this client
+        final String to = query.getUsername();
+        createDestination(to);
+    }
+
+    public void createDestination(String to) throws IOException, JMSException {
+        ActiveMQDestination destination = createActiveMQDestination(to);
+        if (destination == null) {
+            LOG.debug("Unable to create destination for " + to);
+            return;
+        }
+        subscribe(to, destination, jidToConsumerMap);
+
+        // lets subscribe to a personal inbox for replies
+
+        // Check if Destination info is of temporary type.
+        if (inboxDestination == null) {
+            inboxDestination = new ActiveMQTempQueue(connectionInfo.getConnectionId(), tempDestinationIdGenerator.getNextSequenceId());
+
+            DestinationInfo info = new DestinationInfo();
+            info.setConnectionId(connectionInfo.getConnectionId());
+            info.setOperationType(DestinationInfo.ADD_OPERATION_TYPE);
+            info.setDestination(inboxDestination);
+            sendToActiveMQ(info, null);
+
+            subscribe(to, inboxDestination, jidToInboxConsumerMap);
+        }
     }
 
     protected String debugString(Iq iq) {
-        return " to: " + iq.getTo() + " type: " + iq.getType() + " from: " + iq.getFrom() + " id: " + iq.getId();
+        return "to: " + iq.getTo() + " type: " + iq.getType() + " from: " + iq.getFrom() + " id: " + iq.getId();
     }
 
     protected void onDiscoItems(Iq iq, org.jabber.protocol.disco_items.Query query) throws IOException {
@@ -367,30 +401,13 @@ public class ProtocolConverter {
          * sendPresence(presence, item);
          */
 
-        // lets create a subscription
-        final String to = presence.getTo();
-
-        ActiveMQDestination destination = createActiveMQDestination(to);
-        if (destination == null) {
-            LOG.debug("No 'to' attribute specified for presence so not creating a JMS subscription");
-            return;
+        // lets create a subscription for the room, Jabber clients would use
+        // "room/nickname", so we need to strip off the nickname
+        String to = presence.getTo();
+        if ( to != null ) {
+            to = to.substring(0, to.indexOf("/"));
         }
-        subscribe(to, destination, jidToConsumerMap);
-
-        // lets subscribe to a personal inbox for replies
-
-        // Check if Destination info is of temporary type.
-        if (inboxDestination == null) {
-            inboxDestination = new ActiveMQTempQueue(connectionInfo.getConnectionId(), tempDestinationIdGenerator.getNextSequenceId());
-
-            DestinationInfo info = new DestinationInfo();
-            info.setConnectionId(connectionInfo.getConnectionId());
-            info.setOperationType(DestinationInfo.ADD_OPERATION_TYPE);
-            info.setDestination(inboxDestination);
-            sendToActiveMQ(info, null);
-
-            subscribe(to, inboxDestination, jidToInboxConsumerMap);
-        }
+        createDestination(to);
     }
 
     protected void subscribe(final String to, ActiveMQDestination destination, Map<String, ConsumerInfo> consumerMap) {
@@ -416,15 +433,23 @@ public class ProtocolConverter {
         consumerInfo.setDestination(destination);
 
         subscriptionsByConsumerId.put(consumerInfo.getConsumerId(), new Handler<MessageDispatch>() {
-            public void handle(MessageDispatch messageDispatch) throws Exception {
+            public void handle(final MessageDispatch messageDispatch) throws Exception {
                 // processing the inbound message
                 if (LOG.isDebugEnabled()) {
                     LOG.debug("Receiving inbound: " + messageDispatch.getMessage());
                 }
 
                 // lets send back an ACK
-                MessageAck ack = new MessageAck(messageDispatch, MessageAck.STANDARD_ACK_TYPE, 1);
-                sendToActiveMQ(ack, createErrorHandler("Ack of message: " + messageDispatch.getMessage().getMessageId()));
+                final MessageAck ack = new MessageAck(messageDispatch, MessageAck.STANDARD_ACK_TYPE, 1);
+
+                FutureTask<Void> task = new FutureTask<Void>(new Callable<Void>() {
+                    public Void call() {
+                        sendToActiveMQ(ack, createErrorHandler("Ack of message: " + messageDispatch.getMessage().getMessageId()));
+                        return null;
+                    }
+                });
+
+                scheduledThreadPoolExecutor.submit(task);
 
                 Message message = createXmppMessage(to, messageDispatch);
                 if (message != null) {
@@ -438,18 +463,26 @@ public class ProtocolConverter {
         sendToActiveMQ(consumerInfo, createErrorHandler("subscribe to destination: " + destination));
     }
 
-    protected Message createXmppMessage(String to, MessageDispatch messageDispatch) throws JMSException {
+    protected Message createXmppMessage(String to, MessageDispatch messageDispatch) throws IOException, JMSException {
+        
+        org.apache.activemq.command.Message message = messageDispatch.getMessage();
+
         Message answer = new Message();
-        answer.setType("groupchat");
-        String from = to;
-        int idx = from.indexOf('/');
-        if (idx > 0) {
-            from = from.substring(0, idx) + "/broker";
+        String from = (String)message.getProperty("XMPPFrom");
+        if ( from == null ) {
+            from = to;
+            int idx = from.indexOf('/');
+            if (idx > 0) {
+                from = from.substring(0, idx) + "/broker";
+            }
+            answer.setType("groupchat");
+        } else {
+            answer.setType("chat");
         }
+        LOG.debug("Sending message from " + from + " and to " + to);
         answer.setFrom(from);
         answer.setTo(to);
 
-        org.apache.activemq.command.Message message = messageDispatch.getMessage();
         // answer.setType(message.getType());
         if (message instanceof ActiveMQTextMessage) {
             ActiveMQTextMessage activeMQTextMessage = (ActiveMQTextMessage)message;
@@ -515,7 +548,7 @@ public class ProtocolConverter {
         command.setCommandId(generateCommandId());
         if (handler != null) {
             command.setResponseRequired(true);
-            resposeHandlers.put(command.getCommandId(), handler);
+            responseHandlers.put(command.getCommandId(), handler);
         }
         transport.getTransportListener().onCommand(command);
     }
@@ -578,9 +611,6 @@ public class ProtocolConverter {
         if (idx > 0) {
             name = name.substring(0, idx);
         }
-
-        System.out.println("#### Creating ActiveMQ destination for: " + name);
-
         // lets support lower-case versions of the agent topic
         if (name.equalsIgnoreCase(AdvisorySupport.AGENT_TOPIC)) {
             name = AdvisorySupport.AGENT_TOPIC;
@@ -613,7 +643,7 @@ public class ProtocolConverter {
         if (replyTo == null) {
             replyTo = inboxDestination;
         }
-        System.out.println("Setting reply to destination to: " + replyTo);
+        LOG.info("Setting reply to destination to: " + replyTo);
         answer.setJMSReplyTo(replyTo);
     }
 
