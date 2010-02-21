@@ -182,6 +182,20 @@ public class JmsQueueConnector extends JmsConnector {
     public void restartProducerConnection() throws NamingException, JMSException {
         outboundQueueConnection = null;
         initializeForeignQueueConnection();
+
+        // the outboundQueueConnection was reestablished - publish the new connection to the bridges
+        if (inboundQueueBridges != null) {
+        	for (int i = 0; i < inboundQueueBridges.length; i++) {
+        		InboundQueueBridge bridge = inboundQueueBridges[i];
+        		bridge.setConsumerConnection(outboundQueueConnection);
+        	}
+        }
+        if (outboundQueueBridges != null) {
+        	for (int i = 0; i < outboundQueueBridges.length; i++) {
+        		OutboundQueueBridge bridge = outboundQueueBridges[i];
+        		bridge.setProducerConnection(outboundQueueConnection);
+        	}
+        }
     }
 
     protected void initializeForeignQueueConnection() throws NamingException, JMSException {
@@ -199,7 +213,7 @@ public class JmsQueueConnector extends JmsConnector {
                         outboundQueueConnection = outboundQueueConnectionFactory.createQueueConnection();
                     }
                 } else {
-                    throw new JMSException("Cannot create localConnection - no information");
+                    throw new JMSException("Cannot create foreignConnection - no information");
                 }
             } else {
                 if (outboundUsername != null) {

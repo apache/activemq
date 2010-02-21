@@ -17,7 +17,6 @@
 package org.apache.activemq.network.jms;
 
 import java.util.concurrent.atomic.AtomicBoolean;
-
 import javax.jms.Connection;
 import javax.jms.Destination;
 import javax.jms.JMSException;
@@ -26,7 +25,6 @@ import javax.jms.MessageConsumer;
 import javax.jms.MessageListener;
 import javax.jms.MessageProducer;
 import javax.naming.NamingException;
-
 import org.apache.activemq.Service;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -109,8 +107,9 @@ public abstract class DestinationBridge implements Service, MessageListener {
     }
 
     public void onMessage(Message message) {
-        if (started.get() && message != null) {
-            int attempt = 0;
+        int attempt = 0;
+        while (started.get() && message != null) {
+           
             try {
                 if (attempt > 0) {
                     restartProducer();
@@ -129,6 +128,7 @@ public abstract class DestinationBridge implements Service, MessageListener {
                 }
                 sendMessage(converted);
                 message.acknowledge();
+                return;
             } catch (Exception e) {
                 LOG.error("failed to forward message on attempt: " + (++attempt) + " reason: " + e + " message: " + message, e);
                 if (maximumRetries > 0 && attempt >= maximumRetries) {
@@ -168,6 +168,8 @@ public abstract class DestinationBridge implements Service, MessageListener {
 
     protected void restartProducer() throws JMSException, NamingException {
         try {
+            //don't reconnect immediately
+            Thread.sleep(1000);
             getConnectionForProducer().close();
         } catch (Exception e) {
             LOG.debug("Ignoring failure to close producer connection: " + e, e);
