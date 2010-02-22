@@ -25,7 +25,6 @@ import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
 import javax.jms.Queue;
 import javax.jms.Session;
-import javax.jms.Topic;
 import junit.framework.TestCase;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
@@ -68,33 +67,7 @@ public class AMQ2616Test extends TestCase {
         endUsage = brokerService.getSystemUsage().getMemoryUsage().getUsage();
         assertEquals(startUsage,endUsage);
     }
-    
-    public void testTopicResourcesReleased() throws Exception{
-        ActiveMQConnectionFactory fac = new ActiveMQConnectionFactory(ACTIVEMQ_BROKER_BIND);
-        Connection tempConnection = fac.createConnection();
-        tempConnection.start();
-        Session tempSession = tempConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        Topic tempTopic = tempSession.createTemporaryTopic();
-        final MessageConsumer tempConsumer = tempSession.createConsumer(tempTopic);
-               
-        Connection testConnection = fac.createConnection();
-        long startUsage = brokerService.getSystemUsage().getMemoryUsage().getUsage();
-        Session testSession = testConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        MessageProducer testProducer = testSession.createProducer(tempTopic);
-        byte[] payload = new byte[1024*4];
-        for (int i = 0; i < NUMBER; i++ ) {
-            BytesMessage msg = testSession.createBytesMessage();
-            msg.writeBytes(payload);
-            testProducer.send(msg);
-        }
-        long endUsage = brokerService.getSystemUsage().getMemoryUsage().getUsage();
-        assertFalse(startUsage==endUsage);
-        tempConnection.close();
-        Thread.sleep(1000);
-        endUsage = brokerService.getSystemUsage().getMemoryUsage().getUsage();
-        assertEquals(startUsage,endUsage);
-    }
-    
+   
     
     @Override
     protected void setUp() throws Exception {
