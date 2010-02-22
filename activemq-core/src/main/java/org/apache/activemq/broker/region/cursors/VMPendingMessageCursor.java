@@ -20,7 +20,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.MessageReference;
@@ -33,38 +32,39 @@ import org.apache.activemq.broker.region.QueueMessageReference;
  * @version $Revision$
  */
 public class VMPendingMessageCursor extends AbstractPendingMessageCursor {
-    private LinkedList<MessageReference> list = new LinkedList<MessageReference>();
+    private final LinkedList<MessageReference> list = new LinkedList<MessageReference>();
     private Iterator<MessageReference> iter;
-    public VMPendingMessageCursor(){
-        this.useCache=false;
+    public VMPendingMessageCursor() {
+        this.useCache = false;
     }
 
-    
     @Override
-    public synchronized List<MessageReference> remove(ConnectionContext context, Destination destination) throws Exception {
-    	List<MessageReference> rc = new ArrayList<MessageReference>();
+    public synchronized List<MessageReference> remove(ConnectionContext context, Destination destination)
+            throws Exception {
+        List<MessageReference> rc = new ArrayList<MessageReference>();
         for (Iterator<MessageReference> iterator = list.iterator(); iterator.hasNext();) {
             MessageReference r = iterator.next();
-            if( r.getRegionDestination()==destination ) {
+            if (r.getRegionDestination() == destination) {
                 r.decrementReferenceCount();
                 rc.add(r);
                 iterator.remove();
             }
         }
-        return rc ;        
+        return rc;
     }
-    
+
     /**
      * @return true if there are no pending messages
      */
+    @Override
     public synchronized boolean isEmpty() {
         if (list.isEmpty()) {
             return true;
         } else {
             for (Iterator<MessageReference> iterator = list.iterator(); iterator.hasNext();) {
                 MessageReference node = iterator.next();
-                if (node== QueueMessageReference.NULL_MESSAGE){
-                	continue;
+                if (node == QueueMessageReference.NULL_MESSAGE) {
+                    continue;
                 }
                 if (!node.isDropped()) {
                     return false;
@@ -79,6 +79,7 @@ public class VMPendingMessageCursor extends AbstractPendingMessageCursor {
     /**
      * reset the cursor
      */
+    @Override
     public synchronized void reset() {
         iter = list.listIterator();
         last = null;
@@ -89,6 +90,7 @@ public class VMPendingMessageCursor extends AbstractPendingMessageCursor {
      * 
      * @param node
      */
+    @Override
     public synchronized void addMessageLast(MessageReference node) {
         node.incrementReferenceCount();
         list.addLast(node);
@@ -100,6 +102,7 @@ public class VMPendingMessageCursor extends AbstractPendingMessageCursor {
      * @param position
      * @param node
      */
+    @Override
     public synchronized void addMessageFirst(MessageReference node) {
         node.incrementReferenceCount();
         list.addFirst(node);
@@ -108,6 +111,7 @@ public class VMPendingMessageCursor extends AbstractPendingMessageCursor {
     /**
      * @return true if there pending messages to dispatch
      */
+    @Override
     public synchronized boolean hasNext() {
         return iter.hasNext();
     }
@@ -115,8 +119,9 @@ public class VMPendingMessageCursor extends AbstractPendingMessageCursor {
     /**
      * @return the next pending message
      */
+    @Override
     public synchronized MessageReference next() {
-        last = (MessageReference)iter.next();
+        last = iter.next();
         if (last != null) {
             last.incrementReferenceCount();
         }
@@ -126,6 +131,7 @@ public class VMPendingMessageCursor extends AbstractPendingMessageCursor {
     /**
      * remove the message at the cursor position
      */
+    @Override
     public synchronized void remove() {
         if (last != null) {
             last.decrementReferenceCount();
@@ -136,6 +142,7 @@ public class VMPendingMessageCursor extends AbstractPendingMessageCursor {
     /**
      * @return the number of pending messages
      */
+    @Override
     public synchronized int size() {
         return list.size();
     }
@@ -143,10 +150,16 @@ public class VMPendingMessageCursor extends AbstractPendingMessageCursor {
     /**
      * clear all pending messages
      */
+    @Override
     public synchronized void clear() {
+        for (Iterator<MessageReference> i = list.iterator(); i.hasNext();) {
+            MessageReference ref = i.next();
+            ref.decrementReferenceCount();
+        }
         list.clear();
     }
 
+    @Override
     public synchronized void remove(MessageReference node) {
         for (Iterator<MessageReference> i = list.iterator(); i.hasNext();) {
             MessageReference ref = i.next();
@@ -164,11 +177,19 @@ public class VMPendingMessageCursor extends AbstractPendingMessageCursor {
      * @param maxItems
      * @return a list of paged in messages
      */
+    @Override
     public LinkedList<MessageReference> pageInList(int maxItems) {
         return list;
     }
-    
+
+    @Override
     public boolean isTransient() {
         return true;
+    }
+
+    @Override
+    public void destroy() throws Exception {
+        super.destroy();
+        clear();
     }
 }

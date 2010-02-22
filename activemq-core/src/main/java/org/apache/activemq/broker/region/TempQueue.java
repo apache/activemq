@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.broker.region;
 
+import java.io.IOException;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.cursors.VMPendingMessageCursor;
@@ -23,6 +24,8 @@ import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQTempDestination;
 import org.apache.activemq.store.MessageStore;
 import org.apache.activemq.thread.TaskRunnerFactory;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * The Queue is a List of MessageEntry objects that are dispatched to matching
@@ -31,6 +34,7 @@ import org.apache.activemq.thread.TaskRunnerFactory;
  * @version $Revision: 1.28 $
  */
 public class TempQueue extends Queue{
+    private static final Log LOG = LogFactory.getLog(TempQueue.class);
     private final ActiveMQTempDestination tempDest;
    
     
@@ -50,6 +54,7 @@ public class TempQueue extends Queue{
         this.tempDest = (ActiveMQTempDestination) destination;
     }
     
+    @Override
     public void initialize() throws Exception {
         this.messages=new VMPendingMessageCursor();
         this.messages.setMemoryUsageHighWaterMark(getCursorMemoryHighWaterMark());
@@ -58,6 +63,7 @@ public class TempQueue extends Queue{
         this.taskRunner = taskFactory.createTaskRunner(this, "TempQueue:  " + destination.getPhysicalName());
     }
     
+    @Override
     public void addSubscription(ConnectionContext context, Subscription sub) throws Exception {
         // Only consumers on the same connection can consume from
         // the temporary destination
@@ -73,5 +79,15 @@ public class TempQueue extends Queue{
             LOG.debug(" changed ownership of " + this + " to "+ tempDest.getConnectionId());
         }
         super.addSubscription(context, sub);
+    }
+    
+    @Override
+    public void dispose(ConnectionContext context) throws IOException {
+        try {
+           purge();
+        } catch (Exception e) {
+          LOG.warn("Caught an exception purging Queue: " + destination);
+        }
+        super.dispose(context);
     }
 }
