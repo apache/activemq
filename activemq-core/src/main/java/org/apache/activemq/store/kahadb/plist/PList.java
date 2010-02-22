@@ -151,6 +151,9 @@ public class PList {
 
     synchronized public void unload() {
         if (loaded.compareAndSet(true, false)) {
+            this.rootId = EntryLocation.NOT_SET;
+            this.lastId = EntryLocation.NOT_SET;
+            this.size=0;
         }
     }
 
