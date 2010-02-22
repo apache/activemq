@@ -350,15 +350,19 @@ public class AdvisoryBroker extends BrokerFilter {
     }
     
     @Override
-    public void isFull(ConnectionContext context,Destination destination,Usage usage) {
-        super.isFull(context,destination, usage);
-        try {
-            ActiveMQTopic topic = AdvisorySupport.getFullAdvisoryTopic(destination.getActiveMQDestination());
-            ActiveMQMessage advisoryMessage = new ActiveMQMessage();           
-            advisoryMessage.setStringProperty(AdvisorySupport.MSG_PROPERTY_USAGE_NAME, usage.getName());
-            fireAdvisory(context, topic,null,null,advisoryMessage);
-        } catch (Exception e) {
-            LOG.warn("Failed to fire message is full advisory");
+    public void isFull(ConnectionContext context, Destination destination, Usage usage) {
+        super.isFull(context, destination, usage);
+        if (AdvisorySupport.isAdvisoryTopic(destination.getActiveMQDestination()) == false) {
+            try {
+
+                ActiveMQTopic topic = AdvisorySupport.getFullAdvisoryTopic(destination.getActiveMQDestination());
+                ActiveMQMessage advisoryMessage = new ActiveMQMessage();
+                advisoryMessage.setStringProperty(AdvisorySupport.MSG_PROPERTY_USAGE_NAME, usage.getName());
+                fireAdvisory(context, topic, null, null, advisoryMessage);
+
+            } catch (Exception e) {
+                LOG.warn("Failed to fire message is full advisory");
+            }
         }
     }
     
