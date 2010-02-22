@@ -23,7 +23,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-
 import org.apache.tools.ant.Project;
 import org.apache.tools.ant.taskdefs.FixCRLF;
 import org.codehaus.jam.JClass;
@@ -59,9 +58,14 @@ public abstract class MultiSourceGenerator extends OpenWireGenerator {
 
         JamClassIterator iter = getClasses();
         while (iter.hasNext()) {
-            jclass = iter.nextClass();
-            if (isValidClass(jclass)) {
-                processClass(jclass);
+            try {
+                jclass = iter.nextClass();
+                if (isValidClass(jclass)) {
+                    processClass(jclass);
+                }
+            } catch (Exception e) {
+                System.err.println("Unable to process: " + jclass);
+                e.printStackTrace();
             }
         }
         return null;
