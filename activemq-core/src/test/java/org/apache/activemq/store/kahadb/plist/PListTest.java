@@ -17,7 +17,9 @@
 package org.apache.activemq.store.kahadb.plist;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
@@ -124,6 +126,28 @@ public class PListTest {
         assertEquals(0,plist.size());
         assertNull("no first entry", plist.getFirst());
     }
+    
+    @Test
+    public void testRemoveSecond() throws Exception {
+        plist.addLast("First", new ByteSequence("A".getBytes()));
+        plist.addLast("Second", new ByteSequence("B".getBytes()));
+        
+        assertTrue(plist.remove("Second"));
+        assertTrue(plist.remove("First"));
+        assertFalse(plist.remove("doesNotExist"));
+    }
+    
+    
+    @Test
+    public void testRemoveSecondPosition() throws Exception {
+        plist.addLast("First", new ByteSequence("A".getBytes()));
+        plist.addLast("Second", new ByteSequence("B".getBytes()));
+        
+        assertTrue(plist.remove(1));
+        assertTrue(plist.remove(0));
+        assertFalse(plist.remove(3));
+    }
+    
 
     @Before
     public void setUp() throws Exception {

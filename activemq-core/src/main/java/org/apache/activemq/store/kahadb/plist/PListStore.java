@@ -308,17 +308,18 @@ public class PListStore extends ServiceSupport {
 
     synchronized void decrementJournalCount(Transaction tx, Location location) throws IOException {
         int logId = location.getDataFileId();
-        int refCount = this.metaData.journalRC.get(tx, logId);
-        refCount--;
-        if (refCount <= 0) {
-            this.metaData.journalRC.remove(tx, logId);
-            Set<Integer> set = new HashSet<Integer>();
-            set.add(logId);
-            this.journal.removeDataFiles(set);
-        } else {
-            this.metaData.journalRC.put(tx, logId, refCount);
+        if (logId != Location.NOT_SET) {
+            int refCount = this.metaData.journalRC.get(tx, logId);
+            refCount--;
+            if (refCount <= 0) {
+                this.metaData.journalRC.remove(tx, logId);
+                Set<Integer> set = new HashSet<Integer>();
+                set.add(logId);
+                this.journal.removeDataFiles(set);
+            } else {
+                this.metaData.journalRC.put(tx, logId, refCount);
+            }
         }
-
     }
 
     synchronized ByteSequence getPayload(Location location) throws IllegalStateException, IOException {

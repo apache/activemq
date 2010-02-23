@@ -325,6 +325,10 @@ public class PList {
                     result = doRemove(tx, entry);
                     break;
                 }
+                nextId = entry.getNext();
+            } else {
+                // not found
+                break;
             }
         }
         return result;
@@ -341,6 +345,10 @@ public class PList {
                     result = doRemove(tx, entry);
                     break;
                 }
+                nextId = entry.getNext();
+            } else {
+                // not found
+                break;
             }
             count++;
         }
@@ -437,7 +445,9 @@ public class PList {
     EntryLocation loadEntry(Transaction tx, long pageId) throws IOException {
         Page<EntryLocation> page = tx.load(pageId, EntryLocationMarshaller.INSTANCE);
         EntryLocation entry = page.get();
-        entry.setPage(page);
+        if (entry != null) {
+            entry.setPage(page);
+        }
         return entry;
     }
     private void storeEntry(Transaction tx, EntryLocation entry) throws IOException {
