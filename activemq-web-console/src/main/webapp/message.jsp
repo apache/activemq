@@ -130,16 +130,16 @@ No message could be found for ID ${requestContext.messageQuery.id}
                 </thead>
                 <tbody>
                     <tr>
-                        <td colspan="2"><a href="deleteMessage.action?JMSDestination=${row.JMSDestination}&messageId=${row.JMSMessageID}">Delete</a></td>
+                        <td colspan="2"><a href="deleteMessage.action?JMSDestination=<c:out value="${row.JMSDestination}" />&messageId=${row.JMSMessageID}">Delete</a></td>
                     </tr>
                     <tr class="odd">
-                    <td><a href="javascript:confirmAction('queue', 'copyMessage.action?destination=%target%&JMSDestination=${row.JMSDestination}&messageId=${row.JMSMessageID}&JMSDestinationType=queue')">Copy</a></td>
+                    <td><a href="javascript:confirmAction('queue', 'copyMessage.action?destination=%target%&JMSDestination=<c:out value="${row.JMSDestination}" />&messageId=${row.JMSMessageID}&JMSDestinationType=queue')">Copy</a></td>
                         <td rowspan="2">
                             <select id="queue">
                                 <option value=""> -- Please select --</option>
                                 <c:forEach items="${requestContext.brokerQuery.queues}" var="queues">
                                     <c:if test="${queues.name != requestContext.messageQuery.JMSDestination}">
-                                    <option value="${queues.name}"><form:short text="${queues.name}"/></option>
+                                    <option value="<c:out value="${queues.name}" />"><form:short text="${queues.name}"/></option>
                                     </c:if>
                                 </c:forEach>
                             </select>
@@ -147,7 +147,7 @@ No message could be found for ID ${requestContext.messageQuery.id}
                         
                     </tr>
                     <tr class="odd">
-                        <td><a href="javascript:confirmAction('queue', 'moveMessage.action?destination=%target%&JMSDestination=${row.JMSDestination}&messageId=${row.JMSMessageID}&JMSDestinationType=queue')">Move</a></td>
+                        <td><a href="javascript:confirmAction('queue', 'moveMessage.action?destination=%target%&JMSDestination=<c:out value="${row.JMSDestination}" />&messageId=${row.JMSMessageID}&JMSDestinationType=queue')">Move</a></td>
                     </tr>
                 </tbody>
             </table>

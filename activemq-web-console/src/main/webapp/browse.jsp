@@ -39,7 +39,7 @@
 <tbody>
 <jms:forEachMessage queueBrowser="${requestContext.queueBrowser.browser}" var="row">
 <tr>
-<td><a href="message.jsp?id=${row.JMSMessageID}&JMSDestination=${requestContext.queueBrowser.JMSDestination}" 
+<td><a href="message.jsp?id=${row.JMSMessageID}&JMSDestination=<c:out value="${requestContext.queueBrowser.JMSDestination}" />" 
     title="${row.properties}">${row.JMSMessageID}</a></td>
 <td>${row.JMSCorrelationID}</td>
 <td><jms:persistent message="${row}"/></td>
@@ -49,7 +49,7 @@
 <td><jms:formatTimestamp timestamp="${row.JMSTimestamp}"/></td>
 <td>${row.JMSType}</td>
 <td>
-    <a href="deleteMessage.action?JMSDestination=${row.JMSDestination}&messageId=${row.JMSMessageID}">Delete</a>
+    <a href="deleteMessage.action?JMSDestination=<c:out value="${row.JMSDestination}"/>&messageId=${row.JMSMessageID}">Delete</a>
 </td>
 </tr>
 </jms:forEachMessage>
@@ -57,7 +57,7 @@
 </table>
 
 <div>
-<a href="queueConsumers.jsp?JMSDestination=${requestContext.queueBrowser.JMSDestination}">View Consumers</a>
+<a href="queueConsumers.jsp?JMSDestination=<c:out value="${requestContext.queueBrowser.JMSDestination}"/>">View Consumers</a>
 </div>
 </body>
 </html>

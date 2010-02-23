@@ -37,7 +37,7 @@
 	    <label for="JMSDestination">Destination</label>
 	</td>
 	<td>
-	    <form:text name="JMSDestination" defaultValue="foo.bar"/>
+	    <form:text name="JMSDestination" defaultValue="foo.bar" />
 	</td>
 	<td class="label">
 	    <label for="queue">Queue or Topic</label>

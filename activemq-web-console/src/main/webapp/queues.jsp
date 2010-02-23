@@ -48,22 +48,23 @@
 </thead>
 <tbody>
 <c:forEach items="${requestContext.brokerQuery.queues}" var="row">
+
 <tr>
-<td><a href="browse.jsp?JMSDestination=${row.name}"><form:tooltip text="${row.name}" length="50"/></a></td>
+<td><a href="browse.jsp?JMSDestination=<c:out value="${row.name}" />"><form:tooltip text="${row.name}" length="50"/></a></td>
 <td>${row.queueSize}</td>
 <td>${row.consumerCount}</td>
 <td>${row.enqueueCount}</td>
 <td>${row.dequeueCount}</td>
 <td>
-    <a href="browse.jsp?JMSDestination=${row.name}">Browse</a>
-	<a href="queueConsumers.jsp?JMSDestination=${row.name}">Active Consumers</a><br/>
-    <a href="queueBrowse/${row.name}?view=rss&feedType=atom_1.0" title="Atom 1.0"><img src="images/feed_atom.png"/></a>
-    <a href="queueBrowse/${row.name}?view=rss&feedType=rss_2.0" title="RSS 2.0"><img src="images/feed_rss.png"/></a>
+    <a href="browse.jsp?JMSDestination=<c:out value="${row.name}" />">Browse</a>
+	<a href="queueConsumers.jsp?JMSDestination=<c:out value="${row.name}" />">Active Consumers</a><br/>
+    <a href="queueBrowse/<c:out value="${row.name}" />?view=rss&feedType=atom_1.0" title="Atom 1.0"><img src="images/feed_atom.png"/></a>
+    <a href="queueBrowse/<c:out value="${row.name}" />?view=rss&feedType=rss_2.0" title="RSS 2.0"><img src="images/feed_rss.png"/></a>
 </td>
 <td>
-    <a href="send.jsp?JMSDestination=${row.name}&JMSDestinationType=queue">Send To</a>
-    <a href="purgeDestination.action?JMSDestination=${row.name}&JMSDestinationType=queue">Purge</a>
-    <a href="deleteDestination.action?JMSDestination=${row.name}&JMSDestinationType=queue">Delete</a>
+    <a href="send.jsp?JMSDestination=<c:out value="${row.name}" />&JMSDestinationType=queue">Send To</a>
+    <a href="purgeDestination.action?JMSDestination=<c:out value="${row.name}" />&JMSDestinationType=queue">Purge</a>
+    <a href="deleteDestination.action?JMSDestination=<c:out value="${row.name}" />&JMSDestinationType=queue">Delete</a>
 </td>
 </tr>
 </c:forEach>
