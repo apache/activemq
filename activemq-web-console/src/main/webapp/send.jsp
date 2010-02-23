@@ -23,6 +23,7 @@
 <h2>Send a JMS Message</h2>
 
 <form action="sendMessage.action" method="post">
+<input type="hidden" name="secret" value="<c:out value='${sessionScope["secret"]}'/>"/>
 
 <table id="headers" class="autostripe">
 <thead>

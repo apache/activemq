@@ -50,5 +50,9 @@ public class CreateSubscriber extends DurableSubscriberFacade implements Control
         getBrokerAdmin().createDurableSubscriber(getClientId(), getSubscriberName(), getValidDestination(), selector);
         return new ModelAndView("redirect:subscribers.jsp");
     }
+    
+	public String[] getSupportedHttpMethods() {
+		return new String[]{"POST"};
+	}
 
 }

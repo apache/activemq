@@ -45,7 +45,7 @@
 	 	 <td>${row.period}</td>
 	     <td>${row.repeat}</td>
 		<td>
-		    <a href="deleteJob.action?jobId=${row.jobId}">Delete</a>
+		    <a href="deleteJob.action?jobId=${row.jobId}&secret=<c:out value='${sessionScope["secret"]}'/>">Delete</a>
 		</td>
 	    </tr>
 	</c:forEach>

@@ -49,7 +49,7 @@
 <td><jms:formatTimestamp timestamp="${row.JMSTimestamp}"/></td>
 <td>${row.JMSType}</td>
 <td>
-    <a href="deleteMessage.action?JMSDestination=<c:out value="${row.JMSDestination}"/>&messageId=${row.JMSMessageID}">Delete</a>
+    <a href="deleteMessage.action?JMSDestination=<c:out value="${row.JMSDestination}"/>&messageId=${row.JMSMessageID}&secret=<c:out value='${sessionScope["secret"]}'/>">Delete</a>
 </td>
 </tr>
 </jms:forEachMessage>

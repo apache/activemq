@@ -230,4 +230,8 @@ public class SendMessage extends DestinationFacade implements Controller {
         // allow JMSX extensions or non JMS properties
         return name.startsWith("JMSX") || !name.startsWith("JMS");
     }
+    
+	public String[] getSupportedHttpMethods() {
+		return new String[]{"POST"};
+	}
 }

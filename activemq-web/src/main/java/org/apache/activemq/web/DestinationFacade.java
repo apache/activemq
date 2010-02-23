@@ -128,4 +128,8 @@ public class DestinationFacade {
     protected String getPhysicalDestinationName() {
         return createDestination().getPhysicalName();
     }
+    
+    public String[] getSupportedHttpMethods() {
+    	return new String[]{"GET", "POST"};
+    }
 }

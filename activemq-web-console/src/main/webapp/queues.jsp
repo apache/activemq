@@ -21,8 +21,9 @@
 <body>
 
 <div>
-<form action="createDestination.action" method="get">
+<form action="createDestination.action" method="post">
     <input type="hidden" name="JMSDestinationType" value="queue"/>
+    <input type="hidden" name="secret" value="<c:out value='${sessionScope["secret"]}'/>"/>
 
     <label name="destination">Queue Name</label>
     <input type="text" name="JMSDestination" value=""/>
@@ -63,8 +64,8 @@
 </td>
 <td>
     <a href="send.jsp?JMSDestination=<c:out value="${row.name}" />&JMSDestinationType=queue">Send To</a>
-    <a href="purgeDestination.action?JMSDestination=<c:out value="${row.name}" />&JMSDestinationType=queue">Purge</a>
-    <a href="deleteDestination.action?JMSDestination=<c:out value="${row.name}" />&JMSDestinationType=queue">Delete</a>
+    <a href="purgeDestination.action?JMSDestination=<c:out value="${row.name}" />&JMSDestinationType=queue&secret=<c:out value='${sessionScope["secret"]}'/>">Purge</a>
+    <a href="deleteDestination.action?JMSDestination=<c:out value="${row.name}" />&JMSDestinationType=queue&secret=<c:out value='${sessionScope["secret"]}'/>">Delete</a>
 </td>
 </tr>
 </c:forEach>

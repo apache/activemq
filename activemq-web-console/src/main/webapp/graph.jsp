@@ -51,7 +51,7 @@
 <td>${row.JMSTimestamp}</td>
 <td>${row.JMSType}</td>
 <td>
-    <a href="deleteDestination.action?destination=${row.JMSMessageID}">Delete</a>
+    <a href="deleteDestination.action?destination=${row.JMSMessageID}&secret=<c:out value='${sessionScope["secret"]}'/>">Delete</a>
 </td>
 </tr>
 </jms:forEachMessage>

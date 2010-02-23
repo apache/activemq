@@ -20,8 +20,9 @@
 </head>
 <body>
 
-<form action="createSubscriber.action" method="get">
+<form action="createSubscriber.action" method="post">
     <input type="hidden" name="JMSDestinationType" value="topic"/>
+    <input type="hidden" name="secret" value="<c:out value='${sessionScope["secret"]}'/>"/>
 
 <table id="createSubscribers" class="sortable autostripe">
 <thead>
@@ -102,7 +103,7 @@
 <td>${row.enqueueCounter}</td>
 <td>${row.dequeueCounter}</td>
 <td>
-    <a href="deleteSubscriber.action?clientId=${row.clientId}&subscriberName=${row.subscriptionName}">Delete</a>
+    <a href="deleteSubscriber.action?clientId=${row.clientId}&subscriberName=${row.subscriptionName}&secret=<c:out value='${sessionScope["secret"]}'/>">Delete</a>
 </td>
 </tr>
 </c:forEach>

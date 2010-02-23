@@ -23,6 +23,7 @@
 <div>
 <form action="createDestination.action" method="get">
     <input type="hidden" name="JMSDestinationType" value="topic"/>
+    <input type="hidden" name="secret" value="<c:out value='${sessionScope["secret"]}'/>"/>
 
     <label name="destination">Topic Name</label>
     <input type="text" name="JMSDestination" value=""/>
@@ -52,7 +53,7 @@
 <td>${row.dequeueCount}</td>
 <td>
     <a href="send.jsp?JMSDestination=<c:out value="${row.name}" />&JMSDestinationType=topic">Send To</a>
-    <a href="deleteDestination.action?JMSDestination=<c:out value="${row.name}" />&JMSDestinationType=topic">Delete</a>
+    <a href="deleteDestination.action?JMSDestination=<c:out value="${row.name}" />&JMSDestinationType=topic&secret=<c:out value='${sessionScope["secret"]}'/>">Delete</a>
 </td>
 </tr>
 </c:forEach>
