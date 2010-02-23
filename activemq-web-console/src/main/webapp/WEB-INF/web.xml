@@ -50,7 +50,7 @@
 
   <filter-mapping>
     <filter-name>spring</filter-name>
-    <url-pattern>/*</url-pattern>
+    <url-pattern>*.jsp</url-pattern>
   </filter-mapping>
 
   <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
@@ -101,7 +101,7 @@
 
   <filter-mapping>
     <filter-name>session</filter-name>
-    <url-pattern>/*</url-pattern>
+    <url-pattern>*.jsp</url-pattern>
   </filter-mapping>
   <filter-mapping>
     <filter-name>spring-rq</filter-name>

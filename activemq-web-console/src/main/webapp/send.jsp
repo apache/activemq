@@ -23,6 +23,7 @@
 <h2>Send a JMS Message</h2>
 
 <form action="sendMessage.action" method="post">
+<input type="hidden" name="secret" value="<c:out value='${sessionScope["secret"]}'/>"/>
 
 <table id="headers" class="autostripe">
 <thead>
@@ -37,7 +38,7 @@
 	    <label for="JMSDestination">Destination</label>
 	</td>
 	<td>
-	    <form:text name="JMSDestination"/>
+	    <form:text name="JMSDestination" defaultValue="foo.bar" />
 	</td>
 	<td class="label">
 	    <label for="queue">Queue or Topic</label>

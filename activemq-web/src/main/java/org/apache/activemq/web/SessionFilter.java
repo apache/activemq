@@ -18,6 +18,7 @@
 package org.apache.activemq.web;
 
 import java.io.IOException;
+import java.util.UUID;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -39,7 +40,8 @@ public class SessionFilter implements Filter {
     }
 
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
-        ((HttpServletRequest)request).getSession(true);
+    	// set secret to prevent CSRF attacks
+        ((HttpServletRequest)request).getSession(true).setAttribute("secret", UUID.randomUUID().toString());;
         chain.doFilter(request, response);
     }
 

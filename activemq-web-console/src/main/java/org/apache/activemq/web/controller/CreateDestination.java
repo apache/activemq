@@ -39,4 +39,10 @@ public class CreateDestination extends DestinationFacade implements Controller {
         return redirectToBrowseView();
     }
 
+	public String[] getSupportedHttpMethods() {
+		return new String[]{"POST"};
+	}
+    
+    
+
 }

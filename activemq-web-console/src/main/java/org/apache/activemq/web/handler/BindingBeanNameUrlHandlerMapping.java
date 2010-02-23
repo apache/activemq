@@ -16,8 +16,12 @@
  */
 package org.apache.activemq.web.handler;
 
+import java.util.Arrays;
+import java.util.UUID;
+
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.activemq.web.DestinationFacade;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.web.bind.ServletRequestDataBinder;
@@ -41,8 +45,21 @@ public class BindingBeanNameUrlHandlerMapping extends BeanNameUrlHandlerMapping 
             HandlerExecutionChain handlerExecutionChain = (HandlerExecutionChain) object;
             object = handlerExecutionChain.getHandler();
         }
-
+        
         if (object != null) {
+        	// prevent CSRF attacks
+        	if (object instanceof DestinationFacade) {
+        		// check supported methods
+        		if (!Arrays.asList(((DestinationFacade)object).getSupportedHttpMethods()).contains(request.getMethod())) {
+        			throw new UnsupportedOperationException("Unsupported method " + request.getMethod() + " for path " + request.getRequestURI());
+        		}
+        		// check the 'secret'
+        		if (!request.getSession().getAttribute("secret").equals(request.getParameter("secret"))) {
+        			throw new UnsupportedOperationException("Possible CSRF attack");
+        		}
+        	}
+        	
+        	
             ServletRequestDataBinder binder = new ServletRequestDataBinder(object, "request");
             try {
                 binder.bind(request);
@@ -56,6 +73,7 @@ public class BindingBeanNameUrlHandlerMapping extends BeanNameUrlHandlerMapping 
                 throw e;
             }
         }
+        
         return object;
     }
 }

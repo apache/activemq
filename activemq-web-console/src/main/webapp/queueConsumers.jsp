@@ -16,11 +16,11 @@
 --%>
 <html>
 <head>
-<title>Consumers for ${requestContext.queueConsumerQuery.JMSDestination}</title>
+<title>Consumers for <c:out value="${requestContext.queueConsumerQuery.JMSDestination}" /></title>
 </head>
 <body>
 
-<h2>Active Consumers for ${requestContext.queueConsumerQuery.JMSDestination}</h2>
+<h2>Active Consumers for <c:out value="${requestContext.queueConsumerQuery.JMSDestination}" /></h2>
 
 <table id="messages" class="sortable autostripe">
 <thead>

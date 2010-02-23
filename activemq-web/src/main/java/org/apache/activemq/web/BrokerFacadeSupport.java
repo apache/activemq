@@ -172,6 +172,7 @@ public abstract class BrokerFacadeSupport implements BrokerFacade {
     @SuppressWarnings("unchecked")
     public Collection<SubscriptionViewMBean> getQueueConsumers(String queueName) throws Exception {
         String brokerName = getBrokerName();
+        queueName = StringUtils.replace(queueName, "\"", "_");
         ObjectName query = new ObjectName("org.apache.activemq:BrokerName=" + brokerName
                 + ",Type=Subscription,destinationType=Queue,destinationName=" + queueName + ",*");
         Set<ObjectName> queryResult = getManagementContext().queryNames(query, null);
