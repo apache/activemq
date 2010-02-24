@@ -88,7 +88,7 @@ public class TopicSubscription extends AbstractSubscription {
             dispatch(node);
             slowConsumer=false;
         } else {
-          //we are slow
+            //we are slow
             if(!slowConsumer) {
                 slowConsumer=true;
                 for (Destination dest: destinations) {
@@ -124,8 +124,11 @@ public class TopicSubscription extends AbstractSubscription {
                             LinkedList<MessageReference> list = null;
                             MessageReference[] oldMessages=null;
                             synchronized(matched){
-                            list = matched.pageInList(pageInSize);
+                                list = matched.pageInList(pageInSize);
                             	oldMessages = messageEvictionStrategy.evictMessages(list);
+                            	for (MessageReference ref : list) {
+                            	    ref.decrementReferenceCount();
+                            	}
                             }
                             int messagesToEvict = 0;
                             if (oldMessages != null){
@@ -477,18 +480,6 @@ public class TopicSubscription extends AbstractSubscription {
 
     public int getPrefetchSize() {
         return (int)info.getPrefetchSize();
-    }
-    
-    /**
-     * Get the list of inflight messages
-     * @return the list
-     */
-    public synchronized List<MessageReference> getInFlightMessages(){
-    	List<MessageReference> result = new ArrayList<MessageReference>();
-        synchronized(matched) {
-            result.addAll(matched.pageInList(1000));
-        }
-        return result;
     }
 
 }

@@ -43,12 +43,14 @@ public class ThreadTracker {
      * output the result of stack trace capture to the log
      */
     public static void result() {
-        for (Entry<String, Tracker> t: trackers.entrySet()) {
-            LOG.info("Tracker: " + t.getKey() + ", " + t.getValue().size() + " entry points...");
-            for (Trace trace : t.getValue().values()) {
-                LOG.info("count: " + trace.count, trace);
+        synchronized(trackers) {
+            for (Entry<String, Tracker> t: trackers.entrySet()) {
+                LOG.info("Tracker: " + t.getKey() + ", " + t.getValue().size() + " entry points...");
+                for (Trace trace : t.getValue().values()) {
+                    LOG.info("count: " + trace.count, trace);
+                }
+                LOG.info("Tracker: " + t.getKey() + ", done.");
             }
-            LOG.info("Tracker: " + t.getKey() + ", done.");
         }
     }
 

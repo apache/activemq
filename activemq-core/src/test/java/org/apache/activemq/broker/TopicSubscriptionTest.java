@@ -16,8 +16,6 @@
  */
 package org.apache.activemq.broker;
 
-import javax.jms.JMSException;
-
 import org.apache.activemq.TestSupport;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.util.ThreadTracker;

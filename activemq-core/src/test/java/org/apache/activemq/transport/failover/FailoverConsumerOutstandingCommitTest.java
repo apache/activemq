@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.util.ArrayList;
 import java.util.concurrent.CountDownLatch;
@@ -157,7 +158,19 @@ public class FailoverConsumerOutstandingCommitTest {
             }
         });
         
-        produceMessage(producerSession, destination, prefetch * 2);
+        // may block if broker shutodwn happens quickly
+        Executors.newSingleThreadExecutor().execute(new Runnable() {
+            public void run() {
+                LOG.info("producer started");
+                try {
+                    produceMessage(producerSession, destination, prefetch * 2);
+                } catch (JMSException e) {
+                    e.printStackTrace();
+                    fail("unexpceted ex on producer: " + e);
+                }
+                LOG.info("producer done");
+            }
+        });
      
         // will be stopped by the plugin
         broker.waitUntilStopped();
@@ -245,7 +258,19 @@ public class FailoverConsumerOutstandingCommitTest {
             }
         });
 
-        produceMessage(producerSession, destination, prefetch * 2);
+        // may block if broker shutdown happens quickly
+        Executors.newSingleThreadExecutor().execute(new Runnable() {
+            public void run() {
+                LOG.info("producer started");
+                try {
+                    produceMessage(producerSession, destination, prefetch * 2);
+                } catch (JMSException e) {
+                    e.printStackTrace();
+                    fail("unexpceted ex on producer: " + e);
+                }
+                LOG.info("producer done");
+            }
+        });
 
         // will be stopped by the plugin
         broker.waitUntilStopped();

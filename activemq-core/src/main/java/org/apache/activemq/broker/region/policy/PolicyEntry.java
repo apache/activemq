@@ -147,6 +147,11 @@ public class PolicyEntry extends DestinationMapEntry {
     }
 
     public void configure(Broker broker, SystemUsage memoryManager, TopicSubscription subscription) {
+        //override prefetch size if not set by the Consumer
+        int prefetch=subscription.getConsumerInfo().getPrefetchSize();
+        if (prefetch == ActiveMQPrefetchPolicy.DEFAULT_TOPIC_PREFETCH){
+            subscription.getConsumerInfo().setPrefetchSize(getTopicPrefetch());
+        }
         if (pendingMessageLimitStrategy != null) {
             int value = pendingMessageLimitStrategy.getMaximumPendingMessageLimit(subscription);
             int consumerLimit = subscription.getInfo().getMaximumPendingMessageLimit();
@@ -167,11 +172,6 @@ public class PolicyEntry extends DestinationMapEntry {
         }
         if (pendingSubscriberPolicy != null) {
             String name = subscription.getContext().getClientId() + "_" + subscription.getConsumerInfo().getConsumerId();
-            //override prefetch size if not set by the Consumer
-            int prefetch=subscription.getConsumerInfo().getPrefetchSize();
-            if (prefetch == ActiveMQPrefetchPolicy.DEFAULT_TOPIC_PREFETCH){
-                subscription.getConsumerInfo().setPrefetchSize(getTopicPrefetch());
-            }
             int maxBatchSize = subscription.getConsumerInfo().getPrefetchSize();
             subscription.setMatched(pendingSubscriberPolicy.getSubscriberPendingMessageCursor(broker,name, maxBatchSize));
         }

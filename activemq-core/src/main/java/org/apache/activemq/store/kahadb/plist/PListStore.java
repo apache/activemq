@@ -176,8 +176,10 @@ public class PListStore extends ServiceSupport {
     }
 
     public long size() {
-        if (!initialized) {
-            return 0;
+        synchronized (this) {
+            if (!initialized) {
+                return 0;
+            }
         }
         try {
             return journal.getDiskSize() + pageFile.getDiskSize();

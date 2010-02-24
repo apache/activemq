@@ -240,7 +240,7 @@ public abstract class Usage<T extends Usage> implements Service {
 
     private void fireEvent(final int oldPercentUsage, final int newPercentUsage) {
         if (debug) {
-            LOG.debug("Memory usage change from: " + oldPercentUsage + "% of available memory, to: " 
+            LOG.debug(getName() + ": usage change from: " + oldPercentUsage + "% of available memory, to: " 
                 + newPercentUsage + "% of available memory");
         }   
         if (started.get()) {
