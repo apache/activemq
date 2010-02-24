@@ -40,17 +40,18 @@ import javax.jms.Topic;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.broker.region.policy.ConstantPendingMessageLimitStrategy;
+import org.apache.activemq.broker.region.policy.FilePendingSubscriberMessageStoragePolicy;
 import org.apache.activemq.broker.region.policy.OldestMessageEvictionStrategy;
-import org.apache.activemq.broker.region.policy.PendingMessageLimitStrategy;
+import org.apache.activemq.broker.region.policy.PendingSubscriberMessageStoragePolicy;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
-import org.apache.activemq.broker.region.policy.PrefetchRatePendingMessageLimitStrategy;
+import org.apache.activemq.broker.region.policy.VMPendingSubscriberMessageStoragePolicy;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.util.ThreadTracker;
+import org.apache.activemq.util.Wait;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 
 public class MessageEvictionTest {
@@ -63,9 +64,8 @@ public class MessageEvictionTest {
     protected int numMessages = 4000;
     protected String payload = new String(new byte[1024*2]);
 
-    @Before
-    public void setUp() throws Exception {
-        broker = createBroker();
+    public void setUp(PendingSubscriberMessageStoragePolicy pendingSubscriberPolicy) throws Exception {
+        broker = createBroker(pendingSubscriberPolicy);
         broker.start();
         connectionFactory = createConnectionFactory();
         connection = connectionFactory.createConnection();
@@ -82,7 +82,17 @@ public class MessageEvictionTest {
     }
     
     @Test
-    public void testMessageEvictionMemoryUsage() throws Exception {
+    public void testMessageEvictionMemoryUsageFileCursor() throws Exception {
+        doTestMessageEvictionMemoryUsage(new FilePendingSubscriberMessageStoragePolicy());
+    }
+    
+    @Test
+    public void testMessageEvictionMemoryUsageVmCursor() throws Exception {
+        doTestMessageEvictionMemoryUsage(new VMPendingSubscriberMessageStoragePolicy());
+    }
+    
+    public void doTestMessageEvictionMemoryUsage(PendingSubscriberMessageStoragePolicy pendingSubscriberPolicy) throws Exception {
+        setUp(pendingSubscriberPolicy);
         ExecutorService executor = Executors.newCachedThreadPool();
         final CountDownLatch doAck = new CountDownLatch(1);
         final CountDownLatch consumerRegistered = new CountDownLatch(1);
@@ -144,13 +154,15 @@ public class MessageEvictionTest {
         executor.shutdown();
         executor.awaitTermination(30, TimeUnit.SECONDS);
         
-        assertEquals("usage goes to 0", 0,
-                TestSupport.getDestination(broker, 
-                        ActiveMQDestination.transform(destination)).getMemoryUsage().getPercentUsage());
-        
+        assertTrue("usage goes to 0 once consumer goes away", Wait.waitFor(new Wait.Condition() {
+            public boolean isSatisified() throws Exception {
+                return 0 == TestSupport.getDestination(broker, 
+                        ActiveMQDestination.transform(destination)).getMemoryUsage().getPercentUsage();
+            }
+        }));
     }
 
-    BrokerService createBroker() throws Exception {
+    BrokerService createBroker(PendingSubscriberMessageStoragePolicy pendingSubscriberPolicy) throws Exception {
         BrokerService brokerService = new BrokerService();
         brokerService.addConnector("tcp://localhost:0");
         brokerService.setUseJmx(false);
@@ -166,9 +178,17 @@ public class MessageEvictionTest {
         // so consumer does not get over run while blocked limit the prefetch
         entry.setTopicPrefetch(50);
         
+        
+        entry.setPendingSubscriberPolicy(pendingSubscriberPolicy);
+        
         // limit the number of outstanding messages, large enough to use the file store
+        // or small enough not to blow memory limit
+        int pendingMessageLimit = 50;
+        if (pendingSubscriberPolicy instanceof FilePendingSubscriberMessageStoragePolicy) {
+            pendingMessageLimit = 500;
+        }
         ConstantPendingMessageLimitStrategy pendingMessageLimitStrategy = new ConstantPendingMessageLimitStrategy();
-        pendingMessageLimitStrategy.setLimit(500);
+        pendingMessageLimitStrategy.setLimit(pendingMessageLimit);
         entry.setPendingMessageLimitStrategy(pendingMessageLimitStrategy);
 
         // to keep the limit in check and up to date rather than just the first few, evict some

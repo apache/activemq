@@ -179,7 +179,15 @@ public class VMPendingMessageCursor extends AbstractPendingMessageCursor {
      */
     @Override
     public LinkedList<MessageReference> pageInList(int maxItems) {
-        return list;
+        LinkedList<MessageReference> result = new LinkedList<MessageReference>();
+        for (MessageReference ref: list) {
+            ref.incrementReferenceCount();
+            result.add(ref);
+            if (result.size() >= maxItems) {
+                break;
+            }
+        }
+        return result;
     }
 
     @Override

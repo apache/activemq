@@ -17,11 +17,11 @@
 package org.apache.activemq.broker.region;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
+
 import javax.jms.JMSException;
+
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.cursors.FilePendingMessageCursor;
@@ -98,6 +98,11 @@ public class TopicSubscription extends AbstractSubscription {
             if (maximumPendingMessages != 0) {
             	synchronized(matchedListMutex){
             		while (matched.isFull()){
+            		    if (getContext().getStopping().get()) {
+            		        LOG.warn("stopped waiting for space in pendingMessage cursor for: " + node.getMessageId());
+            		        enqueueCounter.decrementAndGet();
+            		        return;
+            		    }
             			matchedListMutex.wait(20);
             		}
             		matched.addMessageLast(node);
