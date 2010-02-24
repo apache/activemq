@@ -62,94 +62,22 @@
       <groupId>${pom.groupId}</groupId>
       <artifactId>activemq-core</artifactId>
     </dependency>
-    <!--
-    <dependency>
-      <groupId>${pom.groupId}</groupId>
-      <artifactId>activemq-core</artifactId>
-      <scope>compile</scope>
-      <type>test-jar</type>
-    </dependency>
-    -->
     <dependency>
       <groupId>${pom.groupId}</groupId>
       <artifactId>activeio-core</artifactId>
     </dependency>
 
-<!--
-    <dependency>
-      <groupId>stax</groupId>
-      <artifactId>stax</artifactId>
-      <scope>runtime</scope>
-      <optional>true</optional>
-      <exclusions>
-        <exclusion>
-          <groupId>xmlbeans</groupId>
-          <artifactId>xmlbeans-jsr173-api</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
--->
-
-
-    <dependency>
-      <groupId>com.sun.xml.bind</groupId>
-      <artifactId>jaxb-impl</artifactId>
-      <exclusions>
-        <exclusion>
-          <groupId>javax.xml.bind</groupId>
-          <artifactId>jsr173_api</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>javax.jws</groupId>
-          <artifactId>jsr181-api</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>javax.activation</groupId>
-          <artifactId>activation</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>javax.xml.bind</groupId>
-      <artifactId>jaxb-api</artifactId>
-      <exclusions>
-        <exclusion>
-          <groupId>javax.xml.bind</groupId>
-          <artifactId>jsr173_api</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>javax.activation</groupId>
-          <artifactId>activation</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-
     <dependency>
       <groupId>org.codehaus.woodstox</groupId>
-      <!--<groupId>woodstox</groupId>-->
-      <artifactId>wstx-asl</artifactId>
-
+      <artifactId>woodstox-core-asl</artifactId>
+      <version>4.0.7</version>
+    </dependency>
+    <dependency>
+      <groupId>org.codehaus.woodstox</groupId>
+      <artifactId>stax2-api</artifactId>
       <version>3.0.1</version>
-      <!--<version>3.1-rc1</version>-->
-      <exclusions>
-        <exclusion>
-          <groupId>stax</groupId>
-          <artifactId>stax-api</artifactId>
-        </exclusion>
-      </exclusions>
     </dependency>
 
-    <dependency>
-      <groupId>org.apache.geronimo.specs</groupId>
-      <artifactId>geronimo-activation_1.1_spec</artifactId>
-      <version>1.0.2</version>
-    </dependency>
-
-    <dependency>
-      <groupId>org.apache.geronimo.specs</groupId>
-      <artifactId>geronimo-stax-api_1.0_spec</artifactId>
-      <version>1.0.1</version>
-    </dependency>
     <dependency>
       <groupId>jivesoftware</groupId>
       <artifactId>smack</artifactId>
@@ -160,8 +88,8 @@
       <groupId>jivesoftware</groupId>
       <artifactId>smackx</artifactId>
       <version>3.1.0</version>
+      <scope>test</scope>
     </dependency>
-
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
@@ -169,7 +97,6 @@
       <scope>test</scope>
     </dependency>
   </dependencies>
-
 
   <build>
     <defaultGoal>install</defaultGoal>
@@ -207,22 +134,7 @@
       <plugin>
         <groupId>org.jvnet.jaxb2.maven2</groupId>
         <artifactId>maven-jaxb2-plugin</artifactId>
-		<version>0.1</version>
-        <!--
-        <dependencies>
-          <dependency>
-            <groupId>net.java.dev.jaxb2-commons</groupId>
-            <artifactId>jaxb-fluent-api</artifactId>
-            <version>2.0.1</version>
-            <exclusions>
-              <exclusion>
-                <groupId>com.sun.xml</groupId>
-                <artifactId>jaxb-xjc</artifactId>
-              </exclusion>
-            </exclusions>
-          </dependency>
-        </dependencies>
-		-->
+        <version>0.7.2</version>
         <executions>
           <execution>
             <goals>
@@ -231,21 +143,7 @@
           </execution>
         </executions>
         <configuration>
-          <strict>false</strict>
-          <verbose>false</verbose>
-          <args>
-            <!--<arg value="-Xfluent-api" />-->
-          </args>
-            <!--
-               <arg>-XtoString</arg>
-              <arg>-Xequals</arg>
-              <arg>-XhashCode</arg>
-            -->
-          <!--
-          <schemasExcludes>
-            <exclude>delimiter.xsd</exclude>
-          </schemasExcludes>
-          -->
+          <strict>true</strict>
         </configuration>
       </plugin>
     </plugins>

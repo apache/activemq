@@ -211,7 +211,8 @@
         <include>org.springframework:spring-jms</include>
         <include>com.thoughtworks.xstream:xstream</include>
         <include>xmlpull:xmlpull</include>
-        <include>org.codehaus.woodstox:wstx-asl</include>
+        <include>org.codehaus.woodstox:woodstox-core-asl</include>
+        <include>org.codehaus.woodstox:stax2-api</include>
         <include>org.springframework.ws:spring-oxm-tiger</include>
         <include>org.codehaus.jettison:jettison</include>
         <include>org.apache.velocity:velocity</include>
