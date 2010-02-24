@@ -170,7 +170,7 @@
     <xs:complexType>
       <xs:sequence  xmlns:err='urn:ietf:params:xml:ns:xmpp-stanzas'>
         <xs:group   ref='err:stanzaErrorGroup'/>
-        <xs:element ref='err:text'
+        <xs:element xmlns:err='urn:ietf:params:xml:ns:xmpp-stanzas' ref='err:text'
                     minOccurs='0'/>
       </xs:sequence>
       <xs:attribute name='code' type='xs:unsignedShort' use='optional'/>

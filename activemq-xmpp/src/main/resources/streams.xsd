@@ -54,9 +54,9 @@
                                 <jaxb:property name="clientMessages"/>
                             </xs:appinfo>
                         </xs:annotation>
-                        <xs:element ref='client:message'/>
-                        <xs:element ref='client:presence'/>
-                        <xs:element ref='client:iq'/>
+                        <xs:element xmlns:client='jabber:client' ref='client:message'/>
+                        <xs:element xmlns:client='jabber:client' ref='client:presence'/>
+                        <xs:element xmlns:client='jabber:client' ref='client:iq'/>
                     </xs:choice>
                     <xs:choice minOccurs='0' maxOccurs='unbounded'>
                         <xs:annotation>
@@ -64,11 +64,11 @@
                                 <jaxb:property name="serverMessages"/>
                             </xs:appinfo>
                         </xs:annotation>
-                        <xs:element ref='server:message'/>
-                        <xs:element ref='server:presence'/>
-                        <xs:element ref='server:iq'/>
-                        <xs:element ref='db:result'/>
-                        <xs:element ref='db:verify'/>
+                        <xs:element xmlns:server='jabber:server' ref='server:message'/>
+                        <xs:element xmlns:server='jabber:server' ref='server:presence'/>
+                        <xs:element xmlns:server='jabber:server' ref='server:iq'/>
+                        <xs:element xmlns:db='jabber:server:dialback' ref='db:result'/>
+                        <xs:element xmlns:db='jabber:server:dialback' ref='db:verify'/>
                     </xs:choice>
                 </xs:choice>
                 <xs:element ref='error' minOccurs='0' maxOccurs='1'/>
@@ -93,7 +93,7 @@
         <xs:complexType>
             <xs:sequence  xmlns:err='urn:ietf:params:xml:ns:xmpp-streams'>
                 <xs:group   ref='err:streamErrorGroup'/>
-                <xs:element ref='err:text'
+                <xs:element xmlns:err='urn:ietf:params:xml:ns:xmpp-streams' ref='err:text'
                     minOccurs='0'
                     maxOccurs='1'/>
             </xs:sequence>
