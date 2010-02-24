@@ -284,13 +284,13 @@ public class Topic extends BaseDestination implements Task {
 
                 if (warnOnProducerFlowControl) {
                     warnOnProducerFlowControl = false;
-                    LOG.info("Usage Manager memory limit reached for " + getActiveMQDestination().getQualifiedName()
+                    LOG.info("Usage Manager memory limit ("+ memoryUsage.getLimit() + ") reached for " + getActiveMQDestination().getQualifiedName()
                             + ". Producers will be throttled to the rate at which messages are removed from this destination to prevent flooding it."
                             + " See http://activemq.apache.org/producer-flow-control.html for more info");
                 }
 
                 if (systemUsage.isSendFailIfNoSpace()) {
-                    throw new javax.jms.ResourceAllocationException("Usage Manager memory limit reached. Stopping producer (" + message.getProducerId() + ") to prevent flooding "
+                    throw new javax.jms.ResourceAllocationException("Usage Manager memory limit ("+ memoryUsage.getLimit() + ") reached. Stopping producer (" + message.getProducerId() + ") to prevent flooding "
                             + getActiveMQDestination().getQualifiedName() + "." + " See http://activemq.apache.org/producer-flow-control.html for more info");
                 }
 

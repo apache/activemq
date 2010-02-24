@@ -211,7 +211,7 @@ public interface PendingMessageCursor extends Service {
     void destroy() throws Exception;
 
     /**
-     * Page in a restricted number of messages
+     * Page in a restricted number of messages and increment the reference count
      * 
      * @param maxItems
      * @return a list of paged in messages
