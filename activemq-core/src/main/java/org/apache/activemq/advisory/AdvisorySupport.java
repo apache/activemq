@@ -55,6 +55,9 @@ public final class AdvisorySupport {
     public static final String MSG_PROPERTY_CONSUMER_ID = "consumerId";
     public static final String MSG_PROPERTY_PRODUCER_ID = "producerId";
     public static final String MSG_PROPERTY_MESSAGE_ID = "orignalMessageId";
+    public static final String MSG_PROPERTY_CONSUMER_COUNT = "consumerCount";
+    public static final String MSG_PROPERTY_DISCARDED_COUNT = "discardedCount";
+    
     public static final ActiveMQTopic TEMP_DESTINATION_COMPOSITE_ADVISORY_TOPIC = new ActiveMQTopic(
             TEMP_QUEUE_ADVISORY_TOPIC + "," + TEMP_TOPIC_ADVISORY_TOPIC);
     private static final ActiveMQTopic AGENT_TOPIC_DESTINATION = new ActiveMQTopic(AGENT_TOPIC);

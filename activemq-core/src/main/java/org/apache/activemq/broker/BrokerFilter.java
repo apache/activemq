@@ -284,8 +284,8 @@ public class BrokerFilter implements Broker {
         next.messageDelivered(context, messageReference);
     }
 
-    public void messageDiscarded(ConnectionContext context,MessageReference messageReference) {
-        next.messageDiscarded(context, messageReference);
+    public void messageDiscarded(ConnectionContext context,Subscription sub, MessageReference messageReference) {
+        next.messageDiscarded(context, sub, messageReference);
     }
 
     public void slowConsumer(ConnectionContext context, Destination destination,Subscription subs) {

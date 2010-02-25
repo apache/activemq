@@ -429,9 +429,9 @@ public abstract class BaseDestination implements Destination {
      * @param context
      * @param messageReference
      */
-    public void messageDiscarded(ConnectionContext context, MessageReference messageReference) {
+    public void messageDiscarded(ConnectionContext context, Subscription sub, MessageReference messageReference) {
         if (advisoryForDiscardingMessages) {
-            broker.messageDiscarded(context, messageReference);
+            broker.messageDiscarded(context, sub, messageReference);
         }
     }
 

@@ -27,6 +27,7 @@ import org.apache.activemq.broker.ProducerBrokerExchange;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.broker.region.Subscription;
+import org.apache.activemq.broker.region.TopicSubscription;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ActiveMQTopic;
@@ -309,14 +310,19 @@ public class AdvisoryBroker extends BrokerFilter {
     }
     
     @Override
-    public void messageDiscarded(ConnectionContext context, MessageReference messageReference) {
-        super.messageDiscarded(context, messageReference);
+    public void messageDiscarded(ConnectionContext context, Subscription sub, MessageReference messageReference) {
+        super.messageDiscarded(context, sub, messageReference);
         try {
             if (!messageReference.isAdvisory()) {
                 ActiveMQTopic topic = AdvisorySupport.getMessageDiscardedAdvisoryTopic(messageReference.getMessage().getDestination());
                 Message payload = messageReference.getMessage().copy();
                 payload.clearBody();
-                fireAdvisory(context, topic,payload);
+                ActiveMQMessage advisoryMessage = new ActiveMQMessage();
+                if (sub instanceof TopicSubscription) {
+                    advisoryMessage.setIntProperty(AdvisorySupport.MSG_PROPERTY_DISCARDED_COUNT, ((TopicSubscription)sub).discarded());
+                }
+                advisoryMessage.setStringProperty(AdvisorySupport.MSG_PROPERTY_CONSUMER_ID, sub.getConsumerInfo().getConsumerId().toString());
+                fireAdvisory(context, topic, payload, null, advisoryMessage);
             }
         } catch (Exception e) {
             LOG.warn("Failed to fire message discarded advisory");
@@ -403,7 +409,7 @@ public class AdvisoryBroker extends BrokerFilter {
                 count += dest.getDestinationStatistics().getConsumers().getCount();
             }
         }
-        advisoryMessage.setIntProperty("consumerCount", count);
+        advisoryMessage.setIntProperty(AdvisorySupport.MSG_PROPERTY_CONSUMER_COUNT, count);
         
         fireAdvisory(context, topic, command, targetConsumerId, advisoryMessage);
     }

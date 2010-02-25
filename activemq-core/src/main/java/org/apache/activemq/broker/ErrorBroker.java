@@ -286,7 +286,7 @@ public class ErrorBroker implements Broker {
         throw new BrokerStoppedException(this.message);
     }
 
-    public void messageDiscarded(ConnectionContext context,MessageReference messageReference) {
+    public void messageDiscarded(ConnectionContext context, Subscription sub, MessageReference messageReference) {
         throw new BrokerStoppedException(this.message);
     }
 

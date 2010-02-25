@@ -579,7 +579,7 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport {
     }
 
     @Override
-    public void messageDiscarded(ConnectionContext context,
+    public void messageDiscarded(ConnectionContext context,  Subscription sub,
             MessageReference messageReference) {
         if (isLogAll() || isLogInternalEvents()) {
             String msg = "Unable to display message.";
@@ -589,7 +589,7 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport {
             }
             LOG.info("Message discarded : " + msg);
         }
-        super.messageDiscarded(context, messageReference);
+        super.messageDiscarded(context, sub, messageReference);
     }
 
     @Override

@@ -18,6 +18,7 @@ package org.apache.activemq;
 
 import static junit.framework.Assert.fail;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
@@ -30,6 +31,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
+import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageListener;
@@ -37,6 +39,7 @@ import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.jms.Topic;
 
+import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.broker.region.policy.ConstantPendingMessageLimitStrategy;
@@ -47,6 +50,8 @@ import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.broker.region.policy.VMPendingSubscriberMessageStoragePolicy;
 import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.command.ActiveMQMessage;
+import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.util.ThreadTracker;
 import org.apache.activemq.util.Wait;
 import org.apache.commons.logging.Log;
@@ -61,7 +66,8 @@ public class MessageEvictionTest {
     Connection connection;
     private Session session;
     private Topic destination;
-    protected int numMessages = 4000;
+    private final String destinationName = "verifyEvection";
+    protected int numMessages = 2000;
     protected String payload = new String(new byte[1024*2]);
 
     public void setUp(PendingSubscriberMessageStoragePolicy pendingSubscriberPolicy) throws Exception {
@@ -71,7 +77,7 @@ public class MessageEvictionTest {
         connection = connectionFactory.createConnection();
         connection.start();
         session = connection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
-        destination = session.createTopic("verifyEvection");
+        destination = session.createTopic(destinationName);
     }
     
     @After
@@ -83,16 +89,69 @@ public class MessageEvictionTest {
     
     @Test
     public void testMessageEvictionMemoryUsageFileCursor() throws Exception {
-        doTestMessageEvictionMemoryUsage(new FilePendingSubscriberMessageStoragePolicy());
+        setUp(new FilePendingSubscriberMessageStoragePolicy());
+        doTestMessageEvictionMemoryUsage();
     }
     
     @Test
     public void testMessageEvictionMemoryUsageVmCursor() throws Exception {
-        doTestMessageEvictionMemoryUsage(new VMPendingSubscriberMessageStoragePolicy());
+        setUp(new VMPendingSubscriberMessageStoragePolicy());
+        doTestMessageEvictionMemoryUsage();
     }
     
-    public void doTestMessageEvictionMemoryUsage(PendingSubscriberMessageStoragePolicy pendingSubscriberPolicy) throws Exception {
-        setUp(pendingSubscriberPolicy);
+    @Test
+    public void testMessageEvictionDiscardedAdvisory() throws Exception {
+        setUp(new VMPendingSubscriberMessageStoragePolicy());
+        
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        final CountDownLatch consumerRegistered = new CountDownLatch(1);
+        final CountDownLatch gotAdvisory = new CountDownLatch(1);
+        final CountDownLatch advisoryIsGood = new CountDownLatch(1);
+        
+        executor.execute(new Runnable() {
+            public void run() {
+                try {
+                    ActiveMQTopic discardedAdvisoryDestination = 
+                        AdvisorySupport.getMessageDiscardedAdvisoryTopic(destination);
+                    // use separate session rather than asyncDispatch on consumer session 
+                    // as we want consumer session to block
+                    Session advisorySession = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+                    final MessageConsumer consumer = advisorySession.createConsumer(discardedAdvisoryDestination);
+                    consumer.setMessageListener(new MessageListener() {
+                        public void onMessage(Message message) {
+                            try {
+                                LOG.info("advisory:" + message);
+                                ActiveMQMessage activeMQMessage = (ActiveMQMessage) message;
+                                assertNotNull(activeMQMessage.getStringProperty(AdvisorySupport.MSG_PROPERTY_CONSUMER_ID));
+                                assertEquals(1, activeMQMessage.getIntProperty(AdvisorySupport.MSG_PROPERTY_DISCARDED_COUNT));
+                                message.acknowledge();
+                                advisoryIsGood.countDown();
+                            } catch (JMSException e) {
+                                e.printStackTrace();
+                                fail(e.toString());
+                            } finally {
+                                gotAdvisory.countDown();
+                            }
+                        }           
+                    });
+                    consumerRegistered.countDown();
+                    gotAdvisory.await(120, TimeUnit.SECONDS);
+                    consumer.close();
+                    advisorySession.close();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    fail(e.toString());
+                }
+            }
+        });
+        assertTrue("we have an advisory consumer", consumerRegistered.await(60, TimeUnit.SECONDS));
+        doTestMessageEvictionMemoryUsage();
+        assertTrue("got an advisory for discarded", gotAdvisory.await(0, TimeUnit.SECONDS));
+        assertTrue("advisory is good",advisoryIsGood.await(0, TimeUnit.SECONDS));
+    }
+    
+    public void doTestMessageEvictionMemoryUsage() throws Exception {
+        
         ExecutorService executor = Executors.newCachedThreadPool();
         final CountDownLatch doAck = new CountDownLatch(1);
         final CountDownLatch consumerRegistered = new CountDownLatch(1);
@@ -147,7 +206,7 @@ public class MessageEvictionTest {
             }
         });
         
-        assertTrue("messages sending done", sendDone.await(90, TimeUnit.SECONDS));
+        assertTrue("messages sending done", sendDone.await(180, TimeUnit.SECONDS));
         assertEquals("all message were sent", numMessages, sent.get());
         
         doAck.countDown();
@@ -174,6 +233,8 @@ public class MessageEvictionTest {
         final List<PolicyEntry> policyEntries = new ArrayList<PolicyEntry>();
         final PolicyEntry entry = new PolicyEntry();
         entry.setTopic(">");
+        
+        entry.setAdvisoryForDiscardingMessages(true);
         
         // so consumer does not get over run while blocked limit the prefetch
         entry.setTopicPrefetch(50);
@@ -203,8 +264,6 @@ public class MessageEvictionTest {
         final PolicyMap policyMap = new PolicyMap();
         policyMap.setPolicyEntries(policyEntries);
         brokerService.setDestinationPolicy(policyMap);
-        
-        brokerService.setAdvisorySupport(false);
         
         return brokerService;
     }

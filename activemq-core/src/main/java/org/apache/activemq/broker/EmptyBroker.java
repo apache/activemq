@@ -271,7 +271,7 @@ public class EmptyBroker implements Broker {
     public void messageDelivered(ConnectionContext context,MessageReference messageReference) {
     }
 
-    public void messageDiscarded(ConnectionContext context,MessageReference messageReference) {
+    public void messageDiscarded(ConnectionContext context, Subscription sub, MessageReference messageReference) {
     }
 
     public void slowConsumer(ConnectionContext context,Destination destination, Subscription subs) {

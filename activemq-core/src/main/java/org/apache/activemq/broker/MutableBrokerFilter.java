@@ -295,8 +295,8 @@ public class MutableBrokerFilter implements Broker {
         getNext().messageDelivered(context, messageReference);
     }
 
-    public void messageDiscarded(ConnectionContext context,MessageReference messageReference) {
-        getNext().messageDiscarded(context, messageReference);
+    public void messageDiscarded(ConnectionContext context, Subscription sub, MessageReference messageReference) {
+        getNext().messageDiscarded(context, sub, messageReference);
     }
 
     public void slowConsumer(ConnectionContext context, Destination dest, Subscription subs) {

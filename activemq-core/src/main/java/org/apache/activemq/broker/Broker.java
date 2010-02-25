@@ -339,9 +339,10 @@ public interface Broker extends Region, Service {
      * Called when a message is discarded - e.g. running low on memory
      * This will happen only if the policy is enabled - e.g. non durable topics
      * @param context
+     * @param sub 
      * @param messageReference
      */
-    void messageDiscarded(ConnectionContext context, MessageReference messageReference);
+    void messageDiscarded(ConnectionContext context, Subscription sub, MessageReference messageReference);
     
     /**
      * Called when there is a slow consumer

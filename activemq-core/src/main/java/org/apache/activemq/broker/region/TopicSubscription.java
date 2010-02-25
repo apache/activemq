@@ -463,7 +463,7 @@ public class TopicSubscription extends AbstractSubscription {
         }
         Destination dest = message.getRegionDestination();
         if (dest != null) {
-            dest.messageDiscarded(getContext(), message);
+            dest.messageDiscarded(getContext(), this, message);
         }
         broker.getRoot().sendToDeadLetterQueue(getContext(), message);
     }

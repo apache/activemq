@@ -177,8 +177,9 @@ public interface Destination extends Service, Task {
      * 
      * @param context
      * @param messageReference
+     * @param sub 
      */
-    void messageDiscarded(ConnectionContext context, MessageReference messageReference);
+    void messageDiscarded(ConnectionContext context, Subscription sub, MessageReference messageReference);
 
     /**
      * Called when there is a slow consumer
