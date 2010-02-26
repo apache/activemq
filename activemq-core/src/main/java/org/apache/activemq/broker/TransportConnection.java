@@ -77,6 +77,7 @@ import org.apache.activemq.state.ConsumerState;
 import org.apache.activemq.state.ProducerState;
 import org.apache.activemq.state.SessionState;
 import org.apache.activemq.state.TransactionState;
+import org.apache.activemq.thread.DefaultThreadPools;
 import org.apache.activemq.thread.Task;
 import org.apache.activemq.thread.TaskRunner;
 import org.apache.activemq.thread.TaskRunnerFactory;
@@ -91,6 +92,8 @@ import org.apache.activemq.util.ServiceSupport;
 import org.apache.activemq.util.URISupport;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import static org.apache.activemq.thread.DefaultThreadPools.*;
 /**
  * @version $Revision: 1.8 $
  */
@@ -908,8 +911,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
                 cs.getContext().getStopping().set(true);
             }
             try {
-                new Thread("ActiveMQ Transport Stopper: " + transport.getRemoteAddress()) {
-                    @Override
+                getDefaultTaskRunnerFactory().execute(new Runnable(){
                     public void run() {
                         serviceLock.writeLock().lock();
                         try {
@@ -922,7 +924,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
                             serviceLock.writeLock().unlock();
                         }
                     }
-                }.start();
+                });
             } catch (Throwable t) {
                 LOG.warn("cannot create async transport stopper thread.. not waiting for stop to complete, reason:", t);
                 stopped.countDown();

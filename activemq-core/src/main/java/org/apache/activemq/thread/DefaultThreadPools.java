@@ -26,24 +26,24 @@ import java.util.concurrent.ThreadFactory;
  */
 public final class DefaultThreadPools {
 
-    private static final Executor DEFAULT_POOL;
-    static {
-        DEFAULT_POOL = new ScheduledThreadPoolExecutor(5, new ThreadFactory() {
-            public Thread newThread(Runnable runnable) {
-                Thread thread = new Thread(runnable, "ActiveMQ Default Thread Pool Thread");
-                thread.setDaemon(true);
-                return thread;
-            }
-        });
-    }    
+//    private static final Executor DEFAULT_POOL;
+//    static {
+//        DEFAULT_POOL = new ScheduledThreadPoolExecutor(5, new ThreadFactory() {
+//            public Thread newThread(Runnable runnable) {
+//                Thread thread = new Thread(runnable, "ActiveMQ Default Thread Pool Thread");
+//                thread.setDaemon(true);
+//                return thread;
+//            }
+//        });
+//    }    
     private static final TaskRunnerFactory DEFAULT_TASK_RUNNER_FACTORY = new TaskRunnerFactory();
     
     private DefaultThreadPools() {        
     }
     
-    public static Executor getDefaultPool() {
-        return DEFAULT_POOL;
-    }
+//    public static Executor getDefaultPool() {
+//        return DEFAULT_POOL;
+//    }
     
     public static TaskRunnerFactory getDefaultTaskRunnerFactory() {
         return DEFAULT_TASK_RUNNER_FACTORY;

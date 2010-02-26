@@ -20,8 +20,11 @@ import java.io.IOException;
 import java.nio.channels.SocketChannel;
 import java.util.LinkedList;
 import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 /**
  * The SelectorManager will manage one Selector and the thread that checks the
@@ -36,16 +39,20 @@ public final class SelectorManager {
 
     public static final SelectorManager SINGLETON = new SelectorManager();
 
-    private Executor selectorExecutor = Executors.newCachedThreadPool(new ThreadFactory() {
-        public Thread newThread(Runnable r) {
-            Thread rc = new Thread(r);
-            rc.setName("NIO Transport Thread");
-            return rc;
-        }
-    });
+    private Executor selectorExecutor = createDefaultExecutor();
     private Executor channelExecutor = selectorExecutor;
     private LinkedList<SelectorWorker> freeWorkers = new LinkedList<SelectorWorker>();
     private int maxChannelsPerWorker = 64;
+    
+    protected ExecutorService createDefaultExecutor() {
+        ThreadPoolExecutor rc = new ThreadPoolExecutor(0, Integer.MAX_VALUE, 10, TimeUnit.SECONDS, new SynchronousQueue<Runnable>(), new ThreadFactory() {
+            public Thread newThread(Runnable runnable) {
+                return new Thread(runnable, "ActiveMQ NIO Worker");
+            }
+        });
+        // rc.allowCoreThreadTimeOut(true);
+        return rc;
+    }
     
     public static SelectorManager getInstance() {
         return SINGLETON;
