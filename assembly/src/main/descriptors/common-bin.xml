@@ -209,6 +209,8 @@
         <include>org.springframework:spring-context</include>
         <include>org.springframework:spring-tx</include>
         <include>org.springframework:spring-jms</include>
+        <include>org.springframework:spring-asm</include>
+        <include>org.springframework:spring-expression</include>
         <include>com.thoughtworks.xstream:xstream</include>
         <include>xmlpull:xmlpull</include>
         <include>org.codehaus.woodstox:woodstox-core-asl</include>
