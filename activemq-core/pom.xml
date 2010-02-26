@@ -137,6 +137,11 @@
     </dependency>
     <dependency>
       <groupId>org.apache.geronimo.specs</groupId>
+      <artifactId>geronimo-annotation_1.0_spec</artifactId>
+      <optional>true</optional>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.geronimo.specs</groupId>
       <artifactId>geronimo-jacc_1.1_spec</artifactId>
       <optional>true</optional>
     </dependency>
@@ -174,11 +179,9 @@
       <optional>true</optional>
     </dependency>
     <dependency>
-    <groupId>commons-net</groupId>
-    <artifactId>commons-net</artifactId>
-    
-</dependency>
-
+      <groupId>commons-net</groupId>
+      <artifactId>commons-net</artifactId>
+    </dependency>
 
     <!-- not really a dependency at all - just added optionally to get the generator working -->
     <dependency>
@@ -297,7 +300,7 @@
 
   </dependencies>
 
-    <reporting>
+  <reporting>
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -384,6 +387,28 @@
     
   <build>
     <plugins>
+      <plugin>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>maven-bundle-plugin</artifactId>
+        <version>${felix-version}</version>
+        <extensions>true</extensions>
+        <configuration>
+          <instructions>
+            <Bundle-Activator>org.apache.activemq.util.osgi.Activator</Bundle-Activator>
+            <Bundle-Name>${artifactId}</Bundle-Name>
+            <Bundle-SymbolicName>${activemq.osgi.symbolic.name}</Bundle-SymbolicName>
+            <Export-Package>${activemq.osgi.export}</Export-Package>
+            <Import-Package>${activemq.osgi.import}</Import-Package>
+            <DynamicImport-Package>${activemq.osgi.dynamic.import}</DynamicImport-Package>
+            <Private-Package>${activemq.osgi.private.pkg}</Private-Package>
+            <Implementation-Title>Apache ActiveMQ</Implementation-Title>
+            <Implementation-Version>${project.version}</Implementation-Version>
+            <_versionpolicy>[$(version;==;$(@)),$(version;=+;$(@)))</_versionpolicy>
+            <_failok>${servicemix.osgi.failok}</_failok>
+          </instructions>
+        </configuration>
+      </plugin>
+      
       <!-- Configure which tests are included/excuded -->
       <plugin>
         <artifactId>maven-surefire-plugin</artifactId>

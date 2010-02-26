@@ -16,6 +16,8 @@
  */
 package org.apache.activemq.broker.util;
 
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
 import javax.jms.Destination;
@@ -23,16 +25,12 @@ import javax.jms.ExceptionListener;
 import javax.jms.JMSException;
 import javax.jms.MessageConsumer;
 import javax.jms.Session;
-
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.Service;
 import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.util.ServiceStopper;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.beans.factory.DisposableBean;
-import org.springframework.beans.factory.FactoryBean;
-import org.springframework.beans.factory.InitializingBean;
 
 /**
  * An agent which listens to commands on a JMS destination
@@ -40,7 +38,7 @@ import org.springframework.beans.factory.InitializingBean;
  * @version $Revision$
  * @org.apache.xbean.XBean
  */
-public class CommandAgent implements Service, InitializingBean, DisposableBean, FactoryBean, ExceptionListener {
+public class CommandAgent implements Service, ExceptionListener {
     private static final Log LOG = LogFactory.getLog(CommandAgent.class);
 
     private String brokerUrl = "vm://localhost";
@@ -53,6 +51,12 @@ public class CommandAgent implements Service, InitializingBean, DisposableBean, 
     private Session session;
     private MessageConsumer consumer;
 
+    /**
+     *
+     * @throws Exception
+     * @org.apache.xbean.InitMethod
+     */
+    @PostConstruct
     public void start() throws Exception {
         session = getConnection().createSession(false, Session.AUTO_ACKNOWLEDGE);
         listener = new CommandMessageListener(session);
@@ -64,6 +68,12 @@ public class CommandAgent implements Service, InitializingBean, DisposableBean, 
         consumer.setMessageListener(listener);
     }
 
+    /**
+     *
+     * @throws Exception
+     * @org.apache.xbean.DestroyMethod
+     */
+    @PreDestroy
     public void stop() throws Exception {
         ServiceStopper stopper = new ServiceStopper();
         if (consumer != null) {
@@ -91,29 +101,6 @@ public class CommandAgent implements Service, InitializingBean, DisposableBean, 
             }
         }
         stopper.throwFirstException();
-    }
-
-    // the following methods ensure that we are created on startup and the
-    // lifecycles respected
-    // TODO there must be a simpler way?
-    public void afterPropertiesSet() throws Exception {
-        start();
-    }
-
-    public void destroy() throws Exception {
-        stop();
-    }
-
-    public Object getObject() throws Exception {
-        return this;
-    }
-
-    public Class getObjectType() {
-        return getClass();
-    }
-
-    public boolean isSingleton() {
-        return true;
     }
 
     // Properties

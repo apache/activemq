@@ -18,7 +18,7 @@ package org.apache.activemq.broker.util;
 
 import java.io.IOException;
 import java.util.Set;
-
+import javax.annotation.PostConstruct;
 import org.apache.activemq.broker.BrokerPluginSupport;
 import org.apache.activemq.broker.Connection;
 import org.apache.activemq.broker.ConnectionContext;
@@ -45,7 +45,6 @@ import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.usage.Usage;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.beans.factory.InitializingBean;
 
 /**
  * A simple Broker intercepter which allows you to enable/disable logging.
@@ -53,8 +52,7 @@ import org.springframework.beans.factory.InitializingBean;
  * @org.apache.xbean.XBean
  */
 
-public class LoggingBrokerPlugin extends BrokerPluginSupport implements
-        InitializingBean {
+public class LoggingBrokerPlugin extends BrokerPluginSupport {
 
     private static final Log LOG = LogFactory.getLog(LoggingBrokerPlugin.class);
 
@@ -66,6 +64,12 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport implements
     private boolean logProducerEvents = false;
     private boolean logInternalEvents = false;
 
+    /**
+     *
+     * @throws Exception
+     * @org.apache.xbean.InitMethod
+     */
+    @PostConstruct
     public void afterPropertiesSet() throws Exception {
         LOG.info("Created LoggingBrokerPlugin: " + this.toString());
     }

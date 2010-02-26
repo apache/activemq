@@ -32,6 +32,8 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 
@@ -99,6 +101,7 @@ import org.apache.commons.logging.LogFactory;
  * which can be used to configure the broker as its lazily created.
  * 
  * @version $Revision: 1.1 $
+ * @org.apache.xbean.XBean
  */
 public class BrokerService implements Service {
     protected CountDownLatch slaveStartSignal = new CountDownLatch(1);
@@ -430,6 +433,13 @@ public class BrokerService implements Service {
 
     // Service interface
     // -------------------------------------------------------------------------
+
+    /**
+     *
+     * @throws Exception
+     * @org. apache.xbean.InitMethod
+     */
+    @PostConstruct
     public void start() throws Exception {
         if (stopped.get() || !started.compareAndSet(false, true)) {
             // lets just ignore redundant start() calls
@@ -505,6 +515,12 @@ public class BrokerService implements Service {
         }
     }
 
+    /**
+     *
+     * @throws Exception
+     * @org.apache .xbean.DestroyMethod
+     */
+    @PreDestroy
     public void stop() throws Exception {
         if (!started.get()) {
             return;

@@ -16,15 +16,13 @@
  */
 package org.apache.activemq.pool;
 
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import javax.jms.ConnectionFactory;
 import javax.transaction.TransactionManager;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.pool.ObjectPoolFactory;
-import org.springframework.beans.factory.FactoryBean;
-import org.springframework.beans.factory.InitializingBean;
-import org.springframework.beans.factory.DisposableBean;
 
 /**
  * Simple factory bean used to create a jencks connection pool.
@@ -43,8 +41,9 @@ import org.springframework.beans.factory.DisposableBean;
  * the same value than its <code>resourceName</code> property. This will make sure the transaction manager
  * maps correctly the connection factory to the recovery process.
  *
+ * @org.apache.xbean.XBean
  */
-public class PooledConnectionFactoryBean implements FactoryBean, InitializingBean, DisposableBean {
+public class PooledConnectionFactoryBean {
 
     private static final Log LOGGER = LogFactory.getLog(PooledConnectionFactoryBean.class);
 
@@ -55,18 +54,6 @@ public class PooledConnectionFactoryBean implements FactoryBean, InitializingBea
     private Object transactionManager;
     private String resourceName;
     private ObjectPoolFactory poolFactory;
-
-    public Object getObject() throws Exception {
-        return pooledConnectionFactory;
-    }
-
-    public Class getObjectType() {
-        return ConnectionFactory.class;
-    }
-
-    public boolean isSingleton() {
-        return true;
-    }
 
     public int getMaxConnections() {
         return maxConnections;
@@ -116,6 +103,12 @@ public class PooledConnectionFactoryBean implements FactoryBean, InitializingBea
         this.poolFactory = poolFactory;
     }
 
+    /**
+     *
+     * @throws Exception
+     * @org.apache.xbean.InitMethod
+     */
+    @PostConstruct
     public void afterPropertiesSet() throws Exception {
         if (pooledConnectionFactory == null && transactionManager != null && resourceName != null) {
             try {
@@ -164,6 +157,12 @@ public class PooledConnectionFactoryBean implements FactoryBean, InitializingBea
         }
     }
 
+    /**
+     *
+     * @throws Exception
+     * @org.apache.xbean.DestroyMethod
+     */
+    @PreDestroy
     public void destroy() throws Exception {
         if (pooledConnectionFactory != null) {
             pooledConnectionFactory.stop();

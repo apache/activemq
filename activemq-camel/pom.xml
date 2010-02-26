@@ -100,6 +100,11 @@
       <groupId>${pom.groupId}</groupId>
       <artifactId>activemq-pool</artifactId>
     </dependency>
+    <dependency>
+      <groupId>org.apache.geronimo.specs</groupId>
+      <artifactId>geronimo-annotation_1.0_spec</artifactId>
+      <optional>true</optional>
+    </dependency>
 
     <!-- testing helpers -->
     <dependency>

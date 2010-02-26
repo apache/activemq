@@ -16,18 +16,19 @@
  */
 package org.apache.activemq.filter;
 
+import javax.annotation.PostConstruct;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
-import org.springframework.beans.factory.InitializingBean;
 
 /**
  * A base class for entry objects used to construct a destination based policy
  * map.
  * 
  * @version $Revision: 1.1 $
+ * @org.apache.xbean.XBean
  */
-public abstract class DestinationMapEntry implements InitializingBean, Comparable {
+public abstract class DestinationMapEntry implements Comparable {
 
     private ActiveMQDestination destination;
 
@@ -64,6 +65,12 @@ public abstract class DestinationMapEntry implements InitializingBean, Comparabl
         this.destination = destination;
     }
 
+    /**
+     *
+     * @throws Exception
+     * @org.apache.xbean.InitMethod
+     */
+    @PostConstruct
     public void afterPropertiesSet() throws Exception {
         if (destination == null) {
             throw new IllegalArgumentException("You must specify the 'destination' property");

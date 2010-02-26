@@ -19,6 +19,8 @@ package org.apache.activemq.camel.component;
 
 import java.util.Set;
 
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
 
@@ -37,15 +39,14 @@ import org.apache.camel.component.jms.JmsQueueEndpoint;
 import org.apache.camel.util.ObjectHelper;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.beans.factory.DisposableBean;
-import org.springframework.beans.factory.InitializingBean;
 
 /**
  * A helper bean which populates a {@link CamelContext} with ActiveMQ Queue endpoints
  *
  * @version $Revision: 1.1 $
+ * @org.apache.xbean.XBean
  */
-public class CamelEndpointLoader implements InitializingBean, DisposableBean, CamelContextAware {
+public class CamelEndpointLoader implements CamelContextAware {
     private static final transient Log LOG = LogFactory.getLog(CamelEndpointLoader.class);
     private CamelContext camelContext;
     private EnhancedConnection connection;
@@ -59,6 +60,12 @@ public class CamelEndpointLoader implements InitializingBean, DisposableBean, Ca
         this.camelContext = camelContext;
     }
 
+    /**
+     *
+     * @throws Exception
+     * @org.apache.xbean.InitMethod
+     */
+    @PostConstruct
     public void afterPropertiesSet() throws Exception {
         ObjectHelper.notNull(camelContext, "camelContext");
         if (connection == null) {
@@ -112,6 +119,13 @@ public class CamelEndpointLoader implements InitializingBean, DisposableBean, Ca
         }
     }
 
+
+    /**
+     *
+     * @throws Exception
+     * @org.apache.xbean.DestroyMethod
+     */
+    @PreDestroy
     public void destroy() throws Exception {
         if (connection != null) {
             connection.close();

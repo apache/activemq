@@ -16,8 +16,8 @@
  */
 package org.apache.activemq.spring;
 
+import javax.annotation.PostConstruct;
 import org.springframework.beans.factory.BeanNameAware;
-import org.springframework.beans.factory.InitializingBean;
 
 /**
  * A <a href="http://www.springframework.org/">Spring</a> enhanced connection
@@ -29,11 +29,17 @@ import org.springframework.beans.factory.InitializingBean;
  * 
  * @version $Revision: $
  */
-public class ActiveMQConnectionFactory extends org.apache.activemq.ActiveMQConnectionFactory implements InitializingBean, BeanNameAware {
+public class ActiveMQConnectionFactory extends org.apache.activemq.ActiveMQConnectionFactory implements BeanNameAware {
 
     private String beanName;
     private boolean useBeanNameAsClientIdPrefix;
     
+    /**
+     *
+     * @throws Exception
+     * @org.apache.xbean.InitMethod
+     */
+    @PostConstruct
     public void afterPropertiesSet() throws Exception {
         if (isUseBeanNameAsClientIdPrefix() && getClientIDPrefix() == null) {
             setClientIDPrefix(getBeanName());

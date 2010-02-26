@@ -39,7 +39,7 @@ import org.osgi.framework.SynchronousBundleListener;
 
 /**
  * An OSGi bundle activator for ActiveMQ which adapts the {@link org.apache.activemq.util.FactoryFinder}
- * to the OSGi enviorment.
+ * to the OSGi environment.
  *
  */
 public class Activator implements BundleActivator, SynchronousBundleListener, ObjectFactory {
