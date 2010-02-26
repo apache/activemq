@@ -157,13 +157,11 @@
       <scope>runtime</scope>
       <includes>
         <include>commons-logging:commons-logging</include>
-        <include>geronimo-jms_1.1_spec:geronimo-jms_1.1_spec</include>
         <include>${pom.groupId}:activemq-core</include>
         <include>${pom.groupId}:activemq-console</include>
         <include>${pom.groupId}:activemq-jaas</include>
         <include>${pom.groupId}:kahadb</include>
         <include>org.apache.activemq.protobuf:activemq-protobuf</include>
-        <include>mx4j:mx4j</include>
         <include>org.apache.geronimo.specs:geronimo-j2ee-management_1.0_spec</include>
         <include>org.apache.geronimo.specs:geronimo-jms_1.1_spec</include>
         <include>org.apache.geronimo.specs:geronimo-jta_1.0.1B_spec</include>
@@ -192,7 +190,6 @@
         <include>${pom.groupId}:activemq-optional</include>
         <include>${pom.groupId}:activemq-pool</include>
         <include>${pom.groupId}:activemq-xmpp</include>
-        <include>${pom.groupId}:activecluster</include>
         <include>${pom.groupId}:activeio-core</include>
         <include>${pom.groupId}:activemq-jmdns_1.0</include>
         <include>commons-beanutils:commons-beanutils</include>
@@ -204,12 +201,8 @@
         <include>commons-net:commons-net</include>
         <include>commons-lang:commons-lang</include>
         <include>log4j:log4j</include>
-        <include>mx4j:mx4j-remote</include>
-        <include>mx4j:mx4j-tools</include>
-        <include>org.apache.geronimo.specs:geronimo-j2ee-jacc_1.0_spec</include>
         <include>org.apache.geronimo.specs:geronimo-j2ee-connector_1.5_spec</include>
         <include>org.apache.xbean:xbean-spring</include>
-        <include>org.mortbay.jetty:jetty-client</include>
         <include>org.springframework:spring-aop</include>
         <include>org.springframework:spring-core</include>
         <include>org.springframework:spring-beans</include>
@@ -218,12 +211,13 @@
         <include>org.springframework:spring-jms</include>
         <include>com.thoughtworks.xstream:xstream</include>
         <include>xmlpull:xmlpull</include>
-        <include>org.apache.hadoop.zookeeper:zookeeper</include>
         <include>org.codehaus.woodstox:wstx-asl</include>
         <include>org.springframework.ws:spring-oxm-tiger</include>
         <include>org.codehaus.jettison:jettison</include>
         <include>org.apache.velocity:velocity</include>
         <include>net.sf.josql:josql</include>
+        <include>org.osgi:org.osgi.core</include>
+        <include>org.springframework.osgi:spring-osgi-core</include>
       </includes>
     </dependencySet>
     <dependencySet>

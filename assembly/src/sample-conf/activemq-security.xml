@@ -38,7 +38,7 @@
       </property>      
   </bean>
 
-  <broker useJmx="true" persistent="false" xmlns="http://activemq.apache.org/schema/core">
+  <broker useJmx="true" persistent="false" xmlns="http://activemq.apache.org/schema/core" destroyApplicationContextOnStop="true">
 
     <plugins>
         <!-- Configure authentication; Username, passwords and groups -->

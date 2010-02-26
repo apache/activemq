@@ -43,23 +43,6 @@
 
     <broker xmlns="http://activemq.apache.org/schema/core" brokerName="static-broker1" dataDirectory="${activemq.base}/data">
 
-        <!-- First let's configure connectors -->
-
-        <!-- 
-            The store and forward broker networks ActiveMQ will listen to.
-            We'll leave it empty as duplex network will be configured by another broker
-            Take a look at activemq-static_network-broker2.xml for example
-        -->
-        <networkConnectors>
-        </networkConnectors>
-        
-        <!-- The transport connectors ActiveMQ will listen to -->
-        <transportConnectors>
-            <transportConnector name="openwire" uri="tcp://0.0.0.0:61616"/>
-        </transportConnectors>
-        
-        <!-- Now configure the rest of the desired broker behavior -->
-
         <!-- Destination specific policies using destination names or wildcards -->
         <destinationPolicy>
             <policyMap>
@@ -80,6 +63,14 @@
             <managementContext createConnector="true"/>
         </managementContext>
 
+        <!-- 
+            The store and forward broker networks ActiveMQ will listen to.
+            We'll leave it empty as duplex network will be configured by another broker
+            Take a look at activemq-static_network-broker2.xml for example
+        -->
+        <networkConnectors>
+        </networkConnectors>
+        
         <persistenceAdapter>
             <kahaDB directory="${activemq.base}/data/static-broker1/kahadb" />
         </persistenceAdapter>
@@ -99,6 +90,11 @@
             </systemUsage>
         </systemUsage>
 
+        <!-- The transport connectors ActiveMQ will listen to -->
+        <transportConnectors>
+            <transportConnector name="openwire" uri="tcp://0.0.0.0:61616"/>
+        </transportConnectors>
+        
     </broker>
 
 </beans>

@@ -23,11 +23,10 @@
  -->
 <beans
   xmlns="http://www.springframework.org/schema/beans"
-  xmlns:amq="http://activemq.apache.org/schema/core"
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.0.xsd
   http://activemq.apache.org/schema/core http://activemq.apache.org/schema/core/activemq-core.xsd   
-  http://activemq.apache.org/camel/schema/spring http://activemq.apache.org/camel/schema/spring/camel-spring.xsd">
+  http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd">
 
     <!-- 
         Allows us to use system properties as variables in this configuration 
@@ -48,7 +47,7 @@
           - Change the brokerName attribute to something unique  
     -->
 
-    <broker xmlns="http://activemq.apache.org/schema/core" brokerName="amq-broker" useJmx="true">
+    <broker xmlns="http://activemq.apache.org/schema/core" brokerName="amq-broker" useJmx="true" destroyApplicationContextOnStop="true">
 
         <!-- 
             Examples of destination-specific policies using destination 
@@ -139,9 +138,9 @@
             Configure the following if you wish to use journaled JDBC for message 
             persistence. 
         
-        <persistenceAdapter>
+        <persistenceFactory>
             <journaledJDBC dataDirectory="${activemq.base}/data" dataSource="#postgres-ds"/>
-        </persistenceAdapter>
+        </persistenceFactory>
         -->
 
         <!-- 
@@ -214,35 +213,18 @@
       
        http://activemq.apache.org/enterprise-integration-patterns.html
     -->
-    <camelContext id="camel" xmlns="http://camel.apache.org/schema/spring">
+    <import resource="camel.xml"/>
 
-        <!-- You can use a <package> element for each root package to search for Java routes -->
-        <package>org.foo.bar</package>
 
-        <!-- You can use Spring XML syntax to define the routes here using the <route> element -->
-        <route>
-            <from uri="activemq:example.A"/>
-            <to uri="activemq:example.B"/>
-        </route>
-    </camelContext>
-
-    <!--
-       Lets configure some Camel endpoints
-    
-       http://activemq.apache.org/camel/components.html
+    <!-- 
+        An embedded servlet engine for serving up the Admin console and other demos. 
+        For more information, see: 
+        
+          http://activemq.apache.org/web-console.html
     -->
-
-    <!-- configure the camel activemq component to use the current broker -->
-    <bean id="activemq" class="org.apache.activemq.camel.component.ActiveMQComponent" >
-        <property name="connectionFactory">
-          <bean class="org.apache.activemq.ActiveMQConnectionFactory">
-            <property name="brokerURL" value="vm://localhost?create=false&amp;waitForStart=10000" />
-            <property name="userName" value="${activemq.username}"/>
-            <property name="password" value="${activemq.password}"/>
-          </bean>
-        </property>
-    </bean>
-
+    <import resource="jetty.xml"/>
+    
+    
     <!-- 
         Uncomment to create a command agent to respond to message based admin 
         commands on the ActiveMQ.Agent topic. For more information, see: 
@@ -252,24 +234,6 @@
     <commandAgent xmlns="http://activemq.apache.org/schema/core" brokerUrl="vm://localhost"/>
     -->
 
-
-    <!-- 
-        An embedded servlet engine for serving up the Admin console and other demos. 
-        For more information, see: 
-        
-          http://activemq.apache.org/web-console.html
-    -->
-    <jetty xmlns="http://mortbay.com/schemas/jetty/1.0">
-        <connectors>
-            <nioConnector port="8161"/>
-        </connectors>
-
-        <handlers>
-            <webAppContext contextPath="/admin" resourceBase="${activemq.base}/webapps/admin" logUrlOnStart="true"/>
-            <webAppContext contextPath="/demo" resourceBase="${activemq.base}/webapps/demo" logUrlOnStart="true"/>
-            <webAppContext contextPath="/fileserver" resourceBase="${activemq.base}/webapps/fileserver" logUrlOnStart="true"/>
-        </handlers>
-    </jetty>
 
     <!-- 
         This xbean configuration file supports all the standard Spring XML 

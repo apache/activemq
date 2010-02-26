@@ -195,4 +195,10 @@ public class MemoryPersistenceAdapter implements PersistenceAdapter {
     public long size(){
         return 0;
     }
+    
+    public void setCreateTransactionStore(boolean create) throws IOException {
+        if (create) {
+            createTransactionStore();
+        }
+    }
 }
