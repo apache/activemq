@@ -20,17 +20,70 @@
     
     e.g. <import resource="jetty.xml"/>
 -->
-<beans>
-    <jetty xmlns="http://mortbay.com/schemas/jetty/1.0">
-        <connectors>
-            <nioConnector port="8161"/>
-        </connectors>
+<beans
+    xmlns="http://www.springframework.org/schema/beans"
+    xmlns:jetty="http://mortbay.com/schemas/jetty/1.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+    
+    <bean id="Server"
+      class="org.mortbay.jetty.Server" init-method="start" destroy-method="stop">
+    <property name="connectors">
+      <list>
+        <bean id="Connector" class="org.mortbay.jetty.nio.SelectChannelConnector">
+          <property name="port" value="8161"/>
+        </bean>
+      </list>
+    </property>
 
-        <handlers>
-            <webAppContext contextPath="/admin" resourceBase="${activemq.base}/webapps/admin" logUrlOnStart="true"/>
-            <webAppContext contextPath="/camel" resourceBase="${activemq.base}/webapps/camel" logUrlOnStart="true"/>
-            <webAppContext contextPath="/demo" resourceBase="${activemq.base}/webapps/demo" logUrlOnStart="true"/>
-            <webAppContext contextPath="/fileserver" resourceBase="${activemq.base}/webapps/fileserver" logUrlOnStart="true"/>
-        </handlers>
-    </jetty>
- </beans>
+    <property name="handler">
+      <bean id="handlers"
+           class="org.mortbay.jetty.handler.HandlerCollection">
+        <property name="handlers">
+          <list>
+             <bean id="contexts"
+              class="org.mortbay.jetty.handler.ContextHandlerCollection">
+               <property name="handlers">
+                 <list>
+                   <bean class="org.mortbay.jetty.webapp.WebAppContext">
+                     <property name="contextPath" value="/admin"/>
+                     <property name="resourceBase" value="${activemq.base}/webapps/admin"/>
+                     <property name="logUrlOnStart" value="true"/>
+                   </bean>
+                   <bean class="org.mortbay.jetty.webapp.WebAppContext">
+                     <property name="contextPath" value="/camel"/>
+                     <property name="resourceBase" value="${activemq.base}/webapps/camel"/>
+                     <property name="logUrlOnStart" value="true"/>
+                   </bean>
+                   <bean class="org.mortbay.jetty.webapp.WebAppContext">
+                     <property name="contextPath" value="/demo"/>
+                     <property name="resourceBase" value="${activemq.base}/webapps/demo"/>
+                     <property name="logUrlOnStart" value="true"/>
+                   </bean>
+                   <bean class="org.mortbay.jetty.webapp.WebAppContext">
+                     <property name="contextPath" value="/fileserver"/>
+                     <property name="resourceBase" value="${activemq.base}/webapps/fileserver"/>
+                     <property name="logUrlOnStart" value="true"/>
+                   </bean>
+                   <bean class="org.mortbay.jetty.handler.ContextHandler">
+                       <property name="contextPath" value="/"/>
+                       <property name="handler">
+                           <bean class="org.mortbay.jetty.handler.ResourceHandler">
+                               <property name="welcomeFiles">
+                                   <list>
+                                       <value>index.html</value>
+                                   </list>
+                               </property>
+                               <property name="resourceBase" value="${activemq.base}/webapps/"/>
+                           </bean> 
+                       </property>
+                   </bean>
+                 </list>
+               </property>
+             </bean>
+          </list>
+        </property>
+      </bean>
+    </property>
+    </bean>
+</beans>
