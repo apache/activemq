@@ -17,14 +17,12 @@
 package org.apache.activemq.transport.nio;
 
 import java.io.IOException;
-import java.nio.channels.ClosedSelectorException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.util.Iterator;
 import java.util.Set;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class SelectorWorker implements Runnable {
 
@@ -33,54 +31,67 @@ public class SelectorWorker implements Runnable {
     final SelectorManager manager;
     final Selector selector;
     final int id = NEXT_ID.getAndIncrement();
-    final AtomicInteger useCounter = new AtomicInteger();
     private final int maxChannelsPerWorker;
-    private final ReadWriteLock selectorLock = new ReentrantReadWriteLock();
+
+    final AtomicInteger retainCounter = new AtomicInteger(1);
+    private final ConcurrentLinkedQueue<Runnable> ioTasks = new ConcurrentLinkedQueue<Runnable>();
        
     public SelectorWorker(SelectorManager manager) throws IOException {
         this.manager = manager;
         selector = Selector.open();
         maxChannelsPerWorker = manager.getMaxChannelsPerWorker();
+        manager.getSelectorExecutor().execute(this);
     }
 
-    void incrementUseCounter() {
-        int use = useCounter.getAndIncrement();
-        if (use == 0) {
-            manager.getSelectorExecutor().execute(this);
-        } else if (use + 1 == maxChannelsPerWorker) {
+    void retain() {
+        if (retainCounter.incrementAndGet() == maxChannelsPerWorker) {
             manager.onWorkerFullEvent(this);
         }
     }
 
-    void decrementUseCounter() {
-        int use = useCounter.getAndDecrement();
-        if (use == 1) {
+    void release() {
+        int use = retainCounter.decrementAndGet();
+        if (use == 0) {
             manager.onWorkerEmptyEvent(this);
-        } else if (use == maxChannelsPerWorker) {
+        } else if (use < maxChannelsPerWorker) {
             manager.onWorkerNotFullEvent(this);
         }
     }
-
-    boolean isRunning() {
-        return useCounter.get() != 0;
+    
+    boolean isReleased() {
+        return retainCounter.get()==0;
     }
+
+
+    public void addIoTask(Runnable work) {
+        ioTasks.add(work);
+        selector.wakeup();
+    }
+    
+    private void processIoTasks() {
+        Runnable task; 
+        while( (task= ioTasks.poll()) !=null ) {
+            try {
+                task.run();
+            } catch (Throwable e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    
 
     public void run() {
 
         String origName = Thread.currentThread().getName();
         try {
             Thread.currentThread().setName("Selector Worker: " + id);
-            while (isRunning()) {
+            while (!isReleased()) {
                 
-                lockBarrier();
-                
+                processIoTasks();
                 int count = selector.select(10);
                 if (count == 0) {
                     continue;
-                }
-
-                if (!isRunning()) {
-                    return;
                 }
 
                 // Get a java.util.Set containing the SelectionKey objects
@@ -93,7 +104,9 @@ public class SelectorWorker implements Runnable {
 
                     final SelectorSelection s = (SelectorSelection)key.attachment();
                     try {
-                        s.disable();
+                        if( key.isValid() ) {
+                            key.interestOps(0);
+                        }
 
                         // Kick off another thread to find newly selected keys
                         // while we process the
@@ -116,13 +129,8 @@ public class SelectorWorker implements Runnable {
                 }
 
             }
-        } catch (ClosedSelectorException cse) {
-            // Don't accept any more selections
-            manager.onWorkerEmptyEvent(this);
-        } catch (IOException e) {
-            // Don't accept any more selections
-            manager.onWorkerEmptyEvent(this);
-
+            
+        } catch (Throwable e) {
             // Notify all the selections that the error occurred.
             Set keys = selector.keys();
             for (Iterator i = keys.iterator(); i.hasNext();) {
@@ -132,25 +140,13 @@ public class SelectorWorker implements Runnable {
             }
 
         } finally {
+            try {
+                manager.onWorkerEmptyEvent(this);
+                selector.close();
+            } catch (IOException ignore) {
+            }
             Thread.currentThread().setName(origName);
         }
     }
 
-    private void lockBarrier() {
-        selectorLock.writeLock().lock();
-        selectorLock.writeLock().unlock();
-	}
-
-    public void lock() {
-        selectorLock.readLock().lock();
-        selector.wakeup();
-    }
-
-	public void unlock() {
-	    selectorLock.readLock().unlock();
-	}
-	
-    public void close() throws IOException {
-        selector.close();
-    }
 }

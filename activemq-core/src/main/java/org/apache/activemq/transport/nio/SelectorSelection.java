@@ -16,10 +16,11 @@
  */
 package org.apache.activemq.transport.nio;
 
-import java.io.IOException;
+import java.nio.channels.CancelledKeyException;
 import java.nio.channels.ClosedChannelException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.activemq.transport.nio.SelectorManager.Listener;
 
@@ -29,23 +30,23 @@ import org.apache.activemq.transport.nio.SelectorManager.Listener;
 public final class SelectorSelection {
 
     private final SelectorWorker worker;
-    private final SelectionKey key;
     private final Listener listener;
     private int interest;
+    private SelectionKey key;
+    private AtomicBoolean closed = new AtomicBoolean();
 
-    public SelectorSelection(SelectorWorker worker, SocketChannel socketChannel, Listener listener) throws ClosedChannelException {
+    public SelectorSelection(final SelectorWorker worker, final SocketChannel socketChannel, Listener listener) throws ClosedChannelException {
         this.worker = worker;
         this.listener = listener;
-        
-        // Lock when mutating state of the selector
-        worker.lock();
-        
-        try {
-            this.key = socketChannel.register(worker.selector, 0, this);
-            worker.incrementUseCounter();
-        } finally {
-            worker.unlock();
-        }
+        worker.addIoTask(new Runnable() {
+            public void run() {
+                try {
+                    SelectorSelection.this.key = socketChannel.register(worker.selector, 0, SelectorSelection.this);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        });
     }
 
     public void setInterestOps(int ops) {
@@ -53,29 +54,39 @@ public final class SelectorSelection {
     }
 
     public void enable() {
-        key.interestOps(interest);
-        worker.selector.wakeup();
+        worker.addIoTask(new Runnable() {
+            public void run() {
+                try {
+                    key.interestOps(interest);
+                } catch (CancelledKeyException e) {
+                }
+            }
+        });        
     }
 
     public void disable() {
-        if (key.isValid()) {
-            key.interestOps(0);
-        }
+        worker.addIoTask(new Runnable() {
+            public void run() {
+                try {
+                    key.interestOps(0);
+                } catch (CancelledKeyException e) {
+                }
+            }
+        });        
     }
 
     public void close() {
-        worker.decrementUseCounter();
-        
-        // Lock when mutating state of the selector
-        worker.lock();
-        try {
-            key.cancel();
-            if (!worker.isRunning()) {
-                worker.close();
-            }
-        } catch (IOException e) {
-        } finally {
-            worker.unlock();
+        // guard against multiple closes.
+        if( closed.compareAndSet(false, true) ) {
+            worker.addIoTask(new Runnable() {
+                public void run() {
+                    try {
+                        key.cancel();
+                    } catch (CancelledKeyException e) {
+                    }
+                    worker.release();
+                }
+            });        
         }
     }
 
