@@ -16,7 +16,12 @@
     limitations under the License.
 -->
 
-<beans>
+<beans 
+  xmlns="http://www.springframework.org/schema/beans" 
+  xmlns:amq="http://activemq.apache.org/schema/core"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.0.xsd
+  http://activemq.apache.org/schema/core http://activemq.apache.org/schema/core/activemq-core.xsd">
 
   <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer"/>
 
@@ -39,19 +44,13 @@
     </destinationPolicy>
 
 
-    <persistenceAdapter>
-      <journaledJDBC journalLogFiles="5" dataDirectory="${basedir}/target/data" />
-    </persistenceAdapter>
+    <persistenceFactory>
+      <journalPersistenceAdapterFactory journalLogFiles="5" dataDirectory="${basedir}/target/data" />
+    </persistenceFactory>
 
     <transportConnectors>
       <transportConnector uri="tcp://localhost:61616" />
     </transportConnectors>
 
-<!-- 
-    <networkConnectors>
-      <networkConnector
-        uri="multicast://default?initialReconnectDelay=100" />
-    </networkConnectors>
- -->
   </broker>
 </beans>

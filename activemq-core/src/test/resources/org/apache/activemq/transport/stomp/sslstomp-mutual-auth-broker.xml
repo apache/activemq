@@ -32,17 +32,6 @@
   <!--  lets create an embedded ActiveMQ Broker -->
   <amq:broker useJmx="true" persistent="false" start="false">
 
-    <amq:sslContext>
-      <amq:sslContext 
-      		keyStore="server.keystore" keyStorePassword="password"
-      		trustStore="client.keystore" trustStorePassword="password"/>
-    </amq:sslContext>
-    
-    <amq:transportConnectors>
-      <amq:transportConnector name="stomp+ssl"   uri="stomp+ssl://localhost:61612?needClientAuth=true"/>
-      <amq:transportConnector name="ssl"   uri="ssl://localhost:61617?needClientAuth=true"/>
-    </amq:transportConnectors>
-    
      <amq:plugins>
 		<amq:jaasCertificateAuthenticationPlugin configuration="cert-login"/>
 		
@@ -70,7 +59,18 @@
 			</amq:map>
       </amq:authorizationPlugin>
 	</amq:plugins>
-	
+
+    <amq:sslContext>
+      <amq:sslContext 
+      		keyStore="server.keystore" keyStorePassword="password"
+      		trustStore="client.keystore" trustStorePassword="password"/>
+    </amq:sslContext>
+    
+    <amq:transportConnectors>
+      <amq:transportConnector name="stomp+ssl"   uri="stomp+ssl://localhost:61612?needClientAuth=true"/>
+      <amq:transportConnector name="ssl"   uri="ssl://localhost:61617?needClientAuth=true"/>
+    </amq:transportConnectors>
+    	
   </amq:broker>
   
 </beans>

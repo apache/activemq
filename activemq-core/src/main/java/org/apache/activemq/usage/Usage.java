@@ -202,6 +202,7 @@ public abstract class Usage<T extends Usage> implements Service {
      * before a UsageListener event is fired by the manager.
      * 
      * @param percentUsageMinDelta
+     * @org.apache.xbean.Property propertyEditor="org.apache.activemq.util.MemoryPropertyEditor"
      */
     public void setPercentUsageMinDelta(int percentUsageMinDelta) {
         if (percentUsageMinDelta < 1) {

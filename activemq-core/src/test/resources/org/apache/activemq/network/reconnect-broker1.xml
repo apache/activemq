@@ -15,7 +15,12 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 -->
-<beans>
+<beans
+  xmlns="http://www.springframework.org/schema/beans"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.0.xsd
+  http://activemq.apache.org/schema/core http://activemq.apache.org/schema/core/activemq-core.xsd
+  http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd">
   <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer"/>
 
   <broker brokerName="broker1" persistent="false" useShutdownHook="false" useJmx="false"  xmlns="http://activemq.apache.org/schema/core">
@@ -32,14 +37,14 @@
       </policyEntries></policyMap>
     </destinationPolicy>
     
+    <networkConnectors>
+      <networkConnector uri="static:(tcp://localhost:61617)"/>
+    </networkConnectors>
+    
     <transportConnectors>
       <transportConnector uri="tcp://localhost:61616"/>
       <transportConnector uri="vm://broker1"/>
     </transportConnectors>
-
-    <networkConnectors>
-      <networkConnector uri="static:(tcp://localhost:61617)"/>
-    </networkConnectors>
     
   </broker>
   

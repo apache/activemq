@@ -16,16 +16,21 @@
     limitations under the License.
 -->
 
-<beans xmlns:amq="http://activemq.apache.org/schema/core">
+<beans
+  xmlns="http://www.springframework.org/schema/beans"
+  xmlns:amq="http://activemq.apache.org/schema/core"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.0.xsd
+  http://activemq.apache.org/schema/core http://activemq.apache.org/schema/core/activemq-core.xsd">
 
-    <amq:broker brokerName="brokerJournaledJDBCConfigTest" persistent="false" useShutdownHook="false" deleteAllMessagesOnStartup="true">
-
+    <amq:broker brokerName="brokerJournaledJDBCConfigTest" persistent="true" useShutdownHook="false" deleteAllMessagesOnStartup="true">
+	
+	    <amq:persistenceFactory>
+           <amq:journalPersistenceAdapterFactory journalLogFiles="4" journalLogFileSize="32768" dataDirectory="target/test-data/testJournaledJDBCConfig" />
+        </amq:persistenceFactory>
         <amq:transportConnectors>
             <amq:transportConnector uri="tcp://localhost:61635"/>
         </amq:transportConnectors>
 
-        <amq:persistenceAdapter>
-            <amq:journaledJDBC journalLogFiles="4" journalLogFileSize="32768" dataDirectory="target/test-data/testJournaledJDBCConfig" />
-        </amq:persistenceAdapter>
     </amq:broker>
 </beans>

@@ -15,30 +15,40 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 -->
-<beans>
+<beans
+  xmlns="http://www.springframework.org/schema/beans"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.0.xsd
+  http://activemq.apache.org/schema/core http://activemq.apache.org/schema/core/activemq-core.xsd
+  http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd">
+
   <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer"/>
 
 <broker brokerName="localBroker" persistent="true" useShutdownHook="false" xmlns="http://activemq.apache.org/schema/core">
-    <transportConnectors>
-      <transportConnector uri="tcp://localhost:61616"/>
-    </transportConnectors>
-
     <networkConnectors>
-      <networkConnector uri="static:(tcp://localhost:61617)">
-         duplex=true
-         dynamicOnly = false
-         conduitSubscriptions = true
-         decreaseNetworkConsumerPriority = false
-      	<excludedDestinations>
-      		<queue physicalName="exclude.test.foo"/>
-      		<topic physicalName="exclude.test.bar"/>
-      	</excludedDestinations>
+      <networkConnector uri="static:(tcp://localhost:61617)"
+         duplex="true"
+         dynamicOnly = "false"
+         conduitSubscriptions = "true"
+         decreaseNetworkConsumerPriority = "false">
+
       	<dynamicallyIncludedDestinations>
       		<queue physicalName="include.test.foo"/>
       		<topic physicalName="include.test.bar"/>
       	</dynamicallyIncludedDestinations>
+
+      	<excludedDestinations>
+      		<queue physicalName="exclude.test.foo"/>
+      		<topic physicalName="exclude.test.bar"/>
+      	</excludedDestinations>
+
       </networkConnector>
     </networkConnectors>
+
+    <transportConnectors>
+      <transportConnector uri="tcp://localhost:61616"/>
+    </transportConnectors>
+
   </broker>
 </beans>
 

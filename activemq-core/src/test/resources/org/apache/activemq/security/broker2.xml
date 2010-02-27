@@ -24,20 +24,7 @@
   
   <broker xmlns="http://activemq.apache.org/schema/core" brokerName="broker2" useJmx="false" persistent="false">
 
-    <sslContext>
-        <sslContext keyStore="org/apache/activemq/security/broker2.ks"
-                    keyStorePassword="password"
-                    trustStore="org/apache/activemq/security/broker2.ts"
-                    trustStorePassword="password"/>
-    </sslContext>
-
-
-    <!-- The transport connectors ActiveMQ will listen to -->
-    <transportConnectors>
-       <transportConnector name="ssl"     uri="ssl://0.0.0.0:61618?transport.closeAsync=false&amp;wantClientAuth=true&amp;needClientAuth=true"/>
-    </transportConnectors>
-
- <plugins>
+    <plugins>
       <jaasCertificateAuthenticationPlugin configuration="broker2" />
 
       <authorizationPlugin>
@@ -55,6 +42,20 @@
         </map>
       </authorizationPlugin>
     </plugins>
+
+
+    <sslContext>
+        <sslContext keyStore="org/apache/activemq/security/broker2.ks"
+                    keyStorePassword="password"
+                    trustStore="org/apache/activemq/security/broker2.ts"
+                    trustStorePassword="password"/>
+    </sslContext>
+
+
+    <!-- The transport connectors ActiveMQ will listen to -->
+    <transportConnectors>
+       <transportConnector name="ssl"     uri="ssl://0.0.0.0:61618?transport.closeAsync=false&amp;wantClientAuth=true&amp;needClientAuth=true"/>
+    </transportConnectors>
 
   </broker>
   

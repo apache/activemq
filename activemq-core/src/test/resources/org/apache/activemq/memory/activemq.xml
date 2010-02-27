@@ -36,12 +36,12 @@
 			<memoryUsage>
 		    	<memoryUsage limit="${limit}" percentUsageMinDelta="${delta}"/>
 			</memoryUsage>
-			<tempUsage>	
-		    	<tempUsage limit="100 mb"/>
-			</tempUsage>
 			<storeUsage>
 		    	<storeUsage limit="1 gb" name="foo"/>
 			</storeUsage>
+			<tempUsage>	
+		    	<tempUsage limit="100 mb"/>
+			</tempUsage>
 	    </systemUsage>
 	</systemUsage>
 

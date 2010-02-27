@@ -15,20 +15,26 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 -->
-<beans>
+<beans
+  xmlns="http://www.springframework.org/schema/beans"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.0.xsd
+  http://activemq.apache.org/schema/core http://activemq.apache.org/schema/core/activemq-core.xsd
+  http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd">
+
   <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer"/>
 
   <!-- START SNIPPET: example -->
   <broker brokerName="slave" useJmx="false"  deleteAllMessagesOnStartup="true"  xmlns="http://activemq.apache.org/schema/core">
   
-    <transportConnectors>
-      <transportConnector uri="tcp://localhost:62002"/>
-    </transportConnectors>
-    
     <services>
       <masterConnector remoteURI= "tcp://localhost:62001" userName="James" password="Cheese"/>
     </services>
 
+    <transportConnectors>
+      <transportConnector uri="tcp://localhost:62002"/>
+    </transportConnectors>
+    
   </broker>
   <!-- END SNIPPET: example -->
 

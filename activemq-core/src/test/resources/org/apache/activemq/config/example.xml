@@ -15,8 +15,13 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 -->
-<beans xmlns:amq="http://activemq.apache.org/schema/core">
-
+<beans
+  xmlns="http://www.springframework.org/schema/beans"
+  xmlns:amq="http://activemq.apache.org/schema/core"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.0.xsd
+  http://activemq.apache.org/schema/core http://activemq.apache.org/schema/core/activemq-core.xsd">
+  
     <!-- normal ActiveMQ XML config which is less verbose & can be validated -->
     <amq:broker brokerName="brokerConfigTest" populateJMSXUserID="false"
         useLoggingForShutdownErrors="true" useJmx="true"
@@ -27,17 +32,6 @@
         || NOTE this config file is used for unit testing the configuration mechanism
         || it is not necessarily a good example of a config file! :)
         -->
-
-        <amq:transportConnectors>
-            <amq:transportConnector uri="tcp://localhost:61635"/>
-            <amq:transportConnector uri="tcp://localhost:61636"/>
-            <amq:transportConnector uri="tcp://localhost:61637"/>
-        </amq:transportConnectors>
-
-        <amq:networkConnectors>
-            <amq:networkConnector uri="static://(tcp://localhost:61616)"/>
-        </amq:networkConnectors>
-
         <amq:destinationPolicy>
             <amq:policyMap>
                 <amq:policyEntries>
@@ -76,23 +70,34 @@
             </amq:policyMap>
         </amq:destinationPolicy>
 
+        <amq:networkConnectors>
+            <amq:networkConnector uri="static://(tcp://localhost:61616)"/>
+        </amq:networkConnectors>
+
+        <amq:persistenceAdapter>
+            <amq:memoryPersistenceAdapter createTransactionStore="true"/>
+        </amq:persistenceAdapter>
+
         <amq:systemUsage>
             <amq:systemUsage>
 	            <amq:memoryUsage>
     	            <amq:memoryUsage limit="10 mb" percentUsageMinDelta="20"/>
 	            </amq:memoryUsage>
-	            <amq:tempUsage>
-    	            <amq:tempUsage limit="100 mb"/>
-	            </amq:tempUsage>
 	            <amq:storeUsage>
     	            <amq:storeUsage limit="1 gb" name="foo"/>
 	            </amq:storeUsage>
+	            <amq:tempUsage>
+    	            <amq:tempUsage limit="100 mb"/>
+	            </amq:tempUsage>
             </amq:systemUsage>
         </amq:systemUsage>
 
-        <amq:persistenceAdapter>
-            <amq:memoryPersistenceAdapter init-method="createTransactionStore"/>
-        </amq:persistenceAdapter>
+        <amq:transportConnectors>
+            <amq:transportConnector uri="tcp://localhost:61635"/>
+            <amq:transportConnector uri="tcp://localhost:61636"/>
+            <amq:transportConnector uri="tcp://localhost:61637"/>
+        </amq:transportConnectors>
+
 
     </amq:broker>
 
