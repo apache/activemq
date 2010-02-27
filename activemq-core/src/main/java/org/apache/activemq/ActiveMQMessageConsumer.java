@@ -650,6 +650,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
     void doClose() throws JMSException {
         dispose();
         RemoveInfo removeCommand = info.createRemoveCommand();
+        LOG.info("remove: " + this.getConsumerId() + ", lasteDeliveredSequenceId:" + lastDeliveredSequenceId);
         removeCommand.setLastDeliveredSequenceId(lastDeliveredSequenceId);
         this.session.asyncSendPacket(removeCommand);
     }
@@ -1205,14 +1206,15 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                                 }
                                 afterMessageIsConsumed(md, expired);
                             } catch (RuntimeException e) {
+                                LOG.error(getConsumerId() + " Exception while processing message: " + md.getMessage().getMessageId(), e);
                                 if (isAutoAcknowledgeBatch() || isAutoAcknowledgeEach() || session.isIndividualAcknowledge()) {
-                                    // Redeliver the message
+                                    // schedual redelivery and possible dlq processing
+                                    rollback();
                                 } else {
                                     // Transacted or Client ack: Deliver the
                                     // next message.
                                     afterMessageIsConsumed(md, false);
                                 }
-                                LOG.error(getConsumerId() + " Exception while processing message: " + e, e);
                             }
                         } else {
                             unconsumedMessages.enqueue(md);
@@ -1328,14 +1330,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
         if (listener != null) {
             MessageDispatch md = unconsumedMessages.dequeueNoWait();
             if (md != null) {
-                try {
-                    ActiveMQMessage message = createActiveMQMessage(md);
-                    beforeMessageIsConsumed(md);
-                    listener.onMessage(message);
-                    afterMessageIsConsumed(md, false);
-                } catch (JMSException e) {
-                    session.connection.onClientInternalException(e);
-                }
+                dispatch(md);
                 return true;
             }
         }
