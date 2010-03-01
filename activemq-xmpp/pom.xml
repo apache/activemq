@@ -95,12 +95,17 @@
          <artifactId>activation</artifactId>
        </exclusion>
        <exclusion>
+         <!-- needed so explicitly pull in geronimo .. spec below -->
          <groupId>javax.xml.bind</groupId>
          <artifactId>activation</artifactId>
        </exclusion>
       </exclusions>
     </dependency>
-
+    <dependency>
+      <groupId>org.apache.geronimo.specs</groupId>
+      <artifactId>geronimo-activation_1.1_spec</artifactId>
+      <version>1.0.2</version>
+    </dependency>
     <dependency>
       <groupId>jivesoftware</groupId>
       <artifactId>smack</artifactId>
