@@ -201,6 +201,8 @@ public class FailoverConsumerOutstandingCommitTest {
             @Override
             public void commitTransaction(ConnectionContext context,
                     TransactionId xid, boolean onePhase) throws Exception {
+                // from the consumer perspective whether the commit completed on the broker or
+                // not is irrelevant, the transaction is still in doubt in the absence of a reply
                 if (doActualBrokerCommit) {
                     LOG.info("doing actual broker commit...");
                     super.commitTransaction(context, xid, onePhase);
@@ -231,6 +233,10 @@ public class FailoverConsumerOutstandingCommitTest {
         final Session producerSession = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         final Queue destination = producerSession.createQueue(QUEUE_NAME
                 + "?consumer.prefetchSize=" + prefetch);
+        
+        final Queue signalDestination = producerSession.createQueue(QUEUE_NAME + ".signal"
+                + "?consumer.prefetchSize=" + prefetch);
+
 
         final Session consumerSession = connection.createSession(true, Session.SESSION_TRANSACTED);
 
@@ -246,7 +252,7 @@ public class FailoverConsumerOutstandingCommitTest {
                 assertNotNull("got message", message);
                 receivedMessages.add((TextMessage) message);
                 try {
-                    produceMessage(consumerSession, destination, 1);
+                    produceMessage(consumerSession, signalDestination, 1);
                     consumerSession.commit();
                 } catch (JMSException e) {
                     LOG.info("commit exception", e);
@@ -285,6 +291,7 @@ public class FailoverConsumerOutstandingCommitTest {
         assertEquals("get message 0 second", MESSAGE_TEXT + "0", receivedMessages.get(1).getText());
         assertTrue("another message was received", messagesReceived.await(20, TimeUnit.SECONDS));
         assertEquals("get message 1 eventually", MESSAGE_TEXT + "1", receivedMessages.get(2).getText());
+        
         
         connection.close();
     }
