@@ -139,7 +139,7 @@
             persistence. 
         
         <persistenceFactory>
-            <journaledJDBC dataDirectory="${activemq.base}/data" dataSource="#postgres-ds"/>
+            <journalPersistenceAdapterFactory dataDirectory="${activemq.base}/data" dataSource="#postgres-ds"/>
         </persistenceFactory>
         -->
 

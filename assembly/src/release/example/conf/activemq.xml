@@ -26,9 +26,9 @@
   
   <broker xmlns="http://activemq.apache.org/schema/core" useJmx="false">
 
-    <persistenceAdapter>
-      <journaledJDBC journalLogFiles="5" dataDirectory="../data"/>
-    </persistenceAdapter>
+    <persistenceFactory>
+      <journalPersistenceAdapterFactory journalLogFiles="5" dataDirectory="../data"/>
+    </persistenceFactory>
   
     <transportConnectors>
       <transportConnector uri="tcp://localhost:61616"/>      

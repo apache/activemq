@@ -23,7 +23,7 @@
     
   <broker useJmx="false" brokerName="quickJdbcBroker" xmlns="http://activemq.apache.org/schema/core">
     <persistenceFactory>
-       <journaledJDBC journalLogFiles="4" 
+       <journalPersistenceAdapterFactory journalLogFiles="4" 
                       journalLogFileSize="32768" 
 		      useJournal="true" 
 		      useQuickJournal="true" 
