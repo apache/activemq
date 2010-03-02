@@ -39,7 +39,8 @@ public class CronParserTest {
         long current = 60*1000*60*5;
         long next = CronParser.getNextScheduledTime(test, current);
         long result = next - current;
-        assertEquals(60*1000*60*18,result);
+        long expected = 60*1000*60*18;
+        assertEquals(expected,result);
     }
     
     @Test
