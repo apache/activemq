@@ -30,7 +30,6 @@ import javax.jms.Session;
 import org.apache.activemq.broker.BrokerRegistry;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
-import org.apache.activemq.network.DiscoveryNetworkConnector;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -181,6 +180,29 @@ public class ActiveMQConnectionFactoryTest extends CombinationTestSupport {
         assertEquals(exListener, connection.getExceptionListener());
         
         assertEquals(exListener, cf.getExceptionListener());
+        
+    }
+
+    
+    public void testSetClientInternalExceptionListener() throws Exception {
+        ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory("vm://localhost?broker.persistent=false");
+        connection = (ActiveMQConnection)cf.createConnection();
+        assertNull(connection.getClientInternalExceptionListener());
+        
+        ClientInternalExceptionListener listener = new ClientInternalExceptionListener() {
+            public void onException(Throwable exception) {
+            }
+        };
+        connection.setClientInternalExceptionListener(listener);
+        cf.setClientInternalExceptionListener(listener);
+        
+        connection = (ActiveMQConnection)cf.createConnection();
+        assertNotNull(connection.getClientInternalExceptionListener());
+        assertEquals(listener, connection.getClientInternalExceptionListener());
+        
+        connection = (ActiveMQConnection)cf.createConnection();
+        assertEquals(listener, connection.getClientInternalExceptionListener());   
+        assertEquals(listener, cf.getClientInternalExceptionListener());
         
     }
 

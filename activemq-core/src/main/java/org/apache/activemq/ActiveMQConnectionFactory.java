@@ -115,6 +115,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     private int auditMaximumProducerNumber = ActiveMQMessageAudit.MAXIMUM_PRODUCER_COUNT;
     private boolean useDedicatedTaskRunner;
     private long consumerFailoverRedeliveryWaitPeriod = 0;
+    private ClientInternalExceptionListener clientInternalExceptionListener;
 
     // /////////////////////////////////////////////
     //
@@ -322,6 +323,9 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
         }
         if (exceptionListener != null) {
         	connection.setExceptionListener(exceptionListener);
+        }
+        if (clientInternalExceptionListener != null) {
+            connection.setClientInternalExceptionListener(clientInternalExceptionListener);
         }
     }
 
@@ -922,5 +926,23 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     
     public long getConsumerFailoverRedeliveryWaitPeriod() {
         return consumerFailoverRedeliveryWaitPeriod;
+    }
+
+    public ClientInternalExceptionListener getClientInternalExceptionListener() {
+        return clientInternalExceptionListener;
+    }
+    
+    /**
+     * Allows an {@link ClientInternalExceptionListener} to be configured on the ConnectionFactory so that when this factory
+     * is used by frameworks which don't expose the Connection such as Spring JmsTemplate, you can register
+     * an exception listener.
+     * <p> Note: access to this clientInternalExceptionListener will <b>not</b> be serialized if it is associated with more than
+     * on connection (as it will be if more than one connection is subsequently created by this connection factory)
+     * @param clientInternalExceptionListener sets the exception listener to be registered on all connections
+     * created by this factory
+     */
+    public void setClientInternalExceptionListener(
+            ClientInternalExceptionListener clientInternalExceptionListener) {
+        this.clientInternalExceptionListener = clientInternalExceptionListener;
     }
 }

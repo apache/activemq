@@ -16,24 +16,34 @@
  */
 package org.apache.activemq.usecases;
 
+import java.util.ArrayList;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+
 import javax.jms.Connection;
 import javax.jms.DeliveryMode;
 import javax.jms.Destination;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
+import javax.jms.MessageListener;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.jms.TextMessage;
 import javax.jms.Topic;
 
+import org.apache.activemq.memory.list.MessageList;
 import org.apache.activemq.test.TestSupport;
 import org.apache.activemq.util.IdGenerator;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * @version $Revision: 1.1.1.1 $
  */
 public class TopicRedeliverTest extends TestSupport {
 
+    private static final Log LOG = LogFactory.getLog(TopicRedeliverTest.class);
     private static final int RECEIVE_TIMEOUT = 10000;
 
     protected int deliveryMode = DeliveryMode.PERSISTENT;
@@ -221,6 +231,52 @@ public class TopicRedeliverTest extends TestSupport {
         assertTrue(recMsg.equals(sentMsg));
         consumerSession.commit();
 
+        connection.close();
+    }
+
+    
+    public void testRedeliveryOnListenerException() throws Exception {
+        Destination destination = createDestination(getClass().getName());
+        Connection connection = createConnection();
+        connection.setClientID(idGen.generateId());
+        connection.start();
+        Session consumerSession = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        MessageConsumer consumer = consumerSession.createConsumer(destination);
+        
+        final ArrayList<Message> receivedMessages = new ArrayList<Message>();
+        final CountDownLatch received = new CountDownLatch(6);
+        consumer.setMessageListener(new MessageListener() {
+            public void onMessage(Message message) {
+                LOG.info("got: " + message);
+                receivedMessages.add(message);
+                received.countDown();
+                if (received.getCount() == 5) {
+                    throw new RuntimeException("force redelivery on first message");
+                }
+            }
+        });
+        Session producerSession = connection.createSession(true, Session.AUTO_ACKNOWLEDGE);
+        MessageProducer producer = producerSession.createProducer(destination);
+        producer.setDeliveryMode(deliveryMode);
+
+        TextMessage sentMsg = producerSession.createTextMessage();
+        sentMsg.setText("msg1");
+        producer.send(sentMsg);
+        producerSession.commit();
+
+        sentMsg = producerSession.createTextMessage();
+        sentMsg.setText("msg2");
+        producer.send(sentMsg);
+        producerSession.commit();
+
+        TimeUnit.SECONDS.sleep(2);
+        //assertTrue("got our redeliveries", received.await(20, TimeUnit.SECONDS));
+        assertEquals("got message one", "msg1", ((TextMessage)receivedMessages.get(0)).getText());
+        // retries
+        for (int i=1; i< 6; i++) {
+            assertEquals("got message one", "msg2", ((TextMessage)receivedMessages.get(i)).getText());
+        }
+        
         connection.close();
     }
 
