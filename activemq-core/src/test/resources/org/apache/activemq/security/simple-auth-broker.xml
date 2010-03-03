@@ -18,18 +18,25 @@
 
 <!-- this file can only be parsed using the xbean-spring library -->
 <!-- START SNIPPET: example -->
-<beans>
+<beans
+  xmlns="http://www.springframework.org/schema/beans"
+  xmlns:amq="http://activemq.apache.org/schema/core"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.0.xsd
+  http://activemq.apache.org/schema/core http://activemq.apache.org/schema/core/activemq-core.xsd">
+
   <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer"/>
 
   <broker useJmx="true" persistent="false" xmlns="http://activemq.apache.org/schema/core" populateJMSXUserID="true">
-    <!-- Use a non-default port in case the default port is in use -->
-    <managementContext>
-      <managementContext connectorPort="1199"/>
-    </managementContext>
 
     <destinations>
       <queue physicalName="TEST.Q" />      
     </destinations> 
+
+    <!-- Use a non-default port in case the default port is in use -->
+    <managementContext>
+      <managementContext connectorPort="1199"/>
+    </managementContext>
 
     <plugins>
 		<simpleAuthenticationPlugin>

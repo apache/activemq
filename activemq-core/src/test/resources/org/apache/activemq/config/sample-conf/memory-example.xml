@@ -16,16 +16,22 @@
     limitations under the License.
 -->
 
-<beans xmlns:amq="http://activemq.apache.org/schema/core">
+<beans 
+  xmlns="http://www.springframework.org/schema/beans" 
+  xmlns:amq="http://activemq.apache.org/schema/core"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.0.xsd
+  http://activemq.apache.org/schema/core http://activemq.apache.org/schema/core/activemq-core.xsd">
 
     <amq:broker brokerName="brokerMemoryConfigTest" persistent="false" useShutdownHook="false" deleteAllMessagesOnStartup="true">
+
+        <amq:persistenceAdapter>
+            <amq:memoryPersistenceAdapter createTransactionStore = "true"/>
+        </amq:persistenceAdapter>
 
         <amq:transportConnectors>
             <amq:transportConnector uri="tcp://localhost:61635"/>
         </amq:transportConnectors>
 
-        <amq:persistenceAdapter>
-            <amq:memoryPersistenceAdapter init-method="createTransactionStore"/>
-        </amq:persistenceAdapter>
     </amq:broker>
 </beans>

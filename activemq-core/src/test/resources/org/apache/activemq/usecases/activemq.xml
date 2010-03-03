@@ -15,7 +15,12 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 -->
-<beans>
+<beans 
+  xmlns="http://www.springframework.org/schema/beans" 
+  xmlns:amq="http://activemq.apache.org/schema/core"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.0.xsd
+  http://activemq.apache.org/schema/core http://activemq.apache.org/schema/core/activemq-core.xsd">
   
   <broker useJmx="true" xmlns="http://activemq.apache.org/schema/core">
 
@@ -42,19 +47,6 @@
       </policyEntries></policyMap>
     </destinationPolicy>
   
-  
-    <persistenceAdapter>
-      <journaledJDBC journalLogFiles="5" dataDirectory="../data"/>
-      <!-- To use a different datasource, use th following syntax : -->
-      <!-- 
-      <journaledJDBC journalLogFiles="5" dataDirectory="../data" dataSource="#postgres-ds"/>
-       -->
-    </persistenceAdapter>
-  
-    <transportConnectors>
-       <transportConnector uri="tcp://localhost:61616" discoveryUri="multicast://default"/>
-    </transportConnectors>
-    
     <networkConnectors>
       <!-- by default just auto discover the other brokers -->
       <networkConnector uri="multicast://default"/>
@@ -62,7 +54,19 @@
       <networkConnector uri="static://(tcp://host1:61616,tcp://host2:61616)"/>
       -->
     </networkConnectors>
-    
+  
+    <persistenceFactory>
+      <journalPersistenceAdapterFactory journalLogFiles="5" dataDirectory="../data"/>
+      <!-- To use a different datasource, use the following syntax : -->
+      <!-- 
+      <journalPersistenceAdapterFactory journalLogFiles="5" dataDirectory="../data" dataSource="#postgres-ds"/>
+       -->
+    </persistenceFactory>
+  
+    <transportConnectors>
+       <transportConnector uri="tcp://localhost:61616" discoveryUri="multicast://default"/>
+    </transportConnectors>
+        
   </broker>
   
   <!--  This xbean configuration file supports all the standard spring xml configuration options -->

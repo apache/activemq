@@ -116,6 +116,9 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
 
     private TaskRunnerFactory taskRunnerFactory;
 
+    public JournalPersistenceAdapter() {        
+    }
+    
     public JournalPersistenceAdapter(Journal journal, PersistenceAdapter longTermPersistence, TaskRunnerFactory taskRunnerFactory) throws IOException {
         setJournal(journal);
         setTaskRunnerFactory(taskRunnerFactory);

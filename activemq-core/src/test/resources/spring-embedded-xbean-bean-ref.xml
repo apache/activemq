@@ -35,7 +35,7 @@
 
     </bean>
 
-    <amq:broker poor="false"
+    <amq:broker
           persistent="true"
           advisorySupport="false"
           dataDirectory="target/amqdata"
