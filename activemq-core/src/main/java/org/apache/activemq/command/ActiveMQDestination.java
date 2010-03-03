@@ -117,6 +117,17 @@ public abstract class ActiveMQDestination extends JNDIBaseStorable implements Da
         if (dest instanceof ActiveMQDestination) {
             return (ActiveMQDestination)dest;
         }
+        
+        if (dest instanceof Queue && dest instanceof Topic) {
+            String queueName = ((Queue) dest).getQueueName();
+            String topicName = ((Topic) dest).getTopicName();
+            if (queueName != null && topicName == null) {
+                return new ActiveMQQueue(queueName);
+            } else if (queueName == null && topicName != null) {
+                return new ActiveMQTopic(topicName);
+            }
+            throw new JMSException("Could no disambiguate on queue|Topic-name totransform pollymorphic destination into a ActiveMQ destination: " + dest);
+        }
         if (dest instanceof TemporaryQueue) {
             return new ActiveMQTempQueue(((TemporaryQueue)dest).getQueueName());
         }

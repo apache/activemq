@@ -24,6 +24,12 @@ import java.util.Map;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
+import javax.jms.JMSException;
+import javax.jms.Queue;
+import javax.jms.TemporaryQueue;
+import javax.jms.TemporaryTopic;
+import javax.jms.Topic;
+
 import junit.framework.Test;
 
 public class ActiveMQDestinationTest extends DataStructureTestSupport {
@@ -71,6 +77,46 @@ public class ActiveMQDestinationTest extends DataStructureTestSupport {
         assertEquals("Sorted order", expected, actual);
     }
 
+    // https://issues.apache.org/activemq/browse/AMQ-2630
+    class CombyDest implements Queue, Topic, TemporaryQueue, TemporaryTopic {
+
+        private final String qName;
+        private final String topicName;
+
+        public CombyDest(String qName, String topicName) {
+            this.qName = qName;
+            this.topicName = topicName;
+        }
+        
+        public void delete() throws JMSException {
+        }
+
+        public String getTopicName() throws JMSException {
+            return topicName;
+        }
+
+        public String getQueueName() throws JMSException {
+            return qName;
+        }    
+    }
+    
+    public void testTransformPollymorphic() throws Exception {
+        ActiveMQQueue queue = new ActiveMQQueue("TEST");
+        assertEquals(ActiveMQDestination.transform(queue), queue);
+        assertTrue("is a q", ActiveMQDestination.transform(new CombyDest(null, "Topic")) instanceof ActiveMQTopic);
+        assertTrue("is a q", ActiveMQDestination.transform(new CombyDest("Q", null)) instanceof ActiveMQQueue);
+        try {
+            ActiveMQDestination.transform(new CombyDest(null, null));
+            fail("expect ex as cannot disambiguate");
+        } catch (JMSException expected) { 
+        } 
+        try {
+            ActiveMQDestination.transform(new CombyDest("Q", "T"));
+            fail("expect ex as cannot disambiguate");
+        } catch (JMSException expected) { 
+        }
+    }
+    
     public static Test suite() {
         return suite(ActiveMQDestinationTest.class);
     }
