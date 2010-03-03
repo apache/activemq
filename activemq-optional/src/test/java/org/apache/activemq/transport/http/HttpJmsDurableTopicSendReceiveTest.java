@@ -29,6 +29,7 @@ public class HttpJmsDurableTopicSendReceiveTest extends JmsDurableTopicSendRecei
             broker.start();
         }
         super.setUp();
+        WaitForJettyListener.waitForJettySocketToAccept(getBrokerURL());
     }
 
     protected void tearDown() throws Exception {

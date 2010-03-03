@@ -16,11 +16,7 @@
  */
 package org.apache.activemq.transport.http;
 
-import java.net.Socket;
 import java.net.URI;
-import java.net.URL;
-
-import javax.net.SocketFactory;
 
 import junit.framework.Test;
 import junit.textui.TestRunner;
@@ -28,13 +24,9 @@ import junit.textui.TestRunner;
 import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.transport.TransportBrokerTestSupport;
-import org.apache.activemq.util.Wait;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 public class HttpTransportBrokerTest extends TransportBrokerTestSupport {
 
-    private static final Log LOG = LogFactory.getLog(HttpTransportBrokerTest.class);
     protected String getBindLocation() {
         return "http://localhost:8081";
     }
@@ -42,25 +34,7 @@ public class HttpTransportBrokerTest extends TransportBrokerTestSupport {
     protected void setUp() throws Exception {
         maxWait = 2000;
         super.setUp();
-        waitForJettySocketToAccept(getBindLocation());
-    }
-    
-	private void waitForJettySocketToAccept(String bindLocation) throws Exception {
-        final URL url = new URL(bindLocation);
-        assertTrue("Jetty endpoint is available", Wait.waitFor(new Wait.Condition() {
-
-            public boolean isSatisified() throws Exception {
-                boolean canConnect = false;
-                try {
-                    Socket socket = SocketFactory.getDefault().createSocket(url.getHost(), url.getPort());
-                    socket.close();
-                    canConnect = true;
-                } catch (Exception e) {
-                    LOG.warn("verify jettty available, failed to connect to " + url + e);
-                }
-                return canConnect;
-            }}, 60 * 1000));
-        
+        WaitForJettyListener.waitForJettySocketToAccept(getBindLocation());
     }
 
     protected BrokerService createBroker() throws Exception {

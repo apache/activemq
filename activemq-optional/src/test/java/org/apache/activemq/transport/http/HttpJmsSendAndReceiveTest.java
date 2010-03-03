@@ -32,6 +32,7 @@ public class HttpJmsSendAndReceiveTest extends JmsTopicSendReceiveWithTwoConnect
             broker.start();
         }
         super.setUp();
+        WaitForJettyListener.waitForJettySocketToAccept(getBrokerURL());
     }
 
     protected void tearDown() throws Exception {
