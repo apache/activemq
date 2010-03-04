@@ -31,6 +31,7 @@ import javax.jms.MessageListener;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.jms.Topic;
+import javax.jms.TransactionRolledBackException;
 
 import junit.framework.TestCase;
 
@@ -172,10 +173,11 @@ public class AMQ2149Test extends TestCase {
             return nextExpectedSeqNum;
         }
         
+        final int TRANSACITON_BATCH = 500;
         public void onMessage(Message message) {
             try {
                 final long seqNum = message.getLongProperty(SEQ_NUM_PROPERTY);
-                if ((seqNum % 500) == 0) {
+                if ((seqNum % TRANSACITON_BATCH) == 0) {
                     LOG.info(dest + " received " + seqNum);
                     
                     if (transactional) {
@@ -195,6 +197,10 @@ public class AMQ2149Test extends TestCase {
                 }
                 ++nextExpectedSeqNum;
                 lastId = message.getJMSMessageID();
+            } catch (TransactionRolledBackException expectedSometimesOnFailoverRecovery) {
+                LOG.info("got rollback: " + expectedSometimesOnFailoverRecovery);
+                // batch will be replayed
+                nextExpectedSeqNum -= (TRANSACITON_BATCH -1);
             } catch (Throwable e) {
                 LOG.error(dest + " onMessage error", e);
                 exceptions.add(e);
