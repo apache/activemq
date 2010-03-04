@@ -1207,7 +1207,6 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                             } catch (RuntimeException e) {
                                 if (isAutoAcknowledgeBatch() || isAutoAcknowledgeEach() || session.isIndividualAcknowledge()) {
                                     // Redeliver the message
-                                    unconsumedMessages.enqueueFirst(md);
                                 } else {
                                     // Transacted or Client ack: Deliver the
                                     // next message.
