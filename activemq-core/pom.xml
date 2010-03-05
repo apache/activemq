@@ -32,7 +32,6 @@
 
   <properties>
     <activemq.osgi.import.pkg>
-      org.osgi.framework;version="[1.3,2)",
       com.thoughtworks.xstream*;resolution:=optional,
       org.apache.activeio*;resolution:=optional,
       org.apache.camel*;resolution:=optional,
@@ -395,21 +394,9 @@
       <plugin>
         <groupId>org.apache.felix</groupId>
         <artifactId>maven-bundle-plugin</artifactId>
-        <version>${felix-version}</version>
-        <extensions>true</extensions>
         <configuration>
           <instructions>
             <Bundle-Activator>org.apache.activemq.util.osgi.Activator</Bundle-Activator>
-            <Bundle-Name>${artifactId}</Bundle-Name>
-            <Bundle-SymbolicName>${activemq.osgi.symbolic.name}</Bundle-SymbolicName>
-            <Export-Package>${activemq.osgi.export}</Export-Package>
-            <Import-Package>${activemq.osgi.import}</Import-Package>
-            <DynamicImport-Package>${activemq.osgi.dynamic.import}</DynamicImport-Package>
-            <Private-Package>${activemq.osgi.private.pkg}</Private-Package>
-            <Implementation-Title>Apache ActiveMQ</Implementation-Title>
-            <Implementation-Version>${project.version}</Implementation-Version>
-            <_versionpolicy>[$(version;==;$(@)),$(version;=+;$(@)))</_versionpolicy>
-            <_failok>${servicemix.osgi.failok}</_failok>
           </instructions>
         </configuration>
       </plugin>
