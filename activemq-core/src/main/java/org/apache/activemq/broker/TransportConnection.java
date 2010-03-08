@@ -121,7 +121,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
     // Used to do async dispatch.. this should perhaps be pushed down into the
     // transport layer..
     private boolean inServiceException;
-    private ConnectionStatistics statistics = new ConnectionStatistics();
+    private final ConnectionStatistics statistics = new ConnectionStatistics();
     private boolean manageable;
     private boolean slow;
     private boolean markedCandidate;
@@ -133,15 +133,15 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
     private boolean pendingStop;
     private long timeStamp;
     private final AtomicBoolean stopping = new AtomicBoolean(false);
-    private CountDownLatch stopped = new CountDownLatch(1);
+    private final CountDownLatch stopped = new CountDownLatch(1);
     private final AtomicBoolean asyncException = new AtomicBoolean(false);
     private final Map<ProducerId, ProducerBrokerExchange> producerExchanges = new HashMap<ProducerId, ProducerBrokerExchange>();
     private final Map<ConsumerId, ConsumerBrokerExchange> consumerExchanges = new HashMap<ConsumerId, ConsumerBrokerExchange>();
-    private CountDownLatch dispatchStoppedLatch = new CountDownLatch(1);
+    private final CountDownLatch dispatchStoppedLatch = new CountDownLatch(1);
     private ConnectionContext context;
     private boolean networkConnection;
     private boolean faultTolerantConnection;
-    private AtomicInteger protocolVersion = new AtomicInteger(CommandTypes.PROTOCOL_VERSION);
+    private final AtomicInteger protocolVersion = new AtomicInteger(CommandTypes.PROTOCOL_VERSION);
     private DemandForwardingBridge duplexBridge;
     private final TaskRunnerFactory taskRunnerFactory;
     private TransportConnectionStateRegister connectionStateRegister = new SingleTransportConnectionStateRegister();
@@ -168,6 +168,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         this.taskRunnerFactory = taskRunnerFactory;
         this.transport = transport;
         this.transport.setTransportListener(new DefaultTransportListener() {
+            @Override
             public void onCommand(Object o) {
                 serviceLock.readLock().lock();
                 try {
@@ -184,6 +185,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
                 }
             }
 
+            @Override
             public void onException(IOException exception) {
                 serviceLock.readLock().lock();
                 try {
@@ -241,6 +243,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
     public void serviceExceptionAsync(final IOException e) {
         if (asyncException.compareAndSet(false, true)) {
             new Thread("Async Exception Handler") {
+                @Override
                 public void run() {
                     serviceException(e);
                 }
@@ -654,6 +657,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         }
         registerConnectionState(info.getConnectionId(), state);
         LOG.debug("Setting up new connection id: " + info.getConnectionId() + ", address: " + getRemoteAddress());
+        this.faultTolerantConnection=info.isFaultTolerant();
         // Setup the context.
         String clientId = info.getClientId();
         context = new ConnectionContext();
@@ -672,6 +676,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         this.manageable = info.isManageable();
         state.setContext(context);
         state.setConnection(this);
+       
         try {
             broker.addConnection(context, info);
         } catch (Exception e) {
@@ -679,9 +684,9 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
             LOG.warn("Failed to add Connection", e);
             throw e;
         }
-        if (info.isManageable() && broker.isFaultTolerantConfiguration()) {
+        if (info.isManageable()) {
             // send ConnectionCommand
-            ConnectionControl command = new ConnectionControl();
+            ConnectionControl command = this.connector.getConnectionControl();
             command.setFaultTolerant(broker.isFaultTolerantConfiguration());
             dispatchAsync(command);
         }
@@ -867,7 +872,10 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
                 }
                 transport.start();
                 active = true;
-                dispatchAsync(connector.getBrokerInfo());
+                BrokerInfo info = connector.getBrokerInfo().copy();
+                info.setPeerBrokerInfos(this.broker.getPeerBrokerInfos());
+                dispatchAsync(info);
+                
                 connector.onStarted(this);
             }
         } catch (Exception e) {
@@ -1120,6 +1128,10 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
     public synchronized boolean isNetworkConnection() {
         return networkConnection;
     }
+    
+    public boolean isFaultTolerantConnection() {
+       return this.faultTolerantConnection;
+    }
 
     protected synchronized void setStarting(boolean starting) {
         this.starting = starting;
@@ -1221,6 +1233,13 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
             return cs.getInfo().getConnectionId().toString();
         }
         return null;
+    }
+        
+    public void updateClient(ConnectionControl control) {
+        if (isActive() && isBlocked() == false && isFaultTolerantConnection() && this.wireFormatInfo != null
+                && this.wireFormatInfo.getVersion() >= 6) {
+            dispatchAsync(control);
+        }
     }
 
     private ProducerBrokerExchange getProducerBrokerExchange(ProducerId id) {

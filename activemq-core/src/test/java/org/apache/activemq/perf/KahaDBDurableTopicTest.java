@@ -17,6 +17,7 @@
 package org.apache.activemq.perf;
 
 import java.io.File;
+import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.store.kahadb.KahaDBStore;
 
@@ -29,6 +30,13 @@ public class KahaDBDurableTopicTest extends SimpleDurableTopicTest {
     protected void setUp() throws Exception {
         this.initialConsumerDelay = 10 * 1000;
         super.setUp();
+    }
+    
+    @Override
+    protected ActiveMQConnectionFactory createConnectionFactory(String uri) throws Exception {
+        ActiveMQConnectionFactory result = new ActiveMQConnectionFactory(uri);
+        //result.setDispatchAsync(false);
+        return result;
     }
 
     @Override
@@ -52,7 +60,7 @@ public class KahaDBDurableTopicTest extends SimpleDurableTopicTest {
 
         // small batch means more frequent and smaller writes
         kaha.setIndexWriteBatchSize(100);
-        kaha.setIndexCacheSize(10000);
+        kaha.setIndexCacheSize(1000);
         // do the index write in a separate thread
         //kaha.setEnableIndexWriteAsync(true);
 

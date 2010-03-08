@@ -27,7 +27,7 @@ public class KahaDBQueueTest extends SimpleQueueTest {
 
     @Override
     protected void setUp() throws Exception {
-        this.initialConsumerDelay = 10 * 1000;
+       // this.initialConsumerDelay = 10 * 1000;
         super.setUp();
     }
     @Override
@@ -43,7 +43,7 @@ public class KahaDBQueueTest extends SimpleQueueTest {
         // The setEnableJournalDiskSyncs(false) setting is a little dangerous right now, as I have not verified 
         // what happens if the index is updated but a journal update is lost.
         // Index is going to be in consistent, but can it be repaired?
-        //kaha.setEnableJournalDiskSyncs(false);
+        kaha.setEnableJournalDiskSyncs(false);
         // Using a bigger journal file size makes he take fewer spikes as it is not switching files as often.
         //kaha.setJournalMaxFileLength(1024*1024*100);
         
@@ -51,6 +51,7 @@ public class KahaDBQueueTest extends SimpleQueueTest {
         kaha.setIndexWriteBatchSize(100);
         // do the index write in a separate thread
         kaha.setEnableIndexWriteAsync(true);
+        kaha.setIndexCacheSize(10000);
         
         answer.setPersistenceAdapter(kaha);
         answer.addConnector(uri);

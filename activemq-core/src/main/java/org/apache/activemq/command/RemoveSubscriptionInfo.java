@@ -47,14 +47,12 @@ public class RemoveSubscriptionInfo extends BaseCommand {
 
     /**
      * @openwire:property version=1
-     * @deprecated
      */
     public String getSubcriptionName() {
         return subscriptionName;
     }
 
     /**
-     * @deprecated
      */
     public void setSubcriptionName(String subscriptionName) {
         this.subscriptionName = subscriptionName;

@@ -85,6 +85,7 @@ public class ConnectionInfoMarshaller extends BaseCommandMarshaller {
         info.setBrokerMasterConnector(bs.readBoolean());
         info.setManageable(bs.readBoolean());
         info.setClientMaster(bs.readBoolean());
+        info.setFaultTolerant(bs.readBoolean());
 
     }
 
@@ -105,6 +106,7 @@ public class ConnectionInfoMarshaller extends BaseCommandMarshaller {
         bs.writeBoolean(info.isBrokerMasterConnector());
         bs.writeBoolean(info.isManageable());
         bs.writeBoolean(info.isClientMaster());
+        bs.writeBoolean(info.isFaultTolerant());
 
         return rc + 0;
     }
@@ -125,6 +127,7 @@ public class ConnectionInfoMarshaller extends BaseCommandMarshaller {
         tightMarshalString2(info.getPassword(), dataOut, bs);
         tightMarshalString2(info.getUserName(), dataOut, bs);
         tightMarshalObjectArray2(wireFormat, info.getBrokerPath(), dataOut, bs);
+        bs.readBoolean();
         bs.readBoolean();
         bs.readBoolean();
         bs.readBoolean();
@@ -161,6 +164,7 @@ public class ConnectionInfoMarshaller extends BaseCommandMarshaller {
         info.setBrokerMasterConnector(dataIn.readBoolean());
         info.setManageable(dataIn.readBoolean());
         info.setClientMaster(dataIn.readBoolean());
+        info.setFaultTolerant(dataIn.readBoolean());
 
     }
 
@@ -181,6 +185,7 @@ public class ConnectionInfoMarshaller extends BaseCommandMarshaller {
         dataOut.writeBoolean(info.isBrokerMasterConnector());
         dataOut.writeBoolean(info.isManageable());
         dataOut.writeBoolean(info.isClientMaster());
+        dataOut.writeBoolean(info.isFaultTolerant());
 
     }
 }

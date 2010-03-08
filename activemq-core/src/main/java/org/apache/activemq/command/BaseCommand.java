@@ -17,7 +17,6 @@
 package org.apache.activemq.command;
 
 import java.util.Map;
-
 import org.apache.activemq.util.IntrospectionSupport;
 
 
@@ -61,6 +60,7 @@ public abstract class BaseCommand implements Command {
         this.responseRequired = responseRequired;
     }
 
+    @Override
     public String toString() {
         return toString(null);
     }
@@ -102,6 +102,10 @@ public abstract class BaseCommand implements Command {
     }
 
     public boolean isShutdownInfo() {
+        return false;
+    }
+    
+    public boolean isConnectionControl() {
         return false;
     }
 

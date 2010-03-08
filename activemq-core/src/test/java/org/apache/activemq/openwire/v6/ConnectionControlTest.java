@@ -56,5 +56,8 @@ public class ConnectionControlTest extends BaseCommandTestSupport {
         info.setFaultTolerant(true);
         info.setResume(false);
         info.setSuspend(true);
+        info.setConnectedBrokers("ConnectedBrokers:1");
+        info.setReconnectTo("ReconnectTo:2");
+        info.setRebalanceConnection(false);
     }
 }

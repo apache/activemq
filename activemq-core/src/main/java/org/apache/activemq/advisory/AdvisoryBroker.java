@@ -440,11 +440,10 @@ public class AdvisoryBroker extends BrokerFilter {
             String id = getBrokerId() != null ? getBrokerId().getValue() : "NOT_SET";
             advisoryMessage.setStringProperty(AdvisorySupport.MSG_PROPERTY_ORIGIN_BROKER_ID, id);
             
-            String[] uris = getBrokerService().getTransportConnectorURIs();
             String url = getBrokerService().getVmConnectorURI().toString();
-            if (uris != null && uris.length > 0) {
-                url = uris[0];
-            } 
+            if (getBrokerService().getDefaultSocketURI() != null) {
+                url = getBrokerService().getDefaultSocketURI().toString();
+            }
             advisoryMessage.setStringProperty(AdvisorySupport.MSG_PROPERTY_ORIGIN_BROKER_URL, url);
             
             //set the data structure

@@ -17,7 +17,6 @@
 package org.apache.activemq.network;
 
 import java.util.List;
-
 import org.apache.activemq.command.ActiveMQDestination;
 
 /**
@@ -36,6 +35,7 @@ public class NetworkBridgeConfiguration {
     private int prefetchSize = 1000;
     private int networkTTL = 1;
     private String brokerName = "localhost";
+    private String brokerURL = "";
     private String userName;
     private String password;
     private String destinationFilter = ">";
@@ -273,5 +273,19 @@ public class NetworkBridgeConfiguration {
      */
     public void setSuppressDuplicateQueueSubscriptions(boolean val) {
         suppressDuplicateQueueSubscriptions = val;
+    }
+
+    /**
+     * @return the brokerURL
+     */
+    public String getBrokerURL() {
+        return this.brokerURL;
+    }
+
+    /**
+     * @param brokerURL the brokerURL to set
+     */
+    public void setBrokerURL(String brokerURL) {
+        this.brokerURL = brokerURL;
     }
 }

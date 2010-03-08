@@ -35,9 +35,7 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
-
 import javax.net.SocketFactory;
-
 import org.apache.activemq.Service;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportLoggerFactory;
@@ -171,6 +169,7 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
     /**
      * @return pretty print of 'this'
      */
+    @Override
     public String toString() {
         return "tcp://" + socket.getInetAddress() + ":" + socket.getPort();
     }
@@ -398,6 +397,7 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
         }
     }
 
+    @Override
     protected void doStart() throws Exception {
         connect();
         stoppedLatch.set(new CountDownLatch(1));
@@ -454,6 +454,7 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
         initializeStreams();
     }
 
+    @Override
     protected void doStop(ServiceStopper stopper) throws Exception {
         if (LOG.isDebugEnabled()) {
             LOG.debug("Stopping transport " + this);

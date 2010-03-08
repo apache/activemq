@@ -45,7 +45,8 @@ public class TransportFilter implements TransportListener, Transport {
 
     /**
      * @see org.apache.activemq.Service#start()
-     * @throws IOException if the next channel has not been set.
+     * @throws IOException
+     *             if the next channel has not been set.
      */
     public void start() throws Exception {
         if (next == null) {
@@ -75,6 +76,7 @@ public class TransportFilter implements TransportListener, Transport {
         return next;
     }
 
+    @Override
     public String toString() {
         return next.toString();
     }
@@ -126,19 +128,31 @@ public class TransportFilter implements TransportListener, Transport {
         return next.isFaultTolerant();
     }
 
-	public boolean isDisposed() {
-		return next.isDisposed();
-	}
-	
-	public boolean isConnected() {
+    public boolean isDisposed() {
+        return next.isDisposed();
+    }
+
+    public boolean isConnected() {
         return next.isConnected();
     }
 
-	public void reconnect(URI uri) throws IOException {
-		next.reconnect(uri);
-	}
+    public void reconnect(URI uri) throws IOException {
+        next.reconnect(uri);
+    }
 
     public int getReceiveCounter() {
         return next.getReceiveCounter();
+    }
+
+    public boolean isReconnectSupported() {
+        return next.isReconnectSupported();
+    }
+
+    public boolean isUpdateURIsSupported() {
+        return next.isUpdateURIsSupported();
+    }
+
+    public void updateURIs(boolean rebalance,URI[] uris) throws IOException {
+        next.updateURIs(rebalance,uris);
     }
 }

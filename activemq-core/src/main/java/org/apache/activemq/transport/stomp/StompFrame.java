@@ -133,6 +133,10 @@ public class StompFrame implements Command {
     public boolean isShutdownInfo() {
         return false;
     }
+    
+    public boolean isConnectionControl() {
+        return false;
+    }
 
     public boolean isWireFormatInfo() {
         return false;

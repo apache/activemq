@@ -18,7 +18,6 @@ package org.apache.activemq.transport;
 
 import java.io.IOException;
 import java.net.URI;
-
 import org.apache.activemq.Service;
 
 /**
@@ -148,11 +147,28 @@ public interface Transport extends Service {
     boolean isConnected();
     
     /**
+     * @return true if reconnect is supported
+     */
+    boolean isReconnectSupported();
+    
+    /**
+     * @return true if updating uris is supported
+     */
+    boolean isUpdateURIsSupported();
+    /**
      * reconnect to another location
      * @param uri
      * @throws IOException on failure of if not supported
      */
     void reconnect(URI uri) throws IOException;
+    
+    /**
+     * Provide a list of available alternative locations
+     * @param rebalance 
+     * @param uris
+     * @throws IOException
+     */
+    void updateURIs(boolean rebalance,URI[] uris) throws IOException;
 
     /**
      * Returns a counter which gets incremented as data is read from the transport.

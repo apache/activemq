@@ -76,7 +76,6 @@ public class SubscriptionInfo implements DataStructure {
 
     /**
      * @openwire:property version=1
-     * @deprecated
      */
     public String getSubcriptionName() {
         return subscriptionName;
@@ -84,7 +83,6 @@ public class SubscriptionInfo implements DataStructure {
 
     /**
      * @param subscriptionName *
-     * @deprecated
      */
     public void setSubcriptionName(String subscriptionName) {
         this.subscriptionName = subscriptionName;
@@ -102,16 +100,19 @@ public class SubscriptionInfo implements DataStructure {
         return false;
     }
 
+    @Override
     public String toString() {
         return IntrospectionSupport.toString(this);
     }
 
+    @Override
     public int hashCode() {
         int h1 = clientId != null ? clientId.hashCode() : -1;
         int h2 = subscriptionName != null ? subscriptionName.hashCode() : -1;
         return h1 ^ h2;
     }
 
+    @Override
     public boolean equals(Object obj) {
         boolean result = false;
         if (obj instanceof SubscriptionInfo) {

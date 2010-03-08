@@ -215,6 +215,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
 
         this.info = new ConnectionInfo(new ConnectionId(CONNECTION_ID_GENERATOR.generateId()));
         this.info.setManageable(true);
+        this.info.setFaultTolerant(transport.isFaultTolerant());
         this.connectionSessionId = new SessionId(info.getConnectionId(), -1);
 
         this.transport.setTransportListener(this);

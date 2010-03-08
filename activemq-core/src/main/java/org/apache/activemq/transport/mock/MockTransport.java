@@ -18,7 +18,6 @@ package org.apache.activemq.transport.mock;
 
 import java.io.IOException;
 import java.net.URI;
-
 import org.apache.activemq.transport.DefaultTransportListener;
 import org.apache.activemq.transport.FutureResponse;
 import org.apache.activemq.transport.ResponseCallback;
@@ -70,6 +69,7 @@ public class MockTransport extends DefaultTransportListener implements Transport
         getNext().stop();
     }
 
+    @Override
     public void onCommand(Object command) {
         getTransportListener().onCommand(command);
     }
@@ -88,6 +88,7 @@ public class MockTransport extends DefaultTransportListener implements Transport
         return transportListener;
     }
 
+    @Override
     public String toString() {
         return getNext().toString();
     }
@@ -108,6 +109,7 @@ public class MockTransport extends DefaultTransportListener implements Transport
         return getNext().request(command, timeout);
     }
 
+    @Override
     public void onException(IOException error) {
         getTransportListener().onException(error);
     }
@@ -154,5 +156,17 @@ public class MockTransport extends DefaultTransportListener implements Transport
 
     public int getReceiveCounter() {
         return getNext().getReceiveCounter();
+    }
+    
+
+    public boolean isReconnectSupported() {
+        return getNext().isReconnectSupported();
+    }
+
+    public boolean isUpdateURIsSupported() {
+        return getNext().isUpdateURIsSupported();
+    }
+    public void updateURIs(boolean reblance,URI[] uris) throws IOException {
+       getNext().updateURIs(reblance,uris);
     }
 }

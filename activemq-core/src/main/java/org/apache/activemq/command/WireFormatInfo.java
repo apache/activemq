@@ -23,7 +23,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-
 import org.apache.activemq.state.CommandVisitor;
 import org.apache.activemq.util.ByteArrayInputStream;
 import org.apache.activemq.util.ByteArrayOutputStream;
@@ -290,6 +289,7 @@ public class WireFormatInfo implements Command, MarshallAware {
         return visitor.processWireFormat(this);
     }
 
+    @Override
     public String toString() {
         Map<String, Object> p = null;
         try {
@@ -354,6 +354,10 @@ public class WireFormatInfo implements Command, MarshallAware {
     }
 
     public boolean isShutdownInfo() {
+        return false;
+    }
+    
+    public boolean isConnectionControl() {
         return false;
     }
 

@@ -35,6 +35,7 @@ public class ConnectionInfo extends BaseCommand {
     protected boolean brokerMasterConnector;
     protected boolean manageable;
     protected boolean clientMaster = true;
+    protected boolean faultTolerant = false;
     protected transient Object transportContext;
 
     public ConnectionInfo() {
@@ -65,6 +66,7 @@ public class ConnectionInfo extends BaseCommand {
         copy.manageable = manageable;
         copy.clientMaster = clientMaster;
         copy.transportContext = transportContext;
+        copy.faultTolerant= faultTolerant;
     }
 
     /**
@@ -197,6 +199,21 @@ public class ConnectionInfo extends BaseCommand {
      */
     public void setClientMaster(boolean clientMaster) {
         this.clientMaster = clientMaster;
+    }
+
+    /**
+     * @openwire:property version=6 cache=false
+     * @return the faultTolerant
+     */
+    public boolean isFaultTolerant() {
+        return this.faultTolerant;
+    }
+
+    /**
+     * @param faultTolerant the faultTolerant to set
+     */
+    public void setFaultTolerant(boolean faultTolerant) {
+        this.faultTolerant = faultTolerant;
     }
 
 }

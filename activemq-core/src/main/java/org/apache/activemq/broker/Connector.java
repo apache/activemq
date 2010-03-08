@@ -28,8 +28,7 @@ import org.apache.activemq.command.BrokerInfo;
 public interface Connector extends Service {
 
     /**
-     * 
-     * @return
+     * @return brokerInfo
      */
     BrokerInfo getBrokerInfo();
 
@@ -37,4 +36,21 @@ public interface Connector extends Service {
      * @return the statistics for this connector
      */
     ConnectorStatistics getStatistics();
+    
+    /**
+     * @return true if update client connections when brokers leave/join a cluster
+     */
+    public boolean isUpdateClusterClients();
+
+    /**
+     * @return true if clients should be re-balanced across the cluster
+     */
+    public boolean isRebalanceClusterClients();
+    
+    /**
+     * Update all the connections with information
+     * about the connected brokers in the cluster
+     */
+    public void updateClientClusterInfo();
+
 }

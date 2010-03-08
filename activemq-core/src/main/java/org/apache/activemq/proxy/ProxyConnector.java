@@ -21,7 +21,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Iterator;
 import java.util.concurrent.CopyOnWriteArrayList;
-
 import org.apache.activemq.Service;
 import org.apache.activemq.transport.CompositeTransport;
 import org.apache.activemq.transport.Transport;
@@ -46,7 +45,7 @@ public class ProxyConnector implements Service {
     private URI remote;
     private URI localUri;
     private String name;
-    private CopyOnWriteArrayList<ProxyConnection> connections = new CopyOnWriteArrayList<ProxyConnection>();
+    private final CopyOnWriteArrayList<ProxyConnection> connections = new CopyOnWriteArrayList<ProxyConnection>();
 
     public void start() throws Exception {
 
@@ -131,13 +130,14 @@ public class ProxyConnector implements Service {
 
     private Transport createRemoteTransport() throws Exception {
         Transport transport = TransportFactory.compositeConnect(remote);
-        CompositeTransport ct = (CompositeTransport)transport.narrow(CompositeTransport.class);
+        CompositeTransport ct = transport.narrow(CompositeTransport.class);
         if (ct != null && localUri != null) {
-            ct.add(new URI[] {localUri});
+            ct.add(false,new URI[] {localUri});
         }
 
         // Add a transport filter so that can track the transport life cycle
         transport = new TransportFilter(transport) {
+            @Override
             public void stop() throws Exception {
                 LOG.info("Stopping proxy.");
                 super.stop();

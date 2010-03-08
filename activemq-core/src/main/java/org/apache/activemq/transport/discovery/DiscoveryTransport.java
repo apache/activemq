@@ -20,7 +20,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-
 import org.apache.activemq.command.DiscoveryEvent;
 import org.apache.activemq.transport.CompositeTransport;
 import org.apache.activemq.transport.TransportFilter;
@@ -50,6 +49,7 @@ public class DiscoveryTransport extends TransportFilter implements DiscoveryList
         this.next = next;
     }
 
+    @Override
     public void start() throws Exception {
         if (discoveryAgent == null) {
             throw new IllegalStateException("discoveryAgent not configured");
@@ -61,6 +61,7 @@ public class DiscoveryTransport extends TransportFilter implements DiscoveryList
         next.start();
     }
 
+    @Override
     public void stop() throws Exception {
         ServiceStopper ss = new ServiceStopper();
         ss.stop(discoveryAgent);
@@ -75,7 +76,7 @@ public class DiscoveryTransport extends TransportFilter implements DiscoveryList
                 URI uri = new URI(url);
                 serviceURIs.put(event.getServiceName(), uri);
                 LOG.info("Adding new broker connection URL: " + uri);
-                next.add(new URI[] {URISupport.applyParameters(uri, parameters)});
+                next.add(false,new URI[] {URISupport.applyParameters(uri, parameters)});
             } catch (URISyntaxException e) {
                 LOG.warn("Could not connect to remote URI: " + url + " due to bad URI syntax: " + e, e);
             }
@@ -85,7 +86,7 @@ public class DiscoveryTransport extends TransportFilter implements DiscoveryList
     public void onServiceRemove(DiscoveryEvent event) {
         URI uri = serviceURIs.get(event.getServiceName());
         if (uri != null) {
-            next.remove(new URI[] {uri});
+            next.remove(false,new URI[] {uri});
         }
     }
 

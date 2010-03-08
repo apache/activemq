@@ -20,7 +20,6 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Map;
-
 import org.apache.activemq.transport.MutexTransport;
 import org.apache.activemq.transport.ResponseCorrelator;
 import org.apache.activemq.transport.Transport;
@@ -32,6 +31,7 @@ import org.apache.activemq.util.URISupport.CompositeData;
 
 public class FailoverTransportFactory extends TransportFactory {
 
+    @Override
     public Transport doConnect(URI location) throws IOException {
         try {
             Transport transport = createTransport(URISupport.parseComposite(location));
@@ -43,6 +43,7 @@ public class FailoverTransportFactory extends TransportFactory {
         }
     }
 
+    @Override
     public Transport doCompositeConnect(URI location) throws IOException {
         try {
             return createTransport(URISupport.parseComposite(location));
@@ -62,7 +63,7 @@ public class FailoverTransportFactory extends TransportFactory {
         if (!options.isEmpty()) {
             throw new IllegalArgumentException("Invalid connect parameters: " + options);
         }
-        transport.add(compositData.getComponents());
+        transport.add(false,compositData.getComponents());
         return transport;
     }
 
@@ -72,6 +73,7 @@ public class FailoverTransportFactory extends TransportFactory {
         return transport;
     }
 
+    @Override
     public TransportServer doBind(URI location) throws IOException {
         throw new IOException("Invalid server URI: " + location);
     }

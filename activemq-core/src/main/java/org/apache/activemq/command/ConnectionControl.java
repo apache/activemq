@@ -31,6 +31,9 @@ public class ConnectionControl extends BaseCommand {
     protected boolean close;
     protected boolean exit;
     protected boolean faultTolerant;
+    protected String connectedBrokers="";
+    protected String reconnectTo = "";
+    protected boolean rebalanceConnection;
 
     public byte getDataStructureType() {
         return DATA_STRUCTURE_TYPE;
@@ -38,6 +41,10 @@ public class ConnectionControl extends BaseCommand {
 
     public Response visit(CommandVisitor visitor) throws Exception {
         return visitor.processConnectionControl(this);
+    }
+    @Override
+    public boolean isConnectionControl() {
+        return true;
     }
 
     /**
@@ -113,5 +120,50 @@ public class ConnectionControl extends BaseCommand {
      */
     public void setSuspend(boolean suspend) {
         this.suspend = suspend;
+    }
+
+    /**
+     * @openwire:property version=6 cache=false
+     * @return connected brokers.
+     */
+    public String getConnectedBrokers() {
+        return this.connectedBrokers;
+    }
+
+    /**
+     * @param connectedBrokers the connectedBrokers to set
+     */
+    public void setConnectedBrokers(String connectedBrokers) {
+        this.connectedBrokers = connectedBrokers;
+    }
+
+    /**
+     *  @openwire:property version=6 cache=false
+     * @return the reconnectTo
+     */
+    public String getReconnectTo() {
+        return this.reconnectTo;
+    }
+
+    /**
+     * @param reconnectTo the reconnectTo to set
+     */
+    public void setReconnectTo(String reconnectTo) {
+        this.reconnectTo = reconnectTo;
+    }
+
+    /**
+     * @return the rebalanceConnection
+     *  @openwire:property version=6 cache=false
+     */
+    public boolean isRebalanceConnection() {
+        return this.rebalanceConnection;
+    }
+
+    /**
+     * @param rebalanceConnection the rebalanceConnection to set
+     */
+    public void setRebalanceConnection(boolean rebalanceConnection) {
+        this.rebalanceConnection = rebalanceConnection;
     }
 }

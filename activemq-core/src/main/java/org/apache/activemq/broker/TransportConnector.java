@@ -16,10 +16,17 @@
  */
 package org.apache.activemq.broker;
 
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.Iterator;
+import java.util.concurrent.CopyOnWriteArrayList;
+import javax.management.ObjectName;
 import org.apache.activemq.broker.jmx.ManagedTransportConnector;
 import org.apache.activemq.broker.jmx.ManagementContext;
 import org.apache.activemq.broker.region.ConnectorStatistics;
 import org.apache.activemq.command.BrokerInfo;
+import org.apache.activemq.command.ConnectionControl;
 import org.apache.activemq.security.MessageAuthorizationPolicy;
 import org.apache.activemq.thread.DefaultThreadPools;
 import org.apache.activemq.thread.TaskRunnerFactory;
@@ -33,6 +40,7 @@ import org.apache.activemq.util.ServiceStopper;
 import org.apache.activemq.util.ServiceSupport;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
 
 import static org.apache.activemq.thread.DefaultThreadPools.*;
 
@@ -53,7 +61,6 @@ public class TransportConnector implements Connector, BrokerServiceAware {
 
     protected CopyOnWriteArrayList<TransportConnection> connections = new CopyOnWriteArrayList<TransportConnection>();
     protected TransportStatusDetector statusDector;
-
     private BrokerService brokerService;
     private TransportServer server;
     private URI uri;
@@ -61,14 +68,16 @@ public class TransportConnector implements Connector, BrokerServiceAware {
     private TaskRunnerFactory taskRunnerFactory;
     private MessageAuthorizationPolicy messageAuthorizationPolicy;
     private DiscoveryAgent discoveryAgent;
-    private ConnectorStatistics statistics = new ConnectorStatistics();
+    private final ConnectorStatistics statistics = new ConnectorStatistics();
     private URI discoveryUri;
     private URI connectUri;
     private String name;
     private boolean disableAsyncDispatch;
     private boolean enableStatusMonitor = false;
     private Broker broker;
-
+    private boolean updateClusterClients=false;
+    private boolean rebalanceClusterClients;
+    
     public TransportConnector() {
     }
 
@@ -109,6 +118,8 @@ public class TransportConnector implements Connector, BrokerServiceAware {
         rc.setTaskRunnerFactory(getTaskRunnerFactory());
         rc.setUri(getUri());
         rc.setBrokerService(brokerService);
+        rc.setUpdateClusterClients(isUpdateClusterClients());
+        rc.setRebalanceClusterClients(isRebalanceClusterClients());
         return rc;
     }
 
@@ -193,16 +204,13 @@ public class TransportConnector implements Connector, BrokerServiceAware {
     }
 
     public void start() throws Exception {
-        
-        TransportServer server = getServer();
-        
+        TransportServer server = getServer();  
         broker = brokerService.getBroker();
         brokerInfo.setBrokerName(broker.getBrokerName());
         brokerInfo.setBrokerId(broker.getBrokerId());
         brokerInfo.setPeerBrokerInfos(broker.getPeerBrokerInfos());
         brokerInfo.setFaultTolerantConfiguration(broker.isFaultTolerantConfiguration());
         brokerInfo.setBrokerURL(server.getConnectURI().toString());
-        
         server.setAcceptListener(new TransportAcceptListener() {
             public void onAccept(final Transport transport) {
                 try {
@@ -233,7 +241,6 @@ public class TransportConnector implements Connector, BrokerServiceAware {
                 LOG.debug("Reason: " + error, error);
             }
         });
-        
         server.setBrokerInfo(brokerInfo);
         server.start();
         
@@ -366,12 +373,50 @@ public class TransportConnector implements Connector, BrokerServiceAware {
         this.name = name;
     }
 
+    @Override
     public String toString() {
         String rc = getName();
         if (rc == null) {
             rc = super.toString();
         }
         return rc;
+    }
+    
+    protected ConnectionControl getConnectionControl() {
+        boolean rebalance = isRebalanceClusterClients();
+            String connectedBrokers = "";
+            String self = "";
+            if (brokerService.getDefaultSocketURI() != null) {
+                self += brokerService.getDefaultSocketURI().toString();
+                self += ",";
+            }
+            if (rebalance == false) {
+                connectedBrokers += self;
+            }
+            if (this.broker.getPeerBrokerInfos() != null) {
+            for (BrokerInfo info : this.broker.getPeerBrokerInfos()) {
+                connectedBrokers += info.getBrokerURL();
+                connectedBrokers += ",";
+            }
+            }
+            if (rebalance) {
+                connectedBrokers += self;
+            }
+
+            ConnectionControl control = new ConnectionControl();
+            control.setConnectedBrokers(connectedBrokers);
+            control.setRebalanceConnection(rebalance);
+            return control;
+        
+    }
+    
+    public void updateClientClusterInfo() {
+        if (isRebalanceClusterClients() || isUpdateClusterClients()) {
+            ConnectionControl control = getConnectionControl();
+            for (Connection c: this.connections) {
+                c.updateClient(control);
+            }
+        }
     }
 
     public boolean isDisableAsyncDispatch() {
@@ -410,4 +455,32 @@ public class TransportConnector implements Connector, BrokerServiceAware {
 	public BrokerService getBrokerService() {
 		return brokerService;
 	}
+
+    /**
+     * @return the updateClusterClients
+     */
+    public boolean isUpdateClusterClients() {
+        return this.updateClusterClients;
+    }
+
+    /**
+     * @param updateClusterClients the updateClusterClients to set
+     */
+    public void setUpdateClusterClients(boolean updateClusterClients) {
+        this.updateClusterClients = updateClusterClients;
+    }
+
+    /**
+     * @return the rebalanceClusterClients
+     */
+    public boolean isRebalanceClusterClients() {
+        return this.rebalanceClusterClients;
+    }
+
+    /**
+     * @param rebalanceClusterClients the rebalanceClusterClients to set
+     */
+    public void setRebalanceClusterClients(boolean rebalanceClusterClients) {
+        this.rebalanceClusterClients = rebalanceClusterClients;
+    }
 }

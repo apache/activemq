@@ -30,7 +30,6 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
-
 import org.apache.activemq.Service;
 import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.broker.BrokerService;
@@ -131,7 +130,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
     private BrokerInfo localBrokerInfo;
     private BrokerInfo remoteBrokerInfo;
 
-    private AtomicBoolean started = new AtomicBoolean();
+    private final AtomicBoolean started = new AtomicBoolean();
     private TransportConnection duplexInitiatingConnection;
     private BrokerService brokerService = null;
 
@@ -153,11 +152,13 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
         if (started.compareAndSet(false, true)) {
             localBroker.setTransportListener(new DefaultTransportListener() {
 
+                @Override
                 public void onCommand(Object o) {
                     Command command = (Command) o;
                     serviceLocalCommand(command);
                 }
 
+                @Override
                 public void onException(IOException error) {
                     serviceLocalException(error);
                 }
@@ -318,6 +319,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                 if (!isCreatedByDuplex()) {
                     BrokerInfo brokerInfo = new BrokerInfo();
                     brokerInfo.setBrokerName(configuration.getBrokerName());
+                    brokerInfo.setBrokerURL(configuration.getBrokerURL());
                     brokerInfo.setNetworkConnection(true);
                     brokerInfo.setDuplexConnection(configuration.isDuplex());
                     // set our properties

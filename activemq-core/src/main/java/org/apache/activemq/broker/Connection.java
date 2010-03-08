@@ -17,10 +17,10 @@
 package org.apache.activemq.broker;
 
 import java.io.IOException;
-
 import org.apache.activemq.Service;
 import org.apache.activemq.broker.region.ConnectionStatistics;
 import org.apache.activemq.command.Command;
+import org.apache.activemq.command.ConnectionControl;
 import org.apache.activemq.command.Response;
 
 /**
@@ -51,6 +51,7 @@ public interface Connection extends Service {
      * Services a client command and submits it to the broker.
      * 
      * @param command
+     * @return Response
      */
     Response service(Command command);
 
@@ -110,5 +111,12 @@ public interface Connection extends Service {
      * @return
      */
     boolean isNetworkConnection();
+    
+    /**
+     * @return true if a fault tolerant connection
+     */
+    boolean isFaultTolerantConnection();
+    
+    void updateClient(ConnectionControl control);
 
 }

@@ -117,6 +117,10 @@ public class PartialCommand implements Command {
     public boolean isShutdownInfo() {
         return false;
     }
+    
+    public boolean isConnectionControl() {
+        return false;
+    }
 
     public void setResponseRequired(boolean responseRequired) {
     }
@@ -135,7 +139,6 @@ public class PartialCommand implements Command {
             size = data.length;
         }
         return "PartialCommand[id: " + commandId + " data: " + size + " byte(s)]";
-    }
-    
+    }   
     
 }

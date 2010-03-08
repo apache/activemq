@@ -23,7 +23,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
-
 import org.apache.activemq.command.Command;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.Message;
@@ -65,7 +64,7 @@ public class FanoutTransport implements CompositeTransport {
     private final TaskRunner reconnectTask;
     private boolean started;
 
-    private ArrayList<FanoutTransportHandler> transports = new ArrayList<FanoutTransportHandler>();
+    private final ArrayList<FanoutTransportHandler> transports = new ArrayList<FanoutTransportHandler>();
     private int connectedCount;
 
     private int minAckCount = 2;
@@ -73,7 +72,7 @@ public class FanoutTransport implements CompositeTransport {
     private long initialReconnectDelay = 10;
     private long maxReconnectDelay = 1000 * 30;
     private long backOffMultiplier = 2;
-    private boolean useExponentialBackOff = true;
+    private final boolean useExponentialBackOff = true;
     private int maxReconnectAttempts;
     private Exception connectionFailure;
     private FanoutTransportHandler primary;
@@ -89,6 +88,7 @@ public class FanoutTransport implements CompositeTransport {
             this.ackCount = new AtomicInteger(count);
         }
 
+        @Override
         public String toString() {
             return command.getCommandId() + "=" + ackCount.get();
         }
@@ -107,6 +107,7 @@ public class FanoutTransport implements CompositeTransport {
             this.uri = uri;
         }
 
+        @Override
         public void onCommand(Object o) {
             Command command = (Command)o;
             if (command.isResponse()) {
@@ -125,6 +126,7 @@ public class FanoutTransport implements CompositeTransport {
             }
         }
 
+        @Override
         public void onException(IOException error) {
             try {
                 synchronized (reconnectMutex) {
@@ -499,7 +501,7 @@ public class FanoutTransport implements CompositeTransport {
         }
     }
 
-    public void add(URI uris[]) {
+    public void add(boolean reblance,URI uris[]) {
 
         synchronized (reconnectMutex) {
             for (int i = 0; i < uris.length; i++) {
@@ -523,7 +525,7 @@ public class FanoutTransport implements CompositeTransport {
 
     }
 
-    public void remove(URI uris[]) {
+    public void remove(boolean rebalance,URI uris[]) {
 
         synchronized (reconnectMutex) {
             for (int i = 0; i < uris.length; i++) {
@@ -546,9 +548,20 @@ public class FanoutTransport implements CompositeTransport {
     }
     
     public void reconnect(URI uri) throws IOException {
-		add(new URI[]{uri});
+		add(true,new URI[]{uri});
 		
 	}
+    
+    public boolean isReconnectSupported() {
+        return true;
+    }
+
+    public boolean isUpdateURIsSupported() {
+        return true;
+    }
+    public void updateURIs(boolean reblance,URI[] uris) throws IOException {
+        add(reblance,uris);
+    }
 
 
     public String getRemoteAddress() {

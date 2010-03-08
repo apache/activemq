@@ -16,13 +16,12 @@
  */
 package org.apache.activemq.command;
 
-import org.apache.activemq.plugin.StatisticsBrokerPlugin;
+import java.io.IOException;
+import java.util.Properties;
 import org.apache.activemq.state.CommandVisitor;
 import org.apache.activemq.util.MarshallingSupport;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import java.io.IOException;
-import java.util.Properties;
 
 /**
  * When a client connects to a broker, the broker send the client a BrokerInfo
@@ -49,7 +48,30 @@ public class BrokerInfo extends BaseCommand {
     long connectionId;
     String brokerUploadUrl;
     String networkProperties;
+    
+    public BrokerInfo copy() {
+        BrokerInfo copy = new BrokerInfo();
+        copy(copy);
+        return copy;
+    }
+    
+    private void copy(BrokerInfo copy) {
+        super.copy(copy);
+        copy.brokerId = this.brokerId;
+        copy.brokerURL = this.brokerURL;
+        copy.slaveBroker = this.slaveBroker;
+        copy.masterBroker = this.masterBroker;
+        copy.faultTolerantConfiguration = this.faultTolerantConfiguration;
+        copy.networkConnection = this.networkConnection;
+        copy.duplexConnection = this.duplexConnection;
+        copy.peerBrokerInfos = this.peerBrokerInfos;
+        copy.brokerName = this.brokerName;
+        copy.connectionId = this.connectionId;
+        copy.brokerUploadUrl = this.brokerUploadUrl;
+        copy.networkProperties = this.networkProperties;
+    } 
 
+    @Override
     public boolean isBrokerInfo() {
         return true;
     }

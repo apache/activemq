@@ -18,7 +18,6 @@ package org.apache.activemq.transport;
 
 import java.io.IOException;
 import java.net.URI;
-
 import org.apache.activemq.util.ServiceSupport;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -96,8 +95,9 @@ public abstract class TransportSupport extends ServiceSupport implements Transpo
             try {
                 transportListener.onException(e);
             } catch (RuntimeException e2) {
-                // Handle any unexpected runtime exceptions by debug logging them.
-                LOG.debug("Unexpected runtime exception: "+e2, e2);
+                // Handle any unexpected runtime exceptions by debug logging
+                // them.
+                LOG.debug("Unexpected runtime exception: " + e2, e2);
             }
         }
     }
@@ -111,18 +111,28 @@ public abstract class TransportSupport extends ServiceSupport implements Transpo
     public boolean isFaultTolerant() {
         return false;
     }
-    
-   
-	public void reconnect(URI uri) throws IOException {
-		throw new IOException("Not supported");
-	}
-	
-	public boolean isDisposed() {
-		return isStopped();
-	}
-	
-	public  boolean isConnected() {
-	    return isStarted();
-	}
+
+    public void reconnect(URI uri) throws IOException {
+        throw new IOException("Not supported");
+    }
+
+    public boolean isReconnectSupported() {
+        return false;
+    }
+
+    public boolean isUpdateURIsSupported() {
+        return false;
+    }
+    public void updateURIs(boolean reblance,URI[] uris) throws IOException {
+        throw new IOException("Not supported");
+    }
+
+    public boolean isDisposed() {
+        return isStopped();
+    }
+
+    public boolean isConnected() {
+        return isStarted();
+    }
 
 }

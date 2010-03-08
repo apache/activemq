@@ -71,6 +71,9 @@ public class ConnectionControlMarshaller extends BaseCommandMarshaller {
         info.setFaultTolerant(bs.readBoolean());
         info.setResume(bs.readBoolean());
         info.setSuspend(bs.readBoolean());
+        info.setConnectedBrokers(tightUnmarshalString(dataIn, bs));
+        info.setReconnectTo(tightUnmarshalString(dataIn, bs));
+        info.setRebalanceConnection(bs.readBoolean());
 
     }
 
@@ -88,6 +91,9 @@ public class ConnectionControlMarshaller extends BaseCommandMarshaller {
         bs.writeBoolean(info.isFaultTolerant());
         bs.writeBoolean(info.isResume());
         bs.writeBoolean(info.isSuspend());
+        rc += tightMarshalString1(info.getConnectedBrokers(), bs);
+        rc += tightMarshalString1(info.getReconnectTo(), bs);
+        bs.writeBoolean(info.isRebalanceConnection());
 
         return rc + 0;
     }
@@ -108,6 +114,9 @@ public class ConnectionControlMarshaller extends BaseCommandMarshaller {
         bs.readBoolean();
         bs.readBoolean();
         bs.readBoolean();
+        tightMarshalString2(info.getConnectedBrokers(), dataOut, bs);
+        tightMarshalString2(info.getReconnectTo(), dataOut, bs);
+        bs.readBoolean();
 
     }
 
@@ -127,6 +136,9 @@ public class ConnectionControlMarshaller extends BaseCommandMarshaller {
         info.setFaultTolerant(dataIn.readBoolean());
         info.setResume(dataIn.readBoolean());
         info.setSuspend(dataIn.readBoolean());
+        info.setConnectedBrokers(looseUnmarshalString(dataIn));
+        info.setReconnectTo(looseUnmarshalString(dataIn));
+        info.setRebalanceConnection(dataIn.readBoolean());
 
     }
 
@@ -144,6 +156,9 @@ public class ConnectionControlMarshaller extends BaseCommandMarshaller {
         dataOut.writeBoolean(info.isFaultTolerant());
         dataOut.writeBoolean(info.isResume());
         dataOut.writeBoolean(info.isSuspend());
+        looseMarshalString(info.getConnectedBrokers(), dataOut);
+        looseMarshalString(info.getReconnectTo(), dataOut);
+        dataOut.writeBoolean(info.isRebalanceConnection());
 
     }
 }

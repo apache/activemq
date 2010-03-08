@@ -21,6 +21,7 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -34,6 +35,7 @@ import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.ConsumerBrokerExchange;
 import org.apache.activemq.broker.EmptyBroker;
 import org.apache.activemq.broker.ProducerBrokerExchange;
+import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.broker.region.policy.DeadLetterStrategy;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.ActiveMQDestination;
@@ -585,12 +587,14 @@ public class RegionBroker extends EmptyBroker {
     @Override
     public synchronized void addBroker(Connection connection, BrokerInfo info) {
         brokerInfos.add(info);
+        updateClients();
     }
 
     @Override
     public synchronized void removeBroker(Connection connection, BrokerInfo info) {
         if (info != null) {
             brokerInfos.remove(info);
+            updateClients();
         }
     }
 
@@ -828,6 +832,13 @@ public class RegionBroker extends EmptyBroker {
             
         default:
             LOG.warn("unmatched destination: " + destination + ", in consumerControl: "  + control);
+        }
+    }
+    
+    protected void updateClients() {
+        List<TransportConnector> connectors = this.brokerService.getTransportConnectors();
+        for (TransportConnector connector : connectors) {
+            connector.updateClientClusterInfo();
         }
     }
 }

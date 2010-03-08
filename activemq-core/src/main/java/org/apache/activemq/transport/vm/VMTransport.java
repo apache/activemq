@@ -21,7 +21,6 @@ import java.net.URI;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
-
 import org.apache.activemq.thread.Task;
 import org.apache.activemq.thread.TaskRunner;
 import org.apache.activemq.thread.TaskRunnerFactory;
@@ -275,6 +274,7 @@ public class VMTransport implements Transport, Task {
         this.network = network;
     }
 
+    @Override
     public String toString() {
         return location + "#" + id;
     }
@@ -342,8 +342,19 @@ public class VMTransport implements Transport, Task {
 	}
 
 	public void reconnect(URI uri) throws IOException {
-		throw new IOException("Not supported");
-	}
+        throw new IOException("Not supported");
+    }
+
+    public boolean isReconnectSupported() {
+        return false;
+    }
+
+    public boolean isUpdateURIsSupported() {
+        return false;
+    }
+    public void updateURIs(boolean reblance,URI[] uris) throws IOException {
+        throw new IOException("Not supported");
+    }
 
     public int getReceiveCounter() {
         return receiveCounter;

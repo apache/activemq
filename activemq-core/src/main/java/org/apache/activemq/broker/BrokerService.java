@@ -31,7 +31,6 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.management.MalformedObjectNameException;
@@ -154,6 +153,7 @@ public class BrokerService implements Service {
     private boolean deleteAllMessagesOnStartup;
     private boolean advisorySupport = true;
     private URI vmConnectorURI;
+    private URI defaultSocketURI;
     private PolicyMap destinationPolicy;
     private final AtomicBoolean started = new AtomicBoolean(false);
     private final AtomicBoolean stopped = new AtomicBoolean(false);
@@ -1271,6 +1271,28 @@ public class BrokerService implements Service {
     public void setVmConnectorURI(URI vmConnectorURI) {
         this.vmConnectorURI = vmConnectorURI;
     }
+    
+    public URI getDefaultSocketURI() {
+       
+            if (started.get()) {
+                if (this.defaultSocketURI==null) {
+                    for (TransportConnector tc:this.transportConnectors) {
+                        URI result = null;
+                        try {
+                            result = tc.getConnectUri();
+                        } catch (Exception e) {
+                          LOG.warn("Failed to get the ConnectURI for "+tc,e);
+                        }
+                        if (result != null) {
+                            this.defaultSocketURI=result;
+                            break;
+                        }
+                    }
+                }
+                return this.defaultSocketURI;
+            }
+       return null;
+    }
 
     /**
      * @return Returns the shutdownOnMasterFailure.
@@ -2007,6 +2029,9 @@ public class BrokerService implements Service {
                     connector.setLocalUri(uri);
                     connector.setBrokerName(getBrokerName());
                     connector.setDurableDestinations(durableDestinations);
+                    if (getDefaultSocketURI() != null) {
+                        connector.setBrokerURL(getDefaultSocketURI().toString());
+                    }
                     connector.start();
                 }
                 for (Iterator<ProxyConnector> iter = getProxyConnectors().iterator(); iter.hasNext();) {
