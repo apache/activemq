@@ -1,0 +1,123 @@
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.apache.activemq.transport.tcp;
+
+import java.net.Socket;
+import java.util.HashMap;
+import java.util.Map;
+import junit.framework.TestCase;
+
+public class QualityOfServiceUtilsTest extends TestCase {
+    private int ECN;
+
+    protected void setUp() throws Exception {
+	Socket socket = new Socket();
+	ECN = socket.getTrafficClass();
+	ECN = ECN & Integer.parseInt("11000000", 2);
+    }
+
+    protected void tearDown() throws Exception {
+	super.tearDown();
+    }
+
+    public void testValidDiffServIntegerValues() {
+	int[] values = {0, 1, 32, 62, 63};
+        for (int val : values) {
+	    testValidDiffServIntegerValue(val);
+	}
+    }
+
+    public void testInvalidDiffServIntegerValues() {
+	int[] values = {-2, -1, 64, 65};
+        for (int val : values) {
+	    testInvalidDiffServIntegerValue(val);
+	}
+    }
+
+    public void testValidDiffServNames() {
+        Map<String, Integer> namesToExpected = new HashMap<String, Integer>();
+	namesToExpected.put("EF", Integer.valueOf("101110", 2));
+	namesToExpected.put("AF11", Integer.valueOf("001010", 2));
+	namesToExpected.put("AF12", Integer.valueOf("001100", 2));
+	namesToExpected.put("AF13", Integer.valueOf("001110", 2));
+	namesToExpected.put("AF21", Integer.valueOf("010010", 2));
+	namesToExpected.put("AF22", Integer.valueOf("010100", 2));
+	namesToExpected.put("AF23", Integer.valueOf("010110", 2));
+	namesToExpected.put("AF31", Integer.valueOf("011010", 2));
+	namesToExpected.put("AF32", Integer.valueOf("011100", 2));
+	namesToExpected.put("AF33", Integer.valueOf("011110", 2));
+ 	namesToExpected.put("AF41", Integer.valueOf("100010", 2));
+	namesToExpected.put("AF42", Integer.valueOf("100100", 2));
+	namesToExpected.put("AF43", Integer.valueOf("100110", 2));
+        for (String name : namesToExpected.keySet()) {
+            testValidDiffServName(name, namesToExpected.get(name));
+        }
+    }
+
+    public void testInvalidDiffServNames() {
+        String[] names = {"hello_world", "", "abcd"};
+        for (String name : names) {
+            testInvalidDiffServName(name);
+        }
+    }
+
+    private void testValidDiffServIntegerValue(int val) {
+        int dscp = -1;
+	try {
+	    dscp = QualityOfServiceUtils.getDSCP(Integer.toString(val));
+	} catch (IllegalArgumentException e) {
+	    fail("IllegalArgumentException thrown for valid Differentiated Services "
+                 + "value: " + val);
+	}
+        // Make sure it adjusted for any system ECN values.
+	assertEquals("Incorrect Differentiated Services Code Point " 
+		     + dscp + " returned for value " + val + ".",
+                     ECN | val, dscp);
+    }
+
+    private void testInvalidDiffServIntegerValue(int val) {
+	try {
+	    int dscp = QualityOfServiceUtils.getDSCP(Integer.toString(val));
+	    fail("No IllegalArgumentException thrown for invalid Differentiated "
+                 + "Services value: " + val + ".");
+	} catch (IllegalArgumentException e) {
+	}
+    }
+
+    private void testValidDiffServName(String name, int expected) {
+        int dscp = -1;
+	try {
+	    dscp = QualityOfServiceUtils.getDSCP(name);
+	} catch (IllegalArgumentException e) {
+	    fail("IllegalArgumentException thrown for valid Differentiated "
+                 + " Services name: " + name);
+	}
+        // Make sure it adjusted for any system ECN values.
+	assertEquals("Incorrect Differentiated Services Code Point " 
+		     + dscp + " returned for name " + name + ".",
+                     ECN | expected, dscp);
+    }
+
+    private void testInvalidDiffServName(String name) {
+	try {
+	    int dscp = QualityOfServiceUtils.getDSCP(name);
+	    fail("No IllegalArgumentException thrown for invalid Differentiated "
+                 + "Services value: " + name + ".");
+	} catch (IllegalArgumentException e) {
+	}
+    }
+}

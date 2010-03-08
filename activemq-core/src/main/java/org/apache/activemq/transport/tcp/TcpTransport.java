@@ -69,6 +69,15 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
     protected DataInputStream dataIn;
     protected TcpBufferedOutputStream buffOut = null;
     /**
+     * Differentiated Services Code Point. Determines the Traffic Class to be
+     * set on the socket.
+     */
+    protected int dscp = 0;
+    /**
+     * Keeps track of attempts to set the Traffic Class.
+     */
+    private boolean trafficClassSet = false;
+    /**
      * trace=true -> the Transport stack where this TcpTransport
      * object will be, will have a TransportLogger layer
      * trace=false -> the Transport stack where this TcpTransport
@@ -212,6 +221,18 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
 
     // Properties
     // -------------------------------------------------------------------------
+    public String getDiffServ() {
+        // This is the value requested by the user by setting the Tcp Transport
+        // options. If the socket hasn't been created, then this value may not
+        // reflect the value returned by Socket.getTrafficClass().
+        return Integer.toString(dscp);
+    }
+
+    public void setDiffServ(String diffServ) throws IllegalArgumentException {
+        this.dscp = QualityOfServiceUtils.getDSCP(diffServ);
+    }
+
+    // TODO: Add methods for setting and getting a ToS value.
 
     public boolean isTrace() {
         return trace;
@@ -395,6 +416,9 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
         if (tcpNoDelay != null) {
             sock.setTcpNoDelay(tcpNoDelay.booleanValue());
         }
+        if (!trafficClassSet) {
+            trafficClassSet = setTrafficClass(sock);
+        }
     }
 
     @Override
@@ -422,6 +446,9 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
             String host = resolveHostName(remoteLocation.getHost());
             remoteAddress = new InetSocketAddress(host, remoteLocation.getPort());
         }
+        // Set the traffic class before the socket is connected when possible so
+        // that the connection packets are given the correct traffic class.
+        trafficClassSet = setTrafficClass(socket);
 
         if (socket != null) {
 
@@ -578,5 +605,28 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
 
     public int getReceiveCounter() {
         return receiveCounter;
+    }
+    
+    /**
+     * @return Whether or not the Traffic Class was set on the given socket.
+     */
+    private boolean setTrafficClass(Socket sock) {
+        // TODO: Add in ToS support.
+
+        if (sock == null)
+            return false;
+
+        boolean success = false;
+
+        try {
+            sock.setTrafficClass(this.dscp);
+            success = true;
+        } catch (SocketException e) {
+            // The system does not support setting the traffic class through
+            // setTrafficClass.
+            LOG.error("Unable to set the traffic class: " + e);
+        }
+
+        return success;
     }
 }
