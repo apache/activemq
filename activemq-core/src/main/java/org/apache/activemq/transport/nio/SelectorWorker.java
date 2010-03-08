@@ -68,15 +68,18 @@ public class SelectorWorker implements Runnable {
         selector.wakeup();
     }
     
-    private void processIoTasks() {
+    private boolean processIoTasks() {
+        boolean rc = false;
         Runnable task; 
         while( (task= ioTasks.poll()) !=null ) {
             try {
+                rc = true;
                 task.run();
             } catch (Throwable e) {
                 e.printStackTrace();
             }
         }
+        return rc;
     }
 
     
@@ -88,7 +91,9 @@ public class SelectorWorker implements Runnable {
             Thread.currentThread().setName("Selector Worker: " + id);
             while (!isReleased()) {
                 
-                processIoTasks();
+                if( processIoTasks() ) {
+                    continue;
+                }
                 int count = selector.select(10);
                 if (count == 0) {
                     continue;
