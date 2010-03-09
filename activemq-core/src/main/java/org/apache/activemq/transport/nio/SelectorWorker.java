@@ -53,7 +53,7 @@ public class SelectorWorker implements Runnable {
         int use = retainCounter.decrementAndGet();
         if (use == 0) {
             manager.onWorkerEmptyEvent(this);
-        } else if (use < maxChannelsPerWorker) {
+        } else if (use == maxChannelsPerWorker - 1) {
             manager.onWorkerNotFullEvent(this);
         }
     }
@@ -68,18 +68,15 @@ public class SelectorWorker implements Runnable {
         selector.wakeup();
     }
     
-    private boolean processIoTasks() {
-        boolean rc = false;
+    private void processIoTasks() {
         Runnable task; 
         while( (task= ioTasks.poll()) !=null ) {
             try {
-                rc = true;
                 task.run();
             } catch (Throwable e) {
                 e.printStackTrace();
             }
         }
-        return rc;
     }
 
     
@@ -90,11 +87,11 @@ public class SelectorWorker implements Runnable {
         try {
             Thread.currentThread().setName("Selector Worker: " + id);
             while (!isReleased()) {
-                
-                if( processIoTasks() ) {
-                    continue;
-                }
-                int count = selector.select(10);
+            	
+            	processIoTasks();
+            	
+            	int count = selector.select(10);
+            	
                 if (count == 0) {
                     continue;
                 }
@@ -134,8 +131,8 @@ public class SelectorWorker implements Runnable {
                 }
 
             }
-            
-        } catch (Throwable e) {
+        } catch (Throwable e) {         	
+            e.printStackTrace();
             // Notify all the selections that the error occurred.
             Set keys = selector.keys();
             for (Iterator i = keys.iterator(); i.hasNext();) {
@@ -143,12 +140,12 @@ public class SelectorWorker implements Runnable {
                 SelectorSelection s = (SelectorSelection)key.attachment();
                 s.onError(e);
             }
-
         } finally {
             try {
                 manager.onWorkerEmptyEvent(this);
                 selector.close();
             } catch (IOException ignore) {
+            	ignore.printStackTrace();
             }
             Thread.currentThread().setName(origName);
         }

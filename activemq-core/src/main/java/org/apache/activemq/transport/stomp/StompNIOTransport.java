@@ -145,6 +145,7 @@ public class StompNIOTransport extends TcpTransport {
         try {
             selection.close();
         } catch (Exception e) {
+        	e.printStackTrace();
         }
         super.doStop(stopper);
     }

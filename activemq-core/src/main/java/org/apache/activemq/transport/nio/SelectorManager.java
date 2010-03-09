@@ -99,7 +99,7 @@ public final class SelectorManager {
     }
 
     public synchronized void onWorkerNotFullEvent(SelectorWorker worker) {
-        freeWorkers.add(worker);
+        freeWorkers.addFirst(worker);
     }
 
     public Executor getChannelExecutor() {
