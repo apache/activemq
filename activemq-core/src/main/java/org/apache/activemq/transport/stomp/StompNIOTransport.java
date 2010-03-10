@@ -16,8 +16,9 @@
  */
 package org.apache.activemq.transport.stomp;
 
-import java.io.DataInputStream;
+import java.io.ByteArrayInputStream;
 import java.io.DataOutputStream;
+import java.io.EOFException;
 import java.io.IOException;
 import java.net.Socket;
 import java.net.URI;
@@ -30,11 +31,12 @@ import javax.net.SocketFactory;
 
 import org.apache.activemq.command.Command;
 import org.apache.activemq.transport.Transport;
-import org.apache.activemq.transport.nio.NIOBufferedInputStream;
 import org.apache.activemq.transport.nio.NIOOutputStream;
 import org.apache.activemq.transport.nio.SelectorManager;
 import org.apache.activemq.transport.nio.SelectorSelection;
 import org.apache.activemq.transport.tcp.TcpTransport;
+import org.apache.activemq.util.ByteArrayOutputStream;
+import org.apache.activemq.util.ByteSequence;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.ServiceStopper;
 import org.apache.activemq.wireformat.WireFormat;
@@ -48,6 +50,10 @@ public class StompNIOTransport extends TcpTransport {
 
     private SocketChannel channel;
     private SelectorSelection selection;
+    
+    private ByteBuffer inputBuffer;
+    ByteArrayOutputStream currentCommand = new ByteArrayOutputStream();
+    int previousByte = -1;
 
     public StompNIOTransport(WireFormat wireFormat, SocketFactory socketFactory, URI remoteLocation, URI localLocation) throws UnknownHostException, IOException {
         super(wireFormat, socketFactory, remoteLocation, localLocation);
@@ -76,19 +82,54 @@ public class StompNIOTransport extends TcpTransport {
             }
         });
 
+        inputBuffer = ByteBuffer.allocate(8 * 1024);
         this.dataOut = new DataOutputStream(new NIOOutputStream(channel, 8 * 1024));
     }
-
+    
     private void serviceRead() {
         try {
-            DataInputStream in = new DataInputStream(new NIOBufferedInputStream(channel, 8 * 1024));
-            while (true) {
-                Object command = wireFormat.unmarshal(in);
-                doConsume((Command)command);
-            }
-
+            
+           while (true) {
+               // read channel
+               int readSize = channel.read(inputBuffer);
+               // channel is closed, cleanup
+               if (readSize == -1) {
+                   onException(new EOFException());
+                   selection.close();
+                   break;
+               }
+               // nothing more to read, break
+               if (readSize == 0) {
+                   break;
+               }
+               
+               inputBuffer.flip();
+               
+               int b;
+               ByteArrayInputStream input = new ByteArrayInputStream(inputBuffer.array());
+               
+               int i = 0;
+               while(i++ < readSize) {
+                   b = input.read();
+                   // skip repeating nulls
+                   if (previousByte == 0 && b == 0) {
+                       continue;
+                   }
+                   currentCommand.write(b);
+                   // end of command reached, unmarshal
+                   if (b == 0) {
+                       Object command = wireFormat.unmarshal(new ByteSequence(currentCommand.toByteArray()));
+                       doConsume((Command)command);
+                       currentCommand.reset();
+                   }
+                   previousByte = b;
+               }
+               // clear the buffer
+               inputBuffer.clear();
+               
+           }
         } catch (IOException e) {
-            onException(e);
+            onException(e);  
         } catch (Throwable e) {
             onException(IOExceptionSupport.create(e));
         }
@@ -101,7 +142,11 @@ public class StompNIOTransport extends TcpTransport {
     }
 
     protected void doStop(ServiceStopper stopper) throws Exception {
-        selection.disable();
+        try {
+            selection.close();
+        } catch (Exception e) {
+        	e.printStackTrace();
+        }
         super.doStop(stopper);
     }
 }

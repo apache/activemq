@@ -21,6 +21,7 @@ import org.apache.activemq.broker.jmx.ManagementContext;
 import org.apache.activemq.broker.region.ConnectorStatistics;
 import org.apache.activemq.command.BrokerInfo;
 import org.apache.activemq.security.MessageAuthorizationPolicy;
+import org.apache.activemq.thread.DefaultThreadPools;
 import org.apache.activemq.thread.TaskRunnerFactory;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportAcceptListener;
@@ -32,6 +33,9 @@ import org.apache.activemq.util.ServiceStopper;
 import org.apache.activemq.util.ServiceSupport;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import static org.apache.activemq.thread.DefaultThreadPools.*;
+
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -202,9 +206,7 @@ public class TransportConnector implements Connector, BrokerServiceAware {
         server.setAcceptListener(new TransportAcceptListener() {
             public void onAccept(final Transport transport) {
                 try {
-                    // Starting the connection could block due to
-                    // wireformat negotiation, so start it in an async thread.
-                    Thread startThread = new Thread("ActiveMQ Transport Initiator: " + transport.getRemoteAddress()) {
+                    getDefaultTaskRunnerFactory().execute(new Runnable(){
                         public void run() {
                             try {
                                 Connection connection = createConnection(transport);
@@ -214,8 +216,7 @@ public class TransportConnector implements Connector, BrokerServiceAware {
                                 onAcceptError(e);
                             }
                         }
-                    };
-                    startThread.start();
+                    });
                 } catch (Exception e) {
                     String remoteHost = transport.getRemoteAddress();
                     ServiceSupport.dispose(transport);

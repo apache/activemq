@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.thread;
 
+import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadFactory;
@@ -31,7 +32,7 @@ import java.util.concurrent.TimeUnit;
  * 
  * @version $Revision: 1.5 $
  */
-public class TaskRunnerFactory {
+public class TaskRunnerFactory implements Executor {
 
     private ExecutorService executor;
     private int maxIterationsPerRun;
@@ -77,6 +78,18 @@ public class TaskRunnerFactory {
             return new PooledTaskRunner(executor, task, maxIterationsPerRun);
         } else {
             return new DedicatedTaskRunner(task, name, priority, daemon);
+        }
+    }
+
+    public void execute(Runnable runnable) {
+        execute(runnable, "ActiveMQ Task");
+    }
+    
+    public void execute(Runnable runnable, String name) {
+        if (executor != null) {
+            executor.execute(runnable);
+        } else {
+            new Thread(runnable, name).start();
         }
     }
 

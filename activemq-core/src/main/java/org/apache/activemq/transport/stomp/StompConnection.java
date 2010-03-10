@@ -25,10 +25,6 @@ import java.io.OutputStream;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.HashMap;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import org.apache.activemq.transport.stomp.Stomp.Headers.Subscribe;
 
 public class StompConnection {
 

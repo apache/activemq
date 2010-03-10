@@ -20,8 +20,11 @@ import java.io.IOException;
 import java.nio.channels.SocketChannel;
 import java.util.LinkedList;
 import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 /**
  * The SelectorManager will manage one Selector and the thread that checks the
@@ -36,16 +39,20 @@ public final class SelectorManager {
 
     public static final SelectorManager SINGLETON = new SelectorManager();
 
-    private Executor selectorExecutor = Executors.newCachedThreadPool(new ThreadFactory() {
-        public Thread newThread(Runnable r) {
-            Thread rc = new Thread(r);
-            rc.setName("NIO Transport Thread");
-            return rc;
-        }
-    });
+    private Executor selectorExecutor = createDefaultExecutor();
     private Executor channelExecutor = selectorExecutor;
     private LinkedList<SelectorWorker> freeWorkers = new LinkedList<SelectorWorker>();
-    private int maxChannelsPerWorker = 64;
+    private int maxChannelsPerWorker = 1024;
+    
+    protected ExecutorService createDefaultExecutor() {
+        ThreadPoolExecutor rc = new ThreadPoolExecutor(0, Integer.MAX_VALUE, 10, TimeUnit.MILLISECONDS, new SynchronousQueue<Runnable>(), new ThreadFactory() {
+            public Thread newThread(Runnable runnable) {
+                return new Thread(runnable, "ActiveMQ NIO Worker");
+            }
+        });
+        // rc.allowCoreThreadTimeOut(true);
+        return rc;
+    }
     
     public static SelectorManager getInstance() {
         return SINGLETON;
@@ -61,15 +68,25 @@ public final class SelectorManager {
     public synchronized SelectorSelection register(SocketChannel socketChannel, Listener listener)
         throws IOException {
 
-        SelectorWorker worker = null;
-        if (freeWorkers.size() > 0) {
-            worker = freeWorkers.getFirst();
-        } else {
-            worker = new SelectorWorker(this);
-            freeWorkers.addFirst(worker);
+        SelectorSelection selection = null;
+        while( selection == null ) {
+            if (freeWorkers.size() > 0) {
+                SelectorWorker worker = freeWorkers.getFirst();
+                if( worker.isReleased() ) {
+                    freeWorkers.remove(worker);
+                } else {
+                    worker.retain();
+                    selection = new SelectorSelection(worker, socketChannel, listener);
+                }
+                
+            } else {
+                // Worker starts /w retain count of 1
+                SelectorWorker worker = new SelectorWorker(this);
+                freeWorkers.addFirst(worker);
+                selection = new SelectorSelection(worker, socketChannel, listener);
+            }
         }
-
-        SelectorSelection selection = new SelectorSelection(worker, socketChannel, listener);
+        
         return selection;
     }
 
@@ -82,7 +99,7 @@ public final class SelectorManager {
     }
 
     public synchronized void onWorkerNotFullEvent(SelectorWorker worker) {
-        freeWorkers.add(worker);
+        freeWorkers.addFirst(worker);
     }
 
     public Executor getChannelExecutor() {

@@ -149,7 +149,7 @@ public class NIOTransport extends TcpTransport {
     }
 
     protected void doStop(ServiceStopper stopper) throws Exception {
-        selection.disable();
+        selection.close();
         super.doStop(stopper);
     }
 }
