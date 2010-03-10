@@ -79,14 +79,6 @@
         <include>**/*.class</include>
       </includes>
     </fileSet>
-    <!-- add our patched RoutesResource class to mask 2.0.0 camel-web bug --> 
-     <fileSet>
-      <directory>../activemq-camel/target/classes</directory>
-      <outputDirectory>/webapps/camel/WEB-INF/classes</outputDirectory>
-      <includes>
-        <include>org/apache/camel/web/resources/RoutesResource.class</include>
-      </includes>
-    </fileSet>
   </fileSets> 
   
   <dependencySets>
@@ -107,8 +99,6 @@
       <unpackOptions>
         <excludes>
           <exclude>**/applicationContext.xml</exclude>
-          <!-- ignore RoutesResource class to mask 2.0.0 camel-web bug -->
-          <exclude>**/RoutesResource.class</exclude>
           <!-- ignore jars already in distro -->
           <exclude>**/act*.jar</exclude>
           <exclude>**/ant*.jar</exclude>
