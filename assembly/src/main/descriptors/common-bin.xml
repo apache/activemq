@@ -248,6 +248,8 @@
         <!-- Atom/RSS support -->
         <include>rome:rome</include>
         <include>jdom:jdom</include>
+        <!--  Camel web dependencies -->
+        <include>org.fusesource.commonman:commons-management</include>
       </includes>
     </dependencySet>
   </dependencySets>
