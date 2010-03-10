@@ -50,7 +50,7 @@
 
   <filter-mapping>
     <filter-name>spring</filter-name>
-    <url-pattern>*.jsp</url-pattern>
+    <url-pattern>/*</url-pattern>
   </filter-mapping>
 
   <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
