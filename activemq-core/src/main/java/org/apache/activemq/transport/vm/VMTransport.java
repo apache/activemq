@@ -17,6 +17,7 @@
 package org.apache.activemq.transport.vm;
 
 import java.io.IOException;
+import java.io.InterruptedIOException;
 import java.net.URI;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -100,7 +101,9 @@ public class VMTransport implements Transport, Task {
             }
             
         } catch (InterruptedException e) {
-            throw IOExceptionSupport.create(e);
+            InterruptedIOException iioe = new InterruptedIOException(e.getMessage());
+            iioe.initCause(e);
+            throw iioe;
         } finally {
             // Allow the peer to change state again...
             peer.enqueueValve.decrement();
