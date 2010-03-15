@@ -104,9 +104,11 @@ public class FailoverTransport implements CompositeTransport {
     private int maxCacheSize = 128 * 1024;
     private final TransportListener disposedListener = new DefaultTransportListener() {
     };
-    private boolean connectionInterruptProcessingComplete;
+    //private boolean connectionInterruptProcessingComplete;
 
     private final TransportListener myTransportListener = createTransportListener();
+    private boolean updateURIsSupported=true;
+    private boolean reconnectSupported=true;
 
     public FailoverTransport() throws InterruptedIOException {
 
@@ -951,36 +953,46 @@ public class FailoverTransport implements CompositeTransport {
     }
 
     public boolean isReconnectSupported() {
-        return true;
+        return this.reconnectSupported;
     }
-
+    
+    public void setReconnectSupported(boolean value) {
+        this.reconnectSupported=value;
+    }
+   
     public boolean isUpdateURIsSupported() {
-        return true;
+        return this.updateURIsSupported;
+    }
+    
+    public void setUpdateURIsSupported(boolean value) {
+        this.updateURIsSupported=value;
     }
 
     public void updateURIs(boolean rebalance, URI[] updatedURIs) throws IOException {
-        List<URI> copy = new ArrayList<URI>(this.updated);
-        List<URI> add = new ArrayList<URI>();
-        if (updatedURIs != null && updatedURIs.length > 0) {
-            Set<URI> set = new HashSet<URI>();
-            for (int i = 0; i < updatedURIs.length; i++) {
-                URI uri = updatedURIs[i];
-                if (uri != null) {
-                    set.add(uri);
+        if (isUpdateURIsSupported()) {
+            List<URI> copy = new ArrayList<URI>(this.updated);
+            List<URI> add = new ArrayList<URI>();
+            if (updatedURIs != null && updatedURIs.length > 0) {
+                Set<URI> set = new HashSet<URI>();
+                for (int i = 0; i < updatedURIs.length; i++) {
+                    URI uri = updatedURIs[i];
+                    if (uri != null) {
+                        set.add(uri);
+                    }
                 }
-            }
-            for (URI uri : set) {
-                if (copy.remove(uri) == false) {
-                    add.add(uri);
+                for (URI uri : set) {
+                    if (copy.remove(uri) == false) {
+                        add.add(uri);
+                    }
                 }
-            }
-            synchronized (reconnectMutex) {
-                this.updated.clear();
-                this.updated.addAll(add);
-                for (URI uri : copy) {
-                    this.uris.remove(uri);
+                synchronized (reconnectMutex) {
+                    this.updated.clear();
+                    this.updated.addAll(add);
+                    for (URI uri : copy) {
+                        this.uris.remove(uri);
+                    }
+                    add(rebalance, add.toArray(new URI[add.size()]));
                 }
-                add(rebalance, add.toArray(new URI[add.size()]));
             }
         }
     }

@@ -23,15 +23,12 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-
 import javax.jms.DeliveryMode;
 import javax.jms.JMSException;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
-
 import junit.framework.TestCase;
-
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
@@ -55,8 +52,8 @@ public class ReconnectTest extends TestCase {
 
     private BrokerService bs;
     private URI tcpUri;
-    private AtomicInteger resumedCount = new AtomicInteger();
-    private AtomicInteger interruptedCount = new AtomicInteger();
+    private final AtomicInteger resumedCount = new AtomicInteger();
+    private final AtomicInteger interruptedCount = new AtomicInteger();
     private Worker[] workers;
 
     class Worker implements Runnable {
@@ -64,14 +61,14 @@ public class ReconnectTest extends TestCase {
         public AtomicInteger iterations = new AtomicInteger();
         public CountDownLatch stopped = new CountDownLatch(1);
 
-        private ActiveMQConnection connection;
-        private AtomicBoolean stop = new AtomicBoolean(false);
+        private final ActiveMQConnection connection;
+        private final AtomicBoolean stop = new AtomicBoolean(false);
         private Throwable error;
-        private String name;
+        private final String name;
 
         public Worker(final String name) throws URISyntaxException, JMSException {
             this.name=name;
-            URI uri = new URI("failover://(mock://(" + tcpUri + "))");
+            URI uri = new URI("failover://(mock://(" + tcpUri + "))?updateURIsSupported=false");
             ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(uri);
             connection = (ActiveMQConnection)factory.createConnection();
             connection.addTransportListener(new TransportListener() {
@@ -96,7 +93,7 @@ public class ReconnectTest extends TestCase {
         }
 
         public void failConnection() {
-            MockTransport mockTransport = (MockTransport)connection.getTransportChannel().narrow(MockTransport.class);
+            MockTransport mockTransport = connection.getTransportChannel().narrow(MockTransport.class);
             mockTransport.onException(new IOException("Simulated error"));
         }
 
@@ -222,6 +219,7 @@ public class ReconnectTest extends TestCase {
 
     }
 
+    @Override
     protected void setUp() throws Exception {
         bs = new BrokerService();
         bs.setPersistent(false);
@@ -238,6 +236,7 @@ public class ReconnectTest extends TestCase {
 
     }
 
+    @Override
     protected void tearDown() throws Exception {
         for (int i = 0; i < WORKER_COUNT; i++) {
             workers[i].stop();
