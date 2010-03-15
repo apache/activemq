@@ -22,13 +22,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Set;
-import java.util.TreeSet;
 
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.MessageId;
@@ -59,7 +55,6 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
     private static final Log LOG = LogFactory.getLog(DefaultJDBCAdapter.class);
     protected Statements statements;
     protected boolean batchStatments = true;
-    private Set<Long> lastRecoveredMessagesIds = Collections.synchronizedSet(new TreeSet<Long>());
 
     protected void setBinaryData(PreparedStatement s, int index, byte data[]) throws SQLException {
         s.setBytes(index, data);
@@ -169,7 +164,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         }
     }
 
-    public void doAddMessage(TransactionContext c, MessageId messageID, ActiveMQDestination destination, byte[] data,
+    public void doAddMessage(TransactionContext c, long sequence, MessageId messageID, ActiveMQDestination destination, byte[] data,
             long expiration) throws SQLException, IOException {
         PreparedStatement s = c.getAddMessageStatement();
         try {
@@ -179,7 +174,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
                     c.setAddMessageStatement(s);
                 }
             }
-            s.setLong(1, messageID.getBrokerSequenceId());
+            s.setLong(1, sequence);
             s.setString(2, messageID.getProducerId().toString());
             s.setLong(3, messageID.getProducerSequenceId());
             s.setString(4, destination.getQualifiedName());
@@ -199,7 +194,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         }
     }
 
-    public void doAddMessageReference(TransactionContext c, MessageId messageID, ActiveMQDestination destination,
+    public void doAddMessageReference(TransactionContext c, long sequence, MessageId messageID, ActiveMQDestination destination,
             long expirationTime, String messageRef) throws SQLException, IOException {
         PreparedStatement s = c.getAddMessageStatement();
         try {
@@ -227,7 +222,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         }
     }
 
-    public long getBrokerSequenceId(TransactionContext c, MessageId messageID) throws SQLException, IOException {
+    public long getStoreSequenceId(TransactionContext c, MessageId messageID) throws SQLException, IOException {
         PreparedStatement s = null;
         ResultSet rs = null;
         try {
@@ -245,12 +240,13 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         }
     }
 
-    public byte[] doGetMessage(TransactionContext c, long seq) throws SQLException, IOException {
+    public byte[] doGetMessage(TransactionContext c, MessageId id) throws SQLException, IOException {
         PreparedStatement s = null;
         ResultSet rs = null;
         try {
             s = c.getConnection().prepareStatement(this.statements.getFindMessageStatement());
-            s.setLong(1, seq);
+            s.setString(1, id.getProducerId().toString());
+            s.setLong(2, id.getProducerSequenceId());
             rs = s.executeQuery();
             if (!rs.next()) {
                 return null;

@@ -134,7 +134,7 @@ public class Statements {
 
     public String getFindMessageStatement() {
         if (findMessageStatement == null) {
-            findMessageStatement = "SELECT MSG FROM " + getFullMessageTableName() + " WHERE ID=?";
+            findMessageStatement = "SELECT MSG FROM " + getFullMessageTableName() + " WHERE MSGID_PROD=? AND MSGID_SEQ=?";
         }
         return findMessageStatement;
     }

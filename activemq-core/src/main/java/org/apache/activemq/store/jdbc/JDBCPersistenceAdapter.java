@@ -46,6 +46,7 @@ import org.apache.activemq.store.memory.MemoryTransactionStore;
 import org.apache.activemq.usage.SystemUsage;
 import org.apache.activemq.util.FactoryFinder;
 import org.apache.activemq.util.IOExceptionSupport;
+import org.apache.activemq.util.LongSequenceGenerator;
 import org.apache.activemq.wireformat.WireFormat;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -93,6 +94,8 @@ public class JDBCPersistenceAdapter extends DataSourceSupport implements Persist
     protected boolean enableAudit=true;
     protected int auditRecoveryDepth = 1024;
     protected ActiveMQMessageAudit audit;
+    
+    protected LongSequenceGenerator sequenceGenerator = new LongSequenceGenerator();
 
     public JDBCPersistenceAdapter() {
     }
@@ -151,6 +154,28 @@ public class JDBCPersistenceAdapter extends DataSourceSupport implements Persist
                 }
             }
     	}
+    }
+    
+    public void initSequenceIdGenerator() {
+        TransactionContext c = null;
+        try {
+            c = getTransactionContext();
+            getAdapter().doMessageIdScan(c, auditRecoveryDepth, new JDBCMessageIdScanListener() {
+                public void messageId(MessageId id) {
+                    audit.isDuplicate(id);
+                }
+            });
+        } catch (Exception e) {
+            LOG.error("Failed to reload store message audit for JDBC persistence adapter", e);
+        } finally {
+            if (c != null) {
+                try {
+                    c.close();
+                } catch (Throwable e) {
+                }
+            }
+        }
+        
     }
 
     public MessageStore createQueueMessageStore(ActiveMQQueue destination) throws IOException {
@@ -654,6 +679,12 @@ public class JDBCPersistenceAdapter extends DataSourceSupport implements Persist
 
     public void setAuditRecoveryDepth(int auditRecoveryDepth) {
         this.auditRecoveryDepth = auditRecoveryDepth;
+    }
+
+    public long getNextSequenceId() {
+        synchronized(sequenceGenerator) {
+            return sequenceGenerator.getNextSequenceId();
+        }
     }
     
 }

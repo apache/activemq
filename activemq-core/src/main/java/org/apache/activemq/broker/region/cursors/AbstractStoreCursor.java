@@ -171,7 +171,9 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
             if (cacheEnabled) {
                 cacheEnabled=false;
                 if (LOG.isDebugEnabled()) {
-                    LOG.debug(regionDestination.getActiveMQDestination().getPhysicalName() + " disabling cache on size:" + size);
+                    LOG.debug(regionDestination.getActiveMQDestination().getPhysicalName() + " disabling cache on size:" + size
+                            + ", lastCachedIdSeq: " + (lastCachedId == null ? -1 : lastCachedId.getBrokerSequenceId())
+                            + " current node seqId: " + node.getMessageId().getBrokerSequenceId());
                 }
                 // sync with store on disabling the cache
                 if (lastCachedId != null) {
