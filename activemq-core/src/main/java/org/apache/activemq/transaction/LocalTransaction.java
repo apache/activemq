@@ -67,6 +67,8 @@ public class LocalTransaction extends Transaction {
 
         setState(Transaction.FINISHED_STATE);
         context.getTransactions().remove(xid);
+        // Sync on transaction store to avoid out of order messages in the cursor
+        // https://issues.apache.org/activemq/browse/AMQ-2594
         synchronized (transactionStore) {
             transactionStore.commit(getTransactionId(), false);
 
@@ -92,6 +94,8 @@ public class LocalTransaction extends Transaction {
         }
         setState(Transaction.FINISHED_STATE);
         context.getTransactions().remove(xid);
+        // Sync on transaction store to avoid out of order messages in the cursor
+        // https://issues.apache.org/activemq/browse/AMQ-2594
         synchronized (transactionStore) {
            transactionStore.rollback(getTransactionId());
 
