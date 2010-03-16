@@ -46,10 +46,10 @@ public class JDBCTopicMessageStore extends JDBCMessageStore implements TopicMess
     }
 
     public void acknowledge(ConnectionContext context, String clientId, String subscriptionName, MessageId messageId) throws IOException {
-        long seq = messageId.getBrokerSequenceId();
         // Get a connection and insert the message into the DB.
         TransactionContext c = persistenceAdapter.getTransactionContext(context);
         try {
+        	long seq = adapter.getStoreSequenceId(c, messageId);
             adapter.doSetLastAck(c, destination, clientId, subscriptionName, seq);
         } catch (SQLException e) {
             JDBCPersistenceAdapter.log("JDBC Failure: ", e);

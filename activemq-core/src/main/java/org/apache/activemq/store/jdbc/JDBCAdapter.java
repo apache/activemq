@@ -34,11 +34,11 @@ public interface JDBCAdapter {
 
     void doDropTables(TransactionContext c) throws SQLException, IOException;
 
-    void doAddMessage(TransactionContext c, MessageId messageID, ActiveMQDestination destination, byte[] data, long expiration) throws SQLException, IOException;
+    void doAddMessage(TransactionContext c, long sequence, MessageId messageID, ActiveMQDestination destination, byte[] data, long expiration) throws SQLException, IOException;
 
-    void doAddMessageReference(TransactionContext c, MessageId messageId, ActiveMQDestination destination, long expirationTime, String messageRef) throws SQLException, IOException;
+    void doAddMessageReference(TransactionContext c, long sequence, MessageId messageId, ActiveMQDestination destination, long expirationTime, String messageRef) throws SQLException, IOException;
 
-    byte[] doGetMessage(TransactionContext c, long seq) throws SQLException, IOException;
+    byte[] doGetMessage(TransactionContext c, MessageId id) throws SQLException, IOException;
 
     String doGetMessageReference(TransactionContext c, long id) throws SQLException, IOException;
 
@@ -58,7 +58,7 @@ public interface JDBCAdapter {
 
     SubscriptionInfo doGetSubscriberEntry(TransactionContext c, ActiveMQDestination destination, String clientId, String subscriptionName) throws SQLException, IOException;
 
-    long getBrokerSequenceId(TransactionContext c, MessageId messageID) throws SQLException, IOException;
+    long getStoreSequenceId(TransactionContext c, MessageId messageID) throws SQLException, IOException;
 
     void doRemoveAllMessages(TransactionContext c, ActiveMQDestination destinationName) throws SQLException, IOException;
 

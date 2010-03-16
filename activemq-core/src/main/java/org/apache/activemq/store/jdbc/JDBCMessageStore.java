@@ -44,9 +44,10 @@ public class JDBCMessageStore extends AbstractMessageStore {
     protected final WireFormat wireFormat;
     protected final JDBCAdapter adapter;
     protected final JDBCPersistenceAdapter persistenceAdapter;
-    protected AtomicLong lastMessageId = new AtomicLong(-1);
-    protected ActiveMQMessageAudit audit;
+    protected AtomicLong lastStoreSequenceId = new AtomicLong(-1);
 
+    protected ActiveMQMessageAudit audit;
+    
     public JDBCMessageStore(JDBCPersistenceAdapter persistenceAdapter, JDBCAdapter adapter, WireFormat wireFormat, ActiveMQDestination destination, ActiveMQMessageAudit audit) {
         super(destination);
         this.persistenceAdapter = persistenceAdapter;
@@ -67,6 +68,8 @@ public class JDBCMessageStore extends AbstractMessageStore {
             return;
         }
         
+        long sequenceId = persistenceAdapter.getNextSequenceId();
+        
         // Serialize the Message..
         byte data[];
         try {
@@ -78,8 +81,8 @@ public class JDBCMessageStore extends AbstractMessageStore {
 
         // Get a connection and insert the message into the DB.
         TransactionContext c = persistenceAdapter.getTransactionContext(context);
-        try {
-            adapter.doAddMessage(c, messageId, destination, data, message.getExpiration());
+        try {      
+            adapter.doAddMessage(c,sequenceId, messageId, destination, data, message.getExpiration());
         } catch (SQLException e) {
             JDBCPersistenceAdapter.log("JDBC Failure: ", e);
             throw IOExceptionSupport.create("Failed to broker message: " + messageId + " in container: " + e, e);
@@ -92,7 +95,7 @@ public class JDBCMessageStore extends AbstractMessageStore {
         // Get a connection and insert the message into the DB.
         TransactionContext c = persistenceAdapter.getTransactionContext(context);
         try {
-            adapter.doAddMessageReference(c, messageId, destination, expirationTime, messageRef);
+            adapter.doAddMessageReference(c, persistenceAdapter.getNextSequenceId(), messageId, destination, expirationTime, messageRef);
         } catch (SQLException e) {
             JDBCPersistenceAdapter.log("JDBC Failure: ", e);
             throw IOExceptionSupport.create("Failed to broker message: " + messageId + " in container: " + e, e);
@@ -102,13 +105,10 @@ public class JDBCMessageStore extends AbstractMessageStore {
     }
 
     public Message getMessage(MessageId messageId) throws IOException {
-
-        long id = messageId.getBrokerSequenceId();
-
         // Get a connection and pull the message out of the DB
         TransactionContext c = persistenceAdapter.getTransactionContext();
         try {
-            byte data[] = adapter.doGetMessage(c, id);
+            byte data[] = adapter.doGetMessage(c, messageId);
             if (data == null) {
                 return null;
             }
@@ -143,7 +143,8 @@ public class JDBCMessageStore extends AbstractMessageStore {
     }
 
     public void removeMessage(ConnectionContext context, MessageAck ack) throws IOException {
-        long seq = ack.getLastMessageId().getBrokerSequenceId();
+    	
+    	long seq = getStoreSequenceIdForMessageId(ack.getLastMessageId());
 
         // Get a connection and remove the message from the DB
         TransactionContext c = persistenceAdapter.getTransactionContext(context);
@@ -225,14 +226,14 @@ public class JDBCMessageStore extends AbstractMessageStore {
         TransactionContext c = persistenceAdapter.getTransactionContext();
 
         try {
-            adapter.doRecoverNextMessages(c, destination, lastMessageId.get(), maxReturned, new JDBCMessageRecoveryListener() {
+            adapter.doRecoverNextMessages(c, destination, lastStoreSequenceId.get(), maxReturned, new JDBCMessageRecoveryListener() {
 
                 public boolean recoverMessage(long sequenceId, byte[] data) throws Exception {
                     if (listener.hasSpace()) {
                         Message msg = (Message)wireFormat.unmarshal(new ByteSequence(data));
                         msg.getMessageId().setBrokerSequenceId(sequenceId);
                         listener.recoverMessage(msg);
-                        lastMessageId.set(sequenceId);
+                        lastStoreSequenceId.set(sequenceId);
                         return true;
                     }
                     return false;
@@ -259,13 +260,38 @@ public class JDBCMessageStore extends AbstractMessageStore {
      * @see org.apache.activemq.store.MessageStore#resetBatching()
      */
     public void resetBatching() {
-        lastMessageId.set(-1);
+        if (LOG.isDebugEnabled()) {
+            LOG.debug(destination.getPhysicalName() + " resetBatch, existing last seqId: " + lastStoreSequenceId.get());
+        }
+        lastStoreSequenceId.set(-1);
 
     }
 
     @Override
     public void setBatch(MessageId messageId) {
-        lastMessageId.set(messageId.getBrokerSequenceId());
+        long storeSequenceId = -1;
+        try {
+            storeSequenceId = getStoreSequenceIdForMessageId(messageId);
+        } catch (IOException ignoredAsAlreadyLogged) {
+            // reset batch in effect with default -1 value
+        }
+        if (LOG.isDebugEnabled()) {
+            LOG.debug(destination.getPhysicalName() + " setBatch: new sequenceId: " + storeSequenceId + ",existing last seqId: " + lastStoreSequenceId.get());
+        }
+        lastStoreSequenceId.set(storeSequenceId);
     }
 
+    private long getStoreSequenceIdForMessageId(MessageId messageId) throws IOException {
+        long result = -1;
+        TransactionContext c = persistenceAdapter.getTransactionContext();
+        try {
+            result = adapter.getStoreSequenceId(c, messageId);
+        } catch (SQLException e) {
+            JDBCPersistenceAdapter.log("JDBC Failure: ", e);
+            throw IOExceptionSupport.create("Failed to get store sequenceId for messageId: " + messageId +", on: " + destination + ". Reason: " + e, e);
+        } finally {
+            c.close();
+        }
+        return result;
+    }
 }

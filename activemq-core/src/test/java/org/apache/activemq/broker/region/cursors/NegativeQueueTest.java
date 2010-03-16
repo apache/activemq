@@ -135,6 +135,7 @@ public class NegativeQueueTest extends TestCase {
     
     public void testWithNoPrefetch() throws Exception{
         PREFETCH_SIZE = 1;
+        NUM_CONSUMERS = 20;
         blastAndConsume();
     }
     
@@ -192,7 +193,7 @@ public class NegativeQueueTest extends TestCase {
             consumer.setMessageListener(new SessionAwareMessageListener(producerConnections2[ix], consumerSession, QUEUE_2_NAME, latch1, consumerList1));
         }
         
-        latch1.await(300000, TimeUnit.MILLISECONDS);
+        latch1.await(200000, TimeUnit.MILLISECONDS);
         if(DEBUG){
             System.out.println("");
             System.out.println("Queue2 Size = "+proxyQueue2.getQueueSize());
@@ -295,6 +296,11 @@ public class NegativeQueueTest extends TestCase {
         PolicyEntry policy = new PolicyEntry();
         policy.setMemoryLimit(QUEUE_MEMORY_LIMIT); 
         policy.setPendingQueuePolicy(new StorePendingQueueMessageStoragePolicy());
+        
+        // disable the cache to be sure setBatch is the problem
+        // will get lots of duplicates
+        // policy.setUseCache(false);
+        
         PolicyMap pMap = new PolicyMap();
         pMap.setDefaultEntry(policy);
         answer.setDestinationPolicy(pMap);

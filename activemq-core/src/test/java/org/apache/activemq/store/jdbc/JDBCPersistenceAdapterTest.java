@@ -28,6 +28,8 @@ public class JDBCPersistenceAdapterTest extends PersistenceAdapterTestSupport {
     
     protected PersistenceAdapter createPersistenceAdapter(boolean delete) throws IOException {
         JDBCPersistenceAdapter jdbc = new JDBCPersistenceAdapter();
+        brokerService.setPersistenceAdapter(jdbc);
+        jdbc.setBrokerService(brokerService);
         EmbeddedDataSource dataSource = new EmbeddedDataSource();
         dataSource.setDatabaseName("derbyDb");
         dataSource.setCreateDatabase("create");

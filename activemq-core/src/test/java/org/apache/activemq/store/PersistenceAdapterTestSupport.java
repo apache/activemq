@@ -20,6 +20,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import junit.framework.TestCase;
 
+import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTextMessage;
@@ -33,6 +34,7 @@ import org.apache.activemq.command.MessageId;
 abstract public class PersistenceAdapterTestSupport extends TestCase {
 
     protected PersistenceAdapter pa;
+    protected BrokerService brokerService = new BrokerService();
 
     abstract protected PersistenceAdapter createPersistenceAdapter(boolean delete) throws Exception;
 
