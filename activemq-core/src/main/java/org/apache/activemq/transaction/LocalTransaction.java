@@ -67,18 +67,20 @@ public class LocalTransaction extends Transaction {
 
         setState(Transaction.FINISHED_STATE);
         context.getTransactions().remove(xid);
-        transactionStore.commit(getTransactionId(), false);
+        synchronized (transactionStore) {
+            transactionStore.commit(getTransactionId(), false);
 
-        try {
-            fireAfterCommit();
-        } catch (Throwable e) {
-            // I guess this could happen. Post commit task failed
-            // to execute properly.
-            LOG.warn("POST COMMIT FAILED: ", e);
-            XAException xae = new XAException("POST COMMIT FAILED");
-            xae.errorCode = XAException.XAER_RMERR;
-            xae.initCause(e);
-            throw xae;
+            try {
+                fireAfterCommit();
+            } catch (Throwable e) {
+                // I guess this could happen. Post commit task failed
+                // to execute properly.
+                LOG.warn("POST COMMIT FAILED: ", e);
+                XAException xae = new XAException("POST COMMIT FAILED");
+                xae.errorCode = XAException.XAER_RMERR;
+                xae.initCause(e);
+                throw xae;
+            }
         }
     }
 
@@ -90,16 +92,18 @@ public class LocalTransaction extends Transaction {
         }
         setState(Transaction.FINISHED_STATE);
         context.getTransactions().remove(xid);
-        transactionStore.rollback(getTransactionId());
+        synchronized (transactionStore) {
+           transactionStore.rollback(getTransactionId());
 
-        try {
-            fireAfterRollback();
-        } catch (Throwable e) {
-            LOG.warn("POST ROLLBACK FAILED: ", e);
-            XAException xae = new XAException("POST ROLLBACK FAILED");
-            xae.errorCode = XAException.XAER_RMERR;
-            xae.initCause(e);
-            throw xae;
+            try {
+                fireAfterRollback();
+            } catch (Throwable e) {
+                LOG.warn("POST ROLLBACK FAILED: ", e);
+                XAException xae = new XAException("POST ROLLBACK FAILED");
+                xae.errorCode = XAException.XAER_RMERR;
+                xae.initCause(e);
+                throw xae;
+            }
         }
     }
 
