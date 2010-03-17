@@ -587,14 +587,14 @@ public class RegionBroker extends EmptyBroker {
     @Override
     public synchronized void addBroker(Connection connection, BrokerInfo info) {
         brokerInfos.add(info);
-        updateClients();
+        addBrokerInClusterUpdate();
     }
 
     @Override
     public synchronized void removeBroker(Connection connection, BrokerInfo info) {
         if (info != null) {
             brokerInfos.remove(info);
-            updateClients();
+            removeBrokerInClusterUpdate();
         }
     }
 
@@ -835,10 +835,21 @@ public class RegionBroker extends EmptyBroker {
         }
     }
     
-    protected void updateClients() {
+    protected void addBrokerInClusterUpdate() {
         List<TransportConnector> connectors = this.brokerService.getTransportConnectors();
         for (TransportConnector connector : connectors) {
-            connector.updateClientClusterInfo();
+            if (connector.isUpdateClusterClients()) {
+                connector.updateClientClusterInfo();
+            }
+        }
+    }
+
+    protected void removeBrokerInClusterUpdate() {
+        List<TransportConnector> connectors = this.brokerService.getTransportConnectors();
+        for (TransportConnector connector : connectors) {
+            if (connector.isUpdateClusterClients() && connector.isUpdateClusterClientsOnRemove()) {
+                connector.updateClientClusterInfo();
+            }
         }
     }
 }

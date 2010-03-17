@@ -52,5 +52,11 @@ public interface Connector extends Service {
      * about the connected brokers in the cluster
      */
     public void updateClientClusterInfo();
+    
+    /**
+     * @return true if clients should be updated when
+     * a broker is removed from a broker
+     */
+    public boolean  isUpdateClusterClientsOnRemove();
 
 }

@@ -67,8 +67,9 @@ public class TransportConnector implements Connector, BrokerServiceAware {
     private boolean disableAsyncDispatch;
     private boolean enableStatusMonitor = false;
     private Broker broker;
-    private boolean updateClusterClients = false;
+    private boolean updateClusterClients = true;
     private boolean rebalanceClusterClients;
+    private boolean updateClusterClientsOnRemove = false;
     private String updateClusterFilter;
 
     public TransportConnector() {
@@ -509,7 +510,21 @@ public class TransportConnector implements Connector, BrokerServiceAware {
     public void setRebalanceClusterClients(boolean rebalanceClusterClients) {
         this.rebalanceClusterClients = rebalanceClusterClients;
     }
+ 
+    /**
+     * @return the updateClusterClientsOnRemove
+     */
+    public boolean isUpdateClusterClientsOnRemove() {
+        return this.updateClusterClientsOnRemove;
+    }
 
+    /**
+     * @param updateClusterClientsOnRemove the updateClusterClientsOnRemove to set
+     */
+    public void setUpdateClusterClientsOnRemove(boolean updateClusterClientsOnRemove) {
+        this.updateClusterClientsOnRemove = updateClusterClientsOnRemove;
+    }
+    
     /**
      * @return the updateClusterFilter
      */
@@ -524,4 +539,5 @@ public class TransportConnector implements Connector, BrokerServiceAware {
     public void setUpdateClusterFilter(String updateClusterFilter) {
         this.updateClusterFilter = updateClusterFilter;
     }
+
 }
