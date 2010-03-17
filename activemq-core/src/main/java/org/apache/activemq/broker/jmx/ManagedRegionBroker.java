@@ -201,7 +201,7 @@ public class ManagedRegionBroker extends RegionBroker {
         String persistentMode = "persistentMode=";
         String consumerId = "";
         if (sub.getConsumerInfo().isDurable()) {
-            persistentMode += "Durable, subscriptionID=" + JMXSupport.encodeObjectNamePart(sub.getConsumerInfo().getSubscriptionName());
+            persistentMode += "Durable,subscriptionID=" + JMXSupport.encodeObjectNamePart(sub.getConsumerInfo().getSubscriptionName());
         } else {
             persistentMode += "Non-Durable";
             if (sub.getConsumerInfo() != null && sub.getConsumerInfo().getConsumerId() != null) {
