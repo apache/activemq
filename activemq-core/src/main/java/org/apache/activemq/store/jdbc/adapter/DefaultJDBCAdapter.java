@@ -138,7 +138,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         }
     }
 
-    public long doGetLastMessageBrokerSequenceId(TransactionContext c) throws SQLException, IOException {
+    public long doGetLastMessageStoreSequenceId(TransactionContext c) throws SQLException, IOException {
         PreparedStatement s = null;
         ResultSet rs = null;
         try {
@@ -162,6 +162,25 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
             close(s);
         }
     }
+    
+    public byte[] doGetMessageById(TransactionContext c, long storeSequenceId) throws SQLException, IOException {
+        PreparedStatement s = null;
+        ResultSet rs = null;
+        try {
+            s = c.getConnection().prepareStatement(
+                    this.statements.getFindMessageByIdStatement());
+            s.setLong(1, storeSequenceId);
+            rs = s.executeQuery();
+            if (!rs.next()) {
+                return null;
+            }
+            return getBinaryData(rs, 1);
+        } finally {
+            close(rs);
+            close(s);
+        }
+    }
+    
 
     public void doAddMessage(TransactionContext c, long sequence, MessageId messageID, ActiveMQDestination destination, byte[] data,
             long expiration) throws SQLException, IOException {
@@ -793,4 +812,5 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
      * out.print(set.getString(i)+"|"); } out.println(); } } finally { try { set.close(); } catch (Throwable ignore) {}
      * try { s.close(); } catch (Throwable ignore) {} } }
      */
+
 }

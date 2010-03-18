@@ -41,6 +41,7 @@ public class Statements {
     private String removeMessageStatment;
     private String findMessageSequenceIdStatement;
     private String findMessageStatement;
+    private String findMessageByIdStatement;
     private String findAllMessagesStatement;
     private String findLastSequenceIdInMsgsStatement;
     private String findLastSequenceIdInAcksStatement;
@@ -139,6 +140,13 @@ public class Statements {
         return findMessageStatement;
     }
 
+    public String getFindMessageByIdStatement() {
+        if (findMessageStatement == null) {
+            findMessageStatement = "SELECT MSG FROM " + getFullMessageTableName() + " WHERE ID=?";
+        }
+        return findMessageStatement;
+    }
+    
     public String getFindAllMessagesStatement() {
         if (findAllMessagesStatement == null) {
             findAllMessagesStatement = "SELECT ID, MSG FROM " + getFullMessageTableName()

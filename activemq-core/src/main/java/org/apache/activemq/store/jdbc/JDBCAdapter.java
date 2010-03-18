@@ -39,6 +39,8 @@ public interface JDBCAdapter {
     void doAddMessageReference(TransactionContext c, long sequence, MessageId messageId, ActiveMQDestination destination, long expirationTime, String messageRef) throws SQLException, IOException;
 
     byte[] doGetMessage(TransactionContext c, MessageId id) throws SQLException, IOException;
+    
+    byte[] doGetMessageById(TransactionContext c, long storeSequenceId) throws SQLException, IOException;
 
     String doGetMessageReference(TransactionContext c, long id) throws SQLException, IOException;
 
@@ -66,7 +68,7 @@ public interface JDBCAdapter {
 
     void doDeleteOldMessages(TransactionContext c) throws SQLException, IOException;
 
-    long doGetLastMessageBrokerSequenceId(TransactionContext c) throws SQLException, IOException;
+    long doGetLastMessageStoreSequenceId(TransactionContext c) throws SQLException, IOException;
 
     Set<ActiveMQDestination> doGetDestinations(TransactionContext c) throws SQLException, IOException;
 
