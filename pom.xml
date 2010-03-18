@@ -25,7 +25,7 @@
 
   <groupId>org.apache.activemq</groupId>
   <artifactId>activemq-parent</artifactId>
-  <version>5.3.1</version>
+  <version>5.3.2-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>ActiveMQ</name>
   <inceptionYear>2005</inceptionYear>
@@ -150,9 +150,9 @@
   </modules>
 
   <scm>
-    <connection>scm:svn:https://svn.apache.org/repos/asf/activemq/tags/activemq-5.3.1</connection>
-    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/activemq/tags/activemq-5.3.1</developerConnection>
-    <url>http://svn.apache.org/viewvc/activemq/tags/activemq-5.3.1</url>
+    <connection>scm:svn:https://svn.apache.org/repos/asf/activemq/branches/activemq-5.3</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/activemq/branches/activemq-5.3</developerConnection>
+    <url>http://svn.apache.org/viewvc/activemq/branches/activemq-5.3</url>
   </scm>
   
   <repositories>
