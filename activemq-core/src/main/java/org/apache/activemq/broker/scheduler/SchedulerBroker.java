@@ -108,8 +108,9 @@ public class SchedulerBroker extends BrokerFilter implements JobListener {
         String cronEntry = "";
         Object cronValue = messageSend.getProperty(ScheduledMessage.AMQ_SCHEDULED_CRON);
         Object periodValue = messageSend.getProperty(ScheduledMessage.AMQ_SCHEDULED_PERIOD);
+        Object delayValue = messageSend.getProperty(ScheduledMessage.AMQ_SCHEDULED_DELAY);
 
-        if (cronValue != null || periodValue != null) {
+        if (cronValue != null || periodValue != null || delayValue != null) {
             org.apache.activemq.util.ByteSequence packet = wireFormat.marshal(messageSend);
                 if (cronValue != null) {
                     cronEntry = cronValue.toString();
@@ -117,7 +118,6 @@ public class SchedulerBroker extends BrokerFilter implements JobListener {
                 if (periodValue != null) {      
                   period = (Long) TypeConversionSupport.convert(periodValue, Long.class);
                 }
-                Object delayValue = messageSend.getProperty(ScheduledMessage.AMQ_SCHEDULED_DELAY);
                 if (delayValue != null) {
                     delay = (Long) TypeConversionSupport.convert(delayValue, Long.class);
                 }
@@ -131,7 +131,6 @@ public class SchedulerBroker extends BrokerFilter implements JobListener {
             
 
         } else {
-
             super.send(producerExchange, messageSend);
         }
     }

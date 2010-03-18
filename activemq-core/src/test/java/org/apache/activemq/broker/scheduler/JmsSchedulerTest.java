@@ -93,7 +93,7 @@ public class JmsSchedulerTest extends EmbeddedBrokerTestSupport {
         MessageProducer producer = session.createProducer(destination);
         TextMessage message = session.createTextMessage("test msg");
 
-        message.setLongProperty(ScheduledMessage.AMQ_SCHEDULED_PERIOD, time);
+        message.setLongProperty(ScheduledMessage.AMQ_SCHEDULED_DELAY, time);
 
         producer.send(message);
         producer.close();

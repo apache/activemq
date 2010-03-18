@@ -16,15 +16,6 @@
  */
 package org.apache.activemq.transport.stomp;
 
-import org.apache.activemq.ActiveMQConnectionFactory;
-import org.apache.activemq.CombinationTestSupport;
-import org.apache.activemq.broker.BrokerFactory;
-import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.broker.jmx.BrokerViewMBean;
-import org.apache.activemq.command.ActiveMQQueue;
-import org.apache.activemq.command.ActiveMQTextMessage;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import java.io.IOException;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
@@ -44,6 +35,15 @@ import javax.jms.ObjectMessage;
 import javax.jms.Session;
 import javax.jms.TextMessage;
 import javax.management.ObjectName;
+import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.CombinationTestSupport;
+import org.apache.activemq.broker.BrokerFactory;
+import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.jmx.BrokerViewMBean;
+import org.apache.activemq.command.ActiveMQQueue;
+import org.apache.activemq.command.ActiveMQTextMessage;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 public class StompTest extends CombinationTestSupport {
     private static final Log LOG = LogFactory.getLog(StompTest.class);
@@ -58,7 +58,7 @@ public class StompTest extends CombinationTestSupport {
     private Connection connection;
     private Session session;
     private ActiveMQQueue queue;
-    private String xmlObject = "<pojo>\n"
+    private final String xmlObject = "<pojo>\n"
             + "  <name>Dejan</name>\n"
             + "  <city>Belgrade</city>\n"
             + "</pojo>";
@@ -74,7 +74,7 @@ public class StompTest extends CombinationTestSupport {
         + "  </entry>\n"
         + "</map>\n";
 
-    private String jsonObject = "{\"pojo\":{"
+    private final String jsonObject = "{\"pojo\":{"
         + "\"name\":\"Dejan\","
         + "\"city\":\"Belgrade\""
         + "}}";
@@ -86,6 +86,7 @@ public class StompTest extends CombinationTestSupport {
         + "]"
         + "}}";
 
+    @Override
     protected void setUp() throws Exception {
         // The order of the entries is different when using ibm jdk 5.
         if (System.getProperty("java.vendor").equals("IBM Corporation")
@@ -132,6 +133,7 @@ public class StompTest extends CombinationTestSupport {
         return getClass().getName() + "." + getName();
     }
 
+    @Override
     protected void tearDown() throws Exception {
         try {
             connection.close();
@@ -242,6 +244,26 @@ public class StompTest extends CombinationTestSupport {
         assertEquals("Hello World", message.getText());
         assertEquals("foo", "abc", message.getStringProperty("foo"));
         assertEquals("bar", "123", message.getStringProperty("bar"));
+    }
+    
+    public void testSendMessageWithDelay() throws Exception {
+
+        MessageConsumer consumer = session.createConsumer(queue);
+
+        String frame = "CONNECT\n" + "login: system\n" + "passcode: manager\n\n" + Stomp.NULL;
+        stompConnection.sendFrame(frame);
+
+        frame = stompConnection.receiveFrame();
+        assertTrue(frame.startsWith("CONNECTED"));
+
+        frame = "SEND\n" + "AMQ_SCHEDULED_DELAY:5000\n"  + "destination:/queue/" + getQueueName() + "\n\n" + "Hello World" + Stomp.NULL;
+
+        stompConnection.sendFrame(frame);
+
+        TextMessage message = (TextMessage)consumer.receive(2000);
+        assertNull(message);
+        message = (TextMessage)consumer.receive(5000);
+        assertNotNull(message);
     }
 
     public void testSendMessageWithStandardHeaders() throws Exception {

@@ -414,7 +414,7 @@ public class ActiveMQMessage extends Message implements org.apache.activemq.Mess
         }
 
         checkValidObject(value);
-        checkValidScheduled(name, value);
+        value = convertScheduled(name, value);
         PropertySetter setter = JMS_PROPERTY_SETERS.get(name);
 
         if (setter != null && value != null) {
@@ -466,6 +466,20 @@ public class ActiveMQMessage extends Message implements org.apache.activemq.Mess
         if (AMQ_SCHEDULED_CRON.equals(name)) {
             CronParser.validate(value.toString());
         }
+    }
+    
+    protected Object  convertScheduled(String name, Object value) throws MessageFormatException {
+        Object result = value;
+        if (AMQ_SCHEDULED_DELAY.equals(name)){
+            result = TypeConversionSupport.convert(value, Long.class);
+        }
+        else if (AMQ_SCHEDULED_PERIOD.equals(name)){
+            result = TypeConversionSupport.convert(value, Long.class);
+        }
+        else if (AMQ_SCHEDULED_REPEAT.equals(name)){
+            result = TypeConversionSupport.convert(value, Integer.class);
+        }
+        return result;
     }
 
     public Object getObjectProperty(String name) throws JMSException {
