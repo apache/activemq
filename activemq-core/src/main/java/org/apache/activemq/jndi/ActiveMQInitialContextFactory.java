@@ -33,6 +33,7 @@ import javax.naming.NamingException;
 import javax.naming.spi.InitialContextFactory;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.ActiveMQXAConnectionFactory;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
 
@@ -198,11 +199,18 @@ public class ActiveMQInitialContextFactory implements InitialContextFactory {
      * environment
      */
     protected ActiveMQConnectionFactory createConnectionFactory(Hashtable environment) throws URISyntaxException {
-        ActiveMQConnectionFactory answer = new ActiveMQConnectionFactory();
+        ActiveMQConnectionFactory answer = needsXA(environment) ? new ActiveMQXAConnectionFactory() : new ActiveMQConnectionFactory();
         Properties properties = new Properties();
         properties.putAll(environment);
         answer.setProperties(properties);
         return answer;
+    }
+
+    private boolean needsXA(Hashtable environment) {
+        boolean isXA = Boolean.parseBoolean((String) environment.get("xa"));
+        // property not applicable to connectionfactory so remove
+        environment.remove("xa");
+        return isXA;
     }
 
     public String getConnectionPrefix() {
