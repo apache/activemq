@@ -67,7 +67,7 @@ public class TransportConnector implements Connector, BrokerServiceAware {
     private boolean disableAsyncDispatch;
     private boolean enableStatusMonitor = false;
     private Broker broker;
-    private boolean updateClusterClients = true;
+    private boolean updateClusterClients = false;
     private boolean rebalanceClusterClients;
     private boolean updateClusterClientsOnRemove = false;
     private String updateClusterFilter;
