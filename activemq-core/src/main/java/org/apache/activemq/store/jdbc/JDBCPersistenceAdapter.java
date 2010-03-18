@@ -35,6 +35,7 @@ import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
+import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.openwire.OpenWireFormat;
 import org.apache.activemq.store.MessageStore;
@@ -44,6 +45,7 @@ import org.apache.activemq.store.TransactionStore;
 import org.apache.activemq.store.jdbc.adapter.DefaultJDBCAdapter;
 import org.apache.activemq.store.memory.MemoryTransactionStore;
 import org.apache.activemq.usage.SystemUsage;
+import org.apache.activemq.util.ByteSequence;
 import org.apache.activemq.util.FactoryFinder;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.LongSequenceGenerator;
@@ -223,7 +225,14 @@ public class JDBCPersistenceAdapter extends DataSourceSupport implements Persist
         // Get a connection and insert the message into the DB.
         TransactionContext c = getTransactionContext();
         try {
-            return getAdapter().doGetLastMessageBrokerSequenceId(c);
+            long seq =  getAdapter().doGetLastMessageStoreSequenceId(c);
+            sequenceGenerator.setLastSequenceId(seq);
+            long brokerSeq = 0;
+            if (seq != 0) {
+            	Message last = (Message)wireFormat.unmarshal(new ByteSequence(getAdapter().doGetMessageById(c, seq)));
+            	brokerSeq = last.getMessageId().getBrokerSequenceId();
+            }
+            return brokerSeq;
         } catch (SQLException e) {
             JDBCPersistenceAdapter.log("JDBC Failure: ", e);
             throw IOExceptionSupport.create("Failed to get last broker message id: " + e, e);
