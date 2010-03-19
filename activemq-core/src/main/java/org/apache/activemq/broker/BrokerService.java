@@ -1803,7 +1803,6 @@ public class BrokerService implements Service {
      * @throws IOException
      */
     protected Broker addInterceptors(Broker broker) throws Exception {
-        broker = new TransactionBroker(broker, getPersistenceAdapter().createTransactionStore());
         if (isSchedulerSupport()) {
             SchedulerBroker sb = new SchedulerBroker(broker, getSchedulerDirectoryFile());
             if (isUseJmx()) {
@@ -1823,6 +1822,7 @@ public class BrokerService implements Service {
             }
             broker = sb;
         }
+        broker = new TransactionBroker(broker, getPersistenceAdapter().createTransactionStore());
         if (isAdvisorySupport()) {
             broker = new AdvisoryBroker(broker);
         }

@@ -204,8 +204,8 @@ public class TransportConnector implements Connector, BrokerServiceAware {
         brokerInfo.setBrokerId(broker.getBrokerId());
         brokerInfo.setPeerBrokerInfos(broker.getPeerBrokerInfos());
         brokerInfo.setFaultTolerantConfiguration(broker.isFaultTolerantConfiguration());
-        brokerInfo.setBrokerURL(server.getConnectURI().toString());
-        server.setAcceptListener(new TransportAcceptListener() {
+        brokerInfo.setBrokerURL(getServer().getConnectURI().toString());
+        getServer().setAcceptListener(new TransportAcceptListener() {
             public void onAccept(final Transport transport) {
                 try {
                     getDefaultTaskRunnerFactory().execute(new Runnable() {
@@ -236,8 +236,8 @@ public class TransportConnector implements Connector, BrokerServiceAware {
                 LOG.debug("Reason: " + error, error);
             }
         });
-        server.setBrokerInfo(brokerInfo);
-        server.start();
+        getServer().setBrokerInfo(brokerInfo);
+        getServer().start();
 
         DiscoveryAgent da = getDiscoveryAgent();
         if (da != null) {
