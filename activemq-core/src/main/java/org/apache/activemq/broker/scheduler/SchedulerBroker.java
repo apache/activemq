@@ -111,7 +111,10 @@ public class SchedulerBroker extends BrokerFilter implements JobListener {
         Object delayValue = messageSend.getProperty(ScheduledMessage.AMQ_SCHEDULED_DELAY);
 
         if (cronValue != null || periodValue != null || delayValue != null) {
-            org.apache.activemq.util.ByteSequence packet = wireFormat.marshal(messageSend);
+            //clear transaction context
+            Message msg = messageSend.copy();
+            msg.setTransactionId(null);
+            org.apache.activemq.util.ByteSequence packet = wireFormat.marshal(msg);
                 if (cronValue != null) {
                     cronEntry = cronValue.toString();
                 }
@@ -121,12 +124,11 @@ public class SchedulerBroker extends BrokerFilter implements JobListener {
                 if (delayValue != null) {
                     delay = (Long) TypeConversionSupport.convert(delayValue, Long.class);
                 }
-                Object repeatValue = messageSend.getProperty(ScheduledMessage.AMQ_SCHEDULED_REPEAT);
+                Object repeatValue = msg.getProperty(ScheduledMessage.AMQ_SCHEDULED_REPEAT);
                 if (repeatValue != null) {
                     repeat = (Integer) TypeConversionSupport.convert(repeatValue, Integer.class);
                 }
-                
-                getInternalScheduler().schedule(messageSend.getMessageId().toString(),
+                getInternalScheduler().schedule(msg.getMessageId().toString(),
                         new ByteSequence(packet.data, packet.offset, packet.length),cronEntry, delay, period, repeat);
             
 

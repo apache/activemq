@@ -22,6 +22,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import javax.jms.Connection;
+import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageListener;
@@ -103,6 +104,44 @@ public class JmsSchedulerTest extends EmbeddedBrokerTestSupport {
         latch.await(5, TimeUnit.SECONDS);
         assertEquals(latch.getCount(), 0);
     }
+    
+    public void testTransactedSchedule() throws Exception {
+        final int COUNT = 1;
+        Connection connection = createConnection();
+
+        final Session session = connection.createSession(true, Session.SESSION_TRANSACTED);
+
+        MessageConsumer consumer = session.createConsumer(destination);
+
+        final CountDownLatch latch = new CountDownLatch(COUNT);
+        consumer.setMessageListener(new MessageListener() {
+            public void onMessage(Message message) {
+                latch.countDown();
+                try {
+                    session.commit();
+                } catch (JMSException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+
+        connection.start();
+        long time = 5000;
+        MessageProducer producer = session.createProducer(destination);
+        TextMessage message = session.createTextMessage("test msg");
+
+        message.setLongProperty(ScheduledMessage.AMQ_SCHEDULED_DELAY, time);
+
+        producer.send(message);
+        session.commit();
+        producer.close();
+        // make sure the message isn't delivered early
+        Thread.sleep(2000);
+        assertEquals(latch.getCount(), COUNT);
+        latch.await(5, TimeUnit.SECONDS);
+        assertEquals(latch.getCount(), 0);
+    }
+
 
     public void testScheduleRepeated() throws Exception {
         final int NUMBER = 10;
