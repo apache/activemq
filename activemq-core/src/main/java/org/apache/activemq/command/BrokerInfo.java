@@ -20,8 +20,6 @@ import java.io.IOException;
 import java.util.Properties;
 import org.apache.activemq.state.CommandVisitor;
 import org.apache.activemq.util.MarshallingSupport;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 /**
  * When a client connects to a broker, the broker send the client a BrokerInfo
@@ -33,7 +31,6 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision: 1.7 $
  */
 public class BrokerInfo extends BaseCommand {
-    private static Log LOG = LogFactory.getLog(BrokerInfo.class);
     private static final String PASSIVE_SLAVE_KEY = "passiveSlave";
     public static final byte DATA_STRUCTURE_TYPE = CommandTypes.BROKER_INFO;
     BrokerId brokerId;
@@ -255,7 +252,7 @@ public class BrokerInfo extends BaseCommand {
         try {
             this.networkProperties=MarshallingSupport.propertiesToString(props);
         } catch (IOException e) {
-            LOG.error("Failed to marshall props to a String",e);
+            e.printStackTrace();
         }
     }
     
@@ -264,7 +261,7 @@ public class BrokerInfo extends BaseCommand {
         try {
             result = MarshallingSupport.stringToProperties(getNetworkProperties());
         } catch (IOException e) {
-            LOG.error("Failed to marshall properties", e);
+           e.printStackTrace();
         }
         return result;
     }
