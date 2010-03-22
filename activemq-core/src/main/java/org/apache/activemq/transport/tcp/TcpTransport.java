@@ -69,14 +69,20 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
     protected DataInputStream dataIn;
     protected TcpBufferedOutputStream buffOut = null;
     /**
-     * Differentiated Services Code Point. Determines the Traffic Class to be
-     * set on the socket.
+     * The Traffic Class to be set on the socket.
      */
-    protected int dscp = 0;
+    protected int trafficClass = 0;
     /**
-     * Keeps track of attempts to set the Traffic Class.
+     * Keeps track of attempts to set the Traffic Class on the socket.
      */
     private boolean trafficClassSet = false;
+    /**
+     * Prevents setting both the Differentiated Services and Type of Service
+     * transport options at the same time, since they share the same spot in
+     * the TCP/IP packet headers.
+     */
+    protected boolean diffServChosen = false;
+    protected boolean typeOfServiceChosen = false;
     /**
      * trace=true -> the Transport stack where this TcpTransport
      * object will be, will have a TransportLogger layer
@@ -225,14 +231,25 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
         // This is the value requested by the user by setting the Tcp Transport
         // options. If the socket hasn't been created, then this value may not
         // reflect the value returned by Socket.getTrafficClass().
-        return Integer.toString(dscp);
+        return Integer.toString(this.trafficClass);
     }
 
     public void setDiffServ(String diffServ) throws IllegalArgumentException {
-        this.dscp = QualityOfServiceUtils.getDSCP(diffServ);
+        this.trafficClass = QualityOfServiceUtils.getDSCP(diffServ);
+        this.diffServChosen = true;
     }
 
-    // TODO: Add methods for setting and getting a ToS value.
+    public int getTypeOfService() {
+        // This is the value requested by the user by setting the Tcp Transport
+        // options. If the socket hasn't been created, then this value may not
+        // reflect the value returned by Socket.getTrafficClass().
+        return this.trafficClass;
+    }
+  
+    public void setTypeOfService(int typeOfService) {
+        this.trafficClass = QualityOfServiceUtils.getToS(typeOfService);
+        this.typeOfServiceChosen = true;
+    }
 
     public boolean isTrace() {
         return trace;
@@ -394,9 +411,11 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
      * Configures the socket for use
      * 
      * @param sock
-     * @throws SocketException
+     * @throws SocketException, IllegalArgumentException if setting the options
+     *         on the socket failed.
      */
-    protected void initialiseSocket(Socket sock) throws SocketException {
+    protected void initialiseSocket(Socket sock) throws SocketException,
+            IllegalArgumentException {
         if (socketOptions != null) {
             IntrospectionSupport.setProperties(socket, socketOptions);
         }
@@ -416,8 +435,8 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
         if (tcpNoDelay != null) {
             sock.setTcpNoDelay(tcpNoDelay.booleanValue());
         }
-        if (!trafficClassSet) {
-            trafficClassSet = setTrafficClass(sock);
+        if (!this.trafficClassSet) {
+            this.trafficClassSet = setTrafficClass(sock);
         }
     }
 
@@ -448,7 +467,7 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
         }
         // Set the traffic class before the socket is connected when possible so
         // that the connection packets are given the correct traffic class.
-        trafficClassSet = setTrafficClass(socket);
+        this.trafficClassSet = setTrafficClass(socket);
 
         if (socket != null) {
 
@@ -607,26 +626,33 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
         return receiveCounter;
     }
     
+
     /**
+     * @param sock The socket on which to set the Traffic Class.
      * @return Whether or not the Traffic Class was set on the given socket.
+     * @throws SocketException if the system does not support setting the
+     *         Traffic Class.
+     * @throws IllegalArgumentException if both the Differentiated Services and
+     *         Type of Services transport options have been set on the same
+     *         connection.
      */
-    private boolean setTrafficClass(Socket sock) {
-        // TODO: Add in ToS support.
-
-        if (sock == null)
+    private boolean setTrafficClass(Socket sock) throws SocketException,
+            IllegalArgumentException {
+        if (sock == null
+            || (!this.diffServChosen && !this.typeOfServiceChosen)) {
             return false;
-
-        boolean success = false;
-
-        try {
-            sock.setTrafficClass(this.dscp);
-            success = true;
-        } catch (SocketException e) {
-            // The system does not support setting the traffic class through
-            // setTrafficClass.
-            LOG.error("Unable to set the traffic class: " + e);
         }
-
-        return success;
+        if (this.diffServChosen && this.typeOfServiceChosen) {
+            throw new IllegalArgumentException("Cannot set both the "
+                + " Differentiated Services and Type of Services transport "
+                + " options on the same connection.");
+        }
+        sock.setTrafficClass(this.trafficClass);
+        // Reset the guards that prevent both the Differentiated Services
+        // option and the Type of Service option from being set on the same
+        // connection.
+        this.diffServChosen = false;
+        this.typeOfServiceChosen = false;
+        return true;
     }
 }

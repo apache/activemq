@@ -28,29 +28,32 @@ import java.util.Map;
  */
 public class QualityOfServiceUtils {
 
-    private static final int MAX_DIFF_SERV = 64;
+    private static final int MAX_DIFF_SERV = 63;
     private static final int MIN_DIFF_SERV = 0;
     private static final Map<String, Integer> DIFF_SERV_NAMES
-	= new HashMap<String, Integer>();
+        = new HashMap<String, Integer>();
     // TODO: Find other names used for Differentiated Services values.
     static {
-	DIFF_SERV_NAMES.put("EF", 46);
-	DIFF_SERV_NAMES.put("AF11", 10);
-	DIFF_SERV_NAMES.put("AF12", 12);
-	DIFF_SERV_NAMES.put("AF13", 14);
-	DIFF_SERV_NAMES.put("AF21", 18);
-	DIFF_SERV_NAMES.put("AF22", 20);
-	DIFF_SERV_NAMES.put("AF23", 22);
-	DIFF_SERV_NAMES.put("AF31", 26);
-	DIFF_SERV_NAMES.put("AF32", 28);
-	DIFF_SERV_NAMES.put("AF33", 30);
- 	DIFF_SERV_NAMES.put("AF41", 34);
-	DIFF_SERV_NAMES.put("AF42", 36);
-	DIFF_SERV_NAMES.put("AF43", 38);
+        DIFF_SERV_NAMES.put("EF", 46);
+        DIFF_SERV_NAMES.put("AF11", 10);
+        DIFF_SERV_NAMES.put("AF12", 12);
+        DIFF_SERV_NAMES.put("AF13", 14);
+        DIFF_SERV_NAMES.put("AF21", 18);
+        DIFF_SERV_NAMES.put("AF22", 20);
+        DIFF_SERV_NAMES.put("AF23", 22);
+        DIFF_SERV_NAMES.put("AF31", 26);
+        DIFF_SERV_NAMES.put("AF32", 28);
+        DIFF_SERV_NAMES.put("AF33", 30);
+        DIFF_SERV_NAMES.put("AF41", 34);
+        DIFF_SERV_NAMES.put("AF42", 36);
+        DIFF_SERV_NAMES.put("AF43", 38);
     }
 
+    private static final int MAX_TOS = 255;
+    private static final int MIN_TOS = 0;
+
     /**
-     * @param The value to be used for Differentiated Services.
+     * @param value A potential value to be used for Differentiated Services.
      * @return The corresponding Differentiated Services Code Point (DSCP).
      * @throws IllegalArgumentException if the value does not correspond to a
      *         Differentiated Services Code Point or setting the DSCP is not
@@ -60,52 +63,67 @@ public class QualityOfServiceUtils {
         int intValue = -1;
 
         // Check the names first.
-	if (DIFF_SERV_NAMES.containsKey(value)) {
+        if (DIFF_SERV_NAMES.containsKey(value)) {
             intValue = DIFF_SERV_NAMES.get(value);
-	} else {
+        } else {
             try {
                 intValue = Integer.parseInt(value);
-                if (intValue >= MAX_DIFF_SERV || intValue < MIN_DIFF_SERV) {
-                    throw new IllegalArgumentException("Differentiated Services "
-                            + "value: " + intValue + " must be between "
-                            + MIN_DIFF_SERV + " and " + (MAX_DIFF_SERV - 1) + ".");
+                if (intValue > MAX_DIFF_SERV || intValue < MIN_DIFF_SERV) {
+                    throw new IllegalArgumentException("Differentiated Services"
+                        + " value: " + intValue + " not in legal range ["
+                        + MIN_DIFF_SERV + ", " + MAX_DIFF_SERV + "].");
                 }
             } catch (NumberFormatException e) {
                 // value must have been a malformed name.
-	        throw new IllegalArgumentException("No such Differentiated "
-                        + "Services name: " + value);
+                throw new IllegalArgumentException("No such Differentiated "
+                    + "Services name: " + value);
             }
         }
 
         return adjustDSCPForECN(intValue);
      }
 
+
+    /**
+     * @param value A potential value to be used for Type of Service.
+     * @return A valid value that can be used to set the Type of Service in the
+     *         packet headers.
+     * @throws IllegalArgumentException if the value is not a legal Type of
+     *         Service value.
+     */
+    public static int getToS(int value) throws IllegalArgumentException {
+        if (value > MAX_TOS || value < MIN_TOS) {
+            throw new IllegalArgumentException("Type of Service value: "
+                + value + " not in legal range [" + MIN_TOS + ", " + MAX_TOS
+                + ".");
+        }
+        return value;
+    }
+
     /**
      * The Differentiated Services values use only 6 of the 8 bits in the field
      * in the TCP/IP packet header. Make sure any values the system has set for
      * the other two bits (the ECN bits) are maintained.
      *
-     * @param The Differentiated Services Code Point.
+     * @param dscp The Differentiated Services Code Point.
      * @return A Differentiated Services Code Point that respects the ECN bits
      *         set on the system.
      * @throws IllegalArgumentException if setting Differentiated Services is
      *         not supported.
      */
-    private static int adjustDSCPForECN(int value)
+    private static int adjustDSCPForECN(int dscp)
             throws IllegalArgumentException {
-	// The only way to see if there are any values set for the ECN is to
+        // The only way to see if there are any values set for the ECN is to
         // read the traffic class automatically set by the system and isolate
         // the ECN bits.
-	Socket socket = new Socket();
+        Socket socket = new Socket();
         try {
             int systemTrafficClass = socket.getTrafficClass();
             // The 7th and 8th bits of the system traffic class are the ECN bits.
-            return value | (systemTrafficClass & 192);
+            return dscp | (systemTrafficClass & 192);
         } catch (SocketException e) {
-            throw new IllegalArgumentException("Setting Differentiated Services "
-                    + "not supported: " + e);
+            throw new IllegalArgumentException("Setting Differentiated Services"
+                + " not supported: " + e);
         }
     }
-
-    // TODO: Add getter methods for ToS values.
 }
