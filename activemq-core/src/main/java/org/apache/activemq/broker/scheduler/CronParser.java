@@ -36,49 +36,46 @@ public class CronParser {
         if (cronEntry != null && cronEntry.length() > 0) {
             List<String> list = tokenize(cronEntry);
             List<CronEntry> entries = buildCronEntries(list);
-            Calendar calendar = Calendar.getInstance();
-            calendar.setTimeInMillis(currentTime);
-            int currentMinutes = calendar.get(Calendar.MINUTE);
-            int currentHours = calendar.get(Calendar.HOUR_OF_DAY);
-            int currentDayOfMonth = calendar.get(Calendar.DAY_OF_MONTH);
-            int currentMonth = calendar.get(Calendar.MONTH) + 1;
-            int currentDayOfWeek = calendar.get(Calendar.DAY_OF_WEEK) - 1;
+            Calendar working = Calendar.getInstance();
+            working.setTimeInMillis(currentTime);
 
             CronEntry minutes = entries.get(MINUTES);
             CronEntry hours = entries.get(HOURS);
             CronEntry dayOfMonth = entries.get(DAY_OF_MONTH);
             CronEntry month = entries.get(MONTH);
             CronEntry dayOfWeek = entries.get(DAY_OF_MONTH);
-            if (!isCurrent(month, currentMonth)) {
-                int nextMonth = getNext(month, currentMonth);
-                Calendar working = (Calendar) calendar.clone();
-                working.add(Calendar.MONTH, nextMonth);
-                result += working.getTimeInMillis();
-            }
-            if (!isCurrent(dayOfMonth, currentDayOfMonth)) {
-                int nextDay = getNext(dayOfMonth, currentMonth);
-                Calendar working = (Calendar) calendar.clone();
-                working.add(Calendar.DAY_OF_MONTH, nextDay);
-                result += working.getTimeInMillis();
-            }
-            if (!isCurrent(dayOfWeek, currentDayOfWeek)) {
-                int nextDay = getNext(dayOfWeek, currentDayOfWeek);
-                Calendar working = (Calendar) calendar.clone();
-                working.add(Calendar.DAY_OF_WEEK, nextDay);
-                result += working.getTimeInMillis();
-            }
-            if (!isCurrent(hours, currentHours)) {
-                int nextHour = getNext(hours, currentHours);
-                Calendar working = (Calendar) calendar.clone();
-                working.add(Calendar.HOUR_OF_DAY, nextHour);
-                result += working.getTimeInMillis();
-            }
+            
+            int currentMinutes = working.get(Calendar.MINUTE);
             if (!isCurrent(minutes, currentMinutes)) {
                 int nextMinutes = getNext(minutes, currentMinutes);
-                Calendar working = (Calendar) calendar.clone();
                 working.add(Calendar.MINUTE, nextMinutes);
-                result += working.getTimeInMillis();
+                result = working.getTimeInMillis();
             }
+            int currentHours = working.get(Calendar.HOUR_OF_DAY);
+            if (!isCurrent(hours, currentHours)) {
+                int nextHour = getNext(hours, currentHours);
+                working.add(Calendar.HOUR_OF_DAY, nextHour);
+                result = working.getTimeInMillis();
+            }
+            int currentDayOfWeek = working.get(Calendar.DAY_OF_WEEK) - 1;
+            if (!isCurrent(dayOfWeek, currentDayOfWeek)) {
+                int nextDay = getNext(dayOfWeek, currentDayOfWeek);
+                working.add(Calendar.DAY_OF_WEEK, nextDay);
+                result = working.getTimeInMillis();
+            }
+            int currentMonth = working.get(Calendar.MONTH) + 1;
+            if (!isCurrent(month, currentMonth)) {
+                int nextMonth = getNext(month, currentMonth);
+                working.add(Calendar.MONTH, nextMonth);
+                result = working.getTimeInMillis();
+            }
+            int currentDayOfMonth = working.get(Calendar.DAY_OF_MONTH);
+            if (!isCurrent(dayOfMonth, currentDayOfMonth)) {
+                int nextDay = getNext(dayOfMonth, currentMonth);
+                working.add(Calendar.DAY_OF_MONTH, nextDay);
+                result = working.getTimeInMillis();
+            }
+            
             if (result == 0) {
                 // this can occur for "* * * * *"
                 result = currentTime + 60 * 1000;
@@ -148,7 +145,7 @@ public class CronParser {
     protected static List<Integer> calculateValues(CronEntry entry) {
         List<Integer> result = new ArrayList<Integer>();
         if (isAll(entry.token)) {
-            for (int i = entry.start; i < entry.end; i++) {
+            for (int i = entry.start; i <= entry.end; i++) {
                 result.add(i);
             }
         } else if (isAStep(entry.token)) {
@@ -215,9 +212,9 @@ public class CronParser {
 
     static List<CronEntry> buildCronEntries(List<String> tokens) {
         List<CronEntry> result = new ArrayList<CronEntry>();
-        CronEntry minutes = new CronEntry("Minutes", tokens.get(MINUTES), 0, 59);
+        CronEntry minutes = new CronEntry("Minutes", tokens.get(MINUTES), 0, 60);
         result.add(minutes);
-        CronEntry hours = new CronEntry("Hours", tokens.get(HOURS), 0, 23);
+        CronEntry hours = new CronEntry("Hours", tokens.get(HOURS), 0, 24);
         result.add(hours);
         CronEntry dayOfMonth = new CronEntry("DayOfMonth", tokens.get(DAY_OF_MONTH), 1, 31);
         result.add(dayOfMonth);

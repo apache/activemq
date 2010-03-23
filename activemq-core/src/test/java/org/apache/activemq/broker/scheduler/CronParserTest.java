@@ -18,6 +18,8 @@ package org.apache.activemq.broker.scheduler;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
+
+import java.util.Calendar;
 import java.util.List;
 import javax.jms.MessageFormatException;
 import org.junit.Test;
@@ -28,7 +30,13 @@ public class CronParserTest {
     public void testgetNextTimeMinutes() throws MessageFormatException {
         String test = "30 * * * *";
         long current = 20*60*1000;
+        Calendar calender = Calendar.getInstance();
+        calender.setTimeInMillis(current);
+        System.out.println("start:" + calender.getTime());
         long next = CronParser.getNextScheduledTime(test, current);
+        
+        calender.setTimeInMillis(next);
+        System.out.println("next:" + calender.getTime());
         long result = next - current;
         assertEquals(60*10*1000,result);
     }
@@ -36,13 +44,33 @@ public class CronParserTest {
     @Test
     public void testgetNextTimeHours() throws MessageFormatException {
         String test = "* 1 * * *";
-        long current = 60*1000*60*5;
+        
+        Calendar calender = Calendar.getInstance();
+        calender.set(1972, 2, 2, 17, 10, 0);
+        long current = calender.getTimeInMillis();
         long next = CronParser.getNextScheduledTime(test, current);
+        
+        calender.setTimeInMillis(next);
         long result = next - current;
-        long expected = 60*1000*60*18;
+        long expected = 60*1000*60*8;
         assertEquals(expected,result);
     }
-    
+
+    @Test
+    public void testgetNextTimeHoursZeroMin() throws MessageFormatException {
+        String test = "0 1 * * *";
+        
+        Calendar calender = Calendar.getInstance();
+        calender.set(1972, 2, 2, 17, 10, 0);
+        long current = calender.getTimeInMillis();
+        long next = CronParser.getNextScheduledTime(test, current);
+        
+        calender.setTimeInMillis(next);
+        long result = next - current;
+        long expected = 60*1000*60*7 + 60*1000*50;
+        assertEquals(expected,result);
+    }
+
     @Test
     public void testValidate() {
         try {
