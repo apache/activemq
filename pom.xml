@@ -117,7 +117,7 @@
       <!-- this needs to match a server in your settings.xml with upload settings -->
       <id>activemq-website</id>
       <!-- set the staging.siteURL in your ~/.m2/settings.xml in a release or other profile -->
-      <url>${staging.siteURL}/${siteId}/maven/${activemq-version}</url>
+      <url>${staging.siteURL}/maven/${activemq-version}</url>
       <!--<url>${site-repo-url}</url>-->
     </site>
     <snapshotRepository>
