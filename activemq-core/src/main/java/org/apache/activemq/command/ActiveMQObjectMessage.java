@@ -77,9 +77,15 @@ public class ActiveMQObjectMessage extends ActiveMQMessage implements ObjectMess
     }
 
     private void copy(ActiveMQObjectMessage copy) {
-        storeContent();
+        ActiveMQConnection connection = getConnection();
+        if (connection == null || !connection.isObjectMessageSerializationDefered()) {
+            storeContent();
+            copy.object = null;
+        } else {
+            copy.object = object;
+        }
         super.copy(copy);
-        copy.object = null;
+        
     }
 
     public void storeContent() {
