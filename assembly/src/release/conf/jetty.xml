@@ -61,6 +61,7 @@
               <property name="contextPath" value="/fileserver"/>
               <property name="resourceBase" value="${activemq.base}/webapps/fileserver"/>
               <property name="logUrlOnStart" value="true"/>
+              <property name="parentLoaderPriority" value="true"/>
             </bean>
             <bean class="org.eclipse.jetty.server.handler.ResourceHandler">
               <property name="directoriesListed" value="false"/>
