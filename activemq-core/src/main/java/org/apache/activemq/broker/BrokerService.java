@@ -188,6 +188,8 @@ public class BrokerService implements Service {
     private IOExceptionHandler ioExceptionHandler;
     private boolean schedulerSupport = true;
     private File schedulerDirectoryFile;
+    
+    private boolean slave = true;
 
 	static {
         String localHostName = "localhost";
@@ -401,7 +403,8 @@ public class BrokerService implements Service {
      */
     public boolean isSlave() {
         return (masterConnector != null && masterConnector.isSlave()) ||
-            (masterConnector != null && masterConnector.isStoppedBeforeStart());
+            (masterConnector != null && masterConnector.isStoppedBeforeStart()) ||
+            (masterConnector == null && slave);
     }
 
     public void masterFailed() {
@@ -467,6 +470,7 @@ public class BrokerService implements Service {
                 deleteAllMessages();
             }
             getPersistenceAdapter().start();
+            slave = false;
             startDestinations();
             addShutdownHook();
             getBroker().start();
@@ -559,6 +563,7 @@ public class BrokerService implements Service {
             tempDataStore.stop();
         }
         stopper.stop(persistenceAdapter);
+        slave = true;
         if (isUseJmx()) {
             stopper.stop(getManagementContext());
         }
