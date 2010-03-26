@@ -21,7 +21,7 @@
 <body>
 
 <div>
-<form action="createDestination.action" method="get">
+<form action="createDestination.action" method="post">
     <input type="hidden" name="JMSDestinationType" value="topic"/>
     <input type="hidden" name="secret" value="<c:out value='${sessionScope["secret"]}'/>"/>
 
