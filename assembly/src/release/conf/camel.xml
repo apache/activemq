@@ -53,7 +53,13 @@
 
     <!-- configure the camel activemq component to use the current broker -->
     <bean id="activemq" class="org.apache.activemq.camel.component.ActiveMQComponent" >
-       <property name="userName" value="${activemq.username}"/>
-       <property name="password" value="${activemq.password}"/>
+        <property name="connectionFactory">
+          <bean class="org.apache.activemq.ActiveMQConnectionFactory">
+            <property name="brokerURL" value="vm://localhost?create=false&amp;waitForStart=10000" />
+            <property name="userName" value="${activemq.username}"/>
+            <property name="password" value="${activemq.password}"/>
+            <property name="useSingleConnection" value="true" />
+          </bean>
+        </property>
     </bean>
 </beans>
