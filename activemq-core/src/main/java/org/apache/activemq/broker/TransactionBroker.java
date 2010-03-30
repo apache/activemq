@@ -128,12 +128,18 @@ public class TransactionBroker extends BrokerFilter {
             for (Iterator<Transaction> iter = xaTransactions.values().iterator(); iter.hasNext();) {
                 Transaction tx = iter.next();
                 if (tx.isPrepared()) {
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug("prepared transaction: " + tx.getTransactionId());
+                    }
                     txs.add(tx.getTransactionId());
                 }
             }
         }
         XATransactionId rc[] = new XATransactionId[txs.size()];
         txs.toArray(rc);
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("prepared transacton list size: " + rc.length);
+        }
         return rc;
     }
 
