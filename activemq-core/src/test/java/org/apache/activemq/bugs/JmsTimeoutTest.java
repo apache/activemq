@@ -4,7 +4,6 @@ package org.apache.activemq.bugs;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.jms.DeliveryMode;
-import javax.jms.ExceptionListener;
 import javax.jms.JMSException;
 import javax.jms.MessageProducer;
 import javax.jms.ResourceAllocationException;
@@ -14,12 +13,13 @@ import javax.jms.TextMessage;
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.EmbeddedBrokerTestSupport;
 import org.apache.activemq.command.ActiveMQDestination;
-import org.apache.log4j.Logger;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 
 public class JmsTimeoutTest extends EmbeddedBrokerTestSupport {
 
-		private final static Logger logger = Logger.getLogger( JmsTimeoutTest.class );
+		static final Log LOG = LogFactory.getLog(JmsTimeoutTest.class);
 	
 		private int messageSize=1024*64;
 		private int messageCount=10000;
@@ -40,7 +40,7 @@ public class JmsTimeoutTest extends EmbeddedBrokerTestSupport {
 	        Runnable r = new Runnable() {
 	            public void run() {
 	                try {
-	                	logger.info("Sender thread starting");
+	                	LOG.info("Sender thread starting");
 	                    Session session = cx.createSession(false, 1);
 	                    MessageProducer producer = session.createProducer(queue);
 	                    producer.setDeliveryMode(DeliveryMode.PERSISTENT);
@@ -52,7 +52,7 @@ public class JmsTimeoutTest extends EmbeddedBrokerTestSupport {
 	                    	// returns but there is no way to know that
 	                    	// the send timed out
 	                    }	  
-	                    logger.info("Done sending..");
+	                    LOG.info("Done sending..");
 	                } catch (JMSException e) {
 	                    e.printStackTrace();
 	                    if (e instanceof ResourceAllocationException) {
