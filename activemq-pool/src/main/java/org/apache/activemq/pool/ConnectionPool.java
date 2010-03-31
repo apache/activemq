@@ -90,7 +90,12 @@ public class ConnectionPool {
 
     public void start() throws JMSException {
         if (started.compareAndSet(false, true)) {
-            connection.start();
+        	try {
+        		connection.start();
+        	} catch (JMSException e) {
+        		started.set(false);
+        		throw(e);
+        	}
         }
     }
 
