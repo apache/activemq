@@ -30,6 +30,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Map.Entry;
 
+import javax.net.ssl.SSLServerSocket;
+
 import org.apache.activemq.command.ActiveMQDestination;
 
 
@@ -53,6 +55,7 @@ public final class IntrospectionSupport {
 		            newSearchPath, existingSearchPath.length,
 		            additionalPath.length);
 		    PropertyEditorManager.setEditorSearchPath(newSearchPath);
+                    PropertyEditorManager.registerEditor(String[].class, StringArrayEditor.class);
 		}
 	}
     
@@ -179,6 +182,10 @@ public final class IntrospectionSupport {
     public static boolean setProperty(Object target, String name, Object value) {
         try {
             Class clazz = target.getClass();
+            if (target instanceof SSLServerSocket) {
+                // overcome illegal access issues with internal implementation class
+                clazz = SSLServerSocket.class;
+            }
             Method setter = findSetterMethod(clazz, name);
             if (setter == null) {
                 return false;
