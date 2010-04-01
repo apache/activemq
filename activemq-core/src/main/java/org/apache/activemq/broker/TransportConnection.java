@@ -31,6 +31,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+
+import javax.transaction.xa.XAResource;
+
 import org.apache.activemq.broker.ft.MasterBroker;
 import org.apache.activemq.broker.region.ConnectionStatistics;
 import org.apache.activemq.broker.region.RegionBroker;
@@ -389,7 +392,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         }
         TransactionState transactionState = cs.getTransactionState(info.getTransactionId());
         if (transactionState == null) {
-            throw new IllegalStateException("Cannot prepare a transaction that had not been started: "
+            throw new IllegalStateException("Cannot prepare a transaction that had not been started or previously returned XA_RDONLY: "
                     + info.getTransactionId());
         }
         // Avoid dups.
@@ -397,6 +400,10 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
             transactionState.setPrepared(true);
             int result = broker.prepareTransaction(context, info.getTransactionId());
             transactionState.setPreparedResult(result);
+            if (result == XAResource.XA_RDONLY) {
+                // we are done, no further rollback or commit from TM
+                cs.removeTransactionState(info.getTransactionId());
+            }
             IntegerResponse response = new IntegerResponse(result);
             return response;
         } else {

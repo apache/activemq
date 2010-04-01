@@ -155,7 +155,7 @@ public class FailoverTransport implements CompositeTransport {
                         object = requestMap.remove(Integer.valueOf(((Response) command).getCorrelationId()));
                     }
                     if (object != null && object.getClass() == Tracked.class) {
-                        ((Tracked) object).onResponses();
+                        ((Tracked) object).onResponses(command);
                     }
                 }
                 if (!initialized) {      
@@ -1009,6 +1009,10 @@ public class FailoverTransport implements CompositeTransport {
         synchronized (reconnectMutex) {
             stateTracker.connectionInterruptProcessingComplete(this, connectionId);
         }
+    }
+    
+    public ConnectionStateTracker getStateTracker() {
+        return stateTracker;
     }
     
     private boolean contains(URI newURI) {

@@ -426,6 +426,18 @@ public class TransactionContext implements XAResource {
 
             // Find out if the server wants to commit or rollback.
             IntegerResponse response = (IntegerResponse)syncSendPacketWithInterruptionHandling(info);
+            if (XAResource.XA_RDONLY == response.getResult()) {
+                // transaction stops now, may be syncs that need a callback
+                List<TransactionContext> l = ENDED_XA_TRANSACTION_CONTEXTS.remove(x);
+                if (l != null && !l.isEmpty()) {
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug("firing afterCommit callbacks on XA_RDONLY from prepare: " + xid);
+                    }
+                    for (TransactionContext ctx : l) {
+                        ctx.afterCommit();
+                    }
+                }
+            }
             return response.getResult();
 
         } catch (JMSException e) {

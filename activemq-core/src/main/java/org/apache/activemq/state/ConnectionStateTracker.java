@@ -25,6 +25,7 @@ import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.jms.TransactionRolledBackException;
+import javax.transaction.xa.XAResource;
 
 import org.apache.activemq.command.Command;
 import org.apache.activemq.command.ConnectionId;
@@ -34,6 +35,7 @@ import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.DestinationInfo;
 import org.apache.activemq.command.ExceptionResponse;
+import org.apache.activemq.command.IntegerResponse;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.command.ProducerId;
@@ -79,17 +81,32 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
         }
     };
     
-    private class RemoveTransactionAction implements Runnable {
+    private class RemoveTransactionAction implements ResponseHandler {
         private final TransactionInfo info;
 
         public RemoveTransactionAction(TransactionInfo info) {
             this.info = info;
         }
 
-        public void run() {
+        public void onResponse(Command response) {
             ConnectionId connectionId = info.getConnectionId();
             ConnectionState cs = connectionStates.get(connectionId);
             cs.removeTransactionState(info.getTransactionId());
+        }
+    }
+    
+    private class PrepareReadonlyTransactionAction extends RemoveTransactionAction {
+
+        public PrepareReadonlyTransactionAction(TransactionInfo info) {
+            super(info);
+        }
+
+        public void onResponse(Command command) {
+            IntegerResponse response = (IntegerResponse) command;
+            if (XAResource.XA_RDONLY == response.getResult()) {
+                // all done, no commit or rollback from TM
+                super.onResponse(command);
+            }
         }
     }
 
@@ -469,10 +486,10 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
                     TransactionState transactionState = cs.getTransactionState(info.getTransactionId());
                     if (transactionState != null) {
                         transactionState.addCommand(info);
+                        return new Tracked(new PrepareReadonlyTransactionAction(info));
                     }
                 }
             }
-            return TRACKED_RESPONSE_MARKER;
         }
         return null;
     }

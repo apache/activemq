@@ -17,25 +17,7 @@
 package org.apache.activemq.state;
 
 import org.apache.activemq.command.Command;
-import org.apache.activemq.command.Response;
 
-public class Tracked extends Response {
-
-    private ResponseHandler handler;
-
-    public Tracked(ResponseHandler runnable) {
-        this.handler = runnable;
-    }
-
-    public void onResponses(Command command) {
-        if (handler != null) {
-            handler.onResponse(command);
-            handler = null;
-        }
-    }
-
-    public boolean isWaitingForResponse() {
-        return handler != null;
-    }
-
+public interface ResponseHandler {
+    public void onResponse(Command command);
 }

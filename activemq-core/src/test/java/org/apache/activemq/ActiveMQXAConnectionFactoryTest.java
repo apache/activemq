@@ -21,6 +21,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import javax.jms.Connection;
 import javax.jms.Destination;
@@ -37,11 +38,20 @@ import javax.transaction.xa.XAException;
 import javax.transaction.xa.XAResource;
 import javax.transaction.xa.Xid;
 
+import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerRegistry;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.TransactionBroker;
+import org.apache.activemq.broker.TransportConnection;
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTextMessage;
+import org.apache.activemq.command.ConnectionId;
+import org.apache.activemq.command.TransactionInfo;
+import org.apache.activemq.command.XATransactionId;
+import org.apache.activemq.management.JMSConnectionStatsImpl;
+import org.apache.activemq.transport.Transport;
+import org.apache.activemq.transport.failover.FailoverTransport;
 import org.apache.activemq.transport.stomp.StompTransportFilter;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -248,7 +258,89 @@ public class ActiveMQXAConnectionFactoryTest extends CombinationTestSupport {
         resource.commit(tid, true);        
     }
 
-    
+
+    public void testReadonlyNoLeak() throws Exception {
+        final String brokerName = "readOnlyNoLeak";
+        BrokerService broker = BrokerFactory.createBroker(new URI("broker:(tcp://localhost:0)/" + brokerName));
+        broker.setPersistent(false);
+        broker.start();
+        ActiveMQXAConnectionFactory cf1 = new ActiveMQXAConnectionFactory("failover:(" + broker.getTransportConnectors().get(0).getConnectUri() + ")");
+        cf1.setStatsEnabled(true);
+        ActiveMQXAConnection xaConnection = (ActiveMQXAConnection)cf1.createConnection();
+        xaConnection.start();
+        XASession session = xaConnection.createXASession();
+        XAResource resource = session.getXAResource();        
+        Xid tid = createXid();
+        resource.start(tid, XAResource.TMNOFLAGS);
+        session.close();
+        resource.end(tid, XAResource.TMSUCCESS);
+        resource.commit(tid, true);
+        
+        assertTransactionGoneFromBroker(tid);
+        assertTransactionGoneFromConnection(brokerName, xaConnection.getClientID(), xaConnection.getConnectionInfo().getConnectionId(), tid);
+        assertSessionGone(xaConnection, session);
+        assertTransactionGoneFromFailoverState(xaConnection, tid);
+        
+        // two phase
+        session = xaConnection.createXASession();
+        resource = session.getXAResource();        
+        tid = createXid();
+        resource.start(tid, XAResource.TMNOFLAGS);
+        session.close();
+        resource.end(tid, XAResource.TMSUCCESS);
+        assertEquals(XAResource.XA_RDONLY, resource.prepare(tid));
+        
+        // no need for a commit on read only        
+        assertTransactionGoneFromBroker(tid);
+        assertTransactionGoneFromConnection(brokerName, xaConnection.getClientID(), xaConnection.getConnectionInfo().getConnectionId(), tid);
+        assertSessionGone(xaConnection, session);
+        assertTransactionGoneFromFailoverState(xaConnection, tid);
+        
+        xaConnection.close();
+        broker.stop();
+        
+    }
+
+    private void assertTransactionGoneFromFailoverState(
+            ActiveMQXAConnection connection1, Xid tid) throws Exception {
+        
+        FailoverTransport transport = (FailoverTransport) connection1.getTransport().narrow(FailoverTransport.class);
+        TransactionInfo info = new TransactionInfo(connection1.getConnectionInfo().getConnectionId(), new XATransactionId(tid), TransactionInfo.COMMIT_ONE_PHASE);
+        assertNull("transaction shold not exist in the state tracker", 
+                transport.getStateTracker().processCommitTransactionOnePhase(info)); 
+    }
+
+    private void assertSessionGone(ActiveMQXAConnection connection1,
+            XASession session) {
+        JMSConnectionStatsImpl stats = (JMSConnectionStatsImpl)connection1.getStats();
+        // should be no dangling sessions maintained by the transaction
+        assertEquals("should be no sessions", 0, stats.getSessions().length);
+    }
+
+    private void assertTransactionGoneFromConnection(String brokerName, String clientId, ConnectionId connectionId, Xid tid) throws Exception {
+        BrokerService broker = BrokerRegistry.getInstance().lookup(brokerName);
+        CopyOnWriteArrayList<TransportConnection> connections = broker.getTransportConnectors().get(0).getConnections();
+        for (TransportConnection connection: connections) {
+            if (connection.getConnectionId().equals(clientId)) {
+                try {
+                    connection.processPrepareTransaction(new TransactionInfo(connectionId, new XATransactionId(tid), TransactionInfo.PREPARE));
+                    fail("did not get expected excepton on missing transaction, it must be still there in error!");
+                } catch (IllegalStateException expectedOnNoTransaction) {
+                }   
+            }
+        }
+    }
+
+    private void assertTransactionGoneFromBroker(Xid tid) throws Exception {
+        BrokerService broker = BrokerRegistry.getInstance().lookup("localhost");
+        TransactionBroker transactionBroker = (TransactionBroker)broker.getBroker().getAdaptor(TransactionBroker.class);
+        try {
+            transactionBroker.getTransaction(null, new XATransactionId(tid), false);
+            fail("expecte ex on tx not found");
+        } catch (XAException expectedOnNotFound) {
+        }
+    }
+
     protected void assertCreateConnection(String uri) throws Exception {
         // Start up a broker with a tcp connector.
         BrokerService broker = new BrokerService();
