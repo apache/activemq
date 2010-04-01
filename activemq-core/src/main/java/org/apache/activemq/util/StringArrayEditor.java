@@ -17,23 +17,44 @@
 package org.apache.activemq.util;
 
 import java.beans.PropertyEditorSupport;
-
-import org.springframework.util.StringUtils;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.StringTokenizer;
 
 
 public class StringArrayEditor extends PropertyEditorSupport {
 
-       public static final String DEFAULT_SEPARATOR = ",";
+    public void setAsText(String text) {
+        if (text == null || text.length() == 0) {
+            setValue(null);
+        } else {
+            StringTokenizer stok = new StringTokenizer(text, ",");
+            final List<String> list = new ArrayList<String>();
 
-       public String getAsText() {
-               return getValue().toString();
-       }
+            while (stok.hasMoreTokens()) {
+                list.add(stok.nextToken());
+            }
 
+            Object array = list.toArray(new String[list.size()]);
 
-       public void setAsText(String text) throws IllegalArgumentException {
-        String[] array = StringUtils.delimitedListToStringArray(text, ListEditor.DEFAULT_SEPARATOR, null);
-               setValue(array);
-       }
+            setValue(array);
+        }
+    }
+
+    public String getAsText() {
+        Object[] objects = (Object[]) getValue();
+        if (objects == null || objects.length == 0) {
+            return null;
+        }
+
+        StringBuffer result = new StringBuffer(String.valueOf(objects[0]));
+        for (int i = 1; i < objects.length; i++) {
+            result.append(",").append(objects[i]);
+        }
+
+        return result.toString();
+
+    }
 
 }
 
