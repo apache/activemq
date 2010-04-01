@@ -141,10 +141,10 @@ public class Statements {
     }
 
     public String getFindMessageByIdStatement() {
-        if (findMessageStatement == null) {
-            findMessageStatement = "SELECT MSG FROM " + getFullMessageTableName() + " WHERE ID=?";
+        if (findMessageByIdStatement == null) {
+        	findMessageByIdStatement = "SELECT MSG FROM " + getFullMessageTableName() + " WHERE ID=?";
         }
-        return findMessageStatement;
+        return findMessageByIdStatement;
     }
     
     public String getFindAllMessagesStatement() {
@@ -570,6 +570,10 @@ public class Statements {
 
     public void setFindMessageStatement(String findMessageStatment) {
         this.findMessageStatement = findMessageStatment;
+    }
+    
+    public void setFindMessageByIdStatement(String findMessageByIdStatement) {
+        this.findMessageByIdStatement = findMessageByIdStatement;
     }
 
     public void setRemoveAllMessagesStatement(String removeAllMessagesStatment) {
