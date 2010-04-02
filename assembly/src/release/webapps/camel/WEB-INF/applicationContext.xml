@@ -56,8 +56,8 @@
             <property name="brokerURL" value="vm://localhost?create=false&amp;waitForStart=10000" />
             <property name="userName" value="${activemq.username}"/>
             <property name="password" value="${activemq.password}"/>
-            <property name="useSingleConnection" value="true" />
           </bean>
         </property>
+        <property name="useSingleConnection" value="true" />
     </bean>
 </beans>
