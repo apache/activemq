@@ -298,7 +298,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         PreparedStatement s = c.getRemovedMessageStatement();
         try {
             if (s == null) {
-                s = c.getConnection().prepareStatement(this.statements.getRemoveMessageStatment());
+                s = c.getConnection().prepareStatement(this.statements.getRemoveMessageStatement());
                 if (this.batchStatments) {
                     c.setRemovedMessageStatement(s);
                 }

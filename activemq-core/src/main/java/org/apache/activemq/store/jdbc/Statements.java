@@ -38,7 +38,7 @@ public class Statements {
     private String tablePrefix = "";
     private String addMessageStatement;
     private String updateMessageStatement;
-    private String removeMessageStatment;
+    private String removeMessageStatement;
     private String findMessageSequenceIdStatement;
     private String findMessageStatement;
     private String findMessageByIdStatement;
@@ -118,11 +118,11 @@ public class Statements {
         return updateMessageStatement;
     }
 
-    public String getRemoveMessageStatment() {
-        if (removeMessageStatment == null) {
-            removeMessageStatment = "DELETE FROM " + getFullMessageTableName() + " WHERE ID=?";
+    public String getRemoveMessageStatement() {
+        if (removeMessageStatement == null) {
+            removeMessageStatement = "DELETE FROM " + getFullMessageTableName() + " WHERE ID=?";
         }
-        return removeMessageStatment;
+        return removeMessageStatement;
     }
 
     public String getFindMessageSequenceIdStatement() {
@@ -584,8 +584,8 @@ public class Statements {
         this.removeAllSubscriptionsStatement = removeAllSubscriptionsStatment;
     }
 
-    public void setRemoveMessageStatment(String removeMessageStatment) {
-        this.removeMessageStatment = removeMessageStatment;
+    public void setRemoveMessageStatment(String removeMessageStatement) {
+        this.removeMessageStatement = removeMessageStatement;
     }
 
     public void setUpdateLastAckOfDurableSubStatement(String updateLastAckOfDurableSub) {
