@@ -49,7 +49,7 @@ class StompSocket extends TransportSupport implements WebSocket, StompTransport 
 
     public void onMessage(byte frame, String data) {
         try {
-            protocolConverter.onStompCommand((StompFrame)wireFormat.unmarshal(new ByteSequence(data.getBytes())));
+            protocolConverter.onStompCommand((StompFrame)wireFormat.unmarshal(new ByteSequence(data.getBytes("UTF-8"))));
         } catch (Exception e) {
             onException(IOExceptionSupport.create(e));
         }

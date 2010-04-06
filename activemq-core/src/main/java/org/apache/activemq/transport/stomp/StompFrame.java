@@ -181,7 +181,7 @@ public class StompFrame implements Command {
         buffer.append("\n");
         if (getContent() != null) {
             try {
-                buffer.append(new String(getContent()));
+                buffer.append(new String(getContent(), "UTF-8"));
             } catch (Throwable e) {
                 buffer.append(Arrays.toString(getContent()));
             }
