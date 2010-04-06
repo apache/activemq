@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.transport.stomp;
 
+import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -72,7 +73,11 @@ public class StompFrame implements Command {
     }
     
     public String getBody() {
-    	return new String(content);
+    	try {
+    		return new String(content, "UTF-8");
+    	} catch (UnsupportedEncodingException e) {
+    		return new String(content);
+    	}
     }
 
     public void setContent(byte[] data) {
