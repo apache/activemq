@@ -46,13 +46,6 @@
       </policyMap>
     </destinationPolicy>
 
-
-    <transportConnectors>
-      <transportConnector name="openwire" uri="tcp://localhost:61616" discoveryUri="multicast://default"/>
-      <transportConnector name="stomp" uri="stomp://localhost:61613"/>
-      <transportConnector name="xmpp" uri="xmpp://localhost:61222"/>
-    </transportConnectors>
-
     <networkConnectors>
       <!-- by default just auto discover the other brokers -->
       <networkConnector name="defaultNetwork" uri="multicast://default"/>
@@ -60,6 +53,12 @@
       <networkConnector name="host1 and host2" uri="static://(tcp://host1:61616,tcp://host2:61616)" failover="true"/>
       -->
     </networkConnectors>
+
+    <transportConnectors>
+      <transportConnector name="openwire" uri="tcp://localhost:61616" discoveryUri="multicast://default"/>
+      <transportConnector name="stomp" uri="stomp://localhost:61613"/>
+      <transportConnector name="xmpp" uri="xmpp://localhost:61222"/>
+    </transportConnectors>
 
   </broker>
 
