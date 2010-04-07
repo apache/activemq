@@ -178,6 +178,9 @@ public class SendMessage extends DestinationFacade implements Controller {
             for (Iterator iter = map.entrySet().iterator(); iter.hasNext();) {
                 Map.Entry entry = (Map.Entry) iter.next();
                 String name = (String) entry.getKey();
+                if (name.equals("secret")) {
+                	continue;
+                }
                 Object value = entry.getValue();
                 if (isValidPropertyName(name)) {
                     if (value instanceof String[]) {

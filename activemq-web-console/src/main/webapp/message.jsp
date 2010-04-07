@@ -17,7 +17,7 @@
 <html>
 <head>
 <c:set var="row" value="${requestContext.messageQuery.message}"/>
-<title>Message ${requestContext.messageQuery.id}</title>
+<title>Message <c:out value="${requestContext.messageQuery.id}"/></title>
 </head>
 <body>
 
@@ -26,7 +26,7 @@
 <c:when test="${empty row}">
 
 <div>
-No message could be found for ID ${requestContext.messageQuery.id}
+No message could be found for ID <c:out value="${requestContext.messageQuery.id}"/>
 </div>
 
 </c:when>
@@ -47,7 +47,7 @@ No message could be found for ID ${requestContext.messageQuery.id}
 				<tbody>
 					<tr>
 						<td class="label" title="Unique Message ID for this message">Message ID</td>
-						<td>${row.JMSMessageID}</td>
+						<td><c:out value="${row.JMSMessageID}"/></td>
 					</tr>
 					<tr>
 						<td class="label">Destination</td>
@@ -55,19 +55,19 @@ No message could be found for ID ${requestContext.messageQuery.id}
 					</tr>
 					<tr>
 						<td class="label" title="The ID used to correlate messages together in a conversation">Correlation ID</td>
-						<td>${row.JMSCorrelationID}</td>
+						<td><c:out value="${row.JMSCorrelationID}"/></td>
 					</tr>
 					<tr>
 						<td class="label" title="Message Group Identifier">Group</td>
-						<td>${row.groupID}</td>
+						<td><c:out value="${row.groupID}"/></td>
 					</tr>
 					<tr>
 						<td class="label" title="Message Group Sequence Number">Sequence</td>
-						<td>${row.groupSequence}</td>
+						<td><c:out value="${row.groupSequence}"/></td>
 					</tr>
 					<tr>
 						<td class="label">Expiration</td>
-						<td>${row.JMSExpiration}</td>
+						<td><c:out value="${row.JMSExpiration}"/></td>
 					</tr>
 					<tr>
 						<td class="label">Persistence</td>
@@ -75,15 +75,15 @@ No message could be found for ID ${requestContext.messageQuery.id}
 					</tr>
 					<tr>
 						<td class="label">Priority</td>
-						<td>${row.JMSPriority}</td>
+						<td><c:out value="${row.JMSPriority}"/></td>
 					</tr>
 					<tr>
 						<td class="label">Redelivered</td>
-					    <td>${row.JMSRedelivered}</td>
+					    <td><c:out value="${row.JMSRedelivered}"/></td>
 					</tr>
 					<tr>
 						<td class="label">Reply To</td>
-						<td>${row.JMSReplyTo}</td>
+						<td><c:out value="${row.JMSReplyTo}"/></td>
 					</tr>
 					<tr>
 						<td class="label">Timestamp</td>
@@ -91,7 +91,7 @@ No message could be found for ID ${requestContext.messageQuery.id}
 					</tr>
 					<tr>
 						<td class="label">Type</td>
-						<td>${row.JMSType}</td>
+						<td><c:out value="${row.JMSType}"/></td>
 					</tr>
 				</tbody>
 			</table>
@@ -109,8 +109,8 @@ No message could be found for ID ${requestContext.messageQuery.id}
 				<tbody>
                    <form:forEachMapEntry items="${requestContext.messageQuery.propertiesMap}" var="prop">
 						<tr>
-							<td class="label">${prop.key}</td>
-							<td>${prop.value}</td>
+							<td class="label"><c:out value="${prop.key}"/></td>
+							<td><c:out value="${prop.value}"/></td>
 						</tr>
 						<tr>
 					</form:forEachMapEntry>

@@ -17,7 +17,7 @@
 <html>
 <head>
 <c:set var="row" value="${requestContext.connectionQuery.connection}"/>
-<title>Connection ${requestContext.connectionQuery.connectionID}</title>
+<title>Connection <c:out value="${requestContext.connectionQuery.connectionID}" /></title>
 </head>
 <body>
 
@@ -26,40 +26,40 @@
 <c:when test="${empty row}">
 
 <div>
-No connection could be found for ID ${requestContext.connectionQuery.connectionID}
+No connection could be found for ID <c:out value="${requestContext.connectionQuery.connectionID}" />
 </div>
 
 </c:when>
 
 <c:otherwise>
 
-<h2>Connection ${requestContext.connectionQuery.connectionID}</h2>
+<h2>Connection <c:out value="${requestContext.connectionQuery.connectionID}" /></h2>
 
 <table id="header" class="sortable autostripe">
 	<tbody>
 		<tr>
 			<td class="label" title="Unique ID for this connection">Connection ID</td>
-			<td>${requestContext.connectionQuery.connectionID}</td>
+			<td><c:out value="${requestContext.connectionQuery.connectionID}" /></td>
 		</tr>
 		<tr>
 			<td class="label" tite="Hostname and port of the connected party">Remote Address</td>
-			<td>${row.remoteAddress}</td>
+			<td><c:out value="${row.remoteAddress}" /></td>
 		</tr>
 		<tr>
 			<td class="label">Active</td>
-			<td>${row.active}</td>
+			<td><c:out value="${row.active}" /></td>
 		</tr>
 		<tr>
 			<td class="label">Connected</td>
-			<td>${row.connected}</td>
+			<td><c:out value="${row.connected}" /></td>
 		</tr>
 		<tr>
 			<td class="label">Blocked</td>
-			<td>${row.blocked}</td>
+			<td><c:out value="${row.blocked}" /></td>
 		</tr>
 		<tr>
 			<td class="label">Slow</td>
-			<td>${row.slow}</td>
+			<td><c:out value="${row.slow}" /></td>
 		</tr>
 	</tbody>
 </table>
@@ -96,29 +96,29 @@ No connection could be found for ID ${requestContext.connectionQuery.connectionI
 	<td>
 		<c:choose>
 			<c:when test="${consumer.destinationQueue}">
-				Queue <a href="browse.jsp?JMSDestination=${consumer.destinationName}">${consumer.destinationName}</a>
+				Queue <a href="browse.jsp?JMSDestination=${consumer.destinationName}"><c:out value="${consumer.destinationName}" /></a>
 			</c:when>
 			<c:when test="${consumer.destinationTopic}">
-				Topic <a href="send.jsp?JMSDestination=${consumer.destinationName}">${consumer.destinationName}</a>
+				Topic <a href="send.jsp?JMSDestination=${consumer.destinationName}"><c:out value="${consumer.destinationName}" /></a>
 			</c:when>
 			<c:otherwise>
-				${consumer.destinationName}
+				<c:out value="${consumer.destinationName}" />
 			</c:otherwise>
 		</c:choose>
 	</td>
-	<td>${consumer.sessionId}</td>
-	<td>${consumer.selector}</td>
-	<td>${consumer.enqueueCounter}</td>
-	<td>${consumer.dequeueCounter}</td>
-	<td>${consumer.dispachedCounter}</td>
-	<td>${consumer.dispatchedQueueSize}</td>
+	<td><c:out value="${consumer.sessionId}" /></td>
+	<td><c:out value="${consumer.selector}" /></td>
+	<td><c:out value="${consumer.enqueueCounter}" /></td>
+	<td><c:out value="${consumer.dequeueCounter}" /></td>
+	<td><c:out value="${consumer.dispachedCounter}" /></td>
+	<td><c:out value="${consumer.dispatchedQueueSize}" /></td>
 	<td>
-		${consumer.prefetchSize}<br/>
-		${consumer.maximumPendingMessageLimit}
+		<c:out value="${consumer.prefetchSize}" /><br/>
+		<c:out value="${consumer.maximumPendingMessageLimit}" />
 	</td>
 	<td>
-		${consumer.exclusive}<br/>
-		${consumer.retroactive}
+		<c:out value="${consumer.exclusive}" /><br/>
+		<c:out value="${consumer.retroactive}" />
 	</td>
 </tr>
 </c:forEach>

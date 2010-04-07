@@ -41,13 +41,13 @@
 <tr>
 <td><a href="message.jsp?id=${row.JMSMessageID}&JMSDestination=<c:out value="${requestContext.queueBrowser.JMSDestination}" />" 
     title="${row.properties}">${row.JMSMessageID}</a></td>
-<td>${row.JMSCorrelationID}</td>
+<td><c:out value="${row.JMSCorrelationID}"/></td>
 <td><jms:persistent message="${row}"/></td>
-<td>${row.JMSPriority}</td>
-<td>${row.JMSRedelivered}</td>
-<td>${row.JMSReplyTo}</td>
+<td><c:out value="${row.JMSPriority}"/></td>
+<td><c:out value="${row.JMSRedelivered}"/></td>
+<td><c:out value="${row.JMSReplyTo}"/></td>
 <td><jms:formatTimestamp timestamp="${row.JMSTimestamp}"/></td>
-<td>${row.JMSType}</td>
+<td><c:out value="${row.JMSType}"/></td>
 <td>
     <a href="deleteMessage.action?JMSDestination=<c:out value="${row.JMSDestination}"/>&messageId=${row.JMSMessageID}&secret=<c:out value='${sessionScope["secret"]}'/>">Delete</a>
 </td>
