@@ -1073,9 +1073,9 @@ public class PageFile {
         
         // How many recovery pages do we have in the recovery buffer?
         recoveryFile.seek(0);
-        long nextTxId = readFile.readLong();
-        long expectedChecksum = readFile.readLong();
-        int pageCounter = readFile.readInt();
+        long nextTxId = recoveryFile.readLong();
+        long expectedChecksum = recoveryFile.readLong();
+        int pageCounter = recoveryFile.readInt();
         
         recoveryFile.seek(RECOVERY_FILE_HEADER_SIZE);
         Checksum checksum = new Adler32();
