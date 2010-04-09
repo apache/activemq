@@ -283,6 +283,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                     MessageId messageId = node.getMessageId();
                     if (ack.getLastMessageId().equals(messageId)) {
                         // this should never be within a transaction
+                        dequeueCounter++;
                         node.getRegionDestination().getDestinationStatistics().getInflight().decrement();
                         destination = node.getRegionDestination();
                         acknowledge(context, ack, node);

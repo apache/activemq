@@ -30,6 +30,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
+
 import org.apache.activemq.Service;
 import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.broker.BrokerService;
@@ -65,6 +66,7 @@ import org.apache.activemq.command.SessionInfo;
 import org.apache.activemq.command.ShutdownInfo;
 import org.apache.activemq.command.WireFormatInfo;
 import org.apache.activemq.filter.DestinationFilter;
+import org.apache.activemq.filter.MessageEvaluationContext;
 import org.apache.activemq.transport.DefaultTransportListener;
 import org.apache.activemq.transport.FutureResponse;
 import org.apache.activemq.transport.ResponseCallback;
@@ -88,9 +90,9 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision$
  */
 public abstract class DemandForwardingBridgeSupport implements NetworkBridge, BrokerServiceAware {
-
     private static final Log LOG = LogFactory.getLog(DemandForwardingBridge.class);
     private static final ThreadPoolExecutor ASYNC_TASKS;
+    protected static final String DURABLE_SUB_PREFIX = "NC-DS_";
     protected final Transport localBroker;
     protected final Transport remoteBroker;
     protected final IdGenerator idGenerator = new IdGenerator();
@@ -677,45 +679,41 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                     final MessageDispatch md = (MessageDispatch) command;
                     final DemandSubscription sub = subscriptionMapByLocalId.get(md.getConsumerId());
                     if (sub != null && md.getMessage() != null && sub.incrementOutstandingResponses()) {
-                        // See if this consumer's brokerPath tells us it came from the broker at the other end
-                        // of the bridge. I think we should be making this decision based on the message's
-                        // broker bread crumbs and not the consumer's? However, the message's broker bread
-                        // crumbs are null, which is another matter.   
-                        boolean cameFromRemote = false;
-                        Object consumerInfo = md.getMessage().getDataStructure();
-                        if (consumerInfo != null && (consumerInfo instanceof ConsumerInfo))
-                            cameFromRemote = contains(((ConsumerInfo) consumerInfo).getBrokerPath(), remoteBrokerInfo.getBrokerId());
-
+                        
+                        if (originallyCameFromRemote(md, sub)) {
+                            if (LOG.isDebugEnabled()) {
+                                LOG.debug(configuration.getBrokerName() + " message not forwarded to " + remoteBrokerName + " because message came from there or fails networkTTL: " + md.getMessage());
+                            }
+                            // still ack as it may be durable
+                            try {
+                                localBroker.oneway(new MessageAck(md, MessageAck.INDIVIDUAL_ACK_TYPE, 1));
+                            } finally {
+                                sub.decrementOutstandingResponses();
+                            }
+                            return;
+                        }
+                        
                         Message message = configureMessage(md);
                         if (LOG.isDebugEnabled()) {
                             LOG.debug("bridging " + configuration.getBrokerName() + " -> " + remoteBrokerName + ": " + message);
                         }
-
+                        
                         if (!message.isResponseRequired()) {
-
+                            
                             // If the message was originally sent using async
                             // send, we will preserve that QOS
                             // by bridging it using an async send (small chance
                             // of message loss).
-
                             try {
-                                // Don't send it off to the remote if it originally came from the remote. 
-                                if (!cameFromRemote) {
-                                    remoteBroker.oneway(message);
-                                } else {
-                                    if (LOG.isDebugEnabled()) {
-                                        LOG.debug("Message not forwarded on to remote, because message came from remote");
-                                    }
-                                }
-
+                                remoteBroker.oneway(message);
                                 localBroker.oneway(new MessageAck(md, MessageAck.INDIVIDUAL_ACK_TYPE, 1));
                                 dequeueCounter.incrementAndGet();
                             } finally {
                                 sub.decrementOutstandingResponses();
                             }
-
+                            
                         } else {
-
+                            
                             // The message was not sent using async send, so we
                             // should only ack the local
                             // broker when we get confirmation that the remote
@@ -730,8 +728,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                                         } else {
                                             localBroker.oneway(new MessageAck(md, MessageAck.INDIVIDUAL_ACK_TYPE, 1));
                                             dequeueCounter.incrementAndGet();
-
-                                        }
+                                        }   
                                     } catch (IOException e) {
                                         serviceLocalException(e);
                                     } finally {
@@ -739,10 +736,10 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                                     }
                                 }
                             };
-
+                            
                             remoteBroker.asyncRequest(message, callback);
+                            
                         }
-
                     } else {
                         if (LOG.isDebugEnabled()) {
                             LOG.debug("No subscription registered with this network bridge for consumerId " + md.getConsumerId() + " for message: " + md.getMessage());
@@ -777,6 +774,27 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                 serviceLocalException(e);
             }
         }
+    }
+
+    private boolean originallyCameFromRemote(MessageDispatch md, DemandSubscription sub) throws Exception {
+        // See if this consumer's brokerPath tells us it came from the broker at the other end
+        // of the bridge. I think we should be making this decision based on the message's
+        // broker bread crumbs and not the consumer's? However, the message's broker bread
+        // crumbs are null, which is another matter.   
+        boolean cameFromRemote = false;
+        Object consumerInfo = md.getMessage().getDataStructure();
+        if (consumerInfo != null && (consumerInfo instanceof ConsumerInfo)) {
+            cameFromRemote = contains(((ConsumerInfo) consumerInfo).getBrokerPath(), remoteBrokerInfo.getBrokerId());
+        }
+        
+        // for durable subs, suppression via filter leaves dangling acks so we need to 
+        // check here and allow the ack irrespective
+        if (!cameFromRemote && sub.getLocalInfo().isDurable()) {
+            MessageEvaluationContext messageEvalContext = new MessageEvaluationContext();
+            messageEvalContext.setMessageReference(md.getMessage());
+            cameFromRemote = !createNetworkBridgeFilter(null).matches(messageEvalContext);
+        }  
+        return cameFromRemote;
     }
 
     /**
@@ -1130,9 +1148,14 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
         subscriptionMapByLocalId.put(sub.getLocalInfo().getConsumerId(), sub);
         subscriptionMapByRemoteId.put(sub.getRemoteInfo().getConsumerId(), sub);
 
-        // This works for now since we use a VM connection to the local broker.
-        // may need to change if we ever subscribe to a remote broker.
-        sub.getLocalInfo().setAdditionalPredicate(createNetworkBridgeFilter(info));
+        if (!info.isDurable()) {
+            // This works for now since we use a VM connection to the local broker.
+            // may need to change if we ever subscribe to a remote broker.
+            sub.getLocalInfo().setAdditionalPredicate(createNetworkBridgeFilter(info));
+        } else  {
+            // need to ack this message if it is ignored as it is durable so
+            // we check before we send. see: originallyCameFromRemote()
+        }
     }
 
     protected void removeDemandSubscription(ConsumerId id) throws IOException {

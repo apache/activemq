@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.broker.jmx;
 
+import org.apache.activemq.broker.region.DurableTopicSubscription;
 import org.apache.activemq.broker.region.TopicSubscription;
 
 /**
@@ -58,5 +59,15 @@ public class TopicSubscriptionView extends SubscriptionView implements TopicSubs
         }
     }
 
+    @Override
+    public boolean isActive() {
+        if (subscription instanceof DurableTopicSubscription) {
+            return ((DurableTopicSubscription)subscription).isActive();
+        } else {
+            return super.isActive();
+        }
+    }
+
+    
 
 }

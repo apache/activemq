@@ -29,6 +29,7 @@ import org.apache.activemq.broker.region.Region;
 import org.apache.activemq.broker.region.RegionBroker;
 import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.broker.region.Topic;
+import org.apache.activemq.broker.region.TopicRegion;
 import org.apache.activemq.broker.region.TopicSubscription;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQMessage;
@@ -338,14 +339,16 @@ public class ManagedRegionBroker extends RegionBroker {
         if (destinations != null) {
             for (Iterator iter = destinations.iterator(); iter.hasNext();) {
                 ActiveMQDestination dest = (ActiveMQDestination)iter.next();
-                if (dest.isTopic()) {
+                if (dest.isTopic()) {                
                     SubscriptionInfo[] infos = destinationFactory.getAllDurableSubscriptions((ActiveMQTopic)dest);
                     if (infos != null) {
                         for (int i = 0; i < infos.length; i++) {
                             SubscriptionInfo info = infos[i];
-                            LOG.debug("Restoring durable subscription: " + info);
                             SubscriptionKey key = new SubscriptionKey(info);
-                            subscriptions.put(key, info);
+                            if (!alreadyKnown(key)) {
+                                LOG.debug("Restoring durable subscription mbean: " + info);
+                                subscriptions.put(key, info);
+                            }
                         }
                     }
                 }
@@ -357,6 +360,15 @@ public class ManagedRegionBroker extends RegionBroker {
             SubscriptionInfo info = (SubscriptionInfo)entry.getValue();
             addInactiveSubscription(key, info);
         }
+    }
+
+    private boolean alreadyKnown(SubscriptionKey key) {
+        boolean known = false;
+        known = ((TopicRegion) getTopicRegion()).durableSubscriptionExists(key);
+        if (LOG.isTraceEnabled()) {
+            LOG.trace("Sub with key: " + key + ", " + (known ? "": "not") +  " already registered");
+        }
+        return known;
     }
 
     protected void addInactiveSubscription(SubscriptionKey key, SubscriptionInfo info) {

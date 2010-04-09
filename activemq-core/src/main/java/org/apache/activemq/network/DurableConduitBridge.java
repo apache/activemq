@@ -54,7 +54,7 @@ public class DurableConduitBridge extends ConduitBridge {
      */
     protected void setupStaticDestinations() {
         super.setupStaticDestinations();
-        ActiveMQDestination[] dests = durableDestinations;
+        ActiveMQDestination[] dests = configuration.isDynamicOnly() ? null : durableDestinations;
         if (dests != null) {
             for (int i = 0; i < dests.length; i++) {
                 ActiveMQDestination dest = dests[i];
@@ -96,7 +96,7 @@ public class DurableConduitBridge extends ConduitBridge {
     }
 
     protected String getSubscriberName(ActiveMQDestination dest) {
-        String subscriberName = configuration.getBrokerName() + "_" + dest.getPhysicalName();
+        String subscriberName = DURABLE_SUB_PREFIX + configuration.getBrokerName() + "_" + dest.getPhysicalName();
         return subscriberName;
     }
 

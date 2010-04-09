@@ -55,11 +55,8 @@ public final class NetworkBridgeFactory {
                                                       final NetworkBridgeListener listener) {
         DemandForwardingBridge result = null;
         if (configuration.isConduitSubscriptions()) {
-            if (configuration.isDynamicOnly()) {
-                result = new ConduitBridge(configuration, localTransport, remoteTransport);
-            } else {
-                result = new DurableConduitBridge(configuration, localTransport, remoteTransport);
-            }
+            // dynamicOnly determines whether durables are auto bridged
+            result = new DurableConduitBridge(configuration, localTransport, remoteTransport);
         } else {
             result = new DemandForwardingBridge(configuration, localTransport, remoteTransport);
         }
