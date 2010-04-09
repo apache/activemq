@@ -33,10 +33,6 @@ public class StompExample {
 		connection.open("localhost", 61613);
 		
 		connection.connect("system", "manager");
-		StompFrame connect = connection.receive();
-		if (!connect.getAction().equals(Stomp.Responses.CONNECTED)) {
-			throw new Exception ("Not connected");
-		}
 		
 		connection.begin("tx1");
 		connection.send("/queue/test", "message1");
