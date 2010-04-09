@@ -109,11 +109,15 @@ public class VMTransport implements Transport, Task {
             peer.enqueueValve.decrement();
         }
 
+        dispatch(peer, transportListener, command);
+    }
+    
+    public void dispatch(VMTransport transport, TransportListener transportListener, Object command) {
         if( transportListener!=null ) {
             if( command == DISCONNECT ) {
                 transportListener.onException(new TransportDisposedIOException("Peer (" + peer.toString() + ") disposed."));
             } else {
-                peer.receiveCounter++;
+                transport.receiveCounter++;
                 transportListener.onCommand(command);
             }
         }
@@ -129,7 +133,7 @@ public class VMTransport implements Transport, Task {
                 Object command;
                 while ((command = messageQueue.poll()) != null && !stopping.get() ) {
                     receiveCounter++;
-                    transportListener.onCommand(command);
+                    dispatch(this, transportListener, command);
                 }
             }
             started = true;
@@ -149,7 +153,14 @@ public class VMTransport implements Transport, Task {
         
         // If stop() is called while being start()ed.. then we can't stop until we return to the start() method.
         if( enqueueValve.isOn() ) {
-
+        	
+            // let the peer know that we are disconnecting..
+            try {
+            	peer.transportListener.onException(new TransportDisposedIOException("Peer (" + peer.toString() + ") disposed."));
+            } catch (Exception ignore) {
+            }
+        	
+        	
             TaskRunner tr = null;
             try {
                 enqueueValve.turnOff();
@@ -168,12 +179,10 @@ public class VMTransport implements Transport, Task {
             if (tr != null) {
                 tr.shutdown(1000);
             }
-            // let the peer know that we are disconnecting..
-            try {
-                oneway(DISCONNECT);
-            } catch (Exception ignore) {
-            }
+            
+
         }
+        
     }
     
     /**

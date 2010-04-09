@@ -206,16 +206,7 @@ public class VMTransportFactory extends TransportFactory {
 
     public static void stopped(VMTransportServer server) {
         String host = server.getBindURI().getHost();
-        SERVERS.remove(host);
-        TransportConnector connector = CONNECTORS.remove(host);
-        if (connector != null) {
-            LOG.debug("Shutting down VM connectors for broker: " + host);
-            ServiceSupport.dispose(connector);
-            BrokerService broker = BROKERS.remove(host);
-            if (broker != null) {
-                ServiceSupport.dispose(broker);
-            }
-        }
+        stopped(host);
     }
 
     public static void stopped(String host) {

@@ -60,6 +60,5 @@
             <property name="password" value="${activemq.password}"/>
           </bean>
         </property>
-        <property name="useSingleConnection" value="true" />
     </bean>
 </beans>
