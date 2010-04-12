@@ -144,6 +144,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
     private ExecutorService executorService;
     private MessageTransformer transformer;
     private boolean clearDispatchList;
+    boolean inProgressClearRequiredFlag;
 
     private MessageAck pendingAck;
     private long lastDeliveredSequenceId;
@@ -655,23 +656,32 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
         this.session.asyncSendPacket(removeCommand);
     }
     
-    void clearMessagesInProgress() {
+    void inProgressClearRequired() {
+        inProgressClearRequiredFlag = true;
         // deal with delivered messages async to avoid lock contention with in progress acks
         clearDispatchList = true;
-        synchronized (unconsumedMessages.getMutex()) {            
-            if (LOG.isDebugEnabled()) {
-                LOG.debug(getConsumerId() + " clearing dispatched list (" + unconsumedMessages.size() + ") on transport interrupt");
-            }
-            // ensure unconsumed are rolledback up front as they may get redelivered to another consumer
-            List<MessageDispatch> list = unconsumedMessages.removeAll();
-            if (!this.info.isBrowser()) {
-                for (MessageDispatch old : list) {
-                    session.connection.rollbackDuplicate(this, old.getMessage());
+    }
+    
+    void clearMessagesInProgress() {
+        if (inProgressClearRequiredFlag) {
+            synchronized (unconsumedMessages.getMutex()) {
+                if (inProgressClearRequiredFlag) {
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug(getConsumerId() + " clearing dispatched list (" + unconsumedMessages.size() + ") on transport interrupt");
+                    }
+                    // ensure unconsumed are rolledback up front as they may get redelivered to another consumer
+                    List<MessageDispatch> list = unconsumedMessages.removeAll();
+                    if (!this.info.isBrowser()) {
+                        for (MessageDispatch old : list) {
+                            session.connection.rollbackDuplicate(this, old.getMessage());
+                        }
+                    }
+                    // allow dispatch on this connection to resume
+                    session.connection.transportInterruptionProcessingComplete();
+                    inProgressClearRequiredFlag = false;
                 }
             }
         }
-        // allow dispatch on this connection to resume
-        session.connection.transportInterruptionProcessingComplete();
     }
 
     void deliverAcks() {
@@ -1192,6 +1202,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
     public void dispatch(MessageDispatch md) {
         MessageListener listener = this.messageListener.get();
         try {
+            clearMessagesInProgress();
             clearDispatchList();
             synchronized (unconsumedMessages.getMutex()) {
                 if (!unconsumedMessages.isClosed()) {

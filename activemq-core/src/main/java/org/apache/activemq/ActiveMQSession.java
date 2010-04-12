@@ -649,6 +649,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
         // connection.transportInterruptionProcessingComplete()
         //
         for (final ActiveMQMessageConsumer consumer : consumers) {
+            consumer.inProgressClearRequired();
             scheduler.executeAfterDelay(new Runnable() {
                 public void run() {
                     consumer.clearMessagesInProgress();
