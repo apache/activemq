@@ -464,7 +464,7 @@ public class AMQ2102Test extends CombinationTestSupport implements UncaughtExcep
             }
         };
         t.start();
-        Thread.sleep(2000);
+        master.waitUntilStarted();
         masterUrl = master.getTransportConnectors().get(0).getConnectUri().toString(); 
         
         debug("masterUrl: " + masterUrl);
@@ -474,6 +474,7 @@ public class AMQ2102Test extends CombinationTestSupport implements UncaughtExcep
         slave.addConnector("tcp://localhost:0");
         slave.setMasterConnectorURI(masterUrl);
         slave.start();
+        slave.waitUntilStarted();
     }
     
     public void tearDown() throws Exception {
