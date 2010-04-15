@@ -70,32 +70,23 @@ public abstract class DurableSubscriptionTestSupport extends TestSupport {
     }
 
     private void createBroker() throws Exception {
-        try {
-            broker = new BrokerService();
-            broker.setBrokerName("durable-broker");
-            broker.setDeleteAllMessagesOnStartup(true);
-            broker.setPersistenceAdapter(createPersistenceAdapter());
-            broker.setPersistent(true);
-            broker.start();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        broker = new BrokerService();
+        broker.setBrokerName("durable-broker");
+        broker.setDeleteAllMessagesOnStartup(true);
+        broker.setPersistenceAdapter(createPersistenceAdapter());
+        broker.setPersistent(true);
+        broker.start();
 
         connection = createConnection();
     }
 
     private void createRestartedBroker() throws Exception {
-        try {
-            broker = new BrokerService();
-            broker.setBrokerName("durable-broker");
-            broker.setDeleteAllMessagesOnStartup(false);
-            broker.setPersistenceAdapter(createPersistenceAdapter());
-            broker.setPersistent(true);
-            broker.start();
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        broker = new BrokerService();
+        broker.setBrokerName("durable-broker");
+        broker.setDeleteAllMessagesOnStartup(false);
+        broker.setPersistenceAdapter(createPersistenceAdapter());
+        broker.setPersistent(true);
+        broker.start();
 
         connection = createConnection();
     }
@@ -230,6 +221,28 @@ public abstract class DurableSubscriptionTestSupport extends TestSupport {
         // Try to get the message.
         assertTextMessageEquals("Msg:2", consumer.receive(5000));
         assertNull(consumer.receive(5000));
+    }
+    
+    public void testDurableSubscriptionBrokerRestart() throws Exception {
+
+        // Create the durable sub.
+        connection.start();
+        session = connection.createSession(false, javax.jms.Session.AUTO_ACKNOWLEDGE);
+
+        // Ensure that consumer will receive messages sent before it was created
+        Topic topic = session.createTopic("TestTopic?consumer.retroactive=true");
+        consumer = session.createDurableSubscriber(topic, "sub1");
+        
+        producer = session.createProducer(topic);
+        producer.setDeliveryMode(DeliveryMode.PERSISTENT);
+        producer.send(session.createTextMessage("Msg:1"));
+        assertTextMessageEquals("Msg:1", consumer.receive(5000));
+        
+        // Make sure cleanup kicks in
+        Thread.sleep(1000);
+
+        // Restart the broker.
+        restartBroker();
     }
 
     public void testDurableSubscriptionPersistsPastBrokerRestart() throws Exception {

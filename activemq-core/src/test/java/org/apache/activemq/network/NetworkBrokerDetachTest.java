@@ -90,7 +90,7 @@ public class NetworkBrokerDetachTest {
     }
     
     // variants for each store....
-    private void configureBroker(BrokerService broker) throws Exception {
+    protected void configureBroker(BrokerService broker) throws Exception {
         //KahaPersistenceAdapter persistenceAdapter = new KahaPersistenceAdapter();
         //persistenceAdapter.setDirectory(new File("target/activemq-data/kaha/" + broker.getBrokerName() + "/NetworBrokerDetatchTest"));
         //broker.setPersistenceAdapter(persistenceAdapter);        

@@ -309,7 +309,7 @@ public class Statements {
     public String getDeleteOldMessagesStatement() {
         if (deleteOldMessagesStatement == null) {
             deleteOldMessagesStatement = "DELETE FROM " + getFullMessageTableName()
-                                         + " WHERE ( EXPIRATION<>0 AND EXPIRATION<?) OR ID <= "
+                                         + " WHERE ( EXPIRATION<>0 AND EXPIRATION<?) OR ID < "
                                          + "( SELECT min(" + getFullAckTableName() + ".LAST_ACKED_ID) "
                                          + "FROM " + getFullAckTableName() + " WHERE "
                                          + getFullAckTableName() + ".CONTAINER=" + getFullMessageTableName()

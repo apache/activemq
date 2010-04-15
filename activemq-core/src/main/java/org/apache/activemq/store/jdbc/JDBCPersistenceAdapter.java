@@ -229,8 +229,13 @@ public class JDBCPersistenceAdapter extends DataSourceSupport implements Persist
             sequenceGenerator.setLastSequenceId(seq);
             long brokerSeq = 0;
             if (seq != 0) {
-            	Message last = (Message)wireFormat.unmarshal(new ByteSequence(getAdapter().doGetMessageById(c, seq)));
-            	brokerSeq = last.getMessageId().getBrokerSequenceId();
+                byte[] msg = getAdapter().doGetMessageById(c, seq);
+                if (msg != null) {
+                    Message last = (Message)wireFormat.unmarshal(new ByteSequence(msg));
+                    brokerSeq = last.getMessageId().getBrokerSequenceId();
+                } else {
+                   LOG.warn("Broker sequence id wasn't recovered properly, possible duplicates!");
+                }
             }
             return brokerSeq;
         } catch (SQLException e) {

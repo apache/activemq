@@ -16,11 +16,11 @@
  */
 package org.apache.activemq.usecases;
 
-import java.io.File;
 import java.io.IOException;
 
 import org.apache.activemq.store.PersistenceAdapter;
-import org.apache.activemq.store.journal.JournalPersistenceAdapterFactory;
+import org.apache.activemq.store.jdbc.JDBCPersistenceAdapter;
+import org.apache.derby.jdbc.EmbeddedDataSource;
 
 /**
  * @version $Revision: 1.1.1.1 $
@@ -28,11 +28,13 @@ import org.apache.activemq.store.journal.JournalPersistenceAdapterFactory;
 public class JDBCDurableSubscriptionTest extends DurableSubscriptionTestSupport {
 
     protected PersistenceAdapter createPersistenceAdapter() throws IOException {
-        File dataDir = new File("target/test-data/durableJDBC");
-        JournalPersistenceAdapterFactory factory = new JournalPersistenceAdapterFactory();
-        factory.setDataDirectoryFile(dataDir);
-        factory.setUseJournal(false);
-        return factory.createPersistenceAdapter();
+        JDBCPersistenceAdapter jdbc = new JDBCPersistenceAdapter();
+        EmbeddedDataSource dataSource = new EmbeddedDataSource();
+        dataSource.setDatabaseName("derbyDb");
+        dataSource.setCreateDatabase("create");
+        jdbc.setDataSource(dataSource);
+        jdbc.setCleanupPeriod(1000); // set up small cleanup period
+        return jdbc;
     }
 
 }

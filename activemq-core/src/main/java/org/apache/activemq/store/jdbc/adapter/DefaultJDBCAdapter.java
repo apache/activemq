@@ -156,8 +156,13 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
             long seq2 = 0;
             if (rs.next()) {
                 seq2 = rs.getLong(1);
+                // if there is no such message, ignore the value
+                if (this.doGetMessageById(c, seq2) == null) {
+                    seq2 = 0;
+                }
             }
-            return Math.max(seq1, seq2);
+            long seq = Math.max(seq1, seq2);
+            return seq;
         } finally {
             close(rs);
             close(s);
