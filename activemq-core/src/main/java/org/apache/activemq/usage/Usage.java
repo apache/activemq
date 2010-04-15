@@ -78,25 +78,29 @@ public abstract class Usage<T extends Usage> implements Service {
         waitForSpace(0);
     }
 
+    public boolean waitForSpace(long timeout) throws InterruptedException {
+        return waitForSpace(timeout, 100);
+    }
+    
     /**
      * @param timeout
      * @throws InterruptedException
      * @return true if space
      */
-    public boolean waitForSpace(long timeout) throws InterruptedException {
+    public boolean waitForSpace(long timeout, int highWaterMark) throws InterruptedException {
         if (parent != null) {
-            if (!parent.waitForSpace(timeout)) {
+            if (!parent.waitForSpace(timeout, highWaterMark)) {
                 return false;
             }
         }
         synchronized (usageMutex) {
             percentUsage=caclPercentUsage();
-            if (percentUsage >= 100) {
+            if (percentUsage >= highWaterMark) {
                 long deadline = timeout > 0 ? System.currentTimeMillis() + timeout : Long.MAX_VALUE;
                 long timeleft = deadline;
                 while (timeleft > 0) {
                     percentUsage=caclPercentUsage();
-                    if (percentUsage >= 100) {
+                    if (percentUsage >= highWaterMark) {
                         usageMutex.wait(pollingTime);
                         timeleft = deadline - System.currentTimeMillis();
                     } else {
@@ -104,17 +108,21 @@ public abstract class Usage<T extends Usage> implements Service {
                     }
                 }
             }
-            return percentUsage < 100;
+            return percentUsage < highWaterMark;
         }
     }
 
     public boolean isFull() {
-        if (parent != null && parent.isFull()) {
+        return isFull(100);
+    }
+    
+    public boolean isFull(int highWaterMark) {
+        if (parent != null && parent.isFull(highWaterMark)) {
             return true;
         }
         synchronized (usageMutex) {
             percentUsage=caclPercentUsage();
-            return percentUsage >= 100;
+            return percentUsage >= highWaterMark;
         }
     }
 

@@ -84,6 +84,7 @@ public class PolicyEntry extends DestinationMapEntry {
     private int topicPrefetch=ActiveMQPrefetchPolicy.DEFAULT_TOPIC_PREFETCH;
     private int durableTopicPrefetch=ActiveMQPrefetchPolicy.DEFAULT_DURABLE_TOPIC_PREFETCH;
     private int cursorMemoryHighWaterMark=70;
+    private int storeUsageHighWaterMark = 100;
     
    
     public void configure(Broker broker,Queue queue) {
@@ -144,6 +145,7 @@ public class PolicyEntry extends DestinationMapEntry {
         destination.setExpireMessagesPeriod(getExpireMessagesPeriod());
         destination.setMaxExpirePageSize(getMaxExpirePageSize());
         destination.setCursorMemoryHighWaterMark(getCursorMemoryHighWaterMark());
+        destination.setStoreUsageHighWaterMark(getStoreUsageHighWaterMark());
     }
 
     public void configure(Broker broker, SystemUsage memoryManager, TopicSubscription subscription) {
@@ -698,6 +700,12 @@ public class PolicyEntry extends DestinationMapEntry {
 		this.cursorMemoryHighWaterMark = cursorMemoryHighWaterMark;
 	}
 
+    public void setStoreUsageHighWaterMark(int storeUsageHighWaterMark) {
+        this.storeUsageHighWaterMark = storeUsageHighWaterMark;   
+    }
 
+    public int getStoreUsageHighWaterMark() {
+        return storeUsageHighWaterMark;
+    }
 
 }

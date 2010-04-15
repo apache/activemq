@@ -556,16 +556,16 @@ public class Queue extends BaseDestination implements Task, UsageListener {
         final ConnectionContext context = producerExchange.getConnectionContext();
         synchronized (sendLock) {
             if (store != null && message.isPersistent()) {
-                if (systemUsage.getStoreUsage().isFull()) {
+                if (systemUsage.getStoreUsage().isFull(getStoreUsageHighWaterMark())) {
 
-                    String logMessage = "Usage Manager Store is Full. Producer (" + message.getProducerId() + ") stopped to prevent flooding " + getActiveMQDestination().getQualifiedName() + "."
+                    String logMessage = "Usage Manager Store is Full, " + getStoreUsageHighWaterMark() + "% of " + systemUsage.getStoreUsage().getLimit() + ". Stopping producer (" + message.getProducerId() + ") to prevent flooding " + getActiveMQDestination().getQualifiedName() + "."
                             + " See http://activemq.apache.org/producer-flow-control.html for more info";
 
                     if (systemUsage.isSendFailIfNoSpace()) {
                         throw new ResourceAllocationException(logMessage);
                     }
 
-                    waitForSpace(context, systemUsage.getStoreUsage(), logMessage);
+                    waitForSpace(context, systemUsage.getStoreUsage(), getStoreUsageHighWaterMark(), logMessage);
                 }
                 message.getMessageId().setBrokerSequenceId(getDestinationSequenceId());
                 store.addMessage(context, message);
@@ -1718,25 +1718,8 @@ public class Queue extends BaseDestination implements Task, UsageListener {
         }
     }
 
-    private final void waitForSpace(ConnectionContext context, Usage<?> usage, String warning) throws IOException, InterruptedException, ResourceAllocationException {
-        if (systemUsage.getSendFailIfNoSpaceAfterTimeout() != 0) {
-            if (!usage.waitForSpace(systemUsage.getSendFailIfNoSpaceAfterTimeout())) {
-                throw new ResourceAllocationException(warning);
-            }
-        } else {
-            long start = System.currentTimeMillis();
-            long nextWarn = start + blockedProducerWarningInterval;
-            while (!usage.waitForSpace(1000)) {
-                if (context.getStopping().get()) {
-                    throw new IOException("Connection closed, send aborted.");
-                }
-    
-                long now = System.currentTimeMillis();
-                if (now >= nextWarn) {
-                    LOG.info(warning + " (blocking for: " + (now - start) / 1000 + "s)");
-                    nextWarn = now + blockedProducerWarningInterval;
-                }
-            }
-        }
+    @Override
+    protected Log getLog() {
+        return LOG;
     }
 }

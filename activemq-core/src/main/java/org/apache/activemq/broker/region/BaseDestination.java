@@ -18,6 +18,8 @@ package org.apache.activemq.broker.region;
 
 import java.io.IOException;
 
+import javax.jms.ResourceAllocationException;
+
 import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.BrokerService;
@@ -34,6 +36,7 @@ import org.apache.activemq.store.MessageStore;
 import org.apache.activemq.usage.MemoryUsage;
 import org.apache.activemq.usage.SystemUsage;
 import org.apache.activemq.usage.Usage;
+import org.apache.commons.logging.Log;
 
 /**
  * @version $Revision: 1.12 $
@@ -77,6 +80,7 @@ public abstract class BaseDestination implements Destination {
     protected long expireMessagesPeriod = EXPIRE_MESSAGE_PERIOD;
     private int maxExpirePageSize = MAX_BROWSE_PAGE_SIZE;
     protected int cursorMemoryHighWaterMark = 70;
+    protected int storeUsageHighWaterMark = 100;
 
     /**
      * @param broker
@@ -533,6 +537,41 @@ public abstract class BaseDestination implements Destination {
 
     public void processDispatchNotification(MessageDispatchNotification messageDispatchNotification) throws Exception {
     }
+
+    public final int getStoreUsageHighWaterMark() {
+        return this.storeUsageHighWaterMark;
+    }
+
+    public void setStoreUsageHighWaterMark(int storeUsageHighWaterMark) {
+        this.storeUsageHighWaterMark = storeUsageHighWaterMark;
+    }
+
+    protected final void waitForSpace(ConnectionContext context, Usage<?> usage, String warning) throws IOException, InterruptedException, ResourceAllocationException {
+        waitForSpace(context, usage, 100, warning);
+    }
     
+    protected final void waitForSpace(ConnectionContext context, Usage<?> usage, int highWaterMark, String warning) throws IOException, InterruptedException, ResourceAllocationException {
+        if (systemUsage.getSendFailIfNoSpaceAfterTimeout() != 0) {
+            if (!usage.waitForSpace(systemUsage.getSendFailIfNoSpaceAfterTimeout(), highWaterMark)) {
+                throw new ResourceAllocationException(warning);
+            }
+        } else {
+            long start = System.currentTimeMillis();
+            long nextWarn = start;
+            while (!usage.waitForSpace(1000, highWaterMark)) {
+                if (context.getStopping().get()) {
+                    throw new IOException("Connection closed, send aborted.");
+                }
+    
+                long now = System.currentTimeMillis();
+                if (now >= nextWarn) {
+                    getLog().info(warning + " (blocking for: " + (now - start) / 1000 + "s)");
+                    nextWarn = now + blockedProducerWarningInterval;
+                }
+            }
+        }
+    }
+
+    protected abstract Log getLog();
     
 }

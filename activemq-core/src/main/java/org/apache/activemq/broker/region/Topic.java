@@ -16,6 +16,15 @@
  */
 package org.apache.activemq.broker.region;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.CopyOnWriteArraySet;
+
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.ProducerBrokerExchange;
@@ -41,18 +50,9 @@ import org.apache.activemq.thread.TaskRunner;
 import org.apache.activemq.thread.TaskRunnerFactory;
 import org.apache.activemq.thread.Valve;
 import org.apache.activemq.transaction.Synchronization;
-import org.apache.activemq.usage.Usage;
 import org.apache.activemq.util.SubscriptionKey;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.CopyOnWriteArraySet;
 
 /**
  * The Topic is a destination that sends a copy of a message to every active
@@ -404,14 +404,14 @@ public class Topic extends BaseDestination implements Task {
         message.getMessageId().setBrokerSequenceId(getDestinationSequenceId());
 
         if (topicStore != null && message.isPersistent() && !canOptimizeOutPersistence()) {
-            if (systemUsage.getStoreUsage().isFull()) {
-                final String logMessage = "Usage Manager Store is Full. Stopping producer (" + message.getProducerId() + ") to prevent flooding " + getActiveMQDestination().getQualifiedName() + "."
+            if (systemUsage.getStoreUsage().isFull(getStoreUsageHighWaterMark())) {
+                final String logMessage = "Usage Manager Store is Full, " + getStoreUsageHighWaterMark() + "% of " + systemUsage.getStoreUsage().getLimit() + ". Stopping producer (" + message.getProducerId() + ") to prevent flooding " + getActiveMQDestination().getQualifiedName() + "."
                         + " See http://activemq.apache.org/producer-flow-control.html for more info";
                 if (systemUsage.isSendFailIfNoSpace()) {
                     throw new javax.jms.ResourceAllocationException(logMessage);
                 }
 
-                waitForSpace(context, systemUsage.getStoreUsage(), logMessage);
+                waitForSpace(context, systemUsage.getStoreUsage(), getStoreUsageHighWaterMark(), logMessage);
             }
             topicStore.addMessage(context, message);
         }
@@ -610,21 +610,11 @@ public class Topic extends BaseDestination implements Task {
             LOG.error("Failed to remove expired Message from the store ", e);
         }
     }
-
-    private final void waitForSpace(ConnectionContext context, Usage<?> usage, String warning) throws IOException, InterruptedException {
-        long start = System.currentTimeMillis();
-        long nextWarn = start + blockedProducerWarningInterval;
-        while (!usage.waitForSpace(1000)) {
-            if (context.getStopping().get()) {
-                throw new IOException("Connection closed, send aborted.");
-            }
-
-            long now = System.currentTimeMillis();
-            if (now >= nextWarn) {
-                LOG.info(warning + " (blocking for: " + (now - start) / 1000 + "s)");
-                nextWarn = now + blockedProducerWarningInterval;
-            }
-        }
+    
+    @Override
+    protected Log getLog() {
+        return LOG;
     }
+
 
 }
