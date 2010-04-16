@@ -20,6 +20,7 @@ import javax.jms.JMSException;
 
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.ConnectionContext;
+import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.MessageDispatchNotification;
@@ -46,6 +47,8 @@ public class TempQueueRegion extends AbstractTempRegion {
 
     protected Destination doCreateDestination(ConnectionContext context, ActiveMQDestination destination) throws Exception {  
         TempQueue result = new TempQueue(brokerService, destination, null, destinationStatistics, taskRunnerFactory);
+        brokerService.getDestinationPolicy();
+        configureQueue(result, destination);
         result.initialize();
         return result;
     }
@@ -83,6 +86,18 @@ public class TempQueueRegion extends AbstractTempRegion {
      */
     public void processDispatchNotification(MessageDispatchNotification messageDispatchNotification) throws Exception {
         processDispatchNotificationViaDestination(messageDispatchNotification);
+    }
+
+    protected void configureQueue(Queue queue, ActiveMQDestination destination) {
+        if (broker == null) {
+            throw new IllegalStateException("broker property is not set");
+        }
+        if (broker.getDestinationPolicy() != null) {
+            PolicyEntry entry = broker.getDestinationPolicy().getEntryFor(destination);
+            if (entry != null) {
+                entry.configure(broker,queue);
+            }
+        }
     }
 
 }

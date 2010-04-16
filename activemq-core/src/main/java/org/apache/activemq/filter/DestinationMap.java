@@ -43,7 +43,9 @@ public class DestinationMap {
     protected static final String ANY_CHILD = DestinationFilter.ANY_CHILD;
 
     private DestinationMapNode queueRootNode = new DestinationMapNode(null);
+    private DestinationMapNode tempQueueRootNode = new DestinationMapNode(null);
     private DestinationMapNode topicRootNode = new DestinationMapNode(null);
+    private DestinationMapNode tempTopicRootNode = new DestinationMapNode(null);
 
     /**
      * Looks up the value(s) matching the given Destination key. For simple
@@ -117,6 +119,14 @@ public class DestinationMap {
 
     public DestinationMapNode getTopicRootNode() {
         return topicRootNode;
+    }
+
+    public DestinationMapNode getTempQueueRootNode() {
+        return tempQueueRootNode;
+    }
+
+    public DestinationMapNode getTempTopicRootNode() {
+        return tempTopicRootNode;
     }
 
     // Implementation methods
@@ -195,10 +205,18 @@ public class DestinationMap {
      * Returns the root node for the given destination type
      */
     protected DestinationMapNode getRootNode(ActiveMQDestination key) {
-        if (key.isQueue()) {
-            return queueRootNode;
+        if (key.isTemporary()){
+            if (key.isQueue()) {
+                return tempQueueRootNode;
+            } else {
+                return tempTopicRootNode;
+            }
         } else {
-            return topicRootNode;
+            if (key.isQueue()) {
+                return queueRootNode;
+            } else {
+                return topicRootNode;
+            }
         }
     }
 }

@@ -65,6 +65,9 @@
             </subscriptionRecoveryPolicy>
             
           </policyEntry>
+          <policyEntry tempTopic="true" advisoryForConsumed="true" />
+
+          <policyEntry tempQueue="true" advisoryForConsumed="true" />
         </policyEntries>
       </policyMap>
     </destinationPolicy>

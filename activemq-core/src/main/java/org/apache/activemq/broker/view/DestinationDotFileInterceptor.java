@@ -79,6 +79,14 @@ public class DestinationDotFileInterceptor extends DotFileInterceptorSupport {
         writer.println("}");
         writer.println();
 
+        writer.println("subgraph temp queues {");
+        writer.println("  node [fillcolor=red];     ");
+        writer.println("  label = \"TempQueues\"");
+        writer.println();
+        printNodeLinks(writer, map.getTempQueueRootNode(), "tempqueue");
+        writer.println("}");
+        writer.println();
+
         writer.println("subgraph topics {");
         writer.println("  node [fillcolor=green];     ");
         writer.println("  label = \"Topics\"");
@@ -87,10 +95,24 @@ public class DestinationDotFileInterceptor extends DotFileInterceptorSupport {
         writer.println("}");
         writer.println();
 
+        writer.println("subgraph temp topics {");
+        writer.println("  node [fillcolor=green];     ");
+        writer.println("  label = \"TempTopics\"");
+        writer.println();
+        printNodeLinks(writer, map.getTempTopicRootNode(), "temptopic");
+        writer.println("}");
+        writer.println();
+
         printNodes(writer, map.getQueueRootNode(), "queue");
         writer.println();
 
+        printNodes(writer, map.getTempQueueRootNode(), "tempqueue");
+        writer.println();
+
         printNodes(writer, map.getTopicRootNode(), "topic");
+        writer.println();
+
+        printNodes(writer, map.getTempTopicRootNode(), "temptopic");
         writer.println();
 
         writer.println("}");

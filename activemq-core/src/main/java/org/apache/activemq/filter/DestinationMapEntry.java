@@ -17,9 +17,8 @@
 package org.apache.activemq.filter;
 
 import javax.annotation.PostConstruct;
-import org.apache.activemq.command.ActiveMQDestination;
-import org.apache.activemq.command.ActiveMQQueue;
-import org.apache.activemq.command.ActiveMQTopic;
+
+import org.apache.activemq.command.*;
 
 /**
  * A base class for entry objects used to construct a destination based policy
@@ -55,6 +54,14 @@ public abstract class DestinationMapEntry implements Comparable {
      */
     public void setTopic(String name) {
         setDestination(new ActiveMQTopic(name));
+    }
+
+    public void setTempTopic(boolean flag){
+        setDestination(new ActiveMQTempTopic(">"));
+    }
+    
+    public void setTempQueue(boolean flag){
+        setDestination(new ActiveMQTempQueue(">"));
     }
 
     public ActiveMQDestination getDestination() {
