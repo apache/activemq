@@ -25,7 +25,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
+
 import javax.jms.MessageFormatException;
+
 import org.apache.activemq.util.IdGenerator;
 import org.apache.activemq.util.ServiceStopper;
 import org.apache.activemq.util.ServiceSupport;
@@ -286,6 +288,9 @@ class JobSchedulerImpl extends ServiceSupport implements Runnable, JobScheduler 
         jobLocation.setDelay(delay);
         jobLocation.setPeriod(period);
         jobLocation.setRepeat(repeat);
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("Scheduling " + jobLocation);
+        }
         storeJob(tx, jobLocation, time);
         this.scheduleTime.newJob();
     }
@@ -410,6 +415,9 @@ class JobSchedulerImpl extends ServiceSupport implements Runnable, JobScheduler 
     }
 
     void fireJob(JobLocation job) throws IllegalStateException, IOException {
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("Firing " + job);
+        }
         ByteSequence bs = this.store.getPayload(job.getLocation());
         for (JobListener l : jobListeners) {
             l.scheduledJob(job.getJobId(), bs);
@@ -506,6 +514,9 @@ class JobSchedulerImpl extends ServiceSupport implements Runnable, JobScheduler 
                         // rescheduled from this execution time
                         remove(executionTime);
                     } else {
+                        if (LOG.isDebugEnabled()) {
+                            LOG.debug("Not yet time to execute the job, waiting " + (executionTime - currentTime) + " ms");
+                        }
                         this.scheduleTime.setWaitTime(executionTime - currentTime);
                     }
                 }

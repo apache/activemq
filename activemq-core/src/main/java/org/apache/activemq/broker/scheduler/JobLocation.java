@@ -20,7 +20,9 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+
 import org.apache.kahadb.journal.Location;
 import org.apache.kahadb.util.VariableMarshaller;
 
@@ -183,6 +185,12 @@ class JobLocation {
         return this.location;
     }
     
+    public String toString() {
+        return "Job [id=" + jobId + ", startTime=" + new Date(startTime)
+                + ", delay=" + delay + ", period=" + period + ", repeat="
+                + repeat + ", nextTime=" + new Date(nextTime) + "]"; 
+    }
+
     static class JobLocationMarshaller extends VariableMarshaller<List<JobLocation>> {
         static final JobLocationMarshaller INSTANCE = new JobLocationMarshaller();
         public List<JobLocation> readPayload(DataInput dataIn) throws IOException {
