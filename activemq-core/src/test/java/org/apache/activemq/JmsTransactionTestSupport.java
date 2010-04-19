@@ -81,6 +81,7 @@ public abstract class JmsTransactionTestSupport extends TestSupport implements M
     protected void setUp() throws Exception {
         broker = createBroker();
         broker.start();
+        broker.waitUntilStarted();
 
         resourceProvider = getJmsResourceProvider();
         topic = resourceProvider.isTopic();
@@ -129,6 +130,7 @@ public abstract class JmsTransactionTestSupport extends TestSupport implements M
         connection.close();
         connection = null;
         broker.stop();
+        broker.waitUntilStopped();
         broker = null;
 
         LOG.info("Connection closed.");
