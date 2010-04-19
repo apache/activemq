@@ -55,14 +55,14 @@ public class GenerateJDBCStatements {
     	}
     	for(int i=0; i<methods.length;i++){
     		if(sPattern.matcher(methods[i].getName()).find()&&setMethods.contains(methods[i].getName().replace("get","set"))){
-    			System.out.println("<property name=\""+methods[i].getName().substring(3,4).toLowerCase()+methods[i].getName().substring(4)+"\" value=\""+returnStatement(methods[i].invoke(s, null))+"\" />");
+    			System.out.println("<property name=\""+methods[i].getName().substring(3,4).toLowerCase()+methods[i].getName().substring(4)+"\" value=\""+returnStatement(methods[i].invoke(s, (Object[])null))+"\" />");
     		}
     	}
     	//for a typo is not needed if removeMessageStatment typo is corrected
     	Pattern sPattern2= Pattern.compile("get.*Statment$");
     	for(int i=0; i<methods.length;i++){
     		if(sPattern2.matcher(methods[i].getName()).find()){
-    			System.out.println("<property name=\""+methods[i].getName().substring(3,4).toLowerCase()+methods[i].getName().substring(4)+"\" value=\""+returnStatement(methods[i].invoke(s, null))+"\" />");
+    			System.out.println("<property name=\""+methods[i].getName().substring(3,4).toLowerCase()+methods[i].getName().substring(4)+"\" value=\""+returnStatement(methods[i].invoke(s, (Object[])null))+"\" />");
     		}
     	}
     	//end of generating because of typo
