@@ -17,6 +17,8 @@
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.Iterator;
 
 import javax.jms.Connection;
 import javax.jms.DeliveryMode;
@@ -39,7 +41,7 @@ import org.apache.activemq.ActiveMQConnectionFactory;
  * 
  * @version $Revision: 1.1.1.1 $
  */
-public class ConsumerTool implements MessageListener, ExceptionListener {
+public class ConsumerTool extends Thread implements MessageListener, ExceptionListener {
 
     private boolean running;
 
@@ -47,9 +49,10 @@ public class ConsumerTool implements MessageListener, ExceptionListener {
     private Destination destination;
     private MessageProducer replyProducer;
 
-    private boolean pauseBeforeShutdown;
+    private boolean pauseBeforeShutdown = false;
     private boolean verbose = true;
     private int maxiumMessages;
+    private static int parallelThreads = 1;
     private String subject = "TOOL.DEFAULT";
     private boolean topic;
     private String user = ActiveMQConnection.DEFAULT_USER;
@@ -64,22 +67,57 @@ public class ConsumerTool implements MessageListener, ExceptionListener {
     private long receiveTimeOut;
 
     public static void main(String[] args) {
+        ArrayList<ConsumerTool> threads = new ArrayList();
         ConsumerTool consumerTool = new ConsumerTool();
         String[] unknown = CommandLineSupport.setOptions(consumerTool, args);
         if (unknown.length > 0) {
             System.out.println("Unknown options: " + Arrays.toString(unknown));
             System.exit(-1);
         }
-        consumerTool.run();
+        consumerTool.showParameters();
+        for (int threadCount = 1; threadCount <= parallelThreads; threadCount++) {
+            consumerTool = new ConsumerTool();
+            CommandLineSupport.setOptions(consumerTool, args);
+            consumerTool.start();
+            threads.add(consumerTool);
+        }
+
+        while (true) {
+            Iterator<ConsumerTool> itr = threads.iterator();
+            int running = 0;
+            while (itr.hasNext()) {
+                ConsumerTool thread = itr.next();
+                if (thread.isAlive()) {
+                    running++;
+                }
+            }
+
+            if (running <= 0) {
+                System.out.println("All threads completed their work");
+                break;
+            }
+
+            try {
+                Thread.sleep(1000);
+            } catch (Exception e) {
+            }
+        }
+        Iterator<ConsumerTool> itr = threads.iterator();
+        while (itr.hasNext()) {
+            ConsumerTool thread = itr.next();
+        }
+    }
+
+    public void showParameters() {
+        System.out.println("Connecting to URL: " + url);
+        System.out.println("Consuming " + (topic ? "topic" : "queue") + ": " + subject);
+        System.out.println("Using a " + (durable ? "durable" : "non-durable") + " subscription");
+        System.out.println("Running " + parallelThreads + " parallel threads");
     }
 
     public void run() {
         try {
             running = true;
-
-            System.out.println("Connecting to URL: " + url);
-            System.out.println("Consuming " + (topic ? "topic" : "queue") + ": " + subject);
-            System.out.println("Using a " + (durable ? "durable" : "non-durable") + " subscription");
 
             ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory(user, password, url);
             Connection connection = connectionFactory.createConnection();
@@ -101,7 +139,7 @@ public class ConsumerTool implements MessageListener, ExceptionListener {
 
             MessageConsumer consumer = null;
             if (durable && topic) {
-                consumer = session.createDurableSubscriber((Topic)destination, consumerName);
+                consumer = session.createDurableSubscriber((Topic) destination, consumerName);
             } else {
                 consumer = session.createConsumer(destination);
             }
@@ -117,7 +155,7 @@ public class ConsumerTool implements MessageListener, ExceptionListener {
             }
 
         } catch (Exception e) {
-            System.out.println("Caught: " + e);
+            System.out.println("[" + this.getName() + "] Caught: " + e);
             e.printStackTrace();
         }
     }
@@ -126,19 +164,19 @@ public class ConsumerTool implements MessageListener, ExceptionListener {
         try {
 
             if (message instanceof TextMessage) {
-                TextMessage txtMsg = (TextMessage)message;
+                TextMessage txtMsg = (TextMessage) message;
                 if (verbose) {
 
                     String msg = txtMsg.getText();
-                    if (msg.length() > 50) {
+                    int length = msg.length();
+                    if (length > 50) {
                         msg = msg.substring(0, 50) + "...";
                     }
-
-                    System.out.println("Received: " + msg);
+                    System.out.println("[" + this.getName() + "] Received: '" + msg + "' (length " + length + ")");
                 }
             } else {
                 if (verbose) {
-                    System.out.println("Received: " + message);
+                    System.out.println("[" + this.getName() + "] Received: '" + message + "'");
                 }
             }
 
@@ -153,7 +191,7 @@ public class ConsumerTool implements MessageListener, ExceptionListener {
             }
 
         } catch (JMSException e) {
-            System.out.println("Caught: " + e);
+            System.out.println("[" + this.getName() + "] Caught: " + e);
             e.printStackTrace();
         } finally {
             if (sleepTime > 0) {
@@ -166,7 +204,7 @@ public class ConsumerTool implements MessageListener, ExceptionListener {
     }
 
     public synchronized void onException(JMSException ex) {
-        System.out.println("JMS Exception occured.  Shutting down client.");
+        System.out.println("[" + this.getName() + "] JMS Exception occured.  Shutting down client.");
         running = false;
     }
 
@@ -174,8 +212,10 @@ public class ConsumerTool implements MessageListener, ExceptionListener {
         return running;
     }
 
-    protected void consumeMessagesAndClose(Connection connection, Session session, MessageConsumer consumer) throws JMSException, IOException {
-        System.out.println("We are about to wait until we consume: " + maxiumMessages + " message(s) then we will shutdown");
+    protected void consumeMessagesAndClose(Connection connection, Session session, MessageConsumer consumer) throws JMSException,
+            IOException {
+        System.out.println("[" + this.getName() + "] We are about to wait until we consume: " + maxiumMessages
+                + " message(s) then we will shutdown");
 
         for (int i = 0; i < maxiumMessages && isRunning();) {
             Message message = consumer.receive(1000);
@@ -184,30 +224,32 @@ public class ConsumerTool implements MessageListener, ExceptionListener {
                 onMessage(message);
             }
         }
-        System.out.println("Closing connection");
+        System.out.println("[" + this.getName() + "] Closing connection");
         consumer.close();
         session.close();
         connection.close();
         if (pauseBeforeShutdown) {
-            System.out.println("Press return to shut down");
+            System.out.println("[" + this.getName() + "] Press return to shut down");
             System.in.read();
         }
     }
 
-    protected void consumeMessagesAndClose(Connection connection, Session session, MessageConsumer consumer, long timeout) throws JMSException, IOException {
-        System.out.println("We will consume messages while they continue to be delivered within: " + timeout + " ms, and then we will shutdown");
+    protected void consumeMessagesAndClose(Connection connection, Session session, MessageConsumer consumer, long timeout)
+            throws JMSException, IOException {
+        System.out.println("[" + this.getName() + "] We will consume messages while they continue to be delivered within: " + timeout
+                + " ms, and then we will shutdown");
 
         Message message;
         while ((message = consumer.receive(timeout)) != null) {
             onMessage(message);
         }
 
-        System.out.println("Closing connection");
+        System.out.println("[" + this.getName() + "] Closing connection");
         consumer.close();
         session.close();
         connection.close();
         if (pauseBeforeShutdown) {
-            System.out.println("Press return to shut down");
+            System.out.println("[" + this.getName() + "] Press return to shut down");
             System.in.read();
         }
     }
@@ -263,6 +305,13 @@ public class ConsumerTool implements MessageListener, ExceptionListener {
         this.subject = subject;
     }
 
+    public void setParallelThreads(int parallelThreads) {
+        if (parallelThreads < 1) {
+            parallelThreads = 1;
+        }
+        this.parallelThreads = parallelThreads;
+    }
+
     public void setTopic(boolean topic) {
         this.topic = topic;
     }
@@ -286,5 +335,4 @@ public class ConsumerTool implements MessageListener, ExceptionListener {
     public void setVerbose(boolean verbose) {
         this.verbose = verbose;
     }
-
 }

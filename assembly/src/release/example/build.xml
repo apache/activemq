@@ -26,6 +26,7 @@
 	<property name="subject" value="TEST.FOO" />
 	<property name="durable" value="false" />
 	<property name="max" value="2000" />
+	<property name="parallelThreads" value="1" />
 	<property name="messageSize" value="1000" />
 	<property name="clientId" value="consumer1" />
 	<property name="producerClientId" value="null" />
@@ -92,7 +93,7 @@
                                     more information
                  receive-time-out - An integer to specify the time to wait for
                                     message consumption
- 
+                  parallelThreads - The number of parallel threads
 				
             --------------------------------------------------------				
             ant producer &lt;options&gt; - Creates a producer publishing a number of messages
@@ -112,6 +113,9 @@
                     transacted - A boolean to specify that you want to use 
                                  transactions? 
                        verbose - Used to print out more info; the default is true
+                   messageSize - The size of the message in 1-byte characters
+               parallelThreads - The number of parallel threads
+
 		   
            --------------------------------------------------------
 		
@@ -209,6 +213,7 @@
 			<arg value="--durable=${durable}" />
 			<arg value="--maxium-messages=${max}" />
 			<arg value="--client-id=${clientId}" />
+			<arg value="--parallel-threads=${parallelThreads}" />
 			<arg value="--transacted=${transacted}" />
 			<arg value="--sleep-time=${sleepTime}" />
 			<arg value="--verbose=${verbose}"/>
@@ -230,6 +235,7 @@
 			<arg value="--persistent=${durable}" />
 			<arg value="--message-count=${max}" />
 			<arg value="--message-size=${messageSize}" />
+			<arg value="--parallel-threads=${parallelThreads}" />
 			<arg value="--time-to-live=${timeToLive}" />
 			<arg value="--sleep-time=${sleepTime}" />
 			<arg value="--transacted=${transacted}" />

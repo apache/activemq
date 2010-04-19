@@ -15,7 +15,9 @@
  * limitations under the License.
  */
 import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.Iterator;
 
 import javax.jms.Connection;
 import javax.jms.DeliveryMode;
@@ -33,13 +35,14 @@ import org.apache.activemq.util.IndentPrinter;
  * 
  * @version $Revision: 1.2 $
  */
-public class ProducerTool {
+public class ProducerTool extends Thread {
 
     private Destination destination;
     private int messageCount = 10;
     private long sleepTime;
     private boolean verbose = true;
     private int messageSize = 255;
+    private static int parallelThreads = 1;
     private long timeToLive;
     private String user = ActiveMQConnection.DEFAULT_USER;
     private String password = ActiveMQConnection.DEFAULT_PASSWORD;
@@ -48,28 +51,59 @@ public class ProducerTool {
     private boolean topic;
     private boolean transacted;
     private boolean persistent;
+    private static Object lockResults = new Object();
 
     public static void main(String[] args) {
+        ArrayList<ProducerTool> threads = new ArrayList();
         ProducerTool producerTool = new ProducerTool();
         String[] unknown = CommandLineSupport.setOptions(producerTool, args);
         if (unknown.length > 0) {
             System.out.println("Unknown options: " + Arrays.toString(unknown));
             System.exit(-1);
         }
-        producerTool.run();
+        producerTool.showParameters();
+        for (int threadCount = 1; threadCount <= parallelThreads; threadCount++) {
+            producerTool = new ProducerTool();
+            CommandLineSupport.setOptions(producerTool, args);
+            producerTool.start();
+            threads.add(producerTool);
+        }
+
+        while (true) {
+            Iterator<ProducerTool> itr = threads.iterator();
+            int running = 0;
+            while (itr.hasNext()) {
+                ProducerTool thread = itr.next();
+                if (thread.isAlive()) {
+                    running++;
+                }
+            }
+            if (running <= 0) {
+                System.out.println("All threads completed their work");
+                break;
+            }
+            try {
+                Thread.sleep(1000);
+            } catch (Exception e) {
+            }
+        }
+    }
+
+    public void showParameters() {
+        System.out.println("Connecting to URL: " + url);
+        System.out.println("Publishing a Message with size " + messageSize + " to " + (topic ? "topic" : "queue") + ": " + subject);
+        System.out.println("Using " + (persistent ? "persistent" : "non-persistent") + " messages");
+        System.out.println("Sleeping between publish " + sleepTime + " ms");
+        System.out.println("Running " + parallelThreads + " parallel threads");
+
+        if (timeToLive != 0) {
+            System.out.println("Messages time to live " + timeToLive + " ms");
+        }
     }
 
     public void run() {
         Connection connection = null;
         try {
-            System.out.println("Connecting to URL: " + url);
-            System.out.println("Publishing a Message with size " + messageSize + " to " + (topic ? "topic" : "queue") + ": " + subject);
-            System.out.println("Using " + (persistent ? "persistent" : "non-persistent") + " messages");
-            System.out.println("Sleeping between publish " + sleepTime + " ms");
-            if (timeToLive != 0) {
-                System.out.println("Messages time to live " + timeToLive + " ms");
-            }
-
             // Create the connection.
             ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory(user, password, url);
             connection = connectionFactory.createConnection();
@@ -97,15 +131,16 @@ public class ProducerTool {
             // Start sending messages
             sendLoop(session, producer);
 
-            System.out.println("Done.");
+            System.out.println("[" + this.getName() + "] Done.");
 
-            // Use the ActiveMQConnection interface to dump the connection
-            // stats.
-            ActiveMQConnection c = (ActiveMQConnection)connection;
-            c.getConnectionStats().dump(new IndentPrinter());
+            synchronized (lockResults) {
+                ActiveMQConnection c = (ActiveMQConnection) connection;
+                System.out.println("[" + this.getName() + "] Results:\n");
+                c.getConnectionStats().dump(new IndentPrinter());
+            }
 
         } catch (Exception e) {
-            System.out.println("Caught: " + e);
+            System.out.println("[" + this.getName() + "] Caught: " + e);
             e.printStackTrace();
         } finally {
             try {
@@ -126,18 +161,17 @@ public class ProducerTool {
                 if (msg.length() > 50) {
                     msg = msg.substring(0, 50) + "...";
                 }
-                System.out.println("Sending message: " + msg);
+                System.out.println("[" + this.getName() + "] Sending message: '" + msg + "'");
             }
 
             producer.send(message);
+
             if (transacted) {
+                System.out.println("[" + this.getName() + "] Committing " + messageCount + " messages");
                 session.commit();
             }
-
             Thread.sleep(sleepTime);
-
         }
-
     }
 
     private String createMessageText(int index) {
@@ -178,6 +212,13 @@ public class ProducerTool {
 
     public void setTimeToLive(long timeToLive) {
         this.timeToLive = timeToLive;
+    }
+
+    public void setParallelThreads(int parallelThreads) {
+        if (parallelThreads < 1) {
+            parallelThreads = 1;
+        }
+        this.parallelThreads = parallelThreads;
     }
 
     public void setTopic(boolean topic) {
