@@ -20,9 +20,11 @@ import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.jms.ConnectionFactory;
 import javax.transaction.TransactionManager;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.pool.ObjectPoolFactory;
+import org.springframework.beans.factory.FactoryBean;
 
 /**
  * Simple factory bean used to create a jencks connection pool.
@@ -43,7 +45,7 @@ import org.apache.commons.pool.ObjectPoolFactory;
  *
  * @org.apache.xbean.XBean
  */
-public class PooledConnectionFactoryBean {
+public class PooledConnectionFactoryBean implements FactoryBean {
 
     private static final Log LOGGER = LogFactory.getLog(PooledConnectionFactoryBean.class);
 
@@ -168,5 +170,18 @@ public class PooledConnectionFactoryBean {
             pooledConnectionFactory.stop();
             pooledConnectionFactory = null;
         }
+    }
+
+    // FactoryBean methods
+    public Object getObject() throws Exception {
+        return pooledConnectionFactory;
+    }
+
+    public Class getObjectType() {
+        return ConnectionFactory.class;
+    }
+
+    public boolean isSingleton() {
+        return true;
     }
 }

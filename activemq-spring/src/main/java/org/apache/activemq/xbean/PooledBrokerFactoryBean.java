@@ -86,7 +86,7 @@ public class PooledBrokerFactoryBean implements FactoryBean, InitializingBean, D
         return null;
     }
 
-    public Class<BrokerService> getObjectType() {
+    public Class getObjectType() {
         return BrokerService.class;
     }
 

@@ -25,20 +25,21 @@
     <version>5.4-SNAPSHOT</version>
   </parent>
 
-  <artifactId>activemq-pool</artifactId>
+  <artifactId>activemq-spring</artifactId>
   <packaging>bundle</packaging>
-  <name>ActiveMQ :: Pool</name>
-  <description>ActiveMQ Pooled ConnectionFactory</description>
+  <name>ActiveMQ :: Spring</name>
+  <description>ActiveMQ Spring Integration</description>
 
   <properties>
     <activemq.osgi.import.pkg>
       javax.transaction*;resolution:=optional,
-      org.apache.activemq.ra*;resolution:=optional,
       org.apache.geronimo.transaction.manager*;resolution:=optional,
+      org.springframework*;resolution:=optional,
       *
     </activemq.osgi.import.pkg>
     <activemq.osgi.export>
-      org.apache.activemq.pool*;version=${project.version};-noimport:=true,
+      org.apache.activemq.pool*;version=${project.version};-noimport:=;-split-package:=merge-last,
+      org.apache.activemq.xbean*;version=${project.version};-noimport:=true;-split-package:=merge-last
     </activemq.osgi.export>
   </properties>
 
@@ -57,8 +58,7 @@
     </dependency>
     <dependency>
       <groupId>${pom.groupId}</groupId>
-      <artifactId>activemq-ra</artifactId>
-      <optional>true</optional>
+      <artifactId>activemq-pool</artifactId>
     </dependency>
     <dependency>
       <groupId>org.apache.geronimo.components</groupId>
@@ -79,6 +79,10 @@
       <artifactId>commons-pool</artifactId>
     </dependency>
     <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-beans</artifactId>
+    </dependency>
+    <dependency>
       <groupId>${pom.groupId}</groupId>
       <artifactId>activemq-core</artifactId>
       <type>test-jar</type>
@@ -88,6 +92,16 @@
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
       <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-jms</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+    	<groupId>org.apache.xbean</groupId>
+    	<artifactId>xbean-spring</artifactId>
+    	<scope>test</scope>
     </dependency>
     <dependency>
     	<groupId>log4j</groupId>
