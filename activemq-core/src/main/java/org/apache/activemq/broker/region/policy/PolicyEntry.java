@@ -83,7 +83,8 @@ public class PolicyEntry extends DestinationMapEntry {
     private int queueBrowserPrefetch=ActiveMQPrefetchPolicy.DEFAULT_QUEUE_BROWSER_PREFETCH;
     private int topicPrefetch=ActiveMQPrefetchPolicy.DEFAULT_TOPIC_PREFETCH;
     private int durableTopicPrefetch=ActiveMQPrefetchPolicy.DEFAULT_DURABLE_TOPIC_PREFETCH;
-    private int cursorMemoryHighWaterMark=70;
+    private boolean usePrefetchExtension = true;
+    private int cursorMemoryHighWaterMark = 70;
     private int storeUsageHighWaterMark = 100;
     
    
@@ -195,7 +196,7 @@ public class PolicyEntry extends DestinationMapEntry {
         }
         sub.setMaxAuditDepth(getMaxAuditDepth());
         sub.setMaxProducersToAudit(getMaxProducersToAudit());
-        
+        sub.setUsePrefetchExtension(isUsePrefetchExtension());        
     }
     
     public void configure(Broker broker, SystemUsage memoryManager, QueueBrowserSubscription sub) {
@@ -207,6 +208,7 @@ public class PolicyEntry extends DestinationMapEntry {
             sub.setPrefetchSize(getQueueBrowserPrefetch());
         }
         sub.setCursorMemoryHighWaterMark(getCursorMemoryHighWaterMark());
+        sub.setUsePrefetchExtension(isUsePrefetchExtension());
     }
     
     public void configure(Broker broker, SystemUsage memoryManager, QueueSubscription sub) {
@@ -218,6 +220,7 @@ public class PolicyEntry extends DestinationMapEntry {
             sub.setPrefetchSize(getQueuePrefetch());
         }
         sub.setCursorMemoryHighWaterMark(getCursorMemoryHighWaterMark());
+        sub.setUsePrefetchExtension(isUsePrefetchExtension());
     }
 
     // Properties
@@ -692,12 +695,20 @@ public class PolicyEntry extends DestinationMapEntry {
         this.durableTopicPrefetch = durableTopicPrefetch;
     }
     
-    public int getCursorMemoryHighWaterMark() {
-		return this.cursorMemoryHighWaterMark;
-	}
+    public boolean isUsePrefetchExtension() {
+        return this.usePrefetchExtension;
+    }
 
-	public void setCursorMemoryHighWaterMark(int cursorMemoryHighWaterMark) {
-		this.cursorMemoryHighWaterMark = cursorMemoryHighWaterMark;
+    public void setUsePrefetchExtension(boolean usePrefetchExtension) {
+        this.usePrefetchExtension = usePrefetchExtension;
+    }
+    
+    public int getCursorMemoryHighWaterMark() {
+        return this.cursorMemoryHighWaterMark;
+    }
+
+    public void setCursorMemoryHighWaterMark(int cursorMemoryHighWaterMark) {
+        this.cursorMemoryHighWaterMark = cursorMemoryHighWaterMark;
 	}
 
     public void setStoreUsageHighWaterMark(int storeUsageHighWaterMark) {

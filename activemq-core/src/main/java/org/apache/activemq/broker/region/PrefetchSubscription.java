@@ -60,6 +60,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
     protected PendingMessageCursor pending;
     protected final List<MessageReference> dispatched = new CopyOnWriteArrayList<MessageReference>();
     protected int prefetchExtension;
+    protected boolean usePrefetchExtension = true;
     protected long enqueueCounter;
     protected long dispatchCounter;
     protected long dequeueCounter;
@@ -257,7 +258,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                             // contract prefetch if dispatch required a pull
                             if (getPrefetchSize() == 0) {
                                 prefetchExtension = Math.max(0, prefetchExtension - index);
-                            } else if (context.isInTransaction()) {
+                            } else if (usePrefetchExtension && context.isInTransaction()) {
                                 // extend prefetch window only if not a pulling consumer
                                 prefetchExtension = Math.max(prefetchExtension, index);
                             }
@@ -307,7 +308,9 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                         node.getRegionDestination().getDestinationStatistics().getInflight().decrement();
                     }
                     if (ack.getLastMessageId().equals(node.getMessageId())) {
-                        prefetchExtension = Math.max(prefetchExtension, index + 1);
+                        if (usePrefetchExtension) {
+                            prefetchExtension = Math.max(prefetchExtension, index + 1);
+                        }
                         destination = node.getRegionDestination();
                         callDispatchMatched = true;
                         break;
@@ -745,5 +748,13 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
 
     public void setMaxAuditDepth(int maxAuditDepth) {
         this.maxAuditDepth = maxAuditDepth;
+    }
+    
+    public boolean isUsePrefetchExtension() {
+        return usePrefetchExtension;
+    }
+
+    public void setUsePrefetchExtension(boolean usePrefetchExtension) {
+        this.usePrefetchExtension = usePrefetchExtension;
     }
 }
