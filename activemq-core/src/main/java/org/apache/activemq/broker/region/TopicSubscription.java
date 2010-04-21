@@ -22,6 +22,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import javax.jms.JMSException;
 
+import org.apache.activemq.ActiveMQMessageAudit;
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.cursors.FilePendingMessageCursor;
@@ -62,6 +63,12 @@ public class TopicSubscription extends AbstractSubscription {
     private final AtomicLong dequeueCounter = new AtomicLong(0);
     private int memoryUsageHighWaterMark = 95;
     private boolean slowConsumer;
+    
+    // allow duplicate suppression in a ring network of brokers
+    protected int maxProducersToAudit = 1024;
+    protected int maxAuditDepth = 1000;
+    protected boolean enableAudit = false;
+    protected ActiveMQMessageAudit audit;
 
     public TopicSubscription(Broker broker,ConnectionContext context, ConsumerInfo info, SystemUsage usageManager) throws Exception {
         super(broker, context, info);
@@ -78,9 +85,15 @@ public class TopicSubscription extends AbstractSubscription {
         this.matched.setSystemUsage(usageManager);
         this.matched.setMemoryUsageHighWaterMark(getCursorMemoryHighWaterMark());
         this.matched.start();
+        if (enableAudit) {
+            audit= new ActiveMQMessageAudit(maxAuditDepth, maxProducersToAudit);
+        }
     }
 
     public void add(MessageReference node) throws Exception {
+        if (isDuplicate(node)) {
+            return;
+        }
         enqueueCounter.incrementAndGet();
         if (!isFull() && matched.isEmpty()  && !isSlave()) {
             // if maximumPendingMessages is set we will only discard messages which
@@ -156,6 +169,19 @@ public class TopicSubscription extends AbstractSubscription {
                 dispatchMatched();
             }
         }
+    }
+
+    private boolean isDuplicate(MessageReference node) {
+        boolean duplicate = false;
+        if (enableAudit && audit != null) {
+            duplicate = audit.isDuplicate(node);
+            if (LOG.isDebugEnabled()) {
+                if (duplicate) {
+                    LOG.debug("ignoring duplicate add: " + node.getMessageId());
+                }
+            }
+        }
+        return duplicate;
     }
 
     /**
@@ -313,6 +339,39 @@ public class TopicSubscription extends AbstractSubscription {
         this.messageEvictionStrategy = messageEvictionStrategy;
     }
 
+    public int getMaxProducersToAudit() {
+        return maxProducersToAudit;
+    }
+
+    public synchronized void setMaxProducersToAudit(int maxProducersToAudit) {
+        this.maxProducersToAudit = maxProducersToAudit;
+        if (audit != null) {
+            audit.setMaximumNumberOfProducersToTrack(maxProducersToAudit);
+        }
+    }
+
+    public int getMaxAuditDepth() {
+        return maxAuditDepth;
+    }
+    
+    public synchronized void setMaxAuditDepth(int maxAuditDepth) {
+        this.maxAuditDepth = maxAuditDepth;
+        if (audit != null) {
+            audit.setAuditDepth(maxAuditDepth);
+        }
+    }
+    
+    public boolean isEnableAudit() {
+        return enableAudit;
+    }
+
+    public synchronized void setEnableAudit(boolean enableAudit) {
+        this.enableAudit = enableAudit;
+        if (enableAudit && audit==null) {
+            audit = new ActiveMQMessageAudit(maxAuditDepth,maxProducersToAudit);
+        }
+    }
+    
     // Implementation methods
     // -------------------------------------------------------------------------
     public boolean isFull() {

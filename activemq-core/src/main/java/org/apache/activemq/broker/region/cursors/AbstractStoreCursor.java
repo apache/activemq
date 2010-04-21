@@ -91,7 +91,9 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
              * the cache. If subsequently, we pull out that message from the store (before its deleted)
              * it will be a duplicate - but should be ignored
              */
-            //LOG.error(regionDestination.getActiveMQDestination().getPhysicalName() + " cursor got duplicate: " + message);
+            if (LOG.isDebugEnabled()) {
+                LOG.debug(regionDestination.getActiveMQDestination().getPhysicalName() + " cursor got duplicate: " + message);
+            }
             storeHasMessages = true;
         }
         return recovered;

@@ -178,6 +178,11 @@ public class PolicyEntry extends DestinationMapEntry {
             int maxBatchSize = subscription.getConsumerInfo().getPrefetchSize();
             subscription.setMatched(pendingSubscriberPolicy.getSubscriberPendingMessageCursor(broker,name, maxBatchSize));
         }
+        if (enableAudit) {
+            subscription.setEnableAudit(enableAudit);
+            subscription.setMaxProducersToAudit(maxProducersToAudit);
+            subscription.setMaxAuditDepth(maxAuditDepth);
+        }
     }
 
     public void configure(Broker broker, SystemUsage memoryManager, DurableTopicSubscription sub) {

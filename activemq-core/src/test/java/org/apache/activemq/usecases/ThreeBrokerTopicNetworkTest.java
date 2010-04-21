@@ -17,15 +17,21 @@
 package org.apache.activemq.usecases;
 
 import java.net.URI;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 
 import javax.jms.Destination;
 import javax.jms.MessageConsumer;
+import javax.jms.Topic;
 
 import junit.framework.Test;
 
 import org.apache.activemq.JmsMultipleBrokersTestSupport;
-import org.apache.activemq.transport.failover.FailoverUriTest;
+import org.apache.activemq.JmsMultipleBrokersTestSupport.BrokerItem;
+import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.region.policy.PolicyEntry;
+import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.util.MessageIdList;
 
 /**
@@ -242,6 +248,106 @@ public class ThreeBrokerTopicNetworkTest extends JmsMultipleBrokersTestSupport {
         assertEquals(MESSAGE_COUNT * 3, msgsC.getMessageCount());
     }
 
+    public void testAllConnectedBrokerNetworkSingleProducerTTL() throws Exception {
+        
+        // duplicates are expected with ttl of 2 as each broker is connected to the next
+        // but the dups are suppressed by the store and now also by the topic sub when enableAudit
+        // default (true) is present in a matching destination policy entry
+        int networkTTL = 2;
+        boolean conduitSubs = true;
+        // Setup broker networks
+        bridgeBrokers("BrokerA", "BrokerB", dynamicOnly, networkTTL, conduitSubs);
+        bridgeBrokers("BrokerB", "BrokerA", dynamicOnly, networkTTL, conduitSubs);
+        bridgeBrokers("BrokerB", "BrokerC", dynamicOnly, networkTTL, conduitSubs);
+        bridgeBrokers("BrokerC", "BrokerB", dynamicOnly, networkTTL, conduitSubs);
+        bridgeBrokers("BrokerA", "BrokerC", dynamicOnly, networkTTL, conduitSubs);
+        bridgeBrokers("BrokerC", "BrokerA", dynamicOnly, networkTTL, conduitSubs);
+
+        PolicyMap policyMap = new PolicyMap();
+        // enable audit is on by default just need to give it matching policy entry
+        // so it will be applied to the topic subscription
+        policyMap.setDefaultEntry(new PolicyEntry());
+        Collection<BrokerItem> brokerList = brokers.values();
+        for (Iterator<BrokerItem> i = brokerList.iterator(); i.hasNext();) {
+            BrokerService broker = i.next().broker;
+            broker.setDestinationPolicy(policyMap);
+            broker.setDeleteAllMessagesOnStartup(true);
+        }
+        startAllBrokers();
+
+        // Setup destination
+        Destination dest = createDestination("TEST.FOO", true);
+
+        // Setup consumers
+        MessageConsumer clientA = createConsumer("BrokerA", dest);
+        MessageConsumer clientB = createConsumer("BrokerB", dest);
+        MessageConsumer clientC = createConsumer("BrokerC", dest);
+        //let consumers propogate around the network
+        Thread.sleep(2000);
+
+        // Send messages
+        sendMessages("BrokerA", dest, 1);
+        
+        // Get message count
+        MessageIdList msgsA = getConsumerMessages("BrokerA", clientA);
+        MessageIdList msgsB = getConsumerMessages("BrokerB", clientB);
+        MessageIdList msgsC = getConsumerMessages("BrokerC", clientC);
+
+        msgsA.waitForMessagesToArrive(1);
+        msgsB.waitForMessagesToArrive(1);
+        msgsC.waitForMessagesToArrive(1);
+
+        // ensure we don't get any more messages
+        Thread.sleep(2000);
+        
+        assertEquals(1, msgsA.getMessageCount());
+        assertEquals(1, msgsB.getMessageCount());
+        assertEquals(1, msgsC.getMessageCount());
+    }
+
+    public void testAllConnectedBrokerNetworkDurableSubTTL() throws Exception {
+        int networkTTL = 2;
+        boolean conduitSubs = true;
+        // Setup broker networks
+        bridgeBrokers("BrokerA", "BrokerB", dynamicOnly, networkTTL, conduitSubs);
+        bridgeBrokers("BrokerB", "BrokerA", dynamicOnly, networkTTL, conduitSubs);
+        bridgeBrokers("BrokerB", "BrokerC", dynamicOnly, networkTTL, conduitSubs);
+        bridgeBrokers("BrokerC", "BrokerB", dynamicOnly, networkTTL, conduitSubs);
+        bridgeBrokers("BrokerA", "BrokerC", dynamicOnly, networkTTL, conduitSubs);
+        bridgeBrokers("BrokerC", "BrokerA", dynamicOnly, networkTTL, conduitSubs);
+
+        startAllBrokers();
+
+        // Setup destination
+        Destination dest = createDestination("TEST.FOO", true);
+
+        // Setup consumers
+        MessageConsumer clientA = createDurableSubscriber("BrokerA", (Topic)dest, "clientA");
+        MessageConsumer clientB = createDurableSubscriber("BrokerB", (Topic)dest, "clientB");
+        MessageConsumer clientC = createDurableSubscriber("BrokerC", (Topic)dest, "clientC");
+        //let consumers propogate around the network
+        Thread.sleep(2000);
+
+        // Send messages
+        sendMessages("BrokerA", dest, 1);
+
+        // Get message count
+        MessageIdList msgsA = getConsumerMessages("BrokerA", clientA);
+        MessageIdList msgsB = getConsumerMessages("BrokerB", clientB);
+        MessageIdList msgsC = getConsumerMessages("BrokerC", clientC);
+
+        msgsA.waitForMessagesToArrive(1);
+        msgsB.waitForMessagesToArrive(1);
+        msgsC.waitForMessagesToArrive(1);
+
+        // ensure we don't get any more messages
+        Thread.sleep(2000);
+        
+        assertEquals(1, msgsA.getMessageCount());
+        assertEquals(1, msgsB.getMessageCount());
+        assertEquals(1, msgsC.getMessageCount());
+    }
+    
     /**
      * BrokerA <-> BrokerB <-> BrokerC
      */
@@ -284,9 +390,10 @@ public class ThreeBrokerTopicNetworkTest extends JmsMultipleBrokersTestSupport {
     public void setUp() throws Exception {
         super.setAutoFail(true);
         super.setUp();
-        createBroker(new URI("broker:(tcp://localhost:61616)/BrokerA?persistent=false&useJmx=false"));
-        createBroker(new URI("broker:(tcp://localhost:61617)/BrokerB?persistent=false&useJmx=false"));
-        createBroker(new URI("broker:(tcp://localhost:61618)/BrokerC?persistent=false&useJmx=false"));
+        String options = new String("?persistent=false&useJmx=false"); 
+        createBroker(new URI("broker:(tcp://localhost:61616)/BrokerA" + options));
+        createBroker(new URI("broker:(tcp://localhost:61617)/BrokerB" + options));
+        createBroker(new URI("broker:(tcp://localhost:61618)/BrokerC" + options));
     }
     
     public static Test suite() {

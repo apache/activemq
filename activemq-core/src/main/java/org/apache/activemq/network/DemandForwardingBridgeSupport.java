@@ -19,6 +19,7 @@ package org.apache.activemq.network;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.security.cert.X509Certificate;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Properties;
@@ -680,9 +681,9 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                     final DemandSubscription sub = subscriptionMapByLocalId.get(md.getConsumerId());
                     if (sub != null && md.getMessage() != null && sub.incrementOutstandingResponses()) {
                         
-                        if (originallyCameFromRemote(md, sub)) {
+                        if (suppressMessageDispatch(md, sub)) {
                             if (LOG.isDebugEnabled()) {
-                                LOG.debug(configuration.getBrokerName() + " message not forwarded to " + remoteBrokerName + " because message came from there or fails networkTTL: " + md.getMessage());
+                                LOG.debug(configuration.getBrokerName() + " message not forwarded to " + remoteBrokerName + " because message came from there or fails networkTTL, brokerPath: " + Arrays.toString(md.getMessage().getBrokerPath()) + ", message: " + md.getMessage());
                             }
                             // still ack as it may be durable
                             try {
@@ -695,7 +696,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                         
                         Message message = configureMessage(md);
                         if (LOG.isDebugEnabled()) {
-                            LOG.debug("bridging " + configuration.getBrokerName() + " -> " + remoteBrokerName + ": " + message);
+                            LOG.debug("bridging " + configuration.getBrokerName() + " -> " + remoteBrokerName + ", brokerPath: " + Arrays.toString(message.getBrokerPath()) + ", message: " + message);
                         }
                         
                         if (!message.isResponseRequired()) {
@@ -776,25 +777,25 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
         }
     }
 
-    private boolean originallyCameFromRemote(MessageDispatch md, DemandSubscription sub) throws Exception {
+    private boolean suppressMessageDispatch(MessageDispatch md, DemandSubscription sub) throws Exception {
         // See if this consumer's brokerPath tells us it came from the broker at the other end
         // of the bridge. I think we should be making this decision based on the message's
         // broker bread crumbs and not the consumer's? However, the message's broker bread
         // crumbs are null, which is another matter.   
-        boolean cameFromRemote = false;
+        boolean suppress = false;
         Object consumerInfo = md.getMessage().getDataStructure();
         if (consumerInfo != null && (consumerInfo instanceof ConsumerInfo)) {
-            cameFromRemote = contains(((ConsumerInfo) consumerInfo).getBrokerPath(), remoteBrokerInfo.getBrokerId());
+            suppress = contains(((ConsumerInfo) consumerInfo).getBrokerPath(), remoteBrokerInfo.getBrokerId());
         }
         
         // for durable subs, suppression via filter leaves dangling acks so we need to 
         // check here and allow the ack irrespective
-        if (!cameFromRemote && sub.getLocalInfo().isDurable()) {
+        if (!suppress && sub.getLocalInfo().isDurable()) {
             MessageEvaluationContext messageEvalContext = new MessageEvaluationContext();
             messageEvalContext.setMessageReference(md.getMessage());
-            cameFromRemote = !createNetworkBridgeFilter(null).matches(messageEvalContext);
+            suppress = !createNetworkBridgeFilter(null).matches(messageEvalContext);
         }  
-        return cameFromRemote;
+        return suppress;
     }
 
     /**
@@ -1154,7 +1155,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
             sub.getLocalInfo().setAdditionalPredicate(createNetworkBridgeFilter(info));
         } else  {
             // need to ack this message if it is ignored as it is durable so
-            // we check before we send. see: originallyCameFromRemote()
+            // we check before we send. see: suppressMessageDispatch()
         }
     }
 
