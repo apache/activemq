@@ -397,7 +397,7 @@ public class AMQ2102Test extends CombinationTestSupport implements UncaughtExcep
     }
 
     private static void debug(String message) {
-        LOG.debug(message);
+        LOG.info(message);
     }
 
     private static void info(String message) {
@@ -464,7 +464,6 @@ public class AMQ2102Test extends CombinationTestSupport implements UncaughtExcep
             }
         };
         t.start();
-        master.waitUntilStarted();
         masterUrl = master.getTransportConnectors().get(0).getConnectUri().toString(); 
         
         debug("masterUrl: " + masterUrl);
@@ -475,6 +474,7 @@ public class AMQ2102Test extends CombinationTestSupport implements UncaughtExcep
         slave.setMasterConnectorURI(masterUrl);
         slave.start();
         slave.waitUntilStarted();
+        assertTrue("master started", master.waitUntilStarted());
     }
     
     public void tearDown() throws Exception {

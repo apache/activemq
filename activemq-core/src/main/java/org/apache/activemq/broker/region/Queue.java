@@ -940,8 +940,11 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                 } catch (IOException e) {
                 }
             }
-
-        } while (!pagedInMessages.isEmpty() || this.destinationStatistics.getMessages().getCount() > 0);
+            // don't spin/hang if stats are out and there is nothing left in the store
+        } while (!list.isEmpty() && this.destinationStatistics.getMessages().getCount() > 0);
+        if (this.destinationStatistics.getMessages().getCount() > 0) {
+            LOG.warn(getActiveMQDestination().getQualifiedName() + " after purge complete, message count stats report: " +  this.destinationStatistics.getMessages().getCount());
+        }
         gc();
         this.destinationStatistics.getMessages().setCount(0);
         getMessages().clear();

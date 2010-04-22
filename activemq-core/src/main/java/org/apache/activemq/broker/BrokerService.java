@@ -689,10 +689,10 @@ public class BrokerService implements Service {
     }
 
     /**
-     * A helper method to block the caller thread until the broker has been
-     * started
+     * A helper method to block the caller thread until the broker has fully started
+     * @return boolean true if wait succeeded false if broker was not started or was stopped
      */
-    public void waitUntilStarted() {
+    public boolean waitUntilStarted() {
         boolean waitSucceeded = false;
         while (isStarted() && !stopped.get() && !waitSucceeded) {
             try {
@@ -700,6 +700,7 @@ public class BrokerService implements Service {
             } catch (InterruptedException ignore) {
             }
         }
+        return waitSucceeded;
     }
 
     // Properties
