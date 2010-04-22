@@ -18,9 +18,19 @@ package org.apache.activemq;
 
 import javax.jms.DeliveryMode;
 import javax.jms.Destination;
+import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.Topic;
+import javax.management.MBeanServerConnection;
+import javax.management.MBeanServerInvocationHandler;
+import javax.management.ObjectName;
+import javax.management.remote.JMXConnector;
+import javax.management.remote.JMXConnectorFactory;
+import javax.management.remote.JMXServiceURL;
 
+import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.jmx.QueueViewMBean;
+import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.test.JmsTopicSendReceiveTest;
 
 
@@ -83,5 +93,27 @@ public class JmsQueueCompositeSendReceiveTest extends JmsTopicSendReceiveTest {
 
         assertMessagesAreReceived();
         LOG.info("" + data.length + " messages(s) received, closing down connections");
+    }
+    
+    public void testDuplicate() throws Exception {
+    	ActiveMQDestination queue = (ActiveMQDestination)session.createQueue("TEST,TEST");
+        for (int i = 0; i < data.length; i++) {
+            Message message = createMessage(i);
+            configureMessage(message);
+            if (verbose) {
+                LOG.info("About to send a message: " + message + " with text: " + data[i]);
+            }
+            producer.send(queue, message);
+        }
+        JMXServiceURL url = new JMXServiceURL("service:jmx:rmi:///jndi/rmi://localhost:1099/jmxrmi");
+        JMXConnector connector = JMXConnectorFactory.connect(url, null);
+        connector.connect();
+        MBeanServerConnection connection = connector.getMBeanServerConnection();
+        ObjectName queueViewMBeanName = new ObjectName("org.apache.activemq:Type=Queue,Destination=TEST,BrokerName=localhost");
+        
+        QueueViewMBean queueMbean = (QueueViewMBean) MBeanServerInvocationHandler.newProxyInstance(connection, queueViewMBeanName, QueueViewMBean.class, true);
+        assertEquals(data.length, queueMbean.getQueueSize());
+        queueMbean.purge();
+        assertEquals(0, queueMbean.getQueueSize());
     }
 }

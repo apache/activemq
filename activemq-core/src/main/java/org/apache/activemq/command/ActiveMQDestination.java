@@ -22,9 +22,11 @@ import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 import java.util.StringTokenizer;
 
 import javax.jms.Destination;
@@ -249,7 +251,7 @@ public abstract class ActiveMQDestination extends JNDIBaseStorable implements Da
         this.hashValue = 0;
         if (composite) {
             // Check to see if it is a composite.
-            List<String> l = new ArrayList<String>();
+            Set<String> l = new HashSet<String>();
             StringTokenizer iter = new StringTokenizer(physicalName, "" + COMPOSITE_SEPERATOR);
             while (iter.hasMoreTokens()) {
                 String name = iter.nextToken().trim();
@@ -258,12 +260,10 @@ public abstract class ActiveMQDestination extends JNDIBaseStorable implements Da
                 }
                 l.add(name);
             }
-            if (l.size() > 1) {
-                compositeDestinations = new ActiveMQDestination[l.size()];
-                int counter = 0;
-                for (String dest : l) {
-                    compositeDestinations[counter++] = createDestination(dest);
-                }
+            compositeDestinations = new ActiveMQDestination[l.size()];
+            int counter = 0;
+            for (String dest : l) {
+                compositeDestinations[counter++] = createDestination(dest);
             }
         }
     }
