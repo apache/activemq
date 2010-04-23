@@ -648,7 +648,29 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
                 + " Differentiated Services and Type of Services transport "
                 + " options on the same connection.");
         }
+
         sock.setTrafficClass(this.trafficClass);
+
+        int resultTrafficClass = sock.getTrafficClass();
+        if (this.trafficClass != resultTrafficClass) {
+            // In the case where the user has specified the ECN bits (e.g. in
+            // Type of Service) but the system won't allow the ECN bits to be
+            // set or in the case where setting the traffic class failed for
+            // other reasons, emit a warning.
+            if ((this.trafficClass >> 2) == (resultTrafficClass >> 2)
+                    && (this.trafficClass & 3) != (resultTrafficClass & 3)) {
+                LOG.warn("Attempted to set the Traffic Class to "
+                    + this.trafficClass + " but the result Traffic Class was "
+                    + resultTrafficClass + ". Please check that your system "
+                    + "allows you to set the ECN bits (the first two bits).");
+            } else {
+                LOG.warn("Attempted to set the Traffic Class to "
+                    + this.trafficClass + " but the result Traffic Class was "
+                    + resultTrafficClass + ". Please check that your system "
+                         + "supports java.net.setTrafficClass.");
+            }
+            return false;
+        }
         // Reset the guards that prevent both the Differentiated Services
         // option and the Type of Service option from being set on the same
         // connection.

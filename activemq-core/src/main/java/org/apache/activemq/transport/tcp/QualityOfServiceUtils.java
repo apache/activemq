@@ -32,7 +32,7 @@ public class QualityOfServiceUtils {
     private static final int MIN_DIFF_SERV = 0;
     private static final Map<String, Integer> DIFF_SERV_NAMES
         = new HashMap<String, Integer>();
-    // TODO: Find other names used for Differentiated Services values.
+    /** Common names used for Differentiated Services values. */
     static {
         DIFF_SERV_NAMES.put("EF", 46);
         DIFF_SERV_NAMES.put("AF11", 10);
@@ -119,8 +119,9 @@ public class QualityOfServiceUtils {
         Socket socket = new Socket();
         try {
             int systemTrafficClass = socket.getTrafficClass();
-            // The 7th and 8th bits of the system traffic class are the ECN bits.
-            return dscp | (systemTrafficClass & 192);
+            // The 1st and 2nd bits of the system traffic class are the ECN
+            // bits.
+            return (dscp << 2) | (systemTrafficClass & 3);
         } catch (SocketException e) {
             throw new IllegalArgumentException("Setting Differentiated Services"
                 + " not supported: " + e);

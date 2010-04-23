@@ -31,8 +31,7 @@ public class QualityOfServiceUtilsTest extends TestCase {
 
     protected void setUp() throws Exception {
         Socket socket = new Socket();
-        ECN = socket.getTrafficClass();
-        ECN = ECN & Integer.parseInt("11000000", 2);
+        ECN = socket.getTrafficClass() & Integer.parseInt("00000011", 2);
     }
 
     protected void tearDown() throws Exception {
@@ -90,7 +89,7 @@ public class QualityOfServiceUtilsTest extends TestCase {
         }
         // Make sure it adjusted for any system ECN values.
         assertEquals("Incorrect Differentiated Services Code Point "  + dscp
-            + " returned for name " + name + ".", ECN | expected, dscp);
+            + " returned for name " + name + ".", ECN | (expected << 2), dscp);
     }
 
     private void testInvalidDiffServName(String name) {
@@ -107,7 +106,7 @@ public class QualityOfServiceUtilsTest extends TestCase {
             int dscp = QualityOfServiceUtils.getDSCP(Integer.toString(val));
             // Make sure it adjusted for any system ECN values.
             assertEquals("Incorrect Differentiated Services Code Point "
-                + "returned for value " + val + ".", ECN | val, dscp);
+                + "returned for value " + val + ".", ECN | (val << 2), dscp);
         } catch (IllegalArgumentException e) {
             fail("IllegalArgumentException thrown for valid Differentiated "
                  + "Services value " + val);
