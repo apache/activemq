@@ -29,11 +29,13 @@ public class QualityOfServiceUtilsTest extends TestCase {
      */
     private int ECN;
 
+    @Override
     protected void setUp() throws Exception {
         Socket socket = new Socket();
         ECN = socket.getTrafficClass() & Integer.parseInt("00000011", 2);
     }
 
+    @Override
     protected void tearDown() throws Exception {
         super.tearDown();
     }
@@ -54,6 +56,14 @@ public class QualityOfServiceUtilsTest extends TestCase {
 
     public void testValidDiffServNames() {
         Map<String, Integer> namesToExpected = new HashMap<String, Integer>();
+        namesToExpected.put("CS0", Integer.valueOf("000000", 2));
+        namesToExpected.put("CS1", Integer.valueOf("001000", 2));
+        namesToExpected.put("CS2", Integer.valueOf("010000", 2));
+        namesToExpected.put("CS3", Integer.valueOf("011000", 2));
+        namesToExpected.put("CS4", Integer.valueOf("100000", 2));
+        namesToExpected.put("CS5", Integer.valueOf("101000", 2));
+        namesToExpected.put("CS6", Integer.valueOf("110000", 2));
+        namesToExpected.put("CS7", Integer.valueOf("111000", 2));
         namesToExpected.put("EF", Integer.valueOf("101110", 2));
         namesToExpected.put("AF11", Integer.valueOf("001010", 2));
         namesToExpected.put("AF12", Integer.valueOf("001100", 2));

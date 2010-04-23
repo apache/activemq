@@ -18,9 +18,7 @@ package org.apache.activemq.transport.tcp;
 
 import javax.jms.Connection;
 import javax.jms.JMSException;
-
 import junit.framework.Test;
-
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.EmbeddedBrokerTestSupport;
 import org.apache.activemq.broker.BrokerService;
@@ -63,8 +61,9 @@ public class TransportUriTest extends EmbeddedBrokerTestSupport {
         for (String opt : validIntegerOptions) {
             testValidOptionsWork(DIFF_SERV + opt, "");
         }
-        String[] validNameOptions = {"EF", "AF11", "AF12", "AF13", "AF21",
-            "AF22", "AF23", "AF31", "AF32", "AF33", "AF41", "AF42", "AF43"};
+        String[] validNameOptions = { "CS0", "CS1", "CS2", "CS3", "CS4", "CS5", "CS6",
+                "CS7", "EF", "AF11", "AF12","AF13", "AF21", "AF22", "AF23", "AF31", 
+                "AF32", "AF33", "AF41", "AF42", "AF43" };
         for (String opt : validNameOptions) {
             testValidOptionsWork(DIFF_SERV + opt, "");
         }
@@ -169,11 +168,13 @@ public class TransportUriTest extends EmbeddedBrokerTestSupport {
         }
     }
 
+    @Override
     protected void setUp() throws Exception {
         bindAddress = "tcp://localhost:61616";
         super.setUp();
     }
 
+    @Override
     protected void tearDown() throws Exception {
         if (connection != null) {
             try {
@@ -185,6 +186,7 @@ public class TransportUriTest extends EmbeddedBrokerTestSupport {
         super.tearDown();
     }
 
+    @Override
     protected BrokerService createBroker() throws Exception {
         BrokerService answer = new BrokerService();
         answer.setUseJmx(false);
