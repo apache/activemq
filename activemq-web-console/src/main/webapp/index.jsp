@@ -39,6 +39,10 @@ You can find more information about ActiveMQ on the <a href="http://activemq.apa
         <td><b>${requestContext.brokerQuery.brokerAdmin.brokerName}</b></td>
     </tr>
     <tr>
+        <td>Version</td>
+        <td><b>${requestContext.brokerQuery.brokerAdmin.brokerVersion}</b></td>
+    </tr>
+    <tr>
         <td>ID</td>
         <td><b>${requestContext.brokerQuery.brokerAdmin.brokerId}</b></td>
     </tr>

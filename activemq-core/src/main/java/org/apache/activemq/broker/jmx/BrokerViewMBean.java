@@ -39,6 +39,12 @@ public interface BrokerViewMBean extends Service {
     String getBrokerName();    
 
     /**
+     * @return The name of the broker.
+     */
+    @MBeanInfo("The version of the broker.")
+    String getBrokerVersion();        
+    
+    /**
      * The Broker will fush it's caches so that the garbage collector can
      * recalaim more memory.
      * 

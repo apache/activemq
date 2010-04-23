@@ -24,6 +24,8 @@ import java.net.URI;
 import java.net.URL;
 import java.util.concurrent.atomic.AtomicInteger;
 import javax.management.ObjectName;
+
+import org.apache.activemq.ActiveMQConnectionMetaData;
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.ConnectionContext;
@@ -66,6 +68,10 @@ public class BrokerView implements BrokerViewMBean {
     public String getBrokerName() {
         return broker.getBrokerName();
     }    
+    
+    public String getBrokerVersion() {
+    	return ActiveMQConnectionMetaData.PROVIDER_VERSION;
+    }
 
     public void gc() throws Exception {
         brokerService.getBroker().gc();
