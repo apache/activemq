@@ -110,9 +110,9 @@ public class AMQ2102Test extends CombinationTestSupport implements UncaughtExcep
                     reply.setJMSCorrelationID(textMessage.getJMSCorrelationID());
                     
                     producer.send(replyQueue, reply);
-                    debug("replied via " + replyQueue + " for message => " + textMessage.getText());
+                    debug("replied via " + replyQueue + " for message => " + textMessage.getText() + ", " + textMessage.getJMSMessageID());
                 } else {
-                    debug("no reply to message => " + textMessage.getText());
+                    debug("no reply to message => " + textMessage.getText() + ", " + textMessage.getJMSMessageID());
                 }
             } else {
                 error("Consumer cannot process " + message.getClass().getSimpleName());
@@ -349,7 +349,7 @@ public class AMQ2102Test extends CombinationTestSupport implements UncaughtExcep
                         TextMessage textReply = (TextMessage) reply;
                         synchronized (messageCount) {
                             try {
-                                debug("receive reply#" + messageCount.value + " " + textReply.getText());
+                                debug("receive reply#" + messageCount.value + " " + textReply.getText() + ", " + textReply.getJMSMessageID());
                             } catch (JMSException e) {
                                 error("Problem processing reply", e);
                             }
