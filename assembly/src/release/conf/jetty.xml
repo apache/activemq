@@ -74,7 +74,7 @@
                                        <value>index.html</value>
                                    </list>
                                </property>
-                               <property name="resourceBase" value="${activemq.base}/webapps/"/>
+                               <property name="resourceBase" value="${activemq.base}/webapps/static/"/>
                            </bean> 
                        </property>
                    </bean>
