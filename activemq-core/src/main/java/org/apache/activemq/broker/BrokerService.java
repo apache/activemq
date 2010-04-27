@@ -1828,11 +1828,11 @@ public class BrokerService implements Service {
             }
             broker = sb;
         }
-        broker = new TransactionBroker(broker, getPersistenceAdapter().createTransactionStore());
         if (isAdvisorySupport()) {
             broker = new AdvisoryBroker(broker);
         }
         broker = new CompositeDestinationBroker(broker);
+        broker = new TransactionBroker(broker, getPersistenceAdapter().createTransactionStore());
         if (isPopulateJMSXUserID()) {
             broker = new UserIDBroker(broker);
         }
