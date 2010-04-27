@@ -34,7 +34,15 @@ public class QualityOfServiceUtils {
         = new HashMap<String, Integer>();
     /** Common names used for Differentiated Services values. */
     static {
-        DIFF_SERV_NAMES.put("EF", 46);
+        
+        DIFF_SERV_NAMES.put("CS0", 0);
+        DIFF_SERV_NAMES.put("CS1", 8);
+        DIFF_SERV_NAMES.put("CS2", 16);
+        DIFF_SERV_NAMES.put("CS3", 24);
+        DIFF_SERV_NAMES.put("CS4", 32);
+        DIFF_SERV_NAMES.put("CS5", 40);
+        DIFF_SERV_NAMES.put("CS6", 48);
+        DIFF_SERV_NAMES.put("CS7", 56);
         DIFF_SERV_NAMES.put("AF11", 10);
         DIFF_SERV_NAMES.put("AF12", 12);
         DIFF_SERV_NAMES.put("AF13", 14);
@@ -47,6 +55,7 @@ public class QualityOfServiceUtils {
         DIFF_SERV_NAMES.put("AF41", 34);
         DIFF_SERV_NAMES.put("AF42", 36);
         DIFF_SERV_NAMES.put("AF43", 38);
+        DIFF_SERV_NAMES.put("EF", 46);
     }
 
     private static final int MAX_TOS = 255;
