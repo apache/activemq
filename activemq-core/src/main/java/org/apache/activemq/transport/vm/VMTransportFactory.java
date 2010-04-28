@@ -76,7 +76,7 @@ public class VMTransportFactory extends TransportFactory {
             // If using the less complex vm://localhost?broker.persistent=true
             // form
             try {
-                host = location.getHost();
+                host = extractHost(location);
                 options = URISupport.parseParamters(location);
                 String config = (String)options.remove("brokerConfig");
                 if (config != null) {
@@ -157,7 +157,18 @@ public class VMTransportFactory extends TransportFactory {
         return transport;
     }
 
-   /**
+   private static String extractHost(URI location) {
+       String host = location.getHost();
+       if (host == null || host.length() == 0) {
+           host = location.getAuthority();
+           if (host == null || host.length() == 0) {
+               host = "localhost";
+           }
+       }
+       return host;
+    }
+
+/**
     * @param registry
     * @param brokerName
     * @param waitForStart - time in milliseconds to wait for a broker to appear
@@ -193,7 +204,7 @@ public class VMTransportFactory extends TransportFactory {
      * @throws IOException
      */
     private TransportServer bind(URI location, boolean dispose) throws IOException {
-        String host = location.getHost();
+        String host = extractHost(location);
         LOG.debug("binding to broker: " + host);
         VMTransportServer server = new VMTransportServer(location, dispose);
         Object currentBoundValue = SERVERS.get(host);
@@ -205,7 +216,7 @@ public class VMTransportFactory extends TransportFactory {
     }
 
     public static void stopped(VMTransportServer server) {
-        String host = server.getBindURI().getHost();
+        String host = extractHost(server.getBindURI());
         stopped(host);
     }
 

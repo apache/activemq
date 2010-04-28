@@ -92,4 +92,14 @@ public class URISupportTest extends TestCase {
         assertTrue(URISupport.checkParenthesis(str));
     }
     
+    public void testCreateWithQuery() throws Exception {
+        URI source = new URI("vm://localhost");
+        URI dest = URISupport.createURIWithQuery(source, "network=true&one=two");
+        
+        assertEquals("correct param count", 2, URISupport.parseParamters(dest).size());
+        assertEquals("same uri, host", source.getHost(), dest.getHost());
+        assertEquals("same uri, scheme", source.getScheme(), dest.getScheme());
+        assertFalse("same uri, ssp", dest.getQuery().equals(source.getQuery()));
+    }
+    
 }

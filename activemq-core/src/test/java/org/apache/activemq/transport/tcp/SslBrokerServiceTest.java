@@ -121,7 +121,7 @@ public class SslBrokerServiceTest extends TransportBrokerTestSupport {
         LOG.info("peer cert: " + session.getPeerCertificateChain()[0].toString());    
     }
     
-    private TrustManager[] getTrustManager() throws Exception {
+    public static TrustManager[] getTrustManager() throws Exception {
         TrustManager[] trustStoreManagers = null;
         KeyStore trustedCertStore = KeyStore.getInstance(SslTransportBrokerTest.KEYSTORE_TYPE);
         
@@ -134,7 +134,7 @@ public class SslBrokerServiceTest extends TransportBrokerTestSupport {
         return trustStoreManagers; 
     }
 
-    private KeyManager[] getKeyManager() throws Exception {
+    public static KeyManager[] getKeyManager() throws Exception {
         KeyManagerFactory kmf = 
             KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());  
         KeyStore ks = KeyStore.getInstance(SslTransportBrokerTest.KEYSTORE_TYPE);

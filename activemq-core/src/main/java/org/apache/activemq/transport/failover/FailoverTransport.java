@@ -31,6 +31,8 @@ import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicReference;
+
+import org.apache.activemq.broker.SslContext;
 import org.apache.activemq.command.Command;
 import org.apache.activemq.command.ConnectionControl;
 import org.apache.activemq.command.ConnectionId;
@@ -109,9 +111,11 @@ public class FailoverTransport implements CompositeTransport {
     private final TransportListener myTransportListener = createTransportListener();
     private boolean updateURIsSupported=true;
     private boolean reconnectSupported=true;
+    // remember for reconnect thread
+    private SslContext brokerSslContext;
 
     public FailoverTransport() throws InterruptedIOException {
-
+        brokerSslContext = SslContext.getCurrentSslContext();
         stateTracker.setTrackTransactions(true);
         // Setup a task that is used to reconnect the a connection async.
         reconnectTask = DefaultThreadPools.getDefaultTaskRunnerFactory().createTaskRunner(new Task() {
@@ -792,6 +796,7 @@ public class FailoverTransport implements CompositeTransport {
                         Transport t = null;
                         try {
                             LOG.debug("Attempting connect to: " + uri);
+                            SslContext.setCurrentSslContext(brokerSslContext);
                             t = TransportFactory.compositeConnect(uri);
                             t.setTransportListener(myTransportListener);
                             t.start();
@@ -842,6 +847,8 @@ public class FailoverTransport implements CompositeTransport {
                                     LOG.debug("Stop of failed transport: " + t + " failed with reason: " + ee);
                                 }
                             }
+                        } finally {
+                            SslContext.setCurrentSslContext(null);
                         }
                     }
                 }
@@ -921,6 +928,7 @@ public class FailoverTransport implements CompositeTransport {
                     URI uri = iter.next();
                     if (connectedTransportURI != null && !connectedTransportURI.equals(uri)) {
                         try {
+                            SslContext.setCurrentSslContext(brokerSslContext);
                             BackupTransport bt = new BackupTransport(this);
                             bt.setUri(uri);
                             if (!backups.contains(bt)) {
@@ -932,6 +940,8 @@ public class FailoverTransport implements CompositeTransport {
                             }
                         } catch (Exception e) {
                             LOG.debug("Failed to build backup ", e);
+                        } finally {
+                            SslContext.setCurrentSslContext(null);
                         }
                     }
                 }

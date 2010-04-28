@@ -157,8 +157,16 @@ public class URISupport {
      * Creates a URI with the given query
      */
     public static URI createURIWithQuery(URI uri, String query) throws URISyntaxException {
-        return new URI(uri.getScheme(), uri.getUserInfo(), uri.getHost(), uri.getPort(), uri.getPath(),
-                       query, uri.getFragment());
+        String schemeSpecificPart = uri.getRawSchemeSpecificPart();
+        // strip existing query if any
+        int questionMark = schemeSpecificPart.lastIndexOf("?");
+        if (questionMark > 0) {
+            schemeSpecificPart = schemeSpecificPart.substring(0, questionMark);
+        }
+        if (query != null && query.length() > 0) {
+            schemeSpecificPart += "?" + query;
+         }
+        return new URI(uri.getScheme(), schemeSpecificPart, uri.getFragment());
     }
 
     public static CompositeData parseComposite(URI uri) throws URISyntaxException {

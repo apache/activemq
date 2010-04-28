@@ -71,7 +71,6 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
     }
 
     public void onServiceAdd(DiscoveryEvent event) {
-        String localURIName = localURI.getScheme() + "://" + localURI.getHost();
         // Ignore events once we start stopping.
         if (serviceSupport.isStopped() || serviceSupport.isStopping()) {
             return;
@@ -100,7 +99,7 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
             } catch (URISyntaxException e) {
                 LOG.warn("could not apply query parameters: " + parameters + " to: " + connectUri, e);
             }
-            LOG.info("Establishing network connection from " + localURIName + " to " + connectUri);
+            LOG.info("Establishing network connection from " + localURI + " to " + connectUri);
 
             Transport remoteTransport;
             Transport localTransport;
@@ -118,7 +117,7 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
                     localTransport = createLocalTransport();
                 } catch (Exception e) {
                     ServiceSupport.dispose(remoteTransport);
-                    LOG.warn("Could not connect to local URI: " + localURIName + ": " + e.getMessage());
+                    LOG.warn("Could not connect to local URI: " + localURI + ": " + e.getMessage());
                     LOG.debug("Connection failure exception: " + e, e);
                     return;
                 }
@@ -132,7 +131,7 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
             } catch (Exception e) {
                 ServiceSupport.dispose(localTransport);
                 ServiceSupport.dispose(remoteTransport);
-                LOG.warn("Could not start network bridge between: " + localURIName + " and: " + uri + " due to: " + e);
+                LOG.warn("Could not start network bridge between: " + localURI + " and: " + uri + " due to: " + e);
                 LOG.debug("Start failure exception: " + e, e);
                 try {
                     discoveryAgent.serviceFailed(event);
