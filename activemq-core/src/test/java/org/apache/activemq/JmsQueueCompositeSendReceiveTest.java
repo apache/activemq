@@ -21,16 +21,13 @@ import javax.jms.Destination;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.Topic;
-import javax.management.MBeanServerConnection;
-import javax.management.MBeanServerInvocationHandler;
-import javax.management.ObjectName;
-import javax.management.remote.JMXConnector;
-import javax.management.remote.JMXConnectorFactory;
-import javax.management.remote.JMXServiceURL;
 
+import org.apache.activemq.broker.BrokerRegistry;
 import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.broker.jmx.QueueViewMBean;
+import org.apache.activemq.broker.region.Queue;
+import org.apache.activemq.broker.region.RegionBroker;
 import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.test.JmsTopicSendReceiveTest;
 
 
@@ -105,15 +102,13 @@ public class JmsQueueCompositeSendReceiveTest extends JmsTopicSendReceiveTest {
             }
             producer.send(queue, message);
         }
-        JMXServiceURL url = new JMXServiceURL("service:jmx:rmi:///jndi/rmi://localhost:1099/jmxrmi");
-        JMXConnector connector = JMXConnectorFactory.connect(url, null);
-        connector.connect();
-        MBeanServerConnection connection = connector.getMBeanServerConnection();
-        ObjectName queueViewMBeanName = new ObjectName("org.apache.activemq:Type=Queue,Destination=TEST,BrokerName=localhost");
         
-        QueueViewMBean queueMbean = (QueueViewMBean) MBeanServerInvocationHandler.newProxyInstance(connection, queueViewMBeanName, QueueViewMBean.class, true);
-        assertEquals(data.length, queueMbean.getQueueSize());
-        queueMbean.purge();
-        assertEquals(0, queueMbean.getQueueSize());
+        Thread.sleep(200); // wait for messages to be queued
+        
+        BrokerService broker = BrokerRegistry.getInstance().lookup("localhost");
+        Queue dest = (Queue)((RegionBroker)broker.getRegionBroker()).getQueueRegion().getDestinationMap().get(new ActiveMQQueue("TEST"));
+        assertEquals(data.length, dest.getDestinationStatistics().getMessages().getCount());
+        dest.purge();
+        assertEquals(0, dest.getDestinationStatistics().getMessages().getCount());
     }
 }
