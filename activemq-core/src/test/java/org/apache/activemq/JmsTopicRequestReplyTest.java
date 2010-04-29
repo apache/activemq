@@ -27,6 +27,8 @@ import javax.jms.MessageConsumer;
 import javax.jms.MessageListener;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
+import javax.jms.TemporaryQueue;
+import javax.jms.TemporaryTopic;
 import javax.jms.TextMessage;
 
 import org.apache.activemq.test.TestSupport;
@@ -91,6 +93,8 @@ public class JmsTopicRequestReplyTest extends TestSupport implements MessageList
         } else {
             fail("Should have received a reply by now");
         }
+        replyConsumer.close();
+        deleteTemporaryDestination(replyDestination);
 
         assertEquals("Should not have had any failures: " + failures, 0, failures.size());
     }
@@ -205,6 +209,14 @@ public class JmsTopicRequestReplyTest extends TestSupport implements MessageList
             return session.createTemporaryTopic();
         }
         return session.createTemporaryQueue();
+    }
+    
+    protected void deleteTemporaryDestination(Destination dest) throws JMSException {
+        if (topic) {
+            ((TemporaryTopic)dest).delete();
+        } else {
+            ((TemporaryQueue)dest).delete();
+        }
     }
 
 }
