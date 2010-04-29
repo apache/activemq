@@ -23,13 +23,11 @@ import javax.jms.Destination;
 import javax.jms.MessageConsumer;
 
 import org.apache.activemq.JmsMultipleBrokersTestSupport;
-import org.apache.activemq.JmsMultipleBrokersTestSupport.BrokerItem;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.region.DestinationInterceptor;
 import org.apache.activemq.broker.region.virtual.VirtualDestination;
 import org.apache.activemq.broker.region.virtual.VirtualDestinationInterceptor;
 import org.apache.activemq.broker.region.virtual.VirtualTopic;
-import org.apache.activemq.network.NetworkConnector;
 import org.apache.activemq.store.kahadb.KahaDBStore;
 import org.apache.activemq.util.MessageIdList;
 import org.apache.commons.logging.Log;
@@ -47,6 +45,11 @@ public class ThreeBrokerVirtualTopicNetworkTest extends JmsMultipleBrokersTestSu
         boolean conduitSubs = true;
         // Setup broker networks
         bridgeAndConfigureBrokers("BrokerA", "BrokerB", dynamicOnly, networkTTL, conduitSubs);
+        bridgeAndConfigureBrokers("BrokerA", "BrokerC", dynamicOnly, networkTTL, conduitSubs);
+        bridgeAndConfigureBrokers("BrokerB", "BrokerA", dynamicOnly, networkTTL, conduitSubs);
+        bridgeAndConfigureBrokers("BrokerB", "BrokerC", dynamicOnly, networkTTL, conduitSubs);
+        bridgeAndConfigureBrokers("BrokerC", "BrokerA", dynamicOnly, networkTTL, conduitSubs);
+        bridgeAndConfigureBrokers("BrokerC", "BrokerB", dynamicOnly, networkTTL, conduitSubs);
 
         startAllBrokers();      
         waitForBridgeFormation();
@@ -57,7 +60,7 @@ public class ThreeBrokerVirtualTopicNetworkTest extends JmsMultipleBrokersTestSu
         // Setup consumers
         MessageConsumer clientA = createConsumer("BrokerA", createDestination("Consumer.A.TEST.FOO", false));
         MessageConsumer clientB = createConsumer("BrokerB", createDestination("Consumer.B.TEST.FOO", false));
-        MessageConsumer clientC = createConsumer("BrokerB", createDestination("Consumer.C.TEST.FOO", false));
+        MessageConsumer clientC = createConsumer("BrokerC", createDestination("Consumer.C.TEST.FOO", false));
         
         Thread.sleep(2000);
 
@@ -87,8 +90,9 @@ public class ThreeBrokerVirtualTopicNetworkTest extends JmsMultipleBrokersTestSu
             brokerItem.destroy();
         }
         
-        BrokerService restartedBroker = createAndConfigureBroker(new URI("broker:(tcp://localhost:61616)/BrokerA"));
+        BrokerService restartedBroker = createAndConfigureBroker(new URI("broker:(tcp://localhost:61616)/BrokerA?useJmx=false"));
         bridgeAndConfigureBrokers("BrokerA", "BrokerB", dynamicOnly, networkTTL, conduitSubs);
+        bridgeAndConfigureBrokers("BrokerA", "BrokerC", dynamicOnly, networkTTL, conduitSubs);
         restartedBroker.start();
         waitForBridgeFormation();
         
@@ -123,6 +127,7 @@ public class ThreeBrokerVirtualTopicNetworkTest extends JmsMultipleBrokersTestSu
         String options = new String("?useJmx=false&deleteAllMessagesOnStartup=true"); 
         createAndConfigureBroker(new URI("broker:(tcp://localhost:61616)/BrokerA" + options));
         createAndConfigureBroker(new URI("broker:(tcp://localhost:61617)/BrokerB" + options));
+        createAndConfigureBroker(new URI("broker:(tcp://localhost:61618)/BrokerC" + options));
     }
     
     private BrokerService createAndConfigureBroker(URI uri) throws Exception {
