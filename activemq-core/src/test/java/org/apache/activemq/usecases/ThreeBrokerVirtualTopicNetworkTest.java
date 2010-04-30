@@ -28,6 +28,7 @@ import org.apache.activemq.broker.region.DestinationInterceptor;
 import org.apache.activemq.broker.region.virtual.VirtualDestination;
 import org.apache.activemq.broker.region.virtual.VirtualDestinationInterceptor;
 import org.apache.activemq.broker.region.virtual.VirtualTopic;
+import org.apache.activemq.network.NetworkConnector;
 import org.apache.activemq.store.kahadb.KahaDBStore;
 import org.apache.activemq.util.MessageIdList;
 import org.apache.commons.logging.Log;
@@ -100,25 +101,26 @@ public class ThreeBrokerVirtualTopicNetworkTest extends JmsMultipleBrokersTestSu
         
         Thread.sleep(2000);
 
-        sendMessages("BrokerA", dest, 1);
+        sendMessages("BrokerA", dest, 2);
 
         msgsA = getConsumerMessages("BrokerA", clientA);
 
-        msgsA.waitForMessagesToArrive(1);
-        msgsB.waitForMessagesToArrive(2);
-        msgsC.waitForMessagesToArrive(2);
+        msgsA.waitForMessagesToArrive(2);
+        msgsB.waitForMessagesToArrive(3);
+        msgsC.waitForMessagesToArrive(3);
 
         // ensure we don't get any more messages
         Thread.sleep(2000);
         
-        assertEquals(1, msgsA.getMessageCount());
-        assertEquals(2, msgsB.getMessageCount());
-        assertEquals(2, msgsC.getMessageCount());        
+        assertEquals(2, msgsA.getMessageCount());
+        assertEquals(3, msgsB.getMessageCount());
+        assertEquals(3, msgsC.getMessageCount());        
     }
     
 
     private void bridgeAndConfigureBrokers(String local, String remote, boolean dynamicOnly, int networkTTL, boolean conduitSubs) throws Exception {
-        bridgeBrokers(local, remote, dynamicOnly, networkTTL, conduitSubs);
+        NetworkConnector bridge = bridgeBrokers(local, remote, dynamicOnly, networkTTL, conduitSubs);
+        bridge.setDecreaseNetworkConsumerPriority(true);
     }
 
     public void setUp() throws Exception {
