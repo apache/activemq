@@ -95,6 +95,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
     private final LinkedHashMap<MessageId, QueueMessageReference> pagedInMessages = new LinkedHashMap<MessageId, QueueMessageReference>();
     // Messages that are paged in but have not yet been targeted at a subscription
     private List<QueueMessageReference> pagedInPendingDispatch = new ArrayList<QueueMessageReference>(100);
+    private List<QueueMessageReference> redeliveredWaitingDispatch = new ArrayList<QueueMessageReference>();
     private MessageGroupMap messageGroupOwners;
     private DispatchPolicy dispatchPolicy = new RoundRobinDispatchPolicy();
     private MessageGroupMapFactory messageGroupMapFactory = new MessageGroupHashBucketFactory();
@@ -377,7 +378,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
             wakeup();
         }
     }
-
+    
     public void removeSubscription(ConnectionContext context, Subscription sub, long lastDeiveredSequenceId) throws Exception {
         destinationStatistics.getConsumers().decrement();
         // synchronize with dispatch method so that no new messages are sent
@@ -406,7 +407,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                 getMessageGroupOwners().removeConsumer(consumerId);
 
                 // redeliver inflight messages
-                List<QueueMessageReference> list = new ArrayList<QueueMessageReference>();
+                
                 for (MessageReference ref : sub.remove(context, this)) {
                     QueueMessageReference qmr = (QueueMessageReference) ref;
                     if (qmr.getLockOwner() == sub) {
@@ -416,11 +417,10 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                             qmr.incrementRedeliveryCounter();
                         }
                     }
-                    list.add(qmr);
+                    redeliveredWaitingDispatch.add(qmr);
                 }
-
-                if (!list.isEmpty()) {
-                    doDispatch(list);
+                if (!redeliveredWaitingDispatch.isEmpty()) {
+                    doDispatch(new ArrayList());
                 }
             }
             if (!(this.optimizedDispatch || isSlave())) {
@@ -1220,7 +1220,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
             // Perhaps we should page always into the pagedInPendingDispatch list if 
             // !messages.isEmpty(), and then if !pagedInPendingDispatch.isEmpty()
             // then we do a dispatch.
-            if (pageInMoreMessages || pendingBrowserDispatch != null) {
+            if (pageInMoreMessages || pendingBrowserDispatch != null || !redeliveredWaitingDispatch.isEmpty()) {
                 try {
                     pageInMessages(pendingBrowserDispatch != null);
 
@@ -1494,8 +1494,12 @@ public class Queue extends BaseDestination implements Task, UsageListener {
         synchronized (dispatchMutex) {
 
             synchronized (pagedInPendingDispatch) {
+                if (!redeliveredWaitingDispatch.isEmpty()) {
+                    // Try first to dispatch redelivered messages to keep an proper order
+                    redeliveredWaitingDispatch = doActualDispatch(redeliveredWaitingDispatch);
+                }
                 if (!pagedInPendingDispatch.isEmpty()) {
-                    // Try to first dispatch anything that had not been
+                    // Next dispatch anything that had not been
                     // dispatched before.
                     pagedInPendingDispatch = doActualDispatch(pagedInPendingDispatch);
                 }
