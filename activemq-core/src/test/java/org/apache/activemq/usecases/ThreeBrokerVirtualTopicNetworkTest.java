@@ -17,6 +17,7 @@
 package org.apache.activemq.usecases;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.URI;
 
 import javax.jms.Destination;
@@ -98,23 +99,51 @@ public class ThreeBrokerVirtualTopicNetworkTest extends JmsMultipleBrokersTestSu
         waitForBridgeFormation();
         
         clientA = createConsumer("BrokerA", createDestination("Consumer.A.TEST.FOO", false));
+        LOG.info("recreated clientA");
         
         Thread.sleep(2000);
 
-        sendMessages("BrokerA", dest, 2);
+        sendMessages("BrokerA", dest, 10);
 
         msgsA = getConsumerMessages("BrokerA", clientA);
 
-        msgsA.waitForMessagesToArrive(2);
-        msgsB.waitForMessagesToArrive(3);
-        msgsC.waitForMessagesToArrive(3);
+        msgsA.waitForMessagesToArrive(10);
+        msgsB.waitForMessagesToArrive(11);
+        msgsC.waitForMessagesToArrive(11);
 
         // ensure we don't get any more messages
         Thread.sleep(2000);
         
-        assertEquals(2, msgsA.getMessageCount());
-        assertEquals(3, msgsB.getMessageCount());
-        assertEquals(3, msgsC.getMessageCount());        
+        assertEquals(10, msgsA.getMessageCount());
+        assertEquals(11, msgsB.getMessageCount());
+        assertEquals(11, msgsC.getMessageCount());        
+        
+        // restart to ensure no hanging messages
+        LOG.info("Restarting brokerA again");
+        brokerItem = brokers.remove("BrokerA");
+        if (brokerItem != null) {
+            brokerItem.destroy();
+        }
+        
+        restartedBroker = createAndConfigureBroker(new URI("broker:(tcp://localhost:61616)/BrokerA?useJmx=false"));
+        bridgeAndConfigureBrokers("BrokerA", "BrokerB", dynamicOnly, networkTTL, conduitSubs);
+        bridgeAndConfigureBrokers("BrokerA", "BrokerC", dynamicOnly, networkTTL, conduitSubs);
+        restartedBroker.start();
+        waitForBridgeFormation();
+        
+        clientA = createConsumer("BrokerA", createDestination("Consumer.A.TEST.FOO", false));
+        LOG.info("recreated clientA again");
+        
+        Thread.sleep(2000);
+
+        msgsA = getConsumerMessages("BrokerA", clientA);
+
+        // ensure we don't get any more messages
+        Thread.sleep(5000);
+        
+        assertEquals(0, msgsA.getMessageCount());
+        assertEquals(11, msgsB.getMessageCount());
+        assertEquals(11, msgsC.getMessageCount());
     }
     
 
@@ -135,10 +164,7 @@ public class ThreeBrokerVirtualTopicNetworkTest extends JmsMultipleBrokersTestSu
     private BrokerService createAndConfigureBroker(URI uri) throws Exception {
         BrokerService broker = createBroker(uri);
         
-        File dataFileDir = new File("target/test-amq-data/kahadb/" + broker.getBrokerName());
-        KahaDBStore kaha = new KahaDBStore();
-        kaha.setDirectory(dataFileDir);
-        broker.setPersistenceAdapter(kaha);
+        configurePersistenceAdapter(broker);
         
         // make all topics virtual and consumers use the default prefix
         VirtualDestinationInterceptor virtualDestinationInterceptor = new VirtualDestinationInterceptor();
@@ -147,4 +173,12 @@ public class ThreeBrokerVirtualTopicNetworkTest extends JmsMultipleBrokersTestSu
         broker.setDestinationInterceptors(destinationInterceptors);
         return broker;
     }
+    
+    protected void configurePersistenceAdapter(BrokerService broker) throws IOException {
+        File dataFileDir = new File("target/test-amq-data/kahadb/" + broker.getBrokerName());
+        KahaDBStore kaha = new KahaDBStore();
+        kaha.setDirectory(dataFileDir);
+        broker.setPersistenceAdapter(kaha);
+    }
+
 }

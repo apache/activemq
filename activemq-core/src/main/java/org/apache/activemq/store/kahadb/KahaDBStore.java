@@ -46,6 +46,7 @@ import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.TopicMessageStore;
 import org.apache.activemq.store.TransactionRecoveryListener;
 import org.apache.activemq.store.TransactionStore;
+import org.apache.activemq.store.kahadb.MessageDatabase.StoredDestination;
 import org.apache.activemq.store.kahadb.data.KahaAddMessageCommand;
 import org.apache.activemq.store.kahadb.data.KahaCommitCommand;
 import org.apache.activemq.store.kahadb.data.KahaDestination;
@@ -496,8 +497,22 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
                     public void execute(Transaction tx) throws IOException {
                         for (Iterator<Entry<String, StoredDestination>> iterator = metadata.destinations.iterator(tx); iterator.hasNext();) {
                             Entry<String, StoredDestination> entry = iterator.next();
-                            rc.add(convert(entry.getKey()));
+                            if (!isEmptyTopic(entry, tx)) {
+                                rc.add(convert(entry.getKey()));
+                            }
                         }
+                    }
+
+                    private boolean isEmptyTopic(Entry<String, StoredDestination> entry, Transaction tx) throws IOException {
+                        boolean isEmptyTopic = false;
+                        ActiveMQDestination dest = convert(entry.getKey());
+                        if (dest.isTopic()) {
+                            StoredDestination loadedStore = getStoredDestination(convert(dest), tx);
+                            if (loadedStore.ackPositions.isEmpty()) {
+                                isEmptyTopic = true;
+                            }
+                        }
+                        return isEmptyTopic;
                     }
                 });
             }
