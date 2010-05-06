@@ -71,7 +71,7 @@
     </dependency>
 
     <dependency>
-      <groupId>${pom.groupId}</groupId>
+      <groupId>${project.groupId}</groupId>
       <artifactId>activeio-core</artifactId>
       <optional>false</optional>
     </dependency>
@@ -213,7 +213,7 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>${pom.groupId}</groupId>
+      <groupId>${project.groupId}</groupId>
       <artifactId>activeio-core</artifactId>
       <optional>false</optional>
       <type>test-jar</type>

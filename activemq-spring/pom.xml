@@ -53,11 +53,11 @@
       <artifactId>commons-logging-api</artifactId>
     </dependency>
     <dependency>
-      <groupId>${pom.groupId}</groupId>
+      <groupId>${project.groupId}</groupId>
       <artifactId>activemq-core</artifactId>
     </dependency>
     <dependency>
-      <groupId>${pom.groupId}</groupId>
+      <groupId>${project.groupId}</groupId>
       <artifactId>activemq-pool</artifactId>
     </dependency>
     <dependency>
@@ -83,7 +83,7 @@
       <artifactId>spring-beans</artifactId>
     </dependency>
     <dependency>
-      <groupId>${pom.groupId}</groupId>
+      <groupId>${project.groupId}</groupId>
       <artifactId>activemq-core</artifactId>
       <type>test-jar</type>
       <scope>test</scope>

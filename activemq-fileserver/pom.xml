@@ -79,7 +79,7 @@
     </dependency>
 
     <dependency>
-      <groupId>${pom.groupId}</groupId>
+      <groupId>${project.groupId}</groupId>
       <artifactId>activemq-core</artifactId>
     </dependency>
     <dependency>

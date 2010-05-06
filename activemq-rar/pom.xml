@@ -34,7 +34,7 @@
   
     <!-- activemq -->
     <dependency>
-      <groupId>${pom.groupId}</groupId>
+      <groupId>${project.groupId}</groupId>
       <artifactId>activemq-ra</artifactId>
       <exclusions>
         <exclusion>
@@ -78,7 +78,7 @@
            <artifactId>axion</artifactId>
         </exclusion>
         <exclusion>
-           <groupId>${pom.groupId}</groupId>
+           <groupId>${project.groupId}</groupId>
            <artifactId>activemq-jaas</artifactId>
         </exclusion>
         <exclusion>

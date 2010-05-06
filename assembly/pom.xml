@@ -43,77 +43,77 @@
     
     <!-- activemq -->
     <dependency>
-      <groupId>${pom.groupId}</groupId>
+      <groupId>${project.groupId}</groupId>
       <artifactId>activemq-all</artifactId>
     </dependency>
     <dependency>
-      <groupId>${pom.groupId}</groupId>
+      <groupId>${project.groupId}</groupId>
       <artifactId>activemq-camel</artifactId>
     </dependency>
     <dependency>
-      <groupId>${pom.groupId}</groupId>
+      <groupId>${project.groupId}</groupId>
       <artifactId>activemq-core</artifactId>
     </dependency>
     <dependency>
-      <groupId>${pom.groupId}</groupId>
+      <groupId>${project.groupId}</groupId>
       <artifactId>activemq-core</artifactId>
       <type>test-jar</type>
     </dependency>
     <dependency>
-      <groupId>${pom.groupId}</groupId>
+      <groupId>${project.groupId}</groupId>
       <artifactId>activeio-core</artifactId>
     </dependency>
     <dependency>
-      <groupId>${pom.groupId}</groupId>
+      <groupId>${project.groupId}</groupId>
       <artifactId>activemq-console</artifactId>
     </dependency>
     <dependency>
-      <groupId>${pom.groupId}</groupId>
+      <groupId>${project.groupId}</groupId>
       <artifactId>activemq-fileserver</artifactId>
       <type>war</type>
     </dependency>
     <dependency>
-      <groupId>${pom.groupId}</groupId>
+      <groupId>${project.groupId}</groupId>
       <artifactId>activemq-optional</artifactId>
     </dependency>
     <dependency>
-      <groupId>${pom.groupId}</groupId>
+      <groupId>${project.groupId}</groupId>
       <artifactId>activemq-pool</artifactId>
     </dependency>
     <dependency>
-      <groupId>${pom.groupId}</groupId>
+      <groupId>${project.groupId}</groupId>
       <artifactId>activemq-web</artifactId>
     </dependency>
     <dependency>
-      <groupId>${pom.groupId}</groupId>
+      <groupId>${project.groupId}</groupId>
       <artifactId>activemq-jaas</artifactId>
     </dependency>
     <dependency>
-      <groupId>${pom.groupId}</groupId>
+      <groupId>${project.groupId}</groupId>
       <artifactId>activemq-xmpp</artifactId>
     </dependency>
     <dependency>
-      <groupId>${pom.groupId}</groupId>
+      <groupId>${project.groupId}</groupId>
       <artifactId>activemq-web-demo</artifactId>
       <type>war</type>
     </dependency>
     <dependency>
-      <groupId>${pom.groupId}</groupId>
+      <groupId>${project.groupId}</groupId>
       <artifactId>activemq-web-console</artifactId>
       <type>war</type>
     </dependency>
     <dependency>
-      <groupId>${pom.groupId}</groupId>
+      <groupId>${project.groupId}</groupId>
       <artifactId>activemq-rar</artifactId>
       <type>rar</type>
       <optional>true</optional>
     </dependency>
     <dependency>
-      <groupId>${pom.groupId}</groupId>
+      <groupId>${project.groupId}</groupId>
       <artifactId>activemq-run</artifactId>
     </dependency>
     <dependency>
-      <groupId>${pom.groupId}</groupId>
+      <groupId>${project.groupId}</groupId>
       <artifactId>kahadb</artifactId>
     </dependency>
     
@@ -364,7 +364,7 @@
               <goal>unpack-dependencies</goal>
             </goals>
             <configuration>
-              <includeGroupIds>${pom.groupId}</includeGroupIds>
+              <includeGroupIds>${project.groupId}</includeGroupIds>
               <includeArtifactIds>activemq-console</includeArtifactIds>
               <outputDirectory>target/classes</outputDirectory>
               <overWriteReleases>false</overWriteReleases>
@@ -402,7 +402,7 @@
               <descriptors>
                  <descriptor>src/main/descriptors/unix-bin.xml</descriptor>  
               </descriptors>
-              <!--<finalName>${pom.artifactId}-${pom.version}</finalName>-->
+              <!--<finalName>${pom.artifactId}-${project.version}</finalName>-->
               <!--<appendAssemblyId>false</appendAssemblyId>-->
             </configuration>
           </execution>
@@ -416,7 +416,7 @@
               <descriptors>
                  <descriptor>src/main/descriptors/windows-bin.xml</descriptor>  
               </descriptors>
-              <!--<finalName>${pom.artifactId}-${pom.version}</finalName>-->
+              <!--<finalName>${pom.artifactId}-${project.version}</finalName>-->
               <!--<appendAssemblyId>false</appendAssemblyId>-->
             </configuration>
           </execution>
@@ -425,7 +425,7 @@
       <!-- plugin>
         <groupId>org.apache.activemq</groupId>
         <artifactId>maven-activemq-plugin</artifactId>
-        <version>${pom.version}</version>
+        <version>${project.version}</version>
         <configuration>
           <configFile>${basedir}/src/release/conf/activemq.xml</configFile>
           <url>broker:(tcp://localhost:61616)?useJmx=false</url>

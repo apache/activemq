@@ -94,7 +94,7 @@
     <activemq.osgi.export.version>${project.version}</activemq.osgi.export.version>
     <activemq.osgi.import>${activemq.osgi.import.pkg}</activemq.osgi.import>
     <activemq.osgi.dynamic.import/>
-    <activemq.osgi.symbolic.name>${groupId}.${artifactId}</activemq.osgi.symbolic.name>
+    <activemq.osgi.symbolic.name>${project.groupId}.${project.artifactId}</activemq.osgi.symbolic.name>
 <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
   <prerequisites>
@@ -737,7 +737,7 @@
       <dependency>
         <groupId>activesoap</groupId>
         <artifactId>jaxp-api</artifactId>
-        <version>1.3</version>
+        <version>${activesoap-version}</version>
       </dependency>
 
       <dependency>
@@ -1080,7 +1080,7 @@
         <extensions>true</extensions>
         <configuration>
           <instructions>
-            <Bundle-Name>${artifactId}</Bundle-Name>
+            <Bundle-Name>${project.artifactId}</Bundle-Name>
             <Bundle-SymbolicName>${activemq.osgi.symbolic.name}</Bundle-SymbolicName>
             <Export-Package>${activemq.osgi.export}</Export-Package>
             <Import-Package>${activemq.osgi.import}</Import-Package>
@@ -1124,6 +1124,7 @@
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>taglist-maven-plugin</artifactId>
+        <version>2.4</version>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>

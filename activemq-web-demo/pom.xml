@@ -71,17 +71,17 @@
 
     <!-- activemq -->
     <dependency>
-      <groupId>${pom.groupId}</groupId>
+      <groupId>${project.groupId}</groupId>
       <artifactId>activemq-web</artifactId>
     </dependency>
 
     <!-- TODO this should not be needed, but transitive dependencies are not working -->
     <dependency>
-      <groupId>${pom.groupId}</groupId>
+      <groupId>${project.groupId}</groupId>
       <artifactId>activemq-core</artifactId>
     </dependency>
     <dependency>
-      <groupId>${pom.groupId}</groupId>
+      <groupId>${project.groupId}</groupId>
       <artifactId>activemq-core</artifactId>
       <scope>test</scope>
       <type>test-jar</type>

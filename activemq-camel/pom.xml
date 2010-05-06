@@ -68,13 +68,13 @@
       <artifactId>camel-jms</artifactId>
     </dependency>
     <dependency>
-      <groupId>${pom.groupId}</groupId>
+      <groupId>${project.groupId}</groupId>
       <artifactId>activemq-core</artifactId>
     </dependency>
 
     <!-- TODO we could maybe remove this dependency and use the Spring pool implementation? -->
     <dependency>
-      <groupId>${pom.groupId}</groupId>
+      <groupId>${project.groupId}</groupId>
       <artifactId>activemq-pool</artifactId>
     </dependency>
     <dependency>
@@ -85,7 +85,7 @@
 
     <!-- testing helpers -->
     <dependency>
-      <groupId>${pom.groupId}</groupId>
+      <groupId>${project.groupId}</groupId>
       <artifactId>activemq-core</artifactId>
       <type>test-jar</type>
       <scope>test</scope>

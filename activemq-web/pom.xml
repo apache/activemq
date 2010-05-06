@@ -33,15 +33,15 @@
   <dependencies>
     <!-- activemq -->
     <dependency>
-      <groupId>${pom.groupId}</groupId>
+      <groupId>${project.groupId}</groupId>
       <artifactId>activemq-core</artifactId>
     </dependency>
     <dependency>
-        <groupId>${pom.groupId}</groupId>
+        <groupId>${project.groupId}</groupId>
         <artifactId>activemq-camel</artifactId>
     </dependency>
     <dependency>
-      <groupId>${pom.groupId}</groupId>
+      <groupId>${project.groupId}</groupId>
       <artifactId>activemq-core</artifactId>
       <scope>test</scope>
       <type>test-jar</type>
