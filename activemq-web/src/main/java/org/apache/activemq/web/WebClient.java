@@ -70,6 +70,7 @@ public class WebClient implements HttpSessionActivationListener, HttpSessionBind
     public static final String CONNECTION_FACTORY_PREFETCH_PARAM = "org.apache.activemq.connectionFactory.prefetch";
     public static final String CONNECTION_FACTORY_OPTIMIZE_ACK_PARAM = "org.apache.activemq.connectionFactory.optimizeAck";
     public static final String BROKER_URL_INIT_PARAM = "org.apache.activemq.brokerURL";
+    public static final String SELECTOR_NAME = "org.apache.activemq.selector";
 
     private static final Log LOG = LogFactory.getLog(WebClient.class);
 
@@ -196,7 +197,7 @@ public class WebClient implements HttpSessionActivationListener, HttpSessionBind
 
                 try {
                     Destination destination = destinationName.startsWith("topic://") ? (Destination)getSession().createTopic(destinationName) : (Destination)getSession().createQueue(destinationName);
-                    consumers.put(destination, getConsumer(destination, true));
+                    consumers.put(destination, getConsumer(destination, null, true));
                 } catch (JMSException e) {
                     LOG.debug("Caought Exception ", e);
                     IOException ex = new IOException(e.getMessage());
@@ -304,14 +305,14 @@ public class WebClient implements HttpSessionActivationListener, HttpSessionBind
         this.producer = producer;
     }
 
-    public synchronized MessageConsumer getConsumer(Destination destination) throws JMSException {
-        return getConsumer(destination, true);
+    public synchronized MessageConsumer getConsumer(Destination destination, String selector) throws JMSException {
+        return getConsumer(destination, selector, true);
     }
 
-    public synchronized MessageConsumer getConsumer(Destination destination, boolean create) throws JMSException {
+    public synchronized MessageConsumer getConsumer(Destination destination, String selector, boolean create) throws JMSException {
         MessageConsumer consumer = consumers.get(destination);
         if (create && consumer == null) {
-            consumer = getSession().createConsumer(destination);
+            consumer = getSession().createConsumer(destination, selector);
             consumers.put(destination, consumer);
         }
         return consumer;

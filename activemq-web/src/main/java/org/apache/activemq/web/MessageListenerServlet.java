@@ -156,7 +156,7 @@ public class MessageListenerServlet extends MessageServletSupport {
                         Map<MessageAvailableConsumer, String> consumerDestinationMap = getConsumerDestinationNameMap(request);
                         client.closeConsumer(destination); // drop any existing
                         // consumer.
-                        MessageAvailableConsumer consumer = (MessageAvailableConsumer)client.getConsumer(destination);
+                        MessageAvailableConsumer consumer = (MessageAvailableConsumer)client.getConsumer(destination, request.getHeader(WebClient.SELECTOR_NAME));
 
                         consumer.setAvailableListener(listener);
                         consumerIdMap.put(consumer, message);
@@ -167,7 +167,7 @@ public class MessageListenerServlet extends MessageServletSupport {
                     } else if ("unlisten".equals(type)) {
                         Map<MessageAvailableConsumer, String> consumerIdMap = getConsumerIdMap(request);
                         Map consumerDestinationMap = getConsumerDestinationNameMap(request);
-                        MessageAvailableConsumer consumer = (MessageAvailableConsumer)client.getConsumer(destination);
+                        MessageAvailableConsumer consumer = (MessageAvailableConsumer)client.getConsumer(destination, request.getHeader(WebClient.SELECTOR_NAME));
 
                         consumer.setAvailableListener(null);
                         consumerIdMap.remove(consumer);
