@@ -14,7 +14,7 @@ public class RestTest extends JettyTestSupport {
         httpClient.start();
         ContentExchange contentExchange = new ContentExchange();
         httpClient.setConnectorType(HttpClient.CONNECTOR_SELECT_CHANNEL);
-        contentExchange.setURL("http://localhost:8080/message/test?timeout=1000&type=queue");
+        contentExchange.setURL("http://localhost:8080/message/test?readTimeout=1000&type=queue");
         httpClient.send(contentExchange);
         contentExchange.waitForDone();
         assertEquals("test", contentExchange.getResponseContent());
@@ -34,7 +34,7 @@ public class RestTest extends JettyTestSupport {
         httpClient.start();
         ContentExchange contentExchange = new ContentExchange();
         httpClient.setConnectorType(HttpClient.CONNECTOR_SELECT_CHANNEL);
-        contentExchange.setURL("http://localhost:8080/message/test?timeout=1000&type=queue");
+        contentExchange.setURL("http://localhost:8080/message/test?readTimeout=1000&type=queue");
         contentExchange.setRequestHeader("selector", "test=2");
         httpClient.send(contentExchange);
         contentExchange.waitForDone();
