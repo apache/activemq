@@ -355,6 +355,6 @@ public abstract class MessageServletSupport extends HttpServlet {
     }
     
     protected String getSelector(HttpServletRequest request) throws IOException {
-    	return request.getHeader(WebClient.SELECTOR_NAME);
+    	return request.getHeader(WebClient.selectorName);
     }
 }

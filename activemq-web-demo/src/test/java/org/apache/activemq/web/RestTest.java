@@ -35,7 +35,7 @@ public class RestTest extends JettyTestSupport {
         ContentExchange contentExchange = new ContentExchange();
         httpClient.setConnectorType(HttpClient.CONNECTOR_SELECT_CHANNEL);
         contentExchange.setURL("http://localhost:8080/message/test?timeout=1000&type=queue");
-        contentExchange.setRequestHeader(WebClient.SELECTOR_NAME, "test=2");
+        contentExchange.setRequestHeader("selector", "test=2");
         httpClient.send(contentExchange);
         contentExchange.waitForDone();
         assertEquals("test2", contentExchange.getResponseContent());

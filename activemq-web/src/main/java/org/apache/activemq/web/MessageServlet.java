@@ -180,7 +180,7 @@ public class MessageServlet extends MessageServletSupport {
                 LOG.debug("Receiving message(s) from: " + destination + " with timeout: " + timeout);
             }
 
-            MessageAvailableConsumer consumer = (MessageAvailableConsumer)client.getConsumer(destination, request.getHeader(WebClient.SELECTOR_NAME));
+            MessageAvailableConsumer consumer = (MessageAvailableConsumer)client.getConsumer(destination, request.getHeader(WebClient.selectorName));
             Continuation continuation = null;
             Listener listener = null;
             Message message = null;
@@ -297,7 +297,7 @@ public class MessageServlet extends MessageServletSupport {
                 LOG.debug("Receiving message(s) from: " + destination + " with timeout: " + timeout);
             }
 
-            MessageAvailableConsumer consumer = (MessageAvailableConsumer)client.getConsumer(destination, request.getHeader(WebClient.SELECTOR_NAME));
+            MessageAvailableConsumer consumer = (MessageAvailableConsumer)client.getConsumer(destination, request.getHeader(WebClient.selectorName));
             Message message = null;
 
             // write a responds

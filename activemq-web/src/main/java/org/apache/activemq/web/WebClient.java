@@ -70,7 +70,7 @@ public class WebClient implements HttpSessionActivationListener, HttpSessionBind
     public static final String CONNECTION_FACTORY_PREFETCH_PARAM = "org.apache.activemq.connectionFactory.prefetch";
     public static final String CONNECTION_FACTORY_OPTIMIZE_ACK_PARAM = "org.apache.activemq.connectionFactory.optimizeAck";
     public static final String BROKER_URL_INIT_PARAM = "org.apache.activemq.brokerURL";
-    public static final String SELECTOR_NAME = "org.apache.activemq.selector";
+    public static final String SELECTOR_NAME = "org.apache.activemq.selectorName";
 
     private static final Log LOG = LogFactory.getLog(WebClient.class);
 
@@ -81,6 +81,7 @@ public class WebClient implements HttpSessionActivationListener, HttpSessionBind
     private transient Session session;
     private transient MessageProducer producer;
     private int deliveryMode = DeliveryMode.NON_PERSISTENT;
+    public static String selectorName;
 
     private final Semaphore semaphore = new Semaphore(1);
 
@@ -122,6 +123,12 @@ public class WebClient implements HttpSessionActivationListener, HttpSessionBind
     public static void initContext(ServletContext context) {
         initConnectionFactory(context);
         context.setAttribute("webClients", new HashMap<String, WebClient>());
+        if (selectorName == null) {
+            selectorName = context.getInitParameter(SELECTOR_NAME);
+        }
+        if (selectorName == null) {
+            selectorName = "selector";
+        }        
     }
 
     public int getDeliveryMode() {
