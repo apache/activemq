@@ -137,6 +137,20 @@ public class ActiveMQConnectionFactoryTest extends CombinationTestSupport {
         assertCreateConnection("tcp://localhost:61610?wireFormat.tcpNoDelayEnabled=true");
     }
 
+    public void testCreateTcpConnectionUsingKnownLocalPort() throws Exception {
+        broker = new BrokerService();
+        broker.setPersistent(false);
+        TransportConnector connector = broker.addConnector("tcp://localhost:61610?wireFormat.tcpNoDelayEnabled=true");
+        broker.start();
+
+        // This should create the connection.
+        ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory("tcp://localhost:61610/localhost:51610");
+        connection = (ActiveMQConnection)cf.createConnection();
+        assertNotNull(connection);
+
+        broker.stop();
+    }
+
     public void testConnectionFailsToConnectToVMBrokerThatIsNotRunning() throws Exception {
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("vm://localhost?create=false");
         try {
