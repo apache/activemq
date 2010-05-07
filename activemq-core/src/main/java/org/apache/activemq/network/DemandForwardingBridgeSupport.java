@@ -473,7 +473,8 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                     if (isDuplex()) {
                         if (command.isMessage()) {
                             ActiveMQMessage message = (ActiveMQMessage) command;
-                            if (AdvisorySupport.isConsumerAdvisoryTopic(message.getDestination())) {
+                            if (AdvisorySupport.isConsumerAdvisoryTopic(message.getDestination()) 
+                                || AdvisorySupport.isDestinationAdvisoryTopic(message.getDestination())) {
                                 serviceRemoteConsumerAdvisory(message.getDataStructure());
                             } else {
                                 if (!isPermissableDestination(message.getDestination(), true)) {

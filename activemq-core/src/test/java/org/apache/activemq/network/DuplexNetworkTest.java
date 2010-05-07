@@ -16,6 +16,9 @@
  */
 package org.apache.activemq.network;
 
+import javax.jms.MessageProducer;
+import javax.jms.TemporaryQueue;
+
 import org.apache.activemq.broker.BrokerService;
 
 public class DuplexNetworkTest extends SimpleNetworkTest {
@@ -29,5 +32,16 @@ public class DuplexNetworkTest extends SimpleNetworkTest {
         broker.setBrokerName("remoteBroker");
         broker.addConnector("tcp://localhost:61617");
         return broker;
+    }
+    
+    public void testTempQueues() throws Exception {
+        TemporaryQueue temp = localSession.createTemporaryQueue();
+        MessageProducer producer = localSession.createProducer(temp);
+        producer.send(localSession.createTextMessage("test"));
+        Thread.sleep(100);
+        assertEquals("Destination not created", 1, remoteBroker.getAdminView().getTemporaryQueues().length);
+        temp.delete();
+        Thread.sleep(100);
+        assertEquals("Destination not deleted", 0, remoteBroker.getAdminView().getTemporaryQueues().length);
     }
 }
