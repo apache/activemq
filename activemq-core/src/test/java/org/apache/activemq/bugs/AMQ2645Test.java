@@ -93,7 +93,7 @@ public class AMQ2645Test extends EmbeddedBrokerTestSupport {
             assertTrue("Consumer is deadlocked!", twoNewMessages.await(60, TimeUnit.SECONDS));
 
             producer.send(session.createTextMessage("test 3"));
-            assertTrue("Consumer got third message after block", twoNewMessages.await(60, TimeUnit.SECONDS));
+            assertTrue("Consumer got third message after block", thirdMessageReceived.await(60, TimeUnit.SECONDS));
 
         } finally {
             broker.stop();
