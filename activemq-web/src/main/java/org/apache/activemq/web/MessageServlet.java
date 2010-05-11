@@ -162,111 +162,125 @@ public class MessageServlet extends MessageServletSupport {
      * @throws IOException
      */
     protected void doMessages(HttpServletRequest request, HttpServletResponse response, int maxMessages) throws ServletException, IOException {
-
-        int messages = 0;
         try {
             WebClient client = getWebClient(request);
             Destination destination = getDestination(client, request);
             if (destination == null) {
                 throw new NoDestinationSuppliedException();
             }
-            long timeout = getReadTimeout(request);
-            boolean ajax = isRicoAjax(request);
-            if (!ajax) {
-                maxMessages = 1;
+            MessageAvailableConsumer consumer = (MessageAvailableConsumer)client.getConsumer(destination, request.getHeader(WebClient.selectorName));
+            Message message = null;
+            message = (Message)request.getAttribute("message"); 
+            if (message != null) {
+                // we're resuming continuation,
+                // so just write the message and return
+                writeResponse(request, response, maxMessages, message, consumer);
+                return;
             }
+            long timeout = getReadTimeout(request);
 
             if (LOG.isDebugEnabled()) {
                 LOG.debug("Receiving message(s) from: " + destination + " with timeout: " + timeout);
             }
 
-            MessageAvailableConsumer consumer = (MessageAvailableConsumer)client.getConsumer(destination, request.getHeader(WebClient.selectorName));
             Continuation continuation = null;
             Listener listener = null;
-            Message message = null;
+            
 
-            synchronized (consumer) {
+            // Look for any available messages
+            message = consumer.receive(10);
+
+            // Get an existing Continuation or create a new one if there are
+            // no events.
+            if (message == null) {
+                continuation = ContinuationSupport.getContinuation(request);
+                
+                if (continuation.isExpired()) {
+                    response.setStatus(isRicoAjax(request) ? HttpServletResponse.SC_OK : HttpServletResponse.SC_NO_CONTENT);
+                    return;
+                }
+
+                continuation.setTimeout(timeout);
+                continuation.suspend();
+                
                 // Fetch the listeners
                 listener = (Listener)consumer.getAvailableListener();
                 if (listener == null) {
                     listener = new Listener(consumer);
                     consumer.setAvailableListener(listener);
                 }
-                // Look for any available messages
-                message = consumer.receiveNoWait();
 
-                // Get an existing Continuation or create a new one if there are
-                // no events.
-                if (message == null) {
-                    continuation = ContinuationSupport.getContinuation(request);
-
-                    // register this continuation with our listener.
-                    listener.setContinuation(continuation);
-
-                    // Get the continuation object (may wait and/or retry
-                    // request here).
-                    continuation.setTimeout(timeout);
-                    continuation.suspend();
-                }
-
-                // Try again now
-                if (message == null) {
-                    message = consumer.receiveNoWait();
-                }
-
-                // write a responds
-                response.setContentType("text/xml");
-                PrintWriter writer = response.getWriter();
-
-                if (ajax) {
-                    writer.println("<ajax-response>");
-                }
-
-                // handle any message(s)
-                if (message == null) {
-                    // No messages so OK response of for ajax else no content.
-                    response.setStatus(ajax ? HttpServletResponse.SC_OK : HttpServletResponse.SC_NO_CONTENT);
-                } else {
-                    // We have at least one message so set up the response
-                    response.setStatus(HttpServletResponse.SC_OK);
-                    String type = getContentType(request);
-                    if (type != null) {
-                        response.setContentType(type);
-                    }
-
-                    // send a response for each available message (up to max
-                    // messages)
-                    while ((maxMessages < 0 || messages < maxMessages) && message != null) {
-                        if (ajax) {
-                            writer.print("<response type='object' id='");
-                            writer.print(request.getParameter("id"));
-                            writer.println("'>");
-                        } else {
-                            // only ever 1 message for non ajax!
-                            setResponseHeaders(response, message);
-                        }
-
-                        writeMessageResponse(writer, message);
-
-                        if (ajax) {
-                            writer.println("</response>");
-                        }
-
-                        // look for next message
-                        messages++;
-                        if(maxMessages < 0 || messages < maxMessages) {
-                        	message = consumer.receiveNoWait();
-                        }
-                    }
-                }
-
-                if (ajax) {
-                    writer.println("<response type='object' id='poll'><ok/></response>");
-                    writer.println("</ajax-response>");
-                }
+                // register this continuation with our listener.
+                listener.setContinuation(continuation);
             }
+
+            writeResponse(request, response, maxMessages, message, consumer);
         } catch (JMSException e) {
             throw new ServletException("Could not post JMS message: " + e, e);
+        }
+    }
+    
+    protected void writeResponse(HttpServletRequest request, HttpServletResponse response, int maxMessages, Message message, MessageAvailableConsumer consumer) throws IOException, JMSException {
+        int messages = 0;
+        try {
+            boolean ajax = isRicoAjax(request);
+            if (!ajax) {
+                maxMessages = 1;
+            }
+
+            // write a responds
+            response.setContentType("text/xml");
+            PrintWriter writer = response.getWriter();
+
+            if (ajax) {
+                writer.println("<ajax-response>");
+            }
+
+            // handle any message(s)
+            if (message == null) {
+                // No messages so OK response of for ajax else no content.
+                response.setStatus(ajax ? HttpServletResponse.SC_OK
+                        : HttpServletResponse.SC_NO_CONTENT);
+            } else {
+                // We have at least one message so set up the response
+                response.setStatus(HttpServletResponse.SC_OK);
+                String type = getContentType(request);
+                if (type != null) {
+                    response.setContentType(type);
+                }
+
+                // send a response for each available message (up to max
+                // messages)
+                while ((maxMessages < 0 || messages < maxMessages)
+                        && message != null) {
+                    if (ajax) {
+                        writer.print("<response type='object' id='");
+                        writer.print(request.getParameter("id"));
+                        writer.println("'>");
+                    } else {
+                        // only ever 1 message for non ajax!
+                        setResponseHeaders(response, message);
+                    }
+
+                    writeMessageResponse(writer, message);
+
+                    if (ajax) {
+                        writer.println("</response>");
+                    }
+
+                    // look for next message
+                    messages++;
+                    if (maxMessages < 0 || messages < maxMessages) {
+                        message = consumer.receiveNoWait();
+                    }
+                }
+            }
+
+            if (ajax) {
+                writer
+                        .println("<response type='object' id='poll'><ok/></response>");
+                writer.println("</ajax-response>");
+            }
         } finally {
             if (LOG.isDebugEnabled()) {
                 LOG.debug("Received " + messages + " message(s)");
@@ -475,9 +489,14 @@ public class MessageServlet extends MessageServletSupport {
 
             synchronized (this.consumer) {
                 if (continuation != null) {
-                    continuation.resume();
+                    try {
+                        Message message = consumer.receiveNoWait();
+                        continuation.setAttribute("message", message);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                    continuation.resume();   
                 }
-                continuation = null;
             }
         }
     }

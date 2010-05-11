@@ -41,7 +41,7 @@ public class WaitForJettyListener {
                     socket.close();
                     canConnect = true;
                 } catch (Exception e) {
-                    LOG.warn("verify jettty available, failed to connect to " + url + e);
+                    LOG.warn("verify jetty available, failed to connect to " + url + e);
                 }
                 return canConnect;
             }}, 60 * 1000));

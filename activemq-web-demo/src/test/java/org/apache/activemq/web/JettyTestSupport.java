@@ -1,20 +1,28 @@
 package org.apache.activemq.web;
 
+import java.net.Socket;
+import java.net.URL;
+
 import javax.jms.Connection;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
+import javax.net.SocketFactory;
+
+import junit.framework.TestCase;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.util.Wait;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.nio.SelectChannelConnector;
 import org.eclipse.jetty.webapp.WebAppContext;
 
-import junit.framework.TestCase;
-
 public class JettyTestSupport extends TestCase {
-
+    private static final Log LOG = LogFactory.getLog(JettyTestSupport.class);
+    
     BrokerService broker;
     Server server;
     ActiveMQConnectionFactory factory;
@@ -43,7 +51,8 @@ public class JettyTestSupport extends TestCase {
         server.setConnectors(new Connector[] {
             connector
         });
-        server.start();   
+        server.start();
+        waitForJettySocketToAccept("http://localhost:8080");
         
         factory = new ActiveMQConnectionFactory("tcp://localhost:61616");
         connection = factory.createConnection();
@@ -60,6 +69,21 @@ public class JettyTestSupport extends TestCase {
         connection.close();
     }
 
-    
+    public void waitForJettySocketToAccept(String bindLocation) throws Exception {
+        final URL url = new URL(bindLocation);
+        assertTrue("Jetty endpoint is available", Wait.waitFor(new Wait.Condition() {
+
+            public boolean isSatisified() throws Exception {
+                boolean canConnect = false;
+                try {
+                    Socket socket = SocketFactory.getDefault().createSocket(url.getHost(), url.getPort());
+                    socket.close();
+                    canConnect = true;
+                } catch (Exception e) {
+                    LOG.warn("verify jetty available, failed to connect to " + url + e);
+                }
+                return canConnect;
+            }}, 60 * 1000));
+    }
     
 }
