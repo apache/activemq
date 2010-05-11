@@ -55,7 +55,7 @@ public class VmTransportNetworkBrokerTest extends TestCase {
         int threadCountAfterSleep = Thread.activeCount();
         
         assertTrue("Threads are leaking, threadCount=" + threadCount + " threadCountAfterSleep=" + threadCountAfterSleep, 
-                threadCountAfterSleep < threadCount + 5);
+                threadCountAfterSleep < threadCount + 8);
                 
         broker.stop(); 
     }

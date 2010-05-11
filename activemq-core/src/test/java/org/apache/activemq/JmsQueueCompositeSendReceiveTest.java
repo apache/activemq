@@ -29,6 +29,7 @@ import org.apache.activemq.broker.region.RegionBroker;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.test.JmsTopicSendReceiveTest;
+import org.apache.activemq.util.Wait;
 
 
 /**
@@ -106,8 +107,12 @@ public class JmsQueueCompositeSendReceiveTest extends JmsTopicSendReceiveTest {
         Thread.sleep(200); // wait for messages to be queued
         
         BrokerService broker = BrokerRegistry.getInstance().lookup("localhost");
-        Queue dest = (Queue)((RegionBroker)broker.getRegionBroker()).getQueueRegion().getDestinationMap().get(new ActiveMQQueue("TEST"));
-        assertEquals(data.length, dest.getDestinationStatistics().getMessages().getCount());
+        final Queue dest = (Queue)((RegionBroker)broker.getRegionBroker()).getQueueRegion().getDestinationMap().get(new ActiveMQQueue("TEST"));
+        assertTrue("all messages were received", Wait.waitFor(new Wait.Condition(){
+            public boolean isSatisified() throws Exception {
+                return data.length == dest.getDestinationStatistics().getMessages().getCount();
+            }}));
+        
         dest.purge();
         assertEquals(0, dest.getDestinationStatistics().getMessages().getCount());
     }
