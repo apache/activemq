@@ -83,6 +83,7 @@
     <xbean-version>3.6</xbean-version>
     <velocity-version>1.6.2</velocity-version>
     <maven-bundle-plugin-version>2.0.1</maven-bundle-plugin-version>
+    <maven-surefire-plugin-version>2.5</maven-surefire-plugin-version>
     <commons-net-version>2.0</commons-net-version>
     <ftpserver-version>1.0.0</ftpserver-version>
     <site-repo-url>scpexe://people.apache.org/www/activemq.apache.org/maven/</site-repo-url>
@@ -978,6 +979,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-surefire-plugin</artifactId>
+          <version>${maven-surefire-plugin-version}</version>
           <configuration>
             <redirectTestOutputToFile>true</redirectTestOutputToFile>
             <forkMode>once</forkMode>
@@ -1107,6 +1109,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-report-plugin</artifactId>
+        <version>${maven-surefire-plugin-version}</version>
       </plugin>
             <plugin>
               <groupId>org.apache.maven.plugins</groupId>
@@ -1179,6 +1182,7 @@
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-surefire-plugin</artifactId>
+            <version>${maven-surefire-plugin-version}</version>
             <configuration>
               <test>false</test>
             </configuration>
