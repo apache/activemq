@@ -36,6 +36,7 @@ import javax.servlet.http.HttpServletResponse;
  */
 public class AjaxServlet extends MessageListenerServlet {
 
+    private static final long serialVersionUID = -3875280764356406114L;
     private Map<String, byte[]> jsCache = new HashMap<String, byte[]>();
     private long jsLastModified = 1000 * (System.currentTimeMillis() / 1000);
 
