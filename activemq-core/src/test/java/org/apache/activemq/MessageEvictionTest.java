@@ -118,12 +118,13 @@ public class MessageEvictionTest {
                     Session advisorySession = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
                     final MessageConsumer consumer = advisorySession.createConsumer(discardedAdvisoryDestination);
                     consumer.setMessageListener(new MessageListener() {
+                        int advisoriesReceived = 0;
                         public void onMessage(Message message) {
                             try {
                                 LOG.info("advisory:" + message);
                                 ActiveMQMessage activeMQMessage = (ActiveMQMessage) message;
                                 assertNotNull(activeMQMessage.getStringProperty(AdvisorySupport.MSG_PROPERTY_CONSUMER_ID));
-                                assertEquals(1, activeMQMessage.getIntProperty(AdvisorySupport.MSG_PROPERTY_DISCARDED_COUNT));
+                                assertEquals(++advisoriesReceived, activeMQMessage.getIntProperty(AdvisorySupport.MSG_PROPERTY_DISCARDED_COUNT));
                                 message.acknowledge();
                                 advisoryIsGood.countDown();
                             } catch (JMSException e) {
@@ -164,6 +165,7 @@ public class MessageEvictionTest {
                             try {
                                 // very slow, only ack once
                                 doAck.await(60, TimeUnit.SECONDS);
+                                LOG.info("acking: " + message.getJMSMessageID());
                                 message.acknowledge();
                             } catch (Exception e) {
                                 e.printStackTrace();
