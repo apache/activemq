@@ -23,6 +23,7 @@ import java.io.InputStream;
 import java.net.ConnectException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Arrays;
 
 import javax.jms.JMSException;
 
@@ -79,10 +80,11 @@ public class FTPBlobUploadStrategy implements BlobUploadStrategy {
         	url = this.url.toString();
         }
         
-		ftp.storeFile(filename, in);
+		if (!ftp.storeFile(filename, in)) {
+		    throw new JMSException("FTP store failed: " + ftp.getReplyString());
+		}
 		ftp.quit();
 		ftp.disconnect();
-		
 		return new URL(url + filename);
 	}
 	

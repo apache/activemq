@@ -24,59 +24,17 @@ import java.net.URL;
 import javax.jms.JMSException;
 
 import junit.framework.Assert;
-import junit.framework.TestCase;
 
 import org.apache.activemq.command.ActiveMQBlobMessage;
-import org.apache.ftpserver.FtpServer;
-import org.apache.ftpserver.FtpServerFactory;
-import org.apache.ftpserver.ftplet.UserManager;
-import org.apache.ftpserver.listener.ListenerFactory;
-import org.apache.ftpserver.usermanager.PropertiesUserManagerFactory;
-import org.apache.ftpserver.usermanager.impl.BaseUser;
-import org.jmock.Mockery;
 
-public class FTPBlobDownloadStrategyTest extends TestCase {
-
-    private static final String ftpServerListenerName = "default";
-    private FtpServer server;
-    final static String userNamePass = "activemq";
-
-    Mockery context = null;
-    int ftpPort;
-    String ftpUrl;
+public class FTPBlobDownloadStrategyTest extends FTPTestSupport {
 
     final int FILE_SIZE = Short.MAX_VALUE * 10;
 
-    protected void setUp() throws Exception {
-        final File ftpHomeDirFile = new File("target/FTPBlobTest/ftptest");
-        ftpHomeDirFile.mkdirs();
-        ftpHomeDirFile.getParentFile().deleteOnExit();
-
-        FtpServerFactory serverFactory = new FtpServerFactory();
-        ListenerFactory factory = new ListenerFactory();
-
-        PropertiesUserManagerFactory userManagerFactory = new PropertiesUserManagerFactory();
-        UserManager userManager = userManagerFactory.createUserManager();
-
-        BaseUser user = new BaseUser();
-        user.setName("activemq");
-        user.setPassword("activemq");
-        user.setHomeDirectory(ftpHomeDirFile.getParent());
-
-        userManager.save(user);
-
-        serverFactory.setUserManager(userManager);
-        factory.setPort(0);
-        serverFactory.addListener(ftpServerListenerName, factory
-                .createListener());
-        server = serverFactory.createServer();
-        server.start();
-        ftpPort = serverFactory.getListener(ftpServerListenerName)
-                .getPort();
-
-        ftpUrl = "ftp://" + userNamePass + ":" + userNamePass + "@localhost:"
-                + ftpPort + "/ftptest/";
-
+    public void testDownload() throws Exception {
+        setConnection();
+        
+        // create file
         File uploadFile = new File(ftpHomeDirFile, "test.txt");
         FileWriter wrt = new FileWriter(uploadFile);
 
@@ -87,10 +45,7 @@ public class FTPBlobDownloadStrategyTest extends TestCase {
         }
 
         wrt.close();
-
-    }
-
-    public void testDownload() {
+        
         ActiveMQBlobMessage message = new ActiveMQBlobMessage();
         BlobDownloadStrategy strategy = new FTPBlobDownloadStrategy();
         InputStream stream;

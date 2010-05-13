@@ -17,7 +17,7 @@ import org.apache.ftpserver.usermanager.impl.BaseUser;
 import org.apache.ftpserver.usermanager.impl.WritePermission;
 import org.jmock.Mockery;
 
-public class FTPTestSupport extends EmbeddedBrokerTestSupport {
+public abstract class FTPTestSupport extends EmbeddedBrokerTestSupport {
     
     protected static final String ftpServerListenerName = "default";
     protected Connection connection;
