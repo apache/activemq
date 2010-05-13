@@ -103,6 +103,7 @@ public class URISupport {
 
     public static Map<String, String> parseQuery(String uri) throws URISyntaxException {
         try {
+            uri = uri.substring(uri.lastIndexOf("?") + 1); // get only the relevant part of the query
             Map<String, String> rc = new HashMap<String, String>();
             if (uri != null) {
                 String[] parameters = uri.split("&");
