@@ -87,12 +87,14 @@
       <artifactId>activemq-jaas</artifactId>
       <optional>true</optional>
     </dependency>
-
+    
     <!-- web container -->
     <dependency>
-      <groupId>org.eclipse.jetty.aggregate</groupId>
-      <artifactId>jetty-all-server</artifactId>
+      <groupId>org.apache.geronimo.specs</groupId>
+      <artifactId>geronimo-servlet_2.5_spec</artifactId>
+      <scope>provided</scope>
     </dependency>
+
 
     <!-- used for testing -->
     <dependency>
@@ -100,6 +102,20 @@
       <artifactId>junit</artifactId>
       <scope>test</scope>
     </dependency>
+    
+    <dependency>
+      <groupId>${pom.groupId}</groupId>
+      <artifactId>activemq-core</artifactId>
+      <type>test-jar</type>
+      <scope>test</scope>
+    </dependency>    
+
+    <dependency>
+      <groupId>org.eclipse.jetty.aggregate</groupId>
+      <artifactId>jetty-all-server</artifactId>
+      <scope>test</scope>
+    </dependency>
+    
   </dependencies>
 
   <properties>

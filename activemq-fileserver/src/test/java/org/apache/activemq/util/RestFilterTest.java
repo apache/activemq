@@ -23,21 +23,17 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
-import junit.framework.TestCase;
-
 import org.eclipse.jetty.util.IO;
 
-public class RestFilterTest extends TestCase {
+public class RestFilterTest extends HttpTestSupport {
 
-    public RestFilterTest(String s) {
-        super(s);
-    }
-
-    public void test() throws Exception {
+    protected boolean createBroker = false;
+    
+    public void testFilter() throws Exception {
         byte[] fileContents = new byte[] {
             'a', 'b', 'c'
         };
-        URL url = new URL("http://localhost:8080/fileserver/repository/file.txt");
+        URL url = new URL("http://localhost:8080/uploads/file.txt");
 
         // 1. upload
         HttpURLConnection connection = (HttpURLConnection)url.openConnection();

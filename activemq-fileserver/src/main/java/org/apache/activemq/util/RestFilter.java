@@ -38,8 +38,6 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.eclipse.jetty.util.IO;
-import org.eclipse.jetty.util.URIUtil;
 
 
 /**
@@ -71,7 +69,7 @@ public class RestFilter implements Filter {
     }
 
     private File locateFile(HttpServletRequest request) {
-        return new File(filterConfig.getServletContext().getRealPath(URIUtil.addPaths(request.getServletPath(), request.getPathInfo())));
+        return new File(filterConfig.getServletContext().getRealPath(request.getServletPath()), request.getPathInfo());
     }
 
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
@@ -122,8 +120,8 @@ public class RestFilter implements Filter {
 
         try {
             URL destinationUrl = new URL(destination);
-            IO.copyFile(file, new File(destinationUrl.getFile()));
-            IO.delete(file);
+            IOHelper.copyFile(file, new File(destinationUrl.getFile()));
+            IOHelper.deleteFile(file);
         } catch (IOException e) {
             response.sendError(HttpURLConnection.HTTP_INTERNAL_ERROR); // file
                                                                         // could
@@ -178,7 +176,7 @@ public class RestFilter implements Filter {
 
         FileOutputStream out = new FileOutputStream(file);
         try {
-            IO.copy(request.getInputStream(), out);
+            IOHelper.copyInputStream(request.getInputStream(), out);
         } catch (IOException e) {
             LOG.warn("Exception occured" , e);
             out.close();
@@ -207,7 +205,7 @@ public class RestFilter implements Filter {
             return;
         }
 
-        boolean success = IO.delete(file); // actual delete operation
+        boolean success = IOHelper.deleteFile(file); // actual delete operation
 
         if (success) {
             response.setStatus(HttpURLConnection.HTTP_NO_CONTENT); // we return
