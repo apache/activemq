@@ -16,11 +16,10 @@
  */
 package org.apache.activemq.blob;
 
+import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.FilterInputStream;
-import java.net.ConnectException;
-import java.net.URL;
+import java.net.MalformedURLException;
 
 import javax.jms.JMSException;
 
@@ -30,33 +29,18 @@ import org.apache.commons.net.ftp.FTPClient;
 /**
  * A FTP implementation for {@link BlobDownloadStrategy}.
  */
-public class FTPBlobDownloadStrategy implements BlobDownloadStrategy {
-    private String ftpUser;
-    private String ftpPass;
+public class FTPBlobDownloadStrategy extends FTPStrategy implements BlobDownloadStrategy {
+
+    public FTPBlobDownloadStrategy(BlobTransferPolicy transferPolicy) throws MalformedURLException {
+        super(transferPolicy);
+    }
 
     public InputStream getInputStream(ActiveMQBlobMessage message) throws IOException, JMSException {
-        URL url = message.getURL();
-
-        setUserInformation(url.getUserInfo());
-        String connectUrl = url.getHost();
-        int port = url.getPort() < 1 ? 21 : url.getPort();
-
-        final FTPClient ftp = new FTPClient();
-        try {
-            ftp.connect(connectUrl, port);
-        } catch(ConnectException e) {
-            throw new JMSException("Problem connecting the FTP-server");
-        }
-
-        if(!ftp.login(ftpUser, ftpPass)) {
-            ftp.quit();
-            ftp.disconnect();
-            throw new JMSException("Cant Authentificate to FTP-Server");
-        }
+        url = message.getURL();
+        final FTPClient ftp = createFTP();
         String path = url.getPath();
         String workingDir = path.substring(0, path.lastIndexOf("/"));
-        String file = path.substring(path.lastIndexOf("/")+1);
-
+        String file = path.substring(path.lastIndexOf("/") + 1);
         ftp.changeWorkingDirectory(workingDir);
         ftp.setFileType(FTPClient.BINARY_FILE_TYPE);
 
@@ -72,15 +56,20 @@ public class FTPBlobDownloadStrategy implements BlobDownloadStrategy {
         return input;
     }
 
-    private void setUserInformation(String userInfo) {
-        if(userInfo != null) {
-            String[] userPass = userInfo.split(":");
-            if(userPass.length > 0) this.ftpUser = userPass[0];
-            if(userPass.length > 1) this.ftpPass = userPass[1];
-        } else {
-            this.ftpUser = "anonymous";
-            this.ftpPass = "anonymous";
+    public void deleteFile(ActiveMQBlobMessage message) throws IOException, JMSException {
+        url = message.getURL();
+        final FTPClient ftp = createFTP();
+
+        String path = url.getPath();
+        try {
+            if (!ftp.deleteFile(path)) {
+                throw new JMSException("Delete file failed: " + ftp.getReplyString());
+            }
+        } finally {
+            ftp.quit();
+            ftp.disconnect();
         }
+
     }
 
 }

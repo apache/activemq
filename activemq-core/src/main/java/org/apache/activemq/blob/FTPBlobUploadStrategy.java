@@ -20,10 +20,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.ConnectException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.Arrays;
 
 import javax.jms.JMSException;
 
@@ -33,70 +31,42 @@ import org.apache.commons.net.ftp.FTPClient;
 /**
  * A FTP implementation of {@link BlobUploadStrategy}.
  */
-public class FTPBlobUploadStrategy implements BlobUploadStrategy {
-	
-	private URL url;
-	private String ftpUser = "";
-	private String ftpPass = "";
-	private BlobTransferPolicy transferPolicy;
+public class FTPBlobUploadStrategy extends FTPStrategy implements BlobUploadStrategy {
 	
 	public FTPBlobUploadStrategy(BlobTransferPolicy transferPolicy) throws MalformedURLException {
-		this.transferPolicy = transferPolicy;
-		this.url = new URL(this.transferPolicy.getUploadUrl());
-		
-		setUserInformation(url.getUserInfo());
+		super(transferPolicy);
 	}
 
-	public URL uploadFile(ActiveMQBlobMessage message, File file)
-			throws JMSException, IOException {
+	public URL uploadFile(ActiveMQBlobMessage message, File file) throws JMSException, IOException {
 		return uploadStream(message, new FileInputStream(file));
 	}
 
 	public URL uploadStream(ActiveMQBlobMessage message, InputStream in)
 			throws JMSException, IOException {
-		String connectUrl = url.getHost();
-		int port = url.getPort() < 1 ? 21 : url.getPort();
+
+	    FTPClient ftp = createFTP();
+	    try {
+    		String path = url.getPath();
+            String workingDir = path.substring(0, path.lastIndexOf("/"));
+    		String filename = message.getMessageId().toString().replaceAll(":", "_");
+            ftp.setFileType(FTPClient.BINARY_FILE_TYPE);
+            
+            String url;
+            if(!ftp.changeWorkingDirectory(workingDir)) {
+            	url = this.url.toString().replaceFirst(this.url.getPath(), "")+"/";
+            } else {
+            	url = this.url.toString();
+            }
+            
+    		if (!ftp.storeFile(filename, in)) {
+    		    throw new JMSException("FTP store failed: " + ftp.getReplyString());
+    		}
+    		return new URL(url + filename);
+	    } finally {
+    		ftp.quit();
+    		ftp.disconnect();
+	    }
 		
-		FTPClient ftp = new FTPClient();
-		try {
-        	ftp.connect(connectUrl, port);
-        } catch(ConnectException e) {
-        	throw new JMSException("Problem connecting the FTP-server");
-        }
-		if(!ftp.login(ftpUser, ftpPass)) {
-			ftp.quit();
-			ftp.disconnect();
-			throw new JMSException("Cant Authentificate to FTP-Server");
-		}
-		String path = url.getPath();
-        String workingDir = path.substring(0, path.lastIndexOf("/"));
-		String filename = message.getMessageId().toString().replaceAll(":", "_");
-        ftp.setFileType(FTPClient.BINARY_FILE_TYPE);
-        
-        String url;
-        if(!ftp.changeWorkingDirectory(workingDir)) {
-        	url = this.url.toString().replaceFirst(this.url.getPath(), "")+"/";
-        } else {
-        	url = this.url.toString();
-        }
-        
-		if (!ftp.storeFile(filename, in)) {
-		    throw new JMSException("FTP store failed: " + ftp.getReplyString());
-		}
-		ftp.quit();
-		ftp.disconnect();
-		return new URL(url + filename);
-	}
-	
-	private void setUserInformation(String userInfo) {
-		if(userInfo != null) {
-			String[] userPass = userInfo.split(":");
-			if(userPass.length > 0) this.ftpUser = userPass[0];
-			if(userPass.length > 1) this.ftpPass = userPass[1];
-		} else {
-			this.ftpUser = "anonymous";
-			this.ftpPass = "anonymous";
-		}
 	}
 
 }

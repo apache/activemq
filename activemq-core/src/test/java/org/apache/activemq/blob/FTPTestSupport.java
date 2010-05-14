@@ -7,6 +7,7 @@ import java.util.List;
 import javax.jms.Connection;
 
 import org.apache.activemq.EmbeddedBrokerTestSupport;
+import org.apache.activemq.util.IOHelper;
 import org.apache.ftpserver.FtpServer;
 import org.apache.ftpserver.FtpServerFactory;
 import org.apache.ftpserver.ftplet.Authority;
@@ -33,7 +34,7 @@ public abstract class FTPTestSupport extends EmbeddedBrokerTestSupport {
     protected void setUp() throws Exception {
         
         if (ftpHomeDirFile.getParentFile().exists()) {
-            ftpHomeDirFile.getParentFile().delete();
+            IOHelper.deleteFile(ftpHomeDirFile.getParentFile());
         }
         ftpHomeDirFile.mkdirs();
         ftpHomeDirFile.getParentFile().deleteOnExit();
@@ -99,6 +100,7 @@ public abstract class FTPTestSupport extends EmbeddedBrokerTestSupport {
         if (server != null) {
             server.stop();
         }
+        IOHelper.deleteFile(ftpHomeDirFile.getParentFile());
     }
 
     

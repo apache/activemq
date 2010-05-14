@@ -19,6 +19,7 @@ package org.apache.activemq.blob;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.InputStream;
+import java.net.MalformedURLException;
 import java.net.URL;
 
 import javax.jms.JMSException;
@@ -47,7 +48,7 @@ public class FTPBlobDownloadStrategyTest extends FTPTestSupport {
         wrt.close();
         
         ActiveMQBlobMessage message = new ActiveMQBlobMessage();
-        BlobDownloadStrategy strategy = new FTPBlobDownloadStrategy();
+        BlobDownloadStrategy strategy = new FTPBlobDownloadStrategy(new BlobTransferPolicy());
         InputStream stream;
         try {
             message.setURL(new URL(ftpUrl + "test.txt"));
@@ -61,15 +62,19 @@ public class FTPBlobDownloadStrategyTest extends FTPTestSupport {
             Assert.assertEquals("hello world", sb.toString().substring(0, "hello world".length()));
             Assert.assertEquals(FILE_SIZE, sb.toString().substring("hello world".length()).length());
 
+            assertTrue(uploadFile.exists());
+            strategy.deleteFile(message);
+            assertFalse(uploadFile.exists());
+            
         } catch (Exception e) {
             e.printStackTrace();
             Assert.assertTrue(false);
         }
     }
 
-    public void testWrongAuthentification() {
+    public void testWrongAuthentification() throws MalformedURLException {
         ActiveMQBlobMessage message = new ActiveMQBlobMessage();
-        BlobDownloadStrategy strategy = new FTPBlobDownloadStrategy();
+        BlobDownloadStrategy strategy = new FTPBlobDownloadStrategy(new BlobTransferPolicy());
         try {
             message.setURL(new URL("ftp://" + userNamePass + "_wrong:" + userNamePass + "@localhost:"	+ ftpPort + "/ftptest/"));
             strategy.getInputStream(message);
@@ -85,9 +90,9 @@ public class FTPBlobDownloadStrategyTest extends FTPTestSupport {
         Assert.assertTrue("Expect Exception", false);
     }
 
-    public void testWrongFTPPort() {
+    public void testWrongFTPPort() throws MalformedURLException {
         ActiveMQBlobMessage message = new ActiveMQBlobMessage();
-        BlobDownloadStrategy strategy = new FTPBlobDownloadStrategy();
+        BlobDownloadStrategy strategy = new FTPBlobDownloadStrategy(new BlobTransferPolicy());
         try {
             message.setURL(new URL("ftp://" + userNamePass + ":" + userNamePass + "@localhost:"	+ 422 + "/ftptest/"));
             strategy.getInputStream(message);

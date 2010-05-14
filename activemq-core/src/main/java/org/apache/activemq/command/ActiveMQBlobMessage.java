@@ -177,4 +177,8 @@ public class ActiveMQBlobMessage extends ActiveMQMessage implements BlobMessage 
             }
         }
     }
+    
+    public void deleteFile() throws IOException, JMSException {
+        blobDownloader.deleteFile(this);
+    }
 }

@@ -77,7 +77,7 @@ public class DefaultBlobUploadStrategyTest extends TestCase {
         TestCase.assertTrue(bytesRead == file.length());
 
         // 3. Delete
-        strategy.deleteFile(msg);
+        //strategy.deleteFile(msg);
     }
 
 }

@@ -18,6 +18,7 @@ package org.apache.activemq.blob;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.HttpURLConnection;
 import java.net.URL;
 import javax.jms.JMSException;
 import org.apache.activemq.command.ActiveMQBlobMessage;
@@ -26,7 +27,11 @@ import org.apache.activemq.command.ActiveMQBlobMessage;
  * A default implementation of {@link BlobDownloadStrategy} which uses the URL
  * class to download files or streams from a remote URL
  */
-public class DefaultBlobDownloadStrategy implements BlobDownloadStrategy{
+public class DefaultBlobDownloadStrategy extends DefaultStrategy implements BlobDownloadStrategy {
+
+    public DefaultBlobDownloadStrategy(BlobTransferPolicy transferPolicy) {
+        super(transferPolicy);
+    }
 
     public InputStream getInputStream(ActiveMQBlobMessage message) throws IOException, JMSException {
         URL value = message.getURL();
@@ -34,6 +39,20 @@ public class DefaultBlobDownloadStrategy implements BlobDownloadStrategy{
             return null;
         }
         return value.openStream();
+    }
+
+    public void deleteFile(ActiveMQBlobMessage message) throws IOException, JMSException {
+        URL url = createMessageURL(message);
+
+        HttpURLConnection connection = (HttpURLConnection)url.openConnection();
+        connection.setRequestMethod("DELETE");
+        connection.connect();
+        connection.disconnect();
+
+        if (!isSuccessfulCode(connection.getResponseCode())) {
+            throw new IOException("DELETE was not successful: " + connection.getResponseCode() + " "
+                                  + connection.getResponseMessage());
+        }
     }
 
 }

@@ -33,11 +33,10 @@ import org.apache.activemq.command.ActiveMQBlobMessage;
  * A default implementation of {@link BlobUploadStrategy} which uses the URL
  * class to upload files or streams to a remote URL
  */
-public class DefaultBlobUploadStrategy implements BlobUploadStrategy {
-    private BlobTransferPolicy transferPolicy;
+public class DefaultBlobUploadStrategy extends DefaultStrategy implements BlobUploadStrategy {
 
     public DefaultBlobUploadStrategy(BlobTransferPolicy transferPolicy) {
-        this.transferPolicy = transferPolicy;
+        super(transferPolicy);
     }
 
     public URL uploadFile(ActiveMQBlobMessage message, File file) throws JMSException, IOException {
@@ -45,7 +44,7 @@ public class DefaultBlobUploadStrategy implements BlobUploadStrategy {
     }
 
     public URL uploadStream(ActiveMQBlobMessage message, InputStream fis) throws JMSException, IOException {
-        URL url = createUploadURL(message);
+        URL url = createMessageURL(message);
 
         HttpURLConnection connection = (HttpURLConnection)url.openConnection();
         connection.setRequestMethod("PUT");
@@ -74,25 +73,5 @@ public class DefaultBlobUploadStrategy implements BlobUploadStrategy {
         return url;
     }
 
-    public void deleteFile(ActiveMQBlobMessage message) throws IOException, JMSException {
-        URL url = createUploadURL(message);
 
-        HttpURLConnection connection = (HttpURLConnection)url.openConnection();
-        connection.setRequestMethod("DELETE");
-        connection.connect();
-        connection.disconnect();
-
-        if (!isSuccessfulCode(connection.getResponseCode())) {
-            throw new IOException("DELETE was not successful: " + connection.getResponseCode() + " "
-                                  + connection.getResponseMessage());
-        }
-    }
-
-    private boolean isSuccessfulCode(int responseCode) {
-        return responseCode >= 200 && responseCode < 300; // 2xx => successful
-    }
-
-    protected URL createUploadURL(ActiveMQBlobMessage message) throws JMSException, MalformedURLException {
-        return new URL(transferPolicy.getUploadUrl() + message.getMessageId().toString());
-    }
 }

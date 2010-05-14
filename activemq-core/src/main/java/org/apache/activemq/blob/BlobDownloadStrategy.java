@@ -27,5 +27,7 @@ import org.apache.activemq.command.ActiveMQBlobMessage;
 public interface BlobDownloadStrategy {
     
     InputStream getInputStream(ActiveMQBlobMessage message) throws IOException, JMSException;
+    
+    void deleteFile(ActiveMQBlobMessage message) throws IOException, JMSException;
 
 }

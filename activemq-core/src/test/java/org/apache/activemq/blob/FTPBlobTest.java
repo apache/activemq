@@ -66,7 +66,11 @@ public class FTPBlobTest extends FTPTestSupport {
             i = input.read();
         }
         input.close();
+        File uploaded = new File(ftpHomeDirFile, msg.getJMSMessageID().toString().replace(":", "_")); 
         Assert.assertEquals(content, b.toString());
+        assertTrue(uploaded.exists());
+        ((ActiveMQBlobMessage)msg).deleteFile();
+        assertFalse(uploaded.exists());
     }
 
 }

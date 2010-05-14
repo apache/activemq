@@ -37,6 +37,10 @@ public class BlobDownloader {
         return getStrategy().getInputStream(message);
     }
     
+    public void deleteFile(ActiveMQBlobMessage message) throws IOException, JMSException {
+        getStrategy().deleteFile(message);
+    }
+    
     public BlobTransferPolicy getBlobTransferPolicy() {
         return blobTransferPolicy;
     }
