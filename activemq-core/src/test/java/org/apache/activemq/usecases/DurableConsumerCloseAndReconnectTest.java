@@ -39,7 +39,7 @@ public class DurableConsumerCloseAndReconnectTest extends TestSupport {
     protected static final long RECEIVE_TIMEOUT = 5000L;
     private static final Log LOG = LogFactory.getLog(DurableConsumerCloseAndReconnectTest.class);
 
-    private Connection connection;
+    protected Connection connection;
     private Session session;
     private MessageConsumer consumer;
     private MessageProducer producer;

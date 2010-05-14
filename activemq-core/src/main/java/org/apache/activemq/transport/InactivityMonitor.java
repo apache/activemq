@@ -66,6 +66,7 @@ public class InactivityMonitor extends TransportFilter {
     private long readCheckTime;
     private long writeCheckTime;
     private long initialDelayTime;
+    private boolean useKeepAlive = true;
     private boolean keepAliveResponseRequired;
     private WireFormat wireFormat;
 
@@ -129,7 +130,7 @@ public class InactivityMonitor extends TransportFilter {
             return;
         }
 
-        if (!commandSent.get()) {
+        if (!commandSent.get() && useKeepAlive) {
             if (LOG.isTraceEnabled()) {
                 LOG.trace("No message sent since last write check, sending a KeepAliveInfo");
             }
@@ -257,6 +258,10 @@ public class InactivityMonitor extends TransportFilter {
 
     public void setKeepAliveResponseRequired(boolean val) {
         keepAliveResponseRequired = val;
+    }
+    
+    public void setUseKeepAlive(boolean val) {
+        useKeepAlive = val;
     }
 
     public void setIgnoreRemoteWireFormat(boolean val) {
