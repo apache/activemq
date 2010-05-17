@@ -56,6 +56,11 @@ PIDDIR="."
 # Do not modify anything beyond this point
 #-----------------------------------------------------------------------------
 
+# load system-wide activemq configuration
+if [ -f "/etc/sysconfig/activemq" ] ; then
+  . /etc/sysconfig/activemq
+fi
+
 # Get the fully qualified path to the script
 case $0 in
     /*)
