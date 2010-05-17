@@ -21,10 +21,11 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CopyOnWriteArraySet;
-
+import java.util.concurrent.Future;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.ProducerBrokerExchange;
@@ -87,6 +88,7 @@ public class Topic extends BaseDestination implements Task {
         this.taskRunner = taskFactory.createTaskRunner(this, "Topic  " + destination.getPhysicalName());
     }
 
+    @Override
     public void initialize() throws Exception {
         super.initialize();
         if (store != null) {
@@ -402,6 +404,7 @@ public class Topic extends BaseDestination implements Task {
         final ConnectionContext context = producerExchange.getConnectionContext();
         message.setRegionDestination(this);
         message.getMessageId().setBrokerSequenceId(getDestinationSequenceId());
+        Future<Object> result = null;
 
         if (topicStore != null && message.isPersistent() && !canOptimizeOutPersistence()) {
             if (systemUsage.getStoreUsage().isFull(getStoreUsageHighWaterMark())) {
@@ -413,13 +416,18 @@ public class Topic extends BaseDestination implements Task {
 
                 waitForSpace(context, systemUsage.getStoreUsage(), getStoreUsageHighWaterMark(), logMessage);
             }
-            topicStore.addMessage(context, message);
+            if (context.isInTransaction()) {
+                topicStore.addMessage(context, message);
+            }else {
+                result = topicStore.asyncAddTopicMessage(context, message);
+            }      
         }
 
         message.incrementReferenceCount();
 
         if (context.isInTransaction()) {
             context.getTransaction().addSynchronization(new Synchronization() {
+                @Override
                 public void afterCommit() throws Exception {
                     // It could take while before we receive the commit
                     // operration.. by that time the message could have
@@ -445,6 +453,14 @@ public class Topic extends BaseDestination implements Task {
                 message.decrementReferenceCount();
             }
         }
+        if (result != null && !result.isCancelled()) {
+            try {
+            result.get();
+            }catch(CancellationException e) {
+              //ignore - the task has been cancelled if the message
+              // has already been deleted
+            }
+        }
 
     }
 
@@ -452,6 +468,7 @@ public class Topic extends BaseDestination implements Task {
         return durableSubcribers.size() == 0;
     }
 
+    @Override
     public String toString() {
         return "Topic: destination=" + destination.getPhysicalName() + ", subscriptions=" + consumers.size();
     }

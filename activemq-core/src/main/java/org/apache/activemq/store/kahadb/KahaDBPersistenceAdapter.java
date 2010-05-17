@@ -386,4 +386,35 @@ public class KahaDBPersistenceAdapter implements PersistenceAdapter, BrokerServi
     public void setDirectoryArchive(File directoryArchive) {
         letter.setDirectoryArchive(directoryArchive);
     }
+    
+    public boolean isConcurrentStoreAndDispatchQueues() {
+        return letter.isConcurrentStoreAndDispatchQueues();
+    }
+    
+    public void setConcurrentStoreAndDispatchQueues(boolean concurrentStoreAndDispatch) {
+        letter.setConcurrentStoreAndDispatchQueues(concurrentStoreAndDispatch);
+    }    
+    
+    public boolean isConcurrentStoreAndDispatchTopics() {
+        return letter.isConcurrentStoreAndDispatchTopics();
+    }
+    
+    public void setConcurrentStoreAndDispatchTopics(boolean concurrentStoreAndDispatch) {
+        letter.setConcurrentStoreAndDispatchTopics(concurrentStoreAndDispatch);
+    }    
+    
+    public int getMaxAsyncJobs() {
+        return letter.getMaxAsyncJobs();
+    }
+    /**
+     * @param maxAsyncJobs the maxAsyncJobs to set
+     */
+    public void setMaxAsyncJobs(int maxAsyncJobs) {
+       letter.setMaxAsyncJobs(maxAsyncJobs);
+    }   
+    
+    @Override
+    public String toString() {
+        return "KahaDBPersistenceAdapter";
+    }
 }

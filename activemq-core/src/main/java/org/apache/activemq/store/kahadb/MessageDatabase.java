@@ -57,6 +57,8 @@ import org.apache.activemq.store.kahadb.data.KahaTransactionInfo;
 import org.apache.activemq.store.kahadb.data.KahaXATransactionId;
 import org.apache.activemq.util.Callback;
 import org.apache.activemq.util.IOHelper;
+import org.apache.activemq.util.ServiceStopper;
+import org.apache.activemq.util.ServiceSupport;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.kahadb.index.BTreeIndex;
@@ -78,7 +80,7 @@ import org.apache.kahadb.util.SequenceSet;
 import org.apache.kahadb.util.StringMarshaller;
 import org.apache.kahadb.util.VariableMarshaller;
 
-public class MessageDatabase implements BrokerServiceAware {
+public class MessageDatabase extends ServiceSupport implements BrokerServiceAware {
 	
 	private BrokerService brokerService;
 
@@ -171,7 +173,7 @@ public class MessageDatabase implements BrokerServiceAware {
     protected AtomicBoolean opened = new AtomicBoolean();
     private LockFile lockFile;
     private boolean ignoreMissingJournalfiles = false;
-    private int indexCacheSize = 100;
+    private int indexCacheSize = 10000;
     private boolean checkForCorruptJournalFiles = false;
     private boolean checksumJournalFiles = false;
     
@@ -179,16 +181,14 @@ public class MessageDatabase implements BrokerServiceAware {
     public MessageDatabase() {
     }
 
-    public void start() throws Exception {
-        if (started.compareAndSet(false, true)) {
-        	load();
-        }
+    @Override
+    public void doStart() throws Exception {
+        load();
     }
 
-    public void stop() throws Exception {
-        if (started.compareAndSet(true, false)) {
-            unload();
-        }
+    @Override
+    public void doStop(ServiceStopper stopper) throws Exception {
+        unload();
     }
 
 	private void loadPageFile() throws IOException {

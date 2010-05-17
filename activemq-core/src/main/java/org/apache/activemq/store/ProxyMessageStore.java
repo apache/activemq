@@ -17,6 +17,7 @@
 package org.apache.activemq.store;
 
 import java.io.IOException;
+import java.util.concurrent.Future;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.Message;
@@ -99,5 +100,17 @@ public class ProxyMessageStore implements MessageStore {
 
     public boolean isEmpty() throws Exception {
        return delegate.isEmpty();
+    }
+
+    public Future<Object> asyncAddQueueMessage(ConnectionContext context, Message message) throws IOException {
+       return delegate.asyncAddQueueMessage(context, message);
+    }
+    
+    public Future<Object> asyncAddTopicMessage(ConnectionContext context, Message message) throws IOException {
+        return delegate.asyncAddTopicMessage(context, message);
+     }
+    
+    public void removeAsyncMessage(ConnectionContext context, MessageAck ack) throws IOException {
+        delegate.removeAsyncMessage(context, ack);       
     }
 }

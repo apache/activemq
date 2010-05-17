@@ -17,6 +17,7 @@
 package org.apache.activemq.store;
 
 import java.io.IOException;
+import java.util.concurrent.Future;
 import org.apache.activemq.Service;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQDestination;
@@ -40,6 +41,30 @@ public interface MessageStore extends Service {
      * @throws IOException
      */
     void addMessage(ConnectionContext context, Message message) throws IOException;
+    
+    /**
+     * Adds a message to the message store
+     * 
+     * @param context context
+     * @param message
+     * @param l 
+     * @return a Future to track when this is complete
+     * @throws IOException 
+     * @throws IOException
+     */
+    Future<Object> asyncAddQueueMessage(ConnectionContext context, Message message) throws IOException;
+    
+    /**
+     * Adds a message to the message store
+     * 
+     * @param context context
+     * @param message
+     * @param l 
+     * @return a Future to track when this is complete
+     * @throws IOException 
+     * @throws IOException
+     */
+    Future<Object> asyncAddTopicMessage(ConnectionContext context, Message message) throws IOException;
 
     /**
      * Looks up a message using either the String messageID or the
@@ -62,6 +87,8 @@ public interface MessageStore extends Service {
      * @throws IOException
      */
     void removeMessage(ConnectionContext context, MessageAck ack) throws IOException;
+    
+    void removeAsyncMessage(ConnectionContext context, MessageAck ack) throws IOException;
 
     /**
      * Removes all the messages from the message store.

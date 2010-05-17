@@ -29,18 +29,18 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.DelayQueue;
 import java.util.concurrent.Delayed;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
-
 import javax.jms.InvalidSelectorException;
 import javax.jms.JMSException;
 import javax.jms.ResourceAllocationException;
-
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.ProducerBrokerExchange;
@@ -105,13 +105,13 @@ public class Queue extends BaseDestination implements Task, UsageListener {
     private final Object dispatchMutex = new Object();
     private boolean useConsumerPriority = true;
     private boolean strictOrderDispatch = false;
-    private QueueDispatchSelector dispatchSelector;
+    private final QueueDispatchSelector dispatchSelector;
     private boolean optimizedDispatch = false;
     private boolean firstConsumer = false;
     private int timeBeforeDispatchStarts = 0;
     private int consumersBeforeDispatchStarts = 0;
     private CountDownLatch consumersBeforeStartsLatch;
-    private AtomicLong pendingWakeups = new AtomicLong();
+    private final AtomicLong pendingWakeups = new AtomicLong();
 
     private final Runnable sendMessagesWaitingForSpaceTask = new Runnable() {
         public void run() {
@@ -163,6 +163,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
     
     class FlowControlTimeoutTask extends Thread {
         
+        @Override
         public void run() {
             TimeoutMessage timeout;
             try {
@@ -220,6 +221,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
         }
     }
 
+    @Override
     public void initialize() throws Exception {
         if (this.messages == null) {
             if (destination.isTemporary() || broker == null || store == null) {
@@ -554,6 +556,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
 
     void doMessageSend(final ProducerBrokerExchange producerExchange, final Message message) throws IOException, Exception {
         final ConnectionContext context = producerExchange.getConnectionContext();
+        Future<Object> result = null;
         synchronized (sendLock) {
             if (store != null && message.isPersistent()) {
                 if (systemUsage.getStoreUsage().isFull(getStoreUsageHighWaterMark())) {
@@ -568,8 +571,11 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                     waitForSpace(context, systemUsage.getStoreUsage(), getStoreUsageHighWaterMark(), logMessage);
                 }
                 message.getMessageId().setBrokerSequenceId(getDestinationSequenceId());
-                store.addMessage(context, message);
-
+                if (context.isInTransaction()) {
+                    store.addMessage(context, message);
+                }else {
+                    result = store.asyncAddQueueMessage(context, message);
+                }
             }
         }
         if (context.isInTransaction()) {
@@ -578,6 +584,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
             // our memory. This increment is decremented once the tx finishes..
             message.incrementReferenceCount();
             context.getTransaction().addSynchronization(new Synchronization() {
+                @Override
                 public void afterCommit() throws Exception {
                     try {
                         // It could take while before we receive the commit
@@ -602,6 +609,14 @@ public class Queue extends BaseDestination implements Task, UsageListener {
             // Add to the pending list, this takes care of incrementing the
             // usage manager.
             sendMessage(context, message);
+        }
+        if (result != null && !result.isCancelled()) {
+            try {
+            result.get();
+            }catch(CancellationException e) {
+              //ignore - the task has been cancelled if the message
+              // has already been deleted
+            }
         }
     }
 
@@ -651,7 +666,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                 ack.setLastMessageId(node.getMessageId());
                 ack.setMessageCount(1);
             }
-            store.removeMessage(context, ack);
+            store.removeAsyncMessage(context, ack);
         }
     }
 
@@ -666,6 +681,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
         return msg;
     }
 
+    @Override
     public String toString() {
         int size = 0;
         synchronized (messages) {
@@ -725,6 +741,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
 
     // Properties
     // -------------------------------------------------------------------------
+    @Override
     public ActiveMQDestination getActiveMQDestination() {
         return destination;
     }
@@ -936,7 +953,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
             for (MessageReference ref : list) {
                 try {
                     QueueMessageReference r = (QueueMessageReference) ref;
-                    removeMessage(c, (IndirectMessageReference) r);
+                    removeMessage(c, r);
                 } catch (IOException e) {
                 }
             }
@@ -1273,6 +1290,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                 return messageId.equals(r.getMessageId().toString());
             }
 
+            @Override
             public String toString() {
                 return "MessageIdFilter: " + messageId;
             }
@@ -1326,12 +1344,14 @@ public class Queue extends BaseDestination implements Task, UsageListener {
             } finally {
                 context.getTransaction().addSynchronization(new Synchronization() {
 
+                    @Override
                     public void afterCommit() throws Exception {
                         getDestinationStatistics().getDequeues().increment();
                         dropMessage(reference);
                         wakeup();
                     }
 
+                    @Override
                     public void afterRollback() throws Exception {
                         reference.setAcked(false);
                     }
@@ -1634,6 +1654,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
      * org.apache.activemq.broker.region.BaseDestination#processDispatchNotification
      * (org.apache.activemq.command.MessageDispatchNotification)
      */
+    @Override
     public void processDispatchNotification(MessageDispatchNotification messageDispatchNotification) throws Exception {
         // do dispatch
         Subscription sub = getMatchingSubscription(messageDispatchNotification);
