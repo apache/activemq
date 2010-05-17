@@ -308,7 +308,7 @@ checkUser() {
                 RUN_AS_GROUP=`groups $RUN_AS_USER | awk '{print $3}' | tail -1`
                 if [ "X$RUN_AS_GROUP" = "X" ]
                 then
-                    RUN_AS_GROUP=RUN_AS_USER
+                    RUN_AS_GROUP=$RUN_AS_USER
                 fi
                 touch $LOCKFILE
                 chown $RUN_AS_USER:$RUN_AS_GROUP $LOCKFILE
