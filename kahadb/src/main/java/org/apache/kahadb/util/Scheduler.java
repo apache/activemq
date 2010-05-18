@@ -27,7 +27,7 @@ public final class Scheduler {
 
     
 
-	public static final Timer CLOCK_DAEMON = new Timer("ActiveMQ Scheduler", true);
+	public static final Timer CLOCK_DAEMON = new Timer("KahaDB Scheduler", true);
     private static final HashMap<Runnable, TimerTask> TIMER_TASKS = new HashMap<Runnable, TimerTask>();
 
     private Scheduler() {

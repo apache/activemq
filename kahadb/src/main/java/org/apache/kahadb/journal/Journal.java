@@ -20,18 +20,32 @@ import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.zip.Adler32;
 import java.util.zip.Checksum;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.kahadb.journal.DataFileAppender.WriteCommand;
 import org.apache.kahadb.journal.DataFileAppender.WriteKey;
-import org.apache.kahadb.util.*;
+import org.apache.kahadb.util.ByteSequence;
+import org.apache.kahadb.util.DataByteArrayInputStream;
+import org.apache.kahadb.util.DataByteArrayOutputStream;
+import org.apache.kahadb.util.LinkedNodeList;
+import org.apache.kahadb.util.SchedulerTimerTask;
+import org.apache.kahadb.util.Sequence;
 
 /**
  * Manages DataFiles
@@ -103,7 +117,7 @@ public class Journal {
 	private ReplicationTarget replicationTarget;
     protected boolean checksum;
     protected boolean checkForCorruptionOnStartup;
-
+    private Timer timer = new Timer("KahaDB Scheduler", true);
    
 
     public synchronized void start() throws IOException {
@@ -165,7 +179,9 @@ public class Journal {
                 cleanup();
             }
         };
-        Scheduler.executePeriodically(cleanupTask, DEFAULT_CLEANUP_INTERVAL);
+        this.timer = new Timer("KahaDB Scheduler", true);
+        TimerTask task = new SchedulerTimerTask(cleanupTask);
+        this.timer.scheduleAtFixedRate(task, DEFAULT_CLEANUP_INTERVAL,DEFAULT_CLEANUP_INTERVAL);
         long end = System.currentTimeMillis();
         LOG.trace("Startup took: "+(end-start)+" ms");
     }
@@ -345,7 +361,9 @@ public class Journal {
         if (!started) {
             return;
         }
-        Scheduler.cancel(cleanupTask);
+        if (this.timer != null) {
+            this.timer.cancel();
+        }
         accessorPool.close();
         appender.close();
         fileMap.clear();
@@ -429,6 +447,7 @@ public class Journal {
         this.maxFileLength = maxFileLength;
     }
 
+    @Override
     public String toString() {
         return directory.toString();
     }
