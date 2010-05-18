@@ -17,7 +17,6 @@
 package org.apache.activemq.bugs;
 
 import java.util.concurrent.CountDownLatch;
-
 import javax.jms.Connection;
 import javax.jms.JMSException;
 import javax.jms.Message;
@@ -25,9 +24,7 @@ import javax.jms.MessageConsumer;
 import javax.jms.MessageListener;
 import javax.jms.ObjectMessage;
 import javax.jms.Session;
-
 import junit.framework.TestCase;
-
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.kaha.impl.async.AsyncDataManager;
@@ -46,7 +43,7 @@ public class DataFileNotDeletedTest extends TestCase {
     private final CountDownLatch latch = new CountDownLatch(max_messages);
     private static int max_messages = 600;
     private static int messageCounter;
-    private String destinationName = getName()+"_Queue";
+    private final String destinationName = getName()+"_Queue";
     private BrokerService broker;
     private Connection receiverConnection;
     private Connection producerConnection;
@@ -55,6 +52,7 @@ public class DataFileNotDeletedTest extends TestCase {
     AMQPersistenceAdapter persistentAdapter;
     protected static final String payload = new String(new byte[512]);
 
+    @Override
     public void setUp() throws Exception {
         messageCounter = 0;
         startBroker();
@@ -64,6 +62,7 @@ public class DataFileNotDeletedTest extends TestCase {
         producerConnection.start();
     }
     
+    @Override
     public void tearDown() throws Exception {
         receiverConnection.close();
         producerConnection.close();
@@ -122,7 +121,7 @@ public class DataFileNotDeletedTest extends TestCase {
         broker.setPersistent(true);
         broker.setUseJmx(true);
         broker.addConnector("tcp://localhost:61616").setName("Default");
-           
+        broker.setPersistenceFactory(new AMQPersistenceAdapterFactory());
         AMQPersistenceAdapterFactory factory = (AMQPersistenceAdapterFactory) broker.getPersistenceFactory();
         // ensure there are a bunch of data files but multiple entries in each
         factory.setMaxFileLength(1024 * 20);
