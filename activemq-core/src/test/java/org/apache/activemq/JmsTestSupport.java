@@ -47,6 +47,7 @@ public class JmsTestSupport extends CombinationTestSupport {
     static final private AtomicLong TEST_COUNTER = new AtomicLong();
     public String userName;
     public String password;
+    public String messageTextPrefix = "";
 
     protected ConnectionFactory factory;
     protected ActiveMQConnection connection;
@@ -96,7 +97,7 @@ public class JmsTestSupport extends CombinationTestSupport {
     protected void sendMessages(Session session, Destination destination, int count) throws JMSException {
         MessageProducer producer = session.createProducer(destination);
         for (int i = 0; i < count; i++) {
-            producer.send(session.createTextMessage("" + i));
+            producer.send(session.createTextMessage(messageTextPrefix  + i));
         }
         producer.close();
     }

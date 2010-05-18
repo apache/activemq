@@ -83,7 +83,9 @@ public class StompNIOTransport extends TcpTransport {
         });
 
         inputBuffer = ByteBuffer.allocate(8 * 1024);
-        this.dataOut = new DataOutputStream(new NIOOutputStream(channel, 8 * 1024));
+        NIOOutputStream outPutStream = new NIOOutputStream(channel, 8 * 1024);
+        this.dataOut = new DataOutputStream(outPutStream);
+        this.buffOut = outPutStream;
     }
     
     private void serviceRead() {

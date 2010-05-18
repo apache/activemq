@@ -23,13 +23,15 @@ import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.nio.channels.WritableByteChannel;
 
+import org.apache.activemq.transport.tcp.TimeStampStream;
+
 /**
  * An optimized buffered outputstream for Tcp
  * 
  * @version $Revision: 1.1.1.1 $
  */
 
-public class NIOOutputStream extends OutputStream {
+public class NIOOutputStream extends OutputStream implements TimeStampStream {
 
     private static final int BUFFER_SIZE = 8192;
 
@@ -39,6 +41,7 @@ public class NIOOutputStream extends OutputStream {
 
     private int count;
     private boolean closed;
+    private volatile long writeTimestamp = -1;//concurrent reads of this value
 
     /**
      * Constructor
@@ -149,31 +152,51 @@ public class NIOOutputStream extends OutputStream {
         int remaining = data.remaining();
         int lastRemaining = remaining - 1;
         long delay = 1;
-        while (remaining > 0) {
+        try {
+            writeTimestamp = System.currentTimeMillis();
+            while (remaining > 0) {
 
-            // We may need to do a little bit of sleeping to avoid a busy loop.
-            // Slow down if no data was written out..
-            if (remaining == lastRemaining) {
-                try {
-                    // Use exponential rollback to increase sleep time.
-                    Thread.sleep(delay);
-                    delay *= 2;
-                    if (delay > 1000) {
-                        delay = 1000;
+                // We may need to do a little bit of sleeping to avoid a busy loop.
+                // Slow down if no data was written out..
+                if (remaining == lastRemaining) {
+                    try {
+                        // Use exponential rollback to increase sleep time.
+                        Thread.sleep(delay);
+                        delay *= 2;
+                        if (delay > 1000) {
+                            delay = 1000;
+                        }
+                    } catch (InterruptedException e) {
+                        throw new InterruptedIOException();
                     }
-                } catch (InterruptedException e) {
-                    throw new InterruptedIOException();
+                } else {
+                    delay = 1;
                 }
-            } else {
-                delay = 1;
-            }
-            lastRemaining = remaining;
+                lastRemaining = remaining;
 
-            // Since the write is non-blocking, all the data may not have been
-            // written.
-            out.write(data);
-            remaining = data.remaining();
+                // Since the write is non-blocking, all the data may not have been
+                // written.
+                out.write(data);
+                remaining = data.remaining();
+            }
+        } finally {
+            writeTimestamp = -1;
         }
+    }
+    
+    
+    /* (non-Javadoc)
+     * @see org.apache.activemq.transport.tcp.TimeStampStream#isWriting()
+     */
+    public boolean isWriting() {
+        return writeTimestamp > 0;
+    }
+    
+    /* (non-Javadoc)
+     * @see org.apache.activemq.transport.tcp.TimeStampStream#getWriteTimestamp()
+     */
+    public long getWriteTimestamp() {
+        return writeTimestamp;
     }
 
 }

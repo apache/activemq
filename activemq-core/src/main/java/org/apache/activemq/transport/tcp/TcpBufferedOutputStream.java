@@ -27,7 +27,7 @@ import java.io.OutputStream;
  * @version $Revision: 1.1.1.1 $
  */
 
-public class TcpBufferedOutputStream extends FilterOutputStream {
+public class TcpBufferedOutputStream extends FilterOutputStream implements TimeStampStream {
     private static final int BUFFER_SIZE = 8192;
     private byte[] buffer;
     private int bufferlen;
@@ -129,10 +129,16 @@ public class TcpBufferedOutputStream extends FilterOutputStream {
         super.close();
     }
 
+    /* (non-Javadoc)
+     * @see org.apache.activemq.transport.tcp.TimeStampStream#isWriting()
+     */
     public boolean isWriting() {
         return writeTimestamp > 0;
     }
     
+    /* (non-Javadoc)
+     * @see org.apache.activemq.transport.tcp.TimeStampStream#getWriteTimestamp()
+     */
     public long getWriteTimestamp() {
     	return writeTimestamp;
     }

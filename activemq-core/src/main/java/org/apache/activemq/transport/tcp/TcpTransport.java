@@ -67,7 +67,7 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
     protected Socket socket;
     protected DataOutputStream dataOut;
     protected DataInputStream dataIn;
-    protected TcpBufferedOutputStream buffOut = null;
+    protected TimeStampStream buffOut = null;
     /**
      * The Traffic Class to be set on the socket.
      */
@@ -576,8 +576,9 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
             }
         };
         this.dataIn = new DataInputStream(buffIn);
-        buffOut = new TcpBufferedOutputStream(socket.getOutputStream(), ioBufferSize);
-        this.dataOut = new DataOutputStream(buffOut);
+        TcpBufferedOutputStream outputStream = new TcpBufferedOutputStream(socket.getOutputStream(), ioBufferSize);
+        this.dataOut = new DataOutputStream(outputStream);
+        this.buffOut = outputStream;
     }
 
     protected void closeStreams() throws IOException {
@@ -604,7 +605,7 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
     public <T> T narrow(Class<T> target) {
         if (target == Socket.class) {
             return target.cast(socket);
-        } else if ( target == TcpBufferedOutputStream.class) {
+        } else if ( target == TimeStampStream.class) {
             return target.cast(buffOut);
         }
         return super.narrow(target);

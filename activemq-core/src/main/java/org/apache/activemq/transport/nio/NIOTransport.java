@@ -83,8 +83,9 @@ public class NIOTransport extends TcpTransport {
         currentBuffer = inputBuffer;
         nextFrameSize = -1;
         currentBuffer.limit(4);
-        this.dataOut = new DataOutputStream(new NIOOutputStream(channel, 16 * 1024));
-
+        NIOOutputStream outPutStream = new NIOOutputStream(channel, 16 * 1024);
+        this.dataOut = new DataOutputStream(outPutStream);
+        this.buffOut = outPutStream;
     }
 
     private void serviceRead() {

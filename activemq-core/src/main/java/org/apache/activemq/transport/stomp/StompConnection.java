@@ -82,19 +82,26 @@ public class StompConnection {
                 throw new IOException("socket closed.");
             } else if (c == 0) {
                 c = is.read();
-                if (c != '\n') {
-                    throw new IOException("Expecting stomp frame to terminate with \0\n");
+                if (c == '\n') {
+                    // end of frame
+                    return stringFromBuffer(inputBuffer);
+                } else {
+                    inputBuffer.write(0);
+                    inputBuffer.write(c);
                 }
-                byte[] ba = inputBuffer.toByteArray();
-                inputBuffer.reset();
-                return new String(ba, "UTF-8");
             } else {
                 inputBuffer.write(c);
             }
         }
     }
 
-	public Socket getStompSocket() {
+	private String stringFromBuffer(ByteArrayOutputStream inputBuffer) throws Exception {
+	    byte[] ba = inputBuffer.toByteArray();
+        inputBuffer.reset();
+        return new String(ba, "UTF-8");
+    }
+
+    public Socket getStompSocket() {
 		return stompSocket;
 	}
 

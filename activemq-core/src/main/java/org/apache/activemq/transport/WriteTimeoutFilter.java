@@ -26,6 +26,7 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.activemq.transport.tcp.TcpBufferedOutputStream;
+import org.apache.activemq.transport.tcp.TimeStampStream;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -97,8 +98,8 @@ public class WriteTimeoutFilter extends TransportFilter {
     }
 
     
-    protected TcpBufferedOutputStream getWriter() {
-        return next.narrow(TcpBufferedOutputStream.class);
+    protected TimeStampStream getWriter() {
+        return next.narrow(TimeStampStream.class);
     }
     
     protected Socket getSocket() {

@@ -20,6 +20,7 @@ package org.apache.activemq.util;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
@@ -38,10 +39,11 @@ public class SocketProxy {
 
     private static final transient Log LOG = LogFactory.getLog(SocketProxy.class);
 
-    public static final int ACCEPT_TIMEOUT_MILLIS = 1000;
+    public static final int ACCEPT_TIMEOUT_MILLIS = 100;
 
     private URI proxyUrl;
     private URI target;
+
     private Acceptor acceptor;
     private ServerSocket serverSocket;
 
@@ -49,6 +51,11 @@ public class SocketProxy {
 
     private int listenPort = 0;
 
+    private int receiveBufferSize = -1;
+
+    public SocketProxy() throws Exception {    
+    }
+    
     public SocketProxy(URI uri) throws Exception {
         this(0, uri);
     }
@@ -59,12 +66,24 @@ public class SocketProxy {
         open();
     }
 
-    protected void open() throws Exception {
+    public void setReceiveBufferSize(int receiveBufferSize) {
+        this.receiveBufferSize = receiveBufferSize;
+    }
+    
+    public void setTarget(URI tcpBrokerUri) {
+        target = tcpBrokerUri;
+    }
+
+    public void open() throws Exception {
+        serverSocket = new ServerSocket();
+        if (receiveBufferSize > 0) {
+            serverSocket.setReceiveBufferSize(receiveBufferSize);
+        }
         if (proxyUrl == null) {
-            serverSocket = new ServerSocket(listenPort);
+            serverSocket.bind(new InetSocketAddress(listenPort));
             proxyUrl = urlFromSocket(target, serverSocket);
         } else {
-            serverSocket = new ServerSocket(proxyUrl.getPort());
+            serverSocket.bind(new InetSocketAddress(proxyUrl.getPort()));
         }
         acceptor = new Acceptor(serverSocket, target);
         new Thread(null, acceptor, "SocketProxy-Acceptor-" + serverSocket.getLocalPort()).start();
@@ -151,9 +170,13 @@ public class SocketProxy {
 
         public Connection(Socket socket, URI target) throws Exception {
             receiveSocket = socket;
-            sendSocket = new Socket(target.getHost(), target.getPort());
+            sendSocket = new Socket();
+            if (receiveBufferSize > 0) {
+                sendSocket.setReceiveBufferSize(receiveBufferSize);
+            }
+            sendSocket.connect(new InetSocketAddress(target.getHost(), target.getPort()));
             linkWithThreads(receiveSocket, sendSocket);
-            LOG.info("proxy connection " + sendSocket);
+            LOG.info("proxy connection " + sendSocket + ", receiveBufferSize=" + sendSocket.getReceiveBufferSize());
         }
 
         public void goOn() {
@@ -210,6 +233,7 @@ public class SocketProxy {
                     while (true) {
                         int len = in.read(buf);
                         if (len == -1) {
+                            LOG.debug("read eof from:" + src);
                             break;
                         }
                         pause.get().await();
@@ -259,7 +283,12 @@ public class SocketProxy {
                     pause.get().await();
                     try {
                         Socket source = socket.accept();
-                        LOG.info("accepted " + source);
+                        LOG.info("accepted " + source + ", receiveBufferSize:" + source.getReceiveBufferSize());
+                        pause.get().await();
+                        if (receiveBufferSize > 0) {
+                            source.setReceiveBufferSize(receiveBufferSize);
+                        }
+                        LOG.info("accepted " + source + ", receiveBufferSize:" + source.getReceiveBufferSize());
                         synchronized(connections) {
                             connections.add(new Connection(source, target));
                         }
