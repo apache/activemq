@@ -144,6 +144,36 @@ public class SimpleNetworkTest extends TestCase {
         }
     }
 
+    public void testDurableStoreAndForwardReconnect() throws Exception {
+        // create a local durable consumer
+        MessageConsumer localConsumer = localSession.createDurableSubscriber(included, consumerName);
+        Thread.sleep(1000);
+        // now close everything down and restart
+        doTearDown();
+        doSetUp();
+        // send messages
+        MessageProducer producer = localSession.createProducer(included);
+        for (int i = 0; i < MESSAGE_COUNT; i++) {
+            Message test = localSession.createTextMessage("test-" + i);
+            producer.send(test);
+        }
+        Thread.sleep(1000);
+        // consume some messages locally
+        localConsumer = localSession.createDurableSubscriber(included, consumerName);
+        for (int i = 0; i < MESSAGE_COUNT / 2; i++) {
+            assertNotNull("message count: " + i, localConsumer.receive(2500));
+        }
+        Thread.sleep(1000);
+        // close everything down and restart
+        doTearDown();
+        doSetUp();
+        // consume the rest remotely
+        MessageConsumer remoteConsumer = remoteSession.createDurableSubscriber(included, consumerName);
+        for (int i = 0; i < MESSAGE_COUNT / 2; i++) {
+            assertNotNull("message count: " + i, remoteConsumer.receive(2500));
+        }
+    }    
+    
     protected void setUp() throws Exception {
         super.setUp();
         doSetUp();
