@@ -983,7 +983,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
                             this.topicStore.doAcknowledge(context, key, this.message.getMessageId());
                         }
                     }
-                    removeQueueTask(this.message.getMessageId());
+                    removeTopicTask(this.message.getMessageId());
                     this.future.complete();
                 }
             } catch (Exception e) {
