@@ -28,7 +28,7 @@ import org.apache.activemq.command.MessageId;
 import org.apache.activemq.usage.MemoryUsage;
 
 abstract public class AbstractMessageStore implements MessageStore {
-    static final FutureTask<Object> FUTURE;
+    public static final FutureTask<Object> FUTURE;
     protected final ActiveMQDestination destination;
 
     public AbstractMessageStore(ActiveMQDestination destination) {

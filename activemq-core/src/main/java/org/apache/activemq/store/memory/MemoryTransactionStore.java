@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Future;
 
 import javax.transaction.xa.XAException;
 
@@ -28,6 +29,7 @@ import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.command.XATransactionId;
+import org.apache.activemq.store.AbstractMessageStore;
 import org.apache.activemq.store.MessageStore;
 import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.ProxyMessageStore;
@@ -132,8 +134,17 @@ public class MemoryTransactionStore implements TransactionStore {
                 MemoryTransactionStore.this.addMessage(getDelegate(), send);
             }
 
+            public Future<Object> asyncAddQueueMessage(ConnectionContext context, Message message) throws IOException {
+                MemoryTransactionStore.this.addMessage(getDelegate(), message);
+                return AbstractMessageStore.FUTURE;
+             }
+             
             public void removeMessage(ConnectionContext context, final MessageAck ack) throws IOException {
                 MemoryTransactionStore.this.removeMessage(getDelegate(), ack);
+            }
+             
+            public void removeAsyncMessage(ConnectionContext context, MessageAck ack) throws IOException {
+                MemoryTransactionStore.this.removeMessage(getDelegate(), ack);       
             }
         };
     }
@@ -144,8 +155,17 @@ public class MemoryTransactionStore implements TransactionStore {
                 MemoryTransactionStore.this.addMessage(getDelegate(), send);
             }
 
+            public Future<Object> asyncAddTopicMessage(ConnectionContext context, Message message) throws IOException {
+                MemoryTransactionStore.this.addMessage(getDelegate(), message);
+                return AbstractMessageStore.FUTURE;
+             }
+
             public void removeMessage(ConnectionContext context, final MessageAck ack) throws IOException {
                 MemoryTransactionStore.this.removeMessage(getDelegate(), ack);
+            }
+            
+            public void removeAsyncMessage(ConnectionContext context, MessageAck ack) throws IOException {
+                MemoryTransactionStore.this.removeMessage(getDelegate(), ack);       
             }
         };
     }
