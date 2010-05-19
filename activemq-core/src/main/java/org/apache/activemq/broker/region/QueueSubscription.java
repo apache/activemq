@@ -103,6 +103,7 @@ public class QueueSubscription extends PrefetchSubscription implements LockOwner
     /**
      */
     public void destroy() {
+        setSlowConsumer(false);
     }
 
    

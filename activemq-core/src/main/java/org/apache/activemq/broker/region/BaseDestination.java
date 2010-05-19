@@ -26,6 +26,7 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.ProducerBrokerExchange;
 import org.apache.activemq.broker.region.policy.DeadLetterStrategy;
+import org.apache.activemq.broker.region.policy.SlowConsumerStrategy;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.command.Message;
@@ -81,6 +82,7 @@ public abstract class BaseDestination implements Destination {
     private int maxExpirePageSize = MAX_BROWSE_PAGE_SIZE;
     protected int cursorMemoryHighWaterMark = 70;
     protected int storeUsageHighWaterMark = 100;
+    private SlowConsumerStrategy slowConsumerStrategy;
 
     /**
      * @param broker
@@ -449,6 +451,9 @@ public abstract class BaseDestination implements Destination {
         if (advisoryForSlowConsumers) {
             broker.slowConsumer(context, this, subs);
         }
+        if (slowConsumerStrategy != null) {
+            slowConsumerStrategy.slowConsumer(context, subs);
+        }
     }
 
     /**
@@ -573,5 +578,9 @@ public abstract class BaseDestination implements Destination {
     }
 
     protected abstract Log getLog();
+
+    public void setSlowConsumerStrategy(SlowConsumerStrategy slowConsumerStrategy) {
+        this.slowConsumerStrategy = slowConsumerStrategy;
+    }
     
 }

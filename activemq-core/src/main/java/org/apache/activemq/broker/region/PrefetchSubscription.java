@@ -70,8 +70,6 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
     private final Object pendingLock = new Object();
     private final Object dispatchLock = new Object();
     protected ActiveMQMessageAudit audit = new ActiveMQMessageAudit();
-    private boolean slowConsumer;
-
     private CountDownLatch okForAckAsDispatchDone = new CountDownLatch(1);
     
     public PrefetchSubscription(Broker broker, SystemUsage usageManager, ConnectionContext context, ConsumerInfo info, PendingMessageCursor cursor) throws InvalidSelectorException {
@@ -565,7 +563,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                 try {
                     int numberToDispatch = countBeforeFull();
                     if (numberToDispatch > 0) {
-                        slowConsumer=false;
+                        setSlowConsumer(false);
                         pending.setMaxBatchSize(numberToDispatch);
                         int count = 0;
                         pending.reset();
@@ -598,15 +596,10 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                                 }
                             }
                         }
-                    }else {
-                        if (!slowConsumer) {
-                            slowConsumer=true;
-                            ConnectionContext c = new ConnectionContext();
-                            c.setBroker(context.getBroker());
-                            for (Destination dest :destinations) {
-                                dest.slowConsumer(c,this);
-                            }
-                            
+                    } else if (!isSlowConsumer()) {
+                        setSlowConsumer(true);
+                        for (Destination dest :destinations) {
+                            dest.slowConsumer(context, this);
                         }
                     }
                 } finally {

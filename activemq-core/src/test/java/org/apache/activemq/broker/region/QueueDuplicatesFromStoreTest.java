@@ -291,8 +291,12 @@ public class QueueDuplicatesFromStoreTest extends TestCase {
 			}
 
 			public void setCursorMemoryHighWaterMark(
-					int cursorMemoryHighWaterMark) {				
+			        int cursorMemoryHighWaterMark) {				
 			}
+
+            public boolean isSlowConsumer() {
+                return false;
+            }
         };
 
         queue.addSubscription(contextNotInTx, subscription);

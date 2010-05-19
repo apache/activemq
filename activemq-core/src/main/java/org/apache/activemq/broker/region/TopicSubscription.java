@@ -62,8 +62,6 @@ public class TopicSubscription extends AbstractSubscription {
     private final AtomicLong enqueueCounter = new AtomicLong(0);
     private final AtomicLong dequeueCounter = new AtomicLong(0);
     private int memoryUsageHighWaterMark = 95;
-    private boolean slowConsumer;
-    
     // allow duplicate suppression in a ring network of brokers
     protected int maxProducersToAudit = 1024;
     protected int maxAuditDepth = 1000;
@@ -99,11 +97,11 @@ public class TopicSubscription extends AbstractSubscription {
             // if maximumPendingMessages is set we will only discard messages which
             // have not been dispatched (i.e. we allow the prefetch buffer to be filled)
             dispatch(node);
-            slowConsumer=false;
+            setSlowConsumer(false);
         } else {
             //we are slow
-            if(!slowConsumer) {
-                slowConsumer=true;
+            if(!isSlowConsumer()) {
+                setSlowConsumer(true);
                 for (Destination dest: destinations) {
                     dest.slowConsumer(getContext(), this);
                 }
@@ -540,6 +538,7 @@ public class TopicSubscription extends AbstractSubscription {
                 LOG.warn("Failed to destroy cursor", e);
             }
         }
+        setSlowConsumer(false);
     }
 
     public int getPrefetchSize() {

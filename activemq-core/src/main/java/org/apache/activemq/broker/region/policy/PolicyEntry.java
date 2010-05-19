@@ -86,6 +86,7 @@ public class PolicyEntry extends DestinationMapEntry {
     private boolean usePrefetchExtension = true;
     private int cursorMemoryHighWaterMark = 70;
     private int storeUsageHighWaterMark = 100;
+    private SlowConsumerStrategy slowConsumerStrategy;
     
    
     public void configure(Broker broker,Queue queue) {
@@ -147,6 +148,7 @@ public class PolicyEntry extends DestinationMapEntry {
         destination.setMaxExpirePageSize(getMaxExpirePageSize());
         destination.setCursorMemoryHighWaterMark(getCursorMemoryHighWaterMark());
         destination.setStoreUsageHighWaterMark(getStoreUsageHighWaterMark());
+        destination.setSlowConsumerStrategy(getSlowConsumerStrategy());
     }
 
     public void configure(Broker broker, SystemUsage memoryManager, TopicSubscription subscription) {
@@ -722,6 +724,14 @@ public class PolicyEntry extends DestinationMapEntry {
 
     public int getStoreUsageHighWaterMark() {
         return storeUsageHighWaterMark;
+    }
+
+    public void setSlowConsumerStrategy(SlowConsumerStrategy slowConsumerStrategy) {
+        this.slowConsumerStrategy = slowConsumerStrategy;
+    }
+    
+    public SlowConsumerStrategy getSlowConsumerStrategy() {
+        return this.slowConsumerStrategy;
     }
 
 }

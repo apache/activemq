@@ -48,6 +48,7 @@ public abstract class AbstractSubscription implements Subscription {
     private BooleanExpression selectorExpression;
     private ObjectName objectName;
     private int cursorMemoryHighWaterMark = 70;
+    private boolean slowConsumer;
 
 
     public AbstractSubscription(Broker broker,ConnectionContext context, ConsumerInfo info) throws InvalidSelectorException {
@@ -161,6 +162,14 @@ public abstract class AbstractSubscription implements Subscription {
 
     public boolean isRecoveryRequired() {
         return true;
+    }
+    
+    public boolean isSlowConsumer() {
+        return slowConsumer;
+    }
+    
+    public void setSlowConsumer(boolean val) {
+        slowConsumer = val;
     }
 
     public boolean addRecoveredMessage(ConnectionContext context, MessageReference message) throws Exception {

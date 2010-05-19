@@ -262,6 +262,7 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
             }
             dispatched.clear();
         }
+        setSlowConsumer(false);
     }
 
     /**

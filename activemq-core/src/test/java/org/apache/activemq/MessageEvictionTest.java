@@ -52,7 +52,6 @@ import org.apache.activemq.broker.region.policy.VMPendingSubscriberMessageStorag
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ActiveMQTopic;
-import org.apache.activemq.util.ThreadTracker;
 import org.apache.activemq.util.Wait;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -82,7 +81,6 @@ public class MessageEvictionTest {
     
     @After
     public void tearDown() throws Exception {
-        ThreadTracker.result();
         connection.stop();
         broker.stop();
     }
@@ -155,6 +153,7 @@ public class MessageEvictionTest {
         
         ExecutorService executor = Executors.newCachedThreadPool();
         final CountDownLatch doAck = new CountDownLatch(1);
+        final CountDownLatch ackDone = new CountDownLatch(1);
         final CountDownLatch consumerRegistered = new CountDownLatch(1);
         executor.execute(new Runnable() {
             public void run() {
@@ -167,15 +166,18 @@ public class MessageEvictionTest {
                                 doAck.await(60, TimeUnit.SECONDS);
                                 LOG.info("acking: " + message.getJMSMessageID());
                                 message.acknowledge();
+                                ackDone.countDown();
                             } catch (Exception e) {
-                                e.printStackTrace();
-                                consumerRegistered.countDown();
+                                e.printStackTrace();   
                                 fail(e.toString());
+                            } finally {
+                                consumerRegistered.countDown();
+                                ackDone.countDown();
                             }
                         }           
                     });
                     consumerRegistered.countDown();
-                    doAck.await(60, TimeUnit.SECONDS);
+                    ackDone.await(60, TimeUnit.SECONDS);
                     consumer.close();
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -256,7 +258,8 @@ public class MessageEvictionTest {
 
         // to keep the limit in check and up to date rather than just the first few, evict some
         OldestMessageEvictionStrategy messageEvictionStrategy = new OldestMessageEvictionStrategy();
-        messageEvictionStrategy.setEvictExpiredMessagesHighWatermark(100);
+        // whether to check expiry before eviction, default limit 1000 is fine as no ttl set in this test
+        //messageEvictionStrategy.setEvictExpiredMessagesHighWatermark(1000);
         entry.setMessageEvictionStrategy(messageEvictionStrategy);
         
         // let evicted messaged disappear

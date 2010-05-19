@@ -61,7 +61,7 @@ public class JmsMultipleClientsTestSupport extends CombinationTestSupport {
 
     protected boolean useConcurrentSend = true;
     protected boolean durable;
-    protected boolean topic;
+    public boolean topic;
     protected boolean persistent;
 
     protected BrokerService broker;
@@ -115,6 +115,7 @@ public class JmsMultipleClientsTestSupport extends CombinationTestSupport {
     }
 
     protected void sendMessages(Connection connection, Destination destination, int count) throws Exception {
+        connections.add(connection);
         connection.start();
 
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -195,6 +196,9 @@ public class JmsMultipleClientsTestSupport extends CombinationTestSupport {
 
     protected ActiveMQDestination createDestination() throws JMSException {
         String name = "." + getClass().getName() + "." + getName();
+        // ensure not inadvertently composite because of combos
+        name = name.replace(' ','_');
+        name = name.replace(',','&');
         if (topic) {
             destination = new ActiveMQTopic("Topic" + name);
             return (ActiveMQDestination)destination;

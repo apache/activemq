@@ -227,4 +227,6 @@ public interface Subscription extends SubscriptionRecovery {
     public int getCursorMemoryHighWaterMark();
 
 	public void setCursorMemoryHighWaterMark(int cursorMemoryHighWaterMark);
+
+    boolean isSlowConsumer();
 }
