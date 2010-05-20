@@ -23,10 +23,8 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-
 import javax.jms.InvalidSelectorException;
 import javax.jms.JMSException;
-
 import org.apache.activemq.ActiveMQMessageAudit;
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
@@ -55,7 +53,7 @@ import org.apache.commons.logging.LogFactory;
 public abstract class PrefetchSubscription extends AbstractSubscription {
 
     private static final Log LOG = LogFactory.getLog(PrefetchSubscription.class);
-    protected static final Scheduler scheduler = Scheduler.getInstance();
+    protected final Scheduler scheduler;
     
     protected PendingMessageCursor pending;
     protected final List<MessageReference> dispatched = new CopyOnWriteArrayList<MessageReference>();
@@ -70,12 +68,13 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
     private final Object pendingLock = new Object();
     private final Object dispatchLock = new Object();
     protected ActiveMQMessageAudit audit = new ActiveMQMessageAudit();
-    private CountDownLatch okForAckAsDispatchDone = new CountDownLatch(1);
+    private final CountDownLatch okForAckAsDispatchDone = new CountDownLatch(1);
     
     public PrefetchSubscription(Broker broker, SystemUsage usageManager, ConnectionContext context, ConsumerInfo info, PendingMessageCursor cursor) throws InvalidSelectorException {
         super(broker,context, info);
         this.usageManager=usageManager;
         pending = cursor;
+        this.scheduler = broker.getScheduler();
     }
 
     public PrefetchSubscription(Broker broker,SystemUsage usageManager, ConnectionContext context, ConsumerInfo info) throws InvalidSelectorException {
@@ -230,6 +229,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                             context.getTransaction().addSynchronization(
                                     new Synchronization() {
 
+                                        @Override
                                         public void afterCommit()
                                                 throws Exception {
                                             synchronized(dispatchLock) {
@@ -239,6 +239,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                                             }
                                         }
 
+                                        @Override
                                         public void afterRollback() throws Exception {
                                             synchronized(dispatchLock) {
                                                 if (isSlave()) {
@@ -486,6 +487,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
         return (dispatched.size() - prefetchExtension) >= (info.getPrefetchSize() * .9);
     }
 
+    @Override
     public int countBeforeFull() {
         return info.getPrefetchSize() + prefetchExtension - dispatched.size();
     }
@@ -510,6 +512,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
         return enqueueCounter;
     }
 
+    @Override
     public boolean isRecoveryRequired() {
         return pending.isRecoveryRequired();
     }
@@ -526,13 +529,15 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
         }
     }
 
-   public void add(ConnectionContext context, Destination destination) throws Exception {
+   @Override
+public void add(ConnectionContext context, Destination destination) throws Exception {
         synchronized(pendingLock) {
             super.add(context, destination);
             pending.add(context, destination);
         }
     }
 
+    @Override
     public List<MessageReference> remove(ConnectionContext context, Destination destination) throws Exception {
         List<MessageReference> rc = new ArrayList<MessageReference>();
         synchronized(pendingLock) {
@@ -546,7 +551,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
             synchronized(dispatchLock) {
 	            for (MessageReference r : dispatched) {
 	                if( r.getRegionDestination() == destination) {
-	                	rc.add((QueueMessageReference)r);
+	                	rc.add(r);
 	                }
 	            }
                 destination.getDestinationStatistics().getDispatched().subtract(dispatched.size());

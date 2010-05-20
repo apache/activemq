@@ -24,8 +24,8 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicBoolean;
-
 import javax.jms.BytesMessage;
 import javax.jms.Destination;
 import javax.jms.IllegalStateException;
@@ -53,7 +53,6 @@ import javax.jms.TopicPublisher;
 import javax.jms.TopicSession;
 import javax.jms.TopicSubscriber;
 import javax.jms.TransactionRolledBackException;
-
 import org.apache.activemq.blob.BlobDownloader;
 import org.apache.activemq.blob.BlobTransferPolicy;
 import org.apache.activemq.blob.BlobUploader;
@@ -198,7 +197,8 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
     }
 
     private static final Log LOG = LogFactory.getLog(ActiveMQSession.class);
-    protected static final Scheduler scheduler = Scheduler.getInstance();
+    private final Scheduler scheduler;
+    private final ThreadPoolExecutor connectionExecutor;
 
     protected int acknowledgementMode;
     protected final ActiveMQConnection connection;
@@ -220,7 +220,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
     protected Object sendMutex = new Object();
 
     private MessageListener messageListener;
-    private JMSSessionStatsImpl stats;
+    private final JMSSessionStatsImpl stats;
     private TransactionContext transactionContext;
     private DeliveryListener deliveryListener;
     private MessageTransformer transformer;
@@ -251,7 +251,8 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
         this.connection.asyncSendPacket(info);
         setTransformer(connection.getTransformer());
         setBlobTransferPolicy(connection.getBlobTransferPolicy());
-
+        this.scheduler=connection.getScheduler();
+        this.connectionExecutor=connection.getExecutor();
         if (connection.isStarted()) {
             start();
         }
@@ -613,11 +614,13 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
                     synchronizationRegistered = true;
                     getTransactionContext().addSynchronization(new Synchronization() {
 
+                                        @Override
                                         public void afterCommit() throws Exception {
                                             doClose();
                                             synchronizationRegistered = false;
                                         }
 
+                                        @Override
                                         public void afterRollback() throws Exception {
                                             doClose();
                                             synchronizationRegistered = false;
@@ -846,6 +849,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
                 if (ack.getTransactionId() != null) {
                     getTransactionContext().addSynchronization(new Synchronization() {
 
+                        @Override
                         public void afterRollback() throws Exception {
                             md.getMessage().onMessageRolledBack();
                             // ensure we don't filter this as a duplicate
@@ -1947,6 +1951,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
         return executor.getUnconsumedMessages();
     }
 
+    @Override
     public String toString() {
         return "ActiveMQSession {id=" + info.getSessionId() + ",started=" + started.get() + "}";
     }
@@ -2024,5 +2029,13 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
         } else {
             syncSendPacket(ack);
         }
+    }
+    
+    protected Scheduler getScheduler() {
+        return this.scheduler;
+    }
+    
+    protected ThreadPoolExecutor getConnectionExecutor() {
+        return this.connectionExecutor;
     }
 }

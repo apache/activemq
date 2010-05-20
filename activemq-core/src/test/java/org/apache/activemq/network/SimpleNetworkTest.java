@@ -17,7 +17,6 @@
 package org.apache.activemq.network;
 
 import java.net.URI;
-
 import javax.jms.Connection;
 import javax.jms.DeliveryMode;
 import javax.jms.Destination;
@@ -30,9 +29,7 @@ import javax.jms.Session;
 import javax.jms.TextMessage;
 import javax.jms.TopicRequestor;
 import javax.jms.TopicSession;
-
 import junit.framework.TestCase;
-
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQTopic;
@@ -174,11 +171,13 @@ public class SimpleNetworkTest extends TestCase {
         }
     }    
     
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
         doSetUp();
     }
 
+    @Override
     protected void tearDown() throws Exception {
         localBroker.deleteAllMessages();
         remoteBroker.deleteAllMessages();

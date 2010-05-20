@@ -19,32 +19,25 @@ package org.apache.activemq.thread;
 import java.util.HashMap;
 import java.util.Timer;
 import java.util.TimerTask;
+import org.apache.activemq.util.ServiceStopper;
+import org.apache.activemq.util.ServiceSupport;
 
 /**
- * Singelton, references maintained by users
  * @version $Revision$
  */
-public final class Scheduler { 
-
-	private final Timer CLOCK_DAEMON = new Timer("ActiveMQ Scheduler", true);
-    private final HashMap<Runnable, TimerTask> TIMER_TASKS = new HashMap<Runnable, TimerTask>();
-    private static Scheduler instance;
+public final class Scheduler extends ServiceSupport { 
+    private final String name;
+	private Timer timer;
+    private final HashMap<Runnable, TimerTask> timerTasks = new HashMap<Runnable, TimerTask>();
     
-    static {
-        instance = new Scheduler();
+    public Scheduler (String name) {
+        this.name = name;
     }
-    
-    private Scheduler() {
-    }
-
-    public static Scheduler getInstance() {
-        return instance;
-    }
-    
-    public synchronized void executePeriodically(final Runnable task, long period) {
+        
+    public void executePeriodically(final Runnable task, long period) {
     	TimerTask timerTask = new SchedulerTimerTask(task);
-        CLOCK_DAEMON.scheduleAtFixedRate(timerTask, period, period);
-        TIMER_TASKS.put(task, timerTask);
+        timer.scheduleAtFixedRate(timerTask, period, period);
+        timerTasks.put(task, timerTask);
     }
 
     /*
@@ -53,24 +46,38 @@ public final class Scheduler {
      */
     public synchronized void schedualPeriodically(final Runnable task, long period) {
         TimerTask timerTask = new SchedulerTimerTask(task);
-        CLOCK_DAEMON.schedule(timerTask, period, period);
-        TIMER_TASKS.put(task, timerTask);
+        timer.schedule(timerTask, period, period);
+        timerTasks.put(task, timerTask);
     }
     
     public synchronized void cancel(Runnable task) {
-    	TimerTask ticket = TIMER_TASKS.remove(task);
+    	TimerTask ticket = timerTasks.remove(task);
         if (ticket != null) {
             ticket.cancel();
-            CLOCK_DAEMON.purge();//remove cancelled TimerTasks
+            timer.purge();//remove cancelled TimerTasks
         }
     }
 
-    public void executeAfterDelay(final Runnable task, long redeliveryDelay) {
+    public synchronized void executeAfterDelay(final Runnable task, long redeliveryDelay) {
     	TimerTask timerTask = new SchedulerTimerTask(task);
-        CLOCK_DAEMON.schedule(timerTask, redeliveryDelay);
+        timer.schedule(timerTask, redeliveryDelay);
     }
     
     public void shutdown() {
-        CLOCK_DAEMON.cancel();
+        timer.cancel();
+    }
+
+    @Override
+    protected synchronized void doStart() throws Exception {
+        this.timer = new Timer(name, true);
+        
+    }
+
+    @Override
+    protected synchronized void doStop(ServiceStopper stopper) throws Exception {
+       if (this.timer != null) {
+           this.timer.cancel();
+       }
+        
     }
 }

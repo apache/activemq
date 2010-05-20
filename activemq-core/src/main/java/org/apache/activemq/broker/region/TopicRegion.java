@@ -231,7 +231,7 @@ public class TopicRegion extends AbstractRegion {
         if (broker.getDestinationPolicy() != null) {
             PolicyEntry entry = broker.getDestinationPolicy().getEntryFor(destination);
             if (entry != null) {
-                entry.configure(topic);
+                entry.configure(broker,topic);
             }
         }
     }

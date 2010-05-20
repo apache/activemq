@@ -20,6 +20,7 @@ import java.net.URI;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ThreadPoolExecutor;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.broker.region.Subscription;
@@ -41,6 +42,7 @@ import org.apache.activemq.command.Response;
 import org.apache.activemq.command.SessionInfo;
 import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.store.kahadb.plist.PListStore;
+import org.apache.activemq.thread.Scheduler;
 import org.apache.activemq.usage.Usage;
 
 /**
@@ -300,6 +302,14 @@ public class ErrorBroker implements Broker {
 
     public void processConsumerControl(ConsumerBrokerExchange consumerExchange,
             ConsumerControl control) {
+        throw new BrokerStoppedException(this.message);
+    }
+
+    public Scheduler getScheduler() {
+        throw new BrokerStoppedException(this.message);
+    }
+
+    public ThreadPoolExecutor getExecutor() {
         throw new BrokerStoppedException(this.message);
     }
 }

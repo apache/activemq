@@ -17,12 +17,11 @@
 package org.apache.activemq.broker.region.policy;
 
 import java.util.concurrent.atomic.AtomicLong;
-
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageListener;
-
 import org.apache.activemq.ActiveMQMessageTransformation;
+import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.MessageReference;
@@ -50,9 +49,9 @@ public class QueryBasedSubscriptionRecoveryPolicy implements SubscriptionRecover
     private static final Log LOG = LogFactory.getLog(QueryBasedSubscriptionRecoveryPolicy.class);
 
     private MessageQuery query;
-    private AtomicLong messageSequence = new AtomicLong(0);
-    private IdGenerator idGenerator = new IdGenerator();
-    private ProducerId producerId = createProducerId();
+    private final AtomicLong messageSequence = new AtomicLong(0);
+    private final IdGenerator idGenerator = new IdGenerator();
+    private final ProducerId producerId = createProducerId();
 
     public SubscriptionRecoveryPolicy copy() {
         QueryBasedSubscriptionRecoveryPolicy rc = new QueryBasedSubscriptionRecoveryPolicy();
@@ -98,6 +97,9 @@ public class QueryBasedSubscriptionRecoveryPolicy implements SubscriptionRecover
 
     public org.apache.activemq.command.Message[] browse(ActiveMQDestination dest) throws Exception {
         return new org.apache.activemq.command.Message[0];
+    }
+    
+    public void setBroker(Broker broker) {        
     }
 
     protected void dispatchInitialMessage(Message message, Destination regionDestination, ConnectionContext context, SubscriptionRecovery sub) {

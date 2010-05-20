@@ -17,7 +17,6 @@
 package org.apache.activemq.store.amq;
 
 import java.io.File;
-
 import org.apache.activemq.kaha.impl.async.AsyncDataManager;
 import org.apache.activemq.kaha.impl.index.hash.HashIndex;
 import org.apache.activemq.store.PersistenceAdapter;
@@ -35,7 +34,6 @@ import org.apache.activemq.util.IOHelper;
  */
 public class AMQPersistenceAdapterFactory implements PersistenceAdapterFactory {
     static final int DEFAULT_MAX_REFERNCE_FILE_LENGTH=2*1024*1024;
-    private TaskRunnerFactory taskRunnerFactory;
     private File dataDirectory;
     private int journalThreadPriority = Thread.MAX_PRIORITY;
     private String brokerName = "localhost";
@@ -56,6 +54,7 @@ public class AMQPersistenceAdapterFactory implements PersistenceAdapterFactory {
     private boolean forceRecoverReferenceStore=false;
     private long checkpointInterval = 1000 * 20;
     private boolean useDedicatedTaskRunner;
+    private TaskRunnerFactory taskRunnerFactory;
 
 
     /**
@@ -82,6 +81,8 @@ public class AMQPersistenceAdapterFactory implements PersistenceAdapterFactory {
         result.setMaxReferenceFileLength(getMaxReferenceFileLength());
         result.setForceRecoverReferenceStore(isForceRecoverReferenceStore());
         result.setRecoverReferenceStore(isRecoverReferenceStore());
+        result.setUseDedicatedTaskRunner(isUseDedicatedTaskRunner());
+        result.setJournalThreadPriority(getJournalThreadPriority());
         return result;
     }
 
@@ -122,10 +123,6 @@ public class AMQPersistenceAdapterFactory implements PersistenceAdapterFactory {
      * @return the taskRunnerFactory
      */
     public TaskRunnerFactory getTaskRunnerFactory() {
-        if (taskRunnerFactory == null) {
-            taskRunnerFactory = new TaskRunnerFactory("AMQPersistenceAdaptor Task", journalThreadPriority,
-                                                      true, 1000, isUseDedicatedTaskRunner());
-        }
         return taskRunnerFactory;
     }
 

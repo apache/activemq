@@ -125,7 +125,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
     };
     
     private final Object iteratingMutex = new Object() {};
-    private static final Scheduler scheduler = Scheduler.getInstance();
+    private final Scheduler scheduler;
     
     class TimeoutMessage implements Delayed {
 
@@ -203,6 +203,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
         super(brokerService, store, destination, parentStats);
         this.taskFactory = taskFactory;
         this.dispatchSelector = new QueueDispatchSelector(destination);
+        this.scheduler = brokerService.getBroker().getScheduler();
     }
 
     public List<Subscription> getConsumers() {

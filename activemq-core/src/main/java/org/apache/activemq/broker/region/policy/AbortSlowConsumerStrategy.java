@@ -5,7 +5,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
-
 import org.apache.activemq.broker.Connection;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.Subscription;
@@ -24,15 +23,19 @@ public class AbortSlowConsumerStrategy implements SlowConsumerStrategy, Runnable
     
     private static final Log LOG = LogFactory.getLog(AbortSlowConsumerStrategy.class);
 
-    private static final Scheduler scheduler = Scheduler.getInstance();
-    private AtomicBoolean taskStarted = new AtomicBoolean(false);
-    private Map<Subscription, SlowConsumerEntry> slowConsumers = new ConcurrentHashMap<Subscription, SlowConsumerEntry>();
+    private Scheduler scheduler;
+    private final AtomicBoolean taskStarted = new AtomicBoolean(false);
+    private final Map<Subscription, SlowConsumerEntry> slowConsumers = new ConcurrentHashMap<Subscription, SlowConsumerEntry>();
 
     private long maxSlowCount = -1;
     private long maxSlowDuration = 30*1000;
     private long checkPeriod = 30*1000;
     private boolean abortConnection = false;
 
+   public void setScheduler(Scheduler s) {
+       this.scheduler=s;
+   }
+   
     public void slowConsumer(ConnectionContext context, Subscription subs) {
         if (maxSlowCount < 0 && maxSlowDuration < 0) {
             // nothing to do

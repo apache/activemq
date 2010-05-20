@@ -30,7 +30,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
-
 import org.apache.activeio.journal.Journal;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.BrokerServiceAware;
@@ -58,7 +57,6 @@ import org.apache.activemq.store.TopicMessageStore;
 import org.apache.activemq.store.TopicReferenceStore;
 import org.apache.activemq.store.TransactionStore;
 import org.apache.activemq.store.kahadaptor.KahaReferenceStoreAdapter;
-import org.apache.activemq.thread.DefaultThreadPools;
 import org.apache.activemq.thread.Scheduler;
 import org.apache.activemq.thread.Task;
 import org.apache.activemq.thread.TaskRunner;
@@ -85,7 +83,7 @@ import org.apache.commons.logging.LogFactory;
 public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener, BrokerServiceAware {
 
     private static final Log LOG = LogFactory.getLog(AMQPersistenceAdapter.class);
-    private static final Scheduler scheduler = Scheduler.getInstance();
+    private Scheduler scheduler;
     private final ConcurrentHashMap<ActiveMQQueue, AMQMessageStore> queues = new ConcurrentHashMap<ActiveMQQueue, AMQMessageStore>();
     private final ConcurrentHashMap<ActiveMQTopic, AMQTopicMessageStore> topics = new ConcurrentHashMap<ActiveMQTopic, AMQTopicMessageStore>();
     private static final String PROPERTY_PREFIX = "org.apache.activemq.store.amq";
@@ -99,7 +97,7 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
     private SystemUsage usageManager;
     private long checkpointInterval = 1000 * 20;
     private int maxCheckpointMessageAddSize = 1024 * 4;
-    private AMQTransactionStore transactionStore = new AMQTransactionStore(this);
+    private final AMQTransactionStore transactionStore = new AMQTransactionStore(this);
     private TaskRunner checkpointTask;
     private CountDownLatch nextCheckpointCountDownLatch = new CountDownLatch(1);
     private final AtomicBoolean started = new AtomicBoolean(false);
@@ -112,7 +110,7 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
     private File directory;
     private File directoryArchive;
     private BrokerService brokerService;
-    private AtomicLong storeSize = new AtomicLong();
+    private final AtomicLong storeSize = new AtomicLong();
     private boolean persistentIndex=true;
     private boolean useNio = true;
     private boolean archiveDataLogs=false;
@@ -124,8 +122,7 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
     private int indexMaxBinSize = HashIndex.MAXIMUM_CAPACITY;
     private int indexLoadFactor = HashIndex.DEFAULT_LOAD_FACTOR;
     private int maxReferenceFileLength=AMQPersistenceAdapterFactory.DEFAULT_MAX_REFERNCE_FILE_LENGTH;
-    private Map<AMQMessageStore,Map<Integer, AtomicInteger>> dataFilesInProgress = new ConcurrentHashMap<AMQMessageStore,Map<Integer, AtomicInteger>> ();
-    private String directoryPath = "";
+    private final Map<AMQMessageStore,Map<Integer, AtomicInteger>> dataFilesInProgress = new ConcurrentHashMap<AMQMessageStore,Map<Integer, AtomicInteger>> ();
     private RandomAccessFile lockFile;
     private FileLock lock;
     private boolean disableLocking = DISABLE_LOCKING;
@@ -134,6 +131,8 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
     private boolean lockAquired;
     private boolean recoverReferenceStore=true;
     private boolean forceRecoverReferenceStore=false;
+    private boolean useDedicatedTaskRunner=false;
+    private int journalThreadPriority = Thread.MAX_PRIORITY;
 
     public String getBrokerName() {
         return this.brokerName;
@@ -165,12 +164,19 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
             } else {
                 this.directory = new File(IOHelper.getDefaultDataDirectory(), IOHelper.toFileSystemSafeName(brokerName));
                 this.directory = new File(directory, "amqstore");
-                this.directoryPath=directory.getAbsolutePath();
+                directory.getAbsolutePath();
             }
         }
         if (this.directoryArchive == null) {
             this.directoryArchive = new File(this.directory,"archive");
         }
+        if (this.brokerService != null) {
+            this.taskRunnerFactory = this.brokerService.getTaskRunnerFactory();
+        }else {
+            this.scheduler = new Scheduler("AMQPersistenceAdapter Scheduler");
+        }
+        this.taskRunnerFactory= new TaskRunnerFactory("AMQPersistenceAdaptor Task", getJournalThreadPriority(),
+                true, 1000, isUseDedicatedTaskRunner());
         IOHelper.mkdirs(this.directory);
         lockFile = new RandomAccessFile(new File(directory, "lock"), "rw");
         lock();
@@ -192,10 +198,11 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
         referenceStoreAdapter.setBrokerName(getBrokerName());
         referenceStoreAdapter.setUsageManager(usageManager);
         referenceStoreAdapter.setMaxDataFileLength(getMaxReferenceFileLength());
-        if (taskRunnerFactory == null) {
-            taskRunnerFactory = createTaskRunnerFactory();
-        }
         
+        if (brokerService != null) {
+            this.scheduler = this.brokerService.getBroker().getScheduler();
+        }
+                
         if (failIfJournalIsLocked) {
             asyncDataManager.lock();
         } else {
@@ -389,7 +396,7 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
             Iterator<AMQMessageStore> queueIterator = queues.values().iterator();
             while (queueIterator.hasNext()) {
                 final AMQMessageStore ms = queueIterator.next();
-                Location mark = (Location)ms.getMark();
+                Location mark = ms.getMark();
                 if (mark != null && (newMark == null || mark.compareTo(newMark) > 0)) {
                     newMark = mark;
                 }
@@ -397,7 +404,7 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
             Iterator<AMQTopicMessageStore> topicIterator = topics.values().iterator();
             while (topicIterator.hasNext()) {
                 final AMQTopicMessageStore ms = topicIterator.next();
-                Location mark = (Location)ms.getMark();
+                Location mark = ms.getMark();
                 if (mark != null && (newMark == null || mark.compareTo(newMark) > 0)) {
                     newMark = mark;
                 }
@@ -726,6 +733,7 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
         deleteAllMessages = true;
     }
 
+    @Override
     public String toString() {
         return "AMQPersistenceAdapter(" + directory + ")";
     }
@@ -752,10 +760,6 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
         adaptor.setIndexMaxBinSize(getIndexMaxBinSize());
         adaptor.setIndexLoadFactor(getIndexLoadFactor());
         return adaptor;
-    }
-
-    protected TaskRunnerFactory createTaskRunnerFactory() {
-        return DefaultThreadPools.getDefaultTaskRunnerFactory();
     }
 
     // /////////////////////////////////////////////////////////////////
@@ -990,6 +994,28 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
      */
     public void setForceRecoverReferenceStore(boolean forceRecoverReferenceStore) {
         this.forceRecoverReferenceStore = forceRecoverReferenceStore;
+    }
+    
+    public boolean isUseDedicatedTaskRunner() {
+        return useDedicatedTaskRunner;
+    }
+    
+    public void setUseDedicatedTaskRunner(boolean useDedicatedTaskRunner) {
+        this.useDedicatedTaskRunner = useDedicatedTaskRunner;
+    }
+    
+    /**
+     * @return the journalThreadPriority
+     */
+    public int getJournalThreadPriority() {
+        return this.journalThreadPriority;
+    }
+
+    /**
+     * @param journalThreadPriority the journalThreadPriority to set
+     */
+    public void setJournalThreadPriority(int journalThreadPriority) {
+        this.journalThreadPriority = journalThreadPriority;
     }
 
 	

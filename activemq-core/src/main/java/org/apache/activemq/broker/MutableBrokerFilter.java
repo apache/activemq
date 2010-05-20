@@ -19,6 +19,7 @@ package org.apache.activemq.broker;
 import java.net.URI;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicReference;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.MessageReference;
@@ -41,6 +42,7 @@ import org.apache.activemq.command.Response;
 import org.apache.activemq.command.SessionInfo;
 import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.store.kahadb.plist.PListStore;
+import org.apache.activemq.thread.Scheduler;
 import org.apache.activemq.usage.Usage;
 
 /**
@@ -310,6 +312,14 @@ public class MutableBrokerFilter implements Broker {
     public void processConsumerControl(ConsumerBrokerExchange consumerExchange,
             ConsumerControl control) {
         getNext().processConsumerControl(consumerExchange, control);
+    }
+
+    public Scheduler getScheduler() {
+       return getNext().getScheduler();
+    }
+
+    public ThreadPoolExecutor getExecutor() {
+       return getNext().getExecutor();
     }
 
 }

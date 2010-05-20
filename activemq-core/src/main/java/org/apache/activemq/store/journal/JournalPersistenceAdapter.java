@@ -31,7 +31,6 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-
 import org.apache.activeio.journal.InvalidRecordLocationException;
 import org.apache.activeio.journal.Journal;
 import org.apache.activeio.journal.JournalEventListener;
@@ -64,9 +63,9 @@ import org.apache.activemq.thread.Scheduler;
 import org.apache.activemq.thread.Task;
 import org.apache.activemq.thread.TaskRunner;
 import org.apache.activemq.thread.TaskRunnerFactory;
+import org.apache.activemq.usage.SystemUsage;
 import org.apache.activemq.usage.Usage;
 import org.apache.activemq.usage.UsageListener;
-import org.apache.activemq.usage.SystemUsage;
 import org.apache.activemq.util.ByteSequence;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.wireformat.WireFormat;
@@ -85,7 +84,7 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
 
     private BrokerService brokerService;
 	
-    protected static final Scheduler scheduler = Scheduler.getInstance();
+    protected Scheduler scheduler;
     private static final Log LOG = LogFactory.getLog(JournalPersistenceAdapter.class);
 
     private Journal journal;
@@ -97,20 +96,20 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
     private final ConcurrentHashMap<ActiveMQTopic, JournalTopicMessageStore> topics = new ConcurrentHashMap<ActiveMQTopic, JournalTopicMessageStore>();
 
     private SystemUsage usageManager;
-    private long checkpointInterval = 1000 * 60 * 5;
+    private final long checkpointInterval = 1000 * 60 * 5;
     private long lastCheckpointRequest = System.currentTimeMillis();
     private long lastCleanup = System.currentTimeMillis();
     private int maxCheckpointWorkers = 10;
     private int maxCheckpointMessageAddSize = 1024 * 1024;
 
-    private JournalTransactionStore transactionStore = new JournalTransactionStore(this);
+    private final JournalTransactionStore transactionStore = new JournalTransactionStore(this);
     private ThreadPoolExecutor checkpointExecutor;
 
     private TaskRunner checkpointTask;
     private CountDownLatch nextCheckpointCountDownLatch = new CountDownLatch(1);
     private boolean fullCheckPoint;
 
-    private AtomicBoolean started = new AtomicBoolean(false);
+    private final AtomicBoolean started = new AtomicBoolean(false);
 
     private final Runnable periodicCheckpointTask = createPeriodicCheckpointTask();
 
@@ -267,7 +266,9 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
         recover();
 
         // Do a checkpoint periodically.
-        scheduler.executePeriodically(periodicCheckpointTask, checkpointInterval / 10);
+        this.scheduler = new Scheduler("Journal Scheduler");
+        this.scheduler.start();
+        this.scheduler.executePeriodically(periodicCheckpointTask, checkpointInterval / 10);
 
     }
 
@@ -278,7 +279,8 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
             return;
         }
 
-        scheduler.cancel(periodicCheckpointTask);
+        this.scheduler.cancel(periodicCheckpointTask);
+        this.scheduler.stop();
 
         // Take one final checkpoint and stop checkpoint processing.
         checkpoint(true, true);
@@ -723,6 +725,7 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
         longTermPersistence.setBrokerName(brokerName);
     }
 
+    @Override
     public String toString() {
         return "JournalPersistenceAdapator(" + longTermPersistence + ")";
     }

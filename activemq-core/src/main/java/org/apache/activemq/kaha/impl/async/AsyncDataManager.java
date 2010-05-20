@@ -35,7 +35,6 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
-
 import org.apache.activemq.kaha.impl.async.DataFileAppender.WriteCommand;
 import org.apache.activemq.kaha.impl.async.DataFileAppender.WriteKey;
 import org.apache.activemq.thread.Scheduler;
@@ -75,7 +74,7 @@ public class AsyncDataManager {
     public static final int PREFERED_DIFF = 1024 * 512;
 
     private static final Log LOG = LogFactory.getLog(AsyncDataManager.class);
-    protected static Scheduler scheduler  = Scheduler.getInstance();
+    protected Scheduler scheduler;
 
     protected final Map<WriteKey, WriteCommand> inflightWrites = new ConcurrentHashMap<WriteKey, WriteCommand>();
 
@@ -193,7 +192,13 @@ public class AsyncDataManager {
                 cleanup();
             }
         };
-        scheduler.executePeriodically(cleanupTask, DEFAULT_CLEANUP_INTERVAL);
+        this.scheduler = new Scheduler("AsyncDataManager Scheduler");
+        try {
+            this.scheduler.start();
+        } catch (Exception e) {
+            throw new IOException(e);
+        }
+        this.scheduler.executePeriodically(cleanupTask, DEFAULT_CLEANUP_INTERVAL);
     }
 
     public void lock() throws IOException {
@@ -328,7 +333,12 @@ public class AsyncDataManager {
         if (!started) {
             return;
         }
-        scheduler.cancel(cleanupTask);
+        this.scheduler.cancel(cleanupTask);
+        try {
+            this.scheduler.stop();
+        } catch (Exception e) {
+            throw new IOException(e);
+        }
         accessorPool.close();
         storeState(false);
         appender.close();
@@ -376,7 +386,7 @@ public class AsyncDataManager {
     public synchronized void addInterestInFile(int file) throws IOException {
         if (file >= 0) {
             Integer key = Integer.valueOf(file);
-            DataFile dataFile = (DataFile)fileMap.get(key);
+            DataFile dataFile = fileMap.get(key);
             if (dataFile == null) {
                 throw new IOException("That data file does not exist");
             }
@@ -393,7 +403,7 @@ public class AsyncDataManager {
     public synchronized void removeInterestInFile(int file) throws IOException {
         if (file >= 0) {
             Integer key = Integer.valueOf(file);
-            DataFile dataFile = (DataFile)fileMap.get(key);
+            DataFile dataFile = fileMap.get(key);
             removeInterestInFile(dataFile);
         }
        
@@ -414,7 +424,7 @@ public class AsyncDataManager {
                 
         List<DataFile> purgeList = new ArrayList<DataFile>();
         for (Integer key : unUsed) {
-            DataFile dataFile = (DataFile)fileMap.get(key);
+            DataFile dataFile = fileMap.get(key);
             purgeList.add(dataFile);
         }
         for (DataFile dataFile : purgeList) {
@@ -432,7 +442,7 @@ public class AsyncDataManager {
         for (Integer key : unUsed) {
         	// Only add files less than the lastFile..
         	if( key.intValue() < lastFile.intValue() ) {
-                DataFile dataFile = (DataFile)fileMap.get(key);
+                DataFile dataFile = fileMap.get(key);
                 purgeList.add(dataFile);
         	}
         }
@@ -499,6 +509,7 @@ public class AsyncDataManager {
         this.maxFileLength = maxFileLength;
     }
 
+    @Override
     public String toString() {
         return "DataManager:(" + filePrefix + ")";
     }

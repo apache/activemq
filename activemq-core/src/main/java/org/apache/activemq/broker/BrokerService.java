@@ -29,6 +29,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.annotation.PostConstruct;
@@ -78,9 +81,10 @@ import org.apache.activemq.security.SecurityContext;
 import org.apache.activemq.selector.SelectorParser;
 import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.PersistenceAdapterFactory;
-import org.apache.activemq.store.amq.AMQPersistenceAdapterFactory;
+import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
 import org.apache.activemq.store.kahadb.plist.PListStore;
 import org.apache.activemq.store.memory.MemoryPersistenceAdapter;
+import org.apache.activemq.thread.Scheduler;
 import org.apache.activemq.thread.TaskRunnerFactory;
 import org.apache.activemq.transport.TransportFactory;
 import org.apache.activemq.transport.TransportServer;
@@ -188,9 +192,10 @@ public class BrokerService implements Service {
     private IOExceptionHandler ioExceptionHandler;
     private boolean schedulerSupport = true;
     private File schedulerDirectoryFile;
-    
+    private Scheduler scheduler;
+    private ThreadPoolExecutor executor;
     private boolean slave = true;
-
+    
 	static {
         String localHostName = "localhost";
         try {
@@ -589,6 +594,15 @@ public class BrokerService implements Service {
                 }
             }
         }
+        if (this.taskRunnerFactory != null) {
+            this.taskRunnerFactory.shutdown();
+        }
+        if (this.scheduler != null) {
+            this.scheduler.stop();
+        }
+        if (this.executor != null) {
+            this.executor.shutdownNow();
+        }
         LOG.info("ActiveMQ JMS Message Broker (" + getBrokerName() + ", " + brokerId + ") stopped");
         synchronized (shutdownHooks) {
             for (Runnable hook : shutdownHooks) {
@@ -756,9 +770,6 @@ public class BrokerService implements Service {
     }
 
     public PersistenceAdapterFactory getPersistenceFactory() {
-        if (persistenceFactory == null) {
-            persistenceFactory = createPersistenceFactory();
-        }
         return persistenceFactory;
     }
 
@@ -848,6 +859,7 @@ public class BrokerService implements Service {
         try {
             if (systemUsage == null) {
                 systemUsage = new SystemUsage("Main", getPersistenceAdapter(), getTempDataStore());
+                systemUsage.setExecutor(getExecutor());
                 systemUsage.getMemoryUsage().setLimit(1024 * 1024 * 64); // Default
                                                                          // 64
                                                                          // Meg
@@ -869,6 +881,9 @@ public class BrokerService implements Service {
             removeService(this.systemUsage);
         }
         this.systemUsage = memoryManager;
+        if (this.systemUsage.getExecutor()==null) {
+            this.systemUsage.setExecutor(getExecutor());
+        }
         addService(this.systemUsage);
     }
 
@@ -953,11 +968,11 @@ public class BrokerService implements Service {
     }
 
     public TaskRunnerFactory getTaskRunnerFactory() {
-        if (taskRunnerFactory == null) {
-            taskRunnerFactory = new TaskRunnerFactory("BrokerService", getTaskRunnerPriority(), true, 1000,
+        if (this.taskRunnerFactory == null) {
+            this.taskRunnerFactory = new TaskRunnerFactory("BrokerService", getTaskRunnerPriority(), true, 1000,
                     isDedicatedTaskRunner());
         }
-        return taskRunnerFactory;
+        return this.taskRunnerFactory;
     }
 
     public void setTaskRunnerFactory(TaskRunnerFactory taskRunnerFactory) {
@@ -1769,10 +1784,10 @@ public class BrokerService implements Service {
         RegionBroker regionBroker;
         if (isUseJmx()) {
             regionBroker = new ManagedRegionBroker(this, getManagementContext(), getBrokerObjectName(),
-                    getTaskRunnerFactory(), getConsumerSystemUsage(), destinationFactory, destinationInterceptor);
+                    getTaskRunnerFactory(), getConsumerSystemUsage(), destinationFactory, destinationInterceptor,getScheduler(),getExecutor());
         } else {
             regionBroker = new RegionBroker(this, getTaskRunnerFactory(), getConsumerSystemUsage(), destinationFactory,
-                    destinationInterceptor);
+                    destinationInterceptor,getScheduler(),getExecutor());
         }
         destinationFactory.setRegionBroker(regionBroker);
         regionBroker.setKeepDurableSubsActive(keepDurableSubsActive);
@@ -1850,18 +1865,18 @@ public class BrokerService implements Service {
 
     protected PersistenceAdapter createPersistenceAdapter() throws IOException {
         if (isPersistent()) {
-            return getPersistenceFactory().createPersistenceAdapter();
+            PersistenceAdapterFactory fac = getPersistenceFactory();
+            if (fac != null) {
+                return fac.createPersistenceAdapter();
+            }else {
+                KahaDBPersistenceAdapter adaptor = new KahaDBPersistenceAdapter();
+                File dir = new File(getBrokerDataDirectory(),"KahaDB");
+                adaptor.setDirectory(dir);
+                return adaptor;
+            }
         } else {
             return new MemoryPersistenceAdapter();
         }
-    }
-
-    protected AMQPersistenceAdapterFactory createPersistenceFactory() {
-        AMQPersistenceAdapterFactory factory = new AMQPersistenceAdapterFactory();
-        factory.setDataDirectory(getBrokerDataDirectory());
-        factory.setTaskRunnerFactory(getPersistenceTaskRunnerFactory());
-        factory.setBrokerName(getBrokerName());
-        return factory;
     }
 
     protected ObjectName createBrokerObjectName() throws IOException {
@@ -2124,6 +2139,31 @@ public class BrokerService implements Service {
             }
         }
     }
+    
+    protected synchronized ThreadPoolExecutor getExecutor() {
+        if (this.executor == null) {
+        this.executor = new ThreadPoolExecutor(1, 10, 30, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>(), new ThreadFactory() {
+            public Thread newThread(Runnable runnable) {
+                Thread thread = new Thread(runnable, "Usage Async Task");
+                thread.setDaemon(true);
+                return thread;
+            }
+        });
+        }
+        return this.executor;
+    }
+    
+    protected synchronized Scheduler getScheduler() {
+        if (this.scheduler==null) {
+            this.scheduler = new Scheduler("ActiveMQ Broker["+getBrokerName()+"] Scheduler");
+            try {
+                this.scheduler.start();
+            } catch (Exception e) {
+               LOG.error("Failed to start Scheduler ",e);
+            }
+        }
+        return this.scheduler;
+    }
 
     public Broker getRegionBroker() {
         return regionBroker;
@@ -2251,7 +2291,5 @@ public class BrokerService implements Service {
     
     public void setSchedulerDirectory(String schedulerDirectory) {
         setSchedulerDirectoryFile(new File(schedulerDirectory));
-    }
-    
-   
+    }   
 }

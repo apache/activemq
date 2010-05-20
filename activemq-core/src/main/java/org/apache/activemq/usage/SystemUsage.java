@@ -18,6 +18,7 @@ package org.apache.activemq.usage;
 
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ThreadPoolExecutor;
 import org.apache.activemq.Service;
 import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.kahadb.plist.PListStore;
@@ -36,6 +37,7 @@ public class SystemUsage implements Service {
     private MemoryUsage memoryUsage;
     private StoreUsage storeUsage;
     private TempUsage tempUsage;
+    private ThreadPoolExecutor executor;
 
     /**
      * True if someone called setSendFailIfNoSpace() on this particular usage
@@ -45,7 +47,7 @@ public class SystemUsage implements Service {
     private boolean sendFailIfNoSpace;
     private boolean sendFailIfNoSpaceAfterTimeoutExplicitySet;
     private long sendFailIfNoSpaceAfterTimeout = 0;
-    
+
     private final List<SystemUsage> children = new CopyOnWriteArrayList<SystemUsage>();
 
     public SystemUsage() {
@@ -58,14 +60,21 @@ public class SystemUsage implements Service {
         this.memoryUsage = new MemoryUsage(name + ":memory");
         this.storeUsage = new StoreUsage(name + ":store", adapter);
         this.tempUsage = new TempUsage(name + ":temp", tempStore);
+        this.memoryUsage.setExecutor(getExecutor());
+        this.storeUsage.setExecutor(getExecutor());
+        this.tempUsage.setExecutor(getExecutor());
     }
 
     public SystemUsage(SystemUsage parent, String name) {
         this.parent = parent;
+        this.executor = parent.getExecutor();
         this.name = name;
         this.memoryUsage = new MemoryUsage(parent.memoryUsage, name + ":memory");
         this.storeUsage = new StoreUsage(parent.storeUsage, name + ":store");
         this.tempUsage = new TempUsage(parent.tempUsage, name + ":temp");
+        this.memoryUsage.setExecutor(getExecutor());
+        this.storeUsage.setExecutor(getExecutor());
+        this.tempUsage.setExecutor(getExecutor());
     }
 
     public String getName() {
@@ -186,6 +195,7 @@ public class SystemUsage implements Service {
             memoryUsage.setParent(parent.memoryUsage);
         }
         this.memoryUsage = memoryUsage;
+        this.memoryUsage.setExecutor(getExecutor());
     }
 
     public void setStoreUsage(StoreUsage storeUsage) {
@@ -199,6 +209,7 @@ public class SystemUsage implements Service {
             storeUsage.setParent(parent.storeUsage);
         }
         this.storeUsage = storeUsage;
+        this.storeUsage.setExecutor(executor);
 
     }
 
@@ -213,5 +224,30 @@ public class SystemUsage implements Service {
             tempDiskUsage.setParent(parent.tempUsage);
         }
         this.tempUsage = tempDiskUsage;
+        this.tempUsage.setExecutor(getExecutor());
+    }
+
+    /**
+     * @return the executor
+     */
+    public ThreadPoolExecutor getExecutor() {
+        return this.executor;
+    }
+
+    /**
+     * @param executor
+     *            the executor to set
+     */
+    public void setExecutor(ThreadPoolExecutor executor) {
+        this.executor = executor;
+        if (this.memoryUsage != null) {
+            this.memoryUsage.setExecutor(this.executor);
+        }
+        if (this.storeUsage != null) {
+            this.storeUsage.setExecutor(this.executor);
+        }
+        if (this.tempUsage != null) {
+            this.tempUsage.setExecutor(this.executor);
+        }
     }
 }

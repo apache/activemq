@@ -18,6 +18,7 @@ package org.apache.activemq.broker.region.policy;
 
 import java.util.Iterator;
 import java.util.List;
+import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.broker.region.SubscriptionRecovery;
@@ -108,6 +109,9 @@ public class FixedSizedSubscriptionRecoveryPolicy implements SubscriptionRecover
 
     public Message[] browse(ActiveMQDestination destination) throws Exception {
         return buffer.browse(destination);
+    }
+    
+    public void setBroker(Broker broker) {        
     }
 
     // Implementation methods

@@ -29,7 +29,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
-
 import javax.jms.IllegalStateException;
 import javax.jms.InvalidDestinationException;
 import javax.jms.JMSException;
@@ -37,7 +36,6 @@ import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageListener;
 import javax.jms.TransactionRolledBackException;
-
 import org.apache.activemq.blob.BlobDownloader;
 import org.apache.activemq.command.ActiveMQBlobMessage;
 import org.apache.activemq.command.ActiveMQDestination;
@@ -111,7 +109,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
     }
 
     private static final Log LOG = LogFactory.getLog(ActiveMQMessageConsumer.class);
-    protected static final Scheduler scheduler = Scheduler.getInstance();
+    protected final Scheduler scheduler;
     protected final ActiveMQSession session;
     protected final ConsumerInfo info;
 
@@ -130,17 +128,17 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
     private int ackCounter;
     private int dispatchedCount;
     private final AtomicReference<MessageListener> messageListener = new AtomicReference<MessageListener>();
-    private JMSConsumerStatsImpl stats;
+    private final JMSConsumerStatsImpl stats;
 
     private final String selector;
     private boolean synchronizationRegistered;
-    private AtomicBoolean started = new AtomicBoolean(false);
+    private final AtomicBoolean started = new AtomicBoolean(false);
 
     private MessageAvailableListener availableListener;
 
     private RedeliveryPolicy redeliveryPolicy;
     private boolean optimizeAcknowledge;
-    private AtomicBoolean deliveryingAcknowledgements = new AtomicBoolean();
+    private final AtomicBoolean deliveryingAcknowledgements = new AtomicBoolean();
     private ExecutorService executorService;
     private MessageTransformer transformer;
     private boolean clearDispatchList;
@@ -152,7 +150,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
     private IOException failureError;
     
     private long optimizeAckTimestamp = System.currentTimeMillis();
-    private long optimizeAckTimeout = 300;
+    private final long optimizeAckTimeout = 300;
     private long failoverRedeliveryWaitPeriod = 0;
 
     /**
@@ -202,6 +200,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
         }
 
         this.session = session;
+        this.scheduler = session.getScheduler();
         this.redeliveryPolicy = session.connection.getRedeliveryPolicy();
         setTransformer(session.getTransformer());
 
@@ -634,10 +633,12 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
         if (!unconsumedMessages.isClosed()) {
             if (session.getTransactionContext().isInTransaction()) {
                 session.getTransactionContext().addSynchronization(new Synchronization() {
+                    @Override
                     public void afterCommit() throws Exception {
                         doClose();
                     }
 
+                    @Override
                     public void afterRollback() throws Exception {
                         doClose();
                     }
@@ -912,16 +913,19 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
             if (!synchronizationRegistered) {
                 synchronizationRegistered = true;
                 session.getTransactionContext().addSynchronization(new Synchronization() {
+                    @Override
                     public void beforeEnd() throws Exception {
                         acknowledge();
                         synchronizationRegistered = false;
                     }
 
+                    @Override
                     public void afterCommit() throws Exception {
                         commit();
                         synchronizationRegistered = false;
                     }
 
+                    @Override
                     public void afterRollback() throws Exception {
                         rollback();
                         synchronizationRegistered = false;
@@ -1325,6 +1329,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
         unconsumedMessages.stop();
     }
 
+    @Override
     public String toString() {
         return "ActiveMQMessageConsumer { value=" + info.getConsumerId() + ", started=" + started.get()
                + " }";

@@ -87,6 +87,7 @@ import org.apache.activemq.management.JMSStatsImpl;
 import org.apache.activemq.management.StatsCapable;
 import org.apache.activemq.management.StatsImpl;
 import org.apache.activemq.state.CommandVisitorAdapter;
+import org.apache.activemq.thread.Scheduler;
 import org.apache.activemq.thread.TaskRunnerFactory;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportListener;
@@ -114,7 +115,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     protected boolean alwaysSessionAsync = true;
 
     private TaskRunnerFactory sessionTaskRunner;
-    private final ThreadPoolExecutor asyncConnectionThread;
+    private final ThreadPoolExecutor executor;
 
     // Connection state variables
     private final ConnectionInfo info;
@@ -188,6 +189,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     private boolean useDedicatedTaskRunner;
     protected volatile CountDownLatch transportInterruptionProcessingComplete;
     private long consumerFailoverRedeliveryWaitPeriod;
+    private final Scheduler scheduler;
 
     /**
      * Construct an <code>ActiveMQConnection</code>
@@ -204,16 +206,16 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
 
         // Configure a single threaded executor who's core thread can timeout if
         // idle
-        asyncConnectionThread = new ThreadPoolExecutor(1, 1, 5, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>(), new ThreadFactory() {
+        executor = new ThreadPoolExecutor(1, 1, 5, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>(), new ThreadFactory() {
             public Thread newThread(Runnable r) {
-                Thread thread = new Thread(r, "ActiveMQ Connection Worker: " + transport);
+                Thread thread = new Thread(r, "ActiveMQ Connection Executor: " + transport);
                 thread.setDaemon(true);
                 return thread;
             }
         });
         // asyncConnectionThread.allowCoreThreadTimeOut(true);
-
-        this.info = new ConnectionInfo(new ConnectionId(CONNECTION_ID_GENERATOR.generateId()));
+        String uniqueId = CONNECTION_ID_GENERATOR.generateId();
+        this.info = new ConnectionInfo(new ConnectionId(uniqueId));
         this.info.setManageable(true);
         this.info.setFaultTolerant(transport.isFaultTolerant());
         this.connectionSessionId = new SessionId(info.getConnectionId(), -1);
@@ -224,6 +226,8 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
         this.factoryStats.addConnection(this);
         this.timeCreated = System.currentTimeMillis();
         this.connectionAudit.setCheckForDuplicates(transport.isFaultTolerant());
+        this.scheduler = new Scheduler("ActiveMQConnection["+uniqueId+"] Scheduler");
+        this.scheduler.start();
     }
 
     protected void setUserName(String userName) {
@@ -609,6 +613,14 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
                         advisoryConsumer.dispose();
                         advisoryConsumer = null;
                     }
+                    if (this.scheduler != null) {
+                        try {
+                            this.scheduler.stop();
+                        } catch (Exception e) {
+                            JMSException ex =  JMSExceptionSupport.create(e);
+                            throw ex;
+                        }
+                    }
 
                     long lastDeliveredSequenceId = 0;
                     for (Iterator<ActiveMQSession> i = this.sessions.iterator(); i.hasNext();) {
@@ -656,8 +668,8 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
             }
         } finally {
             try {
-                if (asyncConnectionThread != null){
-                    asyncConnectionThread.shutdown();
+                if (executor != null){
+                    executor.shutdown();
                 }
             }catch(Throwable e) {
                 LOG.error("Error shutting down thread pool " + e,e);
@@ -1719,7 +1731,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
 
                     @Override
                     public Response processConnectionError(final ConnectionError error) throws Exception {
-                        asyncConnectionThread.execute(new Runnable() {
+                        executor.execute(new Runnable() {
                             public void run() {
                                 onAsyncException(error.getException());
                             }
@@ -1779,7 +1791,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     public void onClientInternalException(final Throwable error) {
         if ( !closed.get() && !closing.get() ) {
             if ( this.clientInternalExceptionListener != null ) {
-                asyncConnectionThread.execute(new Runnable() {
+                executor.execute(new Runnable() {
                     public void run() {
                         ActiveMQConnection.this.clientInternalExceptionListener.onException(error);
                     }
@@ -1804,7 +1816,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
                 }
                 final JMSException e = (JMSException)error;
 
-                asyncConnectionThread.execute(new Runnable() {
+                executor.execute(new Runnable() {
                     public void run() {
                         ActiveMQConnection.this.exceptionListener.onException(e);
                     }
@@ -1819,7 +1831,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     public void onException(final IOException error) {
 		onAsyncException(error);
 		if (!closing.get() && !closed.get()) {
-			asyncConnectionThread.execute(new Runnable() {
+			executor.execute(new Runnable() {
 				public void run() {
 					transportFailed(error);
 					ServiceSupport.dispose(ActiveMQConnection.this.transport);
@@ -2296,5 +2308,13 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     
     public long getConsumerFailoverRedeliveryWaitPeriod() {
         return consumerFailoverRedeliveryWaitPeriod;
+    }
+    
+    protected Scheduler getScheduler() {
+        return this.scheduler;
+    }
+    
+    protected ThreadPoolExecutor getExecutor() {
+        return this.executor;
     }
 }

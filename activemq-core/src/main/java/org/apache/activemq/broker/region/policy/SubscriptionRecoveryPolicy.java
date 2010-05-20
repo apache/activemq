@@ -18,6 +18,7 @@ package org.apache.activemq.broker.region.policy;
 
 
 import org.apache.activemq.Service;
+import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.broker.region.SubscriptionRecovery;
@@ -69,4 +70,6 @@ public interface SubscriptionRecoveryPolicy extends Service {
      * @return the copy
      */
     SubscriptionRecoveryPolicy copy();
+    
+    void setBroker(Broker broker);
 }

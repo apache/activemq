@@ -17,13 +17,14 @@
 package org.apache.activemq.bugs;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Vector;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-
 import javax.jms.BytesMessage;
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
@@ -41,9 +42,7 @@ import javax.jms.TopicConnectionFactory;
 import javax.jms.TopicPublisher;
 import javax.jms.TopicSession;
 import javax.jms.TopicSubscriber;
-
 import junit.framework.Test;
-
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.CombinationTestSupport;
@@ -121,7 +120,7 @@ public class DurableConsumerTest extends CombinationTestSupport{
     }
     
     private class MessagePublisher implements Runnable{
-        private boolean shouldPublish = true;
+        private final boolean shouldPublish = true;
         
         public void run(){
             TopicConnectionFactory topicConnectionFactory = null;
@@ -170,13 +169,14 @@ public class DurableConsumerTest extends CombinationTestSupport{
         
         Thread publisherThread = new Thread(new MessagePublisher());
         publisherThread.start();
-        
+        final List<SimpleTopicSubscriber> list = new ArrayList<SimpleTopicSubscriber>();
         for (int i = 0; i < 100; i++) {
             
             final int id = i;
             Thread thread = new Thread(new Runnable(){
                 public void run(){
-                    new SimpleTopicSubscriber(CONNECTION_URL, System.currentTimeMillis() + "-" + id, TOPIC_NAME);
+                    SimpleTopicSubscriber s =new SimpleTopicSubscriber(CONNECTION_URL, System.currentTimeMillis() + "-" + id, TOPIC_NAME);
+                    list.add(s);
                 }
             });
             thread.start();
@@ -189,6 +189,9 @@ public class DurableConsumerTest extends CombinationTestSupport{
         configurePersistence(broker);
         broker.start();
         Thread.sleep(10000);
+        for (SimpleTopicSubscriber s:list) {
+            s.closeConnection();
+        }
         assertEquals(0, exceptions.size());
     }
     
@@ -358,6 +361,7 @@ public class DurableConsumerTest extends CombinationTestSupport{
         
     }
     
+    @Override
     protected void setUp() throws Exception{
         if (broker == null) {
             broker = createBroker(true);
@@ -366,6 +370,7 @@ public class DurableConsumerTest extends CombinationTestSupport{
         super.setUp();
     }
     
+    @Override
     protected void tearDown() throws Exception{
         super.tearDown();
         if (broker != null) {
@@ -392,11 +397,13 @@ public class DurableConsumerTest extends CombinationTestSupport{
     protected void configureBroker(BrokerService answer,boolean deleteStore) throws Exception{
         answer.setDeleteAllMessagesOnStartup(deleteStore);
         KahaDBStore kaha = new KahaDBStore();
+        //kaha.setConcurrentStoreAndDispatchTopics(false);
         File directory = new File("target/activemq-data/kahadb");
         if (deleteStore) {
             IOHelper.deleteChildren(directory);
         }
         kaha.setDirectory(directory);
+        //kaha.setMaxAsyncJobs(10);
         
         answer.setPersistenceAdapter(kaha);
         answer.addConnector(bindAddress);

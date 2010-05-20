@@ -26,7 +26,6 @@ import javax.jms.MessageProducer;
 import javax.jms.Session;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.thread.Scheduler;
 import org.apache.log4j.Logger;
 
 public class EmbeddedActiveMQ
@@ -39,6 +38,7 @@ public class EmbeddedActiveMQ
  
                 BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
                 BrokerService brokerService = null;
+                Connection connection = null;
  
                 logger.info("Start...");
                 try
@@ -49,7 +49,7 @@ public class EmbeddedActiveMQ
                         logger.info("Broker '" + brokerService.getBrokerName() + "' is starting........");
                         brokerService.start();
                         ConnectionFactory fac = new ActiveMQConnectionFactory("vm://TestMQ");
-                        Connection connection = fac.createConnection();
+                        connection = fac.createConnection();
                         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
                         Destination queue = session.createQueue("TEST.QUEUE");
                         MessageProducer producer = session.createProducer(queue);
@@ -71,12 +71,9 @@ public class EmbeddedActiveMQ
                         try
                         {
                                 br.close();
-                                Scheduler scheduler = Scheduler.getInstance();
-                                scheduler.shutdown();
                                 logger.info("Broker '" + brokerService.getBrokerName() + "' is stopping........");
-                                brokerService.stop();
-                                Scheduler.getInstance().shutdown();
- 
+                                connection.close();
+                                brokerService.stop(); 
                                 sleep(8);
                                 logger.info(ThreadExplorer.show("Active threads after stop:"));
  
@@ -90,7 +87,7 @@ public class EmbeddedActiveMQ
                 logger.info("Waiting for list theads is greater then 1 ...");
                 int numTh = ThreadExplorer.active();
  
-                while (numTh > 1)
+                while (numTh > 2)
                 {
                         sleep(3);
                         numTh = ThreadExplorer.active();

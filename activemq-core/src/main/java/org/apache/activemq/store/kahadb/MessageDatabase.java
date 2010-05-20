@@ -82,7 +82,7 @@ import org.apache.kahadb.util.VariableMarshaller;
 
 public class MessageDatabase extends ServiceSupport implements BrokerServiceAware {
 	
-	private BrokerService brokerService;
+	protected BrokerService brokerService;
 
     public static final String PROPERTY_LOG_SLOW_ACCESS_TIME = "org.apache.activemq.store.kahadb.LOG_SLOW_ACCESS_TIME";
     public static final int LOG_SLOW_ACCESS_TIME = Integer.parseInt(System.getProperty(PROPERTY_LOG_SLOW_ACCESS_TIME, "500"));
@@ -245,7 +245,6 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
                     // to see if we need to exit this thread.
                     long sleepTime = Math.min(checkpointInterval, 500);
                     while (opened.get()) {
-                        
                         Thread.sleep(sleepTime);
                         long now = System.currentTimeMillis();
                         if( now - lastCleanup >= cleanupInterval ) {
@@ -276,9 +275,7 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
 	public void open() throws IOException {
 		if( opened.compareAndSet(false, true) ) {
             getJournal().start();
-            
-	        loadPageFile();
-	        
+	        loadPageFile();        
 	        startCheckpoint();
             recover();
 		}
@@ -332,6 +329,11 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
 	public void close() throws IOException, InterruptedException {
 		if( opened.compareAndSet(true, false)) {
 	        synchronized (indexMutex) {
+	            pageFile.tx().execute(new Transaction.Closure<IOException>() {
+	                public void execute(Transaction tx) throws IOException {
+	                    checkpointUpdate(tx, true);
+	                }
+	            });
 	            pageFile.unload();
 	            metadata = new Metadata();
 	        }
@@ -385,11 +387,12 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
      */
     private void recover() throws IllegalStateException, IOException {
         synchronized (indexMutex) {
-	        long start = System.currentTimeMillis();
-	        
+            
+	        long start = System.currentTimeMillis();        
 	        Location recoveryPosition = getRecoveryPosition();
 	        if( recoveryPosition!=null ) {
 		        int redoCounter = 0;
+		        LOG.info("Recoverying from the journal ...");
 		        while (recoveryPosition != null) {
 		            JournalCommand message = load(recoveryPosition);
 		            metadata.lastUpdate = recoveryPosition;
@@ -398,7 +401,7 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
 		            recoveryPosition = journal.getNextLocation(recoveryPosition);
 		        }
 		        long end = System.currentTimeMillis();
-	        	LOG.info("Replayed " + redoCounter + " operations from the journal in " + ((end - start) / 1000.0f) + " seconds.");
+	        	LOG.info("Recovery replayed " + redoCounter + " operations from the journal in " + ((end - start) / 1000.0f) + " seconds.");
 	        }
 	     
 	        // We may have to undo some index updates.
@@ -693,7 +696,7 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
     // from the recovery method too so they need to be idempotent
     // /////////////////////////////////////////////////////////////////
 
-    private void process(JournalCommand data, final Location location) throws IOException {
+    void process(JournalCommand data, final Location location) throws IOException {
         data.visit(new Visitor() {
             @Override
             public void visit(KahaAddMessageCommand command) throws IOException {
@@ -732,11 +735,12 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
         });
     }
 
-    private void process(final KahaAddMessageCommand command, final Location location) throws IOException {
+    protected void process(final KahaAddMessageCommand command, final Location location) throws IOException {
         if (command.hasTransactionInfo()) {
             synchronized (indexMutex) {
                 ArrayList<Operation> inflightTx = getInflightTx(command.getTransactionInfo(), location);
                 inflightTx.add(new AddOpperation(command, location));
+                TransactionId key = key(command.getTransactionInfo());
             }
         } else {
             synchronized (indexMutex) {
@@ -836,7 +840,7 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
     protected final Object indexMutex = new Object();
 	private final HashSet<Integer> journalFilesBeingReplicated = new HashSet<Integer>();
 
-    private void upadateIndex(Transaction tx, KahaAddMessageCommand command, Location location) throws IOException {
+    void upadateIndex(Transaction tx, KahaAddMessageCommand command, Location location) throws IOException {
         StoredDestination sd = getStoredDestination(command.getDestination(), tx);
 
         // Skip adding the message to the index if this is a topic and there are
@@ -870,7 +874,7 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
         
     }
 
-    private void updateIndex(Transaction tx, KahaRemoveMessageCommand command, Location ackLocation) throws IOException {
+    void updateIndex(Transaction tx, KahaRemoveMessageCommand command, Location ackLocation) throws IOException {
         StoredDestination sd = getStoredDestination(command.getDestination(), tx);
         if (!command.hasSubscriptionKey()) {
             
@@ -902,7 +906,7 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
         }
     }
 
-    private void updateIndex(Transaction tx, KahaRemoveDestinationCommand command, Location location) throws IOException {
+    void updateIndex(Transaction tx, KahaRemoveDestinationCommand command, Location location) throws IOException {
         StoredDestination sd = getStoredDestination(command.getDestination(), tx);
         sd.orderIndex.clear(tx);
         sd.orderIndex.unload(tx);
@@ -931,7 +935,7 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
         metadata.destinations.remove(tx, key);
     }
 
-    private void updateIndex(Transaction tx, KahaSubscriptionCommand command, Location location) throws IOException {
+    void updateIndex(Transaction tx, KahaSubscriptionCommand command, Location location) throws IOException {
         StoredDestination sd = getStoredDestination(command.getDestination(), tx);
 
         // If set then we are creating it.. otherwise we are destroying the sub
@@ -961,8 +965,7 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
      * @param tx
      * @throws IOException
      */
-    private void checkpointUpdate(Transaction tx, boolean cleanup) throws IOException {
-
+    void checkpointUpdate(Transaction tx, boolean cleanup) throws IOException {
         LOG.debug("Checkpoint started.");
         
         metadata.state = OPEN_STATE;

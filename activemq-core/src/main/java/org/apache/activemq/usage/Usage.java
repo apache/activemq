@@ -21,13 +21,8 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.Executor;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-
 import org.apache.activemq.Service;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -43,7 +38,6 @@ import org.apache.commons.logging.LogFactory;
 public abstract class Usage<T extends Usage> implements Service {
 
     private static final Log LOG = LogFactory.getLog(Usage.class);
-    private static ThreadPoolExecutor executor;
     protected final Object usageMutex = new Object();
     protected int percentUsage;
     protected T parent;
@@ -53,12 +47,11 @@ public abstract class Usage<T extends Usage> implements Service {
     private final boolean debug = LOG.isDebugEnabled();
     private String name;
     private float usagePortion = 1.0f;
-    private List<T> children = new CopyOnWriteArrayList<T>();
+    private final List<T> children = new CopyOnWriteArrayList<T>();
     private final List<Runnable> callbacks = new LinkedList<Runnable>();
     private int pollingTime = 100;
-    
-    private AtomicBoolean started=new AtomicBoolean();
-
+    private final AtomicBoolean started=new AtomicBoolean();
+    private ThreadPoolExecutor executor;
     public Usage(T parent, String name, float portion) {
         this.parent = parent;
         this.usagePortion = portion;
@@ -289,6 +282,7 @@ public abstract class Usage<T extends Usage> implements Service {
         return name;
     }
 
+    @Override
     public String toString() {
         return "Usage(" + getName() + ") percentUsage=" + percentUsage + "%, usage=" + retrieveUsage() + " limit=" + limiter.getLimit() + " percentUsageMinDelta=" + percentUsageMinDelta + "%";
     }
@@ -411,18 +405,10 @@ public abstract class Usage<T extends Usage> implements Service {
         this.parent = parent;
     }
     
-    protected Executor getExecutor() {
+    public void setExecutor (ThreadPoolExecutor executor) {
+        this.executor = executor;
+    }
+    public ThreadPoolExecutor getExecutor() {
         return executor;
     }
-    
-    static {
-        executor = new ThreadPoolExecutor(1, 10, 30, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>(), new ThreadFactory() {
-            public Thread newThread(Runnable runnable) {
-                Thread thread = new Thread(runnable, "Usage Async Task");
-                thread.setDaemon(true);
-                return thread;
-            }
-        });
-    }
-
 }

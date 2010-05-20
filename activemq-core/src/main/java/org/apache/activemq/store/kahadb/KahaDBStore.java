@@ -72,6 +72,7 @@ import org.apache.activemq.store.kahadb.data.KahaSubscriptionCommand;
 import org.apache.activemq.store.kahadb.data.KahaTransactionInfo;
 import org.apache.activemq.store.kahadb.data.KahaXATransactionId;
 import org.apache.activemq.store.kahadb.data.KahaDestination.DestinationType;
+import org.apache.activemq.thread.Scheduler;
 import org.apache.activemq.usage.MemoryUsage;
 import org.apache.activemq.usage.SystemUsage;
 import org.apache.activemq.util.ServiceStopper;
@@ -94,6 +95,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
     private boolean concurrentStoreAndDispatchQueues = true;
     private boolean concurrentStoreAndDispatchTopics = true;
     private int maxAsyncJobs = MAX_ASYNC_JOBS;
+    private Scheduler scheduler;
 
     public KahaDBStore() {
 
@@ -155,6 +157,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
 
     @Override
     public void doStart() throws Exception {
+        super.doStart();
         this.queueSemaphore = new Semaphore(getMaxAsyncJobs());
         this.topicSemaphore = new Semaphore(getMaxAsyncJobs());
         this.asyncQueueJobQueue = new LinkedBlockingQueue<Runnable>(getMaxAsyncJobs());
@@ -175,8 +178,6 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
                         return thread;
                     }
                 });
-        super.doStart();
-
     }
 
     @Override
@@ -204,6 +205,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
     protected void addQueueTask(StoreQueueTask task) throws IOException {
         try {
             this.queueSemaphore.acquire();
+
         } catch (InterruptedException e) {
             throw new InterruptedIOException(e.getMessage());
         }
@@ -327,7 +329,6 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
 
             org.apache.activemq.util.ByteSequence packet = wireFormat.marshal(message);
             command.setMessage(new Buffer(packet.getData(), packet.getOffset(), packet.getLength()));
-
             store(command, isEnableJournalDiskSyncs() && message.isResponseRequired());
 
         }

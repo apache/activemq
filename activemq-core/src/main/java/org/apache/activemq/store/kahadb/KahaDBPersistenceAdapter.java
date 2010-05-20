@@ -415,6 +415,7 @@ public class KahaDBPersistenceAdapter implements PersistenceAdapter, BrokerServi
     
     @Override
     public String toString() {
-        return "KahaDBPersistenceAdapter";
+        String path = getDirectory() != null ? getDirectory().toString() : "DIRECTORY_NOT_SET";
+        return "KahaDBPersistenceAdapter[" + path +"]" ;
     }
 }

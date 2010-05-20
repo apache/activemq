@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.broker.region.policy;
 
+import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.broker.region.SubscriptionRecovery;
@@ -51,6 +52,9 @@ public class NoSubscriptionRecoveryPolicy implements SubscriptionRecoveryPolicy 
 
     public Message[] browse(ActiveMQDestination dest) throws Exception {
         return new Message[0];
+    }
+    
+    public void setBroker(Broker broker) {        
     }
 
 }

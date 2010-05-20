@@ -55,6 +55,7 @@ public class DestinationFactoryImpl extends DestinationFactory {
         this.persistenceAdapter = persistenceAdapter;
     }
 
+    @Override
     public void setRegionBroker(RegionBroker broker) {
         if (broker == null) {
             throw new IllegalArgumentException("null broker");
@@ -62,6 +63,7 @@ public class DestinationFactoryImpl extends DestinationFactory {
         this.broker = broker;
     }
 
+    @Override
     public Set<ActiveMQDestination> getDestinations() {
         return persistenceAdapter.getDestinations();
     }
@@ -69,6 +71,7 @@ public class DestinationFactoryImpl extends DestinationFactory {
     /**
      * @return instance of {@link Queue} or {@link Topic}
      */
+    @Override
     public Destination createDestination(ConnectionContext context, ActiveMQDestination destination, DestinationStatistics destinationStatistics) throws Exception {
         if (destination.isQueue()) {
             if (destination.isTemporary()) {
@@ -100,6 +103,7 @@ public class DestinationFactoryImpl extends DestinationFactory {
         }
     }
 
+    @Override
     public void removeDestination(Destination dest) {
         ActiveMQDestination destination = dest.getActiveMQDestination();
         if (!destination.isTemporary()) {
@@ -131,11 +135,12 @@ public class DestinationFactoryImpl extends DestinationFactory {
         if (broker.getDestinationPolicy() != null) {
             PolicyEntry entry = broker.getDestinationPolicy().getEntryFor(destination);
             if (entry != null) {
-                entry.configure(topic);
+                entry.configure(broker,topic);
             }
         }
     }
 
+    @Override
     public long getLastMessageBrokerSequenceId() throws IOException {
         return persistenceAdapter.getLastMessageBrokerSequenceId();
     }
@@ -144,6 +149,7 @@ public class DestinationFactoryImpl extends DestinationFactory {
         return persistenceAdapter;
     }
 
+    @Override
     public SubscriptionInfo[] getAllDurableSubscriptions(ActiveMQTopic topic) throws IOException {
         return persistenceAdapter.createTopicMessageStore(topic).getAllSubscriptions();
     }

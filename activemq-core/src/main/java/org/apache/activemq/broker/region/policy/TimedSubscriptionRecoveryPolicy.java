@@ -21,6 +21,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.broker.region.SubscriptionRecovery;
@@ -28,7 +29,6 @@ import org.apache.activemq.broker.region.Topic;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.filter.DestinationFilter;
-import org.apache.activemq.filter.MessageEvaluationContext;
 import org.apache.activemq.thread.Scheduler;
 
 /**
@@ -42,7 +42,7 @@ import org.apache.activemq.thread.Scheduler;
 public class TimedSubscriptionRecoveryPolicy implements SubscriptionRecoveryPolicy {
 
     private static final int GC_INTERVAL = 1000;
-    protected static final Scheduler scheduler = Scheduler.getInstance();
+    private Scheduler scheduler;
     
     // TODO: need to get a better synchronized linked list that has little
     // contention between enqueuing and dequeuing
@@ -89,6 +89,10 @@ public class TimedSubscriptionRecoveryPolicy implements SubscriptionRecoveryPoli
             }
         }
     }
+    
+    public void setBroker(Broker broker) {  
+        this.scheduler = broker.getScheduler();
+    }
 
     public void start() throws Exception {
         scheduler.executePeriodically(gcTask, GC_INTERVAL);
@@ -97,6 +101,7 @@ public class TimedSubscriptionRecoveryPolicy implements SubscriptionRecoveryPoli
     public void stop() throws Exception {
         scheduler.cancel(gcTask);
     }
+    
 
     public void gc() {
         lastGCRun = System.currentTimeMillis();

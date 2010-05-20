@@ -26,6 +26,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ThreadPoolExecutor;
 import javax.jms.InvalidClientIDException;
 import javax.jms.JMSException;
 import org.apache.activemq.broker.Broker;
@@ -57,6 +58,7 @@ import org.apache.activemq.command.Response;
 import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.state.ConnectionState;
 import org.apache.activemq.store.kahadb.plist.PListStore;
+import org.apache.activemq.thread.Scheduler;
 import org.apache.activemq.thread.TaskRunnerFactory;
 import org.apache.activemq.usage.SystemUsage;
 import org.apache.activemq.util.BrokerSupport;
@@ -98,10 +100,14 @@ public class RegionBroker extends EmptyBroker {
     private final Map<String, ConnectionContext> clientIdSet = new HashMap<String, ConnectionContext>();
     private final DestinationInterceptor destinationInterceptor;
     private ConnectionContext adminConnectionContext;
+    private final Scheduler scheduler;
+    private final ThreadPoolExecutor executor;
 
     public RegionBroker(BrokerService brokerService, TaskRunnerFactory taskRunnerFactory, SystemUsage memoryManager, DestinationFactory destinationFactory,
-                        DestinationInterceptor destinationInterceptor) throws IOException {
+                        DestinationInterceptor destinationInterceptor,Scheduler scheduler,ThreadPoolExecutor executor) throws IOException {
         this.brokerService = brokerService;
+        this.executor=executor;
+        this.scheduler = scheduler;
         if (destinationFactory == null) {
             throw new IllegalArgumentException("null destinationFactory");
         }
@@ -808,6 +814,16 @@ public class RegionBroker extends EmptyBroker {
         synchronized(sequenceGenerator) {
             return sequenceGenerator.getNextSequenceId();
         }
+    }
+    
+    
+    @Override
+    public Scheduler getScheduler() {
+        return this.scheduler;
+    }
+    
+    public ThreadPoolExecutor getExecutor() {
+        return this.executor;
     }
     
     @Override

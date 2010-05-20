@@ -20,10 +20,11 @@ package org.apache.activemq.usage;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -31,6 +32,7 @@ import org.junit.Test;
 public class MemoryUsageTest {
 
     MemoryUsage underTest;
+    ThreadPoolExecutor executor;
       
     @Test
     public final void testPercentUsageNeedsNoThread() {    
@@ -46,6 +48,7 @@ public class MemoryUsageTest {
     public final void testAddUsageListenerStartsThread() throws Exception {       
         int activeThreadCount = Thread.activeCount();
         underTest = new MemoryUsage();
+        underTest.setExecutor(executor);
         underTest.setLimit(10);
         underTest.start();
         final CountDownLatch called = new CountDownLatch(1);
@@ -66,12 +69,24 @@ public class MemoryUsageTest {
     
     @Before
     public void setUp() throws Exception {
-        underTest = new MemoryUsage();   
+        underTest = new MemoryUsage();
+        this.executor = new ThreadPoolExecutor(1, 10, 30, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>(), new ThreadFactory() {
+            public Thread newThread(Runnable runnable) {
+                Thread thread = new Thread(runnable, "Usage Async Task");
+                thread.setDaemon(true);
+                return thread;
+            }
+        });
+        underTest.setExecutor(this.executor);
+        
     }
     
     @After
     public void tearDown() {
         assertNotNull(underTest);
         underTest.stop();
+        if (this.executor != null) {
+            this.executor.shutdownNow();
+        }
     }
 }

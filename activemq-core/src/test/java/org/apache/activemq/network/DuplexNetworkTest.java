@@ -18,15 +18,16 @@ package org.apache.activemq.network;
 
 import javax.jms.MessageProducer;
 import javax.jms.TemporaryQueue;
-
 import org.apache.activemq.broker.BrokerService;
 
 public class DuplexNetworkTest extends SimpleNetworkTest {
 
+    @Override
     protected String getLocalBrokerURI() {
         return "org/apache/activemq/network/duplexLocalBroker.xml";
     }
 
+    @Override
     protected BrokerService createRemoteBroker() throws Exception {
         BrokerService broker = new BrokerService();
         broker.setBrokerName("remoteBroker");

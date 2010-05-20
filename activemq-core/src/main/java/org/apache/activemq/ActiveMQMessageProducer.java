@@ -19,13 +19,11 @@ package org.apache.activemq;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
-
 import javax.jms.Destination;
 import javax.jms.IllegalStateException;
 import javax.jms.InvalidDestinationException;
 import javax.jms.JMSException;
 import javax.jms.Message;
-
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ProducerAck;
 import org.apache.activemq.command.ProducerId;
@@ -73,9 +71,9 @@ public class ActiveMQMessageProducer extends ActiveMQMessageProducerSupport impl
     protected ProducerInfo info;
     protected boolean closed;
 
-    private JMSProducerStatsImpl stats;
+    private final JMSProducerStatsImpl stats;
     private AtomicLong messageSequence;
-    private long startTime;
+    private final long startTime;
     private MessageTransformer transformer;
     private MemoryUsage producerWindow;
 
@@ -93,6 +91,7 @@ public class ActiveMQMessageProducer extends ActiveMQMessageProducerSupport impl
         // size > 0
         if (session.connection.getProtocolVersion() >= 3 && this.info.getWindowSize() > 0) {
             producerWindow = new MemoryUsage("Producer Window: " + producerId);
+            producerWindow.setExecutor(session.getConnectionExecutor());
             producerWindow.setLimit(this.info.getWindowSize());
             producerWindow.start();
         }
@@ -164,6 +163,7 @@ public class ActiveMQMessageProducer extends ActiveMQMessageProducerSupport impl
      * 
      * @throws IllegalStateException
      */
+    @Override
     protected void checkClosed() throws IllegalStateException {
         if (closed) {
             throw new IllegalStateException("The producer is closed");
@@ -280,6 +280,7 @@ public class ActiveMQMessageProducer extends ActiveMQMessageProducerSupport impl
         this.info = info;
     }
 
+    @Override
     public String toString() {
         return "ActiveMQMessageProducer { value=" + info.getProducerId() + " }";
     }

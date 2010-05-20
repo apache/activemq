@@ -90,7 +90,7 @@ public class PolicyEntry extends DestinationMapEntry {
     
    
     public void configure(Broker broker,Queue queue) {
-        baseConfiguration(queue);
+        baseConfiguration(broker,queue);
         if (dispatchPolicy != null) {
             queue.setDispatchPolicy(dispatchPolicy);
         }
@@ -112,14 +112,16 @@ public class PolicyEntry extends DestinationMapEntry {
         queue.setConsumersBeforeDispatchStarts(getConsumersBeforeDispatchStarts());
     }
 
-    public void configure(Topic topic) {
-        baseConfiguration(topic);
+    public void configure(Broker broker,Topic topic) {
+        baseConfiguration(broker,topic);
         if (dispatchPolicy != null) {
             topic.setDispatchPolicy(dispatchPolicy);
         }
         topic.setDeadLetterStrategy(getDeadLetterStrategy());
         if (subscriptionRecoveryPolicy != null) {
-            topic.setSubscriptionRecoveryPolicy(subscriptionRecoveryPolicy.copy());
+            SubscriptionRecoveryPolicy srp = subscriptionRecoveryPolicy.copy();
+            srp.setBroker(broker);
+            topic.setSubscriptionRecoveryPolicy(srp);
         }
         if (memoryLimit > 0) {
             topic.getMemoryUsage().setLimit(memoryLimit);
@@ -127,7 +129,7 @@ public class PolicyEntry extends DestinationMapEntry {
         topic.setLazyDispatch(isLazyDispatch());
     }
     
-    public void baseConfiguration(BaseDestination destination) {
+    public void baseConfiguration(Broker broker,BaseDestination destination) {
         destination.setProducerFlowControl(isProducerFlowControl());
         destination.setBlockedProducerWarningInterval(getBlockedProducerWarningInterval());
         destination.setEnableAudit(isEnableAudit());
@@ -148,7 +150,11 @@ public class PolicyEntry extends DestinationMapEntry {
         destination.setMaxExpirePageSize(getMaxExpirePageSize());
         destination.setCursorMemoryHighWaterMark(getCursorMemoryHighWaterMark());
         destination.setStoreUsageHighWaterMark(getStoreUsageHighWaterMark());
-        destination.setSlowConsumerStrategy(getSlowConsumerStrategy());
+        SlowConsumerStrategy scs = getSlowConsumerStrategy();
+        if (scs != null) {
+            scs.setScheduler(broker.getScheduler());
+        }
+        destination.setSlowConsumerStrategy(scs);
     }
 
     public void configure(Broker broker, SystemUsage memoryManager, TopicSubscription subscription) {
