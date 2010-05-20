@@ -182,8 +182,12 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
 
     @Override
     public void doStop(ServiceStopper stopper) throws Exception {
-        this.queueSemaphore.drainPermits();
-        this.topicSemaphore.drainPermits();
+        if (this.queueSemaphore != null) {
+            this.queueSemaphore.drainPermits();
+        }
+        if (this.topicSemaphore != null) {
+            this.topicSemaphore.drainPermits();
+        }
         if (this.queueExecutor != null) {
             this.queueExecutor.shutdownNow();
         }
