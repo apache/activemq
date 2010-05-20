@@ -18,7 +18,6 @@ package org.apache.activemq.perf;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-
 import javax.jms.BytesMessage;
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
@@ -34,23 +33,34 @@ public class PerfProducer implements Runnable {
     protected Connection connection;
     protected MessageProducer producer;
     protected PerfRate rate = new PerfRate();
-    private byte[] payload;
+    private final byte[] payload;
     private Session session;
     private final CountDownLatch stopped = new CountDownLatch(1);
     private boolean running;
+    private final boolean transacted;
     private int sleep = 0;
 
-    public PerfProducer(ConnectionFactory fac, Destination dest, byte[] palyload) throws JMSException {
+    public PerfProducer(ConnectionFactory fac, Destination dest, byte[] payload) throws JMSException {
+        this(fac, dest, payload, false);
+    }
+    public PerfProducer(ConnectionFactory fac, Destination dest, byte[] payload, boolean transacted)
+            throws JMSException {
         connection = fac.createConnection();
-        session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        this.transacted = transacted;
+        if (transacted) {
+            session = connection.createSession(true, Session.SESSION_TRANSACTED);
+        } else {
+            session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        }
         producer = session.createProducer(dest);
-        this.payload = palyload;
+        this.payload = payload;
+       
     }
 
     public void setDeliveryMode(int mode) throws JMSException {
         producer.setDeliveryMode(mode);
     }
-    
+
     public void setTimeToLive(int ttl) throws JMSException {
         producer.setTimeToLive(ttl);
     }
@@ -68,7 +78,7 @@ public class PerfProducer implements Runnable {
             rate.reset();
             running = true;
             connection.start();
-            Thread t = new  Thread(this);
+            Thread t = new Thread(this);
             t.setName("Producer");
             t.start();
         }
@@ -78,7 +88,7 @@ public class PerfProducer implements Runnable {
         synchronized (this) {
             running = false;
         }
-        stopped.await(1,TimeUnit.SECONDS);
+        stopped.await(1, TimeUnit.SECONDS);
         connection.stop();
     }
 
@@ -93,6 +103,9 @@ public class PerfProducer implements Runnable {
                 msg = session.createBytesMessage();
                 msg.writeBytes(payload);
                 producer.send(msg);
+                if(this.transacted) {
+                    this.session.commit();
+                }
                 rate.increment();
                 if (sleep > 0) {
                     Thread.sleep(sleep);
