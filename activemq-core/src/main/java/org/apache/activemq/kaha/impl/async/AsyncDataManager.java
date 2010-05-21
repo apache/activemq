@@ -196,7 +196,9 @@ public class AsyncDataManager {
         try {
             this.scheduler.start();
         } catch (Exception e) {
-            throw new IOException(e);
+            IOException ioe =  new IOException("scheduler start: " + e);
+            ioe.initCause(e);
+            throw ioe;
         }
         this.scheduler.executePeriodically(cleanupTask, DEFAULT_CLEANUP_INTERVAL);
     }
@@ -337,7 +339,9 @@ public class AsyncDataManager {
         try {
             this.scheduler.stop();
         } catch (Exception e) {
-            throw new IOException(e);
+            IOException ioe = new IOException("scheduler stop: " + e);
+            ioe.initCause(e);
+            throw ioe;
         }
         accessorPool.close();
         storeState(false);
