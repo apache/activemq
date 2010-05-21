@@ -341,8 +341,9 @@ public class MasterBroker extends InsertableMutableBrokerFilter {
          * A message can be dispatched before the super.send() method returns so -
          * here the order is switched to avoid problems on the slave with
          * receiving acks for messages not received yet
+         * copy ensures we don't mess with the correlator and command ids
          */
-        sendSyncToSlave(message);
+        sendSyncToSlave(message.copy());
         super.send(producerExchange, message);
     }
 
