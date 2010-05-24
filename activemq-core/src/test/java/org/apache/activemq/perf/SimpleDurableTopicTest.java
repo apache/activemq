@@ -33,8 +33,8 @@ public class SimpleDurableTopicTest extends SimpleTopicTest {
     protected void setUp() throws Exception {
         numberOfDestinations=1;
         numberOfConsumers = 2;
-        numberofProducers = 1;
-        sampleCount=1000;
+        numberofProducers = Integer.parseInt(System.getProperty("SimpleDurableTopicTest.numberofProducers", "1"), 10);
+        sampleCount= Integer.parseInt(System.getProperty("SimpleDurableTopicTest.sampleCount", "1000"), 10);
         playloadSize = 1024;
         super.setUp();
     }

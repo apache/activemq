@@ -23,11 +23,11 @@ import javax.jms.JMSException;
 /**
  * @version $Revision: 1.3 $
  */
-public class KahaDBDurableTransactedTopicTest extends SimpleDurableTopicTest {
+public class KahaDBDurableTransactedTopicTest extends KahaDBDurableTopicTest {
 
     @Override
     protected PerfProducer createProducer(ConnectionFactory fac, Destination dest, int number, byte[] payload) throws JMSException {
-        return new PerfProducer(fac, dest, payload);
+        return new PerfProducer(fac, dest, payload, true);
     }
 
   

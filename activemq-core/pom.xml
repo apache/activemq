@@ -54,6 +54,7 @@
       '=META-INF.services.org.apache.xbean.spring.http.activemq.apache.org.schema';-noimport:=true
     </activemq.osgi.export>
     <activemq.osgi.dynamic.import>*</activemq.osgi.dynamic.import>
+    <surefire.argLine>-Xmx512M</surefire.argLine>
   </properties>
 
   <dependencies>
@@ -408,7 +409,7 @@
           <forkMode>pertest</forkMode>
           <childDelegation>false</childDelegation>
           <useFile>true</useFile>
-          <argLine>-Xmx512M</argLine>
+          <argLine>${surefire.argLine}</argLine>
 
            <systemProperties>
             <property>
