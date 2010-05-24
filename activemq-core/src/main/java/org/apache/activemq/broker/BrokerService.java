@@ -563,14 +563,19 @@ public class BrokerService implements Service {
         VMTransportFactory.stopped(getBrokerName());
         if (broker != null) {
             stopper.stop(broker);
+            broker = null;
         }
+        
         if (tempDataStore != null) {
             tempDataStore.stop();
+            tempDataStore = null;
         }
         stopper.stop(persistenceAdapter);
+        persistenceAdapter = null;
         slave = true;
         if (isUseJmx()) {
             stopper.stop(getManagementContext());
+            managementContext = null;
         }
         // Clear SelectorParser cache to free memory
         SelectorParser.clearCache();
@@ -596,13 +601,20 @@ public class BrokerService implements Service {
         }
         if (this.taskRunnerFactory != null) {
             this.taskRunnerFactory.shutdown();
+            this.taskRunnerFactory = null;
         }
         if (this.scheduler != null) {
             this.scheduler.stop();
+            this.scheduler = null;
         }
         if (this.executor != null) {
             this.executor.shutdownNow();
+            this.executor = null;
         }
+        
+        this.destinationInterceptors = null;
+        this.destinationFactory = null;
+        
         LOG.info("ActiveMQ JMS Message Broker (" + getBrokerName() + ", " + brokerId + ") stopped");
         synchronized (shutdownHooks) {
             for (Runnable hook : shutdownHooks) {
