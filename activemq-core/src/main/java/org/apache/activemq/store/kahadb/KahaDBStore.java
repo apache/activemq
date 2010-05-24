@@ -264,8 +264,8 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
                             messageList.add(msg);
                         } else {
                             RemoveOpperation rmOp = (RemoveOpperation) op;
-                            MessageAck ack = (MessageAck) wireFormat.unmarshal(new DataInputStream(rmOp.getCommand()
-                                    .getAck().newInput()));
+                            Buffer ackb = rmOp.getCommand().getAck();
+                            MessageAck ack = (MessageAck) wireFormat.unmarshal(new DataInputStream(ackb.newInput()));
                             ackList.add(ack);
                         }
                     }
@@ -342,6 +342,9 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
             command.setDestination(dest);
             command.setMessageId(ack.getLastMessageId().toString());
             command.setTransactionInfo(createTransactionInfo(ack.getTransactionId()));
+
+            org.apache.activemq.util.ByteSequence packet = wireFormat.marshal(ack);
+            command.setAck(new Buffer(packet.getData(), packet.getOffset(), packet.getLength()));
             store(command, isEnableJournalDiskSyncs() && ack.isResponseRequired());
         }
 
