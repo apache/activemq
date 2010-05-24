@@ -17,6 +17,7 @@
 package org.apache.activemq.store;
 
 import java.io.IOException;
+import java.util.concurrent.FutureTask;
 
 import org.apache.activemq.Service;
 import org.apache.activemq.command.TransactionId;
@@ -31,7 +32,7 @@ public interface TransactionStore extends Service {
 
     void prepare(TransactionId txid) throws IOException;
 
-    void commit(TransactionId txid, boolean wasPrepared) throws IOException;
+    void commit(TransactionId txid, boolean wasPrepared, Runnable done) throws IOException;
 
     void rollback(TransactionId txid) throws IOException;
 

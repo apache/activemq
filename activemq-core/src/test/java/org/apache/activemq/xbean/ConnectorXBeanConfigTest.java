@@ -35,12 +35,15 @@ import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.network.NetworkConnector;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * @version $Revision: 1.1 $
  */
 public class ConnectorXBeanConfigTest extends TestCase {
 
+    private static final Log LOG = LogFactory.getLog(ConnectorXBeanConfigTest.class);
     protected BrokerService brokerService;
 
     public void testConnectorConfiguredCorrectly() throws Exception {
@@ -76,6 +79,7 @@ public class ConnectorXBeanConfigTest extends TestCase {
     	brokerService.start(true); // force restart
     	brokerService.waitUntilStarted();
     	
+    	LOG.info("try and connect to restarted broker");
     	//send and receive a message from a restarted broker
     	ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("tcp://localhost:61636");
     	Connection conn = factory.createConnection();

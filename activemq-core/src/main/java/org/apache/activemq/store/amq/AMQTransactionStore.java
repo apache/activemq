@@ -99,7 +99,7 @@ public class AMQTransactionStore implements TransactionStore {
      * @throws XAException
      * @see org.apache.activemq.store.TransactionStore#commit(org.apache.activemq.service.Transaction)
      */
-    public void commit(TransactionId txid, boolean wasPrepared) throws IOException {
+    public void commit(TransactionId txid, boolean wasPrepared, Runnable done) throws IOException {
         AMQTx tx;
         if (wasPrepared) {
             synchronized (preparedTransactions) {
@@ -111,6 +111,7 @@ public class AMQTransactionStore implements TransactionStore {
             }
         }
         if (tx == null) {
+            done.run();
             return;
         }
         if (txid.isXATransaction()) {
@@ -118,6 +119,7 @@ public class AMQTransactionStore implements TransactionStore {
         } else {
             peristenceAdapter.writeCommand(new JournalTransaction(JournalTransaction.LOCAL_COMMIT, txid, wasPrepared), true,true);
         }
+        done.run();
     }
 
     /**

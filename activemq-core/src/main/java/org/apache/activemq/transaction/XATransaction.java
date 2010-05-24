@@ -64,15 +64,15 @@ public class XATransaction extends Transaction {
             checkForPreparedState(onePhase);
             doPrePrepare();
             setStateFinished();
-            transactionStore.commit(getTransactionId(), false);
-            doPostCommit();
+            transactionStore.commit(getTransactionId(), false, postCommitTask);
+            waitPostCommitDone(postCommitTask);
             break;
         case PREPARED_STATE:
             // 2 phase commit, work done.
             // We would record commit here.
             setStateFinished();
-            transactionStore.commit(getTransactionId(), true);
-            doPostCommit();
+            transactionStore.commit(getTransactionId(), true, postCommitTask);
+            waitPostCommitDone(postCommitTask);
             break;
         default:
             illegalStateTransition("commit");
@@ -103,20 +103,6 @@ public class XATransaction extends Transaction {
             rollback();
             XAException xae = new XAException("PRE-PREPARE FAILED: Transaction rolled back.");
             xae.errorCode = XAException.XA_RBOTHER;
-            xae.initCause(e);
-            throw xae;
-        }
-    }
-
-    private void doPostCommit() throws XAException {
-        try {
-            fireAfterCommit();
-        } catch (Throwable e) {
-            // I guess this could happen. Post commit task failed
-            // to execute properly.
-            LOG.warn("POST COMMIT FAILED: ", e);
-            XAException xae = new XAException("POST COMMIT FAILED");
-            xae.errorCode = XAException.XAER_RMERR;
             xae.initCause(e);
             throw xae;
         }
@@ -194,5 +180,10 @@ public class XATransaction extends Transaction {
 
     public TransactionId getTransactionId() {
         return xid;
+    }
+    
+    @Override
+    public Log getLog() {
+        return LOG;
     }
 }

@@ -101,12 +101,13 @@ public class KahaTransactionStore implements TransactionStore, BrokerServiceAwar
      * @throws XAException
      * @see org.apache.activemq.store.TransactionStore#commit(org.apache.activemq.service.Transaction)
      */
-    public void commit(TransactionId txid, boolean wasPrepared) throws IOException {
+    public void commit(TransactionId txid, boolean wasPrepared, Runnable done) throws IOException {
         KahaTransaction tx = getTx(txid);
         if (tx != null) {
             tx.commit(this);
             removeTx(txid);
         }
+        done.run();
     }
 
     /**

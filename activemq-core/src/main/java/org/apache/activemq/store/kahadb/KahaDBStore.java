@@ -241,14 +241,14 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
     public TransactionStore createTransactionStore() throws IOException {
         return new TransactionStore() {
 
-            public void commit(TransactionId txid, boolean wasPrepared) throws IOException {
-                store(new KahaCommitCommand().setTransactionInfo(createTransactionInfo(txid)), true);
+            public void commit(TransactionId txid, boolean wasPrepared, Runnable done) throws IOException {
+                store(new KahaCommitCommand().setTransactionInfo(createTransactionInfo(txid)), true, done);
             }
             public void prepare(TransactionId txid) throws IOException {
-                store(new KahaPrepareCommand().setTransactionInfo(createTransactionInfo(txid)), true);
+                store(new KahaPrepareCommand().setTransactionInfo(createTransactionInfo(txid)), true, null);
             }
             public void rollback(TransactionId txid) throws IOException {
-                store(new KahaRollbackCommand().setTransactionInfo(createTransactionInfo(txid)), false);
+                store(new KahaRollbackCommand().setTransactionInfo(createTransactionInfo(txid)), false, null);
             }
             public void recover(TransactionRecoveryListener listener) throws IOException {
                 for (Map.Entry<TransactionId, ArrayList<Operation>> entry : preparedTransactions.entrySet()) {
@@ -333,7 +333,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
 
             org.apache.activemq.util.ByteSequence packet = wireFormat.marshal(message);
             command.setMessage(new Buffer(packet.getData(), packet.getOffset(), packet.getLength()));
-            store(command, isEnableJournalDiskSyncs() && message.isResponseRequired());
+            store(command, isEnableJournalDiskSyncs() && message.isResponseRequired(), null);
 
         }
 
@@ -345,13 +345,13 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
 
             org.apache.activemq.util.ByteSequence packet = wireFormat.marshal(ack);
             command.setAck(new Buffer(packet.getData(), packet.getOffset(), packet.getLength()));
-            store(command, isEnableJournalDiskSyncs() && ack.isResponseRequired());
+            store(command, isEnableJournalDiskSyncs() && ack.isResponseRequired(), null);
         }
 
         public void removeAllMessages(ConnectionContext context) throws IOException {
             KahaRemoveDestinationCommand command = new KahaRemoveDestinationCommand();
             command.setDestination(dest);
-            store(command, true);
+            store(command, true, null);
         }
 
         public Message getMessage(MessageId identity) throws IOException {
@@ -519,7 +519,6 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
             if (isConcurrentStoreAndDispatchTopics()) {
                 StoreTopicTask task = asyncTopicMap.get(messageId);
                 if (task != null) {
-
                     if (task.addSubscriptionKey(subscriptionKey)) {
                         removeTopicTask(messageId);
                         task.cancel();
@@ -538,7 +537,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
             command.setDestination(dest);
             command.setSubscriptionKey(subscriptionKey);
             command.setMessageId(messageId.toString());
-            store(command, false);
+            store(command, false, null);
         }
 
         public void addSubsciption(SubscriptionInfo subscriptionInfo, boolean retroactive) throws IOException {
@@ -550,7 +549,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
             command.setRetroactive(retroactive);
             org.apache.activemq.util.ByteSequence packet = wireFormat.marshal(subscriptionInfo);
             command.setSubscriptionInfo(new Buffer(packet.getData(), packet.getOffset(), packet.getLength()));
-            store(command, isEnableJournalDiskSyncs() && true);
+            store(command, isEnableJournalDiskSyncs() && true, null);
             this.subscriptionCount.incrementAndGet();
         }
 
@@ -558,7 +557,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
             KahaSubscriptionCommand command = new KahaSubscriptionCommand();
             command.setDestination(dest);
             command.setSubscriptionKey(subscriptionKey(clientId, subscriptionName));
-            store(command, isEnableJournalDiskSyncs() && true);
+            store(command, isEnableJournalDiskSyncs() && true, null);
             this.subscriptionCount.decrementAndGet();
         }
 

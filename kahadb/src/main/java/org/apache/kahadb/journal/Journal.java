@@ -596,12 +596,12 @@ public class Journal {
         return rc;
     }
 
-    public synchronized Location write(ByteSequence data, boolean sync) throws IOException, IllegalStateException {
+    public Location write(ByteSequence data, boolean sync) throws IOException, IllegalStateException {
         Location loc = appender.storeItem(data, Location.USER_TYPE, sync);
         return loc;
     }
 
-    public synchronized Location write(ByteSequence data, Runnable onComplete) throws IOException, IllegalStateException {
+    public Location write(ByteSequence data, Runnable onComplete) throws IOException, IllegalStateException {
         Location loc = appender.storeItem(data, Location.USER_TYPE, onComplete);
         return loc;
     }

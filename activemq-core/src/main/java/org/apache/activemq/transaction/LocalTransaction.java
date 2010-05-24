@@ -69,21 +69,8 @@ public class LocalTransaction extends Transaction {
         context.getTransactions().remove(xid);
         // Sync on transaction store to avoid out of order messages in the cursor
         // https://issues.apache.org/activemq/browse/AMQ-2594
-        synchronized (transactionStore) {
-            transactionStore.commit(getTransactionId(), false);
-
-            try {
-                fireAfterCommit();
-            } catch (Throwable e) {
-                // I guess this could happen. Post commit task failed
-                // to execute properly.
-                LOG.warn("POST COMMIT FAILED: ", e);
-                XAException xae = new XAException("POST COMMIT FAILED");
-                xae.errorCode = XAException.XAER_RMERR;
-                xae.initCause(e);
-                throw xae;
-            }
-        }
+        transactionStore.commit(getTransactionId(), false, postCommitTask);
+        this.waitPostCommitDone(postCommitTask);
     }
 
     public void rollback() throws XAException, IOException {
@@ -120,5 +107,9 @@ public class LocalTransaction extends Transaction {
     public TransactionId getTransactionId() {
         return xid;
     }
-
+    
+    @Override
+    public Log getLog() {
+        return LOG;
+    }
 }

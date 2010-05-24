@@ -62,6 +62,7 @@ public class ThreadExplorer
      * @param isStarredExp
      *            (regular expressions with *)
      */
+    @SuppressWarnings("deprecation")
     public static int kill(String threadName, boolean isStarredExp, String motivation)
     {
         String me = "ThreadExplorer.kill: ";

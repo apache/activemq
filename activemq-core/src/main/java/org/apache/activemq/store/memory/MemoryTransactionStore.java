@@ -194,7 +194,7 @@ public class MemoryTransactionStore implements TransactionStore {
      * @throws XAException
      * @see org.apache.activemq.store.TransactionStore#commit(org.apache.activemq.service.Transaction)
      */
-    public void commit(TransactionId txid, boolean wasPrepared) throws IOException {
+    public void commit(TransactionId txid, boolean wasPrepared, Runnable done) throws IOException {
 
         Tx tx;
         if (wasPrepared) {
@@ -204,9 +204,11 @@ public class MemoryTransactionStore implements TransactionStore {
         }
 
         if (tx == null) {
+            done.run();
             return;
         }
         tx.commit();
+        done.run();
 
     }
 

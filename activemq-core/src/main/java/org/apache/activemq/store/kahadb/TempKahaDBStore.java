@@ -72,8 +72,9 @@ public class TempKahaDBStore extends TempMessageDatabase implements PersistenceA
     public TransactionStore createTransactionStore() throws IOException {
         return new TransactionStore(){
             
-            public void commit(TransactionId txid, boolean wasPrepared) throws IOException {
+            public void commit(TransactionId txid, boolean wasPrepared, Runnable done) throws IOException {
                 processCommit(txid);
+                done.run();
             }
             public void prepare(TransactionId txid) throws IOException {
             	processPrepare(txid);
