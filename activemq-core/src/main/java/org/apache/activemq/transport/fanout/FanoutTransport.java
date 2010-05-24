@@ -23,9 +23,11 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
+
 import org.apache.activemq.command.Command;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.Message;
+import org.apache.activemq.command.RemoveInfo;
 import org.apache.activemq.command.Response;
 import org.apache.activemq.state.ConnectionStateTracker;
 import org.apache.activemq.thread.DefaultThreadPools;
@@ -130,7 +132,7 @@ public class FanoutTransport implements CompositeTransport {
         public void onException(IOException error) {
             try {
                 synchronized (reconnectMutex) {
-                    if (transport == null) {
+                    if (transport == null || !transport.isConnected()) {
                         return;
                     }
 
@@ -434,7 +436,8 @@ public class FanoutTransport implements CompositeTransport {
             }
             return ((Message)command).getDestination().isTopic();
         }
-        if (command.getDataStructureType() == ConsumerInfo.DATA_STRUCTURE_TYPE) {
+        if (command.getDataStructureType() == ConsumerInfo.DATA_STRUCTURE_TYPE ||
+                command.getDataStructureType() == RemoveInfo.DATA_STRUCTURE_TYPE) {
             return false;
         }
         return true;

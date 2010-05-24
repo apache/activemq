@@ -449,9 +449,6 @@
             <!-- These are load tests so take too long to run -->
             <exclude>**/load/*</exclude>
 
-            <!-- http://jira.activemq.org/jira/browse/AMQ-610 -->
-            <exclude>**/FanoutTransportBrokerTest.*</exclude>
-
             <!-- http://jira.activemq.org/jira/browse/AMQ-626 -->
             <exclude>**/MultipleTestsWithSpringFactoryBeanTest.*</exclude>
             <exclude>**/MultipleTestsWithXBeanFactoryBeanTest.*</exclude>
