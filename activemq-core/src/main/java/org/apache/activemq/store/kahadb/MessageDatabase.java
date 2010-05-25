@@ -744,7 +744,6 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
             synchronized (indexMutex) {
                 ArrayList<Operation> inflightTx = getInflightTx(command.getTransactionInfo(), location);
                 inflightTx.add(new AddOpperation(command, location));
-                TransactionId key = key(command.getTransactionInfo());
             }
         } else {
             synchronized (indexMutex) {

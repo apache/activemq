@@ -114,6 +114,7 @@ public class ThreeBrokerVirtualTopicNetworkTest extends JmsMultipleBrokersTestSu
         // ensure we don't get any more messages
         Thread.sleep(2000);
         
+        LOG.info("MessagesA: " + msgsA.getMessageIds());
         assertEquals(10, msgsA.getMessageCount());
         assertEquals(11, msgsB.getMessageCount());
         assertEquals(11, msgsC.getMessageCount());        
@@ -141,6 +142,7 @@ public class ThreeBrokerVirtualTopicNetworkTest extends JmsMultipleBrokersTestSu
         // ensure we don't get any more messages
         Thread.sleep(5000);
         
+        LOG.info("Extra MessagesA: " + msgsA.getMessageIds());
         assertEquals(0, msgsA.getMessageCount());
         assertEquals(11, msgsB.getMessageCount());
         assertEquals(11, msgsC.getMessageCount());
