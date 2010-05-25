@@ -176,6 +176,14 @@
     </repository>
   </repositories>
 
+  <!-- This is only here since the activemq-protobuf plugin has not been released yet -->
+  <pluginRepositories>
+    <pluginRepository>
+      <id>apache.snapshots</id>
+      <url>https://repository.apache.org/content/repositories/snapshots/</url>
+    </pluginRepository>
+  </pluginRepositories>
+
   <dependencyManagement>
     <dependencies>
       <!-- =============================== -->
