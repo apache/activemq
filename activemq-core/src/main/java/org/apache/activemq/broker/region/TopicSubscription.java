@@ -107,12 +107,17 @@ public class TopicSubscription extends AbstractSubscription {
                 }
             }
             if (maximumPendingMessages != 0) {
+                boolean warnedAboutWait = false;
             	synchronized(matchedListMutex){
             		while (matched.isFull()){
             		    if (getContext().getStopping().get()) {
-            		        LOG.warn("stopped waiting for space in pendingMessage cursor for: " + node.getMessageId());
+            		        LOG.warn(toString() + ": stopped waiting for space in pendingMessage cursor for: " + node.getMessageId());
             		        enqueueCounter.decrementAndGet();
             		        return;
+            		    }
+            		    if (!warnedAboutWait) {
+            		        LOG.info(toString() + ": Pending message cursor ["+ matched + "] is full, temp usage (" + + matched.getSystemUsage().getTempUsage().getPercentUsage() + "%) or memory usage (" + matched.getSystemUsage().getMemoryUsage().getPercentUsage() + "%) limit reached, blocking message add() pending the release of resources.");
+            		        warnedAboutWait = true;
             		    }
             			matchedListMutex.wait(20);
             		}
