@@ -1020,7 +1020,8 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
         final ConsumerInfo consumerInfo = candidate.getRemoteInfo();
         boolean suppress = false;
 
-        if (consumerInfo.getDestination().isQueue() && !configuration.isSuppressDuplicateQueueSubscriptions()) {
+        if (consumerInfo.getDestination().isQueue() && !configuration.isSuppressDuplicateQueueSubscriptions() ||
+                consumerInfo.getDestination().isTopic() && !configuration.isSuppressDuplicateTopicSubscriptions()) {
             return suppress;
         }
 

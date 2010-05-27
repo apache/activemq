@@ -46,6 +46,7 @@ public class NetworkBridgeConfiguration {
     private List<ActiveMQDestination> staticallyIncludedDestinations;
 
     private boolean suppressDuplicateQueueSubscriptions = false;
+    private boolean suppressDuplicateTopicSubscriptions = true;
 
 
     /**
@@ -275,6 +276,18 @@ public class NetworkBridgeConfiguration {
         suppressDuplicateQueueSubscriptions = val;
     }
 
+    public boolean isSuppressDuplicateTopicSubscriptions() {
+        return suppressDuplicateTopicSubscriptions;
+    }
+
+    /**
+     * 
+     * @param val if true, duplicate network topic subscriptions (in a cyclic network) will be suppressed
+     */
+    public void setSuppressDuplicateTopicSubscriptions(boolean val) {
+        suppressDuplicateTopicSubscriptions  = val;
+    }
+    
     /**
      * @return the brokerURL
      */

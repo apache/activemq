@@ -18,6 +18,7 @@ package org.apache.activemq.usecases;
 
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -34,16 +35,23 @@ import javax.jms.Session;
 import javax.jms.TextMessage;
 import javax.jms.Topic;
 
-import junit.framework.TestCase;
+import junit.framework.Test;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.CombinationTestSupport;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.region.policy.DispatchPolicy;
+import org.apache.activemq.broker.region.policy.PolicyEntry;
+import org.apache.activemq.broker.region.policy.PolicyMap;
+import org.apache.activemq.broker.region.policy.PriorityNetworkDispatchPolicy;
+import org.apache.activemq.broker.region.policy.SimpleDispatchPolicy;
+import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.network.NetworkConnector;
 import org.apache.activemq.util.Wait;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-public class NoDuplicateOnTopicNetworkTest extends TestCase {
+public class NoDuplicateOnTopicNetworkTest extends CombinationTestSupport {
     private static final Log LOG = LogFactory
             .getLog(NoDuplicateOnTopicNetworkTest.class);
 
@@ -51,17 +59,23 @@ public class NoDuplicateOnTopicNetworkTest extends TestCase {
     private static final String BROKER_1 = "tcp://localhost:61626";
     private static final String BROKER_2 = "tcp://localhost:61636";
     private static final String BROKER_3 = "tcp://localhost:61646";
+    private final static String TOPIC_NAME = "broadcast";
     private BrokerService broker1;
     private BrokerService broker2;
     private BrokerService broker3;
 
+    public boolean suppressDuplicateTopicSubs = false;
+    public DispatchPolicy dispatchPolicy = new SimpleDispatchPolicy();
+    
     private boolean dynamicOnly = false;
     // no duplicates in cyclic network if networkTTL <=1
     // when > 1, subscriptions perculate around resulting in duplicates as there is no
     // memory of the original subscription.
     // solution for 6.0 using org.apache.activemq.command.ConsumerInfo.getNetworkConsumerIds()
     private int ttl = 3;
-
+    
+    
+  
     @Override
     protected void setUp() throws Exception {
         super.setUp();
@@ -74,6 +88,10 @@ public class NoDuplicateOnTopicNetworkTest extends TestCase {
         Thread.sleep(1000);
         
         waitForBridgeFormation();
+    }
+    
+    public static Test suite() {
+        return suite(NoDuplicateOnTopicNetworkTest.class);
     }
     
     protected void waitForBridgeFormation() throws Exception {
@@ -105,7 +123,17 @@ public class NoDuplicateOnTopicNetworkTest extends TestCase {
         networkConnector.setDecreaseNetworkConsumerPriority(true);
         networkConnector.setDynamicOnly(dynamicOnly);
         networkConnector.setNetworkTTL(ttl);
+        networkConnector.setSuppressDuplicateTopicSubscriptions(suppressDuplicateTopicSubs);
 
+        
+        PolicyMap policyMap = new PolicyMap();
+        PolicyEntry policy = new PolicyEntry();
+        policy.setDispatchPolicy(dispatchPolicy);
+        // the audit will suppress the duplicates as it defaults to true so this test
+        // checking for dups will fail. it is good to have it on in practice.
+        policy.setEnableAudit(false);
+        policyMap.put(new ActiveMQTopic(TOPIC_NAME), policy);
+        broker.setDestinationPolicy(policyMap);
         broker.start();
        
         return broker;
@@ -119,13 +147,20 @@ public class NoDuplicateOnTopicNetworkTest extends TestCase {
         super.tearDown();
     }
 
+    public void initCombosForTestProducerConsumerTopic() {
+        this.addCombinationValues("suppresDuplicateTopicSubs", new Object[]{Boolean.TRUE, Boolean.FALSE});
+        this.addCombinationValues("dispatchPolicy", new Object[]{new PriorityNetworkDispatchPolicy(), new SimpleDispatchPolicy()});
+    }
+    
     public void testProducerConsumerTopic() throws Exception {
-        final String topicName = "broadcast";
+        
+        final CountDownLatch consumerStarted = new CountDownLatch(1);
+        
         Thread producerThread = new Thread(new Runnable() {
             public void run() {
                 TopicWithDuplicateMessages producer = new TopicWithDuplicateMessages();
                 producer.setBrokerURL(BROKER_1);
-                producer.setTopicName(topicName);
+                producer.setTopicName(TOPIC_NAME);
                 try {
                     producer.produce();
                 } catch (JMSException e) {
@@ -138,9 +173,10 @@ public class NoDuplicateOnTopicNetworkTest extends TestCase {
         Thread consumerThread = new Thread(new Runnable() {
             public void run() {
                 consumer.setBrokerURL(BROKER_2);
-                consumer.setTopicName(topicName);
+                consumer.setTopicName(TOPIC_NAME);
                 try {
                     consumer.consumer();
+                    consumerStarted.countDown();
                     consumer.getLatch().await(60, TimeUnit.SECONDS);
                 } catch (Exception e) {
                     fail("Unexpected " + e);
@@ -151,20 +187,32 @@ public class NoDuplicateOnTopicNetworkTest extends TestCase {
         consumerThread.start();
         LOG.info("Started Consumer");
         
+        assertTrue("consumer started eventually", consumerStarted.await(10, TimeUnit.SECONDS));
+        
         // ensure subscription has percolated though the network
         Thread.sleep(2000);
+        
         producerThread.start();
         LOG.info("Started Producer");
         producerThread.join();
         consumerThread.join();
 
+        int duplicateCount = 0;
         Map<String, String> map = new HashMap<String, String>();
         for (String msg : consumer.getMessageStrings()) {
-            assertTrue("is not a duplicate: " + msg, !map.containsKey(msg));
+            if (map.containsKey(msg)) {
+                LOG.info("got duplicate: " + msg);
+                duplicateCount++;
+            }
             map.put(msg, msg);
         }
-        assertEquals("got all required messages: " + map.size(), consumer
-                .getNumMessages(), map.size());
+        if (suppressDuplicateTopicSubs || dispatchPolicy instanceof PriorityNetworkDispatchPolicy) {
+            assertEquals("no duplicates", 0, duplicateCount);
+            assertEquals("got all required messages: " + map.size(), consumer
+                    .getNumMessages(), map.size());
+        } else {
+            assertTrue("we got some duplicates", duplicateCount > 0);
+        }
     }
 
     class TopicWithDuplicateMessages {
@@ -176,16 +224,18 @@ public class NoDuplicateOnTopicNetworkTest extends TestCase {
         private MessageProducer producer;
         private MessageConsumer consumer;
 
-        private List<String> receivedStrings = new ArrayList<String>();
+        private List<String> receivedStrings = Collections.synchronizedList(new ArrayList<String>());
         private int numMessages = 10;
         private CountDownLatch recievedLatch = new CountDownLatch(numMessages);
 
         public CountDownLatch getLatch() {
             return recievedLatch;
         }
-
+        
         public List<String> getMessageStrings() {
-            return receivedStrings;
+            synchronized(receivedStrings) {
+                return new ArrayList<String>(receivedStrings);
+            }
         }
 
         public String getBrokerURL() {
