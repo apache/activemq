@@ -64,6 +64,13 @@ public class TimeStampingBrokerPlugin extends BrokerPluginSupport {
      * False by default
      */
     boolean futureOnly = false;
+    
+    
+    /**
+     * if true, update timestamp even if message has passed through a network
+     * default false
+     */
+    boolean processNetworkMessages = false;
 
     /** 
     * setter method for zeroExpirationOverride
@@ -84,12 +91,16 @@ public class TimeStampingBrokerPlugin extends BrokerPluginSupport {
 	public void setFutureOnly(boolean futureOnly) {
 		this.futureOnly = futureOnly;
 	}
+	
+	public void setProcessNetworkMessages(Boolean processNetworkMessages) {
+	    this.processNetworkMessages = processNetworkMessages;
+	}
 
 	@Override
     public void send(ProducerBrokerExchange producerExchange, Message message) throws Exception {
         if (message.getTimestamp() > 0
-            && (message.getBrokerPath() == null || message.getBrokerPath().length == 0)) {
-            // timestamp not been disabled and has not passed through a network
+            && (processNetworkMessages || (message.getBrokerPath() == null || message.getBrokerPath().length == 0))) {
+            // timestamp not been disabled and has not passed through a network or processNetworkMessages=true
             long oldExpiration = message.getExpiration();
             long newTimeStamp = System.currentTimeMillis();
             long timeToLive = zeroExpirationOverride;
