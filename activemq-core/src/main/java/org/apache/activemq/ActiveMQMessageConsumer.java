@@ -1232,7 +1232,10 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                                 }
                             }
                         } else {
-                            session.connection.rollbackDuplicate(this, md.getMessage());
+                            if (!unconsumedMessages.isRunning()) {
+                                // delayed redelivery, ensure it can be re delivered
+                                session.connection.rollbackDuplicate(this, md.getMessage());
+                            }
                             unconsumedMessages.enqueue(md);
                             if (availableListener != null) {
                                 availableListener.onMessageAvailable(this);
