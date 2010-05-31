@@ -79,7 +79,7 @@ public class ConduitBridge extends DemandForwardingBridge {
             if (filter.matches(info.getDestination())) {
                 if (LOG.isDebugEnabled()) {
                     LOG.debug(configuration.getBrokerName() + " matched (add interest) to exsting sub for: " + ds.getRemoteInfo()
-                            + " with sub: " + info);
+                            + " with sub: " + info.getConsumerId());
                 }
                 // add the interest in the subscription
                 // ds.add(ds.getRemoteInfo().getConsumerId());
@@ -96,7 +96,6 @@ public class ConduitBridge extends DemandForwardingBridge {
 
     @Override
     protected void removeDemandSubscription(ConsumerId id) throws IOException {
-        super.removeDemandSubscription(id);
         List<DemandSubscription> tmpList = new ArrayList<DemandSubscription>();
 
         for (Iterator i = subscriptionMapByLocalId.values().iterator(); i.hasNext();) {
