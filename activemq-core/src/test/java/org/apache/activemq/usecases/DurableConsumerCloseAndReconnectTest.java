@@ -46,6 +46,26 @@ public class DurableConsumerCloseAndReconnectTest extends TestSupport {
     private Destination destination;
     private int messageCount;
 
+    
+    @Override
+    protected void setUp() throws Exception {
+        super.setUp();
+        deleteAllMessages();
+    }
+
+    @Override
+    protected void tearDown() throws Exception {
+        super.tearDown();
+        deleteAllMessages();
+    }
+
+    private void deleteAllMessages() throws Exception {
+        ActiveMQConnectionFactory fac = new ActiveMQConnectionFactory("vm://localhost?broker.deleteAllMessagesOnStartup=true");
+        Connection dummyConnection = fac.createConnection();
+        dummyConnection.start();
+        dummyConnection.close();
+    }
+    
     protected ActiveMQConnectionFactory createConnectionFactory() throws Exception {
         return new ActiveMQConnectionFactory("vm://localhost?broker.deleteAllMessagesOnStartup=false");
     }
@@ -60,12 +80,7 @@ public class DurableConsumerCloseAndReconnectTest extends TestSupport {
         dummyConnection.close();
 
         // now lets try again without one connection open
-        consumeMessagesDeliveredWhileConsumerClosed();
-        // now delete the db
-        ActiveMQConnectionFactory fac = new ActiveMQConnectionFactory("vm://localhost?broker.deleteAllMessagesOnStartup=true");
-        dummyConnection = fac.createConnection();
-        dummyConnection.start();
-        dummyConnection.close();
+        consumeMessagesDeliveredWhileConsumerClosed();       
     }
 
     protected void consumeMessagesDeliveredWhileConsumerClosed() throws Exception {

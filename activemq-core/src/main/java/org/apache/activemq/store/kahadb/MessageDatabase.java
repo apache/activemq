@@ -92,6 +92,7 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
 
     public static final int CLOSED_STATE = 1;
     public static final int OPEN_STATE = 2;
+    private static final long NOT_ACKED = -1;
 
 
     protected class Metadata {
@@ -945,7 +946,7 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
         if (command.hasSubscriptionInfo()) {
             String subscriptionKey = command.getSubscriptionKey();
             sd.subscriptions.put(tx, subscriptionKey, command);
-            long ackLocation=-1;
+            long ackLocation=NOT_ACKED;
             if (!command.getRetroactive()) {
                 ackLocation = sd.nextMessageId-1;
             }
@@ -1262,6 +1263,16 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
             for (Iterator<Entry<String, Long>> iterator = rc.subscriptionAcks.iterator(tx); iterator.hasNext();) {
                 Entry<String, Long> entry = iterator.next();
                 addAckLocation(rc, entry.getValue(), entry.getKey());
+            }
+            
+            if (rc.nextMessageId == 0) {
+                // check for existing durable sub all acked out - pull next seq from acks as messages are gone
+                if (!rc.ackPositions.isEmpty()) {
+                    Long lastAckedMessageId = rc.ackPositions.lastKey();
+                    if (lastAckedMessageId != NOT_ACKED) {
+                        rc.nextMessageId = lastAckedMessageId+1;
+                    }
+                }
             }
 
         }
