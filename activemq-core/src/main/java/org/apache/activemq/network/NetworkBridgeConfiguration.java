@@ -185,6 +185,7 @@ public class NetworkBridgeConfiguration {
 
     /**
      * @param prefetchSize the prefetchSize to set
+     * @org.apache.xbean.Property propertyEditor="org.apache.activemq.util.MemoryIntPropertyEditor"
      */
     public void setPrefetchSize(int prefetchSize) {
         this.prefetchSize = prefetchSize;

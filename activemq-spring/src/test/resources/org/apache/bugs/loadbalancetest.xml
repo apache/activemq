@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:amq="http://activemq.apache.org/schema/core"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+    http://activemq.apache.org/schema/core http://activemq.apache.org/schema/core/activemq-core.xsd">
+
+	<!-- Allows us to use system properties as variables in this configuration file -->
+    <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+       <property name="systemPropertiesModeName">
+         <value>SYSTEM_PROPERTIES_MODE_OVERRIDE</value>
+       </property>
+    </bean>   
+	
+	<!-- Configures a broker with the system's hostname as its name with jmx but no persistence or adivsory support -->
+	<amq:broker brokerName="${lbt.brokerName}" useJmx="false" persistent="false" advisorySupport="true" useLocalHostBrokerName="false">
+
+	    <amq:networkConnectors>
+            <amq:networkConnector conduitSubscriptions="false" decreaseNetworkConsumerPriority="false" networkTTL="3" 
+                dynamicOnly="true" uri="multicast://239.255.2.25:6155" name="network" prefetchSize="${lbt.networkBridgePrefetch}">
+                <amq:excludedDestinations>
+	                <amq:topic physicalName=">"/>
+	            </amq:excludedDestinations>
+                <amq:staticallyIncludedDestinations>
+                    <amq:queue physicalName=">"/>
+                </amq:staticallyIncludedDestinations>
+            </amq:networkConnector>
+	    </amq:networkConnectors>
+
+	    <amq:transportConnectors>
+	       <amq:transportConnector name="transport" uri="nio://0.0.0.0:0" discoveryUri="multicast://239.255.2.25:6155"/>
+        </amq:transportConnectors>
+	</amq:broker>
+</beans>
