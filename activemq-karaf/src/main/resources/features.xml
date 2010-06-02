@@ -1,22 +1,10 @@
 <features>
-    <repository>mvn:org.apache.felix.karaf/apache-felix-karaf/1.1.0-SNAPSHOT/xml/features</repository>
+    <repository>mvn:org.apache.felix.karaf/apache-felix-karaf/1.6.0/xml/features</repository>
     <repository>mvn:org.ops4j.pax.web/features/0.7.2/xml/features</repository>
     
     <feature name="transaction" version="1.0.0"> 
-        <bundle>mvn:org.apache.geronimo.specs/geronimo-jta_1.1_spec/1.1.1</bundle> 
-        <bundle>mvn:org.apache.geronimo.specs/geronimo-j2ee-connector_1.5_spec/2.0.0</bundle> 
-        <bundle>mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.howl/1.0.1-1_1</bundle>
-        <bundle>mvn:org.apache.geronimo.components/geronimo-transaction/2.2-r634076</bundle> 
-        <bundle>mvn:org.springframework/spring-tx/2.5.6</bundle> 
-        <bundle>mvn:org.apache.servicemix.transaction/org.apache.servicemix.transaction/1.0.0</bundle> 
+        <bundle>mvn:org.apache.aries.transaction/org.apache.aries.transaction.manager/0.1-incubating</bundle>
     </feature>     
-    
-    <feature name="connector" version="4.0.0"> 
-        <feature version="1.0.0">transaction</feature> 
-        <bundle>mvn:org.apache.geronimo.components/geronimo-connector/2.2-r634076</bundle> 
-        <bundle>mvn:org.apache.geronimo.specs/geronimo-jms_1.1_spec/1.1.1</bundle> 
-        <bundle>mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.jencks/2.1_1</bundle> 
-    </feature>
     
     <feature name="spring" version="${spring-version}">
         <bundle>mvn:org.springframework/spring-core/${spring-version}</bundle>
@@ -24,26 +12,39 @@
         <bundle>mvn:org.springframework/spring-aop/${spring-version}</bundle>
         <bundle>mvn:org.springframework/spring-context/${spring-version}</bundle>
         <bundle>mvn:org.springframework/spring-context-support/${spring-version}</bundle>
+        <bundle>mvn:org.springframework/spring-tx/${spring-version}</bundle> 
     </feature>
     
     <feature name="activemq" version="${activemq-version}">
         <feature version="1.1.1">servlet-2.5</feature>
-        <feature version="${spring-version}">spring</feature>
-        <feature version="1.2.0">spring-dm</feature> 
-        <feature version="4.0.0">connector</feature> 
+        <bundle>mvn:org.apache.geronimo.specs/geronimo-annotation_1.0_spec/1.1.1</bundle>
+        <bundle>mvn:org.apache.geronimo.specs/geronimo-jms_1.1_spec/1.1.1</bundle> 
         <bundle>mvn:org.apache.geronimo.specs/geronimo-j2ee-management_1.1_spec/1.0.1</bundle> 
         <bundle>mvn:commons-pool/commons-pool/${commons-pool-version}</bundle> 
         <bundle>mvn:commons-collections/commons-collections/${commons-collections-version}</bundle>
         <bundle>mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.commons-lang/2.4_3</bundle>
         <bundle>mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.oro/2.0.8_3</bundle>
         <bundle>mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.velocity/1.6.2_3</bundle>
-        <bundle>mvn:org.apache.xbean/xbean-spring/${xbean-version}</bundle> 
         <bundle>mvn:org.apache.activemq/activemq-core/${activemq-version}</bundle> 
         <bundle>mvn:org.apache.activemq/kahadb/${activemq-version}</bundle> 
-        <bundle>mvn:org.apache.activemq/activemq-ra/${activemq-version}</bundle> 
         <bundle>mvn:org.apache.activemq/activemq-console/${activemq-version}</bundle> 
         <bundle>mvn:org.apache.activemq/activemq-pool/${activemq-version}</bundle> 
         <bundle>mvn:org.apache.servicemix.activemq/org.apache.servicemix.activemq.commands/4.1.0-SNAPSHOT</bundle> 
+    </feature>
+
+    <feature name="activemq-spring" version="${activemq-version}">
+        <feature version="${spring-version}">spring</feature>
+        <feature version="1.2.0">spring-dm</feature> 
+        <feature version="${activemq-version}">activemq</feature> 
+        <bundle>mvn:org.apache.xbean/xbean-spring/${xbean-version}</bundle> 
+    </feature>
+
+    <feature name="activemq-blueprint" version="${activemq-version}">
+        <feature version="${activemq-version}">activemq</feature> 
+        <bundle>mvn:org.apache.servicemix.specs/org.apache.servicemix.specs.scripting-api-1.0/1.5.0</bundle>
+        <bundle>mvn:org.apache.commons/commons-jexl/2.0.1</bundle>
+        <bundle>mvn:org.apache.xbean/xbean-blueprint/${xbean-version}</bundle> 
+        <bundle>mvn:org.apache.activemq/activemq-blueprint/${activemq-version}</bundle> 
     </feature>
     
     <!-- do "features:install pax-web" before installing this one  -->

@@ -80,9 +80,9 @@
     <xmlbeans-version>2.0.0-beta1</xmlbeans-version>
     <xmlpull-version>1.1.3.4d_b4_min</xmlpull-version>
     <xstream-version>1.3.1</xstream-version>
-    <xbean-version>3.6</xbean-version>
+    <xbean-version>3.7</xbean-version>
     <velocity-version>1.6.2</velocity-version>
-    <maven-bundle-plugin-version>2.0.1</maven-bundle-plugin-version>
+    <maven-bundle-plugin-version>2.1.0</maven-bundle-plugin-version>
     <maven-surefire-plugin-version>2.5</maven-surefire-plugin-version>
     <commons-net-version>2.0</commons-net-version>
     <ftpserver-version>1.0.0</ftpserver-version>
@@ -137,6 +137,7 @@
     <module>activemq-core</module>
     <module>activemq-fileserver</module>
     <module>activemq-jaas</module>
+    <module>activemq-blueprint</module>
     <module>activemq-karaf</module>
     <module>activemq-openwire-generator</module>
     <module>activemq-optional</module>
@@ -1096,6 +1097,7 @@
         <groupId>org.apache.felix</groupId>
         <artifactId>maven-bundle-plugin</artifactId>
         <extensions>true</extensions>
+		<inherited>true</inherited>
         <configuration>
           <instructions>
             <Bundle-Name>${project.artifactId}</Bundle-Name>
@@ -1112,6 +1114,20 @@
             <_failok>${servicemix.osgi.failok}</_failok>
           </instructions>
         </configuration>
+		<executions>
+          <execution>
+            <id>cleanVersions</id>
+            <phase>generate-sources</phase>
+            <goals>
+              <goal>cleanVersions</goal>
+            </goals>
+            <configuration>
+              <versions>
+                <activemq.osgi.version>${project.version}</activemq.osgi.version>
+              </versions>
+            </configuration>
+          </execution>
+        </executions>
       </plugin>
     </plugins>
   </build>
