@@ -28,7 +28,7 @@
     <bean id="securityConstraint" class="org.eclipse.jetty.http.security.Constraint">
         <property name="name" value="BASIC" />
         <property name="roles" value="admin" />
-        <property name="authenticate" value="true" />
+        <property name="authenticate" value="false" />
     </bean>
     <bean id="securityConstraintMapping" class="org.eclipse.jetty.security.ConstraintMapping">
         <property name="constraint" ref="securityConstraint" />
