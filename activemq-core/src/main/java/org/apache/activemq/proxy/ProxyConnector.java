@@ -45,6 +45,11 @@ public class ProxyConnector implements Service {
     private URI remote;
     private URI localUri;
     private String name;
+    /**
+     * Should we proxy commands to the local broker using VM transport as well?
+     */
+    private boolean proxyToLocalBroker = true;
+    
     private final CopyOnWriteArrayList<ProxyConnection> connections = new CopyOnWriteArrayList<ProxyConnection>();
 
     public void start() throws Exception {
@@ -131,11 +136,11 @@ public class ProxyConnector implements Service {
     private Transport createRemoteTransport() throws Exception {
         Transport transport = TransportFactory.compositeConnect(remote);
         CompositeTransport ct = transport.narrow(CompositeTransport.class);
-        if (ct != null && localUri != null) {
+        if (ct != null && localUri != null && proxyToLocalBroker) {
             ct.add(false,new URI[] {localUri});
         }
 
-        // Add a transport filter so that can track the transport life cycle
+        // Add a transport filter so that we can track the transport life cycle
         transport = new TransportFilter(transport) {
             @Override
             public void stop() throws Exception {
@@ -160,6 +165,14 @@ public class ProxyConnector implements Service {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public boolean isProxyToLocalBroker() {
+        return proxyToLocalBroker;
+    }
+
+    public void setProxyToLocalBroker(boolean proxyToLocalBroker) {
+        this.proxyToLocalBroker = proxyToLocalBroker;
     }
 
 }

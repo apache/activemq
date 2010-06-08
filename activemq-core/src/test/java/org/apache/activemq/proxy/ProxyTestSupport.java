@@ -46,6 +46,7 @@ public class ProxyTestSupport extends BrokerTestSupport {
         BrokerService service = new BrokerService();
         service.setBrokerName("broker1");
         service.setPersistent(false);
+        service.setUseJmx(false);
 
         connector = service.addConnector(getLocalURI());
         proxyConnector = new ProxyConnector();
@@ -61,6 +62,7 @@ public class ProxyTestSupport extends BrokerTestSupport {
         BrokerService service = new BrokerService();
         service.setBrokerName("broker2");
         service.setPersistent(false);
+        service.setUseJmx(false);
 
         remoteConnector = service.addConnector(getRemoteURI());
         remoteProxyConnector = new ProxyConnector();
