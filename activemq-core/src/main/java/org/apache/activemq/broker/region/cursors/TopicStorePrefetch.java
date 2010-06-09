@@ -28,7 +28,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 /**
- * perist pendingCount messages pendingCount message (messages awaiting disptach
+ * persist pendingCount messages pendingCount message (messages awaiting disptach
  * to a consumer) cursor
  * 
  * @version $Revision$

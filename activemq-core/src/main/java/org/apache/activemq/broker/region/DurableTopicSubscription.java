@@ -111,6 +111,7 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
                 for (Iterator<Destination> iter = destinations.values()
                         .iterator(); iter.hasNext();) {
                     Topic topic = (Topic) iter.next();
+                    add(context, topic);
                     topic.activate(context, this);
                 }
             }
