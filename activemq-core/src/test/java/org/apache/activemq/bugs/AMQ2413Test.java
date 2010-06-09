@@ -111,11 +111,6 @@ public class AMQ2413Test extends CombinationTestSupport implements MessageListen
         super.tearDown();
     }
 
-    public void initCombosForTestFoo() {
-        addCombinationValues("age", new Object[] { new Integer(21), new Integer(30) });
-        addCombinationValues("color", new Object[] { "blue", "green" });
-    }
-
     public void testReceipt() throws Exception {
 
         running.set(true);
