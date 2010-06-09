@@ -72,6 +72,10 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
     }
 
     public void add(ConnectionContext context, Destination destination) throws Exception {
+        // do it just once per destination
+        if (destinations.containsKey(destination.getActiveMQDestination())) {
+            return;
+        }
         super.add(context, destination);
         destinations.put(destination.getActiveMQDestination(), destination);
         if (destination.getMessageStore() != null) {
