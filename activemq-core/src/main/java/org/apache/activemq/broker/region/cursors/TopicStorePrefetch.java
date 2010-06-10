@@ -71,13 +71,13 @@ class TopicStorePrefetch extends AbstractStoreCursor {
         return false;
         
     }
-
-   
+    
     @Override
     protected synchronized int getStoreSize() {
         try {
-            return store.getMessageCount(clientId, subscriberName);
-        } catch (IOException e) {
+            this.store.recoverNextMessages(clientId, subscriberName, maxBatchSize, this);
+            return size;
+        } catch (Exception e) {
             LOG.error(this + " Failed to get the outstanding message count from the store", e);
             throw new RuntimeException(e);
         }
