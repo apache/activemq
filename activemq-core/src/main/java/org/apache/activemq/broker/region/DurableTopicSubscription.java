@@ -72,11 +72,11 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
     }
 
     public void add(ConnectionContext context, Destination destination) throws Exception {
+        super.add(context, destination);
         // do it just once per destination
         if (destinations.containsKey(destination.getActiveMQDestination())) {
             return;
         }
-        super.add(context, destination);
         destinations.put(destination.getActiveMQDestination(), destination);
         if (destination.getMessageStore() != null) {
             TopicMessageStore store = (TopicMessageStore)destination.getMessageStore();
@@ -123,7 +123,6 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
                 pending.setSystemUsage(memoryManager);
                 pending.setMemoryUsageHighWaterMark(getCursorMemoryHighWaterMark());
                 pending.start();
-
                 // If nothing was in the persistent store, then try to use the
                 // recovery policy.
                 if (pending.isEmpty()) {
@@ -151,6 +150,7 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
                 topic.deactivate(context, this);
             }
         }
+        
         for (final MessageReference node : dispatched) {
             // Mark the dispatched messages as redelivered for next time.
             Integer count = redeliveredMessages.get(node.getMessageId());
