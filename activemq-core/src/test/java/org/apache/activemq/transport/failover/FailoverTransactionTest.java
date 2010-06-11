@@ -36,6 +36,8 @@ import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
 import javax.jms.Queue;
+import javax.jms.ServerSession;
+import javax.jms.ServerSessionPool;
 import javax.jms.Session;
 import javax.jms.TextMessage;
 import javax.jms.TransactionRolledBackException;
@@ -290,7 +292,59 @@ public class FailoverTransactionTest {
 	    session.commit();
 	    connection.close();
 	}
-		
+	
+    @Test
+    // https://issues.apache.org/activemq/browse/AMQ-2772
+    public void testFailoverWithConnectionConsumer() throws Exception {
+        startCleanBroker();         
+        ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory("failover:(" + url + ")");
+        Connection connection = cf.createConnection();
+        connection.start();
+        
+        Session session = connection.createSession(true, Session.AUTO_ACKNOWLEDGE);
+        Queue destination = session.createQueue(QUEUE_NAME);
+
+        final CountDownLatch connectionConsumerGotOne = new CountDownLatch(1);
+        final Session poolSession = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        connection.createConnectionConsumer(destination, null, new ServerSessionPool() {
+            public ServerSession getServerSession() throws JMSException {
+                return new ServerSession() {
+                    public Session getSession() throws JMSException {
+                        return poolSession;
+                    }
+                    public void start() throws JMSException {
+                        connectionConsumerGotOne.countDown();
+                        poolSession.run();
+                    }
+                };
+            }
+        }, 1);
+
+        MessageConsumer consumer = session.createConsumer(destination);
+        MessageProducer producer;
+        TextMessage message;
+        final int count = 10;
+        for (int i=0; i<count; i++) {
+            producer = session.createProducer(destination);         
+            message = session.createTextMessage("Test message: " + count);
+            producer.send(message);
+            producer.close();
+        }
+        
+        // restart to force failover and connection state recovery before the commit
+        broker.stop();
+        startBroker(false);
+        
+        session.commit();
+        for (int i=0; i<count-1; i++) {
+            assertNotNull("we got all the message: " + count, consumer.receive(20000));
+        }
+        session.commit();
+        connection.close();
+        
+        assertTrue("connectionconsumer got a message", connectionConsumerGotOne.await(10, TimeUnit.SECONDS));
+    }
+	
     @Test
     public void testFailoverConsumerAckLost() throws Exception {
         // as failure depends on hash order of state tracker recovery, do a few times
