@@ -157,13 +157,16 @@ public class Topic extends BaseDestination implements Task {
         sub.remove(context, this);
     }
 
-    public void deleteSubscription(ConnectionContext context, SubscriptionKey key) throws IOException {
+    public void deleteSubscription(ConnectionContext context, SubscriptionKey key) throws Exception {
         if (topicStore != null) {
             topicStore.deleteSubscription(key.clientId, key.subscriptionName);
-            Object removed = durableSubcribers.remove(key);
+            DurableTopicSubscription removed = durableSubcribers.remove(key);
             if (removed != null) {
                 destinationStatistics.getConsumers().decrement();
             }
+            // deactivate and remove
+            removed.deactivate(false);
+            consumers.remove(removed);
         }
     }
 
