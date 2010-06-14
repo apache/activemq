@@ -18,7 +18,7 @@ package org.apache.activemq.perf;
 
 import java.io.File;
 import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.store.kahadb.KahaDBStore;
+import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
 
 /**
  * @version $Revision$
@@ -27,7 +27,8 @@ public class KahaDBQueueTest extends SimpleQueueTest {
 
     @Override
     protected void setUp() throws Exception {
-       // this.initialConsumerDelay = 10 * 1000;
+        this.numberOfDestinations = 25;
+        this.numberofProducers = 1;
         super.setUp();
     }
     @Override
@@ -35,20 +36,20 @@ public class KahaDBQueueTest extends SimpleQueueTest {
 
         File dataFileDir = new File("target/test-amq-data/perfTest/kahadb");
         File archiveDir = new File(dataFileDir,"archive");
-        KahaDBStore kaha = new KahaDBStore();
+        KahaDBPersistenceAdapter kaha = new KahaDBPersistenceAdapter();
         kaha.setDirectory(dataFileDir);
         kaha.setDirectoryArchive(archiveDir);
-        kaha.setArchiveDataLogs(true);
+        kaha.setArchiveDataLogs(false);
 
         // The setEnableJournalDiskSyncs(false) setting is a little dangerous right now, as I have not verified 
         // what happens if the index is updated but a journal update is lost.
         // Index is going to be in consistent, but can it be repaired?
-        kaha.setEnableJournalDiskSyncs(false);
+        kaha.setEnableJournalDiskSyncs(true);
         // Using a bigger journal file size makes he take fewer spikes as it is not switching files as often.
         //kaha.setJournalMaxFileLength(1024*1024*100);
         
         // small batch means more frequent and smaller writes
-        kaha.setIndexWriteBatchSize(100);
+        //kaha.setIndexWriteBatchSize(100);
         // do the index write in a separate thread
         kaha.setEnableIndexWriteAsync(true);
         kaha.setIndexCacheSize(10000);

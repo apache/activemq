@@ -20,11 +20,6 @@ package org.apache.activemq.perf;
  * A NumberOfDestinationsTest
  *
  */
-import org.apache.activemq.ActiveMQConnectionFactory;
-import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.store.kahadb.KahaDBStore;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import java.io.File;
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
@@ -33,9 +28,12 @@ import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
-import javax.jms.TemporaryQueue;
-import javax.jms.TemporaryTopic;
 import junit.framework.TestCase;
+import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 /**
  * @version $Revision: 1.3 $
  */
@@ -73,6 +71,7 @@ public class NumberOfDestinationsTest extends TestCase {
         return session.createTopic(topicName);
     }
 
+    @Override
     protected void setUp() throws Exception {
         if (broker == null) {
             broker = createBroker();
@@ -80,6 +79,7 @@ public class NumberOfDestinationsTest extends TestCase {
         super.setUp();
     }
 
+    @Override
     protected void tearDown() throws Exception {
         super.tearDown();
         if (broker != null) {
@@ -102,7 +102,7 @@ public class NumberOfDestinationsTest extends TestCase {
     protected void configureBroker(BrokerService answer) throws Exception {
         File dataFileDir = new File("target/test-amq-data/perfTest/kahadb");
 
-        KahaDBStore kaha = new KahaDBStore();
+        KahaDBPersistenceAdapter kaha = new KahaDBPersistenceAdapter();
         kaha.setDirectory(dataFileDir);
         //answer.setUseJmx(false);
 

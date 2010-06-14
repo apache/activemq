@@ -17,6 +17,7 @@
 package org.apache.activemq.perf;
 
 import javax.jms.ConnectionFactory;
+import javax.jms.DeliveryMode;
 import javax.jms.Destination;
 import javax.jms.JMSException;
 
@@ -26,8 +27,15 @@ import javax.jms.JMSException;
 public class KahaDBDurableTransactedTopicTest extends KahaDBDurableTopicTest {
 
     @Override
+    protected void setUp() throws Exception {
+        //this.initialConsumerDelay = 10 * 1000;
+        super.setUp();
+    }
+    @Override
     protected PerfProducer createProducer(ConnectionFactory fac, Destination dest, int number, byte[] payload) throws JMSException {
-        return new PerfProducer(fac, dest, payload, true);
+        PerfProducer result= new PerfProducer(fac, dest, payload, true);
+        result.setDeliveryMode(DeliveryMode.PERSISTENT);
+        return result;
     }
 
   

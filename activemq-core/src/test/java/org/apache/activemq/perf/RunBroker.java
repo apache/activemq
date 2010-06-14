@@ -18,45 +18,47 @@ package org.apache.activemq.perf;
 
 import java.io.File;
 import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.store.kahadaptor.KahaPersistenceAdapter;
-import org.apache.activemq.store.kahadb.KahaDBStore;
+import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
+import org.apache.activemq.util.IOHelper;
 
 public class RunBroker {
 
     public static void main(String arg[]) {
 
         try {
-        KahaPersistenceAdapter adaptor = new KahaPersistenceAdapter();
+            KahaDBPersistenceAdapter kahaDB = new KahaDBPersistenceAdapter();
             File dataFileDir = new File("target/test-amq-data/perfTest/kahadb");
-            File archiveDir = new File(dataFileDir,"archive");
-            KahaDBStore kahaDB = new KahaDBStore();
+            IOHelper.deleteChildren(dataFileDir);
+            File archiveDir = new File(dataFileDir, "archive");
             kahaDB.setDirectory(dataFileDir);
-            kahaDB.setDirectoryArchive(archiveDir);
-            kahaDB.setArchiveDataLogs(true);
 
-            // The setEnableJournalDiskSyncs(false) setting is a little dangerous right now, as I have not verified 
-            // what happens if the index is updated but a journal update is lost.
+            // The setEnableJournalDiskSyncs(false) setting is a little
+            // dangerous right now, as I have not verified
+            // what happens if the index is updated but a journal update is
+            // lost.
             // Index is going to be in consistent, but can it be repaired?
-            //kaha.setEnableJournalDiskSyncs(false);
-            // Using a bigger journal file size makes he take fewer spikes as it is not switching files as often.
-            //kaha.setJournalMaxFileLength(1024*1024*100);
-            
+            // kaha.setEnableJournalDiskSyncs(false);
+            // Using a bigger journal file size makes he take fewer spikes as it
+            // is not switching files as often.
+            // kaha.setJournalMaxFileLength(1024*1024*100);
+
             // small batch means more frequent and smaller writes
             kahaDB.setIndexWriteBatchSize(1000);
             kahaDB.setIndexCacheSize(10000);
+
             // do the index write in a separate thread
-            kahaDB.setEnableIndexWriteAsync(true);
-        BrokerService broker = new BrokerService();
-        broker.setUseJmx(false);
-        //broker.setPersistenceAdapter(adaptor);
-        //broker.setPersistenceAdapter(kahaDB);
-        broker.setPersistent(false);
-        broker.setDeleteAllMessagesOnStartup(true);
-        broker.addConnector("tcp://0.0.0.0:61616");
-        broker.start();
-        System.err.println("Running");
-        Thread.sleep(Long.MAX_VALUE);
-        }catch(Throwable e) {
+            // kahaDB.setEnableIndexWriteAsync(true);
+            BrokerService broker = new BrokerService();
+            broker.setUseJmx(false);
+            // broker.setPersistenceAdapter(adaptor);
+            broker.setPersistenceAdapter(kahaDB);
+            // broker.setPersistent(false);
+            broker.setDeleteAllMessagesOnStartup(true);
+            broker.addConnector("tcp://0.0.0.0:61616");
+            broker.start();
+            System.err.println("Running");
+            Thread.sleep(Long.MAX_VALUE);
+        } catch (Throwable e) {
             e.printStackTrace();
         }
 
