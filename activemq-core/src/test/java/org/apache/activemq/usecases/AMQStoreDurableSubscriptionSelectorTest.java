@@ -18,13 +18,13 @@
 package org.apache.activemq.usecases;
 
 import org.apache.activemq.store.PersistenceAdapter;
-import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
+import org.apache.activemq.store.amq.AMQPersistenceAdapter;
 
-public class KahaDBDurableSubscriptionSelectorTest extends DurableSubscriptionSelectorTest {
+public class AMQStoreDurableSubscriptionSelectorTest extends DurableSubscriptionSelectorTest {
 
     @Override
     public PersistenceAdapter createPersistenceAdapter() throws Exception {
-        return new KahaDBPersistenceAdapter();
+        return new AMQPersistenceAdapter();
     }
 
 }
