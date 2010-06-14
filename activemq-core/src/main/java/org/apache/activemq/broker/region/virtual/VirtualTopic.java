@@ -18,7 +18,6 @@ package org.apache.activemq.broker.region.virtual;
 
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.command.ActiveMQDestination;
-import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
 
 /**
@@ -36,6 +35,7 @@ public class VirtualTopic implements VirtualDestination {
     private String prefix = "Consumer.*.";
     private String postfix = "";
     private String name = ">";
+    private boolean selectorAware = false;
 
 
     public ActiveMQDestination getVirtualDestination() {
@@ -43,7 +43,8 @@ public class VirtualTopic implements VirtualDestination {
     }
 
     public Destination intercept(Destination destination) {
-        return new VirtualTopicInterceptor(destination, getPrefix(), getPostfix());
+        return selectorAware ? new SelectorAwareVirtualTopicInterceptor(destination, getPrefix(), getPostfix()) : 
+            new VirtualTopicInterceptor(destination, getPrefix(), getPostfix());
     }
     
 
@@ -83,5 +84,18 @@ public class VirtualTopic implements VirtualDestination {
     public void setName(String name) {
         this.name = name;
     }
-
+    
+    /**
+     * Indicates whether the selectors of consumers are used to determine dispatch
+     * to a virtual destination, when true only messages matching an existing 
+     * consumer will be dispatched.
+     * @param selectorAware when true take consumer selectors into consideration
+     */
+    public void setSelectorAware(boolean selectorAware) {
+        this.selectorAware = selectorAware;
+    }
+    
+    public boolean isSelectorAware() {
+        return selectorAware;
+    }
 }

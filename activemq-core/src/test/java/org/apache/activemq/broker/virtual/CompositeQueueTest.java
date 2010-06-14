@@ -44,7 +44,8 @@ public class CompositeQueueTest extends EmbeddedBrokerTestSupport {
     private static final Log LOG = LogFactory.getLog(CompositeQueueTest.class);
     
     protected int total = 10;
-    private Connection connection;
+    protected Connection connection;
+    public String messageSelector1, messageSelector2 = null;
 
 
     public void testVirtualTopicCreation() throws Exception {
@@ -67,8 +68,8 @@ public class CompositeQueueTest extends EmbeddedBrokerTestSupport {
         LOG.info("Sending to: " + producerDestination);
         LOG.info("Consuming from: " + destination1 + " and " + destination2);
         
-        MessageConsumer c1 = session.createConsumer(destination1);
-        MessageConsumer c2 = session.createConsumer(destination2);
+        MessageConsumer c1 = session.createConsumer(destination1, messageSelector1);
+        MessageConsumer c2 = session.createConsumer(destination2, messageSelector2);
 
         c1.setMessageListener(messageList1);
         c2.setMessageListener(messageList2);
@@ -93,6 +94,8 @@ public class CompositeQueueTest extends EmbeddedBrokerTestSupport {
         TextMessage textMessage = session.createTextMessage("message: " + i);
         if (i % 2 != 0) {
             textMessage.setStringProperty("odd", "yes");
+        } else {
+            textMessage.setStringProperty("odd", "no");
         }
         textMessage.setIntProperty("i", i);
         return textMessage;

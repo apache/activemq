@@ -31,7 +31,7 @@
     <destinationInterceptors>
       <virtualDestinationInterceptor>
         <virtualDestinations>
-          <virtualTopic name=">" prefix="VirtualTopicConsumers.*." />
+          <virtualTopic name=">" prefix="VirtualTopicConsumers.*." selectorAware="false"/>
         </virtualDestinations>
       </virtualDestinationInterceptor>
     </destinationInterceptors>
