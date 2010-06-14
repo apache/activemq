@@ -147,6 +147,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     private long warnAboutUnstartedConnectionTimeout = 500L;
     private int sendTimeout =0;
     private boolean sendAcksAsync=true;
+    private boolean checkForDuplicates = true;
 
     private final Transport transport;
     private final IdGenerator clientIdGenerator;
@@ -2245,7 +2246,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     }
 
     protected boolean isDuplicate(ActiveMQDispatcher dispatcher, Message message) {
-        return connectionAudit.isDuplicate(dispatcher, message);
+        return checkForDuplicates && connectionAudit.isDuplicate(dispatcher, message);
     }
 
     protected void rollbackDuplicate(ActiveMQDispatcher dispatcher, Message message) {
@@ -2316,5 +2317,19 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     
     protected ThreadPoolExecutor getExecutor() {
         return this.executor;
+    }
+
+    /**
+     * @return the checkForDuplicates
+     */
+    public boolean isCheckForDuplicates() {
+        return this.checkForDuplicates;
+    }
+
+    /**
+     * @param checkForDuplicates the checkForDuplicates to set
+     */
+    public void setCheckForDuplicates(boolean checkForDuplicates) {
+        this.checkForDuplicates = checkForDuplicates;
     }
 }

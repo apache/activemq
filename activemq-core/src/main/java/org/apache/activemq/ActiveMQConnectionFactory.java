@@ -24,7 +24,6 @@ import java.util.Properties;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadFactory;
-
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
 import javax.jms.ExceptionListener;
@@ -34,7 +33,6 @@ import javax.jms.QueueConnectionFactory;
 import javax.jms.TopicConnection;
 import javax.jms.TopicConnectionFactory;
 import javax.naming.Context;
-
 import org.apache.activemq.blob.BlobTransferPolicy;
 import org.apache.activemq.jndi.JNDIBaseStorable;
 import org.apache.activemq.management.JMSStatsImpl;
@@ -115,6 +113,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     private int auditMaximumProducerNumber = ActiveMQMessageAudit.MAXIMUM_PRODUCER_COUNT;
     private boolean useDedicatedTaskRunner;
     private long consumerFailoverRedeliveryWaitPeriod = 0;
+    private boolean checkForDuplicates = true;
     private ClientInternalExceptionListener clientInternalExceptionListener;
 
     // /////////////////////////////////////////////
@@ -318,6 +317,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
         connection.setAuditMaximumProducerNumber(getAuditMaximumProducerNumber());
         connection.setUseDedicatedTaskRunner(isUseDedicatedTaskRunner());
         connection.setConsumerFailoverRedeliveryWaitPeriod(getConsumerFailoverRedeliveryWaitPeriod());
+        connection.setCheckForDuplicates(isCheckForDuplicates());
         if (transportListener != null) {
             connection.addTransportListener(transportListener);
         }
@@ -594,6 +594,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
         this.transformer = transformer;
     }
 
+    @Override
     public void buildFromProperties(Properties properties) {
 
         if (properties == null) {
@@ -638,6 +639,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
         return rc;
     }
 
+    @Override
     public void populateProperties(Properties props) {
         props.setProperty("dispatchAsync", Boolean.toString(isDispatchAsync()));
 
@@ -682,6 +684,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
         props.setProperty("sendAcksAsync",Boolean.toString(isSendAcksAsync()));
         props.setProperty("auditDepth", Integer.toString(getAuditDepth()));
         props.setProperty("auditMaximumProducerNumber", Integer.toString(getAuditMaximumProducerNumber()));
+        props.setProperty("checkForDuplicates", Boolean.toString(isCheckForDuplicates()));
     }
 
     public boolean isUseCompression() {
@@ -944,5 +947,19 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     public void setClientInternalExceptionListener(
             ClientInternalExceptionListener clientInternalExceptionListener) {
         this.clientInternalExceptionListener = clientInternalExceptionListener;
+    }
+
+    /**
+     * @return the checkForDuplicates
+     */
+    public boolean isCheckForDuplicates() {
+        return this.checkForDuplicates;
+    }
+
+    /**
+     * @param checkForDuplicates the checkForDuplicates to set
+     */
+    public void setCheckForDuplicates(boolean checkForDuplicates) {
+        this.checkForDuplicates = checkForDuplicates;
     }
 }
