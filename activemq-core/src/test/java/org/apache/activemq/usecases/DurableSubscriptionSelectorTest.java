@@ -31,9 +31,9 @@ import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQTopic;
-import org.apache.activemq.store.amq.AMQPersistenceAdapter;
+import org.apache.activemq.store.PersistenceAdapter;
 
-public class SubscriptionSelectorTest extends org.apache.activemq.TestSupport {
+abstract public class DurableSubscriptionSelectorTest extends org.apache.activemq.TestSupport {
 
     MBeanServer mbs;
     BrokerService broker = null;
@@ -127,8 +127,6 @@ public class SubscriptionSelectorTest extends org.apache.activemq.TestSupport {
         broker = new BrokerService();
         broker.setBrokerName("test-broker");
         
-        //TODO create variants for different stores
-        //broker.setPersistenceAdapter(new AMQPersistenceAdapter());
         if (deleteMessages) {
             broker.setDeleteAllMessagesOnStartup(true);
         }
@@ -140,6 +138,8 @@ public class SubscriptionSelectorTest extends org.apache.activemq.TestSupport {
             broker.stop();
         broker = null;
     }
+    
+    abstract public PersistenceAdapter createPersistenceAdapter() throws Exception;
 
     protected ActiveMQConnectionFactory createConnectionFactory() throws Exception {
         return new ActiveMQConnectionFactory("vm://test-broker?jms.watchTopicAdvisories=false&waitForStart=5000&create=false");

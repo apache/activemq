@@ -38,6 +38,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import javax.jms.InvalidSelectorException;
+
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
@@ -51,8 +53,11 @@ import org.apache.activemq.command.MessageId;
 import org.apache.activemq.command.SubscriptionInfo;
 import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.command.XATransactionId;
+import org.apache.activemq.filter.BooleanExpression;
+import org.apache.activemq.filter.MessageEvaluationContext;
 import org.apache.activemq.openwire.OpenWireFormat;
 import org.apache.activemq.protobuf.Buffer;
+import org.apache.activemq.selector.SelectorParser;
 import org.apache.activemq.store.AbstractMessageStore;
 import org.apache.activemq.store.MessageRecoveryListener;
 import org.apache.activemq.store.MessageStore;
@@ -75,6 +80,7 @@ import org.apache.activemq.store.kahadb.data.KahaXATransactionId;
 import org.apache.activemq.store.kahadb.data.KahaDestination.DestinationType;
 import org.apache.activemq.usage.MemoryUsage;
 import org.apache.activemq.usage.SystemUsage;
+import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.ServiceStopper;
 import org.apache.activemq.wireformat.WireFormat;
 import org.apache.commons.logging.Log;
@@ -612,6 +618,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
 
         public int getMessageCount(String clientId, String subscriptionName) throws IOException {
             final String subscriptionKey = subscriptionKey(clientId, subscriptionName);
+            final SubscriptionInfo info = lookupSubscription(clientId, subscriptionName);
             synchronized (indexMutex) {
                 return pageFile.tx().execute(new Transaction.CallableClosure<Integer, IOException>() {
                     public Integer execute(Transaction tx) throws IOException {
@@ -626,8 +633,24 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
                         int counter = 0;
                         for (Iterator<Entry<Long, MessageKeys>> iterator = sd.orderIndex.iterator(tx, cursorPos); iterator
                                 .hasNext();) {
-                            iterator.next();
-                            counter++;
+                            Entry<Long, MessageKeys> entry = iterator.next();
+                            String selector = info.getSelector();
+                            if (selector != null) {
+                                try {
+                                    if (selector != null) { 
+                                        BooleanExpression selectorExpression = SelectorParser.parse(selector);
+                                        MessageEvaluationContext ctx = new MessageEvaluationContext();
+                                        ctx.setMessageReference(loadMessage(entry.getValue().location));
+                                        if (selectorExpression.matches(ctx)) {
+                                            counter++;
+                                        }
+                                    }
+                                } catch (Exception e) {
+                                    throw IOExceptionSupport.create(e);
+                                }
+                            } else {
+                                counter++;
+                            }
                         }
                         return counter;
                     }

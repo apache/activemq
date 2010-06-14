@@ -16,7 +16,6 @@
  */
 package org.apache.activemq.broker.region.cursors;
 
-import java.io.IOException;
 import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.broker.region.Topic;
 import org.apache.activemq.command.Message;
@@ -75,8 +74,7 @@ class TopicStorePrefetch extends AbstractStoreCursor {
     @Override
     protected synchronized int getStoreSize() {
         try {
-            this.store.recoverNextMessages(clientId, subscriberName, maxBatchSize, this);
-            return size;
+            return store.getMessageCount(clientId, subscriberName);
         } catch (Exception e) {
             LOG.error(this + " Failed to get the outstanding message count from the store", e);
             throw new RuntimeException(e);
