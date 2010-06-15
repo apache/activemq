@@ -1853,7 +1853,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
 	}
 
     public void transportInterupted() {
-        this.transportInterruptionProcessingComplete = new CountDownLatch(dispatchers.size() - (advisoryConsumer != null ? 1:0) - connectionConsumers.size());
+        this.transportInterruptionProcessingComplete = new CountDownLatch(dispatchers.size() - (advisoryConsumer != null ? 1:0));
         if (LOG.isDebugEnabled()) {
             LOG.debug("transport interrupted, dispatchers: " + transportInterruptionProcessingComplete.getCount());
         }
@@ -1861,6 +1861,11 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
             ActiveMQSession s = i.next();
             s.clearMessagesInProgress();
         }
+        
+        for (ActiveMQConnectionConsumer connectionConsumer : this.connectionConsumers) {
+            connectionConsumer.clearMessagesInProgress();    
+        }
+        
         for (Iterator<TransportListener> iter = transportListeners.iterator(); iter.hasNext();) {
             TransportListener listener = iter.next();
             listener.transportInterupted();

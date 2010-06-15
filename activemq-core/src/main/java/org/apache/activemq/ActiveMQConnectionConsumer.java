@@ -153,4 +153,11 @@ public class ActiveMQConnectionConsumer implements ConnectionConsumer, ActiveMQD
     public String toString() {
         return "ActiveMQConnectionConsumer { value=" + consumerInfo.getConsumerId() + " }";
     }
+
+    public void clearMessagesInProgress() {
+        // future: may want to deal with rollback of in progress messages to track re deliveries
+        // before indicating that all is complete.        
+        // Till there is a need, lets immediately allow dispatch
+        this.connection.transportInterruptionProcessingComplete();
+    }
 }
