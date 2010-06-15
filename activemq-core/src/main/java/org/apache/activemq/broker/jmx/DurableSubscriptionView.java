@@ -142,4 +142,11 @@ public class DurableSubscriptionView extends SubscriptionView implements Durable
         }
         return false;
     }
+
+    @Override
+    public boolean isActive() {
+        return durableSub.isActive();
+    }
+    
+    
 }
