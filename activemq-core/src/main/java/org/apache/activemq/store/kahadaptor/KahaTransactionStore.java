@@ -21,9 +21,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
-
 import javax.transaction.xa.XAException;
-
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.BrokerServiceAware;
 import org.apache.activemq.broker.ConnectionContext;
@@ -38,7 +36,6 @@ import org.apache.activemq.store.ProxyTopicMessageStore;
 import org.apache.activemq.store.TopicMessageStore;
 import org.apache.activemq.store.TransactionRecoveryListener;
 import org.apache.activemq.store.TransactionStore;
-import org.apache.activemq.store.journal.JournalPersistenceAdapter;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -51,9 +48,9 @@ import org.apache.commons.logging.LogFactory;
 public class KahaTransactionStore implements TransactionStore, BrokerServiceAware {	
     private static final Log LOG = LogFactory.getLog(KahaTransactionStore.class);
 	
-    private Map transactions = new ConcurrentHashMap();
-    private Map prepared;
-    private KahaPersistenceAdapter adaptor;
+    private final Map transactions = new ConcurrentHashMap();
+    private final Map prepared;
+    private final KahaPersistenceAdapter adaptor;
     
     private BrokerService brokerService;
 
@@ -64,10 +61,12 @@ public class KahaTransactionStore implements TransactionStore, BrokerServiceAwar
 
     public MessageStore proxy(MessageStore messageStore) {
         return new ProxyMessageStore(messageStore) {
+            @Override
             public void addMessage(ConnectionContext context, final Message send) throws IOException {
                 KahaTransactionStore.this.addMessage(getDelegate(), send);
             }
 
+            @Override
             public void removeMessage(ConnectionContext context, final MessageAck ack) throws IOException {
                 KahaTransactionStore.this.removeMessage(getDelegate(), ack);
             }
@@ -76,10 +75,12 @@ public class KahaTransactionStore implements TransactionStore, BrokerServiceAwar
 
     public TopicMessageStore proxy(TopicMessageStore messageStore) {
         return new ProxyTopicMessageStore(messageStore) {
+            @Override
             public void addMessage(ConnectionContext context, final Message send) throws IOException {
                 KahaTransactionStore.this.addMessage(getDelegate(), send);
             }
 
+            @Override
             public void removeMessage(ConnectionContext context, final MessageAck ack) throws IOException {
                 KahaTransactionStore.this.removeMessage(getDelegate(), ack);
             }
@@ -101,13 +102,18 @@ public class KahaTransactionStore implements TransactionStore, BrokerServiceAwar
      * @throws XAException
      * @see org.apache.activemq.store.TransactionStore#commit(org.apache.activemq.service.Transaction)
      */
-    public void commit(TransactionId txid, boolean wasPrepared, Runnable done) throws IOException {
+    public void commit(TransactionId txid, boolean wasPrepared, Runnable before,Runnable after) throws IOException {
+        if(before != null) {
+            before.run();
+        }
         KahaTransaction tx = getTx(txid);
         if (tx != null) {
             tx.commit(this);
             removeTx(txid);
         }
-        done.run();
+        if (after != null) {
+            after.run();
+        }
     }
 
     /**

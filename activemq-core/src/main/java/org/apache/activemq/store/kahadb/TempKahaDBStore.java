@@ -24,7 +24,6 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.Map.Entry;
-
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
@@ -62,7 +61,7 @@ import org.apache.kahadb.page.Transaction;
 
 public class TempKahaDBStore extends TempMessageDatabase implements PersistenceAdapter {
 
-    private WireFormat wireFormat = new OpenWireFormat();
+    private final WireFormat wireFormat = new OpenWireFormat();
 
     public void setBrokerName(String brokerName) {
     }
@@ -72,9 +71,14 @@ public class TempKahaDBStore extends TempMessageDatabase implements PersistenceA
     public TransactionStore createTransactionStore() throws IOException {
         return new TransactionStore(){
             
-            public void commit(TransactionId txid, boolean wasPrepared, Runnable done) throws IOException {
+            public void commit(TransactionId txid, boolean wasPrepared, Runnable preCommit,Runnable postCommit) throws IOException {
+                if (preCommit != null) {
+                    preCommit.run();
+                }
                 processCommit(txid);
-                done.run();
+                if (postCommit != null) {
+                    postCommit.run();
+                }
             }
             public void prepare(TransactionId txid) throws IOException {
             	processPrepare(txid);
@@ -122,6 +126,7 @@ public class TempKahaDBStore extends TempMessageDatabase implements PersistenceA
             this.dest = convert( destination );
         }
 
+        @Override
         public ActiveMQDestination getDestination() {
             return destination;
         }
@@ -254,10 +259,13 @@ public class TempKahaDBStore extends TempMessageDatabase implements PersistenceA
             
         }
 
+        @Override
         public void setMemoryUsage(MemoryUsage memoeyUSage) {
         }
+        @Override
         public void start() throws Exception {
         }
+        @Override
         public void stop() throws Exception {
         }
         

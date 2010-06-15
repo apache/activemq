@@ -23,6 +23,9 @@ public class Synchronization {
 
     public void beforeEnd() throws Exception {
     }
+    
+    public void beforeCommit() throws Exception {
+    }
 
     public void afterCommit() throws Exception {
     }

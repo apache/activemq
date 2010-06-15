@@ -22,9 +22,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
-
 import javax.transaction.xa.XAException;
-
 import org.apache.activeio.journal.RecordLocation;
 import org.apache.activemq.command.JournalTopicAck;
 import org.apache.activemq.command.JournalTransaction;
@@ -40,8 +38,8 @@ import org.apache.activemq.store.TransactionStore;
 public class JournalTransactionStore implements TransactionStore {
 
     private final JournalPersistenceAdapter peristenceAdapter;
-    private Map<Object, Tx> inflightTransactions = new LinkedHashMap<Object, Tx>();
-    private Map<TransactionId, Tx> preparedTransactions = new LinkedHashMap<TransactionId, Tx>();
+    private final Map<Object, Tx> inflightTransactions = new LinkedHashMap<Object, Tx>();
+    private final Map<TransactionId, Tx> preparedTransactions = new LinkedHashMap<TransactionId, Tx>();
     private boolean doingRecover;
 
     public static class TxOperation {
@@ -70,7 +68,7 @@ public class JournalTransactionStore implements TransactionStore {
     public static class Tx {
 
         private final RecordLocation location;
-        private ArrayList<TxOperation> operations = new ArrayList<TxOperation>();
+        private final ArrayList<TxOperation> operations = new ArrayList<TxOperation>();
 
         public Tx(RecordLocation location) {
             this.location = location;
@@ -176,8 +174,11 @@ public class JournalTransactionStore implements TransactionStore {
      * @throws XAException
      * @see org.apache.activemq.store.TransactionStore#commit(org.apache.activemq.service.Transaction)
      */
-    public void commit(TransactionId txid, boolean wasPrepared, Runnable done) throws IOException {
+    public void commit(TransactionId txid, boolean wasPrepared, Runnable preCommit,Runnable postCommit) throws IOException {
         Tx tx;
+        if (preCommit != null) {
+            preCommit.run();
+        }
         if (wasPrepared) {
             synchronized (preparedTransactions) {
                 tx = preparedTransactions.remove(txid);
@@ -188,7 +189,9 @@ public class JournalTransactionStore implements TransactionStore {
             }
         }
         if (tx == null) {
-            done.run();
+            if (postCommit != null) {
+                postCommit.run();
+            }
             return;
         }
         if (txid.isXATransaction()) {
@@ -198,7 +201,9 @@ public class JournalTransactionStore implements TransactionStore {
             peristenceAdapter.writeCommand(new JournalTransaction(JournalTransaction.LOCAL_COMMIT, txid,
                                                                   wasPrepared), true);
         }
-        done.run();
+        if (postCommit != null) {
+            postCommit.run();
+        }
     }
 
     /**

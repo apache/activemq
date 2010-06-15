@@ -17,10 +17,8 @@
 package org.apache.activemq.transaction;
 
 import java.io.IOException;
-
 import javax.transaction.xa.XAException;
 import javax.transaction.xa.XAResource;
-
 import org.apache.activemq.broker.TransactionBroker;
 import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.command.XATransactionId;
@@ -48,6 +46,7 @@ public class XATransaction extends Transaction {
         }
     }
 
+    @Override
     public void commit(boolean onePhase) throws XAException, IOException {
         if (LOG.isDebugEnabled()) {
             LOG.debug("XA Transaction commit: " + xid);
@@ -64,14 +63,14 @@ public class XATransaction extends Transaction {
             checkForPreparedState(onePhase);
             doPrePrepare();
             setStateFinished();
-            transactionStore.commit(getTransactionId(), false, postCommitTask);
+            transactionStore.commit(getTransactionId(), false, preCommitTask,postCommitTask);
             waitPostCommitDone(postCommitTask);
             break;
         case PREPARED_STATE:
             // 2 phase commit, work done.
             // We would record commit here.
             setStateFinished();
-            transactionStore.commit(getTransactionId(), true, postCommitTask);
+            transactionStore.commit(getTransactionId(), true, preCommitTask,postCommitTask);
             waitPostCommitDone(postCommitTask);
             break;
         default:
@@ -108,6 +107,7 @@ public class XATransaction extends Transaction {
         }
     }
 
+    @Override
     public void rollback() throws XAException, IOException {
 
         if (LOG.isDebugEnabled()) {
@@ -151,6 +151,7 @@ public class XATransaction extends Transaction {
         }
     }
 
+    @Override
     public int prepare() throws XAException, IOException {
         if (LOG.isDebugEnabled()) {
             LOG.debug("XA Transaction prepare: " + xid);
@@ -178,6 +179,7 @@ public class XATransaction extends Transaction {
         broker.removeTransaction(xid);
     }
 
+    @Override
     public TransactionId getTransactionId() {
         return xid;
     }

@@ -631,7 +631,7 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
     // Methods call by the broker to update and query the store.
     // /////////////////////////////////////////////////////////////////
     public Location store(JournalCommand data) throws IOException {
-        return store(data, false, null);
+        return store(data, false, null,null);
     }
 
     /**
@@ -641,8 +641,11 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
      * during a recovery process.
      * @param done 
      */
-    public Location store(JournalCommand data, boolean sync, Runnable done) throws IOException {
-    	try {
+    public Location store(JournalCommand data, boolean sync, Runnable before,Runnable after) throws IOException {
+    	if (before != null) {
+    	    before.run();
+    	}
+        try {
             int size = data.serializedSizeFramed();
             DataByteArrayOutputStream os = new DataByteArrayOutputStream(size + 1);
             os.writeByte(data.type().getNumber());
@@ -664,8 +667,8 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
                 LOG.info("KahaDB: Recovering checkpoint thread after exception");
                 startCheckpoint();
             }
-            if (done != null) {
-                done.run();
+            if (after != null) {
+                after.run();
             }
             return location;
     	} catch (IOException ioe) {

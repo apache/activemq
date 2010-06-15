@@ -21,9 +21,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
-
 import javax.transaction.xa.XAException;
-
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
@@ -53,9 +51,9 @@ public class MemoryTransactionStore implements TransactionStore {
     private boolean doingRecover;
 
     public class Tx {
-        private ArrayList<AddMessageCommand> messages = new ArrayList<AddMessageCommand>();
+        private final ArrayList<AddMessageCommand> messages = new ArrayList<AddMessageCommand>();
 
-        private ArrayList<RemoveMessageCommand> acks = new ArrayList<RemoveMessageCommand>();
+        private final ArrayList<RemoveMessageCommand> acks = new ArrayList<RemoveMessageCommand>();
 
         public void add(AddMessageCommand msg) {
             messages.add(msg);
@@ -130,19 +128,23 @@ public class MemoryTransactionStore implements TransactionStore {
 
     public MessageStore proxy(MessageStore messageStore) {
         return new ProxyMessageStore(messageStore) {
+            @Override
             public void addMessage(ConnectionContext context, final Message send) throws IOException {
                 MemoryTransactionStore.this.addMessage(getDelegate(), send);
             }
 
+            @Override
             public Future<Object> asyncAddQueueMessage(ConnectionContext context, Message message) throws IOException {
                 MemoryTransactionStore.this.addMessage(getDelegate(), message);
                 return AbstractMessageStore.FUTURE;
              }
              
+            @Override
             public void removeMessage(ConnectionContext context, final MessageAck ack) throws IOException {
                 MemoryTransactionStore.this.removeMessage(getDelegate(), ack);
             }
              
+            @Override
             public void removeAsyncMessage(ConnectionContext context, MessageAck ack) throws IOException {
                 MemoryTransactionStore.this.removeMessage(getDelegate(), ack);       
             }
@@ -151,19 +153,23 @@ public class MemoryTransactionStore implements TransactionStore {
 
     public TopicMessageStore proxy(TopicMessageStore messageStore) {
         return new ProxyTopicMessageStore(messageStore) {
+            @Override
             public void addMessage(ConnectionContext context, final Message send) throws IOException {
                 MemoryTransactionStore.this.addMessage(getDelegate(), send);
             }
 
+            @Override
             public Future<Object> asyncAddTopicMessage(ConnectionContext context, Message message) throws IOException {
                 MemoryTransactionStore.this.addMessage(getDelegate(), message);
                 return AbstractMessageStore.FUTURE;
              }
 
+            @Override
             public void removeMessage(ConnectionContext context, final MessageAck ack) throws IOException {
                 MemoryTransactionStore.this.removeMessage(getDelegate(), ack);
             }
             
+            @Override
             public void removeAsyncMessage(ConnectionContext context, MessageAck ack) throws IOException {
                 MemoryTransactionStore.this.removeMessage(getDelegate(), ack);       
             }
@@ -194,8 +200,10 @@ public class MemoryTransactionStore implements TransactionStore {
      * @throws XAException
      * @see org.apache.activemq.store.TransactionStore#commit(org.apache.activemq.service.Transaction)
      */
-    public void commit(TransactionId txid, boolean wasPrepared, Runnable done) throws IOException {
-
+    public void commit(TransactionId txid, boolean wasPrepared, Runnable preCommit,Runnable postCommit) throws IOException {
+        if (preCommit != null) {
+            preCommit.run();
+        }
         Tx tx;
         if (wasPrepared) {
             tx = preparedTransactions.remove(txid);
@@ -204,11 +212,15 @@ public class MemoryTransactionStore implements TransactionStore {
         }
 
         if (tx == null) {
-            done.run();
+            if (postCommit != null) {
+                postCommit.run();
+            }
             return;
         }
         tx.commit();
-        done.run();
+        if (postCommit != null) {
+            postCommit.run();
+        }
 
     }
 

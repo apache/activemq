@@ -17,9 +17,7 @@
 package org.apache.activemq.transaction;
 
 import java.io.IOException;
-
 import javax.transaction.xa.XAException;
-
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.LocalTransactionId;
 import org.apache.activemq.command.TransactionId;
@@ -44,6 +42,7 @@ public class LocalTransaction extends Transaction {
         this.context = context;
     }
 
+    @Override
     public void commit(boolean onePhase) throws XAException, IOException {
         if (LOG.isDebugEnabled()) {
             LOG.debug("commit: "  + xid
@@ -69,10 +68,11 @@ public class LocalTransaction extends Transaction {
         context.getTransactions().remove(xid);
         // Sync on transaction store to avoid out of order messages in the cursor
         // https://issues.apache.org/activemq/browse/AMQ-2594
-        transactionStore.commit(getTransactionId(), false, postCommitTask);
+        transactionStore.commit(getTransactionId(), false,preCommitTask, postCommitTask);
         this.waitPostCommitDone(postCommitTask);
     }
 
+    @Override
     public void rollback() throws XAException, IOException {
 
         if (LOG.isDebugEnabled()) {
@@ -98,12 +98,14 @@ public class LocalTransaction extends Transaction {
         }
     }
 
+    @Override
     public int prepare() throws XAException {
         XAException xae = new XAException("Prepare not implemented on Local Transactions.");
         xae.errorCode = XAException.XAER_RMERR;
         throw xae;
     }
 
+    @Override
     public TransactionId getTransactionId() {
         return xid;
     }

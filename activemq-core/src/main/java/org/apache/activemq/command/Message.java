@@ -602,6 +602,8 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
 
         if (rc == 1 && getMemoryUsage() != null) {
             getMemoryUsage().increaseUsage(size);
+            //System.err.println("INCREASE USAGE " + System.identityHashCode(getMemoryUsage()) + " PERCENT = " + getMemoryUsage().getPercentUsage());
+           
         }
 
         //System.out.println(" + "+getMemoryUsage().getName()+" :::: "+getMessageId()+"rc="+rc);
@@ -618,7 +620,10 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
 
         if (rc == 0 && getMemoryUsage() != null) {
             getMemoryUsage().decreaseUsage(size);
+            //Thread.dumpStack();
+            //System.err.println("DECREADED USAGE " + System.identityHashCode(getMemoryUsage()) + " PERCENT = " + getMemoryUsage().getPercentUsage());
         }
+       
         //System.out.println(" - "+getMemoryUsage().getName()+" :::: "+getMessageId()+"rc="+rc);
 
         return rc;

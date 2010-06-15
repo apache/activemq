@@ -163,10 +163,10 @@ public class Topic extends BaseDestination implements Task {
             DurableTopicSubscription removed = durableSubcribers.remove(key);
             if (removed != null) {
                 destinationStatistics.getConsumers().decrement();
-            }
-            // deactivate and remove
-            removed.deactivate(false);
-            consumers.remove(removed);
+                // deactivate and remove
+                removed.deactivate(false);
+                consumers.remove(removed);
+            }         
         }
     }
 
@@ -418,12 +418,8 @@ public class Topic extends BaseDestination implements Task {
                 }
 
                 waitForSpace(context, systemUsage.getStoreUsage(), getStoreUsageHighWaterMark(), logMessage);
-            }
-            if (context.isInTransaction()) {
-                topicStore.addMessage(context, message);
-            }else {
-                result = topicStore.asyncAddTopicMessage(context, message);
             }      
+            topicStore.asyncAddTopicMessage(context, message);      
         }
 
         message.incrementReferenceCount();

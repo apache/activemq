@@ -21,9 +21,7 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
-
 import javax.transaction.xa.XAException;
-
 import org.apache.activemq.command.JournalTopicAck;
 import org.apache.activemq.command.JournalTransaction;
 import org.apache.activemq.command.Message;
@@ -99,7 +97,10 @@ public class AMQTransactionStore implements TransactionStore {
      * @throws XAException
      * @see org.apache.activemq.store.TransactionStore#commit(org.apache.activemq.service.Transaction)
      */
-    public void commit(TransactionId txid, boolean wasPrepared, Runnable done) throws IOException {
+    public void commit(TransactionId txid, boolean wasPrepared, Runnable preCommit,Runnable postCommit) throws IOException {
+        if (preCommit != null) {
+            preCommit.run();
+        }
         AMQTx tx;
         if (wasPrepared) {
             synchronized (preparedTransactions) {
@@ -111,7 +112,9 @@ public class AMQTransactionStore implements TransactionStore {
             }
         }
         if (tx == null) {
-            done.run();
+            if (postCommit != null) {
+                postCommit.run();
+            }
             return;
         }
         if (txid.isXATransaction()) {
@@ -119,7 +122,9 @@ public class AMQTransactionStore implements TransactionStore {
         } else {
             peristenceAdapter.writeCommand(new JournalTransaction(JournalTransaction.LOCAL_COMMIT, txid, wasPrepared), true,true);
         }
-        done.run();
+        if (postCommit != null) {
+            postCommit.run();
+        }
     }
 
     /**

@@ -24,9 +24,7 @@ import java.util.Iterator;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.FutureTask;
-
 import javax.transaction.xa.XAException;
-
 import org.apache.activemq.command.TransactionId;
 import org.apache.commons.logging.Log;
 
@@ -36,16 +34,27 @@ import org.apache.commons.logging.Log;
  * 
  * @version $Revision: 1.5 $
  */
-public abstract class Transaction implements Callable {
+public abstract class Transaction {
 
     public static final byte START_STATE = 0; // can go to: 1,2,3
     public static final byte IN_USE_STATE = 1; // can go to: 2,3
     public static final byte PREPARED_STATE = 2; // can go to: 3
     public static final byte FINISHED_STATE = 3;
 
-    private ArrayList<Synchronization> synchronizations = new ArrayList<Synchronization>();
+    private final ArrayList<Synchronization> synchronizations = new ArrayList<Synchronization>();
     private byte state = START_STATE;
-    protected FutureTask<?> postCommitTask = new FutureTask(this);
+    protected FutureTask<?> preCommitTask = new FutureTask<Object>(new Callable<Object>() {
+        public Object call() throws Exception {
+            doPreCommit();
+            return null;
+        }   
+    });
+    protected FutureTask<?> postCommitTask = new FutureTask<Object>(new Callable<Object>() {
+        public Object call() throws Exception {
+            doPostCommit();
+            return null;
+        }   
+    });
     
     public byte getState() {
         return state;
@@ -86,6 +95,13 @@ public abstract class Transaction implements Callable {
         // r.execute();
         // }
     }
+    
+    protected void fireBeforeCommit() throws Exception {
+        for (Iterator<Synchronization> iter = synchronizations.iterator(); iter.hasNext();) {
+            Synchronization s = iter.next();
+            s.beforeCommit();
+        }
+    }
 
     protected void fireAfterCommit() throws Exception {
         for (Iterator<Synchronization> iter = synchronizations.iterator(); iter.hasNext();) {
@@ -102,6 +118,7 @@ public abstract class Transaction implements Callable {
         }
     }
 
+    @Override
     public String toString() {
         return super.toString() + "[synchronizations=" + synchronizations + "]";
     }
@@ -140,6 +157,20 @@ public abstract class Transaction implements Callable {
             }
         }    
     }
+    
+    protected void doPreCommit() throws XAException {
+        try {
+            fireBeforeCommit();
+        } catch (Throwable e) {
+            // I guess this could happen. Post commit task failed
+            // to execute properly.
+            getLog().warn("PRE COMMIT FAILED: ", e);
+            XAException xae = new XAException("PRE COMMIT FAILED");
+            xae.errorCode = XAException.XAER_RMERR;
+            xae.initCause(e);
+            throw xae;
+        }
+    }
 
     protected void doPostCommit() throws XAException {
         try {
@@ -154,10 +185,4 @@ public abstract class Transaction implements Callable {
             throw xae;
         }
     }
-    
-    public Object call() throws Exception {
-        doPostCommit();
-        return null;
-    }
-
 }
