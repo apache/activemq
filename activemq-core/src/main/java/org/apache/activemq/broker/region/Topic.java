@@ -419,7 +419,7 @@ public class Topic extends BaseDestination implements Task {
 
                 waitForSpace(context, systemUsage.getStoreUsage(), getStoreUsageHighWaterMark(), logMessage);
             }      
-            topicStore.asyncAddTopicMessage(context, message);      
+            result = topicStore.asyncAddTopicMessage(context, message);      
         }
 
         message.incrementReferenceCount();

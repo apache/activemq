@@ -182,8 +182,7 @@ public class KahaDBTransactionStore implements TransactionStore {
 
             @Override
             public Future<Object> asyncAddTopicMessage(ConnectionContext context, Message message) throws IOException {
-                KahaDBTransactionStore.this.asyncAddTopicMessage(context, getDelegate(), message);
-                return AbstractMessageStore.FUTURE;
+                return KahaDBTransactionStore.this.asyncAddTopicMessage(context, getDelegate(), message);
             }
 
             @Override
