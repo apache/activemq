@@ -96,6 +96,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter{
     Semaphore globalTopicSemaphore;
     private boolean concurrentStoreAndDispatchQueues = true;
     private boolean concurrentStoreAndDispatchTopics = true;
+    private boolean concurrentStoreAndDispatchTransactions = true;
     private int maxAsyncJobs = MAX_ASYNC_JOBS;
     private final KahaDBTransactionStore transactionStore;
 
@@ -142,6 +143,20 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter{
      */
     public void setConcurrentStoreAndDispatchTopics(boolean concurrentStoreAndDispatch) {
         this.concurrentStoreAndDispatchTopics = concurrentStoreAndDispatch;
+    }
+    
+    /**
+     * @return the concurrentStoreAndDispatchTransactions
+     */
+    public boolean isConcurrentStoreAndDispatchTransactions() {
+        return this.concurrentStoreAndDispatchTransactions;
+    }
+
+    /**
+     * @param concurrentStoreAndDispatchTransactions the concurrentStoreAndDispatchTransactions to set
+     */
+    public void setConcurrentStoreAndDispatchTransactions(boolean concurrentStoreAndDispatchTransactions) {
+        this.concurrentStoreAndDispatchTransactions = concurrentStoreAndDispatchTransactions;
     }
 
     /**

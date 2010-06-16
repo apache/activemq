@@ -31,6 +31,7 @@ import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.TopicMessageStore;
 import org.apache.activemq.store.TransactionStore;
 import org.apache.activemq.usage.SystemUsage;
+
 /**
  * An implementation of {@link PersistenceAdapter} designed for use with a
  * {@link Journal} and then check pointing asynchronously on a timeout with some
@@ -41,7 +42,6 @@ import org.apache.activemq.usage.SystemUsage;
  */
 public class KahaDBPersistenceAdapter implements PersistenceAdapter, BrokerServiceAware {
     private final KahaDBStore letter = new KahaDBStore();
-    
 
     /**
      * @param context
@@ -157,8 +157,6 @@ public class KahaDBPersistenceAdapter implements PersistenceAdapter, BrokerServi
         this.letter.setBrokerName(brokerName);
     }
 
-    
-
     /**
      * @param usageManager
      * @see org.apache.activemq.store.PersistenceAdapter#setUsageManager(org.apache.activemq.usage.SystemUsage)
@@ -193,6 +191,7 @@ public class KahaDBPersistenceAdapter implements PersistenceAdapter, BrokerServi
 
     /**
      * Get the journalMaxFileLength
+     * 
      * @return the journalMaxFileLength
      */
     public int getJournalMaxFileLength() {
@@ -200,8 +199,11 @@ public class KahaDBPersistenceAdapter implements PersistenceAdapter, BrokerServi
     }
 
     /**
-     * When set using Xbean, values of the form "20 Mb", "1024kb", and "1g" can be used
-     * @org.apache.xbean.Property propertyEditor="org.apache.activemq.util.MemoryIntPropertyEditor"
+     * When set using Xbean, values of the form "20 Mb", "1024kb", and "1g" can
+     * be used
+     * 
+     * @org.apache.xbean.Property 
+     *                            propertyEditor="org.apache.activemq.util.MemoryIntPropertyEditor"
      */
     public void setJournalMaxFileLength(int journalMaxFileLength) {
         this.letter.setJournalMaxFileLength(journalMaxFileLength);
@@ -209,6 +211,7 @@ public class KahaDBPersistenceAdapter implements PersistenceAdapter, BrokerServi
 
     /**
      * Get the checkpointInterval
+     * 
      * @return the checkpointInterval
      */
     public long getCheckpointInterval() {
@@ -217,7 +220,9 @@ public class KahaDBPersistenceAdapter implements PersistenceAdapter, BrokerServi
 
     /**
      * Set the checkpointInterval
-     * @param checkpointInterval the checkpointInterval to set
+     * 
+     * @param checkpointInterval
+     *            the checkpointInterval to set
      */
     public void setCheckpointInterval(long checkpointInterval) {
         this.letter.setCheckpointInterval(checkpointInterval);
@@ -225,6 +230,7 @@ public class KahaDBPersistenceAdapter implements PersistenceAdapter, BrokerServi
 
     /**
      * Get the cleanupInterval
+     * 
      * @return the cleanupInterval
      */
     public long getCleanupInterval() {
@@ -233,7 +239,9 @@ public class KahaDBPersistenceAdapter implements PersistenceAdapter, BrokerServi
 
     /**
      * Set the cleanupInterval
-     * @param cleanupInterval the cleanupInterval to set
+     * 
+     * @param cleanupInterval
+     *            the cleanupInterval to set
      */
     public void setCleanupInterval(long cleanupInterval) {
         this.letter.setCleanupInterval(cleanupInterval);
@@ -241,6 +249,7 @@ public class KahaDBPersistenceAdapter implements PersistenceAdapter, BrokerServi
 
     /**
      * Get the indexWriteBatchSize
+     * 
      * @return the indexWriteBatchSize
      */
     public int getIndexWriteBatchSize() {
@@ -249,7 +258,9 @@ public class KahaDBPersistenceAdapter implements PersistenceAdapter, BrokerServi
 
     /**
      * Set the indexWriteBatchSize
-     * @param indexWriteBatchSize the indexWriteBatchSize to set
+     * 
+     * @param indexWriteBatchSize
+     *            the indexWriteBatchSize to set
      */
     public void setIndexWriteBatchSize(int indexWriteBatchSize) {
         this.letter.setIndexWriteBatchSize(indexWriteBatchSize);
@@ -257,6 +268,7 @@ public class KahaDBPersistenceAdapter implements PersistenceAdapter, BrokerServi
 
     /**
      * Get the journalMaxWriteBatchSize
+     * 
      * @return the journalMaxWriteBatchSize
      */
     public int getJournalMaxWriteBatchSize() {
@@ -265,14 +277,17 @@ public class KahaDBPersistenceAdapter implements PersistenceAdapter, BrokerServi
 
     /**
      * Set the journalMaxWriteBatchSize
-     * @param journalMaxWriteBatchSize the journalMaxWriteBatchSize to set
+     * 
+     * @param journalMaxWriteBatchSize
+     *            the journalMaxWriteBatchSize to set
      */
     public void setJournalMaxWriteBatchSize(int journalMaxWriteBatchSize) {
         this.letter.setJournalMaxWriteBatchSize(journalMaxWriteBatchSize);
     }
-    
+
     /**
      * Get the enableIndexWriteAsync
+     * 
      * @return the enableIndexWriteAsync
      */
     public boolean isEnableIndexWriteAsync() {
@@ -281,7 +296,9 @@ public class KahaDBPersistenceAdapter implements PersistenceAdapter, BrokerServi
 
     /**
      * Set the enableIndexWriteAsync
-     * @param enableIndexWriteAsync the enableIndexWriteAsync to set
+     * 
+     * @param enableIndexWriteAsync
+     *            the enableIndexWriteAsync to set
      */
     public void setEnableIndexWriteAsync(boolean enableIndexWriteAsync) {
         this.letter.setEnableIndexWriteAsync(enableIndexWriteAsync);
@@ -289,12 +306,13 @@ public class KahaDBPersistenceAdapter implements PersistenceAdapter, BrokerServi
 
     /**
      * Get the directory
+     * 
      * @return the directory
      */
     public File getDirectory() {
         return this.letter.getDirectory();
     }
-    
+
     /**
      * @param dir
      * @see org.apache.activemq.store.PersistenceAdapter#setDirectory(java.io.File)
@@ -305,6 +323,7 @@ public class KahaDBPersistenceAdapter implements PersistenceAdapter, BrokerServi
 
     /**
      * Get the enableJournalDiskSyncs
+     * 
      * @return the enableJournalDiskSyncs
      */
     public boolean isEnableJournalDiskSyncs() {
@@ -313,14 +332,17 @@ public class KahaDBPersistenceAdapter implements PersistenceAdapter, BrokerServi
 
     /**
      * Set the enableJournalDiskSyncs
-     * @param enableJournalDiskSyncs the enableJournalDiskSyncs to set
+     * 
+     * @param enableJournalDiskSyncs
+     *            the enableJournalDiskSyncs to set
      */
     public void setEnableJournalDiskSyncs(boolean enableJournalDiskSyncs) {
         this.letter.setEnableJournalDiskSyncs(enableJournalDiskSyncs);
     }
-    
+
     /**
      * Get the indexCacheSize
+     * 
      * @return the indexCacheSize
      */
     public int getIndexCacheSize() {
@@ -329,14 +351,17 @@ public class KahaDBPersistenceAdapter implements PersistenceAdapter, BrokerServi
 
     /**
      * Set the indexCacheSize
-     * @param indexCacheSize the indexCacheSize to set
+     * 
+     * @param indexCacheSize
+     *            the indexCacheSize to set
      */
     public void setIndexCacheSize(int indexCacheSize) {
         this.letter.setIndexCacheSize(indexCacheSize);
     }
-    
+
     /**
      * Get the ignoreMissingJournalfiles
+     * 
      * @return the ignoreMissingJournalfiles
      */
     public boolean isIgnoreMissingJournalfiles() {
@@ -345,7 +370,9 @@ public class KahaDBPersistenceAdapter implements PersistenceAdapter, BrokerServi
 
     /**
      * Set the ignoreMissingJournalfiles
-     * @param ignoreMissingJournalfiles the ignoreMissingJournalfiles to set
+     * 
+     * @param ignoreMissingJournalfiles
+     *            the ignoreMissingJournalfiles to set
      */
     public void setIgnoreMissingJournalfiles(boolean ignoreMissingJournalfiles) {
         this.letter.setIgnoreMissingJournalfiles(ignoreMissingJournalfiles);
@@ -367,9 +394,9 @@ public class KahaDBPersistenceAdapter implements PersistenceAdapter, BrokerServi
         letter.setCheckForCorruptJournalFiles(checkForCorruptJournalFiles);
     }
 
-	public void setBrokerService(BrokerService brokerService) {
-		letter.setBrokerService(brokerService);
-	}
+    public void setBrokerService(BrokerService brokerService) {
+        letter.setBrokerService(brokerService);
+    }
 
     public boolean isArchiveDataLogs() {
         return letter.isArchiveDataLogs();
@@ -378,7 +405,7 @@ public class KahaDBPersistenceAdapter implements PersistenceAdapter, BrokerServi
     public void setArchiveDataLogs(boolean archiveDataLogs) {
         letter.setArchiveDataLogs(archiveDataLogs);
     }
-    
+
     public File getDirectoryArchive() {
         return letter.getDirectoryArchive();
     }
@@ -386,36 +413,52 @@ public class KahaDBPersistenceAdapter implements PersistenceAdapter, BrokerServi
     public void setDirectoryArchive(File directoryArchive) {
         letter.setDirectoryArchive(directoryArchive);
     }
-    
+
     public boolean isConcurrentStoreAndDispatchQueues() {
         return letter.isConcurrentStoreAndDispatchQueues();
     }
-    
+
     public void setConcurrentStoreAndDispatchQueues(boolean concurrentStoreAndDispatch) {
         letter.setConcurrentStoreAndDispatchQueues(concurrentStoreAndDispatch);
-    }    
-    
+    }
+
     public boolean isConcurrentStoreAndDispatchTopics() {
         return letter.isConcurrentStoreAndDispatchTopics();
     }
-    
+
     public void setConcurrentStoreAndDispatchTopics(boolean concurrentStoreAndDispatch) {
         letter.setConcurrentStoreAndDispatchTopics(concurrentStoreAndDispatch);
-    }    
-    
+    }
+
+    /**
+     * @return the concurrentStoreAndDispatchTransactions
+     */
+    public boolean isConcurrentStoreAndDispatchTransactions() {
+        return letter.isConcurrentStoreAndDispatchTransactions();
+    }
+
+    /**
+     * @param concurrentStoreAndDispatchTransactions
+     *            the concurrentStoreAndDispatchTransactions to set
+     */
+    public void setConcurrentStoreAndDispatchTransactions(boolean concurrentStoreAndDispatchTransactions) {
+        letter.setConcurrentStoreAndDispatchTransactions(concurrentStoreAndDispatchTransactions);
+    }
+
     public int getMaxAsyncJobs() {
         return letter.getMaxAsyncJobs();
     }
     /**
-     * @param maxAsyncJobs the maxAsyncJobs to set
+     * @param maxAsyncJobs
+     *            the maxAsyncJobs to set
      */
     public void setMaxAsyncJobs(int maxAsyncJobs) {
-       letter.setMaxAsyncJobs(maxAsyncJobs);
-    }   
-    
+        letter.setMaxAsyncJobs(maxAsyncJobs);
+    }
+
     @Override
     public String toString() {
         String path = getDirectory() != null ? getDirectory().toString() : "DIRECTORY_NOT_SET";
-        return "KahaDBPersistenceAdapter[" + path +"]" ;
+        return "KahaDBPersistenceAdapter[" + path + "]";
     }
 }
