@@ -236,9 +236,9 @@ public class KahaDBTransactionStore implements TransactionStore {
                         try {
                             result.get();
                         } catch (InterruptedException e) {
-                            theStore.brokerService.handleIOException(new IOException(e));
+                            theStore.brokerService.handleIOException(new IOException(e.getMessage()));
                         } catch (ExecutionException e) {
-                            theStore.brokerService.handleIOException(new IOException(e));
+                            theStore.brokerService.handleIOException(new IOException(e.getMessage()));
                         }catch(CancellationException e) {
                         }
                         if (!result.isCancelled()) {
