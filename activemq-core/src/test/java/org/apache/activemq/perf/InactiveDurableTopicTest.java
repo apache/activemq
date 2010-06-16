@@ -24,13 +24,11 @@ import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.jms.Topic;
 import javax.jms.TopicSubscriber;
-
 import junit.framework.Assert;
 import junit.framework.AssertionFailedError;
 import junit.framework.TestCase;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.store.kahadaptor.KahaPersistenceAdapter;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -56,6 +54,7 @@ public class InactiveDurableTopicTest extends TestCase {
     private ActiveMQConnectionFactory connectionFactory;
     private BrokerService broker;
 
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
         broker = new BrokerService();
@@ -68,7 +67,7 @@ public class InactiveDurableTopicTest extends TestCase {
          * factory.setTaskRunnerFactory(broker.getTaskRunnerFactory());
          * factory.setUseJournal(false); broker.setPersistenceFactory(factory);
          */
-        broker.addConnector(ActiveMQConnectionFactory.DEFAULT_BROKER_URL);
+        broker.addConnector(ActiveMQConnectionFactory.DEFAULT_BROKER_BIND_URL);
         broker.start();
         connectionFactory = new ActiveMQConnectionFactory(ActiveMQConnectionFactory.DEFAULT_BROKER_URL);
         /*
@@ -79,6 +78,7 @@ public class InactiveDurableTopicTest extends TestCase {
         connectionFactory.setUseAsyncSend(true);
     }
 
+    @Override
     protected void tearDown() throws Exception {
         super.tearDown();
         broker.stop();
