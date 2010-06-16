@@ -202,8 +202,7 @@ public class KahaDBPersistenceAdapter implements PersistenceAdapter, BrokerServi
      * When set using Xbean, values of the form "20 Mb", "1024kb", and "1g" can
      * be used
      * 
-     * @org.apache.xbean.Property 
-     *                            propertyEditor="org.apache.activemq.util.MemoryIntPropertyEditor"
+     * @org.apache.xbean.Property propertyEditor="org.apache.activemq.util.MemoryIntPropertyEditor"
      */
     public void setJournalMaxFileLength(int journalMaxFileLength) {
         this.letter.setJournalMaxFileLength(journalMaxFileLength);
@@ -258,7 +257,8 @@ public class KahaDBPersistenceAdapter implements PersistenceAdapter, BrokerServi
 
     /**
      * Set the indexWriteBatchSize
-     * 
+     * When set using Xbean, values of the form "20 Mb", "1024kb", and "1g" can be used
+     * @org.apache.xbean.Property propertyEditor="org.apache.activemq.util.MemoryPropertyEditor"
      * @param indexWriteBatchSize
      *            the indexWriteBatchSize to set
      */
@@ -277,7 +277,8 @@ public class KahaDBPersistenceAdapter implements PersistenceAdapter, BrokerServi
 
     /**
      * Set the journalMaxWriteBatchSize
-     * 
+     *  * When set using Xbean, values of the form "20 Mb", "1024kb", and "1g" can be used
+     * @org.apache.xbean.Property propertyEditor="org.apache.activemq.util.MemoryPropertyEditor"
      * @param journalMaxWriteBatchSize
      *            the journalMaxWriteBatchSize to set
      */
@@ -351,7 +352,8 @@ public class KahaDBPersistenceAdapter implements PersistenceAdapter, BrokerServi
 
     /**
      * Set the indexCacheSize
-     * 
+     * When set using Xbean, values of the form "20 Mb", "1024kb", and "1g" can be used
+     * @org.apache.xbean.Property propertyEditor="org.apache.activemq.util.MemoryPropertyEditor"
      * @param indexCacheSize
      *            the indexCacheSize to set
      */
