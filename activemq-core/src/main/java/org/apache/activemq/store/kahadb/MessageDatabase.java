@@ -88,7 +88,7 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
     public static final int LOG_SLOW_ACCESS_TIME = Integer.parseInt(System.getProperty(PROPERTY_LOG_SLOW_ACCESS_TIME, "500"));
 
     private static final Log LOG = LogFactory.getLog(MessageDatabase.class);
-    private static final int DATABASE_LOCKED_WAIT_DELAY = 10 * 1000;
+    private static final int DEFAULT_DATABASE_LOCKED_WAIT_DELAY = 10 * 1000;
 
     public static final int CLOSED_STATE = 1;
     public static final int OPEN_STATE = 2;
@@ -177,6 +177,7 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
     private int indexCacheSize = 10000;
     private boolean checkForCorruptJournalFiles = false;
     private boolean checksumJournalFiles = false;
+    private int databaseLockedWaitDelay = DEFAULT_DATABASE_LOCKED_WAIT_DELAY;
     
 
     public MessageDatabase() {
@@ -294,9 +295,9 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
                         lockFile.lock();
                         break;
                     } catch (IOException e) {
-                        LOG.info("Database "+lockFileName+" is locked... waiting " + (DATABASE_LOCKED_WAIT_DELAY / 1000) + " seconds for the database to be unlocked. Reason: " + e);
+                        LOG.info("Database "+lockFileName+" is locked... waiting " + (getDatabaseLockedWaitDelay() / 1000) + " seconds for the database to be unlocked. Reason: " + e);
                         try {
-                            Thread.sleep(DATABASE_LOCKED_WAIT_DELAY);
+                            Thread.sleep(getDatabaseLockedWaitDelay());
                         } catch (InterruptedException e1) {
                         }
                     }
@@ -1615,5 +1616,19 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
      */
     public void setDirectoryArchive(File directoryArchive) {
         this.directoryArchive = directoryArchive;
+    }
+
+    /**
+     * @return the databaseLockedWaitDelay
+     */
+    public int getDatabaseLockedWaitDelay() {
+        return this.databaseLockedWaitDelay;
+    }
+
+    /**
+     * @param databaseLockedWaitDelay the databaseLockedWaitDelay to set
+     */
+    public void setDatabaseLockedWaitDelay(int databaseLockedWaitDelay) {
+        this.databaseLockedWaitDelay = databaseLockedWaitDelay;
     }
 }

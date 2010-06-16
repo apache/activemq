@@ -455,6 +455,20 @@ public class KahaDBPersistenceAdapter implements PersistenceAdapter, BrokerServi
     public void setMaxAsyncJobs(int maxAsyncJobs) {
         letter.setMaxAsyncJobs(maxAsyncJobs);
     }
+    
+    /**
+     * @return the databaseLockedWaitDelay
+     */
+    public int getDatabaseLockedWaitDelay() {
+        return letter.getDatabaseLockedWaitDelay();
+    }
+
+    /**
+     * @param databaseLockedWaitDelay the databaseLockedWaitDelay to set
+     */
+    public void setDatabaseLockedWaitDelay(int databaseLockedWaitDelay) {
+       letter.setDatabaseLockedWaitDelay(databaseLockedWaitDelay);
+    }
 
     @Override
     public String toString() {
