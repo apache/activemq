@@ -85,6 +85,16 @@ public interface PendingMessageCursor extends Service {
      * @throws Exception
      */
     void addMessageLast(MessageReference node) throws Exception;
+    /**
+     * add message to await dispatch - if it can
+     * 
+     * @param node
+     * @param maxWaitTime 
+     * @return true if successful
+     * @throws IOException
+     * @throws Exception
+     */
+    boolean tryAddMessageLast(MessageReference node, long maxWaitTime) throws Exception;
 
     /**
      * add message to await dispatch

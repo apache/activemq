@@ -183,9 +183,14 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
      * add message to await dispatch
      * 
      * @param node
+     * @throws Exception 
      */
     @Override
-    public synchronized void addMessageLast(MessageReference node) {
+    public synchronized void addMessageLast(MessageReference node) throws Exception {
+        tryAddMessageLast(node, 0);
+    }
+    
+    public synchronized boolean tryAddMessageLast(MessageReference node, long maxWaitTime) throws Exception {
         if (!node.isExpired()) {
             try {
                 regionDestination = node.getMessage().getRegionDestination();
@@ -193,7 +198,7 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
                     if (hasSpace() || this.store == null) {
                         memoryList.add(node);
                         node.incrementReferenceCount();
-                        return;
+                        return true;
                     }
                 }
                 if (!hasSpace()) {
@@ -202,15 +207,18 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
                         if (hasSpace()) {
                             memoryList.add(node);
                             node.incrementReferenceCount();
-                            return;
+                            return true;
                         } else {
                             flushToDisk();
                         }
                     }
                 }
-                systemUsage.getTempUsage().waitForSpace();
-                ByteSequence bs = getByteSequence(node.getMessage());
-                getDiskList().addLast(node.getMessageId().toString(), bs);
+                if (systemUsage.getTempUsage().waitForSpace(maxWaitTime)) {
+                    ByteSequence bs = getByteSequence(node.getMessage());
+                    getDiskList().addLast(node.getMessageId().toString(), bs);
+                    return true;
+                }
+                return false;
 
             } catch (Exception e) {
                 LOG.error("Caught an Exception adding a message: " + node + " first to FilePendingMessageCursor ", e);
@@ -219,6 +227,7 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
         } else {
             discard(node);
         }
+        return false;
     }
 
     /**

@@ -19,9 +19,7 @@ package org.apache.activemq.broker.region;
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.concurrent.atomic.AtomicLong;
-
 import javax.jms.JMSException;
-
 import org.apache.activemq.ActiveMQMessageAudit;
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
@@ -67,6 +65,7 @@ public class TopicSubscription extends AbstractSubscription {
     protected int maxAuditDepth = 1000;
     protected boolean enableAudit = false;
     protected ActiveMQMessageAudit audit;
+    protected boolean active = false;
 
     public TopicSubscription(Broker broker,ConnectionContext context, ConsumerInfo info, SystemUsage usageManager) throws Exception {
         super(broker, context, info);
@@ -86,6 +85,7 @@ public class TopicSubscription extends AbstractSubscription {
         if (enableAudit) {
             audit= new ActiveMQMessageAudit(maxAuditDepth, maxProducersToAudit);
         }
+        this.active=true;
     }
 
     public void add(MessageReference node) throws Exception {
@@ -108,21 +108,33 @@ public class TopicSubscription extends AbstractSubscription {
             }
             if (maximumPendingMessages != 0) {
                 boolean warnedAboutWait = false;
-            	synchronized(matchedListMutex){
-            		while (matched.isFull()){
-            		    if (getContext().getStopping().get()) {
-            		        LOG.warn(toString() + ": stopped waiting for space in pendingMessage cursor for: " + node.getMessageId());
-            		        enqueueCounter.decrementAndGet();
-            		        return;
-            		    }
-            		    if (!warnedAboutWait) {
-            		        LOG.info(toString() + ": Pending message cursor ["+ matched + "] is full, temp usage (" + + matched.getSystemUsage().getTempUsage().getPercentUsage() + "%) or memory usage (" + matched.getSystemUsage().getMemoryUsage().getPercentUsage() + "%) limit reached, blocking message add() pending the release of resources.");
-            		        warnedAboutWait = true;
-            		    }
-            			matchedListMutex.wait(20);
-            		}
-            		matched.addMessageLast(node);
-            	}
+                while (active) {
+                    synchronized (matchedListMutex) {
+                        while (matched.isFull()) {
+                            if (getContext().getStopping().get()) {
+                                LOG.warn(toString() + ": stopped waiting for space in pendingMessage cursor for: "
+                                        + node.getMessageId());
+                                enqueueCounter.decrementAndGet();
+                                return;
+                            }
+                            if (!warnedAboutWait) {
+                                LOG.info(toString() + ": Pending message cursor [" + matched
+                                        + "] is full, temp usage ("
+                                        + +matched.getSystemUsage().getTempUsage().getPercentUsage()
+                                        + "%) or memory usage ("
+                                        + matched.getSystemUsage().getMemoryUsage().getPercentUsage()
+                                        + "%) limit reached, blocking message add() pending the release of resources.");
+                                warnedAboutWait = true;
+                            }
+                            matchedListMutex.wait(20);
+                        }
+                        //Temporary storage could be full - so just try to add the message
+                        //see https://issues.apache.org/activemq/browse/AMQ-2475
+                        if (matched.tryAddMessageLast(node, 10)) {
+                            break;
+                        }
+                    }
+                }
                 synchronized (matchedListMutex) {
                     
                     // NOTE - be careful about the slaveBroker!
@@ -239,6 +251,7 @@ public class TopicSubscription extends AbstractSubscription {
             if (context.isInTransaction()) {
                 context.getTransaction().addSynchronization(new Synchronization() {
 
+                    @Override
                     public void afterCommit() throws Exception {
                        synchronized (TopicSubscription.this) {
                             if (singleDestination && destination != null) {
@@ -456,7 +469,7 @@ public class TopicSubscription extends AbstractSubscription {
                     matched.reset();
                    
                     while (matched.hasNext() && !isFull()) {
-                        MessageReference message = (MessageReference) matched.next();
+                        MessageReference message = matched.next();
                         message.decrementReferenceCount();
                         matched.remove();
                         // Message may have been sitting in the matched list a
@@ -530,12 +543,14 @@ public class TopicSubscription extends AbstractSubscription {
         broker.getRoot().sendToDeadLetterQueue(getContext(), message);
     }
 
+    @Override
     public String toString() {
         return "TopicSubscription:" + " consumer=" + info.getConsumerId() + ", destinations=" + destinations.size() + ", dispatched=" + getDispatchedQueueSize() + ", delivered="
                + getDequeueCounter() + ", matched=" + matched() + ", discarded=" + discarded();
     }
 
     public void destroy() {
+        this.active=false;
         synchronized (matchedListMutex) {
             try {
                 matched.destroy();
@@ -546,8 +561,9 @@ public class TopicSubscription extends AbstractSubscription {
         setSlowConsumer(false);
     }
 
+    @Override
     public int getPrefetchSize() {
-        return (int)info.getPrefetchSize();
+        return info.getPrefetchSize();
     }
 
 }

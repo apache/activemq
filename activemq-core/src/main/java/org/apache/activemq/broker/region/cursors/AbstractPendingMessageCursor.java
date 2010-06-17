@@ -33,7 +33,7 @@ import org.apache.activemq.usage.SystemUsage;
  * 
  * @version $Revision$
  */
-public class AbstractPendingMessageCursor implements PendingMessageCursor {
+public abstract class AbstractPendingMessageCursor implements PendingMessageCursor {
     protected int memoryUsageHighWaterMark = 70;
     protected int maxBatchSize = BaseDestination.MAX_PAGE_SIZE;
     protected SystemUsage systemUsage;
@@ -75,6 +75,11 @@ public class AbstractPendingMessageCursor implements PendingMessageCursor {
     }
 
     public void addMessageLast(MessageReference node) throws Exception {
+    }
+    
+    public boolean tryAddMessageLast(MessageReference node, long maxWaitTime) throws Exception {
+        addMessageLast(node);
+        return true;
     }
 
     public void addRecoveredMessage(MessageReference node) throws Exception {
