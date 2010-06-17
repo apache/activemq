@@ -241,7 +241,7 @@ public class AdvisoryBroker extends BrokerFilter {
         if (!AdvisorySupport.isAdvisoryTopic(dest)) {
             ActiveMQTopic topic = AdvisorySupport.getConsumerAdvisoryTopic(dest);
             consumers.remove(info.getConsumerId());
-            if (!dest.isTemporary() || destinations.contains(dest)) {
+            if (!dest.isTemporary() || destinations.containsKey(dest)) {
             	fireConsumerAdvisory(context,dest, topic, info.createRemoveCommand());
             }
         }
