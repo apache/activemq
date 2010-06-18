@@ -80,7 +80,7 @@ public class SoWriteTimeoutTest extends JmsTestSupport {
         MessageConsumer consumer = session.createConsumer(dest); 
         proxy.pause();
         // writes should back up... writeTimeout will kick in a abort the connection
-        TimeUnit.SECONDS.sleep(4);
+        TimeUnit.SECONDS.sleep(10);
         proxy.goOn();
         assertNotNull("can receive buffered messages", consumer.receive(500));
         try {
