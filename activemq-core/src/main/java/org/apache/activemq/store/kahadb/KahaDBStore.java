@@ -205,7 +205,9 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter{
     public void doStop(ServiceStopper stopper) throws Exception {
         //drain down async jobs
         LOG.info("Stopping async queue tasks");
-        this.globalQueueSemaphore.tryAcquire(this.maxAsyncJobs, 60, TimeUnit.SECONDS);
+        if (this.globalQueueSemaphore != null) {
+            this.globalQueueSemaphore.tryAcquire(this.maxAsyncJobs, 60, TimeUnit.SECONDS);
+        }
         synchronized (this.asyncQueueMap) {
             for (StoreQueueTask task : this.asyncQueueMap.values()) {
                 task.cancel();
@@ -213,7 +215,9 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter{
             this.asyncQueueMap.clear();
         }
         LOG.info("Stopping async topic tasks");
-        this.globalTopicSemaphore.tryAcquire(this.maxAsyncJobs, 60, TimeUnit.SECONDS);
+        if (this.globalTopicSemaphore != null) {
+            this.globalTopicSemaphore.tryAcquire(this.maxAsyncJobs, 60, TimeUnit.SECONDS);
+        }
         synchronized (this.asyncTopicMap) {
             for (StoreTopicTask task : this.asyncTopicMap.values()) {
                 task.cancel();

@@ -49,9 +49,12 @@ import junit.framework.TestCase;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQQueue;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 public class FailoverManagedClusterTest extends TestCase {
-
+    private static final Log LOG = LogFactory.getLog(FailoverManagedClusterTest.class);
+    
     long txGenerator = System.currentTimeMillis();
     
     private static final String MASTER_BIND_ADDRESS = "tcp://0.0.0.0:61616";
@@ -61,12 +64,25 @@ public class FailoverManagedClusterTest extends TestCase {
     
     private BrokerService master;
     private BrokerService slave;
+    private CountDownLatch slaveThreadStarted = new CountDownLatch(1);
 
+    @Override
     protected void setUp() throws Exception {
         createAndStartMaster();
         createAndStartSlave();    
     }
     
+    @Override
+    protected void tearDown() throws Exception {
+        if (slave != null) {
+            slave.stop();
+        }
+        if (master != null) {
+            master.stop();
+        }
+    }
+
+
 
     private void createAndStartMaster() throws Exception {
         master = new BrokerService();
@@ -88,8 +104,9 @@ public class FailoverManagedClusterTest extends TestCase {
         new Thread(new Runnable() {
             public void run() {
                 try {
+                    slaveThreadStarted.countDown();
                     slave.start();
-                    System.out.println("slave has started");
+                    LOG.info("slave has started");
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -112,7 +129,7 @@ public class FailoverManagedClusterTest extends TestCase {
 
         final StubMessageEndpoint endpoint = new StubMessageEndpoint() {
             public void onMessage(Message message) {
-                System.out.println("Received message " + message);
+                LOG.info("Received message " + message);
                 super.onMessage(message);
                 messageDelivered.countDown();
             };
@@ -144,18 +161,14 @@ public class FailoverManagedClusterTest extends TestCase {
         } catch (InterruptedException e) {
         }
 
-        // Send the broker a message to that endpoint
         MessageProducer producer = session.createProducer(new ActiveMQQueue("TEST"));
-
-        // force a failover
+        slaveThreadStarted.await(10, TimeUnit.SECONDS);
+        
+        // force a failover before send
+        LOG.info("Stopping master to force failover..");
         master.stop();
-        slave.waitUntilStarted();
-
-        try {
-            Thread.sleep(2000);
-        } catch (InterruptedException ie) {
-            // ignore
-        }
+        master = null;
+        assertTrue("slave started ok", slave.waitUntilStarted());
 
         producer.send(session.createTextMessage("Hello, again!"));
 
