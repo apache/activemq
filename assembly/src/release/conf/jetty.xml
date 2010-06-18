@@ -22,7 +22,7 @@
 
     <bean id="securityLoginService" class="org.eclipse.jetty.security.HashLoginService">
         <property name="name" value="ActiveMQRealm" />
-        <property name="config" value="conf/jetty-realm.properties" />
+        <property name="config" value="jetty-realm.properties" />
     </bean>
 
     <bean id="securityConstraint" class="org.eclipse.jetty.http.security.Constraint">

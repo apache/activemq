@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash 
 # ------------------------------------------------------------------------
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
@@ -15,34 +15,39 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ------------------------------------------------------------------------
+#
+# This script controls standalone Apache ActiveMQ service processes.
+# To ensure compatibility to macosx and cygwin we do not utilize 
+# lsb standard infrastructure for controlling daemons like 
+# "start-stop-daemon".
+#
+# See also http://activemq.apache.org/activemq-command-line-tools-reference.html
+# for additional commandline arguments
+#
+# Authors:
+# Marc Schoechlin <ms@256bit.org>
 
-# load system-wide activemq configuration
-if [ -f "/etc/activemq.conf" ] ; then
-  . /etc/activemq.conf
+# ------------------------------------------------------------------------
+# CONFIGURATION
+ACTIVEMQ_CONFIGS="/etc/default/activemq $HOME/.activemqrc"
+
+# Backup invocation parameters
+COMMANDLINE_ARGS="$@"
+
+# For using instances
+if ( basename $0 | grep -q "activemq-instance-" );then
+   INST="$(basename $0|sed 's/^activemq-instance-//;s/\.sh$//')"
+   ACTIVEMQ_CONFIGS="/etc/default/activemq-instance-${INST} $HOME/.activemqrc-instance-${INST}"
+   echo "INFO: using alternative activemq configuration files: $ACCTIVEMQ_CONFIGS"
 fi
 
-# provide default values for people who don't use RPMs
-if [ -z "$usejikes" ] ; then
-  usejikes=false;
-fi
-
-# load user activemq configuration
-if [ -f "$HOME/.activemqrc" ] ; then
-  . "$HOME/.activemqrc"
-fi
-
-# OS specific support.  $var _must_ be set to either true or false.
-cygwin=false;
-darwin=false;
-case "`uname`" in
-  CYGWIN*) cygwin=true ;;
-  Darwin*) darwin=true
-           if [ -z "$JAVA_HOME" ] ; then
-             JAVA_HOME=/System/Library/Frameworks/JavaVM.framework/Home
-           fi
-           ;;
-esac
-
+## START:DEFAULTCONFIG
+# ------------------------------------------------------------------------
+# Configuration file for running Apache Active MQ as standalone provider
+# 
+# This file overwrites the predefined settings of the sysv init-script
+#
+# Active MQ installation dir
 if [ -z "$ACTIVEMQ_HOME" ] ; then
   # try to find ACTIVEMQ
   if [ -d /opt/activemq ] ; then
@@ -80,16 +85,171 @@ if [ -z "$ACTIVEMQ_HOME" ] ; then
   ACTIVEMQ_HOME=`cd "$ACTIVEMQ_HOME" && pwd`
 fi
 
-# For Cygwin, ensure paths are in UNIX format before anything is touched
-if $cygwin ; then
-  [ -n "$ACTIVEMQ_HOME" ] &&
-    ACTIVEMQ_HOME=`cygpath --unix "$ACTIVEMQ_HOME"`
-  [ -n "$JAVA_HOME" ] &&
-    JAVA_HOME=`cygpath --unix "$JAVA_HOME"`
-  [ -n "$CLASSPATH" ] &&
-    CLASSPATH=`cygpath --path --unix "$CLASSPATH"`
+# Active MQ configuration directory
+ACTIVEMQ_CONFIG_DIR="$ACTIVEMQ_HOME/conf"
+
+# Active MQ configuration directory
+ACTIVEMQ_DATA_DIR="$ACTIVEMQ_HOME/data"
+
+if [ ! -d "$ACTIVEMQ_DATA_DIR" ]; then
+    mkdir $ACTIVEMQ_DATA_DIR
 fi
 
+# Location of the pidfile
+ACTIVEMQ_PIDFILE="$ACTIVEMQ_DATA_DIR/activemq.pid"
+
+# Location of the java installation
+# Specify the location of your java installation using JAVA_HOME, or specify the 
+# path to the "java" binary using JAVACMD
+# (set JAVACMD to "auto" for automatic detection)
+#JAVA_HOME=""
+JAVACMD="auto"
+
+# Configure a user with non root priviledges, if no user is specified do not change user
+ACTIVEMQ_USER=""
+
+# Set jvm memory configuration
+ACTIVEMQ_OPTS_MEMORY="-Xms256M -Xmx256M"
+
+# Set jvm jmx configuration
+# This enables jmx access over a configured jmx-tcp-port.
+# You have to configure the first four settings if you run a ibm jvm, caused by the
+# fact that IBM's jvm does not support VirtualMachine.attach(PID).
+# JMX access is needed for quering a running activemq instance to gain data or to
+# trigger management operations.
+# 
+# Example for ${ACTIVEMQ_CONFIG_DIR}/jmx.access:
+# ---
+# # The "monitorRole" role has readonly access.
+# # The "controlRole" role has readwrite access.
+# monitorRole readonly
+# controlRole readwrite
+# ---
+#
+# Example for ${ACTIVEMQ_CONFIG_DIR}/jmx.password:
+# ---
+# # The "monitorRole" role has password "abc123".
+# # # The "controlRole" role has password "abcd1234".
+# monitorRole abc123
+# controlRole abcd1234
+# ---
+#
+# ACTIVEMQ_SUNJMX_START="-Dcom.sun.management.jmxremote.port=11099 "
+# ACTIVEMQ_SUNJMX_START="$ACTIVEMQ_SUNJMX_START -Dcom.sun.management.jmxremote.password.file=${ACTIVEMQ_CONFIG_DIR}/jmx.password"
+# ACTIVEMQ_SUNJMX_START="$ACTIVEMQ_SUNJMX_START -Dcom.sun.management.jmxremote.access.file=${ACTIVEMQ_CONFIG_DIR}/jmx.access"
+# ACTIVEMQ_SUNJMX_START="$ACTIVEMQ_SUNJMX_START -Dcom.sun.management.jmxremote.ssl=false"
+ACTIVEMQ_SUNJMX_START="$ACTIVEMQ_SUNJMX_START -Dcom.sun.management.jmxremote"
+
+# Set jvm jmx configuration for controlling the broker process
+# You only have to configure the first four settings if you run a ibm jvm, caused by the
+# fact that IBM's jvm does not support VirtualMachine.attach(PID)
+# (see also com.sun.management.jmxremote.port, .jmx.password.file and .jmx.access.file )
+#ACTIVEMQ_SUNJMX_CONTROL="--jmxurl service:jmx:rmi:///jndi/rmi://127.0.0.1:11099/jmxrmi --jmxuser controlRole --jmxpassword abcd1234"
+ACTIVEMQ_SUNJMX_CONTROL=""
+
+# Specify the queue manager URL for using "browse" option of sysv initscript
+ACTIVEMQ_QUEUEMANAGERURL="--amqurl tcp://localhost:61616"
+
+# Set additional JSE arguments
+ACTIVEMQ_SSL_OPTS=""
+
+# Uncomment to enable YourKit profiling
+#ACTIVEMQ_DEBUG_OPTS="-agentlib:yjpagent"
+
+# Uncomment to enable remote debugging
+#ACTIVEMQ_DEBUG_OPTS="-Xdebug -Xnoagent -Djava.compiler=NONE -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=5005"
+
+# ActiveMQ tries to shutdown the broker by jmx, 
+# after a specified number of seconds send SIGKILL
+ACTIVEMQ_KILL_MAXSECONDS="300"
+
+## END:DEFAULTCONFIG
+
+# ------------------------------------------------------------------------
+# LOAD CONFIGURATION
+
+# load activemq configuration
+CONFIG_LOAD="no"
+for ACTIVEMQ_CONFIG in $ACTIVEMQ_CONFIGS;do
+   if [ -f "$ACTIVEMQ_CONFIG" ] ; then
+     ( . $ACTIVEMQ_CONFIG >/dev/null 2>&1 )
+     if [ "$?" != "0" ];then
+      echo "ERROR: there are syntax errors in '$ACTIVEMQ_CONFIG'"
+      exit 1
+     else
+       echo "INFO: loading '$ACTIVEMQ_CONFIG'"
+       . $ACTIVEMQ_CONFIG
+      CONFIG_LOAD="yes"
+     fi
+   fi
+done
+
+# inform user that default configuration is loaded, no suitable configfile found
+if [ "$CONFIG_LOAD" != "yes" ];then
+   if [ "$1" != "setup" ];then
+      echo "INFO: using default configuration";
+      echo "(you can configure options in one of these file: $ACTIVEMQ_CONFIGS)"
+      echo
+      echo "INFO: invoke the following command to create a configuration file"
+      echo "$0 setup [ $(echo $ACTIVEMQ_CONFIGS|sed 's/[ ][ ]*/ | /') ]"
+      echo
+   fi
+fi
+
+# create configuration if requested
+if [ "$1" = "setup" ];then
+   if [ -z "$2" ];then
+      echo "ERROR: specify configuration file"
+      exit 1
+   fi
+   echo "INFO: creating configuration file: $2"
+   (
+   P_STATE="0"
+   while read LINE ;do
+      if (echo "$LINE" | grep "START:DEFAULTCONFIG" >/dev/null );then
+         P_STATE="1"
+         continue;
+      fi
+      if (echo "$LINE" | grep "END:DEFAULTCONFIG" >/dev/null);then
+         P_STATE="0"
+         break;
+      fi
+      if [ "$P_STATE" -eq "1" ];then
+         echo $LINE
+      fi
+   done < $0
+   ) > $2
+   echo "INFO: it's recommend to limit access to '$2' to the priviledged user"
+   echo "INFO: (recommended: chown `whoami`:nogroup '$2'; chmod 600 '$2')"
+   exit $?
+fi
+
+# ------------------------------------------------------------------------
+# OS SPECIFIC SUPPORT
+
+OSTYPE="unknown"
+
+case "`uname`" in
+  CYGWIN*) OSTYPE="cygwin" ;;
+  Darwin*) 
+           OSTYPE="darwin"
+           if [ "$JAVACMD" = "auto" ];then
+             JAVA_HOME=/System/Library/Frameworks/JavaVM.framework/Home
+           fi
+           ;;
+esac
+
+# For Cygwin, ensure paths are in UNIX format before anything is touched
+if [ "$OSTYPE" = "cygwin" ]; then
+  [ -n "$ACTIVEMQ_HOME" ] &&
+    ACTIVEMQ_HOME="`cygpath --unix "$ACTIVEMQ_HOME"`"
+  [ -n "$JAVA_HOME" ] &&
+    JAVA_HOME="`cygpath --unix "$JAVA_HOME"`"
+  [ -n "$CLASSPATH" ] &&
+    CLASSPATH="`cygpath --path --unix "$CLASSPATH"`"
+fi
+
+# Detect the location of the java binary
 if [ -z "$JAVACMD" ] ; then
   if [ -n "$JAVA_HOME"  ] ; then
     if [ -x "$JAVA_HOME/jre/sh/java" ] ; then
@@ -98,61 +258,325 @@ if [ -z "$JAVACMD" ] ; then
     else
       JAVACMD="$JAVA_HOME/bin/java"
     fi
-  else
+  fi
+fi
+
+# Hm, we still do not know the location of the java binary
+if [ ! -x "$JAVACMD" ] ; then
     JAVACMD=`which java 2> /dev/null `
     if [ -z "$JAVACMD" ] ; then
         JAVACMD=java
     fi
-  fi
 fi
-
+# Stop here if no java installation is defined/found
 if [ ! -x "$JAVACMD" ] ; then
-  echo "Error: JAVA_HOME is not defined correctly."
-  echo "  We cannot execute $JAVACMD"
+  echo "ERROR: configuration varaiable JAVA_HOME or JAVACMD is not defined correctly."
+  echo "       (JAVA_HOME='$JAVAHOME', JAVACMD='$JAVACMD')"
   exit 1
 fi
+
+echo "INFO: using java '$JAVACMD'"
 
 if [ -z "$ACTIVEMQ_BASE" ] ; then
   ACTIVEMQ_BASE="$ACTIVEMQ_HOME"
 fi
 
-# For Cygwin, switch paths to Windows format before running java
-if $cygwin; then
+# For Cygwin, switch paths to Windows format before running java if [ "$OSTYPE" = "cygwin" ]; then
+if [ "$OSTYPE" = "cygwin" ];then
   ACTIVEMQ_HOME=`cygpath --windows "$ACTIVEMQ_HOME"`
   ACTIVEMQ_BASE=`cygpath --windows "$ACTIVEMQ_BASE"`
   ACTIVEMQ_CLASSPATH=`cygpath --path --windows "$ACTIVEMQ_CLASSPATH"`
   JAVA_HOME=`cygpath --windows "$JAVA_HOME"`
   CLASSPATH=`cygpath --path --windows "$CLASSPATH"`
   CYGHOME=`cygpath --windows "$HOME"`
+  if [ -n "$CYGHOME" ]; then
+      ACTIVEMQ_CYGWIN="-Dcygwin.user.home=\"$CYGHOME\""
+  fi
 fi
-
-if [ -z "$ACTIVEMQ_OPTS" ] ; then
-  ACTIVEMQ_OPTS="-Xmx512M -Dorg.apache.activemq.UseDedicatedTaskRunner=true -Djava.util.logging.config.file=logging.properties"
-fi
-
-if [ -z "$SUNJMX" ] ; then
-  #SUNJMX="-Dcom.sun.management.jmxremote.port=1099 -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false"
-  SUNJMX="-Dcom.sun.management.jmxremote"
-fi
-
-ACTIVEMQ_OPTS="$ACTIVEMQ_OPTS $SUNJMX $SSL_OPTS"
 
 # Set default classpath
-ACTIVEMQ_CLASSPATH="${ACTIVEMQ_BASE}/conf;"$ACTIVEMQ_CLASSPATH
+ACTIVEMQ_CLASSPATH="${ACTIVEMQ_CONFIG_DIR}/;${ACTIVEMQ_CLASSPATH}"
 
-# Optionally enable YourKit debugging
-if [ "x$YOURKIT_DEBUG" != "x" ]; then
-    ACTIVEMQ_DEBUG_OPTS="-agentlib:yjpagent"
+
+# ------------------------------------------------------------------------
+# HELPER FUNCTIONS
+
+# Start the ActiveMQ JAR
+#
+#
+# @ARG1 : the name of the PID-file
+#         If specified, this function starts the java process in background as a daemon
+#         and stores the pid of the created process in the file.
+#         Output on stdout/stderr will be supressed if this parameter is specified
+# @RET  : If unless 0 something went wrong
+#
+# Note: This function uses a lot of globally defined variables
+# - if $ACTIVEMQ_USER is set, the function tries starts the java process whith the specified
+#   user
+invokeJar(){
+   local PIDFILE="$1"
+   local RET="1"
+   local CUSER="$(whoami)"
+
+   if ( ! [ -f "${ACTIVEMQ_HOME}/bin/run.jar" ] );then
+    echo "ERROR: '${ACTIVEMQ_HOME}/bin/run.jar' does not exist"
+    exit 1
+   fi
+  
+   if ( [ -z "$ACTIVEMQ_USER" ] || [ "$ACTIVEMQ_USER" = "$CUSER" ] );then
+      DOIT_PREFIX="sh -c "
+      DOIT_POSTFIX=";"
+   elif [ "$(id -u)" = "0" ];then
+      DOIT_PREFIX="su -c "
+      DOIT_POSTFIX=" - $ACTIVEMQ_USER"
+      echo "INFO: changing to user '$ACTIVEMQ_USER' to invoke java"
+   fi
+   # Execute java binary
+   if [ -n "$PIDFILE" ];then
+      $DOIT_PREFIX "cd $ACTIVEMQ_CONFIG_DIR; $JAVACMD $ACTIVEMQ_OPTS $ACTIVEMQ_DEBUG_OPTS \
+              -Dactivemq.classpath=\"${ACTIVEMQ_CLASSPATH}\" \
+              -Dactivemq.home=\"${ACTIVEMQ_HOME}\" \
+              -Dactivemq.base=\"${ACTIVEMQ_BASE}\" \
+              $ACTIVEMQ_CYGWIN \
+              -jar \"${ACTIVEMQ_HOME}/bin/run.jar\" $COMMANDLINE_ARGS >/dev/null 2>&1 & 
+              RET=\"\$?\"; APID=\"\$!\";
+              echo \$APID > $PIDFILE;
+              echo \"INFO: pidfile created : '$PIDFILE' (pid '\$APID')\";exit \$RET" $DOIT_POSTFIX
+      RET="$?"
+     else
+      $DOIT_PREFIX "cd $ACTIVEMQ_CONFIG_DIR; $JAVACMD $ACTIVEMQ_OPTS $ACTIVEMQ_DEBUG_OPTS \
+              -Dactivemq.classpath=\"${ACTIVEMQ_CLASSPATH}\" \
+              -Dactivemq.home=\"${ACTIVEMQ_HOME}\" \
+              -Dactivemq.base=\"${ACTIVEMQ_BASE}\" \
+              $ACTIVEMQ_CYGWIN \
+              -jar \"${ACTIVEMQ_HOME}/bin/run.jar\" $COMMANDLINE_ARGS" $DOIT_POSTFIX
+      RET="$?"
+   fi
+   return $RET
+}
+
+# Check if ActiveMQ is running
+#
+# @RET  : 0 => the activemq process is running
+#         1 => process id in $ACTIVEMQ_PIDFILE does not exist anymore
+#         2 => something is wrong with the pid file
+#
+# Note: This function uses globally defined variables
+# - $ACTIVEMQ_PIDFILE : the name of the pid file
+
+
+checkRunning(){
+    if [ -f "$ACTIVEMQ_PIDFILE" ]; then
+       if  [ -z "$(cat $ACTIVEMQ_PIDFILE)" ];then
+        echo "ERROR: pidfile '$ACTIVEMQ_PIDFILE' exists but contains no pid"
+        return 2
+       fi
+       if (ps -p $(cat $ACTIVEMQ_PIDFILE)|grep java >/dev/null);then
+         return 0;
+       else
+         return 1;
+       fi
+    else
+         return 1;
+    fi
+}
+
+# Check if ActiveMQ is running
+#
+# @RET  : 0 => the activemq process is running
+#         1 => the activemq process is not running
+#
+# Note: This function uses globally defined variables
+# - $ACTIVEMQ_PIDFILE : the name of the pid file
+
+
+invoke_status(){
+    if ( checkRunning );then
+         echo "Activemq is running (pid '$(cat $ACTIVEMQ_PIDFILE)')"
+         exit 0
+    fi
+    echo "Activemq not running"
+    exit 1
+}
+
+# Start ActiveMQ if not already running
+#
+# @RET  : 0 => is now started, is already started
+#         !0 => something went wrong
+#
+# Note: This function uses globally defined variables
+# - $ACTIVEMQ_PIDFILE      : the name of the pid file
+# - $ACTIVEMQ_OPTS         : Additional options 
+# - $ACTIVEMQ_SUNJMX_START : options for JMX settings
+# - $ACTIVEMQ_SSL_OPTS     : options for SSL encryption
+
+invoke_start(){
+    if ( checkRunning );then
+      echo "INFO: process with pid '$(cat $ACTIVEMQ_PIDFILE)' is already running"
+      exit 0
+    fi
+
+    if [ -z "$ACTIVEMQ_OPTS" ] ; then
+        ACTIVEMQ_OPTS="$ACTIVEMQ_OPTS_MEMORY -Dorg.apache.activemq.UseDedicatedTaskRunner=true -Djava.util.logging.config.file=logging.properties"
+    fi
+    ACTIVEMQ_OPTS="$ACTIVEMQ_OPTS $ACTIVEMQ_SUNJMX_START $ACTIVEMQ_SSL_OPTS"
+    echo "INFO: starting - inspect logfiles specified in logging.properties and log4j.properties to get details"
+    invokeJar $ACTIVEMQ_PIDFILE
+    exit "$?" 
+}
+
+# Start ActiveMQ in foreground (for debugging)
+#
+# @RET  : 0 => is now started, is already started
+#         !0 => something went wrong
+#
+# Note: This function uses globally defined variables
+# - $ACTIVEMQ_PIDFILE      : the name of the pid file
+# - $ACTIVEMQ_OPTS         : Additional options 
+# - $ACTIVEMQ_SUNJMX_START : options for JMX settings
+# - $ACTIVEMQ_SSL_OPTS     : options for SSL encryption
+
+invoke_fgstart(){
+    if ( checkRunning );then
+      echo "ERROR: activemq is already running"
+      exit 1
+    fi
+    if [ -z "$ACTIVEMQ_OPTS" ] ; then
+        ACTIVEMQ_OPTS="$ACTIVEMQ_OPTS_MEMORY -Dorg.apache.activemq.UseDedicatedTaskRunner=true -Djava.util.logging.config.file=logging.properties"
+    fi
+    ACTIVEMQ_OPTS="$ACTIVEMQ_OPTS $ACTIVEMQ_SUNJMX_START $ACTIVEMQ_SSL_OPTS"
+
+    COMMANDLINE_ARGS="start $(echo $COMMANDLINE_ARGS|sed 's,^fgstart,,')"
+    echo "INFO: starting in foreground, this is just for debugging purposes (stop process by pressing CTRL+c)"
+    invokeJar
+    exit "$?" 
+}
+
+# Stop ActiveMQ
+#
+# @RET  : 0 => stop was successful
+#         !0 => something went wrong
+#
+# Note: This function uses globally defined variables
+# - $ACTIVEMQ_PIDFILE         : the name of the pid file
+# - $ACTIVEMQ_KILL_MAXSECONDS : the number of seconds to wait for termination of broker after sending 
+#                              shutdown signal by jmx interface
+
+invoke_stop(){
+    RET="1"
+    if ( checkRunning );then
+       ACTIVEMQ_OPTS="$ACTIVEMQ_OPTS $ACTIVEMQ_SSL_OPTS"
+       COMMANDLINE_ARGS="$COMMANDLINE_ARGS $ACTIVEMQ_SUNJMX_CONTROL"
+       invokeJar
+       RET="$?"
+       echo -n "INFO: waiting at least $ACTIVEMQ_KILL_MAXSECONDS seconds for regular process termination of pid '$(cat $ACTIVEMQ_PIDFILE)' : "
+       FOUND="0"
+#       for i in `seq 0 $ACTIVEMQ_KILL_MAXSECONDS` ;do
+        for i in {1..$ACTIVEMQ_KILL_MAXSECONDS} ;do
+         if (checkRunning);then
+            sleep 1
+            echo -n "."
+         else
+            echo " FINISHED"
+            FOUND="1"
+            break
+         fi
+       done
+       if [ "$FOUND" -ne "1" ];then
+         echo "INFO: regular shutdown not successful,  sending SIGKILL to process with pid '$(cat $ACTIVEMQ_PIDFILE)'"
+         kill -KILL $(cat $ACTIVEMQ_PIDFILE)
+         RET="1"
+       fi
+    elif [ -f "$ACTIVEMQ_PIDFILE" ];then
+       echo "ERROR: no or outdated process id in '$ACTIVEMQ_PIDFILE'"
+       echo
+       echo "INFO: removing $ACTIVEMQ_PIDFILE"
+    else
+       exit 0
+    fi
+    rm -f $ACTIVEMQ_PIDFILE >/dev/null 2>&1
+    exit $RET
+}
+
+# Invoke a task on a running ActiveMQ instance
+#
+# @RET  : 0 => successful
+#         !0 => something went wrong
+#
+# Note: This function uses globally defined variables
+# - $ACTIVEMQ_QUEUEMANAGERURL : The url of the queuemanager
+# - $ACTIVEMQ_OPTS            : Additional options
+# - $ACTIVEMQ_SUNJMX_START    : options for JMX settings
+# - $ACTIVEMQ_SSL_OPTS        : options for SSL encryption
+invoke_task(){
+    # call task in java binary
+    if ( checkRunning );then
+      if [ "$1" = "browse" ] && [ -n "$ACTIVEMQ_QUEUEMANAGERURL" ];then
+         ACTIVEMQ_OPTS="$ACTIVEMQ_OPTS $ACTIVEMQ_SSL_OPTS"
+         COMMANDLINE_ARGS="$1 $ACTIVEMQ_QUEUEMANAGERURL $(echo $COMMANDLINE_ARGS|sed 's,^browse,,')"
+      elif [ "$1" = "query" ]  && [ -n "$ACTIVEMQ_QUEUEMANAGERURL" ];then
+         ACTIVEMQ_OPTS="$ACTIVEMQ_OPTS $ACTIVEMQ_SSL_OPTS"
+         COMMANDLINE_ARGS="$1 $ACTIVEMQ_SUNJMX_CONTROL $(echo $COMMANDLINE_ARGS|sed 's,^query,,')"
+      else 
+         ACTIVEMQ_OPTS="$ACTIVEMQ_OPTS $ACTIVEMQ_SSL_OPTS"
+         COMMANDLINE_ARGS="$COMMANDLINE_ARGS $ACTIVEMQ_SUNJMX_CONTROL"
+      fi
+      invokeJar
+      exit $?
+    else
+      echo "INFO: activemq not running"
+      exit 1
+    fi
+}
+
+# ------------------------------------------------------------------------
+# MAIN
+
+# show help
+if [ -z "$1" ];then
+  invokeJar
+  RET="$?"
+  cat << EOF
+Tasks provided by the sysv init script:
+    restart         - stop running instance (is there is one), start new instance
+    fgstart         - start daemon in foreground, usful for debugging purposes
+    status          - check if activemq process is running
+    setup           - create the specified configuration file for this init script
+                      (see next usage section)
+
+Configuration of this script:
+    The configuration of this script can be placed on /etc/default/activemq or $HOME/.activemqrc.
+    To use addtional configurations for running multiple instances on the same operating system
+    rename or symlink script to a name matching to activemq-instance-<INSTANCENAME>.
+    This changes the configuration location to /etc/default/activemq-instance-<INSTANCENAME> and
+    \$HOME/.activemqrc-instance-<INSTANCENAME>. Configuration files in /etc have higher precedence. 
+EOF
+  exit $RET
 fi
 
-# Optionally enable remote debugging
-if [ "x$ACTIVEMQ_DEBUG" != "x" ]; then
-    ACTIVEMQ_DEBUG_OPTS="-Xdebug -Xnoagent -Djava.compiler=NONE -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=5005"
-fi
+case "$1" in
+  status)    
+      invoke_status
+    ;;
+  restart)
+    if ( checkRunning );then
+      $0 stop
+    fi
+    $0 status
+    $0 start
+    $0 status
+    ;;
+  start)    
+    invoke_start
+    ;;
+  fgstart)
+    invoke_fgstart
+    ;;
+  stop)    
+    invoke_stop
+    ;;
+  *)
+    invoke_task
+esac
 
-if [ -n "$CYGHOME" ]; then
-    exec "$JAVACMD" $ACTIVEMQ_DEBUG_OPTS $ACTIVEMQ_OPTS -Dactivemq.classpath="${ACTIVEMQ_CLASSPATH}" -Dactivemq.home="${ACTIVEMQ_HOME}" -Dactivemq.base="${ACTIVEMQ_BASE}" -Dcygwin.user.home="$CYGHOME" -jar "${ACTIVEMQ_HOME}/bin/run.jar" start $@
-else
-    exec "$JAVACMD" $ACTIVEMQ_DEBUG_OPTS $ACTIVEMQ_OPTS -Dactivemq.classpath="${ACTIVEMQ_CLASSPATH}" -Dactivemq.home="${ACTIVEMQ_HOME}" -Dactivemq.base="${ACTIVEMQ_BASE}" -jar "${ACTIVEMQ_HOME}/bin/run.jar" start $@
-fi
-
+# vim:ai et ts=2 shiftwidth=2 expandtab tabstop=3:
