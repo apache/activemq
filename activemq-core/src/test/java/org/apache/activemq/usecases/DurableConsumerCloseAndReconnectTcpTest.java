@@ -59,6 +59,7 @@ implements ExceptionListener, TransportListener {
         connector = broker.addConnector("tcp://localhost:0?transport.useInactivityMonitor=false");
         broker.setPersistent(false);
         broker.start();
+        broker.waitUntilStarted();
         
         class SlowCloseSocketTcpTransportFactory extends TcpTransportFactory {
 
@@ -130,6 +131,7 @@ implements ExceptionListener, TransportListener {
     
     public void tearDown() throws Exception {
         broker.stop();
+        broker.waitUntilStopped();
     }
 
     protected ActiveMQConnectionFactory createConnectionFactory() throws Exception {
@@ -175,6 +177,7 @@ implements ExceptionListener, TransportListener {
        LOG.info("Transport listener exception:" + error);
        if (reconnectInTransportListener) {
            try {
+               TimeUnit.MILLISECONDS.sleep(500);
                makeConsumer();
            } catch (Exception e) {
                reconnectException = e;
