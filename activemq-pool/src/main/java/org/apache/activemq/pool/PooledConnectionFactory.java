@@ -56,6 +56,7 @@ public class PooledConnectionFactory implements ConnectionFactory, Service {
     private int maxConnections = 1;
     private int idleTimeout = 30 * 1000;
     private AtomicBoolean stopped = new AtomicBoolean(false);
+    private long expiryTimeout = 0l;
 
     public PooledConnectionFactory() {
         this(new ActiveMQConnectionFactory());
@@ -117,6 +118,7 @@ public class PooledConnectionFactory implements ConnectionFactory, Service {
     protected ConnectionPool createConnectionPool(ActiveMQConnection connection) {
         ConnectionPool result =  new ConnectionPool(connection, getPoolFactory());
         result.setIdleTimeout(getIdleTimeout());
+        result.setExpiryTimeout(getExpiryTimeout());
         return result;
     }
 
@@ -145,9 +147,7 @@ public class PooledConnectionFactory implements ConnectionFactory, Service {
         LOG.debug("Stop the PooledConnectionFactory, number of connections in cache: "+cache.size());
         stopped.set(true);
         for (Iterator<LinkedList<ConnectionPool>> iter = cache.values().iterator(); iter.hasNext();) {
-            LinkedList list = iter.next();
-            for (Iterator i = list.iterator(); i.hasNext();) {
-                ConnectionPool connection = (ConnectionPool) i.next();
+            for (ConnectionPool connection : iter.next()) {
                 try {
                     connection.close();
                 }catch(Exception e) {
@@ -208,5 +208,19 @@ public class PooledConnectionFactory implements ConnectionFactory, Service {
 
     public void setIdleTimeout(int idleTimeout) {
         this.idleTimeout = idleTimeout;
+    }
+
+    /**
+     * allow connections to expire, irrespective of load or idle time. This is useful with failover
+     * to force a reconnect from the pool, to reestablish load balancing or use of the master post recovery
+     * 
+     * @param expiryTimeout non zero in milliseconds
+     */
+    public void setExpiryTimeout(long expiryTimeout) {
+        this.expiryTimeout = expiryTimeout;   
+    }
+    
+    public long getExpiryTimeout() {
+        return expiryTimeout;
     }
 }

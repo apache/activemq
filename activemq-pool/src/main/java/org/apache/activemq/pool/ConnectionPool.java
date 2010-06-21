@@ -25,11 +25,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.jms.JMSException;
 import javax.jms.Session;
-import javax.transaction.RollbackException;
-import javax.transaction.Status;
-import javax.transaction.SystemException;
-import javax.transaction.TransactionManager;
-import javax.transaction.xa.XAResource;
 
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.transport.TransportListener;
@@ -48,9 +43,11 @@ public class ConnectionPool {
     private int referenceCount;
     private ObjectPoolFactory poolFactory;
     private long lastUsed = System.currentTimeMillis();
+    private long firstUsed = lastUsed;
     private boolean hasFailed;
     private boolean hasExpired;
     private int idleTimeout = 30 * 1000;
+    private long expiryTimeout = 0l;
 
     public ConnectionPool(ActiveMQConnection connection, ObjectPoolFactory poolFactory) {
         this(connection, new HashMap<SessionKey, SessionPool>(), poolFactory);
@@ -63,6 +60,8 @@ public class ConnectionPool {
 
             public void onException(IOException error) {
                 synchronized (ConnectionPool.this) {
+                    System.err.println("HasFaile=true on :" + error);
+                    Thread.dumpStack();
                     hasFailed = true;
                 }
             }
@@ -163,7 +162,9 @@ public class ConnectionPool {
             }
             return true;
         }
-        if (hasFailed || (idleTimeout > 0 && System.currentTimeMillis() > lastUsed + idleTimeout)) {
+        if (hasFailed 
+                || (idleTimeout > 0 && System.currentTimeMillis() > lastUsed + idleTimeout)
+                || expiryTimeout > 0 && System.currentTimeMillis() > firstUsed + expiryTimeout) {
             hasExpired = true;
             if (referenceCount == 0) {
                 close();
@@ -183,6 +184,14 @@ public class ConnectionPool {
 
     protected SessionPool createSessionPool(SessionKey key) {
         return new SessionPool(this, key, poolFactory.createPool());
+    }
+
+    public void setExpiryTimeout(long expiryTimeout) {
+        this.expiryTimeout  = expiryTimeout;
+    }
+    
+    public long getExpiryTimeout() {
+        return expiryTimeout;
     }
 
 }
