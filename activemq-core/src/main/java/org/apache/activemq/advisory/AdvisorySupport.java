@@ -16,11 +16,11 @@
  */
 package org.apache.activemq.advisory;
 
+import javax.jms.Destination;
+import javax.jms.JMSException;
 import org.apache.activemq.ActiveMQMessageTransformation;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQTopic;
-import javax.jms.Destination;
-import javax.jms.JMSException;
 public final class AdvisorySupport {
     public static final String ADVISORY_TOPIC_PREFIX = "ActiveMQ.Advisory.";
     public static final ActiveMQTopic CONNECTION_ADVISORY_TOPIC = new ActiveMQTopic(ADVISORY_TOPIC_PREFIX
@@ -45,6 +45,7 @@ public final class AdvisorySupport {
     public static final String FULL_TOPIC_PREFIX = ADVISORY_TOPIC_PREFIX + "FULL.";
     public static final String MESSAGE_DELIVERED_TOPIC_PREFIX = ADVISORY_TOPIC_PREFIX + "MessageDelivered.";
     public static final String MESSAGE_CONSUMED_TOPIC_PREFIX = ADVISORY_TOPIC_PREFIX + "MessageConsumed.";
+    public static final String MESSAGE_DLQ_TOPIC_PREFIX = ADVISORY_TOPIC_PREFIX + "MessageDLQd.";
     public static final String MASTER_BROKER_TOPIC_PREFIX = ADVISORY_TOPIC_PREFIX + "MasterBroker";
     public static final String AGENT_TOPIC = "ActiveMQ.Agent";
     public static final String ADIVSORY_MESSAGE_TYPE = "Advisory";
@@ -182,6 +183,12 @@ public final class AdvisorySupport {
 
     public static ActiveMQTopic getMessageConsumedAdvisoryTopic(ActiveMQDestination destination) {
         String name = MESSAGE_CONSUMED_TOPIC_PREFIX + destination.getDestinationTypeAsString() + "."
+                + destination.getPhysicalName();
+        return new ActiveMQTopic(name);
+    }
+    
+    public static ActiveMQTopic getMessageDLQdAdvisoryTopic(ActiveMQDestination destination) {
+        String name = MESSAGE_DLQ_TOPIC_PREFIX + destination.getDestinationTypeAsString() + "."
                 + destination.getPhysicalName();
         return new ActiveMQTopic(name);
     }

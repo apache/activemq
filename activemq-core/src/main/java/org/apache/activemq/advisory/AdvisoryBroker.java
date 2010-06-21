@@ -386,6 +386,21 @@ public class AdvisoryBroker extends BrokerFilter {
             LOG.warn("Failed to fire message master broker advisory");
         }
     }
+    
+    @Override
+    public void sendToDeadLetterQueue(ConnectionContext context,MessageReference messageReference){
+        super.sendToDeadLetterQueue(context, messageReference);
+        try {
+            if(!messageReference.isAdvisory()) {
+                ActiveMQTopic topic = AdvisorySupport.getMessageDLQdAdvisoryTopic(messageReference.getMessage().getDestination());
+                Message payload = messageReference.getMessage().copy();
+                payload.clearBody();
+                fireAdvisory(context, topic,payload);
+            }
+        } catch (Exception e) {
+            LOG.warn("Failed to fire message consumed advisory");
+        } 
+    }
 
     protected void fireAdvisory(ConnectionContext context, ActiveMQTopic topic, Command command) throws Exception {
         fireAdvisory(context, topic, command, null);
