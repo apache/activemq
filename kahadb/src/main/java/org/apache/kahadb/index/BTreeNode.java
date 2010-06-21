@@ -101,6 +101,7 @@ public final class BTreeNode<Key,Value> {
                         // we need to roll to the next leaf..
                         if( current.next >= 0 ) {
                             current = index.loadNode(tx, current.next, null);
+                            assert !current.isBranch() : "Should have linked to the next leaf node.";
                             nextIndex=0;
                         } else {
                             break;
@@ -227,7 +228,53 @@ public final class BTreeNode<Key,Value> {
             return null;
         }
     }
-   
+
+
+    /**
+     * Returns the right most leaf from the current btree graph.
+     * @throws IOException
+     */
+    private BTreeNode<Key,Value> getRightLeaf(Transaction tx) throws IOException {
+        BTreeNode<Key,Value> cur = this;
+        while(cur.isBranch()) {
+            cur = cur.getChild(tx, keys.length);
+        }
+        return cur;
+    }
+
+    /**
+     * Returns the left most leaf from the current btree graph.
+     * @throws IOException
+     */
+    private BTreeNode<Key,Value> getLeftLeaf(Transaction tx) throws IOException {
+        BTreeNode<Key,Value> cur = this;
+        while(cur.isBranch()) {
+            cur = cur.getChild(tx, 0);
+        }
+        return cur;
+    }
+
+    /**
+     * Returns the left most leaf from the current btree graph.
+     * @throws IOException
+     */
+    private BTreeNode<Key,Value> getLeftPeer(Transaction tx, BTreeNode<Key,Value> x) throws IOException {
+        BTreeNode<Key,Value> cur = x;
+        while( cur.parent !=null ) {
+            if( cur.parent.children[0] == cur.getPageId() ) {
+                cur = cur.parent;
+            } else {
+                for( int i=0; i < cur.parent.children.length; i ++) {
+                    if( cur.parent.children[i]==cur.getPageId() ) {
+                        return  cur.parent.getChild(tx, i-1);
+                    }
+                }
+                throw new AssertionError("page "+x+" was decendent of "+cur.getPageId());
+            }
+        }
+        return null;
+    }
+
     public Value remove(Transaction tx, Key key) throws IOException {
 
         if(isBranch()) {
@@ -249,14 +296,26 @@ public final class BTreeNode<Key,Value> {
                 } else {
                     
                     // The child was a leaf. Then we need to actually remove it from this branch node..
+                    // and relink the previous leaf to skip to the next leaf.
 
-                    // We need to update the previous child's next pointer to skip over the child being removed....
-                    if( idx > 0 && children.length > 1) {
-                        BTreeNode<Key, Value> previousChild = getChild(tx, idx-1);
-                        previousChild.next = child.next;
-                        index.storeNode(tx, previousChild, true);
+                    BTreeNode<Key, Value> previousLeaf = null;
+                    if( idx > 0 ) {
+                        // easy if we this node hold the previous child.
+                        previousLeaf = getChild(tx, idx-1).getRightLeaf(tx);
+                    } else {
+                        // less easy if we need to go to the parent to find the previous child.
+                        BTreeNode<Key, Value> lp = getLeftPeer(tx, this);
+                        if( lp!=null ) {
+                            previousLeaf = lp.getRightLeaf(tx);
+                        }
+                        // lp will be null if there was no previous child.
                     }
-                    
+
+                    if( previousLeaf !=null ) {
+                        previousLeaf.next = child.next;
+                        index.storeNode(tx, previousLeaf, true);
+                    }
+
                     if( idx < children.length-1 ) {
                         // Delete it and key to the right.
                         setBranchData(arrayDelete(keys, idx), arrayDelete(children, idx));
