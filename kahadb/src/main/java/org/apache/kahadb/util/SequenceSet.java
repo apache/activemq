@@ -272,7 +272,7 @@ public class SequenceSet extends LinkedNodeList<Sequence> {
         }
         Sequence sequence = getHead();
         while (sequence != null) {
-            if (sequence.first <= first ) {
+            if (sequence.first <= first && first <= sequence.last ) {
                 return last <= sequence.last ;
             }
             sequence = sequence.getNext();
