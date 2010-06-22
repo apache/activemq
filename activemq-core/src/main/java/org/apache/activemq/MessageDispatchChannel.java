@@ -16,44 +16,17 @@
  */
 package org.apache.activemq;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
-
 import javax.jms.JMSException;
-
 import org.apache.activemq.command.MessageDispatch;
 
-public class MessageDispatchChannel {
+public interface MessageDispatchChannel {
 
-    private final Object mutex = new Object();
-    private final LinkedList<MessageDispatch> list;
-    private boolean closed;
-    private boolean running;
+    public abstract void enqueue(MessageDispatch message);
 
-    public MessageDispatchChannel() {
-        this.list = new LinkedList<MessageDispatch>();
-    }
+    public abstract void enqueueFirst(MessageDispatch message);
 
-    public void enqueue(MessageDispatch message) {
-        synchronized (mutex) {
-            list.addLast(message);
-            mutex.notify();
-        }
-    }
-
-    public void enqueueFirst(MessageDispatch message) {
-        synchronized (mutex) {
-            list.addFirst(message);
-            mutex.notify();
-        }
-    }
-
-    public boolean isEmpty() {
-        synchronized (mutex) {
-            return list.isEmpty();
-        }
-    }
+    public abstract boolean isEmpty();
 
     /**
      * Used to get an enqueued message. The amount of time this method blocks is
@@ -67,101 +40,28 @@ public class MessageDispatchChannel {
      * @return null if we timeout or if the consumer is closed.
      * @throws InterruptedException
      */
-    public MessageDispatch dequeue(long timeout) throws InterruptedException {
-        synchronized (mutex) {
-            // Wait until the consumer is ready to deliver messages.
-            while (timeout != 0 && !closed && (list.isEmpty() || !running)) {
-                if (timeout == -1) {
-                    mutex.wait();
-                } else {
-                    mutex.wait(timeout);
-                    break;
-                }
-            }
-            if (closed || !running || list.isEmpty()) {
-                return null;
-            }
-            return list.removeFirst();
-        }
-    }
+    public abstract MessageDispatch dequeue(long timeout) throws InterruptedException;
 
-    public MessageDispatch dequeueNoWait() {
-        synchronized (mutex) {
-            if (closed || !running || list.isEmpty()) {
-                return null;
-            }
-            return list.removeFirst();
-        }
-    }
+    public abstract MessageDispatch dequeueNoWait();
 
-    public MessageDispatch peek() {
-        synchronized (mutex) {
-            if (closed || !running || list.isEmpty()) {
-                return null;
-            }
-            return list.getFirst();
-        }
-    }
+    public abstract MessageDispatch peek();
 
-    public void start() {
-        synchronized (mutex) {
-            running = true;
-            mutex.notifyAll();
-        }
-    }
+    public abstract void start();
 
-    public void stop() {
-        synchronized (mutex) {
-            running = false;
-            mutex.notifyAll();
-        }
-    }
+    public abstract void stop();
 
-    public void close() {
-        synchronized (mutex) {
-            if (!closed) {
-                running = false;
-                closed = true;
-            }
-            mutex.notifyAll();
-        }
-    }
+    public abstract void close();
 
-    public void clear() {
-        synchronized (mutex) {
-            list.clear();
-        }
-    }
+    public abstract void clear();
 
-    public boolean isClosed() {
-        return closed;
-    }
+    public abstract boolean isClosed();
 
-    public int size() {
-        synchronized (mutex) {
-            return list.size();
-        }
-    }
+    public abstract int size();
 
-    public Object getMutex() {
-        return mutex;
-    }
+    public abstract Object getMutex();
 
-    public boolean isRunning() {
-        return running;
-    }
+    public abstract boolean isRunning();
 
-    public List<MessageDispatch> removeAll() {
-        synchronized (mutex) {
-            ArrayList<MessageDispatch> rc = new ArrayList<MessageDispatch>(list);
-            list.clear();
-            return rc;
-        }
-    }
+    public abstract List<MessageDispatch> removeAll();
 
-    public String toString() {
-        synchronized (mutex) {
-            return list.toString();
-        }
-    }
 }

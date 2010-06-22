@@ -20,11 +20,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
-
 import javax.jms.IllegalStateException;
 import javax.jms.InvalidDestinationException;
 import javax.jms.JMSException;
-
 import org.apache.activemq.command.ActiveMQBytesMessage;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQMessage;
@@ -47,7 +45,7 @@ public class ActiveMQInputStream extends InputStream implements ActiveMQDispatch
     private final ActiveMQConnection connection;
     private final ConsumerInfo info;
     // These are the messages waiting to be delivered to the client
-    private final MessageDispatchChannel unconsumedMessages = new MessageDispatchChannel();
+    private final MessageDispatchChannel unconsumedMessages = new FifoMessageDispatchChannel();
 
     private int deliveredCounter;
     private MessageDispatch lastDelivered;
@@ -113,6 +111,7 @@ public class ActiveMQInputStream extends InputStream implements ActiveMQDispatch
         unconsumedMessages.start();
     }
 
+    @Override
     public void close() throws IOException {
         if (!unconsumedMessages.isClosed()) {
             try {
@@ -172,6 +171,7 @@ public class ActiveMQInputStream extends InputStream implements ActiveMQDispatch
         }
     }
 
+    @Override
     public int read() throws IOException {
         fillBuffer();
         if (eosReached || buffer.length == 0) {
@@ -181,6 +181,7 @@ public class ActiveMQInputStream extends InputStream implements ActiveMQDispatch
         return buffer[pos++] & 0xff;
     }
 
+    @Override
     public int read(byte[] b, int off, int len) throws IOException {
         fillBuffer();
         if (eosReached || buffer.length == 0) {
@@ -241,6 +242,7 @@ public class ActiveMQInputStream extends InputStream implements ActiveMQDispatch
         unconsumedMessages.enqueue(md);
     }
 
+    @Override
     public String toString() {
         return "ActiveMQInputStream { value=" + info.getConsumerId() + ", producerId=" + producerId + " }";
     }

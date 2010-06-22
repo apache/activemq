@@ -18,9 +18,7 @@
 package org.apache.activemq;
 
 import java.util.List;
-
 import javax.jms.JMSException;
-
 import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.command.MessageDispatch;
 import org.apache.activemq.thread.Task;
@@ -39,14 +37,19 @@ import org.apache.commons.logging.LogFactory;
 public class ActiveMQSessionExecutor implements Task {
     private static final Log LOG = LogFactory.getLog(ActiveMQSessionExecutor.class);
 
-    private ActiveMQSession session;
-    private MessageDispatchChannel messageQueue = new MessageDispatchChannel();
+    private final ActiveMQSession session;
+    private final MessageDispatchChannel messageQueue;
     private boolean dispatchedBySessionPool;
     private volatile TaskRunner taskRunner;
     private boolean startedOrWarnedThatNotStarted;
 
     ActiveMQSessionExecutor(ActiveMQSession session) {
         this.session = session;
+        if (this.session.connection.isMessagePrioritySupported()) {
+           this.messageQueue = new SimplePriorityMessageDispatchChannel();
+        }else {
+            this.messageQueue = new FifoMessageDispatchChannel();
+        }
     }
 
     void setDispatchedBySessionPool(boolean value) {

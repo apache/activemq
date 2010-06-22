@@ -114,7 +114,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
     protected final ConsumerInfo info;
 
     // These are the messages waiting to be delivered to the client
-    protected final MessageDispatchChannel unconsumedMessages = new MessageDispatchChannel();
+    protected final MessageDispatchChannel unconsumedMessages;
 
     // The are the messages that were delivered to the consumer but that have
     // not been acknowledged. It's kept in reverse order since we
@@ -197,6 +197,11 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
             if (prefetch < 0) {
                 throw new JMSException("Cannot have a prefetch size less than zero");
             }
+        }
+        if (session.connection.isMessagePrioritySupported()) {
+            this.unconsumedMessages = new SimplePriorityMessageDispatchChannel();
+        }else {
+            this.unconsumedMessages = new FifoMessageDispatchChannel();
         }
 
         this.session = session;

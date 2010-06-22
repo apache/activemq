@@ -115,6 +115,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     private long consumerFailoverRedeliveryWaitPeriod = 0;
     private boolean checkForDuplicates = true;
     private ClientInternalExceptionListener clientInternalExceptionListener;
+    private boolean messagePrioritySupported = true;
 
     // /////////////////////////////////////////////
     //
@@ -318,6 +319,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
         connection.setUseDedicatedTaskRunner(isUseDedicatedTaskRunner());
         connection.setConsumerFailoverRedeliveryWaitPeriod(getConsumerFailoverRedeliveryWaitPeriod());
         connection.setCheckForDuplicates(isCheckForDuplicates());
+        connection.setMessagePrioritySupported(isMessagePrioritySupported());
         if (transportListener != null) {
             connection.addTransportListener(transportListener);
         }
@@ -583,6 +585,20 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     public void setSendAcksAsync(boolean sendAcksAsync) {
         this.sendAcksAsync = sendAcksAsync;
     }
+    
+    /**
+     * @return the messagePrioritySupported
+     */
+    public boolean isMessagePrioritySupported() {
+        return this.messagePrioritySupported;
+    }
+
+    /**
+     * @param messagePrioritySupported the messagePrioritySupported to set
+     */
+    public void setMessagePrioritySupported(boolean messagePrioritySupported) {
+        this.messagePrioritySupported = messagePrioritySupported;
+    }
 
 
     /**
@@ -685,6 +701,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
         props.setProperty("auditDepth", Integer.toString(getAuditDepth()));
         props.setProperty("auditMaximumProducerNumber", Integer.toString(getAuditMaximumProducerNumber()));
         props.setProperty("checkForDuplicates", Boolean.toString(isCheckForDuplicates()));
+        props.setProperty("messagePrioritySupported", Boolean.toString(isMessagePrioritySupported()));
     }
 
     public boolean isUseCompression() {

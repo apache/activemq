@@ -191,6 +191,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     protected volatile CountDownLatch transportInterruptionProcessingComplete;
     private long consumerFailoverRedeliveryWaitPeriod;
     private final Scheduler scheduler;
+    private boolean messagePrioritySupported=true;
 
     /**
      * Construct an <code>ActiveMQConnection</code>
@@ -1432,6 +1433,20 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
      */
     public void setAlwaysSyncSend(boolean alwaysSyncSend) {
         this.alwaysSyncSend = alwaysSyncSend;
+    }
+    
+    /**
+     * @return the messagePrioritySupported
+     */
+    public boolean isMessagePrioritySupported() {
+        return this.messagePrioritySupported;
+    }
+
+    /**
+     * @param messagePrioritySupported the messagePrioritySupported to set
+     */
+    public void setMessagePrioritySupported(boolean messagePrioritySupported) {
+        this.messagePrioritySupported = messagePrioritySupported;
     }
 
     /**
