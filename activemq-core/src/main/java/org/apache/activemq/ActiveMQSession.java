@@ -206,7 +206,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
     protected final LongSequenceGenerator consumerIdGenerator = new LongSequenceGenerator();
     protected final LongSequenceGenerator producerIdGenerator = new LongSequenceGenerator();
     protected final LongSequenceGenerator deliveryIdGenerator = new LongSequenceGenerator();
-    protected final ActiveMQSessionExecutor executor = new ActiveMQSessionExecutor(this);
+    protected final ActiveMQSessionExecutor executor;
     protected final AtomicBoolean started = new AtomicBoolean(false);
 
     protected final CopyOnWriteArrayList<ActiveMQMessageConsumer> consumers = new CopyOnWriteArrayList<ActiveMQMessageConsumer>();
@@ -253,6 +253,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
         setBlobTransferPolicy(connection.getBlobTransferPolicy());
         this.scheduler=connection.getScheduler();
         this.connectionExecutor=connection.getExecutor();
+        this.executor = new ActiveMQSessionExecutor(this);
         if (connection.isStarted()) {
             start();
         }
