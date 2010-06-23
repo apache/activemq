@@ -130,6 +130,7 @@ abstract public class DurableSubscriptionSelectorTest extends org.apache.activem
         if (deleteMessages) {
             broker.setDeleteAllMessagesOnStartup(true);
         }
+        broker.setPersistenceAdapter(createPersistenceAdapter());
         broker.start();
     }
 

@@ -672,26 +672,26 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter{
                         cursorPos += 1;
 
                         int counter = 0;
-                        for (Iterator<Entry<Long, MessageKeys>> iterator = sd.orderIndex.iterator(tx, cursorPos); iterator
-                                .hasNext();) {
-                            Entry<Long, MessageKeys> entry = iterator.next();
+                        try {
                             String selector = info.getSelector();
+                            BooleanExpression selectorExpression = null;
                             if (selector != null) {
-                                try {
-                                    if (selector != null) { 
-                                        BooleanExpression selectorExpression = SelectorParser.parse(selector);
+                                selectorExpression = SelectorParser.parse(selector);
+                            }
+                            for (Iterator<Entry<Long, MessageKeys>> iterator = sd.orderIndex.iterator(tx, cursorPos); iterator.hasNext();) {
+                                Entry<Long, MessageKeys> entry = iterator.next();
+                                if (selectorExpression != null) { 
                                         MessageEvaluationContext ctx = new MessageEvaluationContext();
                                         ctx.setMessageReference(loadMessage(entry.getValue().location));
                                         if (selectorExpression.matches(ctx)) {
                                             counter++;
                                         }
-                                    }
-                                } catch (Exception e) {
-                                    throw IOExceptionSupport.create(e);
+                                } else {
+                                    counter++;
                                 }
-                            } else {
-                                counter++;
                             }
+                        } catch (Exception e) {
+                            throw IOExceptionSupport.create(e);
                         }
                         return counter;
                     }

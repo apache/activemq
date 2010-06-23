@@ -328,7 +328,7 @@ public class KahaTopicReferenceStore extends KahaReferenceStore implements Topic
         if (container != null) {
             for (Iterator i = container.iterator(); i.hasNext();) {
                 ConsumerMessageRef ref = (ConsumerMessageRef)i.next();
-                ReferenceRecord msg = messageContainer.get(ref.getMessageEntry());
+                ReferenceRecord msg = messageContainer.getValue(ref.getMessageEntry());
                 if (msg != null) {
                     if (!recoverReference(listener, msg)) {
                         break;
