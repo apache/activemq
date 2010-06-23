@@ -158,7 +158,7 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
     protected boolean failIfDatabaseIsLocked;
 
     protected boolean deleteAllMessages;
-    protected File directory;
+    protected File directory = new File("KahaDB");
     protected Thread checkpointThread;
     protected boolean enableJournalDiskSyncs=true;
     protected boolean archiveDataLogs;
