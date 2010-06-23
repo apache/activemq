@@ -223,7 +223,6 @@ public class AMQTopicMessageStore extends AMQMessageStore implements TopicMessag
             this.store = store;
         }
 
-        @Override
         public boolean recoverMessageReference(MessageId ref) throws Exception {
             if (selectorExpression != null) {
                 MessageEvaluationContext ctx = new MessageEvaluationContext();
@@ -237,7 +236,6 @@ public class AMQTopicMessageStore extends AMQMessageStore implements TopicMessag
             return true;
         }
 
-        @Override
         public boolean recoverMessage(Message message) throws Exception {
             if (selectorExpression != null) {
                 MessageEvaluationContext ctx = new MessageEvaluationContext();
@@ -251,12 +249,10 @@ public class AMQTopicMessageStore extends AMQMessageStore implements TopicMessag
             return true;
         }
 
-        @Override
         public boolean isDuplicate(MessageId ref) {
             return false;
         }
 
-        @Override
         public boolean hasSpace() {
             return true;
         }
