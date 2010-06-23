@@ -17,6 +17,8 @@
 
 package org.apache.activemq.usecases;
 
+import java.io.File;
+
 import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
 
@@ -24,7 +26,10 @@ public class KahaDBDurableSubscriptionSelectorTest extends DurableSubscriptionSe
 
     @Override
     public PersistenceAdapter createPersistenceAdapter() throws Exception {
-        return new KahaDBPersistenceAdapter();
+        KahaDBPersistenceAdapter adapter = new KahaDBPersistenceAdapter();
+        File dir = new File("target/KahaDB");
+        adapter.setDirectory(dir);
+        return adapter;
     }
 
 }
