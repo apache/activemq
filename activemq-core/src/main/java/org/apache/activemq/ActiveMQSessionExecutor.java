@@ -45,7 +45,7 @@ public class ActiveMQSessionExecutor implements Task {
 
     ActiveMQSessionExecutor(ActiveMQSession session) {
         this.session = session;
-        if (this.session.connection.isMessagePrioritySupported()) {
+        if (this.session.connection != null && this.session.connection.isMessagePrioritySupported()) {
            this.messageQueue = new SimplePriorityMessageDispatchChannel();
         }else {
             this.messageQueue = new FifoMessageDispatchChannel();
