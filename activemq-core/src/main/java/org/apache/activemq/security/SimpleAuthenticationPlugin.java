@@ -41,6 +41,11 @@ import org.apache.activemq.jaas.GroupPrincipal;
 public class SimpleAuthenticationPlugin implements BrokerPlugin {
     private Map<String, String> userPasswords;
     private Map<String, Set<GroupPrincipal>> userGroups;
+    private static final String DEFAULT_ANONYMOUS_USER = "anonymous";
+    private static final String DEFAULT_ANONYMOUS_GROUP = "anonymous";
+    private String anonymousUser = DEFAULT_ANONYMOUS_USER;
+    private String anonymousGroup = DEFAULT_ANONYMOUS_GROUP;
+    private boolean anonymousAccessAllowed = false;
 
     public SimpleAuthenticationPlugin() {
     }
@@ -49,8 +54,12 @@ public class SimpleAuthenticationPlugin implements BrokerPlugin {
         setUsers(users);
     }
 
-    public Broker installPlugin(Broker broker) {
-        return new SimpleAuthenticationBroker(broker, userPasswords, userGroups);
+    public Broker installPlugin(Broker parent) {
+        SimpleAuthenticationBroker broker = new SimpleAuthenticationBroker(parent, userPasswords, userGroups);
+        broker.setAnonymousAccessAllowed(anonymousAccessAllowed);
+        broker.setAnonymousUser(anonymousUser);
+        broker.setAnonymousGroup(anonymousGroup);
+        return broker;
     }
 
     public Map<String, Set<GroupPrincipal>> getUserGroups() {
@@ -76,6 +85,19 @@ public class SimpleAuthenticationPlugin implements BrokerPlugin {
             }
             userGroups.put(user.getUsername(), groups);
         }
+    }
+    
+    
+    public void setAnonymousAccessAllowed(boolean anonymousAccessAllowed) {
+        this.anonymousAccessAllowed = anonymousAccessAllowed;
+    }
+
+    public void setAnonymousUser(String anonymousUser) {
+        this.anonymousUser = anonymousUser;
+    }
+
+    public void setAnonymousGroup(String anonymousGroup) {
+        this.anonymousGroup = anonymousGroup;
     }
 
     /**

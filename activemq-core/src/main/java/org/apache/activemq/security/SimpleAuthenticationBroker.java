@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.security;
 
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
@@ -25,6 +26,7 @@ import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.BrokerFilter;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ConnectionInfo;
+import org.apache.activemq.jaas.GroupPrincipal;
 
 /**
  * Handles authenticating a users against a simple user name/password map.
@@ -33,6 +35,9 @@ import org.apache.activemq.command.ConnectionInfo;
  */
 public class SimpleAuthenticationBroker extends BrokerFilter {
 
+    private boolean anonymousAccessAllowed = false;
+    private String anonymousUser;
+    private String anonymousGroup;
     private final Map userPasswords;
     private final Map userGroups;
     private final CopyOnWriteArrayList<SecurityContext> securityContexts = new CopyOnWriteArrayList<SecurityContext>();
@@ -42,22 +47,47 @@ public class SimpleAuthenticationBroker extends BrokerFilter {
         this.userPasswords = userPasswords;
         this.userGroups = userGroups;
     }
+    
+    public void setAnonymousAccessAllowed(boolean anonymousAccessAllowed) {
+        this.anonymousAccessAllowed = anonymousAccessAllowed;
+    }
+
+    public void setAnonymousUser(String anonymousUser) {
+        this.anonymousUser = anonymousUser;
+    }
+
+    public void setAnonymousGroup(String anonymousGroup) {
+        this.anonymousGroup = anonymousGroup;
+    }
 
     public void addConnection(ConnectionContext context, ConnectionInfo info) throws Exception {
 
-        if (context.getSecurityContext() == null) {
+    	SecurityContext s = context.getSecurityContext();
+        if (s == null) {
             // Check the username and password.
-            String pw = (String)userPasswords.get(info.getUserName());
-            if (pw == null || !pw.equals(info.getPassword())) {
-                throw new SecurityException("User name or password is invalid.");
-            }
-
-            final Set groups = (Set)userGroups.get(info.getUserName());
-            SecurityContext s = new SecurityContext(info.getUserName()) {
-                public Set<?> getPrincipals() {
-                    return groups;
+            if (anonymousAccessAllowed && info.getUserName() == null && info.getPassword() == null) {
+                info.setUserName(anonymousUser);
+                s = new SecurityContext(info.getUserName()) {
+                    public Set getPrincipals() {
+                        Set groups = new HashSet();
+                        groups.add(new GroupPrincipal(anonymousGroup));
+                        return groups;
+                    }
+                };
+            } else {
+                String pw = (String) userPasswords.get(info.getUserName());
+                if (pw == null || !pw.equals(info.getPassword())) {
+                    throw new SecurityException(
+                            "User name or password is invalid.");
                 }
-            };
+
+                final Set groups = (Set) userGroups.get(info.getUserName());
+                s = new SecurityContext(info.getUserName()) {
+                    public Set<?> getPrincipals() {
+                        return groups;
+                    }
+                };
+            }
 
             context.setSecurityContext(s);
             securityContexts.add(s);
