@@ -244,7 +244,6 @@ public class KahaDBTransactionStore implements TransactionStore {
                             doneSomething = true;
                         }
                     }
-                   
                     if (postCommit != null) {
                         postCommit.run();
                     }

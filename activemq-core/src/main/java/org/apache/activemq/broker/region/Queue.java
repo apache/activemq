@@ -102,7 +102,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
     private MessageGroupMap messageGroupOwners;
     private DispatchPolicy dispatchPolicy = new RoundRobinDispatchPolicy();
     private MessageGroupMapFactory messageGroupMapFactory = new MessageGroupHashBucketFactory();
-    private final Lock sendLock = new ReentrantLock();
+    final Lock sendLock = new ReentrantLock();
     private ExecutorService executor;
     protected final Map<MessageId, Runnable> messagesWaitingForSpace = Collections
             .synchronizedMap(new LinkedHashMap<MessageId, Runnable>());
@@ -616,9 +616,6 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                     @Override
                     public void beforeCommit() throws Exception {
                         sendLock.lockInterruptibly();
-                    }
-                    @Override
-                    public void afterCommit() throws Exception {
                         try {
                             // It could take while before we receive the commit
                             // op, by that time the message could have expired..
