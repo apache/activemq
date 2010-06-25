@@ -38,6 +38,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import javax.jms.InvalidSelectorException;
 import javax.jms.JMSException;
 import javax.jms.ResourceAllocationException;
@@ -100,7 +102,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
     private MessageGroupMap messageGroupOwners;
     private DispatchPolicy dispatchPolicy = new RoundRobinDispatchPolicy();
     private MessageGroupMapFactory messageGroupMapFactory = new MessageGroupHashBucketFactory();
-    private final Object sendLock = new Object();
+    private final Lock sendLock = new ReentrantLock();
     private ExecutorService executor;
     protected final Map<MessageId, Runnable> messagesWaitingForSpace = Collections
             .synchronizedMap(new LinkedHashMap<MessageId, Runnable>());
@@ -446,7 +448,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                     redeliveredWaitingDispatch.add(qmr);
                 }
                 if (!redeliveredWaitingDispatch.isEmpty()) {
-                    doDispatch(new ArrayList());
+                    doDispatch(new ArrayList<QueueMessageReference>());
                 }
             }
             if (!(this.optimizedDispatch || isSlave())) {
@@ -596,57 +598,57 @@ public class Queue extends BaseDestination implements Task, UsageListener {
             Exception {
         final ConnectionContext context = producerExchange.getConnectionContext();
         Future<Object> result = null;
-        synchronized (sendLock) {
-            if (store != null && message.isPersistent()) {
-                if (systemUsage.getStoreUsage().isFull(getStoreUsageHighWaterMark())) {
-
-                    String logMessage = "Usage Manager Store is Full, " + getStoreUsageHighWaterMark() + "% of "
-                            + systemUsage.getStoreUsage().getLimit() + ". Stopping producer ("
-                            + message.getProducerId() + ") to prevent flooding "
-                            + getActiveMQDestination().getQualifiedName() + "."
-                            + " See http://activemq.apache.org/producer-flow-control.html for more info";
-
-                    if (systemUsage.isSendFailIfNoSpace()) {
-                        throw new ResourceAllocationException(logMessage);
-                    }
-
-                    waitForSpace(context, systemUsage.getStoreUsage(), getStoreUsageHighWaterMark(), logMessage);
-                }
+        
+        checkUsage(context, message);
+        sendLock.lockInterruptibly();
+        try {
+            if (store != null && message.isPersistent()) {        
                 message.getMessageId().setBrokerSequenceId(getDestinationSequenceId());
                 result = store.asyncAddQueueMessage(context, message);
             }
-        }
-        if (context.isInTransaction()) {
-            // If this is a transacted message.. increase the usage now so that
-            // a big TX does not blow up
-            // our memory. This increment is decremented once the tx finishes..
-            message.incrementReferenceCount();
-            context.getTransaction().addSynchronization(new Synchronization() {
-                @Override
-                public void afterCommit() throws Exception {
-                    try {
-                        // It could take while before we receive the commit
-                        // op, by that time the message could have expired..
-                        if (broker.isExpired(message)) {
-                            broker.messageExpired(context, message);
-                            destinationStatistics.getExpired().increment();
-                            return;
+            if (context.isInTransaction()) {
+                // If this is a transacted message.. increase the usage now so that
+                // a big TX does not blow up
+                // our memory. This increment is decremented once the tx finishes..
+                message.incrementReferenceCount();
+            
+                context.getTransaction().addSynchronization(new Synchronization() {
+                    @Override
+                    public void beforeCommit() throws Exception {
+                        sendLock.lockInterruptibly();
+                    }
+                    @Override
+                    public void afterCommit() throws Exception {
+                        try {
+                            // It could take while before we receive the commit
+                            // op, by that time the message could have expired..
+                            if (broker.isExpired(message)) {
+                                broker.messageExpired(context, message);
+                                destinationStatistics.getExpired().increment();
+                                return;
+                            }
+                            sendMessage(message);
+                        } finally {
+                            sendLock.unlock();
+                            message.decrementReferenceCount();
                         }
-                        sendMessage(context, message);
-                    } finally {
+                        messageSent(context, message);
+                    }
+                    @Override
+                    public void afterRollback() throws Exception {
                         message.decrementReferenceCount();
                     }
-                }
-
-                @Override
-                public void afterRollback() throws Exception {
-                    message.decrementReferenceCount();
-                }
-            });
-        } else {
-            // Add to the pending list, this takes care of incrementing the
-            // usage manager.
-            sendMessage(context, message);
+                });
+            } else {
+                // Add to the pending list, this takes care of incrementing the
+                // usage manager.
+                sendMessage(message);
+            }
+        } finally {
+            sendLock.unlock();
+        }
+        if (!context.isInTransaction()) {
+            messageSent(context, message);
         }
         if (result != null && !result.isCancelled()) {
             try {
@@ -655,6 +657,26 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                 // ignore - the task has been cancelled if the message
                 // has already been deleted
             }
+        }
+    }
+
+    private void checkUsage(ConnectionContext context, Message message) throws ResourceAllocationException, IOException, InterruptedException {
+        if (message.isPersistent()) {
+            if (store != null && systemUsage.getStoreUsage().isFull(getStoreUsageHighWaterMark())) {
+                final String logMessage = "Usage Manager Store is Full, " + getStoreUsageHighWaterMark() + "% of "
+                    + systemUsage.getStoreUsage().getLimit() + ". Stopping producer ("
+                    + message.getProducerId() + ") to prevent flooding "
+                    + getActiveMQDestination().getQualifiedName() + "."
+                    + " See http://activemq.apache.org/producer-flow-control.html for more info";
+
+                waitForSpace(context, systemUsage.getStoreUsage(), getStoreUsageHighWaterMark(), logMessage);
+            }
+        } else if (messages.getSystemUsage() != null && systemUsage.getTempUsage().isFull()) {
+            final String logMessage = "Usage Manager Temp Store is Full. Stopping producer (" + message.getProducerId()
+                + ") to prevent flooding " + getActiveMQDestination().getQualifiedName() + "."
+                + " See http://activemq.apache.org/producer-flow-control.html for more info";
+            
+            waitForSpace(context, messages.getSystemUsage().getTempUsage(), logMessage);
         }
     }
 
@@ -1458,23 +1480,13 @@ public class Queue extends BaseDestination implements Task, UsageListener {
         return answer;
     }
 
-    final void sendMessage(final ConnectionContext context, Message msg) throws Exception {
-        if (!msg.isPersistent() && messages.getSystemUsage() != null) {
-            if (systemUsage.getTempUsage().isFull()) {
-                final String logMessage = "Usage Manager Temp Store is Full. Stopping producer (" + msg.getProducerId()
-                        + ") to prevent flooding " + getActiveMQDestination().getQualifiedName() + "."
-                        + " See http://activemq.apache.org/producer-flow-control.html for more info";
-                if (systemUsage.isSendFailIfNoSpace()) {
-                    throw new ResourceAllocationException(logMessage);
-                }
-
-                waitForSpace(context, messages.getSystemUsage().getTempUsage(), logMessage);
-            }
-
-        }
+    final void sendMessage(final Message msg) throws Exception {
         synchronized (messages) {
             messages.addMessageLast(msg);
         }
+    }
+    
+    final void messageSent(final ConnectionContext context, final Message msg) throws Exception {     
         destinationStatistics.getEnqueues().increment();
         destinationStatistics.getMessages().increment();
         messageDelivered(context, msg);

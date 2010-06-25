@@ -555,8 +555,13 @@ public abstract class BaseDestination implements Destination {
     }
     
     protected final void waitForSpace(ConnectionContext context, Usage<?> usage, int highWaterMark, String warning) throws IOException, InterruptedException, ResourceAllocationException {
+        if (systemUsage.isSendFailIfNoSpace()) {
+            getLog().debug("sendFailIfNoSpace, forcing exception on send: " + warning);
+            throw new ResourceAllocationException(warning);
+        }
         if (systemUsage.getSendFailIfNoSpaceAfterTimeout() != 0) {
             if (!usage.waitForSpace(systemUsage.getSendFailIfNoSpaceAfterTimeout(), highWaterMark)) {
+                getLog().debug("sendFailIfNoSpaceAfterTimeout expired, forcing exception on send: " + warning);
                 throw new ResourceAllocationException(warning);
             }
         } else {

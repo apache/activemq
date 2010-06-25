@@ -21,20 +21,23 @@ public class JDBCNegativeQueueTest extends NegativeQueueTest {
         dataSource = new EmbeddedDataSource();
         dataSource.setDatabaseName("derbyDb");
         dataSource.setCreateDatabase("create");
-        jdbc.setDataSource(dataSource);
+        jdbc.setDataSource(dataSource);     
         answer.setPersistenceAdapter(jdbc);
     }
 
     protected void tearDown() throws Exception {
-        /*Connection conn = dataSource.getConnection();
-        printQuery(conn, "Select * from ACTIVEMQ_MSGS", System.out); */
+        if (DEBUG) {
+            printQuery("Select * from ACTIVEMQ_MSGS", System.out);
+        }
         super.tearDown();
     }
     
     
-    private void printQuery(Connection c, String query, PrintStream out)
+    private void printQuery(String query, PrintStream out)
             throws SQLException {
-        printQuery(c.prepareStatement(query), out);
+        Connection conn = dataSource.getConnection();
+        printQuery(conn.prepareStatement(query), out);
+        conn.close();
     }
 
     private void printQuery(PreparedStatement s, PrintStream out)
@@ -69,7 +72,4 @@ public class JDBCNegativeQueueTest extends NegativeQueueTest {
             }
         }
     }
-
-    
-    
 }

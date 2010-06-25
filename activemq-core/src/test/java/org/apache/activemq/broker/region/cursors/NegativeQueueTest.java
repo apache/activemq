@@ -18,7 +18,6 @@ package org.apache.activemq.broker.region.cursors;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Properties;
@@ -52,6 +51,8 @@ import org.apache.activemq.usage.StoreUsage;
 import org.apache.activemq.usage.SystemUsage;
 import org.apache.activemq.usage.TempUsage;
 import org.apache.activemq.util.Wait;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * Modified CursorSupport Unit test to reproduce the negative queue issue.
@@ -77,7 +78,8 @@ import org.apache.activemq.util.Wait;
  * 
  */
 public class NegativeQueueTest extends TestCase {
-
+    private static final Log LOG = LogFactory.getLog(NegativeQueueTest.class);
+    
     public static SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMdd,hh:mm:ss:SSS");
     
     private static final String QUEUE_1_NAME = "conn.test.queue.1";
@@ -140,6 +142,7 @@ public class NegativeQueueTest extends TestCase {
     }
     
     public void blastAndConsume() throws Exception {
+        LOG.info(getName());
         ConnectionFactory factory = createConnectionFactory();
         
         //get proxy queues for statistics lookups
@@ -208,7 +211,7 @@ public class NegativeQueueTest extends TestCase {
             consumer.setMessageListener(new SessionAwareMessageListener(consumerSession, latch2, consumerList2));
         }
         
-        latch2.await(300000, TimeUnit.MILLISECONDS);
+        assertTrue("got all expected messages on 2", latch2.await(300000, TimeUnit.MILLISECONDS));
         producerConnection.close();
         for(int ix=0; ix<NUM_CONSUMERS; ix++){
             consumerConnections1[ix].close();
@@ -299,6 +302,8 @@ public class NegativeQueueTest extends TestCase {
         
         // disable the cache to be sure setBatch is the problem
         // will get lots of duplicates
+        // real problem is sync between cursor and store add - leads to out or order messages
+        // in the cursor so setBatch can break.
         // policy.setUseCache(false);
         
         PolicyMap pMap = new PolicyMap();
