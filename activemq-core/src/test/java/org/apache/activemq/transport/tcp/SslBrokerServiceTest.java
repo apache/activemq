@@ -57,6 +57,11 @@ public class SslBrokerServiceTest extends TransportBrokerTestSupport {
     
     @Override
     protected BrokerService createBroker() throws Exception {
+        
+        // http://java.sun.com/javase/javaseforbusiness/docs/TLSReadme.html
+        // work around: javax.net.ssl.SSLHandshakeException: renegotiation is not allowed
+        System.setProperty("sun.security.ssl.allowUnsafeRenegotiation", "true");
+        
         SslBrokerService service = new SslBrokerService();
         service.setPersistent(false);
         
