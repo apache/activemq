@@ -19,11 +19,14 @@ package org.apache.activemq.broker.region.cursors;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 import org.apache.activemq.ActiveMQMessageAudit;
+import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.BaseDestination;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.MessageReference;
+import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.usage.SystemUsage;
 
@@ -44,6 +47,11 @@ public abstract class AbstractPendingMessageCursor implements PendingMessageCurs
     protected boolean useCache=true;
     private boolean started=false;
     protected MessageReference last = null;
+    protected final boolean prioritizedMessages;
+    
+    public AbstractPendingMessageCursor(boolean prioritizedMessages) {
+        this.prioritizedMessages=prioritizedMessages;
+    }
   
 
     public synchronized void start() throws Exception  {
@@ -303,5 +311,20 @@ public abstract class AbstractPendingMessageCursor implements PendingMessageCurs
     
     protected synchronized boolean isStarted() {
         return started;
+    }
+    
+    public static boolean isPrioritizedMessageSubscriber(Broker broker,Subscription sub) {
+        boolean result = false;
+        Set<Destination> destinations = broker.getDestinations(sub.getActiveMQDestination());
+        if (destinations != null) {
+            for (Destination dest:destinations) {
+                if (dest.isPrioritizedMessages()) {
+                    result = true;
+                    break;
+                }
+            }
+        }
+        return result;
+
     }
 }

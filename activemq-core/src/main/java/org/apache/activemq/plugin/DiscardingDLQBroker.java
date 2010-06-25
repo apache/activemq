@@ -16,9 +16,7 @@
  */
  package org.apache.activemq.plugin;
 
-import java.io.IOException;
 import java.util.regex.Pattern;
-
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.BrokerFilter;
 import org.apache.activemq.broker.ConnectionContext;
@@ -48,25 +46,15 @@ public class DiscardingDLQBroker extends BrokerFilter {
     @Override
     public void sendToDeadLetterQueue(ConnectionContext ctx, MessageReference msgRef) {
         if (log.isTraceEnabled()) {
-            try {
-                log.trace("Discarding DLQ BrokerFilter[pass through] - skipping message:" + (msgRef != null ? msgRef.getMessage() : null));
-            } catch (IOException x) {
-                log.trace("Discarding DLQ BrokerFilter[pass through] - skipping message:" + msgRef != null ? msgRef : null, x);
-            }
+            log.trace("Discarding DLQ BrokerFilter[pass through] - skipping message:" + (msgRef != null ? msgRef.getMessage() : null));
         }
         boolean dropped = true;
         Message msg = null;
         ActiveMQDestination dest = null;
         String destName = null;
-        try {
-            msg = msgRef.getMessage();
-            dest = msg.getDestination();
-            destName = dest.getPhysicalName();
-        }catch (IOException x) {
-            if (log.isDebugEnabled()) {
-                log.debug("Unable to retrieve message or destination for message going to Dead Letter Queue. message skipped.", x);
-            }
-        }
+        msg = msgRef.getMessage();
+        dest = msg.getDestination();
+        destName = dest.getPhysicalName();
 
         if (dest == null || destName == null ) {
             //do nothing, no need to forward it
@@ -105,12 +93,8 @@ public class DiscardingDLQBroker extends BrokerFilter {
 
     private void skipMessage(String prefix, MessageReference msgRef) {
         if (log.isDebugEnabled()) {
-            try {
-                String lmsg = "Discarding DLQ BrokerFilter["+prefix+"] - skipping message:" + (msgRef!=null?msgRef.getMessage():null);
-                log.debug(lmsg);
-            }catch (IOException x) {
-                log.debug("Discarding DLQ BrokerFilter["+prefix+"] - skipping message:" + (msgRef!=null?msgRef:null),x);
-            }
+            String lmsg = "Discarding DLQ BrokerFilter["+prefix+"] - skipping message:" + (msgRef!=null?msgRef.getMessage():null);
+            log.debug(lmsg);
         }
     }
 

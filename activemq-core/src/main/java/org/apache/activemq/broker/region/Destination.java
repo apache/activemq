@@ -18,14 +18,12 @@ package org.apache.activemq.broker.region;
 
 import java.io.IOException;
 import java.util.List;
-
 import org.apache.activemq.Service;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.ProducerBrokerExchange;
 import org.apache.activemq.broker.region.policy.DeadLetterStrategy;
 import org.apache.activemq.broker.region.policy.SharedDeadLetterStrategy;
 import org.apache.activemq.command.ActiveMQDestination;
-import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageDispatchNotification;
@@ -215,4 +213,6 @@ public interface Destination extends Service, Task {
      * @throws Exception
      */
     void processDispatchNotification(MessageDispatchNotification messageDispatchNotification) throws Exception;
+    
+    boolean isPrioritizedMessages();
 }

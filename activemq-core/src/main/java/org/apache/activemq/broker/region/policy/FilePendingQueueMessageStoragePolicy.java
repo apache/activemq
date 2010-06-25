@@ -39,7 +39,7 @@ public class FilePendingQueueMessageStoragePolicy implements PendingQueueMessage
      *      org.apache.activemq.kaha.Store)
      */
     public PendingMessageCursor getQueuePendingMessageCursor(Broker broker,Queue queue) {
-        return new FilePendingMessageCursor(broker,"PendingCursor:" + queue.getName());
+        return new FilePendingMessageCursor(broker,"PendingCursor:" + queue.getName(),queue.isPrioritizedMessages());
     }
 
 }

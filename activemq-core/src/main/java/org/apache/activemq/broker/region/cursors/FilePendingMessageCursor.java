@@ -63,9 +63,11 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
     /**
      * @param broker
      * @param name
+     * @param prioritizedMessages 
      * @param store
      */
-    public FilePendingMessageCursor(Broker broker, String name) {
+    public FilePendingMessageCursor(Broker broker, String name, boolean prioritizedMessages) {
+        super(prioritizedMessages);
         this.useCache = false;
         this.broker = broker;
         // the store can be null if the BrokerService has persistence
@@ -190,6 +192,7 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
         tryAddMessageLast(node, 0);
     }
     
+    @Override
     public synchronized boolean tryAddMessageLast(MessageReference node, long maxWaitTime) throws Exception {
         if (!node.isExpired()) {
             try {

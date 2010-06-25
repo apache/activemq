@@ -16,8 +16,6 @@
  */
 package org.apache.activemq.broker.region;
 
-import java.io.IOException;
-
 import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.command.Message;
@@ -28,7 +26,7 @@ import org.apache.activemq.command.MessageId;
  */
 final class NullMessageReference implements QueueMessageReference {
 
-    private ActiveMQMessage message = new ActiveMQMessage();
+    private final ActiveMQMessage message = new ActiveMQMessage();
     private volatile int references;
 
     public void drop() {
@@ -75,7 +73,7 @@ final class NullMessageReference implements QueueMessageReference {
         return 0;
     }
 
-    public Message getMessage() throws IOException {
+    public Message getMessage()  {
         return message;
     }
 

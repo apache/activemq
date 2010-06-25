@@ -564,7 +564,7 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
         return this;
     }
 
-    public Message getMessage() throws IOException {
+    public Message getMessage() {
         return this;
     }
 

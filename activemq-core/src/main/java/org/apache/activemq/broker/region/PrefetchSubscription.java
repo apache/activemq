@@ -78,7 +78,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
     }
 
     public PrefetchSubscription(Broker broker,SystemUsage usageManager, ConnectionContext context, ConsumerInfo info) throws InvalidSelectorException {
-        this(broker,usageManager,context, info, new VMPendingMessageCursor());
+        this(broker,usageManager,context, info, new VMPendingMessageCursor(false));
     }
 
     /**

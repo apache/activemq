@@ -22,7 +22,7 @@ import java.util.List;
 import org.apache.activemq.command.MessageDispatch;
 
 public class SimplePriorityMessageDispatchChannel implements MessageDispatchChannel {
-    private static Integer MAX_PRIORITY = 10;
+    private static final Integer MAX_PRIORITY = 10;
     private final Object mutex = new Object();
     private final LinkedList<MessageDispatch>[] lists;
     private boolean closed;
@@ -234,7 +234,7 @@ public class SimplePriorityMessageDispatchChannel implements MessageDispatchChan
     }
 
     protected int getPriority(MessageDispatch message) {
-        int priority = Message.DEFAULT_PRIORITY;
+        int priority = javax.jms.Message.DEFAULT_PRIORITY;
         if (message.getMessage() != null) {
         Math.max(message.getMessage().getPriority(), 0);
         priority = Math.min(priority, 9);

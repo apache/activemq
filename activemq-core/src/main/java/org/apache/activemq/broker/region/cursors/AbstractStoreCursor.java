@@ -17,8 +17,6 @@
 package org.apache.activemq.broker.region.cursors;
 
 import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.Map.Entry;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.command.Message;
@@ -34,8 +32,8 @@ import org.apache.commons.logging.LogFactory;
 public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor implements MessageRecoveryListener {
     private static final Log LOG = LogFactory.getLog(AbstractStoreCursor.class);
     protected final Destination regionDestination;
-    private final LinkedHashMap<MessageId,Message> batchList = new LinkedHashMap<MessageId,Message> ();
-    private Iterator<Entry<MessageId, Message>> iterator = null;
+    private final PendingList batchList;
+    private Iterator<MessageReference> iterator = null;
     private boolean cacheEnabled=false;
     protected boolean batchResetNeeded = true;
     protected boolean storeHasMessages = false;
@@ -43,10 +41,16 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
     private MessageId lastCachedId;
     
     protected AbstractStoreCursor(Destination destination) {
+        super((destination != null ? destination.isPrioritizedMessages():false));
         this.regionDestination=destination;
+        if (this.prioritizedMessages) {
+            this.batchList= new PrioritizedPendingList();
+        }else {
+            this.batchList = new OrderedPendingList();
+        }
     }
     
-    @Override
+    
     public final synchronized void start() throws Exception{
         if (!isStarted()) {
             super.start();
@@ -60,7 +64,7 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
         } 
     }
     
-    @Override
+    
     public final synchronized void stop() throws Exception {
         resetBatch();
         super.stop();
@@ -82,7 +86,7 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
                 }
             }
             message.incrementReferenceCount();
-            batchList.put(message.getMessageId(), message);
+            batchList.addMessageLast(message);
             clearIterator(true);
             recovered = true;
         } else {
@@ -99,7 +103,7 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
         return recovered;
     }
     
-    @Override
+    
     public final void reset() {
         if (batchList.isEmpty()) {
             try {
@@ -113,7 +117,7 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
         size();
     }
     
-    @Override
+    
     public synchronized void release() {
         clearIterator(false);
     }
@@ -129,7 +133,7 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
     
     private synchronized void ensureIterator() {
         if(this.iterator==null) {
-            this.iterator=this.batchList.entrySet().iterator();
+            this.iterator=this.batchList.iterator();
         }
     }
 
@@ -137,7 +141,7 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
     public final void finished() {
     }
         
-    @Override
+    
     public final synchronized boolean hasNext() {
         if (batchList.isEmpty()) {
             try {
@@ -151,11 +155,11 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
         return this.iterator.hasNext();
     }
     
-    @Override
+    
     public final synchronized MessageReference next() {
         MessageReference result = null;
         if (!this.batchList.isEmpty()&&this.iterator.hasNext()) {
-            result = this.iterator.next().getValue();
+            result = this.iterator.next();
         }
         last = result;
         if (result != null) {
@@ -164,7 +168,7 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
         return result;
     }
     
-    @Override
+    
     public final synchronized void addMessageLast(MessageReference node) throws Exception {
         if (cacheEnabled && hasSpace()) {
             recoverMessage(node.getMessage(),true);
@@ -189,13 +193,13 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
     protected void setBatch(MessageId messageId) throws Exception {
     }
 
-    @Override
+    
     public final synchronized void addMessageFirst(MessageReference node) throws Exception {
         cacheEnabled=false;
         size++;
     }
 
-    @Override
+    
     public final synchronized void remove() {
         size--;
         if (iterator!=null) {
@@ -212,21 +216,22 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
         }
     }
 
-    @Override
+    
     public final synchronized void remove(MessageReference node) {
         size--;
         cacheEnabled=false;
-        batchList.remove(node.getMessageId());
+        batchList.remove(node);
     }
     
-    @Override
+    
     public final synchronized void clear() {
         gc();
     }
     
-    @Override
+    
     public final synchronized void gc() {
-        for (Message msg : batchList.values()) {
+        for (Iterator<MessageReference>i = batchList.iterator();i.hasNext();) {
+            MessageReference msg = i.next();
             rollback(msg.getMessageId());
             msg.decrementReferenceCount();
         }
@@ -241,7 +246,7 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
         }
     }
     
-    @Override
+    
     protected final synchronized void fillBatch() {
         if (batchResetNeeded) {
             resetBatch();
@@ -261,18 +266,18 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
         }
     }
     
-    @Override
+    
     public final synchronized boolean isEmpty() {
         // negative means more messages added to store through queue.send since last reset
         return size == 0;
     }
 
-    @Override
+    
     public final synchronized boolean hasMessagesBufferedToDeliver() {
         return !batchList.isEmpty();
     }
 
-    @Override
+    
     public final synchronized int size() {
         if (size < 0) {
             this.size = getStoreSize();

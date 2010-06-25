@@ -21,7 +21,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
-
 import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
@@ -58,13 +57,14 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
      * @param subscription  subscription for this cursor
      */
     public StoreDurableSubscriberCursor(Broker broker,String clientId, String subscriberName,int maxBatchSize, Subscription subscription) {
+        super(AbstractPendingMessageCursor.isPrioritizedMessageSubscriber(broker,subscription));
         this.subscription=subscription;
         this.clientId = clientId;
         this.subscriberName = subscriberName;
         if (broker.getBrokerService().isPersistent()) {
-            this.nonPersistent = new FilePendingMessageCursor(broker,clientId + subscriberName);
+            this.nonPersistent = new FilePendingMessageCursor(broker,clientId + subscriberName,this.prioritizedMessages);
         }else {
-            this.nonPersistent = new VMPendingMessageCursor();
+            this.nonPersistent = new VMPendingMessageCursor(this.prioritizedMessages);
         }
         
         this.nonPersistent.setMaxBatchSize(maxBatchSize);
@@ -72,6 +72,7 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
         this.storePrefetches.add(this.nonPersistent);
     }
 
+    @Override
     public synchronized void start() throws Exception {
         if (!isStarted()) {
             super.start();
@@ -82,6 +83,7 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
         }
     }
 
+    @Override
     public synchronized void stop() throws Exception {
         if (isStarted()) {
             super.stop();
@@ -98,6 +100,7 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
      * @param destination
      * @throws Exception
      */
+    @Override
     public synchronized void add(ConnectionContext context, Destination destination) throws Exception {
         if (destination != null && !AdvisorySupport.isAdvisoryTopic(destination.getActiveMQDestination())) {
             TopicStorePrefetch tsp = new TopicStorePrefetch(this.subscription,(Topic)destination, clientId, subscriberName);
@@ -122,6 +125,7 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
      * @param destination
      * @throws Exception
      */
+    @Override
     public synchronized List<MessageReference> remove(ConnectionContext context, Destination destination) throws Exception {
         PendingMessageCursor tsp = topics.remove(destination);
         if (tsp != null) {
@@ -133,6 +137,7 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
     /**
      * @return true if there are no pending messages
      */
+    @Override
     public synchronized boolean isEmpty() {
         for (PendingMessageCursor tsp : storePrefetches) {
             if( !tsp.isEmpty() )
@@ -141,6 +146,7 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
         return true;
     }
 
+    @Override
     public synchronized boolean isEmpty(Destination destination) {
         boolean result = true;
         TopicStorePrefetch tsp = topics.get(destination);
@@ -157,10 +163,12 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
      * @see org.apache.activemq.broker.region.cursors.AbstractPendingMessageCursor
      * @return true if recovery required
      */
+    @Override
     public boolean isRecoveryRequired() {
         return false;
     }
 
+    @Override
     public synchronized void addMessageLast(MessageReference node) throws Exception {
         if (node != null) {
             Message msg = node.getMessage();
@@ -179,16 +187,19 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
         }
     }
 
+    @Override
     public synchronized void addRecoveredMessage(MessageReference node) throws Exception {
         nonPersistent.addMessageLast(node);
     }
 
+    @Override
     public synchronized void clear() {
         for (PendingMessageCursor tsp : storePrefetches) {
             tsp.clear();
         }
     }
 
+    @Override
     public synchronized boolean hasNext() {
         boolean result = true;
         if (result) {
@@ -203,35 +214,41 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
         return result;
     }
 
+    @Override
     public synchronized MessageReference next() {
         MessageReference result = currentCursor != null ? currentCursor.next() : null;
         return result;
     }
 
+    @Override
     public synchronized void remove() {
         if (currentCursor != null) {
             currentCursor.remove();
         }
     }
 
+    @Override
     public synchronized void remove(MessageReference node) {
         if (currentCursor != null) {
             currentCursor.remove(node);
         }
     }
 
+    @Override
     public synchronized void reset() {
         for (PendingMessageCursor storePrefetch : storePrefetches) {
             storePrefetch.reset();
         }
     }
 
+    @Override
     public synchronized void release() {
         for (PendingMessageCursor storePrefetch : storePrefetches) {
             storePrefetch.release();
         }
     }
 
+    @Override
     public synchronized int size() {
         int pendingCount=0;
         for (PendingMessageCursor tsp : storePrefetches) {
@@ -240,6 +257,7 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
         return pendingCount;
     }
 
+    @Override
     public void setMaxBatchSize(int maxBatchSize) {
         for (PendingMessageCursor storePrefetch : storePrefetches) {
             storePrefetch.setMaxBatchSize(maxBatchSize);
@@ -247,12 +265,14 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
         super.setMaxBatchSize(maxBatchSize);
     }
 
+    @Override
     public synchronized void gc() {
         for (PendingMessageCursor tsp : storePrefetches) {
             tsp.gc();
         }
     }
 
+    @Override
     public void setSystemUsage(SystemUsage usageManager) {
         super.setSystemUsage(usageManager);
         for (PendingMessageCursor tsp : storePrefetches) {
@@ -260,6 +280,7 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
         }
     }
     
+    @Override
     public void setMemoryUsageHighWaterMark(int memoryUsageHighWaterMark) {
         super.setMemoryUsageHighWaterMark(memoryUsageHighWaterMark);
         for (PendingMessageCursor cursor : storePrefetches) {
@@ -267,6 +288,7 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
         }
     }
     
+    @Override
     public void setMaxProducersToAudit(int maxProducersToAudit) {
         super.setMaxProducersToAudit(maxProducersToAudit);
         for (PendingMessageCursor cursor : storePrefetches) {
@@ -274,6 +296,7 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
         }
     }
 
+    @Override
     public void setMaxAuditDepth(int maxAuditDepth) {
         super.setMaxAuditDepth(maxAuditDepth);
         for (PendingMessageCursor cursor : storePrefetches) {
@@ -281,6 +304,7 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
         }
     }
     
+    @Override
     public void setEnableAudit(boolean enableAudit) {
         super.setEnableAudit(enableAudit);
         for (PendingMessageCursor cursor : storePrefetches) {
@@ -288,6 +312,7 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
         }
     }
     
+    @Override
     public  void setUseCache(boolean useCache) {
         super.setUseCache(useCache);
         for (PendingMessageCursor cursor : storePrefetches) {
@@ -313,6 +338,7 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
         return currentCursor;
     }
     
+    @Override
     public String toString() {
         return "StoreDurableSubscriber(" + clientId + ":" + subscriberName + ")";
     }

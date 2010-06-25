@@ -81,6 +81,7 @@ public abstract class BaseDestination implements Destination {
     protected int cursorMemoryHighWaterMark = 70;
     protected int storeUsageHighWaterMark = 100;
     private SlowConsumerStrategy slowConsumerStrategy;
+    private boolean prioritizedMessages;
 
     /**
      * @param broker
@@ -579,6 +580,15 @@ public abstract class BaseDestination implements Destination {
 
     public void setSlowConsumerStrategy(SlowConsumerStrategy slowConsumerStrategy) {
         this.slowConsumerStrategy = slowConsumerStrategy;
+    }
+
+   
+    public boolean isPrioritizedMessages() {
+        return this.prioritizedMessages;
+    }
+
+    public void setPrioritizedMessages(boolean prioritizedMessages) {
+        this.prioritizedMessages = prioritizedMessages;
     }
     
 }

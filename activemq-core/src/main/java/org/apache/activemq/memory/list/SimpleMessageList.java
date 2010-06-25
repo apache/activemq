@@ -16,7 +16,6 @@
  */
 package org.apache.activemq.memory.list;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -38,10 +37,10 @@ import org.apache.commons.logging.LogFactory;
  */
 public class SimpleMessageList implements MessageList {
     private static final Log LOG = LogFactory.getLog(SimpleMessageList.class);
-    private LinkedList<MessageReference> list = new LinkedList<MessageReference>();
+    private final LinkedList<MessageReference> list = new LinkedList<MessageReference>();
     private int maximumSize = 100 * 64 * 1024;
     private int size;
-    private Object lock = new Object();
+    private final Object lock = new Object();
 
     public SimpleMessageList() {
     }
@@ -73,13 +72,9 @@ public class SimpleMessageList implements MessageList {
             for (Iterator<MessageReference> i = list.iterator(); i.hasNext();) {
                 MessageReference ref = i.next();
                 Message msg;
-                try {
-                    msg = ref.getMessage();
-                    if (filter.matches(msg.getDestination())) {
-                        result.add(msg);
-                    }
-                } catch (IOException e) {
-                    LOG.error("Failed to get Message from MessageReference: " + ref, e);
+                msg = ref.getMessage();
+                if (filter.matches(msg.getDestination())) {
+                    result.add(msg);
                 }
 
             }

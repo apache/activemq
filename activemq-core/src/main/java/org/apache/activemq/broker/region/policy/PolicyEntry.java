@@ -87,6 +87,7 @@ public class PolicyEntry extends DestinationMapEntry {
     private int cursorMemoryHighWaterMark = 70;
     private int storeUsageHighWaterMark = 100;
     private SlowConsumerStrategy slowConsumerStrategy;
+    private boolean prioritizedMessages;
     
    
     public void configure(Broker broker,Queue queue) {
@@ -155,6 +156,7 @@ public class PolicyEntry extends DestinationMapEntry {
             scs.setScheduler(broker.getScheduler());
         }
         destination.setSlowConsumerStrategy(scs);
+        destination.setPrioritizedMessages(isPrioritizedMessages());
     }
 
     public void configure(Broker broker, SystemUsage memoryManager, TopicSubscription subscription) {
@@ -184,7 +186,7 @@ public class PolicyEntry extends DestinationMapEntry {
         if (pendingSubscriberPolicy != null) {
             String name = subscription.getContext().getClientId() + "_" + subscription.getConsumerInfo().getConsumerId();
             int maxBatchSize = subscription.getConsumerInfo().getPrefetchSize();
-            subscription.setMatched(pendingSubscriberPolicy.getSubscriberPendingMessageCursor(broker,name, maxBatchSize));
+            subscription.setMatched(pendingSubscriberPolicy.getSubscriberPendingMessageCursor(broker,name, maxBatchSize,subscription));
         }
         if (enableAudit) {
             subscription.setEnableAudit(enableAudit);
@@ -738,6 +740,15 @@ public class PolicyEntry extends DestinationMapEntry {
     
     public SlowConsumerStrategy getSlowConsumerStrategy() {
         return this.slowConsumerStrategy;
+    }
+    
+    
+    public boolean isPrioritizedMessages() {
+        return this.prioritizedMessages;
+    }
+
+    public void setPrioritizedMessages(boolean prioritizedMessages) {
+        this.prioritizedMessages = prioritizedMessages;
     }
 
 }

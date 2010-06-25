@@ -16,7 +16,6 @@
  */
 package org.apache.activemq.broker.util;
 
-import java.io.IOException;
 import java.util.Set;
 import javax.annotation.PostConstruct;
 import org.apache.activemq.broker.BrokerPluginSupport;
@@ -65,7 +64,7 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport {
     private boolean logInternalEvents = false;
 
     /**
-     *
+     * 
      * @throws Exception
      * @org.apache.xbean.InitMethod
      */
@@ -77,7 +76,7 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport {
     public boolean isLogAll() {
         return logAll;
     }
-    
+
     /**
      * Log all Events that go through the Plugin
      */
@@ -152,15 +151,12 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport {
     }
 
     @Override
-    public void acknowledge(ConsumerBrokerExchange consumerExchange,
-            MessageAck ack) throws Exception {
+    public void acknowledge(ConsumerBrokerExchange consumerExchange, MessageAck ack) throws Exception {
         if (isLogAll() || isLogConsumerEvents()) {
-            LOG.info("Acknowledging message for client ID : "
-                    + consumerExchange.getConnectionContext().getClientId() 
+            LOG.info("Acknowledging message for client ID : " + consumerExchange.getConnectionContext().getClientId()
                     + (ack.getMessageCount() == 1 ? ", " + ack.getLastMessageId() : ""));
             if (LOG.isTraceEnabled() && ack.getMessageCount() > 1) {
-                LOG.trace("Message count: " + ack.getMessageCount()
-                        + ", First Message Id: " + ack.getFirstMessageId()
+                LOG.trace("Message count: " + ack.getMessageCount() + ", First Message Id: " + ack.getFirstMessageId()
                         + ", Last Message Id: " + ack.getLastMessageId());
             }
         }
@@ -168,18 +164,15 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport {
     }
 
     @Override
-    public Response messagePull(ConnectionContext context, MessagePull pull)
-            throws Exception {
+    public Response messagePull(ConnectionContext context, MessagePull pull) throws Exception {
         if (isLogAll() || isLogConsumerEvents()) {
-            LOG.info("Message Pull from : " + context.getClientId() + " on "
-                    + pull.getDestination().getPhysicalName());
+            LOG.info("Message Pull from : " + context.getClientId() + " on " + pull.getDestination().getPhysicalName());
         }
         return super.messagePull(context, pull);
     }
 
     @Override
-    public void addConnection(ConnectionContext context, ConnectionInfo info)
-            throws Exception {
+    public void addConnection(ConnectionContext context, ConnectionInfo info) throws Exception {
         if (isLogAll() || isLogConnectionEvents()) {
             LOG.info("Adding Connection : " + context);
         }
@@ -187,8 +180,7 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport {
     }
 
     @Override
-    public Subscription addConsumer(ConnectionContext context, ConsumerInfo info)
-            throws Exception {
+    public Subscription addConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
         if (isLogAll() || isLogConsumerEvents()) {
             LOG.info("Adding Consumer : " + info);
         }
@@ -196,8 +188,7 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport {
     }
 
     @Override
-    public void addProducer(ConnectionContext context, ProducerInfo info)
-            throws Exception {
+    public void addProducer(ConnectionContext context, ProducerInfo info) throws Exception {
         if (isLogAll() || isLogProducerEvents()) {
             LOG.info("Adding Producer :" + info);
         }
@@ -205,8 +196,7 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport {
     }
 
     @Override
-    public void commitTransaction(ConnectionContext context, TransactionId xid,
-            boolean onePhase) throws Exception {
+    public void commitTransaction(ConnectionContext context, TransactionId xid, boolean onePhase) throws Exception {
         if (isLogAll() || isLogTransactionEvents()) {
             LOG.info("Commiting transaction : " + xid.getTransactionKey());
         }
@@ -214,8 +204,7 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport {
     }
 
     @Override
-    public void removeSubscription(ConnectionContext context,
-            RemoveSubscriptionInfo info) throws Exception {
+    public void removeSubscription(ConnectionContext context, RemoveSubscriptionInfo info) throws Exception {
         if (isLogAll() || isLogConsumerEvents()) {
             LOG.info("Removing subscription : " + info);
         }
@@ -223,8 +212,7 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport {
     }
 
     @Override
-    public TransactionId[] getPreparedTransactions(ConnectionContext context)
-            throws Exception {
+    public TransactionId[] getPreparedTransactions(ConnectionContext context) throws Exception {
 
         TransactionId[] result = super.getPreparedTransactions(context);
         if ((isLogAll() || isLogTransactionEvents()) && result != null) {
@@ -241,8 +229,7 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport {
     }
 
     @Override
-    public int prepareTransaction(ConnectionContext context, TransactionId xid)
-            throws Exception {
+    public int prepareTransaction(ConnectionContext context, TransactionId xid) throws Exception {
         if (isLogAll() || isLogTransactionEvents()) {
             LOG.info("Preparing transaction : " + xid.getTransactionKey());
         }
@@ -250,8 +237,7 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport {
     }
 
     @Override
-    public void removeConnection(ConnectionContext context,
-            ConnectionInfo info, Throwable error) throws Exception {
+    public void removeConnection(ConnectionContext context, ConnectionInfo info, Throwable error) throws Exception {
         if (isLogAll() || isLogConnectionEvents()) {
             LOG.info("Removing Connection : " + info);
         }
@@ -259,8 +245,7 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport {
     }
 
     @Override
-    public void removeConsumer(ConnectionContext context, ConsumerInfo info)
-            throws Exception {
+    public void removeConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
         if (isLogAll() || isLogConsumerEvents()) {
             LOG.info("Removing Consumer : " + info);
         }
@@ -268,8 +253,7 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport {
     }
 
     @Override
-    public void removeProducer(ConnectionContext context, ProducerInfo info)
-            throws Exception {
+    public void removeProducer(ConnectionContext context, ProducerInfo info) throws Exception {
         if (isLogAll() || isLogProducerEvents()) {
             LOG.info("Removing Producer : " + info);
         }
@@ -277,8 +261,7 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport {
     }
 
     @Override
-    public void rollbackTransaction(ConnectionContext context, TransactionId xid)
-            throws Exception {
+    public void rollbackTransaction(ConnectionContext context, TransactionId xid) throws Exception {
         if (isLogAll() || isLogTransactionEvents()) {
             LOG.info("Rolling back Transaction : " + xid.getTransactionKey());
         }
@@ -286,8 +269,7 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport {
     }
 
     @Override
-    public void send(ProducerBrokerExchange producerExchange,
-            Message messageSend) throws Exception {
+    public void send(ProducerBrokerExchange producerExchange, Message messageSend) throws Exception {
         if (isLogAll() || isLogProducerEvents()) {
             LOG.info("Sending message : " + messageSend);
         }
@@ -295,8 +277,7 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport {
     }
 
     @Override
-    public void beginTransaction(ConnectionContext context, TransactionId xid)
-            throws Exception {
+    public void beginTransaction(ConnectionContext context, TransactionId xid) throws Exception {
         if (isLogAll() || isLogTransactionEvents()) {
             LOG.info("Beginning transaction : " + xid.getTransactionKey());
         }
@@ -304,11 +285,9 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport {
     }
 
     @Override
-    public void forgetTransaction(ConnectionContext context,
-            TransactionId transactionId) throws Exception {
+    public void forgetTransaction(ConnectionContext context, TransactionId transactionId) throws Exception {
         if (isLogAll() || isLogTransactionEvents()) {
-            LOG.info("Forgetting transaction : "
-                    + transactionId.getTransactionKey());
+            LOG.info("Forgetting transaction : " + transactionId.getTransactionKey());
         }
         super.forgetTransaction(context, transactionId);
     }
@@ -333,23 +312,20 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport {
     }
 
     @Override
-    public org.apache.activemq.broker.region.Destination addDestination(
-            ConnectionContext context, ActiveMQDestination destination,boolean create)
-            throws Exception {
+    public org.apache.activemq.broker.region.Destination addDestination(ConnectionContext context,
+            ActiveMQDestination destination, boolean create) throws Exception {
         if (isLogAll() || isLogInternalEvents()) {
-            LOG.info("Adding destination : "
-                    + destination.getDestinationTypeAsString() + ":"
+            LOG.info("Adding destination : " + destination.getDestinationTypeAsString() + ":"
                     + destination.getPhysicalName());
         }
-        return super.addDestination(context, destination,create);
+        return super.addDestination(context, destination, create);
     }
 
     @Override
-    public void removeDestination(ConnectionContext context,
-            ActiveMQDestination destination, long timeout) throws Exception {
+    public void removeDestination(ConnectionContext context, ActiveMQDestination destination, long timeout)
+            throws Exception {
         if (isLogAll() || isLogInternalEvents()) {
-            LOG.info("Removing destination : "
-                    + destination.getDestinationTypeAsString() + ":"
+            LOG.info("Removing destination : " + destination.getDestinationTypeAsString() + ":"
                     + destination.getPhysicalName());
         }
         super.removeDestination(context, destination, timeout);
@@ -390,8 +366,7 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport {
     }
 
     @Override
-    public void addSession(ConnectionContext context, SessionInfo info)
-            throws Exception {
+    public void addSession(ConnectionContext context, SessionInfo info) throws Exception {
         if (isLogAll() || isLogConnectionEvents()) {
             LOG.info("Adding Session : " + info);
         }
@@ -399,8 +374,7 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport {
     }
 
     @Override
-    public void removeSession(ConnectionContext context, SessionInfo info)
-            throws Exception {
+    public void removeSession(ConnectionContext context, SessionInfo info) throws Exception {
         if (isLogAll() || isLogConnectionEvents()) {
             LOG.info("Removing Session : " + info);
         }
@@ -458,12 +432,9 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport {
     }
 
     @Override
-    public void processDispatchNotification(
-            MessageDispatchNotification messageDispatchNotification)
-            throws Exception {
+    public void processDispatchNotification(MessageDispatchNotification messageDispatchNotification) throws Exception {
         if (isLogAll() || isLogInternalEvents() || isLogConsumerEvents()) {
-            LOG.info("ProcessDispatchNotification :"
-                    + messageDispatchNotification);
+            LOG.info("ProcessDispatchNotification :" + messageDispatchNotification);
         }
         super.processDispatchNotification(messageDispatchNotification);
     }
@@ -487,8 +458,7 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport {
     }
 
     @Override
-    public void addDestinationInfo(ConnectionContext context,
-            DestinationInfo info) throws Exception {
+    public void addDestinationInfo(ConnectionContext context, DestinationInfo info) throws Exception {
         if (isLogAll() || isLogInternalEvents()) {
             LOG.info("Adding destination info : " + info);
         }
@@ -496,8 +466,7 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport {
     }
 
     @Override
-    public void removeDestinationInfo(ConnectionContext context,
-            DestinationInfo info) throws Exception {
+    public void removeDestinationInfo(ConnectionContext context, DestinationInfo info) throws Exception {
         if (isLogAll() || isLogInternalEvents()) {
             LOG.info("Removing destination info : " + info);
         }
@@ -505,36 +474,31 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport {
     }
 
     @Override
-    public void messageExpired(ConnectionContext context,
-            MessageReference message) {
+    public void messageExpired(ConnectionContext context, MessageReference message) {
         if (isLogAll() || isLogInternalEvents()) {
             String msg = "Unable to display message.";
-            try {
-                msg = message.getMessage().toString();
-            } catch (IOException ioe) {
-            }
+
+            msg = message.getMessage().toString();
+
             LOG.info("Message has expired : " + msg);
         }
         super.messageExpired(context, message);
     }
 
     @Override
-    public void sendToDeadLetterQueue(ConnectionContext context,
-            MessageReference messageReference) {
+    public void sendToDeadLetterQueue(ConnectionContext context, MessageReference messageReference) {
         if (isLogAll() || isLogInternalEvents()) {
             String msg = "Unable to display message.";
-            try {
-                msg = messageReference.getMessage().toString();
-            } catch (IOException ioe) {
-            }
+
+            msg = messageReference.getMessage().toString();
+
             LOG.info("Sending to DLQ : " + msg);
         }
         super.sendToDeadLetterQueue(context, messageReference);
     }
 
     @Override
-    public void fastProducer(ConnectionContext context,
-            ProducerInfo producerInfo) {
+    public void fastProducer(ConnectionContext context, ProducerInfo producerInfo) {
         if (isLogAll() || isLogProducerEvents() || isLogInternalEvents()) {
             LOG.info("Fast Producer : " + producerInfo);
         }
@@ -542,8 +506,7 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport {
     }
 
     @Override
-    public void isFull(ConnectionContext context, Destination destination,
-            Usage usage) {
+    public void isFull(ConnectionContext context, Destination destination, Usage usage) {
         if (isLogAll() || isLogProducerEvents() || isLogInternalEvents()) {
             LOG.info("Destination is full : " + destination.getName());
         }
@@ -551,50 +514,43 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport {
     }
 
     @Override
-    public void messageConsumed(ConnectionContext context,
-            MessageReference messageReference) {
+    public void messageConsumed(ConnectionContext context, MessageReference messageReference) {
         if (isLogAll() || isLogConsumerEvents() || isLogInternalEvents()) {
             String msg = "Unable to display message.";
-            try {
-                msg = messageReference.getMessage().toString();
-            } catch (IOException ioe) {
-            }
+
+            msg = messageReference.getMessage().toString();
+
             LOG.info("Message consumed : " + msg);
         }
         super.messageConsumed(context, messageReference);
     }
 
     @Override
-    public void messageDelivered(ConnectionContext context,
-            MessageReference messageReference) {
+    public void messageDelivered(ConnectionContext context, MessageReference messageReference) {
         if (isLogAll() || isLogConsumerEvents() || isLogInternalEvents()) {
             String msg = "Unable to display message.";
-            try {
-                msg = messageReference.getMessage().toString();
-            } catch (IOException ioe) {
-            }
+
+            msg = messageReference.getMessage().toString();
+
             LOG.info("Message delivered : " + msg);
         }
         super.messageDelivered(context, messageReference);
     }
 
     @Override
-    public void messageDiscarded(ConnectionContext context,  Subscription sub,
-            MessageReference messageReference) {
+    public void messageDiscarded(ConnectionContext context, Subscription sub, MessageReference messageReference) {
         if (isLogAll() || isLogInternalEvents()) {
             String msg = "Unable to display message.";
-            try {
-                msg = messageReference.getMessage().toString();
-            } catch (IOException ioe) {
-            }
+
+            msg = messageReference.getMessage().toString();
+
             LOG.info("Message discarded : " + msg);
         }
         super.messageDiscarded(context, sub, messageReference);
     }
 
     @Override
-    public void slowConsumer(ConnectionContext context,
-            Destination destination, Subscription subs) {
+    public void slowConsumer(ConnectionContext context, Destination destination, Subscription subs) {
         if (isLogAll() || isLogConsumerEvents() || isLogInternalEvents()) {
             LOG.info("Detected slow consumer on " + destination.getName());
             StringBuffer buf = new StringBuffer("Connection(");

@@ -56,7 +56,7 @@ public class TempQueue extends Queue{
     
     @Override
     public void initialize() throws Exception {
-        this.messages=new VMPendingMessageCursor();
+        this.messages=new VMPendingMessageCursor(false);
         this.messages.setMemoryUsageHighWaterMark(getCursorMemoryHighWaterMark());
         this.systemUsage = brokerService.getSystemUsage();
         memoryUsage.setParent(systemUsage.getMemoryUsage());           

@@ -37,6 +37,6 @@ public class VMPendingQueueMessageStoragePolicy implements PendingQueueMessageSt
      * @return the cursor
      */
     public PendingMessageCursor getQueuePendingMessageCursor(Broker broker,Queue queue) {
-        return new VMPendingMessageCursor();
+        return new VMPendingMessageCursor(queue.isPrioritizedMessages());
     }
 }

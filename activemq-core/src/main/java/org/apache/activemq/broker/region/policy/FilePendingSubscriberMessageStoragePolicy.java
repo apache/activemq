@@ -17,6 +17,8 @@
 package org.apache.activemq.broker.region.policy;
 
 import org.apache.activemq.broker.Broker;
+import org.apache.activemq.broker.region.Subscription;
+import org.apache.activemq.broker.region.cursors.AbstractPendingMessageCursor;
 import org.apache.activemq.broker.region.cursors.FilePendingMessageCursor;
 import org.apache.activemq.broker.region.cursors.PendingMessageCursor;
 
@@ -31,14 +33,16 @@ import org.apache.activemq.broker.region.cursors.PendingMessageCursor;
 public class FilePendingSubscriberMessageStoragePolicy implements PendingSubscriberMessageStoragePolicy {
 
     /**
-     * @param broker 
+     * @param broker
      * @param name
      * @param maxBatchSize
      * @return a Cursor
      * @see org.apache.activemq.broker.region.policy.PendingSubscriberMessageStoragePolicy#getSubscriberPendingMessageCursor(java.lang.String,
      *      org.apache.activemq.kaha.Store, int)
      */
-    public PendingMessageCursor getSubscriberPendingMessageCursor(Broker broker,String name,int maxBatchSize) {
-        return new FilePendingMessageCursor(broker,"PendingCursor:" + name);
+    public PendingMessageCursor getSubscriberPendingMessageCursor(Broker broker, String name, int maxBatchSize,
+            Subscription subs) {
+        return new FilePendingMessageCursor(broker, "PendingCursor:" + name, AbstractPendingMessageCursor
+                .isPrioritizedMessageSubscriber(broker, subs));
     }
 }

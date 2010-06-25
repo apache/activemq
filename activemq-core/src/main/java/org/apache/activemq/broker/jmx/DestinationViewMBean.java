@@ -16,16 +16,15 @@
  */
 package org.apache.activemq.broker.jmx;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-import java.io.IOException;
-
 import javax.jms.InvalidSelectorException;
+import javax.management.MalformedObjectNameException;
+import javax.management.ObjectName;
 import javax.management.openmbean.CompositeData;
 import javax.management.openmbean.OpenDataException;
 import javax.management.openmbean.TabularData;
-import javax.management.ObjectName;
-import javax.management.MalformedObjectNameException;
 
 public interface DestinationViewMBean {
 
@@ -312,6 +311,12 @@ public interface DestinationViewMBean {
      */
     @MBeanInfo("Caching is enabled")
     public boolean isUseCache();
+    
+    /**
+     * @return true if prioritized messages are enabled for the destination
+     */
+    @MBeanInfo("Prioritized messages is enabled")
+    public boolean isPrioritizedMessages();
     
     /**
      * @param value

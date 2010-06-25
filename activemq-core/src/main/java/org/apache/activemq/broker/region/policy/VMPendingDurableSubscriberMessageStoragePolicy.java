@@ -18,6 +18,7 @@ package org.apache.activemq.broker.region.policy;
 
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.region.Subscription;
+import org.apache.activemq.broker.region.cursors.AbstractPendingMessageCursor;
 import org.apache.activemq.broker.region.cursors.PendingMessageCursor;
 import org.apache.activemq.broker.region.cursors.VMPendingMessageCursor;
 
@@ -40,6 +41,6 @@ public class VMPendingDurableSubscriberMessageStoragePolicy implements PendingDu
      * @return the Pending Message cursor
      */
     public PendingMessageCursor getSubscriberPendingMessageCursor(Broker broker,String clientId, String name,int maxBatchSize, Subscription sub) {
-        return new VMPendingMessageCursor();
+        return new VMPendingMessageCursor(AbstractPendingMessageCursor.isPrioritizedMessageSubscriber(broker, sub));
     }
 }

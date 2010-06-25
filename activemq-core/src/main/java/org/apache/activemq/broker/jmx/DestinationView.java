@@ -16,19 +16,6 @@
  */
 package org.apache.activemq.broker.jmx;
 
-import org.apache.activemq.ActiveMQConnectionFactory;
-import org.apache.activemq.broker.jmx.OpenTypeSupport.OpenTypeFactory;
-import org.apache.activemq.broker.region.Destination;
-import org.apache.activemq.broker.region.Subscription;
-import org.apache.activemq.command.ActiveMQDestination;
-import org.apache.activemq.command.ActiveMQMessage;
-import org.apache.activemq.command.ActiveMQTextMessage;
-import org.apache.activemq.command.Message;
-import org.apache.activemq.filter.BooleanExpression;
-import org.apache.activemq.filter.MessageEvaluationContext;
-import org.apache.activemq.selector.SelectorParser;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -48,6 +35,19 @@ import javax.management.openmbean.OpenDataException;
 import javax.management.openmbean.TabularData;
 import javax.management.openmbean.TabularDataSupport;
 import javax.management.openmbean.TabularType;
+import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.broker.jmx.OpenTypeSupport.OpenTypeFactory;
+import org.apache.activemq.broker.region.Destination;
+import org.apache.activemq.broker.region.Subscription;
+import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.command.ActiveMQMessage;
+import org.apache.activemq.command.ActiveMQTextMessage;
+import org.apache.activemq.command.Message;
+import org.apache.activemq.filter.BooleanExpression;
+import org.apache.activemq.filter.MessageEvaluationContext;
+import org.apache.activemq.selector.SelectorParser;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 public class DestinationView implements DestinationViewMBean {
     private static final Log LOG = LogFactory.getLog(DestinationViewMBean.class);
@@ -125,6 +125,10 @@ public class DestinationView implements DestinationViewMBean {
 
     public long getMinEnqueueTime() {
         return destination.getDestinationStatistics().getProcessTime().getMinTime();
+    }
+    
+    public boolean isPrioritizedMessages() {
+        return destination.isPrioritizedMessages();
     }
 
     public CompositeData[] browse() throws OpenDataException {

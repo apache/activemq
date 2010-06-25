@@ -19,7 +19,6 @@ package org.apache.activemq.broker.region;
 import java.io.IOException;
 import java.util.List;
 import java.util.Set;
-
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.ProducerBrokerExchange;
@@ -39,7 +38,7 @@ import org.apache.activemq.usage.Usage;
  */
 public class DestinationFilter implements Destination {
 
-    private Destination next;
+    private final Destination next;
 
     public DestinationFilter(Destination next) {
         this.next = next;
@@ -269,5 +268,9 @@ public class DestinationFilter implements Destination {
 
     public void setCursorMemoryHighWaterMark(int cursorMemoryHighWaterMark) {
         next.setCursorMemoryHighWaterMark(cursorMemoryHighWaterMark);
+    }
+
+    public boolean isPrioritizedMessages() {
+        return next.isPrioritizedMessages();
     }
 }

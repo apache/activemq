@@ -14,27 +14,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.activemq.broker.region.policy;
+package org.apache.activemq.broker.region.cursors;
 
-import org.apache.activemq.broker.Broker;
-import org.apache.activemq.broker.region.Subscription;
-import org.apache.activemq.broker.region.cursors.PendingMessageCursor;
+import java.util.Iterator;
+import org.apache.activemq.broker.region.MessageReference;
 
-/**
- * Abstraction to allow different policies for holding messages awaiting
- * dispatch to active clients
- * 
- * @version $Revision$
- */
-public interface PendingSubscriberMessageStoragePolicy {
-
-    /**
-     * Retrieve the configured pending message storage cursor;
-     * @param broker 
-     * 
-     * @param name
-     * @param maxBatchSize
-     * @return the Pending Message cursor
-     */
-    PendingMessageCursor getSubscriberPendingMessageCursor(Broker broker,String name,int maxBatchSize,Subscription subs);
+public interface PendingList {
+    
+    public boolean isEmpty();
+    public void clear();
+    public PendingNode addMessageFirst(MessageReference message);
+    public PendingNode addMessageLast(MessageReference message);
+    public void remove(MessageReference message);
+    public int size();
+    public Iterator<MessageReference> iterator();
 }

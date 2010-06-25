@@ -236,7 +236,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
     public void initialize() throws Exception {
         if (this.messages == null) {
             if (destination.isTemporary() || broker == null || store == null) {
-                this.messages = new VMPendingMessageCursor();
+                this.messages = new VMPendingMessageCursor(isPrioritizedMessages());
             } else {
                 this.messages = new StoreQueueCursor(broker, this);
             }
@@ -951,38 +951,30 @@ public class Queue extends BaseDestination implements Task, UsageListener {
 
     public Message getMessage(String id) {
         MessageId msgId = new MessageId(id);
-        try {
-            synchronized (pagedInMessages) {
-                QueueMessageReference r = this.pagedInMessages.get(msgId);
-                if (r != null) {
-                    return r.getMessage();
-                }
+        synchronized (pagedInMessages) {
+            QueueMessageReference r = this.pagedInMessages.get(msgId);
+            if (r != null) {
+                return r.getMessage();
             }
-            synchronized (messages) {
-                try {
-                    messages.reset();
-                    while (messages.hasNext()) {
-                        try {
-                            MessageReference r = messages.next();
-                            r.decrementReferenceCount();
-                            messages.rollback(r.getMessageId());
-                            if (msgId.equals(r.getMessageId())) {
-                                Message m = r.getMessage();
-                                if (m != null) {
-                                    return m;
-                                }
-                                break;
-                            }
-                        } catch (IOException e) {
-                            LOG.error("got an exception retrieving message " + id);
+        }
+        synchronized (messages) {
+            try {
+                messages.reset();
+                while (messages.hasNext()) {
+                    MessageReference r = messages.next();
+                    r.decrementReferenceCount();
+                    messages.rollback(r.getMessageId());
+                    if (msgId.equals(r.getMessageId())) {
+                        Message m = r.getMessage();
+                        if (m != null) {
+                            return m;
                         }
+                        break;
                     }
-                } finally {
-                    messages.release();
                 }
+            } finally {
+                messages.release();
             }
-        } catch (IOException e) {
-            LOG.error("got an exception retrieving message " + id);
         }
         return null;
     }

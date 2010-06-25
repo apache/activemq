@@ -16,8 +16,6 @@
  */
 package org.apache.activemq.broker.region;
 
-import java.io.IOException;
-
 import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageId;
@@ -33,7 +31,7 @@ public interface MessageReference {
     
     MessageId getMessageId();
     Message getMessageHardRef();
-    Message getMessage() throws IOException;
+    Message getMessage();
     boolean isPersistent();
     
     Destination getRegionDestination();

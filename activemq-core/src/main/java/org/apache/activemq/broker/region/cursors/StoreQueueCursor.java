@@ -32,21 +32,21 @@ import org.apache.commons.logging.LogFactory;
 public class StoreQueueCursor extends AbstractPendingMessageCursor {
 
     private static final Log LOG = LogFactory.getLog(StoreQueueCursor.class);
-    private Broker broker;
+    private final Broker broker;
     private int pendingCount;
-    private Queue queue;
+    private final Queue queue;
     private PendingMessageCursor nonPersistent;
-    private QueueStorePrefetch persistent;
+    private final QueueStorePrefetch persistent;
     private boolean started;
     private PendingMessageCursor currentCursor;
 
     /**
      * Construct
-     * 
+     * @param broker 
      * @param queue
-     * @param tmpStore
      */
     public StoreQueueCursor(Broker broker,Queue queue) {
+        super((queue != null ? queue.isPrioritizedMessages():false));
         this.broker=broker;
         this.queue = queue;
         this.persistent = new QueueStorePrefetch(queue);
@@ -58,9 +58,9 @@ public class StoreQueueCursor extends AbstractPendingMessageCursor {
         super.start();
         if (nonPersistent == null) {
             if (broker.getBrokerService().isPersistent()) {
-                nonPersistent = new FilePendingMessageCursor(broker,queue.getName());
+                nonPersistent = new FilePendingMessageCursor(broker,queue.getName(),this.prioritizedMessages);
             }else {
-                nonPersistent = new VMPendingMessageCursor();
+                nonPersistent = new VMPendingMessageCursor(this.prioritizedMessages);
             }
             nonPersistent.setMaxBatchSize(getMaxBatchSize());
             nonPersistent.setSystemUsage(systemUsage);
@@ -101,7 +101,7 @@ public class StoreQueueCursor extends AbstractPendingMessageCursor {
             }
         }
     }
-
+    
     public synchronized void addMessageFirst(MessageReference node) throws Exception {
         if (node != null) {
             Message msg = node.getMessage();
@@ -240,6 +240,7 @@ public class StoreQueueCursor extends AbstractPendingMessageCursor {
         }
     }
     
+    @Override
     public void setUseCache(boolean useCache) {
         super.setUseCache(useCache);
         if (persistent != null) {
@@ -250,6 +251,7 @@ public class StoreQueueCursor extends AbstractPendingMessageCursor {
         }
     }
     
+    @Override
     public void setMemoryUsageHighWaterMark(int memoryUsageHighWaterMark) {
         super.setMemoryUsageHighWaterMark(memoryUsageHighWaterMark);
         if (persistent != null) {
