@@ -245,7 +245,7 @@ public class StompTest extends CombinationTestSupport {
         assertEquals("foo", "abc", message.getStringProperty("foo"));
         assertEquals("bar", "123", message.getStringProperty("bar"));
     }
-    
+
     public void testSendMessageWithDelay() throws Exception {
 
         MessageConsumer consumer = session.createConsumer(queue);
@@ -818,6 +818,165 @@ public class StompTest extends CombinationTestSupport {
         frame = stompConnection.receiveFrame();
 
         assertTrue(frame.trim().endsWith(xmlObject));
+
+        frame = "DISCONNECT\n" + "\n\n" + Stomp.NULL;
+        stompConnection.sendFrame(frame);
+    }
+
+    public void testTransformationReceiveObject() throws Exception {
+
+        MessageProducer producer = session.createProducer(new ActiveMQQueue("USERS." + getQueueName()));
+        ObjectMessage message = session.createObjectMessage(new SamplePojo("Dejan", "Belgrade"));
+        producer.send(message);
+
+        String frame = "CONNECT\n" + "login: system\n" + "passcode: manager\n\n" + Stomp.NULL;
+        stompConnection.sendFrame(frame);
+
+        frame = stompConnection.receiveFrame();
+        assertTrue(frame.startsWith("CONNECTED"));
+
+        frame = "SUBSCRIBE\n" + "destination:/queue/USERS." + getQueueName() + "\n" + "ack:auto" + "\n" + "transformation:"	+ Stomp.Transformations.JMS_OBJECT_XML + "\n\n" + Stomp.NULL;
+        stompConnection.sendFrame(frame);
+
+        frame = stompConnection.receiveFrame();
+
+        assertTrue(frame.trim().endsWith(xmlObject));
+
+        frame = "DISCONNECT\n" + "\n\n" + Stomp.NULL;
+        stompConnection.sendFrame(frame);
+    }
+
+    public void testTransformationReceiveXMLObjectAndMap() throws Exception {
+        MessageProducer producer = session.createProducer(new ActiveMQQueue("USERS." + getQueueName()));
+        ObjectMessage objMessage = session.createObjectMessage(new SamplePojo("Dejan", "Belgrade"));
+        producer.send(objMessage);
+
+        MapMessage mapMessage = session.createMapMessage();
+        mapMessage.setString("name", "Dejan");
+        mapMessage.setString("city", "Belgrade");
+        producer.send(mapMessage);
+
+        String frame = "CONNECT\n" + "login: system\n" + "passcode: manager\n\n" + Stomp.NULL;
+        stompConnection.sendFrame(frame);
+
+        frame = stompConnection.receiveFrame();
+        assertTrue(frame.startsWith("CONNECTED"));
+
+        frame = "SUBSCRIBE\n" + "destination:/queue/USERS." + getQueueName() + "\n" + "ack:auto" + "\n" + "transformation:"	+ Stomp.Transformations.JMS_XML + "\n\n" + Stomp.NULL;
+        stompConnection.sendFrame(frame);
+
+        frame = stompConnection.receiveFrame();
+
+        assertTrue(frame.trim().endsWith(xmlObject));
+
+        frame = stompConnection.receiveFrame();
+
+        assertTrue(frame.trim().endsWith(xmlMap.trim()));
+
+        frame = "DISCONNECT\n" + "\n\n" + Stomp.NULL;
+        stompConnection.sendFrame(frame);
+    }
+
+    public void testTransformationReceiveJSONObjectAndMap() throws Exception {
+        MessageProducer producer = session.createProducer(new ActiveMQQueue("USERS." + getQueueName()));
+        ObjectMessage objMessage = session.createObjectMessage(new SamplePojo("Dejan", "Belgrade"));
+        producer.send(objMessage);
+
+        MapMessage mapMessage = session.createMapMessage();
+        mapMessage.setString("name", "Dejan");
+        mapMessage.setString("city", "Belgrade");
+        producer.send(mapMessage);
+
+        String frame = "CONNECT\n" + "login: system\n" + "passcode: manager\n\n" + Stomp.NULL;
+        stompConnection.sendFrame(frame);
+
+        frame = stompConnection.receiveFrame();
+        assertTrue(frame.startsWith("CONNECTED"));
+
+        frame = "SUBSCRIBE\n" + "destination:/queue/USERS." + getQueueName() + "\n" + "ack:auto" + "\n" + "transformation:"	+ Stomp.Transformations.JMS_JSON + "\n\n" + Stomp.NULL;
+        stompConnection.sendFrame(frame);
+
+        frame = stompConnection.receiveFrame();
+
+        assertTrue(frame.trim().endsWith(jsonObject));
+
+        frame = stompConnection.receiveFrame();
+
+        assertTrue(frame.trim().endsWith(jsonMap.trim()));
+
+        frame = "DISCONNECT\n" + "\n\n" + Stomp.NULL;
+        stompConnection.sendFrame(frame);
+    }
+
+    public void testTransformationSendAndReceiveXmlMap() throws Exception {
+
+        String frame = "CONNECT\n" + "login: system\n" + "passcode: manager\n\n" + Stomp.NULL;
+        stompConnection.sendFrame(frame);
+
+        frame = stompConnection.receiveFrame();
+        assertTrue(frame.startsWith("CONNECTED"));
+
+        frame = "SUBSCRIBE\n" + "destination:/queue/" + getQueueName() + "\n" + "ack:auto" + "\n" + "transformation:" + Stomp.Transformations.JMS_XML + "\n\n" + Stomp.NULL;
+        stompConnection.sendFrame(frame);
+
+        frame = "SEND\n" + "destination:/queue/" + getQueueName() + "\n" + "transformation:" + Stomp.Transformations.JMS_MAP_JSON + "\n\n" + jsonMap + Stomp.NULL;
+
+        stompConnection.sendFrame(frame);
+
+        frame = stompConnection.receiveFrame();
+
+        assertNotNull(frame);
+        assertTrue(frame.trim().endsWith(xmlMap.trim()));
+        assertTrue(frame.contains("jms-map-xml"));
+    }
+
+    public void testTransformationSendAndReceiveJsonMap() throws Exception {
+
+        String frame = "CONNECT\n" + "login: system\n" + "passcode: manager\n\n" + Stomp.NULL;
+        stompConnection.sendFrame(frame);
+
+        frame = stompConnection.receiveFrame();
+        assertTrue(frame.startsWith("CONNECTED"));
+
+        frame = "SUBSCRIBE\n" + "destination:/queue/" + getQueueName() + "\n" + "ack:auto" + "\n" + "transformation:" + Stomp.Transformations.JMS_JSON + "\n\n" + Stomp.NULL;
+        stompConnection.sendFrame(frame);
+
+        frame = "SEND\n" + "destination:/queue/" + getQueueName() + "\n" + "transformation:" + Stomp.Transformations.JMS_MAP_XML + "\n\n" + xmlMap + Stomp.NULL;
+
+        stompConnection.sendFrame(frame);
+
+        frame = stompConnection.receiveFrame();
+
+        assertNotNull(frame);
+        assertTrue(frame.trim().endsWith(jsonMap.trim()));
+        assertTrue(frame.contains("jms-map-json"));
+    }
+
+    public void testTransformationReceiveBytesMessage() throws Exception {
+
+        MessageProducer producer = session.createProducer(new ActiveMQQueue("USERS." + getQueueName()));
+        BytesMessage message = session.createBytesMessage();
+        message.writeBytes(new byte[]{1, 2, 3, 4, 5});
+        producer.send(message);
+
+        String frame = "CONNECT\n" + "login: system\n" + "passcode: manager\n\n" + Stomp.NULL;
+        stompConnection.sendFrame(frame);
+
+        frame = stompConnection.receiveFrame();
+        assertTrue(frame.startsWith("CONNECTED"));
+
+        frame = "SUBSCRIBE\n" + "destination:/queue/USERS." + getQueueName() + "\n" + "ack:auto" + "\n" + "transformation:"	+ Stomp.Transformations.JMS_XML + "\n\n" + Stomp.NULL;
+        stompConnection.sendFrame(frame);
+
+        frame = stompConnection.receiveFrame();
+        assertTrue(frame.startsWith("MESSAGE"));
+
+        Pattern cl = Pattern.compile("Content-length:\\s*(\\d+)", Pattern.CASE_INSENSITIVE);
+        Matcher clMmatcher = cl.matcher(frame);
+        assertTrue(clMmatcher.find());
+        assertEquals("5", clMmatcher.group(1));
+
+        assertFalse(Pattern.compile("type:\\s*null", Pattern.CASE_INSENSITIVE).matcher(frame).find());
 
         frame = "DISCONNECT\n" + "\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);

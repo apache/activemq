@@ -25,24 +25,29 @@ import java.util.Map;
 
 import javax.jms.JMSException;
 
+import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.command.ActiveMQMapMessage;
 import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ActiveMQObjectMessage;
+import org.apache.activemq.command.ConsumerId;
+import org.apache.activemq.command.DataStructure;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 
+import com.sun.tools.javac.util.Log;
 import com.thoughtworks.xstream.XStream;
 import com.thoughtworks.xstream.io.HierarchicalStreamReader;
 import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
 import com.thoughtworks.xstream.io.json.JettisonMappedXmlDriver;
+import com.thoughtworks.xstream.io.json.JsonHierarchicalStreamDriver;
 import com.thoughtworks.xstream.io.xml.PrettyPrintWriter;
 import com.thoughtworks.xstream.io.xml.XppReader;
 
 /**
  * Frame translator implementation that uses XStream to convert messages to and
  * from XML and JSON
- * 
+ *
  * @author <a href="mailto:dejan@nighttale.net">Dejan Bosanac</a>
  */
 public class JmsFrameTranslator extends LegacyFrameTranslator implements
@@ -102,13 +107,20 @@ public class JmsFrameTranslator extends LegacyFrameTranslator implements
 
 			FrameTranslator.Helper.copyStandardHeadersFromMessageToFrame(
 					converter, message, command, this);
-			ActiveMQObjectMessage msg = (ActiveMQObjectMessage) message.copy();
+
+            if (headers.get(Stomp.Headers.TRANSFORMATION).equals(Stomp.Transformations.JMS_XML.toString())) {
+            	headers.put(Stomp.Headers.TRANSFORMATION, Stomp.Transformations.JMS_OBJECT_XML.toString());
+            } else if (headers.get(Stomp.Headers.TRANSFORMATION).equals(Stomp.Transformations.JMS_JSON.toString())) {
+            	headers.put(Stomp.Headers.TRANSFORMATION, Stomp.Transformations.JMS_OBJECT_JSON.toString());
+            }
+
+            ActiveMQObjectMessage msg = (ActiveMQObjectMessage) message.copy();
 			command.setContent(marshall(msg.getObject(),
 					headers.get(Stomp.Headers.TRANSFORMATION))
 					.getBytes("UTF-8"));
 			return command;
 
-		} else if (message.getDataStructureType() == ActiveMQMapMessage.DATA_STRUCTURE_TYPE) { 
+		} else if (message.getDataStructureType() == ActiveMQMapMessage.DATA_STRUCTURE_TYPE) {
 			StompFrame command = new StompFrame();
 			command.setAction(Stomp.Responses.MESSAGE);
 			Map<String, String> headers = new HashMap<String, String>(25);
@@ -116,11 +128,39 @@ public class JmsFrameTranslator extends LegacyFrameTranslator implements
 
 			FrameTranslator.Helper.copyStandardHeadersFromMessageToFrame(
 					converter, message, command, this);
+
+            if (headers.get(Stomp.Headers.TRANSFORMATION).equals(Stomp.Transformations.JMS_XML.toString())) {
+            	headers.put(Stomp.Headers.TRANSFORMATION, Stomp.Transformations.JMS_MAP_XML.toString());
+            } else if (headers.get(Stomp.Headers.TRANSFORMATION).equals(Stomp.Transformations.JMS_JSON.toString())) {
+            	headers.put(Stomp.Headers.TRANSFORMATION, Stomp.Transformations.JMS_MAP_JSON.toString());
+            }
+
 			ActiveMQMapMessage msg = (ActiveMQMapMessage) message.copy();
 			command.setContent(marshall((Serializable)msg.getContentMap(),
 					headers.get(Stomp.Headers.TRANSFORMATION))
 					.getBytes("UTF-8"));
-			return command;		
+			return command;
+        } else if (message.getDataStructureType() == ActiveMQMessage.DATA_STRUCTURE_TYPE &&
+                AdvisorySupport.ADIVSORY_MESSAGE_TYPE.equals(message.getType())) {
+
+			StompFrame command = new StompFrame();
+			command.setAction(Stomp.Responses.MESSAGE);
+			Map<String, String> headers = new HashMap<String, String>(25);
+			command.setHeaders(headers);
+
+            FrameTranslator.Helper.copyStandardHeadersFromMessageToFrame(
+					converter, message, command, this);
+
+            if (headers.get(Stomp.Headers.TRANSFORMATION).equals(Stomp.Transformations.JMS_XML.toString())) {
+            	headers.put(Stomp.Headers.TRANSFORMATION, Stomp.Transformations.JMS_ADVISORY_XML.toString());
+            } else if (headers.get(Stomp.Headers.TRANSFORMATION).equals(Stomp.Transformations.JMS_JSON.toString())) {
+            	headers.put(Stomp.Headers.TRANSFORMATION, Stomp.Transformations.JMS_ADVISORY_JSON.toString());
+            }
+
+            String body = marshallAdvisory(message.getDataStructure(),
+            		headers.get(Stomp.Headers.TRANSFORMATION));
+            command.setContent(body.getBytes("UTF-8"));
+            return command;
 		} else {
 			return super.convertMessage(converter, message);
 		}
@@ -148,7 +188,7 @@ public class JmsFrameTranslator extends LegacyFrameTranslator implements
 		objMsg.setObject((Serializable) obj);
 		return objMsg;
 	}
-	
+
 	protected ActiveMQMapMessage createMapMessage(HierarchicalStreamReader in) throws JMSException {
 		ActiveMQMapMessage mapMsg = new ActiveMQMapMessage();
 		Map<String, Object> map = (Map<String, Object>)getXStream().unmarshal(in);
@@ -157,8 +197,23 @@ public class JmsFrameTranslator extends LegacyFrameTranslator implements
 		}
 		return mapMsg;
 	}
-	
-	
+
+    protected String marshallAdvisory(final DataStructure ds, String transformation) {
+
+		StringWriter buffer = new StringWriter();
+		HierarchicalStreamWriter out;
+		if (transformation.toLowerCase().endsWith("json")) {
+			out = new JettisonMappedXmlDriver().createWriter(buffer);
+		} else {
+			out = new PrettyPrintWriter(buffer);
+		}
+
+		XStream xstream = getXStream();
+        xstream.setMode(XStream.NO_REFERENCES);
+        xstream.aliasPackage("", "org.apache.activemq.command");
+		xstream.marshal(ds, out);
+		return buffer.toString();
+    }
 
 	// Properties
 	// -------------------------------------------------------------------------

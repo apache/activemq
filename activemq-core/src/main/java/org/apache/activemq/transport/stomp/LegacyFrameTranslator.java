@@ -23,17 +23,17 @@ import java.util.Map;
 import javax.jms.Destination;
 import javax.jms.JMSException;
 
-import org.apache.activemq.command.ActiveMQBytesMessage;
-import org.apache.activemq.command.ActiveMQDestination;
-import org.apache.activemq.command.ActiveMQMessage;
-import org.apache.activemq.command.ActiveMQTextMessage;
+import com.thoughtworks.xstream.XStream;
+import com.thoughtworks.xstream.io.json.JsonHierarchicalStreamDriver;
+import org.apache.activemq.advisory.AdvisorySupport;
+import org.apache.activemq.command.*;
 
 /**
  * Implements ActiveMQ 4.0 translations
  */
 public class LegacyFrameTranslator implements FrameTranslator {
-	
-	
+
+
     public ActiveMQMessage convertFrame(ProtocolConverter converter, StompFrame command) throws JMSException, ProtocolException {
         final Map headers = command.getHeaders();
         final ActiveMQMessage msg;
@@ -77,6 +77,14 @@ public class LegacyFrameTranslator implements FrameTranslator {
 
             headers.put(Stomp.Headers.CONTENT_LENGTH, "" + data.length);
             command.setContent(data);
+        } else if (message.getDataStructureType() == ActiveMQMessage.DATA_STRUCTURE_TYPE &&
+                AdvisorySupport.ADIVSORY_MESSAGE_TYPE.equals(message.getType())) {
+
+            FrameTranslator.Helper.copyStandardHeadersFromMessageToFrame(
+					converter, message, command, this);
+
+            String body = marshallAdvisory(message.getDataStructure());
+            command.setContent(body.getBytes("UTF-8"));
         }
         return command;
     }
@@ -92,7 +100,7 @@ public class LegacyFrameTranslator implements FrameTranslator {
         if( rc!=null ) {
         	return rc;
         }
-        
+
         StringBuffer buffer = new StringBuffer();
         if (activeMQDestination.isQueue()) {
             if (activeMQDestination.isTemporary()) {
@@ -134,5 +142,17 @@ public class LegacyFrameTranslator implements FrameTranslator {
             throw new ProtocolException("Illegal destination name: [" + name + "] -- ActiveMQ STOMP destinations "
                                         + "must begine with one of: /queue/ /topic/ /temp-queue/ /temp-topic/");
         }
+    }
+
+    /**
+     * Return an Advisory message as a JSON formatted string
+     * @param ds
+     * @return
+     */
+    protected String marshallAdvisory(final DataStructure ds) {
+        XStream xstream = new XStream(new JsonHierarchicalStreamDriver());
+        xstream.setMode(XStream.NO_REFERENCES);
+        xstream.aliasPackage("", "org.apache.activemq.command");
+        return xstream.toXML(ds);
     }
 }

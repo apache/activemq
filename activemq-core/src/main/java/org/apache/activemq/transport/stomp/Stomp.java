@@ -117,16 +117,24 @@ public interface Stomp {
             String MESSAGE_ID = "message-id";
         }
     }
-    
+
 	public enum Transformations {
-		JMS_BYTE, JMS_OBJECT_XML, JMS_OBJECT_JSON, JMS_MAP_XML, JMS_MAP_JSON;
-		
+		JMS_BYTE,
+		JMS_XML,
+		JMS_JSON,
+		JMS_OBJECT_XML,
+		JMS_OBJECT_JSON,
+		JMS_MAP_XML,
+		JMS_MAP_JSON,
+		JMS_ADVISORY_XML,
+		JMS_ADVISORY_JSON;
+
 		public String toString() {
 			return name().replaceAll("_", "-").toLowerCase();
 		}
-		
+
 		public static Transformations getValue(String value) {
 			return valueOf(value.replaceAll("-", "_").toUpperCase());
 		}
-	}    
+	}
 }

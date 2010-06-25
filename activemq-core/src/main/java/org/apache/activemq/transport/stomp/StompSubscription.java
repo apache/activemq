@@ -25,6 +25,7 @@ import java.util.Map.Entry;
 
 import javax.jms.JMSException;
 
+import org.apache.activemq.command.ActiveMQBytesMessage;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ConsumerInfo;
@@ -80,7 +81,7 @@ public class StompSubscription {
 
         boolean ignoreTransformation = false;
 
-        if (transformation != null) {
+        if (transformation != null && !( message instanceof ActiveMQBytesMessage ) ) {
        		message.setReadOnlyProperties(false);
         	message.setStringProperty(Stomp.Headers.TRANSFORMATION, transformation);
         } else {
