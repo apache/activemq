@@ -48,7 +48,7 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.CombinationTestSupport;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQTopic;
-import org.apache.activemq.store.amq.AMQPersistenceAdapterFactory;
+import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
 import org.apache.activemq.store.kahadb.KahaDBStore;
 import org.apache.activemq.util.IOHelper;
 import org.apache.activemq.util.Wait;
@@ -156,10 +156,9 @@ public class DurableConsumerTest extends CombinationTestSupport{
     
     private void configurePersistence(BrokerService broker) throws Exception{
         File dataDirFile = new File("target/" + getName());
-        AMQPersistenceAdapterFactory fact = new AMQPersistenceAdapterFactory();
-        fact.setDataDirectory(dataDirFile);
-        fact.setForceRecoverReferenceStore(true);
-        broker.setPersistenceAdapter(fact.createPersistenceAdapter());
+        KahaDBPersistenceAdapter kahaDBAdapter = new KahaDBPersistenceAdapter();
+        kahaDBAdapter.setDirectory(dataDirFile);
+        broker.setPersistenceAdapter(kahaDBAdapter);
     }
     
     public void testFailover() throws Exception{
