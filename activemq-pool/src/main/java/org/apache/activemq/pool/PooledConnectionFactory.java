@@ -37,14 +37,21 @@ import org.apache.commons.pool.impl.GenericObjectPoolFactory;
  * A JMS provider which pools Connection, Session and MessageProducer instances
  * so it can be used with tools like <a href="http://camel.apache.org/activemq.html">Camel</a> and Spring's <a
  * href="http://activemq.apache.org/spring-support.html">JmsTemplate and MessagListenerContainer</a>.
+ * Connections, sessions and producers are returned to a pool after use so that they can be reused later
+ * without having to undergo the cost of creating them again.
  * 
- * <b>NOTE</b> this implementation does not pool consumers. Pooling makes sense for seldom used
- * resources that are expensive to create and can remain idle a minimal cost. like sessions and producers.
- * Consumers on the other hand, will consume messages even when idle due to <a 
- * href="http://activemq.apache.org/what-is-the-prefetch-limit-for.html">prefetch</a>.
- * If you want to consider a consumer pool, configure an appropriate prefetch and a pool
- * allocation strategy that is inclusive. Also note that message order guarantees will be
- * lost across the consumer pool. 
+ * b>NOTE:</b> while this implementation does allow the creation of a collection of active consumers,
+ * it does not 'pool' consumers. Pooling makes sense for connections, sessions and producers, which 
+ * are expensive to create and can remain idle a minimal cost. Consumers, on the other hand, are usually
+ * just created at startup and left active, handling incoming messages as they come. When a consumer is
+ * complete, it is best to close it rather than return it to a pool for later reuse: this is because, 
+ * even if a consumer is idle, ActiveMQ will keep delivering messages to the consumer's prefetch buffer,
+ * where they'll get held until the consumer is active again.
+ * 
+ * If you are creating a collection of consumers (for example, for multi-threaded message consumption), you
+ * might want to consider using a lower value for each consumer (e.g. 10 or 20), to ensure that all messages
+ * don't end up going to just one of the consumers. See this FAQ entry for more detail: 
+ * http://activemq.apache.org/i-do-not-receive-messages-in-my-second-consumer.html
  * 
  * @org.apache.xbean.XBean element="pooledConnectionFactory"
  * 
