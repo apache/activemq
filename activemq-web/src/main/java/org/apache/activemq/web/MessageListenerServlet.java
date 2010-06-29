@@ -263,46 +263,59 @@ public class MessageListenerServlet extends MessageServletSupport {
             LOG.debug("doMessage timeout=" + timeout);
         }
 
-        Continuation continuation = ContinuationSupport.getContinuation(request);
-        Listener listener = getListener(request);
-        if (listener != null && continuation != null && !continuation.isInitial()) {
-            listener.access();
-        }
-
         Message message = null;
+        message = (Message)request.getAttribute("message"); 
+        
         synchronized (client) {
 
             List consumers = client.getConsumers();
-            MessageAvailableConsumer consumer = null;
+            MessageAvailableConsumer consumer = (MessageAvailableConsumer)request.getAttribute("consumer");
 
-            // Look for a message that is ready to go
-            for (int i = 0; message == null && i < consumers.size(); i++) {
-                consumer = (MessageAvailableConsumer)consumers.get(i);
-                if (consumer.getAvailableListener() == null) {
-                    continue;
-                }
-
-                // Look for any available messages
-                message = consumer.receiveNoWait();
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("received " + message + " from " + consumer);
+            if (message == null) {
+                // Look for a message that is ready to go
+                for (int i = 0; message == null && i < consumers.size(); i++) {
+                    consumer = (MessageAvailableConsumer)consumers.get(i);
+                    if (consumer.getAvailableListener() == null) {
+                        continue;
+                    }
+    
+                    // Look for any available messages
+                    message = consumer.receive(10);
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug("received " + message + " from " + consumer);
+                    }
                 }
             }
 
-            // Get an existing Continuation or create a new one if there are no
-            // messages
+            if (message == null) {
+                Continuation continuation = ContinuationSupport.getContinuation(request);
+                
+                if (continuation.isExpired()) {  
+                    response.setStatus(HttpServletResponse.SC_OK);
+                    StringWriter swriter = new StringWriter();
+                    PrintWriter writer = new PrintWriter(swriter);
+                    writer.println("<ajax-response>");
+                    writer.print("</ajax-response>");
 
-            if (message == null && continuation.isInitial()) {
-                // register this continuation with our listener.
-                listener.setContinuation(continuation);
+                    writer.flush();
+                    String m = swriter.toString();
+                    response.getWriter().println(m); 
+                    
+                    return;
+                }
 
-                // Get the continuation object (may wait and/or retry
-                // request here).
                 continuation.setTimeout(timeout);
                 continuation.suspend();
+                
+                // Fetch the listeners
+                Listener listener = getListener(request);
+
+                // register this continuation with our listener.
+                listener.setContinuation(continuation);
+                
                 return;
             }
-
+            
             // prepare the responds
             response.setContentType("text/xml");
             response.setHeader("Cache-Control", "no-cache");
@@ -319,15 +332,8 @@ public class MessageListenerServlet extends MessageServletSupport {
             if (message != null) {
                 String id = consumerIdMap.get(consumer);
                 String destinationName = consumerDestinationNameMap.get(consumer);
-                writer.print("<response id='");
-                writer.print(id);
-                writer.print("'");
-                if (destinationName != null) {
-                    writer.print(" destination='" + destinationName + "' ");
-                }
-                writer.print(">");
-                writeMessageResponse(writer, message);
-                writer.println("</response>");
+                writeMessageResponse(writer, message, id, destinationName);
+                
                 messages++;
             }
 
@@ -347,21 +353,9 @@ public class MessageListenerServlet extends MessageServletSupport {
                     messages++;
                     String id = consumerIdMap.get(consumer);
                     String destinationName = consumerDestinationNameMap.get(consumer);
-                    writer.print("<response id='");
-                    writer.print(id);
-                    writer.print("'");
-                    if (destinationName != null) {
-                        writer.print(" destination='" + destinationName + "' ");
-                    }
-                    writer.print(">");
-                    writeMessageResponse(writer, message);
-                    writer.println("</response>");
+                    writeMessageResponse(writer, message, id, destinationName);
                 }
             }
-
-            // Add poll message
-            // writer.println("<response type='object'
-            // id='amqPoll'><ok/></response>");
 
             writer.print("</ajax-response>");
 
@@ -372,7 +366,14 @@ public class MessageListenerServlet extends MessageServletSupport {
 
     }
 
-    protected void writeMessageResponse(PrintWriter writer, Message message) throws JMSException, IOException {
+    protected void writeMessageResponse(PrintWriter writer, Message message, String id, String destinationName) throws JMSException, IOException {
+        writer.print("<response id='");
+        writer.print(id);
+        writer.print("'");
+        if (destinationName != null) {
+            writer.print(" destination='" + destinationName + "' ");
+        }
+        writer.print(">");
         if (message instanceof TextMessage) {
             TextMessage textMsg = (TextMessage)message;
             String txt = textMsg.getText();
@@ -385,6 +386,7 @@ public class MessageListenerServlet extends MessageServletSupport {
             Object object = objectMsg.getObject();
             writer.print(object.toString());
         }
+        writer.println("</response>");
     }
 
     protected Listener getListener(HttpServletRequest request) {
@@ -464,7 +466,14 @@ public class MessageListenerServlet extends MessageServletSupport {
                 LOG.debug("message for " + consumer + "continuation=" + continuation);
             }
             if (continuation != null) {
-                continuation.resume();
+                    try {
+                        Message message = consumer.receive(10);
+                        continuation.setAttribute("message", message);
+                        continuation.setAttribute("consumer", consumer);
+                    } catch (Exception e) {
+                        LOG.error("Error receiving message " + e, e);
+                    }
+                    continuation.resume();
             } else if (System.currentTimeMillis() - lastAccess > 2 * maximumReadTimeout) {
                 new Thread() {
                     public void run() {
@@ -472,7 +481,6 @@ public class MessageListenerServlet extends MessageServletSupport {
                     };
                 }.start();
             }
-            continuation = null;
         }
 
     }

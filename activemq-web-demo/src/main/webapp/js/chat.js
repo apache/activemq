@@ -96,10 +96,6 @@ org.activemq.Chat = function() {
 		return keyc;
 	};
 
-	// Again, you would generally use your particular js library to attach
-	// event handlers. However, I wanted to remove the dependency on the
-	// behaviors.js file in the original code, and I am demonstrating a library
-	// that can work with a variety of js libraries, so we are going old-school.
 	var addEvent = function(obj, type, fn) {
 		if (obj.addEventListener)
 			obj.addEventListener(type, fn, false);

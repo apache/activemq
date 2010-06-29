@@ -300,13 +300,12 @@ public abstract class MessageServletSupport extends HttpServlet {
         boolean isTopic = defaultTopicFlag;
         if (destinationName.startsWith("topic://")) {
             isTopic = true;
-            destinationName = destinationName.substring(8);
-        } else if (destinationName.startsWith("channel://")) {
+        } else if (destinationName.startsWith("channel://") || destinationName.startsWith("queue://")) {
             isTopic = false;
-            destinationName = destinationName.substring(10);
         } else {
             isTopic = isTopic(request);
         }
+        destinationName = destinationName.substring(destinationName.indexOf("://") + 3);
 
         if (destinationOptions != null) {
             destinationName += "?" + destinationOptions;
