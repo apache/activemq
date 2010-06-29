@@ -35,13 +35,16 @@ import org.apache.commons.pool.impl.GenericObjectPoolFactory;
 
 /**
  * A JMS provider which pools Connection, Session and MessageProducer instances
- * so it can be used with tools like Spring's <a
- * href="http://activemq.org/Spring+Support">JmsTemplate</a>.
+ * so it can be used with tools like <a href="http://camel.apache.org/activemq.html">Camel</a> and Spring's <a
+ * href="http://activemq.apache.org/spring-support.html">JmsTemplate and MessagListenerContainer</a>.
  * 
- * <b>NOTE</b> this implementation is only intended for use when sending
- * messages. It does not deal with pooling of consumers; for that look at a
- * library like <a href="http://jencks.org/">Jencks</a> such as in <a
- * href="http://jencks.org/Message+Driven+POJOs">this example</a>
+ * <b>NOTE</b> this implementation does not pool consumers. Pooling makes sense for seldom used
+ * resources that are expensive to create and can remain idle a minimal cost. like sessions and producers.
+ * Consumers on the other hand, will consume messages even when idle due to <a 
+ * href="http://activemq.apache.org/what-is-the-prefetch-limit-for.html">prefetch</a>.
+ * If you want to consider a consumer pool, configure an appropriate prefetch and a pool
+ * allocation strategy that is inclusive. Also note that message order guarantees will be
+ * lost across the consumer pool. 
  * 
  * @org.apache.xbean.XBean element="pooledConnectionFactory"
  * 
