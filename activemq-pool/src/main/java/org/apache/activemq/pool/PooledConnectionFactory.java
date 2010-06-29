@@ -49,8 +49,8 @@ import org.apache.commons.pool.impl.GenericObjectPoolFactory;
  * where they'll get held until the consumer is active again.
  * 
  * If you are creating a collection of consumers (for example, for multi-threaded message consumption), you
- * might want to consider using a lower value for each consumer (e.g. 10 or 20), to ensure that all messages
- * don't end up going to just one of the consumers. See this FAQ entry for more detail: 
+ * might want to consider using a lower prefetch value for each consumer (e.g. 10 or 20), to ensure that 
+ * all messages don't end up going to just one of the consumers. See this FAQ entry for more detail: 
  * http://activemq.apache.org/i-do-not-receive-messages-in-my-second-consumer.html
  * 
  * @org.apache.xbean.XBean element="pooledConnectionFactory"
