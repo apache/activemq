@@ -18,6 +18,7 @@
     <feature name="activemq" version="${activemq-version}">
         <feature version="1.1.1">servlet-2.5</feature>
         <bundle>mvn:org.apache.geronimo.specs/geronimo-annotation_1.0_spec/1.1.1</bundle>
+        <bundle>mvn:org.apache.geronimo.specs/geronimo-jta_1.1_spec/1.1.1</bundle> 
         <bundle>mvn:org.apache.geronimo.specs/geronimo-jms_1.1_spec/1.1.1</bundle> 
         <bundle>mvn:org.apache.geronimo.specs/geronimo-j2ee-management_1.1_spec/1.0.1</bundle> 
         <bundle>mvn:commons-pool/commons-pool/${commons-pool-version}</bundle> 
