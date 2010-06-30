@@ -37,6 +37,7 @@ public class SelectorTest extends TestCase {
 
         assertSelector(message, "(trueProp OR falseProp) AND trueProp", true);
         assertSelector(message, "(trueProp OR falseProp) AND falseProp", false);
+        assertSelector(message, "trueProp", true);
 
     }
 
