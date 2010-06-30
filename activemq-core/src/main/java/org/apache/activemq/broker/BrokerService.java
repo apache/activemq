@@ -981,7 +981,7 @@ public class BrokerService implements Service {
 
     public TaskRunnerFactory getTaskRunnerFactory() {
         if (this.taskRunnerFactory == null) {
-            this.taskRunnerFactory = new TaskRunnerFactory("BrokerService", getTaskRunnerPriority(), true, 1000,
+            this.taskRunnerFactory = new TaskRunnerFactory("BrokerService["+getBrokerName()+"] Task", getTaskRunnerPriority(), true, 1000,
                     isDedicatedTaskRunner());
         }
         return this.taskRunnerFactory;
