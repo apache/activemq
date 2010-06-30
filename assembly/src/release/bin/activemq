@@ -161,7 +161,7 @@ ACTIVEMQ_SSL_OPTS=""
 
 # ActiveMQ tries to shutdown the broker by jmx, 
 # after a specified number of seconds send SIGKILL
-ACTIVEMQ_KILL_MAXSECONDS="300"
+ACTIVEMQ_KILL_MAXSECONDS=30
 
 ## END:DEFAULTCONFIG
 
@@ -332,7 +332,7 @@ invokeJar(){
       echo "INFO: changing to user '$ACTIVEMQ_USER' to invoke java"
    fi
    # Execute java binary
-   if [ -n "$PIDFILE" ];then
+   if [ -n "$PIDFILE" ] && [ "$PIDFILE" != "stop" ];then
       $DOIT_PREFIX "cd $ACTIVEMQ_CONFIG_DIR; $JAVACMD $ACTIVEMQ_OPTS $ACTIVEMQ_DEBUG_OPTS \
               -Dactivemq.classpath=\"${ACTIVEMQ_CLASSPATH}\" \
               -Dactivemq.home=\"${ACTIVEMQ_HOME}\" \
@@ -343,7 +343,15 @@ invokeJar(){
               echo \$APID > $PIDFILE;
               echo \"INFO: pidfile created : '$PIDFILE' (pid '\$APID')\";exit \$RET" $DOIT_POSTFIX
       RET="$?"
-     else
+   elif [ -n "$PIDFILE" ] && [ "$PIDFILE" == "stop" ];then
+          $DOIT_PREFIX "cd $ACTIVEMQ_CONFIG_DIR; $JAVACMD $ACTIVEMQ_OPTS $ACTIVEMQ_DEBUG_OPTS \
+              -Dactivemq.classpath=\"${ACTIVEMQ_CLASSPATH}\" \
+              -Dactivemq.home=\"${ACTIVEMQ_HOME}\" \
+              -Dactivemq.base=\"${ACTIVEMQ_BASE}\" \
+              $ACTIVEMQ_CYGWIN \
+              -jar \"${ACTIVEMQ_HOME}/bin/run.jar\" $COMMANDLINE_ARGS &"
+      RET="$?"
+   else
       $DOIT_PREFIX "cd $ACTIVEMQ_CONFIG_DIR; $JAVACMD $ACTIVEMQ_OPTS $ACTIVEMQ_DEBUG_OPTS \
               -Dactivemq.classpath=\"${ACTIVEMQ_CLASSPATH}\" \
               -Dactivemq.home=\"${ACTIVEMQ_HOME}\" \
@@ -467,12 +475,11 @@ invoke_stop(){
     if ( checkRunning );then
        ACTIVEMQ_OPTS="$ACTIVEMQ_OPTS $ACTIVEMQ_SSL_OPTS"
        COMMANDLINE_ARGS="$COMMANDLINE_ARGS $ACTIVEMQ_SUNJMX_CONTROL"
-       invokeJar
+       invokeJar "stop"
        RET="$?"
        echo -n "INFO: Waiting at least $ACTIVEMQ_KILL_MAXSECONDS seconds for regular process termination of pid '$(cat $ACTIVEMQ_PIDFILE)' : "
        FOUND="0"
-#       for i in `seq 0 $ACTIVEMQ_KILL_MAXSECONDS` ;do
-        for i in {1..$ACTIVEMQ_KILL_MAXSECONDS} ;do
+       for ((i=1; i <= ACTIVEMQ_KILL_MAXSECONDS ; i++));do
          if (checkRunning);then
             sleep 1
             echo -n "."
@@ -483,6 +490,7 @@ invoke_stop(){
          fi
        done
        if [ "$FOUND" -ne "1" ];then
+         echo
          echo "INFO: Regular shutdown not successful,  sending SIGKILL to process with pid '$(cat $ACTIVEMQ_PIDFILE)'"
          kill -KILL $(cat $ACTIVEMQ_PIDFILE)
          RET="1"
