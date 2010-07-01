@@ -30,6 +30,18 @@
   <name>ActiveMQ :: Web</name>
   <description>Web Connector for REST API and Streamlets support</description>
   
+  <properties>
+    <activemq.osgi.import.pkg>
+      org.apache.activemq*;resolution:=optional,
+      org.springframework*;resolution:=optional,
+      sun.management*;resolution:=optional,
+      *
+    </activemq.osgi.import.pkg>
+    <activemq.osgi.export>
+      org.apache.activemq.web*;version=${project.version};-noimport:=true,
+    </activemq.osgi.export>
+  </properties>
+  
   <dependencies>
     <!-- activemq -->
     <dependency>

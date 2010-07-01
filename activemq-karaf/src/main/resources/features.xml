@@ -1,22 +1,11 @@
 <features>
     <repository>mvn:org.apache.felix.karaf/apache-felix-karaf/1.6.0/xml/features</repository>
-    <repository>mvn:org.ops4j.pax.web/features/0.7.2/xml/features</repository>
     
     <feature name="transaction" version="1.0.0"> 
         <bundle>mvn:org.apache.aries.transaction/org.apache.aries.transaction.manager/0.1-incubating</bundle>
-    </feature>     
-    
-    <feature name="spring" version="${spring-version}">
-        <bundle>mvn:org.springframework/spring-core/${spring-version}</bundle>
-        <bundle>mvn:org.springframework/spring-beans/${spring-version}</bundle>
-        <bundle>mvn:org.springframework/spring-aop/${spring-version}</bundle>
-        <bundle>mvn:org.springframework/spring-context/${spring-version}</bundle>
-        <bundle>mvn:org.springframework/spring-context-support/${spring-version}</bundle>
-        <bundle>mvn:org.springframework/spring-tx/${spring-version}</bundle> 
     </feature>
     
     <feature name="activemq" version="${activemq-version}">
-        <feature version="1.1.1">servlet-2.5</feature>
         <bundle>mvn:org.apache.geronimo.specs/geronimo-annotation_1.0_spec/1.1.1</bundle>
         <bundle>mvn:org.apache.geronimo.specs/geronimo-jta_1.1_spec/1.1.1</bundle> 
         <bundle>mvn:org.apache.geronimo.specs/geronimo-jms_1.1_spec/1.1.1</bundle> 
@@ -34,7 +23,6 @@
     </feature>
 
     <feature name="activemq-spring" version="${activemq-version}">
-        <feature version="${spring-version}">spring</feature>
         <feature version="1.2.0">spring-dm</feature> 
         <feature version="${activemq-version}">activemq</feature> 
         <bundle>mvn:org.apache.xbean/xbean-spring/${xbean-version}</bundle> 
@@ -48,9 +36,9 @@
         <bundle>mvn:org.apache.activemq/activemq-blueprint/${activemq-version}</bundle> 
     </feature>
     
-    <!-- do "features:install pax-web" before installing this one  -->
+    <!-- do "features:install war" before installing this one  -->
     <feature name="activemq-web-console" version="${activemq-version}">
-        <!-- <feature version="0.7.2">pax-web</feature> - it doesn't see 'war' protocol since they are installed as the same feature -->
+        <feature version="${activemq-version}">activemq-spring</feature> 
         <bundle>war:mvn:org.apache.activemq/activemq-web-console/${activemq-version}/war?Webapp-Context=activemq-web-console</bundle>
     </feature>
 </features>
