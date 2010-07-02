@@ -44,8 +44,6 @@
             WEB-INF/lib/activemq-pool*.jar
             WEB-INF/lib/activemq-console*.jar
             WEB-INF/lib/geronimo*.jar,
-            WEB-INF/lib/xml-apis*.jar,
-            WEB-INF/lib/xerces*.jar
             WEB-INF/lib/jetty*.jar
             WEB-INF/lib/servlet*.jar
           </packagingExcludes>
@@ -132,7 +130,7 @@
             <Embed-Directory>WEB-INF/lib</Embed-Directory>
             <Embed-Dependency>*;scope=compile|runtime</Embed-Dependency>
             <Embed-Transitive>true</Embed-Transitive>
-            <Import-Package>org.apache.activemq,org.xml.sax,javax.xml.parsers,javax.xml.transform,javax.naming,org.w3c.dom,*;resolution:=optional</Import-Package>
+            <Import-Package>org.xml.sax,javax.xml.parsers,javax.xml.transform,javax.naming,org.w3c.dom,org.apache.activemq,org.apache.activemq.util,org.apache.activemq.xbean,org.apache.activemq*,!org.apache.activemq.web*,!org.springframework*,*</Import-Package>
           </instructions>
         </configuration>
       </plugin>
