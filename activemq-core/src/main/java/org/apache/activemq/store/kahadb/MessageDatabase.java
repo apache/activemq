@@ -367,6 +367,7 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
      */
     private Location getFirstInProgressTxLocation() {
         Location l = null;
+        synchronized (inflightTransactions) {
         if (!inflightTransactions.isEmpty()) {
             l = inflightTransactions.values().iterator().next().get(0).getLocation();
         }
@@ -375,6 +376,7 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
             if (l==null || t.compareTo(l) <= 0) {
                 l = t;
             }
+        }
         }
         return l;
     }
@@ -746,7 +748,7 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
 
     protected void process(final KahaAddMessageCommand command, final Location location) throws IOException {
         if (command.hasTransactionInfo()) {
-            synchronized (indexMutex) {
+            synchronized (inflightTransactions) {
                 ArrayList<Operation> inflightTx = getInflightTx(command.getTransactionInfo(), location);
                 inflightTx.add(new AddOpperation(command, location));
             }
@@ -763,7 +765,7 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
 
     protected void process(final KahaRemoveMessageCommand command, final Location location) throws IOException {
         if (command.hasTransactionInfo()) {
-            synchronized (indexMutex) {
+            synchronized (inflightTransactions) {
                 ArrayList<Operation> inflightTx = getInflightTx(command.getTransactionInfo(), location);
                 inflightTx.add(new RemoveOpperation(command, location));
             }
@@ -801,16 +803,19 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
 
     protected void process(KahaCommitCommand command, Location location) throws IOException {
         TransactionId key = key(command.getTransactionInfo());
-        synchronized (indexMutex) {
-            ArrayList<Operation> inflightTx = inflightTransactions.remove(key);
+        ArrayList<Operation> inflightTx = null;
+        synchronized (inflightTransactions) {
+            inflightTx = inflightTransactions.remove(key);
             if (inflightTx == null) {
                 inflightTx = preparedTransactions.remove(key);
             }
-            if (inflightTx == null) {
-                return;
-            }
+        }
+        if (inflightTx == null) {
+            return;
+        }
 
-            final ArrayList<Operation> messagingTx = inflightTx;
+        final ArrayList<Operation> messagingTx = inflightTx;
+        synchronized (indexMutex) {
             pageFile.tx().execute(new Transaction.Closure<IOException>() {
                 public void execute(Transaction tx) throws IOException {
                     for (Operation op : messagingTx) {
@@ -822,7 +827,7 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
     }
 
     protected void process(KahaPrepareCommand command, Location location) {
-        synchronized (indexMutex) {
+        synchronized (inflightTransactions) {
             TransactionId key = key(command.getTransactionInfo());
             ArrayList<Operation> tx = inflightTransactions.remove(key);
             if (tx != null) {
@@ -832,7 +837,7 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
     }
 
     protected void process(KahaRollbackCommand command, Location location) {
-        synchronized (indexMutex) {
+        synchronized (inflightTransactions) {
             TransactionId key = key(command.getTransactionInfo());
             ArrayList<Operation> tx = inflightTransactions.remove(key);
             if (tx == null) {

@@ -47,5 +47,6 @@ public class KahaDBDurableTopicTest extends SimpleDurableTopicTest {
         answer.setDeleteAllMessagesOnStartup(true);
         answer.addConnector(uri);
         answer.setUseShutdownHook(false);
+        answer.setEnableStatistics(false);
     }
 }

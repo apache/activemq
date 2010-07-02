@@ -86,8 +86,7 @@ public class AMQ2149Test extends TestCase {
     
     public void createBroker(Configurer configurer) throws Exception {
         broker = new BrokerService();
-        AMQPersistenceAdapterFactory persistenceFactory = new AMQPersistenceAdapterFactory();
-        persistenceFactory.setDataDirectory(dataDirFile);
+        configurePersistenceAdapter(broker);
         
         SystemUsage usage = new SystemUsage();
         MemoryUsage memoryUsage = new MemoryUsage();
@@ -95,7 +94,7 @@ public class AMQ2149Test extends TestCase {
         usage.setMemoryUsage(memoryUsage);
         broker.setSystemUsage(usage);
         
-        broker.setPersistenceFactory(persistenceFactory);
+        
 
         broker.addConnector(BROKER_CONNECTOR);        
         broker.setBrokerName(getName());
@@ -106,6 +105,12 @@ public class AMQ2149Test extends TestCase {
         broker.start();
     }
     
+    protected void configurePersistenceAdapter(BrokerService brokerService) {
+        AMQPersistenceAdapterFactory persistenceFactory = new AMQPersistenceAdapterFactory();
+        persistenceFactory.setDataDirectory(dataDirFile);
+        brokerService.setPersistenceFactory(persistenceFactory);
+    }
+
     public void setUp() throws Exception {
         dataDirFile = new File("target/"+ getName());
         numtoSend = DEFAULT_NUM_TO_SEND;

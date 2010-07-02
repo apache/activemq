@@ -257,7 +257,11 @@ class DataFileAppender {
 	                    // Otherwise wait for the queuedCommand to be null
 	                    try {
 	                        while (nextWriteBatch != null) {
+	                            final long start = System.currentTimeMillis();
 	                            enqueueMutex.wait();
+	                            if (maxStat > 0) { 
+	                                System.err.println("Watiting for write to finish with full batch... millis: " + (System.currentTimeMillis() - start));
+	                            }
 	                        }
 	                    } catch (InterruptedException e) {
 	                        throw new InterruptedIOException();
@@ -295,6 +299,10 @@ class DataFileAppender {
 
     }
 
+    public static final String PROPERTY_LOG_WRITE_STAT_WINDOW = "org.apache.kahadb.journal.appender.WRITE_STAT_WINDOW";
+    public static final int maxStat = Integer.parseInt(System.getProperty(PROPERTY_LOG_WRITE_STAT_WINDOW, "0"));
+    int statIdx = 0;
+    int[] stats = new int[maxStat];
     /**
      * The async processing loop that writes to the data files and does the
      * force calls. Since the file sync() call is the slowest of all the
@@ -376,6 +384,17 @@ class DataFileAppender {
 
                 // Now do the 1 big write.
                 file.seek(wb.offset);
+                if (maxStat > 0) {
+                    if (statIdx < maxStat) {
+                        stats[statIdx++] = sequence.getLength();
+                    } else {
+                        long all = 0;
+                        for (;statIdx > 0;) {
+                            all+= stats[--statIdx];
+                        }
+                        System.err.println("Ave writeSize: " + all/maxStat);
+                    }
+                }
                 file.write(sequence.getData(), sequence.getOffset(), sequence.getLength());
                 
                 ReplicationTarget replicationTarget = journal.getReplicationTarget();

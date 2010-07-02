@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -84,10 +85,16 @@ import org.apache.kahadb.page.Transaction;
 public class KahaDBStore extends MessageDatabase implements PersistenceAdapter{
     static final Log LOG = LogFactory.getLog(KahaDBStore.class);
     private static final int MAX_ASYNC_JOBS = 10000;
+    
+    public static final String PROPERTY_CANCELED_TASK_MOD_METRIC = "org.apache.activemq.store.kahadb.CANCELED_TASK_MOD_METRIC";
+    public static final int cancelledTaskModMetric = Integer.parseInt(System.getProperty(PROPERTY_CANCELED_TASK_MOD_METRIC, "0"), 10);
+    public static final String PROPERTY_ASYNC_EXECUTOR_MAX_THREADS = "org.apache.activemq.store.kahadb.ASYNC_EXECUTOR_MAX_THREADS";
+    private static final int asyncExecutorMaxThreads = Integer.parseInt(System.getProperty(PROPERTY_ASYNC_EXECUTOR_MAX_THREADS, "1"), 10);;
+
     protected ExecutorService queueExecutor;
     protected ExecutorService topicExecutor;
-    protected final Map<AsyncJobKey, StoreQueueTask> asyncQueueMap = new HashMap<AsyncJobKey, StoreQueueTask>();
-    protected final Map<AsyncJobKey, StoreTopicTask> asyncTopicMap = new HashMap<AsyncJobKey, StoreTopicTask>();
+    protected final List<Map<AsyncJobKey, StoreTask>> asyncQueueMaps = new LinkedList<Map<AsyncJobKey, StoreTask>>();
+    protected final List<Map<AsyncJobKey, StoreTask>> asyncTopicMaps = new LinkedList<Map<AsyncJobKey, StoreTask>>();
     private final WireFormat wireFormat = new OpenWireFormat();
     private SystemUsage usageManager;
     private LinkedBlockingQueue<Runnable> asyncQueueJobQueue;
@@ -183,7 +190,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter{
         this.globalTopicSemaphore = new Semaphore(getMaxAsyncJobs());
         this.asyncQueueJobQueue = new LinkedBlockingQueue<Runnable>(getMaxAsyncJobs());
         this.asyncTopicJobQueue = new LinkedBlockingQueue<Runnable>(getMaxAsyncJobs());
-        this.queueExecutor = new ThreadPoolExecutor(1, 1, 0L, TimeUnit.MILLISECONDS, asyncQueueJobQueue,
+        this.queueExecutor = new ThreadPoolExecutor(1, asyncExecutorMaxThreads, 0L, TimeUnit.MILLISECONDS, asyncQueueJobQueue,
                 new ThreadFactory() {
                     public Thread newThread(Runnable runnable) {
                         Thread thread = new Thread(runnable, "ConcurrentQueueStoreAndDispatch");
@@ -191,7 +198,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter{
                         return thread;
                     }
                 });
-        this.topicExecutor = new ThreadPoolExecutor(1, 1, 0L, TimeUnit.MILLISECONDS, asyncTopicJobQueue,
+        this.topicExecutor = new ThreadPoolExecutor(1, asyncExecutorMaxThreads, 0L, TimeUnit.MILLISECONDS, asyncTopicJobQueue,
                 new ThreadFactory() {
                     public Thread newThread(Runnable runnable) {
                         Thread thread = new Thread(runnable, "ConcurrentTopicStoreAndDispatch");
@@ -208,21 +215,29 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter{
         if (this.globalQueueSemaphore != null) {
             this.globalQueueSemaphore.tryAcquire(this.maxAsyncJobs, 60, TimeUnit.SECONDS);
         }
-        synchronized (this.asyncQueueMap) {
-            for (StoreQueueTask task : this.asyncQueueMap.values()) {
-                task.cancel();
+        synchronized (this.asyncQueueMaps) {
+            for (Map<AsyncJobKey, StoreTask> m : asyncQueueMaps) {
+                synchronized (m) {
+                    for (StoreTask task : m.values()) {
+                        task.cancel();
+                    }
+                }
             }
-            this.asyncQueueMap.clear();
+            this.asyncQueueMaps.clear();
         }
         LOG.info("Stopping async topic tasks");
         if (this.globalTopicSemaphore != null) {
             this.globalTopicSemaphore.tryAcquire(this.maxAsyncJobs, 60, TimeUnit.SECONDS);
         }
-        synchronized (this.asyncTopicMap) {
-            for (StoreTopicTask task : this.asyncTopicMap.values()) {
-                task.cancel();
+        synchronized (this.asyncTopicMaps) {
+            for (Map<AsyncJobKey, StoreTask> m : asyncTopicMaps) {
+                synchronized (m) {
+                    for (StoreTask task : m.values()) {
+                        task.cancel();
+                    }
+                }
             }
-            this.asyncTopicMap.clear();
+            this.asyncTopicMaps.clear();
         }
         if (this.globalQueueSemaphore != null) {
             this.globalQueueSemaphore.drainPermits();
@@ -242,30 +257,30 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter{
 
     protected StoreQueueTask removeQueueTask(KahaDBMessageStore store, MessageId id) {
         StoreQueueTask task = null;
-        synchronized (this.asyncQueueMap) {
-            task = this.asyncQueueMap.remove(new AsyncJobKey(id, store.getDestination()));
+        synchronized (store.asyncTaskMap) {
+            task = (StoreQueueTask) store.asyncTaskMap.remove(new AsyncJobKey(id, store.getDestination()));
         }
         return task;
     }
 
     protected void addQueueTask(KahaDBMessageStore store, StoreQueueTask task) throws IOException {
-        synchronized (this.asyncQueueMap) {
-            this.asyncQueueMap.put(new AsyncJobKey(task.getMessage().getMessageId(), store.getDestination()), task);
+        synchronized (store.asyncTaskMap) {
+            store.asyncTaskMap.put(new AsyncJobKey(task.getMessage().getMessageId(), store.getDestination()), task);
         }
         this.queueExecutor.execute(task);
     }
 
-    protected StoreTopicTask removeTopicTask(KahaDBMessageStore store, MessageId id) {
+    protected StoreTopicTask removeTopicTask(KahaDBTopicMessageStore store, MessageId id) {
         StoreTopicTask task = null;
-        synchronized (this.asyncTopicMap) {
-            task = this.asyncTopicMap.remove(new AsyncJobKey(id, store.getDestination()));
+        synchronized (store.asyncTaskMap) {
+            task = (StoreTopicTask) store.asyncTaskMap.remove(new AsyncJobKey(id, store.getDestination()));
         }
         return task;
     }
 
-    protected void addTopicTask(KahaDBMessageStore store, StoreTopicTask task) throws IOException {
-        synchronized (this.asyncTopicMap) {
-            this.asyncTopicMap.put(new AsyncJobKey(task.getMessage().getMessageId(), store.getDestination()), task);
+    protected void addTopicTask(KahaDBTopicMessageStore store, StoreTopicTask task) throws IOException {
+        synchronized (store.asyncTaskMap) {
+            store.asyncTaskMap.put(new AsyncJobKey(task.getMessage().getMessageId(), store.getDestination()), task);
         }
         this.topicExecutor.execute(task);
     }
@@ -275,9 +290,12 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter{
     }
 
     public class KahaDBMessageStore extends AbstractMessageStore {
+        protected final Map<AsyncJobKey, StoreTask> asyncTaskMap = new HashMap<AsyncJobKey, StoreTask>();
         protected KahaDestination dest;
         private final int maxAsyncJobs;
         private final Semaphore localDestinationSemaphore;
+        
+        double doneTasks, canceledTasks = 0;
 
         public KahaDBMessageStore(ActiveMQDestination destination) {
             super(destination);
@@ -309,8 +327,8 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter{
             if (isConcurrentStoreAndDispatchQueues()) {
                 AsyncJobKey key = new AsyncJobKey(ack.getLastMessageId(), getDestination());
                 StoreQueueTask task = null;
-                synchronized (asyncQueueMap) {
-                    task = asyncQueueMap.get(key);
+                synchronized (asyncTaskMap) {
+                    task = (StoreQueueTask) asyncTaskMap.get(key);
                 }
                 if (task != null) {
                     if (!task.cancel()) {
@@ -324,8 +342,8 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter{
                         }
                         removeMessage(context, ack);
                     } else {
-                        synchronized (asyncQueueMap) {
-                            asyncQueueMap.remove(key);
+                        synchronized (asyncTaskMap) {
+                            asyncTaskMap.remove(key);
                         }
                     }
                 } else {
@@ -545,6 +563,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter{
         public KahaDBTopicMessageStore(ActiveMQTopic destination) throws IOException {
             super(destination);
             this.subscriptionCount.set(getAllSubscriptions().length);
+            asyncTopicMaps.add(asyncTaskMap);
         }
 
         @Override
@@ -566,15 +585,15 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter{
             if (isConcurrentStoreAndDispatchTopics()) {
                 AsyncJobKey key = new AsyncJobKey(messageId, getDestination());
                 StoreTopicTask task = null;
-                synchronized (asyncTopicMap) {
-                    task = asyncTopicMap.get(key);
+                synchronized (asyncTaskMap) {
+                    task = (StoreTopicTask) asyncTaskMap.get(key);
                 }
                 if (task != null) {
                     if (task.addSubscriptionKey(subscriptionKey)) {
                         removeTopicTask(this, messageId);
                         if (task.cancel()) {
-                            synchronized (asyncTopicMap) {
-                                asyncTopicMap.remove(key);
+                            synchronized (asyncTaskMap) {
+                                asyncTaskMap.remove(key);
                             }
                         }
                     }
@@ -994,8 +1013,12 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter{
             return destination.getPhysicalName() + "-" + id;
         }
     }
-
-    class StoreQueueTask implements Runnable {
+    
+    interface StoreTask {
+        public boolean cancel();
+    }
+    
+    class StoreQueueTask implements Runnable, StoreTask {
         protected final Message message;
         protected final ConnectionContext context;
         protected final KahaDBMessageStore store;
@@ -1044,11 +1067,15 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter{
         }
 
         public void run() {
+            this.store.doneTasks++;
             try {
                 if (this.done.compareAndSet(false, true)) {
                     this.store.addMessage(context, message);
                     removeQueueTask(this.store, this.message.getMessageId());
                     this.future.complete();
+                } else if (cancelledTaskModMetric > 0 && this.store.canceledTasks++ % cancelledTaskModMetric == 0) {
+                    System.err.println(this.store.dest.getName() + " cancelled: " +  (this.store.canceledTasks/this.store.doneTasks) * 100);
+                    this.store.canceledTasks = this.store.doneTasks = 0;
                 }
             } catch (Exception e) {
                 this.future.setException(e);
@@ -1128,6 +1155,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter{
 
         @Override
         public void run() {
+            this.store.doneTasks++;
             try {
                 if (this.done.compareAndSet(false, true)) {
                     this.topicStore.addMessage(context, message);
@@ -1140,6 +1168,9 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter{
                     }
                     removeTopicTask(this.topicStore, this.message.getMessageId());
                     this.future.complete();
+                } else if (cancelledTaskModMetric > 0 && this.store.canceledTasks++ % cancelledTaskModMetric == 0) {
+                    System.err.println(this.store.dest.getName() + " cancelled: " +  (this.store.canceledTasks/this.store.doneTasks) * 100);
+                    this.store.canceledTasks = this.store.doneTasks = 0;
                 }
             } catch (Exception e) {
                 this.future.setException(e);
