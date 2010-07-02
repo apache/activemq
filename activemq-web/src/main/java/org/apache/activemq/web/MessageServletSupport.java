@@ -305,7 +305,9 @@ public abstract class MessageServletSupport extends HttpServlet {
         } else {
             isTopic = isTopic(request);
         }
-        destinationName = destinationName.substring(destinationName.indexOf("://") + 3);
+        if (destinationName.indexOf("://") != -1) {
+            destinationName = destinationName.substring(destinationName.indexOf("://") + 3);
+        }
 
         if (destinationOptions != null) {
             destinationName += "?" + destinationOptions;
