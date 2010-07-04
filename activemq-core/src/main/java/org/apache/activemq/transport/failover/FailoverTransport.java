@@ -17,10 +17,16 @@
 
 package org.apache.activemq.transport.failover;
 
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.InterruptedIOException;
 import java.net.InetAddress;
+import java.net.MalformedURLException;
 import java.net.URI;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -31,7 +37,6 @@ import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicReference;
-
 import org.apache.activemq.broker.SslContext;
 import org.apache.activemq.command.Command;
 import org.apache.activemq.command.ConnectionControl;
@@ -113,6 +118,8 @@ public class FailoverTransport implements CompositeTransport {
     private boolean reconnectSupported=true;
     // remember for reconnect thread
     private SslContext brokerSslContext;
+    private String updateURIsURL = null;
+    private boolean rebalanceUpdateURIs=true;
 
     public FailoverTransport() throws InterruptedIOException {
         brokerSslContext = SslContext.getCurrentSslContext();
@@ -257,12 +264,15 @@ public class FailoverTransport implements CompositeTransport {
                 }
             }
         }
-        String connectedStr = control.getConnectedBrokers();
-        if (connectedStr != null) {
-            connectedStr = connectedStr.trim();
-            if (connectedStr.length() > 0 && isUpdateURIsSupported()) {
+        processNewTransports(control.isRebalanceConnection(), control.getConnectedBrokers());
+    }
+
+    private final void processNewTransports(boolean rebalance, String newTransports) {
+        if (newTransports != null) {
+            newTransports = newTransports.trim();
+            if (newTransports.length() > 0 && isUpdateURIsSupported()) {
                 List<URI> list = new ArrayList<URI>();
-                StringTokenizer tokenizer = new StringTokenizer(connectedStr, ",");
+                StringTokenizer tokenizer = new StringTokenizer(newTransports, ",");
                 while (tokenizer.hasMoreTokens()) {
                     String str = tokenizer.nextToken();
                     try {
@@ -274,9 +284,9 @@ public class FailoverTransport implements CompositeTransport {
                 }
                 if (list.isEmpty() == false) {
                     try {
-                        updateURIs(control.isRebalanceConnection(), list.toArray(new URI[list.size()]));
+                        updateURIs(rebalance, list.toArray(new URI[list.size()]));
                     } catch (IOException e) {
-                        LOG.error("Failed to update transport URI's from: " + connectedStr, e);
+                        LOG.error("Failed to update transport URI's from: " + newTransports, e);
                     }
                 }
 
@@ -752,6 +762,40 @@ public class FailoverTransport implements CompositeTransport {
         Exception failure = null;
         synchronized (reconnectMutex) {
 
+            // If updateURIsURL is specified, read the file and add any new
+            // transport URI's to this FailOverTransport. 
+            // Note: Could track file timestamp to avoid unnecessary reading.
+            String fileURL = getUpdateURIsURL();
+            if (fileURL != null) {
+                BufferedReader in = null;
+                String newUris = null;
+                StringBuffer buffer = new StringBuffer();
+
+                try {
+                    in = new BufferedReader(getURLStream(fileURL));
+                    while (true) {
+                        String line = in.readLine();
+                        if (line == null) {
+                            break;
+                        }
+                        buffer.append(line);
+                    }
+                    newUris = buffer.toString();
+                } catch (IOException ioe) {
+                    LOG.error("Failed to read updateURIsURL: " + fileURL, ioe);
+                } finally {
+                    if (in != null) {
+                        try {
+                            in.close();
+                        } catch (IOException ioe) {
+                            // ignore
+                        }
+                    }
+                }
+                
+                processNewTransports(isRebalanceUpdateURIs(), newUris);
+            }
+
             if (disposed || connectionFailure != null) {
                 reconnectMutex.notifyAll();
             }
@@ -1006,6 +1050,34 @@ public class FailoverTransport implements CompositeTransport {
             }
         }
     }
+    
+    /**
+     * @return the updateURIsURL
+     */
+    public String getUpdateURIsURL() {
+        return this.updateURIsURL;
+    }
+
+    /**
+     * @param updateURIsURL the updateURIsURL to set
+     */
+    public void setUpdateURIsURL(String updateURIsURL) {
+        this.updateURIsURL = updateURIsURL;
+    }
+    
+    /**
+     * @return the rebalanceUpdateURIs
+     */
+    public boolean isRebalanceUpdateURIs() {
+        return this.rebalanceUpdateURIs;
+    }
+
+    /**
+     * @param rebalanceUpdateURIs the rebalanceUpdateURIs to set
+     */
+    public void setRebalanceUpdateURIs(boolean rebalanceUpdateURIs) {
+        this.rebalanceUpdateURIs = rebalanceUpdateURIs;
+    }
 
     public int getReceiveCounter() {
         Transport transport = connectedTransport.get();
@@ -1042,6 +1114,21 @@ public class FailoverTransport implements CompositeTransport {
         }catch(IOException e) {
             result = true;
             LOG.error("Failed to verify URI " + newURI + " already known: " + e);
+        }
+        return result;
+    }
+    
+    private InputStreamReader getURLStream(String path) throws IOException {
+        InputStreamReader result = null;
+        URL url = null;
+        try {
+            url = new URL(path);
+            result = new InputStreamReader(url.openStream());
+        } catch (MalformedURLException e) {
+            // ignore - it could be a path to a a local file
+        }
+        if (result == null) {
+            result = new FileReader(path);
         }
         return result;
     }
