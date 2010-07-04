@@ -88,6 +88,7 @@ public class PolicyEntry extends DestinationMapEntry {
     private int storeUsageHighWaterMark = 100;
     private SlowConsumerStrategy slowConsumerStrategy;
     private boolean prioritizedMessages;
+    private boolean allConsumersExclusiveByDefault;
     
    
     public void configure(Broker broker,Queue queue) {
@@ -111,6 +112,7 @@ public class PolicyEntry extends DestinationMapEntry {
         queue.setLazyDispatch(isLazyDispatch());
         queue.setTimeBeforeDispatchStarts(getTimeBeforeDispatchStarts());
         queue.setConsumersBeforeDispatchStarts(getConsumersBeforeDispatchStarts());
+        queue.setAllConsumersExclusiveByDefault(isAllConsumersExclusiveByDefault());
     }
 
     public void configure(Broker broker,Topic topic) {
@@ -749,6 +751,14 @@ public class PolicyEntry extends DestinationMapEntry {
 
     public void setPrioritizedMessages(boolean prioritizedMessages) {
         this.prioritizedMessages = prioritizedMessages;
+    }
+
+    public void setAllConsumersExclusiveByDefault(boolean allConsumersExclusiveByDefault) {
+        this.allConsumersExclusiveByDefault = allConsumersExclusiveByDefault;
+    }
+
+    public boolean isAllConsumersExclusiveByDefault() {
+        return allConsumersExclusiveByDefault;
     }
 
 }

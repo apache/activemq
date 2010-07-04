@@ -116,6 +116,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
     private int consumersBeforeDispatchStarts = 0;
     private CountDownLatch consumersBeforeStartsLatch;
     private final AtomicLong pendingWakeups = new AtomicLong();
+    private boolean allConsumersExclusiveByDefault = false;
     
     private final Runnable sendMessagesWaitingForSpaceTask = new Runnable() {
         public void run() {
@@ -368,7 +369,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                 }
 
                 addToConsumerList(sub);
-                if (sub.getConsumerInfo().isExclusive()) {
+                if (sub.getConsumerInfo().isExclusive() || isAllConsumersExclusiveByDefault()) {
                     Subscription exclusiveConsumer = dispatchSelector.getExclusiveConsumer();
                     if (exclusiveConsumer == null) {
                         exclusiveConsumer = sub;
@@ -428,6 +429,16 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                         }
                         dispatchSelector.setExclusiveConsumer(exclusiveConsumer);
                     }
+                } else if (isAllConsumersExclusiveByDefault()) {
+                    Subscription exclusiveConsumer = null;
+                    for (Subscription s : consumers) {
+                        if (exclusiveConsumer == null 
+                                || s.getConsumerInfo().getPriority() > exclusiveConsumer
+                                .getConsumerInfo().getPriority()) {
+                            exclusiveConsumer = s;
+                                }
+                    }
+                    dispatchSelector.setExclusiveConsumer(exclusiveConsumer);
                 }
                 ConsumerId consumerId = sub.getConsumerInfo().getConsumerId();
                 getMessageGroupOwners().removeConsumer(consumerId);
@@ -880,6 +891,15 @@ public class Queue extends BaseDestination implements Task, UsageListener {
     public void setConsumersBeforeDispatchStarts(int consumersBeforeDispatchStarts) {
         this.consumersBeforeDispatchStarts = consumersBeforeDispatchStarts;
     }
+
+    public void setAllConsumersExclusiveByDefault(boolean allConsumersExclusiveByDefault) {
+        this.allConsumersExclusiveByDefault = allConsumersExclusiveByDefault;
+    }
+
+    public boolean isAllConsumersExclusiveByDefault() {
+        return allConsumersExclusiveByDefault;
+    }
+
 
     // Implementation methods
     // -------------------------------------------------------------------------
