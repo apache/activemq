@@ -42,6 +42,8 @@ public interface DispatchPolicy {
      * Once a message has been locked, it does not need to be dispatched to any 
      * further subscriptions.
      * 
+     * The list will be safe to iterate over when this method is called
+     * 
      * @return true if at least one consumer was dispatched or false if there are no active subscriptions that could be dispatched
      */
     boolean dispatch(MessageReference node, MessageEvaluationContext msgContext, List<Subscription> consumers) throws Exception;
