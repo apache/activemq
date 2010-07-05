@@ -33,8 +33,11 @@
   <properties>
     <activemq.osgi.import.pkg>
       org.apache.activemq*;resolution:=optional,
+      org.apache.camel*;resolution:=optional,
+      org.eclipse.jetty*;resolution:=optional,
       org.springframework*;resolution:=optional,
-      sun.management*;resolution:=optional,
+      com.thoughtworks.xstream*;resolution:=optional,
+      com.sun*;resolution:=optional,
       *
     </activemq.osgi.import.pkg>
     <activemq.osgi.export>

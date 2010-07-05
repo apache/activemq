@@ -60,6 +60,10 @@
     <!-- do "features:install war" before installing this one  -->
     <feature name="activemq-web-console" version="${activemq-version}">
         <feature version="${activemq-version}">activemq-spring</feature> 
+        <bundle>mvn:org.springframework/spring-web/${spring-version}</bundle>
+        <bundle>mvn:org.springframework/spring-webmvc/${spring-version}</bundle>
+        <bundle>mvn:org.apache.activemq/activemq-camel/${activemq-version}</bundle>
+        <bundle>mvn:org.apache.activemq/activemq-web/${activemq-version}</bundle>
         <bundle>war:mvn:org.apache.activemq/activemq-web-console/${activemq-version}/war?Webapp-Context=activemq-web-console</bundle>
     </feature>
 </features>
