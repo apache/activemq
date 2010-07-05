@@ -90,9 +90,9 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
     private static final Log LOG = LogFactory.getLog(MessageDatabase.class);
     private static final int DEFAULT_DATABASE_LOCKED_WAIT_DELAY = 10 * 1000;
 
-    public static final int CLOSED_STATE = 1;
-    public static final int OPEN_STATE = 2;
-    private static final long NOT_ACKED = -1;
+     static final int CLOSED_STATE = 1;
+     static final int OPEN_STATE = 2;
+     static final long NOT_ACKED = -1;
 
 
     protected class Metadata {
@@ -170,7 +170,6 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
     boolean enableIndexWriteAsync = false;
     int setIndexWriteBatchSize = PageFile.DEFAULT_WRITE_BATCH_SIZE; 
     
-    protected AtomicBoolean started = new AtomicBoolean();
     protected AtomicBoolean opened = new AtomicBoolean();
     private LockFile lockFile;
     private boolean ignoreMissingJournalfiles = false;

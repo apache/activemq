@@ -863,7 +863,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter{
     }
 
     public long size() {
-        if (!started.get()) {
+        if (!isStarted()) {
             return 0;
         }
         try {
