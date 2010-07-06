@@ -152,7 +152,7 @@
         <include>${pom.groupId}:activemq-jaas</include>
         <include>${pom.groupId}:kahadb</include>
         <include>org.apache.activemq.protobuf:activemq-protobuf</include>
-        <include>org.apache.geronimo.specs:geronimo-j2ee-management_1.0_spec</include>
+        <include>org.apache.geronimo.specs:geronimo-j2ee-management_1.1_spec</include>
         <include>org.apache.geronimo.specs:geronimo-jms_1.1_spec</include>
         <include>org.apache.geronimo.specs:geronimo-jta_1.0.1B_spec</include>
         <include>${pom.groupId}:activemq-web</include>

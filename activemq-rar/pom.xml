@@ -211,7 +211,7 @@
     </dependency>
     <dependency>
       <groupId>org.apache.geronimo.specs</groupId>
-      <artifactId>geronimo-j2ee-management_1.0_spec</artifactId>
+      <artifactId>geronimo-j2ee-management_1.1_spec</artifactId>
     </dependency>
     <dependency>
       <groupId>log4j</groupId>

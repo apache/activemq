@@ -81,7 +81,7 @@
                   <include>${project.groupId}:kahadb</include>
                   <include>org.apache.geronimo.specs:geronimo-jms_1.1_spec</include>
                   <include>org.apache.geronimo.specs:geronimo-jta_1.0.1B_spec</include>
-                  <include>org.apache.geronimo.specs:geronimo-j2ee-management_1.0_spec</include>
+                  <include>org.apache.geronimo.specs:geronimo-j2ee-management_1.1_spec</include>
                   <include>org.apache.geronimo.specs:geronimo-annotation_1.0_spec</include>
                   <include>commons-logging:commons-logging-api</include>
                 </includes>
