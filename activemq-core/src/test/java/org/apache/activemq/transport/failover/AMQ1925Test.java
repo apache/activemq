@@ -32,6 +32,7 @@ import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.jms.TextMessage;
+import javax.jms.TransactionRolledBackException;
 
 import junit.framework.TestCase;
 
@@ -263,11 +264,12 @@ public class AMQ1925Test extends TestCase implements ExceptionListener {
 		MessageConsumer consumer = session.createConsumer(session
 				.createQueue(QUEUE_NAME));
 
+		boolean restartDone = false;
 		for (int i = 0; i < MESSAGE_COUNT; i++) {
 			Message message = consumer.receive(500);
 			assertNotNull(message);
 
-			if (i == 222) {
+			if (i == 222 && !restartDone) {
 				// Simulate broker failure & restart
 				bs.stop();
 				bs = new BrokerService();
@@ -275,10 +277,16 @@ public class AMQ1925Test extends TestCase implements ExceptionListener {
 				bs.setUseJmx(true);
 				bs.addConnector(tcpUri);
 				bs.start();
+				restartDone = true;
 			}
 
 			assertEquals(i, message.getIntProperty(PROPERTY_MSG_NUMBER));
-			session.commit();
+			try {
+			    session.commit();
+			} catch (TransactionRolledBackException expectedOnOccasion) {
+			    log.info("got rollback: "  + expectedOnOccasion);
+			    i--;
+			}
 		}
 		assertNull(consumer.receive(500));
 
