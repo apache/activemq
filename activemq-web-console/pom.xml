@@ -38,23 +38,12 @@
         <version>2.1-beta-1</version>
         <configuration>
           <packagingExcludes>
-            WEB-INF/lib/activation*.jar,
-            WEB-INF/lib/activeio*.jar,
-            WEB-INF/lib/activemq-core*.jar,
-            WEB-INF/lib/activemq-pool*.jar
-            WEB-INF/lib/activemq-console*.jar
-            WEB-INF/lib/geronimo*.jar,
-            WEB-INF/lib/jetty*.jar
+            WEB-INF/lib/jetty*.jar,
             WEB-INF/lib/servlet*.jar
           </packagingExcludes>
             <archive>
             <manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>
-          </archive>
-<!--           <archive>
-            <manifest>
-              <addClasspath>true</addClasspath>
-            </manifest>
-          </archive>  -->          
+          </archive>          
         </configuration>
       </plugin>
       <plugin>

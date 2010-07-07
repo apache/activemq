@@ -1,4 +1,4 @@
-<features>
+<features name="activemq-${activemq-version}">
     <repository>mvn:org.apache.felix.karaf/apache-felix-karaf/1.6.0/xml/features</repository>
     
     <feature name="transaction" version="1.0.0"> 
