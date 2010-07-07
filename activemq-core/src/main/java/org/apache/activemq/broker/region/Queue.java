@@ -198,7 +198,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                 }
             } catch (InterruptedException e) {
                 if (LOG.isDebugEnabled()) {
-                    LOG.debug("Producer Flow Control Timeout Task is stopping");
+                    LOG.debug(getName() + "P roducer Flow Control Timeout Task is stopping");
                 }
             }
         }
@@ -548,6 +548,12 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                     // for space.
                     final ProducerBrokerExchange producerExchangeCopy = producerExchange.copy();
                     synchronized (messagesWaitingForSpace) {
+                     // Start flow control timeout task
+                        // Prevent trying to start it multiple times
+                        if (!flowControlTimeoutTask.isAlive()) {
+                            flowControlTimeoutTask.setName(getName()+" Producer Flow Control Timeout Task");
+                            flowControlTimeoutTask.start();
+                        }
                         messagesWaitingForSpace.put(message.getMessageId(), new Runnable() {
                             public void run() {
 
@@ -804,15 +810,6 @@ public class Queue extends BaseDestination implements Task, UsageListener {
         if (getExpireMessagesPeriod() > 0) {
             scheduler.schedualPeriodically(expireMessagesTask, getExpireMessagesPeriod());
         }
-
-        flowControlTimeoutTask.setName("Producer Flow Control Timeout Task");
-
-        // Start flow control timeout task
-        // Prevent trying to start it multiple times
-        if (!flowControlTimeoutTask.isAlive()) {
-            flowControlTimeoutTask.start();
-        }
-
         doPageIn(false);
     }
 
