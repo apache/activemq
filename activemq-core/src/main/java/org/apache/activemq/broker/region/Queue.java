@@ -1677,23 +1677,19 @@ public class Queue extends BaseDestination implements Task, UsageListener {
             }
             // Only add new messages, not already pagedIn to avoid multiple
             // dispatch attempts
-            pagedInMessagesLock.readLock().lock();
+            pagedInMessagesLock.writeLock().lock();
             try {
                 resultList = new ArrayList<QueueMessageReference>(result.size());
                 for (QueueMessageReference ref : result) {
-                    if (!pagedInMessages.containsKey(ref.getMessageId())) {
-                        pagedInMessagesLock.readLock().unlock();
-                        pagedInMessagesLock.writeLock().lock();
+                    if (!pagedInMessages.containsKey(ref.getMessageId())) {            
                         pagedInMessages.put(ref.getMessageId(), ref);
-                        pagedInMessagesLock.readLock().lock();
-                        pagedInMessagesLock.writeLock().unlock();
                         resultList.add(ref);
                     } else {
                         ref.decrementReferenceCount();
                     }
                 }
             } finally {
-                pagedInMessagesLock.readLock().unlock();
+                pagedInMessagesLock.writeLock().unlock();
             }
         } else {
             // Avoid return null list, if condition is not validated
