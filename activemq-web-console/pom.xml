@@ -119,7 +119,7 @@
             <Embed-Directory>WEB-INF/lib</Embed-Directory>
             <Embed-Dependency>*;scope=compile|runtime</Embed-Dependency>
             <Embed-Transitive>true</Embed-Transitive>
-            <Import-Package>org.xml.sax,org.xml.sax.helpers,javax.xml.parsers,javax.xml.transform,javax.management.remote,javax.naming,org.w3c.dom,org.apache.activemq,org.apache.activemq.util,org.apache.activemq.xbean,org.apache.activemq*,org.springframework*,org.springframework.context.support,org.springframework.beans.factory.config,org.springframework.core.io,org.springframework.beans.factory,javax.servlet.jsp,javax.servlet.jsp.tagext,*</Import-Package>
+            <Import-Package>org.xml.sax,org.xml.sax.helpers,javax.xml.parsers,javax.xml.transform,javax.management.remote,javax.naming,org.w3c.dom,javax.servlet*,javax.servlet.jsp,javax.servlet.jsp.tagext,javax.management,javax.management.openmbean,javax.net</Import-Package>
           </instructions>
         </configuration>
       </plugin>

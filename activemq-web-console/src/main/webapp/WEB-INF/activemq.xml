@@ -26,44 +26,18 @@
   http://www.springframework.org/schema/osgi http://www.springframework.org/schema/osgi/spring-osgi.xsd">
 
 
-  <broker useJmx="true" xmlns="http://activemq.apache.org/schema/core">
+  <broker  brokerName="web-console" useJmx="true" xmlns="http://activemq.apache.org/schema/core">
 
-    <!-- In ActiveMQ 4, you can setup destination policies -->
-    <destinationPolicy>
-      <policyMap>
-        <policyEntries>
-
-          <policyEntry topic="FOO.>">
-            <dispatchPolicy>
-              <strictOrderDispatchPolicy/>
-            </dispatchPolicy>
-            <subscriptionRecoveryPolicy>
-              <lastImageSubscriptionRecoveryPolicy/>
-            </subscriptionRecoveryPolicy>
-          </policyEntry>
-
-        </policyEntries>
-      </policyMap>
-    </destinationPolicy>
-
-    <networkConnectors>
-      <!-- by default just auto discover the other brokers -->
-      <networkConnector name="defaultNetwork" uri="multicast://default"/>
-      <!--
-      <networkConnector name="host1 and host2" uri="static://(tcp://host1:61616,tcp://host2:61616)" failover="true"/>
-      -->
-    </networkConnectors>
+    <persistenceAdapter>
+      <kahaDB directory="${activemq.base}/data/kahadb"/>
+    </persistenceAdapter>
 
     <transportConnectors>
-      <transportConnector name="openwire" uri="tcp://localhost:61616" discoveryUri="multicast://default"/>
+      <transportConnector name="openwire" uri="tcp://localhost:61616"/>
       <transportConnector name="stomp" uri="stomp://localhost:61613"/>
-      <transportConnector name="xmpp" uri="xmpp://localhost:61222"/>
     </transportConnectors>
 
   </broker>
-
-  <!-- lets create a command agent to respond to admin commands over JMS or XMPP on the ActiveMQ.Agent topic -->
-  <commandAgent xmlns="http://activemq.apache.org/schema/core"/>
 
 </beans>
         <!-- END SNIPPET: xbean -->
