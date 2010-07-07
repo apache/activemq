@@ -389,7 +389,8 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
             // operations... but for now we must
             // externally synchronize...
             Location location;
-            synchronized (indexMutex) {
+            indexLock.readLock().lock();
+            try {
                 location = pageFile.tx().execute(new Transaction.CallableClosure<Location, IOException>() {
                     public Location execute(Transaction tx) throws IOException {
                         StoredDestination sd = getStoredDestination(dest, tx);
@@ -400,6 +401,8 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
                         return sd.orderIndex.get(tx, sequence).location;
                     }
                 });
+            }finally {
+                indexLock.readLock().unlock();
             }
             if (location == null) {
                 return null;
@@ -411,7 +414,8 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
         public int getMessageCount() throws IOException {
             try {
                 lockAsyncJobQueue();
-                synchronized (indexMutex) {
+                indexLock.readLock().lock();
+                try {
                     return pageFile.tx().execute(new Transaction.CallableClosure<Integer, IOException>() {
                         public Integer execute(Transaction tx) throws IOException {
                             // Iterate through all index entries to get a count
@@ -427,6 +431,8 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
                             return rc;
                         }
                     });
+                }finally {
+                    indexLock.readLock().unlock();
                 }
             } finally {
                 unlockAsyncJobQueue();
@@ -435,7 +441,8 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
 
         @Override
         public boolean isEmpty() throws IOException {
-            synchronized (indexMutex) {
+            indexLock.readLock().lock();
+            try {
                 return pageFile.tx().execute(new Transaction.CallableClosure<Boolean, IOException>() {
                     public Boolean execute(Transaction tx) throws IOException {
                         // Iterate through all index entries to get a count of
@@ -444,11 +451,14 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
                         return sd.locationIndex.isEmpty(tx);
                     }
                 });
+            }finally {
+                indexLock.readLock().unlock();
             }
         }
 
         public void recover(final MessageRecoveryListener listener) throws Exception {
-            synchronized (indexMutex) {
+            indexLock.readLock().lock();
+            try {
                 pageFile.tx().execute(new Transaction.Closure<Exception>() {
                     public void execute(Transaction tx) throws Exception {
                         StoredDestination sd = getStoredDestination(dest, tx);
@@ -459,13 +469,16 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
                         }
                     }
                 });
+            }finally {
+                indexLock.readLock().unlock();
             }
         }
 
         long cursorPos = 0;
 
         public void recoverNextMessages(final int maxReturned, final MessageRecoveryListener listener) throws Exception {
-            synchronized (indexMutex) {
+            indexLock.readLock().lock();
+            try {
                 pageFile.tx().execute(new Transaction.Closure<Exception>() {
                     public void execute(Transaction tx) throws Exception {
                         StoredDestination sd = getStoredDestination(dest, tx);
@@ -486,6 +499,8 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
                         }
                     }
                 });
+            }finally {
+                indexLock.readLock().unlock();
             }
         }
 
@@ -503,13 +518,16 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
                 // operations... but for now we must
                 // externally synchronize...
                 Long location;
-                synchronized (indexMutex) {
+                indexLock.readLock().lock();
+                try {
                     location = pageFile.tx().execute(new Transaction.CallableClosure<Long, IOException>() {
                         public Long execute(Transaction tx) throws IOException {
                             StoredDestination sd = getStoredDestination(dest, tx);
                             return sd.messageIdIndex.get(tx, key);
                         }
                     });
+                }finally {
+                    indexLock.readLock().unlock();
                 }
                 if (location != null) {
                     cursorPos = location + 1;
@@ -638,7 +656,8 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
         public SubscriptionInfo[] getAllSubscriptions() throws IOException {
 
             final ArrayList<SubscriptionInfo> subscriptions = new ArrayList<SubscriptionInfo>();
-            synchronized (indexMutex) {
+            indexLock.readLock().lock();
+            try {
                 pageFile.tx().execute(new Transaction.Closure<IOException>() {
                     public void execute(Transaction tx) throws IOException {
                         StoredDestination sd = getStoredDestination(dest, tx);
@@ -652,6 +671,8 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
                         }
                     }
                 });
+            }finally {
+                indexLock.readLock().unlock();
             }
 
             SubscriptionInfo[] rc = new SubscriptionInfo[subscriptions.size()];
@@ -661,7 +682,8 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
 
         public SubscriptionInfo lookupSubscription(String clientId, String subscriptionName) throws IOException {
             final String subscriptionKey = subscriptionKey(clientId, subscriptionName);
-            synchronized (indexMutex) {
+            indexLock.readLock().lock();
+            try {
                 return pageFile.tx().execute(new Transaction.CallableClosure<SubscriptionInfo, IOException>() {
                     public SubscriptionInfo execute(Transaction tx) throws IOException {
                         StoredDestination sd = getStoredDestination(dest, tx);
@@ -673,13 +695,16 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
                                 .getSubscriptionInfo().newInput()));
                     }
                 });
+            }finally {
+                indexLock.readLock().unlock();
             }
         }
 
         public int getMessageCount(String clientId, String subscriptionName) throws IOException {
             final String subscriptionKey = subscriptionKey(clientId, subscriptionName);
             final SubscriptionInfo info = lookupSubscription(clientId, subscriptionName);
-            synchronized (indexMutex) {
+            indexLock.readLock().lock();
+            try {
                 return pageFile.tx().execute(new Transaction.CallableClosure<Integer, IOException>() {
                     public Integer execute(Transaction tx) throws IOException {
                         StoredDestination sd = getStoredDestination(dest, tx);
@@ -716,13 +741,16 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
                         return counter;
                     }
                 });
+            }finally {
+                indexLock.readLock().unlock();
             }
         }
 
         public void recoverSubscription(String clientId, String subscriptionName, final MessageRecoveryListener listener)
                 throws Exception {
             final String subscriptionKey = subscriptionKey(clientId, subscriptionName);
-            synchronized (indexMutex) {
+            indexLock.readLock().lock();
+            try {
                 pageFile.tx().execute(new Transaction.Closure<Exception>() {
                     public void execute(Transaction tx) throws Exception {
                         StoredDestination sd = getStoredDestination(dest, tx);
@@ -736,13 +764,16 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
                         }
                     }
                 });
+            }finally {
+                indexLock.readLock().unlock();
             }
         }
 
         public void recoverNextMessages(String clientId, String subscriptionName, final int maxReturned,
                 final MessageRecoveryListener listener) throws Exception {
             final String subscriptionKey = subscriptionKey(clientId, subscriptionName);
-            synchronized (indexMutex) {
+            indexLock.readLock().lock();
+            try {
                 pageFile.tx().execute(new Transaction.Closure<Exception>() {
                     public void execute(Transaction tx) throws Exception {
                         StoredDestination sd = getStoredDestination(dest, tx);
@@ -768,19 +799,24 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
                         }
                     }
                 });
+            }finally {
+                indexLock.readLock().unlock();
             }
         }
 
         public void resetBatching(String clientId, String subscriptionName) {
             try {
                 final String subscriptionKey = subscriptionKey(clientId, subscriptionName);
-                synchronized (indexMutex) {
+                indexLock.writeLock().lock();
+                try {
                     pageFile.tx().execute(new Transaction.Closure<IOException>() {
                         public void execute(Transaction tx) throws IOException {
                             StoredDestination sd = getStoredDestination(dest, tx);
                             sd.subscriptionCursors.remove(subscriptionKey);
                         }
                     });
+                }finally {
+                    indexLock.writeLock().unlock();
                 }
             } catch (IOException e) {
                 throw new RuntimeException(e);
@@ -827,7 +863,8 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
     public Set<ActiveMQDestination> getDestinations() {
         try {
             final HashSet<ActiveMQDestination> rc = new HashSet<ActiveMQDestination>();
-            synchronized (indexMutex) {
+            indexLock.readLock().lock();
+            try {
                 pageFile.tx().execute(new Transaction.Closure<IOException>() {
                     public void execute(Transaction tx) throws IOException {
                         for (Iterator<Entry<String, StoredDestination>> iterator = metadata.destinations.iterator(tx); iterator
@@ -852,6 +889,8 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
                         return isEmptyTopic;
                     }
                 });
+            }finally {
+                indexLock.readLock().unlock();
             }
             return rc;
         } catch (IOException e) {

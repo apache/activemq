@@ -35,6 +35,9 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.BrokerServiceAware;
 import org.apache.activemq.command.ConnectionId;
@@ -193,7 +196,8 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
     }
 
 	private void loadPageFile() throws IOException {
-		synchronized (indexMutex) {
+	    this.indexLock.writeLock().lock();
+	    try {
 		    final PageFile pageFile = getPageFile();
             pageFile.load();
             pageFile.tx().execute(new Transaction.Closure<IOException>() {
@@ -232,6 +236,8 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
                     }
                 }
             });
+        }finally {
+            this.indexLock.writeLock().unlock();
         }
 	}
 	
@@ -307,7 +313,8 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
 
     public void load() throws IOException {
     	
-        synchronized (indexMutex) {
+        this.indexLock.writeLock().lock();
+        try {
             lock();
             if (deleteAllMessages) {
                 getJournal().start();
@@ -321,7 +328,8 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
 
 	    	open();
 	        store(new KahaTraceCommand().setMessage("LOADED " + new Date()));
-
+        }finally {
+            this.indexLock.writeLock().unlock();
         }
 
     }
@@ -329,7 +337,8 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
     
 	public void close() throws IOException, InterruptedException {
 		if( opened.compareAndSet(true, false)) {
-	        synchronized (indexMutex) {
+		    this.indexLock.writeLock().lock();
+	        try {
 	            pageFile.tx().execute(new Transaction.Closure<IOException>() {
 	                public void execute(Transaction tx) throws IOException {
 	                    checkpointUpdate(tx, true);
@@ -337,6 +346,8 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
 	            });
 	            pageFile.unload();
 	            metadata = new Metadata();
+	        }finally {
+	            this.indexLock.writeLock().unlock();
 	        }
 	        journal.close();
 	        checkpointThread.join();
@@ -346,7 +357,8 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
 	}
 	
     public void unload() throws IOException, InterruptedException {
-        synchronized (indexMutex) {
+        this.indexLock.writeLock().lock();
+        try {
             if( pageFile != null && pageFile.isLoaded() ) {
                 metadata.state = CLOSED_STATE;
                 metadata.firstInProgressTransactionLocation = getFirstInProgressTxLocation();
@@ -357,6 +369,8 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
                     }
                 });
             }
+        }finally {
+            this.indexLock.writeLock().unlock();
         }
         close();
     }
@@ -389,7 +403,8 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
      * @throws IllegalStateException
      */
     private void recover() throws IllegalStateException, IOException {
-        synchronized (indexMutex) {
+        this.indexLock.writeLock().lock();
+        try {
             
 	        long start = System.currentTimeMillis();        
 	        Location recoveryPosition = getRecoveryPosition();
@@ -413,6 +428,8 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
                     recoverIndex(tx);
                 }
             });
+        }finally {
+            this.indexLock.writeLock().unlock();
         }
     }
     
@@ -559,7 +576,8 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
 	private Location lastRecoveryPosition;
 
 	public void incrementalRecover() throws IOException {
-        synchronized (indexMutex) {
+	    this.indexLock.writeLock().lock();
+        try {
 	        if( nextRecoveryPosition == null ) {
 	        	if( lastRecoveryPosition==null ) {
 	        		nextRecoveryPosition = getRecoveryPosition();
@@ -574,6 +592,8 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
 	            process(message, lastRecoveryPosition);            
 	            nextRecoveryPosition = journal.getNextLocation(lastRecoveryPosition);
 	        }
+        }finally {
+            this.indexLock.writeLock().unlock();
         }
 	}
 	
@@ -600,7 +620,8 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
 
     protected void checkpointCleanup(final boolean cleanup) throws IOException {
     	long start;
-        synchronized (indexMutex) {
+    	this.indexLock.writeLock().lock();
+        try {
             start = System.currentTimeMillis();
         	if( !opened.get() ) {
         		return;
@@ -610,6 +631,8 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
                     checkpointUpdate(tx, cleanup);
                 }
             });
+        }finally {
+            this.indexLock.writeLock().unlock();
         }
     	long end = System.currentTimeMillis();
     	if( LOG_SLOW_ACCESS_TIME>0 && end-start > LOG_SLOW_ACCESS_TIME) {
@@ -619,13 +642,16 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
 
     
 	public void checkpoint(Callback closure) throws Exception {
-        synchronized (indexMutex) {
+	    this.indexLock.writeLock().lock();
+        try {
             pageFile.tx().execute(new Transaction.Closure<IOException>() {
                 public void execute(Transaction tx) throws IOException {
                     checkpointUpdate(tx, false);
                 }
             });
             closure.execute();
+        }finally {
+            this.indexLock.writeLock().unlock();
         }
 	}
 
@@ -662,8 +688,11 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
         		LOG.info("Slow KahaDB access: Journal append took: "+(start2-start)+" ms, Index update took "+(end-start2)+" ms");
         	}
     
-            synchronized (indexMutex) {
+        	this.indexLock.writeLock().lock();
+            try {
             	metadata.lastUpdate = location;
+            }finally {
+                this.indexLock.writeLock().unlock();
             }
             if (!checkpointThread.isAlive()) {
                 LOG.info("KahaDB: Recovering checkpoint thread after exception");
@@ -752,12 +781,15 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
                 inflightTx.add(new AddOpperation(command, location));
             }
         } else {
-            synchronized (indexMutex) {
+            this.indexLock.writeLock().lock();
+            try {
                 pageFile.tx().execute(new Transaction.Closure<IOException>() {
                     public void execute(Transaction tx) throws IOException {
                         upadateIndex(tx, command, location);
                     }
                 });
+            }finally {
+                this.indexLock.writeLock().unlock();
             }
         }
     }
@@ -769,34 +801,43 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
                 inflightTx.add(new RemoveOpperation(command, location));
             }
         } else {
-            synchronized (indexMutex) {
+            this.indexLock.writeLock().lock();
+            try {
                 pageFile.tx().execute(new Transaction.Closure<IOException>() {
                     public void execute(Transaction tx) throws IOException {
                         updateIndex(tx, command, location);
                     }
                 });
+            }finally {
+                this.indexLock.writeLock().unlock();
             }
         }
 
     }
 
     protected void process(final KahaRemoveDestinationCommand command, final Location location) throws IOException {
-        synchronized (indexMutex) {
+        this.indexLock.writeLock().lock();
+        try {
             pageFile.tx().execute(new Transaction.Closure<IOException>() {
                 public void execute(Transaction tx) throws IOException {
                     updateIndex(tx, command, location);
                 }
             });
+        }finally {
+            this.indexLock.writeLock().unlock();
         }
     }
 
     protected void process(final KahaSubscriptionCommand command, final Location location) throws IOException {
-        synchronized (indexMutex) {
+        this.indexLock.writeLock().lock();
+        try {
             pageFile.tx().execute(new Transaction.Closure<IOException>() {
                 public void execute(Transaction tx) throws IOException {
                     updateIndex(tx, command, location);
                 }
             });
+        }finally {
+            this.indexLock.writeLock().unlock();
         }
     }
 
@@ -814,7 +855,8 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
         }
 
         final ArrayList<Operation> messagingTx = inflightTx;
-        synchronized (indexMutex) {
+        this.indexLock.writeLock().lock();
+        try {
             pageFile.tx().execute(new Transaction.Closure<IOException>() {
                 public void execute(Transaction tx) throws IOException {
                     for (Operation op : messagingTx) {
@@ -822,6 +864,8 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
                     }
                 }
             });
+        }finally {
+            this.indexLock.writeLock().unlock();
         }
     }
 
@@ -849,7 +893,7 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
     // These methods do the actual index updates.
     // /////////////////////////////////////////////////////////////////
 
-    protected final Object indexMutex = new Object();
+    protected final ReentrantReadWriteLock indexLock = new ReentrantReadWriteLock();
 	private final HashSet<Integer> journalFilesBeingReplicated = new HashSet<Integer>();
 
     void upadateIndex(Transaction tx, KahaAddMessageCommand command, Location location) throws IOException {
