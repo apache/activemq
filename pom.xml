@@ -67,6 +67,7 @@
     <jmock-version>2.5.1</jmock-version>
     <junit-version>4.5</junit-version>
     <jxta-version>2.0</jxta-version>
+    <karaf-version>1.99.0-SNAPSHOT</karaf-version>
     <log4j-version>1.2.14</log4j-version>
     <nlog4j-version>1.5.2</nlog4j-version>
     <org-apache-derby-version>10.1.3.1</org-apache-derby-version>

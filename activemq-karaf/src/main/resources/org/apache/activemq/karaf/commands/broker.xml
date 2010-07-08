@@ -1,0 +1,137 @@
+<!--
+    Licensed to the Apache Software Foundation (ASF) under one or more
+    contributor license agreements.  See the NOTICE file distributed with
+    this work for additional information regarding copyright ownership.
+    The ASF licenses this file to You under the Apache License, Version 2.0
+    (the "License"); you may not use this file except in compliance with
+    the License.  You may obtain a copy of the License at
+   
+    http://www.apache.org/licenses/LICENSE-2.0
+   
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+-->
+<beans
+  xmlns="http://www.springframework.org/schema/beans"
+  xmlns:amq="http://activemq.apache.org/schema/core"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns:osgi="http://www.springframework.org/schema/osgi"
+  xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.0.xsd
+  http://activemq.apache.org/schema/core http://activemq.apache.org/schema/core/activemq-core.xsd   
+  http://activemq.apache.org/camel/schema/spring http://activemq.apache.org/camel/schema/spring/camel-spring.xsd
+  http://www.springframework.org/schema/osgi http://www.springframework.org/schema/osgi/spring-osgi.xsd">
+
+    <!-- Allows us to use system properties as variables in this configuration file -->
+    <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer"/>
+
+    <broker xmlns="http://activemq.apache.org/schema/core" brokerName="${name}" dataDirectory="${karaf.base}/data/activemq/${name}" useShutdownHook="false">
+
+        <!-- Destination specific policies using destination names or wildcards -->
+        <destinationPolicy>
+            <policyMap>
+
+                <policyEntries>
+                    <policyEntry queue=">" memoryLimit="5mb"/>
+                    <policyEntry topic=">" memoryLimit="5mb">
+                        <subscriptionRecoveryPolicy>
+                            <lastImageSubscriptionRecoveryPolicy/>
+                        </subscriptionRecoveryPolicy>
+                    </policyEntry>
+                </policyEntries>
+            </policyMap>
+
+        </destinationPolicy>
+
+        <!-- Use the following to configure how ActiveMQ is exposed in JMX -->
+        <managementContext>
+            <managementContext createConnector="false"/>
+        </managementContext>
+
+        <!-- The store and forward broker networks ActiveMQ will listen to -->
+        <networkConnectors>
+            <!-- by default just auto discover the other brokers -->
+
+            <networkConnector name="default-nc" uri="multicast://default"/>
+            <!-- Example of a static configuration:
+            <networkConnector name="host1 and host2" uri="static://(tcp://host1:61616,tcp://host2:61616)"/>
+            -->
+        </networkConnectors>
+
+        <persistenceAdapter>
+            <amqPersistenceAdapter syncOnWrite="false" directory="${karaf.base}/data/activemq/${name}" maxFileLength="20 mb"/>
+        </persistenceAdapter>
+
+        <!-- Use the following if you wish to configure the journal with JDBC -->
+        <!--
+        <persistenceAdapter>
+            <journaledJDBC dataDirectory="${activemq.base}/data" dataSource="#postgres-ds"/>
+        </persistenceAdapter>
+        -->
+
+        <!-- Or if you want to use pure JDBC without a journal -->
+        <!--
+        <persistenceAdapter>
+            <jdbcPersistenceAdapter dataSource="#postgres-ds"/>
+        </persistenceAdapter>
+        -->
+
+        <!--  The maximum about of space the broker will use before slowing down producers -->
+        <systemUsage>
+            <systemUsage>
+                <memoryUsage>
+                    <memoryUsage limit="20 mb"/>
+                </memoryUsage>
+
+                <storeUsage>
+                    <storeUsage limit="1 gb" name="foo"/>
+                </storeUsage>
+                <tempUsage>
+                    <tempUsage limit="100 mb"/>
+                </tempUsage>
+            </systemUsage>
+        </systemUsage>
+
+        <!-- The transport connectors ActiveMQ will listen to -->
+        <transportConnectors>
+            <transportConnector name="openwire" uri="tcp://localhost:61616" discoveryUri="multicast://default"/>
+            <transportConnector name="stomp" uri="stomp://localhost:61613"/>
+        </transportConnectors>
+
+    </broker>
+
+    <bean id="activemqConnectionFactory" class="org.apache.activemq.ActiveMQConnectionFactory">
+
+        <property name="brokerURL" value="tcp://localhost:61616" />
+    </bean>
+
+    <bean id="pooledConnectionFactory" class="org.apache.activemq.pool.PooledConnectionFactoryBean">
+        <property name="maxConnections" value="8" />
+        <property name="transactionManager" ref="transactionManager" />
+        <property name="connectionFactory" ref="activemqConnectionFactory" />
+        <property name="resourceName" value="activemq.${name}" />
+    </bean>
+
+    <bean id="resourceManager" class="org.apache.activemq.pool.ActiveMQResourceManager" init-method="recoverResource">
+          <property name="transactionManager" ref="transactionManager" />
+          <property name="connectionFactory" ref="activemqConnectionFactory" />
+          <property name="resourceName" value="activemq.${name}" />
+    </bean>
+
+    <osgi:reference id="transactionManager" interface="javax.transaction.TransactionManager" />
+
+    <osgi:service ref="pooledConnectionFactory">
+
+        <osgi:interfaces>
+            <value>javax.jms.ConnectionFactory</value>
+        </osgi:interfaces>
+        <osgi:service-properties>
+            <entry key="name" value="${name}"/>
+        </osgi:service-properties>
+    </osgi:service>
+
+</beans>
+
+

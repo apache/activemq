@@ -1,26 +1,6 @@
 <features name="activemq-${activemq-version}">
-    <repository>mvn:org.apache.felix.karaf/apache-felix-karaf/1.6.0/xml/features</repository>
-    
-    <feature name="spring" version="${spring-version}">
-        <bundle>mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.aopalliance/1.0_3</bundle> 
-        <bundle>mvn:org.springframework/spring-core/${spring-version}</bundle>
-        <bundle>mvn:org.springframework/spring-beans/${spring-version}</bundle>
-        <bundle>mvn:org.springframework/spring-aop/${spring-version}</bundle>
-        <bundle>mvn:org.springframework/spring-context/${spring-version}</bundle>
-        <bundle>mvn:org.springframework/spring-context-support/${spring-version}</bundle>
-        <bundle>mvn:org.springframework/spring-asm/${spring-version}</bundle>
-        <bundle>mvn:org.springframework/spring-expression/${spring-version}</bundle>
-    </feature>
-    
-    <feature name="spring-dm" version="1.2.1"> 
-        <feature version="${spring-version}">spring</feature> 
-        <bundle>mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.cglib/2.1_3_4</bundle> 
-        <bundle>mvn:org.springframework.osgi/spring-osgi-io/1.2.0</bundle> 
-        <bundle>mvn:org.springframework.osgi/spring-osgi-core/1.2.0</bundle> 
-        <bundle>mvn:org.springframework.osgi/spring-osgi-extender/1.2.0</bundle> 
-        <bundle>mvn:org.springframework.osgi/spring-osgi-annotation/1.2.0</bundle> 
-        <bundle>mvn:org.apache.felix.karaf.deployer/org.apache.felix.karaf.deployer.spring/1.7.0-SNAPSHOT</bundle> 
-    </feature>     
+    <!--  TODO: uncomment when we upgrade to karaf 2.0 -->
+    <!-- <repository>mvn:org.apache.felix.karaf/apache-felix-karaf/${karaf-version}/xml/features</repository> -->  
         
     <feature name="activemq" version="${activemq-version}">
         <bundle>mvn:org.apache.geronimo.specs/geronimo-annotation_1.0_spec/1.1.1</bundle>
@@ -35,13 +15,13 @@
         <bundle>mvn:org.apache.activemq/activemq-core/${activemq-version}</bundle> 
         <bundle>mvn:org.apache.activemq/kahadb/${activemq-version}</bundle> 
         <bundle>mvn:org.apache.activemq/activemq-console/${activemq-version}</bundle> 
-        <bundle>mvn:org.apache.activemq/activemq-pool/${activemq-version}</bundle> 
-        <bundle>mvn:org.apache.servicemix.activemq/org.apache.servicemix.activemq.commands/4.2.0</bundle> 
+        <bundle>mvn:org.apache.activemq/activemq-pool/${activemq-version}</bundle>
+        <bundle>mvn:org.apache.activemq/activemq-karaf/${activemq-version}</bundle> 
         <bundle>mvn:org.apache.aries.transaction/org.apache.aries.transaction.manager/0.1-incubating</bundle>
     </feature>
 
     <feature name="activemq-spring" version="${activemq-version}">
-        <feature version="1.2.1">spring-dm</feature> 
+        <feature version="1.2.0">spring-dm</feature> 
         <feature version="${activemq-version}">activemq</feature> 
         <bundle>mvn:org.apache.xbean/xbean-spring/${xbean-version}</bundle> 
     </feature>

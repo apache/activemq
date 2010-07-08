@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+    Licensed to the Apache Software Foundation (ASF) under one or more
+    contributor license agreements.  See the NOTICE file distributed with
+    this work for additional information regarding copyright ownership.
+    The ASF licenses this file to You under the Apache License, Version 2.0
+    (the "License"); you may not use this file except in compliance with
+    the License.  You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+-->
+<blueprint xmlns="http://www.osgi.org/xmlns/blueprint/v1.0.0"
+           xmlns:shell="http://felix.apache.org/karaf/xmlns/shell/v1.0.0">
+
+    <shell:command-bundle>
+
+        <shell:command name="activemq/create-broker">
+            <shell:action class="org.apache.activemq.karaf.commands.CreateBrokerCommand"/>
+        </shell:command>
+
+        <shell:command name="activemq/destroy-broker">
+            <shell:action class="org.apache.activemq.karaf.commands.DestroyBrokerCommand"/>
+        </shell:command>
+
+    </shell:command-bundle>
+    
+    <!-- ActiveMQ List Command -->
+    <bean id="listcommand" class="org.apache.activemq.karaf.commands.ActiveMQCommand">
+      <property name="blueprintContainer" ref="blueprintContainer"/>
+      <property name="blueprintConverter" ref="blueprintConverter"/>
+      <property name="actionId" value="listaction"/>
+    </bean>
+
+    <service ref="listcommand" activation="lazy" >
+        <interfaces>
+            <value>org.osgi.service.command.Function</value>
+            <value>org.apache.karaf.shell.console.CompletableFunction</value>
+        </interfaces>
+        <service-properties>
+            <entry key="osgi.command.scope" value="activemq"/>
+            <entry key="osgi.command.function" value="list"/>
+        </service-properties>
+    </service>
+
+    <bean id="listaction" class="org.apache.activemq.karaf.commands.ActiveMQCommandSupport"
+          activation="lazy"
+          scope="prototype">
+        <property name="command">
+            <bean class="org.apache.activemq.console.command.ListCommand"/>
+        </property>
+    </bean>
+
+    <!-- ActiveMQ Query Command -->
+    <bean id="querycommand" class="org.apache.activemq.karaf.commands.ActiveMQCommand">
+      <property name="blueprintContainer" ref="blueprintContainer"/>
+      <property name="blueprintConverter" ref="blueprintConverter"/>
+      <property name="actionId" value="queryaction"/>
+    </bean>
+
+    <service ref="querycommand" activation="lazy" >
+        <interfaces>
+            <value>org.osgi.service.command.Function</value>
+            <value>org.apache.karaf.shell.console.CompletableFunction</value>
+        </interfaces>
+        <service-properties>
+            <entry key="osgi.command.scope" value="activemq"/>
+            <entry key="osgi.command.function" value="query"/>
+        </service-properties>
+    </service>
+
+    <bean id="queryaction" class="org.apache.activemq.karaf.commands.ActiveMQCommandSupport"
+          activation="lazy"
+          scope="prototype">
+        <property name="command">
+            <bean class="org.apache.activemq.console.command.QueryCommand"/>
+        </property>
+    </bean>
+
+    <!-- ActiveMQ Browse Command -->
+    <bean id="browsecommand" class="org.apache.activemq.karaf.commands.ActiveMQCommand">
+      <property name="blueprintContainer" ref="blueprintContainer"/>
+      <property name="blueprintConverter" ref="blueprintConverter"/>
+      <property name="actionId" value="browseaction"/>
+    </bean>
+
+    <service ref="browsecommand" activation="lazy" >
+        <interfaces>
+            <value>org.osgi.service.command.Function</value>
+            <value>org.apache.karaf.shell.console.CompletableFunction</value>
+        </interfaces>
+        <service-properties>
+            <entry key="osgi.command.scope" value="activemq"/>
+            <entry key="osgi.command.function" value="browse"/>
+        </service-properties>
+    </service>
+
+    <bean id="browseaction" class="org.apache.activemq.karaf.commands.ActiveMQCommandSupport"
+          activation="lazy"
+          scope="prototype">
+        <property name="command">
+            <bean class="org.apache.activemq.console.command.AmqBrowseCommand"/>
+        </property>
+    </bean>
+
+    <!-- ActiveMQ Bstat Command -->
+    <bean id="bstatcommand" class="org.apache.activemq.karaf.commands.ActiveMQCommand">
+      <property name="blueprintContainer" ref="blueprintContainer"/>
+      <property name="blueprintConverter" ref="blueprintConverter"/>
+      <property name="actionId" value="bstataction"/>
+    </bean>
+
+    <service ref="bstatcommand" activation="lazy" >
+        <interfaces>
+            <value>org.osgi.service.command.Function</value>
+            <value>org.apache.karaf.shell.console.CompletableFunction</value>
+        </interfaces>
+        <service-properties>
+            <entry key="osgi.command.scope" value="activemq"/>
+            <entry key="osgi.command.function" value="bstat"/>
+        </service-properties>
+    </service>
+
+    <bean id="bstataction" class="org.apache.activemq.karaf.commands.ActiveMQCommandSupport"
+          activation="lazy"
+          scope="prototype">
+        <property name="command">
+            <bean class="org.apache.activemq.console.command.BstatCommand"/>
+        </property>
+    </bean>
+
+    <!-- ActiveMQ Purge Command -->
+    <bean id="purgecommand" class="org.apache.activemq.karaf.commands.ActiveMQCommand">
+      <property name="blueprintContainer" ref="blueprintContainer"/>
+      <property name="blueprintConverter" ref="blueprintConverter"/>
+      <property name="actionId" value="purgeaction"/>
+    </bean>
+
+    <service ref="purgecommand" activation="lazy" >
+        <interfaces>
+            <value>org.osgi.service.command.Function</value>
+            <value>org.apache.karaf.shell.console.CompletableFunction</value>
+        </interfaces>
+        <service-properties>
+            <entry key="osgi.command.scope" value="activemq"/>
+            <entry key="osgi.command.function" value="purge"/>
+        </service-properties>
+    </service>
+
+    <bean id="purgeaction" class="org.apache.activemq.karaf.commands.ActiveMQCommandSupport"
+          activation="lazy"
+          scope="prototype">
+        <property name="command">
+            <bean class="org.apache.activemq.console.command.PurgeCommand"/>
+        </property>
+    </bean>
+
+</blueprint>

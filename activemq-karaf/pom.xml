@@ -26,9 +26,43 @@
   </parent>
 
   <artifactId>activemq-karaf</artifactId>
-  <packaging>jar</packaging>
+  <packaging>bundle</packaging>
   <name>ActiveMQ :: Apache Karaf</name>
   <description>Provides resources for running ActiveMQ in Apache Karaf</description>
+
+    <dependencies>
+      <dependency>
+        <groupId>org.apache.karaf.shell</groupId>
+        <artifactId>org.apache.karaf.shell.console</artifactId>
+        <version>${karaf-version}</version>
+      </dependency>
+      <dependency>
+          <groupId>org.osgi</groupId>
+          <artifactId>org.osgi.core</artifactId>
+          <scope>provided</scope>
+      </dependency>
+
+        <dependency>
+            <groupId>org.apache.activemq</groupId>
+            <artifactId>activemq-core</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.activemq</groupId>
+            <artifactId>activemq-optional</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.activemq</groupId>
+            <artifactId>activemq-console</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.activemq</groupId>
+            <artifactId>activemq-pool</artifactId>
+        </dependency>
+
+    </dependencies>
 
   <build>
     <resources>
@@ -73,6 +107,22 @@
              </execution>
          </executions>
        </plugin>
+       <plugin>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>maven-bundle-plugin</artifactId>
+        <configuration>
+            <instructions>
+                <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
+                <Export-Package>org.apache.activemq.karaf.commands;version=${project.version};-split-package:=merge-first</Export-Package>
+                <Import-Package>
+                  org.apache.felix.gogo.commands,
+                  *
+                </Import-Package>
+                <Private-Package>!*</Private-Package>
+                <_versionpolicy>[$(version;==;$(@)),$(version;+;$(@)))</_versionpolicy>
+            </instructions>
+        </configuration>
+      </plugin>       
     </plugins>
   </build>
 
