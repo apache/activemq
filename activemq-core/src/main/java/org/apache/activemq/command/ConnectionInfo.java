@@ -37,6 +37,7 @@ public class ConnectionInfo extends BaseCommand {
     protected boolean clientMaster = true;
     protected boolean faultTolerant = false;
     protected transient Object transportContext;
+    private boolean failoverReconnect;
 
     public ConnectionInfo() {
     }
@@ -216,4 +217,15 @@ public class ConnectionInfo extends BaseCommand {
         this.faultTolerant = faultTolerant;
     }
 
+    /**
+     * @openwire:property version=6 cache=false
+     * @return failoverReconnect true if this is a reconnect
+     */
+    public boolean isFailoverReconnect() {
+        return this.failoverReconnect;
+    }
+
+    public void setFailoverReconnect(boolean failoverReconnect) {
+        this.failoverReconnect = failoverReconnect;
+    }
 }

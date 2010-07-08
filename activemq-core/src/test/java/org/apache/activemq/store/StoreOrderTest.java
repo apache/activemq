@@ -17,6 +17,7 @@
 package org.apache.activemq.store;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -117,6 +118,23 @@ public abstract class StoreOrderTest {
         if (broker != null) {
             broker.stop();
         }
+    }
+    
+    @Test
+    public void testCompositeSendReceiveAfterRestart() throws Exception {
+        destination = new ActiveMQQueue("StoreOrderTest,SecondStoreOrderTest");
+        enqueueOneMessage();
+        
+        LOG.info("restart broker");
+        stopBroker();
+        broker = createRestartedBroker();
+        dumpMessages();
+        initConnection();
+        destination = new ActiveMQQueue("StoreOrderTest");
+        assertNotNull("got one message from first dest", receiveOne());
+        dumpMessages();
+        destination = new ActiveMQQueue("SecondStoreOrderTest");
+        assertNotNull("got one message from second dest", receiveOne());
     }
     
     @Test
@@ -247,6 +265,7 @@ public abstract class StoreOrderTest {
         PolicyEntry defaultEntry = new PolicyEntry();
         defaultEntry.setMemoryLimit(1024*3);
         defaultEntry.setCursorMemoryHighWaterMark(68);
+        defaultEntry.setExpireMessagesPeriod(0);
         map.setDefaultEntry(defaultEntry);
         brokerService.setDestinationPolicy(map);
     }

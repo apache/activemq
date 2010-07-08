@@ -28,6 +28,11 @@ public class JDBCPersistenceAdapterTest extends PersistenceAdapterTestSupport {
     
     protected PersistenceAdapter createPersistenceAdapter(boolean delete) throws IOException {
         JDBCPersistenceAdapter jdbc = new JDBCPersistenceAdapter();
+        
+        // explicitly enable audit as it is now off by default
+        // due to org.apache.activemq.broker.ProducerBrokerExchange.canDispatch(Message)
+        jdbc.setEnableAudit(true);
+        
         brokerService.setSchedulerSupport(false);
         brokerService.setPersistenceAdapter(jdbc);
         jdbc.setBrokerService(brokerService);
@@ -56,6 +61,5 @@ public class JDBCPersistenceAdapterTest extends PersistenceAdapterTestSupport {
     	if (!failed) {
     		fail("Should have failed with audit turned off");
     	}
-    }
-    
+    }   
 }

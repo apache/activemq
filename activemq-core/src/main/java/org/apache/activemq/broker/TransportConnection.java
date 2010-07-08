@@ -453,7 +453,9 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
     public Response processMessage(Message messageSend) throws Exception {
         ProducerId producerId = messageSend.getProducerId();
         ProducerBrokerExchange producerExchange = getProducerBrokerExchange(producerId);
-        broker.send(producerExchange, messageSend);
+        if (producerExchange.canDispatch(messageSend)) {
+            broker.send(producerExchange, messageSend);
+        }
         return null;
     }
 
@@ -680,6 +682,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         context.setTransactions(new ConcurrentHashMap<TransactionId, Transaction>());
         context.setUserName(info.getUserName());
         context.setWireFormatInfo(wireFormatInfo);
+        context.setReconnect(info.isFailoverReconnect());
         this.manageable = info.isManageable();
         state.setContext(context);
         state.setConnection(this);
@@ -1249,13 +1252,16 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         }
     }
 
-    private ProducerBrokerExchange getProducerBrokerExchange(ProducerId id) {
+    private ProducerBrokerExchange getProducerBrokerExchange(ProducerId id) throws IOException {
         ProducerBrokerExchange result = producerExchanges.get(id);
         if (result == null) {
             synchronized (producerExchanges) {
                 result = new ProducerBrokerExchange();
-                TransportConnectionState state = lookupConnectionState(id);
+                TransportConnectionState state = lookupConnectionState(id);              
                 context = state.getContext();
+                if (context.isReconnect()) {
+                    result.setLastStoredSequenceId(broker.getBrokerService().getPersistenceAdapter().getLastProducerSequenceId(id));
+                }
                 result.setConnectionContext(context);
                 SessionState ss = state.getSessionState(id.getParentId());
                 if (ss != null) {

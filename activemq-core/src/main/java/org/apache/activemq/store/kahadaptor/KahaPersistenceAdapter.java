@@ -32,6 +32,7 @@ import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageId;
+import org.apache.activemq.command.ProducerId;
 import org.apache.activemq.kaha.CommandMarshaller;
 import org.apache.activemq.kaha.ContainerId;
 import org.apache.activemq.kaha.ListContainer;
@@ -369,6 +370,11 @@ public class KahaPersistenceAdapter implements PersistenceAdapter, BrokerService
 	public void setBrokerService(BrokerService brokerService) {
 		this.brokerService = brokerService;
 	}
+
+    public long getLastProducerSequenceId(ProducerId id) {
+        // reference store send has adequate duplicate suppression
+        return -1;
+    }
   
 
 }

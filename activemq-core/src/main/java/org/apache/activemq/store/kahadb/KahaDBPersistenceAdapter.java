@@ -26,6 +26,7 @@ import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
+import org.apache.activemq.command.ProducerId;
 import org.apache.activemq.store.MessageStore;
 import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.TopicMessageStore;
@@ -124,6 +125,10 @@ public class KahaDBPersistenceAdapter implements PersistenceAdapter, BrokerServi
         return this.letter.getLastMessageBrokerSequenceId();
     }
 
+    public long getLastProducerSequenceId(ProducerId id) throws IOException {
+        return this.letter.getLastProducerSequenceId(id);
+    }
+
     /**
      * @param destination
      * @see org.apache.activemq.store.PersistenceAdapter#removeQueueMessageStore(org.apache.activemq.command.ActiveMQQueue)
@@ -208,6 +213,29 @@ public class KahaDBPersistenceAdapter implements PersistenceAdapter, BrokerServi
         this.letter.setJournalMaxFileLength(journalMaxFileLength);
     }
 
+    /**
+     * Set the max number of producers (LRU cache) to track for duplicate sends
+     */
+    public void setMaxFailoverProducersToTrack(int maxFailoverProducersToTrack) {
+        this.letter.setMaxFailoverProducersToTrack(maxFailoverProducersToTrack);
+    }
+    
+    public int getMaxFailoverProducersToTrack() {
+        return this.letter.getMaxFailoverProducersToTrack();
+    }
+
+    /**
+     * set the audit window depth for duplicate suppression (should exceed the max transaction
+     * batch)
+     */
+    public void setFailoverProducersAuditDepth(int failoverProducersAuditDepth) {
+        this.letter.setFailoverProducersAuditDepth(failoverProducersAuditDepth);
+    }
+    
+    public int getFailoverProducersAuditDepth() {
+        return this.getFailoverProducersAuditDepth();
+    }
+    
     /**
      * Get the checkpointInterval
      * 
@@ -477,4 +505,5 @@ public class KahaDBPersistenceAdapter implements PersistenceAdapter, BrokerServi
         String path = getDirectory() != null ? getDirectory().toString() : "DIRECTORY_NOT_SET";
         return "KahaDBPersistenceAdapter[" + path + "]";
     }
+
 }

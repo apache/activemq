@@ -18,7 +18,10 @@ package org.apache.activemq.broker;
 
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.Region;
+import org.apache.activemq.command.Message;
 import org.apache.activemq.state.ProducerState;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * Holds internal state in the broker for a MessageProducer
@@ -27,11 +30,13 @@ import org.apache.activemq.state.ProducerState;
  */
 public class ProducerBrokerExchange {
 
+    private static final Log LOG = LogFactory.getLog(ProducerBrokerExchange.class);
     private ConnectionContext connectionContext;
     private Destination regionDestination;
     private Region region;
     private ProducerState producerState;
     private boolean mutable = true;
+    private long lastSendSequenceNumber = -1;
     
     public ProducerBrokerExchange() {
     }
@@ -117,4 +122,25 @@ public class ProducerBrokerExchange {
         this.producerState = producerState;
     }
 
+    /**
+     * Enforce duplicate suppression using info from persistence adapter
+     * @param messageSend
+     * @return false if message should be ignored as a duplicate
+     */
+    public boolean canDispatch(Message messageSend) {
+        boolean canDispatch = true;
+        if (lastSendSequenceNumber > 0) {
+            if (messageSend.getMessageId().getProducerSequenceId() <= lastSendSequenceNumber) {
+                canDispatch = false;
+                LOG.debug("suppressing duplicate message send [" + messageSend.getMessageId() + "] with producerSequenceId [" 
+                        + messageSend.getMessageId().getProducerSequenceId() + "] less than last stored: "  + lastSendSequenceNumber);
+            }
+        }
+        return canDispatch;
+    }
+
+    public void setLastStoredSequenceId(long l) {
+        lastSendSequenceNumber = l;
+        LOG.debug("last stored sequence id set: " + l);
+    }
 }

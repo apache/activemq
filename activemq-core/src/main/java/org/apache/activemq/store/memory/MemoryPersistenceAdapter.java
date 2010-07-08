@@ -27,6 +27,7 @@ import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
+import org.apache.activemq.command.ProducerId;
 import org.apache.activemq.store.MessageStore;
 import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.ProxyMessageStore;
@@ -200,5 +201,10 @@ public class MemoryPersistenceAdapter implements PersistenceAdapter {
         if (create) {
             createTransactionStore();
         }
+    }
+
+    public long getLastProducerSequenceId(ProducerId id) {
+        // memory map does duplicate suppression
+        return -1;
     }
 }

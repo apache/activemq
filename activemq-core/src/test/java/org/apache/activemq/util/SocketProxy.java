@@ -30,6 +30,7 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.commons.logging.Log;
@@ -46,6 +47,8 @@ public class SocketProxy {
 
     private Acceptor acceptor;
     private ServerSocket serverSocket;
+    
+    private CountDownLatch closed = new CountDownLatch(1);
 
     public List<Connection> connections = new LinkedList<Connection>();
 
@@ -87,6 +90,7 @@ public class SocketProxy {
         }
         acceptor = new Acceptor(serverSocket, target);
         new Thread(null, acceptor, "SocketProxy-Acceptor-" + serverSocket.getLocalPort()).start();
+        closed = new CountDownLatch(1);
     }
 
     public URI getUrl() {
@@ -106,6 +110,11 @@ public class SocketProxy {
             closeConnection(con);
         }
         acceptor.close();
+        closed.countDown();
+    }
+
+    public boolean waitUntilClosed(long timeoutSeconds) throws InterruptedException {
+        return closed.await(timeoutSeconds, TimeUnit.SECONDS);
     }
 
     /*
@@ -303,10 +312,12 @@ public class SocketProxy {
         public void close() {
             try {
                 socket.close();
+                closed.countDown();
                 goOn();
             } catch (IOException ignored) {
             }
         }
     }
+
 }
 

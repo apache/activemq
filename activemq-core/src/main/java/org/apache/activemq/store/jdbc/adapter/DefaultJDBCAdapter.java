@@ -28,6 +28,7 @@ import java.util.Set;
 
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.MessageId;
+import org.apache.activemq.command.ProducerId;
 import org.apache.activemq.command.SubscriptionInfo;
 import org.apache.activemq.store.jdbc.JDBCAdapter;
 import org.apache.activemq.store.jdbc.JDBCMessageIdScanListener;
@@ -246,13 +247,14 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         }
     }
 
-    public long getStoreSequenceId(TransactionContext c, MessageId messageID) throws SQLException, IOException {
+    public long getStoreSequenceId(TransactionContext c, ActiveMQDestination destination, MessageId messageID) throws SQLException, IOException {
         PreparedStatement s = null;
         ResultSet rs = null;
         try {
             s = c.getConnection().prepareStatement(this.statements.getFindMessageSequenceIdStatement());
             s.setString(1, messageID.getProducerId().toString());
             s.setLong(2, messageID.getProducerSequenceId());
+            s.setString(3, destination.getQualifiedName());
             rs = s.executeQuery();
             if (!rs.next()) {
                 return 0;
@@ -818,5 +820,24 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
      * out.print(set.getString(i)+"|"); } out.println(); } } finally { try { set.close(); } catch (Throwable ignore) {}
      * try { s.close(); } catch (Throwable ignore) {} } }
      */
+
+    public long doGetLastProducerSequenceId(TransactionContext c, ProducerId id)
+            throws SQLException, IOException {
+        PreparedStatement s = null;
+        ResultSet rs = null;
+        try {
+            s = c.getConnection().prepareStatement(this.statements.getLastProducerSequenceIdStatement());
+            s.setString(1, id.toString());
+            rs = s.executeQuery();
+            long seq = -1;
+            if (rs.next()) {
+                seq = rs.getLong(1);
+            }
+            return seq;
+        } finally {
+            close(rs);
+            close(s);
+        }
+    }
 
 }

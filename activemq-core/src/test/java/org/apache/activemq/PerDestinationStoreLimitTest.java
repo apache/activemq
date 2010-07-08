@@ -152,6 +152,7 @@ public class PerDestinationStoreLimitTest extends JmsTestSupport {
             Thread.sleep(1000);
             // the producer is blocked once the done flag stays true
             if (done.get()) {
+                LOG.info("Blocked....");
                 break;
             }
             done.set(true);

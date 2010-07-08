@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.util;
 
+import java.io.Serializable;
 import java.util.LinkedList;
 
 /**
@@ -23,8 +24,9 @@ import java.util.LinkedList;
  * 
  * @version $Revision: 1.1.1.1 $
  */
-public class BitArrayBin {
+public class BitArrayBin implements Serializable {
 
+    private static final long serialVersionUID = 1L;
     private LinkedList<BitArray> list;
     private int maxNumberOfArrays;
     private int firstIndex = -1;
@@ -161,5 +163,23 @@ public class BitArrayBin {
             answer = (int)((index - firstIndex) - (BitArray.LONG_SIZE * getBin(index)));
         }
         return answer;
+    }
+
+    public long getLastSetIndex() {
+        long result = -1;
+        
+        if (firstIndex >=0) {
+            result = firstIndex;   
+            BitArray last = null;
+            for (int lastBitArrayIndex = maxNumberOfArrays -1; lastBitArrayIndex >= 0; lastBitArrayIndex--) {
+                last = list.get(lastBitArrayIndex);
+                if (last != null) {
+                    result += last.length() -1;
+                    result += lastBitArrayIndex * BitArray.LONG_SIZE;
+                    break;
+                }
+            }
+        }
+        return result;
     }
 }

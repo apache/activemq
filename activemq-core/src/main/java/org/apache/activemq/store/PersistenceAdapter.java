@@ -26,6 +26,7 @@ import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
+import org.apache.activemq.command.ProducerId;
 import org.apache.activemq.usage.SystemUsage;
 
 /**
@@ -157,4 +158,13 @@ public interface PersistenceAdapter extends Service {
      * @return disk space used in bytes of 0 if not implemented
      */
     long size();
+
+    /**
+     * return the last stored producer sequenceId for this producer Id
+     * used to suppress duplicate sends on failover reconnect at the transport
+     * when a reconnect occurs
+     * @param id the producerId to find a sequenceId for
+     * @return the last stored sequence id or -1 if no suppression needed
+     */
+    long getLastProducerSequenceId(ProducerId id) throws IOException;
 }

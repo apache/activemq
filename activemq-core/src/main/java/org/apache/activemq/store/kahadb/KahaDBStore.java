@@ -48,6 +48,7 @@ import org.apache.activemq.command.LocalTransactionId;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageId;
+import org.apache.activemq.command.ProducerId;
 import org.apache.activemq.command.SubscriptionInfo;
 import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.command.XATransactionId;
@@ -363,6 +364,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
             org.apache.activemq.util.ByteSequence packet = wireFormat.marshal(message);
             command.setMessage(new Buffer(packet.getData(), packet.getOffset(), packet.getLength()));
             store(command, isEnableJournalDiskSyncs() && message.isResponseRequired(), null, null);
+            
         }
 
         public void removeMessage(ConnectionContext context, MessageAck ack) throws IOException {
@@ -900,6 +902,15 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
 
     public long getLastMessageBrokerSequenceId() throws IOException {
         return 0;
+    }
+    
+    public long getLastProducerSequenceId(ProducerId id) {
+        indexLock.readLock().lock();
+        try {
+            return metadata.producerSequenceIdTracker.getLastSeqId(id);
+        } finally {
+            indexLock.readLock().unlock();
+        }
     }
 
     public long size() {

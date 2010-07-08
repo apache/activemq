@@ -285,7 +285,7 @@ public class JDBCMessageStore extends AbstractMessageStore {
         long result = -1;
         TransactionContext c = persistenceAdapter.getTransactionContext();
         try {
-            result = adapter.getStoreSequenceId(c, messageId);
+            result = adapter.getStoreSequenceId(c, destination, messageId);
         } catch (SQLException e) {
             JDBCPersistenceAdapter.log("JDBC Failure: ", e);
             throw IOExceptionSupport.create("Failed to get store sequenceId for messageId: " + messageId +", on: " + destination + ". Reason: " + e, e);

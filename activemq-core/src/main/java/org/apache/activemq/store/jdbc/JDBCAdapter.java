@@ -21,6 +21,7 @@ import java.sql.SQLException;
 import java.util.Set;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.MessageId;
+import org.apache.activemq.command.ProducerId;
 import org.apache.activemq.command.SubscriptionInfo;
 
 /**
@@ -60,7 +61,7 @@ public interface JDBCAdapter {
 
     SubscriptionInfo doGetSubscriberEntry(TransactionContext c, ActiveMQDestination destination, String clientId, String subscriptionName) throws SQLException, IOException;
 
-    long getStoreSequenceId(TransactionContext c, MessageId messageID) throws SQLException, IOException;
+    long getStoreSequenceId(TransactionContext c, ActiveMQDestination destination, MessageId messageID) throws SQLException, IOException;
 
     void doRemoveAllMessages(TransactionContext c, ActiveMQDestination destinationName) throws SQLException, IOException;
 
@@ -85,4 +86,6 @@ public interface JDBCAdapter {
     long doGetLastAckedDurableSubscriberMessageId(TransactionContext c, ActiveMQDestination destination, String clientId, String subscriberName) throws SQLException, IOException;
 
     void doMessageIdScan(TransactionContext c, int limit, JDBCMessageIdScanListener listener) throws SQLException, IOException;
+
+    long doGetLastProducerSequenceId(TransactionContext c, ProducerId id) throws SQLException, IOException;
 }

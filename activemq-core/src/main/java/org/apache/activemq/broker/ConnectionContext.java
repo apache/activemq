@@ -47,7 +47,7 @@ public class ConnectionContext {
     private ConnectionId connectionId;
     private String clientId;
     private String userName;
-    private boolean haAware;
+    private boolean reconnect;
     private WireFormatInfo wireFormatInfo;
     private Object longTermStoreContext;
     private boolean producerFlowControl = true;
@@ -86,7 +86,7 @@ public class ConnectionContext {
         rc.connectionId = this.connectionId;
         rc.clientId = this.clientId;
         rc.userName = this.userName;
-        rc.haAware = this.haAware;
+        rc.reconnect = this.reconnect;
         rc.wireFormatInfo = this.wireFormatInfo;
         rc.longTermStoreContext = this.longTermStoreContext;
         rc.producerFlowControl = this.producerFlowControl;
@@ -212,12 +212,12 @@ public class ConnectionContext {
         this.clientId = clientId;
     }
 
-    public boolean isHaAware() {
-        return haAware;
+    public boolean isReconnect() {
+        return reconnect;
     }
 
-    public void setHaAware(boolean haAware) {
-        this.haAware = haAware;
+    public void setReconnect(boolean reconnect) {
+        this.reconnect = reconnect;
     }
 
     public WireFormatInfo getWireFormatInfo() {

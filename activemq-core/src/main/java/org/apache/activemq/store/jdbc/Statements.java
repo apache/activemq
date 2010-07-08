@@ -67,6 +67,7 @@ public class Statements {
     private String findNextMessagesStatement;
     private boolean useLockCreateWhereClause;
     private String findAllMessageIdsStatement;
+    private String lastProducerSequenceIdStatement;
 
     public String[] getCreateSchemaStatements() {
         if (createSchemaStatements == null) {
@@ -128,7 +129,7 @@ public class Statements {
     public String getFindMessageSequenceIdStatement() {
         if (findMessageSequenceIdStatement == null) {
             findMessageSequenceIdStatement = "SELECT ID FROM " + getFullMessageTableName()
-                                             + " WHERE MSGID_PROD=? AND MSGID_SEQ=?";
+                                             + " WHERE MSGID_PROD=? AND MSGID_SEQ=? AND CONTAINER=?";
         }
         return findMessageSequenceIdStatement;
     }
@@ -171,6 +172,15 @@ public class Statements {
         }
         return findLastSequenceIdInMsgsStatement;
     }
+
+    public String getLastProducerSequenceIdStatement() {
+        if (lastProducerSequenceIdStatement == null) {
+            lastProducerSequenceIdStatement = "SELECT MAX(MSGID_SEQ) FROM " + getFullMessageTableName()
+                                            + " WHERE MSGID_PROD=?";
+        }
+        return lastProducerSequenceIdStatement;
+    }
+
 
     public String getFindLastSequenceIdInAcksStatement() {
         if (findLastSequenceIdInAcksStatement == null) {
@@ -654,6 +664,11 @@ public class Statements {
     public void setLastAckedDurableSubscriberMessageStatement(
                                                               String lastAckedDurableSubscriberMessageStatement) {
         this.lastAckedDurableSubscriberMessageStatement = lastAckedDurableSubscriberMessageStatement;
+    }
+
+
+    public void setLastProducerSequenceIdStatement(String lastProducerSequenceIdStatement) {
+        this.lastProducerSequenceIdStatement = lastProducerSequenceIdStatement;
     }
 
 }

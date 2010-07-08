@@ -24,6 +24,7 @@ import static org.junit.Assert.fail;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
 import java.util.Vector;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
@@ -49,10 +50,14 @@ import org.apache.activemq.broker.BrokerPluginSupport;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.ConsumerBrokerExchange;
+import org.apache.activemq.broker.ProducerBrokerExchange;
+import org.apache.activemq.broker.region.RegionBroker;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.TransactionId;
+import org.apache.activemq.store.amq.AMQPersistenceAdapter;
 import org.apache.activemq.store.jdbc.JDBCPersistenceAdapter;
 import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
+import org.apache.activemq.util.SocketProxy;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.junit.After;
@@ -86,6 +91,7 @@ public class FailoverTransactionTest {
 	public BrokerService createBroker(boolean deleteAllMessagesOnStartup) throws Exception {   
 	    broker = new BrokerService();
 	    broker.setUseJmx(false);
+	    broker.setAdvisorySupport(false);
 	    broker.addConnector(url);
 	    broker.setDeleteAllMessagesOnStartup(deleteAllMessagesOnStartup);
 	    return broker;
@@ -114,7 +120,7 @@ public class FailoverTransactionTest {
 	}
 	
     @Test
-    public void testFailoverCommitReplyLost() throws Exception {
+    public void testFailoverCommitReplyLostAMQ() throws Exception {
         doTestFailoverCommitReplyLost(0);
     }  
     
@@ -222,15 +228,257 @@ public class FailoverTransactionTest {
         connection.close();
     }
 
+    
+    //@Test not implemented
+    public void testFailoverSendReplyLostAMQ() throws Exception {
+        doTestFailoverSendReplyLost(0);
+    }  
+    
+    @Test
+    public void testFailoverSendReplyLostJdbc() throws Exception {
+        doTestFailoverSendReplyLost(1);
+    }
+    
+    @Test
+    public void testFailoverSendReplyLostKahaDB() throws Exception {
+        doTestFailoverSendReplyLost(2);
+    }
+    
+    public void doTestFailoverSendReplyLost(final int adapter) throws Exception {
+        
+        broker = createBroker(true);
+        setPersistenceAdapter(adapter);
+            
+        broker.setPlugins(new BrokerPlugin[] {
+                new BrokerPluginSupport() {
+                    @Override
+                    public void send(ProducerBrokerExchange producerExchange,
+                            org.apache.activemq.command.Message messageSend)
+                            throws Exception {
+                        // so send will hang as if reply is lost
+                        super.send(producerExchange, messageSend);
+                        producerExchange.getConnectionContext().setDontSendReponse(true);
+                        Executors.newSingleThreadExecutor().execute(new Runnable() {   
+                            public void run() {
+                                LOG.info("Stopping broker post send...");
+                                try {
+                                    broker.stop();
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                        });
+                    }
+                }
+        });
+        broker.start();
+        
+        ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory("failover:(" + url + ")?jms.watchTopicAdvisories=false");
+        Connection connection = cf.createConnection();
+        connection.start();
+        final Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        final Queue destination = session.createQueue(QUEUE_NAME);
+
+        MessageConsumer consumer = session.createConsumer(destination);
+        final CountDownLatch sendDoneLatch = new CountDownLatch(1);
+        // broker will die on send reply so this will hang till restart
+        Executors.newSingleThreadExecutor().execute(new Runnable() {   
+            public void run() {
+                LOG.info("doing async send...");
+                try {
+                    produceMessage(session, destination);
+                } catch (JMSException e) {
+                    //assertTrue(e instanceof TransactionRolledBackException);
+                    LOG.error("got send exception: ", e);
+                    fail("got unexpected send exception" + e);
+                }
+                sendDoneLatch.countDown();
+                LOG.info("done async send");
+            }
+        });
+       
+        // will be stopped by the plugin
+        broker.waitUntilStopped();
+        broker = createBroker(false);
+        setPersistenceAdapter(adapter);
+        LOG.info("restarting....");
+        broker.start();
+
+        assertTrue("message sent through failover", sendDoneLatch.await(30, TimeUnit.SECONDS));
+        
+        // new transaction
+        Message msg = consumer.receive(20000);
+        LOG.info("Received: " + msg);
+        assertNotNull("we got the message", msg);
+        assertNull("we got just one message", consumer.receive(2000));
+        consumer.close();
+        connection.close();
+        
+        // verify stats
+        assertEquals("no newly queued messages", 0, ((RegionBroker)broker.getRegionBroker()).getDestinationStatistics().getEnqueues().getCount());
+        assertEquals("1 dequeue", 1, ((RegionBroker)broker.getRegionBroker()).getDestinationStatistics().getDequeues().getCount());
+        
+        // ensure no dangling messages with fresh broker etc
+        broker.stop();
+        broker.waitUntilStopped();
+        
+        LOG.info("Checking for remaining/hung messages with second restart..");
+        broker = createBroker(false);
+        setPersistenceAdapter(adapter);
+        broker.start();
+        
+        // after restart, ensure no dangling messages
+        cf = new ActiveMQConnectionFactory("failover:(" + url + ")");
+        connection = cf.createConnection();
+        connection.start();
+        Session session2 = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        consumer = session2.createConsumer(destination);
+        msg = consumer.receive(1000);
+        if (msg == null) {
+            msg = consumer.receive(5000);
+        }
+        LOG.info("Received: " + msg);
+        assertNull("no messges left dangling but got: " + msg, msg);
+        connection.close();
+    }
+
+    // not implemented.. @Test
+    public void testFailoverConnectionSendReplyLostAMQ() throws Exception {
+        doTestFailoverConnectionSendReplyLost(0);
+    }  
+    
+    @Test
+    public void testFailoverConnectionSendReplyLostJdbc() throws Exception {
+        doTestFailoverConnectionSendReplyLost(1);
+    }
+    
+    @Test
+    public void testFailoverConnectionSendReplyLostKahaDB() throws Exception {
+        doTestFailoverConnectionSendReplyLost(2);
+    }
+    
+    public void doTestFailoverConnectionSendReplyLost(final int adapter) throws Exception {
+        
+        broker = createBroker(true);
+        setPersistenceAdapter(adapter);
+        
+        final SocketProxy proxy = new SocketProxy();
+
+        broker.setPlugins(new BrokerPlugin[] {
+                new BrokerPluginSupport() {
+                    private boolean firstSend = true;
+
+                    @Override
+                    public void send(ProducerBrokerExchange producerExchange,
+                            org.apache.activemq.command.Message messageSend)
+                            throws Exception {
+                        // so send will hang as if reply is lost
+                        super.send(producerExchange, messageSend);
+                        if (firstSend) {
+                            firstSend = false;
+                        
+                            producerExchange.getConnectionContext().setDontSendReponse(true);
+                            Executors.newSingleThreadExecutor().execute(new Runnable() {   
+                                public void run() {
+                                    LOG.info("Stopping connection post send...");
+                                    try {
+                                        proxy.close();
+                                    } catch (Exception e) {
+                                        e.printStackTrace();
+                                    }
+                                }   
+                            });
+                        }
+                    }
+                }
+        });
+        broker.start();
+        
+        proxy.setTarget(new URI(url));
+        proxy.open();
+        
+        ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory("failover:(" + proxy.getUrl().toASCIIString() + ")?jms.watchTopicAdvisories=false");
+        Connection connection = cf.createConnection();
+        connection.start();
+        final Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        final Queue destination = session.createQueue(QUEUE_NAME);
+
+        MessageConsumer consumer = session.createConsumer(destination);
+        final CountDownLatch sendDoneLatch = new CountDownLatch(1);
+        // proxy connection will die on send reply so this will hang on failover reconnect till open
+        Executors.newSingleThreadExecutor().execute(new Runnable() {   
+            public void run() {
+                LOG.info("doing async send...");
+                try {
+                    produceMessage(session, destination);
+                } catch (JMSException e) {
+                    //assertTrue(e instanceof TransactionRolledBackException);
+                    LOG.info("got send exception: ", e);
+                }
+                sendDoneLatch.countDown();
+                LOG.info("done async send");
+            }
+        });
+       
+        // will be closed by the plugin
+        assertTrue("proxy was closed", proxy.waitUntilClosed(30));
+        LOG.info("restarting proxy");
+        proxy.open();
+
+        assertTrue("message sent through failover", sendDoneLatch.await(30, TimeUnit.SECONDS));
+        
+        Message msg = consumer.receive(20000);
+        LOG.info("Received: " + msg);
+        assertNotNull("we got the message", msg);
+        assertNull("we got just one message", consumer.receive(2000));
+        consumer.close();
+        connection.close();
+        
+        // verify stats, connection dup suppression means dups don't get to broker
+        assertEquals("one queued message", 1, ((RegionBroker)broker.getRegionBroker()).getDestinationStatistics().getEnqueues().getCount());
+        
+        // ensure no dangling messages with fresh broker etc
+        broker.stop();
+        broker.waitUntilStopped();
+        
+        LOG.info("Checking for remaining/hung messages with restart..");
+        broker = createBroker(false);
+        setPersistenceAdapter(adapter);
+        broker.start();
+        
+        // after restart, ensure no dangling messages
+        cf = new ActiveMQConnectionFactory("failover:(" + url + ")");
+        connection = cf.createConnection();
+        connection.start();
+        Session session2 = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        consumer = session2.createConsumer(destination);
+        msg = consumer.receive(1000);
+        if (msg == null) {
+            msg = consumer.receive(5000);
+        }
+        LOG.info("Received: " + msg);
+        assertNull("no messges left dangling but got: " + msg, msg);
+        connection.close();
+    }
+    
+    
+    
     private void setPersistenceAdapter(int adapter) throws IOException {
         switch (adapter) {
         case 0:
+            broker.setPersistenceAdapter(new AMQPersistenceAdapter());
             break;
         case 1:
             broker.setPersistenceAdapter(new JDBCPersistenceAdapter());
             break;
         case 2:
             KahaDBPersistenceAdapter store = new KahaDBPersistenceAdapter();
+            // duplicate checker not updated on canceled tasks, even it
+            // it was, reovery of the audit would fail as the message is
+            // not recorded in the store and the audit may not be up to date.
+            // So if duplicate are a nono (w.r.t stats), this must be disabled
+            store.setConcurrentStoreAndDispatchQueues(false);
+            store.setMaxFailoverProducersToTrack(10);
             store.setDirectory(new File("target/activemq-data/kahadb/FailoverTransactionTest"));
             broker.setPersistenceAdapter(store);
             break;

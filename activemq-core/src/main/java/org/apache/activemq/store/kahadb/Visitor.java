@@ -21,6 +21,7 @@ import java.io.IOException;
 import org.apache.activemq.store.kahadb.data.KahaAddMessageCommand;
 import org.apache.activemq.store.kahadb.data.KahaCommitCommand;
 import org.apache.activemq.store.kahadb.data.KahaPrepareCommand;
+import org.apache.activemq.store.kahadb.data.KahaProducerAuditCommand;
 import org.apache.activemq.store.kahadb.data.KahaRemoveDestinationCommand;
 import org.apache.activemq.store.kahadb.data.KahaRemoveMessageCommand;
 import org.apache.activemq.store.kahadb.data.KahaRollbackCommand;
@@ -51,6 +52,9 @@ public class Visitor {
     }
 
     public void visit(KahaSubscriptionCommand kahaUpdateSubscriptionCommand) throws IOException {
+    }
+    
+    public void visit(KahaProducerAuditCommand kahaProducerAuditCommand) throws IOException {
     }
 
 }

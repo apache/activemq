@@ -43,7 +43,7 @@ public class JDBCStoreOrderTest extends StoreOrderTest {
         while(result.next()) {
             long id = result.getLong(1);
             Message message = (Message)wireFormat.unmarshal(new ByteSequence(result.getBytes(2)));
-            LOG.error("id: " + id + ", message SeqId: " + message.getMessageId().getBrokerSequenceId() + ", MSG: " + message);
+            LOG.info("id: " + id + ", message SeqId: " + message.getMessageId().getBrokerSequenceId() + ", MSG: " + message);
         }
         statement.close();
         conn.close();

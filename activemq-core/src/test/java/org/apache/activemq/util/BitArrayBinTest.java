@@ -32,21 +32,29 @@ public class BitArrayBinTest extends TestCase {
         
         for (int i=0; i <= dataSize; i++) {
             assertTrue("not already set", !toTest.setBit(i, Boolean.TRUE));
+            assertEquals("current is max", i, toTest.getLastSetIndex());
         }
 
+        assertEquals("last is max", dataSize, toTest.getLastSetIndex());
+        
         int windowOfValidData = roundWindow(dataSize, window);
         int i=dataSize;
         for (; i >= dataSize -windowOfValidData; i--) {
             assertTrue("was already set, id=" + i, toTest.setBit(i, Boolean.TRUE));
         }
+
+        assertEquals("last is still max", dataSize, toTest.getLastSetIndex());
         
         for (; i >= 0; i--) {
             assertTrue("was not already set, id=" + i, !toTest.setBit(i, Boolean.TRUE));
         }
         
-        for (int j= dataSize +1; j<(2*dataSize); j++) {
+        for (int j= dataSize +1; j<=(2*dataSize); j++) {
             assertTrue("not already set: id=" + j, !toTest.setBit(j, Boolean.TRUE));
         }
+        
+        assertEquals("last still max*2", 2*dataSize, toTest.getLastSetIndex());
+
     }
     
     public void testSetUnsetAroundWindow() throws Exception {
@@ -87,6 +95,7 @@ public class BitArrayBinTest extends TestCase {
                 int instance = value +muliplier*BitArray.LONG_SIZE;
                 assertTrue("not already set: id=" + instance, !toTest.setBit(instance, Boolean.TRUE));
                 assertTrue("not already set: id=" + value, !toTest.setBit(value, Boolean.TRUE));
+                assertEquals("max set correct", instance, toTest.getLastSetIndex());
             }
         }
     }
@@ -108,6 +117,22 @@ public class BitArrayBinTest extends TestCase {
         instance = 9 *BitArray.LONG_SIZE;
         assertTrue("not already set: id=" + instance,  !toTest.setBit(instance, Boolean.TRUE));
     }
+    
+    
+   public void testLastSeq() throws Exception {
+       BitArrayBin toTest = new BitArrayBin(512);
+       assertEquals("last not set", -1, toTest.getLastSetIndex());
+       
+       toTest.setBit(1, Boolean.TRUE);
+       assertEquals("last correct", 1, toTest.getLastSetIndex());
+       
+       toTest.setBit(64, Boolean.TRUE);
+       assertEquals("last correct", 64, toTest.getLastSetIndex());
+       
+       toTest.setBit(68, Boolean.TRUE);
+       assertEquals("last correct", 68, toTest.getLastSetIndex());
+       
+   }
     
     // window moves in increments of BitArray.LONG_SIZE.
     // valid data window on low end can be larger than window

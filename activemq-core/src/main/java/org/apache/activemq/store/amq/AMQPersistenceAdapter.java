@@ -43,6 +43,7 @@ import org.apache.activemq.command.JournalTopicAck;
 import org.apache.activemq.command.JournalTrace;
 import org.apache.activemq.command.JournalTransaction;
 import org.apache.activemq.command.Message;
+import org.apache.activemq.command.ProducerId;
 import org.apache.activemq.command.SubscriptionInfo;
 import org.apache.activemq.filter.NonCachedMessageEvaluationContext;
 import org.apache.activemq.kaha.impl.async.AsyncDataManager;
@@ -1117,4 +1118,10 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
 	           + ".DisableLocking",
 	           "false"));
 	}
+
+	
+    public long getLastProducerSequenceId(ProducerId id) {
+        // reference store send has adequate duplicate suppression
+        return -1;
+    }
 }

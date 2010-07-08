@@ -16,35 +16,23 @@
  */
 package org.apache.activemq;
 
-import javax.jms.JMSException;
-import javax.jms.Message;
-
-import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.command.MessageId;
-import org.apache.activemq.command.ProducerId;
-import org.apache.activemq.util.BitArrayBin;
-import org.apache.activemq.util.IdGenerator;
-import org.apache.activemq.util.LRUCache;
 
 /**
  * Provides basic audit functions for Messages
  * 
  * @version $Revision: 1.1.1.1 $
  */
-public class ActiveMQMessageAudit {
+public class ActiveMQMessageAudit extends ActiveMQMessageAuditNoSync {
 
-    public static final int DEFAULT_WINDOW_SIZE = 2048;
-    public static final int MAXIMUM_PRODUCER_COUNT = 64;
-    private int auditDepth;
-    private int maximumNumberOfProducersToTrack;
-    private LRUCache<Object, BitArrayBin> map;
+    private static final long serialVersionUID = 1L;
 
     /**
      * Default Constructor windowSize = 2048, maximumNumberOfProducersToTrack =
      * 64
      */
     public ActiveMQMessageAudit() {
-        this(DEFAULT_WINDOW_SIZE, MAXIMUM_PRODUCER_COUNT);
+        super();
     }
 
     /**
@@ -55,198 +43,41 @@ public class ActiveMQMessageAudit {
      *                the system
      */
     public ActiveMQMessageAudit(int auditDepth, final int maximumNumberOfProducersToTrack) {
-        this.auditDepth = auditDepth;
-        this.maximumNumberOfProducersToTrack=maximumNumberOfProducersToTrack;
-        this.map = new LRUCache<Object, BitArrayBin>(0, maximumNumberOfProducersToTrack, 0.75f, true);
+        super(auditDepth, maximumNumberOfProducersToTrack);
     }
     
-    /**
-     * @return the auditDepth
-     */
-    public int getAuditDepth() {
-        return auditDepth;
-    }
-
-    /**
-     * @param auditDepth the auditDepth to set
-     */
-    public void setAuditDepth(int auditDepth) {
-        this.auditDepth = auditDepth;
-    }
-
-    /**
-     * @return the maximumNumberOfProducersToTrack
-     */
-    public int getMaximumNumberOfProducersToTrack() {
-        return maximumNumberOfProducersToTrack;
-    }
-
-    /**
-     * @param maximumNumberOfProducersToTrack the maximumNumberOfProducersToTrack to set
-     */
-    public void setMaximumNumberOfProducersToTrack(
-            int maximumNumberOfProducersToTrack) {
-        this.maximumNumberOfProducersToTrack = maximumNumberOfProducersToTrack;
-        this.map.setMaxCacheSize(maximumNumberOfProducersToTrack);
-    }
-
-    /**
-     * Checks if this message has been seen before
-     * 
-     * @param message
-     * @return true if the message is a duplicate
-     * @throws JMSException
-     */
-    public boolean isDuplicate(Message message) throws JMSException {
-        return isDuplicate(message.getJMSMessageID());
-    }
-
-    /**
-     * checks whether this messageId has been seen before and adds this
-     * messageId to the list
-     * 
-     * @param id
-     * @return true if the message is a duplicate
-     */
-    public synchronized boolean isDuplicate(String id) {
-        boolean answer = false;
-        String seed = IdGenerator.getSeedFromId(id);
-        if (seed != null) {
-            BitArrayBin bab = map.get(seed);
-            if (bab == null) {
-                bab = new BitArrayBin(auditDepth);
-                map.put(seed, bab);
-            }
-            long index = IdGenerator.getSequenceFromId(id);
-            if (index >= 0) {
-                answer = bab.setBit(index, true);
-            }
+    @Override
+    public boolean isDuplicate(String id) {
+        synchronized (this) {
+            return super.isDuplicate(id);
         }
-        return answer;
     }
 
-    /**
-     * Checks if this message has been seen before
-     * 
-     * @param message
-     * @return true if the message is a duplicate
-     */
-    public boolean isDuplicate(final MessageReference message) {
-        MessageId id = message.getMessageId();
-        return isDuplicate(id);
-    }
-    
-    /**
-     * Checks if this messageId has been seen before
-     * 
-     * @param id
-     * @return true if the message is a duplicate
-     */
-    public synchronized boolean isDuplicate(final MessageId id) {
-        boolean answer = false;
-        
-        if (id != null) {
-            ProducerId pid = id.getProducerId();
-            if (pid != null) {
-                BitArrayBin bab = map.get(pid);
-                if (bab == null) {
-                    bab = new BitArrayBin(auditDepth);
-                    map.put(pid, bab);
-                }
-                answer = bab.setBit(id.getProducerSequenceId(), true);
-            }
+    @Override
+    public boolean isDuplicate(final MessageId id) {
+        synchronized (this) {
+            return super.isDuplicate(id);
         }
-        return answer;
     }
 
-    /**
-     * mark this message as being received
-     * 
-     * @param message
-     */
-    public void rollback(final MessageReference message) {
-        MessageId id = message.getMessageId();
-        rollback(id);
-    }
-    
-    /**
-     * mark this message as being received
-     * 
-     * @param id
-     */
-    public synchronized void rollback(final  MessageId id) {
-        if (id != null) {
-            ProducerId pid = id.getProducerId();
-            if (pid != null) {
-                BitArrayBin bab = map.get(pid);
-                if (bab != null) {
-                    bab.setBit(id.getProducerSequenceId(), false);
-                }
-            }
+    @Override
+    public void rollback(final  MessageId id) {
+        synchronized (this) {
+            super.rollback(id);
         }
     }
     
-    /**
-     * Check the message is in order
-     * @param msg
-     * @return
-     * @throws JMSException
-     */
-    public boolean isInOrder(Message msg) throws JMSException {
-        return isInOrder(msg.getJMSMessageID());
-    }
-    
-    /**
-     * Check the message id is in order
-     * @param id
-     * @return
-     */
-    public synchronized boolean isInOrder(final String id) {
-        boolean answer = true;
-        
-        if (id != null) {
-            String seed = IdGenerator.getSeedFromId(id);
-            if (seed != null) {
-                BitArrayBin bab = map.get(seed);
-                if (bab != null) {
-                    long index = IdGenerator.getSequenceFromId(id);
-                    answer = bab.isInOrder(index);
-                }
-               
-            }
+    @Override
+    public boolean isInOrder(final String id) {
+        synchronized (this) {
+            return super.isInOrder(id);
         }
-        return answer;
     }
     
-    /**
-     * Check the MessageId is in order
-     * @param message 
-     * @return
-     */
-    public synchronized boolean isInOrder(final MessageReference message) {
-        return isInOrder(message.getMessageId());
-    }
-    
-    /**
-     * Check the MessageId is in order
-     * @param id
-     * @return
-     */
-    public synchronized boolean isInOrder(final MessageId id) {
-        boolean answer = false;
-
-        if (id != null) {
-            ProducerId pid = id.getProducerId();
-            if (pid != null) {
-                BitArrayBin bab = map.get(pid);
-                if (bab == null) {
-                    bab = new BitArrayBin(auditDepth);
-                    map.put(pid, bab);
-                }
-                answer = bab.isInOrder(id.getProducerSequenceId());
-
-            }
+    @Override
+    public boolean isInOrder(final MessageId id) {
+        synchronized (this) {
+            return isInOrder(id);
         }
-        return answer;
     }
 }

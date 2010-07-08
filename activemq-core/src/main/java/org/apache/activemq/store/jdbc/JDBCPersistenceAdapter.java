@@ -37,6 +37,7 @@ import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageId;
+import org.apache.activemq.command.ProducerId;
 import org.apache.activemq.openwire.OpenWireFormat;
 import org.apache.activemq.store.MessageStore;
 import org.apache.activemq.store.PersistenceAdapter;
@@ -93,7 +94,7 @@ public class JDBCPersistenceAdapter extends DataSourceSupport implements Persist
     
     protected int maxProducersToAudit=1024;
     protected int maxAuditDepth=1000;
-    protected boolean enableAudit=true;
+    protected boolean enableAudit=false;
     protected int auditRecoveryDepth = 1024;
     protected ActiveMQMessageAudit audit;
     
@@ -245,6 +246,19 @@ public class JDBCPersistenceAdapter extends DataSourceSupport implements Persist
             c.close();
         }
     }
+    
+    public long getLastProducerSequenceId(ProducerId id) throws IOException {
+        TransactionContext c = getTransactionContext();
+        try {
+            return getAdapter().doGetLastProducerSequenceId(c, id);
+        } catch (SQLException e) {
+            JDBCPersistenceAdapter.log("JDBC Failure: ", e);
+            throw IOExceptionSupport.create("Failed to get last broker message id: " + e, e);
+        } finally {
+            c.close();
+        }
+    }
+
 
     public void start() throws Exception {
         getAdapter().setUseExternalMessageReferences(isUseExternalMessageReferences());
@@ -699,6 +713,5 @@ public class JDBCPersistenceAdapter extends DataSourceSupport implements Persist
         synchronized(sequenceGenerator) {
             return sequenceGenerator.getNextSequenceId();
         }
-    }
-    
+    }    
 }

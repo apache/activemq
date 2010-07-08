@@ -16,11 +16,15 @@
  */
 package org.apache.activemq.store.kahadb;
 
+import java.io.ByteArrayOutputStream;
 import java.io.DataInput;
 import java.io.DataOutput;
+import java.io.EOFException;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -35,22 +39,25 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+
+import org.apache.activemq.ActiveMQMessageAuditNoSync;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.BrokerServiceAware;
 import org.apache.activemq.command.ConnectionId;
 import org.apache.activemq.command.LocalTransactionId;
+import org.apache.activemq.command.MessageId;
 import org.apache.activemq.command.SubscriptionInfo;
 import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.command.XATransactionId;
+import org.apache.activemq.protobuf.Buffer;
 import org.apache.activemq.store.kahadb.data.KahaAddMessageCommand;
 import org.apache.activemq.store.kahadb.data.KahaCommitCommand;
 import org.apache.activemq.store.kahadb.data.KahaDestination;
 import org.apache.activemq.store.kahadb.data.KahaEntryType;
 import org.apache.activemq.store.kahadb.data.KahaLocalTransactionId;
 import org.apache.activemq.store.kahadb.data.KahaPrepareCommand;
+import org.apache.activemq.store.kahadb.data.KahaProducerAuditCommand;
 import org.apache.activemq.store.kahadb.data.KahaRemoveDestinationCommand;
 import org.apache.activemq.store.kahadb.data.KahaRemoveMessageCommand;
 import org.apache.activemq.store.kahadb.data.KahaRollbackCommand;
@@ -93,9 +100,9 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
     private static final Log LOG = LogFactory.getLog(MessageDatabase.class);
     private static final int DEFAULT_DATABASE_LOCKED_WAIT_DELAY = 10 * 1000;
 
-     static final int CLOSED_STATE = 1;
-     static final int OPEN_STATE = 2;
-     static final long NOT_ACKED = -1;
+    static final int CLOSED_STATE = 1;
+    static final int OPEN_STATE = 2;
+    static final long NOT_ACKED = -1;
 
 
     protected class Metadata {
@@ -104,6 +111,8 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
         protected BTreeIndex<String, StoredDestination> destinations;
         protected Location lastUpdate;
         protected Location firstInProgressTransactionLocation;
+        protected Location producerSequenceIdTrackerLocation = null;
+        protected transient ActiveMQMessageAuditNoSync producerSequenceIdTracker = new ActiveMQMessageAuditNoSync();
 
         public void read(DataInput is) throws IOException {
             state = is.readInt();
@@ -117,6 +126,14 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
                 firstInProgressTransactionLocation = LocationMarshaller.INSTANCE.readPayload(is);
             } else {
                 firstInProgressTransactionLocation = null;
+            }
+            try {
+                if (is.readBoolean()) {
+                    producerSequenceIdTrackerLocation = LocationMarshaller.INSTANCE.readPayload(is);
+                } else {
+                    producerSequenceIdTrackerLocation = null;
+                }
+            } catch (EOFException expectedOnUpgrade) {
             }
         }
 
@@ -137,6 +154,13 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
             } else {
                 os.writeBoolean(false);
             }
+            
+            if (producerSequenceIdTrackerLocation != null) {
+                os.writeBoolean(true);
+                LocationMarshaller.INSTANCE.writePayload(producerSequenceIdTrackerLocation, os);
+            } else {
+                os.writeBoolean(false);
+            }
         }
     }
 
@@ -154,7 +178,7 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
 
     protected PageFile pageFile;
 	protected Journal journal;
-    protected Metadata metadata = new Metadata();
+	protected Metadata metadata = new Metadata();
 
     protected MetadataMarshaller metadataMarshaller = new MetadataMarshaller();
 
@@ -171,7 +195,8 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
     int journalMaxFileLength = Journal.DEFAULT_MAX_FILE_LENGTH;
     int journalMaxWriteBatchSize = Journal.DEFAULT_MAX_WRITE_BATCH_SIZE;
     boolean enableIndexWriteAsync = false;
-    int setIndexWriteBatchSize = PageFile.DEFAULT_WRITE_BATCH_SIZE; 
+    int setIndexWriteBatchSize = PageFile.DEFAULT_WRITE_BATCH_SIZE;
+    
     
     protected AtomicBoolean opened = new AtomicBoolean();
     private LockFile lockFile;
@@ -381,15 +406,15 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
     private Location getFirstInProgressTxLocation() {
         Location l = null;
         synchronized (inflightTransactions) {
-        if (!inflightTransactions.isEmpty()) {
-            l = inflightTransactions.values().iterator().next().get(0).getLocation();
-        }
-        if (!preparedTransactions.isEmpty()) {
-            Location t = preparedTransactions.values().iterator().next().get(0).getLocation();
-            if (l==null || t.compareTo(l) <= 0) {
-                l = t;
+            if (!inflightTransactions.isEmpty()) {
+                l = inflightTransactions.values().iterator().next().get(0).getLocation();
             }
-        }
+            if (!preparedTransactions.isEmpty()) {
+                Location t = preparedTransactions.values().iterator().next().get(0).getLocation();
+                if (l==null || t.compareTo(l) <= 0) {
+                    l = t;
+                }
+            }
         }
         return l;
     }
@@ -407,21 +432,25 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
         try {
             
 	        long start = System.currentTimeMillis();        
-	        Location recoveryPosition = getRecoveryPosition();
-	        if( recoveryPosition!=null ) {
-		        int redoCounter = 0;
-		        LOG.info("Recoverying from the journal ...");
-		        while (recoveryPosition != null) {
-		            JournalCommand message = load(recoveryPosition);
-		            metadata.lastUpdate = recoveryPosition;
-		            process(message, recoveryPosition);
-		            redoCounter++;
-		            recoveryPosition = journal.getNextLocation(recoveryPosition);
-		        }
-		        long end = System.currentTimeMillis();
-	        	LOG.info("Recovery replayed " + redoCounter + " operations from the journal in " + ((end - start) / 1000.0f) + " seconds.");
+	        Location producerAuditPosition = recoverProducerAudit();
+	        Location lastIndoubtPosition = getRecoveryPosition();
+	        
+	        Location recoveryPosition = minimum(producerAuditPosition, lastIndoubtPosition);
+	            
+	        if (recoveryPosition != null) {  
+	            int redoCounter = 0;
+	            LOG.info("Recoverying from the journal ...");
+	            while (recoveryPosition != null) {
+	                JournalCommand<?> message = load(recoveryPosition);
+	                metadata.lastUpdate = recoveryPosition;
+	                process(message, recoveryPosition, lastIndoubtPosition);
+	                redoCounter++;
+	                recoveryPosition = journal.getNextLocation(recoveryPosition);
+	            }
+	            long end = System.currentTimeMillis();
+	            LOG.info("Recovery replayed " + redoCounter + " operations from the journal in " + ((end - start) / 1000.0f) + " seconds.");
 	        }
-	     
+	        
 	        // We may have to undo some index updates.
             pageFile.tx().execute(new Transaction.Closure<IOException>() {
                 public void execute(Transaction tx) throws IOException {
@@ -433,7 +462,39 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
         }
     }
     
-	protected void recoverIndex(Transaction tx) throws IOException {
+	private Location minimum(Location producerAuditPosition,
+            Location lastIndoubtPosition) {
+	    Location min = null;
+	    if (producerAuditPosition != null) {
+	        min = producerAuditPosition;
+	        if (lastIndoubtPosition != null && lastIndoubtPosition.compareTo(producerAuditPosition) < 0) {
+	            min = lastIndoubtPosition;
+	        }
+	    } else {
+	        min = lastIndoubtPosition;
+	    }
+	    return min;
+    }
+	
+	private Location recoverProducerAudit() throws IOException {
+	    if (metadata.producerSequenceIdTrackerLocation != null) {
+	        KahaProducerAuditCommand audit = (KahaProducerAuditCommand) load(metadata.producerSequenceIdTrackerLocation);
+	        try {
+	            ObjectInputStream objectIn = new ObjectInputStream(audit.getAudit().newInput());
+	            metadata.producerSequenceIdTracker = (ActiveMQMessageAuditNoSync) objectIn.readObject();
+	        } catch (ClassNotFoundException cfe) {
+	            IOException ioe = new IOException("Failed to read producerAudit: " + cfe);
+	            ioe.initCause(cfe);
+	            throw ioe;
+	        }
+	        return journal.getNextLocation(metadata.producerSequenceIdTrackerLocation);
+	    } else {
+	        // got no audit stored so got to recreate via replay from start of the journal
+	        return journal.getNextLocation(null);
+	    }
+    }
+
+    protected void recoverIndex(Transaction tx) throws IOException {
         long start = System.currentTimeMillis();
         // It is possible index updates got applied before the journal updates.. 
         // in that case we need to removed references to messages that are not in the journal
@@ -457,6 +518,7 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
                 MessageKeys keys = sd.orderIndex.remove(tx, sequenceId);
                 sd.locationIndex.remove(tx, keys.location);
                 sd.messageIdIndex.remove(tx, keys.messageId);
+                metadata.producerSequenceIdTracker.rollback(new MessageId(keys.messageId));
                 undoCounter++;
                 // TODO: do we need to modify the ack positions for the pub sub case?
 			}
@@ -588,7 +650,7 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
 	        while (nextRecoveryPosition != null) {
 	        	lastRecoveryPosition = nextRecoveryPosition;
 	            metadata.lastUpdate = lastRecoveryPosition;
-	            JournalCommand message = load(lastRecoveryPosition);
+	            JournalCommand<?> message = load(lastRecoveryPosition);
 	            process(message, lastRecoveryPosition);            
 	            nextRecoveryPosition = journal.getNextLocation(lastRecoveryPosition);
 	        }
@@ -601,8 +663,8 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
         return metadata.lastUpdate;
     }
     
-	private Location getRecoveryPosition() throws IOException {
-		
+    private Location getRecoveryPosition() throws IOException {
+        
         // If we need to recover the transactions..
         if (metadata.firstInProgressTransactionLocation != null) {
             return metadata.firstInProgressTransactionLocation;
@@ -613,7 +675,7 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
             // Start replay at the record after the last one recorded in the index file.
             return journal.getNextLocation(metadata.lastUpdate);
         }
-        
+	    
         // This loads the first position.
         return journal.getNextLocation(null);
 	}
@@ -658,7 +720,7 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
     // /////////////////////////////////////////////////////////////////
     // Methods call by the broker to update and query the store.
     // /////////////////////////////////////////////////////////////////
-    public Location store(JournalCommand data) throws IOException {
+    public Location store(JournalCommand<?> data) throws IOException {
         return store(data, false, null,null);
     }
 
@@ -669,7 +731,7 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
      * during a recovery process.
      * @param done 
      */
-    public Location store(JournalCommand data, boolean sync, Runnable before,Runnable after) throws IOException {
+    public Location store(JournalCommand<?> data, boolean sync, Runnable before,Runnable after) throws IOException {
     	if (before != null) {
     	    before.run();
     	}
@@ -716,7 +778,7 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
      * @return
      * @throws IOException
      */
-    public JournalCommand load(Location location) throws IOException {
+    public JournalCommand<?> load(Location location) throws IOException {
         ByteSequence data = journal.read(location);
         DataByteArrayInputStream is = new DataByteArrayInputStream(data);
         byte readByte = is.readByte();
@@ -724,9 +786,29 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
         if( type == null ) {
             throw new IOException("Could not load journal record. Invalid location: "+location);
         }
-        JournalCommand message = (JournalCommand)type.createMessage();
+        JournalCommand<?> message = (JournalCommand<?>)type.createMessage();
         message.mergeFramed(is);
         return message;
+    }
+    
+    /**
+     * do minimal recovery till we reach the last inDoubtLocation
+     * @param data
+     * @param location
+     * @param inDoubtlocation
+     * @throws IOException
+     */
+    void process(JournalCommand<?> data, final Location location, final Location inDoubtlocation) throws IOException {
+        if (inDoubtlocation != null && location.compareTo(inDoubtlocation) >= 0) {
+            process(data, location);
+        } else {
+            // just recover producer audit
+            data.visit(new Visitor() {
+                public void visit(KahaAddMessageCommand command) throws IOException {
+                    metadata.producerSequenceIdTracker.isDuplicate(command.getMessageId());
+                }
+            });
+        }
     }
 
     // /////////////////////////////////////////////////////////////////
@@ -735,7 +817,7 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
     // from the recovery method too so they need to be idempotent
     // /////////////////////////////////////////////////////////////////
 
-    void process(JournalCommand data, final Location location) throws IOException {
+    void process(JournalCommand<?> data, final Location location) throws IOException {
         data.visit(new Visitor() {
             @Override
             public void visit(KahaAddMessageCommand command) throws IOException {
@@ -911,7 +993,7 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
         if( previous == null ) {
             previous = sd.messageIdIndex.put(tx, command.getMessageId(), id);
             if( previous == null ) {
-                sd.orderIndex.put(tx, id, new MessageKeys(command.getMessageId(), location));
+                sd.orderIndex.put(tx, id, new MessageKeys(command.getMessageId(), location));            
             } else {
                 // If the message ID as indexed, then the broker asked us to store a DUP
                 // message.  Bad BOY!  Don't do it, and log a warning.
@@ -927,7 +1009,8 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
             // TODO: consider just rolling back the tx.
             sd.locationIndex.put(tx, location, previous);
         }
-        
+        // record this id in any event, initial send or recovery
+        metadata.producerSequenceIdTracker.isDuplicate(command.getMessageId());
     }
 
     void updateIndex(Transaction tx, KahaRemoveMessageCommand command, Location ackLocation) throws IOException {
@@ -1025,6 +1108,7 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
         LOG.debug("Checkpoint started.");
         
         metadata.state = OPEN_STATE;
+        metadata.producerSequenceIdTrackerLocation = checkpointProducerAudit();
         metadata.firstInProgressTransactionLocation = getFirstInProgressTxLocation();
         tx.store(metadata.page, metadataMarshaller, true);
         pageFile.flush();
@@ -1111,6 +1195,15 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
         LOG.debug("Checkpoint done.");
     }
     
+    private Location checkpointProducerAudit() throws IOException {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        ObjectOutputStream oout = new ObjectOutputStream(baos);
+        oout.writeObject(metadata.producerSequenceIdTracker);
+        oout.flush();
+        oout.close();
+        return store(new KahaProducerAuditCommand().setAudit(new Buffer(baos.toByteArray())));
+    }
+
     public HashSet<Integer> getJournalFilesBeingReplicated() {
 		return journalFilesBeingReplicated;
 	}
@@ -1578,6 +1671,22 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
     
     public int getJournalMaxFileLength() {
         return journalMaxFileLength;
+    }
+    
+    public void setMaxFailoverProducersToTrack(int maxFailoverProducersToTrack) {
+        this.metadata.producerSequenceIdTracker.setMaximumNumberOfProducersToTrack(maxFailoverProducersToTrack);
+    }
+    
+    public int getMaxFailoverProducersToTrack() {
+        return this.metadata.producerSequenceIdTracker.getMaximumNumberOfProducersToTrack();
+    }
+    
+    public void setFailoverProducersAuditDepth(int failoverProducersAuditDepth) {
+        this.metadata.producerSequenceIdTracker.setAuditDepth(failoverProducersAuditDepth);
+    }
+    
+    public int getFailoverProducersAuditDepth() {
+        return this.metadata.producerSequenceIdTracker.getAuditDepth();
     }
     
     public PageFile getPageFile() {

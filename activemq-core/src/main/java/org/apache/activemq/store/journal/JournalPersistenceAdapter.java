@@ -50,6 +50,7 @@ import org.apache.activemq.command.JournalTrace;
 import org.apache.activemq.command.JournalTransaction;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
+import org.apache.activemq.command.ProducerId;
 import org.apache.activemq.filter.NonCachedMessageEvaluationContext;
 import org.apache.activemq.openwire.OpenWireFormat;
 import org.apache.activemq.store.MessageStore;
@@ -743,6 +744,10 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
         if( pa instanceof BrokerServiceAware ) {
             ((BrokerServiceAware)pa).setBrokerService(brokerService);
         }
+    }
+
+    public long getLastProducerSequenceId(ProducerId id) {
+        return -1;
     }
 
 }

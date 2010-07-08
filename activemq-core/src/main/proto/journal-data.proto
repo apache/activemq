@@ -29,6 +29,7 @@ enum KahaEntryType {
   KAHA_ROLLBACK_COMMAND = 5;
   KAHA_REMOVE_DESTINATION_COMMAND = 6;
   KAHA_SUBSCRIPTION_COMMAND = 7;
+  KAHA_PRODUCER_AUDIT_COMMAND = 8;
 }
 
 message KahaTraceCommand {
@@ -107,6 +108,18 @@ message KahaSubscriptionCommand {
   required string subscriptionKey = 2;
   optional bool retroactive = 3;
   optional bytes subscriptionInfo = 4;
+}
+
+message KahaProducerAuditCommand {
+  // We make use of the wonky comment style bellow because the following options
+  // are not valid for protoc, but they are valid for the ActiveMQ proto compiler.
+  // In the ActiveMQ proto compiler, comments terminate with the pipe character: |
+
+  //| option java_implments = "org.apache.activemq.store.kahadb.JournalCommand<KahaProducerAuditCommand>";
+  //| option java_visitor = "org.apache.activemq.store.kahadb.Visitor:void:java.io.IOException";
+  //| option java_type_method = "KahaEntryType";
+  
+  required bytes audit = 1;
 }
 
 message KahaDestination {

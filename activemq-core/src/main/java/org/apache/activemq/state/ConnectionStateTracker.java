@@ -140,6 +140,7 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
         // Restore the connections.
         for (Iterator<ConnectionState> iter = connectionStates.values().iterator(); iter.hasNext();) {
             ConnectionState connectionState = iter.next();
+            connectionState.getInfo().setFailoverReconnect(true);
             if (LOG.isDebugEnabled()) {
                 LOG.debug("conn: " + connectionState.getInfo().getConnectionId());
             }
@@ -156,6 +157,9 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
         }
         //now flush messages
         for (Message msg:messageCache.values()) {
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("message: " + msg.getMessageId());
+            }
             transport.oneway(msg);
         }
     }

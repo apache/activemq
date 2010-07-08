@@ -727,7 +727,7 @@ public class FailoverTransport implements CompositeTransport {
         for (Iterator<Command> iter2 = tmpMap.values().iterator(); iter2.hasNext();) {
             Command command = iter2.next();
             if (LOG.isTraceEnabled()) {
-                LOG.trace("restore, replay: " + command);
+                LOG.trace("restore requestMap, replay: " + command);
             }
             t.oneway(command);
         }

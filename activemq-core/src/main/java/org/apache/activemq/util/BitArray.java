@@ -19,6 +19,7 @@ package org.apache.activemq.util;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.io.Serializable;
 
 /**
  * Simple BitArray to enable setting multiple boolean values efficently Used
@@ -27,7 +28,10 @@ import java.io.IOException;
  * 
  * @version $Revision: 1.1.1.1 $
  */
-public class BitArray {
+public class BitArray implements Serializable {
+    
+    private static final long serialVersionUID = 1L;
+    
     static final int LONG_SIZE = 64;
     static final int INT_SIZE = 32;
     static final int SHORT_SIZE = 16;
@@ -113,6 +117,14 @@ public class BitArray {
         this.bits = bits;
     }
 
+    private void writeObject(java.io.ObjectOutputStream out) throws IOException {
+        writeToStream(out);
+    }
+    
+    private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
+        readFromStream(in);
+    }
+    
     /**
      * write the bits to an output stream
      * 

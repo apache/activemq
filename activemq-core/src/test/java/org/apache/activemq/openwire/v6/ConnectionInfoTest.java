@@ -66,5 +66,6 @@ public class ConnectionInfoTest extends BaseCommandTestSupport {
         info.setManageable(false);
         info.setClientMaster(true);
         info.setFaultTolerant(false);
+        info.setFailoverReconnect(true);
     }
 }
