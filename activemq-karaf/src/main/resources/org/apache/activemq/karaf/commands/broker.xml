@@ -27,64 +27,69 @@
     <!-- Allows us to use system properties as variables in this configuration file -->
     <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer"/>
 
-    <broker xmlns="http://activemq.apache.org/schema/core" brokerName="${name}" dataDirectory="${karaf.base}/data/activemq/${name}" useShutdownHook="false">
+    <broker xmlns="http://activemq.apache.org/schema/core" brokerName="${name}" dataDirectory="${karaf.data}/activemq/${name}" useShutdownHook="false">
 
-        <!-- Destination specific policies using destination names or wildcards -->
+        <!--
+            For better performances use VM cursor and small memory limit.
+            For more information, see:
+            
+            http://activemq.apache.org/message-cursors.html
+            
+            Also, if your producer is "hanging", it's probably due to producer flow control.
+            For more information, see:
+            http://activemq.apache.org/producer-flow-control.html
+        -->
+              
         <destinationPolicy>
             <policyMap>
-
-                <policyEntries>
-                    <policyEntry queue=">" memoryLimit="5mb"/>
-                    <policyEntry topic=">" memoryLimit="5mb">
-                        <subscriptionRecoveryPolicy>
-                            <lastImageSubscriptionRecoveryPolicy/>
-                        </subscriptionRecoveryPolicy>
-                    </policyEntry>
-                </policyEntries>
+              <policyEntries>
+                <policyEntry topic=">" producerFlowControl="true" memoryLimit="1mb">
+                  <pendingSubscriberPolicy>
+                    <vmCursor />
+                  </pendingSubscriberPolicy>
+                </policyEntry>
+                <policyEntry queue=">" producerFlowControl="true" memoryLimit="1mb">
+                  <!-- Use VM cursor for better latency
+                       For more information, see:
+                       
+                       http://activemq.apache.org/message-cursors.html
+                       
+                  <pendingQueuePolicy>
+                    <vmQueueCursor/>
+                  </pendingQueuePolicy>
+                  -->
+                </policyEntry>
+              </policyEntries>
             </policyMap>
-
-        </destinationPolicy>
+        </destinationPolicy> 
 
         <!-- Use the following to configure how ActiveMQ is exposed in JMX -->
         <managementContext>
             <managementContext createConnector="false"/>
         </managementContext>
 
-        <!-- The store and forward broker networks ActiveMQ will listen to -->
-        <networkConnectors>
-            <!-- by default just auto discover the other brokers -->
-
-            <networkConnector name="default-nc" uri="multicast://default"/>
-            <!-- Example of a static configuration:
-            <networkConnector name="host1 and host2" uri="static://(tcp://host1:61616,tcp://host2:61616)"/>
-            -->
-        </networkConnectors>
-
-        <persistenceAdapter>
-            <amqPersistenceAdapter syncOnWrite="false" directory="${karaf.base}/data/activemq/${name}" maxFileLength="20 mb"/>
-        </persistenceAdapter>
-
-        <!-- Use the following if you wish to configure the journal with JDBC -->
-        <!--
-        <persistenceAdapter>
-            <journaledJDBC dataDirectory="${activemq.base}/data" dataSource="#postgres-ds"/>
-        </persistenceAdapter>
+        <!-- 
+            Configure message persistence for the broker. The default persistence
+            mechanism is the KahaDB store (identified by the kahaDB tag). 
+            For more information, see: 
+            
+            http://activemq.apache.org/persistence.html 
         -->
-
-        <!-- Or if you want to use pure JDBC without a journal -->
-        <!--
         <persistenceAdapter>
-            <jdbcPersistenceAdapter dataSource="#postgres-ds"/>
+            <kahaDB directory="${karaf.data}/activemq/${name}/kahadb"/>
         </persistenceAdapter>
-        -->
 
-        <!--  The maximum about of space the broker will use before slowing down producers -->
+       <!--
+            The systemUsage controls the maximum amount of space the broker will 
+            use before slowing down producers. For more information, see:
+            
+            http://activemq.apache.org/producer-flow-control.html
+             
         <systemUsage>
             <systemUsage>
                 <memoryUsage>
                     <memoryUsage limit="20 mb"/>
                 </memoryUsage>
-
                 <storeUsage>
                     <storeUsage limit="1 gb" name="foo"/>
                 </storeUsage>
@@ -93,10 +98,11 @@
                 </tempUsage>
             </systemUsage>
         </systemUsage>
+        -->
 
         <!-- The transport connectors ActiveMQ will listen to -->
         <transportConnectors>
-            <transportConnector name="openwire" uri="tcp://localhost:61616" discoveryUri="multicast://default"/>
+            <transportConnector name="openwire" uri="tcp://localhost:61616"/>
             <transportConnector name="stomp" uri="stomp://localhost:61613"/>
         </transportConnectors>
 
@@ -107,11 +113,9 @@
         <property name="brokerURL" value="tcp://localhost:61616" />
     </bean>
 
-    <bean id="pooledConnectionFactory" class="org.apache.activemq.pool.PooledConnectionFactoryBean">
+    <bean id="pooledConnectionFactory" class="org.apache.activemq.pool.PooledConnectionFactory">
         <property name="maxConnections" value="8" />
-        <property name="transactionManager" ref="transactionManager" />
         <property name="connectionFactory" ref="activemqConnectionFactory" />
-        <property name="resourceName" value="activemq.${name}" />
     </bean>
 
     <bean id="resourceManager" class="org.apache.activemq.pool.ActiveMQResourceManager" init-method="recoverResource">
