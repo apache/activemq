@@ -38,6 +38,8 @@ public class CreateBrokerCommand extends OsgiCommandSupport {
     
     @Option(name = "-n", aliases = {"--name"}, description = "The name of the broker (defaults to localhost).")
     private String name = "localhost";
+    @Option(name = "-t", aliases = {"--type"}, description = "type of configuration to be used: spring or blueprint (defaults to spring)")
+    private String type = "spring";
 
     /*
      * (non-Javadoc)
@@ -56,7 +58,13 @@ public class CreateBrokerCommand extends OsgiCommandSupport {
 
             mkdir(deploy);
             File configFile = new File(deploy, name + "-broker.xml");
-            copyFilteredResourceTo(configFile, "broker.xml", props);
+            
+            if (!type.equalsIgnoreCase("spring") && !type.equalsIgnoreCase("blueprint")) {
+                System.out.println("@green Unknown type '" + type + "' Using spring by default");
+                type = "spring";
+            }
+            
+            copyFilteredResourceTo(configFile, type.toLowerCase() + ".xml", props);
 
             System.out.println("");
             System.out.println("Default ActiveMQ Broker (" + name + ") configuration file created at: "
