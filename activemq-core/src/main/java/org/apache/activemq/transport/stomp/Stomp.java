@@ -62,7 +62,7 @@ public interface Stomp {
             String EXPIRATION_TIME = "expires";
             String PRIORITY = "priority";
             String TYPE = "type";
-            Object PERSISTENT = "persistent";
+            String PERSISTENT = "persistent";
         }
 
         public interface Message {

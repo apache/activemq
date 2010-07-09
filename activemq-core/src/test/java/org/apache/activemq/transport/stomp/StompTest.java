@@ -23,6 +23,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.jms.BytesMessage;
@@ -1319,6 +1320,36 @@ public class StompTest extends CombinationTestSupport {
         StompFrame message = stompConnection.receive(5000);
         assertEquals("system", message.getHeaders().get(Stomp.Headers.Message.USERID));
     }
+
+    public void testClientSetMessageIdIsIgnored() throws Exception {
+        HashMap<String, String> headers = new HashMap<String, String>();
+        headers.put(Stomp.Headers.Message.MESSAGE_ID, "Thisisnotallowed");
+        headers.put(Stomp.Headers.Message.TIMESTAMP, "1234");
+        headers.put(Stomp.Headers.Message.REDELIVERED, "true");
+        headers.put(Stomp.Headers.Message.SUBSCRIPTION, "Thisisnotallowed");
+        headers.put(Stomp.Headers.Message.USERID, "Thisisnotallowed");
+
+
+        stompConnection.connect("system", "manager");
+
+
+        stompConnection.send("/queue/" + getQueueName(), "msg", null, headers);
+
+        stompConnection.subscribe("/queue/" + getQueueName());
+        StompFrame stompMessage = stompConnection.receive();
+
+        Map<String, String> mess_headers = new HashMap<String, String>();
+        mess_headers = stompMessage.getHeaders();
+
+        assertFalse("Thisisnotallowed".equals(mess_headers.get(Stomp.Headers.Message.MESSAGE_ID)
+                ));
+        assertFalse("1234".equals(mess_headers.get(Stomp.Headers.Message.TIMESTAMP)));
+        assertNull(mess_headers.get(Stomp.Headers.Message.REDELIVERED));
+        assertNull(mess_headers.get(Stomp.Headers.Message.SUBSCRIPTION));
+        assertEquals("system", mess_headers.get(Stomp.Headers.Message.USERID));
+
+    }
+
 
     protected void assertClients(int expected) throws Exception {
         org.apache.activemq.broker.Connection[] clients = broker.getBroker().getClients();

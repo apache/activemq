@@ -121,8 +121,17 @@ public interface FrameTranslator {
             }
 
             // Stomp specific headers
-            o = headers.remove(Stomp.Headers.RECEIPT_REQUESTED);
-            
+            headers.remove(Stomp.Headers.RECEIPT_REQUESTED);
+
+            // Since we take the rest of the header and put them in properties which could then
+            // be sent back to a STOMP consumer we need to sanitize anything which could be in
+            // Stomp.Headers.Message and might get passed through to the consumer
+            headers.remove(Stomp.Headers.Message.MESSAGE_ID);
+            headers.remove(Stomp.Headers.Message.TIMESTAMP);
+            headers.remove(Stomp.Headers.Message.REDELIVERED);
+            headers.remove(Stomp.Headers.Message.SUBSCRIPTION);
+            headers.remove(Stomp.Headers.Message.USERID);
+
             // now the general headers
             msg.setProperties(headers);
         }
