@@ -18,7 +18,7 @@
 
 -->
 <blueprint xmlns="http://www.osgi.org/xmlns/blueprint/v1.0.0"
-           xmlns:shell="http://felix.apache.org/karaf/xmlns/shell/v1.0.0">
+           xmlns:shell="http://karaf.apache.org/xmlns/shell/v1.0.0">
 
     <shell:command-bundle>
 
