@@ -33,6 +33,7 @@
         schedualer has a small impact as it checks for the presence three properties on each message
         jmx adds a bunch of wrapper classes
 
+        ACTIVEMQ_OPTS_MEMORY="-Xmx11g -Xms6g -Dorg.apache.activemq.UseDedicatedTaskRunner=false -Djava.util.logging.config.file=logging.properties -XX:+UseLargePages"
     -->
     <broker xmlns="http://activemq.apache.org/schema/core" brokerName="localhost" 
         dataDirectory="${activemq.base}/data" destroyApplicationContextOnStop="true" deleteAllMessagesOnStartup="true"        
