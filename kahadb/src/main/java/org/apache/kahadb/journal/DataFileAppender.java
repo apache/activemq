@@ -168,17 +168,9 @@ class DataFileAppender {
         location.setSize(size);
         location.setType(type);
 
-        WriteBatch batch;
         WriteCommand write = new WriteCommand(location, data, sync);
 
-        // Locate datafile and enqueue into the executor in sychronized block so
-        // that writes get equeued onto the executor in order that they were
-        // assigned
-        // by the data manager (which is basically just appending)
-
-        synchronized (this) {
-            batch = enqueue(write);
-        }
+        WriteBatch batch = enqueue(write);
         location.setLatch(batch.latch);
         if (sync) {
             try {
@@ -203,12 +195,9 @@ class DataFileAppender {
         location.setSize(size);
         location.setType(type);
 
-        WriteBatch batch;
         WriteCommand write = new WriteCommand(location, data, onComplete);
 
-        synchronized (this) {
-            batch = enqueue(write);
-        }
+        WriteBatch batch = enqueue(write);
  
         location.setLatch(batch.latch);
         return location;
