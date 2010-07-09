@@ -444,7 +444,7 @@ invoke_start(){
 # - $ACTIVEMQ_SUNJMX_START : options for JMX settings
 # - $ACTIVEMQ_SSL_OPTS     : options for SSL encryption
 
-invoke_fgstart(){
+invoke_console(){
     if ( checkRunning );then
       echo "ERROR: ActiveMQ is already running"
       exit 1
@@ -454,7 +454,7 @@ invoke_fgstart(){
     fi
     ACTIVEMQ_OPTS="$ACTIVEMQ_OPTS $ACTIVEMQ_SUNJMX_START $ACTIVEMQ_SSL_OPTS"
 
-    COMMANDLINE_ARGS="start $(echo $COMMANDLINE_ARGS|sed 's,^fgstart,,')"
+    COMMANDLINE_ARGS="start $(echo $COMMANDLINE_ARGS|sed 's,^console,,')"
     echo "INFO: Starting in foreground, this is just for debugging purposes (stop process by pressing CTRL+C)"
     invokeJar
     exit "$?" 
@@ -544,7 +544,7 @@ show_help() {
   cat << EOF
 Tasks provided by the sysv init script:
     restart         - stop running instance (is there is one), start new instance
-    fgstart         - start daemon in foreground, usful for debugging purposes
+    console         - start broker in foreground, useful for debugging purposes
     status          - check if activemq process is running
     setup           - create the specified configuration file for this init script
                       (see next usage section)
@@ -582,8 +582,8 @@ case "$1" in
   start)    
     invoke_start
     ;;
-  fgstart)
-    invoke_fgstart
+  console)
+    invoke_console
     ;;
   stop)    
     invoke_stop
