@@ -112,7 +112,7 @@ public class Journal {
 
     protected final AtomicReference<Location> lastAppendLocation = new AtomicReference<Location>();
     protected Runnable cleanupTask;
-    protected final AtomicLong totalLength = new AtomicLong();
+    protected AtomicLong totalLength = new AtomicLong();
     protected boolean archiveDataLogs;
 	private ReplicationTarget replicationTarget;
     protected boolean checksum;
@@ -226,7 +226,11 @@ public class Journal {
             accessorPool.closeDataFileAccessor(reader);
         }
 
+        int existingLen = dataFile.getLength();
         dataFile.setLength(location.getOffset());
+        if (existingLen > dataFile.getLength()) {
+            totalLength.addAndGet(dataFile.getLength() - existingLen);
+        }
 
         if( !dataFile.corruptedBlocks.isEmpty() ) {
             // Is the end of the data file corrupted?
@@ -734,5 +738,9 @@ public class Journal {
     
     public int getWriteBatchSize() {
         return writeBatchSize;
+    }
+
+    public void setSizeAccumulator(AtomicLong storeSizeAccumulator) {
+       this.totalLength = storeSizeAccumulator;
     }
 }

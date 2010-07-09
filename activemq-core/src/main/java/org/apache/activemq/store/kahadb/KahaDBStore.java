@@ -914,14 +914,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
     }
 
     public long size() {
-        if (!isStarted()) {
-            return 0;
-        }
-        try {
-            return journal.getDiskSize() + pageFile.getDiskSize();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        return storeSize.get();
     }
 
     public void beginTransaction(ConnectionContext context) throws IOException {

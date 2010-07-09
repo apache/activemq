@@ -39,6 +39,7 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.apache.activemq.ActiveMQMessageAuditNoSync;
@@ -190,6 +191,7 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
     protected boolean enableJournalDiskSyncs=true;
     protected boolean archiveDataLogs;
     protected File directoryArchive;
+    protected AtomicLong storeSize = new AtomicLong(0);
     long checkpointInterval = 5*1000;
     long cleanupInterval = 30*1000;
     int journalMaxFileLength = Journal.DEFAULT_MAX_FILE_LENGTH;
@@ -1594,6 +1596,7 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
         manager.setChecksum(checksumJournalFiles || checkForCorruptJournalFiles);
         manager.setWriteBatchSize(getJournalMaxWriteBatchSize());
         manager.setArchiveDataLogs(isArchiveDataLogs());
+        manager.setSizeAccumulator(storeSize);
         if (getDirectoryArchive() != null) {
             IOHelper.mkdirs(getDirectoryArchive());
             manager.setDirectoryArchive(getDirectoryArchive());
