@@ -246,7 +246,7 @@ public class PListStore extends ServiceSupport {
                 this.journal.setMaxFileLength(getJournalMaxFileLength());
                 this.journal.setWriteBatchSize(getJournalMaxWriteBatchSize());
                 this.journal.start();
-                this.pageFile = new PageFile(directory, "scheduleDB");
+                this.pageFile = new PageFile(directory, "tmpDB");
                 this.pageFile.load();
 
                 this.pageFile.tx().execute(new Transaction.Closure<IOException>() {
