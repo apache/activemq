@@ -89,6 +89,8 @@ public class PolicyEntry extends DestinationMapEntry {
     private SlowConsumerStrategy slowConsumerStrategy;
     private boolean prioritizedMessages;
     private boolean allConsumersExclusiveByDefault;
+    private boolean gcInactiveDestinations;
+    private long inactiveTimoutBeforeGC = BaseDestination.DEFAULT_INACTIVE_TIMEOUT_BEFORE_GC;
     
    
     public void configure(Broker broker,Queue queue) {
@@ -159,6 +161,8 @@ public class PolicyEntry extends DestinationMapEntry {
         }
         destination.setSlowConsumerStrategy(scs);
         destination.setPrioritizedMessages(isPrioritizedMessages());
+        destination.setGcIfInactive(isGcInactiveDestinations());
+        destination.setInactiveTimoutBeforeGC(getInactiveTimoutBeforeGC());
     }
 
     public void configure(Broker broker, SystemUsage memoryManager, TopicSubscription subscription) {
@@ -759,6 +763,22 @@ public class PolicyEntry extends DestinationMapEntry {
 
     public boolean isAllConsumersExclusiveByDefault() {
         return allConsumersExclusiveByDefault;
+    }
+
+    public boolean isGcInactiveDestinations() {
+        return this.gcInactiveDestinations;
+    }
+
+    public void setGcInactiveDestinations(boolean gcInactiveDestinations) {
+        this.gcInactiveDestinations = gcInactiveDestinations;
+    }
+
+    public long getInactiveTimoutBeforeGC() {
+        return this.inactiveTimoutBeforeGC;
+    }
+
+    public void setInactiveTimoutBeforeGC(long inactiveTimoutBeforeGC) {
+        this.inactiveTimoutBeforeGC = inactiveTimoutBeforeGC;
     }
 
 }
