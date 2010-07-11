@@ -230,7 +230,8 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
         } else {
             discard(node);
         }
-        return false;
+        //message expired
+        return true;
     }
 
     /**
