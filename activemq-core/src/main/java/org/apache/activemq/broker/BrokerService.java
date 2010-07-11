@@ -639,7 +639,7 @@ public class BrokerService implements Service {
             if (entry.getKey().isQueue()) {
                 if (entry.getValue().getName().matches(queueName)) {
                     queueSize = entry.getValue().getDestinationStatistics().getMessages().getCount();
-                    count = queueSize;
+                    count += queueSize;
                     if (queueSize > 0) {
                         LOG.info("Queue has pending message:" + entry.getValue().getName() + " queueSize is:"
                                 + queueSize);
