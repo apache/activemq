@@ -112,7 +112,7 @@ public class Topic extends BaseDestination implements Task {
 
     public void addSubscription(ConnectionContext context, final Subscription sub) throws Exception {
 
-        destinationStatistics.getConsumers().increment();
+       super.addSubscription(context, sub);
 
         if (!sub.getConsumerInfo().isDurable()) {
 
@@ -152,7 +152,7 @@ public class Topic extends BaseDestination implements Task {
     public void removeSubscription(ConnectionContext context, Subscription sub, long lastDeliveredSequenceId)
             throws Exception {
         if (!sub.getConsumerInfo().isDurable()) {
-            destinationStatistics.getConsumers().decrement();
+            super.removeSubscription(context, sub, lastDeliveredSequenceId);
             synchronized (consumers) {
                 consumers.remove(sub);
             }

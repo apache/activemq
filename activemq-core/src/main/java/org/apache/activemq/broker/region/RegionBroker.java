@@ -102,6 +102,12 @@ public class RegionBroker extends EmptyBroker {
     private ConnectionContext adminConnectionContext;
     private final Scheduler scheduler;
     private final ThreadPoolExecutor executor;
+    
+    private final Runnable purgeInactiveDestinationsTask = new Runnable() {
+        public void run() {
+            purgeInactiveDestinations();
+        }
+    };
 
     public RegionBroker(BrokerService brokerService, TaskRunnerFactory taskRunnerFactory, SystemUsage memoryManager, DestinationFactory destinationFactory,
                         DestinationInterceptor destinationInterceptor,Scheduler scheduler,ThreadPoolExecutor executor) throws IOException {
@@ -191,11 +197,16 @@ public class RegionBroker extends EmptyBroker {
         topicRegion.start();
         tempQueueRegion.start();
         tempTopicRegion.start();
+        int period = this.brokerService.getSchedulePeriodForDestinationPurge();
+        if (period > 0) {
+            this.scheduler.executePeriodically(purgeInactiveDestinationsTask, period);
+        }
     }
 
     @Override
     public void stop() throws Exception {
         started = false;
+        this.scheduler.cancel(purgeInactiveDestinationsTask);
         ServiceStopper ss = new ServiceStopper();
         doStop(ss);
         ss.throwFirstException();
@@ -351,26 +362,28 @@ public class RegionBroker extends EmptyBroker {
     }
 
     @Override
-    public void addProducer(ConnectionContext context, ProducerInfo info)
-            throws Exception {
+    public void addProducer(ConnectionContext context, ProducerInfo info) throws Exception {
         ActiveMQDestination destination = info.getDestination();
-        if (destination != null) {
+        synchronized (purgeInactiveDestinationsTask) {
+            if (destination != null) {
 
-            // This seems to cause the destination to be added but without advisories firing...
-            context.getBroker().addDestination(context, destination,false);
-            switch (destination.getDestinationType()) {
-            case ActiveMQDestination.QUEUE_TYPE:
-                queueRegion.addProducer(context, info);
-                break;
-            case ActiveMQDestination.TOPIC_TYPE:
-                topicRegion.addProducer(context, info);
-                break;
-            case ActiveMQDestination.TEMP_QUEUE_TYPE:
-                tempQueueRegion.addProducer(context, info);
-                break;
-            case ActiveMQDestination.TEMP_TOPIC_TYPE:
-                tempTopicRegion.addProducer(context, info);
-                break;
+                // This seems to cause the destination to be added but without
+                // advisories firing...
+                context.getBroker().addDestination(context, destination, false);
+                switch (destination.getDestinationType()) {
+                case ActiveMQDestination.QUEUE_TYPE:
+                    queueRegion.addProducer(context, info);
+                    break;
+                case ActiveMQDestination.TOPIC_TYPE:
+                    topicRegion.addProducer(context, info);
+                    break;
+                case ActiveMQDestination.TEMP_QUEUE_TYPE:
+                    tempQueueRegion.addProducer(context, info);
+                    break;
+                case ActiveMQDestination.TEMP_TOPIC_TYPE:
+                    tempTopicRegion.addProducer(context, info);
+                    break;
+                }
             }
         }
     }
@@ -378,20 +391,22 @@ public class RegionBroker extends EmptyBroker {
     @Override
     public void removeProducer(ConnectionContext context, ProducerInfo info) throws Exception {
         ActiveMQDestination destination = info.getDestination();
-        if (destination != null) {
-            switch (destination.getDestinationType()) {
-            case ActiveMQDestination.QUEUE_TYPE:
-                queueRegion.removeProducer(context, info);
-                break;
-            case ActiveMQDestination.TOPIC_TYPE:
-                topicRegion.removeProducer(context, info);
-                break;
-            case ActiveMQDestination.TEMP_QUEUE_TYPE:
-                tempQueueRegion.removeProducer(context, info);
-                break;
-            case ActiveMQDestination.TEMP_TOPIC_TYPE:
-                tempTopicRegion.removeProducer(context, info);
-                break;
+        synchronized (purgeInactiveDestinationsTask) {
+            if (destination != null) {
+                switch (destination.getDestinationType()) {
+                case ActiveMQDestination.QUEUE_TYPE:
+                    queueRegion.removeProducer(context, info);
+                    break;
+                case ActiveMQDestination.TOPIC_TYPE:
+                    topicRegion.removeProducer(context, info);
+                    break;
+                case ActiveMQDestination.TEMP_QUEUE_TYPE:
+                    tempQueueRegion.removeProducer(context, info);
+                    break;
+                case ActiveMQDestination.TEMP_TOPIC_TYPE:
+                    tempTopicRegion.removeProducer(context, info);
+                    break;
+                }
             }
         }
     }
@@ -399,48 +414,55 @@ public class RegionBroker extends EmptyBroker {
     @Override
     public Subscription addConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
         ActiveMQDestination destination = info.getDestination();
-        switch (destination.getDestinationType()) {
-        case ActiveMQDestination.QUEUE_TYPE:
-            return queueRegion.addConsumer(context, info);
+        synchronized (purgeInactiveDestinationsTask) {
+            switch (destination.getDestinationType()) {
+            case ActiveMQDestination.QUEUE_TYPE:
+                return queueRegion.addConsumer(context, info);
 
-        case ActiveMQDestination.TOPIC_TYPE:
-            return topicRegion.addConsumer(context, info);
+            case ActiveMQDestination.TOPIC_TYPE:
+                return topicRegion.addConsumer(context, info);
 
-        case ActiveMQDestination.TEMP_QUEUE_TYPE:
-            return tempQueueRegion.addConsumer(context, info);
+            case ActiveMQDestination.TEMP_QUEUE_TYPE:
+                return tempQueueRegion.addConsumer(context, info);
 
-        case ActiveMQDestination.TEMP_TOPIC_TYPE:
-            return tempTopicRegion.addConsumer(context, info);
+            case ActiveMQDestination.TEMP_TOPIC_TYPE:
+                return tempTopicRegion.addConsumer(context, info);
 
-        default:
-            throw createUnknownDestinationTypeException(destination);
+            default:
+                throw createUnknownDestinationTypeException(destination);
+            }
         }
     }
 
     @Override
     public void removeConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
         ActiveMQDestination destination = info.getDestination();
-        switch (destination.getDestinationType()) {
-        case ActiveMQDestination.QUEUE_TYPE:
-            queueRegion.removeConsumer(context, info);
-            break;
-        case ActiveMQDestination.TOPIC_TYPE:
-            topicRegion.removeConsumer(context, info);
-            break;
-        case ActiveMQDestination.TEMP_QUEUE_TYPE:
-            tempQueueRegion.removeConsumer(context, info);
-            break;
-        case ActiveMQDestination.TEMP_TOPIC_TYPE:
-            tempTopicRegion.removeConsumer(context, info);
-            break;
-        default:
-            throw createUnknownDestinationTypeException(destination);
+        synchronized (purgeInactiveDestinationsTask) {
+            switch (destination.getDestinationType()) {
+
+            case ActiveMQDestination.QUEUE_TYPE:
+                queueRegion.removeConsumer(context, info);
+                break;
+            case ActiveMQDestination.TOPIC_TYPE:
+                topicRegion.removeConsumer(context, info);
+                break;
+            case ActiveMQDestination.TEMP_QUEUE_TYPE:
+                tempQueueRegion.removeConsumer(context, info);
+                break;
+            case ActiveMQDestination.TEMP_TOPIC_TYPE:
+                tempTopicRegion.removeConsumer(context, info);
+                break;
+            default:
+                throw createUnknownDestinationTypeException(destination);
+            }
         }
     }
 
     @Override
     public void removeSubscription(ConnectionContext context, RemoveSubscriptionInfo info) throws Exception {
-        topicRegion.removeSubscription(context, info);
+        synchronized (purgeInactiveDestinationsTask) {
+            topicRegion.removeSubscription(context, info);
+        }
     }
 
     @Override
@@ -865,6 +887,40 @@ public class RegionBroker extends EmptyBroker {
         for (TransportConnector connector : connectors) {
             if (connector.isUpdateClusterClients() && connector.isUpdateClusterClientsOnRemove()) {
                 connector.updateClientClusterInfo();
+            }
+        }
+    }
+    
+    protected void purgeInactiveDestinations() {
+        synchronized (purgeInactiveDestinationsTask) {
+            List<BaseDestination> list = new ArrayList<BaseDestination>();
+            Map<ActiveMQDestination, Destination> map = getDestinationMap();
+            long timeStamp = System.currentTimeMillis();
+            for (Destination d : map.values()) {
+                if (d instanceof BaseDestination) {
+                    BaseDestination bd = (BaseDestination) d;
+                    bd.markForGC(timeStamp);
+                    if (bd.canGC()) {
+                        list.add(bd);
+                    }
+                }
+            }
+
+            if (list.isEmpty() == false) {
+
+                ConnectionContext context = new ConnectionContext();
+                context.setBroker(this);
+
+                for (BaseDestination dest : list) {
+                    dest.getLog().info(
+                            dest.getName() + " Inactive for longer than " + dest.getInactiveTimoutBeforeGC()
+                                    + " ms - removing ...");
+                    try {
+                        getRoot().removeDestination(context, dest.getActiveMQDestination(), 0);
+                    } catch (Exception e) {
+                        LOG.error("Failed to remove inactive destination " + dest, e);
+                    }
+                }
             }
         }
     }

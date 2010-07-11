@@ -48,6 +48,7 @@ public abstract class BaseDestination implements Destination {
     public static final int MAX_PAGE_SIZE = 200;
     public static final int MAX_BROWSE_PAGE_SIZE = MAX_PAGE_SIZE * 2;
     public static final long EXPIRE_MESSAGE_PERIOD = 30 * 1000;
+    public static final long DEFAULT_INACTIVE_TIMEOUT_BEFORE_GC = 60 * 1000;
     protected final ActiveMQDestination destination;
     protected final Broker broker;
     protected final MessageStore store;
@@ -82,6 +83,9 @@ public abstract class BaseDestination implements Destination {
     protected int storeUsageHighWaterMark = 100;
     private SlowConsumerStrategy slowConsumerStrategy;
     private boolean prioritizedMessages;
+    private long inactiveTimoutBeforeGC = DEFAULT_INACTIVE_TIMEOUT_BEFORE_GC;
+    private boolean gcIfInactive;
+    private long lastActiveTime=0l;
 
     /**
      * @param broker
@@ -196,11 +200,22 @@ public abstract class BaseDestination implements Destination {
 
     public void addProducer(ConnectionContext context, ProducerInfo info) throws Exception {
         destinationStatistics.getProducers().increment();
+        this.lastActiveTime=0l;
     }
 
     public void removeProducer(ConnectionContext context, ProducerInfo info) throws Exception {
         destinationStatistics.getProducers().decrement();
     }
+    
+    public void addSubscription(ConnectionContext context, Subscription sub) throws Exception{
+        destinationStatistics.getConsumers().increment();
+        this.lastActiveTime=0l;
+    }
+
+    public void removeSubscription(ConnectionContext context, Subscription sub, long lastDeliveredSequenceId) throws Exception{
+        destinationStatistics.getConsumers().decrement();
+    }
+
 
     public final MemoryUsage getMemoryUsage() {
         return memoryUsage;
@@ -594,6 +609,51 @@ public abstract class BaseDestination implements Destination {
 
     public void setPrioritizedMessages(boolean prioritizedMessages) {
         this.prioritizedMessages = prioritizedMessages;
+    }
+
+    /**
+     * @return the inactiveTimoutBeforeGC
+     */
+    public long getInactiveTimoutBeforeGC() {
+        return this.inactiveTimoutBeforeGC;
+    }
+
+    /**
+     * @param inactiveTimoutBeforeGC the inactiveTimoutBeforeGC to set
+     */
+    public void setInactiveTimoutBeforeGC(long inactiveTimoutBeforeGC) {
+        this.inactiveTimoutBeforeGC = inactiveTimoutBeforeGC;
+    }
+
+    /**
+     * @return the gcIfInactive
+     */
+    public boolean isGcIfInactive() {
+        return this.gcIfInactive;
+    }
+
+    /**
+     * @param gcIfInactive the gcIfInactive to set
+     */
+    public void setGcIfInactive(boolean gcIfInactive) {
+        this.gcIfInactive = gcIfInactive;
+    }
+    
+    public void markForGC(long timeStamp) {
+        if (isGcIfInactive() && this.lastActiveTime == 0 && isActive() == false
+                && destinationStatistics.messages.getCount() == 0 && getInactiveTimoutBeforeGC() > 0l) {
+            this.lastActiveTime = timeStamp;
+        }
+    }
+
+    public boolean canGC() {
+        boolean result = false;
+        if (isGcIfInactive()&& this.lastActiveTime != 0l) {
+            if ((System.currentTimeMillis() - this.lastActiveTime) > getInactiveTimoutBeforeGC()) {
+                result = true;
+            }
+        }
+        return result;
     }
     
 }

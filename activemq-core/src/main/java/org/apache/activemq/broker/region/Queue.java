@@ -355,6 +355,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
     LinkedList<BrowserDispatch> browserDispatches = new LinkedList<BrowserDispatch>();
 
     public void addSubscription(ConnectionContext context, Subscription sub) throws Exception {
+        super.addSubscription(context, sub);
         // synchronize with dispatch method so that no new messages are sent
         // while setting up a subscription. avoid out of order messages,
         // duplicates, etc.
@@ -362,8 +363,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
         try {
 
             sub.add(context, this);
-            destinationStatistics.getConsumers().increment();
-
+           
             // needs to be synchronized - so no contention with dispatching
            // consumersLock.
             consumersLock.writeLock().lock();
@@ -423,7 +423,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
 
     public void removeSubscription(ConnectionContext context, Subscription sub, long lastDeiveredSequenceId)
             throws Exception {
-        destinationStatistics.getConsumers().decrement();
+        super.removeSubscription(context, sub, lastDeiveredSequenceId);
         // synchronize with dispatch method so that no new messages are sent
         // while removing up a subscription.
         pagedInPendingDispatchLock.writeLock().lock();

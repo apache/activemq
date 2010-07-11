@@ -195,6 +195,8 @@ public class BrokerService implements Service {
     private Scheduler scheduler;
     private ThreadPoolExecutor executor;
     private boolean slave = true;
+    private int schedulePeriodForDestinationPurge=5000;
+    
     
 	static {
         String localHostName = "localhost";
@@ -2303,5 +2305,13 @@ public class BrokerService implements Service {
     
     public void setSchedulerDirectory(String schedulerDirectory) {
         setSchedulerDirectoryFile(new File(schedulerDirectory));
+    }
+
+    public int getSchedulePeriodForDestinationPurge() {
+        return this.schedulePeriodForDestinationPurge;
+    }
+
+    public void setSchedulePeriodForDestinationPurge(int schedulePeriodForDestinationPurge) {
+        this.schedulePeriodForDestinationPurge = schedulePeriodForDestinationPurge;
     }   
 }
