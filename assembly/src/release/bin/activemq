@@ -295,7 +295,7 @@ if [ "$OSTYPE" = "cygwin" ];then
 fi
 
 # Set default classpath
-ACTIVEMQ_CLASSPATH="${ACTIVEMQ_CONFIG_DIR}/;${ACTIVEMQ_CLASSPATH}"
+ACTIVEMQ_CLASSPATH="${ACTIVEMQ_CONFIG_DIR};${ACTIVEMQ_CLASSPATH}"
 
 
 # ------------------------------------------------------------------------
@@ -333,7 +333,7 @@ invokeJar(){
    fi
    # Execute java binary
    if [ -n "$PIDFILE" ] && [ "$PIDFILE" != "stop" ];then
-      $DOIT_PREFIX "cd $ACTIVEMQ_CONFIG_DIR; $JAVACMD $ACTIVEMQ_OPTS $ACTIVEMQ_DEBUG_OPTS \
+      $DOIT_PREFIX "$JAVACMD $ACTIVEMQ_OPTS $ACTIVEMQ_DEBUG_OPTS \
               -Dactivemq.classpath=\"${ACTIVEMQ_CLASSPATH}\" \
               -Dactivemq.home=\"${ACTIVEMQ_HOME}\" \
               -Dactivemq.base=\"${ACTIVEMQ_BASE}\" \
@@ -344,7 +344,7 @@ invokeJar(){
               echo \"INFO: pidfile created : '$PIDFILE' (pid '\$APID')\";exit \$RET" $DOIT_POSTFIX
       RET="$?"
    elif [ -n "$PIDFILE" ] && [ "$PIDFILE" == "stop" ];then
-          $DOIT_PREFIX "cd $ACTIVEMQ_CONFIG_DIR; $JAVACMD $ACTIVEMQ_OPTS $ACTIVEMQ_DEBUG_OPTS \
+          $DOIT_PREFIX "$JAVACMD $ACTIVEMQ_OPTS $ACTIVEMQ_DEBUG_OPTS \
               -Dactivemq.classpath=\"${ACTIVEMQ_CLASSPATH}\" \
               -Dactivemq.home=\"${ACTIVEMQ_HOME}\" \
               -Dactivemq.base=\"${ACTIVEMQ_BASE}\" \
@@ -352,7 +352,7 @@ invokeJar(){
               -jar \"${ACTIVEMQ_HOME}/bin/run.jar\" $COMMANDLINE_ARGS &"
       RET="$?"
    else
-      $DOIT_PREFIX "cd $ACTIVEMQ_CONFIG_DIR; $JAVACMD $ACTIVEMQ_OPTS $ACTIVEMQ_DEBUG_OPTS \
+      $DOIT_PREFIX "$JAVACMD $ACTIVEMQ_OPTS $ACTIVEMQ_DEBUG_OPTS \
               -Dactivemq.classpath=\"${ACTIVEMQ_CLASSPATH}\" \
               -Dactivemq.home=\"${ACTIVEMQ_HOME}\" \
               -Dactivemq.base=\"${ACTIVEMQ_BASE}\" \
