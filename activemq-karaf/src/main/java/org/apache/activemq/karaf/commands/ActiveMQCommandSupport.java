@@ -34,18 +34,16 @@ public class ActiveMQCommandSupport extends OsgiCommandSupport {
     private Command command;
 
     @Argument(index=0, multiValued=true, required=true)
-    private Collection<String> arguments = null;
+    private Collection<String> arguments;
 
     protected Object doExecute() throws Exception {
-        final String[] args = toStringArray(arguments.toArray());
-
         CommandContext context2 = new CommandContext();
         context2.setFormatter(new CommandShellOutputFormatter(System.out));
         Command currentCommand = command.getClass().newInstance();
 
         try {
             currentCommand.setCommandContext(context2);
-            currentCommand.execute(new ArrayList<String>(Arrays.asList(args)));
+            currentCommand.execute(arguments != null ? new ArrayList<String>(arguments) : new ArrayList<String>());
             return null;
         } catch (Throwable e) {
             Throwable cur = e;
