@@ -56,6 +56,15 @@ public class StompConnection {
         outputStream.flush();
     }
     
+    public void sendFrame(String frame, byte[] data) throws Exception {
+        byte[] bytes = frame.getBytes("UTF-8");
+        OutputStream outputStream = stompSocket.getOutputStream();
+        outputStream.write(bytes);
+        outputStream.write(data);
+        outputStream.write(0);
+        outputStream.flush();        
+    }
+    
     public StompFrame receive() throws Exception {
         return receive(RECEIVE_TIMEOUT);
     }    

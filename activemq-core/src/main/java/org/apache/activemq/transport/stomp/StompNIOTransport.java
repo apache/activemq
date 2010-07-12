@@ -26,6 +26,7 @@ import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
+import java.util.HashMap;
 
 import javax.net.SocketFactory;
 
@@ -37,6 +38,7 @@ import org.apache.activemq.transport.nio.SelectorSelection;
 import org.apache.activemq.transport.tcp.TcpTransport;
 import org.apache.activemq.util.ByteArrayOutputStream;
 import org.apache.activemq.util.ByteSequence;
+import org.apache.activemq.util.DataByteArrayInputStream;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.ServiceStopper;
 import org.apache.activemq.wireformat.WireFormat;
@@ -53,6 +55,11 @@ public class StompNIOTransport extends TcpTransport {
     
     private ByteBuffer inputBuffer;
     ByteArrayOutputStream currentCommand = new ByteArrayOutputStream();
+    boolean processedHeaders = false;
+    String action;
+    HashMap<String, String> headers;
+    int contentLength = -1;
+    int readLength = 0;
     int previousByte = -1;
 
     public StompNIOTransport(WireFormat wireFormat, SocketFactory socketFactory, URI remoteLocation, URI localLocation) throws UnknownHostException, IOException {
@@ -114,16 +121,47 @@ public class StompNIOTransport extends TcpTransport {
                while(i++ < readSize) {
                    b = input.read();
                    // skip repeating nulls
-                   if (previousByte == 0 && b == 0) {
+                   if (!processedHeaders && previousByte == 0 && b == 0) {
                        continue;
                    }
-                   currentCommand.write(b);
-                   // end of command reached, unmarshal
-                   if (b == 0) {
-                       Object command = wireFormat.unmarshal(new ByteSequence(currentCommand.toByteArray()));
-                       doConsume((Command)command);
-                       currentCommand.reset();
+                   
+                   if (!processedHeaders) {
+                       currentCommand.write(b);
+                       // end of headers section, parse action and header
+                       if (previousByte == '\n' && b == '\n') {
+                           if (wireFormat instanceof StompWireFormat) {
+                               DataByteArrayInputStream data = new DataByteArrayInputStream(currentCommand.toByteArray());
+                               action = ((StompWireFormat)wireFormat).parseAction(data);
+                               headers = ((StompWireFormat)wireFormat).parseHeaders(data);
+                               String contentLengthHeader = headers.get(Stomp.Headers.CONTENT_LENGTH);
+                               if (contentLengthHeader != null) {
+                                   contentLength = ((StompWireFormat)wireFormat).parseContentLength(contentLengthHeader);
+                               } else {
+                                   contentLength = -1;
+                               }
+                           }
+                           processedHeaders = true;
+                           currentCommand.reset();
+                       }
+                   } else {
+                       
+                       if (contentLength == -1) {
+                           // end of command reached, unmarshal
+                           if (b == 0) {
+                               processCommand();
+                           } else {
+                               currentCommand.write(b);
+                           }
+                       } else {
+                           // read desired content length
+                           if (readLength++ == contentLength) {
+                               processCommand();
+                           } else {
+                               currentCommand.write(b);
+                           }
+                       }
                    }
+                   
                    previousByte = b;
                }
                // clear the buffer
@@ -135,6 +173,14 @@ public class StompNIOTransport extends TcpTransport {
         } catch (Throwable e) {
             onException(IOExceptionSupport.create(e));
         }
+    }
+    
+    private void processCommand() throws Exception {
+        StompFrame frame = new StompFrame(action, headers, currentCommand.toByteArray());
+        doConsume(frame);
+        processedHeaders = false;
+        currentCommand.reset();
+        contentLength = -1;       
     }
 
     protected void doStart() throws Exception {

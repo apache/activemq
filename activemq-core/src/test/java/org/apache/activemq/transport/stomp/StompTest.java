@@ -397,6 +397,32 @@ public class StompTest extends CombinationTestSupport {
         frame = "DISCONNECT\n" + "\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
     }
+    
+    public void testBytesMessageWithNulls() throws Exception {
+
+        String frame = "CONNECT\n" + "login: system\n" + "passcode: manager\n\n" + Stomp.NULL;
+        stompConnection.sendFrame(frame);
+
+        frame = stompConnection.receiveFrame();
+        assertTrue(frame.startsWith("CONNECTED"));
+
+        frame = "SEND\n destination:/queue/" + getQueueName() + "\ncontent-length:5" + " \n\n" + "\u0001\u0002\u0000\u0004\u0005" + Stomp.NULL;
+        stompConnection.sendFrame(frame);
+        
+        frame = "SUBSCRIBE\n" + "destination:/queue/" + getQueueName() + "\n" + "ack:auto\n\n" + Stomp.NULL;
+        stompConnection.sendFrame(frame);        
+
+        StompFrame message = stompConnection.receive();
+        assertTrue(message.getAction().startsWith("MESSAGE"));
+
+        String length = message.getHeaders().get("content-length");
+        assertEquals("5", length);
+        
+        assertEquals(5, message.getContent().length);
+        
+        frame = "DISCONNECT\n" + "\n\n" + Stomp.NULL;
+        stompConnection.sendFrame(frame);
+    }    
 
     public void testSubscribeWithMessageSentWithProperties() throws Exception {
 

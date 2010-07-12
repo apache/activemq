@@ -87,43 +87,12 @@ public class StompWireFormat implements WireFormat {
     public Object unmarshal(DataInput in) throws IOException {
 
         try {
-            String action = null;
-
-            // skip white space to next real action line
-            while (true) {
-                action = readLine(in, MAX_COMMAND_LENGTH, "The maximum command length was exceeded");
-                if (action == null) {
-                    throw new IOException("connection was closed");
-                } else {
-                    action = action.trim();
-                    if (action.length() > 0) {
-                        break;
-                    }
-                }
-            }
+            
+            // parse action
+            String action = parseAction(in);
 
             // Parse the headers
-            HashMap<String, String> headers = new HashMap<String, String>(25);
-            while (true) {
-                String line = readLine(in, MAX_HEADER_LENGTH, "The maximum header length was exceeded");
-                if (line != null && line.trim().length() > 0) {
-
-                    if (headers.size() > MAX_HEADERS) {
-                        throw new ProtocolException("The maximum number of headers was exceeded", true);
-                    }
-
-                    try {
-                        int seperatorIndex = line.indexOf(Stomp.Headers.SEPERATOR);
-                        String name = line.substring(0, seperatorIndex).trim();
-                        String value = line.substring(seperatorIndex + 1, line.length()).trim();
-                        headers.put(name, value);
-                    } catch (Exception e) {
-                        throw new ProtocolException("Unable to parser header line [" + line + "]", true);
-                    }
-                } else {
-                    break;
-                }
-            }
+            HashMap<String, String> headers = parseHeaders(in);
 
             // Read in the data part.
             byte[] data = NO_DATA;
@@ -131,16 +100,7 @@ public class StompWireFormat implements WireFormat {
             if (contentLength != null) {
 
                 // Bless the client, he's telling us how much data to read in.
-                int length;
-                try {
-                    length = Integer.parseInt(contentLength.trim());
-                } catch (NumberFormatException e) {
-                    throw new ProtocolException("Specified content-length is not a valid integer", true);
-                }
-
-                if (length > MAX_DATA_LENGTH) {
-                    throw new ProtocolException("The maximum data length was exceeded", true);
-                }
+                int length = parseContentLength(contentLength);
 
                 data = new byte[length];
                 in.readFully(data);
@@ -192,6 +152,64 @@ public class StompWireFormat implements WireFormat {
         baos.close();
         ByteSequence sequence = baos.toByteSequence();
         return new String(sequence.getData(), sequence.getOffset(), sequence.getLength(), "UTF-8");
+    }
+    
+    protected String parseAction(DataInput in) throws IOException {
+        String action = null;
+
+        // skip white space to next real action line
+        while (true) {
+            action = readLine(in, MAX_COMMAND_LENGTH, "The maximum command length was exceeded");
+            if (action == null) {
+                throw new IOException("connection was closed");
+            } else {
+                action = action.trim();
+                if (action.length() > 0) {
+                    break;
+                }
+            }
+        }
+        return action;
+    }
+    
+    protected HashMap<String, String> parseHeaders(DataInput in) throws IOException {
+        HashMap<String, String> headers = new HashMap<String, String>(25);
+        while (true) {
+            String line = readLine(in, MAX_HEADER_LENGTH, "The maximum header length was exceeded");
+            if (line != null && line.trim().length() > 0) {
+
+                if (headers.size() > MAX_HEADERS) {
+                    throw new ProtocolException("The maximum number of headers was exceeded", true);
+                }
+
+                try {
+                    int seperatorIndex = line.indexOf(Stomp.Headers.SEPERATOR);
+                    String name = line.substring(0, seperatorIndex).trim();
+                    String value = line.substring(seperatorIndex + 1, line.length()).trim();
+                    headers.put(name, value);
+                } catch (Exception e) {
+                    throw new ProtocolException("Unable to parser header line [" + line + "]", true);
+                }
+            } else {
+                break;
+            }
+        }     
+        return headers;
+    }
+    
+    protected int parseContentLength(String contentLength) throws ProtocolException {
+        int length;
+        try {
+            length = Integer.parseInt(contentLength.trim());
+        } catch (NumberFormatException e) {
+            throw new ProtocolException("Specified content-length is not a valid integer", true);
+        }
+
+        if (length > MAX_DATA_LENGTH) {
+            throw new ProtocolException("The maximum data length was exceeded", true);
+        }
+        
+        return length;
     }
 
     public int getVersion() {
