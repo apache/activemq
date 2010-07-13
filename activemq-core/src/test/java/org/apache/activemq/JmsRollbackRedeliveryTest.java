@@ -98,7 +98,7 @@ public class JmsRollbackRedeliveryTest extends AutoFailTestSupport {
                         session.commit();
                     } else {
                         LOG.info("Rollback message " + msg.getText() + " id: " +  msg.getJMSMessageID());
-                        assertFalse(msg.getJMSRedelivered());
+                        assertFalse("should not have redelivery flag set, id: " + msg.getJMSMessageID(), msg.getJMSRedelivered());
                         session.rollback();
                     }
                 }

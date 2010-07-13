@@ -807,7 +807,7 @@ public class JMSConsumerTest extends JmsTestSupport {
                 
         Message msg = redispatchConsumer.receive(1000);
         assertNotNull(msg);
-        assertTrue(msg.getJMSRedelivered());
+        assertTrue("redelivered flag set", msg.getJMSRedelivered());
         assertEquals(2, msg.getLongProperty("JMSXDeliveryCount"));
         
         msg = redispatchConsumer.receive(1000);

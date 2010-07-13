@@ -467,15 +467,37 @@ public class Queue extends BaseDestination implements Task, UsageListener {
 
                 // redeliver inflight messages
 
-                for (MessageReference ref : sub.remove(context, this)) {
+                boolean markAsRedelivered = false;
+                MessageReference lastDeliveredRef = null;
+                List<MessageReference> unAckedMessages = sub.remove(context, this);
+
+                // locate last redelivered in unconsumed list (list in delivery rather than seq order)
+                if (lastDeiveredSequenceId != 0) {
+                    for (MessageReference ref : unAckedMessages) {
+                        if (ref.getMessageId().getBrokerSequenceId() == lastDeiveredSequenceId) {
+                            lastDeliveredRef = ref;
+                            markAsRedelivered = true;
+                            LOG.debug("found lastDeliveredSeqID: " + lastDeiveredSequenceId + ", message reference: " + ref.getMessageId());
+                            break;
+                        }
+                    }
+                }
+                for (MessageReference ref : unAckedMessages) {
                     QueueMessageReference qmr = (QueueMessageReference) ref;
                     if (qmr.getLockOwner() == sub) {
                         qmr.unlock();
-                        // only increment redelivery if it was delivered or we
+
                         // have no delivery information
-                        if (lastDeiveredSequenceId == 0
-                                || qmr.getMessageId().getBrokerSequenceId() <= lastDeiveredSequenceId) {
+                        if (lastDeiveredSequenceId == 0) {
                             qmr.incrementRedeliveryCounter();
+                        } else {
+                            if (markAsRedelivered) {
+                                qmr.incrementRedeliveryCounter();
+                            }
+                            if (ref == lastDeliveredRef) {
+                                // all that follow were not redelivered
+                                markAsRedelivered = false;
+                            }
                         }
                     }
                     redeliveredWaitingDispatch.add(qmr);
