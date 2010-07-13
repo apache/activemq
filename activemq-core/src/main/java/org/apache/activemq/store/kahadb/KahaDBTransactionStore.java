@@ -289,7 +289,7 @@ public class KahaDBTransactionStore implements TransactionStore {
     public synchronized void recover(TransactionRecoveryListener listener) throws IOException {
         // All the inflight transactions get rolled back..
         // inflightTransactions.clear();
-        for (Map.Entry<TransactionId, ArrayList<Operation>> entry : theStore.preparedTransactions.entrySet()) {
+        for (Map.Entry<TransactionId, List<Operation>> entry : theStore.preparedTransactions.entrySet()) {
             XATransactionId xid = (XATransactionId) entry.getKey();
             ArrayList<Message> messageList = new ArrayList<Message>();
             ArrayList<MessageAck> ackList = new ArrayList<MessageAck>();

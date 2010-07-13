@@ -956,14 +956,6 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
         }
         KahaTransactionInfo rc = new KahaTransactionInfo();
 
-        // Link it up to the previous record that was part of the transaction.
-        synchronized (inflightTransactions) {
-            ArrayList<Operation> tx = inflightTransactions.get(txid);
-            if (tx != null) {
-                rc.setPreviousEntry(convert(tx.get(tx.size() - 1).location));
-            }
-        }
-
         if (txid.isLocalTransaction()) {
             LocalTransactionId t = (LocalTransactionId) txid;
             KahaLocalTransactionId kahaTxId = new KahaLocalTransactionId();
