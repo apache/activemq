@@ -71,4 +71,7 @@ public class StompSslAuthTest extends StompTest {
 
     public void testJMSXUserIDIsSetInStompMessage() throws Exception {
     }
+    
+    public void testClientSetMessageIdIsIgnored() throws Exception {
+    }
 }
