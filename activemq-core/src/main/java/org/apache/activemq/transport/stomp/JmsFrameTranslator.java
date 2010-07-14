@@ -29,18 +29,16 @@ import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.command.ActiveMQMapMessage;
 import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ActiveMQObjectMessage;
-import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.command.DataStructure;
+import org.apache.activemq.util.JettisonMappedXmlDriver;
+import org.codehaus.jettison.mapped.Configuration;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 
-import com.sun.tools.javac.util.Log;
 import com.thoughtworks.xstream.XStream;
 import com.thoughtworks.xstream.io.HierarchicalStreamReader;
 import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
-import com.thoughtworks.xstream.io.json.JettisonMappedXmlDriver;
-import com.thoughtworks.xstream.io.json.JsonHierarchicalStreamDriver;
 import com.thoughtworks.xstream.io.xml.PrettyPrintWriter;
 import com.thoughtworks.xstream.io.xml.XppReader;
 
@@ -174,7 +172,7 @@ public class JmsFrameTranslator extends LegacyFrameTranslator implements
 		StringWriter buffer = new StringWriter();
 		HierarchicalStreamWriter out;
 		if (transformation.toLowerCase().endsWith("json")) {
-			out = new JettisonMappedXmlDriver().createWriter(buffer);
+			out = new JettisonMappedXmlDriver(new Configuration(), false).createWriter(buffer);
 		} else {
 			out = new PrettyPrintWriter(buffer);
 		}

@@ -33,6 +33,8 @@
   <properties>
     <activemq.osgi.import.pkg>
       com.thoughtworks.xstream*;resolution:=optional,
+      javax.xml.stream*;resolution:=optional,
+      org.codehaus.jettison*;resolution:=optional,
       org.apache.activeio*;resolution:=optional,
       org.apache.camel*;resolution:=optional,
       org.apache.commons.pool*;resolution:=optional,
@@ -155,11 +157,21 @@
       <artifactId>xstream</artifactId>
       <optional>true</optional>
     </dependency>        
+    <dependency>
+        <groupId>org.codehaus.jettison</groupId>
+        <artifactId>jettison</artifactId>
+        <optional>true</optional>
+    </dependency>       
 
     <!-- for XML parsing -->
     <dependency>
       <groupId>org.apache.xbean</groupId>
       <artifactId>xbean-spring</artifactId>
+      <optional>true</optional>
+    </dependency>
+    <dependency>
+      <groupId>stax</groupId>
+      <artifactId>stax-api</artifactId>
       <optional>true</optional>
     </dependency>
 
@@ -219,27 +231,17 @@
       <optional>false</optional>
       <type>test-jar</type>
     </dependency>
-	<dependency>
-		<groupId>org.codehaus.jettison</groupId>
-		<artifactId>jettison</artifactId>
-		<version>1.0</version>
-		<scope>test</scope>
-	</dependency>	
-	<dependency>
-		<groupId>stax</groupId>
-		<artifactId>stax-api</artifactId>
-		<scope>test</scope>
-	</dependency>
     <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring-jms</artifactId>
       <scope>test</scope>
-    </dependency>    
+    </dependency>
     <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring-test</artifactId>
       <scope>test</scope>
-    </dependency>    
+    </dependency>
+    
     <dependency>
       <groupId>commons-io</groupId>
       <artifactId>commons-io</artifactId>

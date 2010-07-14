@@ -63,7 +63,7 @@
     <jdom-version>1.0</jdom-version>
     <jetty-version>7.0.1.v20091125</jetty-version>
     <jsp-version>2.1.v20100127</jsp-version>
-    <jettison-version>1.1</jettison-version>
+    <jettison-version>1.2</jettison-version>
     <jmock-version>2.5.1</jmock-version>
     <junit-version>4.5</junit-version>
     <jxta-version>2.0</jxta-version>
@@ -76,6 +76,7 @@
     <rome-version>0.8</rome-version>
     <slf4j-version>1.5.0</slf4j-version>
     <spring-oxm-version>1.5.8</spring-oxm-version>
+    <stax-api-version>1.0.1</stax-api-version>
     <stax-version>1.2.0</stax-version>
     <xalan-version>2.6.0</xalan-version>
     <xmlbeans-version>2.0.0-beta1</xmlbeans-version>
@@ -744,7 +745,7 @@
       <dependency>
         <groupId>stax</groupId>
         <artifactId>stax-api</artifactId>
-        <version>1.0.1</version>
+        <version>${stax-api-version}</version>
       </dependency>
       <dependency>
         <groupId>stax</groupId>
