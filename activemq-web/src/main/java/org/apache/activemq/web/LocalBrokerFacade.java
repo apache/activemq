@@ -19,6 +19,9 @@ package org.apache.activemq.web;
 import java.util.Iterator;
 import java.util.Set;
 
+import javax.management.ObjectName;
+import javax.management.QueryExp;
+
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.jmx.BrokerView;
@@ -73,6 +76,16 @@ public class LocalBrokerFacade extends BrokerFacadeSupport {
                 regionQueue.purge();
             }
         }
+    }
+
+    @Override
+    public Set queryNames(ObjectName name, QueryExp query) throws Exception {
+        return getManagementContext().queryNames(name, query);
+    }
+
+    @Override
+    public Object newProxyInstance(ObjectName objectName, Class interfaceClass, boolean notificationBroadcaster) {
+        return getManagementContext().newProxyInstance(objectName, interfaceClass, notificationBroadcaster);
     }
     
 }

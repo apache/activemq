@@ -23,6 +23,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import javax.management.ObjectName;
+import javax.management.QueryExp;
 import javax.management.openmbean.CompositeData;
 import javax.management.openmbean.TabularData;
 import org.apache.activemq.broker.jmx.BrokerViewMBean;
@@ -45,6 +46,8 @@ import org.springframework.util.StringUtils;
  */
 public abstract class BrokerFacadeSupport implements BrokerFacade {
     public abstract ManagementContext getManagementContext();
+    public abstract Set queryNames(ObjectName name, QueryExp query) throws Exception;
+    public abstract Object newProxyInstance( ObjectName objectName, Class interfaceClass, boolean notificationBroadcaster) throws Exception;
 
     public Collection<QueueViewMBean> getQueues() throws Exception {
         BrokerViewMBean broker = getBrokerAdmin();
@@ -94,11 +97,11 @@ public abstract class BrokerFacadeSupport implements BrokerFacade {
     }
 
     @SuppressWarnings("unchecked")
-    protected <T> Collection<T> getManagedObjects(ObjectName[] names, Class<T> type) {
+    protected <T> Collection<T> getManagedObjects(ObjectName[] names, Class<T> type) throws Exception {
         List<T> answer = new ArrayList<T>();
         for (int i = 0; i < names.length; i++) {
             ObjectName name = names[i];
-            T value = (T) getManagementContext().newProxyInstance(name, type, true);
+            T value = (T) newProxyInstance(name, type, true);
             if (value != null) {
                 answer.add(value);
             }
@@ -110,7 +113,7 @@ public abstract class BrokerFacadeSupport implements BrokerFacade {
     public Collection<ConnectionViewMBean> getConnections() throws Exception {
         String brokerName = getBrokerName();
         ObjectName query = new ObjectName("org.apache.activemq:BrokerName=" + brokerName + ",Type=Connection,*");
-        Set<ObjectName> queryResult = getManagementContext().queryNames(query, null);
+        Set<ObjectName> queryResult = queryNames(query, null);
         return getManagedObjects(queryResult.toArray(new ObjectName[queryResult.size()]), ConnectionViewMBean.class);
     }
 
@@ -119,7 +122,7 @@ public abstract class BrokerFacadeSupport implements BrokerFacade {
         String brokerName = getBrokerName();
         ObjectName query = new ObjectName("org.apache.activemq:BrokerName=" + brokerName
                 + ",Type=Connection,ConnectorName=" + connectorName + ",*");
-        Set<ObjectName> queryResult = getManagementContext().queryNames(query, null);
+        Set<ObjectName> queryResult = queryNames(query, null);
         Collection<String> result = new ArrayList<String>(queryResult.size());
         for (ObjectName on : queryResult) {
             String name = StringUtils.replace(on.getKeyProperty("Connection"), "_", ":");
@@ -134,11 +137,11 @@ public abstract class BrokerFacadeSupport implements BrokerFacade {
         String brokerName = getBrokerName();
         ObjectName query = new ObjectName("org.apache.activemq:BrokerName=" + brokerName
                 + ",Type=Connection,*,Connection=" + connectionName);
-        Set<ObjectName> queryResult = getManagementContext().queryNames(query, null);
+        Set<ObjectName> queryResult = queryNames(query, null);
         if (queryResult.size() == 0)
             return null;
         ObjectName objectName = queryResult.iterator().next();
-        return (ConnectionViewMBean) getManagementContext().newProxyInstance(objectName, ConnectionViewMBean.class,
+        return (ConnectionViewMBean) newProxyInstance(objectName, ConnectionViewMBean.class,
                 true);
     }
 
@@ -146,7 +149,7 @@ public abstract class BrokerFacadeSupport implements BrokerFacade {
     public Collection<String> getConnectors() throws Exception {
         String brokerName = getBrokerName();
         ObjectName query = new ObjectName("org.apache.activemq:BrokerName=" + brokerName + ",Type=Connector,*");
-        Set<ObjectName> queryResult = getManagementContext().queryNames(query, null);
+        Set<ObjectName> queryResult = queryNames(query, null);
         Collection<String> result = new ArrayList<String>(queryResult.size());
         for (ObjectName on : queryResult)
             result.add(on.getKeyProperty("ConnectorName"));
@@ -157,14 +160,14 @@ public abstract class BrokerFacadeSupport implements BrokerFacade {
         String brokerName = getBrokerName();
         ObjectName objectName = new ObjectName("org.apache.activemq:BrokerName=" + brokerName
                 + ",Type=Connector,ConnectorName=" + name);
-        return (ConnectorViewMBean) getManagementContext().newProxyInstance(objectName, ConnectorViewMBean.class, true);
+        return (ConnectorViewMBean) newProxyInstance(objectName, ConnectorViewMBean.class, true);
     }
 
     @SuppressWarnings("unchecked")
     public Collection<NetworkConnectorViewMBean> getNetworkConnectors() throws Exception {
         String brokerName = getBrokerName();
         ObjectName query = new ObjectName("org.apache.activemq:BrokerName=" + brokerName + ",Type=NetworkConnector,*");
-        Set<ObjectName> queryResult = getManagementContext().queryNames(query, null);
+        Set<ObjectName> queryResult = queryNames(query, null);
         return getManagedObjects(queryResult.toArray(new ObjectName[queryResult.size()]),
                 NetworkConnectorViewMBean.class);
     }
@@ -175,7 +178,7 @@ public abstract class BrokerFacadeSupport implements BrokerFacade {
         queueName = StringUtils.replace(queueName, "\"", "_");
         ObjectName query = new ObjectName("org.apache.activemq:BrokerName=" + brokerName
                 + ",Type=Subscription,destinationType=Queue,destinationName=" + queueName + ",*");
-        Set<ObjectName> queryResult = getManagementContext().queryNames(query, null);
+        Set<ObjectName> queryResult = queryNames(query, null);
         return getManagedObjects(queryResult.toArray(new ObjectName[queryResult.size()]), SubscriptionViewMBean.class);
     }
 
@@ -185,13 +188,13 @@ public abstract class BrokerFacadeSupport implements BrokerFacade {
         String brokerName = getBrokerName();
         ObjectName query = new ObjectName("org.apache.activemq:BrokerName=" + brokerName
                 + ",Type=Subscription,clientId=" + connectionName + ",*");
-        Set<ObjectName> queryResult = getManagementContext().queryNames(query, null);
+        Set<ObjectName> queryResult = queryNames(query, null);
         return getManagedObjects(queryResult.toArray(new ObjectName[queryResult.size()]), SubscriptionViewMBean.class);
     }
 
     public JobSchedulerViewMBean getJobScheduler() throws Exception {
         ObjectName name = getBrokerAdmin().getJMSJobScheduler();
-        return (JobSchedulerViewMBean) getManagementContext().newProxyInstance(name, JobSchedulerViewMBean.class, true);
+        return (JobSchedulerViewMBean) newProxyInstance(name, JobSchedulerViewMBean.class, true);
     }
 
     public Collection<JobFacade> getScheduledJobs() throws Exception {

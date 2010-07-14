@@ -28,6 +28,7 @@ import javax.management.MBeanServerConnection;
 import javax.management.MBeanServerInvocationHandler;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
+import javax.management.QueryExp;
 import javax.management.remote.JMXConnector;
 import javax.management.remote.JMXConnectorFactory;
 import javax.management.remote.JMXServiceURL;
@@ -238,6 +239,16 @@ public class RemoteJMXBrokerFacade extends BrokerFacadeSupport {
 			}
 		}
 		return answer;
+    }
+
+    @Override
+    public Set queryNames(ObjectName name, QueryExp query) throws Exception {
+        return getMBeanServerConnection().queryNames(name, query);
+    }
+
+    @Override
+    public Object newProxyInstance(ObjectName objectName, Class interfaceClass,boolean notificationBroadcaster) throws Exception {
+        return MBeanServerInvocationHandler.newProxyInstance(getMBeanServerConnection(), objectName, interfaceClass, notificationBroadcaster);
     }
 
 }
