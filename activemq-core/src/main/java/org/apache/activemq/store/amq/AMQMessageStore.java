@@ -38,6 +38,7 @@ import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.filter.NonCachedMessageEvaluationContext;
+import org.apache.activemq.kaha.MessageAckWithLocation;
 import org.apache.activemq.kaha.impl.async.Location;
 import org.apache.activemq.store.AbstractMessageStore;
 import org.apache.activemq.store.MessageRecoveryListener;
@@ -70,7 +71,7 @@ public class AMQMessageStore extends AbstractMessageStore {
     protected final TaskRunner asyncWriteTask;
     protected CountDownLatch flushLatch;
     private Map<MessageId, ReferenceData> messages = new LinkedHashMap<MessageId, ReferenceData>();
-    private List<MessageAck> messageAcks = new ArrayList<MessageAck>();
+    private List<MessageAckWithLocation> messageAcks = new ArrayList<MessageAckWithLocation>();
     /** A MessageStore that we can use to retrieve messages quickly. */
     private Map<MessageId, ReferenceData> cpAddedMessageIds;
     private final boolean debug = LOG.isDebugEnabled();
@@ -255,7 +256,7 @@ public class AMQMessageStore extends AbstractMessageStore {
             MessageId id = ack.getLastMessageId();
             data = messages.remove(id);
             if (data == null) {
-                messageAcks.add(ack);
+                messageAcks.add(new MessageAckWithLocation(ack, location));
             } else {
                 // message never got written so datafileReference will still exist
                 AMQMessageStore.this.peristenceAdapter.removeInProgressDataFile(AMQMessageStore.this, data.getFileId());
@@ -350,7 +351,7 @@ public class AMQMessageStore extends AbstractMessageStore {
      * @throws IOException
      */
     protected Location doAsyncWrite() throws IOException {
-        final List<MessageAck> cpRemovedMessageLocations;
+        final List<MessageAckWithLocation> cpRemovedMessageLocations;
         final List<Location> cpActiveJournalLocations;
         final int maxCheckpointMessageAddSize = peristenceAdapter.getMaxCheckpointMessageAddSize();
         final Location lastLocation;
@@ -361,7 +362,7 @@ public class AMQMessageStore extends AbstractMessageStore {
             cpRemovedMessageLocations = this.messageAcks;
             cpActiveJournalLocations = new ArrayList<Location>(inFlightTxLocations);
             this.messages = new LinkedHashMap<MessageId, ReferenceData>();
-            this.messageAcks = new ArrayList<MessageAck>();
+            this.messageAcks = new ArrayList<MessageAckWithLocation>();
             lastLocation = this.lastLocation;
         } finally {
             lock.unlock();
@@ -406,7 +407,7 @@ public class AMQMessageStore extends AbstractMessageStore {
                 persitanceAdapter.commitTransaction(context);
                 persitanceAdapter.beginTransaction(context);
                 // Checkpoint the removed messages.
-                for (MessageAck ack : cpRemovedMessageLocations) {
+                for (MessageAckWithLocation ack : cpRemovedMessageLocations) {
                     try {
                         referenceStore.removeMessage(transactionTemplate.getContext(), ack);
                     } catch (Throwable e) {
@@ -576,5 +577,5 @@ public class AMQMessageStore extends AbstractMessageStore {
         }
         getReferenceStore().setBatch(messageId);
     }
-    
+
 }

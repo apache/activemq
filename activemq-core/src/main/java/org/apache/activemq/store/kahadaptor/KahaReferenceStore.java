@@ -29,6 +29,7 @@ import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.kaha.MapContainer;
+import org.apache.activemq.kaha.MessageAckWithLocation;
 import org.apache.activemq.kaha.StoreEntry;
 import org.apache.activemq.store.AbstractMessageStore;
 import org.apache.activemq.store.MessageRecoveryListener;
@@ -203,17 +204,17 @@ public class KahaReferenceStore extends AbstractMessageStore implements Referenc
     }
 
     public void removeMessage(ConnectionContext context, MessageAck ack) throws IOException {
-        removeMessage(ack.getLastMessageId());
-    }
-
-    public void removeMessage(MessageId msgId) throws IOException {  
         lock.lock();
         try {
+            MessageId msgId = ack.getLastMessageId();
             StoreEntry entry = messageContainer.getEntry(msgId);
             if (entry != null) {
                 ReferenceRecord rr = messageContainer.remove(msgId);
                 if (rr != null) {
                     removeInterest(rr);
+                    if (ack instanceof MessageAckWithLocation) {
+                        recordAckFileReferences((MessageAckWithLocation)ack, rr.getData().getFileId());
+                    }
                     dispatchAudit.isDuplicate(msgId);
                     if (LOG.isDebugEnabled()) {
                         LOG.debug(destination.getPhysicalName() + " remove reference: " + msgId);
@@ -230,12 +231,18 @@ public class KahaReferenceStore extends AbstractMessageStore implements Referenc
         }
     }
 
+    private void recordAckFileReferences(MessageAckWithLocation ack, int messageFileId) {
+        adapter.recordAckFileReferences(ack.location.getDataFileId(), messageFileId);
+    }
+
     public void removeAllMessages(ConnectionContext context) throws IOException {
         lock.lock();
         try {
             Set<MessageId> tmpSet = new HashSet<MessageId>(messageContainer.keySet());
+            MessageAck ack = new MessageAck();
             for (MessageId id:tmpSet) {
-                removeMessage(id);
+                ack.setLastMessageId(id);
+                removeMessage(null, ack);
             }
             resetBatching();
             messageContainer.clear();

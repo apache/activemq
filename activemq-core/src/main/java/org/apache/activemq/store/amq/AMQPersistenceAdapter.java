@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.channels.FileLock;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
@@ -570,7 +571,6 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
      * 
      * @throws IOException
      * @throws IOException
-     * @throws InvalidLocationException
      * @throws IllegalStateException
      */
     private void recover() throws IllegalStateException, IOException {
@@ -1049,7 +1049,6 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
             }
         }
     }
-	
 	
 	
 	protected void lock() throws Exception {

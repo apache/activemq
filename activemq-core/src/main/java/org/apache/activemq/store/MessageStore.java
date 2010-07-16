@@ -47,7 +47,6 @@ public interface MessageStore extends Service {
      * 
      * @param context context
      * @param message
-     * @param l 
      * @return a Future to track when this is complete
      * @throws IOException 
      * @throws IOException
@@ -59,7 +58,6 @@ public interface MessageStore extends Service {
      * 
      * @param context context
      * @param message
-     * @param l 
      * @return a Future to track when this is complete
      * @throws IOException 
      * @throws IOException

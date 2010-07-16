@@ -252,7 +252,44 @@ public class KahaReferenceStoreAdapter extends KahaPersistenceAdapter implements
      * @see org.apache.activemq.store.ReferenceStoreAdapter#getReferenceFileIdsInUse()
      */
     public synchronized Set<Integer> getReferenceFileIdsInUse() throws IOException {
-        return new HashSet<Integer>(recordReferences.keySet());
+        Set inUse = new HashSet<Integer>(recordReferences.keySet());
+
+        Iterator<Map.Entry<Integer, Set<Integer>>> ackReferences = ackMessageFileMap.entrySet().iterator();
+        while (ackReferences.hasNext()) {
+            Map.Entry<Integer, Set<Integer>> ackReference = ackReferences.next();
+            if (!inUse.contains(ackReference.getKey())) {
+                // should we keep this data file
+                for (Integer referencedFileId : ackReference.getValue()) {
+                    if (inUse.contains(referencedFileId)) {
+                        // keep this ack file
+                        inUse.add(ackReference.getKey());
+                        LOG.debug("not removing data file: " + ackReference.getKey()
+                                        + " as contained ack(s) refer to referencedFileId file: " + ackReference.getValue());
+                        break;
+                    }
+                }
+            }
+            if (!inUse.contains(ackReference.getKey())) {
+               ackReferences.remove();
+            }
+        }
+
+        return inUse;
+    }
+
+    Map<Integer, Set<Integer>> ackMessageFileMap = new HashMap<Integer, Set<Integer>>();
+    public synchronized void recordAckFileReferences(int ackDataFileId, int messageFileId) {
+        Set<Integer> referenceFileIds = ackMessageFileMap.get(Integer.valueOf(ackDataFileId));
+        if (referenceFileIds == null) {
+            referenceFileIds = new HashSet<Integer>();
+            referenceFileIds.add(Integer.valueOf(messageFileId));
+            ackMessageFileMap.put(Integer.valueOf(ackDataFileId), referenceFileIds);
+        } else {
+            Integer id = Integer.valueOf(messageFileId);
+            if (!referenceFileIds.contains(id)) {
+                referenceFileIds.add(id);
+            }
+        }
     }
 
     /**
@@ -409,4 +446,6 @@ public class KahaReferenceStoreAdapter extends KahaPersistenceAdapter implements
     public void setIndexLoadFactor(int loadFactor) {
         this.indexLoadFactor = loadFactor;
     }
+
+
 }
