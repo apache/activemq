@@ -94,6 +94,10 @@
     </dependency>
     <dependency>
       <groupId>${project.groupId}</groupId>
+      <artifactId>activemq-spring</artifactId>
+    </dependency>    
+    <dependency>
+      <groupId>${project.groupId}</groupId>
       <artifactId>activemq-web-demo</artifactId>
       <type>war</type>
     </dependency>

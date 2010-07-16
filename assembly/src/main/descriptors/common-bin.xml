@@ -180,6 +180,7 @@
         <include>${pom.groupId}:activemq-optional</include>
         <include>${pom.groupId}:activemq-pool</include>
         <include>${pom.groupId}:activemq-xmpp</include>
+        <include>${pom.groupId}:activemq-spring</include>
         <include>${pom.groupId}:activeio-core</include>
         <include>${pom.groupId}:activemq-jmdns_1.0</include>
         <include>commons-beanutils:commons-beanutils</include>
@@ -209,8 +210,6 @@
         <include>org.codehaus.jettison:jettison</include>
         <include>org.apache.velocity:velocity</include>
         <include>net.sf.josql:josql</include>
-        <include>org.osgi:org.osgi.core</include>
-        <include>org.springframework.osgi:spring-osgi-core</include>
       </includes>
     </dependencySet>
     <dependencySet>
@@ -230,7 +229,6 @@
         <include>org.mortbay.jetty:jsp-2.1-glassfish</include>
         <include>org.mortbay.jetty:jsp-api-2.1-glassfish</include>
         <include>org.eclipse.jdt:core</include>
-        <include>org.apache.ant:ant</include>
 
         <!-- JSTL and other web stuff -->
         <include>opensymphony:sitemesh</include>

@@ -23,6 +23,7 @@
     <feature name="activemq-spring" version="${activemq-version}">
         <feature version="1.2.0">spring-dm</feature> 
         <feature version="${activemq-version}">activemq</feature> 
+        <bundle>mvn:org.apache.activemq/activemq-spring/${activemq-version}</bundle> 
         <bundle>mvn:org.apache.xbean/xbean-spring/${xbean-version}</bundle> 
     </feature>
 

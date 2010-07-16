@@ -25,12 +25,9 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.usage.SystemUsage;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.osgi.framework.BundleException;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
-import org.springframework.context.ConfigurableApplicationContext;
-import org.springframework.osgi.context.support.OsgiBundleXmlApplicationContext;
 
 /**
  * An ActiveMQ Message Broker. It consists of a number of transport
@@ -51,24 +48,6 @@ public class XBeanBrokerService extends BrokerService implements ApplicationCont
     
     private boolean start = true;
     private ApplicationContext applicationContext = null;
-    private boolean destroyApplicationContextOnShutdown = false;
-    private boolean destroyApplicationContextOnStop = false;
-
-    Runnable stopContextRunnable = new Runnable() {
-        public void run() {
-            if (applicationContext instanceof ConfigurableApplicationContext) {
-                ((ConfigurableApplicationContext) applicationContext).close();
-            }
-            if (applicationContext instanceof OsgiBundleXmlApplicationContext){
-                try {
-                    ((OsgiBundleXmlApplicationContext)applicationContext).getBundle().stop();
-                } catch (BundleException e) {
-                    LOG.info("Error stopping OSGi bundle " + e, e);
-                }
-            }
-
-        }
-    };
     
     public XBeanBrokerService() {
     }
@@ -83,9 +62,6 @@ public class XBeanBrokerService extends BrokerService implements ApplicationCont
         ensureSystemUsageHasStore();
         if (start) {
             start();
-        }
-        if (destroyApplicationContextOnShutdown) {
-            addShutdownHook(stopContextRunnable);
         }
     }
 
@@ -108,15 +84,6 @@ public class XBeanBrokerService extends BrokerService implements ApplicationCont
     public void destroy() throws Exception {
         stop();
     }
-
-    
-   @Override
-   public void stop() throws Exception {      
-       if (destroyApplicationContextOnStop) {
-           stopContextRunnable.run();
-       }
-       super.stop();
-   }
     
 
     /**
@@ -132,16 +99,18 @@ public class XBeanBrokerService extends BrokerService implements ApplicationCont
      * Sets whether the broker should shutdown the ApplicationContext when the broker jvm is shutdown.
      * The broker can be stopped because the underlying JDBC store is unavailable for example.
      */
+    @Deprecated
     public void setDestroyApplicationContextOnShutdown(boolean destroy) {
-        this.destroyApplicationContextOnShutdown = destroy;
+        LOG.warn("destroyApplicationContextOnShutdown parameter is deprecated, please use shutdown hooks instead");
     }
     
     /**
      * Sets whether the broker should shutdown the ApplicationContext when the broker is stopped.
      * The broker can be stopped because the underlying JDBC store is unavailable for example.
      */
+    @Deprecated
     public void setDestroyApplicationContextOnStop(boolean destroy) {
-        this.destroyApplicationContextOnStop = destroy;
+        LOG.warn("destroyApplicationContextOnStop parameter is deprecated, please use shutdown hooks instead");
     }
 
 	public void setApplicationContext(ApplicationContext applicationContext)

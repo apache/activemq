@@ -100,6 +100,10 @@
         </systemUsage>
         -->
 
+        <shutdownHooks>
+           <bean xmlns="http://www.springframework.org/schema/beans" id="hook" class="org.apache.activemq.hooks.SpringContextHook" />
+        </shutdownHooks>
+
         <!-- The transport connectors ActiveMQ will listen to -->
         <transportConnectors>
             <transportConnector name="openwire" uri="tcp://localhost:61616"/>

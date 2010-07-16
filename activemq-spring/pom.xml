@@ -39,7 +39,8 @@
     </activemq.osgi.import.pkg>
     <activemq.osgi.export>
       org.apache.activemq.pool*;version=${project.version};-noimport:=;-split-package:=merge-last,
-      org.apache.activemq.xbean*;version=${project.version};-noimport:=true;-split-package:=merge-last
+      org.apache.activemq.xbean*;version=${project.version};-noimport:=true;-split-package:=merge-last,
+      org.apache.activemq.hooks*;version=${project.version};-noimport:=;-split-package:=merge-last
     </activemq.osgi.export>
   </properties>
 
@@ -108,6 +109,29 @@
     	<artifactId>log4j</artifactId>
     	<scope>test</scope>
     </dependency>
+    <dependency>
+        <groupId>org.springframework.osgi</groupId>
+        <artifactId>spring-osgi-core</artifactId>
+        <exclusions>
+            <exclusion>
+                <groupId>org.springframework</groupId>
+                <artifactId>org.springframework.context</artifactId>
+            </exclusion>
+            <exclusion>
+                <groupId>org.springframework</groupId>
+                <artifactId>org.springframework.beans</artifactId>
+            </exclusion>
+            <exclusion>
+                <groupId>org.springframework</groupId>
+                <artifactId>org.springframework.aop</artifactId>
+            </exclusion>
+            <exclusion>
+                <groupId>org.springframework</groupId>
+                <artifactId>org.springframework.core</artifactId>
+            </exclusion>
+        </exclusions>
+    </dependency>    
+    
   </dependencies>
 
 </project>

@@ -1942,6 +1942,17 @@ public class BrokerService implements Service {
     }
 
     /**
+     * Sets hooks to be executed when broker shut down
+     * 
+     * @org.apache.xbean.Property
+     */
+    public void setShutdownHooks(List<Runnable> hooks) throws Exception {
+        for (Runnable hook : hooks) {
+            addShutdownHook(hook);
+        }
+    }
+    
+    /**
      * Causes a clean shutdown of the container when the VM is being shut down
      */
     protected void containerShutdown() {
