@@ -415,7 +415,7 @@ public class AMQMessageStore extends AbstractMessageStore {
                 }
             }
         });
-        LOG.debug("Batch update done.");
+        LOG.debug("Batch update done. lastLocation:" + lastLocation);
         lock.lock();
         try {
             cpAddedMessageIds = null;

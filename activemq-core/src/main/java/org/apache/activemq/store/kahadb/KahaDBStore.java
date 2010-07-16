@@ -290,6 +290,14 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
         return this.transactionStore;
     }
 
+    public boolean getForceRecoverIndex() {
+        return this.forceRecoverIndex;
+    }
+
+    public void setForceRecoverIndex(boolean forceRecoverIndex) {
+        this.forceRecoverIndex = forceRecoverIndex;
+    }
+
     public class KahaDBMessageStore extends AbstractMessageStore {
         protected final Map<AsyncJobKey, StoreTask> asyncTaskMap = new HashMap<AsyncJobKey, StoreTask>();
         protected KahaDestination dest;

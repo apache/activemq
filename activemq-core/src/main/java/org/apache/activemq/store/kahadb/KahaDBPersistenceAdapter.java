@@ -500,6 +500,14 @@ public class KahaDBPersistenceAdapter implements PersistenceAdapter, BrokerServi
        letter.setDatabaseLockedWaitDelay(databaseLockedWaitDelay);
     }
 
+    public boolean getForceRecoverIndex() {
+        return letter.getForceRecoverIndex();
+    }
+
+    public void setForceRecoverIndex(boolean forceRecoverIndex) {
+        letter.setForceRecoverIndex(forceRecoverIndex);
+    }
+
     @Override
     public String toString() {
         String path = getDirectory() != null ? getDirectory().toString() : "DIRECTORY_NOT_SET";

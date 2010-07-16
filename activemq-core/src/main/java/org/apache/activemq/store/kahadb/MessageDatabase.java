@@ -197,7 +197,7 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
     private boolean checkForCorruptJournalFiles = false;
     private boolean checksumJournalFiles = false;
     private int databaseLockedWaitDelay = DEFAULT_DATABASE_LOCKED_WAIT_DELAY;
-    
+    protected boolean forceRecoverIndex = false;
 
     public MessageDatabase() {
     }
@@ -428,7 +428,7 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
 	            
 	        if (recoveryPosition != null) {  
 	            int redoCounter = 0;
-	            LOG.info("Recoverying from the journal ...");
+	            LOG.info("Recovering from the journal ...");
 	            while (recoveryPosition != null) {
 	                JournalCommand<?> message = load(recoveryPosition);
 	                metadata.lastUpdate = recoveryPosition;
@@ -653,18 +653,20 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
     }
     
     private Location getRecoveryPosition() throws IOException {
+
+        if (!this.forceRecoverIndex) {
+
+            // If we need to recover the transactions..
+            if (metadata.firstInProgressTransactionLocation != null) {
+                return metadata.firstInProgressTransactionLocation;
+            }
         
-        // If we need to recover the transactions..
-        if (metadata.firstInProgressTransactionLocation != null) {
-            return metadata.firstInProgressTransactionLocation;
+            // Perhaps there were no transactions...
+            if( metadata.lastUpdate!=null) {
+                // Start replay at the record after the last one recorded in the index file.
+                return journal.getNextLocation(metadata.lastUpdate);
+            }
         }
-        
-        // Perhaps there were no transactions...
-        if( metadata.lastUpdate!=null) {
-            // Start replay at the record after the last one recorded in the index file.
-            return journal.getNextLocation(metadata.lastUpdate);
-        }
-	    
         // This loads the first position.
         return journal.getNextLocation(null);
 	}
@@ -1008,6 +1010,7 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
                 if (keys != null) {
                     sd.locationIndex.remove(tx, keys.location);
                 }
+                recordAckMessageReferenceLocation(ackLocation, keys.location);
             }
         } else {
             // In the topic case we need remove the message once it's been acked
@@ -1026,6 +1029,21 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
                 addAckLocation(sd, sequence, subscriptionKey);
             }
 
+        }
+    }
+
+    Map<Integer, Set<Integer>> ackMessageFileMap = new HashMap<Integer, Set<Integer>>();
+    private void recordAckMessageReferenceLocation(Location ackLocation, Location messageLocation) {
+        Set<Integer> referenceFileIds = ackMessageFileMap.get(Integer.valueOf(ackLocation.getDataFileId()));
+        if (referenceFileIds == null) {
+            referenceFileIds = new HashSet<Integer>();
+            referenceFileIds.add(messageLocation.getDataFileId());
+            ackMessageFileMap.put(ackLocation.getDataFileId(), referenceFileIds);
+        } else {
+            Integer id = Integer.valueOf(messageLocation.getDataFileId());
+            if (!referenceFileIds.contains(id)) {
+                referenceFileIds.add(id);
+            }
         }
     }
 
@@ -1168,6 +1186,28 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
                     }
     
                 });
+            }
+
+            // check we are not deleting file with ack for in-use journal files
+            Iterator<Integer> candidates = gcCandidateSet.iterator();
+            while (candidates.hasNext()) {
+                Integer candidate = candidates.next();
+                Set<Integer> referencedFileIds = ackMessageFileMap.get(candidate);
+                if (referencedFileIds != null) {
+                    for (Integer referencedFileId : referencedFileIds) {
+                        if (journal.getFileMap().containsKey(referencedFileId) && !gcCandidateSet.contains(referencedFileId)) {
+                            // active file that is not targeted for deletion is referenced so don't delete
+                            candidates.remove();
+                            break;
+                        }
+                    }
+                    if (gcCandidateSet.contains(candidate)) {
+                        ackMessageFileMap.remove(candidate);
+                    } else {
+                        LOG.debug("not removing data file: " + candidate
+                                + " as contained ack(s) refer to referenced file: " + referencedFileIds);
+                    }
+                }
             }
 
             if( !gcCandidateSet.isEmpty() ) {
