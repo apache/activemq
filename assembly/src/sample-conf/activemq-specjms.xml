@@ -88,7 +88,7 @@
             <kahaDB directory="${activemq.base}/data/kahadb" 
                 cleanupInterval="300000" checkpointInterval="50000"
                 journalMaxWriteBatchSize="62k"
-                journalMaxFileLength="64mb"
+                journalMaxFileLength="1g"
                 indexCacheSize="100000" indexWriteBatchSize="100000"
             /> 
         </persistenceAdapter>
