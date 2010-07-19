@@ -271,7 +271,7 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport {
     @Override
     public void send(ProducerBrokerExchange producerExchange, Message messageSend) throws Exception {
         if (isLogAll() || isLogProducerEvents()) {
-            LOG.info("Sending message : " + messageSend);
+            LOG.info("Sending message : " + messageSend.copy());
         }
         super.send(producerExchange, messageSend);
     }
