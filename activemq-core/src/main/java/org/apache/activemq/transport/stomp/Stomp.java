@@ -50,6 +50,11 @@ public interface Stomp {
         String CONTENT_LENGTH = "content-length";
         String TRANSFORMATION = "transformation";
         String TRANSFORMATION_ERROR = "transformation-error";
+        /**
+         * This header is used to instruct ActiveMQ to construct the message
+         * based with a specific type.
+         */
+        String AMQ_MESSAGE_TYPE = "amq-msg-type";
 
         public interface Response {
             String RECEIPT_ID = "receipt-id";

@@ -37,7 +37,28 @@ public class LegacyFrameTranslator implements FrameTranslator {
     public ActiveMQMessage convertFrame(ProtocolConverter converter, StompFrame command) throws JMSException, ProtocolException {
         final Map headers = command.getHeaders();
         final ActiveMQMessage msg;
-        if (headers.containsKey(Stomp.Headers.CONTENT_LENGTH)) {
+        /*
+         * To reduce the complexity of this method perhaps a Chain of Responsibility
+         * would be a better implementation
+         */
+        if (headers.containsKey(Stomp.Headers.AMQ_MESSAGE_TYPE)) {
+            String intendedType = (String)headers.get(Stomp.Headers.AMQ_MESSAGE_TYPE);
+            if(intendedType.equalsIgnoreCase("text")){
+                ActiveMQTextMessage text = new ActiveMQTextMessage();
+                try {
+                    text.setText(new String(command.getContent(), "UTF-8"));
+                } catch (Throwable e) {
+                    throw new ProtocolException("Text could not bet set: " + e, false, e);
+                }
+                msg = text;
+            } else if(intendedType.equalsIgnoreCase("bytes")) {
+                ActiveMQBytesMessage byteMessage = new ActiveMQBytesMessage();
+                byteMessage.writeBytes(command.getContent());
+                msg = byteMessage;
+            } else {
+                throw new ProtocolException("Unsupported message type '"+intendedType+"'",false);
+            }
+        }else if (headers.containsKey(Stomp.Headers.CONTENT_LENGTH)) {
             headers.remove(Stomp.Headers.CONTENT_LENGTH);
             ActiveMQBytesMessage bm = new ActiveMQBytesMessage();
             bm.writeBytes(command.getContent());
