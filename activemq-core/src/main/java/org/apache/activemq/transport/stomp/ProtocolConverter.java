@@ -27,6 +27,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.jms.JMSException;
 
+import org.apache.activemq.broker.BrokerContext;
+import org.apache.activemq.broker.BrokerContextAware;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ActiveMQTempQueue;
@@ -58,7 +60,6 @@ import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.IdGenerator;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.util.LongSequenceGenerator;
-import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 
 /**
@@ -89,12 +90,12 @@ public class ProtocolConverter {
     private final AtomicBoolean connected = new AtomicBoolean(false);
     private final FrameTranslator frameTranslator;
     private final FactoryFinder FRAME_TRANSLATOR_FINDER = new FactoryFinder("META-INF/services/org/apache/activemq/transport/frametranslator/");
-    private final ApplicationContext applicationContext;
+    private final BrokerContext brokerContext;
 
-    public ProtocolConverter(StompTransport stompTransport, FrameTranslator translator, ApplicationContext applicationContext) {
+    public ProtocolConverter(StompTransport stompTransport, FrameTranslator translator, BrokerContext brokerContext) {
         this.stompTransport = stompTransport;
         this.frameTranslator = translator;
-        this.applicationContext = applicationContext;
+        this.brokerContext = brokerContext;
     }
 
     protected int generateCommandId() {
@@ -145,8 +146,8 @@ public class ProtocolConverter {
             if (header != null) {
                 translator = (FrameTranslator) FRAME_TRANSLATOR_FINDER
                         .newInstance(header);
-                if (translator instanceof ApplicationContextAware) {
-                    ((ApplicationContextAware)translator).setApplicationContext(applicationContext);
+                if (translator instanceof BrokerContextAware) {
+                    ((BrokerContextAware)translator).setBrokerContext(brokerContext);
                 }
             }
         } catch (Exception ignore) {

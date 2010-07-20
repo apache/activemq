@@ -21,8 +21,8 @@ import java.security.cert.X509Certificate;
 
 import javax.jms.JMSException;
 
+import org.apache.activemq.broker.BrokerContext;
 import org.apache.activemq.command.Command;
-
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportFilter;
 import org.apache.activemq.transport.TransportListener;
@@ -30,7 +30,6 @@ import org.apache.activemq.transport.tcp.SslTransport;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.context.ApplicationContext;
 
 /**
  * The StompTransportFilter normally sits on top of a TcpTransport that has been
@@ -47,10 +46,10 @@ public class StompTransportFilter extends TransportFilter implements StompTransp
 
     private boolean trace;
 
-    public StompTransportFilter(Transport next, FrameTranslator translator, ApplicationContext applicationContext) {
+    public StompTransportFilter(Transport next, FrameTranslator translator, BrokerContext brokerContext) {
         super(next);
         this.frameTranslator = translator;
-        this.protocolConverter = new ProtocolConverter(this, translator, applicationContext);
+        this.protocolConverter = new ProtocolConverter(this, translator, brokerContext);
     }
 
     public void oneway(Object o) throws IOException {

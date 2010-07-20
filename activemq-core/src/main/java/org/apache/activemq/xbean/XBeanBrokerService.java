@@ -25,9 +25,6 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.usage.SystemUsage;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.beans.BeansException;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
 
 /**
  * An ActiveMQ Message Broker. It consists of a number of transport
@@ -43,11 +40,10 @@ import org.springframework.context.ApplicationContextAware;
  * {code}
  * @version $Revision: 1.1 $
  */
-public class XBeanBrokerService extends BrokerService implements ApplicationContextAware {
+public class XBeanBrokerService extends BrokerService {
     private static final transient Log LOG = LogFactory.getLog(XBeanBrokerService.class);
     
     private boolean start = true;
-    private ApplicationContext applicationContext = null;
     
     public XBeanBrokerService() {
     }
@@ -112,15 +108,5 @@ public class XBeanBrokerService extends BrokerService implements ApplicationCont
     public void setDestroyApplicationContextOnStop(boolean destroy) {
         LOG.warn("destroyApplicationContextOnStop parameter is deprecated, please use shutdown hooks instead");
     }
-
-	public void setApplicationContext(ApplicationContext applicationContext)
-			throws BeansException {
-		this.applicationContext = applicationContext;
-	}
-
-	public ApplicationContext getApplicationContext() {
-		return applicationContext;
-	}
-    
     
 }

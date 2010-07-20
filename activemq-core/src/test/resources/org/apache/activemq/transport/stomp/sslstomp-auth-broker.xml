@@ -31,7 +31,9 @@
         <property name="annotatedClass"><value>org.apache.activemq.transport.stomp.SamplePojo</value></property>
   </bean>
 
-  <broker start="false" useJmx="true" persistent="false" xmlns="http://activemq.apache.org/schema/core" populateJMSXUserID="true">
+  <bean id="springContext" class="org.apache.activemq.spring.SpringBrokerContext" />
+
+  <broker start="false" useJmx="true" persistent="false" xmlns="http://activemq.apache.org/schema/core" populateJMSXUserID="true" brokerContext="#springContext">
 
     <plugins>
 		<simpleAuthenticationPlugin>

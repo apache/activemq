@@ -34,10 +34,12 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
+
 import org.apache.activemq.ActiveMQConnectionMetaData;
 import org.apache.activemq.ConfigurationException;
 import org.apache.activemq.Service;
@@ -196,6 +198,7 @@ public class BrokerService implements Service {
     private ThreadPoolExecutor executor;
     private boolean slave = true;
     private int schedulePeriodForDestinationPurge=5000;
+    private BrokerContext brokerContext;
     
     
 	static {
@@ -2324,5 +2327,14 @@ public class BrokerService implements Service {
 
     public void setSchedulePeriodForDestinationPurge(int schedulePeriodForDestinationPurge) {
         this.schedulePeriodForDestinationPurge = schedulePeriodForDestinationPurge;
-    }   
+    }
+
+    public BrokerContext getBrokerContext() {
+        return brokerContext;
+    }
+
+    public void setBrokerContext(BrokerContext brokerContext) {
+        this.brokerContext = brokerContext;
+    }    
+
 }

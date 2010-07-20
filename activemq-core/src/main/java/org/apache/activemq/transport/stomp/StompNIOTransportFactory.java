@@ -26,17 +26,16 @@ import java.util.Map;
 import javax.net.ServerSocketFactory;
 import javax.net.SocketFactory;
 
+import org.apache.activemq.broker.BrokerContext;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.BrokerServiceAware;
 import org.apache.activemq.transport.Transport;
-import org.apache.activemq.transport.nio.NIOTransport;
 import org.apache.activemq.transport.nio.NIOTransportFactory;
 import org.apache.activemq.transport.tcp.TcpTransport;
 import org.apache.activemq.transport.tcp.TcpTransportServer;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.wireformat.WireFormat;
 import org.apache.activemq.xbean.XBeanBrokerService;
-import org.springframework.context.ApplicationContext;
 
 /**
  * A <a href="http://stomp.codehaus.org/">STOMP</a> over NIO transport factory
@@ -45,7 +44,7 @@ import org.springframework.context.ApplicationContext;
  */
 public class StompNIOTransportFactory extends NIOTransportFactory implements BrokerServiceAware {
 
-    private ApplicationContext applicationContext = null;
+    private BrokerContext brokerContext = null;
 
     protected String getDefaultWireFormatType() {
         return "stomp";
@@ -64,7 +63,7 @@ public class StompNIOTransportFactory extends NIOTransportFactory implements Bro
     }  
 
     public Transport compositeConfigure(Transport transport, WireFormat format, Map options) {
-        transport = new StompTransportFilter(transport, new LegacyFrameTranslator(), applicationContext);
+        transport = new StompTransportFilter(transport, new LegacyFrameTranslator(), brokerContext);
         IntrospectionSupport.setProperties(transport, options);
         return super.compositeConfigure(transport, format, options);
     }
@@ -76,9 +75,7 @@ public class StompNIOTransportFactory extends NIOTransportFactory implements Bro
     }
     
     public void setBrokerService(BrokerService brokerService) {
-        if (brokerService instanceof XBeanBrokerService) {
-            this.applicationContext = ((XBeanBrokerService)brokerService).getApplicationContext();
-        }
+        this.brokerContext = brokerService.getBrokerContext();
     }
 
 }

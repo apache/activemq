@@ -18,6 +18,7 @@ package org.apache.activemq.transport.stomp;
 
 import java.util.Map;
 
+import org.apache.activemq.broker.BrokerContext;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.BrokerServiceAware;
 import org.apache.activemq.transport.Transport;
@@ -25,7 +26,6 @@ import org.apache.activemq.transport.tcp.TcpTransportFactory;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.wireformat.WireFormat;
 import org.apache.activemq.xbean.XBeanBrokerService;
-import org.springframework.context.ApplicationContext;
 
 /**
  * A <a href="http://stomp.codehaus.org/">STOMP</a> transport factory
@@ -34,14 +34,14 @@ import org.springframework.context.ApplicationContext;
  */
 public class StompTransportFactory extends TcpTransportFactory implements BrokerServiceAware {
 
-	private ApplicationContext applicationContext = null;
+	private BrokerContext brokerContext = null;
 	
     protected String getDefaultWireFormatType() {
         return "stomp";
     }
 
     public Transport compositeConfigure(Transport transport, WireFormat format, Map options) {
-        transport = new StompTransportFilter(transport, new LegacyFrameTranslator(), applicationContext);
+        transport = new StompTransportFilter(transport, new LegacyFrameTranslator(), brokerContext);
         IntrospectionSupport.setProperties(transport, options);
         return super.compositeConfigure(transport, format, options);
     }
@@ -53,8 +53,6 @@ public class StompTransportFactory extends TcpTransportFactory implements Broker
     }
 
 	public void setBrokerService(BrokerService brokerService) {
-		if (brokerService instanceof XBeanBrokerService) {
-			this.applicationContext = ((XBeanBrokerService)brokerService).getApplicationContext();
-		}
+	    this.brokerContext = brokerService.getBrokerContext();
 	}
 }
