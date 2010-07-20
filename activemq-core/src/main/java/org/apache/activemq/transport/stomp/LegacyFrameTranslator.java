@@ -161,7 +161,7 @@ public class LegacyFrameTranslator implements FrameTranslator {
             return converter.createTempTopic(name);
         } else {
             throw new ProtocolException("Illegal destination name: [" + name + "] -- ActiveMQ STOMP destinations "
-                                        + "must begine with one of: /queue/ /topic/ /temp-queue/ /temp-topic/");
+                                        + "must begin with one of: /queue/ /topic/ /temp-queue/ /temp-topic/");
         }
     }
 

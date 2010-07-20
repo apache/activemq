@@ -60,6 +60,8 @@ import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.IdGenerator;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.util.LongSequenceGenerator;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.context.ApplicationContextAware;
 
 /**
@@ -67,6 +69,8 @@ import org.springframework.context.ApplicationContextAware;
  */
 public class ProtocolConverter {
 
+    private static final Log LOG = LogFactory.getLog(ProtocolConverter.class);
+    
     private static final IdGenerator CONNECTION_ID_GENERATOR = new IdGenerator();
 
     private final ConnectionId connectionId = new ConnectionId(CONNECTION_ID_GENERATOR.generateId());
@@ -202,6 +206,7 @@ public class ProtocolConverter {
     }
 
     protected void handleException(Throwable exception, StompFrame command) throws IOException {
+        LOG.warn("Exception occured processing: \n" + command, exception);
         // Let the stomp client know about any protocol errors.
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         PrintWriter stream = new PrintWriter(new OutputStreamWriter(baos, "UTF-8"));
