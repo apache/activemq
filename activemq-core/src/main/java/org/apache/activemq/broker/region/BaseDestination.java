@@ -609,6 +609,9 @@ public abstract class BaseDestination implements Destination {
 
     public void setPrioritizedMessages(boolean prioritizedMessages) {
         this.prioritizedMessages = prioritizedMessages;
+        if (store != null) {
+            store.setPrioritizedMessages(prioritizedMessages);
+        }
     }
 
     /**

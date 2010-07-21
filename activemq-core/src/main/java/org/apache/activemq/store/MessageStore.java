@@ -148,4 +148,16 @@ public interface MessageStore extends Service {
      */
     boolean isEmpty() throws Exception;
     
+    /**
+     * A hint to the store to try recover messages according to priority
+     * @param prioritizedMessages
+     */
+    public void setPrioritizedMessages(boolean prioritizedMessages);
+    
+    /**
+     * 
+     * @return true if store is trying to recover messages according to priority
+     */
+    public boolean isPrioritizedMessages();
+    
 }

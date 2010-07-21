@@ -153,4 +153,12 @@ public class ProxyTopicMessageStore implements TopicMessageStore {
     public void removeAsyncMessage(ConnectionContext context, MessageAck ack) throws IOException {
         delegate.removeAsyncMessage(context, ack);
     }
+
+    public void setPrioritizedMessages(boolean prioritizedMessages) {
+        delegate.setPrioritizedMessages(prioritizedMessages);
+    }
+    
+    public boolean isPrioritizedMessages() {
+        return delegate.isPrioritizedMessages();
+    }
 }

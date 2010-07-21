@@ -30,6 +30,7 @@ import org.apache.activemq.usage.MemoryUsage;
 abstract public class AbstractMessageStore implements MessageStore {
     public static final FutureTask<Object> FUTURE;
     protected final ActiveMQDestination destination;
+    protected boolean prioritizedMessages;
 
     public AbstractMessageStore(ActiveMQDestination destination) {
         this.destination = destination;
@@ -62,6 +63,14 @@ abstract public class AbstractMessageStore implements MessageStore {
      */
     public boolean isEmpty() throws Exception {
         return getMessageCount() == 0;
+    }
+    
+    public void setPrioritizedMessages(boolean prioritizedMessages) {
+        this.prioritizedMessages = prioritizedMessages;
+    }    
+
+    public boolean isPrioritizedMessages() {
+        return this.prioritizedMessages;
     }
 
     public Future<Object> asyncAddQueueMessage(final ConnectionContext context, final Message message) throws IOException {
