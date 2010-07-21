@@ -82,7 +82,7 @@ public class JDBCMessageStore extends AbstractMessageStore {
         // Get a connection and insert the message into the DB.
         TransactionContext c = persistenceAdapter.getTransactionContext(context);
         try {      
-            adapter.doAddMessage(c,sequenceId, messageId, destination, data, message.getExpiration());
+            adapter.doAddMessage(c,sequenceId, messageId, destination, data, message.getExpiration(), message.getPriority());
         } catch (SQLException e) {
             JDBCPersistenceAdapter.log("JDBC Failure: ", e);
             throw IOExceptionSupport.create("Failed to broker message: " + messageId + " in container: " + e, e);
@@ -224,7 +224,6 @@ public class JDBCMessageStore extends AbstractMessageStore {
      */
     public void recoverNextMessages(int maxReturned, final MessageRecoveryListener listener) throws Exception {
         TransactionContext c = persistenceAdapter.getTransactionContext();
-
         try {
             adapter.doRecoverNextMessages(c, destination, lastStoreSequenceId.get(), maxReturned, new JDBCMessageRecoveryListener() {
 
@@ -294,4 +293,9 @@ public class JDBCMessageStore extends AbstractMessageStore {
         }
         return result;
     }
+    
+    public void setPrioritizedMessages(boolean prioritizedMessages) {
+        super.setPrioritizedMessages(prioritizedMessages);
+        adapter.setPrioritizedMessages(prioritizedMessages);
+    }   
 }

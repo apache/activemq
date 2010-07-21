@@ -65,6 +65,7 @@ public class Statements {
     private String lastAckedDurableSubscriberMessageStatement;
     private String destinationMessageCountStatement;
     private String findNextMessagesStatement;
+    private String findNextMessagesByPriorityStatement;
     private boolean useLockCreateWhereClause;
     private String findAllMessageIdsStatement;
     private String lastProducerSequenceIdStatement;
@@ -74,12 +75,13 @@ public class Statements {
             createSchemaStatements = new String[] {
                 "CREATE TABLE " + getFullMessageTableName() + "(" + "ID " + sequenceDataType + " NOT NULL"
                     + ", CONTAINER " + containerNameDataType + ", MSGID_PROD " + msgIdDataType + ", MSGID_SEQ "
-                    + sequenceDataType + ", EXPIRATION " + longDataType + ", MSG "
+                    + sequenceDataType + ", EXPIRATION " + longDataType + ", PRIORITY " + sequenceDataType + ", MSG "
                     + (useExternalMessageReferences ? stringIdDataType : binaryDataType)
                     + ", PRIMARY KEY ( ID ) )",
                 "CREATE INDEX " + getFullMessageTableName() + "_MIDX ON " + getFullMessageTableName() + " (MSGID_PROD,MSGID_SEQ)",
                 "CREATE INDEX " + getFullMessageTableName() + "_CIDX ON " + getFullMessageTableName() + " (CONTAINER)",
                 "CREATE INDEX " + getFullMessageTableName() + "_EIDX ON " + getFullMessageTableName() + " (EXPIRATION)",
+                "CREATE INDEX " + getFullMessageTableName() + "_PIDX ON " + getFullMessageTableName() + " (PRIORITY)",
                 "CREATE TABLE " + getFullAckTableName() + "(" + "CONTAINER " + containerNameDataType + " NOT NULL"
                     + ", SUB_DEST " + stringIdDataType 
                     + ", CLIENT_ID " + stringIdDataType + " NOT NULL" + ", SUB_NAME " + stringIdDataType
@@ -107,7 +109,7 @@ public class Statements {
         if (addMessageStatement == null) {
             addMessageStatement = "INSERT INTO "
                                   + getFullMessageTableName()
-                                  + "(ID, MSGID_PROD, MSGID_SEQ, CONTAINER, EXPIRATION, MSG) VALUES (?, ?, ?, ?, ?, ?)";
+                                  + "(ID, MSGID_PROD, MSGID_SEQ, CONTAINER, EXPIRATION, PRIORITY, MSG) VALUES (?, ?, ?, ?, ?, ?, ?)";
         }
         return addMessageStatement;
     }
@@ -368,6 +370,17 @@ public class Statements {
         return findNextMessagesStatement;
     }
 
+    /**
+     * @return the findNextMessagesStatement
+     */
+    public String getFindNextMessagesByPriorityStatement() {
+        if (findNextMessagesByPriorityStatement == null) {
+            findNextMessagesByPriorityStatement = "SELECT ID, MSG FROM " + getFullMessageTableName()
+                                        + " WHERE CONTAINER=? ORDER BY PRIORITY DESC, ID";
+        }
+        return findNextMessagesByPriorityStatement;
+    }    
+    
     /**
      * @return the lastAckedDurableSubscriberMessageStatement
      */

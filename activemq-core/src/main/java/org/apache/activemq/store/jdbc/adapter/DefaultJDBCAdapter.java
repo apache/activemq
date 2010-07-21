@@ -56,6 +56,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
     private static final Log LOG = LogFactory.getLog(DefaultJDBCAdapter.class);
     protected Statements statements;
     protected boolean batchStatments = true;
+    protected boolean prioritizedMessages;
 
     protected void setBinaryData(PreparedStatement s, int index, byte data[]) throws SQLException {
         s.setBytes(index, data);
@@ -190,7 +191,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
     
 
     public void doAddMessage(TransactionContext c, long sequence, MessageId messageID, ActiveMQDestination destination, byte[] data,
-            long expiration) throws SQLException, IOException {
+            long expiration, byte priority) throws SQLException, IOException {
         PreparedStatement s = c.getAddMessageStatement();
         try {
             if (s == null) {
@@ -204,7 +205,8 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
             s.setLong(3, messageID.getProducerSequenceId());
             s.setString(4, destination.getQualifiedName());
             s.setLong(5, expiration);
-            setBinaryData(s, 6, data);
+            s.setLong(6, priority);
+            setBinaryData(s, 7, data);
             if (this.batchStatments) {
                 s.addBatch();
             } else if (s.executeUpdate() != 1) {
@@ -710,6 +712,14 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
 
     public void setStatements(Statements statements) {
         this.statements = statements;
+    }    
+
+    public boolean isPrioritizedMessages() {
+        return prioritizedMessages;
+    }
+
+    public void setPrioritizedMessages(boolean prioritizedMessages) {
+        this.prioritizedMessages = prioritizedMessages;
     }
 
     /**
@@ -765,10 +775,16 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         PreparedStatement s = null;
         ResultSet rs = null;
         try {
-            s = c.getConnection().prepareStatement(this.statements.getFindNextMessagesStatement());
+            if (isPrioritizedMessages()) {
+                s = c.getConnection().prepareStatement(this.statements.getFindNextMessagesByPriorityStatement());
+            } else {
+                s = c.getConnection().prepareStatement(this.statements.getFindNextMessagesStatement());
+            }
             s.setMaxRows(maxReturned * 2);
             s.setString(1, destination.getQualifiedName());
-            s.setLong(2, nextSeq);
+            if (!isPrioritizedMessages()) {
+                s.setLong(2, nextSeq);
+            }
             rs = s.executeQuery();
             int count = 0;
             if (this.statements.isUseExternalMessageReferences()) {

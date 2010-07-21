@@ -30,12 +30,14 @@ import org.apache.activemq.command.SubscriptionInfo;
 public interface JDBCAdapter {
 
     void setStatements(Statements statementProvider);
+    
+    void setPrioritizedMessages(boolean prioritizedMessages);
 
     void doCreateTables(TransactionContext c) throws SQLException, IOException;
 
     void doDropTables(TransactionContext c) throws SQLException, IOException;
 
-    void doAddMessage(TransactionContext c, long sequence, MessageId messageID, ActiveMQDestination destination, byte[] data, long expiration) throws SQLException, IOException;
+    void doAddMessage(TransactionContext c, long sequence, MessageId messageID, ActiveMQDestination destination, byte[] data, long expiration, byte priority) throws SQLException, IOException;
 
     void doAddMessageReference(TransactionContext c, long sequence, MessageId messageId, ActiveMQDestination destination, long expirationTime, String messageRef) throws SQLException, IOException;
 

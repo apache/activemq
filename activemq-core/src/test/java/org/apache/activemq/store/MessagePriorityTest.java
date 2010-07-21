@@ -148,7 +148,7 @@ abstract public class MessagePriorityTest extends CombinationTestSupport {
         MessageConsumer queueConsumer = sess.createConsumer(queue);
         for (int i = 0; i < MSG_NUM * 2; i++) {
             Message msg = queueConsumer.receive(1000);
-            assertNotNull(msg);
+            assertNotNull("Message " + i + " was null", msg);
             assertEquals("Message " + i + " has wrong priority", i < MSG_NUM ? HIGH_PRI : LOW_PRI, msg.getJMSPriority());
         }
     }
