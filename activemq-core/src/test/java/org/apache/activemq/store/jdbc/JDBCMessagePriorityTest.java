@@ -17,6 +17,8 @@
 
 package org.apache.activemq.store.jdbc;
 
+import junit.framework.Test;
+
 import org.apache.activemq.store.MessagePriorityTest;
 import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.derby.jdbc.EmbeddedDataSource;
@@ -30,7 +32,12 @@ public class JDBCMessagePriorityTest extends MessagePriorityTest {
         dataSource.setDatabaseName("derbyDb");
         dataSource.setCreateDatabase("create");
         jdbc.setDataSource(dataSource);
+        jdbc.deleteAllMessages();
         return jdbc;
+    }
+    
+    public static Test suite() {
+        return suite(JDBCMessagePriorityTest.class);
     }
 
 }

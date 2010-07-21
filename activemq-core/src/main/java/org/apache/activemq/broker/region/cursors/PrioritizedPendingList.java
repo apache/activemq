@@ -82,7 +82,7 @@ public class PrioritizedPendingList implements PendingList {
     protected int getPriority(MessageReference message) {
         int priority = javax.jms.Message.DEFAULT_PRIORITY;
         if (message.getMessageId() != null) {
-            Math.max(message.getMessage().getPriority(), 0);
+            priority = Math.max(message.getMessage().getPriority(), 0);
             priority = Math.min(priority, 9);
         }
         return priority;
