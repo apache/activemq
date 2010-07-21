@@ -16,15 +16,40 @@
  */
 package org.apache.activemq.broker.region.policy;
 
-import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
-import org.apache.activemq.broker.region.Subscription;
 
-/*
- * a strategy for dealing with slow consumers
- */
-public interface SlowConsumerStrategy {
+public class SlowConsumerEntry {
 
-    void slowConsumer(ConnectionContext context, Subscription subs);
-    void setBrokerService(Broker broker);
+    final ConnectionContext context;
+    Object subscription;
+    int slowCount = 1;
+    int markCount = 0;
+
+    SlowConsumerEntry(ConnectionContext context) {
+        this.context = context;
+    }
+
+    public void slow() {
+        slowCount++;
+    }
+
+    public void mark() {
+        markCount++;
+    }
+
+    public void setSubscription(Object subscriptionObjectName) {
+        this.subscription = subscriptionObjectName;
+    }
+    
+    public Object getSubscription() {
+        return subscription;
+    }
+
+    public int getSlowCount() {
+        return slowCount;
+    }
+
+    public int getMarkCount() {
+        return markCount;
+    }
 }

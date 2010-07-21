@@ -41,6 +41,9 @@ import javax.management.openmbean.OpenType;
 import javax.management.openmbean.SimpleType;
 import javax.management.openmbean.TabularDataSupport;
 import javax.management.openmbean.TabularType;
+
+import org.apache.activemq.broker.region.Subscription;
+import org.apache.activemq.broker.region.policy.SlowConsumerEntry;
 import org.apache.activemq.broker.scheduler.Job;
 import org.apache.activemq.command.ActiveMQBytesMessage;
 import org.apache.activemq.command.ActiveMQMapMessage;
@@ -429,7 +432,30 @@ public final class OpenTypeSupport {
         }
     }
 
+    static class SlowConsumerEntryOpenTypeFactory extends AbstractOpenTypeFactory {
+       @Override
+        protected String getTypeName() {
+            return SlowConsumerEntry.class.getName();
+        }
 
+        @Override
+        protected void init() throws OpenDataException {
+            super.init();
+            addItem("subscription", "the subscription view", SimpleType.OBJECTNAME);
+            addItem("slowCount", "number of times deemed slow", SimpleType.INTEGER);
+            addItem("markCount", "number of periods remaining slow", SimpleType.INTEGER);
+        }
+
+        @Override
+        public Map<String, Object> getFields(Object o) throws OpenDataException {
+            SlowConsumerEntry entry = (SlowConsumerEntry) o;
+            Map<String, Object> rc = super.getFields(o);
+            rc.put("subscription", entry.getSubscription());
+            rc.put("slowCount", Integer.valueOf(entry.getSlowCount()));
+            rc.put("markCount", Integer.valueOf(entry.getMarkCount()));
+            return rc;
+        }
+    }
 
     static {
         OPEN_TYPE_FACTORIES.put(ActiveMQMessage.class, new MessageOpenTypeFactory());
@@ -439,6 +465,7 @@ public final class OpenTypeSupport {
         OPEN_TYPE_FACTORIES.put(ActiveMQStreamMessage.class, new StreamMessageOpenTypeFactory());
         OPEN_TYPE_FACTORIES.put(ActiveMQTextMessage.class, new TextMessageOpenTypeFactory());
         OPEN_TYPE_FACTORIES.put(Job.class, new JobOpenTypeFactory());
+        OPEN_TYPE_FACTORIES.put(SlowConsumerEntry.class, new SlowConsumerEntryOpenTypeFactory());
     }
 
     private OpenTypeSupport() {
@@ -448,7 +475,7 @@ public final class OpenTypeSupport {
         return OPEN_TYPE_FACTORIES.get(clazz);
     }
 
-    public static CompositeData convert(Message message) throws OpenDataException {
+    public static CompositeData convert(Object message) throws OpenDataException {
         OpenTypeFactory f = getFactory(message.getClass());
         if (f == null) {
             throw new OpenDataException("Cannot create a CompositeData for type: " + message.getClass().getName());

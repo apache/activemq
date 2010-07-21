@@ -602,6 +602,10 @@ public abstract class BaseDestination implements Destination {
         this.slowConsumerStrategy = slowConsumerStrategy;
     }
 
+    public SlowConsumerStrategy getSlowConsumerStrategy() {
+        return this.slowConsumerStrategy;
+    }
+
    
     public boolean isPrioritizedMessages() {
         return this.prioritizedMessages;

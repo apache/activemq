@@ -332,4 +332,13 @@ public interface DestinationViewMBean {
     @MBeanInfo("returns all the current subscription MBeans matching this destination")
     ObjectName[] getSubscriptions() throws IOException, MalformedObjectNameException;
 
+
+    /**
+     * Returns the slow consumer strategy MBean for this destination
+     *
+     * @return the name of the slow consumer handler MBean for this destination
+     */
+    @MBeanInfo("returns the optional slowConsumer handler MBeans for this destination")
+    ObjectName getSlowConsumerStrategy() throws IOException, MalformedObjectNameException;
+
 }

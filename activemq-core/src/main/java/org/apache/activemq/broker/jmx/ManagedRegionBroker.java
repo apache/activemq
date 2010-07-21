@@ -53,6 +53,8 @@ import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.broker.region.Topic;
 import org.apache.activemq.broker.region.TopicRegion;
 import org.apache.activemq.broker.region.TopicSubscription;
+import org.apache.activemq.broker.region.policy.AbortSlowConsumerStrategy;
+import org.apache.activemq.broker.region.policy.SlowConsumerStrategy;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ActiveMQTopic;
@@ -260,10 +262,12 @@ public class ManagedRegionBroker extends RegionBroker {
     }
 
     protected void unregisterDestination(ObjectName key) throws Exception {
-        topics.remove(key);
-        queues.remove(key);
-        temporaryQueues.remove(key);
-        temporaryTopics.remove(key);
+
+        DestinationView view = null;
+        removeAndRemember(topics, key, view);
+        removeAndRemember(queues, key, view);
+        removeAndRemember(temporaryQueues, key, view);
+        removeAndRemember(temporaryTopics, key, view);
         if (registeredMBeans.remove(key)) {
             try {
                 managementContext.unregisterMBean(key);
@@ -271,6 +275,24 @@ public class ManagedRegionBroker extends RegionBroker {
                 LOG.warn("Failed to unregister MBean: " + key);
                 LOG.debug("Failure reason: " + e, e);
             }
+        }
+        if (view != null) {
+            key = view.getSlowConsumerStrategy();
+            if (key!= null && registeredMBeans.remove(key)) {
+                try {
+                    managementContext.unregisterMBean(key);
+                } catch (Throwable e) {
+                    LOG.warn("Failed to unregister slow consumer strategy MBean: " + key);
+                    LOG.debug("Failure reason: " + e, e);
+                }
+            }
+        }
+    }
+
+    private void removeAndRemember(Map<ObjectName, DestinationView> map, ObjectName key, DestinationView view) {
+        DestinationView candidate = map.remove(key);
+        if (candidate != null && view == null) {
+            view = candidate;
         }
     }
 
@@ -526,5 +548,43 @@ public class ManagedRegionBroker extends RegionBroker {
                                                + JMXSupport.encodeObjectNamePart(destName.getDestinationTypeAsString()) + "," + "Destination="
                                                + JMXSupport.encodeObjectNamePart(destName.getPhysicalName()));
         return objectName;
+    }
+
+    public ObjectName registerSlowConsumerStrategy(AbortSlowConsumerStrategy strategy) throws MalformedObjectNameException {
+        ObjectName objectName = null;
+        try {
+            objectName = createObjectName(strategy);
+            if (!registeredMBeans.contains(objectName))  {
+                AbortSlowConsumerStrategyView view = new AbortSlowConsumerStrategyView(this, strategy);
+                AnnotatedMBean.registerMBean(managementContext, view, objectName);
+                registeredMBeans.add(objectName);
+            }
+        } catch (Exception e) {
+            LOG.warn("Failed to register MBean: " + strategy);
+            LOG.debug("Failure reason: " + e, e);
+        }
+        return objectName;
+    }
+
+    private ObjectName createObjectName(AbortSlowConsumerStrategy strategy) throws MalformedObjectNameException{
+        Hashtable map = brokerObjectName.getKeyPropertyList();
+        ObjectName objectName = new ObjectName(brokerObjectName.getDomain() + ":" + "BrokerName=" + map.get("BrokerName") + ","
+                            + "Type=SlowConsumerStrategy," + "InstanceName=" + JMXSupport.encodeObjectNamePart(strategy.getName()));
+        return objectName;            
+    }
+
+    public ObjectName getSubscriberObjectName(Subscription key) {
+        return subscriptionMap.get(key);
+    }
+
+    public Subscription getSubscriber(ObjectName key) {
+        Subscription sub = null;
+        for (Entry<Subscription, ObjectName> entry: subscriptionMap.entrySet()) {
+            if (entry.getValue().equals(key)) {
+                sub = entry.getKey();
+                break;
+            }
+        }
+        return sub;
     }
 }

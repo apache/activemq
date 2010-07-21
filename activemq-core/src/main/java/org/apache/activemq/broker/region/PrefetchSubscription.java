@@ -407,8 +407,6 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
      * Checks an ack versus the contents of the dispatched list.
      * 
      * @param ack
-     * @param firstAckedMsg
-     * @param lastAckedMsg
      * @throws JMSException if it does not match
      */
 	protected void assertAckMatchesDispatched(MessageAck ack) throws JMSException {

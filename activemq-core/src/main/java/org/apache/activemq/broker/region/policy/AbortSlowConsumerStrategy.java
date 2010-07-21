@@ -1,3 +1,19 @@
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.apache.activemq.broker.region.policy;
 
 import java.util.HashMap;
@@ -5,6 +21,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
+
+import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.Connection;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.Subscription;
@@ -23,7 +41,9 @@ public class AbortSlowConsumerStrategy implements SlowConsumerStrategy, Runnable
     
     private static final Log LOG = LogFactory.getLog(AbortSlowConsumerStrategy.class);
 
+    private String name = "AbortSlowConsumerStrategy@" + hashCode();
     private Scheduler scheduler;
+    private Broker broker;
     private final AtomicBoolean taskStarted = new AtomicBoolean(false);
     private final Map<Subscription, SlowConsumerEntry> slowConsumers = new ConcurrentHashMap<Subscription, SlowConsumerEntry>();
 
@@ -32,10 +52,11 @@ public class AbortSlowConsumerStrategy implements SlowConsumerStrategy, Runnable
     private long checkPeriod = 30*1000;
     private boolean abortConnection = false;
 
-   public void setScheduler(Scheduler s) {
-       this.scheduler=s;
-   }
-   
+    public void setBrokerService(Broker broker) {
+       this.scheduler = broker.getScheduler();
+       this.broker = broker;
+    }
+
     public void slowConsumer(ConnectionContext context, Subscription subs) {
         if (maxSlowCount < 0 && maxSlowDuration < 0) {
             // nothing to do
@@ -75,21 +96,25 @@ public class AbortSlowConsumerStrategy implements SlowConsumerStrategy, Runnable
                 slowConsumers.remove(entry.getKey());
             }
         }
-        
+
+        abortSubscription(toAbort, abortConnection);
+    }
+
+    private void abortSubscription(Map<Subscription, SlowConsumerEntry> toAbort, boolean abortSubscriberConnection) {
         for (final Entry<Subscription, SlowConsumerEntry> entry : toAbort.entrySet()) {
             ConnectionContext connectionContext = entry.getValue().context;
             if (connectionContext!= null) {
                 try {
-                    LOG.info("aborting " 
-                            + (abortConnection ? "connection" : "consumer") 
-                            + ", slow consumer: " + entry.getKey().getConsumerInfo().getConsumerId()); 
+                    LOG.info("aborting "
+                            + (abortSubscriberConnection ? "connection" : "consumer") 
+                            + ", slow consumer: " + entry.getKey().getConsumerInfo().getConsumerId());
 
                     final Connection connection = connectionContext.getConnection();
-                    if (connection != null) {    
-                        if (abortConnection) {
+                    if (connection != null) {
+                        if (abortSubscriberConnection) {
                             scheduler.executeAfterDelay(new Runnable() {
                                 public void run() {
-                                    connection.serviceException(new InactivityIOException("Consumer was slow too often (>" 
+                                    connection.serviceException(new InactivityIOException("Consumer was slow too often (>"
                                             + maxSlowCount +  ") or too long (>"
                                             + maxSlowDuration + "): " + entry.getKey().getConsumerInfo().getConsumerId()));
                                 }}, 0l);
@@ -97,21 +122,36 @@ public class AbortSlowConsumerStrategy implements SlowConsumerStrategy, Runnable
                             // just abort the consumer by telling it to stop
                             ConsumerControl stopConsumer = new ConsumerControl();
                             stopConsumer.setConsumerId(entry.getKey().getConsumerInfo().getConsumerId());
-                            stopConsumer.setClose(true);    
+                            stopConsumer.setClose(true);
                             connection.dispatchAsync(stopConsumer);
                         }
                     } else {
                         LOG.debug("slowConsumer abort ignored, no connection in context:"  + connectionContext);
                     }
                 } catch (Exception e) {
-                    LOG.info("exception on stopping " 
-                            + (abortConnection ? "connection" : "consumer") 
-                            + " to abort slow consumer: " + entry.getKey(), e);   
+                    LOG.info("exception on stopping "
+                            + (abortSubscriberConnection ? "connection" : "consumer")
+                            + " to abort slow consumer: " + entry.getKey(), e);
                 }
             }
         }
     }
-    
+
+
+    public void abortConsumer(Subscription sub, boolean abortSubscriberConnection) {
+        if (sub != null) {
+            SlowConsumerEntry entry = slowConsumers.remove(sub);
+            if (entry != null) {
+                Map toAbort = new HashMap<Subscription, SlowConsumerEntry>();
+                toAbort.put(sub, entry);
+                abortSubscription(toAbort, abortSubscriberConnection);
+            } else {
+                LOG.warn("cannot abort subscription as it no longer exists in the map of slow consumers: " + sub);
+            }
+        }
+    }
+
+
     public long getMaxSlowCount() {
         return maxSlowCount;
     }
@@ -120,7 +160,7 @@ public class AbortSlowConsumerStrategy implements SlowConsumerStrategy, Runnable
      * number of times a subscription can be deemed slow before triggering abort
      * effect depends on dispatch rate as slow determination is done on dispatch
      */
-    public void setMaxSlowCount(int maxSlowCount) {
+    public void setMaxSlowCount(long maxSlowCount) {
         this.maxSlowCount = maxSlowCount;
     }
 
@@ -161,22 +201,15 @@ public class AbortSlowConsumerStrategy implements SlowConsumerStrategy, Runnable
         this.abortConnection = abortConnection;
     }
 
-    static class SlowConsumerEntry {
-        
-        final ConnectionContext context;
-        int slowCount = 1;
-        int markCount = 0;
-        
-        SlowConsumerEntry(ConnectionContext context) {
-            this.context = context;
-        }
+    public void setName(String name) {
+        this.name = name;
+    }
+    
+    public String getName() {
+        return name;
+    }
 
-        public void slow() {
-            slowCount++;
-        }
-        
-        public void mark() {
-            markCount++;
-        }
+    public Map<Subscription, SlowConsumerEntry> getSlowConsumers() {
+        return slowConsumers;
     }
 }

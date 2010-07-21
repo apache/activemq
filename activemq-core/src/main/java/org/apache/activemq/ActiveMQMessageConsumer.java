@@ -657,7 +657,9 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
     void doClose() throws JMSException {
         dispose();
         RemoveInfo removeCommand = info.createRemoveCommand();
-        LOG.info("remove: " + this.getConsumerId() + ", lasteDeliveredSequenceId:" + lastDeliveredSequenceId);
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("remove: " + this.getConsumerId() + ", lastDeliveredSequenceId:" + lastDeliveredSequenceId);
+        }
         removeCommand.setLastDeliveredSequenceId(lastDeliveredSequenceId);
         this.session.asyncSendPacket(removeCommand);
     }

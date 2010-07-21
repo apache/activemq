@@ -23,6 +23,7 @@ import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.ProducerBrokerExchange;
 import org.apache.activemq.broker.region.policy.DeadLetterStrategy;
+import org.apache.activemq.broker.region.policy.SlowConsumerStrategy;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
@@ -272,5 +273,9 @@ public class DestinationFilter implements Destination {
 
     public boolean isPrioritizedMessages() {
         return next.isPrioritizedMessages();
+    }
+
+    public SlowConsumerStrategy getSlowConsumerStrategy() {
+        return next.getSlowConsumerStrategy();
     }
 }

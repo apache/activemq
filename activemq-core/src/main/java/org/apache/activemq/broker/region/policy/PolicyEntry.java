@@ -157,7 +157,7 @@ public class PolicyEntry extends DestinationMapEntry {
         destination.setStoreUsageHighWaterMark(getStoreUsageHighWaterMark());
         SlowConsumerStrategy scs = getSlowConsumerStrategy();
         if (scs != null) {
-            scs.setScheduler(broker.getScheduler());
+            scs.setBrokerService(broker);
         }
         destination.setSlowConsumerStrategy(scs);
         destination.setPrioritizedMessages(isPrioritizedMessages());

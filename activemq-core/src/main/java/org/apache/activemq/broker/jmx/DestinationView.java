@@ -39,6 +39,8 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.jmx.OpenTypeSupport.OpenTypeFactory;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.Subscription;
+import org.apache.activemq.broker.region.policy.AbortSlowConsumerStrategy;
+import org.apache.activemq.broker.region.policy.SlowConsumerStrategy;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ActiveMQTextMessage;
@@ -386,6 +388,15 @@ public class DestinationView implements DestinationViewMBean {
             answer[index++] = new ObjectName(objectNameStr);
         }
         return answer;
+    }
+
+    public ObjectName getSlowConsumerStrategy() throws IOException, MalformedObjectNameException {
+        ObjectName result = null;
+        SlowConsumerStrategy strategy = destination.getSlowConsumerStrategy();
+        if (strategy != null && strategy instanceof AbortSlowConsumerStrategy) {
+            result = broker.registerSlowConsumerStrategy((AbortSlowConsumerStrategy)strategy);
+        }
+        return result;
     }
 
 }

@@ -23,6 +23,7 @@ import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.ProducerBrokerExchange;
 import org.apache.activemq.broker.region.policy.DeadLetterStrategy;
 import org.apache.activemq.broker.region.policy.SharedDeadLetterStrategy;
+import org.apache.activemq.broker.region.policy.SlowConsumerStrategy;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
@@ -215,4 +216,6 @@ public interface Destination extends Service, Task {
     void processDispatchNotification(MessageDispatchNotification messageDispatchNotification) throws Exception;
     
     boolean isPrioritizedMessages();
+
+    SlowConsumerStrategy getSlowConsumerStrategy();
 }
