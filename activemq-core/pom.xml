@@ -506,9 +506,6 @@
             <!-- breaks hudson: disable till we get a chance to give it the time that it needs - http://hudson.zones.apache.org/hudson/job/ActiveMQ/org.apache.activemq$activemq-core/199/testReport/org.apache.activemq.network/BrokerNetworkWithStuckMessagesTest/testBrokerNetworkWithStuckMessages/ -->
             <exclude>**/BrokerNetworkWithStuckMessagesTest.*</exclude>
             
-            <!-- exclude until implemented -->
-            <exclude>**/JDBCMessagePriorityTest.*</exclude>
-            
           </excludes>
         </configuration>
       </plugin>

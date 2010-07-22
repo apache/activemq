@@ -40,6 +40,7 @@ import org.apache.activemq.wireformat.WireFormat;
 public class JDBCTopicMessageStore extends JDBCMessageStore implements TopicMessageStore {
 
     private Map<String, AtomicLong> subscriberLastMessageMap = new ConcurrentHashMap<String, AtomicLong>();
+    private Map<String, AtomicLong> subscriberLastPriorityMap = new ConcurrentHashMap<String, AtomicLong>();
 
     public JDBCTopicMessageStore(JDBCPersistenceAdapter persistenceAdapter, JDBCAdapter adapter, WireFormat wireFormat, ActiveMQTopic topic, ActiveMQMessageAudit audit) {
         super(persistenceAdapter, adapter, wireFormat, topic, audit);
@@ -49,8 +50,8 @@ public class JDBCTopicMessageStore extends JDBCMessageStore implements TopicMess
         // Get a connection and insert the message into the DB.
         TransactionContext c = persistenceAdapter.getTransactionContext(context);
         try {
-        	long seq = adapter.getStoreSequenceId(c, destination, messageId);
-            adapter.doSetLastAck(c, destination, clientId, subscriptionName, seq);
+        	long[] res = adapter.getStoreSequenceId(c, destination, messageId);
+            adapter.doSetLastAck(c, destination, clientId, subscriptionName, res[0], res[1]);
         } catch (SQLException e) {
             JDBCPersistenceAdapter.log("JDBC Failure: ", e);
             throw IOExceptionSupport.create("Failed to store acknowledgment for: " + clientId + " on message " + messageId + " in container: " + e, e);
@@ -63,7 +64,6 @@ public class JDBCTopicMessageStore extends JDBCMessageStore implements TopicMess
      * @throws Exception
      */
     public void recoverSubscription(String clientId, String subscriptionName, final MessageRecoveryListener listener) throws Exception {
-
         TransactionContext c = persistenceAdapter.getTransactionContext();
         try {
             adapter.doRecoverSubscription(c, destination, clientId, subscriptionName, new JDBCMessageRecoveryListener() {
@@ -91,14 +91,18 @@ public class JDBCTopicMessageStore extends JDBCMessageStore implements TopicMess
         TransactionContext c = persistenceAdapter.getTransactionContext();
         String subcriberId = getSubscriptionKey(clientId, subscriptionName);
         AtomicLong last = subscriberLastMessageMap.get(subcriberId);
+        AtomicLong priority = subscriberLastPriorityMap.get(subcriberId);
         if (last == null) {
             long lastAcked = adapter.doGetLastAckedDurableSubscriberMessageId(c, destination, clientId, subscriptionName);
             last = new AtomicLong(lastAcked);
             subscriberLastMessageMap.put(subcriberId, last);
+            priority = new AtomicLong(Byte.MAX_VALUE - 1);
+            subscriberLastMessageMap.put(subcriberId, priority);
         }
         final AtomicLong finalLast = last;
+        final AtomicLong finalPriority = priority;
         try {
-            adapter.doRecoverNextMessages(c, destination, clientId, subscriptionName, last.get(), maxReturned, new JDBCMessageRecoveryListener() {
+            adapter.doRecoverNextMessages(c, destination, clientId, subscriptionName, last.get(), priority.get(), maxReturned, new JDBCMessageRecoveryListener() {
 
                 public boolean recoverMessage(long sequenceId, byte[] data) throws Exception {
                     if (listener.hasSpace()) {
@@ -106,6 +110,7 @@ public class JDBCTopicMessageStore extends JDBCMessageStore implements TopicMess
                         msg.getMessageId().setBrokerSequenceId(sequenceId);
                         listener.recoverMessage(msg);
                         finalLast.set(sequenceId);
+                        finalPriority.set(msg.getPriority());
                         return true;
                     }
                     return false;
@@ -120,13 +125,15 @@ public class JDBCTopicMessageStore extends JDBCMessageStore implements TopicMess
             JDBCPersistenceAdapter.log("JDBC Failure: ", e);
         } finally {
             c.close();
-            last.set(finalLast.get());
+            subscriberLastMessageMap.put(subcriberId, finalLast);
+            subscriberLastPriorityMap.put(subcriberId, finalPriority);
         }
     }
 
     public void resetBatching(String clientId, String subscriptionName) {
         String subcriberId = getSubscriptionKey(clientId, subscriptionName);
         subscriberLastMessageMap.remove(subcriberId);
+        subscriberLastPriorityMap.remove(subcriberId);
     }
 
     /**

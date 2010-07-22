@@ -177,7 +177,7 @@ abstract public class MessagePriorityTest extends CombinationTestSupport {
         sub = sess.createDurableSubscriber(topic, "priority");
         for (int i = 0; i < MSG_NUM * 2; i++) {
             Message msg = sub.receive(1000);
-            assertNotNull(msg);
+            assertNotNull("Message " + i + " was null", msg);
             assertEquals("Message " + i + " has wrong priority", i < MSG_NUM ? HIGH_PRI : LOW_PRI, msg.getJMSPriority());
         }
         

@@ -17,14 +17,19 @@
 package org.apache.activemq.store.jdbc.adapter;
 
 import java.io.IOException;
+import java.io.PrintStream;
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Set;
+
+import javax.jms.Message;
 
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.MessageId;
@@ -249,7 +254,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         }
     }
 
-    public long getStoreSequenceId(TransactionContext c, ActiveMQDestination destination, MessageId messageID) throws SQLException, IOException {
+    public long[] getStoreSequenceId(TransactionContext c, ActiveMQDestination destination, MessageId messageID) throws SQLException, IOException {
         PreparedStatement s = null;
         ResultSet rs = null;
         try {
@@ -259,9 +264,9 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
             s.setString(3, destination.getQualifiedName());
             rs = s.executeQuery();
             if (!rs.next()) {
-                return 0;
+                return new long[]{0,0};
             }
-            return rs.getLong(1);
+            return new long[]{rs.getLong(1), rs.getLong(2)};
         } finally {
             close(rs);
             close(s);
@@ -378,7 +383,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
     }
     
     public void doSetLastAck(TransactionContext c, ActiveMQDestination destination, String clientId,
-            String subscriptionName, long seq) throws SQLException, IOException {
+            String subscriptionName, long seq, long prio) throws SQLException, IOException {
         PreparedStatement s = c.getUpdateLastAckStatement();
         try {
             if (s == null) {
@@ -388,9 +393,10 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
                 }
             }
             s.setLong(1, seq);
-            s.setString(2, destination.getQualifiedName());
-            s.setString(3, clientId);
-            s.setString(4, subscriptionName);
+            s.setLong(2, prio);
+            s.setString(3, destination.getQualifiedName());
+            s.setString(4, clientId);
+            s.setString(5, subscriptionName);
             if (this.batchStatments) {
                 s.addBatch();
             } else if (s.executeUpdate() != 1) {
@@ -435,16 +441,25 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
     }
 
     public void doRecoverNextMessages(TransactionContext c, ActiveMQDestination destination, String clientId,
-            String subscriptionName, long seq, int maxReturned, JDBCMessageRecoveryListener listener) throws Exception {
+            String subscriptionName, long seq, long priority, int maxReturned, JDBCMessageRecoveryListener listener) throws Exception {
+        
         PreparedStatement s = null;
         ResultSet rs = null;
         try {
-            s = c.getConnection().prepareStatement(this.statements.getFindDurableSubMessagesStatement());
+            if (isPrioritizedMessages()) {
+                s = c.getConnection().prepareStatement(this.statements.getFindDurableSubMessagesByPriorityStatement());
+            } else {
+                s = c.getConnection().prepareStatement(this.statements.getFindDurableSubMessagesStatement());
+            }
             s.setMaxRows(maxReturned);
             s.setString(1, destination.getQualifiedName());
             s.setString(2, clientId);
             s.setString(3, subscriptionName);
             s.setLong(4, seq);
+            if (isPrioritizedMessages()) {
+                s.setLong(5, priority);
+                s.setLong(6, priority);
+            }
             rs = s.executeQuery();
             int count = 0;
             if (this.statements.isUseExternalMessageReferences()) {
@@ -507,6 +522,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         PreparedStatement s = null;
         try {
             long lastMessageId = -1;
+            long priority = Byte.MAX_VALUE - 1;
             if (!retroactive) {
                 s = c.getConnection().prepareStatement(this.statements.getFindLastSequenceIdInMsgsStatement());
                 ResultSet rs = null;
@@ -527,6 +543,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
             s.setString(4, info.getSelector());
             s.setLong(5, lastMessageId);
             s.setString(6, info.getSubscribedDestination().getQualifiedName());
+            s.setLong(7, priority);
             if (s.executeUpdate() != 1) {
                 throw new IOException("Could not create durable subscription for: " + info.getClientId());
             }
@@ -813,29 +830,61 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
             close(s);
         }
     }
-    /*
-     * Useful for debugging. public void dumpTables(Connection c, String destinationName, String clientId, String
-     * subscriptionName) throws SQLException { printQuery(c, "Select * from ACTIVEMQ_MSGS", System.out); printQuery(c,
-     * "Select * from ACTIVEMQ_ACKS", System.out); PreparedStatement s = c.prepareStatement("SELECT M.ID,
-     * D.LAST_ACKED_ID FROM " +"ACTIVEMQ_MSGS M, " +"ACTIVEMQ_ACKS D " +"WHERE D.CONTAINER=? AND D.CLIENT_ID=? AND
-     * D.SUB_NAME=?" +" AND M.CONTAINER=D.CONTAINER AND M.ID > D.LAST_ACKED_ID" +" ORDER BY M.ID");
-     * s.setString(1,destinationName); s.setString(2,clientId); s.setString(3,subscriptionName);
-     * printQuery(s,System.out); }
-     * 
-     * public void dumpTables(Connection c) throws SQLException { printQuery(c, "Select * from ACTIVEMQ_MSGS",
-     * System.out); printQuery(c, "Select * from ACTIVEMQ_ACKS", System.out); }
-     * 
-     * private void printQuery(Connection c, String query, PrintStream out) throws SQLException {
-     * printQuery(c.prepareStatement(query), out); }
-     * 
-     * private void printQuery(PreparedStatement s, PrintStream out) throws SQLException {
-     * 
-     * ResultSet set=null; try { set = s.executeQuery(); ResultSetMetaData metaData = set.getMetaData(); for( int i=1; i<=
-     * metaData.getColumnCount(); i++ ) { if(i==1) out.print("||"); out.print(metaData.getColumnName(i)+"||"); }
-     * out.println(); while(set.next()) { for( int i=1; i<= metaData.getColumnCount(); i++ ) { if(i==1) out.print("|");
-     * out.print(set.getString(i)+"|"); } out.println(); } } finally { try { set.close(); } catch (Throwable ignore) {}
-     * try { s.close(); } catch (Throwable ignore) {} } }
-     */
+    
+/*    public void dumpTables(Connection c, String destinationName, String clientId, String
+      subscriptionName) throws SQLException { 
+        printQuery(c, "Select * from ACTIVEMQ_MSGS", System.out); 
+        printQuery(c, "Select * from ACTIVEMQ_ACKS", System.out); 
+        PreparedStatement s = c.prepareStatement("SELECT M.ID, D.LAST_ACKED_ID FROM " 
+                + "ACTIVEMQ_MSGS M, " +"ACTIVEMQ_ACKS D " 
+                + "WHERE D.CONTAINER=? AND D.CLIENT_ID=? AND D.SUB_NAME=?" 
+                + " AND M.CONTAINER=D.CONTAINER AND M.ID > D.LAST_ACKED_ID" 
+                + " ORDER BY M.ID");
+      s.setString(1,destinationName); s.setString(2,clientId); s.setString(3,subscriptionName);
+      printQuery(s,System.out); }
+
+    public void dumpTables(Connection c) throws SQLException {
+        printQuery(c, "Select * from ACTIVEMQ_MSGS", System.out);
+        printQuery(c, "Select * from ACTIVEMQ_ACKS", System.out);
+    }
+
+    private void printQuery(Connection c, String query, PrintStream out)
+            throws SQLException {
+        printQuery(c.prepareStatement(query), out);
+    }
+
+    private void printQuery(PreparedStatement s, PrintStream out)
+            throws SQLException {
+
+        ResultSet set = null;
+        try {
+            set = s.executeQuery();
+            ResultSetMetaData metaData = set.getMetaData();
+            for (int i = 1; i <= metaData.getColumnCount(); i++) {
+                if (i == 1)
+                    out.print("||");
+                out.print(metaData.getColumnName(i) + "||");
+            }
+            out.println();
+            while (set.next()) {
+                for (int i = 1; i <= metaData.getColumnCount(); i++) {
+                    if (i == 1)
+                        out.print("|");
+                    out.print(set.getString(i) + "|");
+                }
+                out.println();
+            }
+        } finally {
+            try {
+                set.close();
+            } catch (Throwable ignore) {
+            }
+            try {
+                s.close();
+            } catch (Throwable ignore) {
+            }
+        }
+    }  */  
 
     public long doGetLastProducerSequenceId(TransactionContext c, ProducerId id)
             throws SQLException, IOException {
