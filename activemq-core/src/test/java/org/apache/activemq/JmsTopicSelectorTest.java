@@ -47,14 +47,6 @@ public class JmsTopicSelectorTest extends TestSupport {
     protected boolean durable;
     protected int deliveryMode = DeliveryMode.PERSISTENT;
 
-    public JmsTopicSelectorTest() {
-        super();
-    }
-
-    public JmsTopicSelectorTest(String name) {
-        super(name);
-    }
-
     public void setUp() throws Exception {
         super.setUp();
 

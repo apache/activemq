@@ -46,10 +46,11 @@ final class RecoveryListenerAdapter implements MessageRecoveryListener {
     
     public boolean recoverMessage(Message message) throws Exception {
         if (listener.hasSpace()) {
-            listener.recoverMessage(message);
-            lastRecovered = message.getMessageId();
-            count++;
-            return true;
+            if (listener.recoverMessage(message)) {
+                lastRecovered = message.getMessageId();
+                count++;
+                return true;
+            }
         }
         return false;
     }

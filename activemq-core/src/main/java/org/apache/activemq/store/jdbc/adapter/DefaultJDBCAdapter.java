@@ -451,7 +451,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
             } else {
                 s = c.getConnection().prepareStatement(this.statements.getFindDurableSubMessagesStatement());
             }
-            s.setMaxRows(maxReturned);
+            // no set max rows as selectors may need to scan more than maxReturned messages to get what they need
             s.setString(1, destination.getQualifiedName());
             s.setString(2, clientId);
             s.setString(3, subscriptionName);
@@ -466,16 +466,12 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
                 while (rs.next() && count < maxReturned) {
                     if (listener.recoverMessageReference(rs.getString(1))) {
                         count++;
-                    } else {
-                        break;
                     }
                 }
             } else {
                 while (rs.next() && count < maxReturned) {
                     if (listener.recoverMessage(rs.getLong(1), getBinaryData(rs, 2))) {
                         count++;
-                    } else {
-                        break;
                     }
                 }
             }

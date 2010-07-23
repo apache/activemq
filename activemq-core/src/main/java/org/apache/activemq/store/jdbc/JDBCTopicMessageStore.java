@@ -108,10 +108,11 @@ public class JDBCTopicMessageStore extends JDBCMessageStore implements TopicMess
                     if (listener.hasSpace()) {
                         Message msg = (Message)wireFormat.unmarshal(new ByteSequence(data));
                         msg.getMessageId().setBrokerSequenceId(sequenceId);
-                        listener.recoverMessage(msg);
-                        finalLast.set(sequenceId);
-                        finalPriority.set(msg.getPriority());
-                        return true;
+                        if (listener.recoverMessage(msg)) {
+                            finalLast.set(sequenceId);
+                            finalPriority.set(msg.getPriority());
+                            return true;
+                        }
                     }
                     return false;
                 }

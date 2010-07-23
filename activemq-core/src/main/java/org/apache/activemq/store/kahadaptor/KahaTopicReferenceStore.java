@@ -305,8 +305,6 @@ public class KahaTopicReferenceStore extends KahaReferenceStore implements Topic
                             if (recoverReference(listener, msg)) {
                                 count++;
                                 container.setBatchEntry(msg.getMessageId(), entry);
-                            } else {
-                                break;
                             }
                         } else {
                             container.reset();

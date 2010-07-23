@@ -17,6 +17,8 @@
 package org.apache.activemq;
 
 import java.io.File;
+import java.io.IOException;
+import java.util.Enumeration;
 import java.util.Map;
 
 import javax.jms.Connection;
@@ -34,6 +36,10 @@ import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
+import org.apache.activemq.store.PersistenceAdapter;
+import org.apache.activemq.store.amq.AMQPersistenceAdapter;
+import org.apache.activemq.store.jdbc.JDBCPersistenceAdapter;
+import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -42,18 +48,11 @@ import org.apache.commons.logging.LogFactory;
  * 
  * @version $Revision: 1.5 $
  */
-public class TestSupport extends TestCase {
+public abstract class TestSupport extends CombinationTestSupport {
 
     protected ActiveMQConnectionFactory connectionFactory;
     protected boolean topic = true;
-
-    public TestSupport() {
-        super();
-    }
-
-    public TestSupport(String name) {
-        super(name);
-    }
+    public PersistenceAdapterChoice defaultPersistenceAdapter = PersistenceAdapterChoice.KahaDB;
 
     protected ActiveMQMessage createMessage() {
         return new ActiveMQMessage();
@@ -173,4 +172,28 @@ public class TestSupport extends TestCase {
                     regionBroker.getQueueRegion().getDestinationMap() :
                         regionBroker.getTopicRegion().getDestinationMap();
     }
+
+    public static enum PersistenceAdapterChoice {KahaDB, AMQ, JDBC };
+
+    public PersistenceAdapter setDefaultPersistenceAdapter(BrokerService broker) throws IOException {
+        return setPersistenceAdapter(broker, defaultPersistenceAdapter);
+    }
+    
+    public PersistenceAdapter setPersistenceAdapter(BrokerService broker, PersistenceAdapterChoice choice) throws IOException {
+        PersistenceAdapter adapter = null;
+        switch (choice) {
+        case AMQ:
+            adapter = new AMQPersistenceAdapter();
+            break;
+        case JDBC:
+            adapter = new JDBCPersistenceAdapter();
+            break;
+        case KahaDB:
+            adapter = new KahaDBPersistenceAdapter();
+            break;
+        }
+        broker.setPersistenceAdapter(adapter);
+        return adapter;
+    }
+
 }
