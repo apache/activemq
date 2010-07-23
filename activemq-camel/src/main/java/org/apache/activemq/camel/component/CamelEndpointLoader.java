@@ -187,7 +187,9 @@ public class CamelEndpointLoader implements CamelContextAware {
 
     protected void removeQueue(ActiveMQQueue queue) throws Exception {
         String queueUri = getQueueUri(queue);
-        camelContext.removeEndpoints(queueUri);
+        // lur cache of endpoints so they will disappear in time
+        // this feature needs a new component api - list available endpoints
+        //camelContext.removeEndpoints(queueUri);
     }
     
     protected void addTopic(ActiveMQTopic topic) throws Exception {
@@ -203,6 +205,8 @@ public class CamelEndpointLoader implements CamelContextAware {
 
     protected void removeTopic(ActiveMQTopic topic) throws Exception {
         String topicUri = getTopicUri(topic);
-        camelContext.removeEndpoints(topicUri);
+        // lur cache of endpoints so they will disappear in time
+        // this feature needs a new component api - list available endpoints
+        //camelContext.removeEndpoints(topicUri);
     }
 }
