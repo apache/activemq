@@ -76,22 +76,24 @@ public class Statements {
             createSchemaStatements = new String[] {
                 "CREATE TABLE " + getFullMessageTableName() + "(" + "ID " + sequenceDataType + " NOT NULL"
                     + ", CONTAINER " + containerNameDataType + ", MSGID_PROD " + msgIdDataType + ", MSGID_SEQ "
-                    + sequenceDataType + ", EXPIRATION " + longDataType + ", PRIORITY " + sequenceDataType + ", MSG "
+                    + sequenceDataType + ", EXPIRATION " + longDataType + ", MSG "
                     + (useExternalMessageReferences ? stringIdDataType : binaryDataType)
                     + ", PRIMARY KEY ( ID ) )",
                 "CREATE INDEX " + getFullMessageTableName() + "_MIDX ON " + getFullMessageTableName() + " (MSGID_PROD,MSGID_SEQ)",
                 "CREATE INDEX " + getFullMessageTableName() + "_CIDX ON " + getFullMessageTableName() + " (CONTAINER)",
                 "CREATE INDEX " + getFullMessageTableName() + "_EIDX ON " + getFullMessageTableName() + " (EXPIRATION)",
-                "CREATE INDEX " + getFullMessageTableName() + "_PIDX ON " + getFullMessageTableName() + " (PRIORITY)",
                 "CREATE TABLE " + getFullAckTableName() + "(" + "CONTAINER " + containerNameDataType + " NOT NULL"
                     + ", SUB_DEST " + stringIdDataType 
                     + ", CLIENT_ID " + stringIdDataType + " NOT NULL" + ", SUB_NAME " + stringIdDataType
                     + " NOT NULL" + ", SELECTOR " + stringIdDataType + ", LAST_ACKED_ID " + sequenceDataType
-                    + ", PRIORITY " + sequenceDataType + ", PRIMARY KEY ( CONTAINER, CLIENT_ID, SUB_NAME))", 
+                    + ", PRIMARY KEY ( CONTAINER, CLIENT_ID, SUB_NAME))", 
                 "CREATE TABLE " + getFullLockTableName() 
                     + "( ID " + longDataType + " NOT NULL, TIME " + longDataType 
                     + ", BROKER_NAME " + stringIdDataType + ", PRIMARY KEY (ID) )",
                 "INSERT INTO " + getFullLockTableName() + "(ID) VALUES (1)", 
+                "ALTER TABLE " + getFullMessageTableName() + " ADD PRIORITY " + sequenceDataType,
+                "CREATE INDEX " + getFullMessageTableName() + "_PIDX ON " + getFullMessageTableName() + " (PRIORITY)",
+                "ALTER TABLE " + getFullAckTableName() + " ADD PRIORITY " + sequenceDataType,
             };
         }
         return createSchemaStatements;
