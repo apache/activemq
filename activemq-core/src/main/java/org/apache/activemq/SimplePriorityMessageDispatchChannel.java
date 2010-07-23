@@ -216,6 +216,7 @@ public class SimplePriorityMessageDispatchChannel implements MessageDispatchChan
             for (int i = MAX_PRIORITY - 1; i >= 0; i--) {
                 List<MessageDispatch> list = lists[i];
                 result.addAll(list);
+                size -= list.size();
                 list.clear();
             }
             return result;

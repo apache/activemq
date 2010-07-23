@@ -168,6 +168,20 @@ public class FailoverConsumerUnconsumedTest {
                
         // will be stopped by the plugin
         broker.waitUntilStopped();
+
+        // verify interrupt
+        assertTrue("add messages dispatched and unconsumed are cleaned up", Wait.waitFor(new Wait.Condition() {
+            public boolean isSatisified() throws Exception {
+                int totalUnconsumed = 0;
+                for (TestConsumer testConsumer : testConsumers) {
+                    long unconsumed = testConsumer.unconsumedSize();
+                    LOG.info(testConsumer.getConsumerId() + " unconsumed: " + unconsumed);
+                    totalUnconsumed += unconsumed;
+                }
+                return totalUnconsumed == 0;
+            }
+        }));
+
         broker = createBroker(false);
         broker.start();
 
