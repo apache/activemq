@@ -1009,8 +1009,8 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
                 MessageKeys keys = sd.orderIndex.remove(tx, sequenceId);
                 if (keys != null) {
                     sd.locationIndex.remove(tx, keys.location);
-                }
-                recordAckMessageReferenceLocation(ackLocation, keys.location);
+                    recordAckMessageReferenceLocation(ackLocation, keys.location);
+                }                
             }
         } else {
             // In the topic case we need remove the message once it's been acked
