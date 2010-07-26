@@ -14,6 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.apache.activemq.transport.discovery.multicast;
 
 import java.io.IOException;
@@ -83,6 +84,7 @@ public class MulticastDiscoveryAgent implements DiscoveryAgent, Runnable {
     private long keepAliveInterval = DEFAULT_IDLE_TIME;
     private String mcInterface;
     private String mcNetworkInterface;
+    private String mcJoinNetworkInterface;
     private long lastAdvertizeTime;
     private AtomicBoolean started = new AtomicBoolean(false);
     private boolean reportAdvertizeFailed = true;
@@ -259,6 +261,10 @@ public class MulticastDiscoveryAgent implements DiscoveryAgent, Runnable {
         this.mcNetworkInterface = mcNetworkInterface;    
     }
     
+    public void setJoinNetworkInterface(String mcJoinNetwrokInterface) {
+    	this.mcJoinNetworkInterface = mcJoinNetwrokInterface;
+    }
+    
     /**
      * start the discovery agent
      * 
@@ -299,6 +305,7 @@ public class MulticastDiscoveryAgent implements DiscoveryAgent, Runnable {
         	  	LOG.trace("start - group  = " + group );		       	  	
         	  	LOG.trace("start - interface  = " + mcInterface );
         	  	LOG.trace("start - network interface  = " + mcNetworkInterface );
+        	  	LOG.trace("start - join network interface  = " + mcJoinNetworkInterface );
         	  }	
         	  
             this.inetAddress = InetAddress.getByName(myHost);
@@ -306,7 +313,12 @@ public class MulticastDiscoveryAgent implements DiscoveryAgent, Runnable {
             mcast = new MulticastSocket(myPort);
             mcast.setLoopbackMode(loopBackMode);
             mcast.setTimeToLive(getTimeToLive());
-            mcast.joinGroup(inetAddress);
+            if (mcJoinNetworkInterface != null) {
+                mcast.joinGroup(sockAddress, NetworkInterface.getByName(mcJoinNetworkInterface));
+            }
+            else {
+            	mcast.joinGroup(inetAddress);
+            }
             mcast.setSoTimeout((int)keepAliveInterval);
             if (mcInterface != null) {
                 mcast.setInterface(InetAddress.getByName(mcInterface));
