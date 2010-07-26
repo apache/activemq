@@ -20,9 +20,12 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @version $Revision$
@@ -150,6 +153,71 @@ public final class IOHelper {
     }
     
     public static void copyFile(File src, File dest) throws IOException {
+        copyFile(src,dest,null);
+    }
+    
+    public static void copyFile(File src, File dest,FilenameFilter filter) throws IOException {
+        if (src.getCanonicalPath().equals(dest.getCanonicalPath()) == false) {
+            if (src.isDirectory()) {
+                if (dest.isDirectory()) {
+                    mkdirs(dest);
+                    List<File> list = getFiles(src,filter);
+                    for (File f : list) {
+                        if (f.isFile()) {
+                            File target = new File(getCopyParent(src, dest, f), f.getName());
+                            copySingleFile(f, target);
+                        }
+                    }
+
+                }
+            } else if (dest.isDirectory()) {
+                mkdirs(dest);
+                File target = new File(dest, src.getName());
+                copySingleFile(src, target);
+            } else {
+                copySingleFile(src, dest);
+            }
+        }
+    }
+    
+    static File getCopyParent(File from, File to, File src) {
+        File result = null;
+        File parent = src.getParentFile();
+        String fromPath = from.getAbsolutePath();
+        if (parent.getAbsolutePath().equals(fromPath)) {
+            //one level down
+            result = to;
+        }else {
+            String parentPath = parent.getAbsolutePath();
+            String path = parentPath.substring(fromPath.length());
+            result = new File(to.getAbsolutePath()+File.separator+path);
+        }
+        return result;
+    }
+    
+    static List<File> getFiles(File dir,FilenameFilter filter){
+        List<File> result = new ArrayList<File>();
+        getFiles(dir,result,filter);
+        return result;
+    }
+    
+    static void getFiles(File dir,List<File> list,FilenameFilter filter) {
+        if (!list.contains(dir)) {
+            list.add(dir);
+            String[] fileNames=dir.list(filter);
+            for (int i =0; i < fileNames.length;i++) {
+                File f = new File(dir,fileNames[i]);
+                if (f.isFile()) {
+                    list.add(f);
+                }else {
+                    getFiles(dir,list,filter);
+                }
+            }
+        }
+    }
+    
+    
+    public static void copySingleFile(File src, File dest) throws IOException {
         FileInputStream fileSrc = new FileInputStream(src);
         FileOutputStream fileDest = new FileOutputStream(dest);
         copyInputStream(fileSrc, fileDest);
