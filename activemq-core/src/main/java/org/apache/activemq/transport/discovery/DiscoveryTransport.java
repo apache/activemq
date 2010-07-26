@@ -74,9 +74,10 @@ public class DiscoveryTransport extends TransportFilter implements DiscoveryList
         if (url != null) {
             try {
                 URI uri = new URI(url);
-                serviceURIs.put(event.getServiceName(), uri);
                 LOG.info("Adding new broker connection URL: " + uri);
-                next.add(false,new URI[] {URISupport.applyParameters(uri, parameters)});
+                uri = URISupport.applyParameters(uri, parameters);
+                serviceURIs.put(event.getServiceName(), uri);
+                next.add(false,new URI[] {uri});
             } catch (URISyntaxException e) {
                 LOG.warn("Could not connect to remote URI: " + url + " due to bad URI syntax: " + e, e);
             }

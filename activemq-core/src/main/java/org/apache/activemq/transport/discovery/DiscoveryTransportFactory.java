@@ -21,8 +21,10 @@ import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.activemq.transport.CompositeTransport;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportServer;
+import org.apache.activemq.transport.failover.FailoverTransport;
 import org.apache.activemq.transport.failover.FailoverTransportFactory;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.util.URISupport.CompositeData;
@@ -32,14 +34,30 @@ import org.apache.activemq.util.URISupport.CompositeData;
  */
 public class DiscoveryTransportFactory extends FailoverTransportFactory {
         
-    public Transport createTransport(CompositeData compositData) throws IOException {
-        Map<String, String> parameters = new HashMap<String, String>(compositData.getParameters());
-        DiscoveryTransport transport = new DiscoveryTransport(createTransport(parameters));
-
-        DiscoveryAgent discoveryAgent = DiscoveryAgentFactory.createDiscoveryAgent(compositData.getComponents()[0]);
-        transport.setDiscoveryAgent(discoveryAgent);
+    public Transport createTransport(CompositeData compositeData) throws IOException {
+        Map<String, String> parameters = new HashMap<String, String>(compositeData.getParameters());
+        FailoverTransport failoverTransport = createTransport(parameters);
+        return createTransport(failoverTransport, compositeData);
+    }
+    
+    /**
+     * Creates a transport that reports discovered brokers to a specific composite transport.
+     * 
+     * @param compositeTransport transport to report discovered brokers to
+     * @param compositeData used to apply parameters to this transport 
+     * @return a transport that reports discovered brokers to a specific composite transport.
+     * @throws IOException
+     */
+    public static DiscoveryTransport createTransport(CompositeTransport compositeTransport, CompositeData compositeData) throws IOException {                
+        DiscoveryTransport transport = new DiscoveryTransport(compositeTransport);
+        
+        Map<String, String> parameters = new HashMap<String, String>(compositeData.getParameters());
         IntrospectionSupport.setProperties(transport, parameters);
         transport.setParameters(parameters);
+        
+        URI discoveryAgentURI = compositeData.getComponents()[0];
+        DiscoveryAgent discoveryAgent = DiscoveryAgentFactory.createDiscoveryAgent(discoveryAgentURI);
+        transport.setDiscoveryAgent(discoveryAgent);
         return transport;
     }
 

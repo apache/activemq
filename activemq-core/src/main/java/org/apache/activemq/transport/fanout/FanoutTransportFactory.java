@@ -27,9 +27,8 @@ import org.apache.activemq.transport.ResponseCorrelator;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportFactory;
 import org.apache.activemq.transport.TransportServer;
-import org.apache.activemq.transport.discovery.DiscoveryAgent;
-import org.apache.activemq.transport.discovery.DiscoveryAgentFactory;
 import org.apache.activemq.transport.discovery.DiscoveryTransport;
+import org.apache.activemq.transport.discovery.DiscoveryTransportFactory;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.util.URISupport;
 import org.apache.activemq.util.URISupport.CompositeData;
@@ -62,19 +61,14 @@ public class FanoutTransportFactory extends TransportFactory {
      * @throws URISyntaxException
      */
     public Transport createTransport(URI location) throws IOException, URISyntaxException {
-
         CompositeData compositeData = URISupport.parseComposite(location);
         Map<String, String> parameters = new HashMap<String, String>(compositeData.getParameters());
-        DiscoveryTransport transport = new DiscoveryTransport(createTransport(parameters));
-
-        DiscoveryAgent discoveryAgent = DiscoveryAgentFactory.createDiscoveryAgent(compositeData.getComponents()[0]);
-        transport.setDiscoveryAgent(discoveryAgent);
-
-        return transport;
-
+        FanoutTransport fanoutTransport = createTransport(parameters);        
+        DiscoveryTransport discoveryTransport = DiscoveryTransportFactory.createTransport(fanoutTransport, compositeData);        
+        return discoveryTransport;
     }
 
-    public FanoutTransport createTransport(Map parameters) throws IOException {
+    public FanoutTransport createTransport(Map<String,String> parameters) throws IOException {
         FanoutTransport transport = new FanoutTransport();
         IntrospectionSupport.setProperties(transport, parameters);
         return transport;
