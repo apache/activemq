@@ -106,6 +106,10 @@ public class KahaTopicReferenceStore extends KahaReferenceStore implements Topic
                 if (LOG.isTraceEnabled()) {
                     LOG.trace(destination.getPhysicalName() + " add reference: " + messageId);
                 }
+            } else {
+                if (LOG.isTraceEnabled()) {
+                    LOG.trace("no subscribers or duplicate add for: "  + messageId);
+                }
             }
         } finally {
             lock.unlock();
@@ -182,8 +186,10 @@ public class KahaTopicReferenceStore extends KahaReferenceStore implements Topic
                     if (ackContainer.isEmpty() || subscriberMessages.size() == 1 || isUnreferencedBySubscribers(key, subscriberMessages, messageId)) {
                         // no message reference held        
                         removeMessage = true;
+                        // ensure we don't later add a reference
+                        dispatchAudit.isDuplicate(messageId);
                         if (LOG.isDebugEnabled()) {
-                            LOG.debug(destination.getPhysicalName() + " remove with no outstanding reference (dup ack): " + messageId);
+                            LOG.debug(destination.getPhysicalName() + " remove with no outstanding reference (ack before add): " + messageId);
                         }
                     }
                 }
