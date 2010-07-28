@@ -156,20 +156,19 @@ public final class IOHelper {
         copyFile(src,dest,null);
     }
     
-    public static void copyFile(File src, File dest,FilenameFilter filter) throws IOException {
+    public static void copyFile(File src, File dest, FilenameFilter filter) throws IOException {
         if (src.getCanonicalPath().equals(dest.getCanonicalPath()) == false) {
             if (src.isDirectory()) {
-                if (dest.isDirectory()) {
-                    mkdirs(dest);
-                    List<File> list = getFiles(src,filter);
-                    for (File f : list) {
-                        if (f.isFile()) {
-                            File target = new File(getCopyParent(src, dest, f), f.getName());
-                            copySingleFile(f, target);
-                        }
-                    }
 
+                mkdirs(dest);
+                List<File> list = getFiles(src, filter);
+                for (File f : list) {
+                    if (f.isFile()) {
+                        File target = new File(getCopyParent(src, dest, f), f.getName());
+                        copySingleFile(f, target);
+                    }
                 }
+
             } else if (dest.isDirectory()) {
                 mkdirs(dest);
                 File target = new File(dest, src.getName());
