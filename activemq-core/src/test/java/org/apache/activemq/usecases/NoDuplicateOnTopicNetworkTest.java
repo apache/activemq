@@ -211,7 +211,11 @@ public class NoDuplicateOnTopicNetworkTest extends CombinationTestSupport {
             assertEquals("got all required messages: " + map.size(), consumer
                     .getNumMessages(), map.size());
         } else {
-            assertTrue("we got some duplicates", duplicateCount > 0);
+            assertTrue("we can get some duplicates: " + duplicateCount, duplicateCount >= 0);
+            if (duplicateCount == 0) {
+               assertEquals("got all required messages: " + map.size(), consumer
+                    .getNumMessages(), map.size()); 
+            }
         }
     }
 
