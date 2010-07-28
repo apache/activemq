@@ -233,14 +233,19 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                 // initiator side of duplex network
                 remoteBrokerNameKnownLatch.await();
             }
-            try {
-                triggerRemoteStartBridge();
-            } catch (IOException e) {
-                LOG.warn("Caught exception from remote start", e);
-            }
-            NetworkBridgeListener l = this.networkBridgeListener;
-            if (l != null) {
-                l.onStart(this);
+            if (!disposed.get()) {
+                try {
+                    triggerRemoteStartBridge();
+                } catch (IOException e) {
+                    LOG.warn("Caught exception from remote start", e);
+                }
+                NetworkBridgeListener l = this.networkBridgeListener;
+                if (l != null) {
+                    l.onStart(this);
+                }
+    	    } else {
+                LOG.warn ("Bridge was disposed before the start() method was fully executed.");
+                throw new TransportDisposedIOException();
             }
         }
     }
@@ -285,30 +290,38 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                 }
                 remoteBrokerNameKnownLatch.await();
 
-                localConnectionInfo = new ConnectionInfo();
-                localConnectionInfo.setConnectionId(new ConnectionId(idGenerator.generateId()));
-                localClientId = "NC_" + remoteBrokerName + "_inbound_" + configuration.getBrokerName();
-                localConnectionInfo.setClientId(localClientId);
-                localConnectionInfo.setUserName(configuration.getUserName());
-                localConnectionInfo.setPassword(configuration.getPassword());
-                Transport originalTransport = remoteBroker;
-                while (originalTransport instanceof TransportFilter) {
-                    originalTransport = ((TransportFilter) originalTransport).getNext();
+                if (!disposed.get()) {
+                    localConnectionInfo = new ConnectionInfo();
+                    localConnectionInfo.setConnectionId(new ConnectionId(idGenerator.generateId()));
+                    localClientId = "NC_" + remoteBrokerName + "_inbound_" + configuration.getBrokerName();
+                    localConnectionInfo.setClientId(localClientId);
+                    localConnectionInfo.setUserName(configuration.getUserName());
+                    localConnectionInfo.setPassword(configuration.getPassword());
+                    Transport originalTransport = remoteBroker;
+                    while (originalTransport instanceof TransportFilter) {
+                        originalTransport = ((TransportFilter) originalTransport).getNext();
+                    }
+                    if (originalTransport instanceof SslTransport) {
+                        X509Certificate[] peerCerts = ((SslTransport) originalTransport).getPeerCertificates();
+                        localConnectionInfo.setTransportContext(peerCerts);
+                    }
+                    localBroker.oneway(localConnectionInfo);
+
+                    localSessionInfo = new SessionInfo(localConnectionInfo, 1);
+                    localBroker.oneway(localSessionInfo);
+
+                    LOG.info("Network connection between " + localBroker + " and " + remoteBroker + "(" + remoteBrokerName + ") has been established.");
+
+                } else {
+                    LOG.warn ("Bridge was disposed before the startLocalBridge() method was fully executed.");
                 }
-                if (originalTransport instanceof SslTransport) {
-                    X509Certificate[] peerCerts = ((SslTransport) originalTransport).getPeerCertificates();
-                    localConnectionInfo.setTransportContext(peerCerts);
-                }
-                localBroker.oneway(localConnectionInfo);
-
-                localSessionInfo = new SessionInfo(localConnectionInfo, 1);
-                localBroker.oneway(localSessionInfo);
-
-                LOG.info("Network connection between " + localBroker + " and " + remoteBroker + "(" + remoteBrokerName + ") has been established.");
-
                 startedLatch.countDown();
                 localStartedLatch.countDown();
-                setupStaticDestinations();
+                if (!disposed.get()) {
+                    setupStaticDestinations();
+                } else {
+                    LOG.warn("Network connection between " + localBroker + " and " + remoteBroker + "(" + remoteBrokerName + ") was interrupted during establishment.");
+                }
             }
         }
     }
@@ -408,6 +421,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                 }
             }
             LOG.info(configuration.getBrokerName() + " bridge to " + remoteBrokerName + " stopped");
+            remoteBrokerNameKnownLatch.countDown();
         }
     }
 

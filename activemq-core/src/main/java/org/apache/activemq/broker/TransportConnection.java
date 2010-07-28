@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -37,6 +38,7 @@ import javax.transaction.xa.XAResource;
 import org.apache.activemq.broker.ft.MasterBroker;
 import org.apache.activemq.broker.region.ConnectionStatistics;
 import org.apache.activemq.broker.region.RegionBroker;
+import org.apache.activemq.command.BrokerId;
 import org.apache.activemq.command.BrokerInfo;
 import org.apache.activemq.command.Command;
 import org.apache.activemq.command.CommandTypes;
@@ -80,7 +82,6 @@ import org.apache.activemq.state.ConsumerState;
 import org.apache.activemq.state.ProducerState;
 import org.apache.activemq.state.SessionState;
 import org.apache.activemq.state.TransactionState;
-import org.apache.activemq.thread.DefaultThreadPools;
 import org.apache.activemq.thread.Task;
 import org.apache.activemq.thread.TaskRunner;
 import org.apache.activemq.thread.TaskRunnerFactory;
@@ -88,6 +89,7 @@ import org.apache.activemq.transaction.Transaction;
 import org.apache.activemq.transport.DefaultTransportListener;
 import org.apache.activemq.transport.ResponseCorrelator;
 import org.apache.activemq.transport.Transport;
+import org.apache.activemq.transport.TransportDisposedIOException;
 import org.apache.activemq.transport.TransportFactory;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.util.MarshallingSupport;
@@ -96,7 +98,7 @@ import org.apache.activemq.util.URISupport;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import static org.apache.activemq.thread.DefaultThreadPools.*;
+import static org.apache.activemq.thread.DefaultThreadPools.getDefaultTaskRunnerFactory;
 /**
  * @version $Revision: 1.8 $
  */
@@ -149,6 +151,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
     private final TaskRunnerFactory taskRunnerFactory;
     private TransportConnectionStateRegister connectionStateRegister = new SingleTransportConnectionStateRegister();
     private final ReentrantReadWriteLock serviceLock = new ReentrantReadWriteLock();
+    private BrokerId	duplexRemoteBrokerId;
 
     /**
      * @param connector
@@ -1178,6 +1181,20 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
             // so this TransportConnection is the rear end of a network bridge
             // We have been requested to create a two way pipe ...
             try {
+                // We first look if existing network connection already exists for the same broker Id
+                // It's possible in case of brief network fault to have this transport connector side of the connection always active
+                // and the duplex network connector side wanting to open a new one
+                // In this case, the old connection must be broken
+                BrokerId	remoteBrokerId = info.getBrokerId();
+                setDuplexRemoteBrokerId(remoteBrokerId);
+                CopyOnWriteArrayList<TransportConnection> connections = this.connector.getConnections();
+                for (Iterator<TransportConnection> iter = connections.iterator(); iter.hasNext();) {
+            		TransportConnection c = iter.next();
+                    if ((c != this) && (remoteBrokerId.equals(c.getDuplexRemoteBrokerId()))) {
+                        LOG.warn("An existing duplex active connection already exists for this broker (" + remoteBrokerId + "). Stopping it.");
+                        c.stop();
+                    }
+                }
                 Properties properties = MarshallingSupport.stringToProperties(info.getNetworkProperties());
                 Map<String, String> props = createMap(properties);
                 NetworkBridgeConfiguration config = new NetworkBridgeConfiguration();
@@ -1197,6 +1214,9 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
                 duplexBridge.setCreatedByDuplex(true);
                 duplexBridge.duplexStart(this, brokerInfo, info);
                 LOG.info("Created Duplex Bridge back to " + info.getBrokerName());
+                return null;
+            } catch (TransportDisposedIOException e) {
+                LOG.warn("Duplex Bridge back to " + info.getBrokerName() + " was correctly stopped before it was correctly started.");
                 return null;
             } catch (Exception e) {
                 LOG.error("Creating duplex network bridge", e);
@@ -1390,5 +1410,13 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
 
     protected synchronized TransportConnectionState lookupConnectionState(ConnectionId connectionId) {
         return connectionStateRegister.lookupConnectionState(connectionId);
+    }
+
+    protected synchronized void setDuplexRemoteBrokerId(BrokerId remoteBrokerId) {
+        this.duplexRemoteBrokerId = remoteBrokerId;
+    }
+
+    protected synchronized BrokerId getDuplexRemoteBrokerId() {
+        return this.duplexRemoteBrokerId;
     }
 }
