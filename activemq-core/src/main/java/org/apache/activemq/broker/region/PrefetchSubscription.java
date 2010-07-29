@@ -528,7 +528,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
     }
 
    @Override
-public void add(ConnectionContext context, Destination destination) throws Exception {
+    public void add(ConnectionContext context, Destination destination) throws Exception {
         synchronized(pendingLock) {
             super.add(context, destination);
             pending.add(context, destination);

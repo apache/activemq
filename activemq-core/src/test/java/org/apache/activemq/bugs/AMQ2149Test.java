@@ -105,7 +105,7 @@ public class AMQ2149Test extends TestCase {
         broker.start();
     }
     
-    protected void configurePersistenceAdapter(BrokerService brokerService) {
+    protected void configurePersistenceAdapter(BrokerService brokerService) throws Exception {
         AMQPersistenceAdapterFactory persistenceFactory = new AMQPersistenceAdapterFactory();
         persistenceFactory.setDataDirectory(dataDirFile);
         brokerService.setPersistenceFactory(persistenceFactory);

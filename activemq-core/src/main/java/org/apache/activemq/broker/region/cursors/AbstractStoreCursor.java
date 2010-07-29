@@ -208,7 +208,7 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
         if (last != null) {
             last.decrementReferenceCount();
         }
-        if (size==0 && isStarted() && useCache && hasSpace() ) {
+        if (size==0 && isStarted() && useCache && hasSpace() && isStoreEmpty()) {
             if (LOG.isDebugEnabled()) {
                 LOG.debug(regionDestination.getActiveMQDestination().getPhysicalName() + " enabling cache on last remove");
             }
