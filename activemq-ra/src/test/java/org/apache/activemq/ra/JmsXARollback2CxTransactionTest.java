@@ -39,7 +39,7 @@ import org.apache.activemq.ActiveMQConnectionFactory;
  * @version $Rev$ $Date$
  */
 public class JmsXARollback2CxTransactionTest extends JmsQueueTransactionTest {
-    private static final String DEFAULT_HOST = "vm://localhost";
+    private static final String DEFAULT_HOST = "vm://localhost?create=false";
 
     private ConnectionManagerAdapter connectionManager = new ConnectionManagerAdapter();
     private static long txGenerator;
