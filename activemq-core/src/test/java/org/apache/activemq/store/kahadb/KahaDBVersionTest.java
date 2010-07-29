@@ -16,25 +16,20 @@
  */
 package org.apache.activemq.store.kahadb;
 
-import java.io.File;
-
-import javax.jms.Connection;
-import javax.jms.Message;
-import javax.jms.MessageConsumer;
-import javax.jms.MessageProducer;
-import javax.jms.Queue;
-import javax.jms.Session;
-import javax.jms.TextMessage;
-import javax.jms.Topic;
-
 import junit.framework.TestCase;
-
-import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.util.IOHelper;
 
+import javax.jms.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.RandomAccessFile;
+import java.io.FileNotFoundException;
+
 /**
- * 
+ * @author chirino
  */
 public class KahaDBVersionTest extends TestCase {
 
@@ -49,11 +44,11 @@ public class KahaDBVersionTest extends TestCase {
 
     }
 
-    
-    public void testCreateStore() throws Exception {
+        
+    public void XtestCreateStore() throws Exception {
+        KahaDBPersistenceAdapter kaha = new KahaDBPersistenceAdapter();
         File dir = new File("src/test/resources/org/apache/activemq/store/kahadb/KahaDBVersion1");
         IOHelper.deleteFile(dir);
-        KahaDBPersistenceAdapter kaha = new KahaDBPersistenceAdapter();
         kaha.setDirectory(dir);
         kaha.setJournalMaxFileLength(1024*1024);
         BrokerService broker = createBroker(kaha);
@@ -76,17 +71,15 @@ public class KahaDBVersionTest extends TestCase {
             Message msg = session.createTextMessage("test message:"+i);
             producer.send(msg);
         }
-        connection.close();
+        connection.stop();
         broker.stop();
-
-        
-
     }
     
-    public void XtestVersionConversion() throws Exception{
+    public void testVersionConversion() throws Exception{
         File testDir = new File("target/activemq-data/kahadb/versionDB");
         IOHelper.deleteFile(testDir);
         IOHelper.copyFile(VERSION_1_DB, testDir);
+        
         KahaDBPersistenceAdapter kaha = new KahaDBPersistenceAdapter();
         kaha.setDirectory(testDir);
         kaha.setJournalMaxFileLength(1024*1024);
@@ -100,18 +93,21 @@ public class KahaDBVersionTest extends TestCase {
         Queue queue = session.createQueue("test.queue");
         MessageConsumer queueConsumer = session.createConsumer(queue);
         for (int i = 0; i < 1000; i++) {
-            TextMessage msg  = (TextMessage) queueConsumer.receive();
-            System.err.println(msg.getText());
+            TextMessage msg  = (TextMessage) queueConsumer.receive(10000);
+            //System.err.println(msg.getText());
+            assertNotNull(msg);
         }
         MessageConsumer topicConsumer = session.createDurableSubscriber(topic,"test");
         for (int i = 0; i < 1000; i++) {
-            TextMessage msg  = (TextMessage) topicConsumer.receive();
-            System.err.println(msg.getText());
+            TextMessage msg  = (TextMessage) topicConsumer.receive(10000);
+            //System.err.println(msg.getText());
+            assertNotNull(msg);
         }
         broker.stop();
+        
     }
 
-   
+    
 
 
     

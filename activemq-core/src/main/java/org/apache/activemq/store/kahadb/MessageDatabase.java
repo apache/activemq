@@ -94,6 +94,7 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
     static final int CLOSED_STATE = 1;
     static final int OPEN_STATE = 2;
     static final long NOT_ACKED = -1;
+    static final int VERSION = 2;
 
 
     protected class Metadata {
@@ -104,7 +105,7 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
         protected Location firstInProgressTransactionLocation;
         protected Location producerSequenceIdTrackerLocation = null;
         protected transient ActiveMQMessageAuditNoSync producerSequenceIdTracker = new ActiveMQMessageAuditNoSync();
-
+        protected int version = VERSION;
         public void read(DataInput is) throws IOException {
             state = is.readInt();
             destinations = new BTreeIndex<String, StoredDestination>(pageFile, is.readLong());
@@ -126,6 +127,12 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
                 }
             } catch (EOFException expectedOnUpgrade) {
             }
+            try {
+               version = is.readInt();
+            }catch (EOFException expectedOnUpgrade) {
+                version=1;
+            }
+            LOG.info("KahaDB is version " + version);
         }
 
         public void write(DataOutput os) throws IOException {
@@ -151,6 +158,9 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
                 LocationMarshaller.INSTANCE.writePayload(producerSequenceIdTrackerLocation, os);
             } else {
                 os.writeBoolean(false);
+            }
+            if (version > 1) {
+               os.writeInt(version);
             }
         }
     }
@@ -974,22 +984,26 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
         }
 
         // Add the message.
-        long id = sd.nextMessageId++;
+        int priority = command.getPrioritySupported() ? command.getPriority() : javax.jms.Message.DEFAULT_PRIORITY;
+        long id = sd.orderIndex.getNextMessageId(priority);
         Long previous = sd.locationIndex.put(tx, location, id);
-        if( previous == null ) {
+        if (previous == null) {
             previous = sd.messageIdIndex.put(tx, command.getMessageId(), id);
-            if( previous == null ) {
-                sd.orderIndex.put(tx, id, new MessageKeys(command.getMessageId(), location));            
+            if (previous == null) {
+                sd.orderIndex.put(tx, priority, id, new MessageKeys(command.getMessageId(), location));
             } else {
-                // If the message ID as indexed, then the broker asked us to store a DUP
-                // message.  Bad BOY!  Don't do it, and log a warning.
-                LOG.warn("Duplicate message add attempt rejected. Message id: "+command.getMessageId());
+                // If the message ID as indexed, then the broker asked us to
+                // store a DUP
+                // message. Bad BOY! Don't do it, and log a warning.
+                LOG.warn("Duplicate message add attempt rejected. Message id: " + command.getMessageId());
                 // TODO: consider just rolling back the tx.
                 sd.messageIdIndex.put(tx, command.getMessageId(), previous);
             }
         } else {
-            // restore the previous value.. Looks like this was a redo of a previously
-            // added message.  We don't want to assign it a new id as the other indexes would 
+            // restore the previous value.. Looks like this was a redo of a
+            // previously
+            // added message. We don't want to assign it a new id as the other
+            // indexes would
             // be wrong..
             //
             // TODO: consider just rolling back the tx.
@@ -1049,9 +1063,7 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
 
     void updateIndex(Transaction tx, KahaRemoveDestinationCommand command, Location location) throws IOException {
         StoredDestination sd = getStoredDestination(command.getDestination(), tx);
-        sd.orderIndex.clear(tx);
-        sd.orderIndex.unload(tx);
-        tx.free(sd.orderIndex.getPageId());
+        sd.orderIndex.remove(tx);
         
         sd.locationIndex.clear(tx);
         sd.locationIndex.unload(tx);
@@ -1085,7 +1097,7 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
             sd.subscriptions.put(tx, subscriptionKey, command);
             long ackLocation=NOT_ACKED;
             if (!command.getRetroactive()) {
-                ackLocation = sd.nextMessageId-1;
+                ackLocation = sd.orderIndex.nextMessageId-1;
             }
 
             sd.subscriptionAcks.put(tx, subscriptionKey, ackLocation);
@@ -1273,17 +1285,17 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
             LocationMarshaller.INSTANCE.writePayload(object.location, dataOut);
         }
     }
-    
-    static class StoredDestination {
-        long nextMessageId;
-        BTreeIndex<Long, MessageKeys> orderIndex;
+ 
+    class StoredDestination {
+        
+        MessageOrderIndex orderIndex = new MessageOrderIndex();
         BTreeIndex<Location, Long> locationIndex;
         BTreeIndex<String, Long> messageIdIndex;
 
         // These bits are only set for Topics
         BTreeIndex<String, KahaSubscriptionCommand> subscriptions;
         BTreeIndex<String, Long> subscriptionAcks;
-        HashMap<String, Long> subscriptionCursors;
+        HashMap<String, MessageOrderCursor> subscriptionCursors;
         TreeMap<Long, HashSet<String>> ackPositions;
     }
 
@@ -1291,7 +1303,7 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
 
         public StoredDestination readPayload(DataInput dataIn) throws IOException {
             StoredDestination value = new StoredDestination();
-            value.orderIndex = new BTreeIndex<Long, MessageKeys>(pageFile, dataIn.readLong());
+            value.orderIndex.defaultPriorityIndex = new BTreeIndex<Long, MessageKeys>(pageFile, dataIn.readLong());
             value.locationIndex = new BTreeIndex<Location, Long>(pageFile, dataIn.readLong());
             value.messageIdIndex = new BTreeIndex<String, Long>(pageFile, dataIn.readLong());
 
@@ -1299,11 +1311,15 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
                 value.subscriptions = new BTreeIndex<String, KahaSubscriptionCommand>(pageFile, dataIn.readLong());
                 value.subscriptionAcks = new BTreeIndex<String, Long>(pageFile, dataIn.readLong());
             }
+            if (metadata.version >= 2) {
+                value.orderIndex.lowPriorityIndex = new BTreeIndex<Long, MessageKeys>(pageFile, dataIn.readLong());
+                value.orderIndex.highPriorityIndex = new BTreeIndex<Long, MessageKeys>(pageFile, dataIn.readLong());
+            }
             return value;
         }
 
         public void writePayload(StoredDestination value, DataOutput dataOut) throws IOException {
-            dataOut.writeLong(value.orderIndex.getPageId());
+            dataOut.writeLong(value.orderIndex.defaultPriorityIndex.getPageId());
             dataOut.writeLong(value.locationIndex.getPageId());
             dataOut.writeLong(value.messageIdIndex.getPageId());
             if (value.subscriptions != null) {
@@ -1312,6 +1328,10 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
                 dataOut.writeLong(value.subscriptionAcks.getPageId());
             } else {
                 dataOut.writeBoolean(false);
+            }
+            if (metadata.version >= 2) {
+                dataOut.writeLong(value.orderIndex.lowPriorityIndex.getPageId());
+                dataOut.writeLong(value.orderIndex.highPriorityIndex.getPageId());
             }
         }
     }
@@ -1385,7 +1405,7 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
         if (rc == null) {
             // Brand new destination.. allocate indexes for it.
             rc = new StoredDestination();
-            rc.orderIndex = new BTreeIndex<Long, MessageKeys>(pageFile, tx.allocate());
+            rc.orderIndex.allocate(tx);
             rc.locationIndex = new BTreeIndex<Location, Long>(pageFile, tx.allocate());
             rc.messageIdIndex = new BTreeIndex<String, Long>(pageFile, tx.allocate());
 
@@ -1397,15 +1417,10 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
         }
 
         // Configure the marshalers and load.
-        rc.orderIndex.setKeyMarshaller(LongMarshaller.INSTANCE);
-        rc.orderIndex.setValueMarshaller(MessageKeysMarshaller.INSTANCE);
         rc.orderIndex.load(tx);
 
         // Figure out the next key using the last entry in the destination.
-        Entry<Long, MessageKeys> lastEntry = rc.orderIndex.getLast(tx);
-        if( lastEntry!=null ) {
-            rc.nextMessageId = lastEntry.getKey()+1;
-        }
+        rc.orderIndex.configureLast(tx);
 
         rc.locationIndex.setKeyMarshaller(LocationMarshaller.INSTANCE);
         rc.locationIndex.setValueMarshaller(LongMarshaller.INSTANCE);
@@ -1427,19 +1442,19 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
             rc.subscriptionAcks.load(tx);
 
             rc.ackPositions = new TreeMap<Long, HashSet<String>>();
-            rc.subscriptionCursors = new HashMap<String, Long>();
+            rc.subscriptionCursors = new HashMap<String, MessageOrderCursor>();
 
             for (Iterator<Entry<String, Long>> iterator = rc.subscriptionAcks.iterator(tx); iterator.hasNext();) {
                 Entry<String, Long> entry = iterator.next();
                 addAckLocation(rc, entry.getValue(), entry.getKey());
             }
             
-            if (rc.nextMessageId == 0) {
+            if (rc.orderIndex.nextMessageId == 0) {
                 // check for existing durable sub all acked out - pull next seq from acks as messages are gone
                 if (!rc.ackPositions.isEmpty()) {
                     Long lastAckedMessageId = rc.ackPositions.lastKey();
                     if (lastAckedMessageId != NOT_ACKED) {
-                        rc.nextMessageId = lastAckedMessageId+1;
+                        rc.orderIndex.nextMessageId = lastAckedMessageId+1;
                     }
                 }
             }
@@ -1486,18 +1501,7 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
 
                         // Find all the entries that need to get deleted.
                         ArrayList<Entry<Long, MessageKeys>> deletes = new ArrayList<Entry<Long, MessageKeys>>();
-                        for (Iterator<Entry<Long, MessageKeys>> iterator = sd.orderIndex.iterator(tx); iterator.hasNext();) {
-                            Entry<Long, MessageKeys> entry = iterator.next();
-                            if (entry.getKey().compareTo(sequenceId) <= 0) {
-                                // We don't do the actually delete while we are
-                                // iterating the BTree since
-                                // iterating would fail.
-                                deletes.add(entry);
-                            }else {
-                                //no point in iterating the in-order sequences anymore
-                                break;
-                            }
-                        }
+                        sd.orderIndex.getDeleteList(tx, deletes, sequenceId);
 
                         // Do the actual deletes.
                         for (Entry<Long, MessageKeys> entry : deletes) {
@@ -1816,4 +1820,337 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
     public void setDatabaseLockedWaitDelay(int databaseLockedWaitDelay) {
         this.databaseLockedWaitDelay = databaseLockedWaitDelay;
     }
+    
+    
+    class MessageOrderCursor{
+        long defaultCursorPosition;
+        long lowPriorityCursorPosition;
+        long highPriorityCursorPosition;
+        MessageOrderCursor(){
+        }
+        
+        MessageOrderCursor(long position){
+            this.defaultCursorPosition=position;
+            this.lowPriorityCursorPosition=position;
+            this.highPriorityCursorPosition=position;
+        }
+        
+        MessageOrderCursor(MessageOrderCursor other){
+            this.defaultCursorPosition=other.defaultCursorPosition;
+            this.lowPriorityCursorPosition=other.lowPriorityCursorPosition;
+            this.highPriorityCursorPosition=other.highPriorityCursorPosition;
+        }
+        
+        MessageOrderCursor copy() {
+            return new MessageOrderCursor(this);
+        }
+        
+        void reset() {
+            this.defaultCursorPosition=0;
+            this.highPriorityCursorPosition=0;
+            this.lowPriorityCursorPosition=0;
+        }
+        
+        void increment() {
+            if (defaultCursorPosition!=0) {
+                defaultCursorPosition++;
+            }
+            if (highPriorityCursorPosition!=0) {
+                highPriorityCursorPosition++;
+            }
+            if (lowPriorityCursorPosition!=0) {
+                lowPriorityCursorPosition++;
+            }
+        }
+    }
+    
+    class MessageOrderIndex{
+        long nextMessageId;
+        BTreeIndex<Long, MessageKeys> defaultPriorityIndex;
+        BTreeIndex<Long, MessageKeys> lowPriorityIndex;
+        BTreeIndex<Long, MessageKeys> highPriorityIndex;
+        MessageOrderCursor cursor = new MessageOrderCursor();
+        Long lastDefaultKey;
+        Long lastHighKey;
+        Long lastLowKey;
+        
+        
+        MessageKeys remove(Transaction tx, Long key) throws IOException {
+            MessageKeys result = defaultPriorityIndex.remove(tx, key);
+            if (result == null && highPriorityIndex!=null) {
+                result = highPriorityIndex.remove(tx, key);
+                if (result ==null && lowPriorityIndex!=null) {
+                    result = lowPriorityIndex.remove(tx, key);
+                }
+            }
+            return result;
+        }
+        
+        void load(Transaction tx) throws IOException {
+            defaultPriorityIndex.setKeyMarshaller(LongMarshaller.INSTANCE);
+            defaultPriorityIndex.setValueMarshaller(MessageKeysMarshaller.INSTANCE);
+            defaultPriorityIndex.load(tx);
+            if (metadata.version >= 2) {
+                lowPriorityIndex.setKeyMarshaller(LongMarshaller.INSTANCE);
+                lowPriorityIndex.setValueMarshaller(MessageKeysMarshaller.INSTANCE);
+                lowPriorityIndex.load(tx);
+
+                highPriorityIndex.setKeyMarshaller(LongMarshaller.INSTANCE);
+                highPriorityIndex.setValueMarshaller(MessageKeysMarshaller.INSTANCE);
+                highPriorityIndex.load(tx);
+            }
+        }
+        
+        void allocate(Transaction tx) throws IOException {
+            defaultPriorityIndex = new BTreeIndex<Long, MessageKeys>(pageFile, tx.allocate());
+            if (metadata.version >= 2) {
+                lowPriorityIndex = new BTreeIndex<Long, MessageKeys>(pageFile, tx.allocate());
+                highPriorityIndex = new BTreeIndex<Long, MessageKeys>(pageFile, tx.allocate());
+            }
+        }
+        
+        void configureLast(Transaction tx) throws IOException {
+            // Figure out the next key using the last entry in the destination.
+            if (highPriorityIndex != null) {
+                Entry<Long, MessageKeys> lastEntry = highPriorityIndex.getLast(tx);
+                if (lastEntry != null) {
+                    nextMessageId = lastEntry.getKey() + 1;
+                } else {
+                    lastEntry = defaultPriorityIndex.getLast(tx);
+                    if (lastEntry != null) {
+                        nextMessageId = lastEntry.getKey() + 1;
+                    } else {
+                        lastEntry = lowPriorityIndex.getLast(tx);
+                        if (lastEntry != null) {
+                            nextMessageId = lastEntry.getKey() + 1;
+                        }
+                    }
+                }
+            } else {
+                Entry<Long, MessageKeys> lastEntry = defaultPriorityIndex.getLast(tx);
+                if (lastEntry != null) {
+                    nextMessageId = lastEntry.getKey() + 1;
+                }
+            }
+        }
+        
+               
+        void remove(Transaction tx) throws IOException {
+            defaultPriorityIndex.clear(tx);
+            defaultPriorityIndex.unload(tx);
+            tx.free(defaultPriorityIndex.getPageId());
+            if (lowPriorityIndex != null) {
+                lowPriorityIndex.clear(tx);
+                lowPriorityIndex.unload(tx);
+
+                tx.free(lowPriorityIndex.getPageId());
+            }
+            if (highPriorityIndex != null) {
+                highPriorityIndex.clear(tx);
+                highPriorityIndex.unload(tx);
+                tx.free(highPriorityIndex.getPageId());
+            }
+        }
+        
+        void resetCursorPosition() {
+            this.cursor.reset();
+            lastDefaultKey = null;
+            lastHighKey = null;
+            lastLowKey = null;
+        }
+        
+        void setBatch(Transaction tx, Long sequence) throws IOException {
+            if (sequence != null) {
+                Long nextPosition = new Long(sequence.longValue() + 1);
+                if (defaultPriorityIndex.containsKey(tx, sequence)) {
+                    lastDefaultKey = nextPosition;
+                    cursor.defaultCursorPosition = nextPosition.longValue();
+                } else if (highPriorityIndex != null) {
+                    if (highPriorityIndex.containsKey(tx, sequence)) {
+                        lastHighKey = nextPosition;
+                        cursor.highPriorityCursorPosition = nextPosition.longValue();
+                    } else if (lowPriorityIndex.containsKey(tx, sequence)) {
+                        lastLowKey = nextPosition;
+                        cursor.lowPriorityCursorPosition = nextPosition.longValue();
+                    }
+                } else {
+                    lastDefaultKey = nextPosition;
+                    cursor.defaultCursorPosition = nextPosition.longValue();
+                }
+            }
+        }
+        
+        void stoppedIterating() {
+            if (lastDefaultKey!=null) {
+                cursor.defaultCursorPosition=lastDefaultKey.longValue()+1;
+            }
+            if (lastHighKey!=null) {
+                cursor.highPriorityCursorPosition=lastHighKey.longValue()+1;
+            }
+            if (lastLowKey!=null) {
+                cursor.lowPriorityCursorPosition=lastLowKey.longValue()+1;
+            }
+            lastDefaultKey = null;
+            lastHighKey = null;
+            lastLowKey = null;
+        }
+        
+        void getDeleteList(Transaction tx, ArrayList<Entry<Long, MessageKeys>> deletes, Long sequenceId)
+                throws IOException {
+            getDeleteList(tx, deletes, defaultPriorityIndex, sequenceId);
+            if (highPriorityIndex != null) {
+                getDeleteList(tx, deletes, highPriorityIndex, sequenceId);
+            }
+            if (lowPriorityIndex != null) {
+                getDeleteList(tx, deletes, lowPriorityIndex, sequenceId);
+            }
+        }
+        
+        void getDeleteList(Transaction tx, ArrayList<Entry<Long, MessageKeys>> deletes,
+                BTreeIndex<Long, MessageKeys> index, Long sequenceId) throws IOException {
+            for (Iterator<Entry<Long, MessageKeys>> iterator = index.iterator(tx); iterator.hasNext();) {
+                Entry<Long, MessageKeys> entry = iterator.next();
+                if (entry.getKey().compareTo(sequenceId) <= 0) {
+                    // We don't do the actually delete while we are
+                    // iterating the BTree since
+                    // iterating would fail.
+                    deletes.add(entry);
+                } else {
+                    // no point in iterating the in-order sequences anymore
+                    break;
+                }
+            }
+        } 
+        
+        long getNextMessageId(int priority) {
+            return nextMessageId++;
+        }
+        
+        MessageKeys get(Transaction tx, Long key) throws IOException {
+            MessageKeys result = defaultPriorityIndex.get(tx, key);
+            if (result == null) {
+                result = highPriorityIndex.get(tx, key);
+                if (result == null) {
+                    result = lowPriorityIndex.get(tx, key);
+                }
+            }
+            return result;
+        }
+        
+        MessageKeys put(Transaction tx, int priority, Long key, MessageKeys value) throws IOException {
+            if (priority == javax.jms.Message.DEFAULT_PRIORITY) {
+                return defaultPriorityIndex.put(tx, key, value);
+            } else if (priority > javax.jms.Message.DEFAULT_PRIORITY) {
+                return highPriorityIndex.put(tx, key, value);
+            } else {
+                return lowPriorityIndex.put(tx, key, value);
+            }
+        }
+        
+        Iterator<Entry<Long, MessageKeys>> iterator(Transaction tx) throws IOException{
+            return new MessageOrderIterator(tx,cursor);
+        }
+        
+        Iterator<Entry<Long, MessageKeys>> iterator(Transaction tx, MessageOrderCursor m) throws IOException{
+            return new MessageOrderIterator(tx,m);
+        }
+        
+        class MessageOrderIterator implements Iterator<Entry<Long, MessageKeys>>{
+            Iterator<Entry<Long, MessageKeys>>currentIterator;
+            final Iterator<Entry<Long, MessageKeys>>highIterator;
+            final Iterator<Entry<Long, MessageKeys>>defaultIterator;
+            final Iterator<Entry<Long, MessageKeys>>lowIterator;
+            Long lastKey;
+            
+            
+
+            MessageOrderIterator(Transaction tx, MessageOrderCursor m) throws IOException {
+                this.defaultIterator = defaultPriorityIndex.iterator(tx, m.defaultCursorPosition);
+                if (highPriorityIndex != null) {
+                    this.highIterator = highPriorityIndex.iterator(tx, m.highPriorityCursorPosition);
+                } else {
+                    this.highIterator = null;
+                }
+                if (lowPriorityIndex != null) {
+                    this.lowIterator = lowPriorityIndex.iterator(tx, m.lowPriorityCursorPosition);
+                } else {
+                    this.lowIterator = null;
+                }
+            }
+            
+            public boolean hasNext() {
+                if (currentIterator == null) {
+                    if (highIterator != null) {
+                        if (highIterator.hasNext()) {
+                            currentIterator = highIterator;
+                            return currentIterator.hasNext();
+                        }
+                        if (defaultIterator.hasNext()) {
+                            currentIterator = defaultIterator;
+                            return currentIterator.hasNext();
+                        }
+                        if (lowIterator.hasNext()) {
+                            currentIterator = lowIterator;
+                            return currentIterator.hasNext();
+                        }
+                        return false;
+                    } else {
+                        currentIterator = defaultIterator;
+                        return currentIterator.hasNext();
+                    }
+                }
+                if (highIterator != null) {
+                    if (currentIterator.hasNext()) {
+                        return true;
+                    }
+                    if (currentIterator == highIterator) {
+                        if (defaultIterator.hasNext()) {
+                            currentIterator = defaultIterator;
+                            return currentIterator.hasNext();
+                        }
+                        if (lowIterator.hasNext()) {
+                            currentIterator = lowIterator;
+                            return currentIterator.hasNext();
+                        }
+                        return false;
+                    }
+                    if (currentIterator == defaultIterator) {
+                        if (lowIterator.hasNext()) {
+                            currentIterator = lowIterator;
+                            return currentIterator.hasNext();
+                        }
+                        return false;
+                    }
+                }
+                return currentIterator.hasNext();
+            }
+
+            public Entry<Long, MessageKeys> next() {
+                Entry<Long, MessageKeys> result = currentIterator.next();
+                if (result != null) {
+                    Long key = result.getKey();
+                    if (highIterator != null) {
+                        if (currentIterator == defaultIterator) {
+                            lastDefaultKey = key;
+                        } else if (currentIterator == highIterator) {
+                            lastHighKey = key;
+                        } else {
+                            lastLowKey = key;
+                        }
+                    } else {
+                        lastDefaultKey = key;
+                    }
+                }
+                return result;
+            }
+
+            public void remove() {
+                throw new UnsupportedOperationException();
+            }
+           
+        }
+    }
+    
+    
+    
 }

@@ -53,6 +53,8 @@ message KahaAddMessageCommand {
   required KahaDestination destination = 2;
   required string messageId = 3;
   required bytes message = 4;
+  optional int32 priority =5 [default = 4];
+  optional bool prioritySupported = 6;
 }
 
 message KahaRemoveMessageCommand {

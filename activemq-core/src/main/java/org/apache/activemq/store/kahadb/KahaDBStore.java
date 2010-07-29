@@ -98,7 +98,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
     protected ExecutorService topicExecutor;
     protected final List<Map<AsyncJobKey, StoreTask>> asyncQueueMaps = new LinkedList<Map<AsyncJobKey, StoreTask>>();
     protected final List<Map<AsyncJobKey, StoreTask>> asyncTopicMaps = new LinkedList<Map<AsyncJobKey, StoreTask>>();
-    private final WireFormat wireFormat = new OpenWireFormat();
+    final WireFormat wireFormat = new OpenWireFormat();
     private SystemUsage usageManager;
     private LinkedBlockingQueue<Runnable> asyncQueueJobQueue;
     private LinkedBlockingQueue<Runnable> asyncTopicJobQueue;
@@ -368,7 +368,8 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
             command.setDestination(dest);
             command.setMessageId(message.getMessageId().toString());
             command.setTransactionInfo(createTransactionInfo(message.getTransactionId()));
-
+            command.setPriority(message.getPriority());
+            command.setPrioritySupported(isPrioritizedMessages());
             org.apache.activemq.util.ByteSequence packet = wireFormat.marshal(message);
             command.setMessage(new Buffer(packet.getData(), packet.getOffset(), packet.getLength()));
             store(command, isEnableJournalDiskSyncs() && message.isResponseRequired(), null, null);
@@ -472,10 +473,12 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
                 pageFile.tx().execute(new Transaction.Closure<Exception>() {
                     public void execute(Transaction tx) throws Exception {
                         StoredDestination sd = getStoredDestination(dest, tx);
+                        sd.orderIndex.resetCursorPosition();
                         for (Iterator<Entry<Long, MessageKeys>> iterator = sd.orderIndex.iterator(tx); iterator
                                 .hasNext();) {
                             Entry<Long, MessageKeys> entry = iterator.next();
-                            listener.recoverMessage(loadMessage(entry.getValue().location));
+                            Message msg = loadMessage(entry.getValue().location);
+                            listener.recoverMessage(msg);
                         }
                     }
                 });
@@ -484,8 +487,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
             }
         }
 
-        long cursorPos = 0;
-
+        
         public void recoverNextMessages(final int maxReturned, final MessageRecoveryListener listener) throws Exception {
             indexLock.readLock().lock();
             try {
@@ -494,19 +496,19 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
                         StoredDestination sd = getStoredDestination(dest, tx);
                         Entry<Long, MessageKeys> entry = null;
                         int counter = 0;
-                        for (Iterator<Entry<Long, MessageKeys>> iterator = sd.orderIndex.iterator(tx, cursorPos); iterator
+                        for (Iterator<Entry<Long, MessageKeys>> iterator = sd.orderIndex.iterator(tx); iterator
                                 .hasNext()
                                 && listener.hasSpace();) {
                             entry = iterator.next();
-                            listener.recoverMessage(loadMessage(entry.getValue().location));
+                            Message msg = loadMessage(entry.getValue().location);
+                            //System.err.println("RECOVER " + msg.getMessageId().getProducerSequenceId());
+                            listener.recoverMessage(msg);
                             counter++;
                             if (counter >= maxReturned || listener.hasSpace() == false) {
                                 break;
                             }
                         }
-                        if (entry != null) {
-                            cursorPos = entry.getKey() + 1;
-                        }
+                        sd.orderIndex.stoppedIterating();
                     }
                 });
             }finally {
@@ -515,7 +517,15 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
         }
 
         public void resetBatching() {
-            cursorPos = 0;
+            try {
+                pageFile.tx().execute(new Transaction.Closure<Exception>() {
+                    public void execute(Transaction tx) throws Exception {
+                StoredDestination sd = getStoredDestination(dest, tx);
+                sd.orderIndex.resetCursorPosition();}
+                    });
+            } catch (Exception e) {
+                LOG.error("Failed to reset batching",e);
+            }
         }
 
         @Override
@@ -527,21 +537,22 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
                 // Hopefully one day the page file supports concurrent read
                 // operations... but for now we must
                 // externally synchronize...
-                Long location;
+               
                 indexLock.readLock().lock();
                 try {
-                    location = pageFile.tx().execute(new Transaction.CallableClosure<Long, IOException>() {
-                        public Long execute(Transaction tx) throws IOException {
+                        pageFile.tx().execute(new Transaction.Closure<IOException>() {
+                        public void execute(Transaction tx) throws IOException {
                             StoredDestination sd = getStoredDestination(dest, tx);
-                            return sd.messageIdIndex.get(tx, key);
+                            Long location = sd.messageIdIndex.get(tx, key);
+                            if (location != null) {
+                                sd.orderIndex.setBatch(tx, location);
+                            }
                         }
                     });
                 }finally {
                     indexLock.readLock().unlock();
                 }
-                if (location != null) {
-                    cursorPos = location + 1;
-                }
+                
             } finally {
                 unlockAsyncJobQueue();
             }
@@ -723,7 +734,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
                             // The subscription might not exist.
                             return 0;
                         }
-                        cursorPos += 1;
+                        MessageOrderCursor moc = new MessageOrderCursor(cursorPos + 1);
 
                         int counter = 0;
                         try {
@@ -732,7 +743,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
                             if (selector != null) {
                                 selectorExpression = SelectorParser.parse(selector);
                             }
-                            for (Iterator<Entry<Long, MessageKeys>> iterator = sd.orderIndex.iterator(tx, cursorPos); iterator
+                            for (Iterator<Entry<Long, MessageKeys>> iterator = sd.orderIndex.iterator(tx, moc); iterator
                                     .hasNext();) {
                                 Entry<Long, MessageKeys> entry = iterator.next();
                                 if (selectorExpression != null) {
@@ -765,9 +776,8 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
                     public void execute(Transaction tx) throws Exception {
                         StoredDestination sd = getStoredDestination(dest, tx);
                         Long cursorPos = sd.subscriptionAcks.get(tx, subscriptionKey);
-                        cursorPos += 1;
-
-                        for (Iterator<Entry<Long, MessageKeys>> iterator = sd.orderIndex.iterator(tx, cursorPos); iterator
+                        MessageOrderCursor moc = new MessageOrderCursor(cursorPos + 1);
+                        for (Iterator<Entry<Long, MessageKeys>> iterator = sd.orderIndex.iterator(tx, moc); iterator
                                 .hasNext();) {
                             Entry<Long, MessageKeys> entry = iterator.next();
                             listener.recoverMessage(loadMessage(entry.getValue().location));
@@ -787,15 +797,15 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
                 pageFile.tx().execute(new Transaction.Closure<Exception>() {
                     public void execute(Transaction tx) throws Exception {
                         StoredDestination sd = getStoredDestination(dest, tx);
-                        Long cursorPos = sd.subscriptionCursors.get(subscriptionKey);
-                        if (cursorPos == null) {
-                            cursorPos = sd.subscriptionAcks.get(tx, subscriptionKey);
-                            cursorPos += 1;
+                        MessageOrderCursor moc = sd.subscriptionCursors.get(subscriptionKey);
+                        if (moc == null) {
+                            long pos = sd.subscriptionAcks.get(tx, subscriptionKey);
+                            moc = new MessageOrderCursor(pos+1);
                         }
 
                         Entry<Long, MessageKeys> entry = null;
                         int counter = 0;
-                        for (Iterator<Entry<Long, MessageKeys>> iterator = sd.orderIndex.iterator(tx, cursorPos); iterator
+                        for (Iterator<Entry<Long, MessageKeys>> iterator = sd.orderIndex.iterator(tx, moc); iterator
                                 .hasNext();) {
                             entry = iterator.next();
                             if (listener.recoverMessage(loadMessage(entry.getValue().location))) {
@@ -806,7 +816,9 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
                             }
                         }
                         if (entry != null) {
-                            sd.subscriptionCursors.put(subscriptionKey, entry.getKey() + 1);
+                            MessageOrderCursor copy = sd.orderIndex.cursor.copy();
+                            copy.increment();
+                            sd.subscriptionCursors.put(subscriptionKey, copy);
                         }
                     }
                 });
