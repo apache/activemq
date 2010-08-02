@@ -60,7 +60,7 @@ public class CreateBrokerCommand extends OsgiCommandSupport {
             File configFile = new File(deploy, name + "-broker.xml");
             
             if (!type.equalsIgnoreCase("spring") && !type.equalsIgnoreCase("blueprint")) {
-                System.out.println("@green Unknown type '" + type + "' Using spring by default");
+                System.out.println("@|green Unknown type '" + type + "' Using spring by default");
                 type = "spring";
             }
             
