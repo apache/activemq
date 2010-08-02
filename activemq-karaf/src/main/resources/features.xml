@@ -1,6 +1,5 @@
 <features name="activemq-${activemq-version}">
-    <!--  TODO: uncomment when we upgrade to karaf 2.0 -->
-    <!-- <repository>mvn:org.apache.felix.karaf/apache-felix-karaf/${karaf-version}/xml/features</repository> -->  
+    <repository>mvn:org.apache.karaf/apache-karaf/${karaf-version}/xml/features</repository>
         
     <feature name="activemq" version="${activemq-version}">
         <bundle>mvn:org.apache.geronimo.specs/geronimo-annotation_1.0_spec/1.1.1</bundle>
@@ -37,7 +36,6 @@
     
     <!-- do "features:install war" before installing this one  -->
     <feature name="activemq-web-console" version="${activemq-version}">
-        <feature version="${activemq-version}">activemq-spring</feature>
         <bundle>war:mvn:org.apache.activemq/activemq-web-console/${activemq-version}/war?Webapp-Context=activemq-web-console</bundle>
     </feature>
 </features>
