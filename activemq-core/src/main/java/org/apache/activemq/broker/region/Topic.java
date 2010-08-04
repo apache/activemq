@@ -452,7 +452,7 @@ public class Topic extends BaseDestination implements Task {
         if (context.isInTransaction()) {
             context.getTransaction().addSynchronization(new Synchronization() {
                 @Override
-                public void beforeCommit() throws Exception {
+                public void afterCommit() throws Exception {
                     // It could take while before we receive the commit
                     // operration.. by that time the message could have
                     // expired..

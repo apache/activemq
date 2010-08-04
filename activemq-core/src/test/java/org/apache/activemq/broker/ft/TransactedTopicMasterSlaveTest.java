@@ -42,7 +42,6 @@ public class TransactedTopicMasterSlaveTest extends JmsTopicTransactionTest {
         File dir = new File ("target" + File.separator + "slave");
         KahaDBPersistenceAdapter adapter = new KahaDBPersistenceAdapter();
         adapter.setDirectory(dir);
-        adapter.setConcurrentStoreAndDispatchTransactions(false);
         broker.start();
         slave = new BrokerService();
         slave.setBrokerName("slave");
@@ -73,7 +72,6 @@ public class TransactedTopicMasterSlaveTest extends JmsTopicTransactionTest {
         File dir = new File ("target" + File.separator + "master");
         KahaDBPersistenceAdapter adapter = new KahaDBPersistenceAdapter();
         adapter.setDirectory(dir);
-        adapter.setConcurrentStoreAndDispatchTransactions(false);
         BrokerService broker = new BrokerService();
         broker.setBrokerName("master");
         broker.setPersistenceAdapter(adapter);

@@ -460,21 +460,6 @@ public class KahaDBPersistenceAdapter implements PersistenceAdapter, BrokerServi
         letter.setConcurrentStoreAndDispatchTopics(concurrentStoreAndDispatch);
     }
 
-    /**
-     * @return the concurrentStoreAndDispatchTransactions
-     */
-    public boolean isConcurrentStoreAndDispatchTransactions() {
-        return letter.isConcurrentStoreAndDispatchTransactions();
-    }
-
-    /**
-     * @param concurrentStoreAndDispatchTransactions
-     *            the concurrentStoreAndDispatchTransactions to set
-     */
-    public void setConcurrentStoreAndDispatchTransactions(boolean concurrentStoreAndDispatchTransactions) {
-        letter.setConcurrentStoreAndDispatchTransactions(concurrentStoreAndDispatchTransactions);
-    }
-
     public int getMaxAsyncJobs() {
         return letter.getMaxAsyncJobs();
     }

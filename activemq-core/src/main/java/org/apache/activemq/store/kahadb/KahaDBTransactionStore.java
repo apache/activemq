@@ -217,7 +217,6 @@ public class KahaDBTransactionStore implements TransactionStore {
     }
 
     /**
-     * @throws XAException
      * @see org.apache.activemq.store.TransactionStore#commit(org.apache.activemq.service.Transaction)
      */
     public void commit(TransactionId txid, boolean wasPrepared, Runnable preCommit, Runnable postCommit)

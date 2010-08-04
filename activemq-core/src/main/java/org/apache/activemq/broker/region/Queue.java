@@ -679,7 +679,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
             
                 context.getTransaction().addSynchronization(new Synchronization() {
                     @Override
-                    public void beforeCommit() throws Exception {
+                    public void afterCommit() throws Exception {
                         sendLock.lockInterruptibly();
                         try {
                             // It could take while before we receive the commit
