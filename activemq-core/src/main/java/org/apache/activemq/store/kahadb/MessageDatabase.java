@@ -1392,6 +1392,16 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
         return rc;
     }
 
+
+    protected StoredDestination getExistingStoredDestination(KahaDestination destination, Transaction tx) throws IOException {
+        String key = key(destination);
+        StoredDestination rc = storedDestinations.get(key);
+        if (rc == null && metadata.destinations.containsKey(tx, key)) {
+            rc = getStoredDestination(destination, tx);
+        }
+        return rc;
+    }
+
     /**
      * @param tx
      * @param key

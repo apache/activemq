@@ -520,8 +520,10 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
             try {
                 pageFile.tx().execute(new Transaction.Closure<Exception>() {
                     public void execute(Transaction tx) throws Exception {
-                StoredDestination sd = getStoredDestination(dest, tx);
-                sd.orderIndex.resetCursorPosition();}
+                        StoredDestination sd = getExistingStoredDestination(dest, tx);
+                        if (sd != null) {
+                            sd.orderIndex.resetCursorPosition();}
+                        }
                     });
             } catch (Exception e) {
                 LOG.error("Failed to reset batching",e);

@@ -24,7 +24,7 @@ import org.apache.activemq.command.ActiveMQDestination;
 // from https://issues.apache.org/activemq/browse/AMQ-2216
 public class DestinationRemoveRestartTest extends CombinationTestSupport {
     private final static String destinationName = "TEST";
-    public byte destinationType;
+    public byte destinationType = ActiveMQDestination.QUEUE_TYPE;
     BrokerService broker;
 
     @Override
@@ -36,6 +36,7 @@ public class DestinationRemoveRestartTest extends CombinationTestSupport {
         BrokerService broker = new BrokerService();
         broker.setUseJmx(false);
         broker.setPersistent(true);
+        broker.setDeleteAllMessagesOnStartup(true);
         broker.start();
         return broker;
     }
