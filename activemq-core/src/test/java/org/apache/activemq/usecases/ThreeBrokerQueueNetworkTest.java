@@ -37,6 +37,7 @@ import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.MessageDispatch;
 import org.apache.activemq.util.MessageIdList;
+import org.apache.activemq.util.Wait;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -48,10 +49,6 @@ public class ThreeBrokerQueueNetworkTest extends JmsMultipleBrokersTestSupport {
     protected static final int MESSAGE_COUNT = 100;
     private static final long MAX_WAIT_MILLIS = 10000;
 
-    interface Condition {
-        boolean isSatisified() throws Exception;
-    }
-    
     /**
      * BrokerA -> BrokerB -> BrokerC
      */
@@ -61,7 +58,7 @@ public class ThreeBrokerQueueNetworkTest extends JmsMultipleBrokersTestSupport {
         bridgeBrokers("BrokerB", "BrokerC");
 
         startAllBrokers();
-        waitForBridgeFormation();
+        assertTrue("Bridge formation incomplete", waitForBridgeFormation());
         
         // Setup destination
         Destination dest = createDestination("TEST.FOO", false);
@@ -89,7 +86,7 @@ public class ThreeBrokerQueueNetworkTest extends JmsMultipleBrokersTestSupport {
         bridgeBrokers("BrokerB", "BrokerC");
 
         startAllBrokers();
-        waitForBridgeFormation();
+        assertTrue("Bridge formation incomplete", waitForBridgeFormation());
         
         // Setup destination
         Destination dest = createDestination("TEST.FOO", false);
@@ -121,7 +118,7 @@ public class ThreeBrokerQueueNetworkTest extends JmsMultipleBrokersTestSupport {
         bridgeBrokers("BrokerB", "BrokerC", true, 1, false);
 
         startAllBrokers();
-        waitForBridgeFormation();
+        assertTrue("Bridge formation incomplete", waitForBridgeFormation());
         
         // Setup destination
         Destination dest = createDestination("TEST.FOO", false);
@@ -163,7 +160,7 @@ public class ThreeBrokerQueueNetworkTest extends JmsMultipleBrokersTestSupport {
         bridgeBrokers("BrokerB", "BrokerC", true, 1, false);
 
         startAllBrokers();
-        waitForBridgeFormation();
+        assertTrue("Bridge formation incomplete", waitForBridgeFormation());
         
         // Setup destination
         Destination dest = createDestination("TEST.FOO", false);
@@ -205,7 +202,7 @@ public class ThreeBrokerQueueNetworkTest extends JmsMultipleBrokersTestSupport {
         bridgeBrokers("BrokerC", "BrokerB");
 
         startAllBrokers();
-        waitForBridgeFormation();
+        assertTrue("Bridge formation incomplete", waitForBridgeFormation());
         
         // Setup destination
         Destination dest = createDestination("TEST.FOO", false);
@@ -238,7 +235,7 @@ public class ThreeBrokerQueueNetworkTest extends JmsMultipleBrokersTestSupport {
         bridgeBrokers("BrokerC", "BrokerA");
 
         startAllBrokers();
-        waitForBridgeFormation();
+        assertTrue("Bridge formation incomplete", waitForBridgeFormation());
         
         // Setup destination
         Destination dest = createDestination("TEST.FOO", false);
@@ -269,7 +266,7 @@ public class ThreeBrokerQueueNetworkTest extends JmsMultipleBrokersTestSupport {
         bridgeAllBrokers();
 
         startAllBrokers();
-        waitForBridgeFormation();
+        assertTrue("Bridge formation incomplete", waitForBridgeFormation());
         
         // Setup destination
         Destination dest = createDestination("TEST.FOO", false);
@@ -292,31 +289,19 @@ public class ThreeBrokerQueueNetworkTest extends JmsMultipleBrokersTestSupport {
         MessageIdList msgsB = getConsumerMessages("BrokerB", clientB);
         MessageIdList msgsC = getConsumerMessages("BrokerC", clientC);
 
-        waitFor(new Condition() {
+        assertTrue("Messaged not received within time limit", Wait.waitFor(new Wait.Condition() {
             public boolean isSatisified() {
                 return msgsA.getMessageCount() == MESSAGE_COUNT;
             } 
-        });
+        }, MAX_WAIT_MILLIS));
         
         assertEquals(MESSAGE_COUNT * 3, msgsA.getMessageCount() + msgsB.getMessageCount() + msgsC.getMessageCount());
-    }
-
-    // on slow machines some more waiting is required on account of slow advisories
-    private void waitFor(Condition condition) throws Exception {
-        final long expiry = System.currentTimeMillis() + MAX_WAIT_MILLIS;
-        while (!condition.isSatisified() && System.currentTimeMillis() < expiry) {
-            Thread.sleep(1000);
-        }   
-        if (System.currentTimeMillis() >= expiry) {
-            LOG.error("expired while waiting for condition " + condition);
-        }
-        
     }
 
     public void testAllConnectedUsingMulticastProducerConsumerOnA() throws Exception {
         bridgeAllBrokers("default", 3, false);
         startAllBrokers();
-        waitForBridgeFormation();
+        assertTrue("Bridge formation incomplete", waitForBridgeFormation());
         
         // Setup destination
         Destination dest = createDestination("TEST.FOO", false);
@@ -342,7 +327,7 @@ public class ThreeBrokerQueueNetworkTest extends JmsMultipleBrokersTestSupport {
     public void testAllConnectedWithSpare() throws Exception {
         bridgeAllBrokers("default", 3, false);
         startAllBrokers();
-        waitForBridgeFormation();
+        assertTrue("Bridge formation incomplete", waitForBridgeFormation());
         
         // Setup destination
         Destination dest = createDestination("TEST.FOO", false);
@@ -370,13 +355,12 @@ public class ThreeBrokerQueueNetworkTest extends JmsMultipleBrokersTestSupport {
      * http://issues.apache.org/activemq/browse/AMQ-2530 - which highlights that 
      * For a Conduit bridge - local subscription Ids weren't removed in a ConduitBridge
      * The test fails because on closing clientA - clientB correctly receives all the 
-     * messages - ie. half dont get stuck on BrokerA - 
+     * messages - ie. half don't get stuck on BrokerA - 
      */
     public void XtestMigrateConsumerStuckMessages() throws Exception {
-        boolean suppressQueueDuplicateSubscriptions = false;
-        bridgeAllBrokers("default", 3, suppressQueueDuplicateSubscriptions);
+        bridgeAllBrokers("default", 3, false);
         startAllBrokers();
-        waitForBridgeFormation();
+        assertTrue("Bridge formation incomplete", waitForBridgeFormation());
 
         // Setup destination
         Destination dest = createDestination("TEST.FOO", false);    
@@ -434,7 +418,7 @@ public class ThreeBrokerQueueNetworkTest extends JmsMultipleBrokersTestSupport {
         boolean decreaseNetworkConsumerPriority = true;
         bridgeAllBrokers("default", 3, suppressQueueDuplicateSubscriptions, decreaseNetworkConsumerPriority);
         startAllBrokers();
-        waitForBridgeFormation();
+        assertTrue("Bridge formation incomplete", waitForBridgeFormation());
         
         // Setup destination
         Destination dest = createDestination("TEST.FOO", false);    
@@ -476,9 +460,8 @@ public class ThreeBrokerQueueNetworkTest extends JmsMultipleBrokersTestSupport {
     public void testNoDuplicateQueueSubs() throws Exception {
         
         bridgeAllBrokers("default", 3, true);
-        
         startAllBrokers();
-        waitForBridgeFormation();
+        assertTrue("Bridge formation incomplete", waitForBridgeFormation());
         
         // Setup destination
         Destination dest = createDestination("TEST.FOO", false);
@@ -548,8 +531,7 @@ public class ThreeBrokerQueueNetworkTest extends JmsMultipleBrokersTestSupport {
         });
         
         startAllBrokers();
-        waitForBridgeFormation();
-        
+        assertTrue("Bridge formation incomplete", waitForBridgeFormation());
     
         // Setup consumers
         String brokerName = "BrokerA";
@@ -576,7 +558,7 @@ public class ThreeBrokerQueueNetworkTest extends JmsMultipleBrokersTestSupport {
         
         bridgeAllBrokers("default", 3, false);
         startAllBrokers();
-        waitForBridgeFormation();
+        assertTrue("Bridge formation incomplete", waitForBridgeFormation());
         
         // Setup destination
         Destination dest = createDestination("TEST.FOO", false);
@@ -614,11 +596,11 @@ public class ThreeBrokerQueueNetworkTest extends JmsMultipleBrokersTestSupport {
 
     private void verifyConsumerCount(BrokerService broker, int count, final Destination dest) throws Exception {
         final RegionBroker regionBroker = (RegionBroker) broker.getRegionBroker();
-        waitFor(new Condition() {
+        assertTrue("RegionBroker should have at least one destination", Wait.waitFor(new Wait.Condition() {
             public boolean isSatisified() throws Exception {
                 return !regionBroker.getDestinations(ActiveMQDestination.transform(dest)).isEmpty();
             }
-        });
+        }, MAX_WAIT_MILLIS));
         Queue internalQueue = (Queue) regionBroker.getDestinations(ActiveMQDestination.transform(dest)).iterator().next();
         assertEquals("consumer count on " + broker.getBrokerName() + " matches for q: " + internalQueue, count, internalQueue.getConsumers().size());      
     }
