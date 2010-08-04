@@ -86,6 +86,7 @@ public class CompositeDestinationBroker extends BrokerFilter {
             for (int i = 0; i < destinations.length; i++) {
                 if (i != 0) {
                     message = message.copy();
+                    message.setMemoryUsage(null);
                 }
                 message.setOriginalDestination(destination);
                 message.setDestination(destinations[i]);
