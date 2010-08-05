@@ -2,7 +2,7 @@
     <repository>mvn:org.apache.karaf/apache-karaf/${karaf-version}/xml/features</repository>
         
     <feature name="activemq" version="${activemq-version}">
-        <bundle>mvn:org.apache.geronimo.specs/geronimo-annotation_1.0_spec/1.1.1</bundle>
+        <bundle>mvn:org.apache.geronimo.specs/geronimo-annotation_1.1_spec/1.0</bundle>
         <bundle>mvn:org.apache.geronimo.specs/geronimo-jta_1.1_spec/1.1.1</bundle> 
         <bundle>mvn:org.apache.geronimo.specs/geronimo-jms_1.1_spec/1.1.1</bundle> 
         <bundle>mvn:org.apache.geronimo.specs/geronimo-j2ee-management_1.1_spec/1.0.1</bundle> 
