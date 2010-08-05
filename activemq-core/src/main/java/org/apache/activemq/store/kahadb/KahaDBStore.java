@@ -806,9 +806,9 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
                                 break;
                             }
                         }
+                        sd.orderIndex.stoppedIterating();
                         if (entry != null) {
                             MessageOrderCursor copy = sd.orderIndex.cursor.copy();
-                            copy.increment();
                             sd.subscriptionCursors.put(subscriptionKey, copy);
                         }
                     }
