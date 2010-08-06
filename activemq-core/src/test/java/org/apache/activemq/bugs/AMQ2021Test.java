@@ -57,7 +57,7 @@ public class AMQ2021Test extends TestCase implements ExceptionListener, Uncaught
     AMQ2021Test testCase;
     
     String ACTIVEMQ_BROKER_BIND = "tcp://localhost:61616";    
-    String ACTIVEMQ_BROKER_URL = ACTIVEMQ_BROKER_BIND + "?jms.redeliveryPolicy.maximumRedeliveries=1";
+    String ACTIVEMQ_BROKER_URL = ACTIVEMQ_BROKER_BIND + "?jms.redeliveryPolicy.maximumRedeliveries=1&jms.redeliveryPolicy.initialRedeliveryDelay=0";
     
     private int numMessages = 1000;
     private int numConsumers = 2;

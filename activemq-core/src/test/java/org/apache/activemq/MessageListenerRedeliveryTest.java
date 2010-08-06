@@ -62,7 +62,8 @@ public class MessageListenerRedeliveryTest extends TestCase {
 
     protected RedeliveryPolicy getRedeliveryPolicy() {
         RedeliveryPolicy redeliveryPolicy = new RedeliveryPolicy();
-        redeliveryPolicy.setInitialRedeliveryDelay(1000);
+        redeliveryPolicy.setInitialRedeliveryDelay(0);
+        redeliveryPolicy.setRedeliveryDelay(1000);
         redeliveryPolicy.setMaximumRedeliveries(3);
         redeliveryPolicy.setBackOffMultiplier((short)2);
         redeliveryPolicy.setUseExponentialBackOff(true);

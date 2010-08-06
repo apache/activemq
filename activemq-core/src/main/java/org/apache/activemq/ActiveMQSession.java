@@ -874,9 +874,9 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
 
                                 // Figure out how long we should wait to resend
                                 // this message.
-                                long redeliveryDelay = 0;
+                                long redeliveryDelay = redeliveryPolicy.getInitialRedeliveryDelay();
                                 for (int i = 0; i < redeliveryCounter; i++) {
-                                    redeliveryDelay = redeliveryPolicy.getRedeliveryDelay(redeliveryDelay);
+                                    redeliveryDelay = redeliveryPolicy.getNextRedeliveryDelay(redeliveryDelay);
                                 }
                                 scheduler.executeAfterDelay(new Runnable() {
 

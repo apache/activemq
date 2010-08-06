@@ -1099,11 +1099,13 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                     return;
                 }
     
-                // Only increase the redelivery delay after the first redelivery..
+                // use initial delay for first redelivery
                 MessageDispatch lastMd = deliveredMessages.getFirst();
                 final int currentRedeliveryCount = lastMd.getMessage().getRedeliveryCounter();
                 if (currentRedeliveryCount > 0) {
-                    redeliveryDelay = redeliveryPolicy.getRedeliveryDelay(redeliveryDelay);
+                    redeliveryDelay = redeliveryPolicy.getNextRedeliveryDelay(redeliveryDelay);
+                } else {
+                    redeliveryDelay = redeliveryPolicy.getInitialRedeliveryDelay();
                 }
                 MessageId firstMsgId = deliveredMessages.getLast().getMessage().getMessageId();
     

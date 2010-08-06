@@ -38,6 +38,7 @@ public class RedeliveryPolicy implements Cloneable, Serializable {
     private boolean useCollisionAvoidance;
     private boolean useExponentialBackOff;
     private double backOffMultiplier = 5.0;
+    private long redeliveryDelay = initialRedeliveryDelay;
 
     public RedeliveryPolicy() {
     }
@@ -82,15 +83,15 @@ public class RedeliveryPolicy implements Cloneable, Serializable {
         this.maximumRedeliveries = maximumRedeliveries;
     }
 
-    public long getRedeliveryDelay(long previousDelay) {
-        long redeliveryDelay;
+    public long getNextRedeliveryDelay(long previousDelay) {
+        long nextDelay;
 
         if (previousDelay == 0) {
-            redeliveryDelay = initialRedeliveryDelay;
+            nextDelay = redeliveryDelay;
         } else if (useExponentialBackOff && backOffMultiplier > 1) {
-            redeliveryDelay = (long) (previousDelay * backOffMultiplier);
+            nextDelay = (long) (previousDelay * backOffMultiplier);
         } else {
-            redeliveryDelay = previousDelay;
+            nextDelay = previousDelay;
         }
 
         if (useCollisionAvoidance) {
@@ -100,10 +101,10 @@ public class RedeliveryPolicy implements Cloneable, Serializable {
              */
             Random random = getRandomNumberGenerator();
             double variance = (random.nextBoolean() ? collisionAvoidanceFactor : -collisionAvoidanceFactor) * random.nextDouble();
-            redeliveryDelay += redeliveryDelay * variance;
+            nextDelay += nextDelay * variance;
         }
 
-        return redeliveryDelay;
+        return nextDelay;
     }
 
     public boolean isUseCollisionAvoidance() {
@@ -129,4 +130,11 @@ public class RedeliveryPolicy implements Cloneable, Serializable {
         return randomNumberGenerator;
     }
 
+    public void setRedeliveryDelay(long redeliveryDelay) {
+        this.redeliveryDelay = redeliveryDelay;
+    }
+
+    public long getRedeliveryDelay() {
+        return redeliveryDelay;
+    }
 }

@@ -47,7 +47,8 @@ public class RedeliveryPolicyTest extends JmsTestSupport {
 
         // Receive a message with the JMS API
         RedeliveryPolicy policy = connection.getRedeliveryPolicy();
-        policy.setInitialRedeliveryDelay(500);
+        policy.setInitialRedeliveryDelay(0);
+        policy.setRedeliveryDelay(500);              
         policy.setBackOffMultiplier((short) 2);
         policy.setUseExponentialBackOff(true);
         
@@ -102,8 +103,9 @@ public class RedeliveryPolicyTest extends JmsTestSupport {
 
         // Receive a message with the JMS API
         RedeliveryPolicy policy = connection.getRedeliveryPolicy();
-        policy.setInitialRedeliveryDelay(500);
-        
+        policy.setInitialRedeliveryDelay(0);
+        policy.setRedeliveryDelay(500);
+
         connection.start();
         Session session = connection.createSession(true, Session.AUTO_ACKNOWLEDGE);
         ActiveMQQueue destination = new ActiveMQQueue(getName());
@@ -303,5 +305,128 @@ public class RedeliveryPolicyTest extends JmsTestSupport {
      
   
        
-    }    
+    }
+
+
+    public void testInitialRedeliveryDelayZero() throws Exception {
+
+        // Receive a message with the JMS API
+        RedeliveryPolicy policy = connection.getRedeliveryPolicy();
+        policy.setInitialRedeliveryDelay(0);
+        policy.setUseExponentialBackOff(false);
+        policy.setMaximumRedeliveries(1);
+
+        connection.start();
+        Session session = connection.createSession(true, Session.AUTO_ACKNOWLEDGE);
+        ActiveMQQueue destination = new ActiveMQQueue("TEST");
+        MessageProducer producer = session.createProducer(destination);
+
+        MessageConsumer consumer = session.createConsumer(destination);
+
+        // Send the messages
+        producer.send(session.createTextMessage("1st"));
+        producer.send(session.createTextMessage("2nd"));
+        session.commit();
+
+        TextMessage m;
+        m = (TextMessage)consumer.receive(100);
+        assertNotNull(m);
+        assertEquals("1st", m.getText());
+        session.rollback();
+
+        m = (TextMessage)consumer.receive(100);
+        assertNotNull(m);
+        assertEquals("1st", m.getText());
+
+        m = (TextMessage)consumer.receive(100);
+        assertNotNull(m);
+        assertEquals("2nd", m.getText());
+        session.commit();
+
+        session.commit();
+    }
+
+
+    public void testInitialRedeliveryDelayOne() throws Exception {
+
+        // Receive a message with the JMS API
+        RedeliveryPolicy policy = connection.getRedeliveryPolicy();
+        policy.setInitialRedeliveryDelay(1000);
+        policy.setUseExponentialBackOff(false);
+        policy.setMaximumRedeliveries(1);
+
+        connection.start();
+        Session session = connection.createSession(true, Session.AUTO_ACKNOWLEDGE);
+        ActiveMQQueue destination = new ActiveMQQueue("TEST");
+        MessageProducer producer = session.createProducer(destination);
+
+        MessageConsumer consumer = session.createConsumer(destination);
+
+        // Send the messages
+        producer.send(session.createTextMessage("1st"));
+        producer.send(session.createTextMessage("2nd"));
+        session.commit();
+
+        TextMessage m;
+        m = (TextMessage)consumer.receive(100);
+        assertNotNull(m);
+        assertEquals("1st", m.getText());
+        session.rollback();
+
+        m = (TextMessage)consumer.receive(100);
+        assertNull(m);
+
+        m = (TextMessage)consumer.receive(2000);
+        assertNotNull(m);
+        assertEquals("1st", m.getText());
+
+        m = (TextMessage)consumer.receive(100);
+        assertNotNull(m);
+        assertEquals("2nd", m.getText());
+        session.commit();
+    }
+
+    public void testRedeliveryDelayOne() throws Exception {
+
+        // Receive a message with the JMS API
+        RedeliveryPolicy policy = connection.getRedeliveryPolicy();
+        policy.setInitialRedeliveryDelay(0);
+        policy.setRedeliveryDelay(1000);
+        policy.setUseExponentialBackOff(false);
+        policy.setMaximumRedeliveries(2);
+
+        connection.start();
+        Session session = connection.createSession(true, Session.AUTO_ACKNOWLEDGE);
+        ActiveMQQueue destination = new ActiveMQQueue("TEST");
+        MessageProducer producer = session.createProducer(destination);
+
+        MessageConsumer consumer = session.createConsumer(destination);
+
+        // Send the messages
+        producer.send(session.createTextMessage("1st"));
+        producer.send(session.createTextMessage("2nd"));
+        session.commit();
+
+        TextMessage m;
+        m = (TextMessage)consumer.receive(100);
+        assertNotNull(m);
+        assertEquals("1st", m.getText());
+        session.rollback();
+
+        m = (TextMessage)consumer.receive(100);
+        assertNotNull("first immediate redelivery", m);
+        session.rollback();
+
+        m = (TextMessage)consumer.receive(100);
+        assertNull("second delivery delayed: " + m, m);
+
+        m = (TextMessage)consumer.receive(2000);
+        assertNotNull(m);
+        assertEquals("1st", m.getText());
+
+        m = (TextMessage)consumer.receive(100);
+        assertNotNull(m);
+        assertEquals("2nd", m.getText());
+        session.commit();
+    }
 }
