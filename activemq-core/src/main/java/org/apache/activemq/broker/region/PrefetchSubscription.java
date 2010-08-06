@@ -273,7 +273,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                 // this only happens after a reconnect - get an ack which is not
                 // valid
                 if (!callDispatchMatched) {
-                    LOG.error("Could not correlate acknowledgment with dispatched message: "
+                    LOG.warn("Could not correlate acknowledgment with dispatched message: "
                                   + ack);
                 }
             } else if (ack.isIndividualAck()) {
