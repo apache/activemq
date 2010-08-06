@@ -122,7 +122,7 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
      * and want to control both via JMX; a different port will be needed.
      */
     protected int jmxPort = 1099;
-    protected boolean useLocalHost = true;
+    protected boolean useLocalHost = false;
     protected int minmumWireFormatVersion;
     protected SocketFactory socketFactory;
     protected final AtomicReference<CountDownLatch> stoppedLatch = new AtomicReference<CountDownLatch>();

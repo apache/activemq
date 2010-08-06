@@ -65,7 +65,7 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
     private SocketAddress originalTargetAddress;
     private DatagramChannel channel;
     private boolean trace;
-    private boolean useLocalHost = true;
+    private boolean useLocalHost = false;
     private int port;
     private int minmumWireFormatVersion;
     private String description;
