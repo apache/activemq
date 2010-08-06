@@ -32,6 +32,7 @@
 
   <properties>
     <activemq.osgi.import.pkg>
+      javax.resource*;resolution:=optional,
       *
     </activemq.osgi.import.pkg>
     <activemq.osgi.export>

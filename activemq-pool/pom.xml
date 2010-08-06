@@ -59,7 +59,7 @@
       <groupId>${project.groupId}</groupId>
       <artifactId>activemq-ra</artifactId>
       <optional>true</optional>
-    </dependency>
+    </dependency> 
     <dependency>
       <groupId>org.apache.geronimo.components</groupId>
       <artifactId>geronimo-transaction</artifactId>
@@ -71,7 +71,7 @@
     </dependency>
     <dependency>
       <groupId>org.apache.geronimo.specs</groupId>
-      <artifactId>geronimo-annotation_1.1_spec</artifactId>
+      <artifactId>geronimo-annotation_1.0_spec</artifactId>
       <optional>true</optional>
     </dependency>
     <dependency>
