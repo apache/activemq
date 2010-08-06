@@ -103,7 +103,7 @@
                     <memoryUsage limit="20 mb"/>
                 </memoryUsage>
                 <storeUsage>
-                    <storeUsage limit="1 gb" name="foo"/>
+                    <storeUsage limit="1 gb"/>
                 </storeUsage>
                 <tempUsage>
                     <tempUsage limit="100 mb"/>
