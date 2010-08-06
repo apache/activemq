@@ -87,4 +87,12 @@ public class SpringTest extends SpringTestSupport {
         String config = "spring-embedded-xbean-local.xml";
         assertSenderConfig(config);
     }
+    
+    public void testStartFalse() throws Exception {
+        String config = "spring-start-false.xml";
+        Thread.currentThread().setContextClassLoader(SpringTest.class.getClassLoader());
+        context = new ClassPathXmlApplicationContext(config);
+        BrokerService broker = (BrokerService)context.getBean(BrokerService.class);
+        assertFalse("Broker is started", broker.isStarted());
+    }
 }
