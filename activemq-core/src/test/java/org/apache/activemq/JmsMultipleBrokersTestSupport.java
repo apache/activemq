@@ -149,18 +149,16 @@ public class JmsMultipleBrokersTestSupport extends CombinationTestSupport {
     }
 
     
-    protected boolean waitForBridgeFormation() throws Exception {
-        boolean success = true;
+    protected void waitForBridgeFormation() throws Exception {
         for (BrokerItem brokerItem : brokers.values()) {
             final BrokerService broker = brokerItem.broker;
-            if (success && !broker.getNetworkConnectors().isEmpty()) {
-                success = success && Wait.waitFor(new Wait.Condition() {
+            if (!broker.getNetworkConnectors().isEmpty()) {
+                Wait.waitFor(new Wait.Condition() {
                     public boolean isSatisified() throws Exception {
                         return !broker.getNetworkConnectors().get(0).activeBridges().isEmpty();
                     }});
             }
         }
-        return success;
     }
 
     protected void startAllBrokers() throws Exception {
@@ -388,7 +386,6 @@ public class JmsMultipleBrokersTestSupport extends CombinationTestSupport {
             brokerItem.destroy();
         }
         brokers.clear();
-        destinations.clear();
     }
 
     // Class to group broker components together
