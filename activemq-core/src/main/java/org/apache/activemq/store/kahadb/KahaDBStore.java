@@ -747,6 +747,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
                                     counter++;
                                 }
                             }
+                            sd.orderIndex.resetCursorPosition();
                         } catch (Exception e) {
                             throw IOExceptionSupport.create(e);
                         }
