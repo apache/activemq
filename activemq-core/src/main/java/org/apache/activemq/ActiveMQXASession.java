@@ -69,7 +69,7 @@ public class ActiveMQXASession extends ActiveMQSession implements QueueSession, 
     }
 
     public boolean getTransacted() throws JMSException {
-        return true;
+        return getTransactionContext().isInXATransaction();
     }
 
     public void rollback() throws JMSException {
@@ -96,19 +96,16 @@ public class ActiveMQXASession extends ActiveMQSession implements QueueSession, 
         return new ActiveMQTopicSession(this);
     }
 
-    /**
-     * This is called before transacted work is done by
-     * the session.  XA Work can only be done when this
-     * XA resource is associated with an Xid.
-     *
-     * @throws JMSException not associated with an Xid
+    /*
+     * when there is no XA transaction it is auto ack
      */
+    public boolean isAutoAcknowledge() {
+      return true;
+    }
+    
     protected void doStartTransaction() throws JMSException {
-
-        if (!getTransactionContext().isInXATransaction()) {
-            throw new JMSException("Session's XAResource has not been enlisted in a distributed transaction.");
-        }
-
+        // allow non transactional auto ack work on an XASession
+        // Seems ok by the spec that an XAConnection can be used without an XA tx
     }
 
 }
