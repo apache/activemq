@@ -88,7 +88,7 @@
     <maven-surefire-plugin-version>2.5</maven-surefire-plugin-version>
     <commons-net-version>2.0</commons-net-version>
     <ftpserver-version>1.0.0</ftpserver-version>
-    <activemq-protobuf-version>1.1-SNAPSHOT</activemq-protobuf-version>
+    <activemq-protobuf-version>1.1</activemq-protobuf-version>
     <site-repo-url>scpexe://people.apache.org/www/activemq.apache.org/maven/</site-repo-url>
     <!-- OSGi bundles properties -->
     <activemq.osgi.import.pkg>*</activemq.osgi.import.pkg>
