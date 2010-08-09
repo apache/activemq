@@ -281,6 +281,9 @@ public class ActiveMQMessageTest extends TestCase {
         ActiveMQMessage msg = new ActiveMQMessage();
         msg.setStringProperty("test", "test");
         assertTrue(msg.propertyExists("test"));
+
+        msg.setIntProperty("JMSXDeliveryCount", 1);
+        assertTrue(msg.propertyExists("JMSXDeliveryCount"));
     }
 
     public void testGetBooleanProperty() throws JMSException {
@@ -349,11 +352,19 @@ public class ActiveMQMessageTest extends TestCase {
 
     public void testGetPropertyNames() throws JMSException {
         ActiveMQMessage msg = new ActiveMQMessage();
-        String name = "floatProperty";
-        msg.setFloatProperty(name, 1.3f);
+        String name1 = "floatProperty";
+        msg.setFloatProperty(name1, 1.3f);
+        String name2 = "JMSXDeliveryCount";
+        msg.setIntProperty("name2", 1);
+        boolean found1 = false;
+        boolean found2 = false;
         for (Enumeration iter = msg.getPropertyNames(); iter.hasMoreElements();) {
-            assertTrue(iter.nextElement().equals(name));
+            Object element = iter.nextElement();
+            found1 |= element.equals(name1);
+            found2 |= element.equals(name2);
         }
+        assertTrue("prop name1 found", found1);
+        assertTrue("prop name2 found", found2);
     }
 
     public void testSetObjectProperty() throws JMSException {

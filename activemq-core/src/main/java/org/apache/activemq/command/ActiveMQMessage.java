@@ -273,7 +273,7 @@ public class ActiveMQMessage extends Message implements org.apache.activemq.Mess
 
     public boolean propertyExists(String name) throws JMSException {
         try {
-            return this.getProperties().containsKey(name);
+            return (this.getProperties().containsKey(name) || getObjectProperty(name)!= null);
         } catch (IOException e) {
             throw JMSExceptionSupport.create(e);
         }
@@ -281,7 +281,9 @@ public class ActiveMQMessage extends Message implements org.apache.activemq.Mess
 
     public Enumeration getPropertyNames() throws JMSException {
         try {
-            return new Vector<String>(this.getProperties().keySet()).elements();
+            Vector<String> result = new Vector<String>(this.getProperties().keySet());
+            result.addAll(new Vector<String>(JMS_PROPERTY_SETERS.keySet()));
+            return result.elements();
         } catch (IOException e) {
             throw JMSExceptionSupport.create(e);
         }
