@@ -21,6 +21,7 @@ import java.text.NumberFormat;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 import org.apache.kahadb.index.BTreeIndex;
 import org.apache.kahadb.index.Index;
@@ -172,6 +173,44 @@ public class BTreeIndexTest extends IndexTestSupport {
 
         this.index.unload(tx);
         tx.commit();
+    }
+
+
+    public void testRandomRemove() throws Exception {
+
+        createPageFileAndIndex(100);
+        BTreeIndex<String,Long> index = ((BTreeIndex<String,Long>)this.index);
+        this.index.load(tx);
+        tx.commit();
+
+        final int count = 4000;
+        doInsert(count);
+
+        Random rand = new Random(System.currentTimeMillis());
+        int i = 0, prev = 0;
+        while (!index.isEmpty(tx)) {
+            prev = i;
+            i = rand.nextInt(count);
+            try {
+                index.remove(tx, key(i));
+            } catch (Exception e) {
+                e.printStackTrace();
+                fail("unexpected exception on " + i + ", prev: " + prev + ", ex: " + e);
+            }
+        }
+    }
+
+    public void testRemovePattern() throws Exception {
+        createPageFileAndIndex(100);
+        BTreeIndex<String,Long> index = ((BTreeIndex<String,Long>)this.index);
+        this.index.load(tx);
+        tx.commit();
+
+        final int count = 4000;
+        doInsert(count);
+
+        index.remove(tx, key(3697));
+        index.remove(tx, key(1566));
     }
     
     void doInsertReverse(int count) throws Exception {
