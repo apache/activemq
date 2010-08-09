@@ -399,9 +399,9 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
     // Implementation methods
     // -------------------------------------------------------------------------
     protected String resolveHostName(String host) throws UnknownHostException {
-        String localName = InetAddress.getLocalHost().getHostName();
-        if (localName != null && isUseLocalHost()) {
-            if (localName.equals(host)) {
+        if (isUseLocalHost()) {
+            String localName = InetAddress.getLocalHost().getHostName();
+            if (localName != null && localName.equals(host)) {
                 return "localhost";
             }
         }
