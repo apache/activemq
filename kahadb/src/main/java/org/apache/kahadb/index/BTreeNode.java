@@ -237,7 +237,7 @@ public final class BTreeNode<Key,Value> {
     private BTreeNode<Key,Value> getRightLeaf(Transaction tx) throws IOException {
         BTreeNode<Key,Value> cur = this;
         while(cur.isBranch()) {
-            cur = cur.getChild(tx, keys.length);
+            cur = cur.getChild(tx, cur.keys.length);
         }
         return cur;
     }
