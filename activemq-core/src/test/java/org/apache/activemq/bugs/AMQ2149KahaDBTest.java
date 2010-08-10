@@ -24,7 +24,7 @@ public class AMQ2149KahaDBTest extends AMQ2149Test {
     @Override
     protected void configurePersistenceAdapter(BrokerService brokerService) throws Exception {
         // nothing to do as kahaDB is now the default
-        //KahaDBPersistenceAdapter kahaDB = (KahaDBPersistenceAdapter) brokerService.getPersistenceAdapter();
-        //kahaDB.setConcurrentStoreAndDispatchTopics(true);
+        KahaDBPersistenceAdapter kahaDB = (KahaDBPersistenceAdapter) brokerService.getPersistenceAdapter();
+        kahaDB.setConcurrentStoreAndDispatchTopics(true);
     }
 }
