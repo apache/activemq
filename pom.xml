@@ -25,13 +25,13 @@
 
   <groupId>org.apache.activemq</groupId>
   <artifactId>activemq-parent</artifactId>
-  <version>5.4-SNAPSHOT</version>
+  <version>5.4.0</version>
   <packaging>pom</packaging>
   <name>ActiveMQ</name>
   <inceptionYear>2005</inceptionYear>
 
   <properties>
-    <activemq-version>5.4-SNAPSHOT</activemq-version>
+    <activemq-version>5.4.0</activemq-version>
     <siteId>activemq-${activemq-version}</siteId>
     <projectName>Apache ActiveMQ</projectName>
     <!-- base url for site deployment.  See distribution management for full url.  Override this in settings.xml for staging -->
@@ -97,7 +97,7 @@
     <activemq.osgi.export>${activemq.osgi.export.pkg}*;version=${activemq.osgi.export.version};-noimport:=true</activemq.osgi.export>
     <activemq.osgi.export.version>${project.version}</activemq.osgi.export.version>
     <activemq.osgi.import>${activemq.osgi.import.pkg}</activemq.osgi.import>
-    <activemq.osgi.dynamic.import/>
+    <activemq.osgi.dynamic.import />
     <activemq.osgi.symbolic.name>${project.groupId}.${project.artifactId}</activemq.osgi.symbolic.name>
 <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
@@ -159,9 +159,9 @@
   </modules>
 
   <scm>
-    <connection>scm:svn:https://svn.apache.org/repos/asf/activemq/trunk</connection>
-    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/activemq/trunk</developerConnection>
-    <url>http://svn.apache.org/viewvc/activemq/trunk/</url>
+    <connection>scm:svn:https://svn.apache.org/repos/asf/activemq/tags/activemq-5.4.0</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/activemq/tags/activemq-5.4.0</developerConnection>
+    <url>http://svn.apache.org/viewvc/activemq/tags/activemq-5.4.0</url>
   </scm>
   
   <repositories>
