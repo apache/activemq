@@ -237,8 +237,8 @@ public class SimplePriorityMessageDispatchChannel implements MessageDispatchChan
     protected int getPriority(MessageDispatch message) {
         int priority = javax.jms.Message.DEFAULT_PRIORITY;
         if (message.getMessage() != null) {
-        Math.max(message.getMessage().getPriority(), 0);
-        priority = Math.min(priority, 9);
+	        priority = Math.max(message.getMessage().getPriority(), 0);
+	        priority = Math.min(priority, 9);
         }
         return priority;
     }
