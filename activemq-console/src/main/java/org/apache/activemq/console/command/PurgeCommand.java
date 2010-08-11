@@ -35,7 +35,7 @@ public class PurgeCommand extends AbstractJmxCommand {
         "Task Usage: Main purge [browse-options] <destinations>",
         "Description: Delete selected destination's messages that matches the message selector.", 
         "", 
-        "Browse Options:",
+        "Purge Options:",
         "    --msgsel <msgsel1,msglsel2>   Add to the search list messages matched by the query similar to",
         "                                  the messages selector format.",
         "    --jmxurl <url>                Set the JMX URL to connect to.",
