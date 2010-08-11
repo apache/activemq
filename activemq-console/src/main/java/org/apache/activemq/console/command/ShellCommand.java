@@ -48,6 +48,7 @@ public class ShellCommand extends AbstractCommand {
             "    query           - Display selected broker component's attributes and statistics.",
             "    browse          - Display selected messages in a specified destination.",
             "    journal-audit   - Allows you to view records stored in the persistent journal.",
+            "    purge           - Delete selected destination's messages that matches the message selector",
             "",
             "Task Options (Options specific to each task):",
             "    --extdir <dir>  - Add the jar files in the directory to the classpath.",
