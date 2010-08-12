@@ -56,7 +56,7 @@ public class URISupportTest extends TestCase {
         CompositeData data = URISupport.parseComposite(new URI("test:(part1://host?part1=true)?outside=true"));
         assertEquals(1, data.getComponents().length);
         assertEquals(1, data.getParameters().size());
-        Map part1Params = URISupport.parseParamters(data.getComponents()[0]);
+        Map part1Params = URISupport.parseParameters(data.getComponents()[0]);
         assertEquals(1, part1Params.size());
         assertTrue(part1Params.containsKey("part1"));
     }
@@ -64,7 +64,7 @@ public class URISupportTest extends TestCase {
     public void testParsingURI() throws Exception {
         URI source = new URI("tcp://localhost:61626/foo/bar?cheese=Edam&x=123");
         
-        Map map = URISupport.parseParamters(source);
+        Map map = URISupport.parseParameters(source);
     
         assertEquals("Size: " + map, 2, map.size());
         assertMapKey(map, "cheese", "Edam");
@@ -96,10 +96,24 @@ public class URISupportTest extends TestCase {
         URI source = new URI("vm://localhost");
         URI dest = URISupport.createURIWithQuery(source, "network=true&one=two");
         
-        assertEquals("correct param count", 2, URISupport.parseParamters(dest).size());
+        assertEquals("correct param count", 2, URISupport.parseParameters(dest).size());
         assertEquals("same uri, host", source.getHost(), dest.getHost());
         assertEquals("same uri, scheme", source.getScheme(), dest.getScheme());
         assertFalse("same uri, ssp", dest.getQuery().equals(source.getQuery()));
+    }
+    
+    public void testParsingParams() throws Exception {
+        URI uri = new URI("static:(http://localhost:61617?proxyHost=localhost&proxyPort=80)");
+        Map<String,String>parameters = URISupport.parseParameters(uri);
+        verifyParams(parameters);
+        uri = new URI("static://http://localhost:61617?proxyHost=localhost&proxyPort=80");
+        parameters = URISupport.parseParameters(uri);
+        verifyParams(parameters);
+    }
+    
+    private void verifyParams(Map<String,String> parameters) {
+        assertEquals(parameters.get("proxyHost"), "localhost");
+        assertEquals(parameters.get("proxyPort"), "80");
     }
     
 }

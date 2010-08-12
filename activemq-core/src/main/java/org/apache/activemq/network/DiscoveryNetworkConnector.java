@@ -63,12 +63,7 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
     public void setUri(URI discoveryURI) throws IOException {
         setDiscoveryAgent(DiscoveryAgentFactory.createDiscoveryAgent(discoveryURI));
         try {
-            CompositeData data = URISupport.parseComposite(discoveryURI);
-            parameters = new HashMap<String, String>();
-            parameters.putAll(data.getParameters());
-            for (URI uri : data.getComponents()) {
-                parameters.putAll(URISupport.parseParamters(uri));
-            }
+            parameters = URISupport.parseParameters(discoveryURI);
             // allow discovery agent to grab it's parameters
             IntrospectionSupport.setProperties(getDiscoveryAgent(), parameters);
         } catch (URISyntaxException e) {
@@ -102,6 +97,7 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
             }
             URI connectUri = uri;
             try {
+                connectUri = URISupport.removeQuery(connectUri);
                 connectUri = URISupport.applyParameters(connectUri, parameters);
             } catch (URISyntaxException e) {
                 LOG.warn("could not apply query parameters: " + parameters + " to: " + connectUri, e);

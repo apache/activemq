@@ -327,7 +327,7 @@ public class BrokerService implements Service {
     public NetworkConnector addNetworkConnector(NetworkConnector connector) throws Exception {
         connector.setBrokerService(this);
         URI uri = getVmConnectorURI();
-        Map<String, String> map = new HashMap<String, String>(URISupport.parseParamters(uri));
+        Map<String, String> map = new HashMap<String, String>(URISupport.parseParameters(uri));
         map.put("network", "true");
         uri = URISupport.createURIWithQuery(uri, URISupport.createQueryString(map));
         connector.setLocalUri(uri);
@@ -2065,7 +2065,7 @@ public class BrokerService implements Service {
                 setTransportConnectors(al);
             }
             URI uri = getVmConnectorURI();
-            Map<String, String> map = new HashMap<String, String>(URISupport.parseParamters(uri));
+            Map<String, String> map = new HashMap<String, String>(URISupport.parseParameters(uri));
             map.put("network", "true");
             map.put("async", "false");
             uri = URISupport.createURIWithQuery(uri, URISupport.createQueryString(map));

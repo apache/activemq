@@ -124,8 +124,21 @@ public class URISupport {
         }
     }
 
-    public static Map<String, String> parseParamters(URI uri) throws URISyntaxException {
-        return uri.getQuery() == null ? emptyMap() : parseQuery(stripPrefix(uri.getQuery(), "?"));
+    public static Map<String, String> parseParameters(URI uri) throws URISyntaxException {
+        if (uri.getQuery() != null) {
+            return uri.getQuery() == null ? emptyMap() : parseQuery(stripPrefix(uri.getQuery(), "?"));
+        } else {
+            CompositeData data = URISupport.parseComposite(uri);
+            Map<String, String> parameters = new HashMap<String, String>();
+            parameters.putAll(data.getParameters());
+            for (URI component : data.getComponents()) {
+                parameters.putAll(component.getQuery() == null ? emptyMap() : parseQuery(stripPrefix(component.getQuery(), "?")));
+            }
+            if (parameters.isEmpty()) 
+                parameters = emptyMap();
+            
+            return parameters;
+        }
     }
 
     public static URI applyParameters(URI uri, Map<String, String> queryParameters) throws URISyntaxException {

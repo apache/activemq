@@ -53,7 +53,7 @@ public class UdpTransportFactory extends TransportFactory {
     
     public TransportServer doBind(final URI location) throws IOException {
         try {
-            Map<String, String> options = new HashMap<String, String>(URISupport.parseParamters(location));
+            Map<String, String> options = new HashMap<String, String>(URISupport.parseParameters(location));
             if (options.containsKey("port")) {
                 throw new IllegalArgumentException("The port property cannot be specified on a UDP server transport - please use the port in the URI syntax");
             }

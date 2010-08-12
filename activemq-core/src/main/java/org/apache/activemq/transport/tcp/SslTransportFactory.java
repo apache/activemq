@@ -71,7 +71,7 @@ public class SslTransportFactory extends TcpTransportFactory {
      */
     public TransportServer doBind(final URI location) throws IOException {
         try {
-            Map<String, String> options = new HashMap<String, String>(URISupport.parseParamters(location));
+            Map<String, String> options = new HashMap<String, String>(URISupport.parseParameters(location));
 
             ServerSocketFactory serverSocketFactory = createServerSocketFactory();
             SslTransportServer server = new SslTransportServer(this, location, (SSLServerSocketFactory)serverSocketFactory);

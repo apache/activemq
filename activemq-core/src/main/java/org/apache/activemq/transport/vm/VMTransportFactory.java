@@ -77,7 +77,7 @@ public class VMTransportFactory extends TransportFactory {
             // form
             try {
                 host = extractHost(location);
-                options = URISupport.parseParamters(location);
+                options = URISupport.parseParameters(location);
                 String config = (String)options.remove("brokerConfig");
                 if (config != null) {
                     brokerURI = new URI(config);
