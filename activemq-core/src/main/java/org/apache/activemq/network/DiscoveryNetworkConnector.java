@@ -19,21 +19,23 @@ package org.apache.activemq.network;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
 import org.apache.activemq.broker.SslContext;
 import org.apache.activemq.command.DiscoveryEvent;
 import org.apache.activemq.transport.Transport;
+import org.apache.activemq.transport.TransportDisposedIOException;
 import org.apache.activemq.transport.TransportFactory;
 import org.apache.activemq.transport.discovery.DiscoveryAgent;
-import org.apache.activemq.transport.TransportDisposedIOException;
 import org.apache.activemq.transport.discovery.DiscoveryAgentFactory;
 import org.apache.activemq.transport.discovery.DiscoveryListener;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.util.ServiceStopper;
 import org.apache.activemq.util.ServiceSupport;
 import org.apache.activemq.util.URISupport;
+import org.apache.activemq.util.URISupport.CompositeData;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -61,7 +63,12 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
     public void setUri(URI discoveryURI) throws IOException {
         setDiscoveryAgent(DiscoveryAgentFactory.createDiscoveryAgent(discoveryURI));
         try {
-            parameters = URISupport.parseParamters(discoveryURI);
+            CompositeData data = URISupport.parseComposite(discoveryURI);
+            parameters = new HashMap<String, String>();
+            parameters.putAll(data.getParameters());
+            for (URI uri : data.getComponents()) {
+                parameters.putAll(URISupport.parseParamters(uri));
+            }
             // allow discovery agent to grab it's parameters
             IntrospectionSupport.setProperties(getDiscoveryAgent(), parameters);
         } catch (URISyntaxException e) {
