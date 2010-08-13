@@ -25,13 +25,13 @@
 
   <groupId>org.apache.activemq</groupId>
   <artifactId>activemq-parent</artifactId>
-  <version>5.5-SNAPSHOT</version>
+  <version>5.4-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>ActiveMQ</name>
   <inceptionYear>2005</inceptionYear>
 
   <properties>
-    <activemq-version>5.4.0</activemq-version>
+    <activemq-version>5.4-SNAPSHOT</activemq-version>
     <siteId>activemq-${activemq-version}</siteId>
     <projectName>Apache ActiveMQ</projectName>
     <!-- base url for site deployment.  See distribution management for full url.  Override this in settings.xml for staging -->
