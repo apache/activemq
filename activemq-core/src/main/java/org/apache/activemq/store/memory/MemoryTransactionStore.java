@@ -217,11 +217,13 @@ public class MemoryTransactionStore implements TransactionStore {
             }
             return;
         }
-        tx.commit();
-        if (postCommit != null) {
-            postCommit.run();
+        // ensure message order w.r.t to cursor and store for setBatch()
+        synchronized (this) {
+            tx.commit();
+            if (postCommit != null) {
+                postCommit.run();
+            }
         }
-
     }
 
     /**
