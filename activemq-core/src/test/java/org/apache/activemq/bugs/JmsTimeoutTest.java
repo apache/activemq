@@ -17,6 +17,7 @@
 package org.apache.activemq.bugs;
 
 
+import java.io.IOException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.jms.DeliveryMode;
@@ -29,6 +30,7 @@ import javax.jms.TextMessage;
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.EmbeddedBrokerTestSupport;
 import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.transport.RequestTimedOutIOException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -50,7 +52,7 @@ public class JmsTimeoutTest extends EmbeddedBrokerTestSupport {
 	        final ActiveMQConnection cx = (ActiveMQConnection)createConnection();
 	        final ActiveMQDestination queue = createDestination("testqueue");
 	        
-	        // we should not take longer than 5 seconds to return from send
+	        // we should not take longer than 10 seconds to return from send
 	        cx.setSendTimeout(10000);
 	        	
 	        Runnable r = new Runnable() {
@@ -64,18 +66,61 @@ public class JmsTimeoutTest extends EmbeddedBrokerTestSupport {
 	                    TextMessage message = session.createTextMessage(createMessageText());
 	                    for(int count=0; count<messageCount; count++){
 	                    	producer.send(message);
-	                    	// Currently after the timeout producer just
-	                    	// returns but there is no way to know that
-	                    	// the send timed out
 	                    }	  
 	                    LOG.info("Done sending..");
-	                } catch (JMSException e) {
-	                    e.printStackTrace();
-	                    if (e instanceof ResourceAllocationException) {
+                    } catch (JMSException e) {
+                        if (e.getCause() instanceof RequestTimedOutIOException) {
 	                        exceptionCount.incrementAndGet();
-	                    }
+                        } else {
+                            e.printStackTrace();
+                        }
 	                    return;
 	                }
+
+	            }
+	        };
+	        cx.start();
+	        Thread producerThread = new Thread(r);
+	        producerThread.start();
+	        producerThread.join(30000);
+	        cx.close();
+	        // We should have a few timeout exceptions as memory store will fill up
+	        assertTrue("No exception from the broker", exceptionCount.get() > 0);
+	    }
+
+
+        /**
+	     * Test the case where the broker is blocked due to a memory limit
+	     * with a fail timeout
+	     * @throws Exception
+	     */
+	    public void testBlockedProducerUsageSendFailTimeout() throws Exception {
+	        final ActiveMQConnection cx = (ActiveMQConnection)createConnection();
+	        final ActiveMQDestination queue = createDestination("testqueue");
+
+            broker.getSystemUsage().setSendFailIfNoSpaceAfterTimeout(5000);
+	        Runnable r = new Runnable() {
+	            public void run() {
+	                try {
+	                	LOG.info("Sender thread starting");
+	                    Session session = cx.createSession(false, 1);
+	                    MessageProducer producer = session.createProducer(queue);
+	                    producer.setDeliveryMode(DeliveryMode.PERSISTENT);
+
+	                    TextMessage message = session.createTextMessage(createMessageText());
+	                    for(int count=0; count<messageCount; count++){
+	                    	producer.send(message);
+	                    }
+	                    LOG.info("Done sending..");
+                    } catch (JMSException e) {
+                        if (e instanceof ResourceAllocationException || e.getCause() instanceof RequestTimedOutIOException) {
+	                        exceptionCount.incrementAndGet();
+                        } else {
+                            e.printStackTrace();
+                        }
+	                    return;
+	                }
+
 	            }
 	        };
 	        cx.start();
@@ -88,11 +133,12 @@ public class JmsTimeoutTest extends EmbeddedBrokerTestSupport {
 	    }
 
 	    protected void setUp() throws Exception {
+            exceptionCount.set(0);
 	        bindAddress = "tcp://localhost:61616";
 	        broker = createBroker();
 	        broker.setDeleteAllMessagesOnStartup(true);
 	        broker.getSystemUsage().getMemoryUsage().setLimit(5*1024*1024);
-	        broker.getSystemUsage().setSendFailIfNoSpaceAfterTimeout(5000);
+
 	        super.setUp();
 	    }
 
