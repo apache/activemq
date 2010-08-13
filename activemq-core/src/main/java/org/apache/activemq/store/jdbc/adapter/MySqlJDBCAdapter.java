@@ -40,6 +40,7 @@ public class MySqlJDBCAdapter extends DefaultJDBCAdapter {
     public static final String HEAP = "HEAP";
 
     String engineType = INNODB;
+    String typeStatement = "ENGINE";
 
     public void setStatements(Statements statements) {
         String type = engineType.toUpperCase();
@@ -51,17 +52,17 @@ public class MySqlJDBCAdapter extends DefaultJDBCAdapter {
         statements.setBinaryDataType("LONGBLOB");
         
         
-        String typeClause = " TYPE="+type;
+        String typeClause = typeStatement + "=" + type;
         if( type.equals(NDBCLUSTER) ) {
             // in the NDBCLUSTER case we will create as INNODB and then alter to NDBCLUSTER
-            typeClause = " TYPE="+INNODB;
+            typeClause = typeStatement + "=" + INNODB;
         }
         
         // Update the create statements so they use the right type of engine 
         String[] s = statements.getCreateSchemaStatements();
         for (int i = 0; i < s.length; i++) {
             if( s[i].startsWith("CREATE TABLE")) {
-                s[i] = s[i]+typeClause;
+                s[i] = s[i]+ " " + typeClause;
             }
         }
         
@@ -85,5 +86,13 @@ public class MySqlJDBCAdapter extends DefaultJDBCAdapter {
 
     public void setEngineType(String engineType) {
         this.engineType = engineType;
+    }
+
+    public String getTypeStatement() {
+        return typeStatement;
+    }
+
+    public void setTypeStatement(String typeStatement) {
+        this.typeStatement = typeStatement;
     }
 }
