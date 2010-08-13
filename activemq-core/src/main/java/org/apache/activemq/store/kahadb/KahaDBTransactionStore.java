@@ -259,7 +259,10 @@ public class KahaDBTransactionStore implements TransactionStore {
 
             } else {
                 KahaTransactionInfo info = getTransactionInfo(txid);
-                theStore.store(new KahaCommitCommand().setTransactionInfo(info), true, preCommit, postCommit);
+                // ensure message order w.r.t to cursor and store for setBatch()
+                synchronized (this) {
+                    theStore.store(new KahaCommitCommand().setTransactionInfo(info), true, preCommit, postCommit);
+                }
             }
         }else {
            LOG.error("Null transaction passed on commit");

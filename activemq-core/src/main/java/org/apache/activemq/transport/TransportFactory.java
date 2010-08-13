@@ -136,7 +136,7 @@ public abstract class TransportFactory {
 
     public Transport doConnect(URI location) throws Exception {
         try {
-            Map<String, String> options = new HashMap<String, String>(URISupport.parseParamters(location));
+            Map<String, String> options = new HashMap<String, String>(URISupport.parseParameters(location));
             WireFormat wf = createWireFormat(options);
             Transport transport = createTransport(location, wf);
             Transport rc = configure(transport, wf, options);
@@ -151,7 +151,7 @@ public abstract class TransportFactory {
 
     public Transport doCompositeConnect(URI location) throws Exception {
         try {
-            Map<String, String> options = new HashMap<String, String>(URISupport.parseParamters(location));
+            Map<String, String> options = new HashMap<String, String>(URISupport.parseParameters(location));
             WireFormat wf = createWireFormat(options);
             Transport transport = createTransport(location, wf);
             Transport rc = compositeConfigure(transport, wf, options);

@@ -131,7 +131,7 @@ public class DiscoveryTransportNoBrokerTest extends CombinationTestSupport {
         assertEquals("expected added URI after discovery event", compositeTransport.getTransportURIs().length, 1);
         
         URI discoveredServiceURI = compositeTransport.getTransportURIs()[0];
-        Map<String, String> parameters = URISupport.parseParamters(discoveredServiceURI);
+        Map<String, String> parameters = URISupport.parseParameters(discoveredServiceURI);
         assertTrue("unable to add parameter to discovered service", parameters.containsKey(extraParameterName));
         assertEquals("incorrect value for parameter added to discovered service", parameters.get(extraParameterName), extraParameterValue);
     }

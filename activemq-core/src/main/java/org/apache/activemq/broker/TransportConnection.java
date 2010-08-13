@@ -1201,7 +1201,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
                 IntrospectionSupport.setProperties(config, props, "");
                 config.setBrokerName(broker.getBrokerName());
                 URI uri = broker.getVmConnectorURI();
-                HashMap<String, String> map = new HashMap<String, String>(URISupport.parseParamters(uri));
+                HashMap<String, String> map = new HashMap<String, String>(URISupport.parseParameters(uri));
                 map.put("network", "true");
                 map.put("async", "false");
                 uri = URISupport.createURIWithQuery(uri, URISupport.createQueryString(map));

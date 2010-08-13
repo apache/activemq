@@ -80,7 +80,7 @@ public class TcpFaultyTransportFactory extends TcpTransportFactory {
 
     public TransportServer doBind(final URI location) throws IOException {
         try {
-            Map<String, String> options = new HashMap<String, String>(URISupport.parseParamters(location));
+            Map<String, String> options = new HashMap<String, String>(URISupport.parseParameters(location));
 
             ServerSocketFactory serverSocketFactory = createServerSocketFactory();
             TcpFaultyTransportServer server = createTcpFaultyTransportServer(location, serverSocketFactory);

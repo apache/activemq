@@ -301,7 +301,7 @@ public class Main {
                     File dir = iter.next();
                     // try{ System.out.println("Adding to classpath: " +
                     // dir.getCanonicalPath()); }catch(Exception e){}
-                    urls.add(dir.toURL());
+                    urls.add(dir.toURI().toURL());
                 }
 
                 for (Iterator<File> iter = extensions.iterator(); iter.hasNext();) {
@@ -329,7 +329,7 @@ public class Main {
                                     // classpath: " +
                                     // files[j].getCanonicalPath());
                                     // }catch(Exception e){}
-                                    urls.add(files[j].toURL());
+                                    urls.add(files[j].toURI().toURL());
                                 }
                             }
                         }

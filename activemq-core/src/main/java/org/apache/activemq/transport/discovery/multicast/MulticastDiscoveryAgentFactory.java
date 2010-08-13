@@ -46,7 +46,7 @@ public class MulticastDiscoveryAgentFactory extends DiscoveryAgentFactory {
                         
             // allow MDA's params to be set via query arguments  
             // (e.g., multicast://default?group=foo             
-            Map options = URISupport.parseParamters(uri);         
+            Map options = URISupport.parseParameters(uri);         
             IntrospectionSupport.setProperties(mda, options);
             
             return mda;

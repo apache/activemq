@@ -49,7 +49,11 @@ public class FutureResponse {
 
     public Response getResult(int timeout) throws IOException {
         try {
-            return responseSlot.poll(timeout, TimeUnit.MILLISECONDS);
+            Response result = responseSlot.poll(timeout, TimeUnit.MILLISECONDS);
+            if (result == null && timeout > 0) {
+                throw new RequestTimedOutIOException();
+            }
+            return result;
         } catch (InterruptedException e) {
             throw new InterruptedIOException("Interrupted.");
         }
