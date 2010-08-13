@@ -109,6 +109,8 @@ public class URISupportTest extends TestCase {
         uri = new URI("static://http://localhost:61617?proxyHost=localhost&proxyPort=80");
         parameters = URISupport.parseParameters(uri);
         verifyParams(parameters);
+        uri = new URI("http://0.0.0.0:61616");
+        parameters = URISupport.parseParameters(uri);
     }
     
     private void verifyParams(Map<String,String> parameters) {
