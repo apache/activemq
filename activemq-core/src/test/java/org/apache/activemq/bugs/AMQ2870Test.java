@@ -60,7 +60,7 @@ public class AMQ2870Test extends org.apache.activemq.TestSupport {
         openConsumer();
 
         assertEquals(0, broker.getAdminView().getStorePercentUsage());
-                                                                                                                              Failo
+
         for (int i = 0; i < 5000; i++) {
             sendMessage(false);
         }
