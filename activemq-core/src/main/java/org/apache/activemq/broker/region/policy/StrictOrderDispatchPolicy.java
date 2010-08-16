@@ -51,6 +51,7 @@ public class StrictOrderDispatchPolicy implements DispatchPolicy {
 
                 // Only dispatch to interested subscriptions
                 if (!sub.matches(node, msgContext)) {
+                    sub.unmatched(node);
                     continue;
                 }
 

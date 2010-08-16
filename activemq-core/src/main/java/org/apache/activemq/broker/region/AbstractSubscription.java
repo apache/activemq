@@ -233,6 +233,10 @@ public abstract class AbstractSubscription implements Subscription {
         return getDispatchedQueueSize() - info.getPrefetchSize();
     }
 
+    public void unmatched(MessageReference node) throws IOException {
+        // only durable topic subs have something to do here
+    }
+
     protected void doAddRecoveredMessage(MessageReference message) throws Exception {
         add(message);
     }

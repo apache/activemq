@@ -229,4 +229,6 @@ public interface Subscription extends SubscriptionRecovery {
 	public void setCursorMemoryHighWaterMark(int cursorMemoryHighWaterMark);
 
     boolean isSlowConsumer();
+
+    void unmatched(MessageReference node) throws IOException;
 }

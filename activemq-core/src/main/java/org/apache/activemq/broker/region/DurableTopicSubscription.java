@@ -32,6 +32,7 @@ import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageDispatch;
 import org.apache.activemq.command.MessageId;
+import org.apache.activemq.filter.MessageEvaluationContext;
 import org.apache.activemq.store.TopicMessageStore;
 import org.apache.activemq.usage.SystemUsage;
 import org.apache.activemq.usage.Usage;
@@ -69,6 +70,16 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
     }
 
     public void gc() {
+    }
+
+    /**
+     * store will have a pending ack for all durables, irrespective of the selector
+     * so we need to ack if node is un-matched
+     */
+    public void unmatched(MessageReference node) throws IOException {
+        MessageAck ack = new MessageAck();
+        ack.setMessageID(node.getMessageId());
+        node.getRegionDestination().acknowledge(this.getContext(), this, ack, node);
     }
 
     public void add(ConnectionContext context, Destination destination) throws Exception {
@@ -270,13 +281,6 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
         setSlowConsumer(false);
     }
 
-    /**
-     * @param usageManager
-     * @param oldPercentUsage
-     * @param newPercentUsage
-     * @see org.apache.activemq.usage.UsageListener#onMemoryUseChanged(org.apache.activemq.usage.SystemUsage,
-     *      int, int)
-     */
     public void onUsageChanged(Usage usage, int oldPercentUsage, int newPercentUsage) {
         if (oldPercentUsage > newPercentUsage && oldPercentUsage >= 90) {
             try {

@@ -297,6 +297,9 @@ public class QueueDuplicatesFromStoreTest extends TestCase {
             public boolean isSlowConsumer() {
                 return false;
             }
+
+            public void unmatched(MessageReference node) throws IOException {
+            }
         };
 
         queue.addSubscription(contextNotInTx, subscription);
