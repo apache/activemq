@@ -60,8 +60,6 @@ public class ConnectionPool {
 
             public void onException(IOException error) {
                 synchronized (ConnectionPool.this) {
-                    System.err.println("HasFaile=true on :" + error);
-                    Thread.dumpStack();
                     hasFailed = true;
                 }
             }
