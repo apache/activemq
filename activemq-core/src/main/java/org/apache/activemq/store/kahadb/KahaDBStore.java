@@ -105,7 +105,9 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
     Semaphore globalQueueSemaphore;
     Semaphore globalTopicSemaphore;
     private boolean concurrentStoreAndDispatchQueues = true;
-    private boolean concurrentStoreAndDispatchTopics = true;
+    // when true, message order may be compromised when cache is exhausted if store is out
+    // or order w.r.t cache
+    private boolean concurrentStoreAndDispatchTopics = false;
     private boolean concurrentStoreAndDispatchTransactions = false;
     private int maxAsyncJobs = MAX_ASYNC_JOBS;
     private final KahaDBTransactionStore transactionStore;

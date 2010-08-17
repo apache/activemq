@@ -17,14 +17,11 @@
 package org.apache.activemq.bugs;
 
 import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
 
 public class AMQ2149KahaDBTest extends AMQ2149Test {
 
     @Override
     protected void configurePersistenceAdapter(BrokerService brokerService) throws Exception {
-        // nothing to do as kahaDB is now the default
-        KahaDBPersistenceAdapter kahaDB = (KahaDBPersistenceAdapter) brokerService.getPersistenceAdapter();
-        kahaDB.setConcurrentStoreAndDispatchTopics(false);
+        // nothing to do as kahaDB is now the default and concurrent store and dispatch topics defaults to false
     }
 }
