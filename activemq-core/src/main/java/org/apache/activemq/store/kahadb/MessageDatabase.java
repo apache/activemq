@@ -998,6 +998,7 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
                 LOG.warn("Duplicate message add attempt rejected. Message id: " + command.getMessageId());
                 // TODO: consider just rolling back the tx.
                 sd.messageIdIndex.put(tx, command.getMessageId(), previous);
+                sd.locationIndex.remove(tx, location);
             }
         } else {
             // restore the previous value.. Looks like this was a redo of a
