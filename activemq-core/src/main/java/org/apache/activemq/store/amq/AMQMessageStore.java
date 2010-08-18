@@ -159,7 +159,10 @@ public class AMQMessageStore extends AbstractMessageStore {
         lock.lock();
         try {
             lastLocation = location;
-            messages.put(message.getMessageId(), data);
+            ReferenceData prev = messages.put(message.getMessageId(), data);
+            if (prev != null) {
+                AMQMessageStore.this.peristenceAdapter.removeInProgressDataFile(AMQMessageStore.this, prev.getFileId());
+            }
         } finally {
             lock.unlock();
         }
