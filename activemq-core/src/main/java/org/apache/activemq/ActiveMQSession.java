@@ -246,7 +246,6 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
         this.sessionAsyncDispatch = sessionAsyncDispatch;
         this.info = new SessionInfo(connection.getConnectionInfo(), sessionId.getValue());
         setTransactionContext(new TransactionContext(connection));
-        connection.addSession(this);
         stats = new JMSSessionStatsImpl(producers, consumers);
         this.connection.asyncSendPacket(info);
         setTransformer(connection.getTransformer());
@@ -254,6 +253,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
         this.scheduler=connection.getScheduler();
         this.connectionExecutor=connection.getExecutor();
         this.executor = new ActiveMQSessionExecutor(this);
+        connection.addSession(this);        
         if (connection.isStarted()) {
             start();
         }

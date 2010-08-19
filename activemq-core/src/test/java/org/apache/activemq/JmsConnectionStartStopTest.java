@@ -16,6 +16,15 @@
  */
 package org.apache.activemq;
 
+import java.util.Random;
+import java.util.Vector;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import javax.jms.Connection;
 import javax.jms.JMSException;
 import javax.jms.Message;
@@ -104,5 +113,45 @@ public class JmsConnectionStartStopTest extends TestSupport {
         testStoppedConsumerHoldsMessagesTillStarted();
         stoppedConnection.stop();
         testStoppedConsumerHoldsMessagesTillStarted();
+    }
+
+
+    public void testConcurrentSessionCreateWithStart() throws Exception {
+        ThreadPoolExecutor executor = new ThreadPoolExecutor(50, Integer.MAX_VALUE,
+                                      60L, TimeUnit.SECONDS,
+                                      new SynchronousQueue<Runnable>());
+        final Vector<Throwable> exceptions = new Vector<Throwable>();
+        final Random rand = new Random();
+        Runnable createSessionTask = new Runnable() {
+            public void run() {
+                try {
+                    TimeUnit.MILLISECONDS.sleep(rand.nextInt(10));
+                    stoppedConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+                } catch (Exception e) {
+                    exceptions.add(e);
+                }
+            }
+        };
+
+        Runnable startStopTask = new Runnable() {
+            public void run() {
+                try {
+                    TimeUnit.MILLISECONDS.sleep(rand.nextInt(10));
+                    stoppedConnection.start();
+                    stoppedConnection.stop();
+                } catch (Exception e) {
+                    exceptions.add(e);
+                }
+            }
+        };
+
+        for (int i=0; i<1000; i++) {
+            executor.execute(createSessionTask);
+            executor.execute(startStopTask);
+        }
+
+        executor.shutdown();
+        assertTrue("executor terminated", executor.awaitTermination(30, TimeUnit.SECONDS));
+        assertTrue("no exceptions: " + exceptions, exceptions.isEmpty());
     }
 }
