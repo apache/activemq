@@ -354,8 +354,8 @@ public class ActiveMQMessageTest extends TestCase {
         ActiveMQMessage msg = new ActiveMQMessage();
         String name1 = "floatProperty";
         msg.setFloatProperty(name1, 1.3f);
-        String name2 = "JMSXDeliveryCount";
-        msg.setIntProperty("name2", 1);
+        String name2 = "intProperty";
+        msg.setIntProperty(name2, 1);
         boolean found1 = false;
         boolean found2 = false;
         for (Enumeration iter = msg.getPropertyNames(); iter.hasMoreElements();) {

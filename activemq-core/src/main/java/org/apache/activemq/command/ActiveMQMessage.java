@@ -282,7 +282,7 @@ public class ActiveMQMessage extends Message implements org.apache.activemq.Mess
     public Enumeration getPropertyNames() throws JMSException {
         try {
             Vector<String> result = new Vector<String>(this.getProperties().keySet());
-            result.addAll(new Vector<String>(JMS_PROPERTY_SETERS.keySet()));
+            // omit stand jms props are per spec
             return result.elements();
         } catch (IOException e) {
             throw JMSExceptionSupport.create(e);
