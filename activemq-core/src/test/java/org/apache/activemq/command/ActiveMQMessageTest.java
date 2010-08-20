@@ -356,15 +356,43 @@ public class ActiveMQMessageTest extends TestCase {
         msg.setFloatProperty(name1, 1.3f);
         String name2 = "JMSXDeliveryCount";
         msg.setIntProperty(name2, 1);
+        String name3 = "JMSRedelivered";
+        msg.setBooleanProperty(name3, false);
         boolean found1 = false;
         boolean found2 = false;
+        boolean found3 = false;
         for (Enumeration iter = msg.getPropertyNames(); iter.hasMoreElements();) {
             Object element = iter.nextElement();
             found1 |= element.equals(name1);
             found2 |= element.equals(name2);
+            found3 |= element.equals(name3);
+        }
+        assertTrue("prop name1 found", found1);
+        // spec compliance, only non JMS (and JMSX) props returned
+        assertFalse("prop name2 not found", found2);
+        assertFalse("prop name4 not found", found3);
+    }
+
+    public void testGetAllPropertyNames() throws JMSException {
+        ActiveMQMessage msg = new ActiveMQMessage();
+        String name1 = "floatProperty";
+        msg.setFloatProperty(name1, 1.3f);
+        String name2 = "JMSXDeliveryCount";
+        msg.setIntProperty(name2, 1);
+        String name3 = "JMSRedelivered";
+        msg.setBooleanProperty(name3, false);
+        boolean found1 = false;
+        boolean found2 = false;
+        boolean found3 = false;
+        for (Enumeration iter = msg.getAllPropertyNames(); iter.hasMoreElements();) {
+            Object element = iter.nextElement();
+            found1 |= element.equals(name1);
+            found2 |= element.equals(name2);
+            found3 |= element.equals(name3);
         }
         assertTrue("prop name1 found", found1);
         assertTrue("prop name2 found", found2);
+        assertTrue("prop name4 found", found3);
     }
 
     public void testSetObjectProperty() throws JMSException {
