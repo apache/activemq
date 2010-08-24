@@ -17,6 +17,8 @@
 package org.apache.activemq;
 
 import java.util.Date;
+import java.util.Vector;
+import java.util.concurrent.TimeUnit;
 
 import javax.jms.Connection;
 import javax.jms.DeliveryMode;
@@ -107,6 +109,58 @@ public class JmsSendReceiveWithMessageExpirationTest extends TestSupport {
         assertNull(consumer.receive(1000));
     }
 
+     public void testConsumeExpiredQueueAndDlq() throws Exception {
+
+         MessageProducer producerNormal = createProducer(0);
+         MessageProducer producerExpire = createProducer(500);
+
+         consumerDestination = session.createQueue("ActiveMQ.DLQ");
+         MessageConsumer dlqConsumer = createConsumer();
+
+         consumerDestination = session.createQueue(getConsumerSubject());
+         producerDestination = session.createQueue(getProducerSubject());
+
+
+         Connection consumerConnection = createConnection();
+         ActiveMQPrefetchPolicy prefetchPolicy = new ActiveMQPrefetchPolicy();
+         prefetchPolicy.setAll(10);
+         ((ActiveMQConnection)consumerConnection).setPrefetchPolicy(prefetchPolicy);
+         Session consumerSession = consumerConnection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
+         MessageConsumer consumer = consumerSession.createConsumer(consumerDestination);
+         consumerConnection.start();
+         connection.start();
+
+         String msgBody = new String(new byte[20*1024]);
+         for (int i = 0; i < data.length; i++) {
+             Message message = session.createTextMessage(msgBody);
+             producerExpire.send(producerDestination, message);
+         }
+
+         for (int i = 0; i < data.length; i++) {
+             Message message = session.createTextMessage(msgBody);
+             producerNormal.send(producerDestination, message);
+         }
+
+         Vector<Message> messages = new Vector<Message>();
+         Message received;
+         while ((received = consumer.receive(1000)) != null) {
+             messages.add(received);
+             if (messages.size() == 1) {
+                TimeUnit.SECONDS.sleep(1);
+             }
+             received.acknowledge();
+         };
+
+         assertEquals("got messages", messageCount + 1, messages.size());
+
+         Vector<Message> dlqMessages = new Vector<Message>();
+         while ((received = dlqConsumer.receive(1000)) != null) {
+             dlqMessages.add(received);
+         };
+
+         assertEquals("got dlq messages", data.length - 1, dlqMessages.size());
+    }
+    
     /**
      * Sends and consumes the messages to a queue destination.
      * 
