@@ -38,6 +38,7 @@ import org.apache.activemq.command.ExceptionResponse;
 import org.apache.activemq.command.IntegerResponse;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageId;
+import org.apache.activemq.command.MessagePull;
 import org.apache.activemq.command.ProducerId;
 import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.command.Response;
@@ -71,11 +72,13 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
     private boolean trackTransactionProducers = true;
     private int maxCacheSize = 128 * 1024;
     private int currentCacheSize;
-    private Map<MessageId,Message> messageCache = new LinkedHashMap<MessageId,Message>(){
-        protected boolean removeEldestEntry(Map.Entry<MessageId,Message> eldest) {
+    private Map<Object,Command> messageCache = new LinkedHashMap<Object,Command>(){
+        protected boolean removeEldestEntry(Map.Entry<Object,Command> eldest) {
             boolean result = currentCacheSize > maxCacheSize;
             if (result) {
-                currentCacheSize -= eldest.getValue().getSize();
+                if (eldest.getValue() instanceof Message) {
+                    currentCacheSize -= ((Message)eldest.getValue()).getSize();
+                }
             }
             return result;
         }
@@ -128,10 +131,15 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
     }
     
     public void trackBack(Command command) {
-        if (trackMessages && command != null && command.isMessage()) {
-            Message message = (Message) command;
-            if (message.getTransactionId()==null) {
-                currentCacheSize = currentCacheSize +  message.getSize();
+        if (command != null) {
+            if (trackMessages && command.isMessage()) {
+                Message message = (Message) command;
+                if (message.getTransactionId()==null) {
+                    currentCacheSize = currentCacheSize +  message.getSize();
+                }
+            } else if (command instanceof MessagePull) {
+                // just needs to be a rough estimate of size, ~4 identifiers
+                currentCacheSize += 400;
             }
         }
     }
@@ -156,9 +164,9 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
             }
         }
         //now flush messages
-        for (Message msg:messageCache.values()) {
+        for (Command msg:messageCache.values()) {
             if (LOG.isDebugEnabled()) {
-                LOG.debug("message: " + msg.getMessageId());
+                LOG.debug("command: " + msg.getCommandId());
             }
             transport.oneway(msg);
         }
@@ -562,6 +570,16 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
                 }
             }
             return TRACKED_RESPONSE_MARKER;
+        }
+        return null;
+    }
+
+    @Override
+    public Response processMessagePull(MessagePull pull) throws Exception {
+        if (pull != null) {
+            // leave a single instance in the cache
+            final String id = pull.getDestination() + "::" + pull.getConsumerId();
+            messageCache.put(id.intern(), pull);
         }
         return null;
     }
