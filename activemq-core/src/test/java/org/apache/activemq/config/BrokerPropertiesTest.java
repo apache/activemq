@@ -16,8 +16,11 @@
  */
 package org.apache.activemq.config;
 
+import javax.jms.Connection;
 import junit.framework.TestCase;
+import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerFactory;
+import org.apache.activemq.broker.BrokerRegistry;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -37,5 +40,21 @@ public class BrokerPropertiesTest extends TestCase {
         assertEquals("isUseJmx()", false, broker.isUseJmx());
         assertEquals("isPersistent()", false, broker.isPersistent());
         assertEquals("getBrokerName()", "Cheese", broker.getBrokerName());
+        broker.stop();
+    }
+
+
+    public void testVmBrokerPropertiesFile() throws Exception {
+        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("vm://localhost?brokerConfig=properties:org/apache/activemq/config/broker.properties");
+        Connection connection = factory.createConnection();
+        BrokerService broker = BrokerRegistry.getInstance().lookup("Cheese");
+        LOG.info("Found broker : " + broker);
+        assertNotNull(broker);
+
+        assertEquals("isUseJmx()", false, broker.isUseJmx());
+        assertEquals("isPersistent()", false, broker.isPersistent());
+        assertEquals("getBrokerName()", "Cheese", broker.getBrokerName());
+        connection.close();
+        broker.stop();
     }
 }
