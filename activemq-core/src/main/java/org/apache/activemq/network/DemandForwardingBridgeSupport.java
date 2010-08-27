@@ -91,7 +91,7 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision$
  */
 public abstract class DemandForwardingBridgeSupport implements NetworkBridge, BrokerServiceAware {
-    private static final Log LOG = LogFactory.getLog(DemandForwardingBridge.class);
+    private static final Log LOG = LogFactory.getLog(DemandForwardingBridgeSupport.class);
     private static final ThreadPoolExecutor ASYNC_TASKS;
     protected static final String DURABLE_SUB_PREFIX = "NC-DS_";
     protected final Transport localBroker;
@@ -526,6 +526,12 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                                     // received a subscription whilst stopping
                                     LOG.warn("Stopping - ignoring ConsumerInfo: " + command);
                                 }
+                                break;
+                            case ShutdownInfo.DATA_STRUCTURE_TYPE:
+                                // initiator is shutting down, controlled case
+                                // abortive close dealt with by inactivity monitor
+                                LOG.info("Stopping network bridge on shutdown of remote broker");
+                                serviceRemoteException(new IOException(command.toString()));
                                 break;
                             default:
                                 if (LOG.isDebugEnabled()) {

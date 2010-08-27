@@ -31,9 +31,12 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.apache.activemq.command.Command;
 import org.apache.activemq.command.WireFormatInfo;
+import org.apache.activemq.transport.InactivityMonitor;
+import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportAcceptListener;
 import org.apache.activemq.transport.util.TextWireFormat;
 import org.apache.activemq.transport.xstream.XStreamWireFormat;
+import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -49,9 +52,11 @@ public class HttpTunnelServlet extends HttpServlet {
     private static final Log LOG = LogFactory.getLog(HttpTunnelServlet.class);
 
     private TransportAcceptListener listener;
+    private HttpTransportFactory transportFactory;
     private TextWireFormat wireFormat;
     private final Map<String, BlockingQueueTransport> clients = new HashMap<String, BlockingQueueTransport>();
     private final long requestTimeout = 30000L;
+    private HashMap transportOptions;
 
     @Override
     public void init() throws ServletException {
@@ -60,6 +65,11 @@ public class HttpTunnelServlet extends HttpServlet {
         if (listener == null) {
             throw new ServletException("No such attribute 'acceptListener' available in the ServletContext");
         }
+        transportFactory = (HttpTransportFactory)getServletContext().getAttribute("transportFactory");
+        if (transportFactory == null) {
+            throw new ServletException("No such attribute 'transportFactory' available in the ServletContext");    
+        }
+        transportOptions = (HashMap)getServletContext().getAttribute("transportOptions");
         wireFormat = (TextWireFormat)getServletContext().getAttribute("wireFormat");
         if (wireFormat == null) {
             wireFormat = createWireFormat();
@@ -174,14 +184,20 @@ public class HttpTunnelServlet extends HttpServlet {
         synchronized (this) {
             BlockingQueueTransport answer = clients.get(clientID);
             if (answer != null) {
-                response.sendError(HttpServletResponse.SC_BAD_REQUEST, "A session for clientID '" + clientID + "' has allready been established");
-                LOG.warn("A session for clientID '" + clientID + "' has allready been established");
+                response.sendError(HttpServletResponse.SC_BAD_REQUEST, "A session for clientID '" + clientID + "' has already been established");
+                LOG.warn("A session for clientID '" + clientID + "' has already been established");
                 return null;
             }
 
             answer = createTransportChannel();
             clients.put(clientID, answer);
-            listener.onAccept(answer);
+            Transport transport = answer;
+            try {
+                transport = transportFactory.serverConfigure(answer, null, transportOptions);
+            } catch (Exception e) {
+                IOExceptionSupport.create(e);
+            }
+            listener.onAccept(transport);
             //wait for the transport to connect
             while (!answer.isConnected()) {
             	try {

@@ -32,8 +32,8 @@ public class HttpsTransportServer extends HttpTransportServer {
     private String keyCertificateAlgorithm;
     private String protocol;
 
-    public HttpsTransportServer(URI uri) {
-        super(uri);
+    public HttpsTransportServer(URI uri, HttpsTransportFactory factory) {
+        super(uri, factory);
     }
 
     public void doStart() throws Exception {

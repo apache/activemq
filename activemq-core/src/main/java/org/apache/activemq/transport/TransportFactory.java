@@ -294,4 +294,11 @@ public abstract class TransportFactory {
         return transport;
     }
 
+    protected String getOption(Map options, String key, String def) {
+        String rc = (String) options.remove(key);
+        if( rc == null ) {
+            rc = def;
+        }
+        return rc;
+    }
 }

@@ -33,11 +33,11 @@ import org.apache.activemq.wireformat.WireFormat;
 public class HttpsTransportFactory extends HttpTransportFactory {
     
     public TransportServer doBind(String brokerId, URI location) throws IOException {
-        return new HttpsTransportServer(location);
+        return new HttpsTransportServer(location, this);
     }
     
     public TransportServer doBind(URI location) throws IOException {
-        return new HttpsTransportServer(location);
+        return new HttpsTransportServer(location, this);
     }
 
     protected Transport createTransport(URI location, WireFormat wf) throws MalformedURLException {

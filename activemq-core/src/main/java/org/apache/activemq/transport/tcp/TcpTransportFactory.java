@@ -111,14 +111,6 @@ public class TcpTransportFactory extends TransportFactory {
         return super.compositeConfigure(transport, format, options);
     }
 
-    private String getOption(Map options, String key, String def) {
-        String rc = (String) options.remove(key);
-        if( rc == null ) {
-            rc = def;
-        }
-        return rc;
-    }
-
     /**
      * Returns true if the inactivity monitor should be used on the transport
      */

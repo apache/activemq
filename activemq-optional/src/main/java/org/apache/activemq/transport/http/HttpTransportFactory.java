@@ -18,14 +18,22 @@ package org.apache.activemq.transport.http;
 
 import java.io.IOException;
 import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.activemq.transport.InactivityMonitor;
+import org.apache.activemq.transport.MutexTransport;
+import org.apache.activemq.transport.ThreadNameFilter;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportFactory;
 import org.apache.activemq.transport.TransportLoggerFactory;
 import org.apache.activemq.transport.TransportServer;
 import org.apache.activemq.transport.util.TextWireFormat;
 import org.apache.activemq.transport.xstream.XStreamWireFormat;
+import org.apache.activemq.util.IOExceptionSupport;
+import org.apache.activemq.util.IntrospectionSupport;
+import org.apache.activemq.util.URISupport;
 import org.apache.activemq.wireformat.WireFormat;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -39,7 +47,15 @@ public class HttpTransportFactory extends TransportFactory {
     private static final Log LOG = LogFactory.getLog(HttpTransportFactory.class);
 
     public TransportServer doBind(URI location) throws IOException {
-        return new HttpTransportServer(location);
+        try {
+            Map<String, String> options = new HashMap<String, String>(URISupport.parseParameters(location));
+            HttpTransportServer result = new HttpTransportServer(location, this);
+            Map<String, Object> transportOptions = IntrospectionSupport.extractProperties(options, "transport.");
+            result.setTransportOption(transportOptions);
+            return result;
+        } catch (URISyntaxException e) {
+            throw IOExceptionSupport.create(e);
+        }
     }
 
     protected TextWireFormat asTextWireFormat(WireFormat wireFormat) {
@@ -59,16 +75,26 @@ public class HttpTransportFactory extends TransportFactory {
         return new HttpClientTransport(textWireFormat, location);
     }
 
+    public Transport serverConfigure(Transport transport, WireFormat format, HashMap options) throws Exception {
+        return compositeConfigure(transport, format, options);
+    }
+
     public Transport compositeConfigure(Transport transport, WireFormat format, Map options) {
-        HttpClientTransport httpTransport = (HttpClientTransport) super.compositeConfigure(transport, format, options);
-        transport = httpTransport;
-        if( httpTransport.isTrace() ) {
+        transport = super.compositeConfigure(transport, format, options);
+        HttpClientTransport httpTransport = (HttpClientTransport)transport.narrow(HttpClientTransport.class);
+        if(httpTransport != null && httpTransport.isTrace() ) {
             try {
                 transport = TransportLoggerFactory.getInstance().createTransportLogger(transport);
             } catch (Throwable e) {
                 LOG.error("Could not create TransportLogger object for: " + TransportLoggerFactory.defaultLogWriterName + ", reason: " + e, e);
             }
         }
+        boolean useInactivityMonitor = "true".equals(getOption(options, "useInactivityMonitor", "true"));
+        if (useInactivityMonitor) {
+            transport = new InactivityMonitor(transport, null /* ignore wire format as no negotiation over http */);
+            IntrospectionSupport.setProperties(transport, options);
+        }
+
         return transport;
     }
 

@@ -17,6 +17,7 @@
 package org.apache.activemq.transport;
 
 import java.net.URI;
+import java.util.Map;
 
 import org.apache.activemq.util.ServiceSupport;
 
@@ -30,6 +31,7 @@ public abstract class TransportServerSupport extends ServiceSupport implements T
     private URI connectURI;
     private URI bindLocation;
     private TransportAcceptListener acceptListener;
+    protected Map<String, Object> transportOptions;
 
     public TransportServerSupport() {
     }
@@ -81,5 +83,9 @@ public abstract class TransportServerSupport extends ServiceSupport implements T
 
     public void setBindLocation(URI bindLocation) {
         this.bindLocation = bindLocation;
+    }
+
+    public void setTransportOption(Map<String, Object> transportOptions) {
+        this.transportOptions = transportOptions;
     }
 }

@@ -44,6 +44,7 @@ public class InactivityMonitor extends TransportFilter {
     private static final ThreadPoolExecutor ASYNC_TASKS;
 
     private static int CHECKER_COUNTER;
+    private static long DEFAULT_CHECK_TIME_MILLS = 30000;
     private static Timer  READ_CHECK_TIMER;
     private static Timer  WRITE_CHECK_TIMER;
 
@@ -63,9 +64,11 @@ public class InactivityMonitor extends TransportFilter {
     private SchedulerTimerTask readCheckerTask;
 
     private boolean ignoreRemoteWireFormat = false;
-    private long readCheckTime;
-    private long writeCheckTime;
-    private long initialDelayTime;
+    private boolean ignoreAllWireFormatInfo = false;
+
+    private long readCheckTime = DEFAULT_CHECK_TIME_MILLS;
+    private long writeCheckTime = DEFAULT_CHECK_TIME_MILLS;
+    private long initialDelayTime = DEFAULT_CHECK_TIME_MILLS;
     private boolean useKeepAlive = true;
     private boolean keepAliveResponseRequired;
     private WireFormat wireFormat;
@@ -115,6 +118,14 @@ public class InactivityMonitor extends TransportFilter {
     public InactivityMonitor(Transport next, WireFormat wireFormat) {
         super(next);
         this.wireFormat = wireFormat;
+        if (this.wireFormat == null) {
+            this.ignoreAllWireFormatInfo = true;
+        }
+    }
+
+    public void start() throws Exception {
+        next.start();
+        startMonitorThreads();
     }
 
     public void stop() throws Exception {
@@ -268,23 +279,29 @@ public class InactivityMonitor extends TransportFilter {
         ignoreRemoteWireFormat = val;
     }
 
+    public long getReadCheckTime() {
+        return readCheckTime;
+    }
+
+    public void setReadCheckTime(long readCheckTime) {
+        this.readCheckTime = readCheckTime;
+    }
+
+    public long getInitialDelayTime() {
+        return initialDelayTime;
+    }
+
+    public void setInitialDelayTime(long initialDelayTime) {
+        this.initialDelayTime = initialDelayTime;
+    }
+    
     private synchronized void startMonitorThreads() throws IOException {
         if (monitorStarted.get()) {
             return;
         }
-        if (localWireFormatInfo == null) {
-            return;
-        }
-        if (remoteWireFormatInfo == null) {
-            return;
-        }
 
-        if (!ignoreRemoteWireFormat) {
-            readCheckTime = Math.min(localWireFormatInfo.getMaxInactivityDuration(), remoteWireFormatInfo.getMaxInactivityDuration());
-            initialDelayTime = Math.min(localWireFormatInfo.getMaxInactivityDurationInitalDelay(), remoteWireFormatInfo.getMaxInactivityDurationInitalDelay());
-        } else {
-            readCheckTime = localWireFormatInfo.getMaxInactivityDuration();
-            initialDelayTime = localWireFormatInfo.getMaxInactivityDurationInitalDelay();
+        if (!configuredOk()) {
+            return;
         }
 
         if (readCheckTime > 0) {
@@ -302,6 +319,23 @@ public class InactivityMonitor extends TransportFilter {
                 READ_CHECK_TIMER.scheduleAtFixedRate(readCheckerTask, initialDelayTime,readCheckTime);
             }
         }
+    }
+
+    private boolean configuredOk() throws IOException {
+        boolean configured = false;
+        if (ignoreAllWireFormatInfo) {
+            configured = true;
+        } else if (localWireFormatInfo != null && remoteWireFormatInfo != null) {
+            if (!ignoreRemoteWireFormat) {
+                readCheckTime = Math.min(localWireFormatInfo.getMaxInactivityDuration(), remoteWireFormatInfo.getMaxInactivityDuration());
+                initialDelayTime = Math.min(localWireFormatInfo.getMaxInactivityDurationInitalDelay(), remoteWireFormatInfo.getMaxInactivityDurationInitalDelay());
+            } else {
+                readCheckTime = localWireFormatInfo.getMaxInactivityDuration();
+                initialDelayTime = localWireFormatInfo.getMaxInactivityDurationInitalDelay();
+            }
+            configured = true;
+        }
+        return configured;
     }
 
     /**

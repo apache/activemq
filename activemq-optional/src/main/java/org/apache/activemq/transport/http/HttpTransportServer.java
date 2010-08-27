@@ -41,10 +41,12 @@ public class HttpTransportServer extends TransportServerSupport {
     private TextWireFormat wireFormat;
     private Server server;
     private Connector connector;
+    private HttpTransportFactory transportFactory;
 
-    public HttpTransportServer(URI uri) {
+    public HttpTransportServer(URI uri, HttpTransportFactory factory) {
         super(uri);
         this.bindAddress = uri;
+        this.transportFactory = factory;
     }
 
     public void setBrokerInfo(BrokerInfo brokerInfo) {
@@ -112,6 +114,8 @@ public class HttpTransportServer extends TransportServerSupport {
 
         contextHandler.setAttribute("acceptListener", getAcceptListener());
         contextHandler.setAttribute("wireFormat", getWireFormat());
+        contextHandler.setAttribute("transportFactory", transportFactory);
+        contextHandler.setAttribute("transportOptions", transportOptions);
         server.start();
     }
 

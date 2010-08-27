@@ -43,7 +43,8 @@ public class HttpEmbeddedTunnelServlet extends HttpTunnelServlet {
 
                 // Add the servlet connector
                 String url = getConnectorURL();
-                transportConnector = new HttpTransportServer(new URI(url));
+                HttpTransportFactory factory = new HttpTransportFactory();
+                transportConnector = (HttpTransportServer) factory.doBind(new URI(url));
                 broker.addConnector(transportConnector);
 
                 String brokerURL = getServletContext().getInitParameter("org.apache.activemq.brokerURL");

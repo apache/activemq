@@ -106,7 +106,6 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
      * This parameter is most probably set in Connection or TransportConnector URIs.
      */
     protected boolean startLogging = true;
-    protected Map<String, Object> transportOptions;
     protected final ServerSocketFactory serverSocketFactory;
     protected BlockingQueue<Socket> socketQueue = new LinkedBlockingQueue<Socket>();
     protected Thread socketHandlerThread;
@@ -387,10 +386,6 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
         return (InetSocketAddress)serverSocket.getLocalSocketAddress();
     }
 
-    public void setTransportOption(Map<String, Object> transportOptions) {
-        this.transportOptions = transportOptions;
-    }
-    
     protected final void handleSocket(Socket socket) {
         try {
             if (this.currentTransportCount >= this.maximumConnections) {
