@@ -74,6 +74,7 @@ public class CreateCommand extends AbstractCommand {
         { "conf/broker.ts", "conf/broker.ts" },
         { "conf/camel.xml", "conf/camel.xml" },
         { "conf/jetty.xml", "conf/jetty.xml" },
+        { "conf/jetty-realm.properties", "conf/jetty-realm.properties" },
         { "conf/credentials.properties", "conf/credentials.properties" }
     };
 
