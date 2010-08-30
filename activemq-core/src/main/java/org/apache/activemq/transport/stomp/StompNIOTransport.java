@@ -45,14 +45,14 @@ import org.apache.activemq.wireformat.WireFormat;
 
 /**
  * An implementation of the {@link Transport} interface for using Stomp over NIO
- * 
+ *
  * @version $Revision$
  */
 public class StompNIOTransport extends TcpTransport {
 
     private SocketChannel channel;
     private SelectorSelection selection;
-    
+
     private ByteBuffer inputBuffer;
     ByteArrayOutputStream currentCommand = new ByteArrayOutputStream();
     boolean processedHeaders = false;
@@ -94,10 +94,10 @@ public class StompNIOTransport extends TcpTransport {
         this.dataOut = new DataOutputStream(outPutStream);
         this.buffOut = outPutStream;
     }
-    
+
     private void serviceRead() {
         try {
-            
+
            while (true) {
                // read channel
                int readSize = channel.read(inputBuffer);
@@ -111,12 +111,12 @@ public class StompNIOTransport extends TcpTransport {
                if (readSize == 0) {
                    break;
                }
-               
+
                inputBuffer.flip();
-               
+
                int b;
                ByteArrayInputStream input = new ByteArrayInputStream(inputBuffer.array());
-               
+
                int i = 0;
                while(i++ < readSize) {
                    b = input.read();
@@ -124,7 +124,7 @@ public class StompNIOTransport extends TcpTransport {
                    if (!processedHeaders && previousByte == 0 && b == 0) {
                        continue;
                    }
-                   
+
                    if (!processedHeaders) {
                        currentCommand.write(b);
                        // end of headers section, parse action and header
@@ -144,7 +144,7 @@ public class StompNIOTransport extends TcpTransport {
                            currentCommand.reset();
                        }
                    } else {
-                       
+
                        if (contentLength == -1) {
                            // end of command reached, unmarshal
                            if (b == 0) {
@@ -156,31 +156,32 @@ public class StompNIOTransport extends TcpTransport {
                            // read desired content length
                            if (readLength++ == contentLength) {
                                processCommand();
+                               readLength = 0;
                            } else {
                                currentCommand.write(b);
                            }
                        }
                    }
-                   
+
                    previousByte = b;
                }
                // clear the buffer
                inputBuffer.clear();
-               
+
            }
         } catch (IOException e) {
-            onException(e);  
+            onException(e);
         } catch (Throwable e) {
             onException(IOExceptionSupport.create(e));
         }
     }
-    
+
     private void processCommand() throws Exception {
         StompFrame frame = new StompFrame(action, headers, currentCommand.toByteArray());
         doConsume(frame);
         processedHeaders = false;
         currentCommand.reset();
-        contentLength = -1;       
+        contentLength = -1;
     }
 
     protected void doStart() throws Exception {
