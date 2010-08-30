@@ -36,7 +36,7 @@
         <bundle>mvn:org.apache.activemq/activemq-ra/${activemq-version}</bundle> 
         <bundle>mvn:org.apache.activemq/activemq-pool/${activemq-version}</bundle>
         <bundle>mvn:org.apache.activemq/activemq-karaf/${activemq-version}</bundle> 
-        <bundle>mvn:org.apache.aries.transaction/org.apache.aries.transaction.manager/0.1-incubating</bundle>
+        <bundle>mvn:org.apache.aries.transaction/org.apache.aries.transaction.manager/${aries-version}</bundle>
     </feature>
 
     <feature name="activemq-spring" version="${activemq-version}">
