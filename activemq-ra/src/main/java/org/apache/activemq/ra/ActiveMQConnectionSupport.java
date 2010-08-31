@@ -313,7 +313,7 @@ public class ActiveMQConnectionSupport {
     /**
      * @param value
      */
-    public void setRedeliveryBackOffMultiplier(Short value) {
+    public void setRedeliveryBackOffMultiplier(Double value) {
         if ( log.isDebugEnabled() ) {
             log.debug("setting [redeliveryBackOffMultiplier] to: " + value);
         }

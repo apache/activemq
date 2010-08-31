@@ -213,9 +213,9 @@ public class ActiveMQConnectionRequestInfo implements ConnectionRequestInfo, Ser
         return Boolean.valueOf(redeliveryPolicy().isUseExponentialBackOff());
     }
 
-    public void setRedeliveryBackOffMultiplier(Short value) {
+    public void setRedeliveryBackOffMultiplier(Double value) {
         if (value != null) {
-            redeliveryPolicy().setBackOffMultiplier(value.shortValue());
+            redeliveryPolicy().setBackOffMultiplier(value);
         }
     }
 
