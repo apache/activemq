@@ -50,22 +50,22 @@
                     <list>
                         <bean class="org.eclipse.jetty.webapp.WebAppContext">
                             <property name="contextPath" value="/admin" />
-                            <property name="resourceBase" value="${activemq.base}/webapps/admin" />
+                            <property name="resourceBase" value="${activemq.home}/webapps/admin" />
                             <property name="logUrlOnStart" value="true" />
                         </bean>
                         <bean class="org.eclipse.jetty.webapp.WebAppContext">
                             <property name="contextPath" value="/camel" />
-                            <property name="resourceBase" value="${activemq.base}/webapps/camel" />
+                            <property name="resourceBase" value="${activemq.home}/webapps/camel" />
                             <property name="logUrlOnStart" value="true" />
                         </bean>
                         <bean class="org.eclipse.jetty.webapp.WebAppContext">
                             <property name="contextPath" value="/demo" />
-                            <property name="resourceBase" value="${activemq.base}/webapps/demo" />
+                            <property name="resourceBase" value="${activemq.home}/webapps/demo" />
                             <property name="logUrlOnStart" value="true" />
                         </bean>
                         <bean class="org.eclipse.jetty.webapp.WebAppContext">
                             <property name="contextPath" value="/fileserver" />
-                            <property name="resourceBase" value="${activemq.base}/webapps/fileserver" />
+                            <property name="resourceBase" value="${activemq.home}/webapps/fileserver" />
                             <property name="logUrlOnStart" value="true" />
                             <property name="parentLoaderPriority" value="true" />
                         </bean>
@@ -76,7 +76,7 @@
                                     <value>index.html</value>
                                 </list>
                             </property>
-                            <property name="resourceBase" value="${activemq.base}/webapps/" />
+                            <property name="resourceBase" value="${activemq.home}/webapps/" />
                         </bean>
                         <bean id="defaultHandler" class="org.eclipse.jetty.server.handler.DefaultHandler">
                             <property name="serveIcon" value="false" />

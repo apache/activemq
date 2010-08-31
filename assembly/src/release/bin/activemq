@@ -295,7 +295,12 @@ if [ "$OSTYPE" = "cygwin" ];then
 fi
 
 # Set default classpath
+# Add instance conf dir before AMQ install conf dir to pick up instance-specific classpath entries first
 ACTIVEMQ_CLASSPATH="${ACTIVEMQ_CONFIG_DIR};${ACTIVEMQ_CLASSPATH}"
+if [ "${ACTIVEMQ_BASE}" != "${ACTIVEMQ_HOME}" ]; then
+    ACTIVEMQ_CLASSPATH="${ACTIVEMQ_BASE}/conf;${ACTIVEMQ_CLASSPATH}"
+fi
+
 
 
 # ------------------------------------------------------------------------
