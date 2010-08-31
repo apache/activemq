@@ -68,8 +68,17 @@ public class LocalTransaction extends Transaction {
         context.getTransactions().remove(xid);
         // Sync on transaction store to avoid out of order messages in the cursor
         // https://issues.apache.org/activemq/browse/AMQ-2594
-        transactionStore.commit(getTransactionId(), false,preCommitTask, postCommitTask);
-        this.waitPostCommitDone(postCommitTask);
+        try {
+            transactionStore.commit(getTransactionId(), false,preCommitTask, postCommitTask);
+            this.waitPostCommitDone(postCommitTask);
+        } catch (Throwable t) {
+            LOG.warn("Store COMMIT FAILED: ", t);
+            rollback();
+            XAException xae = new XAException("STORE COMMIT FAILED: Transaction rolled back.");
+            xae.errorCode = XAException.XA_RBOTHER;
+            xae.initCause(t);
+            throw xae;
+        }
     }
 
     @Override
