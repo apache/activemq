@@ -354,8 +354,9 @@ invokeJar(){
               -Dactivemq.home=\"${ACTIVEMQ_HOME}\" \
               -Dactivemq.base=\"${ACTIVEMQ_BASE}\" \
               $ACTIVEMQ_CYGWIN \
-              -jar \"${ACTIVEMQ_HOME}/bin/run.jar\" $COMMANDLINE_ARGS &"
-      RET="$?"
+              -jar \"${ACTIVEMQ_HOME}/bin/run.jar\" $COMMANDLINE_ARGS &
+              RET=\"\$?\"; APID=\"\$!\"; 
+              echo \$APID > $ACTIVEMQ_DATA_DIR/stop.pid" $DOIT_POSTFIX
    else
       $DOIT_PREFIX "$JAVACMD $ACTIVEMQ_OPTS $ACTIVEMQ_DEBUG_OPTS \
               -Dactivemq.classpath=\"${ACTIVEMQ_CLASSPATH}\" \
@@ -385,6 +386,23 @@ checkRunning(){
         return 2
        fi
        if (ps -p $(cat $ACTIVEMQ_PIDFILE)|grep java >/dev/null);then
+         return 0;
+       else
+         return 1;
+       fi
+    else
+         return 1;
+    fi
+}
+
+checkStopRunning(){
+    PID=$ACTIVEMQ_DATA_DIR/stop.pid
+    if [ -f "$PID" ]; then
+       if  [ -z "$(cat $PID)" ];then
+        echo "ERROR: Pidfile '$PID' exists but contains no pid"
+        return 2
+       fi
+       if (ps -p $(cat $PID)|grep java >/dev/null);then
          return 0;
        else
          return 1;
@@ -484,7 +502,16 @@ invoke_stop(){
        RET="$?"
        echo -n "INFO: Waiting at least $ACTIVEMQ_KILL_MAXSECONDS seconds for regular process termination of pid '$(cat $ACTIVEMQ_PIDFILE)' : "
        FOUND="0"
-       for ((i=1; i <= ACTIVEMQ_KILL_MAXSECONDS ; i++));do
+       for ((i=1; i <= ACTIVEMQ_KILL_MAXSECONDS ; i++));do   
+        
+         if (! checkStopRunning);then
+            if (! checkRunning); then
+               echo " FINISHED"
+               FOUND="1"              
+            fi
+            break
+         fi
+        
          if (checkRunning);then
             sleep 1
             echo -n "."
@@ -509,6 +536,7 @@ invoke_stop(){
        exit 0
     fi
     rm -f $ACTIVEMQ_PIDFILE >/dev/null 2>&1
+    rm -f $ACTIVEMQ_DATA_DIR/stop.pid >/dev/null 2>&1
     exit $RET
 }
 
