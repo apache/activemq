@@ -173,10 +173,10 @@ public class ServerSessionImpl implements ServerSession, InboundContext, Work, D
                 }
             } catch (Throwable e) {
                 stale = true;
-                if ( log.isInfoEnabled() ) {
+                if ( log.isDebugEnabled() ) {
+                    log.debug("Endpoint failed to process message.", e);
+                } else if ( log.isInfoEnabled() ) {
                     log.info("Endpoint failed to process message. Reason: " + e.getMessage());                    
-                } else if ( log.isDebugEnabled() ) {
-                log.debug("Endpoint failed to process message.", e);
                 }
             } finally {
                 InboundContextSupport.unregister(this);
