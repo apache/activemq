@@ -118,6 +118,14 @@
       <groupId>net.sf.josql</groupId>
       <artifactId>gentlyweb-utils</artifactId>
     </dependency>
+    <dependency>
+      <groupId>org.jasypt</groupId>
+      <artifactId>jasypt</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.ibm.icu</groupId>
+      <artifactId>icu4j</artifactId>
+    </dependency>  
   </dependencies>
 
   <build>

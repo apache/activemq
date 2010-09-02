@@ -49,6 +49,8 @@ public class ShellCommand extends AbstractCommand {
             "    browse          - Display selected messages in a specified destination.",
             "    journal-audit   - Allows you to view records stored in the persistent journal.",
             "    purge           - Delete selected destination's messages that matches the message selector",
+            "    encrypt         - Encrypts given text",
+            "    decrypt         - Decrypts given text",
             "",
             "Task Options (Options specific to each task):",
             "    --extdir <dir>  - Add the jar files in the directory to the classpath.",
@@ -126,6 +128,10 @@ public class ShellCommand extends AbstractCommand {
                 command = new PurgeCommand();
             } else if (taskToken.equals("journal-audit")) {
                 command = new AMQJournalToolCommand();
+            } else if (taskToken.equals("encrypt")) {
+                command = new EncryptCommand();
+            } else if (taskToken.equals("decrypt")) {
+                command = new DecryptCommand();
             } else if (taskToken.equals("help")) {
                 printHelp();
             } else {

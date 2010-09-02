@@ -138,7 +138,7 @@
         <groupId>org.codehaus.jettison</groupId>
         <artifactId>jettison</artifactId>
         <optional>true</optional>
-    </dependency>       
+    </dependency>
 
     <!-- for XML parsing -->
     <dependency>
@@ -229,6 +229,15 @@
       <artifactId>activemq-jmdns_1.0</artifactId>
       <optional>true</optional>
     </dependency>
+    
+    <dependency>
+      <groupId>org.jasypt</groupId>
+      <artifactId>jasypt</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.ibm.icu</groupId>
+      <artifactId>icu4j</artifactId>
+    </dependency> 
 
     <!-- database testing -->
     <dependency>

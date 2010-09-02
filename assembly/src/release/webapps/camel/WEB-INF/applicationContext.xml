@@ -25,11 +25,16 @@
        http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd
     ">
 
-    <bean id="placeholderConfig" class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
-        <property name="locations">
-                <value>file:${activemq.base}/conf/credentials.properties</value>
-        </property>  
-    </bean>
+    <!-- Allows us to use encrypted system properties as variables in this configuration file -->
+    <bean id="configurationEncryptor" class="org.jasypt.encryption.pbe.StandardPBEStringEncryptor"> 
+        <property name="algorithm" value="PBEWithMD5AndDES"/> 
+        <property name="password" value="activemq"/> 
+    </bean> 
+
+    <bean id="propertyConfigurer" class="org.jasypt.spring.properties.EncryptablePropertyPlaceholderConfigurer"> 
+        <constructor-arg ref="configurationEncryptor" /> 
+        <property name="location" value="file:${activemq.base}/conf/credentials.properties"/> 
+    </bean> 
 
     <camelContext id="camel" xmlns="http://camel.apache.org/schema/spring">
 
