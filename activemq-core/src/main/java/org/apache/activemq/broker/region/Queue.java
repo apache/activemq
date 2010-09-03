@@ -276,10 +276,17 @@ public class Queue extends BaseDestination implements Task, UsageListener {
             messages.setMemoryUsageHighWaterMark(getCursorMemoryHighWaterMark());
             if (messages.isRecoveryRequired()) {
                 store.recover(new MessageRecoveryListener() {
+                    double totalMessageCount = store.getMessageCount();
+                    int recoveredMessageCount = 0;
 
                     public boolean recoverMessage(Message message) {
                         // Message could have expired while it was being
                         // loaded..
+                        if ((++recoveredMessageCount % 50000) == 0) {
+                            LOG.info("cursor for " + getActiveMQDestination().getQualifiedName() + " has recovered "
+                                    + recoveredMessageCount + " messages. " +
+                                    (int)(recoveredMessageCount*100/totalMessageCount) + "% complete");
+                        }
                         if (message.isExpired()) {
                             if (broker.isExpired(message)) {
                                 messageExpired(createConnectionContext(), createMessageReference(message));
