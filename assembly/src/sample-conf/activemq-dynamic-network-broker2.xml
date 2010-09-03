@@ -22,11 +22,11 @@
     
     To run this example network of ActiveMQ brokers run
     
-    $ bin/activemq xbean:conf/activemq-dynamic-network-broker1.xml
+    $ bin/activemq console xbean:conf/activemq-dynamic-network-broker1.xml
     
     and
     
-    $ bin/activemq xbean:conf/activemq-dynamic-network-broker2.xml
+    $ bin/activemq console xbean:conf/activemq-dynamic-network-broker2.xml
     
     in separate consoles
  -->

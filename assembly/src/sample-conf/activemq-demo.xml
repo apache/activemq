@@ -19,7 +19,7 @@
     
     To run ActiveMQ with this configuration add xbean:conf/activemq-demo.xml to your command
     
-    e.g. $ bin/activemq xbean:conf/activemq-demo.xml
+    e.g. $ bin/activemq console xbean:conf/activemq-demo.xml
  -->
 <beans
   xmlns="http://www.springframework.org/schema/beans"

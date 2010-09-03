@@ -27,7 +27,7 @@
     e.g. ACTIVEMQ_OPTS="-Xmx1024M -Dorg.apache.activemq.UseDedicatedTaskRunner=false"
     
     To run ActiveMQ with this configuration add xbean:conf/activemq-scalability.xml to your command
-    e.g. $ bin/activemq xbean:conf/activemq-scalability.xml
+    e.g. $ bin/activemq console xbean:conf/activemq-scalability.xml
  -->
 <beans
   xmlns="http://www.springframework.org/schema/beans"
