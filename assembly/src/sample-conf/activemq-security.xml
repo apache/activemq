@@ -21,9 +21,11 @@
     
     http://activemq.apache.org/security.html
     
-    Beofre you can run this configuration, you need to set ACTIVEMQ_ENCRYPTION_PASSWORD environment variable, like
+    Before you can run this configuration, you need to set ACTIVEMQ_ENCRYPTION_PASSWORD environment variable, like
     
     $ export ACTIVEMQ_ENCRYPTION_PASSWORD=activemq
+    
+    For more information see: http://activemq.apache.org/encrypted-passwords.html
     
     To run ActiveMQ with this configuration add xbean:conf/activemq-security.xml to your command
     
@@ -50,6 +52,16 @@
       <constructor-arg ref="configurationEncryptor" /> 
       <property name="location" value="file:${activemq.base}/conf/credentials-enc.properties"/> 
   </bean> 
+  
+  <!--     
+    Use this configuration if you don't want to set encryptor password using environment variable
+    Note however, that with this solution your passwords can be easily decrypted once the encrypter password is known
+    
+  <bean id="configurationEncryptor" class="org.jasypt.encryption.pbe.StandardPBEStringEncryptor">
+     <property name="algorithm" value="PBEWithMD5AndDES"/>
+     <property name="password" value="activemq"/>
+  </bean> 
+  -->
 
   <broker useJmx="true" persistent="false" xmlns="http://activemq.apache.org/schema/core" destroyApplicationContextOnStop="true">
 
