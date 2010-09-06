@@ -450,12 +450,22 @@ public class BrokerService implements Service {
     // Service interface
     // -------------------------------------------------------------------------
 
+    protected boolean shouldAutostart() {
+        return true;
+    }
+
     /**
      *
      * @throws Exception
      * @org. apache.xbean.InitMethod
      */
     @PostConstruct
+    public void autoStart() throws Exception {
+        if(shouldAutostart()) {
+            start();
+        }
+    }
+
     public void start() throws Exception {
         if (stopped.get() || !started.compareAndSet(false, true)) {
             // lets just ignore redundant start() calls

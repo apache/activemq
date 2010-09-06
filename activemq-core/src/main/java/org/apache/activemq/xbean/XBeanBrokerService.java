@@ -56,9 +56,14 @@ public class XBeanBrokerService extends BrokerService {
     @PostConstruct
     public void afterPropertiesSet() throws Exception {
         ensureSystemUsageHasStore();
-        if (start) {
+        if (shouldAutostart()) {
             start();
         }
+    }
+
+    @Override
+    protected boolean shouldAutostart() {
+        return start;
     }
 
     private void ensureSystemUsageHasStore() throws IOException {
