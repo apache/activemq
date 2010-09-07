@@ -321,7 +321,12 @@ fi
 invokeJar(){
    local PIDFILE="$1"
    local RET="1"
-   local CUSER="$(whoami)"
+   local CUSER="$(whoami 2>/dev/null)"
+
+   # Solaris fix
+   if ( ! [ $? -eq 0 ] ) ; then
+    local CUSER="$(/usr/ucb/whoami)"
+   fi
 
    if ( ! [ -f "${ACTIVEMQ_HOME}/bin/run.jar" ] );then
     echo "ERROR: '${ACTIVEMQ_HOME}/bin/run.jar' does not exist"
