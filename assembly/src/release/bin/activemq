@@ -35,7 +35,7 @@ ACTIVEMQ_CONFIGS="/etc/default/activemq $HOME/.activemqrc"
 COMMANDLINE_ARGS="$@"
 
 # For using instances
-if ( basename $0 | grep -q "activemq-instance-" );then
+if ( basename $0 | grep "activemq-instance-" > /dev/null);then
    INST="$(basename $0|sed 's/^activemq-instance-//;s/\.sh$//')"
    ACTIVEMQ_CONFIGS="/etc/default/activemq-instance-${INST} $HOME/.activemqrc-instance-${INST}"
    echo "INFO: Using alternative activemq configuration files: $ACCTIVEMQ_CONFIGS"
