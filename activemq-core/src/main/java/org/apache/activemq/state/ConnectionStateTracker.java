@@ -674,8 +674,9 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
         }
     }
 
-    public void transportInterrupted() {
-        for (ConnectionState connectionState : connectionStates.values()) {
+    public void transportInterrupted(ConnectionId connectionId) {
+        ConnectionState connectionState = connectionStates.get(connectionId);
+        if (connectionState != null) {
             connectionState.setConnectionInterruptProcessingComplete(false);
         }
     }

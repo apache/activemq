@@ -51,6 +51,8 @@ public class FailoverStaticNetworkTest {
     
     protected BrokerService createBroker(String scheme, String listenPort, String[] networkToPorts) throws Exception {
         BrokerService broker = new BrokerService();
+        broker.setUseJmx(true);
+        broker.getManagementContext().setCreateConnector(false);
         broker.setSslContext(sslContext);
         broker.setDeleteAllMessagesOnStartup(true);
         broker.setBrokerName("Broker_" + listenPort);
@@ -68,19 +70,57 @@ public class FailoverStaticNetworkTest {
     }
   
     @Before
-    public void init() throws Exception {
+    public void setUp() throws Exception {
         KeyManager[] km = SslBrokerServiceTest.getKeyManager();
         TrustManager[] tm = SslBrokerServiceTest.getTrustManager();
         sslContext = new SslContext(km, tm, null);
     }
     
     @After
-    public void cleanup() throws Exception {
+    public void tearDown() throws Exception {
         brokerB.stop();
         brokerB.waitUntilStopped();
         
         brokerA.stop();
         brokerA.waitUntilStopped();
+    }
+
+    @Test
+    public void testSendReceiveAfterReconnect() throws Exception {
+        brokerA = createBroker("tcp", "61617", null);
+        brokerA.start();
+        brokerB = createBroker("tcp", "62617", new String[]{"61617"});
+        brokerB.start();
+        doTestNetworkSendReceive();
+
+        LOG.info("stopping brokerA");
+        brokerA.stop();
+        brokerA.waitUntilStopped();
+
+        LOG.info("restarting brokerA");
+        brokerA = createBroker("tcp", "61617", null);
+        brokerA.start();
+
+        doTestNetworkSendReceive();
+    }
+
+    @Test
+    public void testSendReceiveFailover() throws Exception {
+        brokerA = createBroker("tcp", "61617", null);
+        brokerA.start();
+        brokerB = createBroker("tcp", "62617", new String[]{"61617", "63617"});
+        brokerB.start();
+        doTestNetworkSendReceive();
+
+        LOG.info("stopping brokerA");
+        brokerA.stop();
+        brokerA.waitUntilStopped();
+
+        LOG.info("restarting brokerA");
+        brokerA = createBroker("tcp", "63617", null);
+        brokerA.start();
+
+        doTestNetworkSendReceive();
     }
 
     /**
@@ -95,7 +135,7 @@ public class FailoverStaticNetworkTest {
         brokerB = createBroker("tcp", "62617", new String[]{"61617","1111"});
         brokerB.start();
   
-        testNetworkSendReceive();
+        doTestNetworkSendReceive();
     }
 
     @Test
@@ -106,28 +146,35 @@ public class FailoverStaticNetworkTest {
         brokerB = createBroker("ssl", "62617", new String[]{"61617", "1111"});
         brokerB.start();
   
-        testNetworkSendReceive();
+        doTestNetworkSendReceive();
     }
 
-    private void testNetworkSendReceive() throws Exception, JMSException {
-        LOG.info("Creating Consumer on the networked broker ...");
+    private void doTestNetworkSendReceive() throws Exception, JMSException {
+        LOG.info("Creating Consumer on the networked brokerA ...");
         
         SslContext.setCurrentSslContext(sslContext);
-        // Create a consumer on brokerB
+        // Create a consumer on brokerA
         ConnectionFactory consFactory = createConnectionFactory(brokerA);
         Connection consConn = consFactory.createConnection();
         consConn.start();
         Session consSession = consConn.createSession(false, Session.AUTO_ACKNOWLEDGE);
         ActiveMQDestination destination = (ActiveMQDestination) consSession.createQueue(DESTINATION_NAME);
         final MessageConsumer consumer = consSession.createConsumer(destination);
-        
+
+        LOG.info("publishing to brokerB");
+
         sendMessageTo(destination, brokerB);
         
-        assertTrue("consumer got message", Wait.waitFor(new Wait.Condition() {
+        boolean gotMessage = Wait.waitFor(new Wait.Condition() {
             public boolean isSatisified() throws Exception {
                 return consumer.receive(1000) != null;
             }      
-        }));
+        });
+        try {
+            consConn.close();
+        } catch (JMSException ignored) {
+        }
+        assertTrue("consumer on A got message", gotMessage);
     }
 
     private void sendMessageTo(ActiveMQDestination destination, BrokerService brokerService) throws Exception {

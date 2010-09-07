@@ -1872,6 +1872,8 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
         if (LOG.isDebugEnabled()) {
             LOG.debug("transport interrupted, dispatchers: " + transportInterruptionProcessingComplete.getCount());
         }
+        signalInterruptionProcessingNeeded();
+
         for (Iterator<ActiveMQSession> i = this.sessions.iterator(); i.hasNext();) {
             ActiveMQSession s = i.next();
             s.clearMessagesInProgress();
@@ -2315,6 +2317,17 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
                 }
             }
 
+        }
+    }
+
+    private void signalInterruptionProcessingNeeded() {
+        FailoverTransport failoverTransport = transport.narrow(FailoverTransport.class);
+        if (failoverTransport != null) {
+            failoverTransport.getStateTracker().transportInterrupted(this.getConnectionInfo().getConnectionId());
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("notified failover transport (" + failoverTransport
+                        + ") of pending interruption processing for: " + this.getConnectionInfo().getConnectionId());
+            }
         }
     }
 
