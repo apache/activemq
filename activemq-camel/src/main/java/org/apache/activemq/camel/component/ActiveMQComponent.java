@@ -38,7 +38,7 @@ public class ActiveMQComponent extends JmsComponent {
     private CamelEndpointLoader endpointLoader;
 
     /**
-     * Creates an <a href="http://activemq.apache.org/camel/activemq.html">ActiveMQ Component</a>
+     * Creates an <a href="http://camel.apache.org/activemq.html">ActiveMQ Component</a>
      *
      * @return the created component
      */
@@ -47,7 +47,7 @@ public class ActiveMQComponent extends JmsComponent {
     }
 
     /**
-     * Creates an <a href="http://activemq.apache.org/camel/activemq.html">ActiveMQ Component</a>
+     * Creates an <a href="http://camel.apache.org/activemq.html">ActiveMQ Component</a>
      * connecting to the given <a href="http://activemq.apache.org/configuring-transports.html">broker URL</a>
      *
      * @param brokerURL the URL to connect to

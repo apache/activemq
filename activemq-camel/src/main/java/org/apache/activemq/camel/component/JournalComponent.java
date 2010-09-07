@@ -24,7 +24,7 @@ import java.io.File;
 import java.util.Map;
 
 /**
- * The <a href="http://activemq.apache.org/camel/activemq.html">ActiveMQ Component</a>
+ * The <a href="http://camel.apache.org/activemq-journal.html">ActiveMQ Journal Component</a>
  *
  * @version $Revision$
  */
