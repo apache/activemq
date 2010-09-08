@@ -63,18 +63,33 @@ public class XATransaction extends Transaction {
             checkForPreparedState(onePhase);
             doPrePrepare();
             setStateFinished();
-            transactionStore.commit(getTransactionId(), false, preCommitTask,postCommitTask);
-            waitPostCommitDone(postCommitTask);
+            storeCommit(getTransactionId(), false, preCommitTask, postCommitTask);
             break;
         case PREPARED_STATE:
             // 2 phase commit, work done.
             // We would record commit here.
             setStateFinished();
-            transactionStore.commit(getTransactionId(), true, preCommitTask,postCommitTask);
-            waitPostCommitDone(postCommitTask);
+            storeCommit(getTransactionId(), true, preCommitTask, postCommitTask);
             break;
         default:
             illegalStateTransition("commit");
+        }
+    }
+
+    private void storeCommit(TransactionId txid, boolean wasPrepared, Runnable preCommit,Runnable postCommit)
+            throws XAException, IOException {
+        try {
+            transactionStore.commit(getTransactionId(), wasPrepared, preCommitTask, postCommitTask);
+            waitPostCommitDone(postCommitTask);
+        } catch (XAException xae) {
+            throw xae;
+        } catch (Throwable t) {
+            LOG.warn("Store COMMIT FAILED: ", t);
+            rollback();
+            XAException xae = new XAException("STORE COMMIT FAILED: Transaction rolled back.");
+            xae.errorCode = XAException.XA_RBOTHER;
+            xae.initCause(t);
+            throw xae;
         }
     }
 
@@ -128,6 +143,11 @@ public class XATransaction extends Transaction {
         case PREPARED_STATE:
             // 2 phase rollback work done.
             setStateFinished();
+            transactionStore.rollback(getTransactionId());
+            doPostRollback();
+            break;
+        case FINISHED_STATE:
+            // failure to commit
             transactionStore.rollback(getTransactionId());
             doPostRollback();
             break;

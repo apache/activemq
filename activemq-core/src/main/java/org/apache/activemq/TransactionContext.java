@@ -520,6 +520,19 @@ public class TransactionContext implements XAResource {
             }
 
         } catch (JMSException e) {
+            LOG.warn("commit of: " + x + " failed with: " + e, e);
+            List<TransactionContext> l = ENDED_XA_TRANSACTION_CONTEXTS.remove(x);
+            if (l != null && !l.isEmpty()) {
+                for (TransactionContext ctx : l) {
+                    try {
+                        ctx.afterRollback();
+                    } catch (Throwable ignored) {
+                        if (LOG.isDebugEnabled()) {
+                            LOG.debug("failed to firing afterRollback callbacks commit failure, txid: " + x + ", context: " + ctx, ignored);
+                        }
+                    }
+                }
+            }
             throw toXAException(e);
         }
 

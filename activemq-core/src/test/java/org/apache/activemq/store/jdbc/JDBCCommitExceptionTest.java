@@ -48,19 +48,30 @@ public class JDBCCommitExceptionTest extends TestCase {
 
     private static final Log LOG = LogFactory.getLog(JDBCCommitExceptionTest.class);
 
-    private static final int messagesExpected = 10;
-    private ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(
+    protected static final int messagesExpected = 10;
+    protected ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(
             "tcp://localhost:61616?jms.prefetchPolicy.all=0&jms.redeliveryPolicy.maximumRedeliveries="+messagesExpected); 
-    private BrokerService broker;
-    private EmbeddedDataSource dataSource;
-    private java.sql.Connection dbConnection;
-    private MyPersistenceAdapter jdbc;
+    protected BrokerService broker;
+    protected EmbeddedDataSource dataSource;
+    protected java.sql.Connection dbConnection;
+    protected BrokenPersistenceAdapter jdbc;
 
-    public void testSqlException() throws Exception {
+
+    public void setUp() throws Exception {
         broker = createBroker();
         broker.start();
+    }
 
 
+    public void tearDown() throws Exception {
+        broker.stop();
+    }
+
+    public void testSqlException() throws Exception {
+        doTestSqlException();
+    }
+
+    public void doTestSqlException() throws Exception {
         sendMessages(messagesExpected);
         int messagesReceived = receiveMessages(messagesExpected);
 
@@ -144,10 +155,9 @@ public class JDBCCommitExceptionTest extends TestCase {
     }
 
     protected BrokerService createBroker() throws Exception {
-        Properties p = System.getProperties();
 
         BrokerService broker = new BrokerService();
-        jdbc = new MyPersistenceAdapter();
+        jdbc = new BrokenPersistenceAdapter();
 
         dataSource = new EmbeddedDataSource();
         dataSource.setDatabaseName("target/derbyDb");
@@ -162,27 +172,6 @@ public class JDBCCommitExceptionTest extends TestCase {
         broker.addConnector("tcp://localhost:61616");
 
         return broker;
-    }
-
-    class MyPersistenceAdapter extends JDBCPersistenceAdapter {
-
-        private  final Log LOG = LogFactory.getLog(MyPersistenceAdapter.class);
-
-        private boolean shouldBreak = false;
-
-        @Override
-        public void commitTransaction(ConnectionContext context) throws IOException {
-            if ( shouldBreak ) {
-                LOG.warn("Throwing exception on purpose");
-                throw new IOException("Breaking on purpose");
-            }
-            LOG.debug("in commitTransaction");
-            super.commitTransaction(context);
-        }
-
-        public void setShouldBreak(boolean shouldBreak) {
-            this.shouldBreak = shouldBreak;
-        }
     }
 
 }
