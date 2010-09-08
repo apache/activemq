@@ -2315,7 +2315,7 @@ public class BrokerService implements Service {
      */
     public File getSchedulerDirectoryFile() {
         if (this.schedulerDirectoryFile == null) {
-            this.schedulerDirectoryFile = new File(IOHelper.getDefaultDataDirectory(),"scheduler");
+            this.schedulerDirectoryFile = new File(getBrokerDataDirectory(), "scheduler");
         }
         return schedulerDirectoryFile;
     }
