@@ -43,8 +43,8 @@ import org.apache.activemq.ActiveMQConnectionFactory;
  */
 public class ManagedConnectionFactoryTest extends TestCase {
 
-    private static final String DEFAULT_HOST = "vm://localhost?broker.persistent=false";
-    private static final String REMOTE_HOST = "vm://remotehost?broker.persistent=false";
+    private static final String DEFAULT_HOST = "vm://localhost?broker.persistent=false&broker.schedulerSupport=false";
+    private static final String REMOTE_HOST = "vm://remotehost?broker.persistent=false&broker.schedulerSupport=false";
     private ActiveMQManagedConnectionFactory managedConnectionFactory;
 
     /**
