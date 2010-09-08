@@ -18,6 +18,7 @@ package org.apache.activemq.web;
 
 import javax.jms.TextMessage;
 
+import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.eclipse.jetty.client.ContentExchange;
@@ -77,6 +78,32 @@ public class RestTest extends JettyTestSupport {
         httpClient.send(contentExchange);
         contentExchange.waitForDone();
         assertEquals("test2", contentExchange.getResponseContent());
+	}
+	
+	// test for https://issues.apache.org/activemq/browse/AMQ-2827
+	public void testCorrelation() throws Exception {
+	    for (int i = 0; i < 200; i++) {
+            String correlId = "RESTY" + RandomStringUtils.randomNumeric(10);
+            
+            TextMessage message = session.createTextMessage(correlId);
+            message.setStringProperty("correlationId", correlId);
+            message.setJMSCorrelationID(correlId);
+            
+            LOG.info("Sending: " + correlId);
+            
+            producer.send(message);
+            
+            HttpClient httpClient = new HttpClient();
+            httpClient.start();
+            ContentExchange contentExchange = new ContentExchange();
+            httpClient.setConnectorType(HttpClient.CONNECTOR_SELECT_CHANNEL);
+            contentExchange.setURL("http://localhost:8080/message/test?readTimeout=1000&type=queue&clientId=test");
+            httpClient.send(contentExchange);
+            contentExchange.waitForDone();
+            LOG.info("Received: [" + contentExchange.getResponseStatus() + "] " + contentExchange.getResponseContent());
+            assertEquals(200, contentExchange.getResponseStatus());
+            assertEquals(correlId, contentExchange.getResponseContent());
+	    }
 	}
 
 }
