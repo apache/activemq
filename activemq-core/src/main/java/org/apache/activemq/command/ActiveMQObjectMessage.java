@@ -36,6 +36,7 @@ import org.apache.activemq.util.ByteArrayOutputStream;
 import org.apache.activemq.util.ByteSequence;
 import org.apache.activemq.util.ClassLoadingAwareObjectInputStream;
 import org.apache.activemq.util.JMSExceptionSupport;
+import org.apache.activemq.wireformat.WireFormat;
 
 /**
  * An <CODE>ObjectMessage</CODE> object is used to send a message that
@@ -191,6 +192,13 @@ public class ActiveMQObjectMessage extends ActiveMQMessage implements ObjectMess
             }
         }
         return this.object;
+    }
+
+    @Override
+    public void beforeMarshall(WireFormat wireFormat) throws IOException {
+        super.beforeMarshall(wireFormat);
+        // may have initiated on vm transport with deferred marshalling
+        storeContent();
     }
 
     public void onMessageRolledBack() {

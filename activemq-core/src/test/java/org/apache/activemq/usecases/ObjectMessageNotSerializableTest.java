@@ -16,6 +16,10 @@
  */
 package org.apache.activemq.usecases;
 
+import java.util.Vector;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import javax.jms.Connection;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
@@ -30,6 +34,7 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQObjectMessage;
 import org.apache.activemq.command.ActiveMQQueue;
+import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -39,14 +44,8 @@ public class ObjectMessageNotSerializableTest extends CombinationTestSupport {
     private static final Log LOG = LogFactory.getLog(ObjectMessageNotSerializableTest.class);
     
     BrokerService broker;
-    Connection connection;
-    ActiveMQSession session;
-    MessageProducer producer;
-    MessageConsumer consumer;
-    public ActiveMQDestination destination = new ActiveMQQueue("test");
-
-    int numReceived = 0;
-    boolean writeObjectCalled, readObjectCalled, readObjectNoDataCalled;
+    AtomicInteger numReceived = new AtomicInteger(0);
+    final Vector<Throwable> exceptions = new Vector<Throwable>();
 
     public static Test suite() {
         return suite(ObjectMessageNotSerializableTest.class);
@@ -57,74 +56,210 @@ public class ObjectMessageNotSerializableTest extends CombinationTestSupport {
     }
 	
 	protected void setUp() throws Exception {
+        exceptions.clear();
         broker = createBroker();
     }
 	
 	public void testSendNotSerializeableObjectMessage() throws Exception {
-		
-		ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("vm://localhost");
-        factory.setOptimizedMessageDispatch(true);
-        factory.setObjectMessageSerializationDefered(true);
-        factory.setCopyMessageOnSend(false);
 
-
-		connection = factory.createConnection();
-		session = (ActiveMQSession)connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-		producer = session.createProducer(destination);
-
-		consumer = session.createConsumer(destination);
-		connection.start();
-		
+        final  ActiveMQDestination destination = new ActiveMQQueue("testQ");
         final MyObject obj = new MyObject("A message");
 
-		Thread consumerThread = new Thread("Consumer Thread") {
+        final CountDownLatch consumerStarted = new CountDownLatch(1);
+
+		Thread vmConsumerThread = new Thread("Consumer Thread") {
 			public void run() {
 				try {
-                    ActiveMQObjectMessage message = (ActiveMQObjectMessage)consumer.receive();
+                    ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("vm://localhost");
+                    factory.setOptimizedMessageDispatch(true);
+                    factory.setObjectMessageSerializationDefered(true);
+                    factory.setCopyMessageOnSend(false);
+
+                    Connection connection = factory.createConnection();
+		            Session session = (ActiveMQSession)connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+		            MessageConsumer consumer = session.createConsumer(destination);
+		            connection.start();
+                    consumerStarted.countDown();
+                    ActiveMQObjectMessage message = (ActiveMQObjectMessage)consumer.receive(30000);
                     if ( message != null ) {
-                        numReceived++;
                         MyObject object = (MyObject)message.getObject();
                         LOG.info("Got message " + object.getMessage());
+                        numReceived.incrementAndGet();
                     }
 					consumer.close();
 				} catch (Throwable ex) {
-					ex.printStackTrace();
+					exceptions.add(ex);
 				}
 			}
 		};
-		
-        consumerThread.start();
-		
+        vmConsumerThread.start();
+
 		Thread producingThread = new Thread("Producing Thread") {
             public void run() {
                 try {
+                    ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("vm://localhost");
+                    factory.setOptimizedMessageDispatch(true);
+                    factory.setObjectMessageSerializationDefered(true);
+                    factory.setCopyMessageOnSend(false);
+
+                    Connection connection = factory.createConnection();
+		            Session session = (ActiveMQSession)connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+		            MessageProducer producer = session.createProducer(destination);
                     ActiveMQObjectMessage message = (ActiveMQObjectMessage)session.createObjectMessage();
                     message.setObject(obj);
                     producer.send(message);
                 	producer.close();
                 } catch (Throwable ex) {
-                    ex.printStackTrace();
+                    exceptions.add(ex);
                 }
             }
 		};
-		
+
+        assertTrue("consumers started", consumerStarted.await(10, TimeUnit.SECONDS));
+		producingThread.start();
+
+        vmConsumerThread.join();
+        producingThread.join();
+
+        assertEquals("writeObject called", 0, obj.getWriteObjectCalled());
+        assertEquals("readObject called", 0, obj.getReadObjectCalled());
+        assertEquals("readObjectNoData called", 0, obj.getReadObjectNoDataCalled());
+
+        assertEquals("Got expected messages", 1, numReceived.get());
+        assertTrue("no unexpected exceptions: " + exceptions, exceptions.isEmpty());
+	}
+
+    public void testSendNotSerializeableObjectMessageOverTcp() throws Exception {
+        final  ActiveMQDestination destination = new ActiveMQTopic("testTopic");
+        final MyObject obj = new MyObject("A message");
+
+        final CountDownLatch consumerStarted = new CountDownLatch(3);
+        final Vector<Throwable> exceptions = new Vector<Throwable>();
+		Thread vmConsumerThread = new Thread("Consumer Thread") {
+			public void run() {
+				try {
+                    ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("vm://localhost");
+                    factory.setOptimizedMessageDispatch(true);
+                    factory.setObjectMessageSerializationDefered(true);
+                    factory.setCopyMessageOnSend(false);
+
+                    Connection connection = factory.createConnection();
+		            Session session = (ActiveMQSession)connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+		            MessageConsumer consumer = session.createConsumer(destination);
+		            connection.start();
+                    consumerStarted.countDown();
+                    ActiveMQObjectMessage message = (ActiveMQObjectMessage)consumer.receive(30000);
+                    if ( message != null ) {                  
+                        MyObject object = (MyObject)message.getObject();
+                        LOG.info("Got message " + object.getMessage());
+                        numReceived.incrementAndGet();
+                    }
+					consumer.close();
+				} catch (Throwable ex) {
+					exceptions.add(ex);
+				}
+			}
+		};
+        vmConsumerThread.start();
+
+        Thread tcpConsumerThread = new Thread("Consumer Thread") {
+			public void run() {
+				try {
+
+                    ActiveMQConnectionFactory factory =
+                            new ActiveMQConnectionFactory(broker.getTransportConnectors().get(0).getConnectUri());
+                    factory.setOptimizedMessageDispatch(true);
+
+                    Connection connection = factory.createConnection();
+		            Session session = (ActiveMQSession)connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+		            MessageConsumer consumer = session.createConsumer(destination);
+		            connection.start();
+                    consumerStarted.countDown();
+                    ActiveMQObjectMessage message = (ActiveMQObjectMessage)consumer.receive(30000);
+                    if ( message != null ) {
+                        MyObject object = (MyObject)message.getObject();
+                        LOG.info("Got message " + object.getMessage());
+                        numReceived.incrementAndGet();
+                        assertEquals("readObject called", 1, object.getReadObjectCalled());
+                    }
+					consumer.close();
+				} catch (Throwable ex) {
+					exceptions.add(ex);
+				}
+			}
+		};
+        tcpConsumerThread.start();
+
+
+        Thread notherVmConsumerThread = new Thread("Consumer Thread") {
+            public void run() {
+                try {
+                    ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("vm://localhost");
+                    factory.setOptimizedMessageDispatch(true);
+                    factory.setObjectMessageSerializationDefered(true);
+                    factory.setCopyMessageOnSend(false);
+
+                    Connection connection = factory.createConnection();
+                    Session session = (ActiveMQSession)connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+                    MessageConsumer consumer = session.createConsumer(destination);
+                    connection.start();
+                    consumerStarted.countDown();
+                    ActiveMQObjectMessage message = (ActiveMQObjectMessage)consumer.receive(30000);
+                    if ( message != null ) {
+                        MyObject object = (MyObject)message.getObject();
+                        LOG.info("Got message " + object.getMessage());
+                        numReceived.incrementAndGet();
+                    }
+                    consumer.close();
+                } catch (Throwable ex) {
+                    exceptions.add(ex);
+                }
+            }
+        };
+        notherVmConsumerThread.start();
+
+		Thread producingThread = new Thread("Producing Thread") {
+            public void run() {
+                try {
+                    ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("vm://localhost");
+                    factory.setOptimizedMessageDispatch(true);
+                    factory.setObjectMessageSerializationDefered(true);
+                    factory.setCopyMessageOnSend(false);
+
+                    Connection connection = factory.createConnection();
+		            Session session = (ActiveMQSession)connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+		            MessageProducer producer = session.createProducer(destination);
+                    ActiveMQObjectMessage message = (ActiveMQObjectMessage)session.createObjectMessage();
+                    message.setObject(obj);
+                    producer.send(message);
+                	producer.close();
+                } catch (Throwable ex) {
+                    exceptions.add(ex);
+                }
+            }
+		};
+
+        assertTrue("consumers started", consumerStarted.await(10, TimeUnit.SECONDS));
 		producingThread.start();
 		
-        consumerThread.join();
+        vmConsumerThread.join();
+        tcpConsumerThread.join();
+        notherVmConsumerThread.join();
         producingThread.join();
-        session.close();
 
-        assertFalse("writeObject called", obj.getWriteObjectCalled());
-        assertFalse("readObject called", obj.getReadObjectCalled());
-        assertFalse("readObjectNoData called", obj.getReadObjectNoDataCalled());
+        assertEquals("writeObject called", 1, obj.getWriteObjectCalled());
+        assertEquals("readObject called", 0, obj.getReadObjectCalled());
+        assertEquals("readObjectNoData called", 0, obj.getReadObjectNoDataCalled());
 
+        assertEquals("Got expected messages", 3, numReceived.get());
+        assertTrue("no unexpected exceptions: " + exceptions, exceptions.isEmpty());
 	}
 
 	private BrokerService createBroker() throws Exception {
 	    BrokerService broker = new BrokerService();
         broker.setPersistent(false);
         broker.setUseJmx(false);
-        broker.addConnector("vm://localhost");
+        broker.addConnector("tcp://localhost:0");
         
         broker.start();
         broker.waitUntilStarted();
@@ -132,7 +267,6 @@ public class ObjectMessageNotSerializableTest extends CombinationTestSupport {
 	}
 
 	protected void tearDown() throws Exception {
-		connection.stop();
 		broker.stop();
 		broker.waitUntilStopped();
 	}

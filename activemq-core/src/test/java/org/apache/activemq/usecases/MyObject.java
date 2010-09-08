@@ -22,11 +22,14 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.IOException;
 import java.io.ObjectStreamException;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class MyObject implements Serializable {
 
     private String message;
-    private boolean writeObjectCalled, readObjectCalled, readObjectNoDataCalled;
+    private AtomicInteger writeObjectCalled = new AtomicInteger(0);
+    private AtomicInteger readObjectCalled = new AtomicInteger(0);
+    private AtomicInteger readObjectNoDataCalled = new AtomicInteger(0);
 
     public MyObject(String message) {
         this.setMessage(message);
@@ -41,32 +44,29 @@ public class MyObject implements Serializable {
     }
 
     private void writeObject(java.io.ObjectOutputStream out) throws IOException {
-        writeObjectCalled = true;
-        Thread.dumpStack();
+        writeObjectCalled.incrementAndGet();
         out.defaultWriteObject();
     }
 
     private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
-        readObjectCalled = true;
-        Thread.dumpStack();
         in.defaultReadObject();
+        readObjectCalled.incrementAndGet();        
     }
 
     private void readObjectNoData() throws ObjectStreamException {
-        Thread.dumpStack();
-        readObjectNoDataCalled = true;
+        readObjectNoDataCalled.incrementAndGet();
     }
 
-    public boolean getWriteObjectCalled() {
-        return writeObjectCalled;
+    public int getWriteObjectCalled() {
+        return writeObjectCalled.get();
     }
 
-    public boolean getReadObjectCalled() {
-        return readObjectCalled;
+    public int getReadObjectCalled() {
+        return readObjectCalled.get();
     }
 
-    public boolean getReadObjectNoDataCalled() {
-        return readObjectNoDataCalled;
+    public int getReadObjectNoDataCalled() {
+        return readObjectNoDataCalled.get();
     }
 }
 
