@@ -82,6 +82,7 @@ public class SchedulerBroker extends BrokerFilter implements JobListener {
     @Override
     public void start() throws Exception {
         this.started.set(true);
+        getInternalScheduler();
         super.start();
     }
 

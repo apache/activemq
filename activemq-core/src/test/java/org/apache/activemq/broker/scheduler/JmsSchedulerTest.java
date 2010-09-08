@@ -176,6 +176,36 @@ public class JmsSchedulerTest extends EmbeddedBrokerTestSupport {
         Thread.sleep(1000);
         assertEquals(NUMBER, count.get());
     }
+    
+    public void testScheduleRestart() throws Exception {
+        // send a message
+        Connection connection = createConnection();
+        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        connection.start();
+        MessageProducer producer = session.createProducer(destination);
+        TextMessage message = session.createTextMessage("test msg");
+        long time = 5000;
+        message.setLongProperty(ScheduledMessage.AMQ_SCHEDULED_DELAY, time);
+        producer.send(message);
+        producer.close();
+        
+        //restart broker
+        broker.stop();
+        broker.waitUntilStopped();
+        
+        broker = createBroker(false);
+        broker.start();
+        broker.waitUntilStarted();
+        
+        
+        // consume the message
+        connection = createConnection();
+        connection.start();
+        session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        MessageConsumer consumer = session.createConsumer(destination);
+        Message msg = consumer.receive(5000);
+        assertNotNull("Didn't receive the message", msg);
+    }
 
     @Override
     protected void setUp() throws Exception {
@@ -185,9 +215,15 @@ public class JmsSchedulerTest extends EmbeddedBrokerTestSupport {
 
     @Override
     protected BrokerService createBroker() throws Exception {
+        return createBroker(true);
+    }
+    
+    protected BrokerService createBroker(boolean delete) throws Exception {
         File schedulerDirectory = new File("target/scheduler");
-        IOHelper.mkdirs(schedulerDirectory);
-        IOHelper.deleteChildren(schedulerDirectory);
+        if (delete) {
+            IOHelper.mkdirs(schedulerDirectory);
+            IOHelper.deleteChildren(schedulerDirectory);
+        }
         BrokerService answer = new BrokerService();
         answer.setPersistent(isPersistent());
         answer.setDeleteAllMessagesOnStartup(true);
