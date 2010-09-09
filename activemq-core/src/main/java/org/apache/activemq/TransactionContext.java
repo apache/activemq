@@ -441,6 +441,19 @@ public class TransactionContext implements XAResource {
             return response.getResult();
 
         } catch (JMSException e) {
+            LOG.warn("prepare of: " + x + " failed with: " + e, e);
+            List<TransactionContext> l = ENDED_XA_TRANSACTION_CONTEXTS.remove(x);
+            if (l != null && !l.isEmpty()) {
+                for (TransactionContext ctx : l) {
+                    try {
+                        ctx.afterRollback();
+                    } catch (Throwable ignored) {
+                        if (LOG.isDebugEnabled()) {
+                            LOG.debug("failed to firing afterRollback callbacks on prepare failure, txid: " + x + ", context: " + ctx, ignored);
+                        }
+                    }
+                }
+            }
             throw toXAException(e);
         }
     }
