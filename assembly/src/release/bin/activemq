@@ -98,7 +98,9 @@ if [ ! -d "$ACTIVEMQ_DATA_DIR" ]; then
 fi
 
 # Location of the pidfile
-ACTIVEMQ_PIDFILE="$ACTIVEMQ_DATA_DIR/activemq.pid"
+if [ -z "$ACTIVEMQ_PIDFILE" ]; then
+  ACTIVEMQ_PIDFILE="$ACTIVEMQ_DATA_DIR/activemq.pid"
+fi
 
 # Location of the java installation
 # Specify the location of your java installation using JAVA_HOME, or specify the 
