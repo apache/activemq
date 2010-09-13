@@ -42,7 +42,7 @@
     <annogen-version>0.1.0</annogen-version>
     <ant-version>1.7.1</ant-version>
     <aopalliance-version>1.0</aopalliance-version>
-    <aries-version>0.1-r964701</aries-version>
+    <aries-version>0.2-incubating</aries-version>
     <axion-version>1.0-M3-dev</axion-version>
     <axis-version>1.2-RC1</axis-version>
     <camel-version>2.4.0</camel-version>
