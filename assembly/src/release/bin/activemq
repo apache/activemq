@@ -250,7 +250,7 @@ if [ "$OSTYPE" = "cygwin" ]; then
 fi
 
 # Detect the location of the java binary
-if [ -z "$JAVACMD" ] ; then
+if [ -z "$JAVACMD" ] || [ "$JAVACMD" = "auto" ] ; then
   if [ -n "$JAVA_HOME"  ] ; then
     if [ -x "$JAVA_HOME/jre/sh/java" ] ; then
       # IBM's JDK on AIX uses strange locations for the executables
