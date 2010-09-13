@@ -89,7 +89,9 @@ fi
 ACTIVEMQ_CONFIG_DIR="$ACTIVEMQ_HOME/conf"
 
 # Active MQ configuration directory
-ACTIVEMQ_DATA_DIR="$ACTIVEMQ_HOME/data"
+if [ -z "$ACTIVEMQ_DATA_DIR" ]; then
+  ACTIVEMQ_DATA_DIR="$ACTIVEMQ_HOME/data"
+fi
 
 if [ ! -d "$ACTIVEMQ_DATA_DIR" ]; then
     mkdir $ACTIVEMQ_DATA_DIR
