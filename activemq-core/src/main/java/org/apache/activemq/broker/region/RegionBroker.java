@@ -29,6 +29,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ThreadPoolExecutor;
 import javax.jms.InvalidClientIDException;
 import javax.jms.JMSException;
+import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.Connection;
@@ -320,9 +321,11 @@ public class RegionBroker extends EmptyBroker {
             switch (destination.getDestinationType()) {
             case ActiveMQDestination.QUEUE_TYPE:
                 queueRegion.removeDestination(context, destination, timeout);
+                removeAdvisoryTopics("Queue.", context, destination, timeout);
                 break;
             case ActiveMQDestination.TOPIC_TYPE:
                 topicRegion.removeDestination(context, destination, timeout);
+                removeAdvisoryTopics("Topic.", context, destination, timeout);
                 break;
             case ActiveMQDestination.TEMP_QUEUE_TYPE:
                 tempQueueRegion.removeDestination(context, destination, timeout);
@@ -334,8 +337,28 @@ public class RegionBroker extends EmptyBroker {
                 throw createUnknownDestinationTypeException(destination);
             }
             destinations.remove(destination);
+
         }
 
+    }
+
+    public void removeAdvisoryTopics(String destinationType, ConnectionContext context, ActiveMQDestination destination, long timeout) throws Exception {
+        if (this.brokerService.isAdvisorySupport()) {
+            String producerAdvisoryTopic = AdvisorySupport.PRODUCER_ADVISORY_TOPIC_PREFIX + destinationType + destination.getPhysicalName();
+            String consumerAdvisoryTopic = AdvisorySupport.CONSUMER_ADVISORY_TOPIC_PREFIX + destinationType + destination.getPhysicalName();
+
+            ActiveMQDestination dests[] = getDestinations();
+            for (ActiveMQDestination dest: dests) {
+                String name = dest.getPhysicalName();
+                if ( name.equals(producerAdvisoryTopic) || name.equals(consumerAdvisoryTopic) ) {
+                    try {
+                        removeDestination(context, dest, timeout);
+                    } catch (JMSException ignore) {
+                        // at least ignore the Unknown Destination Type JMSException
+                    }
+                }
+            }
+        }
     }
 
     @Override
