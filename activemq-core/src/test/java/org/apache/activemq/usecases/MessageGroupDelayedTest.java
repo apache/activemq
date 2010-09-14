@@ -99,6 +99,7 @@ public class MessageGroupDelayedTest extends JmsTestSupport {
       producer.close();
       session.close();
       connection.close();
+      broker.stop();
   }
   
   
