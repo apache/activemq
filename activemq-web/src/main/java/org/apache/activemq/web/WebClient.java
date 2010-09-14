@@ -157,7 +157,9 @@ public class WebClient implements HttpSessionActivationListener, HttpSessionBind
 
     public synchronized void close() {
         try {
-            closeConsumers();
+            if (consumers != null) {
+                closeConsumers();
+            }
             if (connection != null) {
                 connection.close();
             }
@@ -175,6 +177,7 @@ public class WebClient implements HttpSessionActivationListener, HttpSessionBind
                 consumers.clear();
             }
             consumers = null;
+
         }
     }
 

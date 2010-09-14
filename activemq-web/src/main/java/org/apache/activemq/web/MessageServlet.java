@@ -91,6 +91,17 @@ public class MessageServlet extends MessageServletSupport {
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         // lets turn the HTTP post into a JMS Message
         try {
+
+            String action = request.getParameter("action");
+            String clientId = request.getParameter("clientId");
+            if (action != null && clientId != null && action.equals("unsubscribe")) {
+                LOG.info("Unsubscribing client " + clientId);
+                WebClient client = getWebClient(request);
+                client.close();
+                clients.remove(clientId);
+                return;
+            }
+
             WebClient client = getWebClient(request);
 
             String text = getPostedMessageBody(request);

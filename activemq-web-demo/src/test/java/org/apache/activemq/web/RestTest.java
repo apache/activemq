@@ -17,12 +17,17 @@
 package org.apache.activemq.web;
 
 import javax.jms.TextMessage;
+import javax.management.ObjectName;
 
+import org.apache.activemq.broker.jmx.DestinationViewMBean;
+import org.apache.activemq.broker.jmx.SubscriptionViewMBean;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.eclipse.jetty.client.ContentExchange;
 import org.eclipse.jetty.client.HttpClient;
+
+import java.util.Set;
 
 public class RestTest extends JettyTestSupport {
     private static final Log LOG = LogFactory.getLog(RestTest.class);
@@ -105,5 +110,33 @@ public class RestTest extends JettyTestSupport {
             assertEquals(correlId, contentExchange.getResponseContent());
 	    }
 	}
+
+    public void testDisconnect() throws Exception {
+
+        producer.send(session.createTextMessage("test"));
+        HttpClient httpClient = new HttpClient();
+        httpClient.start();
+        ContentExchange contentExchange = new ContentExchange();
+        httpClient.setConnectorType(HttpClient.CONNECTOR_SELECT_CHANNEL);
+        contentExchange.setURL("http://localhost:8080/message/test?readTimeout=1000&type=queue&clientId=test");
+        httpClient.send(contentExchange);
+        contentExchange.waitForDone();
+        LOG.info("Received: [" + contentExchange.getResponseStatus() + "] " + contentExchange.getResponseContent());
+
+        contentExchange = new ContentExchange();
+        contentExchange.setMethod("POST");
+        contentExchange.setURL("http://localhost:8080/message/test?clientId=test&action=unsubscribe");
+        httpClient.send(contentExchange);
+        contentExchange.waitForDone();
+
+        httpClient.stop();
+
+
+
+        ObjectName name = new ObjectName("org.apache.activemq" + ":BrokerName=localhost,Type=Queue,Destination=test");
+        ObjectName query = new ObjectName("org.apache.activemq:BrokerName=localhost,Type=Subscription,destinationType=Queue,destinationName=test,*");
+        Set subs = broker.getManagementContext().queryNames(query, null);
+        assertEquals("Consumers not closed", 0 , subs.size());
+    }
 
 }
