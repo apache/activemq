@@ -122,6 +122,7 @@ public class StompAdvisoryTest extends TestCase {
     protected void tearDown() throws Exception {
         stompConnection.disconnect();
         stompConnection.close();
+        broker.stop();
 
     }
 
