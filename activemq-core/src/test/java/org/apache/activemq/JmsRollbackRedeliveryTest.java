@@ -41,14 +41,22 @@ public class JmsRollbackRedeliveryTest extends AutoFailTestSupport {
     final String brokerUrl = "vm://localhost?create=false";
     boolean consumerClose = true;
     boolean rollback = true;
+    BrokerService broker;
     
     public void setUp() throws Exception {
         setAutoFail(true);
         super.setUp();
-        BrokerService broker = new BrokerService();
+        broker = new BrokerService();
         broker.setPersistent(false);
         broker.setUseJmx(false);
         broker.start();
+    }
+
+    public void tearDown() throws Exception {
+        super.tearDown();
+        if (broker != null) {
+            broker.stop();
+        }
     }
     
 
