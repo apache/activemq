@@ -45,46 +45,40 @@ org.activemq.AmqAdapter = {
  *             - xhr:    The XmlHttpRequest object.
  *             - status: A text string of the status.
  *             - ex:     The exception that caused the error.
+ *  - headers: An object containing additional headers for the ajax request.
  */
 	ajax: function(uri, options) {
-		if (options.method == 'post') {
-			new Ajax.Request(uri, {
-				method: "post",
-				postBody: options.data,
-				onSuccess: options.success ? function(xhr, header) {
-					if (options.success) {
-						var ct = xhr.getResponseHeader("content-type");
-						var xml = ct && ct.indexOf("xml") >= 0;
-						var data = xml ? xhr.responseXML : xhr.responseText;
-						options.success(data);
-					}
-				} : function() {},
-				onFailure: options.error || function() {
-				},
-				onException: options.error || function() {
+		request = {
+			onSuccess: options.success ? function(xhr, header) {
+				if (options.success) {
+					var ct = xhr.getResponseHeader("content-type");
+					var xml = ct && ct.indexOf("xml") >= 0;
+					var data = xml ? xhr.responseXML : xhr.responseText;
+					options.success(data);
 				}
-			});
-		} else {
-			new Ajax.Request(uri, {
-				method: "get",
-				parameters: options.data,
-				onSuccess: function(xhr, header) {
-					if (options.success) {
-						var ct = xhr.getResponseHeader("content-type");
-						var xml = ct && ct.indexOf("xml") >= 0;
-						var data = xml ? xhr.responseXML : xhr.responseText;
-						options.success(data);
-					}
-				},
-				onFailure: options.error || function() {
-				},
-				onException: options.error || function() {
-				}
-			});
+			} : function() {},
+			onFailure: options.error || function() {
+			},
+			onException: options.error || function() {
+			}
 		}
+		
+		if( options.headers ) {
+			request.requestHeaders = options.headers;
+		}
+		
+		if (options.method == 'post') {
+			request.postBody = options.data;
+		} else {
+			request.parameters = options.data;
+			request.method = 'get';
+		}
+		
+		new Ajax.Request( uri, request );
 	},
 
 	log: function(message, exception) {
 		if (typeof console != 'undefined' && console.log) console.log(message);
 	}
+
 };

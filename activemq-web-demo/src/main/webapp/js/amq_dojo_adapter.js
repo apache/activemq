@@ -45,6 +45,7 @@ org.activemq.AmqAdapter = {
  *             - xhr:    The XmlHttpRequest object.
  *             - status: A text string of the status.
  *             - ex:     The exception that caused the error.
+ *  - headers: An object containing additional headers for the ajax request.
  */
 	ajax: function(uri, options) {
 		if (options.method == 'post') {
@@ -52,10 +53,11 @@ org.activemq.AmqAdapter = {
 				url: uri,
 				handleAs: "xml",
 				postData: options.data,
+				headers: options.headers,
 				load : options.success ? options.success : function() {},
 				error: options.error ? function(ex, ioargs) {
 						options.error(ioargs.xhr,ioargs.xhr.status, ex);
-					} : function() {}				
+					} : function() {}
 			});
 		} else {
 			if (options.data)
@@ -64,8 +66,9 @@ org.activemq.AmqAdapter = {
 				uri += options.data;
 			}
 			dojo.xhrGet({
-                                url: uri,
+				url: uri,
 				handleAs: "xml",
+				headers: options.headers,
 				load : options.success ? options.success : function() {},
 				error: options.error ? function(ex, ioargs) {
 						options.error(ioargs.xhr,ioargs.xhr.status, ex);
@@ -77,4 +80,5 @@ org.activemq.AmqAdapter = {
 	log: function(message, exception) {
 		if (typeof console != 'undefined' && console.log) console.log(message);
 	}
+
 };

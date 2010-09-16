@@ -146,19 +146,21 @@ org.activemq.Amq = function() {
 		adapter.ajax(uri, options);
 	};
 
-	var sendJmsMessage = function(destination, message, type) {
+	var sendJmsMessage = function(destination, message, type, headers) {
+		var message = {
+			destination: destination,
+			message: message,
+			messageType: type
+		};
 		// Add message to outbound queue
 		if (batchInProgress) {
-			messageQueue[messageQueue.length] = {
-				destination: destination,
-				message: message,
-				messageType: type
-			};
+			messageQueue[messageQueue.length] = {message:message, headers:headers};
 		} else {
 			org.activemq.Amq.startBatch();
 			adapter.ajax(uri, { method: 'post',
-				data: 'destination=' + destination + '&message=' + message + '&type=' + type,
+				data: buildParams( [message] ),
 				error: errorHandler,
+				headers: headers,
 				success: org.activemq.Amq.endBatch});
 		}
 	};
@@ -197,11 +199,30 @@ org.activemq.Amq = function() {
 
 		endBatch : function() {
 			if (messageQueue.length > 0) {
-				var body = buildParams(messageQueue);
-				messageQueue.length = 0;
+				var messagesToSend = [];
+				var messagesToQueue = [];
+				var outgoingHeaders = null;
+				
+				// we need to ensure that messages which set headers are sent by themselves.
+				// if 2 'listen' messages were sent together, and a 'selector' header were added to one of them,
+				//	 AMQ would add the selector to both 'listen' commands.
+				for(i=0;i<messageQueue.length;i++) {
+					// a message with headers should always be sent by itself.	if other messages have been added, send this one later.
+					if ( messageQueue[ i ].headers && messagesToSend.length == 0 ) {
+						messagesToSend[ messagesToSend.length ] = messageQueue[ i ].message;
+						outgoingHeaders = messageQueue[ i ].headers;
+					} else if ( ! messageQueue[ i ].headers && ! outgoingHeaders ) {
+						messagesToSend[ messagesToSend.length ] = messageQueue[ i ].message;
+					} else {
+						messagesToQueue[ messagesToQueue.length ] = messageQueue[ i ];
+					}
+				}
+				var body = buildParams(messagesToSend);
+				messageQueue = messagesToQueue;
 				org.activemq.Amq.startBatch();
 				adapter.ajax(uri, {
 					method: 'post',
+					headers: outgoingHeaders,
 					data: body,
 					success: org.activemq.Amq.endBatch, 
 					error: errorHandler});
@@ -218,15 +239,30 @@ org.activemq.Amq = function() {
 
 		// Listen on a channel or topic.
 		// handler must be a function taking a message argument
-		addListener : function(id, destination, handler) {
+		//
+		// Supported options:
+		//  selector: If supplied, it should be a SQL92 string like "property-name='value'"
+		//            http://activemq.apache.org/selectors.html
+		//
+		// Example: addListener( 'handler', 'topic://test-topic', function(msg) { return msg; }, { selector: "property-name='property-value'" } )
+		addListener : function(id, destination, handler, options) {
 			messageHandlers[id] = handler;
-			sendJmsMessage(destination, id, 'listen');
+			var headers = options && options.selector ? {selector:options.selector} : null;
+			sendJmsMessage(destination, id, 'listen', headers);
 		},
 
 		// remove Listener from channel or topic.
 		removeListener : function(id, destination) {
 			messageHandlers[id] = null;
 			sendJmsMessage(destination, id, 'unlisten');
+		},
+		
+		// for unit testing
+		getMessageQueue: function() {
+			return messageQueue;
+		},
+		testPollHandler: function( data ) {
+			return pollHandler( data );
 		}
 	};
 }();

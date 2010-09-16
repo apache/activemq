@@ -45,33 +45,41 @@ org.activemq.AmqAdapter = {
 	 *             - xhr:    The XmlHttpRequest object.
 	 *             - status: A text string of the status.
 	 *             - ex:     The exception that caused the error.
+	 *  - headers: An object containing additional headers for the ajax request.
 	 */
 	ajax: function(uri, options) {
-		if (options.method == 'post') {
-			jQuery.ajax({
-				type: "POST",
-				url: uri,
-				data: options.data,
-				success: options.success || function(){},
-				error: options.error || function(){},
-				beforeSend: function(xhr) {
-					/* Force "Connection: close" for Mozilla browsers to work around
-					 * a bug where XMLHttpReqeuest sends an incorrect Content-length
-					 * header. See Mozilla Bugzilla #246651.
-					 */
-					xhr.setRequestHeader("Connection", 'close');
-				}
-			});
-		} else {        
-			jQuery.ajax({
-				type: "GET",
-				url: uri,
-				data: options.data,
-				success: options.success || function(){},
-				error: options.error || function(){},
-				dataType: 'xml'
-				});
+		request = {
+			url: uri,
+			data: options.data,
+			success: options.success || function(){},
+			error: options.error || function(){}
 		}
+		var headers = {};
+		if( options.headers ) {
+			headers = options.headers;
+		}
+		
+		if (options.method == 'post') {
+			request.type = 'POST';
+			/* Force "Connection: close" for Mozilla browsers to work around
+			 * a bug where XMLHttpReqeuest sends an incorrect Content-length
+			 * header. See Mozilla Bugzilla #246651.
+			 */
+			headers[ 'Connection' ] = 'close';
+		} else {
+			request.type = 'GET';
+			request.dataType = 'xml';
+		}
+		
+		if( headers ) {
+			request.beforeSend = function(xhr) {
+				for( h in headers ) {
+					xhr.setRequestHeader( h, headers[ h ] );
+				}
+			}
+		}
+		
+		jQuery.ajax( request );
 	},
 
 	log: function(message, exception) {
