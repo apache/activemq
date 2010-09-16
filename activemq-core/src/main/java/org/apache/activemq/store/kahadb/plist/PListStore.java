@@ -45,6 +45,9 @@ import org.apache.kahadb.util.LockFile;
 import org.apache.kahadb.util.StringMarshaller;
 import org.apache.kahadb.util.VariableMarshaller;
 
+/**
+ * @org.apache.xbean.XBean
+ */
 public class PListStore extends ServiceSupport {
     static final Log LOG = LogFactory.getLog(PListStore.class);
     private static final int DATABASE_LOCKED_WAIT_DELAY = 10 * 1000;
@@ -65,6 +68,11 @@ public class PListStore extends ServiceSupport {
     MetaData metaData = new MetaData(this);
     final MetaDataMarshaller metaDataMarshaller = new MetaDataMarshaller(this);
     Map<String, PList> persistentLists = new HashMap<String, PList>();
+    final Object indexLock = new Object();
+
+    public Object getIndexLock() {
+        return indexLock;
+    }
 
     protected class MetaData {
         protected MetaData(PListStore store) {
@@ -188,7 +196,7 @@ public class PListStore extends ServiceSupport {
         }
     }
 
-    public PList getPList(final String name) throws Exception {
+    synchronized public PList getPList(final String name) throws Exception {
         if (!isStarted()) {
             throw new IllegalStateException("Not started");
         }
