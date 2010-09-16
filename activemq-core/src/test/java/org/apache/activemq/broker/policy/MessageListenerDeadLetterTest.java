@@ -100,6 +100,7 @@ public class MessageListenerDeadLetterTest extends DeadLetterTestSupport {
         RedeliveryPolicy policy = new RedeliveryPolicy();
         policy.setMaximumRedeliveries(3);
         policy.setBackOffMultiplier((short) 1);
+        policy.setRedeliveryDelay(0);
         policy.setInitialRedeliveryDelay(0);
         policy.setUseExponentialBackOff(false);
         answer.setRedeliveryPolicy(policy);
