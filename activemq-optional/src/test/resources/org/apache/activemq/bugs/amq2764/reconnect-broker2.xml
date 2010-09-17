@@ -26,8 +26,9 @@
   <broker brokerName="broker2" persistent="false" useShutdownHook="false" useJmx="false" xmlns="http://activemq.apache.org/schema/core">
 
     <transportConnectors>
-      <!-- configure a low inactivity monitor check time to ensure all messages are received quickly -->
-      <transportConnector uri="http://localhost:61617?transport.readCheckTime=4000&amp;transport.initialDelayTime=4000"/>
+      <!-- configure a low inactivity monitor check time to ensure all messages are received quickly, ask for a response as
+      peer will have 30 second inactivity delay so won't satisfy our read check till 30+ delay -->
+      <transportConnector uri="http://localhost:61617?transport.readCheckTime=4000&amp;transport.initialDelayTime=4000&amp;transport.keepAliveResponseRequired=true"/>
     </transportConnectors>
 
   </broker>
