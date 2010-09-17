@@ -27,12 +27,12 @@ import org.apache.commons.logging.LogFactory;
 
 public class MasterSlaveProducerFlowControlTest extends ProducerFlowControlTest {
     static final Log LOG = LogFactory.getLog(MasterSlaveProducerFlowControlTest.class);
-
+    BrokerService slave;
     protected BrokerService createBroker() throws Exception {
         BrokerService service = super.createBroker();
         service.start();
         
-        BrokerService slave = new BrokerService();
+        slave = new BrokerService();
         slave.setBrokerName("Slave");
         slave.setPersistent(false);
         slave.setUseJmx(false);
@@ -53,5 +53,12 @@ public class MasterSlaveProducerFlowControlTest extends ProducerFlowControlTest 
         slave.setMasterConnectorURI(connector.getConnectUri().toString());
         slave.start();
         return service;
+    }
+
+    protected void tearDown() throws Exception {
+        super.tearDown();
+        if (slave != null) {
+            slave.stop();
+        }
     }
 }
