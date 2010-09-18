@@ -157,15 +157,6 @@
           </excludes>
         </configuration>
       </plugin>
-      <plugin>
-        <groupId>org.apache.rat</groupId>
-        <artifactId>apache-rat-plugin</artifactId>
-        <configuration>
-          <excludes>
-            <exclude>**/resources/*.xsd</exclude>
-          </excludes>
-        </configuration>
-      </plugin>
 
       <plugin>
         <groupId>org.jvnet.jaxb2.maven2</groupId>

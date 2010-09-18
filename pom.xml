@@ -1046,14 +1046,6 @@
           <groupId>org.apache.rat</groupId>
           <artifactId>apache-rat-plugin</artifactId>
           <version>0.7</version>
-          <configuration>
-            <excludeSubProjects>false</excludeSubProjects>
-            <excludes>
-              <!-- Eclipse files -->
-              <exclude>**/.*</exclude>
-              <exclude>**/eclipse-classes/**/*</exclude>
-            </excludes>
-          </configuration>
         </plugin>
         <plugin>
           <groupId>org.eclipse.jetty</groupId>
@@ -1134,7 +1126,7 @@
         <groupId>org.apache.felix</groupId>
         <artifactId>maven-bundle-plugin</artifactId>
         <extensions>true</extensions>
-		<inherited>true</inherited>
+        <inherited>true</inherited>
         <configuration>
           <instructions>
             <Bundle-Name>${project.artifactId}</Bundle-Name>
@@ -1151,7 +1143,7 @@
             <_failok>${servicemix.osgi.failok}</_failok>
           </instructions>
         </configuration>
-		<executions>
+        <executions>
           <execution>
             <id>cleanVersions</id>
             <phase>generate-sources</phase>
@@ -1166,32 +1158,64 @@
           </execution>
         </executions>
       </plugin>
+
+      <plugin>
+        <groupId>org.apache.rat</groupId>
+        <artifactId>apache-rat-plugin</artifactId>
+        <configuration>
+          <excludeSubProjects>false</excludeSubProjects>
+          <excludes>
+            <exclude>**/*.bin</exclude>
+            <exclude>**/*.log</exclude>
+            <exclude>**/*README.txt</exclude>
+            <exclude>**/store/amq/help.txt</exclude>
+            <exclude>**/kahadb/**/*.data</exclude>
+            <!-- activemq-xmpp schemas -->
+            <exclude>**/resources/*.xsd</exclude>
+            <!-- web, web-console, web-demo files -->
+            <exclude>**/webapps/camel/js/dojo/dojo.js</exclude>
+            <exclude>**/webapp/js/dojo.js</exclude>
+            <exclude>**/webapp/js/jquery-*.js</exclude>
+            <exclude>**/webapp/js/prototype.js</exclude>
+            <exclude>**/web/behaviour.js</exclude>
+            <exclude>**/webapp/js/common.js</exclude>
+            <exclude>**/webapp/js/css.js</exclude>
+            <exclude>**/webapp/js/standardista-table-sorting.js</exclude>
+            <exclude>**/webapp/test/assets/*</exclude>
+            <!-- plotkit -->
+            <exclude>**/webapp/js/plotkit/**/*</exclude>
+            <!-- Eclipse files -->
+            <exclude>**/.*</exclude>
+            <exclude>**/eclipse-classes/**/*</exclude>
+          </excludes>
+        </configuration>
+      </plugin>
     </plugins>
   </build>
   <reporting>
     <plugins>
       <!--
-            <plugin>
-              <groupId>org.apache.maven.plugins</groupId>
-              <artifactId>maven-jxr-plugin</artifactId>
-            </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jxr-plugin</artifactId>
+      </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-report-plugin</artifactId>
         <version>${maven-surefire-plugin-version}</version>
       </plugin>
-            <plugin>
-              <groupId>org.apache.maven.plugins</groupId>
-              <artifactId>maven-checkstyle-plugin</artifactId>
-            </plugin>
-            <plugin>
-              <groupId>org.apache.maven.plugins</groupId>
-              <artifactId>maven-pmd-plugin</artifactId>
-            </plugin>
-            <plugin>
-              <groupId>org.codehaus.mojo</groupId>
-              <artifactId>cobertura-maven-plugin</artifactId>
-            </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-checkstyle-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-pmd-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>cobertura-maven-plugin</artifactId>
+      </plugin>
       -->
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
