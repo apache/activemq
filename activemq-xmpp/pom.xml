@@ -130,7 +130,6 @@
     <defaultGoal>install</defaultGoal>
 
     <plugins>
-
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
@@ -155,6 +154,15 @@
         <configuration>
           <excludes>
             <!--<exclude>**/XmppTest.*</exclude>-->
+          </excludes>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.rat</groupId>
+        <artifactId>apache-rat-plugin</artifactId>
+        <configuration>
+          <excludes>
+            <exclude>**/resources/*.xsd</exclude>
           </excludes>
         </configuration>
       </plugin>

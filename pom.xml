@@ -1043,11 +1043,16 @@
           <version>2.0</version>
         </plugin>
         <plugin>
-          <groupId>org.codehaus.mojo</groupId>
-          <artifactId>rat-maven-plugin</artifactId>
-          <version>1.0-alpha-3</version>
+          <groupId>org.apache.rat</groupId>
+          <artifactId>apache-rat-plugin</artifactId>
+          <version>0.7</version>
           <configuration>
             <excludeSubProjects>false</excludeSubProjects>
+            <excludes>
+              <!-- Eclipse files -->
+              <exclude>**/.*</exclude>
+              <exclude>**/eclipse-classes/**/*</exclude>
+            </excludes>
           </configuration>
         </plugin>
         <plugin>
