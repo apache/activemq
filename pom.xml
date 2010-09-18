@@ -1187,6 +1187,7 @@
             <!-- Eclipse files -->
             <exclude>**/.*</exclude>
             <exclude>**/eclipse-classes/**/*</exclude>
+            <exclude>**/target/**/*</exclude>
           </excludes>
         </configuration>
       </plugin>
