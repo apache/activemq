@@ -151,7 +151,7 @@ public class PooledConnection implements TopicConnection, QueueConnection, Enhan
     // Implementation methods
     // -------------------------------------------------------------------------
 
-    ActiveMQConnection getConnection() throws JMSException {
+    public ActiveMQConnection getConnection() throws JMSException {
         assertNotClosed();
         return pool.getConnection();
     }
