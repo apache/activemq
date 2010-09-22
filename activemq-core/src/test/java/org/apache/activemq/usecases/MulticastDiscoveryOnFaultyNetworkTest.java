@@ -26,13 +26,11 @@ import javax.jms.TextMessage;
 import junit.framework.Test;
 
 import org.apache.activemq.JmsMultipleBrokersTestSupport;
-import org.apache.activemq.JmsMultipleBrokersTestSupport.BrokerItem;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.network.DiscoveryNetworkConnector;
 import org.apache.activemq.network.NetworkConnector;
 import org.apache.activemq.util.MessageIdList;
-import org.apache.activemq.util.SocketProxy;
 
 
 public class MulticastDiscoveryOnFaultyNetworkTest extends JmsMultipleBrokersTestSupport {
@@ -111,7 +109,7 @@ public class MulticastDiscoveryOnFaultyNetworkTest extends JmsMultipleBrokersTes
 
 
     @Override
-    protected NetworkConnector bridgeBrokers(BrokerService localBroker, BrokerService remoteBroker, boolean dynamicOnly, int networkTTL, boolean conduit) throws Exception {
+    protected NetworkConnector bridgeBrokers(BrokerService localBroker, BrokerService remoteBroker, boolean dynamicOnly, int networkTTL, boolean conduit, boolean failover) throws Exception {
         DiscoveryNetworkConnector connector = new DiscoveryNetworkConnector(new URI("multicast://default?group=TESTERIC&useLocalHost=false"));
         connector.setDynamicOnly(dynamicOnly);
         connector.setNetworkTTL(networkTTL);

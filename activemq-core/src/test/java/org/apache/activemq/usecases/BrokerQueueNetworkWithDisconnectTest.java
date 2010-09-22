@@ -26,7 +26,6 @@ import javax.jms.TextMessage;
 import junit.framework.Test;
 
 import org.apache.activemq.JmsMultipleBrokersTestSupport;
-import org.apache.activemq.JmsMultipleBrokersTestSupport.BrokerItem;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.network.DiscoveryNetworkConnector;
@@ -136,7 +135,7 @@ public class BrokerQueueNetworkWithDisconnectTest extends JmsMultipleBrokersTest
 
 
     @Override
-    protected NetworkConnector bridgeBrokers(BrokerService localBroker, BrokerService remoteBroker, boolean dynamicOnly, int networkTTL, boolean conduit) throws Exception {
+    protected NetworkConnector bridgeBrokers(BrokerService localBroker, BrokerService remoteBroker, boolean dynamicOnly, int networkTTL, boolean conduit, boolean failover) throws Exception {
         List<TransportConnector> transportConnectors = remoteBroker.getTransportConnectors();
         URI remoteURI;
         if (!transportConnectors.isEmpty()) {

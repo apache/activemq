@@ -85,25 +85,29 @@ public class JmsMultipleBrokersTestSupport extends CombinationTestSupport {
         BrokerService localBroker = brokers.get(localBrokerName).broker;
         BrokerService remoteBroker = brokers.get(remoteBrokerName).broker;
 
-        bridgeBrokers(localBroker, remoteBroker, dynamicOnly, 1, true);
+        bridgeBrokers(localBroker, remoteBroker, dynamicOnly, 1, true, false);
     }
 
     protected NetworkConnector bridgeBrokers(String localBrokerName, String remoteBrokerName, boolean dynamicOnly, int networkTTL, boolean conduit) throws Exception {
         BrokerService localBroker = brokers.get(localBrokerName).broker;
         BrokerService remoteBroker = brokers.get(remoteBrokerName).broker;
 
-        return bridgeBrokers(localBroker, remoteBroker, dynamicOnly, networkTTL, conduit);
+        return bridgeBrokers(localBroker, remoteBroker, dynamicOnly, networkTTL, conduit, false);
     }
 
     // Overwrite this method to specify how you want to bridge the two brokers
     // By default, bridge them using add network connector of the local broker
     // and the first connector of the remote broker
-    protected NetworkConnector bridgeBrokers(BrokerService localBroker, BrokerService remoteBroker, boolean dynamicOnly, int networkTTL, boolean conduit) throws Exception {
+    protected NetworkConnector bridgeBrokers(BrokerService localBroker, BrokerService remoteBroker, boolean dynamicOnly, int networkTTL, boolean conduit, boolean failover) throws Exception {
         List<TransportConnector> transportConnectors = remoteBroker.getTransportConnectors();
         URI remoteURI;
         if (!transportConnectors.isEmpty()) {
             remoteURI = transportConnectors.get(0).getConnectUri();
-            NetworkConnector connector = new DiscoveryNetworkConnector(new URI("static:" + remoteURI));
+            String uri = "static:(" + remoteURI + ")";
+            if (failover) {
+                uri = "static:(failover:(" + remoteURI + "))";
+            }
+            NetworkConnector connector = new DiscoveryNetworkConnector(new URI(uri));
             connector.setDynamicOnly(dynamicOnly);
             connector.setNetworkTTL(networkTTL);
             connector.setConduitSubscriptions(conduit);

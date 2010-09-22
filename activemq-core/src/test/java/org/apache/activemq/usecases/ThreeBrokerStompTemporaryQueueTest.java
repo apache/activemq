@@ -38,7 +38,7 @@ public class ThreeBrokerStompTemporaryQueueTest extends JmsMultipleBrokersTestSu
     private static final Log LOG = LogFactory.getLog(ThreeBrokerStompTemporaryQueueTest.class);
     private StompConnection stompConnection;
 
-    protected NetworkConnector bridgeBrokers(BrokerService localBroker, BrokerService remoteBroker, boolean dynamicOnly, int networkTTL, boolean conduit) throws Exception {
+    protected NetworkConnector bridgeBrokers(BrokerService localBroker, BrokerService remoteBroker, boolean dynamicOnly, int networkTTL, boolean conduit, boolean failover) throws Exception {
         List<TransportConnector> transportConnectors = remoteBroker.getTransportConnectors();
         URI remoteURI;
         if (!transportConnectors.isEmpty()) {

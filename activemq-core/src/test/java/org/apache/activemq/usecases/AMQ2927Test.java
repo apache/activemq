@@ -20,6 +20,9 @@ import org.apache.activemq.JmsMultipleBrokersTestSupport;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.network.NetworkConnector;
+import org.apache.activemq.util.MessageIdList;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 
 import javax.jms.MessageConsumer;
@@ -27,6 +30,8 @@ import java.net.URI;
 
 
 public class AMQ2927Test extends JmsMultipleBrokersTestSupport {
+
+    private static final Log LOG = LogFactory.getLog(AMQ2927Test.class);
 
     ActiveMQQueue queue = new ActiveMQQueue("TEST");
 
@@ -46,31 +51,72 @@ public class AMQ2927Test extends JmsMultipleBrokersTestSupport {
         
     }
 
-    public void testFailoverRestart() throws Exception {
+    public void testRestartSend() throws Exception {
 
         Thread.sleep(1000);
 
-        System.out.println("restarting broker");
+        LOG.info("restarting broker");
 
         restartBroker("BrokerA");
 
         Thread.sleep(5000);
 
-        System.out.println("sending message");
+        LOG.info("sending message");
 
         sendMessages("BrokerA", queue, 1);
 
         Thread.sleep(3000);
 
-        System.out.println("consuming message");
+        LOG.info("consuming message");
 
         MessageConsumer consumerA = createConsumer("BrokerA", queue);
         MessageConsumer consumerB = createConsumer("BrokerB", queue);
 
         Thread.sleep(1000);
 
-        System.out.println("consumerA = " + getConsumerMessages("BrokerA", consumerA));
-        System.out.println("consumerB = " + getConsumerMessages("BrokerB", consumerB)); 
+        MessageIdList messagesA = getConsumerMessages("BrokerA", consumerA);
+        MessageIdList messagesB = getConsumerMessages("BrokerB", consumerB);
+
+        LOG.info("consumerA = " + messagesA);
+        LOG.info("consumerB = " + messagesB);
+
+        messagesA.assertMessagesReceived(0);
+        messagesB.assertMessagesReceived(1);
+
+    }
+
+
+    public void testSendRestart() throws Exception {
+
+        Thread.sleep(1000);
+
+        LOG.info("sending message");
+
+        sendMessages("BrokerA", queue, 1);
+
+        Thread.sleep(3000);
+
+        LOG.info("restarting broker");
+
+        restartBroker("BrokerA");
+
+        Thread.sleep(5000);
+
+        LOG.info("consuming message");
+
+        MessageConsumer consumerA = createConsumer("BrokerA", queue);
+        MessageConsumer consumerB = createConsumer("BrokerB", queue);
+
+        Thread.sleep(1000);
+
+        MessageIdList messagesA = getConsumerMessages("BrokerA", consumerA);
+        MessageIdList messagesB = getConsumerMessages("BrokerB", consumerB);
+
+        LOG.info("consumerA = " + messagesA);
+        LOG.info("consumerB = " + messagesB);
+
+        messagesA.assertMessagesReceived(0);
+        messagesB.assertMessagesReceived(1);
     }
 
     protected void restartBroker(String brokerName) throws Exception {
