@@ -522,7 +522,9 @@ public class BrokerService implements Service {
                     registerFTConnectorMBean(masterConnector);
                 }
             }
-            brokerId = broker.getBrokerId();
+            if (brokerId == null) {
+                brokerId = broker.getBrokerId();
+            }
             if (ioExceptionHandler == null) {
             	setIoExceptionHandler(new DefaultIOExceptionHandler());
             }
@@ -1820,6 +1822,9 @@ public class BrokerService implements Service {
         regionBroker.setKeepDurableSubsActive(keepDurableSubsActive);
         regionBroker.setBrokerName(getBrokerName());
         regionBroker.getDestinationStatistics().setEnabled(enableStatistics);
+        if (brokerId != null) {
+            regionBroker.setBrokerId(brokerId);
+        }
         return regionBroker;
     }
 
@@ -2345,6 +2350,9 @@ public class BrokerService implements Service {
 
     public void setBrokerContext(BrokerContext brokerContext) {
         this.brokerContext = brokerContext;
-    }    
+    }
 
+    public void setBrokerId(String brokerId) {
+        this.brokerId = new BrokerId(brokerId);
+    }
 }

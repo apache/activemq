@@ -39,8 +39,10 @@ public class AMQ2927Test extends JmsMultipleBrokersTestSupport {
     public void setUp() throws Exception {
         super.setAutoFail(true);
         super.setUp();
-        createBroker(new URI("broker:(tcp://localhost:61616)/BrokerA?persistent=true&useJmx=false&deleteAllMessagesOnStartup=true"));
-        createBroker(new URI("broker:(tcp://localhost:61617)/BrokerB?persistent=true&useJmx=false"));
+        BrokerService brokerA = createBroker(new URI("broker:(tcp://localhost:61616)/BrokerA?persistent=true&useJmx=false&deleteAllMessagesOnStartup=true"));
+        brokerA.setBrokerId("BrokerA");
+        BrokerService brokerB = createBroker(new URI("broker:(tcp://localhost:61617)/BrokerB?persistent=true&useJmx=false&deleteAllMessagesOnStartup=true"));
+        brokerB.setBrokerId("BrokerB");
         NetworkConnector aTOb = bridgeBrokers(brokers.get("BrokerA").broker, brokers.get("BrokerB").broker, false, 2, true, true);
         aTOb.addStaticallyIncludedDestination(queue);
         NetworkConnector bTOa = bridgeBrokers(brokers.get("BrokerB").broker, brokers.get("BrokerA").broker, false, 2, true, true);
@@ -122,6 +124,7 @@ public class AMQ2927Test extends JmsMultipleBrokersTestSupport {
     protected void restartBroker(String brokerName) throws Exception {
         destroyBroker("BrokerA");
         BrokerService broker = createBroker(new URI("broker:(tcp://localhost:61616)/BrokerA?persistent=true&useJmx=false"));
+        broker.setBrokerId("BrokerA");
         NetworkConnector aTOb = bridgeBrokers(brokers.get("BrokerA").broker, brokers.get("BrokerB").broker, false, 2, true, true);
         aTOb.addStaticallyIncludedDestination(queue);
         broker.start();
