@@ -19,10 +19,16 @@ package org.apache.activemq.transport.https;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.Map;
+import java.util.HashMap;
 
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportServer;
 import org.apache.activemq.transport.http.HttpTransportFactory;
+import org.apache.activemq.util.IntrospectionSupport;
+import org.apache.activemq.util.IOExceptionSupport;
+import org.apache.activemq.util.URISupport;
 import org.apache.activemq.wireformat.WireFormat;
 
 /**
@@ -33,11 +39,20 @@ import org.apache.activemq.wireformat.WireFormat;
 public class HttpsTransportFactory extends HttpTransportFactory {
     
     public TransportServer doBind(String brokerId, URI location) throws IOException {
-        return new HttpsTransportServer(location, this);
+        return doBind(location);
     }
     
     public TransportServer doBind(URI location) throws IOException {
-        return new HttpsTransportServer(location, this);
+        try {
+            Map<String, String> options = new HashMap<String, String>(URISupport.parseParameters(location));
+            HttpsTransportServer result = new HttpsTransportServer(location, this);
+            Map<String, Object> transportOptions = IntrospectionSupport.extractProperties(options, "transport.");
+            result.setTransportOption(transportOptions);
+            return result;
+        } catch (URISyntaxException e) {
+            throw IOExceptionSupport.create(e);
+        }
+        
     }
 
     protected Transport createTransport(URI location, WireFormat wf) throws MalformedURLException {
