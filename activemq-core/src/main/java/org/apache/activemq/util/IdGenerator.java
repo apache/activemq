@@ -18,6 +18,7 @@ package org.apache.activemq.util;
 
 import java.net.InetAddress;
 import java.net.ServerSocket;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -33,7 +34,8 @@ public class IdGenerator {
     private static int instanceCount;
     private static String hostName;
     private String seed;
-    private long sequence;
+    private AtomicLong sequence = new AtomicLong(1);
+    private int length;
 
     static {
         String stub = "";
@@ -70,6 +72,7 @@ public class IdGenerator {
     public IdGenerator(String prefix) {
         synchronized (UNIQUE_STUB) {
             this.seed = prefix + UNIQUE_STUB + (instanceCount++) + ":";
+            this.length = this.seed.length() + ("" + Long.MAX_VALUE).length();
         }
     }
 
@@ -80,7 +83,7 @@ public class IdGenerator {
     /**
      * As we have to find the hostname as a side-affect of generating a unique
      * stub, we allow it's easy retrevial here
-     * 
+     *
      * @return the local host name
      */
 
@@ -91,17 +94,20 @@ public class IdGenerator {
 
     /**
      * Generate a unqiue id
-     * 
+     *
      * @return a unique id
      */
 
     public synchronized String generateId() {
-        return this.seed + (this.sequence++);
+        StringBuilder sb = new StringBuilder(length);
+        sb.append(seed);
+        sb.append(sequence.getAndIncrement());
+        return sb.toString();
     }
 
     /**
      * Generate a unique ID - that is friendly for a URL or file system
-     * 
+     *
      * @return a unique id
      */
     public String generateSanitizedId() {
@@ -114,7 +120,7 @@ public class IdGenerator {
 
     /**
      * From a generated id - return the seed (i.e. minus the count)
-     * 
+     *
      * @param id the generated identifer
      * @return the seed
      */
@@ -131,7 +137,7 @@ public class IdGenerator {
 
     /**
      * From a generated id - return the generator count
-     * 
+     *
      * @param id
      * @return the count
      */
@@ -150,7 +156,7 @@ public class IdGenerator {
 
     /**
      * Does a proper compare on the ids
-     * 
+     *
      * @param id1
      * @param id2
      * @return 0 if equal else a positive if id1 is > id2 ...
