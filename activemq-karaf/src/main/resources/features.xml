@@ -25,11 +25,13 @@
         <bundle>mvn:org.apache.geronimo.specs/geronimo-jta_1.1_spec/1.1.1</bundle> 
         <bundle>mvn:org.apache.geronimo.specs/geronimo-jms_1.1_spec/1.1.1</bundle> 
         <bundle>mvn:org.apache.geronimo.specs/geronimo-j2ee-management_1.1_spec/1.0.1</bundle> 
-        <bundle>mvn:commons-pool/commons-pool/${commons-pool-version}</bundle> 
+        <bundle>mvn:commons-pool/commons-pool/${commons-pool-version}</bundle>
         <bundle>mvn:commons-collections/commons-collections/${commons-collections-version}</bundle>
         <bundle>mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.commons-lang/2.4_3</bundle>
+        <bundle>mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.commons-codec/1.3_3</bundle>
         <bundle>mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.oro/2.0.8_3</bundle>
         <bundle>mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.velocity/1.6.2_3</bundle>
+        <bundle>mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.jasypt/1.6_1</bundle>
         <bundle>mvn:org.apache.activemq/activemq-core/${activemq-version}</bundle> 
         <bundle>mvn:org.apache.activemq/kahadb/${activemq-version}</bundle> 
         <bundle>mvn:org.apache.activemq/activemq-console/${activemq-version}</bundle>
