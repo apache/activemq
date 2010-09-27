@@ -143,7 +143,7 @@ public class ActiveMQCommand extends AbstractCommand implements CompletableFunct
         }
     }
 
-    protected Action createNewAction() throws Exception {
+    public Action createNewAction() {
         Action action = (Action) blueprintContainer.getComponentInstance(actionId);
         if (action instanceof BlueprintContainerAware) {
             ((BlueprintContainerAware) action).setBlueprintContainer(blueprintContainer);

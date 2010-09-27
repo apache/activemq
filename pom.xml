@@ -42,7 +42,7 @@
     <annogen-version>0.1.0</annogen-version>
     <ant-version>1.7.1</ant-version>
     <aopalliance-version>1.0</aopalliance-version>
-    <aries-version>0.1-r964701</aries-version>
+    <aries-version>0.2-incubating</aries-version>
     <axion-version>1.0-M3-dev</axion-version>
     <axis-version>1.2-RC1</axis-version>
     <camel-version>2.4.0</camel-version>
@@ -70,7 +70,7 @@
     <jmock-version>2.5.1</jmock-version>
     <junit-version>4.5</junit-version>
     <jxta-version>2.0</jxta-version>
-    <karaf-version>2.0.0</karaf-version>
+    <karaf-version>2.1.0</karaf-version>
     <log4j-version>1.2.14</log4j-version>
     <nlog4j-version>1.5.2</nlog4j-version>
     <org-apache-derby-version>10.1.3.1</org-apache-derby-version>
