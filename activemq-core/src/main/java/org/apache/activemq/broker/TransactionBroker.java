@@ -251,6 +251,16 @@ public class TransactionBroker extends BrokerFilter {
             }
             iter.remove();
         }
+
+        for (Transaction tx : xaTransactions.values()) {
+           try {
+             if (!tx.isPrepared()) {
+                tx.rollback();
+             }
+           } catch (Exception e) {
+               LOG.warn("ERROR Rolling back disconnected client's xa transactions: ", e);
+           }
+        }
         next.removeConnection(context, info, error);
     }
 
