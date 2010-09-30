@@ -55,16 +55,7 @@ import org.apache.activemq.broker.region.group.MessageGroupMap;
 import org.apache.activemq.broker.region.group.MessageGroupMapFactory;
 import org.apache.activemq.broker.region.policy.DispatchPolicy;
 import org.apache.activemq.broker.region.policy.RoundRobinDispatchPolicy;
-import org.apache.activemq.command.ActiveMQDestination;
-import org.apache.activemq.command.ConsumerId;
-import org.apache.activemq.command.ExceptionResponse;
-import org.apache.activemq.command.Message;
-import org.apache.activemq.command.MessageAck;
-import org.apache.activemq.command.MessageDispatchNotification;
-import org.apache.activemq.command.MessageId;
-import org.apache.activemq.command.ProducerAck;
-import org.apache.activemq.command.ProducerInfo;
-import org.apache.activemq.command.Response;
+import org.apache.activemq.command.*;
 import org.apache.activemq.filter.BooleanExpression;
 import org.apache.activemq.filter.MessageEvaluationContext;
 import org.apache.activemq.filter.NonCachedMessageEvaluationContext;
@@ -1796,10 +1787,12 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                 if (dispatchSelector.canSelect(s, node)) {
                     if (!fullConsumers.contains(s)) {
                         if (!s.isFull()) {
-                            // Dispatch it.
-                            s.add(node);
-                            target = s;                            
-                            break;
+                            if (assignMessageGroup(s, (QueueMessageReference)node)) {
+                                // Dispatch it.
+                                s.add(node);
+                                target = s;
+                                break;
+                            }
                         } else {
                             // no further dispatch of list to a full consumer to
                             // avoid out of order message receipt
@@ -1839,6 +1832,60 @@ public class Queue extends BaseDestination implements Task, UsageListener {
         }
 
         return rc;
+    }
+
+    protected boolean assignMessageGroup(Subscription subscription, QueueMessageReference node) throws Exception {
+        //QueueMessageReference node = (QueueMessageReference) m;
+        boolean result = true;
+        // Keep message groups together.
+        String groupId = node.getGroupID();
+        int sequence = node.getGroupSequence();
+        if (groupId != null) {
+            //MessageGroupMap messageGroupOwners = ((Queue) node
+            //        .getRegionDestination()).getMessageGroupOwners();
+
+            MessageGroupMap messageGroupOwners = getMessageGroupOwners();
+            // If we can own the first, then no-one else should own the
+            // rest.
+            if (sequence == 1) {
+                assignGroup(subscription, messageGroupOwners, node, groupId);
+            } else {
+
+                // Make sure that the previous owner is still valid, we may
+                // need to become the new owner.
+                ConsumerId groupOwner;
+
+                groupOwner = messageGroupOwners.get(groupId);
+                if (groupOwner == null) {
+                    assignGroup(subscription, messageGroupOwners, node, groupId);
+                } else {
+                    if (groupOwner.equals(subscription.getConsumerInfo().getConsumerId())) {
+                        // A group sequence < 1 is an end of group signal.
+                        if (sequence < 0) {
+                            messageGroupOwners.removeGroup(groupId);
+                        }
+                    } else {
+                        result = false;
+                    }
+                }
+            }
+        }
+
+        return result;
+
+    }
+
+    protected void assignGroup(Subscription subs, MessageGroupMap messageGroupOwners, MessageReference n, String groupId) throws IOException {
+        messageGroupOwners.put(groupId, subs.getConsumerInfo().getConsumerId());
+        Message message = n.getMessage();
+        if (message instanceof ActiveMQMessage) {
+            ActiveMQMessage activeMessage = (ActiveMQMessage) message;
+            try {
+                activeMessage.setBooleanProperty("JMSXGroupFirstForConsumer", true, false);
+            } catch (JMSException e) {
+                LOG.warn("Failed to set boolean header: " + e, e);
+            }
+        }
     }
 
     protected void pageInMessages(boolean force) throws Exception {

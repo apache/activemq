@@ -65,61 +65,9 @@ public class QueueDispatchSelector extends SimpleDispatchSelector {
        
         boolean result =  super.canDispatch(subscription, m);
         if (result && !subscription.isBrowser()) {
-            result = exclusiveConsumer == null
-                    || exclusiveConsumer == subscription;
-            if (result) {
-                QueueMessageReference node = (QueueMessageReference) m;
-                // Keep message groups together.
-                String groupId = node.getGroupID();
-                int sequence = node.getGroupSequence();
-                if (groupId != null) {
-                    MessageGroupMap messageGroupOwners = ((Queue) node
-                            .getRegionDestination()).getMessageGroupOwners();
-
-                    // If we can own the first, then no-one else should own the
-                    // rest.
-                    if (sequence == 1) {
-                        assignGroup(subscription, messageGroupOwners, node,groupId);
-                    }else {
-    
-                        // Make sure that the previous owner is still valid, we may
-                        // need to become the new owner.
-                        ConsumerId groupOwner;
-    
-                        groupOwner = messageGroupOwners.get(groupId);
-                        if (groupOwner == null) {
-                            assignGroup(subscription, messageGroupOwners, node,groupId);
-                        } else {
-                            if (groupOwner.equals(subscription.getConsumerInfo().getConsumerId())) {
-                                // A group sequence < 1 is an end of group signal.
-                                if (sequence < 0) {
-                                    messageGroupOwners.removeGroup(groupId);
-                                }
-                            } else {
-                                result = false;
-                            }
-                        }
-                    }
-                }
-            }
+            result = exclusiveConsumer == null || exclusiveConsumer == subscription;
         }
         return result;
     }
-    
-    protected void assignGroup(Subscription subs,MessageGroupMap messageGroupOwners, MessageReference n, String groupId) throws IOException {
-        messageGroupOwners.put(groupId, subs.getConsumerInfo().getConsumerId());
-        Message message = n.getMessage();
-        if (message instanceof ActiveMQMessage) {
-            ActiveMQMessage activeMessage = (ActiveMQMessage)message;
-            try {
-                activeMessage.setBooleanProperty("JMSXGroupFirstForConsumer", true, false);
-            } catch (JMSException e) {
-                LOG.warn("Failed to set boolean header: " + e, e);
-            }
-        }
-    }
-    
-    
-    
     
 }
