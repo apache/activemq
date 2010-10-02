@@ -104,7 +104,7 @@ public class JmsSchedulerTest extends EmbeddedBrokerTestSupport {
         latch.await(5, TimeUnit.SECONDS);
         assertEquals(latch.getCount(), 0);
     }
-    
+
     public void testTransactedSchedule() throws Exception {
         final int COUNT = 1;
         Connection connection = createConnection();
@@ -116,12 +116,12 @@ public class JmsSchedulerTest extends EmbeddedBrokerTestSupport {
         final CountDownLatch latch = new CountDownLatch(COUNT);
         consumer.setMessageListener(new MessageListener() {
             public void onMessage(Message message) {
-                latch.countDown();
                 try {
                     session.commit();
                 } catch (JMSException e) {
                     e.printStackTrace();
                 }
+                latch.countDown();
             }
         });
 
@@ -176,7 +176,7 @@ public class JmsSchedulerTest extends EmbeddedBrokerTestSupport {
         Thread.sleep(1000);
         assertEquals(NUMBER, count.get());
     }
-    
+
     public void testScheduleRestart() throws Exception {
         // send a message
         Connection connection = createConnection();
@@ -188,16 +188,16 @@ public class JmsSchedulerTest extends EmbeddedBrokerTestSupport {
         message.setLongProperty(ScheduledMessage.AMQ_SCHEDULED_DELAY, time);
         producer.send(message);
         producer.close();
-        
+
         //restart broker
         broker.stop();
         broker.waitUntilStopped();
-        
+
         broker = createBroker(false);
         broker.start();
         broker.waitUntilStarted();
-        
-        
+
+
         // consume the message
         connection = createConnection();
         connection.start();
@@ -217,7 +217,7 @@ public class JmsSchedulerTest extends EmbeddedBrokerTestSupport {
     protected BrokerService createBroker() throws Exception {
         return createBroker(true);
     }
-    
+
     protected BrokerService createBroker(boolean delete) throws Exception {
         File schedulerDirectory = new File("target/scheduler");
         if (delete) {
