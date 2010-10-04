@@ -18,11 +18,14 @@ package org.apache.activemq.broker.scheduler;
 
 import java.io.File;
 import java.util.concurrent.atomic.AtomicBoolean;
+
 import org.apache.activemq.ScheduledMessage;
+import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.BrokerFilter;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.ProducerBrokerExchange;
+import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.command.ProducerId;
@@ -107,31 +110,80 @@ public class SchedulerBroker extends BrokerFilter implements JobListener {
         long period = 0;
         int repeat = 0;
         String cronEntry = "";
+        String jobId = (String) messageSend.getProperty(ScheduledMessage.AMQ_SCHEDULED_ID);
         Object cronValue = messageSend.getProperty(ScheduledMessage.AMQ_SCHEDULED_CRON);
         Object periodValue = messageSend.getProperty(ScheduledMessage.AMQ_SCHEDULED_PERIOD);
         Object delayValue = messageSend.getProperty(ScheduledMessage.AMQ_SCHEDULED_DELAY);
 
-        if (cronValue != null || periodValue != null || delayValue != null) {
+        String physicalName = messageSend.getDestination().getPhysicalName();
+        boolean schedularManage = physicalName.regionMatches(true, 0,
+        		ScheduledMessage.AMQ_SCHEDULER_MANAGEMENT_DESTINATION, 0,
+        		ScheduledMessage.AMQ_SCHEDULER_MANAGEMENT_DESTINATION.length());
+
+        if (schedularManage == true) {
+
+        	JobScheduler scheduler = getInternalScheduler();
+	        ActiveMQDestination replyTo = messageSend.getReplyTo();
+
+	        String action = (String) messageSend.getProperty(ScheduledMessage.AMQ_SCHEDULER_ACTION);
+
+	        if (action != null ) {
+
+	        	Object startTime = messageSend.getProperty(ScheduledMessage.AMQ_SCHEDULER_ACTION_START_TIME);
+	        	Object endTime = messageSend.getProperty(ScheduledMessage.AMQ_SCHEDULER_ACTION_END_TIME);
+
+		        if (replyTo != null && action.equals(ScheduledMessage.AMQ_SCHEDULER_ACTION_BROWSE)) {
+
+		        	if( startTime != null && endTime != null ) {
+
+		                long start = (Long) TypeConversionSupport.convert(startTime, Long.class);
+		                long finish = (Long) TypeConversionSupport.convert(endTime, Long.class);
+
+			        	for (Job job : scheduler.getAllJobs(start, finish)) {
+			        		sendScheduledJob(producerExchange.getConnectionContext(), job, replyTo);
+			        	}
+		        	} else {
+			        	for (Job job : scheduler.getAllJobs()) {
+			        		sendScheduledJob(producerExchange.getConnectionContext(), job, replyTo);
+			        	}
+		        	}
+		        }
+		        if (jobId != null && action.equals(ScheduledMessage.AMQ_SCHEDULER_ACTION_REMOVE)) {
+		        	scheduler.remove(jobId);
+		        } else if (action.equals(ScheduledMessage.AMQ_SCHEDULER_ACTION_REMOVEALL)) {
+
+		        	if( startTime != null && endTime != null ) {
+
+		                long start = (Long) TypeConversionSupport.convert(startTime, Long.class);
+		                long finish = (Long) TypeConversionSupport.convert(endTime, Long.class);
+
+		                scheduler.removeAllJobs(start, finish);
+		        	} else {
+			        	scheduler.removeAllJobs();
+		        	}
+		        }
+	        }
+
+        } else if ((cronValue != null || periodValue != null || delayValue != null) && jobId == null) {
             //clear transaction context
             Message msg = messageSend.copy();
             msg.setTransactionId(null);
             org.apache.activemq.util.ByteSequence packet = wireFormat.marshal(msg);
-                if (cronValue != null) {
-                    cronEntry = cronValue.toString();
-                }
-                if (periodValue != null) {      
-                  period = (Long) TypeConversionSupport.convert(periodValue, Long.class);
-                }
-                if (delayValue != null) {
-                    delay = (Long) TypeConversionSupport.convert(delayValue, Long.class);
-                }
-                Object repeatValue = msg.getProperty(ScheduledMessage.AMQ_SCHEDULED_REPEAT);
-                if (repeatValue != null) {
-                    repeat = (Integer) TypeConversionSupport.convert(repeatValue, Integer.class);
-                }
-                getInternalScheduler().schedule(msg.getMessageId().toString(),
-                        new ByteSequence(packet.data, packet.offset, packet.length),cronEntry, delay, period, repeat);
-            
+            if (cronValue != null) {
+                cronEntry = cronValue.toString();
+            }
+            if (periodValue != null) {
+              period = (Long) TypeConversionSupport.convert(periodValue, Long.class);
+            }
+            if (delayValue != null) {
+                delay = (Long) TypeConversionSupport.convert(delayValue, Long.class);
+            }
+            Object repeatValue = msg.getProperty(ScheduledMessage.AMQ_SCHEDULED_REPEAT);
+            if (repeatValue != null) {
+                repeat = (Integer) TypeConversionSupport.convert(repeatValue, Integer.class);
+            }
+            getInternalScheduler().schedule(msg.getMessageId().toString(),
+                    new ByteSequence(packet.data, packet.offset, packet.length),cronEntry, delay, period, repeat);
 
         } else {
             super.send(producerExchange, messageSend);
@@ -151,14 +203,14 @@ public class SchedulerBroker extends BrokerFilter implements JobListener {
             if (repeatValue != null) {
                 repeat = (Integer) TypeConversionSupport.convert(repeatValue, Integer.class);
             }
-  
-                if (repeat != 0 || cronStr != null && cronStr.length() > 0) {
-                    // create a unique id - the original message could be sent
-                    // lots of times
-                    messageSend
-                            .setMessageId(new MessageId(this.producerId, this.messageIdGenerator.getNextSequenceId()));
-                }
-            
+
+            if (repeat != 0 || cronStr != null && cronStr.length() > 0) {
+                // create a unique id - the original message could be sent
+                // lots of times
+                messageSend.setMessageId(
+                		new MessageId(this.producerId, this.messageIdGenerator.getNextSequenceId()));
+            }
+
             // Add the jobId as a property
             messageSend.setProperty("scheduledJobId", id);
 
@@ -176,7 +228,6 @@ public class SchedulerBroker extends BrokerFilter implements JobListener {
         } catch (Exception e) {
             LOG.error("Failed to send scheduled message " + id, e);
         }
-
     }
 
     protected synchronized JobScheduler getInternalScheduler() throws Exception {
@@ -202,4 +253,37 @@ public class SchedulerBroker extends BrokerFilter implements JobListener {
         return null;
     }
 
+	protected void sendScheduledJob(ConnectionContext context, Job job, ActiveMQDestination replyTo)
+			throws Exception {
+
+        org.apache.activemq.util.ByteSequence packet = new org.apache.activemq.util.ByteSequence(job.getPayload());
+        try {
+            Message msg = (Message) this.wireFormat.unmarshal(packet);
+            msg.setOriginalTransactionId(null);
+    		msg.setPersistent(false);
+    		msg.setType(AdvisorySupport.ADIVSORY_MESSAGE_TYPE);
+    		msg.setMessageId(new MessageId(this.producerId, this.messageIdGenerator.getNextSequenceId()));
+    		msg.setDestination(replyTo);
+    		msg.setResponseRequired(false);
+    		msg.setProducerId(this.producerId);
+
+            // Add the jobId as a property
+    		msg.setProperty("scheduledJobId", job.getJobId());
+
+    		final boolean originalFlowControl = context.isProducerFlowControl();
+    		final ProducerBrokerExchange producerExchange = new ProducerBrokerExchange();
+    		producerExchange.setConnectionContext(context);
+    		producerExchange.setMutable(true);
+    		producerExchange.setProducerState(new ProducerState(new ProducerInfo()));
+    		try {
+    			context.setProducerFlowControl(false);
+    			this.next.send(producerExchange, msg);
+    		} finally {
+    			context.setProducerFlowControl(originalFlowControl);
+    		}
+        } catch (Exception e) {
+            LOG.error("Failed to send scheduled message " + job.getJobId(), e);
+        }
+
+	}
 }
