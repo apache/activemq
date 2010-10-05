@@ -201,6 +201,7 @@ public class JobSchedulerStore extends ServiceSupport {
             if (isStarted()) {
                 result.start();
             }
+            this.pageFile.flush();
         }
         return result;
     }

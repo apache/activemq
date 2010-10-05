@@ -335,7 +335,7 @@ public class PageFile {
                     loadFreeList();
                 } 
             } else {
-                LOG.debug("Recovering page file...");
+                LOG.debug(toString() + ", Recovering page file...");
                 nextTxid.set(redoRecoveryUpdates());
                 
                 // Scan all to find the free pages.
@@ -1107,8 +1107,7 @@ public class PageFile {
         
         // Re-apply all the writes in the recovery buffer.
         for (Map.Entry<Long, byte[]> e : batch.entrySet()) {
-            writeFile.seek(e.getKey());
-            e.getValue();
+            writeFile.seek(toOffset(e.getKey()));
             writeFile.write(e.getValue());
         }
         
