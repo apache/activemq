@@ -205,6 +205,12 @@ public class JmsSchedulerTest extends EmbeddedBrokerTestSupport {
         MessageConsumer consumer = session.createConsumer(destination);
         Message msg = consumer.receive(5000);
         assertNotNull("Didn't receive the message", msg);
+
+        //send another message
+        producer = session.createProducer(destination);
+        message.setLongProperty(ScheduledMessage.AMQ_SCHEDULED_DELAY, time);
+        producer.send(message);
+        producer.close();
     }
 
     @Override
