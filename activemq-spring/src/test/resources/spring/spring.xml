@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Licensed to the Apache Software Foundation (ASF) under one or more
+    contributor license agreements.  See the NOTICE file distributed with
+    this work for additional information regarding copyright ownership.
+    The ASF licenses this file to You under the Apache License, Version 2.0
+    (the "License"); you may not use this file except in compliance with
+    the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+-->
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:tx="http://www.springframework.org/schema/tx" xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:amq="http://activemq.apache.org/schema/core"
+       xsi:schemaLocation="
+	   http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.0.xsd
+	   http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-2.5.xsd
+	   http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-2.0.xsd
+	   http://activemq.apache.org/schema/core http://activemq.apache.org/schema/core/activemq-core.xsd">
+
+    <amq:broker brokerName="test" useJmx="false" persistent="false">
+        <amq:transportConnectors>
+            <amq:transportConnector name="transport" uri="nio://0.0.0.0:61616"/>
+        </amq:transportConnectors>
+    </amq:broker>
+
+
+    <bean id="connectionFactory" class="org.apache.activemq.pool.PooledConnectionFactory" destroy-method="stop">
+        <property name="maxConnections" value="100"/>
+        <property name="maximumActive" value="50"/>
+        <property name="connectionFactory">
+            <bean class="org.apache.activemq.ActiveMQConnectionFactory">
+                <property name="brokerURL" value="tcp://localhost:61616"/>
+            </bean>
+        </property>
+    </bean>
+
+    <bean id="transactionManager" class="org.springframework.jms.connection.JmsTransactionManager">
+        <property name="connectionFactory" ref="connectionFactory"/>
+    </bean>
+
+    <bean id="messageListener" class="org.apache.activemq.spring.Listener"/>
+
+    <bean id="simpleContainer" class="org.springframework.jms.listener.DefaultMessageListenerContainer">
+        <property name="connectionFactory" ref="connectionFactory"/>
+        <property name="messageListener" ref="messageListener"/>
+        <property name="destinationName" value="SIMPLE"/>
+        <property name="sessionTransacted" value="true"/>
+    </bean>
+
+    <bean id="compositeContainer" class="org.springframework.jms.listener.DefaultMessageListenerContainer">
+        <property name="connectionFactory" ref="connectionFactory"/>
+        <property name="messageListener" ref="messageListener"/>
+        <property name="destinationName" value="TEST.>"/>
+        <property name="sessionTransacted" value="true"/>
+    </bean>
+
+</beans>   
