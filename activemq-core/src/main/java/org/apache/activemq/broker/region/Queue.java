@@ -732,7 +732,9 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                 waitForSpace(context, systemUsage.getStoreUsage(), getStoreUsageHighWaterMark(), logMessage);
             }
         } else if (messages.getSystemUsage() != null && systemUsage.getTempUsage().isFull()) {
-            final String logMessage = "Usage Manager Temp Store is Full. Stopping producer (" + message.getProducerId()
+            final String logMessage = "Usage Manager Temp Store is Full ("
+                    + systemUsage.getTempUsage().getPercentUsage() + "% of " + systemUsage.getTempUsage().getLimit() 
+                    +"). Stopping producer (" + message.getProducerId()
                 + ") to prevent flooding " + getActiveMQDestination().getQualifiedName() + "."
                 + " See http://activemq.apache.org/producer-flow-control.html for more info";
             
