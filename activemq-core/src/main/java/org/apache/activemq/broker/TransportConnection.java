@@ -232,8 +232,10 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         }
         if (!stopping.get()) {
             transportException.set(e);
-            if (TRANSPORTLOG.isInfoEnabled()) {
-                TRANSPORTLOG.info("Transport failed: " + e, e);
+            if (TRANSPORTLOG.isDebugEnabled()) {
+                TRANSPORTLOG.debug("Transport failed: " + e, e);
+            } else if (TRANSPORTLOG.isInfoEnabled()) {
+                TRANSPORTLOG.info("Transport failed: " + e);
             }
             stopAsync();
         }

@@ -22,6 +22,7 @@ import java.net.URI;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
+import org.apache.activemq.command.ShutdownInfo;
 import org.apache.activemq.thread.Task;
 import org.apache.activemq.thread.TaskRunner;
 import org.apache.activemq.thread.TaskRunnerFactory;
@@ -156,7 +157,7 @@ public class VMTransport implements Transport, Task {
         	
             // let the peer know that we are disconnecting..
             try {
-            	peer.transportListener.onException(new TransportDisposedIOException("Peer (" + peer.toString() + ") disposed."));
+                peer.transportListener.onCommand(new ShutdownInfo());
             } catch (Exception ignore) {
             }
         	
