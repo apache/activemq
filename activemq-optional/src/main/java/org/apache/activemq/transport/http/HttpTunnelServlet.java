@@ -193,7 +193,8 @@ public class HttpTunnelServlet extends HttpServlet {
             clients.put(clientID, answer);
             Transport transport = answer;
             try {
-                transport = transportFactory.serverConfigure(answer, null, transportOptions);
+                HashMap options = new HashMap(transportOptions);
+                transport = transportFactory.serverConfigure(answer, null, options);
             } catch (Exception e) {
                 IOExceptionSupport.create(e);
             }
