@@ -338,8 +338,8 @@ public class ProducerFlowControlTest extends JmsTestSupport {
             TcpTransport t = (TcpTransport)connection.getTransport().narrow(TcpTransport.class);
             t.getTransportListener().onException(new IOException("Disposed."));
             connection.getTransport().stop();
-            super.tearDown();
         }
+        super.tearDown();
     }
 
     protected ConnectionFactory createConnectionFactory() throws Exception {
