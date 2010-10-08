@@ -118,11 +118,17 @@ public class ActiveMQTextMessage extends ActiveMQMessage implements TextMessage 
             MarshallingSupport.writeUTF8(dataOut, this.text);
             dataOut.close();
             setContent(bytesOut.toByteSequence());
-            //see https://issues.apache.org/activemq/browse/AMQ-2103
-            this.text=null;
         }
     }
 
+    @Override
+    public void afterMarshall(WireFormat wireFormat) throws IOException {
+        super.afterMarshall(wireFormat);
+        //see https://issues.apache.org/activemq/browse/AMQ-2103
+        // and https://issues.apache.org/activemq/browse/AMQ-2966
+        this.text=null;
+    }
+    
     /**
      * Clears out the message body. Clearing a message's body does not clear its
      * header values or property entries. <p/>
