@@ -192,7 +192,7 @@ public class BrokerService implements Service {
     private SslContext sslContext;
     private boolean forceStart = false;
     private IOExceptionHandler ioExceptionHandler;
-    private boolean schedulerSupport = true;
+    private boolean schedulerSupport = false;
     private File schedulerDirectoryFile;
     private Scheduler scheduler;
     private ThreadPoolExecutor executor;

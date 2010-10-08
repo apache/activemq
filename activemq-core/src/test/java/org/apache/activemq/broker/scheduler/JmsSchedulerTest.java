@@ -235,6 +235,7 @@ public class JmsSchedulerTest extends EmbeddedBrokerTestSupport {
         answer.setDeleteAllMessagesOnStartup(true);
         answer.setDataDirectory("target");
         answer.setSchedulerDirectoryFile(schedulerDirectory);
+        answer.setSchedulerSupport(true);
         answer.setUseJmx(false);
         answer.addConnector(bindAddress);
         return answer;
