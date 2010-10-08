@@ -58,7 +58,7 @@ public class TransactionBroker extends BrokerFilter {
 
     // The prepared XA transactions.
     private TransactionStore transactionStore;
-    private Map<TransactionId, Transaction> xaTransactions = new LinkedHashMap<TransactionId, Transaction>();
+    private Map<TransactionId, XATransaction> xaTransactions = new LinkedHashMap<TransactionId, XATransaction>();
     private ActiveMQMessageAudit audit;
 
     public TransactionBroker(Broker next, TransactionStore transactionStore) {
@@ -125,7 +125,7 @@ public class TransactionBroker extends BrokerFilter {
     public TransactionId[] getPreparedTransactions(ConnectionContext context) throws Exception {
         List<TransactionId> txs = new ArrayList<TransactionId>();
         synchronized (xaTransactions) {
-            for (Iterator<Transaction> iter = xaTransactions.values().iterator(); iter.hasNext();) {
+            for (Iterator<XATransaction> iter = xaTransactions.values().iterator(); iter.hasNext();) {
                 Transaction tx = iter.next();
                 if (tx.isPrepared()) {
                     if (LOG.isDebugEnabled()) {
@@ -146,13 +146,13 @@ public class TransactionBroker extends BrokerFilter {
     public void beginTransaction(ConnectionContext context, TransactionId xid) throws Exception {
         // the transaction may have already been started.
         if (xid.isXATransaction()) {
-            Transaction transaction = null;
+            XATransaction transaction = null;
             synchronized (xaTransactions) {
                 transaction = xaTransactions.get(xid);
                 if (transaction != null) {
                     return;
                 }
-                transaction = new XATransaction(transactionStore, (XATransactionId)xid, this);
+                transaction = new XATransaction(transactionStore, (XATransactionId)xid, this, context.getConnectionId());
                 xaTransactions.put(xid, transaction);
             }
         } else {
@@ -252,9 +252,10 @@ public class TransactionBroker extends BrokerFilter {
             iter.remove();
         }
 
-        for (Transaction tx : xaTransactions.values()) {
+
+        for (XATransaction tx : xaTransactions.values()) {
            try {
-             if (!tx.isPrepared()) {
+             if (tx.getConnectionId().equals(info.getConnectionId()) && !tx.isPrepared()) {
                 tx.rollback();
              }
            } catch (Exception e) {

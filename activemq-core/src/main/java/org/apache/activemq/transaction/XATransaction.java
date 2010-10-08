@@ -20,6 +20,7 @@ import java.io.IOException;
 import javax.transaction.xa.XAException;
 import javax.transaction.xa.XAResource;
 import org.apache.activemq.broker.TransactionBroker;
+import org.apache.activemq.command.ConnectionId;
 import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.command.XATransactionId;
 import org.apache.activemq.store.TransactionStore;
@@ -36,11 +37,13 @@ public class XATransaction extends Transaction {
     private final TransactionStore transactionStore;
     private final XATransactionId xid;
     private final TransactionBroker broker;
+    private final ConnectionId connectionId;
 
-    public XATransaction(TransactionStore transactionStore, XATransactionId xid, TransactionBroker broker) {
+    public XATransaction(TransactionStore transactionStore, XATransactionId xid, TransactionBroker broker, ConnectionId connectionId) {
         this.transactionStore = transactionStore;
         this.xid = xid;
         this.broker = broker;
+        this.connectionId = connectionId;
         if (LOG.isDebugEnabled()) {
             LOG.debug("XA Transaction new/begin : " + xid);
         }
@@ -197,6 +200,10 @@ public class XATransaction extends Transaction {
     private void setStateFinished() {
         setState(Transaction.FINISHED_STATE);
         broker.removeTransaction(xid);
+    }
+
+    public ConnectionId getConnectionId() {
+        return connectionId;
     }
 
     @Override
