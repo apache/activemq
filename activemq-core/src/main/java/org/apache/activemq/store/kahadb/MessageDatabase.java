@@ -1202,13 +1202,14 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
             }
 
             // check we are not deleting file with ack for in-use journal files
+            final TreeSet<Integer> gcCandidates = new TreeSet<Integer>(gcCandidateSet);
             Iterator<Integer> candidates = gcCandidateSet.iterator();
             while (candidates.hasNext()) {
                 Integer candidate = candidates.next();
                 Set<Integer> referencedFileIds = ackMessageFileMap.get(candidate);
                 if (referencedFileIds != null) {
                     for (Integer referencedFileId : referencedFileIds) {
-                        if (journal.getFileMap().containsKey(referencedFileId) && !gcCandidateSet.contains(referencedFileId)) {
+                        if (journal.getFileMap().containsKey(referencedFileId) && !gcCandidates.contains(referencedFileId)) {
                             // active file that is not targeted for deletion is referenced so don't delete
                             candidates.remove();
                             break;
