@@ -59,7 +59,8 @@
         <property name="connectionFactory" ref="connectionFactory"/>
         <property name="messageListener" ref="messageListener"/>
         <property name="destinationName" value="TEST.>"/>
-        <property name="sessionTransacted" value="true"/>
+        <property name="transactionManager" ref="transactionManager"/>
+        <property name="cacheLevelName" value="CACHE_CONSUMER"/>
     </bean>
 
 </beans>   

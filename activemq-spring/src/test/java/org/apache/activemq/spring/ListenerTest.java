@@ -16,6 +16,8 @@
  */
 package org.apache.activemq.spring;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -32,6 +34,9 @@ import javax.jms.*;
 @ContextConfiguration(locations = {"classpath:spring/spring.xml"})
 @TransactionConfiguration(transactionManager = "transactionManager", defaultRollback = false)
 public class ListenerTest {
+    private static final Log LOG = LogFactory.getLog(ListenerTest.class);
+
+    int msgNum = 10;
 
     protected String bindAddress = "vm://localhost";    
 
@@ -41,24 +46,24 @@ public class ListenerTest {
     @Test
     @DirtiesContext
     public void testSimple() throws Exception {
-        sendMessages("SIMPLE", 10);
+        sendMessages("SIMPLE", msgNum);
 
         Thread.sleep(3000);
 
-        System.out.println(listener.messages.size());
-        Assert.assertEquals(listener.messages.size(), 10);
+        LOG.info("messages received= " + listener.messages.size());
+        Assert.assertEquals(listener.messages.size(), msgNum);
     }
 
 
     @Test
     @DirtiesContext
     public void testComposite() throws Exception {
-        sendMessages("TEST.1,TEST.2,TEST.3,TEST.4,TEST.5,TEST.6", 10);
+        sendMessages("TEST.1,TEST.2,TEST.3,TEST.4,TEST.5,TEST.6", msgNum);
 
         Thread.sleep(3000);
 
-        System.out.println(listener.messages.size());
-        Assert.assertEquals(listener.messages.size(), 60);
+        LOG.info("messages received= " + listener.messages.size());
+        Assert.assertEquals(listener.messages.size(), 6 * msgNum);
     }
 
     public void sendMessages(String destName, int msgNum) throws Exception {
@@ -68,7 +73,9 @@ public class ListenerTest {
         Destination dest = sess.createQueue(destName);
         MessageProducer producer = sess.createProducer(dest);
         for (int i = 0; i < msgNum; i++) {
-            producer.send(sess.createTextMessage("test"));
+            String messageText = i +" test";
+            LOG.info("sending message '" + messageText + "'");
+            producer.send(sess.createTextMessage(messageText));
         }
     }
 

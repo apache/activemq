@@ -17,6 +17,8 @@
 package org.apache.activemq.spring;
 
 import org.apache.activemq.command.ActiveMQTextMessage;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import javax.jms.JMSException;
 import javax.jms.Message;
@@ -25,6 +27,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Listener implements MessageListener {
+    private static final Log LOG = LogFactory.getLog(Listener.class);
 
 	List<Message> messages = new ArrayList<Message>();
 	long lastReceived = 0L;
@@ -33,7 +36,7 @@ public class Listener implements MessageListener {
 	public void onMessage(Message message)  {
 
         try {
-            System.out.println("LISTENER received " + message.getJMSDestination() + " " + ((ActiveMQTextMessage)message).getText());
+            LOG.info("LISTENER received " + message.getJMSDestination() + " " + ((ActiveMQTextMessage)message).getText());
             lastReceived = System.currentTimeMillis();
             synchronized (messages) {
                 messages.add(message);
