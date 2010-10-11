@@ -668,6 +668,9 @@ public class Queue extends BaseDestination implements Task, UsageListener {
             if (store != null && message.isPersistent()) {        
                 message.getMessageId().setBrokerSequenceId(getDestinationSequenceId());
                 result = store.asyncAddQueueMessage(context, message);
+                if (isReduceMemoryFootprint()) {
+                    message.clearMarshalledState();
+                }
             }
             if (context.isInTransaction()) {
                 // If this is a transacted message.. increase the usage now so that

@@ -118,6 +118,11 @@ public class ActiveMQMapMessage extends ActiveMQMessage implements MapMessage {
         storeContent();
     }
 
+    public void clearMarshalledState() throws JMSException {
+        super.clearMarshalledState();
+        map.clear();
+    }
+
     private void storeContent() {
         try {
             if (getContent() == null && !map.isEmpty()) {

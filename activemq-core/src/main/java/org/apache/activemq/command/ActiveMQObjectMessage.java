@@ -201,6 +201,11 @@ public class ActiveMQObjectMessage extends ActiveMQMessage implements ObjectMess
         storeContent();
     }
 
+    public void clearMarshalledState() throws JMSException {
+        super.clearMarshalledState();
+        this.object = null;
+    }
+
     public void onMessageRolledBack() {
         super.onMessageRolledBack();
 

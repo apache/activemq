@@ -94,6 +94,11 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
     public abstract Message copy();
     public abstract void clearBody() throws JMSException;
 
+    // useful to reduce the memory footprint of a persisted message
+    public void clearMarshalledState() throws JMSException {
+        properties = null;
+    }
+
     protected void copy(Message copy) {
         super.copy(copy);
         copy.producerId = producerId;

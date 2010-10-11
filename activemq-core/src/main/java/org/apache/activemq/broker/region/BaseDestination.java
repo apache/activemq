@@ -86,6 +86,7 @@ public abstract class BaseDestination implements Destination {
     private long inactiveTimoutBeforeGC = DEFAULT_INACTIVE_TIMEOUT_BEFORE_GC;
     private boolean gcIfInactive;
     private long lastActiveTime=0l;
+    private boolean reduceMemoryFootprint = false;
 
     /**
      * @param broker
@@ -662,5 +663,12 @@ public abstract class BaseDestination implements Destination {
         }
         return result;
     }
-    
+
+    public void setReduceMemoryFootprint(boolean reduceMemoryFootprint) {
+        this.reduceMemoryFootprint = reduceMemoryFootprint;
+    }
+
+    protected boolean isReduceMemoryFootprint() {
+        return this.reduceMemoryFootprint;
+    }
 }

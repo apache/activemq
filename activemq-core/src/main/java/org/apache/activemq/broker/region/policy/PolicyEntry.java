@@ -91,6 +91,7 @@ public class PolicyEntry extends DestinationMapEntry {
     private boolean allConsumersExclusiveByDefault;
     private boolean gcInactiveDestinations;
     private long inactiveTimoutBeforeGC = BaseDestination.DEFAULT_INACTIVE_TIMEOUT_BEFORE_GC;
+    private boolean reduceMemoryFootprint;
     
    
     public void configure(Broker broker,Queue queue) {
@@ -163,6 +164,7 @@ public class PolicyEntry extends DestinationMapEntry {
         destination.setPrioritizedMessages(isPrioritizedMessages());
         destination.setGcIfInactive(isGcInactiveDestinations());
         destination.setInactiveTimoutBeforeGC(getInactiveTimoutBeforeGC());
+        destination.setReduceMemoryFootprint(isReduceMemoryFootprint());
     }
 
     public void configure(Broker broker, SystemUsage memoryManager, TopicSubscription subscription) {
@@ -780,5 +782,12 @@ public class PolicyEntry extends DestinationMapEntry {
     public void setInactiveTimoutBeforeGC(long inactiveTimoutBeforeGC) {
         this.inactiveTimoutBeforeGC = inactiveTimoutBeforeGC;
     }
+    
+    public boolean isReduceMemoryFootprint() {
+        return reduceMemoryFootprint;
+    }
 
+    public void setReduceMemoryFootprint(boolean reduceMemoryFootprint) {
+        this.reduceMemoryFootprint = reduceMemoryFootprint;
+    }
 }
