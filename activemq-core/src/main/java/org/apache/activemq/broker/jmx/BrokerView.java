@@ -242,20 +242,20 @@ public class BrokerView implements BrokerViewMBean {
     }
 
     public void addTopic(String name) throws Exception {
-        broker.addDestination(getConnectionContext(broker.getContextBroker()), new ActiveMQTopic(name),true);
+        broker.getContextBroker().addDestination(getConnectionContext(broker.getContextBroker()), new ActiveMQTopic(name),true);
     }
 
     public void addQueue(String name) throws Exception {
-        broker.addDestination(getConnectionContext(broker.getContextBroker()), new ActiveMQQueue(name),true);
+        broker.getContextBroker().addDestination(getConnectionContext(broker.getContextBroker()), new ActiveMQQueue(name),true);
     }
 
     public void removeTopic(String name) throws Exception {
-        broker.removeDestination(getConnectionContext(broker.getContextBroker()), new ActiveMQTopic(name),
+        broker.getContextBroker().removeDestination(getConnectionContext(broker.getContextBroker()), new ActiveMQTopic(name),
                                  1000);
     }
 
     public void removeQueue(String name) throws Exception {
-        broker.removeDestination(getConnectionContext(broker.getContextBroker()), new ActiveMQQueue(name),
+        broker.getContextBroker().removeDestination(getConnectionContext(broker.getContextBroker()), new ActiveMQQueue(name),
                                  1000);
     }
 

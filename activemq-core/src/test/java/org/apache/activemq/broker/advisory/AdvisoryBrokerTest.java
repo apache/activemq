@@ -30,6 +30,10 @@ import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.command.RemoveInfo;
 import org.apache.activemq.command.SessionInfo;
 
+import javax.management.remote.JMXConnector;
+import javax.management.remote.JMXConnectorFactory;
+import javax.management.remote.JMXServiceURL;
+
 public class AdvisoryBrokerTest extends BrokerTestSupport {
      
     public void testConnectionAdvisories() throws Exception {
