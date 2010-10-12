@@ -547,14 +547,16 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
 
             // Synchronized to DispatchLock
             synchronized(dispatchLock) {
+                ArrayList<MessageReference> references = new ArrayList<MessageReference>();
 	            for (MessageReference r : dispatched) {
 	                if( r.getRegionDestination() == destination) {
-	                	rc.add(r);
+                        references.add(r);
 	                }
 	            }
-                destination.getDestinationStatistics().getDispatched().subtract(dispatched.size());
-                destination.getDestinationStatistics().getInflight().subtract(dispatched.size());
-                dispatched.clear();
+                rc.addAll(references);
+                destination.getDestinationStatistics().getDispatched().subtract(references.size());
+                destination.getDestinationStatistics().getInflight().subtract(references.size());
+                dispatched.removeAll(references);
             }            
         }
         return rc;

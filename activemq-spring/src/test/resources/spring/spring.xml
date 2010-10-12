@@ -58,9 +58,8 @@
     <bean id="compositeContainer" class="org.springframework.jms.listener.DefaultMessageListenerContainer">
         <property name="connectionFactory" ref="connectionFactory"/>
         <property name="messageListener" ref="messageListener"/>
-        <property name="destinationName" value="TEST.>"/>
+        <property name="destinationName" value="TEST.>?consumer.prefetchSize=1"/>
         <property name="transactionManager" ref="transactionManager"/>
-        <property name="cacheLevelName" value="CACHE_CONSUMER"/>
     </bean>
 
 </beans>   

@@ -51,7 +51,7 @@ public class ListenerTest {
         Thread.sleep(3000);
 
         LOG.info("messages received= " + listener.messages.size());
-        Assert.assertEquals(listener.messages.size(), msgNum);
+        Assert.assertEquals(msgNum, listener.messages.size());
     }
 
 
@@ -63,7 +63,7 @@ public class ListenerTest {
         Thread.sleep(3000);
 
         LOG.info("messages received= " + listener.messages.size());
-        Assert.assertEquals(listener.messages.size(), 6 * msgNum);
+        Assert.assertEquals(6 * msgNum, listener.messages.size());
     }
 
     public void sendMessages(String destName, int msgNum) throws Exception {
