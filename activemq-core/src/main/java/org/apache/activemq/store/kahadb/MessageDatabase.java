@@ -1202,6 +1202,7 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
             }
 
             // check we are not deleting file with ack for in-use journal files
+            LOG.debug("gc candidates: " + gcCandidateSet);
             final TreeSet<Integer> gcCandidates = new TreeSet<Integer>(gcCandidateSet);
             Iterator<Integer> candidates = gcCandidateSet.iterator();
             while (candidates.hasNext()) {
