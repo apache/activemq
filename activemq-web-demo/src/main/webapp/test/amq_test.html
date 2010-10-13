@@ -282,6 +282,26 @@
       org.activemq.Amq.testPollHandler( response );
       
       assertEqual( 'test message', callbackValue.textContent );
+    }},
+    
+    testClientIdSpecifiedInInitIsAddedToAllAjaxRequests: function() { with( this ) {
+      // need to reset to remove the poll message sent when init() is called in setup().
+      org.activemq.AmqAdapter.reset();
+      org.activemq.Amq.init({ uri: '../amq', timeout: 30, clientId:'uniqueClientName' });
+      
+      org.activemq.Amq.addListener( 'id', 'queue://test', function(){} );
+      org.activemq.Amq.sendMessage( 'queue://test', '<message>test</message>' );
+      org.activemq.Amq.removeListener( 'id', 'topic://test' );      
+      org.activemq.Amq.endBatch();
+      
+      var requests = org.activemq.AmqAdapter.getRequests();
+      var clientNameRegex = /clientId=uniqueClientName/;
+      
+      assertEqual( 3, requests.length );
+      assertMatch( clientNameRegex, requests[0].options.data );
+      assertMatch( clientNameRegex, requests[1].options.data );
+      assertMatch( clientNameRegex, requests[2].options.data );
+      
     }}
     
   }); 

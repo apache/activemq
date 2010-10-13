@@ -55,7 +55,7 @@
 		//     org.activemq.Chat.init();
 		// }
 		window.onload = function() {
-			org.activemq.Amq.init({ uri: 'amq', logging: true, timeout: 45 });
+			org.activemq.Amq.init({ uri: 'amq', logging: true, timeout: 45, clientId:(new Date()).getTime().toString() });
 			org.activemq.Chat.init();
 		};
 	</script>    

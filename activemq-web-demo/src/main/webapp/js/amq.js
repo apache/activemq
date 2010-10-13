@@ -70,6 +70,11 @@ org.activemq.Amq = function() {
 	// message, messageType }.
 	var messageQueue = [];
 
+  // String to distinguish this client from others sharing the same session.
+  // This can occur when multiple browser windows or tabs using amq.js simultaneously.
+  // All windows share the same JESSIONID, but need to consume messages independently.
+  var clientId = null;
+  
 	/**
 	 * Iterate over the returned XML and for each message in the response, 
 	 * invoke the handler with the matching id.
@@ -138,9 +143,8 @@ org.activemq.Amq = function() {
 		var data = 'timeout=' + timeout * 1000
 				 + '&d=' + now.getTime()
 				 + '&r=' + Math.random();
-				 
 		var options = { method: 'get',
-			data: data,
+			data: addClientId( data ),
 			success: pollHandler,
 			error: pollErrorHandler};
 		adapter.ajax(uri, options);
@@ -158,7 +162,7 @@ org.activemq.Amq = function() {
 		} else {
 			org.activemq.Amq.startBatch();
 			adapter.ajax(uri, { method: 'post',
-				data: buildParams( [message] ),
+				data: addClientId( buildParams( [message] ) ),
 				error: errorHandler,
 				headers: headers,
 				success: org.activemq.Amq.endBatch});
@@ -181,18 +185,33 @@ org.activemq.Amq = function() {
 		}
 		return s.join('');
 	}
+	
+	// add clientId to data if it exists, before passing data to ajax connection adapter.
+	var addClientId = function( data ) {
+		var output = data || '';
+		if( clientId ) {
+			if( output.length > 0 ) {
+				output += '&';
+			}
+			output += 'clientId='+clientId;
+		}
+		return output;
+	}
 
 	return {
+		// optional clientId can be supplied to allow multiple clients (browser windows) within the same session.
 		init : function(options) {
 			connectStatusHandler = options.connectStatusHandler || function(connected){};
 			uri = options.uri || '/amq';
 			pollDelay = typeof options.pollDelay == 'number' ? options.pollDelay : 0;
 			timeout = typeof options.timeout == 'number' ? options.timeout : 25;
 			logging = options.logging;
+			clientId = options.clientId;
 			adapter.init(options);
 			sendPoll();
+			
 		},
-
+		    
 		startBatch : function() {
 			batchInProgress = true;
 		},
@@ -205,7 +224,7 @@ org.activemq.Amq = function() {
 				
 				// we need to ensure that messages which set headers are sent by themselves.
 				// if 2 'listen' messages were sent together, and a 'selector' header were added to one of them,
-				//	 AMQ would add the selector to both 'listen' commands.
+				// AMQ would add the selector to both 'listen' commands.
 				for(i=0;i<messageQueue.length;i++) {
 					// a message with headers should always be sent by itself.	if other messages have been added, send this one later.
 					if ( messageQueue[ i ].headers && messagesToSend.length == 0 ) {
@@ -223,7 +242,7 @@ org.activemq.Amq = function() {
 				adapter.ajax(uri, {
 					method: 'post',
 					headers: outgoingHeaders,
-					data: body,
+					data: addClientId( body ),
 					success: org.activemq.Amq.endBatch, 
 					error: errorHandler});
 			} else {

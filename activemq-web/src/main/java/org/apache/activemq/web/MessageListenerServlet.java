@@ -23,6 +23,10 @@ import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Date;
+import java.util.Iterator;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import javax.jms.Destination;
 import javax.jms.JMSException;
@@ -66,12 +70,14 @@ import org.eclipse.jetty.continuation.ContinuationSupport;
  */
 public class MessageListenerServlet extends MessageServletSupport {
     private static final Log LOG = LogFactory.getLog(MessageListenerServlet.class);
-
+    
     private String readTimeoutParameter = "timeout";
     private long defaultReadTimeout = -1;
     private long maximumReadTimeout = 25000;
     private int maximumMessages = 100;
-
+    private Timer clientCleanupTimer = new Timer();
+    private HashMap<String,AjaxWebClient> ajaxWebClients = new HashMap<String,AjaxWebClient>();
+    
     public void init() throws ServletException {
         ServletConfig servletConfig = getServletConfig();
         String name = servletConfig.getInitParameter("defaultReadTimeout");
@@ -86,8 +92,9 @@ public class MessageListenerServlet extends MessageServletSupport {
         if (name != null) {
             maximumMessages = (int)asLong(name);
         }
+        clientCleanupTimer.schedule( new ClientCleaner(), 5000, 60000 );
     }
-
+    
     /**
      * Sends a message to a destination or manage subscriptions. If the the
      * content type of the POST is
@@ -110,14 +117,13 @@ public class MessageListenerServlet extends MessageServletSupport {
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 
         // lets turn the HTTP post into a JMS Message
-
-        WebClient client = WebClient.getWebClient(request);
+        AjaxWebClient client = getAjaxWebClient( request );
         String messageIds = "";
 
         synchronized (client) {
 
             if (LOG.isDebugEnabled()) {
-                LOG.debug("POST client=" + client + " session=" + request.getSession().getId() + " info=" + request.getPathInfo() + " contentType=" + request.getContentType());
+                LOG.debug("POST client=" + client + " session=" + request.getSession().getId() + " clientId="+ request.getParameter("clientId") + " info=" + request.getPathInfo() + " contentType=" + request.getContentType());
                 // dump(request.getParameterMap());
             }
 
@@ -151,27 +157,27 @@ public class MessageListenerServlet extends MessageServletSupport {
                     messages++;
 
                     if ("listen".equals(type)) {
-                        Listener listener = getListener(request);
-                        Map<MessageAvailableConsumer, String> consumerIdMap = getConsumerIdMap(request);
-                        Map<MessageAvailableConsumer, String> consumerDestinationMap = getConsumerDestinationNameMap(request);
+                        AjaxListener listener = client.getListener();
+                        Map<MessageAvailableConsumer, String> consumerIdMap = client.getIdMap();
+                        Map<MessageAvailableConsumer, String> consumerDestinationNameMap = client.getDestinationNameMap();
                         client.closeConsumer(destination); // drop any existing
                         // consumer.
                         MessageAvailableConsumer consumer = (MessageAvailableConsumer)client.getConsumer(destination, request.getHeader(WebClient.selectorName));
 
                         consumer.setAvailableListener(listener);
                         consumerIdMap.put(consumer, message);
-                        consumerDestinationMap.put(consumer, destinationName);
+                        consumerDestinationNameMap.put(consumer, destinationName);
                         if (LOG.isDebugEnabled()) {
                             LOG.debug("Subscribed: " + consumer + " to " + destination + " id=" + message);
                         }
                     } else if ("unlisten".equals(type)) {
-                        Map<MessageAvailableConsumer, String> consumerIdMap = getConsumerIdMap(request);
-                        Map consumerDestinationMap = getConsumerDestinationNameMap(request);
+                        Map<MessageAvailableConsumer, String> consumerIdMap = client.getIdMap();
+                        Map consumerDestinationNameMap = client.getDestinationNameMap();
                         MessageAvailableConsumer consumer = (MessageAvailableConsumer)client.getConsumer(destination, request.getHeader(WebClient.selectorName));
 
                         consumer.setAvailableListener(null);
                         consumerIdMap.remove(consumer);
-                        consumerDestinationMap.remove(consumer);
+                        consumerDestinationNameMap.remove(consumer);
                         client.closeConsumer(destination);
                         if (LOG.isDebugEnabled()) {
                             LOG.debug("Unsubscribed: " + consumer);
@@ -233,9 +239,9 @@ public class MessageListenerServlet extends MessageServletSupport {
      */
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         try {
-            WebClient client = WebClient.getWebClient(request);
+            AjaxWebClient client = getAjaxWebClient(request);
             if (LOG.isDebugEnabled()) {
-                LOG.debug("GET client=" + client + " session=" + request.getSession().getId() + " uri=" + request.getRequestURI() + " query=" + request.getQueryString());
+                LOG.debug("GET client=" + client + " session=" + request.getSession().getId() + " clientId="+ request.getParameter("clientId") + " uri=" + request.getRequestURI() + " query=" + request.getQueryString());
             }
 
             doMessages(client, request, response);
@@ -253,7 +259,7 @@ public class MessageListenerServlet extends MessageServletSupport {
      * @throws ServletException
      * @throws IOException
      */
-    protected void doMessages(WebClient client, HttpServletRequest request, HttpServletResponse response) throws JMSException, IOException {
+    protected void doMessages(AjaxWebClient client, HttpServletRequest request, HttpServletResponse response) throws JMSException, IOException {
 
         int messages = 0;
         // This is a poll for any messages
@@ -286,7 +292,11 @@ public class MessageListenerServlet extends MessageServletSupport {
                     }
                 }
             }
-
+            
+            // prepare the response
+            response.setContentType("text/xml");
+            response.setHeader("Cache-Control", "no-cache");
+            
             if (message == null) {
                 Continuation continuation = ContinuationSupport.getContinuation(request);
                 
@@ -308,23 +318,19 @@ public class MessageListenerServlet extends MessageServletSupport {
                 continuation.suspend();
                 
                 // Fetch the listeners
-                Listener listener = getListener(request);
+                AjaxListener listener = client.getListener();
 
                 // register this continuation with our listener.
                 listener.setContinuation(continuation);
                 
                 return;
             }
-            
-            // prepare the responds
-            response.setContentType("text/xml");
-            response.setHeader("Cache-Control", "no-cache");
 
             StringWriter swriter = new StringWriter();
             PrintWriter writer = new PrintWriter(swriter);
-
-            Map<MessageAvailableConsumer, String> consumerIdMap = getConsumerIdMap(request);
-            Map<MessageAvailableConsumer, String> consumerDestinationNameMap = getConsumerDestinationNameMap(request);
+            
+            Map<MessageAvailableConsumer, String> consumerIdMap = client.getIdMap();
+            Map<MessageAvailableConsumer, String> consumerDestinationNameMap = client.getDestinationNameMap();
             response.setStatus(HttpServletResponse.SC_OK);
             writer.println("<ajax-response>");
 
@@ -388,40 +394,35 @@ public class MessageListenerServlet extends MessageServletSupport {
         }
         writer.println("</response>");
     }
-
-    protected Listener getListener(HttpServletRequest request) {
-        HttpSession session = request.getSession();
-        Listener listener = (Listener)session.getAttribute("mls.listener");
-        if (listener == null) {
-            listener = new Listener(WebClient.getWebClient(request));
-            session.setAttribute("mls.listener", listener);
-        }
-        return listener;
-    }
-
-    protected Map<MessageAvailableConsumer, String> getConsumerIdMap(HttpServletRequest request) {
+    
+    /*
+     * Return the AjaxWebClient for this session+clientId.
+     * Create one if it does not already exist.
+     */
+    protected AjaxWebClient getAjaxWebClient( HttpServletRequest request ) {
+        long now = (new Date()).getTime();
         HttpSession session = request.getSession(true);
-        Map<MessageAvailableConsumer, String> map = (Map<MessageAvailableConsumer, String>)session.getAttribute("mls.consumerIdMap");
-        if (map == null) {
-            map = new HashMap<MessageAvailableConsumer, String>();
-            session.setAttribute("mls.consumerIdMap", map);
+        
+        String clientId = request.getParameter( "clientId" );      
+        // if user doesn't supply a 'clientId', we'll just use a default.
+        if( clientId == null ) {
+            clientId = "defaultAjaxWebClient";
         }
-        return map;
-    }
-
-    protected Map<MessageAvailableConsumer, String> getConsumerDestinationNameMap(HttpServletRequest request) {
-        HttpSession session = request.getSession(true);
-        Map<MessageAvailableConsumer, String> map = (Map<MessageAvailableConsumer, String>)session.getAttribute("mls.consumerDestinationNameMap");
-        if (map == null) {
-            map = new HashMap<MessageAvailableConsumer, String>();
-            session.setAttribute("mls.consumerDestinationNameMap", map);
+        String sessionKey = session.getId() + '-' + clientId;
+        
+        AjaxWebClient client = ajaxWebClients.get( sessionKey );
+        synchronized (ajaxWebClients) {
+            // create a new AjaxWebClient if one does not already exist for this sessionKey.
+            if( client == null ) {
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug( "creating new AjaxWebClient in "+sessionKey );
+                }
+                client = new AjaxWebClient( request, maximumReadTimeout );
+                ajaxWebClients.put( sessionKey, client );
+            }
+            client.updateLastAccessed();
         }
-        return map;
-    }
-
-    protected boolean isRicoAjax(HttpServletRequest request) {
-        String rico = request.getParameter("rico");
-        return rico != null && rico.equals("true");
+        return client;
     }
 
     /**
@@ -440,48 +441,34 @@ public class MessageListenerServlet extends MessageServletSupport {
         }
         return answer;
     }
-
+    
     /*
-     * Listen for available messages and wakeup any continuations.
+     * an instance of this class runs every minute (started in init), to clean up old web clients & free resources.
      */
-    private class Listener implements MessageAvailableListener {
-        WebClient client;
-        long lastAccess;
-        Continuation continuation;
-
-        Listener(WebClient client) {
-            this.client = client;
-        }
-
-        public void access() {
-            lastAccess = System.currentTimeMillis();
-        }
-
-        public synchronized void setContinuation(Continuation continuation) {
-            this.continuation = continuation;
-        }
-
-        public synchronized void onMessageAvailable(MessageConsumer consumer) {
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("message for " + consumer + "continuation=" + continuation);
+    private class ClientCleaner extends TimerTask {
+        public void run() {
+            if( LOG.isDebugEnabled() ) {
+                LOG.debug( "Cleaning up expired web clients." );
             }
-            if (continuation != null) {
-                    try {
-                        Message message = consumer.receive(10);
-                        continuation.setAttribute("message", message);
-                        continuation.setAttribute("consumer", consumer);
-                    } catch (Exception e) {
-                        LOG.error("Error receiving message " + e, e);
+            
+            synchronized( ajaxWebClients ) {
+                Iterator it = ajaxWebClients.entrySet().iterator();
+                while ( it.hasNext() ) {
+                    Map.Entry<String,AjaxWebClient> e = (Map.Entry<String,AjaxWebClient>)it.next();
+                    String key = e.getKey();
+                    AjaxWebClient val = e.getValue();
+                    if ( LOG.isDebugEnabled() ) {
+                        LOG.debug( "AjaxWebClient " + key + " last accessed " + val.getMillisSinceLastAccessed()/1000 + " seconds ago." );
                     }
-                    continuation.resume();
-            } else if (System.currentTimeMillis() - lastAccess > 2 * maximumReadTimeout) {
-                new Thread() {
-                    public void run() {
-                        client.closeConsumers();
-                    };
-                }.start();
+                    // close an expired client and remove it from the ajaxWebClients hash.
+                    if( val.closeIfExpired() ) {
+                        if ( LOG.isDebugEnabled() ) {
+                            LOG.debug( "Removing expired AjaxWebClient " + key );
+                        }
+                        it.remove();
+                    }
+                }
             }
         }
-
     }
 }
