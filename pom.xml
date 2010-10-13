@@ -64,7 +64,7 @@
     <icu-version>4.0.1</icu-version>
     <jasypt-version>1.6</jasypt-version>
     <jdom-version>1.0</jdom-version>
-    <jetty-version>7.0.1.v20091125</jetty-version>
+    <jetty-version>7.1.6.v20100715</jetty-version>
     <jsp-version>2.1.v20100127</jsp-version>
     <jettison-version>1.2</jettison-version>
     <jmock-version>2.5.1</jmock-version>
