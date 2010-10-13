@@ -79,6 +79,7 @@ public class SocketProxy {
 
     public void open() throws Exception {
         serverSocket = new ServerSocket();
+        serverSocket.setReuseAddress(true);
         if (receiveBufferSize > 0) {
             serverSocket.setReceiveBufferSize(receiveBufferSize);
         }
