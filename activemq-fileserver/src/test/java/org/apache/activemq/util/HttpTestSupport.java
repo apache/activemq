@@ -93,10 +93,10 @@ public abstract class HttpTestSupport extends TestCase {
     protected void tearDown() throws Exception {
         server.stop();
         if (createBroker) {
-            broker.stop();
-            broker.waitUntilStopped();
             session.close();
             connection.close();
+            broker.stop();
+            broker.waitUntilStopped();
             IOHelper.deleteFile(homeDir);
         }
     }
