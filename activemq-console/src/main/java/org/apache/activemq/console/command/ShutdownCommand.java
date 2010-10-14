@@ -35,6 +35,7 @@ public class ShutdownCommand extends AbstractJmxCommand {
         "", 
         "Stop Options:",
         "    --jmxurl <url>             Set the JMX URL to connect to.",
+        "    --pid <pid>                   Set the pid to connect to (only on Sun JVM).",            
         "    --jmxuser <user>           Set the JMX user used for authenticating.",
         "    --jmxpassword <password>   Set the JMX password used for authenticating.",
         "    --jmxlocal                 Use the local JMX server instead of a remote one.",

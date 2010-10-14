@@ -85,12 +85,16 @@ if [ -z "$ACTIVEMQ_HOME" ] ; then
   ACTIVEMQ_HOME=`cd "$ACTIVEMQ_HOME" && pwd`
 fi
 
+if [ -z "$ACTIVEMQ_BASE" ] ; then
+  ACTIVEMQ_BASE="$ACTIVEMQ_HOME"
+fi
+
 # Active MQ configuration directory
-ACTIVEMQ_CONFIG_DIR="$ACTIVEMQ_HOME/conf"
+ACTIVEMQ_CONFIG_DIR="$ACTIVEMQ_BASE/conf"
 
 # Active MQ configuration directory
 if [ -z "$ACTIVEMQ_DATA_DIR" ]; then
-  ACTIVEMQ_DATA_DIR="$ACTIVEMQ_HOME/data"
+  ACTIVEMQ_DATA_DIR="$ACTIVEMQ_BASE/data"
 fi
 
 if [ ! -d "$ACTIVEMQ_DATA_DIR" ]; then
@@ -363,7 +367,7 @@ invokeJar(){
               -Dactivemq.home=\"${ACTIVEMQ_HOME}\" \
               -Dactivemq.base=\"${ACTIVEMQ_BASE}\" \
               $ACTIVEMQ_CYGWIN \
-              -jar \"${ACTIVEMQ_HOME}/bin/run.jar\" $COMMANDLINE_ARGS &
+              -jar \"${ACTIVEMQ_HOME}/bin/run.jar\" $COMMANDLINE_ARGS --pid $(cat $ACTIVEMQ_PIDFILE) &
               RET=\"\$?\"; APID=\"\$!\"; 
               echo \$APID > $ACTIVEMQ_DATA_DIR/stop.pid" $DOIT_POSTFIX
    else

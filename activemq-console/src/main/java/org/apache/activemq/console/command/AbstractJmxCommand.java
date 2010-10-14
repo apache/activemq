@@ -267,6 +267,30 @@ public abstract class AbstractJmxCommand extends AbstractCommand {
                 context.printException(e);
                 tokens.clear();
             }
+        } else if(token.equals("--pid")) {
+           if (isSunJVM()) {
+               if (tokens.isEmpty() || ((String) tokens.get(0)).startsWith("-")) {
+                   context.printException(new IllegalArgumentException("pid not specified"));
+                   return;
+               }
+               int pid = Integer.parseInt(tokens.remove(0));
+               context.print("Connecting to pid: " + pid);
+
+               String jmxUrl = ConnectorAddressLink.importFrom(pid);
+               // If jmx url already specified
+               if (getJmxServiceUrl() != null) {
+                   context.printException(new IllegalArgumentException("JMX URL already specified."));
+                   tokens.clear();
+               }
+               try {
+                   this.setJmxServiceUrl(new JMXServiceURL(jmxUrl));
+               } catch (MalformedURLException e) {
+                   context.printException(e);
+                   tokens.clear();
+               }
+           }  else {
+              context.printInfo("--pid option is not available for this VM, using default JMX url");
+           }
         } else if (token.equals("--jmxuser")) {
             // If no jmx user specified, or next token is a new option
             if (tokens.isEmpty() || ((String)tokens.get(0)).startsWith("-")) {
