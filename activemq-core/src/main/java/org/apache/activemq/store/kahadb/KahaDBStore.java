@@ -717,7 +717,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
         public int getMessageCount(String clientId, String subscriptionName) throws IOException {
             final String subscriptionKey = subscriptionKey(clientId, subscriptionName);
             final SubscriptionInfo info = lookupSubscription(clientId, subscriptionName);
-            indexLock.readLock().lock();
+            indexLock.writeLock().lock();
             try {
                 return pageFile.tx().execute(new Transaction.CallableClosure<Integer, IOException>() {
                     public Integer execute(Transaction tx) throws IOException {
@@ -727,8 +727,8 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
                             // The subscription might not exist.
                             return 0;
                         }
-                        MessageOrderCursor moc = new MessageOrderCursor(cursorPos + 1);
-
+                        sd.orderIndex.resetCursorPosition();
+                        sd.orderIndex.setBatch(tx, cursorPos);
                         int counter = 0;
                         try {
                             String selector = info.getSelector();
@@ -736,7 +736,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
                             if (selector != null) {
                                 selectorExpression = SelectorParser.parse(selector);
                             }
-                            for (Iterator<Entry<Long, MessageKeys>> iterator = sd.orderIndex.iterator(tx, moc); iterator
+                            for (Iterator<Entry<Long, MessageKeys>> iterator = sd.orderIndex.iterator(tx); iterator
                                     .hasNext();) {
                                 Entry<Long, MessageKeys> entry = iterator.next();
                                 if (selectorExpression != null) {
@@ -757,7 +757,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
                     }
                 });
             }finally {
-                indexLock.readLock().unlock();
+                indexLock.writeLock().unlock();
             }
         }
 
@@ -786,15 +786,19 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
         public void recoverNextMessages(String clientId, String subscriptionName, final int maxReturned,
                 final MessageRecoveryListener listener) throws Exception {
             final String subscriptionKey = subscriptionKey(clientId, subscriptionName);
-            indexLock.readLock().lock();
+            indexLock.writeLock().lock();
             try {
                 pageFile.tx().execute(new Transaction.Closure<Exception>() {
                     public void execute(Transaction tx) throws Exception {
                         StoredDestination sd = getStoredDestination(dest, tx);
+                        sd.orderIndex.resetCursorPosition();
                         MessageOrderCursor moc = sd.subscriptionCursors.get(subscriptionKey);
                         if (moc == null) {
                             long pos = sd.subscriptionAcks.get(tx, subscriptionKey);
-                            moc = new MessageOrderCursor(pos+1);
+                            sd.orderIndex.setBatch(tx, pos);
+                            moc = sd.orderIndex.cursor;
+                        } else {
+                            sd.orderIndex.cursor.sync(moc);
                         }
 
                         Entry<Long, MessageKeys> entry = null;
@@ -813,11 +817,14 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
                         if (entry != null) {
                             MessageOrderCursor copy = sd.orderIndex.cursor.copy();
                             sd.subscriptionCursors.put(subscriptionKey, copy);
+                            if (LOG.isDebugEnabled()) {
+                                LOG.debug("updated moc: " + copy + ", recovered: " + counter);
+                            }
                         }
                     }
                 });
             }finally {
-                indexLock.readLock().unlock();
+                indexLock.writeLock().unlock();
             }
         }
 

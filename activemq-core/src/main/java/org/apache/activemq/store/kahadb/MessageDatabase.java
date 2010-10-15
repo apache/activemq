@@ -1875,6 +1875,18 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
                 lowPriorityCursorPosition++;
             }
         }
+
+        public String toString() {
+           return "MessageOrderCursor:[def:" + defaultCursorPosition
+                   + ", low:" + lowPriorityCursorPosition
+                   + ", high:" +  highPriorityCursorPosition + "]";
+        }
+
+        public void sync(MessageOrderCursor other) {
+            this.defaultCursorPosition=other.defaultCursorPosition;
+            this.lowPriorityCursorPosition=other.lowPriorityCursorPosition;
+            this.highPriorityCursorPosition=other.highPriorityCursorPosition;
+        }
     }
     
     class MessageOrderIndex{
@@ -2010,11 +2022,11 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
         
         void getDeleteList(Transaction tx, ArrayList<Entry<Long, MessageKeys>> deletes, Long sequenceId)
                 throws IOException {
-            getDeleteList(tx, deletes, defaultPriorityIndex, sequenceId);
-            if (highPriorityIndex != null) {
+            if (defaultPriorityIndex.containsKey(tx, sequenceId)) {
+                getDeleteList(tx, deletes, defaultPriorityIndex, sequenceId);
+            } else if (highPriorityIndex != null && highPriorityIndex.containsKey(tx, sequenceId)) {
                 getDeleteList(tx, deletes, highPriorityIndex, sequenceId);
-            }
-            if (lowPriorityIndex != null) {
+            } else if (lowPriorityIndex != null && lowPriorityIndex.containsKey(tx, sequenceId)) {
                 getDeleteList(tx, deletes, lowPriorityIndex, sequenceId);
             }
         }
@@ -2073,7 +2085,6 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
             final Iterator<Entry<Long, MessageKeys>>highIterator;
             final Iterator<Entry<Long, MessageKeys>>defaultIterator;
             final Iterator<Entry<Long, MessageKeys>>lowIterator;
-            Long lastKey;
             
             
 

@@ -27,6 +27,7 @@ import javax.jms.Topic;
 import javax.jms.TopicSubscriber;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.ActiveMQPrefetchPolicy;
 import org.apache.activemq.CombinationTestSupport;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
@@ -49,7 +50,8 @@ abstract public class MessagePriorityTest extends CombinationTestSupport {
     Session sess;
     
     public boolean useCache;
-    
+    public int prefetchVal = 500;
+
     int MSG_NUM = 1000;
     int HIGH_PRI = 7;
     int LOW_PRI = 3;
@@ -59,6 +61,7 @@ abstract public class MessagePriorityTest extends CombinationTestSupport {
     protected void setUp() throws Exception {
         broker = new BrokerService();
         broker.setBrokerName("priorityTest");
+        broker.setAdvisorySupport(false);
         adapter = createPersistenceAdapter(true);
         broker.setPersistenceAdapter(adapter);
         PolicyEntry policy = new PolicyEntry();
@@ -71,6 +74,10 @@ abstract public class MessagePriorityTest extends CombinationTestSupport {
         broker.waitUntilStarted();
         
         factory = new ActiveMQConnectionFactory("vm://priorityTest");
+        ActiveMQPrefetchPolicy prefetch = new ActiveMQPrefetchPolicy();
+        prefetch.setAll(prefetchVal);
+        factory.setPrefetchPolicy(prefetch);
+        factory.setWatchTopicAdvisories(false);
         conn = factory.createConnection();
         conn.setClientID("priority");
         conn.start();
@@ -159,6 +166,10 @@ abstract public class MessagePriorityTest extends CombinationTestSupport {
         LOG.info("Sending  " + text);
         return msg;
     }
+
+    public void initCombosForTestDurableSubs() {
+        addCombinationValues("prefetchVal", new Object[] {new Integer(1000), new Integer(MSG_NUM/4)});
+    }
     
     public void testDurableSubs() throws Exception {
         ActiveMQTopic topic = (ActiveMQTopic)sess.createTopic("TEST");
@@ -176,11 +187,45 @@ abstract public class MessagePriorityTest extends CombinationTestSupport {
         
         sub = sess.createDurableSubscriber(topic, "priority");
         for (int i = 0; i < MSG_NUM * 2; i++) {
-            Message msg = sub.receive(1000);
+            Message msg = sub.receive(5000);
             assertNotNull("Message " + i + " was null", msg);
             assertEquals("Message " + i + " has wrong priority", i < MSG_NUM ? HIGH_PRI : LOW_PRI, msg.getJMSPriority());
         }
         
+    }
+
+    public void initCombosForTestDurableSubsReconnect() {
+        addCombinationValues("prefetchVal", new Object[] {new Integer(1000), new Integer(MSG_NUM/2)});
+    }
+    
+    public void testDurableSubsReconnect() throws Exception {
+        ActiveMQTopic topic = (ActiveMQTopic)sess.createTopic("TEST");
+        final String subName = "priorityDisconnect";
+        TopicSubscriber sub = sess.createDurableSubscriber(topic, subName);
+        sub.close();
+
+        ProducerThread lowPri = new ProducerThread(topic, MSG_NUM, LOW_PRI);
+        ProducerThread highPri = new ProducerThread(topic, MSG_NUM, HIGH_PRI);
+
+        lowPri.start();
+        highPri.start();
+
+        lowPri.join();
+        highPri.join();
+
+
+        final int closeFrequency = MSG_NUM/4;
+        sub = sess.createDurableSubscriber(topic, subName);
+        for (int i = 0; i < MSG_NUM * 2; i++) {
+            Message msg = sub.receive(5000);
+            assertNotNull("Message " + i + " was null", msg);
+            assertEquals("Message " + i + " has wrong priority", i < MSG_NUM ? HIGH_PRI : LOW_PRI, msg.getJMSPriority());
+            if (i>0 && i%closeFrequency==0) {
+                LOG.info("Closing durable sub.. on: " + i);
+                sub.close();
+                sub = sess.createDurableSubscriber(topic, subName);
+            }
+        }
     }
     
 }
