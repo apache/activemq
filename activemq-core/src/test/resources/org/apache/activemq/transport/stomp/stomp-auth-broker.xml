@@ -33,7 +33,7 @@
 
   <bean id="springContext" class="org.apache.activemq.spring.SpringBrokerContext" />
 
-  <broker useJmx="true" persistent="false" xmlns="http://activemq.apache.org/schema/core" populateJMSXUserID="true" brokerContext="#springContext">
+  <broker useJmx="true" schedulerSupport="true" persistent="false" xmlns="http://activemq.apache.org/schema/core" populateJMSXUserID="true" brokerContext="#springContext">
 
     <plugins>
 		<simpleAuthenticationPlugin>
