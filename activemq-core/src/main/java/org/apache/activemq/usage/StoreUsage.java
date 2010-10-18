@@ -58,4 +58,12 @@ public class StoreUsage extends Usage<StoreUsage> {
         this.store = store;
         onLimitChange();
     }
+
+    @Override
+    public int getPercentUsage() {
+        synchronized (usageMutex) {
+            percentUsage = caclPercentUsage();
+            return super.getPercentUsage();
+        }
+    }
 }
