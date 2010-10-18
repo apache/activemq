@@ -727,8 +727,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
                             // The subscription might not exist.
                             return 0;
                         }
-                        sd.orderIndex.resetCursorPosition();
-                        sd.orderIndex.setBatch(tx, cursorPos);
+
                         int counter = 0;
                         try {
                             String selector = info.getSelector();
@@ -736,6 +735,8 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
                             if (selector != null) {
                                 selectorExpression = SelectorParser.parse(selector);
                             }
+                            sd.orderIndex.resetCursorPosition();
+                            sd.orderIndex.setBatch(tx, (selectorExpression != null? 0 : cursorPos));
                             for (Iterator<Entry<Long, MessageKeys>> iterator = sd.orderIndex.iterator(tx); iterator
                                     .hasNext();) {
                                 Entry<Long, MessageKeys> entry = iterator.next();
@@ -764,28 +765,31 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
         public void recoverSubscription(String clientId, String subscriptionName, final MessageRecoveryListener listener)
                 throws Exception {
             final String subscriptionKey = subscriptionKey(clientId, subscriptionName);
-            indexLock.readLock().lock();
+            final SubscriptionInfo info = lookupSubscription(clientId, subscriptionName);
+            indexLock.writeLock().lock();
             try {
                 pageFile.tx().execute(new Transaction.Closure<Exception>() {
                     public void execute(Transaction tx) throws Exception {
                         StoredDestination sd = getStoredDestination(dest, tx);
                         Long cursorPos = sd.subscriptionAcks.get(tx, subscriptionKey);
-                        MessageOrderCursor moc = new MessageOrderCursor(cursorPos + 1);
-                        for (Iterator<Entry<Long, MessageKeys>> iterator = sd.orderIndex.iterator(tx, moc); iterator
+                        sd.orderIndex.setBatch(tx, (info.getSelector() == null ? cursorPos : 0));
+                        for (Iterator<Entry<Long, MessageKeys>> iterator = sd.orderIndex.iterator(tx); iterator
                                 .hasNext();) {
                             Entry<Long, MessageKeys> entry = iterator.next();
                             listener.recoverMessage(loadMessage(entry.getValue().location));
                         }
+                        sd.orderIndex.resetCursorPosition();
                     }
                 });
             }finally {
-                indexLock.readLock().unlock();
+                indexLock.writeLock().unlock();
             }
         }
 
         public void recoverNextMessages(String clientId, String subscriptionName, final int maxReturned,
                 final MessageRecoveryListener listener) throws Exception {
             final String subscriptionKey = subscriptionKey(clientId, subscriptionName);
+            final SubscriptionInfo info = lookupSubscription(clientId, subscriptionName);
             indexLock.writeLock().lock();
             try {
                 pageFile.tx().execute(new Transaction.Closure<Exception>() {
@@ -795,7 +799,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
                         MessageOrderCursor moc = sd.subscriptionCursors.get(subscriptionKey);
                         if (moc == null) {
                             long pos = sd.subscriptionAcks.get(tx, subscriptionKey);
-                            sd.orderIndex.setBatch(tx, pos);
+                            sd.orderIndex.setBatch(tx, (info.getSelector() == null ? pos : 0));
                             moc = sd.orderIndex.cursor;
                         } else {
                             sd.orderIndex.cursor.sync(moc);

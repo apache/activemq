@@ -150,6 +150,7 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
     }
 
     public void deactivate(boolean keepDurableSubsActive) throws Exception {
+        LOG.debug("Dectivating " + this);
         active = false;
         this.usageManager.getMemoryUsage().removeUsageListener(this);
         synchronized (pending) {

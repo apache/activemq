@@ -2035,7 +2035,7 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
                 BTreeIndex<Long, MessageKeys> index, Long sequenceId) throws IOException {
             for (Iterator<Entry<Long, MessageKeys>> iterator = index.iterator(tx); iterator.hasNext();) {
                 Entry<Long, MessageKeys> entry = iterator.next();
-                if (entry.getKey().compareTo(sequenceId) <= 0) {
+                if (entry.getKey().compareTo(sequenceId) == 0) {
                     // We don't do the actually delete while we are
                     // iterating the BTree since
                     // iterating would fail.
