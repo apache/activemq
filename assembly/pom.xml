@@ -191,8 +191,8 @@
       <artifactId>xstream</artifactId>
     </dependency>
     <dependency>
-      <groupId>xmlpull</groupId>
-      <artifactId>xmlpull</artifactId>
+      <groupId>xpp3</groupId>
+      <artifactId>xpp3</artifactId>
     </dependency>
 
     <dependency>

@@ -203,7 +203,7 @@
         <include>org.springframework:spring-asm</include>
         <include>org.springframework:spring-expression</include>
         <include>com.thoughtworks.xstream:xstream</include>
-        <include>xmlpull:xmlpull</include>
+        <include>xpp3:xpp3</include>
         <include>org.codehaus.woodstox:woodstox-core-asl</include>
         <include>org.codehaus.woodstox:stax2-api</include>
         <include>org.springframework.ws:spring-oxm-tiger</include>
