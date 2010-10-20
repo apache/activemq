@@ -26,6 +26,11 @@ import javax.net.ssl.HttpsURLConnection;
 import org.apache.activemq.transport.http.HttpTransport;
 import org.apache.activemq.transport.util.TextWireFormat;
 
+/**
+ * @deprecated
+ * @see HttpsClientTransport
+ */
+@Deprecated
 public class HttpsTransport extends HttpTransport {
 
     public HttpsTransport(TextWireFormat wireFormat, URI remoteUrl) throws MalformedURLException {

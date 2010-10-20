@@ -32,7 +32,7 @@ import org.apache.activemq.ActiveMQMessageConsumer;
 
 import com.thoughtworks.xstream.io.json.JettisonMappedXmlDriver;
 
-import static org.apache.activemq.util.xstream.XStreamMessageTransformer.MessageTransform.*;
+import static org.apache.activemq.util.oxm.AbstractXMLMessageTransformer.MessageTransform.*;
 
 /**
  * @version $Revision$
@@ -43,7 +43,9 @@ public class XStreamTransformTest extends TestCase {
     protected long timeout = 5000;
 
     public void testSendObjectMessageReceiveAsTextMessageAndObjectMessage() throws Exception {
-        connectionFactory.setTransformer(new XStreamMessageTransformer(XML));
+        org.apache.activemq.util.oxm.XStreamMessageTransformer transformer = new org.apache.activemq.util.oxm.XStreamMessageTransformer();
+        transformer.setTransformType(XML);
+        connectionFactory.setTransformer(transformer);
         connection = connectionFactory.createConnection();
         connection.start();
 
@@ -88,7 +90,9 @@ public class XStreamTransformTest extends TestCase {
     }
 
     public void testSendTextMessageReceiveAsObjectMessageAndTextMessage() throws Exception {
-        connectionFactory.setTransformer(new XStreamMessageTransformer(OBJECT));
+        org.apache.activemq.util.oxm.XStreamMessageTransformer transformer = new org.apache.activemq.util.oxm.XStreamMessageTransformer();
+        transformer.setTransformType(OBJECT);
+        connectionFactory.setTransformer(transformer);
         connection = connectionFactory.createConnection();
         connection.start();
 
@@ -138,7 +142,9 @@ public class XStreamTransformTest extends TestCase {
     }
 
     public void testAdaptiveTransform() throws Exception {
-        connectionFactory.setTransformer(new XStreamMessageTransformer(ADAPTIVE));
+        org.apache.activemq.util.oxm.XStreamMessageTransformer transformer = new org.apache.activemq.util.oxm.XStreamMessageTransformer();
+        transformer.setTransformType(ADAPTIVE);
+        connectionFactory.setTransformer(transformer);
         connection = connectionFactory.createConnection();
         connection.start();
 
@@ -220,7 +226,8 @@ public class XStreamTransformTest extends TestCase {
     }
     
     public void testStreamDriverTransform() throws Exception {
-    	XStreamMessageTransformer transformer = new XStreamMessageTransformer(ADAPTIVE);
+    	org.apache.activemq.util.oxm.XStreamMessageTransformer transformer = new org.apache.activemq.util.oxm.XStreamMessageTransformer();
+        transformer.setTransformType(ADAPTIVE);
     	transformer.setStreamDriver(new JettisonMappedXmlDriver());
         connectionFactory.setTransformer(transformer);
         connection = connectionFactory.createConnection();

@@ -38,7 +38,10 @@ import org.apache.commons.logging.LogFactory;
 
 /**
  * @version $Revision$
+ * @deprecated
+ * @see HttpClientTransport
  */
+@Deprecated
 public class HttpTransport extends HttpTransportSupport {
     
     private static final Log LOG = LogFactory.getLog(HttpTransport.class);

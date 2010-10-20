@@ -17,28 +17,15 @@
 
 package org.apache.activemq.util.oxm;
 
-import static org.apache.activemq.util.oxm.AbstractXMLMessageTransformer.MessageTransform.ADAPTIVE;
-import static org.apache.activemq.util.oxm.AbstractXMLMessageTransformer.MessageTransform.OBJECT;
-import static org.apache.activemq.util.oxm.AbstractXMLMessageTransformer.MessageTransform.XML;
-
-import javax.jms.Connection;
-import javax.jms.Destination;
-import javax.jms.Message;
-import javax.jms.MessageConsumer;
-import javax.jms.MessageProducer;
-import javax.jms.ObjectMessage;
-import javax.jms.Session;
-import javax.jms.TextMessage;
-
 import junit.framework.TestCase;
-
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.ActiveMQMessageConsumer;
 import org.apache.activemq.MessageTransformer;
 import org.apache.activemq.util.xstream.SamplePojo;
-import org.apache.activemq.util.xstream.XStreamMessageTransformer;
 
-import com.thoughtworks.xstream.io.json.JettisonMappedXmlDriver;
+import javax.jms.*;
+
+import static org.apache.activemq.util.oxm.AbstractXMLMessageTransformer.MessageTransform.*;
 
 public abstract class AbstractXMLMessageTransformerTest extends TestCase {
     protected ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory("vm://localhost?broker.persistent=false");
