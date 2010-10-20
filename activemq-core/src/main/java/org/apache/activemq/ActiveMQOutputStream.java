@@ -38,10 +38,9 @@ import org.apache.activemq.util.IOExceptionSupport;
  */
 public class ActiveMQOutputStream extends OutputStream implements Disposable {
 
-    // Send down 64k messages.
     protected int count;
 
-    final byte buffer[] = new byte[64 * 1024];
+    final byte buffer[];
 
     private final ActiveMQConnection connection;
     private final Map<String, Object> properties;
@@ -53,6 +52,11 @@ public class ActiveMQOutputStream extends OutputStream implements Disposable {
     private final int priority;
     private final long timeToLive;
 
+    /**
+     * JMS Property which is used to specify the size (in kb) which is used as chunk size when splitting the stream. Default is 64kb
+     */
+    public final static String AMQ_STREAM_CHUNK_SIZE = "AMQ_STREAM_CHUNK_SIZE";
+
     public ActiveMQOutputStream(ActiveMQConnection connection, ProducerId producerId, ActiveMQDestination destination, Map<String, Object> properties, int deliveryMode, int priority,
                                 long timeToLive) throws JMSException {
         this.connection = connection;
@@ -60,6 +64,19 @@ public class ActiveMQOutputStream extends OutputStream implements Disposable {
         this.priority = priority;
         this.timeToLive = timeToLive;
         this.properties = properties == null ? null : new HashMap<String, Object>(properties);
+
+        Integer chunkSize = this.properties == null ? null : (Integer) this.properties.get(AMQ_STREAM_CHUNK_SIZE);
+        if (chunkSize == null) {
+            chunkSize = 64 * 1024;
+        } else {
+            if (chunkSize < 1) {
+                throw new IllegalArgumentException("Chunk size must be greater then 0");
+            } else {
+                chunkSize *= 1024;
+            }
+        }
+
+        buffer = new byte[chunkSize];
 
         if (destination == null) {
             throw new InvalidDestinationException("Don't understand null destinations");
