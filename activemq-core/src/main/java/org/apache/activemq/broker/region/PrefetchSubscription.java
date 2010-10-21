@@ -661,8 +661,8 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                 node.getRegionDestination().getDestinationStatistics().getDispatched().increment();
                 node.getRegionDestination().getDestinationStatistics().getInflight().increment();   
                 if (LOG.isTraceEnabled()) {
-                    LOG.trace(info.getConsumerId() + " dispatched: " + message.getMessageId() 
-                            + ", dispatched: " + dispatchCounter + ", inflight: " + dispatched.size());
+                    LOG.trace(info.getConsumerId() + " dispatched: " + message.getMessageId() + " - "
+                            + message.getDestination()  + ", dispatched: " + dispatchCounter + ", inflight: " + dispatched.size());
                 }
             }
         }

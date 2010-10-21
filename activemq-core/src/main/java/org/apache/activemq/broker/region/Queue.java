@@ -1619,6 +1619,9 @@ public class Queue extends BaseDestination implements Task, UsageListener {
         }finally {
             consumersLock.readLock().unlock();
         }
+        if (LOG.isTraceEnabled()) {
+            LOG.trace("Message " + msg.getMessageId() + " sent to " + this.destination);
+        }
         wakeup();
     }
 
