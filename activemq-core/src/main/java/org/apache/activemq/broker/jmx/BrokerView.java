@@ -37,6 +37,7 @@ import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.RemoveSubscriptionInfo;
 import org.apache.activemq.network.NetworkConnector;
+import org.apache.activemq.security.SecurityContext;
 
 /**
  * @version $Revision$
@@ -313,6 +314,7 @@ public class BrokerView implements BrokerViewMBean {
     protected static ConnectionContext createAdminConnectionContext(Broker broker) {
         ConnectionContext context = new ConnectionContext();
         context.setBroker(broker);
+        context.setSecurityContext(SecurityContext.BROKER_SECURITY_CONTEXT);
         return context;
     }
     
