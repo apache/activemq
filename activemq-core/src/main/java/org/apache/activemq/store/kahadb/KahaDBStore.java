@@ -611,7 +611,8 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
             }
         }
 
-        public void acknowledge(ConnectionContext context, String clientId, String subscriptionName, MessageId messageId)
+        public void acknowledge(ConnectionContext context, String clientId, String subscriptionName,
+                                MessageId messageId, MessageAck ack)
                 throws IOException {
             String subscriptionKey = subscriptionKey(clientId, subscriptionName);
             if (isConcurrentStoreAndDispatchTopics()) {

@@ -23,6 +23,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.Message;
+import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.command.SubscriptionInfo;
 import org.apache.activemq.kaha.ListContainer;
@@ -79,7 +80,7 @@ public class KahaTopicMessageStore extends KahaMessageStore implements TopicMess
     }
 
     public synchronized void acknowledge(ConnectionContext context, String clientId, String subscriptionName,
-                                         MessageId messageId) throws IOException {
+                                         MessageId messageId, MessageAck ack) throws IOException {
         String subcriberId = getSubscriptionKey(clientId, subscriptionName);
         TopicSubContainer container = subscriberMessages.get(subcriberId);
         if (container != null) {

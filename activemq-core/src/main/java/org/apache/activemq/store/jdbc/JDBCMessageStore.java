@@ -44,7 +44,8 @@ public class JDBCMessageStore extends AbstractMessageStore {
     protected final WireFormat wireFormat;
     protected final JDBCAdapter adapter;
     protected final JDBCPersistenceAdapter persistenceAdapter;
-    protected AtomicLong lastStoreSequenceId = new AtomicLong(-1);
+    protected AtomicLong lastRecoveredSequenceId = new AtomicLong(-1);
+    protected AtomicLong lastRecoveredPriority = new AtomicLong(Byte.MAX_VALUE -1);
 
     protected ActiveMQMessageAudit audit;
     
@@ -144,7 +145,7 @@ public class JDBCMessageStore extends AbstractMessageStore {
 
     public void removeMessage(ConnectionContext context, MessageAck ack) throws IOException {
     	
-    	long seq = getStoreSequenceIdForMessageId(ack.getLastMessageId());
+    	long seq = getStoreSequenceIdForMessageId(ack.getLastMessageId())[0];
 
         // Get a connection and remove the message from the DB
         TransactionContext c = persistenceAdapter.getTransactionContext(context);
@@ -225,14 +226,15 @@ public class JDBCMessageStore extends AbstractMessageStore {
     public void recoverNextMessages(int maxReturned, final MessageRecoveryListener listener) throws Exception {
         TransactionContext c = persistenceAdapter.getTransactionContext();
         try {
-            adapter.doRecoverNextMessages(c, destination, lastStoreSequenceId.get(), maxReturned, new JDBCMessageRecoveryListener() {
+            adapter.doRecoverNextMessages(c, destination, lastRecoveredSequenceId.get(), lastRecoveredPriority.get(), maxReturned, new JDBCMessageRecoveryListener() {
 
                 public boolean recoverMessage(long sequenceId, byte[] data) throws Exception {
                     if (listener.hasSpace()) {
                         Message msg = (Message)wireFormat.unmarshal(new ByteSequence(data));
                         msg.getMessageId().setBrokerSequenceId(sequenceId);
                         listener.recoverMessage(msg);
-                        lastStoreSequenceId.set(sequenceId);
+                        lastRecoveredSequenceId.set(sequenceId);
+                        lastRecoveredPriority.set(msg.getPriority());
                         return true;
                     }
                     return false;
@@ -259,32 +261,35 @@ public class JDBCMessageStore extends AbstractMessageStore {
      * @see org.apache.activemq.store.MessageStore#resetBatching()
      */
     public void resetBatching() {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug(destination.getPhysicalName() + " resetBatch, existing last seqId: " + lastStoreSequenceId.get());
+        if (LOG.isTraceEnabled()) {
+            LOG.trace(destination.getPhysicalName() + " resetBatching, existing last recovered seqId: " + lastRecoveredSequenceId.get());
         }
-        lastStoreSequenceId.set(-1);
+        lastRecoveredSequenceId.set(-1);
+        lastRecoveredPriority.set(Byte.MAX_VALUE - 1);
 
     }
 
     @Override
     public void setBatch(MessageId messageId) {
-        long storeSequenceId = -1;
         try {
-            storeSequenceId = getStoreSequenceIdForMessageId(messageId);
+            long[] storedValues = getStoreSequenceIdForMessageId(messageId);
+            lastRecoveredSequenceId.set(storedValues[0]);
+            lastRecoveredPriority.set(storedValues[1]);
         } catch (IOException ignoredAsAlreadyLogged) {
-            // reset batch in effect with default -1 value
+            lastRecoveredSequenceId.set(-1);
+            lastRecoveredPriority.set(Byte.MAX_VALUE -1);
         }
-        if (LOG.isDebugEnabled()) {
-            LOG.debug(destination.getPhysicalName() + " setBatch: new sequenceId: " + storeSequenceId + ",existing last seqId: " + lastStoreSequenceId.get());
+        if (LOG.isTraceEnabled()) {
+            LOG.trace(destination.getPhysicalName() + " setBatch: new sequenceId: " + lastRecoveredSequenceId.get()
+                    + ", priority: " + lastRecoveredPriority.get());
         }
-        lastStoreSequenceId.set(storeSequenceId);
     }
 
-    private long getStoreSequenceIdForMessageId(MessageId messageId) throws IOException {
-        long result = -1;
+    private long[] getStoreSequenceIdForMessageId(MessageId messageId) throws IOException {
+        long[] result = new long[]{-1, Byte.MAX_VALUE -1};
         TransactionContext c = persistenceAdapter.getTransactionContext();
         try {
-            result = adapter.getStoreSequenceId(c, destination, messageId)[0];
+            result = adapter.getStoreSequenceId(c, destination, messageId);
         } catch (SQLException e) {
             JDBCPersistenceAdapter.log("JDBC Failure: ", e);
             throw IOExceptionSupport.create("Failed to get store sequenceId for messageId: " + messageId +", on: " + destination + ". Reason: " + e, e);

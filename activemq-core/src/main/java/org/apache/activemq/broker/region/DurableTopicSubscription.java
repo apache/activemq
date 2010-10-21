@@ -78,6 +78,7 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
      */
     public void unmatched(MessageReference node) throws IOException {
         MessageAck ack = new MessageAck();
+        ack.setAckType(MessageAck.UNMATCHED_ACK_TYPE);
         ack.setMessageID(node.getMessageId());
         node.getRegionDestination().acknowledge(this.getContext(), this, ack, node);
     }
@@ -111,14 +112,14 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
 
     public void activate(SystemUsage memoryManager, ConnectionContext context,
             ConsumerInfo info) throws Exception {
-        LOG.debug("Activating " + this);
         if (!active) {
             this.active = true;
             this.context = context;
             this.info = info;
+            LOG.debug("Activating " + this);
             int prefetch = info.getPrefetchSize();
             if (prefetch>0) {
-            prefetch += prefetch/2;
+                prefetch += prefetch/2;
             }
             int depth = Math.max(prefetch, this.pending.getMaxAuditDepth());
             this.pending.setMaxAuditDepth(depth);
@@ -150,7 +151,7 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
     }
 
     public void deactivate(boolean keepDurableSubsActive) throws Exception {
-        LOG.debug("Dectivating " + this);
+        LOG.debug("Deactivating " + this);
         active = false;
         this.usageManager.getMemoryUsage().removeUsageListener(this);
         synchronized (pending) {
@@ -198,7 +199,7 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
         }
         prefetchExtension = 0;
     }
-    
+
     
     protected MessageDispatch createMessageDispatch(MessageReference node, Message message) {
         MessageDispatch md = super.createMessageDispatch(node, message);

@@ -74,7 +74,7 @@ public abstract class TestSupport extends CombinationTestSupport {
      * Returns the name of the destination used in this test case
      */
     protected String getDestinationString() {
-        return getClass().getName() + "." + getName();
+        return getClass().getName() + "." + getName(true);
     }
 
     /**

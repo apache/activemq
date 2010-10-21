@@ -47,14 +47,15 @@ abstract public class MessagePriorityTest extends CombinationTestSupport {
     
     ActiveMQConnectionFactory factory;
     Connection conn;
-    Session sess;
+    protected Session sess;
     
     public boolean useCache;
+    public boolean dispatchAsync = false;
     public int prefetchVal = 500;
 
-    int MSG_NUM = 1000;
-    int HIGH_PRI = 7;
-    int LOW_PRI = 3;
+    public int MSG_NUM = 600;
+    public int HIGH_PRI = 7;
+    public int LOW_PRI = 3;
     
     abstract protected PersistenceAdapter createPersistenceAdapter(boolean delete) throws Exception;
     
@@ -78,6 +79,7 @@ abstract public class MessagePriorityTest extends CombinationTestSupport {
         prefetch.setAll(prefetchVal);
         factory.setPrefetchPolicy(prefetch);
         factory.setWatchTopicAdvisories(false);
+        factory.setDispatchAsync(dispatchAsync);
         conn = factory.createConnection();
         conn.setClientID("priority");
         conn.start();
@@ -110,7 +112,7 @@ abstract public class MessagePriorityTest extends CombinationTestSupport {
         
     }
     
-    class ProducerThread extends Thread {
+    protected class ProducerThread extends Thread {
 
         int priority;
         int messageCount;
@@ -154,7 +156,8 @@ abstract public class MessagePriorityTest extends CombinationTestSupport {
         
         MessageConsumer queueConsumer = sess.createConsumer(queue);
         for (int i = 0; i < MSG_NUM * 2; i++) {
-            Message msg = queueConsumer.receive(1000);
+            Message msg = queueConsumer.receive(5000);
+            LOG.debug("received i=" + i + ", " + (msg!=null? msg.getJMSMessageID() : null));
             assertNotNull("Message " + i + " was null", msg);
             assertEquals("Message " + i + " has wrong priority", i < MSG_NUM ? HIGH_PRI : LOW_PRI, msg.getJMSPriority());
         }
@@ -196,6 +199,7 @@ abstract public class MessagePriorityTest extends CombinationTestSupport {
 
     public void initCombosForTestDurableSubsReconnect() {
         addCombinationValues("prefetchVal", new Object[] {new Integer(1000), new Integer(MSG_NUM/2)});
+        addCombinationValues("dispatchAsync", new Object[] {Boolean.TRUE, Boolean.FALSE});
     }
     
     public void testDurableSubsReconnect() throws Exception {
@@ -217,7 +221,8 @@ abstract public class MessagePriorityTest extends CombinationTestSupport {
         final int closeFrequency = MSG_NUM/4;
         sub = sess.createDurableSubscriber(topic, subName);
         for (int i = 0; i < MSG_NUM * 2; i++) {
-            Message msg = sub.receive(5000);
+            Message msg = sub.receive(30000);
+            LOG.debug("received i=" + i + ", " + (msg!=null? msg.getJMSMessageID() : null));
             assertNotNull("Message " + i + " was null", msg);
             assertEquals("Message " + i + " has wrong priority", i < MSG_NUM ? HIGH_PRI : LOW_PRI, msg.getJMSPriority());
             if (i>0 && i%closeFrequency==0) {

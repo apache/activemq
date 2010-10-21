@@ -25,6 +25,7 @@ import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.command.JournalTopicAck;
 import org.apache.activemq.command.Message;
+import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.command.SubscriptionInfo;
 import org.apache.activemq.store.MessageRecoveryListener;
@@ -82,7 +83,7 @@ public class JournalTopicMessageStore extends JournalMessageStore implements Top
     /**
      */
     public void acknowledge(ConnectionContext context, String clientId, String subscriptionName,
-                            final MessageId messageId) throws IOException {
+                            final MessageId messageId, MessageAck originalAck) throws IOException {
         final boolean debug = LOG.isDebugEnabled();
 
         JournalTopicAck ack = new JournalTopicAck();
@@ -138,7 +139,7 @@ public class JournalTopicMessageStore extends JournalMessageStore implements Top
         try {
             SubscriptionInfo sub = longTermStore.lookupSubscription(clientId, subscritionName);
             if (sub != null) {
-                longTermStore.acknowledge(context, clientId, subscritionName, messageId);
+                longTermStore.acknowledge(context, clientId, subscritionName, messageId, null);
             }
         } catch (Throwable e) {
             LOG.debug("Could not replay acknowledge for message '" + messageId
@@ -177,7 +178,7 @@ public class JournalTopicMessageStore extends JournalMessageStore implements Top
                     SubscriptionKey subscriptionKey = iterator.next();
                     MessageId identity = cpAckedLastAckLocations.get(subscriptionKey);
                     longTermStore.acknowledge(transactionTemplate.getContext(), subscriptionKey.clientId,
-                                              subscriptionKey.subscriptionName, identity);
+                                              subscriptionKey.subscriptionName, identity, null);
                 }
 
             }

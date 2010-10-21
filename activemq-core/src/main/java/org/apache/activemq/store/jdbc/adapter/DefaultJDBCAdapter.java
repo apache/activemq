@@ -508,8 +508,6 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
      * @param retroactive 
      * @throws SQLException 
      * @throws IOException 
-     * @see org.apache.activemq.store.jdbc.JDBCAdapter#doSetSubscriberEntry(java.sql.Connection, java.lang.Object,
-     *      org.apache.activemq.service.SubscriptionInfo)
      */
     public void doSetSubscriberEntry(TransactionContext c, SubscriptionInfo info, boolean retroactive)
             throws SQLException, IOException {
@@ -644,11 +642,11 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         }
     }
 
-    public long doGetLastAckedDurableSubscriberMessageId(TransactionContext c, ActiveMQDestination destination,
+    public long[] doGetLastAckedDurableSubscriberMessageId(TransactionContext c, ActiveMQDestination destination,
             String clientId, String subscriberName) throws SQLException, IOException {
         PreparedStatement s = null;
         ResultSet rs = null;
-        long result = -1;
+        long[] result = new long[]{-1, Byte.MAX_VALUE - 1};
         try {
             s = c.getConnection().prepareStatement(this.statements.getLastAckedDurableSubscriberMessageStatement());
             s.setString(1, destination.getQualifiedName());
@@ -656,7 +654,8 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
             s.setString(3, subscriberName);
             rs = s.executeQuery();
             if (rs.next()) {
-                result = rs.getLong(1);
+                result[0] = rs.getLong(1);
+                result[1] = rs.getLong(2);
             }
             rs.close();
             s.close();
@@ -784,7 +783,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
     }
 
     public void doRecoverNextMessages(TransactionContext c, ActiveMQDestination destination, long nextSeq,
-            int maxReturned, JDBCMessageRecoveryListener listener) throws Exception {
+            long priority, int maxReturned, JDBCMessageRecoveryListener listener) throws Exception {
         PreparedStatement s = null;
         ResultSet rs = null;
         try {
@@ -795,8 +794,10 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
             }
             s.setMaxRows(maxReturned * 2);
             s.setString(1, destination.getQualifiedName());
-            if (!isPrioritizedMessages()) {
-                s.setLong(2, nextSeq);
+            s.setLong(2, nextSeq);
+            if (isPrioritizedMessages()) {
+                s.setLong(3, priority);
+                s.setLong(4, priority);
             }
             rs = s.executeQuery();
             int count = 0;

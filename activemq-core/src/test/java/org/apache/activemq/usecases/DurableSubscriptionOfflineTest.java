@@ -16,9 +16,12 @@
  */
 package org.apache.activemq.usecases;
 
+import junit.framework.Test;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.region.policy.PolicyEntry;
+import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
 
@@ -27,11 +30,12 @@ import java.io.File;
 
 public class DurableSubscriptionOfflineTest extends org.apache.activemq.TestSupport {
 
+    public Boolean usePrioritySupport = Boolean.TRUE;
     private BrokerService broker;
     private ActiveMQTopic topic;
 
     protected ActiveMQConnectionFactory createConnectionFactory() throws Exception {
-        return new ActiveMQConnectionFactory("vm://" + getName());
+        return new ActiveMQConnectionFactory("vm://" + getName(true));
     }
 
     @Override
@@ -42,6 +46,10 @@ public class DurableSubscriptionOfflineTest extends org.apache.activemq.TestSupp
         return con;
     }
 
+    public static Test suite() {
+        return suite(DurableSubscriptionOfflineTest.class);
+    }
+    
     protected void setUp() throws Exception {
         topic = (ActiveMQTopic) createDestination();
         createBroker();
@@ -54,21 +62,32 @@ public class DurableSubscriptionOfflineTest extends org.apache.activemq.TestSupp
     }
 
     private void createBroker() throws Exception {
-        broker = BrokerFactory.createBroker("broker:(vm://localhost)");
-        broker.setBrokerName(getName());
+        broker = BrokerFactory.createBroker("broker:(vm://" + getName(true) +")");
+        broker.setBrokerName(getName(true));
         broker.setDeleteAllMessagesOnStartup(true);
 
-        broker.setPersistent(true);
-        KahaDBPersistenceAdapter persistenceAdapter = new KahaDBPersistenceAdapter();
-        persistenceAdapter.setDirectory(new File("activemq-data-kaha/" + getName()));
-        broker.setPersistenceAdapter(persistenceAdapter);
-
+        if (usePrioritySupport) {
+            PolicyEntry policy = new PolicyEntry();
+            policy.setPrioritizedMessages(true);
+            PolicyMap policyMap = new PolicyMap();
+            policyMap.setDefaultEntry(policy);
+            broker.setDestinationPolicy(policyMap);
+        }
+        
+        setDefaultPersistenceAdapter(broker);
         broker.start();
     }
 
     private void destroyBroker() throws Exception {
         if (broker != null)
             broker.stop();
+    }
+
+    public void initCombosForTestOfflineSubscription() throws Exception {
+        this.addCombinationValues("defaultPersistenceAdapter",
+                new Object[]{ PersistenceAdapterChoice.KahaDB, PersistenceAdapterChoice.JDBC});
+        this.addCombinationValues("usePrioritySupport",
+                new Object[]{ Boolean.TRUE, Boolean.FALSE});
     }
 
     public void testOfflineSubscription() throws Exception {

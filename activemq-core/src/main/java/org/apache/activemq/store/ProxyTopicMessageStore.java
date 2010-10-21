@@ -74,8 +74,8 @@ public class ProxyTopicMessageStore implements TopicMessageStore {
     }
 
     public void acknowledge(ConnectionContext context, String clientId, String subscriptionName,
-                            MessageId messageId) throws IOException {
-        delegate.acknowledge(context, clientId, subscriptionName, messageId);
+                            MessageId messageId, MessageAck ack) throws IOException {
+        delegate.acknowledge(context, clientId, subscriptionName, messageId, ack);
     }
 
     public void addSubsciption(SubscriptionInfo subscriptionInfo, boolean retroactive) throws IOException {

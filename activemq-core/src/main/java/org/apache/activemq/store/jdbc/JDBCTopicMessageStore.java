@@ -26,6 +26,7 @@ import org.apache.activemq.ActiveMQMessageAudit;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.command.Message;
+import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.command.SubscriptionInfo;
 import org.apache.activemq.store.MessageRecoveryListener;
@@ -33,12 +34,15 @@ import org.apache.activemq.store.TopicMessageStore;
 import org.apache.activemq.util.ByteSequence;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.wireformat.WireFormat;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * @version $Revision: 1.6 $
  */
 public class JDBCTopicMessageStore extends JDBCMessageStore implements TopicMessageStore {
 
+    private static final Log LOG = LogFactory.getLog(JDBCTopicMessageStore.class);
     private Map<String, AtomicLong> subscriberLastMessageMap = new ConcurrentHashMap<String, AtomicLong>();
     private Map<String, AtomicLong> subscriberLastPriorityMap = new ConcurrentHashMap<String, AtomicLong>();
 
@@ -46,12 +50,21 @@ public class JDBCTopicMessageStore extends JDBCMessageStore implements TopicMess
         super(persistenceAdapter, adapter, wireFormat, topic, audit);
     }
 
-    public void acknowledge(ConnectionContext context, String clientId, String subscriptionName, MessageId messageId) throws IOException {
+    public void acknowledge(ConnectionContext context, String clientId, String subscriptionName, MessageId messageId, MessageAck ack) throws IOException {
+        if (ack != null && ack.isUnmatchedAck()) {
+            if (LOG.isTraceEnabled()) {
+                LOG.trace("ignoring unmatched selector ack for: " + messageId + ", cleanup will get to this message after subsequent acks.");
+            }
+            return;
+        }
         // Get a connection and insert the message into the DB.
         TransactionContext c = persistenceAdapter.getTransactionContext(context);
         try {
         	long[] res = adapter.getStoreSequenceId(c, destination, messageId);
             adapter.doSetLastAck(c, destination, clientId, subscriptionName, res[0], res[1]);
+            if (LOG.isTraceEnabled()) {
+                LOG.trace("ack - seq: " + res[0] + ", priority: " + res[1]);
+            }
         } catch (SQLException e) {
             JDBCPersistenceAdapter.log("JDBC Failure: ", e);
             throw IOExceptionSupport.create("Failed to store acknowledgment for: " + clientId + " on message " + messageId + " in container: " + e, e);
@@ -93,11 +106,14 @@ public class JDBCTopicMessageStore extends JDBCMessageStore implements TopicMess
         AtomicLong last = subscriberLastMessageMap.get(subcriberId);
         AtomicLong priority = subscriberLastPriorityMap.get(subcriberId);
         if (last == null) {
-            long lastAcked = adapter.doGetLastAckedDurableSubscriberMessageId(c, destination, clientId, subscriptionName);
-            last = new AtomicLong(lastAcked);
+            long[] lastAcked = adapter.doGetLastAckedDurableSubscriberMessageId(c, destination, clientId, subscriptionName);
+            last = new AtomicLong(lastAcked[0]);
             subscriberLastMessageMap.put(subcriberId, last);
-            priority = new AtomicLong(Byte.MAX_VALUE - 1);
+            priority = new AtomicLong(lastAcked[1]);
             subscriberLastMessageMap.put(subcriberId, priority);
+        }
+        if (LOG.isTraceEnabled()) {
+            LOG.trace("recoverNextMessage - last: " + last.get() + ", priority: " + priority);
         }
         final AtomicLong finalLast = last;
         final AtomicLong finalPriority = priority;
@@ -137,10 +153,6 @@ public class JDBCTopicMessageStore extends JDBCMessageStore implements TopicMess
         subscriberLastPriorityMap.remove(subcriberId);
     }
 
-    /**
-     * @see org.apache.activemq.store.TopicMessageStore#storeSubsciption(org.apache.activemq.service.SubscriptionInfo,
-     *      boolean)
-     */
     public void addSubsciption(SubscriptionInfo subscriptionInfo, boolean retroactive) throws IOException {
         TransactionContext c = persistenceAdapter.getTransactionContext();
         try {
@@ -206,6 +218,9 @@ public class JDBCTopicMessageStore extends JDBCMessageStore implements TopicMess
             throw IOExceptionSupport.create("Failed to get Message Count: " + clientId + ". Reason: " + e, e);
         } finally {
             c.close();
+        }
+        if (LOG.isTraceEnabled()) {
+            LOG.trace(clientId + ":" + subscriberName + ", messageCount: " + result);
         }
         return result;
     }

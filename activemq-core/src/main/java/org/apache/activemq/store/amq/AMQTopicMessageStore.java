@@ -79,7 +79,8 @@ public class AMQTopicMessageStore extends AMQMessageStore implements TopicMessag
 
     /**
      */
-    public void acknowledge(final ConnectionContext context, final String clientId, final String subscriptionName, final MessageId messageId) throws IOException {
+    public void acknowledge(final ConnectionContext context, final String clientId, final String subscriptionName,
+                            final MessageId messageId, final MessageAck originalAck) throws IOException {
         final boolean debug = LOG.isDebugEnabled();
         JournalTopicAck ack = new JournalTopicAck();
         ack.setDestination(destination);
@@ -140,7 +141,7 @@ public class AMQTopicMessageStore extends AMQMessageStore implements TopicMessag
         try {
             SubscriptionInfo sub = topicReferenceStore.lookupSubscription(clientId, subscritionName);
             if (sub != null) {
-                topicReferenceStore.acknowledge(context, clientId, subscritionName, messageId);
+                topicReferenceStore.acknowledge(context, clientId, subscritionName, messageId, null);
                 return true;
             }
         } catch (Throwable e) {

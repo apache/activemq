@@ -19,6 +19,7 @@ package org.apache.activemq.store;
 import java.io.IOException;
 import javax.jms.JMSException;
 import org.apache.activemq.broker.ConnectionContext;
+import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.command.SubscriptionInfo;
 
@@ -39,7 +40,7 @@ public interface TopicMessageStore extends MessageStore {
      * @param subscriptionPersistentId
      * @throws IOException
      */
-    void acknowledge(ConnectionContext context, String clientId, String subscriptionName, MessageId messageId) throws IOException;
+    void acknowledge(ConnectionContext context, String clientId, String subscriptionName, MessageId messageId, MessageAck ack) throws IOException;
     
     /**
      * @param clientId

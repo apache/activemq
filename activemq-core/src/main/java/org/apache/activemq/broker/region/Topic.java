@@ -502,7 +502,7 @@ public class Topic extends BaseDestination implements Task {
         if (topicStore != null && node.isPersistent()) {
             DurableTopicSubscription dsub = (DurableTopicSubscription) sub;
             SubscriptionKey key = dsub.getSubscriptionKey();
-            topicStore.acknowledge(context, key.getClientId(), key.getSubscriptionName(), node.getMessageId());
+            topicStore.acknowledge(context, key.getClientId(), key.getSubscriptionName(), node.getMessageId(), ack);
         }
         messageConsumed(context, node);
     }

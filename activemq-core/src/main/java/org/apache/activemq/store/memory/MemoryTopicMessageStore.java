@@ -25,6 +25,7 @@ import java.util.Map.Entry;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.Message;
+import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.command.SubscriptionInfo;
 import org.apache.activemq.store.MessageRecoveryListener;
@@ -66,7 +67,8 @@ public class MemoryTopicMessageStore extends MemoryMessageStore implements Topic
         }
     }
 
-    public synchronized void acknowledge(ConnectionContext context, String clientId, String subscriptionName, MessageId messageId) throws IOException {
+    public synchronized void acknowledge(ConnectionContext context, String clientId, String subscriptionName,
+                                         MessageId messageId, MessageAck ack) throws IOException {
         SubscriptionKey key = new SubscriptionKey(clientId, subscriptionName);
         MemoryTopicSub sub = topicSubMap.get(key);
         if (sub != null) {

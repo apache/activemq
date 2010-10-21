@@ -527,6 +527,7 @@ public class JDBCPersistenceAdapter extends DataSourceSupport implements Persist
             getAdapter().doDropTables(c);
             getAdapter().setUseExternalMessageReferences(isUseExternalMessageReferences());
             getAdapter().doCreateTables(c);
+            LOG.info("Persistence store purged.");
         } catch (SQLException e) {
             JDBCPersistenceAdapter.log("JDBC Failure: ", e);
             throw IOExceptionSupport.create(e);

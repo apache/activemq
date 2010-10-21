@@ -277,7 +277,8 @@ public class TempKahaDBStore extends TempMessageDatabase implements PersistenceA
             super(destination);
         }
         
-        public void acknowledge(ConnectionContext context, String clientId, String subscriptionName, MessageId messageId) throws IOException {
+        public void acknowledge(ConnectionContext context, String clientId, String subscriptionName,
+                                MessageId messageId, MessageAck ack) throws IOException {
             KahaRemoveMessageCommand command = new KahaRemoveMessageCommand();
             command.setDestination(dest);
             command.setSubscriptionKey(subscriptionKey(clientId, subscriptionName));
