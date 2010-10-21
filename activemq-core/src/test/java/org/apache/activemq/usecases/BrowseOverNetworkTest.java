@@ -28,13 +28,18 @@ import org.apache.activemq.broker.region.QueueSubscription;
 import org.apache.activemq.util.MessageIdList;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.core.io.ClassPathResource;
 
 public class BrowseOverNetworkTest extends JmsMultipleBrokersTestSupport {
     private static final Log LOG = LogFactory.getLog(QueueSubscription.class);
     protected static final int MESSAGE_COUNT = 10;
 
     public void testBrowse() throws Exception {
+        createBroker(new URI("broker:(tcp://localhost:61617)/BrokerB?persistent=false&useJmx=false"));
+        createBroker(new URI("broker:(tcp://localhost:61616)/BrokerA?persistent=false&useJmx=false"));
+
         bridgeBrokers("BrokerA", "BrokerB");
+
 
         startAllBrokers();
 
@@ -42,7 +47,7 @@ public class BrowseOverNetworkTest extends JmsMultipleBrokersTestSupport {
 
         sendMessages("BrokerA", dest, MESSAGE_COUNT);
 
-        browseMessages(dest);
+        browseMessages("BrokerB", dest);
 
         Thread.sleep(2000);
 
@@ -61,23 +66,40 @@ public class BrowseOverNetworkTest extends JmsMultipleBrokersTestSupport {
                 + msgsB.getMessageCount());
     }
 
-    protected void browseMessages(Destination dest) throws Exception {
-        QueueBrowser browser = createBrowser("BrokerB", dest);
+    public void testconsumerInfo() throws Exception {
+        createBroker(new ClassPathResource("org/apache/activemq/usecases/browse-broker1.xml"));
+        createBroker(new ClassPathResource("org/apache/activemq/usecases/browse-broker2.xml"));
+
+        startAllBrokers();
+
+        brokers.get("broker1").broker.waitUntilStarted();
+
+        
+        Destination dest = createDestination("QUEUE.A,QUEUE.B", false);
+
+
+        int broker1 = browseMessages("broker1", dest);
+        assertEquals("Browsed a message on an empty queue", 0, broker1);
+        Thread.sleep(1000);
+        int broker2 = browseMessages("broker2", dest);
+        assertEquals("Browsed a message on an empty queue", 0, broker2);
+
+    }
+
+    protected int browseMessages(String broker, Destination dest) throws Exception {
+        QueueBrowser browser = createBrowser(broker, dest);
         Enumeration msgs = browser.getEnumeration();
         int browsedMessage = 0;
         while (msgs.hasMoreElements()) {
             browsedMessage++;
             msgs.nextElement();
         }
+        return browsedMessage;
     }
 
     public void setUp() throws Exception {
         super.setAutoFail(true);
         super.setUp();
-        createBroker(new URI(
-                "broker:(tcp://localhost:61616)/BrokerA?persistent=false&useJmx=false"));
-        createBroker(new URI(
-                "broker:(tcp://localhost:61617)/BrokerB?persistent=false&useJmx=false"));
     }
 
 }

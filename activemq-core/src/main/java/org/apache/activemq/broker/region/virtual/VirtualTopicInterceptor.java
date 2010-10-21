@@ -41,8 +41,10 @@ public class VirtualTopicInterceptor extends DestinationFilter {
     }
 
     public void send(ProducerBrokerExchange context, Message message) throws Exception {
-        ActiveMQDestination queueConsumers = getQueueConsumersWildcard(message.getDestination());
-        send(context, message, queueConsumers);
+        if (!message.isAdvisory()) {
+            ActiveMQDestination queueConsumers = getQueueConsumersWildcard(message.getDestination());
+            send(context, message, queueConsumers);
+        }
         super.send(context, message);
     }
 
