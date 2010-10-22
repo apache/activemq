@@ -24,6 +24,7 @@ import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.Queue;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.Message;
+import org.apache.activemq.util.BrokerSupport;
 
 /**
  * Provides a JMX Management view of a Queue.
@@ -58,37 +59,37 @@ public class QueueView extends DestinationView implements QueueViewMBean {
     }
 
     public boolean copyMessageTo(String messageId, String destinationName) throws Exception {
-        ConnectionContext context = BrokerView.getConnectionContext(broker.getContextBroker());
+        ConnectionContext context = BrokerSupport.getConnectionContext(broker.getContextBroker());
         ActiveMQDestination toDestination = ActiveMQDestination.createDestination(destinationName, ActiveMQDestination.QUEUE_TYPE);
         return ((Queue)destination).copyMessageTo(context, messageId, toDestination);
     }
 
     public int copyMatchingMessagesTo(String selector, String destinationName) throws Exception {
-        ConnectionContext context = BrokerView.getConnectionContext(broker.getContextBroker());
+        ConnectionContext context = BrokerSupport.getConnectionContext(broker.getContextBroker());
         ActiveMQDestination toDestination = ActiveMQDestination.createDestination(destinationName, ActiveMQDestination.QUEUE_TYPE);
         return ((Queue)destination).copyMatchingMessagesTo(context, selector, toDestination);
     }
 
     public int copyMatchingMessagesTo(String selector, String destinationName, int maximumMessages) throws Exception {
-        ConnectionContext context = BrokerView.getConnectionContext(broker.getContextBroker());
+        ConnectionContext context = BrokerSupport.getConnectionContext(broker.getContextBroker());
         ActiveMQDestination toDestination = ActiveMQDestination.createDestination(destinationName, ActiveMQDestination.QUEUE_TYPE);
         return ((Queue)destination).copyMatchingMessagesTo(context, selector, toDestination, maximumMessages);
     }
 
     public boolean moveMessageTo(String messageId, String destinationName) throws Exception {
-        ConnectionContext context = BrokerView.getConnectionContext(broker.getContextBroker());
+        ConnectionContext context = BrokerSupport.getConnectionContext(broker.getContextBroker());
         ActiveMQDestination toDestination = ActiveMQDestination.createDestination(destinationName, ActiveMQDestination.QUEUE_TYPE);
         return ((Queue)destination).moveMessageTo(context, messageId, toDestination);
     }
 
     public int moveMatchingMessagesTo(String selector, String destinationName) throws Exception {
-        ConnectionContext context = BrokerView.getConnectionContext(broker.getContextBroker());
+        ConnectionContext context = BrokerSupport.getConnectionContext(broker.getContextBroker());
         ActiveMQDestination toDestination = ActiveMQDestination.createDestination(destinationName, ActiveMQDestination.QUEUE_TYPE);
         return ((Queue)destination).moveMatchingMessagesTo(context, selector, toDestination);
     }
 
     public int moveMatchingMessagesTo(String selector, String destinationName, int maximumMessages) throws Exception {
-        ConnectionContext context = BrokerView.getConnectionContext(broker.getContextBroker());
+        ConnectionContext context = BrokerSupport.getConnectionContext(broker.getContextBroker());
         ActiveMQDestination toDestination = ActiveMQDestination.createDestination(destinationName, ActiveMQDestination.QUEUE_TYPE);
         return ((Queue)destination).moveMatchingMessagesTo(context, selector, toDestination, maximumMessages);
     }
@@ -104,7 +105,7 @@ public class QueueView extends DestinationView implements QueueViewMBean {
             rc.getMessage().setRedeliveryCounter(0);
             ActiveMQDestination originalDestination = rc.getOriginalDestination();
             if (originalDestination != null) {
-                ConnectionContext context = BrokerView.getConnectionContext(broker.getContextBroker());
+                ConnectionContext context = BrokerSupport.getConnectionContext(broker.getContextBroker());
                 return queue.moveMessageTo(context, rc, originalDestination);
             }
             else {

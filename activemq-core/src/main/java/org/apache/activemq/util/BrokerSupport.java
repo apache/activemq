@@ -16,15 +16,17 @@
  */
 package org.apache.activemq.util;
 
+import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.ProducerBrokerExchange;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.ProducerInfo;
+import org.apache.activemq.security.SecurityContext;
 import org.apache.activemq.state.ProducerState;
 
 /**
- * Utility class for re-sending messages
+ * Utility class for broker operations
  *
  */
 public final class BrokerSupport {
@@ -68,4 +70,29 @@ public final class BrokerSupport {
         }
     }
 
+    /**
+     * Returns the broker's administration connection context used for
+     * configuring the broker at startup
+     */
+    public static ConnectionContext getConnectionContext(Broker broker) {
+        ConnectionContext adminConnectionContext = broker.getAdminConnectionContext();
+        if (adminConnectionContext == null) {
+            adminConnectionContext = createAdminConnectionContext(broker);
+            broker.setAdminConnectionContext(adminConnectionContext);
+        }
+        return adminConnectionContext;
+    }
+
+    /**
+     * Factory method to create the new administration connection context
+     * object. Note this method is here rather than inside a default broker
+     * implementation to ensure that the broker reference inside it is the outer
+     * most interceptor
+     */
+    protected static ConnectionContext createAdminConnectionContext(Broker broker) {
+        ConnectionContext context = new ConnectionContext();
+        context.setBroker(broker);
+        context.setSecurityContext(SecurityContext.BROKER_SECURITY_CONTEXT);
+        return context;
+    }
 }

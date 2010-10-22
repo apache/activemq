@@ -79,7 +79,6 @@ import org.apache.activemq.network.NetworkConnector;
 import org.apache.activemq.network.jms.JmsConnector;
 import org.apache.activemq.proxy.ProxyConnector;
 import org.apache.activemq.security.MessageAuthorizationPolicy;
-import org.apache.activemq.security.SecurityContext;
 import org.apache.activemq.selector.SelectorParser;
 import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.PersistenceAdapterFactory;
@@ -92,13 +91,7 @@ import org.apache.activemq.transport.TransportFactory;
 import org.apache.activemq.transport.TransportServer;
 import org.apache.activemq.transport.vm.VMTransportFactory;
 import org.apache.activemq.usage.SystemUsage;
-import org.apache.activemq.util.DefaultIOExceptionHandler;
-import org.apache.activemq.util.IOExceptionHandler;
-import org.apache.activemq.util.IOExceptionSupport;
-import org.apache.activemq.util.IOHelper;
-import org.apache.activemq.util.JMXSupport;
-import org.apache.activemq.util.ServiceStopper;
-import org.apache.activemq.util.URISupport;
+import org.apache.activemq.util.*;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 /**
@@ -2017,25 +2010,7 @@ public class BrokerService implements Service {
      * configuring the broker at startup
      */
     public ConnectionContext getAdminConnectionContext() throws Exception {
-        ConnectionContext adminConnectionContext = getBroker().getAdminConnectionContext();
-        if (adminConnectionContext == null) {
-            adminConnectionContext = createAdminConnectionContext();
-            getBroker().setAdminConnectionContext(adminConnectionContext);
-        }
-        return adminConnectionContext;
-    }
-
-    /**
-     * Factory method to create the new administration connection context
-     * object. Note this method is here rather than inside a default broker
-     * implementation to ensure that the broker reference inside it is the outer
-     * most interceptor
-     */
-    protected ConnectionContext createAdminConnectionContext() throws Exception {
-        ConnectionContext context = new ConnectionContext();
-        context.setBroker(getBroker());
-        context.setSecurityContext(SecurityContext.BROKER_SECURITY_CONTEXT);
-        return context;
+        return BrokerSupport.getConnectionContext(getBroker());
     }
 
     protected void waitForSlave() {

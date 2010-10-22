@@ -26,7 +26,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import javax.management.ObjectName;
 
 import org.apache.activemq.ActiveMQConnectionMetaData;
-import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.TransportConnector;
@@ -37,7 +36,7 @@ import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.RemoveSubscriptionInfo;
 import org.apache.activemq.network.NetworkConnector;
-import org.apache.activemq.security.SecurityContext;
+import org.apache.activemq.util.BrokerSupport;
 
 /**
  * @version $Revision$
@@ -243,20 +242,20 @@ public class BrokerView implements BrokerViewMBean {
     }
 
     public void addTopic(String name) throws Exception {
-        broker.getContextBroker().addDestination(getConnectionContext(broker.getContextBroker()), new ActiveMQTopic(name),true);
+        broker.getContextBroker().addDestination(BrokerSupport.getConnectionContext(broker.getContextBroker()), new ActiveMQTopic(name),true);
     }
 
     public void addQueue(String name) throws Exception {
-        broker.getContextBroker().addDestination(getConnectionContext(broker.getContextBroker()), new ActiveMQQueue(name),true);
+        broker.getContextBroker().addDestination(BrokerSupport.getConnectionContext(broker.getContextBroker()), new ActiveMQQueue(name),true);
     }
 
     public void removeTopic(String name) throws Exception {
-        broker.getContextBroker().removeDestination(getConnectionContext(broker.getContextBroker()), new ActiveMQTopic(name),
+        broker.getContextBroker().removeDestination(BrokerSupport.getConnectionContext(broker.getContextBroker()), new ActiveMQTopic(name),
                                  1000);
     }
 
     public void removeQueue(String name) throws Exception {
-        broker.getContextBroker().removeDestination(getConnectionContext(broker.getContextBroker()), new ActiveMQQueue(name),
+        broker.getContextBroker().removeDestination(BrokerSupport.getConnectionContext(broker.getContextBroker()), new ActiveMQQueue(name),
                                  1000);
     }
 
@@ -292,32 +291,6 @@ public class BrokerView implements BrokerViewMBean {
         broker.removeSubscription(context, info);
     }
 
-    /**
-     * Returns the broker's administration connection context used for
-     * configuring the broker at startup
-     */
-    public static ConnectionContext getConnectionContext(Broker broker) {
-        ConnectionContext adminConnectionContext = broker.getAdminConnectionContext();
-        if (adminConnectionContext == null) {
-            adminConnectionContext = createAdminConnectionContext(broker);
-            broker.setAdminConnectionContext(adminConnectionContext);
-        }
-        return adminConnectionContext;
-    }
-
-    /**
-     * Factory method to create the new administration connection context
-     * object. Note this method is here rather than inside a default broker
-     * implementation to ensure that the broker reference inside it is the outer
-     * most interceptor
-     */
-    protected static ConnectionContext createAdminConnectionContext(Broker broker) {
-        ConnectionContext context = new ConnectionContext();
-        context.setBroker(broker);
-        context.setSecurityContext(SecurityContext.BROKER_SECURITY_CONTEXT);
-        return context;
-    }
-    
     //  doc comment inherited from BrokerViewMBean
     public void reloadLog4jProperties() throws Throwable {
 
