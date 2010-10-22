@@ -1655,7 +1655,8 @@ public class Queue extends BaseDestination implements Task, UsageListener {
         if (LOG.isDebugEnabled()) {
             LOG.debug(destination.getPhysicalName() + " toPageIn: " + toPageIn + ", Inflight: "
                     + destinationStatistics.getInflight().getCount() + ", pagedInMessages.size "
-                    + pagedInMessages.size() + ", enqueueSize: " + destinationStatistics.getEnqueues().getCount());
+                    + pagedInMessages.size() + ", enqueueCount: " + destinationStatistics.getEnqueues().getCount()
+                    + ", dequeueCount: " + destinationStatistics.getDequeues().getCount());
         }
 
         if (isLazyDispatch() && !force) {

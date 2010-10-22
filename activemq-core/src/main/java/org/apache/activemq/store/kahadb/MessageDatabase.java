@@ -1037,11 +1037,11 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
                 String subscriptionKey = command.getSubscriptionKey();
                 Long prev = sd.subscriptionAcks.put(tx, subscriptionKey, sequence);
 
-                // The following method handles deleting un-referenced messages.
-                removeAckLocation(tx, sd, subscriptionKey, prev);
-
                 // Add it to the new location set.
                 addAckLocation(sd, sequence, subscriptionKey);
+
+                // The following method handles deleting un-referenced messages.
+                removeAckLocation(tx, sd, subscriptionKey, sequence);
             }
 
         }
@@ -1152,16 +1152,17 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
             			break;
             		}
             	}
+                LOG.trace("gc candidates after first tx:" + firstTxLocation.getDataFileId() + ", " + gcCandidateSet);
             }
 
             // Go through all the destinations to see if any of them can remove GC candidates.
-            for (StoredDestination sd : storedDestinations.values()) {
+            for (Entry<String, StoredDestination> entry : storedDestinations.entrySet()) {
             	if( gcCandidateSet.isEmpty() ) {
                 	break;
                 }
                 
                 // Use a visitor to cut down the number of pages that we load
-                sd.locationIndex.visit(tx, new BTreeVisitor<Location, Long>() {
+                entry.getValue().locationIndex.visit(tx, new BTreeVisitor<Location, Long>() {
                     int last=-1;
                     public boolean isInterestedInKeysBetween(Location first, Location second) {
                     	if( first==null ) {
@@ -1199,10 +1200,11 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
                     }
     
                 });
+                LOG.trace("gc candidates after dest:" + entry.getKey() + ", " + gcCandidateSet);
             }
 
             // check we are not deleting file with ack for in-use journal files
-            LOG.debug("gc candidates: " + gcCandidateSet);
+            LOG.trace("gc candidates: " + gcCandidateSet);
             final TreeSet<Integer> gcCandidates = new TreeSet<Integer>(gcCandidateSet);
             Iterator<Integer> candidates = gcCandidateSet.iterator();
             while (candidates.hasNext()) {
@@ -1219,7 +1221,7 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
                     if (gcCandidateSet.contains(candidate)) {
                         ackMessageFileMap.remove(candidate);
                     } else {
-                        LOG.debug("not removing data file: " + candidate
+                        LOG.trace("not removing data file: " + candidate
                                 + " as contained ack(s) refer to referenced file: " + referencedFileIds);
                     }
                 }
@@ -1504,24 +1506,16 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
             if (hs != null) {
                 hs.remove(subscriptionKey);
                 if (hs.isEmpty()) {
-                    HashSet<String> firstSet = sd.ackPositions.values().iterator().next();
                     sd.ackPositions.remove(sequenceId);
 
-                    // Did we just empty out the first set in the
-                    // ordered list of ack locations? Then it's time to
-                    // delete some messages.
-                    if (hs == firstSet) {
+                    ArrayList<Entry<Long, MessageKeys>> deletes = new ArrayList<Entry<Long, MessageKeys>>();
+                    sd.orderIndex.getDeleteList(tx, deletes, sequenceId);
 
-                        // Find all the entries that need to get deleted.
-                        ArrayList<Entry<Long, MessageKeys>> deletes = new ArrayList<Entry<Long, MessageKeys>>();
-                        sd.orderIndex.getDeleteList(tx, deletes, sequenceId);
-
-                        // Do the actual deletes.
-                        for (Entry<Long, MessageKeys> entry : deletes) {
-                            sd.locationIndex.remove(tx, entry.getValue().location);
-                            sd.messageIdIndex.remove(tx,entry.getValue().messageId);
-                            sd.orderIndex.remove(tx,entry.getKey());
-                        }
+                    // Do the actual delete.
+                    for (Entry<Long, MessageKeys> entry : deletes) {
+                        sd.locationIndex.remove(tx, entry.getValue().location);
+                        sd.messageIdIndex.remove(tx, entry.getValue().messageId);
+                        sd.orderIndex.remove(tx, entry.getKey());
                     }
                 }
             }
@@ -2033,19 +2027,10 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
         
         void getDeleteList(Transaction tx, ArrayList<Entry<Long, MessageKeys>> deletes,
                 BTreeIndex<Long, MessageKeys> index, Long sequenceId) throws IOException {
-            for (Iterator<Entry<Long, MessageKeys>> iterator = index.iterator(tx); iterator.hasNext();) {
-                Entry<Long, MessageKeys> entry = iterator.next();
-                if (entry.getKey().compareTo(sequenceId) == 0) {
-                    // We don't do the actually delete while we are
-                    // iterating the BTree since
-                    // iterating would fail.
-                    deletes.add(entry);
-                } else {
-                    // no point in iterating the in-order sequences anymore
-                    break;
-                }
-            }
-        } 
+
+            Iterator<Entry<Long, MessageKeys>> iterator = index.iterator(tx, sequenceId);
+            deletes.add(iterator.next());
+        }
         
         long getNextMessageId(int priority) {
             return nextMessageId++;

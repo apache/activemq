@@ -737,7 +737,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
                                 selectorExpression = SelectorParser.parse(selector);
                             }
                             sd.orderIndex.resetCursorPosition();
-                            sd.orderIndex.setBatch(tx, (selectorExpression != null? 0 : cursorPos));
+                            sd.orderIndex.setBatch(tx, (selectorExpression == null ? cursorPos : -1));
                             for (Iterator<Entry<Long, MessageKeys>> iterator = sd.orderIndex.iterator(tx); iterator
                                     .hasNext();) {
                                 Entry<Long, MessageKeys> entry = iterator.next();
@@ -773,7 +773,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
                     public void execute(Transaction tx) throws Exception {
                         StoredDestination sd = getStoredDestination(dest, tx);
                         Long cursorPos = sd.subscriptionAcks.get(tx, subscriptionKey);
-                        sd.orderIndex.setBatch(tx, (info.getSelector() == null ? cursorPos : 0));
+                        sd.orderIndex.setBatch(tx, (info.getSelector() == null ? cursorPos : -1));
                         for (Iterator<Entry<Long, MessageKeys>> iterator = sd.orderIndex.iterator(tx); iterator
                                 .hasNext();) {
                             Entry<Long, MessageKeys> entry = iterator.next();
@@ -800,7 +800,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
                         MessageOrderCursor moc = sd.subscriptionCursors.get(subscriptionKey);
                         if (moc == null) {
                             long pos = sd.subscriptionAcks.get(tx, subscriptionKey);
-                            sd.orderIndex.setBatch(tx, (info.getSelector() == null ? pos : 0));
+                            sd.orderIndex.setBatch(tx, (info.getSelector() == null ? pos : -1));
                             moc = sd.orderIndex.cursor;
                         } else {
                             sd.orderIndex.cursor.sync(moc);

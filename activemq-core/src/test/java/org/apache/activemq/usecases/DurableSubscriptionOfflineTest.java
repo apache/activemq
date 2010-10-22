@@ -26,10 +26,13 @@ import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
 
 import javax.jms.*;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import java.io.File;
 
 public class DurableSubscriptionOfflineTest extends org.apache.activemq.TestSupport {
 
+    private static final Log LOG = LogFactory.getLog(DurableSubscriptionOfflineTest.class);
     public Boolean usePrioritySupport = Boolean.TRUE;
     private BrokerService broker;
     private ActiveMQTopic topic;
@@ -65,6 +68,7 @@ public class DurableSubscriptionOfflineTest extends org.apache.activemq.TestSupp
         broker = BrokerFactory.createBroker("broker:(vm://" + getName(true) +")");
         broker.setBrokerName(getName(true));
         broker.setDeleteAllMessagesOnStartup(true);
+        broker.getManagementContext().setCreateConnector(false);
 
         if (usePrioritySupport) {
             PolicyEntry policy = new PolicyEntry();
@@ -132,6 +136,104 @@ public class DurableSubscriptionOfflineTest extends org.apache.activemq.TestSupp
         assertEquals(sent, listener.count);
     }
 
+     public void testOfflineSubscription2() throws Exception {
+         // create durable subscription
+         Connection con = createConnection();
+         Session session = con.createSession(false, Session.AUTO_ACKNOWLEDGE);
+         session.createDurableSubscriber(topic, "SubsId", "filter = 'true'", true);
+         session.close();
+         con.close();
+
+         // send messages
+         con = createConnection();
+         session = con.createSession(false, Session.AUTO_ACKNOWLEDGE);
+         MessageProducer producer = session.createProducer(null);
+
+         int sent = 0;
+         for (int i = 0; i < 10; i++) {
+             sent++;
+             Message message = session.createMessage();
+             message.setStringProperty("filter", "true");
+             producer.send(topic, message);
+         }
+
+         Thread.sleep(1 * 1000);
+
+         session.close();
+         con.close();
+
+         // consume messages
+         con = createConnection();
+         session = con.createSession(false, Session.AUTO_ACKNOWLEDGE);
+         MessageConsumer consumer = session.createDurableSubscriber(topic, "SubsId", "filter = 'true'", true);
+         Listener listener = new Listener();
+         consumer.setMessageListener(listener);
+
+         Thread.sleep(3 * 1000);
+
+         session.close();
+         con.close();
+
+         assertEquals(sent, listener.count);
+     }
+
+     public void testOfflineSubscription3() throws Exception {
+         // create durable subscription
+         Connection con = createConnection();
+         Session session = con.createSession(false, Session.AUTO_ACKNOWLEDGE);
+         session.createDurableSubscriber(topic, "SubsId", "filter = 'true'", true);
+         session.close();
+         con.close();
+
+         // send messages
+         con = createConnection();
+         session = con.createSession(false, Session.AUTO_ACKNOWLEDGE);
+         MessageProducer producer = session.createProducer(null);
+
+         final int numMessages = 10;
+         int sent = 0;
+         for (int i = 0; i < numMessages; i++) {
+             sent++;
+             Message message = session.createMessage();
+             message.setStringProperty("filter", "true");
+             producer.send(topic, message);
+         }
+
+         Thread.sleep(1 * 1000);
+
+         session.close();
+         con.close();
+
+         // consume messages
+         con = createConnection();
+         session = con.createSession(false, Session.AUTO_ACKNOWLEDGE);
+         MessageConsumer consumer = session.createDurableSubscriber(topic, "SubsId", "filter = 'true'", true);
+         Listener listener = new Listener();
+         consumer.setMessageListener(listener);
+
+         Thread.sleep(3 * 1000);
+
+         session.close();
+         con.close();
+
+         LOG.info("Consumed: " + listener.count);
+         assertEquals(numMessages, listener.count);
+
+         // consume messages again, should not get any
+         con = createConnection();
+         session = con.createSession(false, Session.AUTO_ACKNOWLEDGE);
+         consumer = session.createDurableSubscriber(topic, "SubsId", "filter = 'true'", true);
+         listener = new Listener();
+         consumer.setMessageListener(listener);
+
+         Thread.sleep(3 * 1000);
+
+         session.close();
+         con.close();
+
+         assertEquals(0, listener.count);
+     }
+    
     public static class Listener implements MessageListener {
         int count = 0;
 
