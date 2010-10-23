@@ -88,6 +88,7 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
     public static final String PROPERTY_LOG_SLOW_ACCESS_TIME = "org.apache.activemq.store.kahadb.LOG_SLOW_ACCESS_TIME";
     public static final int LOG_SLOW_ACCESS_TIME = Integer.parseInt(System.getProperty(PROPERTY_LOG_SLOW_ACCESS_TIME, "0"));
 
+    protected static final Buffer UNMATCHED = new Buffer(new byte[]{});
     private static final Log LOG = LogFactory.getLog(MessageDatabase.class);
     private static final int DEFAULT_DATABASE_LOCKED_WAIT_DELAY = 10 * 1000;
 
@@ -1037,11 +1038,14 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
                 String subscriptionKey = command.getSubscriptionKey();
                 Long prev = sd.subscriptionAcks.put(tx, subscriptionKey, sequence);
 
+                if (command.getAck() == UNMATCHED) {
+                    sd.subscriptionAcks.put(tx, subscriptionKey, prev);    
+                }
+                // The following method handles deleting un-referenced messages.
+                removeAckLocation(tx, sd, subscriptionKey, prev);
+
                 // Add it to the new location set.
                 addAckLocation(sd, sequence, subscriptionKey);
-
-                // The following method handles deleting un-referenced messages.
-                removeAckLocation(tx, sd, subscriptionKey, sequence);
             }
 
         }
@@ -1506,16 +1510,24 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
             if (hs != null) {
                 hs.remove(subscriptionKey);
                 if (hs.isEmpty()) {
+                    HashSet<String> firstSet = sd.ackPositions.values().iterator().next();
                     sd.ackPositions.remove(sequenceId);
 
-                    ArrayList<Entry<Long, MessageKeys>> deletes = new ArrayList<Entry<Long, MessageKeys>>();
-                    sd.orderIndex.getDeleteList(tx, deletes, sequenceId);
+                    // Did we just empty out the first set in the
+                    // ordered list of ack locations? Then it's time to
+                    // delete some messages.
+                    if (hs == firstSet) {
 
-                    // Do the actual delete.
-                    for (Entry<Long, MessageKeys> entry : deletes) {
-                        sd.locationIndex.remove(tx, entry.getValue().location);
-                        sd.messageIdIndex.remove(tx, entry.getValue().messageId);
-                        sd.orderIndex.remove(tx, entry.getKey());
+                        // Find all the entries that need to get deleted.
+                        ArrayList<Entry<Long, MessageKeys>> deletes = new ArrayList<Entry<Long, MessageKeys>>();
+                        sd.orderIndex.getDeleteList(tx, deletes, sequenceId);
+
+                        // Do the actual deletes.
+                        for (Entry<Long, MessageKeys> entry : deletes) {
+                            sd.locationIndex.remove(tx, entry.getValue().location);
+                            sd.messageIdIndex.remove(tx,entry.getValue().messageId);
+                            sd.orderIndex.remove(tx,entry.getKey());
+                        }
                     }
                 }
             }
