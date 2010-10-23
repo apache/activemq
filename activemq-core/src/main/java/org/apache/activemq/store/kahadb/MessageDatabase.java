@@ -88,7 +88,10 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
     public static final String PROPERTY_LOG_SLOW_ACCESS_TIME = "org.apache.activemq.store.kahadb.LOG_SLOW_ACCESS_TIME";
     public static final int LOG_SLOW_ACCESS_TIME = Integer.parseInt(System.getProperty(PROPERTY_LOG_SLOW_ACCESS_TIME, "0"));
 
-    protected static final Buffer UNMATCHED = new Buffer(new byte[]{});
+    protected static final Buffer UNMATCHED;
+    static {
+        UNMATCHED = new Buffer(new byte[]{});
+    }
     private static final Log LOG = LogFactory.getLog(MessageDatabase.class);
     private static final int DEFAULT_DATABASE_LOCKED_WAIT_DELAY = 10 * 1000;
 
@@ -1039,7 +1042,7 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
                 Long prev = sd.subscriptionAcks.put(tx, subscriptionKey, sequence);
 
                 if (command.getAck() == UNMATCHED) {
-                    sd.subscriptionAcks.put(tx, subscriptionKey, prev);    
+                    sd.subscriptionAcks.put(tx, subscriptionKey, prev);
                 }
                 // The following method handles deleting un-referenced messages.
                 removeAckLocation(tx, sd, subscriptionKey, prev);
