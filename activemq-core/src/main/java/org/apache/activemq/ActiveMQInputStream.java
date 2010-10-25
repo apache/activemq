@@ -18,6 +18,7 @@ package org.apache.activemq;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import javax.jms.IllegalStateException;
@@ -52,6 +53,7 @@ public class ActiveMQInputStream extends InputStream implements ActiveMQDispatch
     private boolean eosReached;
     private byte buffer[];
     private int pos;
+    private Map<String, Object> jmsProperties;
 
     private ProducerId producerId;
     private long nextSequenceId;
@@ -133,6 +135,19 @@ public class ActiveMQInputStream extends InputStream implements ActiveMQDispatch
             this.connection.removeDispatcher(info.getConsumerId());
             this.connection.removeInputStream(this);
         }
+    }
+
+    /**
+     * Return the JMS Properties which where used to send the InputStream
+     *
+     * @return jmsProperties
+     * @throws IOException
+     */
+    public Map<String, Object> getJMSProperties() throws IOException {
+        if (jmsProperties == null) {
+            fillBuffer();
+        }
+        return jmsProperties;
     }
 
     public ActiveMQMessage receive() throws JMSException {
@@ -227,13 +242,24 @@ public class ActiveMQInputStream extends InputStream implements ActiveMQDispatch
                     buffer = new byte[(int)bm.getBodyLength()];
                     bm.readBytes(buffer);
                     pos = 0;
+                    if (jmsProperties == null) {
+                        jmsProperties = Collections.unmodifiableMap(new HashMap<String, Object>(bm.getProperties()));
+                    }
                 } else {
                     eosReached = true;
+                    if (jmsProperties == null) {
+                        // no properties found
+                        jmsProperties = Collections.emptyMap();
+                    }
                 }
                 return;
             }
         } catch (JMSException e) {
             eosReached = true;
+            if (jmsProperties == null) {
+                // no properties found
+                jmsProperties = Collections.emptyMap();
+            }
             throw IOExceptionSupport.create(e);
         }
     }
