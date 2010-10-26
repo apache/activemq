@@ -37,6 +37,7 @@ public class JDBCMessagePriorityTest extends MessagePriorityTest {
         EmbeddedDataSource dataSource = new EmbeddedDataSource();
         dataSource.setDatabaseName("derbyDb");
         dataSource.setCreateDatabase("create");
+        dataSource.setShutdownDatabase("false");
         jdbc.setDataSource(dataSource);
         jdbc.deleteAllMessages();
         jdbc.setCleanupPeriod(1000);
