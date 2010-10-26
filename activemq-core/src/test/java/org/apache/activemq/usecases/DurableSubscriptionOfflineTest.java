@@ -91,14 +91,14 @@ public class DurableSubscriptionOfflineTest extends org.apache.activemq.TestSupp
             broker.stop();
     }
 
-    public void initCombosForTestOfflineSubscription() throws Exception {
+    public void x_initCombosForTestConsumeOnlyMatchedMessages() throws Exception {
         this.addCombinationValues("defaultPersistenceAdapter",
                 new Object[]{ PersistenceAdapterChoice.KahaDB, PersistenceAdapterChoice.JDBC});
         this.addCombinationValues("usePrioritySupport",
                 new Object[]{ Boolean.TRUE, Boolean.FALSE});
     }
 
-    public void testOfflineSubscription() throws Exception {
+    public void testConsumeOnlyMatchedMessages() throws Exception {
         // create durable subscription
         Connection con = createConnection();
         Session session = con.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -140,7 +140,7 @@ public class DurableSubscriptionOfflineTest extends org.apache.activemq.TestSupp
         assertEquals(sent, listener.count);
     }
 
-     public void testOfflineSubscription2() throws Exception {
+     public void testConsumeAllMatchedMessages() throws Exception {
          // create durable subscription
          Connection con = createConnection();
          Session session = con.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -181,7 +181,7 @@ public class DurableSubscriptionOfflineTest extends org.apache.activemq.TestSupp
          assertEquals(sent, listener.count);
      }
 
-     public void testOfflineSubscription3() throws Exception {
+     public void testVerifyAllConsumedAreAcked() throws Exception {
          // create durable subscription
          Connection con = createConnection();
          Session session = con.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -237,7 +237,7 @@ public class DurableSubscriptionOfflineTest extends org.apache.activemq.TestSupp
          assertEquals(0, listener.count);
      }
 
-    public void testOfflineSubscription4() throws Exception {
+    public void testTwoOfflineSubscriptionCanConsume() throws Exception {
         // create durable subscription 1
         Connection con = createConnection("cliId1");
         Session session = con.createSession(false, Session.AUTO_ACKNOWLEDGE);

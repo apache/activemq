@@ -718,6 +718,17 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
             }
         }
 
+        // an ack for an unmatched message is stored as a negative sequence id
+        // if sub has been getting unmatched acks, we need to reset
+        protected Long resetForSelectors(SubscriptionInfo info, Long position) {
+            if (info.getSelector() != null) {
+                if (position < NOT_ACKED) {
+                    position = NOT_ACKED;
+                }
+            }
+            return position;
+        }
+
         public int getMessageCount(String clientId, String subscriptionName) throws IOException {
             final String subscriptionKey = subscriptionKey(clientId, subscriptionName);
             final SubscriptionInfo info = lookupSubscription(clientId, subscriptionName);
@@ -731,6 +742,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
                             // The subscription might not exist.
                             return 0;
                         }
+                        cursorPos = resetForSelectors(info, cursorPos);
 
                         int counter = 0;
                         try {
@@ -740,7 +752,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
                                 selectorExpression = SelectorParser.parse(selector);
                             }
                             sd.orderIndex.resetCursorPosition();
-                            sd.orderIndex.setBatch(tx, cursorPos);
+                            sd.orderIndex.setBatch(tx, extractSequenceId(cursorPos));
                             for (Iterator<Entry<Long, MessageKeys>> iterator = sd.orderIndex.iterator(tx); iterator
                                     .hasNext();) {
                                 Entry<Long, MessageKeys> entry = iterator.next();
@@ -769,13 +781,15 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
         public void recoverSubscription(String clientId, String subscriptionName, final MessageRecoveryListener listener)
                 throws Exception {
             final String subscriptionKey = subscriptionKey(clientId, subscriptionName);
+            final SubscriptionInfo info = lookupSubscription(clientId, subscriptionName);
             indexLock.writeLock().lock();
             try {
                 pageFile.tx().execute(new Transaction.Closure<Exception>() {
                     public void execute(Transaction tx) throws Exception {
                         StoredDestination sd = getStoredDestination(dest, tx);
                         Long cursorPos = sd.subscriptionAcks.get(tx, subscriptionKey);
-                        sd.orderIndex.setBatch(tx, cursorPos);
+                        cursorPos = resetForSelectors(info, cursorPos);
+                        sd.orderIndex.setBatch(tx, extractSequenceId(cursorPos));
                         for (Iterator<Entry<Long, MessageKeys>> iterator = sd.orderIndex.iterator(tx); iterator
                                 .hasNext();) {
                             Entry<Long, MessageKeys> entry = iterator.next();
@@ -792,6 +806,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
         public void recoverNextMessages(String clientId, String subscriptionName, final int maxReturned,
                 final MessageRecoveryListener listener) throws Exception {
             final String subscriptionKey = subscriptionKey(clientId, subscriptionName);
+            final SubscriptionInfo info = lookupSubscription(clientId, subscriptionName);
             indexLock.writeLock().lock();
             try {
                 pageFile.tx().execute(new Transaction.Closure<Exception>() {
@@ -800,8 +815,9 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
                         sd.orderIndex.resetCursorPosition();
                         MessageOrderCursor moc = sd.subscriptionCursors.get(subscriptionKey);
                         if (moc == null) {
-                            long pos = sd.subscriptionAcks.get(tx, subscriptionKey);
-                            sd.orderIndex.setBatch(tx, pos);
+                            Long pos = sd.subscriptionAcks.get(tx, subscriptionKey);
+                            pos = resetForSelectors(info, pos);
+                            sd.orderIndex.setBatch(tx, extractSequenceId(pos));
                             moc = sd.orderIndex.cursor;
                         } else {
                             sd.orderIndex.cursor.sync(moc);

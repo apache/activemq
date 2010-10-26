@@ -98,6 +98,8 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
     static final int CLOSED_STATE = 1;
     static final int OPEN_STATE = 2;
     static final long NOT_ACKED = -1;
+    static final long UNMATCHED_SEQ = -2;
+
     static final int VERSION = 2;
 
 
@@ -1018,6 +1020,13 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
         metadata.producerSequenceIdTracker.isDuplicate(command.getMessageId());
     }
 
+    protected Long extractSequenceId(Long prev) {
+        if (prev < NOT_ACKED) {
+            prev = Math.abs(prev) + UNMATCHED_SEQ;
+        }
+        return prev;
+    }
+
     void updateIndex(Transaction tx, KahaRemoveMessageCommand command, Location ackLocation) throws IOException {
         StoredDestination sd = getStoredDestination(command.getDestination(), tx);
         if (!command.hasSubscriptionKey()) {
@@ -1039,13 +1048,16 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
             // Make sure it's a valid message id...
             if (sequence != null) {
                 String subscriptionKey = command.getSubscriptionKey();
-                Long prev = sd.subscriptionAcks.put(tx, subscriptionKey, sequence);
-
+                Long ackSequenceToStore = sequence;
                 if (command.getAck() == UNMATCHED) {
-                    sd.subscriptionAcks.put(tx, subscriptionKey, prev);
+                    // store negative sequence to indicate that it was unmatched
+                    ackSequenceToStore = new Long(UNMATCHED_SEQ - sequence);
                 }
+
+                Long prev = sd.subscriptionAcks.put(tx, subscriptionKey, ackSequenceToStore);
+
                 // The following method handles deleting un-referenced messages.
-                removeAckLocation(tx, sd, subscriptionKey, prev);
+                removeAckLocation(tx, sd, subscriptionKey, extractSequenceId(prev));
 
                 // Add it to the new location set.
                 addAckLocation(sd, sequence, subscriptionKey);
@@ -1116,7 +1128,7 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
             sd.subscriptions.remove(tx, subscriptionKey);
             Long prev = sd.subscriptionAcks.remove(tx, subscriptionKey);
             if( prev!=null ) {
-                removeAckLocation(tx, sd, subscriptionKey, prev);
+                removeAckLocation(tx, sd, subscriptionKey, extractSequenceId(prev));
             }
         }
 
@@ -1468,7 +1480,7 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
 
             for (Iterator<Entry<String, Long>> iterator = rc.subscriptionAcks.iterator(tx); iterator.hasNext();) {
                 Entry<String, Long> entry = iterator.next();
-                addAckLocation(rc, entry.getValue(), entry.getKey());
+                addAckLocation(rc, extractSequenceId(entry.getValue()), entry.getKey());
             }
             
             if (rc.orderIndex.nextMessageId == 0) {
