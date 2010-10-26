@@ -274,7 +274,7 @@ public class KahaDBTransactionStore implements TransactionStore {
      * @see org.apache.activemq.store.TransactionStore#rollback(TransactionId)
      */
     public void rollback(TransactionId txid) throws IOException {
-        if (txid.isXATransaction() || theStore.isConcurrentStoreAndDispatchTransactions()) {
+        if (txid.isXATransaction() || theStore.isConcurrentStoreAndDispatchTransactions() == false) {
             KahaTransactionInfo info = getTransactionInfo(txid);
             theStore.store(new KahaRollbackCommand().setTransactionInfo(info), false, null, null);
         } else {
