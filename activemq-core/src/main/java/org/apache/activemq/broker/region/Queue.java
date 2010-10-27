@@ -793,11 +793,8 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                 ack.setLastMessageId(node.getMessageId());
                 ack.setMessageCount(1);
             }
-            if (context.isInTransaction()) {
-                store.removeMessage(context, ack);
-            } else {
-                store.removeAsyncMessage(context, ack);
-            }
+
+            store.removeAsyncMessage(context, ack);
         }
     }
 
