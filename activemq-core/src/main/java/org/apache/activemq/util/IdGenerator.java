@@ -16,7 +16,6 @@
  */
 package org.apache.activemq.util;
 
-import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -51,7 +50,7 @@ public class IdGenerator {
 
         if (canAccessSystemProps) {
             try {
-                hostName = InetAddress.getLocalHost().getHostName();
+                hostName = InetAddressUtil.getLocalHostName();
                 ServerSocket ss = new ServerSocket(0);
                 stub = "-" + ss.getLocalPort() + "-" + System.currentTimeMillis() + "-";
                 Thread.sleep(100);

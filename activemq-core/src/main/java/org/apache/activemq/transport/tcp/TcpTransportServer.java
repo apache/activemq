@@ -43,6 +43,7 @@ import org.apache.activemq.transport.TransportLoggerFactory;
 import org.apache.activemq.transport.TransportServer;
 import org.apache.activemq.transport.TransportServerThreadSupport;
 import org.apache.activemq.util.IOExceptionSupport;
+import org.apache.activemq.util.InetAddressUtil;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.util.ServiceListener;
 import org.apache.activemq.util.ServiceStopper;
@@ -332,7 +333,7 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
         if (socket.isBound()) {
             if (socket.getInetAddress().isAnyLocalAddress()) {
                 // make it more human readable and useful, an alternative to 0.0.0.0
-                result = InetAddress.getLocalHost().getHostName();
+                result = InetAddressUtil.getLocalHostName();
             } else {
                 result = socket.getInetAddress().getCanonicalHostName();
             }

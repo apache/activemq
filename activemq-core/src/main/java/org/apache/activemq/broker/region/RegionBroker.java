@@ -64,6 +64,7 @@ import org.apache.activemq.thread.TaskRunnerFactory;
 import org.apache.activemq.usage.SystemUsage;
 import org.apache.activemq.util.BrokerSupport;
 import org.apache.activemq.util.IdGenerator;
+import org.apache.activemq.util.InetAddressUtil;
 import org.apache.activemq.util.LongSequenceGenerator;
 import org.apache.activemq.util.ServiceStopper;
 import org.apache.commons.logging.Log;
@@ -615,7 +616,7 @@ public class RegionBroker extends EmptyBroker {
     public String getBrokerName() {
         if (brokerName == null) {
             try {
-                brokerName = java.net.InetAddress.getLocalHost().getHostName().toLowerCase();
+                brokerName = InetAddressUtil.getLocalHostName().toLowerCase();
             } catch (Exception e) {
                 brokerName = "localhost";
             }

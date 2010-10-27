@@ -197,7 +197,7 @@ public class BrokerService implements Service {
 	static {
         String localHostName = "localhost";
         try {
-            localHostName = java.net.InetAddress.getLocalHost().getHostName();
+            localHostName =  InetAddressUtil.getLocalHostName();
         } catch (UnknownHostException e) {
             LOG.error("Failed to resolve localhost");
         }

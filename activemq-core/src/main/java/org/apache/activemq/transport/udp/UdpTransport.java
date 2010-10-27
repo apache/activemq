@@ -39,6 +39,7 @@ import org.apache.activemq.transport.reliable.ExceptionIfDroppedReplayStrategy;
 import org.apache.activemq.transport.reliable.ReplayBuffer;
 import org.apache.activemq.transport.reliable.ReplayStrategy;
 import org.apache.activemq.transport.reliable.Replayer;
+import org.apache.activemq.util.InetAddressUtil;
 import org.apache.activemq.util.IntSequenceGenerator;
 import org.apache.activemq.util.ServiceStopper;
 import org.apache.commons.logging.Log;
@@ -340,7 +341,7 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
     }
 
     protected String resolveHostName(String host) throws UnknownHostException {
-        String localName = InetAddress.getLocalHost().getHostName();
+        String localName = InetAddressUtil.getLocalHostName();
         if (localName != null && isUseLocalHost()) {
             if (localName.equals(host)) {
                 return "localhost";

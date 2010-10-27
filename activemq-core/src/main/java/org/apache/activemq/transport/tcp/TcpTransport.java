@@ -40,6 +40,7 @@ import org.apache.activemq.Service;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportLoggerFactory;
 import org.apache.activemq.transport.TransportThreadSupport;
+import org.apache.activemq.util.InetAddressUtil;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.util.ServiceStopper;
 import org.apache.activemq.wireformat.WireFormat;
@@ -400,7 +401,7 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
     // -------------------------------------------------------------------------
     protected String resolveHostName(String host) throws UnknownHostException {
         if (isUseLocalHost()) {
-            String localName = InetAddress.getLocalHost().getHostName();
+            String localName = InetAddressUtil.getLocalHostName();
             if (localName != null && localName.equals(host)) {
                 return "localhost";
             }
