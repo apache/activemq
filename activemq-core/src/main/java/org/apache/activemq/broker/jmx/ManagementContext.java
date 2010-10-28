@@ -471,6 +471,9 @@ public class ManagementContext implements Service {
         return connectorPort;
     }
 
+    /**
+     * @org.apache.xbean.Property propertyEditor="org.apache.activemq.util.MemoryIntPropertyEditor"
+     */
     public void setConnectorPort(int connectorPort) {
         this.connectorPort = connectorPort;
     }
@@ -479,6 +482,9 @@ public class ManagementContext implements Service {
         return rmiServerPort;
     }
 
+    /**
+     * @org.apache.xbean.Property propertyEditor="org.apache.activemq.util.MemoryIntPropertyEditor"
+     */
     public void setRmiServerPort(int rmiServerPort) {
         this.rmiServerPort = rmiServerPort;
     }
