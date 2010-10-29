@@ -66,6 +66,8 @@ public class LockFile {
                 lock = readFile.getChannel().tryLock();
             } catch (OverlappingFileLockException e) {
                 reason = IOExceptionSupport.create("File '" + file + "' could not be locked.",e);
+            } catch (IOException ioe) {
+                reason = ioe;
             }
             if (lock != null) {
                 lockCounter++;
