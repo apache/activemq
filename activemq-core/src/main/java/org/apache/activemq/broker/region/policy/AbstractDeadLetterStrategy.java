@@ -16,7 +16,10 @@
  */
 package org.apache.activemq.broker.region.policy;
 
+import org.apache.activemq.ActiveMQMessageAudit;
 import org.apache.activemq.command.Message;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * A strategy for choosing which destination is used for dead letter queue
@@ -25,13 +28,21 @@ import org.apache.activemq.command.Message;
  * @version $Revision: 426366 $
  */
 public abstract class AbstractDeadLetterStrategy implements DeadLetterStrategy {
+    private static final Log LOG = LogFactory.getLog(AbstractDeadLetterStrategy.class);
     private boolean processNonPersistent = false;
     private boolean processExpired = true;
+    private ActiveMQMessageAudit audit = new ActiveMQMessageAudit();
 
     public boolean isSendToDeadLetterQueue(Message message) {
         boolean result = false;
         if (message != null) {
             result = true;
+            if (audit.isDuplicate(message)) {
+                result = false;
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("Not adding duplicate to DLQ: " + message.getMessageId() + ", dest: " + message.getDestination());
+                }
+            }
             if (!message.isPersistent() && !processNonPersistent) {
                 result = false;
             }

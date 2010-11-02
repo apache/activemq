@@ -832,7 +832,8 @@ public class RegionBroker extends EmptyBroker {
 						}
 					} else {
 					    if (LOG.isDebugEnabled()) {
-					        LOG.debug("Expired message with no DLQ strategy in place");
+					        LOG.debug("Dead Letter message with no DLQ strategy in place, message id: "
+                                    + message.getMessageId() + ", destination: " + message.getDestination());
 					    }
 					}
 				}

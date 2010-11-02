@@ -224,7 +224,12 @@ public class AMQ2584ConcurrentDlqTest extends org.apache.activemq.TestSupport {
         properties.put("maxFileLength", maxFileLengthVal);
         properties.put("cleanupInterval", "2000");
         properties.put("checkpointInterval", "2000");
-        properties.put("concurrentStoreAndDispatchQueues", "false");
+        // there are problems with duplicate dispatch in the cursor, which maintain
+        // a map of messages. A dup dispatch can be dropped.
+        // see: org.apache.activemq.broker.region.cursors.OrderedPendingList
+        // Adding duplicate detection to the default DLQ strategy removes the problem
+        // which means we can leave the default for concurrent store and dispatch q
+        //properties.put("concurrentStoreAndDispatchQueues", "false");
 
         IntrospectionSupport.setProperties(persistenceAdapter, properties);
     }
