@@ -76,6 +76,15 @@ public abstract class BrokerFacadeSupport implements BrokerFacade {
         return getManagedObjects(queues, DurableSubscriptionViewMBean.class);
     }
 
+    public Collection<DurableSubscriptionViewMBean> getInactiveDurableTopicSubscribers() throws Exception {
+        BrokerViewMBean broker = getBrokerAdmin();
+        if (broker == null) {
+            return Collections.EMPTY_LIST;
+        }
+        ObjectName[] queues = broker.getInactiveDurableTopicSubscribers();
+        return getManagedObjects(queues, DurableSubscriptionViewMBean.class);
+    }
+
     public QueueViewMBean getQueue(String name) throws Exception {
         return (QueueViewMBean) getDestinationByName(getQueues(), name);
     }

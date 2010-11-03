@@ -179,21 +179,29 @@ public class ManagedRegionBroker extends RegionBroker {
         String connectionClientId = context.getClientId();
         ObjectName brokerJmxObjectName = brokerObjectName;
         String objectNameStr = getSubscriptionObjectName(sub, connectionClientId, brokerJmxObjectName);
-
         SubscriptionKey key = new SubscriptionKey(context.getClientId(), sub.getConsumerInfo().getSubscriptionName());
         try {
             ObjectName objectName = new ObjectName(objectNameStr);
             SubscriptionView view;
-            if (sub.getConsumerInfo().isDurable()) {
-                view = new DurableSubscriptionView(this, context.getClientId(), sub);
+            if (sub.getConsumerInfo().getConsumerId().getConnectionId().equals("OFFLINE")) {
+                // add offline subscribers to inactive list
+                SubscriptionInfo info = new SubscriptionInfo();
+                info.setClientId(context.getClientId());
+                info.setSubscriptionName(sub.getConsumerInfo().getSubscriptionName());
+                info.setDestination(sub.getConsumerInfo().getDestination());
+                addInactiveSubscription(key, info);
             } else {
-                if (sub instanceof TopicSubscription) {
-                    view = new TopicSubscriptionView(context.getClientId(), (TopicSubscription)sub);
+                if (sub.getConsumerInfo().isDurable()) {
+                    view = new DurableSubscriptionView(this, context.getClientId(), sub);
                 } else {
-                    view = new SubscriptionView(context.getClientId(), sub);
+                    if (sub instanceof TopicSubscription) {
+                        view = new TopicSubscriptionView(context.getClientId(), (TopicSubscription) sub);
+                    } else {
+                        view = new SubscriptionView(context.getClientId(), sub);
+                    }
                 }
+                registerSubscription(objectName, sub.getConsumerInfo(), key, view);
             }
-            registerSubscription(objectName, sub.getConsumerInfo(), key, view);
             subscriptionMap.put(sub, objectName);
             return objectName;
         } catch (Exception e) {
@@ -227,11 +235,38 @@ public class ManagedRegionBroker extends RegionBroker {
         return objectNameStr;
     }
 
+    @Override
+    public Subscription addConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
+        Subscription sub = super.addConsumer(context, info);
+        SubscriptionKey subscriptionKey = new SubscriptionKey(sub.getContext().getClientId(), sub.getConsumerInfo().getSubscriptionName());
+        ObjectName inactiveName = subscriptionKeys.get(subscriptionKey);
+        if (inactiveName != null) {
+            // if it was inactive, register it
+            registerSubscription(context, sub);
+        }
+        return sub;
+    }
+
+    @Override
+    public void removeConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
+        for (Subscription sub : subscriptionMap.keySet()) {
+            if (sub.getConsumerInfo().equals(info)) {
+               // unregister all consumer subs
+               unregisterSubscription(subscriptionMap.get(sub), true);
+            }
+        }
+        super.removeConsumer(context, info);
+    }
+
     public void unregisterSubscription(Subscription sub) {
         ObjectName name = subscriptionMap.remove(sub);
         if (name != null) {
             try {
-                unregisterSubscription(name);
+                SubscriptionKey subscriptionKey = new SubscriptionKey(sub.getContext().getClientId(), sub.getConsumerInfo().getSubscriptionName());
+                ObjectName inactiveName = subscriptionKeys.get(subscriptionKey);
+                if (inactiveName != null) {
+                    inactiveDurableTopicSubscribers.remove(inactiveName);
+                }
             } catch (Exception e) {
                 LOG.error("Failed to unregister subscription " + sub, e);
             }
@@ -337,10 +372,9 @@ public class ManagedRegionBroker extends RegionBroker {
 
     }
 
-    protected void unregisterSubscription(ObjectName key) throws Exception {
+    protected void unregisterSubscription(ObjectName key, boolean addToInactive) throws Exception {
         queueSubscribers.remove(key);
         topicSubscribers.remove(key);
-        inactiveDurableTopicSubscribers.remove(key);
         temporaryQueueSubscribers.remove(key);
         temporaryTopicSubscribers.remove(key);
         if (registeredMBeans.remove(key)) {
@@ -355,11 +389,13 @@ public class ManagedRegionBroker extends RegionBroker {
         if (view != null) {
             // need to put this back in the inactive list
             SubscriptionKey subscriptionKey = new SubscriptionKey(view.getClientId(), view.getSubscriptionName());
-            SubscriptionInfo info = new SubscriptionInfo();
-            info.setClientId(subscriptionKey.getClientId());
-            info.setSubscriptionName(subscriptionKey.getSubscriptionName());
-            info.setDestination(new ActiveMQTopic(view.getDestinationName()));
-            addInactiveSubscription(subscriptionKey, info);
+            if (addToInactive) {
+                SubscriptionInfo info = new SubscriptionInfo();
+                info.setClientId(subscriptionKey.getClientId());
+                info.setSubscriptionName(subscriptionKey.getSubscriptionName());
+                info.setDestination(new ActiveMQTopic(view.getDestinationName()));
+                addInactiveSubscription(subscriptionKey, info);
+            }
         }
     }
 

@@ -63,7 +63,7 @@ public class DurableUnsubscribeTest extends org.apache.activemq.TestSupport {
         assertEquals("Subscription is missing.", 1, d.getConsumers().size());
 
         MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
-        ObjectName[] subNames = broker.getAdminView().getDurableTopicSubscribers();
+        ObjectName[] subNames = broker.getAdminView().getInactiveDurableTopicSubscribers();
         mbs.invoke(subNames[0], "destroy", new Object[0], new String[0]);
 
         assertEquals("Subscription exists.", 0, d.getConsumers().size());

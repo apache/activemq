@@ -70,7 +70,7 @@
 </form>
 
 
-<h2>Durable Topic Subscribers</h2>
+<h2>Active Durable Topic Subscribers</h2>
 
 
 <table id="topics" class="sortable autostripe">
@@ -107,6 +107,48 @@
 </td>
 </tr>
 </c:forEach>
+
+</tbody>
+</table>
+
+<h2>Offline Durable Topic Subscribers</h2>
+
+
+<table id="topics" class="sortable autostripe">
+<thead>
+<tr>
+<th>Client ID</th>
+<th>Subscription Name</th>
+<th>Connection ID</th>
+<th>Destination</th>
+<th>Selector</th>
+<th>Pending Queue Size</th>
+<th>Dispatched Queue Size</th>
+<th>Dispatched Counter</th>
+<th>Enqueue Counter</th>
+<th>Dequeue Counter</th>
+<th>Operations</th>
+</tr>
+</thead>
+<tbody>
+<c:forEach items="${requestContext.brokerQuery.inactiveDurableTopicSubscribers}" var="row">
+<tr>
+<td><form:tooltip text="${row.clientId}" length="10"/></td>
+<td><form:tooltip text="${row.subscriptionName}" length="10"/></td>
+<td><form:tooltip text="${row.connectionId}" length="10"/></td>
+<td><form:tooltip text="${row.destinationName}" length="10"/></td>
+<td>${row.selector}</td>
+<td>${row.pendingQueueSize}</td>
+<td>${row.dispatchedQueueSize}</td>
+<td>${row.dispachedCounter}</td>
+<td>${row.enqueueCounter}</td>
+<td>${row.dequeueCounter}</td>
+<td>
+    <a href="deleteSubscriber.action?clientId=${row.clientId}&subscriberName=${row.subscriptionName}&secret=<c:out value='${sessionScope["secret"]}'/>">Delete</a>
+</td>
+</tr>
+</c:forEach>
+
 </tbody>
 </table>
 

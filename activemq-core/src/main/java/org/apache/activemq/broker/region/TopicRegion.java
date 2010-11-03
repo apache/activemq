@@ -138,7 +138,6 @@ public class TopicRegion extends AbstractRegion {
             throw new JMSException("Durable consumer is in use");
         }
 
-        durableSubscriptions.remove(key);
         synchronized (destinationsMutex) {
             for (Iterator<Destination> iter = destinations.values().iterator(); iter.hasNext();) {
             	Destination dest = iter.next();
@@ -149,7 +148,12 @@ public class TopicRegion extends AbstractRegion {
             	}
             }
         }
-        super.removeConsumer(context, sub.getConsumerInfo());
+        if (subscriptions.get(sub.getConsumerInfo()) != null) {
+            super.removeConsumer(context, sub.getConsumerInfo());
+        } else {
+            // try destroying inactive subscriptions
+            destroySubscription(sub);
+        }
     }
 
     @Override
@@ -159,7 +163,6 @@ public class TopicRegion extends AbstractRegion {
 
     @Override
     protected List<Subscription> addSubscriptionsForDestination(ConnectionContext context, Destination dest) throws Exception {
-
         List<Subscription> rc = super.addSubscriptionsForDestination(context, dest);
         Set<Subscription> dupChecker = new HashSet<Subscription>(rc);
 
@@ -210,7 +213,6 @@ public class TopicRegion extends AbstractRegion {
                 }
             }
         }
-
         return rc;
     }
 
@@ -250,6 +252,7 @@ public class TopicRegion extends AbstractRegion {
             if (sub == null) {
                 
                 sub = new DurableTopicSubscription(broker, usageManager, context, info, keepDurableSubsActive);
+
                 if (destination != null && broker.getDestinationPolicy() != null) {
                     PolicyEntry entry = broker.getDestinationPolicy().getEntryFor(destination);
                     if (entry != null) {

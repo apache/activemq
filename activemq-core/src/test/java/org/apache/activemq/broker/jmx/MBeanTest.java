@@ -442,7 +442,7 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         String selector = null;
         ObjectName name1 = broker.createDurableSubscriber(clientID, "subscriber1", topicName, selector);
         broker.createDurableSubscriber(clientID, "subscriber2", topicName, selector);
-        assertEquals("Durable subscriber count", 2, broker.getDurableTopicSubscribers().length);
+        assertEquals("Durable subscriber count", 2, broker.getInactiveDurableTopicSubscribers().length);
 
         assertNotNull("Should have created an mbean name for the durable subscriber!", name1);
 
@@ -450,7 +450,7 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
 
         // now lets try destroy it
         broker.destroyDurableSubscriber(clientID, "subscriber1");
-        assertEquals("Durable subscriber count", 1, broker.getDurableTopicSubscribers().length);
+        assertEquals("Durable subscriber count", 1, broker.getInactiveDurableTopicSubscribers().length);
     }
 
     protected void assertConsumerCounts() throws Exception {

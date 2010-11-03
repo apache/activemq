@@ -80,12 +80,22 @@ public interface BrokerFacade {
 			throws Exception;
 
 	/**
-	 * All durable subscribers to topics of the broker.
+	 * Active durable subscribers to topics of the broker.
 	 * 
 	 * @return not <code>null</code>
 	 * @throws Exception
 	 */
 	Collection<DurableSubscriptionViewMBean> getDurableTopicSubscribers()
+			throws Exception;
+
+
+	/**
+	 * Inactive durable subscribers to topics of the broker.
+	 *
+	 * @return not <code>null</code>
+	 * @throws Exception
+	 */
+	Collection<DurableSubscriptionViewMBean> getInactiveDurableTopicSubscribers()
 			throws Exception;
 
 	/**
