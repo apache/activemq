@@ -27,13 +27,14 @@ import javax.jms.TopicSubscriber;
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
 
+import junit.framework.Test;
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.store.PersistenceAdapter;
 
-abstract public class DurableSubscriptionSelectorTest extends org.apache.activemq.TestSupport {
+public class DurableSubscriptionSelectorTest extends org.apache.activemq.TestSupport {
 
     MBeanServer mbs;
     BrokerService broker = null;
@@ -44,6 +45,14 @@ abstract public class DurableSubscriptionSelectorTest extends org.apache.activem
     MessageProducer producer;
 
     private int received = 0;
+
+    public static Test suite() {
+        return suite(DurableSubscriptionSelectorTest.class);
+    }
+
+    public void initCombosForTestSubscription() throws Exception {
+        this.addCombinationValues("defaultPersistenceAdapter", PersistenceAdapterChoice.values());
+    }
 
     public void testSubscription() throws Exception {
         openConsumer();
@@ -130,7 +139,7 @@ abstract public class DurableSubscriptionSelectorTest extends org.apache.activem
         if (deleteMessages) {
             broker.setDeleteAllMessagesOnStartup(true);
         }
-        broker.setPersistenceAdapter(createPersistenceAdapter());
+        setDefaultPersistenceAdapter(broker);
         broker.start();
     }
 
@@ -140,8 +149,6 @@ abstract public class DurableSubscriptionSelectorTest extends org.apache.activem
         broker = null;
     }
     
-    abstract public PersistenceAdapter createPersistenceAdapter() throws Exception;
-
     protected ActiveMQConnectionFactory createConnectionFactory() throws Exception {
         return new ActiveMQConnectionFactory("vm://test-broker?jms.watchTopicAdvisories=false&waitForStart=5000&create=false");
     }

@@ -23,6 +23,7 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.ActiveMQTopic;
+import org.apache.activemq.store.jdbc.JDBCPersistenceAdapter;
 import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
 
 import javax.jms.*;
@@ -87,6 +88,10 @@ public class DurableSubscriptionOfflineTest extends org.apache.activemq.TestSupp
         }
         
         setDefaultPersistenceAdapter(broker);
+        if (broker.getPersistenceAdapter() instanceof JDBCPersistenceAdapter) {
+            // ensure it kicks in during tests
+            ((JDBCPersistenceAdapter)broker.getPersistenceAdapter()).setCleanupPeriod(2*1000);
+        }
         broker.start();
     }
 
@@ -293,6 +298,13 @@ public class DurableSubscriptionOfflineTest extends org.apache.activemq.TestSupp
         con.close();
 
         assertEquals("offline consumer got all", sent, listener.count);
+    }
+
+    public void initCombosForTestOfflineSubscriptionCanConsumeAfterOnlineSubs() throws Exception {
+        this.addCombinationValues("defaultPersistenceAdapter",
+                new Object[]{ PersistenceAdapterChoice.KahaDB, PersistenceAdapterChoice.JDBC});
+        this.addCombinationValues("usePrioritySupport",
+                new Object[]{ Boolean.TRUE, Boolean.FALSE});
     }
 
     public void testOfflineSubscriptionCanConsumeAfterOnlineSubs() throws Exception {

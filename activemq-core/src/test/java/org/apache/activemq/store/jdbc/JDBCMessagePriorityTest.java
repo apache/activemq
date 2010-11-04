@@ -17,6 +17,9 @@
 
 package org.apache.activemq.store.jdbc;
 
+import java.util.Arrays;
+import java.util.Vector;
+import java.util.concurrent.atomic.AtomicInteger;
 import javax.jms.Message;
 import javax.jms.TopicSubscriber;
 import junit.framework.Test;
@@ -40,7 +43,7 @@ public class JDBCMessagePriorityTest extends MessagePriorityTest {
         dataSource.setShutdownDatabase("false");
         jdbc.setDataSource(dataSource);
         jdbc.deleteAllMessages();
-        jdbc.setCleanupPeriod(1000);
+        jdbc.setCleanupPeriod(2000);
         return jdbc;
     }
 
@@ -74,8 +77,10 @@ public class JDBCMessagePriorityTest extends MessagePriorityTest {
         final int[] priorities = new int[]{HIGH_PRI, MED_HIGH_PRI, MED_PRI, LOW_PRI};
         sub = sess.createDurableSubscriber(topic, subName);
         for (int i = 0; i < MSG_NUM * 4; i++) {
-            Message msg = sub.receive(30000);
-            LOG.debug("received i=" + i + ", m=" + (msg!=null? msg.getJMSMessageID() : null));
+            Message msg = sub.receive(10000);
+            LOG.info("received i=" + i + ", m=" + (msg!=null?
+                    msg.getJMSMessageID() + ", priority: " + msg.getJMSPriority()
+                    : null) );
             assertNotNull("Message " + i + " was null", msg);
             assertEquals("Message " + i + " has wrong priority", priorities[i / MSG_NUM], msg.getJMSPriority());
             if (i > 0 && i % closeFrequency == 0) {
@@ -86,6 +91,53 @@ public class JDBCMessagePriorityTest extends MessagePriorityTest {
         }
         LOG.info("closing on done!");
         sub.close();
+    }
+
+    public void initCombosForTestConcurrentDurableSubsReconnectWithXLevels() {
+        addCombinationValues("prioritizeMessages", new Object[] {Boolean.TRUE, Boolean.FALSE});
+    }
+
+    public void testConcurrentDurableSubsReconnectWithXLevels() throws Exception {
+        ActiveMQTopic topic = (ActiveMQTopic) sess.createTopic("TEST");
+        final String subName = "priorityDisconnect";
+        TopicSubscriber sub = sess.createDurableSubscriber(topic, subName);
+        sub.close();
+
+        final int maxPriority = 5;
+
+        final AtomicInteger[] messageCounts = new AtomicInteger[maxPriority];
+        Vector<ProducerThread> producers = new Vector<ProducerThread>();
+        for (int priority=0; priority <maxPriority; priority++) {
+            producers.add(new ProducerThread(topic, MSG_NUM, priority));
+            messageCounts[priority] = new AtomicInteger(0);
+        }
+
+        for (ProducerThread producer : producers) {
+            producer.start();
+        }
+
+        final int closeFrequency = MSG_NUM/2;
+
+        sub = sess.createDurableSubscriber(topic, subName);
+        for (int i=0; i < MSG_NUM * maxPriority; i++) {
+            Message msg = sub.receive(10000);
+            LOG.info("received i=" + i + ", m=" + (msg!=null?
+                    msg.getJMSMessageID() + ", priority: " + msg.getJMSPriority()
+                    : null) );
+            assertNotNull("Message " + i + " was null", msg);
+            messageCounts[msg.getJMSPriority()].incrementAndGet();
+            if (i > 0 && i % closeFrequency == 0) {
+                LOG.info("Closing durable sub.. on: " + i + ", counts: " + Arrays.toString(messageCounts));
+                sub.close();
+                sub = sess.createDurableSubscriber(topic, subName);
+            }
+        }
+        LOG.info("closing on done!");
+        sub.close();
+
+        for (ProducerThread producer : producers) {
+            producer.join();
+        }
     }
 
     public static Test suite() {

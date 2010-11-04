@@ -28,6 +28,7 @@ import junit.framework.Test;
 
 import org.apache.activemq.EmbeddedBrokerTestSupport;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.store.jdbc.JDBCPersistenceAdapter;
 
 public class DurableSubscriptionReactivationTest extends EmbeddedBrokerTestSupport {
 
@@ -79,7 +80,12 @@ public class DurableSubscriptionReactivationTest extends EmbeddedBrokerTestSuppo
     protected BrokerService createBroker() throws Exception {
         BrokerService answer = super.createBroker();
         answer.setKeepDurableSubsActive(keepDurableSubsActive);
+        answer.setPersistenceAdapter(new JDBCPersistenceAdapter());
         return answer;
+    }
+
+    protected boolean isPersistent() {
+        return true;
     }
     
     public static Test suite() {
