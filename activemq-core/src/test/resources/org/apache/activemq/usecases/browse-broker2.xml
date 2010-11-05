@@ -26,7 +26,7 @@
     
   <!-- Broker2 (lonb) -->
   <amq:broker brokerName="broker2" id="broker2" useJmx="true" 
-  				persistent="true" start="false" advisorySupport="true">
+  				persistent="true" start="false" advisorySupport="true" deleteAllMessagesOnStartup="true">
 
     <!--  Network connectors -->
     <amq:networkConnectors>

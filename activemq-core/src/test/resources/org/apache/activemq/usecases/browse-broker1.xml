@@ -25,7 +25,7 @@
   
   <!-- Broker1 ?useQueueForAccept=false -->
   <amq:broker brokerName="broker1" id="broker1" useJmx="true" 
-  			  persistent="true" start="false" advisorySupport="true">
+  			  persistent="true" start="false" advisorySupport="true" deleteAllMessagesOnStartup="true">
  
  
    <amq:destinationInterceptors>

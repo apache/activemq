@@ -216,6 +216,18 @@ public class JmsMultipleBrokersTestSupport extends CombinationTestSupport {
         return null;
     }
 
+    protected MessageConsumer createSyncConsumer(String brokerName, Destination dest) throws Exception {
+        BrokerItem brokerItem = brokers.get(brokerName);
+        if (brokerItem != null) {
+            Connection con = brokerItem.createConnection();
+            con.start();
+            Session sess = con.createSession(false, Session.AUTO_ACKNOWLEDGE);
+            MessageConsumer consumer = sess.createConsumer(dest);
+            return consumer;
+        }
+        return null;
+    }
+
     protected MessageConsumer createConsumer(String brokerName, Destination dest) throws Exception {
         return createConsumer(brokerName, dest, null, null);
     }
