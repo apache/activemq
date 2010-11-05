@@ -1318,7 +1318,9 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
 	private Response doSyncSendPacket(Command command, int timeout)
 			throws JMSException {
 		try {
-		    Response response = (Response)this.transport.request(command, timeout);
+		    Response response = (Response) (timeout > 0
+                    ? this.transport.request(command, timeout) 
+                    : this.transport.request(command));
 		    if (response != null && response.isException()) {
 		        ExceptionResponse er = (ExceptionResponse)response;
 		        if (er.getException() instanceof JMSException) {
