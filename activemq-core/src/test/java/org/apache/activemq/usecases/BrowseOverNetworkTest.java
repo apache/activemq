@@ -21,7 +21,6 @@ import java.util.Arrays;
 import java.util.Enumeration;
 
 import javax.jms.Destination;
-import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.QueueBrowser;
 
@@ -111,7 +110,6 @@ public class BrowseOverNetworkTest extends JmsMultipleBrokersTestSupport {
                 try {
                     QueueBrowser browser = createBrowser(broker, dest);
                     int count  = browseMessages(browser, broker);
-                    LOG.info("browser '" + broker + "' browsed " + totalCount);
                     if (consume) {
                         if (count != 0) {
                             MessageConsumer consumer = createSyncConsumer(broker, dest);
@@ -125,6 +123,7 @@ public class BrowseOverNetworkTest extends JmsMultipleBrokersTestSupport {
                     } else {
                         totalCount = count;
                     }
+                    LOG.info("browser '" + broker + "' browsed " + totalCount);
 
                     Thread.sleep(1000);
                 } catch (Exception e) {
@@ -203,6 +202,39 @@ public class BrowseOverNetworkTest extends JmsMultipleBrokersTestSupport {
         assertEquals(MESSAGE_COUNT * 2, browser1.getTotalCount() + browser2.getTotalCount() );
 
     }
+
+    public void testAMQ3020() throws Exception {
+        createBroker(new ClassPathResource("org/apache/activemq/usecases/browse-broker1A.xml"));
+        createBroker(new ClassPathResource("org/apache/activemq/usecases/browse-broker1B.xml"));
+        createBroker(new ClassPathResource("org/apache/activemq/usecases/browse-broker2A.xml"));
+        createBroker(new ClassPathResource("org/apache/activemq/usecases/browse-broker2B.xml"));
+        createBroker(new ClassPathResource("org/apache/activemq/usecases/browse-broker3A.xml"));
+        createBroker(new ClassPathResource("org/apache/activemq/usecases/browse-broker3B.xml"));
+
+        brokers.get("broker-1A").broker.waitUntilStarted();
+        brokers.get("broker-2A").broker.waitUntilStarted();
+        brokers.get("broker-3A").broker.waitUntilStarted();
+
+        Destination composite = createDestination("PROD.FUSESOURCE.3.A,PROD.FUSESOURCE.3.B", false);
+
+        Browser browser1 = new Browser("broker-3A", composite);
+        browser1.start();
+
+        Browser browser2 = new Browser("broker-3B", composite);
+        browser2.start();
+
+        sendMessages("broker-1A", composite, MESSAGE_COUNT);
+
+        browser1.join();
+        browser2.join();
+
+
+        LOG.info("broker-3A browsed " + browser1.getTotalCount());
+        LOG.info("broker-3B browsed " + browser2.getTotalCount());
+        
+        assertEquals(MESSAGE_COUNT * 2, browser1.getTotalCount() + browser2.getTotalCount() );
+
+    }    
 
     protected int browseMessages(QueueBrowser browser, String name) throws Exception {
         Enumeration msgs = browser.getEnumeration();

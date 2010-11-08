@@ -717,7 +717,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                         
                         Message message = configureMessage(md);
                         if (LOG.isDebugEnabled()) {
-                            LOG.debug("bridging " + configuration.getBrokerName() + " -> " + remoteBrokerName + ", consumer: " + md.getConsumerId() + ", brokerPath: " + Arrays.toString(message.getBrokerPath()) + ", message: " + message);
+                            LOG.debug("bridging (" + configuration.getBrokerName() + " -> " + remoteBrokerName + ", consumer: " + md.getConsumerId() + ", destination " + message.getDestination() + ", brokerPath: " + Arrays.toString(message.getBrokerPath()) + ", message: " + message);
                         }
                         
                         if (!message.isResponseRequired()) {
