@@ -51,23 +51,25 @@ public class BrowseOverNetworkTest extends JmsMultipleBrokersTestSupport {
 
         sendMessages("BrokerA", dest, MESSAGE_COUNT);
 
-        browseMessages("BrokerB", dest);
+        Thread.sleep(1000);
 
-        Thread.sleep(2000);
+        int browsed = browseMessages("BrokerB", dest);
+
+        Thread.sleep(1000);
 
         MessageConsumer clientA = createConsumer("BrokerA", dest);
         MessageIdList msgsA = getConsumerMessages("BrokerA", clientA);
         msgsA.waitForMessagesToArrive(MESSAGE_COUNT);
 
-        Thread.sleep(2000);
+        Thread.sleep(1000);
         MessageConsumer clientB = createConsumer("BrokerB", dest);
         MessageIdList msgsB = getConsumerMessages("BrokerB", clientB);
         msgsB.waitForMessagesToArrive(MESSAGE_COUNT);
 
         LOG.info("A+B: " + msgsA.getMessageCount() + "+"
                 + msgsB.getMessageCount());
-        assertEquals(MESSAGE_COUNT, msgsA.getMessageCount()
-                + msgsB.getMessageCount());
+        assertEquals("Consumer on Broker A, should've consumed all messages", MESSAGE_COUNT, msgsA.getMessageCount());
+        assertEquals("Broker B shouldn't get any messages", 0, browsed);
     }
 
     public void testConsumerInfo() throws Exception {
@@ -185,6 +187,7 @@ public class BrowseOverNetworkTest extends JmsMultipleBrokersTestSupport {
         startAllBrokers();
 
         brokers.get("BrokerA").broker.waitUntilStarted();
+        brokers.get("BrokerB").broker.waitUntilStarted();
         brokers.get("BrokerC").broker.waitUntilStarted();
         brokers.get("BrokerD").broker.waitUntilStarted();
 

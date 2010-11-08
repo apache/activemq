@@ -566,9 +566,16 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
             ConsumerInfo info = (ConsumerInfo) data;
             BrokerId[] path = info.getBrokerPath();
 
+            if (info.isBrowser()) {
+                if (LOG.isDebugEnabled()) {
+                    LOG.info(configuration.getBrokerName() + " Ignoring sub from " + remoteBrokerName + ", browsers explicitly suppressed");
+                }
+                return;
+            }
+
             if (path != null && path.length >= networkTTL) {
                 if (LOG.isDebugEnabled()) {
-                    LOG.debug(configuration.getBrokerName() + " Ignoring sub  from " + remoteBrokerName + ", restricted to " + networkTTL + " network hops only : " + info);
+                    LOG.debug(configuration.getBrokerName() + " Ignoring sub from " + remoteBrokerName + ", restricted to " + networkTTL + " network hops only : " + info);
                 }
                 return;
             }
