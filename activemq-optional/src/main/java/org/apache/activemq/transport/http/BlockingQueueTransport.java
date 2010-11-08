@@ -24,20 +24,28 @@ import java.util.concurrent.TimeUnit;
 import org.apache.activemq.transport.TransportSupport;
 import org.apache.activemq.util.ServiceStopper;
 
+import java.util.concurrent.CountDownLatch;
 /**
  * A server side HTTP based TransportChannel which processes incoming packets
  * and adds outgoing packets onto a {@link Queue} so that they can be dispatched
  * by the HTTP GET requests from the client.
- * 
+ *
  * @version $Revision$
  */
 public class BlockingQueueTransport extends TransportSupport {
+	public static CountDownLatch finalizeLatch;
     public static final long MAX_TIMEOUT = 30000L;
 
     private BlockingQueue<Object> queue;
 
     public BlockingQueueTransport(BlockingQueue<Object> channel) {
         this.queue = channel;
+    }
+
+    @Override
+    public void finalize()
+    {
+    	finalizeLatch.countDown();
     }
 
     public BlockingQueue<Object> getQueue() {
@@ -55,7 +63,7 @@ public class BlockingQueueTransport extends TransportSupport {
         }
     }
 
-    
+
     public String getRemoteAddress() {
         return "blockingQueue_" + queue.hashCode();
     }
@@ -68,5 +76,5 @@ public class BlockingQueueTransport extends TransportSupport {
 
     public int getReceiveCounter() {
         return 0;
-    }   
+    }
 }

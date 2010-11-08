@@ -21,7 +21,8 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.HashMap;
-import java.util.Map;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import javax.servlet.ServletException;
@@ -29,14 +30,15 @@ import javax.servlet.ServletInputStream;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import org.apache.activemq.Service;
 import org.apache.activemq.command.Command;
 import org.apache.activemq.command.WireFormatInfo;
-import org.apache.activemq.transport.InactivityMonitor;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportAcceptListener;
 import org.apache.activemq.transport.util.TextWireFormat;
 import org.apache.activemq.transport.xstream.XStreamWireFormat;
 import org.apache.activemq.util.IOExceptionSupport;
+import org.apache.activemq.util.ServiceListener;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -54,7 +56,7 @@ public class HttpTunnelServlet extends HttpServlet {
     private TransportAcceptListener listener;
     private HttpTransportFactory transportFactory;
     private TextWireFormat wireFormat;
-    private final Map<String, BlockingQueueTransport> clients = new HashMap<String, BlockingQueueTransport>();
+    private ConcurrentMap<String, BlockingQueueTransport> clients = new ConcurrentHashMap<String, BlockingQueueTransport>();
     private final long requestTimeout = 30000L;
     private HashMap transportOptions;
 
@@ -162,18 +164,16 @@ public class HttpTunnelServlet extends HttpServlet {
             LOG.warn("No clientID header specified");
             return null;
         }
-        synchronized (this) {
-            BlockingQueueTransport answer = clients.get(clientID);
-            if (answer == null) {
-                LOG.warn("The clientID header specified is invalid. Client sesion has not yet been established for it: " + clientID);
-                return null;
-            }
-            return answer;
+        BlockingQueueTransport answer = clients.get(clientID);
+        if (answer == null) {
+            LOG.warn("The clientID header specified is invalid. Client sesion has not yet been established for it: " + clientID);
+            return null;
         }
+        return answer;
     }
 
     protected BlockingQueueTransport createTransportChannel(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        String clientID = request.getHeader("clientID");
+        final String clientID = request.getHeader("clientID");
 
         if (clientID == null) {
             response.sendError(HttpServletResponse.SC_BAD_REQUEST, "No clientID header specified");
@@ -181,33 +181,60 @@ public class HttpTunnelServlet extends HttpServlet {
             return null;
         }
 
-        synchronized (this) {
-            BlockingQueueTransport answer = clients.get(clientID);
-            if (answer != null) {
-                response.sendError(HttpServletResponse.SC_BAD_REQUEST, "A session for clientID '" + clientID + "' has already been established");
-                LOG.warn("A session for clientID '" + clientID + "' has already been established");
-                return null;
+        // Optimistically create the client's transport; this transport may be thrown away if the client has already registered.
+        BlockingQueueTransport answer = createTransportChannel();
+
+        // Record the client's transport and ensure that it has not already registered; this is thread-safe and only allows one 
+        // thread to register the client
+        if (clients.putIfAbsent(clientID, answer) != null) {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "A session for clientID '" + clientID + "' has already been established");
+            LOG.warn("A session for clientID '" + clientID + "' has already been established");
+            return null;
+        }
+
+        // Ensure that the client's transport is cleaned up when no longer
+        // needed.
+        answer.addServiceListener(new ServiceListener() {
+            @Override
+            public void started(Service service) {
+                // Nothing to do.
             }
 
-            answer = createTransportChannel();
-            clients.put(clientID, answer);
-            Transport transport = answer;
-            try {
-                HashMap options = new HashMap(transportOptions);
-                transport = transportFactory.serverConfigure(answer, null, options);
-            } catch (Exception e) {
-                IOExceptionSupport.create(e);
+            @Override
+            public void stopped(Service service) {
+                clients.remove(clientID);
             }
-            listener.onAccept(transport);
-            //wait for the transport to connect
-            while (!answer.isConnected()) {
-            	try {
-            		Thread.sleep(100);
-            	} catch (InterruptedException ignore) {
-            	}
-            }
-            return answer;
+        });
+
+        // Configure the transport with any additional properties or filters.  Although the returned transport is not explicitly
+        // persisted, if it is a filter (e.g., InactivityMonitor) it will be linked to the client's transport as a TransportListener
+        // and not GC'd until the client's transport is disposed.
+        Transport transport = answer;
+        try {
+            // Preserve the transportOptions for future use by making a copy before applying (they are removed when applied).
+            HashMap options = new HashMap(transportOptions);
+            transport = transportFactory.serverConfigure(answer, null, options);
+        } catch (Exception e) {
+            IOExceptionSupport.create(e);
         }
+
+        // Wait for the transport to be connected or disposed.
+        listener.onAccept(transport);
+        while (!transport.isConnected() && !transport.isDisposed()) {
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException ignore) {
+            }
+        }
+
+        // Ensure that the transport was not prematurely disposed.
+        if (transport.isDisposed()) {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "The session for clientID '" + clientID + "' was prematurely disposed");
+            LOG.warn("The session for clientID '" + clientID + "' was prematurely disposed");
+            return null;
+        }
+
+        return answer;
     }
 
     protected BlockingQueueTransport createTransportChannel() {
