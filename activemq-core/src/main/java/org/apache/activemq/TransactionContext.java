@@ -334,12 +334,17 @@ public class TransactionContext implements XAResource {
             throw new XAException(XAException.XAER_PROTO);
         }
 
-        // if ((flags & TMJOIN) == TMJOIN) {
-        // // TODO: verify that the server has seen the xid
-        // }
-        // if ((flags & TMJOIN) == TMRESUME) {
-        // // TODO: verify that the xid was suspended.
-        // }
+        String txSuspendResumeNotSupportMsg = "The suspend/resume of a transaction " 
+        	+ "is not supported. Instead it is recommended that a new JMS session be created.";
+        
+        if ((flags & TMJOIN) == TMJOIN) {
+        	throw new XAException(txSuspendResumeNotSupportMsg);
+        // TODO: verify that the server has seen the xid
+        }
+        if ((flags & TMRESUME) == TMRESUME) {
+        	throw new XAException(txSuspendResumeNotSupportMsg);
+        // TODO: verify that the xid was suspended.
+        }
 
         // associate
         synchronizations = null;
