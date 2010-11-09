@@ -409,15 +409,13 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         }
     }
     
-    public void doSetLastAck(TransactionContext c, ActiveMQDestination destination, String clientId,
+    public void doSetLastAckWithPriority(TransactionContext c, ActiveMQDestination destination, String clientId,
             String subscriptionName, long seq, long prio) throws SQLException, IOException {
-        doCreatePriorityAckRow(c, destination, clientId, subscriptionName, prio);
-        doUpdateLatestAckRow(c, destination, clientId, subscriptionName, seq, prio);
         PreparedStatement s = c.getUpdateLastAckStatement();
         cleanupExclusiveLock.readLock().lock();
         try {
             if (s == null) {
-                s = c.getConnection().prepareStatement(this.statements.getUpdateLastAckOfDurableSubStatement());
+                s = c.getConnection().prepareStatement(this.statements.getUpdateLastPriorityAckRowOfDurableSubStatement());
                 if (this.batchStatments) {
                     c.setUpdateLastAckStatement(s);
                 }
@@ -435,72 +433,39 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         } finally {
             cleanupExclusiveLock.readLock().unlock();
             if (!this.batchStatments) {
-                s.close();
-            }
-        }
-    }
-
-    private void doCreatePriorityAckRow(TransactionContext c, ActiveMQDestination destination, String clientId,
-                                        String subscriptionName,long priority) throws SQLException, IOException{
-        PreparedStatement s = null;
-        ResultSet rs = null;
-        boolean exists = false;
-        cleanupExclusiveLock.readLock().lock();
-        try {
-            s = c.getConnection().prepareStatement(this.statements.getSelectDurablePriorityAckStatement());
-            s.setString(1, destination.getQualifiedName());
-            s.setString(2, clientId);
-            s.setString(3, subscriptionName);
-            s.setLong(4, priority);
-
-            rs = s.executeQuery();
-            exists = rs.next();
-        } finally {
-            cleanupExclusiveLock.readLock().unlock();
-            close(rs);
-            close(s);
-        }
-
-        if (!exists) {
-            cleanupExclusiveLock.readLock().lock();
-            try {
-                s = c.getConnection().prepareStatement(this.statements.getInsertDurablePriorityAckStatement());
-                s.setString(1, destination.getQualifiedName());
-                s.setString(2, clientId);
-                s.setString(3, subscriptionName);
-                s.setLong(4, priority);
-                if (s.executeUpdate() != 1) {
-                    throw new IOException("Could not insert initial ack entry for priority: "
-                            + priority + ", for sub: " + subscriptionName);
-                }
-
-            } finally {
-                cleanupExclusiveLock.readLock().unlock();
                 close(s);
             }
         }
     }
 
-    private void doUpdateLatestAckRow(TransactionContext c, ActiveMQDestination destination, String clientId,
-                                        String subscriptionName, long seq, long priority) throws SQLException, IOException{
-        PreparedStatement s = null;
-        ResultSet rs = null;
+
+    public void doSetLastAck(TransactionContext c, ActiveMQDestination destination, String clientId,
+                                        String subscriptionName, long seq, long priority) throws SQLException, IOException {
+        PreparedStatement s = c.getUpdateLastAckStatement();
         cleanupExclusiveLock.readLock().lock();
         try {
-            s = c.getConnection().prepareStatement(this.statements.getUpdateDurableLastAckStatement());
+            if (s == null) {
+                s = c.getConnection().prepareStatement(this.statements.getUpdateDurableLastAckStatement());
+                if (this.batchStatments) {
+                    c.setUpdateLastAckStatement(s);
+                }
+            }
             s.setLong(1, seq);
             s.setString(2, destination.getQualifiedName());
             s.setString(3, clientId);
             s.setString(4, subscriptionName);
 
-           if (s.executeUpdate() != 1) {
+            if (this.batchStatments) {
+                s.addBatch();
+            } else if (s.executeUpdate() != 1) {
                 throw new IOException("Could not update last ack seq : "
                             + seq + ", for sub: " + subscriptionName);
-           }
+            }
         } finally {
             cleanupExclusiveLock.readLock().unlock();
-            close(rs);
-            close(s);
+            if (!this.batchStatments) {
+                close(s);
+            }            
         }
     }
 
@@ -553,11 +518,6 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
             s.setString(1, destination.getQualifiedName());
             s.setString(2, clientId);
             s.setString(3, subscriptionName);
-            s.setLong(4, seq);
-            if (isPrioritizedMessages()) {
-                s.setLong(5, priority);
-                s.setLong(6, priority);
-            }
             rs = s.executeQuery();
             int count = 0;
             if (this.statements.isUseExternalMessageReferences()) {
@@ -587,7 +547,11 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         int result = 0;
         cleanupExclusiveLock.readLock().lock();
         try {
-            s = c.getConnection().prepareStatement(this.statements.getDurableSubscriberMessageCountStatement());
+            if (this.isPrioritizedMessages()) {
+                s = c.getConnection().prepareStatement(this.statements.getDurableSubscriberMessageCountStatementWithPriority());
+            } else {
+                s = c.getConnection().prepareStatement(this.statements.getDurableSubscriberMessageCountStatement());    
+            }
             s.setString(1, destination.getQualifiedName());
             s.setString(2, clientId);
             s.setString(3, subscriptionName);
@@ -618,7 +582,6 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         cleanupExclusiveLock.readLock().lock();
         try {
             long lastMessageId = -1;
-            long priority = Byte.MAX_VALUE - 1;
             if (!retroactive) {
                 s = c.getConnection().prepareStatement(this.statements.getFindLastSequenceIdInMsgsStatement());
                 ResultSet rs = null;
@@ -633,16 +596,25 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
                 }
             }
             s = c.getConnection().prepareStatement(this.statements.getCreateDurableSubStatement());
-            s.setString(1, info.getDestination().getQualifiedName());
-            s.setString(2, info.getClientId());
-            s.setString(3, info.getSubscriptionName());
-            s.setString(4, info.getSelector());
-            s.setLong(5, lastMessageId);
-            s.setString(6, info.getSubscribedDestination().getQualifiedName());
-            s.setLong(7, priority);
-            if (s.executeUpdate() != 1) {
-                throw new IOException("Could not create durable subscription for: " + info.getClientId());
+            int maxPriority = 1;
+            if (this.isPrioritizedMessages()) {
+                maxPriority = 10;
             }
+
+            for (int priority = 0; priority < maxPriority; priority++) {
+                s.setString(1, info.getDestination().getQualifiedName());
+                s.setString(2, info.getClientId());
+                s.setString(3, info.getSubscriptionName());
+                s.setString(4, info.getSelector());
+                s.setLong(5, lastMessageId);
+                s.setString(6, info.getSubscribedDestination().getQualifiedName());
+                s.setLong(7, priority);
+
+                if (s.executeUpdate() != 1) {
+                    throw new IOException("Could not create durable subscription for: " + info.getClientId());
+                }
+            }
+
         } finally {
             cleanupExclusiveLock.readLock().unlock();
             close(s);
@@ -744,8 +716,13 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         PreparedStatement s = null;
         cleanupExclusiveLock.writeLock().lock();
         try {
-            LOG.debug("Executing SQL: " + this.statements.getDeleteOldMessagesStatement());
-            s = c.getConnection().prepareStatement(this.statements.getDeleteOldMessagesStatement());
+            if (this.isPrioritizedMessages()) {
+                LOG.debug("Executing SQL: " + this.statements.getDeleteOldMessagesStatementWithPriority());
+                s = c.getConnection().prepareStatement(this.statements.getDeleteOldMessagesStatementWithPriority());
+            } else {
+                LOG.debug("Executing SQL: " + this.statements.getDeleteOldMessagesStatement());
+                s = c.getConnection().prepareStatement(this.statements.getDeleteOldMessagesStatement());
+            }
             s.setLong(1, System.currentTimeMillis());
             int i = s.executeUpdate();
             LOG.debug("Deleted " + i + " old message(s).");
@@ -755,11 +732,11 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         }
     }
 
-    public long[] doGetLastAckedDurableSubscriberMessageId(TransactionContext c, ActiveMQDestination destination,
+    public long doGetLastAckedDurableSubscriberMessageId(TransactionContext c, ActiveMQDestination destination,
             String clientId, String subscriberName) throws SQLException, IOException {
         PreparedStatement s = null;
         ResultSet rs = null;
-        long[] result = new long[]{-1, Byte.MAX_VALUE - 1};
+        long result = -1;
         cleanupExclusiveLock.readLock().lock();
         try {
             s = c.getConnection().prepareStatement(this.statements.getLastAckedDurableSubscriberMessageStatement());
@@ -768,8 +745,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
             s.setString(3, subscriberName);
             rs = s.executeQuery();
             if (rs.next()) {
-                result[0] = rs.getLong(1);
-                result[1] = rs.getLong(2);
+                result = rs.getLong(1);
             }
         } finally {
             cleanupExclusiveLock.readLock().unlock();

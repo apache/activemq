@@ -18,6 +18,7 @@
 package org.apache.activemq.store.jdbc;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Vector;
 import java.util.concurrent.atomic.AtomicInteger;
 import javax.jms.Message;
@@ -117,10 +118,11 @@ public class JDBCMessagePriorityTest extends MessagePriorityTest {
         }
 
         final int closeFrequency = MSG_NUM/2;
-
+        HashMap dups = new HashMap();
         sub = sess.createDurableSubscriber(topic, subName);
         for (int i=0; i < MSG_NUM * maxPriority; i++) {
             Message msg = sub.receive(10000);
+            assertNull("no duplicate message", dups.put(msg.getJMSMessageID(), subName));
             LOG.info("received i=" + i + ", m=" + (msg!=null?
                     msg.getJMSMessageID() + ", priority: " + msg.getJMSPriority()
                     : null) );

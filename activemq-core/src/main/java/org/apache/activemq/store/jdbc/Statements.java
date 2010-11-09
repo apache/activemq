@@ -48,7 +48,7 @@ public class Statements {
     private String createDurableSubStatement;
     private String findDurableSubStatement;
     private String findAllDurableSubsStatement;
-    private String updateLastAckOfDurableSubStatement;
+    private String updateLastPriorityAckRowOfDurableSubStatement;
     private String deleteSubscriptionStatement;
     private String findAllDurableSubMessagesStatement;
     private String findDurableSubMessagesStatement;
@@ -74,6 +74,8 @@ public class Statements {
 
     private String insertDurablePriorityAckStatement;
     private String updateDurableLastAckStatement;
+    private String deleteOldMessagesStatementWithPriority;
+    private String durableSubscriberMessageCountStatementWithPriority;
 
     public String[] getCreateSchemaStatements() {
         if (createSchemaStatements == null) {
@@ -213,7 +215,7 @@ public class Statements {
     public String getFindDurableSubStatement() {
         if (findDurableSubStatement == null) {
             findDurableSubStatement = "SELECT SELECTOR, SUB_DEST " + "FROM " + getFullAckTableName()
-                                      + " WHERE CONTAINER=? AND CLIENT_ID=? AND SUB_NAME=? AND SUB_DEST IS NOT NULL";
+                                      + " WHERE CONTAINER=? AND CLIENT_ID=? AND SUB_NAME=?";
         }
         return findDurableSubStatement;
     }
@@ -221,17 +223,17 @@ public class Statements {
     public String getFindAllDurableSubsStatement() {
         if (findAllDurableSubsStatement == null) {
             findAllDurableSubsStatement = "SELECT SELECTOR, SUB_NAME, CLIENT_ID, SUB_DEST" + " FROM "
-                                          + getFullAckTableName() + " WHERE CONTAINER=? AND SUB_DEST IS NOT NULL";
+                                          + getFullAckTableName() + " WHERE CONTAINER=? AND PRIORITY=0";
         }
         return findAllDurableSubsStatement;
     }
 
-    public String getUpdateLastAckOfDurableSubStatement() {
-        if (updateLastAckOfDurableSubStatement == null) {
-            updateLastAckOfDurableSubStatement = "UPDATE " + getFullAckTableName() + " SET LAST_ACKED_ID=?"
+    public String getUpdateLastPriorityAckRowOfDurableSubStatement() {
+        if (updateLastPriorityAckRowOfDurableSubStatement == null) {
+            updateLastPriorityAckRowOfDurableSubStatement = "UPDATE " + getFullAckTableName() + " SET LAST_ACKED_ID=?"
                                                  + " WHERE CONTAINER=? AND CLIENT_ID=? AND SUB_NAME=? AND PRIORITY=?";
         }
-        return updateLastAckOfDurableSubStatement;
+        return updateLastPriorityAckRowOfDurableSubStatement;
     }
 
     public String getDeleteSubscriptionStatement() {
@@ -248,7 +250,7 @@ public class Statements {
                                                  + " M, " + getFullAckTableName() + " D "
                                                  + " WHERE D.CONTAINER=? AND D.CLIENT_ID=? AND D.SUB_NAME=?"
                                                  + " AND M.CONTAINER=D.CONTAINER AND M.ID > D.LAST_ACKED_ID"
-                                                 + " ORDER BY M.ID";
+                                                 + " ORDER BY M.PRIORITY DESC, M.ID";
         }
         return findAllDurableSubMessagesStatement;
     }
@@ -258,7 +260,7 @@ public class Statements {
             findDurableSubMessagesStatement = "SELECT M.ID, M.MSG FROM " + getFullMessageTableName() + " M, "
                                               + getFullAckTableName() + " D "
                                               + " WHERE D.CONTAINER=? AND D.CLIENT_ID=? AND D.SUB_NAME=?"
-                                              + " AND M.CONTAINER=D.CONTAINER AND M.ID > ?"
+                                              + " AND M.CONTAINER=D.CONTAINER AND M.ID > D.LAST_ACKED_ID"
                                               + " ORDER BY M.ID";
         }
         return findDurableSubMessagesStatement;
@@ -269,20 +271,8 @@ public class Statements {
             findDurableSubMessagesByPriorityStatement = "SELECT M.ID, M.MSG FROM " + getFullMessageTableName() + " M, "
                                               + getFullAckTableName() + " D "
                                               + " WHERE D.CONTAINER=? AND D.CLIENT_ID=? AND D.SUB_NAME=?"
-                                              + " AND M.CONTAINER=D.CONTAINER AND "
-                                              + "((M.ID > ? AND M.PRIORITY = ?) "
-                                              + "   OR (M.PRIORITY <> ? "
-                                              + "     AND ( M.ID >"
-                                              + "          ( SELECT LAST_ACKED_ID FROM " + getFullAckTableName()
-                                              + "           WHERE CONTAINER=D.CONTAINER AND CLIENT_ID=D.CLIENT_ID"
-                                              + "           AND SUB_NAME=D.SUB_NAME AND PRIORITY=M.PRIORITY )"
-                                              + "          OR "
-                                              + "          ( (SELECT COUNT(LAST_ACKED_ID) FROM " + getFullAckTableName()
-                                              + "           WHERE CONTAINER=D.CONTAINER AND CLIENT_ID=D.CLIENT_ID"
-                                              + "           AND SUB_NAME=D.SUB_NAME AND PRIORITY=M.PRIORITY) = 0)"
-                                              + "        )"
-                                              + "   )"
-                                              + ")"
+                                              + " AND M.CONTAINER=D.CONTAINER"
+                                              + " AND M.PRIORITY=D.PRIORITY AND M.ID > D.LAST_ACKED_ID"
                                               + " ORDER BY M.PRIORITY DESC, M.ID";
         }
         return findDurableSubMessagesByPriorityStatement;
@@ -324,19 +314,31 @@ public class Statements {
                                                      + " M, "
                                                      + getFullAckTableName()
                                                      + " D "
-                                                     + " WHERE D.CONTAINER=? AND D.CLIENT_ID=? AND D.SUB_NAME=? AND D.SUB_DEST IS NOT NULL"
+                                                     + " WHERE D.CONTAINER=? AND D.CLIENT_ID=? AND D.SUB_NAME=?"
                                                      + " AND M.CONTAINER=D.CONTAINER "
-                                                     + "     AND ( M.ID >"
+                                                     + "     AND M.ID >"
                                                      + "          ( SELECT LAST_ACKED_ID FROM " + getFullAckTableName()
                                                      + "           WHERE CONTAINER=D.CONTAINER AND CLIENT_ID=D.CLIENT_ID"
-                                                     + "           AND SUB_NAME=D.SUB_NAME AND PRIORITY=M.PRIORITY )"
-                                                     + "          OR "
-                                                     + "          ( (SELECT COUNT(LAST_ACKED_ID) FROM " + getFullAckTableName()
-                                                     + "           WHERE CONTAINER=D.CONTAINER AND CLIENT_ID=D.CLIENT_ID"
-                                                     + "           AND SUB_NAME=D.SUB_NAME AND PRIORITY=M.PRIORITY) = 0)"
-                                                     + "        )";
+                                                     + "           AND SUB_NAME=D.SUB_NAME )";
+
         }
         return durableSubscriberMessageCountStatement;
+    }
+
+    public String getDurableSubscriberMessageCountStatementWithPriority() {
+        if (durableSubscriberMessageCountStatementWithPriority == null) {
+            durableSubscriberMessageCountStatementWithPriority = "SELECT COUNT(*) FROM "
+                                                     + getFullMessageTableName()
+                                                     + " M, "
+                                                     + getFullAckTableName()
+                                                     + " D "
+                                                     + " WHERE D.CONTAINER=? AND D.CLIENT_ID=? AND D.SUB_NAME=?"
+                                                     + " AND M.CONTAINER=D.CONTAINER "
+                                                     + " AND M.PRIORITY=D.PRIORITY "
+                                                     + " AND M.ID > D.LAST_ACKED_ID";
+        }
+
+        return durableSubscriberMessageCountStatementWithPriority;
     }
 
     public String getFindAllDestinationsStatement() {
@@ -360,28 +362,36 @@ public class Statements {
         return removeAllSubscriptionsStatement;
     }
 
+    public String getDeleteOldMessagesStatementWithPriority() {
+        if (deleteOldMessagesStatementWithPriority == null) {
+            deleteOldMessagesStatementWithPriority = "DELETE FROM " + getFullMessageTableName()
+                                         + " WHERE ( EXPIRATION<>0 AND EXPIRATION<?)"
+                                         + " OR (ID <= "
+                                         + "     ( SELECT min(" + getFullAckTableName() + ".LAST_ACKED_ID)"
+                                         + "       FROM " + getFullAckTableName() + " WHERE "
+                                         +          getFullAckTableName() + ".CONTAINER="
+                                         +          getFullMessageTableName() + ".CONTAINER"
+                                         + "        AND " + getFullAckTableName() + ".PRIORITY=" + getFullMessageTableName() + ".PRIORITY )"
+                                         + "   )";
+        }
+        return deleteOldMessagesStatementWithPriority;
+    }
+
     public String getDeleteOldMessagesStatement() {
         if (deleteOldMessagesStatement == null) {
             deleteOldMessagesStatement = "DELETE FROM " + getFullMessageTableName()
                                          + " WHERE ( EXPIRATION<>0 AND EXPIRATION<?)"
-                                         + " OR (ID < "
+                                         + " OR (ID <= "
                                          + "     ( SELECT min(" + getFullAckTableName() + ".LAST_ACKED_ID)"
                                          + "       FROM " + getFullAckTableName() + " WHERE "
                                          +          getFullAckTableName() + ".CONTAINER="
-                                         +          getFullMessageTableName() + ".CONTAINER"
-                                         + "        AND " + getFullAckTableName() + ".SUB_DEST IS NULL"
-                                         + "        AND " + getFullAckTableName() + ".PRIORITY=" + getFullMessageTableName() + ".PRIORITY )"
-                                         + "    AND ID <"
-                                         + "     ( SELECT min(" + getFullAckTableName() + ".LAST_ACKED_ID)"
-                                         + "       FROM " + getFullAckTableName() + " WHERE "
-                                         +          getFullAckTableName() + ".CONTAINER="
-                                         +          getFullMessageTableName() + ".CONTAINER"
-                                         + "        AND " + getFullAckTableName() + ".SUB_DEST IS NOT NULL )"
+                                         +          getFullMessageTableName() + ".CONTAINER )"
                                          + "   )";
 
         }
         return deleteOldMessagesStatement;
     }
+
 
     public String getLockCreateStatement() {
         if (lockCreateStatement == null) {
@@ -441,11 +451,9 @@ public class Statements {
      */
     public String getLastAckedDurableSubscriberMessageStatement() {
         if (lastAckedDurableSubscriberMessageStatement == null) {
-            lastAckedDurableSubscriberMessageStatement = "SELECT MAX(LAST_ACKED_ID), PRIORITY FROM "
+            lastAckedDurableSubscriberMessageStatement = "SELECT MAX(LAST_ACKED_ID) FROM "
                                                          + getFullAckTableName()
-                                                         + " WHERE CONTAINER=? AND CLIENT_ID=? AND SUB_NAME=?"
-                                                         + " GROUP BY PRIORITY"
-                                                         + " ORDER BY PRIORITY ASC";
+                                                         + " WHERE CONTAINER=? AND CLIENT_ID=? AND SUB_NAME=?";                                                    
         }
         return lastAckedDurableSubscriberMessageStatement;
     }
@@ -473,8 +481,7 @@ public class Statements {
     public String getUpdateDurableLastAckStatement() {
         if (updateDurableLastAckStatement == null) {
             updateDurableLastAckStatement  = "UPDATE " + getFullAckTableName()
-                    + " SET LAST_ACKED_ID = ? WHERE CONTAINER=? AND CLIENT_ID=? AND SUB_NAME=?"
-                    + " AND PRIORITY = " + (Byte.MAX_VALUE - 1);
+                    + " SET LAST_ACKED_ID = ? WHERE CONTAINER=? AND CLIENT_ID=? AND SUB_NAME=?";
         }
         return  updateDurableLastAckStatement;
     }
@@ -637,6 +644,10 @@ public class Statements {
         this.deleteOldMessagesStatement = deleteOldMessagesStatment;
     }
 
+    public void setDeleteOldMessagesStatementWithPriority(String deleteOldMessagesStatmentWithPriority) {
+        this.deleteOldMessagesStatementWithPriority = deleteOldMessagesStatmentWithPriority;
+    }
+
     public void setDeleteSubscriptionStatement(String deleteSubscriptionStatment) {
         this.deleteSubscriptionStatement = deleteSubscriptionStatment;
     }
@@ -697,8 +708,8 @@ public class Statements {
         this.removeMessageStatement = removeMessageStatement;
     }
 
-    public void setUpdateLastAckOfDurableSubStatement(String updateLastAckOfDurableSub) {
-        this.updateLastAckOfDurableSubStatement = updateLastAckOfDurableSub;
+    public void setUpdateLastPriorityAckRowOfDurableSubStatement(String updateLastPriorityAckRowOfDurableSubStatement) {
+        this.updateLastPriorityAckRowOfDurableSubStatement = updateLastPriorityAckRowOfDurableSubStatement;
     }
 
     public void setUpdateMessageStatement(String updateMessageStatment) {
@@ -741,6 +752,10 @@ public class Statements {
      */
     public void setDurableSubscriberMessageCountStatement(String durableSubscriberMessageCountStatement) {
         this.durableSubscriberMessageCountStatement = durableSubscriberMessageCountStatement;
+    }
+
+    public void setDurableSubscriberMessageCountStatementWithPriority(String durableSubscriberMessageCountStatementWithPriority) {
+        this.durableSubscriberMessageCountStatementWithPriority = durableSubscriberMessageCountStatementWithPriority;
     }
 
     /**
