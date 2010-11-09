@@ -177,8 +177,12 @@ public class BrowseOverNetworkTest extends JmsMultipleBrokersTestSupport {
         Browser browser1 = new Browser("broker-3A", composite);
         browser1.start();
 
+        Thread.sleep(1000);
+
         Browser browser2 = new Browser("broker-3B", composite);
         browser2.start();
+
+        Thread.sleep(1000);
 
         sendMessages("broker-1A", composite, MESSAGE_COUNT);
 
