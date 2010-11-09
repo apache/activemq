@@ -160,52 +160,6 @@ public class BrowseOverNetworkTest extends JmsMultipleBrokersTestSupport {
         return nc;
     }
 
-
-    public void testMultipleBrowsers() throws Exception {
-        createBroker(new URI("broker:(tcp://localhost:61616)/BrokerA?persistent=false&useJmx=false&brokerId=BrokerA"));
-        createBroker(new URI("broker:(tcp://localhost:61617)/BrokerB?persistent=false&useJmx=false&brokerId=BrokerB"));
-        createBroker(new URI("broker:(tcp://localhost:61618)/BrokerC?persistent=false&useJmx=false&brokerId=BrokerC"));
-        createBroker(new URI("broker:(tcp://localhost:61619)/BrokerD?persistent=false&useJmx=false&brokerId=BrokerD"));
-
-        Destination composite = createDestination("TEST.FOO,TEST.BAR", false);
-        Destination dest1 = createDestination("TEST.FOO", false);
-        Destination dest2 = createDestination("TEST.BAR", false);
-
-        bridgeBrokersWithIncludedDestination("BrokerA", "BrokerC", (ActiveMQDestination)composite, null);
-        bridgeBrokersWithIncludedDestination("BrokerA", "BrokerB", (ActiveMQDestination)composite, null);
-        bridgeBrokersWithIncludedDestination("BrokerA", "BrokerD", (ActiveMQDestination)composite, null);
-        bridgeBrokersWithIncludedDestination("BrokerB", "BrokerA", (ActiveMQDestination)composite, null);
-        bridgeBrokersWithIncludedDestination("BrokerB", "BrokerC", (ActiveMQDestination)composite, null);
-        bridgeBrokersWithIncludedDestination("BrokerB", "BrokerD", (ActiveMQDestination)composite, null);
-        bridgeBrokersWithIncludedDestination("BrokerC", "BrokerA", (ActiveMQDestination)dest2, (ActiveMQDestination)dest1);
-        bridgeBrokersWithIncludedDestination("BrokerC", "BrokerB", (ActiveMQDestination)dest2, (ActiveMQDestination)dest1);
-        bridgeBrokersWithIncludedDestination("BrokerC", "BrokerD", (ActiveMQDestination)dest2, (ActiveMQDestination)dest1);
-        bridgeBrokersWithIncludedDestination("BrokerD", "BrokerA", (ActiveMQDestination)dest1, (ActiveMQDestination)dest2);
-        bridgeBrokersWithIncludedDestination("BrokerD", "BrokerB", (ActiveMQDestination)dest1, (ActiveMQDestination)dest2);
-        bridgeBrokersWithIncludedDestination("BrokerD", "BrokerC", (ActiveMQDestination)dest1, (ActiveMQDestination)dest2);
-
-        startAllBrokers();
-
-        brokers.get("BrokerA").broker.waitUntilStarted();
-        brokers.get("BrokerB").broker.waitUntilStarted();
-        brokers.get("BrokerC").broker.waitUntilStarted();
-        brokers.get("BrokerD").broker.waitUntilStarted();
-
-        Browser browser1 = new Browser("BrokerC", composite);
-        browser1.start();
-
-        Browser browser2 = new Browser("BrokerD", composite);
-        browser2.start();
-
-        sendMessages("BrokerA", composite, MESSAGE_COUNT);
-
-        browser1.join();
-        browser2.join();
-
-        assertEquals(MESSAGE_COUNT * 2, browser1.getTotalCount() + browser2.getTotalCount() );
-
-    }
-
     public void testAMQ3020() throws Exception {
         createBroker(new ClassPathResource("org/apache/activemq/usecases/browse-broker1A.xml"));
         createBroker(new ClassPathResource("org/apache/activemq/usecases/browse-broker1B.xml"));
