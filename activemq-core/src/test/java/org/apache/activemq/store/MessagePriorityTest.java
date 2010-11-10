@@ -45,8 +45,8 @@ abstract public class MessagePriorityTest extends CombinationTestSupport {
     BrokerService broker;
     PersistenceAdapter adapter;
     
-    ActiveMQConnectionFactory factory;
-    Connection conn;
+    protected ActiveMQConnectionFactory factory;
+    protected Connection conn;
     protected Session sess;
     
     public boolean useCache = true;

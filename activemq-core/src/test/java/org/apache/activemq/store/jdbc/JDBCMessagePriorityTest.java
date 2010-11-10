@@ -21,7 +21,9 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Vector;
 import java.util.concurrent.atomic.AtomicInteger;
+import javax.jms.Connection;
 import javax.jms.Message;
+import javax.jms.Session;
 import javax.jms.TopicSubscriber;
 import junit.framework.Test;
 import org.apache.activemq.command.ActiveMQTopic;
@@ -101,7 +103,12 @@ public class JDBCMessagePriorityTest extends MessagePriorityTest {
     public void testConcurrentDurableSubsReconnectWithXLevels() throws Exception {
         ActiveMQTopic topic = (ActiveMQTopic) sess.createTopic("TEST");
         final String subName = "priorityDisconnect";
-        TopicSubscriber sub = sess.createDurableSubscriber(topic, subName);
+        Connection consumerConn = factory.createConnection();
+        consumerConn.setClientID("priorityDisconnect");
+        consumerConn.start();
+        Session consumerSession = consumerConn.createSession(false, Session.AUTO_ACKNOWLEDGE);
+
+        TopicSubscriber sub = consumerSession.createDurableSubscriber(topic, subName);
         sub.close();
 
         final int maxPriority = 5;
@@ -119,7 +126,7 @@ public class JDBCMessagePriorityTest extends MessagePriorityTest {
 
         final int closeFrequency = MSG_NUM/2;
         HashMap dups = new HashMap();
-        sub = sess.createDurableSubscriber(topic, subName);
+        sub = consumerSession.createDurableSubscriber(topic, subName);
         for (int i=0; i < MSG_NUM * maxPriority; i++) {
             Message msg = sub.receive(10000);
             assertNull("no duplicate message", dups.put(msg.getJMSMessageID(), subName));
@@ -131,11 +138,13 @@ public class JDBCMessagePriorityTest extends MessagePriorityTest {
             if (i > 0 && i % closeFrequency == 0) {
                 LOG.info("Closing durable sub.. on: " + i + ", counts: " + Arrays.toString(messageCounts));
                 sub.close();
-                sub = sess.createDurableSubscriber(topic, subName);
+                sub = consumerSession.createDurableSubscriber(topic, subName);
             }
         }
         LOG.info("closing on done!");
         sub.close();
+        consumerSession.close();
+        consumerConn.close();
 
         for (ProducerThread producer : producers) {
             producer.join();
