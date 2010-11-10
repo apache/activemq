@@ -81,7 +81,7 @@ public class JDBCMessagePriorityTest extends MessagePriorityTest {
         sub = sess.createDurableSubscriber(topic, subName);
         for (int i = 0; i < MSG_NUM * 4; i++) {
             Message msg = sub.receive(10000);
-            LOG.info("received i=" + i + ", m=" + (msg!=null?
+            LOG.debug("received i=" + i + ", m=" + (msg!=null?
                     msg.getJMSMessageID() + ", priority: " + msg.getJMSPriority()
                     : null) );
             assertNotNull("Message " + i + " was null", msg);
@@ -129,10 +129,10 @@ public class JDBCMessagePriorityTest extends MessagePriorityTest {
         sub = consumerSession.createDurableSubscriber(topic, subName);
         for (int i=0; i < MSG_NUM * maxPriority; i++) {
             Message msg = sub.receive(10000);
-            assertNull("no duplicate message", dups.put(msg.getJMSMessageID(), subName));
-            LOG.info("received i=" + i + ", m=" + (msg!=null?
+            LOG.debug("received i=" + i + ", m=" + (msg!=null?
                     msg.getJMSMessageID() + ", priority: " + msg.getJMSPriority()
                     : null) );
+            assertNull("no duplicate message failed on : " + msg.getJMSMessageID(), dups.put(msg.getJMSMessageID(), subName));            
             assertNotNull("Message " + i + " was null", msg);
             messageCounts[msg.getJMSPriority()].incrementAndGet();
             if (i > 0 && i % closeFrequency == 0) {
