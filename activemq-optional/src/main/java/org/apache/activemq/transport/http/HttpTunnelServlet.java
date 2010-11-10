@@ -195,12 +195,10 @@ public class HttpTunnelServlet extends HttpServlet {
         // Ensure that the client's transport is cleaned up when no longer
         // needed.
         answer.addServiceListener(new ServiceListener() {
-            @Override
             public void started(Service service) {
                 // Nothing to do.
             }
 
-            @Override
             public void stopped(Service service) {
                 clients.remove(clientID);
             }
