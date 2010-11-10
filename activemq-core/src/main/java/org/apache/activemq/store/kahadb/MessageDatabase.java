@@ -1056,6 +1056,12 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
 
                 Long prev = sd.subscriptionAcks.put(tx, subscriptionKey, ackSequenceToStore);
 
+                if (ackSequenceToStore != sequence) {
+                    // unmatched, need to add ack locations for the intermediate sequences
+                    for (long matchedGapSequence = extractSequenceId(prev) + 1; matchedGapSequence < sequence; matchedGapSequence++) {
+                        addAckLocation(sd, matchedGapSequence, subscriptionKey);
+                    }
+                }
                 // The following method handles deleting un-referenced messages.
                 removeAckLocation(tx, sd, subscriptionKey, extractSequenceId(prev));
 
