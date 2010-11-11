@@ -32,7 +32,7 @@
   <bean id="springContext" class="org.apache.activemq.spring.SpringBrokerContext" />
   
   <!--  lets create an embedded ActiveMQ Broker -->
-  <amq:broker useJmx="true" persistent="false" start="false" brokerContext="#springContext">
+  <amq:broker useJmx="true" schedulerSupport="true" persistent="false" start="false" brokerContext="#springContext">
 
      <amq:plugins>
 		<amq:jaasCertificateAuthenticationPlugin configuration="cert-login"/>
