@@ -20,14 +20,18 @@ import java.beans.PropertyEditorManager;
 import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URI;
+import java.util.Map;
 
 import org.apache.activemq.broker.BrokerFactoryHandler;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.util.IntrospectionSupport;
+import org.apache.activemq.util.URISupport;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.xbean.spring.context.ResourceXmlApplicationContext;
 import org.apache.xbean.spring.context.impl.URIEditor;
 import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.xml.XmlBeanDefinitionReader;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.core.io.ClassPathResource;
@@ -46,7 +50,22 @@ public class XBeanBrokerFactory implements BrokerFactoryHandler {
         PropertyEditorManager.registerEditor(URI.class, URIEditor.class);
     }
 
+    private boolean validate = true;
+    public boolean isValidate() {
+        return validate;
+    }
+
+    public void setValidate(boolean validate) {
+        this.validate = validate;
+    }
+
     public BrokerService createBroker(URI config) throws Exception {
+        
+        Map map = URISupport.parseParameters(config);
+        if (!map.isEmpty()) {
+            IntrospectionSupport.setProperties(this, map);
+            config = URISupport.removeQuery(config);
+        }
 
         String uri = config.getSchemeSpecificPart();
         ApplicationContext context = createApplicationContext(uri);
@@ -93,6 +112,11 @@ public class XBeanBrokerFactory implements BrokerFactoryHandler {
         } else {
             resource = new ClassPathResource(uri);
         }
-        return new ResourceXmlApplicationContext(resource);
+        return new ResourceXmlApplicationContext(resource) {
+            @Override
+            protected void initBeanDefinitionReader(XmlBeanDefinitionReader reader) {
+                reader.setValidating(isValidate());
+            }
+        };
     }
 }
