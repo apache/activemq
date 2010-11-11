@@ -1188,6 +1188,9 @@
             <exclude>**/.*</exclude>
             <exclude>**/eclipse-classes/**/*</exclude>
             <exclude>**/target/**/*</exclude>
+            <exclude>**/*.iml</exclude>
+            <exclude>.idea/**/*</exclude>
+            <exclude>.git/**/*</exclude>
           </excludes>
         </configuration>
       </plugin>
