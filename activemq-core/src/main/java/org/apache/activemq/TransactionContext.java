@@ -164,7 +164,7 @@ public class TransactionContext implements XAResource {
         } catch (Throwable e) {
             throw JMSExceptionSupport.create(e);
         } finally {
-        	synchronizations = null;
+            synchronizations = null;
         }
     }
 
@@ -334,17 +334,12 @@ public class TransactionContext implements XAResource {
             throw new XAException(XAException.XAER_PROTO);
         }
 
-        String txSuspendResumeNotSupportMsg = "The suspend/resume of a transaction " 
-        	+ "is not supported. Instead it is recommended that a new JMS session be created.";
-        
-        if ((flags & TMJOIN) == TMJOIN) {
-        	throw new XAException(txSuspendResumeNotSupportMsg);
+        // if ((flags & TMJOIN) == TMJOIN) {
         // TODO: verify that the server has seen the xid
-        }
-        if ((flags & TMRESUME) == TMRESUME) {
-        	throw new XAException(txSuspendResumeNotSupportMsg);
-        // TODO: verify that the xid was suspended.
-        }
+        // // }
+        // if ((flags & TMJOIN) == TMRESUME) {
+        // // TODO: verify that the xid was suspended.
+        // }
 
         // associate
         synchronizations = null;
@@ -705,20 +700,20 @@ public class TransactionContext implements XAResource {
      * @return the response
      */
     private Response syncSendPacketWithInterruptionHandling(Command command) throws JMSException {
-    	try {
-			return this.connection.syncSendPacket(command);
-		} catch (JMSException e) {
-			if (e.getLinkedException() instanceof InterruptedIOException) {
-				try {
-					Thread.interrupted();
-					return this.connection.syncSendPacket(command);
-				} finally {
-					Thread.currentThread().interrupt();
-				}				
-			}
-			
-			throw e;
-		}
+        try {
+            return this.connection.syncSendPacket(command);
+        } catch (JMSException e) {
+            if (e.getLinkedException() instanceof InterruptedIOException) {
+                try {
+                    Thread.interrupted();
+                    return this.connection.syncSendPacket(command);
+                } finally {
+                    Thread.currentThread().interrupt();
+                }               
+            }
+            
+            throw e;
+        }
     }
 
     /**
