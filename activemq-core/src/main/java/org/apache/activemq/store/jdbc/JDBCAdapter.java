@@ -31,8 +31,6 @@ public interface JDBCAdapter {
 
     void setStatements(Statements statementProvider);
     
-    void setPrioritizedMessages(boolean prioritizedMessages);
-
     void doCreateTables(TransactionContext c) throws SQLException, IOException;
 
     void doDropTables(TransactionContext c) throws SQLException, IOException;
@@ -59,7 +57,10 @@ public interface JDBCAdapter {
     void doRecoverNextMessages(TransactionContext c, ActiveMQDestination destination, String clientId, String subscriptionName, long seq, long priority, int maxReturned,
                                JDBCMessageRecoveryListener listener) throws Exception;
 
-    void doSetSubscriberEntry(TransactionContext c, SubscriptionInfo subscriptionInfo, boolean retroactive) throws SQLException, IOException;
+    void doRecoverNextMessagesWithPriority(TransactionContext c, ActiveMQDestination destination, String clientId, String subscriptionName, long seq, long priority, int maxReturned,
+                               JDBCMessageRecoveryListener listener) throws Exception;
+
+    void doSetSubscriberEntry(TransactionContext c, SubscriptionInfo subscriptionInfo, boolean retroactive, boolean isPrioritizeMessages) throws SQLException, IOException;
 
     SubscriptionInfo doGetSubscriberEntry(TransactionContext c, ActiveMQDestination destination, String clientId, String subscriptionName) throws SQLException, IOException;
 
@@ -69,7 +70,7 @@ public interface JDBCAdapter {
 
     void doDeleteSubscription(TransactionContext c, ActiveMQDestination destinationName, String clientId, String subscriptionName) throws SQLException, IOException;
 
-    void doDeleteOldMessages(TransactionContext c) throws SQLException, IOException;
+    void doDeleteOldMessages(TransactionContext c, boolean isPrioritizedMessages) throws SQLException, IOException;
 
     long doGetLastMessageStoreSequenceId(TransactionContext c) throws SQLException, IOException;
 
@@ -79,11 +80,11 @@ public interface JDBCAdapter {
 
     SubscriptionInfo[] doGetAllSubscriptions(TransactionContext c, ActiveMQDestination destination) throws SQLException, IOException;
 
-    int doGetDurableSubscriberMessageCount(TransactionContext c, ActiveMQDestination destination, String clientId, String subscriptionName) throws SQLException, IOException;
+    int doGetDurableSubscriberMessageCount(TransactionContext c, ActiveMQDestination destination, String clientId, String subscriptionName, boolean isPrioritizeMessages) throws SQLException, IOException;
 
     int doGetMessageCount(TransactionContext c, ActiveMQDestination destination) throws SQLException, IOException;
 
-    void doRecoverNextMessages(TransactionContext c, ActiveMQDestination destination, long nextSeq, long priority, int maxReturned, JDBCMessageRecoveryListener listener) throws Exception;
+    void doRecoverNextMessages(TransactionContext c, ActiveMQDestination destination, long nextSeq, long priority, int maxReturned, boolean isPrioritizeMessages, JDBCMessageRecoveryListener listener) throws Exception;
 
     long doGetLastAckedDurableSubscriberMessageId(TransactionContext c, ActiveMQDestination destination, String clientId, String subscriberName) throws SQLException, IOException;
 

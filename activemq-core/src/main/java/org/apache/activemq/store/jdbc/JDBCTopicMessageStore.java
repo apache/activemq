@@ -104,8 +104,7 @@ public class JDBCTopicMessageStore extends JDBCMessageStore implements TopicMess
         throws Exception {
         TransactionContext c = persistenceAdapter.getTransactionContext();
         try {
-            adapter.doRecoverNextMessages(c, destination, clientId, subscriptionName,
-                    0, 0, maxReturned, new JDBCMessageRecoveryListener() {
+             JDBCMessageRecoveryListener jdbcListener = new JDBCMessageRecoveryListener() {
 
                 public boolean recoverMessage(long sequenceId, byte[] data) throws Exception {
                     if (listener.hasSpace()) {
@@ -122,7 +121,14 @@ public class JDBCTopicMessageStore extends JDBCMessageStore implements TopicMess
                     return listener.recoverMessageReference(new MessageId(reference));
                 }
 
-            });
+            };
+            if (isPrioritizedMessages()) {
+                adapter.doRecoverNextMessagesWithPriority(c, destination, clientId, subscriptionName,
+                    0, 0, maxReturned, jdbcListener);
+            } else {
+                adapter.doRecoverNextMessages(c, destination, clientId, subscriptionName,
+                    0, 0, maxReturned, jdbcListener);
+            }
         } catch (SQLException e) {
             JDBCPersistenceAdapter.log("JDBC Failure: ", e);
         } finally {
@@ -138,7 +144,7 @@ public class JDBCTopicMessageStore extends JDBCMessageStore implements TopicMess
         TransactionContext c = persistenceAdapter.getTransactionContext();
         try {
             c = persistenceAdapter.getTransactionContext();
-            adapter.doSetSubscriberEntry(c, subscriptionInfo, retroactive);
+            adapter.doSetSubscriberEntry(c, subscriptionInfo, retroactive, isPrioritizedMessages());
         } catch (SQLException e) {
             JDBCPersistenceAdapter.log("JDBC Failure: ", e);
             throw IOExceptionSupport.create("Failed to lookup subscription for info: " + subscriptionInfo.getClientId() + ". Reason: " + e, e);
@@ -192,8 +198,7 @@ public class JDBCTopicMessageStore extends JDBCMessageStore implements TopicMess
         int result = 0;
         TransactionContext c = persistenceAdapter.getTransactionContext();
         try {
-            result = adapter.doGetDurableSubscriberMessageCount(c, destination, clientId, subscriberName);
-
+                result = adapter.doGetDurableSubscriberMessageCount(c, destination, clientId, subscriberName, isPrioritizedMessages());
         } catch (SQLException e) {
             JDBCPersistenceAdapter.log("JDBC Failure: ", e);
             throw IOExceptionSupport.create("Failed to get Message Count: " + clientId + ". Reason: " + e, e);

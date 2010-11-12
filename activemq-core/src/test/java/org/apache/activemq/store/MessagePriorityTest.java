@@ -70,7 +70,8 @@ abstract public class MessagePriorityTest extends CombinationTestSupport {
         policy.setPrioritizedMessages(prioritizeMessages);
         policy.setUseCache(useCache);
         PolicyMap policyMap = new PolicyMap();
-        policyMap.setDefaultEntry(policy);
+        policyMap.put(new ActiveMQQueue("TEST"), policy);
+        policyMap.put(new ActiveMQTopic("TEST"), policy);
         broker.setDestinationPolicy(policyMap);
         broker.start();
         broker.waitUntilStarted();
@@ -198,7 +199,29 @@ abstract public class MessagePriorityTest extends CombinationTestSupport {
             assertNotNull("Message " + i + " was null", msg);
             assertEquals("Message " + i + " has wrong priority", i < MSG_NUM ? HIGH_PRI : LOW_PRI, msg.getJMSPriority());
         }
-        
+
+
+        // verify that same broker/store can deal with non priority dest also
+        topic = (ActiveMQTopic)sess.createTopic("HAS_NO_PRIORITY");
+        sub = sess.createDurableSubscriber(topic, "no_priority");
+        sub.close();
+
+        lowPri = new ProducerThread(topic, MSG_NUM, LOW_PRI);
+        highPri = new ProducerThread(topic, MSG_NUM, HIGH_PRI);
+
+        lowPri.start();
+        highPri.start();
+
+        lowPri.join();
+        highPri.join();
+
+        sub = sess.createDurableSubscriber(topic, "no_priority");
+        // verify we got them all
+        for (int i = 0; i < MSG_NUM * 2; i++) {
+            Message msg = sub.receive(5000);
+            assertNotNull("Message " + i + " was null", msg);
+        }
+
     }
 
     public void initCombosForTestDurableSubsReconnect() {

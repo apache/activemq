@@ -333,7 +333,8 @@ public class JDBCPersistenceAdapter extends DataSourceSupport implements Persist
         try {
             LOG.debug("Cleaning up old messages.");
             c = getTransactionContext();
-            getAdapter().doDeleteOldMessages(c);
+            getAdapter().doDeleteOldMessages(c, false);
+            getAdapter().doDeleteOldMessages(c, true);
         } catch (IOException e) {
             LOG.warn("Old message cleanup failed due to: " + e, e);
         } catch (SQLException e) {

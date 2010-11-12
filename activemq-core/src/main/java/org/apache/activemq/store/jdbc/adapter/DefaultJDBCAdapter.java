@@ -17,11 +17,8 @@
 package org.apache.activemq.store.jdbc.adapter;
 
 import java.io.IOException;
-import java.io.PrintStream;
-import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
@@ -30,8 +27,6 @@ import java.util.LinkedList;
 import java.util.Set;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-
-import javax.jms.Message;
 
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.MessageId;
@@ -65,6 +60,8 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
     protected boolean batchStatments = true;
     protected boolean prioritizedMessages;
     protected ReadWriteLock cleanupExclusiveLock = new ReentrantReadWriteLock();
+    // needs to be min twice the prefetch for a durable sub
+    protected int maxRows = 2000;
 
     protected void setBinaryData(PreparedStatement s, int index, byte data[]) throws SQLException {
         s.setBytes(index, data);
@@ -509,12 +506,44 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         ResultSet rs = null;
         cleanupExclusiveLock.readLock().lock();
         try {
-            if (isPrioritizedMessages()) {
-                s = c.getConnection().prepareStatement(this.statements.getFindDurableSubMessagesByPriorityStatement());
+            s = c.getConnection().prepareStatement(this.statements.getFindDurableSubMessagesStatement());
+            s.setMaxRows(maxReturned * 2);
+            s.setString(1, destination.getQualifiedName());
+            s.setString(2, clientId);
+            s.setString(3, subscriptionName);
+            rs = s.executeQuery();
+            int count = 0;
+            if (this.statements.isUseExternalMessageReferences()) {
+                while (rs.next() && count < maxReturned) {
+                    if (listener.recoverMessageReference(rs.getString(1))) {
+                        count++;
+                    }
+                }
             } else {
-                s = c.getConnection().prepareStatement(this.statements.getFindDurableSubMessagesStatement());
+                while (rs.next() && count < maxReturned) {
+                    if (listener.recoverMessage(rs.getLong(1), getBinaryData(rs, 2))) {
+                        count++;
+                    }
+                }
             }
-            // no set max rows as selectors may need to scan more than maxReturned messages to get what they need
+        } finally {
+            cleanupExclusiveLock.readLock().unlock();
+            close(rs);
+            close(s);
+        }
+    }
+
+    public void doRecoverNextMessagesWithPriority(TransactionContext c, ActiveMQDestination destination, String clientId,
+            String subscriptionName, long seq, long priority, int maxReturned, JDBCMessageRecoveryListener listener) throws Exception {
+
+        PreparedStatement s = null;
+        ResultSet rs = null;
+        cleanupExclusiveLock.readLock().lock();
+        try {
+            s = c.getConnection().prepareStatement(this.statements.getFindDurableSubMessagesByPriorityStatement());
+            // maxRows needs to be twice prefetch as the db will replay all unacked, so inflight messages will
+            // be returned and suppressed by the cursor audit. It is faster this way.
+            s.setMaxRows(maxRows);
             s.setString(1, destination.getQualifiedName());
             s.setString(2, clientId);
             s.setString(3, subscriptionName);
@@ -541,13 +570,13 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
     }
 
     public int doGetDurableSubscriberMessageCount(TransactionContext c, ActiveMQDestination destination,
-            String clientId, String subscriptionName) throws SQLException, IOException {
+            String clientId, String subscriptionName, boolean isPrioritizedMessages) throws SQLException, IOException {
         PreparedStatement s = null;
         ResultSet rs = null;
         int result = 0;
         cleanupExclusiveLock.readLock().lock();
         try {
-            if (this.isPrioritizedMessages()) {
+            if (isPrioritizedMessages) {
                 s = c.getConnection().prepareStatement(this.statements.getDurableSubscriberMessageCountStatementWithPriority());
             } else {
                 s = c.getConnection().prepareStatement(this.statements.getDurableSubscriberMessageCountStatement());    
@@ -574,7 +603,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
      * @throws SQLException 
      * @throws IOException 
      */
-    public void doSetSubscriberEntry(TransactionContext c, SubscriptionInfo info, boolean retroactive)
+    public void doSetSubscriberEntry(TransactionContext c, SubscriptionInfo info, boolean retroactive, boolean isPrioritizedMessages)
             throws SQLException, IOException {
         // dumpTables(c, destination.getQualifiedName(), clientId,
         // subscriptionName);
@@ -597,7 +626,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
             }
             s = c.getConnection().prepareStatement(this.statements.getCreateDurableSubStatement());
             int maxPriority = 1;
-            if (this.isPrioritizedMessages()) {
+            if (isPrioritizedMessages) {
                 maxPriority = 10;
             }
 
@@ -712,11 +741,11 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         }
     }
 
-    public void doDeleteOldMessages(TransactionContext c) throws SQLException, IOException {
+    public void doDeleteOldMessages(TransactionContext c, boolean isPrioritizedMessages) throws SQLException, IOException {
         PreparedStatement s = null;
         cleanupExclusiveLock.writeLock().lock();
         try {
-            if (this.isPrioritizedMessages()) {
+            if (isPrioritizedMessages) {
                 LOG.debug("Executing SQL: " + this.statements.getDeleteOldMessagesStatementWithPriority());
                 s = c.getConnection().prepareStatement(this.statements.getDeleteOldMessagesStatementWithPriority());
             } else {
@@ -815,15 +844,15 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
 
     public void setStatements(Statements statements) {
         this.statements = statements;
+    }
+
+    public int getMaxRows() {
+        return maxRows;
+    }
+
+    public void setMaxRows(int maxRows) {
+        this.maxRows = maxRows;
     }    
-
-    public boolean isPrioritizedMessages() {
-        return prioritizedMessages;
-    }
-
-    public void setPrioritizedMessages(boolean prioritizedMessages) {
-        this.prioritizedMessages = prioritizedMessages;
-    }
 
     /**
      * @param c
@@ -878,12 +907,12 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
     }
 
     public void doRecoverNextMessages(TransactionContext c, ActiveMQDestination destination, long nextSeq,
-            long priority, int maxReturned, JDBCMessageRecoveryListener listener) throws Exception {
+            long priority, int maxReturned, boolean isPrioritizedMessages, JDBCMessageRecoveryListener listener) throws Exception {
         PreparedStatement s = null;
         ResultSet rs = null;
         cleanupExclusiveLock.readLock().lock();
         try {
-            if (isPrioritizedMessages()) {
+            if (isPrioritizedMessages) {
                 s = c.getConnection().prepareStatement(this.statements.getFindNextMessagesByPriorityStatement());
             } else {
                 s = c.getConnection().prepareStatement(this.statements.getFindNextMessagesStatement());
@@ -891,7 +920,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
             s.setMaxRows(maxReturned * 2);
             s.setString(1, destination.getQualifiedName());
             s.setLong(2, nextSeq);
-            if (isPrioritizedMessages()) {
+            if (isPrioritizedMessages) {
                 s.setLong(3, priority);
                 s.setLong(4, priority);
             }
