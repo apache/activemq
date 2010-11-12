@@ -199,7 +199,8 @@ if [ "$CONFIG_LOAD" != "yes" ];then
       echo "(you can configure options in one of these file: $ACTIVEMQ_CONFIGS)"
       echo
       echo "INFO: Invoke the following command to create a configuration file"
-      echo "$0 setup [ $(echo $ACTIVEMQ_CONFIGS|sed 's/[ ][ ]*/ | /') ]"
+      CONFIGS=`echo $ACTIVEMQ_CONFIGS|sed 's/[ ][ ]*/ | /'`
+      echo "$0 setup [ $CONFIGS ]"
       echo
    fi
 fi
@@ -327,16 +328,16 @@ fi
 # - if $ACTIVEMQ_USER is set, the function tries starts the java process whith the specified
 #   user
 invokeJar(){
-   local PIDFILE="$1"
-   local RET="1"
-   local CUSER="$(whoami 2>/dev/null)"
+   PIDFILE="$1"
+   RET="1"
+   CUSER="$(whoami 2>/dev/null)"
 
    # Solaris fix
-   if ( ! [ $? -eq 0 ] ) ; then
-    local CUSER="$(/usr/ucb/whoami)"
+   if [ ! $? -eq 0 ]; then
+      CUSER="$(/usr/ucb/whoami)"
    fi
 
-   if ( ! [ -f "${ACTIVEMQ_HOME}/bin/run.jar" ] );then
+   if [ ! -f "${ACTIVEMQ_HOME}/bin/run.jar" ];then
     echo "ERROR: '${ACTIVEMQ_HOME}/bin/run.jar' does not exist"
     exit 1
    fi
@@ -362,12 +363,13 @@ invokeJar(){
               echo \"INFO: pidfile created : '$PIDFILE' (pid '\$APID')\";exit \$RET" $DOIT_POSTFIX
       RET="$?"
    elif [ -n "$PIDFILE" ] && [ "$PIDFILE" = "stop" ];then
+          PID=`cat $ACTIVEMQ_PIDFILE`
           $DOIT_PREFIX "$JAVACMD $ACTIVEMQ_OPTS $ACTIVEMQ_DEBUG_OPTS \
               -Dactivemq.classpath=\"${ACTIVEMQ_CLASSPATH}\" \
               -Dactivemq.home=\"${ACTIVEMQ_HOME}\" \
               -Dactivemq.base=\"${ACTIVEMQ_BASE}\" \
               $ACTIVEMQ_CYGWIN \
-              -jar \"${ACTIVEMQ_HOME}/bin/run.jar\" $COMMANDLINE_ARGS --pid $(cat $ACTIVEMQ_PIDFILE) &
+              -jar \"${ACTIVEMQ_HOME}/bin/run.jar\" $COMMANDLINE_ARGS --pid $PID &
               RET=\"\$?\"; APID=\"\$!\"; 
               echo \$APID > $ACTIVEMQ_DATA_DIR/stop.pid" $DOIT_POSTFIX
    else
@@ -398,7 +400,9 @@ checkRunning(){
         echo "ERROR: Pidfile '$ACTIVEMQ_PIDFILE' exists but contains no pid"
         return 2
        fi
-       if (ps -p $(cat $ACTIVEMQ_PIDFILE)|grep java >/dev/null);then
+       PID=`cat $ACTIVEMQ_PIDFILE`
+       RET=`ps -p $PID|grep java`
+       if [ -n "$RET" ];then
          return 0;
        else
          return 1;
@@ -415,7 +419,8 @@ checkStopRunning(){
         echo "ERROR: Pidfile '$PID' exists but contains no pid"
         return 2
        fi
-       if (ps -p $(cat $PID)|grep java >/dev/null);then
+       RET=`ps -p $(cat $PID)|grep java`
+       if [ -n "$RET" ];then
          return 0;
        else
          return 1;
@@ -436,7 +441,8 @@ checkStopRunning(){
 
 invoke_status(){
     if ( checkRunning );then
-         echo "ActiveMQ is running (pid '$(cat $ACTIVEMQ_PIDFILE)')"
+         PID=`cat $ACTIVEMQ_PIDFILE`
+         echo "ActiveMQ is running (pid '$PID')"
          exit 0
     fi
     echo "ActiveMQ not running"
@@ -456,7 +462,8 @@ invoke_status(){
 
 invoke_start(){
     if ( checkRunning );then
-      echo "INFO: Process with pid '$(cat $ACTIVEMQ_PIDFILE)' is already running"
+      PID=`cat $ACTIVEMQ_PIDFILE`
+      echo "INFO: Process with pid '$PID' is already running"
       exit 0
     fi
 
@@ -513,13 +520,14 @@ invoke_stop(){
        COMMANDLINE_ARGS="$COMMANDLINE_ARGS $ACTIVEMQ_SUNJMX_CONTROL"
        invokeJar "stop"
        RET="$?"
-       echo "INFO: Waiting at least $ACTIVEMQ_KILL_MAXSECONDS seconds for regular process termination of pid '$(cat $ACTIVEMQ_PIDFILE)' : "
+       PID=`cat $ACTIVEMQ_PIDFILE`
+       echo "INFO: Waiting at least $ACTIVEMQ_KILL_MAXSECONDS seconds for regular process termination of pid '$PID' : "
        FOUND="0"
        i=1
        while [ $i != $ACTIVEMQ_KILL_MAXSECONDS ]; do
         
-         if (! checkStopRunning);then
-            if (! checkRunning); then
+         if [ ! checkStopRunning ];then
+            if [ ! checkRunning ]; then
                echo " FINISHED"
                FOUND="1"              
             fi
@@ -538,8 +546,8 @@ invoke_stop(){
        done
        if [ "$FOUND" -ne "1" ];then
          echo
-         echo "INFO: Regular shutdown not successful,  sending SIGKILL to process with pid '$(cat $ACTIVEMQ_PIDFILE)'"
-         kill -KILL $(cat $ACTIVEMQ_PIDFILE)
+         echo "INFO: Regular shutdown not successful,  sending SIGKILL to process with pid '$PID'"
+         kill -KILL $PID
          RET="1"
        fi
     elif [ -f "$ACTIVEMQ_PIDFILE" ];then
