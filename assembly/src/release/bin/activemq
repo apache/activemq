@@ -361,7 +361,7 @@ invokeJar(){
               echo \$APID > $PIDFILE;
               echo \"INFO: pidfile created : '$PIDFILE' (pid '\$APID')\";exit \$RET" $DOIT_POSTFIX
       RET="$?"
-   elif [ -n "$PIDFILE" ] && [ "$PIDFILE" == "stop" ];then
+   elif [ -n "$PIDFILE" ] && [ "$PIDFILE" = "stop" ];then
           $DOIT_PREFIX "$JAVACMD $ACTIVEMQ_OPTS $ACTIVEMQ_DEBUG_OPTS \
               -Dactivemq.classpath=\"${ACTIVEMQ_CLASSPATH}\" \
               -Dactivemq.home=\"${ACTIVEMQ_HOME}\" \
@@ -513,7 +513,7 @@ invoke_stop(){
        COMMANDLINE_ARGS="$COMMANDLINE_ARGS $ACTIVEMQ_SUNJMX_CONTROL"
        invokeJar "stop"
        RET="$?"
-       echo -n "INFO: Waiting at least $ACTIVEMQ_KILL_MAXSECONDS seconds for regular process termination of pid '$(cat $ACTIVEMQ_PIDFILE)' : "
+       echo "INFO: Waiting at least $ACTIVEMQ_KILL_MAXSECONDS seconds for regular process termination of pid '$(cat $ACTIVEMQ_PIDFILE)' : \c"
        FOUND="0"
        i=1
        while [ $i != $ACTIVEMQ_KILL_MAXSECONDS ]; do
