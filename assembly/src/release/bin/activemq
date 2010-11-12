@@ -513,7 +513,7 @@ invoke_stop(){
        COMMANDLINE_ARGS="$COMMANDLINE_ARGS $ACTIVEMQ_SUNJMX_CONTROL"
        invokeJar "stop"
        RET="$?"
-       echo "INFO: Waiting at least $ACTIVEMQ_KILL_MAXSECONDS seconds for regular process termination of pid '$(cat $ACTIVEMQ_PIDFILE)' : \c"
+       echo "INFO: Waiting at least $ACTIVEMQ_KILL_MAXSECONDS seconds for regular process termination of pid '$(cat $ACTIVEMQ_PIDFILE)' : "
        FOUND="0"
        i=1
        while [ $i != $ACTIVEMQ_KILL_MAXSECONDS ]; do
@@ -528,7 +528,7 @@ invoke_stop(){
         
          if (checkRunning);then
             sleep 1
-            echo  ".\c"
+            printf  "."
          else
             echo " FINISHED"
             FOUND="1"
