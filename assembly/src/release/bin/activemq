@@ -515,7 +515,8 @@ invoke_stop(){
        RET="$?"
        echo -n "INFO: Waiting at least $ACTIVEMQ_KILL_MAXSECONDS seconds for regular process termination of pid '$(cat $ACTIVEMQ_PIDFILE)' : "
        FOUND="0"
-       for ((i=1; i <= ACTIVEMQ_KILL_MAXSECONDS ; i++));do   
+       i=1
+       while [ $i != $ACTIVEMQ_KILL_MAXSECONDS ]; do
         
          if (! checkStopRunning);then
             if (! checkRunning); then
@@ -533,6 +534,7 @@ invoke_stop(){
             FOUND="1"
             break
          fi
+         i=`expr $i + 1`
        done
        if [ "$FOUND" -ne "1" ];then
          echo
