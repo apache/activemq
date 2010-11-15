@@ -159,7 +159,7 @@ ACTIVEMQ_SUNJMX_CONTROL=""
 ACTIVEMQ_QUEUEMANAGERURL="--amqurl tcp://localhost:61616"
 
 # Set additional JSE arguments
-ACTIVEMQ_SSL_OPTS=""
+ACTIVEMQ_SSL_OPTS="$SSL_OPTS"
 
 # Uncomment to enable YourKit profiling
 #ACTIVEMQ_DEBUG_OPTS="-agentlib:yjpagent"
