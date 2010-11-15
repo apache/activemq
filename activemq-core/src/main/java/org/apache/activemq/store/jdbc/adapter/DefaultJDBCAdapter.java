@@ -56,12 +56,13 @@ import org.apache.commons.logging.LogFactory;
  */
 public class DefaultJDBCAdapter implements JDBCAdapter {
     private static final Log LOG = LogFactory.getLog(DefaultJDBCAdapter.class);
+    public static final int MAX_ROWS = 10000;
     protected Statements statements;
     protected boolean batchStatments = true;
     protected boolean prioritizedMessages;
     protected ReadWriteLock cleanupExclusiveLock = new ReentrantReadWriteLock();
-    // needs to be min twice the prefetch for a durable sub
-    protected int maxRows = 2000;
+    // needs to be min twice the prefetch for a durable sub and large enough for selector range
+    protected int maxRows = MAX_ROWS;
 
     protected void setBinaryData(PreparedStatement s, int index, byte data[]) throws SQLException {
         s.setBytes(index, data);
@@ -507,7 +508,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         cleanupExclusiveLock.readLock().lock();
         try {
             s = c.getConnection().prepareStatement(this.statements.getFindDurableSubMessagesStatement());
-            s.setMaxRows(maxReturned * 2);
+            s.setMaxRows(Math.max(maxReturned * 2, maxRows));
             s.setString(1, destination.getQualifiedName());
             s.setString(2, clientId);
             s.setString(3, subscriptionName);
@@ -917,7 +918,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
             } else {
                 s = c.getConnection().prepareStatement(this.statements.getFindNextMessagesStatement());
             }
-            s.setMaxRows(maxReturned * 2);
+            s.setMaxRows(Math.max(maxReturned * 2, maxRows));
             s.setString(1, destination.getQualifiedName());
             s.setLong(2, nextSeq);
             if (isPrioritizedMessages) {

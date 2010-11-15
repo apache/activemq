@@ -33,6 +33,8 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.store.PersistenceAdapter;
+import org.apache.activemq.store.jdbc.JDBCPersistenceAdapter;
+import org.apache.activemq.util.Wait;
 
 public class DurableSubscriptionSelectorTest extends org.apache.activemq.TestSupport {
 
@@ -71,7 +73,8 @@ public class DurableSubscriptionSelectorTest extends org.apache.activemq.TestSup
         openConsumer();
 
         sendMessage(true);
-        Thread.sleep(1000);
+
+        Wait.waitFor(new Wait.Condition() { public boolean isSatisified() { return received >= 1;} }, 10000);
 
         assertEquals("Message is not recieved.", 1, received);
 
@@ -140,6 +143,10 @@ public class DurableSubscriptionSelectorTest extends org.apache.activemq.TestSup
             broker.setDeleteAllMessagesOnStartup(true);
         }
         setDefaultPersistenceAdapter(broker);
+
+        if (broker.getPersistenceAdapter() instanceof JDBCPersistenceAdapter) {
+            ((JDBCPersistenceAdapter)broker.getPersistenceAdapter()).setMaxRows(5000);    
+        }
         broker.start();
     }
 

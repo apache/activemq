@@ -93,4 +93,8 @@ public interface JDBCAdapter {
     long doGetLastProducerSequenceId(TransactionContext c, ProducerId id) throws SQLException, IOException;
 
     void doSetLastAckWithPriority(TransactionContext c, ActiveMQDestination destination, String clientId, String subscriptionName, long re, long re1) throws SQLException, IOException;
+
+    public int getMaxRows();
+
+    public void setMaxRows(int maxRows);
 }

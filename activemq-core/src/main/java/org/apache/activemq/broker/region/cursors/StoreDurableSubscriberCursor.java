@@ -258,11 +258,13 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
     }
 
     @Override
-    public void setMaxBatchSize(int maxBatchSize) {
-        for (PendingMessageCursor storePrefetch : storePrefetches) {
-            storePrefetch.setMaxBatchSize(maxBatchSize);
+    public void setMaxBatchSize(int newMaxBatchSize) {
+        if (newMaxBatchSize > getMaxBatchSize()) {
+            for (PendingMessageCursor storePrefetch : storePrefetches) {
+                storePrefetch.setMaxBatchSize(newMaxBatchSize);
+            }
+            super.setMaxBatchSize(newMaxBatchSize);
         }
-        super.setMaxBatchSize(maxBatchSize);
     }
 
     @Override

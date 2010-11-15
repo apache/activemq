@@ -99,6 +99,7 @@ public class JDBCPersistenceAdapter extends DataSourceSupport implements Persist
     protected ActiveMQMessageAudit audit;
     
     protected LongSequenceGenerator sequenceGenerator = new LongSequenceGenerator();
+    protected int maxRows = DefaultJDBCAdapter.MAX_ROWS;
 
     public JDBCPersistenceAdapter() {
     }
@@ -464,6 +465,7 @@ public class JDBCPersistenceAdapter extends DataSourceSupport implements Persist
     public void setAdapter(JDBCAdapter adapter) {
         this.adapter = adapter;
         this.adapter.setStatements(getStatements());
+        this.adapter.setMaxRows(getMaxRows());
     }
 
     public WireFormat getWireFormat() {
@@ -715,5 +717,16 @@ public class JDBCPersistenceAdapter extends DataSourceSupport implements Persist
         synchronized(sequenceGenerator) {
             return sequenceGenerator.getNextSequenceId();
         }
-    }    
+    }
+
+    public int getMaxRows() {
+        return maxRows;
+    }
+
+    /*
+     * the max rows return from queries, with sparse selectors this may need to be increased
+     */
+    public void setMaxRows(int maxRows) {
+        this.maxRows = maxRows;
+    }
 }
