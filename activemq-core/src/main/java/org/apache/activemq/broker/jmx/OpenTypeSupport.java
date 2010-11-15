@@ -23,6 +23,8 @@ import static org.apache.activemq.broker.jmx.CompositeDataConstants.JMSXGROUP_ID
 import static org.apache.activemq.broker.jmx.CompositeDataConstants.JMSXGROUP_SEQ;
 import static org.apache.activemq.broker.jmx.CompositeDataConstants.MESSAGE_TEXT;
 import static org.apache.activemq.broker.jmx.CompositeDataConstants.ORIGINAL_DESTINATION;
+import static org.apache.activemq.broker.jmx.CompositeDataConstants.MESSAGE_URL;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
@@ -45,6 +47,7 @@ import javax.management.openmbean.TabularType;
 import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.broker.region.policy.SlowConsumerEntry;
 import org.apache.activemq.broker.scheduler.Job;
+import org.apache.activemq.command.ActiveMQBlobMessage;
 import org.apache.activemq.command.ActiveMQBytesMessage;
 import org.apache.activemq.command.ActiveMQMapMessage;
 import org.apache.activemq.command.ActiveMQMessage;
@@ -432,6 +435,32 @@ public final class OpenTypeSupport {
         }
     }
 
+    static class ActiveMQBlobMessageOpenTypeFactory extends MessageOpenTypeFactory {
+
+        @Override
+        protected String getTypeName() {
+            return ActiveMQBlobMessage.class.getName();
+        }
+
+        @Override
+        protected void init() throws OpenDataException {
+            super.init();
+            addItem(MESSAGE_URL, "Body Url", SimpleType.STRING);
+        }
+
+        @Override
+        public Map<String, Object> getFields(Object o) throws OpenDataException {
+            ActiveMQBlobMessage m = (ActiveMQBlobMessage)o;
+            Map<String, Object> rc = super.getFields(o);
+            try {
+                rc.put(MESSAGE_URL, "" + m.getURL().toString());
+            } catch (JMSException e) {
+                rc.put(MESSAGE_URL, "");
+            }
+            return rc;
+        }
+    }
+
     static class SlowConsumerEntryOpenTypeFactory extends AbstractOpenTypeFactory {
        @Override
         protected String getTypeName() {
@@ -466,6 +495,7 @@ public final class OpenTypeSupport {
         OPEN_TYPE_FACTORIES.put(ActiveMQTextMessage.class, new TextMessageOpenTypeFactory());
         OPEN_TYPE_FACTORIES.put(Job.class, new JobOpenTypeFactory());
         OPEN_TYPE_FACTORIES.put(SlowConsumerEntry.class, new SlowConsumerEntryOpenTypeFactory());
+        OPEN_TYPE_FACTORIES.put(ActiveMQBlobMessage.class, new ActiveMQBlobMessageOpenTypeFactory());
     }
 
     private OpenTypeSupport() {
