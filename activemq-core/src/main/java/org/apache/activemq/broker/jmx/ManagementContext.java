@@ -16,6 +16,14 @@
  */
 package org.apache.activemq.broker.jmx;
 
+import org.apache.activemq.Service;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+import javax.management.*;
+import javax.management.remote.JMXConnectorServer;
+import javax.management.remote.JMXConnectorServerFactory;
+import javax.management.remote.JMXServiceURL;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.net.MalformedURLException;
@@ -23,26 +31,9 @@ import java.net.ServerSocket;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.RMIServerSocketFactory;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
-import javax.management.Attribute;
-import javax.management.JMException;
-import javax.management.MBeanServer;
-import javax.management.MBeanServerFactory;
-import javax.management.MBeanServerInvocationHandler;
-import javax.management.MalformedObjectNameException;
-import javax.management.ObjectInstance;
-import javax.management.ObjectName;
-import javax.management.QueryExp;
-import javax.management.remote.JMXConnectorServer;
-import javax.management.remote.JMXConnectorServerFactory;
-import javax.management.remote.JMXServiceURL;
-import org.apache.activemq.Service;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 /**
  * An abstraction over JMX mbean registration
@@ -65,6 +56,7 @@ public class ManagementContext implements Service {
     private boolean findTigerMbeanServer = true;
     private String connectorHost = "localhost";
     private int connectorPort = 1099;
+    private Map environment;
     private int rmiServerPort;
     private String connectorPath = "/jmxrmi";
     private final AtomicBoolean started = new AtomicBoolean(false);
@@ -456,7 +448,8 @@ public class ManagementContext implements Service {
         }
         String serviceURL = "service:jmx:rmi://" + rmiServer + "/jndi/rmi://" +getConnectorHost()+":" + connectorPort + connectorPath;
         JMXServiceURL url = new JMXServiceURL(serviceURL);
-        connectorServer = JMXConnectorServerFactory.newJMXConnectorServer(url, null, mbeanServer);
+        connectorServer = JMXConnectorServerFactory.newJMXConnectorServer(url, environment, mbeanServer);
+        
     }
 
     public String getConnectorPath() {
@@ -511,5 +504,13 @@ public class ManagementContext implements Service {
      */
     public void setConnectorHost(String connectorHost) {
         this.connectorHost = connectorHost;
+    }
+
+    public Map getEnvironment() {
+        return environment;
+    }
+
+    public void setEnvironment(Map environment) {
+        this.environment = environment;
     }
 }

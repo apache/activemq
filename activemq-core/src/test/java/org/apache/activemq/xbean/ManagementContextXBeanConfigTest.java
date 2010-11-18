@@ -18,11 +18,22 @@ package org.apache.activemq.xbean;
 
 import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.jmx.BrokerViewMBean;
 import org.apache.activemq.util.JMXSupport;
 import java.net.URI;
+import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.Map;
+import javax.management.MBeanServerConnection;
+import javax.management.MBeanServerInvocationHandler;
 import javax.management.ObjectName;
+import javax.management.remote.JMXConnector;
+import javax.management.remote.JMXConnectorFactory;
+import javax.management.remote.JMXServiceURL;
+
 import junit.framework.TestCase;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * @version $Revision: 1.1 $
@@ -30,6 +41,7 @@ import junit.framework.TestCase;
 public class ManagementContextXBeanConfigTest extends TestCase {
 
     protected BrokerService brokerService;
+    private static final transient Log LOG = LogFactory.getLog(ManagementContextXBeanConfigTest.class);
 
     public void testManagmentContextConfiguredCorrectly() throws Exception {
         assertEquals(2011, brokerService.getManagementContext().getConnectorPort());
@@ -41,6 +53,34 @@ public class ManagementContextXBeanConfigTest extends TestCase {
         ObjectName on = new ObjectName("test.domain", map);
         Object value = brokerService.getManagementContext().getAttribute(on, "TotalEnqueueCount");
         assertNotNull(value);
+    }
+
+    public void testSuccessAuthentication() throws Exception {
+        JMXServiceURL url = new JMXServiceURL("service:jmx:rmi:///jndi/rmi://localhost:2011/jmxrmi");
+        Map env = new HashMap();
+        env.put(JMXConnector.CREDENTIALS, new String[]{"admin", "activemq"});
+        JMXConnector connector = JMXConnectorFactory.connect(url, env);
+        assertAuthentication(connector);
+    }
+
+    public void testFailAuthentication() throws Exception {
+        JMXServiceURL url = new JMXServiceURL("service:jmx:rmi:///jndi/rmi://localhost:2011/jmxrmi");
+        try {
+            JMXConnector connector = JMXConnectorFactory.connect(url, null);
+            assertAuthentication(connector);
+        } catch (SecurityException e) {
+            return;
+        }
+        fail("Should have thrown an exception");
+    }
+
+    public void assertAuthentication(JMXConnector connector) throws Exception {
+        connector.connect();
+        MBeanServerConnection connection = connector.getMBeanServerConnection();
+        ObjectName name = new ObjectName("test.domain:BrokerName=localhost,Type=Broker");
+        BrokerViewMBean mbean = (BrokerViewMBean) MBeanServerInvocationHandler
+                .newProxyInstance(connection, name, BrokerViewMBean.class, true);
+        LOG.info("Broker " + mbean.getBrokerId() + " - " + mbean.getBrokerName());
     }
 
     protected void setUp() throws Exception {
