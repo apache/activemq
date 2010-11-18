@@ -65,6 +65,19 @@
 
   <broker useJmx="true" persistent="false" xmlns="http://activemq.apache.org/schema/core" destroyApplicationContextOnStop="true">
 
+    <managementContext>
+        <managementContext createConnector="true">
+            <property xmlns="http://www.springframework.org/schema/beans" name="environment">
+                <map xmlns="http://www.springframework.org/schema/beans">
+                    <entry xmlns="http://www.springframework.org/schema/beans" key="jmx.remote.x.password.file"
+                           value="conf/jmx.password"/>
+                    <entry xmlns="http://www.springframework.org/schema/beans" key="jmx.remote.x.access.file"
+                           value="conf/jmx.access"/>
+                </map>
+            </property>
+        </managementContext>
+    </managementContext>
+
     <plugins>
         <!-- Configure authentication; Username, passwords and groups -->
         <simpleAuthenticationPlugin>
