@@ -53,8 +53,8 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
     
     public final synchronized void start() throws Exception{
         if (!isStarted()) {
-            super.start();
             clear();
+            super.start();      
             resetBatch();
             this.size = getStoreSize();
             this.storeHasMessages=this.size > 0;

@@ -928,7 +928,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
                         ActiveMQDestination dest = convert(entry.getKey());
                         if (dest.isTopic()) {
                             StoredDestination loadedStore = getStoredDestination(convert(dest), tx);
-                            if (loadedStore.ackPositions.isEmpty()) {
+                            if (loadedStore.ackPositions.isEmpty(tx)) {
                                 isEmptyTopic = true;
                             }
                         }

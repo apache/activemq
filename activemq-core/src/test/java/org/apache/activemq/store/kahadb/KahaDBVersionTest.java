@@ -34,6 +34,7 @@ import java.io.FileNotFoundException;
 public class KahaDBVersionTest extends TestCase {
 
     final static File VERSION_1_DB= new File("src/test/resources/org/apache/activemq/store/kahadb/KahaDBVersion1");
+    final static File VERSION_2_DB= new File("src/test/resources/org/apache/activemq/store/kahadb/KahaDBVersion2");
     protected BrokerService createBroker(KahaDBPersistenceAdapter kaha) throws Exception {
 
         BrokerService broker = new BrokerService();
@@ -47,21 +48,28 @@ public class KahaDBVersionTest extends TestCase {
         
     public void XtestCreateStore() throws Exception {
         KahaDBPersistenceAdapter kaha = new KahaDBPersistenceAdapter();
-        File dir = new File("src/test/resources/org/apache/activemq/store/kahadb/KahaDBVersion1");
+        File dir = new File("src/test/resources/org/apache/activemq/store/kahadb/KahaDBVersionX");
         IOHelper.deleteFile(dir);
         kaha.setDirectory(dir);
         kaha.setJournalMaxFileLength(1024*1024);
         BrokerService broker = createBroker(kaha);
-        ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory("vm://localhost");
+        ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory("vm://localhost");        
         Connection connection = cf.createConnection();
         connection.setClientID("test");
         connection.start();
+        producerSomeMessages(connection);
+        connection.close();
+        broker.stop();
+    }
+
+    private void producerSomeMessages(Connection connection) throws Exception {
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         Topic topic = session.createTopic("test.topic");
         Queue queue = session.createQueue("test.queue");
         MessageConsumer consumer = session.createDurableSubscriber(topic,"test");
         consumer.close();
         MessageProducer producer = session.createProducer(topic);
+        producer.setPriority(9);
         for (int i =0; i < 1000; i++) {
             Message msg = session.createTextMessage("test message:"+i);
             producer.send(msg);
@@ -71,45 +79,56 @@ public class KahaDBVersionTest extends TestCase {
             Message msg = session.createTextMessage("test message:"+i);
             producer.send(msg);
         }
-        connection.stop();
-        broker.stop();
     }
-    
-    public void testVersionConversion() throws Exception{
+
+    public void testVersion1Conversion() throws Exception{
+          doConvertRestartCycle(VERSION_1_DB);
+    }
+
+    public void testVersion2Conversion() throws Exception{
+          doConvertRestartCycle(VERSION_2_DB);
+    }
+
+    public void doConvertRestartCycle(File existingStore) throws Exception {
+
         File testDir = new File("target/activemq-data/kahadb/versionDB");
         IOHelper.deleteFile(testDir);
-        IOHelper.copyFile(VERSION_1_DB, testDir);
-        
-        KahaDBPersistenceAdapter kaha = new KahaDBPersistenceAdapter();
-        kaha.setDirectory(testDir);
-        kaha.setJournalMaxFileLength(1024*1024);
-        BrokerService broker = createBroker(kaha);
-        ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory("vm://localhost");
-        Connection connection = cf.createConnection();
-        connection.setClientID("test");
-        connection.start();
-        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        Topic topic = session.createTopic("test.topic");
-        Queue queue = session.createQueue("test.queue");
-        MessageConsumer queueConsumer = session.createConsumer(queue);
-        for (int i = 0; i < 1000; i++) {
-            TextMessage msg  = (TextMessage) queueConsumer.receive(10000);
-            //System.err.println(msg.getText());
-            assertNotNull(msg);
+        IOHelper.copyFile(existingStore, testDir);
+
+        // on repeat store will be upgraded
+        for (int repeats = 0; repeats < 3; repeats++) {
+            KahaDBPersistenceAdapter kaha = new KahaDBPersistenceAdapter();
+            kaha.setDirectory(testDir);
+            kaha.setJournalMaxFileLength(1024 * 1024);
+            BrokerService broker = createBroker(kaha);
+            ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory("vm://localhost");
+            Connection connection = cf.createConnection();
+            connection.setClientID("test");
+            connection.start();
+            Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+            Topic topic = session.createTopic("test.topic");
+            Queue queue = session.createQueue("test.queue");
+
+            if (repeats > 0) {
+                // upgraded store will be empty so generated some more messages
+                producerSomeMessages(connection);
+            }
+
+            MessageConsumer queueConsumer = session.createConsumer(queue);
+            for (int i = 0; i < 1000; i++) {
+                TextMessage msg = (TextMessage) queueConsumer.receive(10000);
+                //System.err.println(msg.getText());
+                assertNotNull(msg);
+            }
+            MessageConsumer topicConsumer = session.createDurableSubscriber(topic, "test");
+            for (int i = 0; i < 1000; i++) {
+                TextMessage msg = (TextMessage) topicConsumer.receive(10000);
+                //System.err.println(msg.getText());
+                assertNotNull(msg);
+            }
+            connection.close();
+            
+            broker.stop();
         }
-        MessageConsumer topicConsumer = session.createDurableSubscriber(topic,"test");
-        for (int i = 0; i < 1000; i++) {
-            TextMessage msg  = (TextMessage) topicConsumer.receive(10000);
-            //System.err.println(msg.getText());
-            assertNotNull(msg);
-        }
-        broker.stop();
-        
     }
-
-    
-
-
-    
-
 }
