@@ -64,7 +64,7 @@ class ConnectionAudit {
         return false;
     }
 
-    protected void rollbackDuplicate(ActiveMQDispatcher dispatcher, Message message) {
+    protected synchronized void rollbackDuplicate(ActiveMQDispatcher dispatcher, Message message) {
         if (checkForDuplicates && message != null) {
             ActiveMQDestination destination = message.getDestination();
             if (destination != null) {
