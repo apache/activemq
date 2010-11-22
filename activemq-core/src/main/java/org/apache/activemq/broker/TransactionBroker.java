@@ -16,11 +16,8 @@
  */
 package org.apache.activemq.broker;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.jms.JMSException;
@@ -252,15 +249,25 @@ public class TransactionBroker extends BrokerFilter {
             iter.remove();
         }
 
+        synchronized (xaTransactions) {
+            // first find all txs that belongs to the connection
+            ArrayList<XATransaction> txs = new ArrayList<XATransaction>();
+            for (XATransaction tx : xaTransactions.values()) {
+                if (tx.getConnectionId().equals(info.getConnectionId()) && !tx.isPrepared()) {
+                    txs.add(tx);
+                }
+            }
 
-        for (XATransaction tx : xaTransactions.values()) {
-           try {
-             if (tx.getConnectionId().equals(info.getConnectionId()) && !tx.isPrepared()) {
-                tx.rollback();
-             }
-           } catch (Exception e) {
-               LOG.warn("ERROR Rolling back disconnected client's xa transactions: ", e);
-           }
+            // then remove them
+            // two steps needed to avoid ConcurrentModificationException, from removeTransaction()
+            for (XATransaction tx : txs) {
+                try {
+                    tx.rollback();
+                } catch (Exception e) {
+                    LOG.warn("ERROR Rolling back disconnected client's xa transactions: ", e);
+                }
+            }
+
         }
         next.removeConnection(context, info, error);
     }
