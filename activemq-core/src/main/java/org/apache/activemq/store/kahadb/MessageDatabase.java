@@ -983,7 +983,7 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
 
         // Skip adding the message to the index if this is a topic and there are
         // no subscriptions.
-        if (sd.subscriptions != null && sd.ackPositions.isEmpty(tx)) {
+        if (sd.subscriptions != null && sd.subscriptions.isEmpty(tx)) {
             return;
         }
 
@@ -995,6 +995,9 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
             previous = sd.messageIdIndex.put(tx, command.getMessageId(), id);
             if (previous == null) {
                 sd.orderIndex.put(tx, priority, id, new MessageKeys(command.getMessageId(), location));
+                if (sd.subscriptions != null && !sd.subscriptions.isEmpty(tx)) {
+                    addAckLocationForNewMessage(tx, sd, id);
+                }
             } else {
                 // If the message ID as indexed, then the broker asked us to
                 // store a DUP
@@ -1018,13 +1021,6 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
         metadata.producerSequenceIdTracker.isDuplicate(command.getMessageId());
     }
 
-    protected Long extractSequenceId(Long prev) {
-        if (prev < NOT_ACKED) {
-            prev = Math.abs(prev) + UNMATCHED_SEQ;
-        }
-        return prev;
-    }
-
     void updateIndex(Transaction tx, KahaRemoveMessageCommand command, Location ackLocation) throws IOException {
         StoredDestination sd = getStoredDestination(command.getDestination(), tx);
         if (!command.hasSubscriptionKey()) {
@@ -1046,26 +1042,13 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
             // Make sure it's a valid message id...
             if (sequence != null) {
                 String subscriptionKey = command.getSubscriptionKey();
-                Long ackSequenceToStore = sequence;
-                if (command.getAck() == UNMATCHED) {
-                    // store negative sequence to indicate that it was unmatched
-                    ackSequenceToStore = new Long(UNMATCHED_SEQ - sequence);
+                if (command.getAck() != UNMATCHED) {
+                    sd.orderIndex.get(tx, sequence);
+                    byte priority = sd.orderIndex.lastGetPriority();
+                    sd.subscriptionAcks.put(tx, subscriptionKey, new LastAck(sequence, priority));
                 }
-
-                Long prev = sd.subscriptionAcks.put(tx, subscriptionKey, ackSequenceToStore);
-                if (prev != null) {
-                    if (ackSequenceToStore != sequence) {
-                        // unmatched, need to add ack locations for the intermediate sequences
-                        for (long matchedGapSequence = extractSequenceId(prev) + 1; matchedGapSequence < sequence; matchedGapSequence++) {
-                            addAckLocation(tx, sd, matchedGapSequence, subscriptionKey);
-                        }
-                    }
-                    // The following method handles deleting un-referenced messages.
-                    removeAckLocation(tx, sd, subscriptionKey, extractSequenceId(prev));
-                }
-
-                // Add it to the new location set.
-                addAckLocation(tx, sd, sequence, subscriptionKey);
+                // The following method handles deleting un-referenced messages.
+                removeAckLocation(tx, sd, subscriptionKey, sequence);
             }
 
         }
@@ -1127,20 +1110,17 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
             long ackLocation=NOT_ACKED;
             if (!command.getRetroactive()) {
                 ackLocation = sd.orderIndex.nextMessageId-1;
+            } else {
+                addAckLocationForRetroactiveSub(tx, sd, ackLocation, subscriptionKey);
             }
-
-            sd.subscriptionAcks.put(tx, subscriptionKey, ackLocation);
-            addAckLocation(tx, sd, ackLocation, subscriptionKey);
+            sd.subscriptionAcks.put(tx, subscriptionKey, new LastAck(ackLocation));
         } else {
             // delete the sub...
             String subscriptionKey = command.getSubscriptionKey();
             sd.subscriptions.remove(tx, subscriptionKey);
-            Long prev = sd.subscriptionAcks.remove(tx, subscriptionKey);
-            if( prev!=null ) {
-                removeAckLocation(tx, sd, subscriptionKey, extractSequenceId(prev));
-            }
+            sd.subscriptionAcks.remove(tx, subscriptionKey);
+            removeAckLocationsForSub(tx, sd, subscriptionKey);
         }
-
     }
     
     /**
@@ -1318,7 +1298,64 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
             LocationMarshaller.INSTANCE.writePayload(object.location, dataOut);
         }
     }
- 
+
+    class LastAck {
+        long lastAckedSequence;
+        byte priority;
+
+        public LastAck(LastAck source) {
+            this.lastAckedSequence = source.lastAckedSequence;
+            this.priority = source.priority;
+        }
+
+        public LastAck() {
+            this.priority = MessageOrderIndex.HI;
+        }
+
+        public LastAck(long ackLocation) {
+            this.lastAckedSequence = ackLocation;
+            this.priority = MessageOrderIndex.HI;
+        }
+
+        public LastAck(long ackLocation, byte priority) {
+            this.lastAckedSequence = ackLocation;
+            this.priority = priority;
+        }
+
+        public String toString() {
+            return "[" + lastAckedSequence + ":" + priority + "]";
+        }
+    }
+
+    protected class LastAckMarshaller implements Marshaller<LastAck> {
+        
+        public void writePayload(LastAck object, DataOutput dataOut) throws IOException {
+            dataOut.writeLong(object.lastAckedSequence);
+            dataOut.writeByte(object.priority);
+        }
+
+        public LastAck readPayload(DataInput dataIn) throws IOException {
+            LastAck lastAcked = new LastAck();
+            lastAcked.lastAckedSequence = dataIn.readLong();
+            if (metadata.version >= 3) {
+                lastAcked.priority = dataIn.readByte();
+            }
+            return lastAcked;
+        }
+
+        public int getFixedSize() {
+            return 9;
+        }
+
+        public LastAck deepCopy(LastAck source) {
+            return new LastAck(source);
+        }
+
+        public boolean isDeepCopySupported() {
+            return true;
+        }
+    }
+
     class StoredDestination {
         
         MessageOrderIndex orderIndex = new MessageOrderIndex();
@@ -1327,7 +1364,7 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
 
         // These bits are only set for Topics
         BTreeIndex<String, KahaSubscriptionCommand> subscriptions;
-        BTreeIndex<String, Long> subscriptionAcks;
+        BTreeIndex<String, LastAck> subscriptionAcks;
         HashMap<String, MessageOrderCursor> subscriptionCursors;
         BTreeIndex<Long, HashSet<String>> ackPositions;
     }
@@ -1342,7 +1379,7 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
 
             if (dataIn.readBoolean()) {
                 value.subscriptions = new BTreeIndex<String, KahaSubscriptionCommand>(pageFile, dataIn.readLong());
-                value.subscriptionAcks = new BTreeIndex<String, Long>(pageFile, dataIn.readLong());
+                value.subscriptionAcks = new BTreeIndex<String, LastAck>(pageFile, dataIn.readLong());
                 if (metadata.version >= 3) {
                     value.ackPositions = new BTreeIndex<Long, HashSet<String>>(pageFile, dataIn.readLong());
                 } else {
@@ -1482,7 +1519,7 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
 
             if (topic) {
                 rc.subscriptions = new BTreeIndex<String, KahaSubscriptionCommand>(pageFile, tx.allocate());
-                rc.subscriptionAcks = new BTreeIndex<String, Long>(pageFile, tx.allocate());
+                rc.subscriptionAcks = new BTreeIndex<String, LastAck>(pageFile, tx.allocate());
                 rc.ackPositions = new BTreeIndex<Long, HashSet<String>>(pageFile, tx.allocate());
             }
             metadata.destinations.put(tx, key, rc);
@@ -1510,7 +1547,7 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
             rc.subscriptions.load(tx);
 
             rc.subscriptionAcks.setKeyMarshaller(StringMarshaller.INSTANCE);
-            rc.subscriptionAcks.setValueMarshaller(LongMarshaller.INSTANCE);
+            rc.subscriptionAcks.setValueMarshaller(new LastAckMarshaller());
             rc.subscriptionAcks.load(tx);
 
             rc.ackPositions.setKeyMarshaller(LongMarshaller.INSTANCE);
@@ -1520,19 +1557,27 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
             rc.subscriptionCursors = new HashMap<String, MessageOrderCursor>();
 
             if (metadata.version < 3) {
-                // on upgrade need to fill ackLocation
-                for (Iterator<Entry<String, Long>> iterator = rc.subscriptionAcks.iterator(tx); iterator.hasNext();) {
-                    Entry<String, Long> entry = iterator.next();
-                    addAckLocation(tx, rc, extractSequenceId(entry.getValue()), entry.getKey());
+
+                // on upgrade need to fill ackLocation with available messages past last ack
+                for (Iterator<Entry<String, LastAck>> iterator = rc.subscriptionAcks.iterator(tx); iterator.hasNext(); ) {
+                    Entry<String, LastAck> entry = iterator.next();
+                    for (Iterator<Entry<Long, MessageKeys>> orderIterator =
+                            rc.orderIndex.iterator(tx, new MessageOrderCursor(entry.getValue().lastAckedSequence)); orderIterator.hasNext(); ) {
+                        Long sequence = orderIterator.next().getKey();
+                        addAckLocation(tx, rc, sequence, entry.getKey());
+                    }
+                    // modify so it is upgraded                   
+                    rc.subscriptionAcks.put(tx, entry.getKey(), entry.getValue());
                 }
             }
             
             if (rc.orderIndex.nextMessageId == 0) {
                 // check for existing durable sub all acked out - pull next seq from acks as messages are gone
-                if (!rc.ackPositions.isEmpty(tx)) {
-                    Long lastAckedMessageId = rc.ackPositions.getLast(tx).getKey();
-                    if (lastAckedMessageId != NOT_ACKED) {
-                        rc.orderIndex.nextMessageId = lastAckedMessageId+1;
+                if (!rc.subscriptionAcks.isEmpty(tx)) {
+                    for (Iterator<Entry<String, LastAck>> iterator = rc.subscriptionAcks.iterator(tx); iterator.hasNext();) {
+                        Entry<String, LastAck> entry = iterator.next();
+                        rc.orderIndex.nextMessageId =
+                                Math.max(rc.orderIndex.nextMessageId, entry.getValue().lastAckedSequence +1);
                     }
                 }
             }
@@ -1546,11 +1591,6 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
         return rc;
     }
 
-    /**
-     * @param sd
-     * @param messageSequence
-     * @param subscriptionKey
-     */
     private void addAckLocation(Transaction tx, StoredDestination sd, Long messageSequence, String subscriptionKey) throws IOException {
         HashSet<String> hs = sd.ackPositions.get(tx, messageSequence);
         if (hs == null) {
@@ -1559,6 +1599,34 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
         hs.add(subscriptionKey);
         // every ack location addition needs to be a btree modification to get it stored
         sd.ackPositions.put(tx, messageSequence, hs);
+    }
+
+    // new sub is interested in potentially all existing messages
+    private void addAckLocationForRetroactiveSub(Transaction tx, StoredDestination sd, Long messageSequence, String subscriptionKey) throws IOException {
+        for (Iterator<Entry<Long, HashSet<String>>> iterator = sd.ackPositions.iterator(tx, messageSequence); iterator.hasNext(); ) {
+            Entry<Long, HashSet<String>> entry = iterator.next();
+            entry.getValue().add(subscriptionKey);
+            sd.ackPositions.put(tx, entry.getKey(), entry.getValue());
+        }
+    }
+
+    // on a new message add, all existing subs are interested in this message
+    private void addAckLocationForNewMessage(Transaction tx, StoredDestination sd, Long messageSequence) throws IOException {
+        HashSet hs = new HashSet<String>();
+        for (Iterator<Entry<String, LastAck>> iterator = sd.subscriptionAcks.iterator(tx); iterator.hasNext();) {
+            Entry<String, LastAck> entry = iterator.next();
+            hs.add(entry.getKey());
+        }
+        sd.ackPositions.put(tx, messageSequence, hs);
+    }
+
+    private void removeAckLocationsForSub(Transaction tx, StoredDestination sd, String subscriptionKey) throws IOException {
+        if (!sd.ackPositions.isEmpty(tx)) {        
+            Long end = sd.ackPositions.getLast(tx).getKey();
+            for (Long sequence = sd.ackPositions.getFirst(tx).getKey(); sequence <= end; sequence++) {
+                removeAckLocation(tx, sd, subscriptionKey, sequence);
+            }
+        }
     }
 
     /**
@@ -1578,21 +1646,15 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
                     HashSet<String> firstSet = sd.ackPositions.getFirst(tx).getValue();
                     sd.ackPositions.remove(tx, sequenceId);
 
-                    // Did we just empty out the first set in the
-                    // ordered list of ack locations? Then it's time to
-                    // delete some messages.
-                    if (hs == firstSet) {
+                    // Find all the entries that need to get deleted.
+                    ArrayList<Entry<Long, MessageKeys>> deletes = new ArrayList<Entry<Long, MessageKeys>>();
+                    sd.orderIndex.getDeleteList(tx, deletes, sequenceId);
 
-                        // Find all the entries that need to get deleted.
-                        ArrayList<Entry<Long, MessageKeys>> deletes = new ArrayList<Entry<Long, MessageKeys>>();
-                        sd.orderIndex.getDeleteList(tx, deletes, sequenceId);
-
-                        // Do the actual deletes.
-                        for (Entry<Long, MessageKeys> entry : deletes) {
-                            sd.locationIndex.remove(tx, entry.getValue().location);
-                            sd.messageIdIndex.remove(tx,entry.getValue().messageId);
-                            sd.orderIndex.remove(tx,entry.getKey());
-                        }
+                    // Do the actual deletes.
+                    for (Entry<Long, MessageKeys> entry : deletes) {
+                        sd.locationIndex.remove(tx, entry.getValue().location);
+                        sd.messageIdIndex.remove(tx, entry.getValue().messageId);
+                        sd.orderIndex.remove(tx, entry.getKey());
                     }
                 }
             }
@@ -1905,7 +1967,7 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
         this.databaseLockedWaitDelay = databaseLockedWaitDelay;
     }
     
-    
+
     class MessageOrderCursor{
         long defaultCursorPosition;
         long lowPriorityCursorPosition;
@@ -1960,7 +2022,11 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
         }
     }
     
-    class MessageOrderIndex{
+    class MessageOrderIndex {
+        static final byte HI = 9;
+        static final byte LO = 0;
+        static final byte DEF = 4;
+
         long nextMessageId;
         BTreeIndex<Long, MessageKeys> defaultPriorityIndex;
         BTreeIndex<Long, MessageKeys> lowPriorityIndex;
@@ -1969,8 +2035,8 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
         Long lastDefaultKey;
         Long lastHighKey;
         Long lastLowKey;
-        
-        
+        byte lastGetPriority;
+
         MessageKeys remove(Transaction tx, Long key) throws IOException {
             MessageKeys result = defaultPriorityIndex.remove(tx, key);
             if (result == null && highPriorityIndex!=null) {
@@ -2072,6 +2138,29 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
                 }
             }
         }
+
+        void setBatch(Transaction tx, LastAck last) throws IOException {
+            setBatch(tx, last.lastAckedSequence);
+            if (cursor.defaultCursorPosition == 0
+                    && cursor.highPriorityCursorPosition == 0
+                    && cursor.lowPriorityCursorPosition == 0) {
+                long next = last.lastAckedSequence + 1;
+                switch (last.priority) {
+                    case DEF:
+                        cursor.defaultCursorPosition = next;
+                        cursor.highPriorityCursorPosition = next;
+                        break;
+                    case HI:
+                        cursor.highPriorityCursorPosition = next;
+                        break;
+                    case LO:
+                        cursor.lowPriorityCursorPosition = next;
+                        cursor.defaultCursorPosition = next;
+                        cursor.highPriorityCursorPosition = next;
+                        break;
+                }
+            }
+        }
         
         void stoppedIterating() {
             if (lastDefaultKey!=null) {
@@ -2116,7 +2205,12 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
                 result = highPriorityIndex.get(tx, key);
                 if (result == null) {
                     result = lowPriorityIndex.get(tx, key);
+                    lastGetPriority = LO;
+                } else {
+                  lastGetPriority = HI;
                 }
+            } else {
+                lastGetPriority = DEF;
             }
             return result;
         }
@@ -2138,7 +2232,11 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
         Iterator<Entry<Long, MessageKeys>> iterator(Transaction tx, MessageOrderCursor m) throws IOException{
             return new MessageOrderIterator(tx,m);
         }
-        
+
+        public byte lastGetPriority() {
+            return lastGetPriority;
+        }
+
         class MessageOrderIterator implements Iterator<Entry<Long, MessageKeys>>{
             Iterator<Entry<Long, MessageKeys>>currentIterator;
             final Iterator<Entry<Long, MessageKeys>>highIterator;

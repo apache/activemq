@@ -466,7 +466,7 @@ public class DurableSubscriptionOfflineTest extends org.apache.activemq.TestSupp
         assertEquals("offline consumer got all", sent, listener.count);
     }    
 
-    public void x_initCombosForTestMixOfOnLineAndOfflineSubsGetAllMatched() throws Exception {
+    public void initCombosForTestMixOfOnLineAndOfflineSubsGetAllMatched() throws Exception {
         this.addCombinationValues("defaultPersistenceAdapter",
                 new Object[]{ PersistenceAdapterChoice.KahaDB, PersistenceAdapterChoice.JDBC});
     }
@@ -639,7 +639,7 @@ public class DurableSubscriptionOfflineTest extends org.apache.activemq.TestSupp
 
         int filtered = 0;
         for (int i = 0; i < 10; i++) {
-            boolean filter = (i %2 == 0); //(int) (Math.random() * 2) >= 1;
+            boolean filter = (int) (Math.random() * 2) >= 1;
             if (filter)
                 filtered++;
 
@@ -664,7 +664,7 @@ public class DurableSubscriptionOfflineTest extends org.apache.activemq.TestSupp
         producer = session.createProducer(null);
 
         for (int i = 0; i < 10; i++) {
-            boolean filter = (i %2 == 0); //(int) (Math.random() * 2) >= 1;
+            boolean filter = (int) (Math.random() * 2) >= 1;
             if (filter)
                 filtered++;
 
@@ -700,6 +700,198 @@ public class DurableSubscriptionOfflineTest extends org.apache.activemq.TestSupp
 
         assertEquals(filtered, listener.count);
         assertEquals(filtered, listener3.count);
+    }
+
+
+    public void testInterleavedOfflineSubscriptionCanConsumeAfterUnsub() throws Exception {
+        // create offline subs 1
+        Connection con = createConnection("offCli1");
+        Session session = con.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        session.createDurableSubscriber(topic, "SubsId", "filter = 'true'", true);
+        session.close();
+        con.close();
+
+        // create offline subs 2
+        con = createConnection("offCli2");
+        session = con.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        session.createDurableSubscriber(topic, "SubsId", null, true);
+        session.close();
+        con.close();
+
+
+        // send messages
+        con = createConnection();
+        session = con.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        MessageProducer producer = session.createProducer(null);
+
+        int sent = 0;
+        for (int i = 0; i < 10; i++) {
+            boolean filter = (int) (Math.random() * 2) >= 1;
+
+            sent++;
+
+            Message message = session.createMessage();
+            message.setStringProperty("filter", filter ? "true" : "false");
+            producer.send(topic, message);
+        }
+
+        Thread.sleep(1 * 1000);
+
+        Connection con2 = createConnection("offCli1");
+        Session session2 = con2.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        session2.unsubscribe("SubsId");
+        session2.close();
+        con2.close();
+
+        // consume all messages
+        con = createConnection("offCli2");
+        session = con.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        MessageConsumer consumer = session.createDurableSubscriber(topic, "SubsId", null, true);
+        Listener listener = new Listener("SubsId");
+        consumer.setMessageListener(listener);
+
+        Thread.sleep(3 * 1000);
+
+        session.close();
+        con.close();
+
+        assertEquals("offline consumer got all", sent, listener.count);
+    }
+
+
+    public void testUnmatchedSubUnsubscribeDeletesAll() throws Exception {
+        // create offline subs 1
+        Connection con = createConnection("offCli1");
+        Session session = con.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        session.createDurableSubscriber(topic, "SubsId", "filter = 'true'", true);
+        session.close();
+        con.close();
+
+        // send messages
+        con = createConnection();
+        session = con.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        MessageProducer producer = session.createProducer(null);
+
+        int filtered = 0;
+        for (int i = 0; i < 10; i++) {
+            boolean filter = (i %2 == 0); //(int) (Math.random() * 2) >= 1;
+            if (filter)
+                filtered++;
+
+            Message message = session.createMessage();
+            message.setStringProperty("filter", filter ? "true" : "false");
+            producer.send(topic, message);
+        }
+
+        LOG.info("sent: " + filtered);
+        Thread.sleep(1 * 1000);
+        session.close();
+        con.close();
+
+        // test offline subs
+        con = createConnection("offCli1");
+        session = con.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        session.unsubscribe("SubsId");
+        session.close();
+        con.close();
+
+
+        con = createConnection("offCli1");
+        session = con.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        MessageConsumer consumer = session.createDurableSubscriber(topic, "SubsId", "filter = 'true'", true);
+        Listener listener = new Listener();
+        consumer.setMessageListener(listener);
+
+        Thread.sleep(3 * 1000);
+
+        session.close();
+        con.close();
+
+        assertEquals(0, listener.count);
+    }
+
+
+    public void testAllConsumed() throws Exception {
+        final String filter = "filter = 'true'";
+        Connection con = createConnection("cli1");
+        Session session = con.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        session.createDurableSubscriber(topic, "SubsId", filter, true);
+        session.close();
+        con.close();
+
+        con = createConnection("cli2");
+        session = con.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        session.createDurableSubscriber(topic, "SubsId", filter, true);
+        session.close();
+        con.close();
+
+        // send messages
+        con = createConnection();
+        session = con.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        MessageProducer producer = session.createProducer(null);
+
+        int sent = 0;
+        for (int i = 0; i < 10; i++) {
+            Message message = session.createMessage();
+            message.setStringProperty("filter", "true");
+            producer.send(topic, message);
+            sent++;
+        }
+
+        LOG.info("sent: " + sent);
+        Thread.sleep(1 * 1000);
+        session.close();
+        con.close();
+
+        con = createConnection("cli1");
+        session = con.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        MessageConsumer consumer = session.createDurableSubscriber(topic, "SubsId", filter, true);
+        Listener listener = new Listener();
+        consumer.setMessageListener(listener);
+        Thread.sleep(3 * 1000);
+        session.close();
+        con.close();
+
+        assertEquals(sent, listener.count);
+
+        LOG.info("cli2 pull 2");
+        con = createConnection("cli2");
+        session = con.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        consumer = session.createDurableSubscriber(topic, "SubsId", filter, true);
+        assertNotNull("got message", consumer.receive(2000));
+        assertNotNull("got message", consumer.receive(2000));
+        session.close();
+        con.close();
+
+
+        // send messages
+        con = createConnection();
+        session = con.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        producer = session.createProducer(null);
+
+        sent = 0;
+        for (int i = 0; i < 2; i++) {
+            Message message = session.createMessage();
+            message.setStringProperty("filter", i==1 ? "true" : "false");
+            producer.send(topic, message);
+            sent++;
+        }
+        LOG.info("sent: " + sent);
+        Thread.sleep(1 * 1000);
+        session.close();
+        con.close();
+ 
+        LOG.info("cli1 again, should get 1 new ones");
+        con = createConnection("cli1");
+        session = con.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        consumer = session.createDurableSubscriber(topic, "SubsId", filter, true);
+        listener = new Listener();
+        consumer.setMessageListener(listener);
+        Thread.sleep(3 * 1000);
+        session.close();
+        con.close();
+
+        assertEquals(1, listener.count);
     }
 
     public static class Listener implements MessageListener {
