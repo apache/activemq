@@ -99,7 +99,7 @@ public class FailoverTransport implements CompositeTransport {
     private int maxReconnectAttempts;
     private int startupMaxReconnectAttempts;
     private int connectFailures;
-    private long reconnectDelay = this.initialReconnectDelay;
+    private long reconnectDelay = -1;
     private Exception connectionFailure;
     private boolean firstConnection = true;
     // optionally always have a backup created
@@ -805,7 +805,7 @@ public class FailoverTransport implements CompositeTransport {
                 if (connectList.isEmpty()) {
                     failure = new IOException("No uris available to connect to.");
                 } else {
-                    if (!useExponentialBackOff) {
+                    if (!useExponentialBackOff || reconnectDelay == -1) {
                         reconnectDelay = initialReconnectDelay;
                     }
                     synchronized (backupMutex) {
