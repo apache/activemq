@@ -720,7 +720,6 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
 
         public int getMessageCount(String clientId, String subscriptionName) throws IOException {
             final String subscriptionKey = subscriptionKey(clientId, subscriptionName);
-            final SubscriptionInfo info = lookupSubscription(clientId, subscriptionName);
             indexLock.writeLock().lock();
             try {
                 return pageFile.tx().execute(new Transaction.CallableClosure<Integer, IOException>() {
@@ -733,30 +732,12 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
                         }
 
                         int counter = 0;
-                        try {
-                            String selector = info.getSelector();
-                            BooleanExpression selectorExpression = null;
-                            if (selector != null) {
-                                selectorExpression = SelectorParser.parse(selector);
+                        for (Iterator<Entry<Long, HashSet<String>>> iterator =
+                                sd.ackPositions.iterator(tx, cursorPos.lastAckedSequence); iterator.hasNext();) {
+                            Entry<Long, HashSet<String>> entry = iterator.next();
+                            if (entry.getValue().contains(subscriptionKey)) {
+                                counter++;
                             }
-                            sd.orderIndex.resetCursorPosition();
-                            sd.orderIndex.setBatch(tx, cursorPos);
-                            for (Iterator<Entry<Long, MessageKeys>> iterator = sd.orderIndex.iterator(tx); iterator
-                                    .hasNext();) {
-                                Entry<Long, MessageKeys> entry = iterator.next();
-                                if (selectorExpression != null) {
-                                    MessageEvaluationContext ctx = new MessageEvaluationContext();
-                                    ctx.setMessageReference(loadMessage(entry.getValue().location));
-                                    if (selectorExpression.matches(ctx)) {
-                                        counter++;
-                                    }
-                                } else {
-                                    counter++;
-                                }
-                            }
-                            sd.orderIndex.resetCursorPosition();
-                        } catch (Exception e) {
-                            throw IOExceptionSupport.create(e);
                         }
                         return counter;
                     }
