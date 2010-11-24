@@ -92,7 +92,13 @@ public class SimpleAuthenticationBroker extends BrokerFilter {
             context.setSecurityContext(s);
             securityContexts.add(s);
         }
-        super.addConnection(context, info);
+        try {
+            super.addConnection(context, info);
+        } catch (Exception e) {
+            securityContexts.remove(s);
+            context.setSecurityContext(null);
+            throw e;
+        }
     }
 
     public void removeConnection(ConnectionContext context, ConnectionInfo info, Throwable error)
