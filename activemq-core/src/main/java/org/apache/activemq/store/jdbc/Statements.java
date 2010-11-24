@@ -99,7 +99,7 @@ public class Statements {
                 "INSERT INTO " + getFullLockTableName() + "(ID) VALUES (1)", 
                 "ALTER TABLE " + getFullMessageTableName() + " ADD PRIORITY " + sequenceDataType,
                 "CREATE INDEX " + getFullMessageTableName() + "_PIDX ON " + getFullMessageTableName() + " (PRIORITY)",
-                "ALTER TABLE " + getFullAckTableName() + " ADD PRIORITY " + sequenceDataType  + " NOT NULL DEFAULT 5",
+                "ALTER TABLE " + getFullAckTableName() + " ADD PRIORITY " + sequenceDataType  + " DEFAULT 5 NOT NULL",
                 "ALTER TABLE " + getFullAckTableName() + " DROP PRIMARY KEY",
                 "ALTER TABLE " + getFullAckTableName() + " ADD PRIMARY KEY (CONTAINER, CLIENT_ID, SUB_NAME, PRIORITY)",
             };
