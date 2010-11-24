@@ -26,14 +26,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InterruptedIOException;
 import java.io.RandomAccessFile;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Properties;
-import java.util.TreeMap;
+import java.util.*;
 import java.util.Map.Entry;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -106,7 +99,7 @@ public class PageFile {
     int writeBatchSize = DEFAULT_WRITE_BATCH_SIZE;
 
     // We keep a cache of pages recently used?
-    private LRUCache<Long, Page> pageCache;
+    private Map<Long, Page> pageCache;
     // The cache of recently used pages.
     private boolean enablePageCaching=true;
     // How many pages will we keep in the cache?
@@ -301,7 +294,7 @@ public class PageFile {
         if (loaded.compareAndSet(false, true)) {
             
             if( enablePageCaching ) {
-                pageCache = new LRUCache<Long, Page>(pageCacheSize, pageCacheSize, 0.75f, true);
+                pageCache = Collections.synchronizedMap(new LRUCache<Long, Page>(pageCacheSize, pageCacheSize, 0.75f, true));
             }
             
             File file = getMainPageFile();
