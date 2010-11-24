@@ -1314,7 +1314,7 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
 
         public LastAck(long ackLocation) {
             this.lastAckedSequence = ackLocation;
-            this.priority = MessageOrderIndex.HI;
+            this.priority = MessageOrderIndex.LO;
         }
 
         public LastAck(long ackLocation, byte priority) {
@@ -2207,7 +2207,7 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
                     result = lowPriorityIndex.get(tx, key);
                     lastGetPriority = LO;
                 } else {
-                  lastGetPriority = HI;
+                    lastGetPriority = HI;
                 }
             } else {
                 lastGetPriority = DEF;

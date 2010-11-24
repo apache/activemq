@@ -784,6 +784,10 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
                         MessageOrderCursor moc = sd.subscriptionCursors.get(subscriptionKey);
                         if (moc == null) {
                             LastAck pos = sd.subscriptionAcks.get(tx, subscriptionKey);
+                            if (pos == null) {
+                                // sub deleted
+                                return;
+                            }
                             sd.orderIndex.setBatch(tx, pos);
                             moc = sd.orderIndex.cursor;
                         } else {
