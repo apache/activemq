@@ -371,7 +371,8 @@ invokeJar(){
               $ACTIVEMQ_CYGWIN \
               -jar \"${ACTIVEMQ_HOME}/bin/run.jar\" $COMMANDLINE_ARGS --pid $PID &
               RET=\"\$?\"; APID=\"\$!\"; 
-              echo \$APID > $ACTIVEMQ_DATA_DIR/stop.pid" $DOIT_POSTFIX
+              echo \$APID > $ACTIVEMQ_DATA_DIR/stop.pid; exit \$RET" $DOIT_POSTFIX
+      RET="$?"
    else
       $DOIT_PREFIX "$JAVACMD $ACTIVEMQ_OPTS $ACTIVEMQ_DEBUG_OPTS \
               -Dactivemq.classpath=\"${ACTIVEMQ_CLASSPATH}\" \
