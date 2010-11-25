@@ -17,6 +17,7 @@
 package org.apache.activemq.blob;
 
 import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.net.URL;
 
 /**
@@ -132,11 +133,15 @@ public class BlobTransferPolicy {
 
             if(url.getProtocol().equalsIgnoreCase("FTP")) {
                 strategy = new FTPBlobUploadStrategy(this);
+            } else if (url.getProtocol().equalsIgnoreCase("FILE")) {
+                strategy = new FileSystemBlobStrategy(this);
             } else {
                 strategy = new DefaultBlobUploadStrategy(this);
             }
         } catch (MalformedURLException e) {
-                strategy = new DefaultBlobUploadStrategy(this);
+            strategy = new DefaultBlobUploadStrategy(this);
+        } catch (URISyntaxException e) {
+            strategy = new DefaultBlobUploadStrategy(this);
         }
         return strategy;
     }
@@ -154,10 +159,14 @@ public class BlobTransferPolicy {
             
             if(url.getProtocol().equalsIgnoreCase("FTP")) {
                 strategy = new FTPBlobDownloadStrategy(this);
+            } else if (url.getProtocol().equalsIgnoreCase("FILE")) {
+                strategy = new FileSystemBlobStrategy(this);
             } else {
                 strategy = new DefaultBlobDownloadStrategy(this);
             }
         } catch (MalformedURLException e) {
+            strategy = new DefaultBlobDownloadStrategy(this);
+        } catch (URISyntaxException e) {
             strategy = new DefaultBlobDownloadStrategy(this);
         }
         return strategy;
