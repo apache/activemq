@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.activemq.ActiveMQMessageAudit;
@@ -43,6 +44,7 @@ import org.apache.commons.logging.LogFactory;
 public class JDBCTopicMessageStore extends JDBCMessageStore implements TopicMessageStore {
 
     private static final Log LOG = LogFactory.getLog(JDBCTopicMessageStore.class);
+    private Map<String, LastRecovered> subscriberLastRecoveredMap = new ConcurrentHashMap<String, LastRecovered>();
 
     public JDBCTopicMessageStore(JDBCPersistenceAdapter persistenceAdapter, JDBCAdapter adapter, WireFormat wireFormat, ActiveMQTopic topic, ActiveMQMessageAudit audit) {
         super(persistenceAdapter, adapter, wireFormat, topic, audit);
@@ -100,17 +102,37 @@ public class JDBCTopicMessageStore extends JDBCMessageStore implements TopicMess
         }
     }
 
-    public synchronized void recoverNextMessages(final String clientId, final String subscriptionName, final int maxReturned, final MessageRecoveryListener listener)
-        throws Exception {
-        TransactionContext c = persistenceAdapter.getTransactionContext();
-        try {
-             JDBCMessageRecoveryListener jdbcListener = new JDBCMessageRecoveryListener() {
+    private class LastRecovered {
+        long sequence = 0;
+        byte priority = 9;
 
+        public void update(long sequence, Message msg) {
+            this.sequence = sequence;
+            this.priority = msg.getPriority();
+        }
+
+        public String toString() {
+            return "" + sequence + ":" + priority;
+        }
+    }
+
+    public synchronized void recoverNextMessages(final String clientId, final String subscriptionName, final int maxReturned, final MessageRecoveryListener listener)
+            throws Exception {
+        TransactionContext c = persistenceAdapter.getTransactionContext();
+
+        String key = getSubscriptionKey(clientId, subscriptionName);
+        if (!subscriberLastRecoveredMap.containsKey(key)) {
+           subscriberLastRecoveredMap.put(key, new LastRecovered());
+        }
+        final LastRecovered lastRecovered = subscriberLastRecoveredMap.get(key);        
+        try {
+            JDBCMessageRecoveryListener jdbcListener = new JDBCMessageRecoveryListener() {
                 public boolean recoverMessage(long sequenceId, byte[] data) throws Exception {
                     if (listener.hasSpace()) {
-                        Message msg = (Message)wireFormat.unmarshal(new ByteSequence(data));
+                        Message msg = (Message) wireFormat.unmarshal(new ByteSequence(data));
                         msg.getMessageId().setBrokerSequenceId(sequenceId);
                         if (listener.recoverMessage(msg)) {
+                            lastRecovered.update(sequenceId, msg);
                             return true;
                         }
                     }
@@ -124,10 +146,10 @@ public class JDBCTopicMessageStore extends JDBCMessageStore implements TopicMess
             };
             if (isPrioritizedMessages()) {
                 adapter.doRecoverNextMessagesWithPriority(c, destination, clientId, subscriptionName,
-                    0, 0, maxReturned, jdbcListener);
+                        lastRecovered.sequence, lastRecovered.priority, maxReturned, jdbcListener);
             } else {
                 adapter.doRecoverNextMessages(c, destination, clientId, subscriptionName,
-                    0, 0, maxReturned, jdbcListener);
+                        lastRecovered.sequence, 0, maxReturned, jdbcListener);
             }
         } catch (SQLException e) {
             JDBCPersistenceAdapter.log("JDBC Failure: ", e);
@@ -137,7 +159,7 @@ public class JDBCTopicMessageStore extends JDBCMessageStore implements TopicMess
     }
 
     public void resetBatching(String clientId, String subscriptionName) {
-        // DB always recovers from last ack
+        subscriberLastRecoveredMap.remove(getSubscriptionKey(clientId, subscriptionName));
     }
 
     public void addSubsciption(SubscriptionInfo subscriptionInfo, boolean retroactive) throws IOException {
