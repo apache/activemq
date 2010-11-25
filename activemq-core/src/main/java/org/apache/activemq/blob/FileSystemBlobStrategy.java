@@ -118,7 +118,8 @@ public class FileSystemBlobStrategy implements BlobUploadStrategy, BlobDownloadS
     		try {
 				return new File(message.getURL().toURI());
 			} catch (URISyntaxException e) {
-				throw new IOException("Unable to open file for message " + message ,e);
+                                IOException ioe = new IOException("Unable to open file for message " + message);
+                                ioe.initCause(e);
 			}
     	}
         //replace all : with _ to make windows more happy
