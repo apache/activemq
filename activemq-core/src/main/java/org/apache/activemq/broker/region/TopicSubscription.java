@@ -282,6 +282,9 @@ public class TopicSubscription extends AbstractSubscription {
             dequeueCounter.addAndGet(ack.getMessageCount());
             dispatchMatched();
             return;
+        } else if (ack.isRedeliveredAck()) {
+            // nothing to do atm
+            return;
         }
         throw new JMSException("Invalid acknowledgment: " + ack);
     }
