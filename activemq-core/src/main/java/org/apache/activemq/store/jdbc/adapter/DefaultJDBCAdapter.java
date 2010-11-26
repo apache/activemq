@@ -169,10 +169,6 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
             long seq2 = 0;
             if (rs.next()) {
                 seq2 = rs.getLong(1);
-                // if there is no such message, ignore the value
-                if (this.doGetMessageById(c, seq2) == null) {
-                    seq2 = 0;
-                }
             }
             long seq = Math.max(seq1, seq2);
             return seq;
@@ -512,6 +508,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
             s.setString(1, destination.getQualifiedName());
             s.setString(2, clientId);
             s.setString(3, subscriptionName);
+            s.setLong(4, seq);
             rs = s.executeQuery();
             int count = 0;
             if (this.statements.isUseExternalMessageReferences()) {
@@ -542,12 +539,12 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         cleanupExclusiveLock.readLock().lock();
         try {
             s = c.getConnection().prepareStatement(this.statements.getFindDurableSubMessagesByPriorityStatement());
-            // maxRows needs to be twice prefetch as the db will replay all unacked, so inflight messages will
-            // be returned and suppressed by the cursor audit. It is faster this way.
             s.setMaxRows(maxRows);
             s.setString(1, destination.getQualifiedName());
             s.setString(2, clientId);
             s.setString(3, subscriptionName);
+            s.setLong(4, seq);
+            s.setLong(5, priority);
             rs = s.executeQuery();
             int count = 0;
             if (this.statements.isUseExternalMessageReferences()) {

@@ -261,6 +261,7 @@ public class Statements {
                                               + getFullAckTableName() + " D "
                                               + " WHERE D.CONTAINER=? AND D.CLIENT_ID=? AND D.SUB_NAME=?"
                                               + " AND M.CONTAINER=D.CONTAINER AND M.ID > D.LAST_ACKED_ID"
+                                              + " AND M.ID > ?"
                                               + " ORDER BY M.ID";
         }
         return findDurableSubMessagesStatement;
@@ -273,6 +274,7 @@ public class Statements {
                                               + " WHERE D.CONTAINER=? AND D.CLIENT_ID=? AND D.SUB_NAME=?"
                                               + " AND M.CONTAINER=D.CONTAINER"
                                               + " AND M.PRIORITY=D.PRIORITY AND M.ID > D.LAST_ACKED_ID"
+                                              + " AND ( (M.ID > ?) OR (M.PRIORITY < ?) )" 
                                               + " ORDER BY M.PRIORITY DESC, M.ID";
         }
         return findDurableSubMessagesByPriorityStatement;
@@ -343,7 +345,7 @@ public class Statements {
 
     public String getFindAllDestinationsStatement() {
         if (findAllDestinationsStatement == null) {
-            findAllDestinationsStatement = "SELECT DISTINCT CONTAINER FROM " + getFullMessageTableName();
+            findAllDestinationsStatement = "SELECT DISTINCT CONTAINER FROM " + getFullAckTableName();
         }
         return findAllDestinationsStatement;
     }
