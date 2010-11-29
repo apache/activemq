@@ -30,8 +30,10 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.ActiveMQPrefetchPolicy;
 import org.apache.activemq.CombinationTestSupport;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.region.policy.PendingDurableSubscriberMessageStoragePolicy;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
+import org.apache.activemq.broker.region.policy.StorePendingDurableSubscriberMessageStoragePolicy;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
@@ -69,6 +71,10 @@ abstract public class MessagePriorityTest extends CombinationTestSupport {
         PolicyEntry policy = new PolicyEntry();
         policy.setPrioritizedMessages(prioritizeMessages);
         policy.setUseCache(useCache);
+        StorePendingDurableSubscriberMessageStoragePolicy durableSubPending =
+                new StorePendingDurableSubscriberMessageStoragePolicy();
+        durableSubPending.setImmediatePriorityDispatch(true);
+        policy.setPendingDurableSubscriberPolicy(durableSubPending);
         PolicyMap policyMap = new PolicyMap();
         policyMap.put(new ActiveMQQueue("TEST"), policy);
         policyMap.put(new ActiveMQTopic("TEST"), policy);
@@ -139,6 +145,14 @@ abstract public class MessagePriorityTest extends CombinationTestSupport {
             } catch (Exception e) {
                 e.printStackTrace();
             }
+        }
+
+        public void setMessagePriority(int priority) {
+            this.priority = priority;
+        }
+
+        public void setMessageCount(int messageCount) {
+            this.messageCount = messageCount;    
         }
         
     }
@@ -260,6 +274,47 @@ abstract public class MessagePriorityTest extends CombinationTestSupport {
                 sub = sess.createDurableSubscriber(topic, subName);
             }
         }
+    }
+
+    public void testHighPriorityDelivery() throws Exception {
+
+        // get zero prefetch
+        ActiveMQPrefetchPolicy prefetch = new ActiveMQPrefetchPolicy();
+        prefetch.setAll(0);
+        factory.setPrefetchPolicy(prefetch);
+        conn.close();
+        conn = factory.createConnection();
+        conn.setClientID("priority");
+        conn.start();
+        sess = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
+
+        ActiveMQTopic topic = (ActiveMQTopic)sess.createTopic("TEST");
+        final String subName = "priorityDisconnect";
+        TopicSubscriber sub = sess.createDurableSubscriber(topic, subName);
+        sub.close();
+
+        ProducerThread producerThread = new ProducerThread(topic, 5000, LOW_PRI);
+        producerThread.run();
+        LOG.info("Low priority messages sent");
+
+        sub = sess.createDurableSubscriber(topic, subName);
+        for (int i=0; i<200;i++) {
+            Message msg = sub.receive(15000);
+            LOG.debug("received i=" + i + ", " + (msg!=null? msg.getJMSMessageID() : null));
+            assertNotNull("Message " + i + " was null", msg);
+            assertEquals("Message " + i + " has wrong priority", LOW_PRI, msg.getJMSPriority());
+        }
+
+        producerThread.setMessagePriority(HIGH_PRI);
+        producerThread.setMessageCount(1);
+        producerThread.run();
+        LOG.info("High priority message sent");
+
+        // try and get the high priority message
+        Message msg = sub.receive(15000);
+        assertNotNull("Message was null", msg);
+        LOG.info("received: " + msg);
+        assertEquals("high priority", HIGH_PRI, msg.getJMSPriority());
     }
     
 }

@@ -34,7 +34,7 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
     protected final Destination regionDestination;
     private final PendingList batchList;
     private Iterator<MessageReference> iterator = null;
-    private boolean cacheEnabled=false;
+    protected boolean cacheEnabled=false;
     protected boolean batchResetNeeded = true;
     protected boolean storeHasMessages = false;
     protected int size;

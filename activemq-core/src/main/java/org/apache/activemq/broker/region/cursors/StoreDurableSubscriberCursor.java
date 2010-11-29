@@ -49,6 +49,8 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
     private final PendingMessageCursor nonPersistent;
     private PendingMessageCursor currentCursor;
     private final Subscription subscription;
+    private int lastAddPriority = 0;
+    private boolean immediatePriorityDispatch = true;
     /**
      * @param broker Broker for this cursor
      * @param clientId clientId for this cursor
@@ -75,6 +77,7 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
     @Override
     public synchronized void start() throws Exception {
         if (!isStarted()) {
+            lastAddPriority = 0;
             super.start();
             for (PendingMessageCursor tsp : storePrefetches) {
             	tsp.setMessageAudit(getMessageAudit());
@@ -182,8 +185,18 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
                 TopicStorePrefetch tsp = topics.get(dest);
                 if (tsp != null) {
                     tsp.addMessageLast(node);
+                    if (isStarted() && this.prioritizedMessages && immediatePriorityDispatch && !tsp.cacheEnabled) {
+                        final int priority = msg.getPriority();
+                        if (priority > lastAddPriority) {
+                            // go get the latest priority message
+                            LOG.debug("Clearing cursor on high priority message " + priority);
+                            tsp.clear();
+                        }
+                        lastAddPriority = priority;
+                    }
                 }
             }
+
         }
     }
 
@@ -344,4 +357,12 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
     public String toString() {
         return "StoreDurableSubscriber(" + clientId + ":" + subscriberName + ")";
     }
+
+    public boolean isImmediatePriorityDispatch() {
+        return immediatePriorityDispatch;
+    }
+
+    public void setImmediatePriorityDispatch(boolean immediatePriorityDispatch) {
+        this.immediatePriorityDispatch = immediatePriorityDispatch;
+    }    
 }
