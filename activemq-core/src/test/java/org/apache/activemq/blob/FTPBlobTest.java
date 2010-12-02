@@ -50,6 +50,7 @@ public class FTPBlobTest extends FTPTestSupport {
         MessageProducer producer = session.createProducer(destination);
         MessageConsumer consumer = session.createConsumer(destination);
         BlobMessage message = session.createBlobMessage(file);
+        message.setName("fileName");
 
         producer.send(message);
         Thread.sleep(1000);
@@ -58,6 +59,7 @@ public class FTPBlobTest extends FTPTestSupport {
         Message msg = consumer.receive(1000);
         Assert.assertTrue(msg instanceof ActiveMQBlobMessage);
 
+        assertEquals("name is correct", "fileName", ((ActiveMQBlobMessage)msg).getName());
         InputStream input = ((ActiveMQBlobMessage) msg).getInputStream();
         StringBuilder b = new StringBuilder();
         int i = input.read();
