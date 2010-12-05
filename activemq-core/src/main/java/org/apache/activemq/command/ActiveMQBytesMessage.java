@@ -81,7 +81,7 @@ import org.apache.activemq.util.JMSExceptionSupport;
  * <P>
  * If a client attempts to write a message in read-only mode, a
  * <CODE>MessageNotWriteableException</CODE> is thrown.
- * 
+ *
  * @openwire:marshaller code=24
  * @see javax.jms.Session#createBytesMessage()
  * @see javax.jms.MapMessage
@@ -153,7 +153,7 @@ public class ActiveMQBytesMessage extends ActiveMQMessage implements BytesMessag
      * If this message body was read-only, calling this method leaves the
      * message body in the same state as an empty body in a newly created
      * message.
-     * 
+     *
      * @throws JMSException if the JMS provider fails to clear the message body
      *                 due to some internal error.
      */
@@ -169,7 +169,7 @@ public class ActiveMQBytesMessage extends ActiveMQMessage implements BytesMessag
      * read-only mode. The value returned can be used to allocate a byte array.
      * The value returned is the entire length of the message body, regardless
      * of where the pointer for reading the message is currently located.
-     * 
+     *
      * @return number of bytes in the message
      * @throws JMSException if the JMS provider fails to read the message due to
      *                 some internal error.
@@ -184,7 +184,7 @@ public class ActiveMQBytesMessage extends ActiveMQMessage implements BytesMessag
 
     /**
      * Reads a <code>boolean</code> from the bytes message stream.
-     * 
+     *
      * @return the <code>boolean</code> value read
      * @throws JMSException if the JMS provider fails to read the message due to
      *                 some internal error.
@@ -205,7 +205,7 @@ public class ActiveMQBytesMessage extends ActiveMQMessage implements BytesMessag
 
     /**
      * Reads a signed 8-bit value from the bytes message stream.
-     * 
+     *
      * @return the next byte from the bytes message stream as a signed 8-bit
      *         <code>byte</code>
      * @throws JMSException if the JMS provider fails to read the message due to
@@ -227,7 +227,7 @@ public class ActiveMQBytesMessage extends ActiveMQMessage implements BytesMessag
 
     /**
      * Reads an unsigned 8-bit number from the bytes message stream.
-     * 
+     *
      * @return the next byte from the bytes message stream, interpreted as an
      *         unsigned 8-bit number
      * @throws JMSException if the JMS provider fails to read the message due to
@@ -249,7 +249,7 @@ public class ActiveMQBytesMessage extends ActiveMQMessage implements BytesMessag
 
     /**
      * Reads a signed 16-bit number from the bytes message stream.
-     * 
+     *
      * @return the next two bytes from the bytes message stream, interpreted as
      *         a signed 16-bit number
      * @throws JMSException if the JMS provider fails to read the message due to
@@ -271,7 +271,7 @@ public class ActiveMQBytesMessage extends ActiveMQMessage implements BytesMessag
 
     /**
      * Reads an unsigned 16-bit number from the bytes message stream.
-     * 
+     *
      * @return the next two bytes from the bytes message stream, interpreted as
      *         an unsigned 16-bit integer
      * @throws JMSException if the JMS provider fails to read the message due to
@@ -293,7 +293,7 @@ public class ActiveMQBytesMessage extends ActiveMQMessage implements BytesMessag
 
     /**
      * Reads a Unicode character value from the bytes message stream.
-     * 
+     *
      * @return the next two bytes from the bytes message stream as a Unicode
      *         character
      * @throws JMSException if the JMS provider fails to read the message due to
@@ -315,7 +315,7 @@ public class ActiveMQBytesMessage extends ActiveMQMessage implements BytesMessag
 
     /**
      * Reads a signed 32-bit integer from the bytes message stream.
-     * 
+     *
      * @return the next four bytes from the bytes message stream, interpreted as
      *         an <code>int</code>
      * @throws JMSException if the JMS provider fails to read the message due to
@@ -337,7 +337,7 @@ public class ActiveMQBytesMessage extends ActiveMQMessage implements BytesMessag
 
     /**
      * Reads a signed 64-bit integer from the bytes message stream.
-     * 
+     *
      * @return the next eight bytes from the bytes message stream, interpreted
      *         as a <code>long</code>
      * @throws JMSException if the JMS provider fails to read the message due to
@@ -359,7 +359,7 @@ public class ActiveMQBytesMessage extends ActiveMQMessage implements BytesMessag
 
     /**
      * Reads a <code>float</code> from the bytes message stream.
-     * 
+     *
      * @return the next four bytes from the bytes message stream, interpreted as
      *         a <code>float</code>
      * @throws JMSException if the JMS provider fails to read the message due to
@@ -381,7 +381,7 @@ public class ActiveMQBytesMessage extends ActiveMQMessage implements BytesMessag
 
     /**
      * Reads a <code>double</code> from the bytes message stream.
-     * 
+     *
      * @return the next eight bytes from the bytes message stream, interpreted
      *         as a <code>double</code>
      * @throws JMSException if the JMS provider fails to read the message due to
@@ -409,7 +409,7 @@ public class ActiveMQBytesMessage extends ActiveMQMessage implements BytesMessag
      * Transformation Format (FSS_UTF)", X/Open Preliminary Specification,
      * X/Open Company Ltd., Document Number: P316. This information also appears
      * in ISO/IEC 10646, Annex P.
-     * 
+     *
      * @return a Unicode string from the bytes message stream
      * @throws JMSException if the JMS provider fails to read the message due to
      *                 some internal error.
@@ -440,7 +440,7 @@ public class ActiveMQBytesMessage extends ActiveMQMessage implements BytesMessag
      * return value of the total number of bytes read will be less than the
      * length of the array, indicating that there are no more bytes left to be
      * read from the stream. The next read of the stream returns -1.
-     * 
+     *
      * @param value the buffer into which the data is read
      * @return the total number of bytes read into the buffer, or -1 if there is
      *         no more data because the end of the stream has been reached
@@ -468,7 +468,7 @@ public class ActiveMQBytesMessage extends ActiveMQMessage implements BytesMessag
      * than the length of the array <code>value</code>, then an
      * <code>IndexOutOfBoundsException</code> is thrown. No bytes will be read
      * from the stream for this exception case.
-     * 
+     *
      * @param value the buffer into which the data is read
      * @param length the number of bytes to read; must be less than or equal to
      *                <code>value.length</code>
@@ -505,7 +505,7 @@ public class ActiveMQBytesMessage extends ActiveMQMessage implements BytesMessag
      * value. The value <code>true</code> is written as the value
      * <code>(byte)1</code>; the value <code>false</code> is written as the
      * value <code>(byte)0</code>.
-     * 
+     *
      * @param value the <code>boolean</code> value to be written
      * @throws JMSException if the JMS provider fails to write the message due
      *                 to some internal error.
@@ -523,7 +523,7 @@ public class ActiveMQBytesMessage extends ActiveMQMessage implements BytesMessag
     /**
      * Writes a <code>byte</code> to the bytes message stream as a 1-byte
      * value.
-     * 
+     *
      * @param value the <code>byte</code> value to be written
      * @throws JMSException if the JMS provider fails to write the message due
      *                 to some internal error.
@@ -541,7 +541,7 @@ public class ActiveMQBytesMessage extends ActiveMQMessage implements BytesMessag
     /**
      * Writes a <code>short</code> to the bytes message stream as two bytes,
      * high byte first.
-     * 
+     *
      * @param value the <code>short</code> to be written
      * @throws JMSException if the JMS provider fails to write the message due
      *                 to some internal error.
@@ -559,7 +559,7 @@ public class ActiveMQBytesMessage extends ActiveMQMessage implements BytesMessag
     /**
      * Writes a <code>char</code> to the bytes message stream as a 2-byte
      * value, high byte first.
-     * 
+     *
      * @param value the <code>char</code> value to be written
      * @throws JMSException if the JMS provider fails to write the message due
      *                 to some internal error.
@@ -577,7 +577,7 @@ public class ActiveMQBytesMessage extends ActiveMQMessage implements BytesMessag
     /**
      * Writes an <code>int</code> to the bytes message stream as four bytes,
      * high byte first.
-     * 
+     *
      * @param value the <code>int</code> to be written
      * @throws JMSException if the JMS provider fails to write the message due
      *                 to some internal error.
@@ -595,7 +595,7 @@ public class ActiveMQBytesMessage extends ActiveMQMessage implements BytesMessag
     /**
      * Writes a <code>long</code> to the bytes message stream as eight bytes,
      * high byte first.
-     * 
+     *
      * @param value the <code>long</code> to be written
      * @throws JMSException if the JMS provider fails to write the message due
      *                 to some internal error.
@@ -615,7 +615,7 @@ public class ActiveMQBytesMessage extends ActiveMQMessage implements BytesMessag
      * the <code>floatToIntBits</code> method in class <code>Float</code>,
      * and then writes that <code>int</code> value to the bytes message stream
      * as a 4-byte quantity, high byte first.
-     * 
+     *
      * @param value the <code>float</code> value to be written
      * @throws JMSException if the JMS provider fails to write the message due
      *                 to some internal error.
@@ -635,7 +635,7 @@ public class ActiveMQBytesMessage extends ActiveMQMessage implements BytesMessag
      * using the <code>doubleToLongBits</code> method in class
      * <code>Double</code>, and then writes that <code>long</code> value to
      * the bytes message stream as an 8-byte quantity, high byte first.
-     * 
+     *
      * @param value the <code>double</code> value to be written
      * @throws JMSException if the JMS provider fails to write the message due
      *                 to some internal error.
@@ -658,7 +658,7 @@ public class ActiveMQBytesMessage extends ActiveMQMessage implements BytesMessag
      * Transformation Format (FSS_UTF)", X/Open Preliminary Specification,
      * X/Open Company Ltd., Document Number: P316. This information also appears
      * in ISO/IEC 10646, Annex P.
-     * 
+     *
      * @param value the <code>String</code> value to be written
      * @throws JMSException if the JMS provider fails to write the message due
      *                 to some internal error.
@@ -675,7 +675,7 @@ public class ActiveMQBytesMessage extends ActiveMQMessage implements BytesMessag
 
     /**
      * Writes a byte array to the bytes message stream.
-     * 
+     *
      * @param value the byte array to be written
      * @throws JMSException if the JMS provider fails to write the message due
      *                 to some internal error.
@@ -692,7 +692,7 @@ public class ActiveMQBytesMessage extends ActiveMQMessage implements BytesMessag
 
     /**
      * Writes a portion of a byte array to the bytes message stream.
-     * 
+     *
      * @param value the byte array value to be written
      * @param offset the initial offset within the byte array
      * @param length the number of bytes to use
@@ -715,7 +715,7 @@ public class ActiveMQBytesMessage extends ActiveMQMessage implements BytesMessag
      * This method works only for the objectified primitive object types (<code>Integer</code>,<code>Double</code>,
      * <code>Long</code> &nbsp;...), <code>String</code> objects, and byte
      * arrays.
-     * 
+     *
      * @param value the object in the Java programming language ("Java object")
      *                to be written; it must not be null
      * @throws JMSException if the JMS provider fails to write the message due
@@ -758,7 +758,7 @@ public class ActiveMQBytesMessage extends ActiveMQMessage implements BytesMessag
     /**
      * Puts the message body in read-only mode and repositions the stream of
      * bytes to the beginning.
-     * 
+     *
      * @throws JMSException if an internal error occurs
      */
     public void reset() throws JMSException {
@@ -804,8 +804,8 @@ public class ActiveMQBytesMessage extends ActiveMQMessage implements BytesMessag
 
                     @Override
                     public void close() throws IOException {
-                        deflater.end();
                         super.close();
+                        deflater.end();
                     }
                 };
             }
