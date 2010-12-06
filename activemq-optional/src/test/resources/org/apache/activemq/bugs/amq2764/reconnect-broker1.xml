@@ -30,6 +30,7 @@
     </destinations>
 
     <networkConnectors>
+      <!--<networkConnector uri="static:(http://localhost:61617?proxyHost=localhost&amp;proxyPort=80)" duplex="true">-->
       <networkConnector uri="static:(http://localhost:61617)" duplex="true">
         <staticallyIncludedDestinations>
           <queue physicalName="RECONNECT.TEST.QUEUE"/>

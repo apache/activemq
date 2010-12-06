@@ -52,9 +52,12 @@ public class AMQ2764Test extends TestCase {
 
     public void testBrokerRestart() throws Exception {
 
-        startBrokerOne();
-        Thread.sleep(5000);
         startBrokerTwo();
+        brokerTwo.waitUntilStarted();        
+
+        startBrokerOne();
+        brokerOne.waitUntilStarted();
+
         Thread.sleep(5000);
 
         ActiveMQConnectionFactory producerConnectionFactory = createBrokerOneConnectionFactory();
