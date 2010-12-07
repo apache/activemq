@@ -17,6 +17,7 @@
 package org.apache.activemq.broker.region.policy;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import org.apache.activemq.broker.region.MessageReference;
@@ -47,10 +48,11 @@ public class PriorityNetworkDispatchPolicy extends SimpleDispatchPolicy {
                 ConsumerInfo info = sub.getConsumerInfo();
                 if (info.isNetworkSubscription()) {    
                     boolean highestPrioritySub = true;
-                    for (Subscription candidate: duplicateFreeSubs) {
+                    for (Iterator<Subscription> it =  duplicateFreeSubs.iterator(); it.hasNext(); ) {
+                        Subscription candidate = it.next();
                         if (matches(candidate, info)) {
                             if (hasLowerPriority(candidate, info)) {
-                                duplicateFreeSubs.remove(candidate);
+                                it.remove();
                             } else {
                                 // higher priority matching sub exists
                                 highestPrioritySub = false;
