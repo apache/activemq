@@ -22,13 +22,7 @@ import java.util.Iterator;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import javax.jms.Connection;
-import javax.jms.Destination;
-import javax.jms.JMSException;
-import javax.jms.Message;
-import javax.jms.MessageConsumer;
-import javax.jms.MessageProducer;
-import javax.jms.Session;
+import javax.jms.*;
 
 import junit.framework.TestCase;
 import org.apache.activemq.ActiveMQConnectionFactory;
@@ -49,6 +43,48 @@ public class AMQ2764Test extends TestCase {
     private BrokerService brokerTwo;
     private Destination destination;
     private ArrayList<Connection> connections = new ArrayList<Connection>();
+
+    public void testInactivityMonitor() throws Exception {
+
+        startBrokerTwo();
+        brokerTwo.waitUntilStarted();
+
+        startBrokerOne();
+        brokerOne.waitUntilStarted();
+
+        Thread.sleep(2000);
+
+        ActiveMQConnectionFactory secondProducerConnectionFactory = createBrokerTwoHttpConnectionFactory();
+        ActiveMQConnectionFactory consumerConnectionFactory = createBrokerOneHttpConnectionFactory();
+
+        MessageConsumer consumer = createConsumer(consumerConnectionFactory);
+        AtomicInteger counter = createConsumerCounter(consumerConnectionFactory);
+        waitForConsumerToArrive(counter);
+
+        Connection connection = secondProducerConnectionFactory.createConnection();
+        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        MessageProducer producer = session.createProducer(destination);
+        producer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
+
+
+        final int expectedMessagesReceived = 2000;
+
+        for (int i = 0; i < expectedMessagesReceived; i++) {
+            Message message = session.createMessage();
+            producer.send(message);            
+            LOG.info("sent message " + i);
+        }
+
+        for (int i = 0; i < expectedMessagesReceived; i++) {
+            Message message = consumer.receive(2000);
+            if (message == null) {
+                fail("Didn't receive a message");
+            }
+            LOG.info("received message " + i);
+        }
+
+
+    }
 
     public void testBrokerRestart() throws Exception {
 
@@ -139,6 +175,14 @@ public class AMQ2764Test extends TestCase {
 
     protected ActiveMQConnectionFactory createBrokerTwoConnectionFactory() {
         return new ActiveMQConnectionFactory("vm://broker2");
+    }
+
+    protected ActiveMQConnectionFactory createBrokerOneHttpConnectionFactory() {
+        return new ActiveMQConnectionFactory("http://localhost:61616");
+    }
+
+    protected ActiveMQConnectionFactory createBrokerTwoHttpConnectionFactory() {
+        return new ActiveMQConnectionFactory("http://localhost:61617");
     }
 
     protected void setUp() throws Exception {
