@@ -31,7 +31,7 @@
 
     <networkConnectors>
       <!--<networkConnector uri="static:(http://localhost:61617?proxyHost=localhost&amp;proxyPort=80)" duplex="true">-->
-      <networkConnector uri="static:(http://localhost:61617)" duplex="true">
+      <networkConnector uri="static:(http://localhost:61617?readCheckTime=4000&amp;initialDelayTime=4000&amp;keepAliveResponseRequired=true)" duplex="true">
         <staticallyIncludedDestinations>
           <queue physicalName="RECONNECT.TEST.QUEUE"/>
         </staticallyIncludedDestinations>
