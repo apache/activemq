@@ -213,7 +213,7 @@ public class PolicyEntry extends DestinationMapEntry {
             sub.setPrefetchSize(getDurableTopicPrefetch());
         }
         if (pendingDurableSubscriberPolicy != null) {
-            PendingMessageCursor cursor = pendingDurableSubscriberPolicy.getSubscriberPendingMessageCursor(broker,clientId, subName,prefetch,sub);
+            PendingMessageCursor cursor = pendingDurableSubscriberPolicy.getSubscriberPendingMessageCursor(broker,clientId, subName,sub.getPrefetchSize(),sub);
             cursor.setSystemUsage(memoryManager);
             sub.setPending(cursor);
         }

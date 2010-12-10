@@ -25,7 +25,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import javax.jms.InvalidSelectorException;
 import javax.jms.JMSException;
-import org.apache.activemq.ActiveMQMessageAudit;
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.cursors.PendingMessageCursor;
@@ -67,7 +66,6 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
     protected final SystemUsage usageManager;
     private final Object pendingLock = new Object();
     private final Object dispatchLock = new Object();
-    protected ActiveMQMessageAudit audit = new ActiveMQMessageAudit();
     private final CountDownLatch okForAckAsDispatchDone = new CountDownLatch(1);
     
     public PrefetchSubscription(Broker broker, SystemUsage usageManager, ConnectionContext context, ConsumerInfo info, PendingMessageCursor cursor) throws InvalidSelectorException {
@@ -569,7 +567,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                     int numberToDispatch = countBeforeFull();
                     if (numberToDispatch > 0) {
                         setSlowConsumer(false);
-                        pending.setMaxBatchSize(numberToDispatch);
+                        setPendingBatchSize(pending, numberToDispatch);
                         int count = 0;
                         pending.reset();
                         while (pending.hasNext() && !isFull()
@@ -612,6 +610,10 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                 }
             }
         }
+    }
+
+    protected void setPendingBatchSize(PendingMessageCursor pending, int numberToDispatch) {
+        pending.setMaxBatchSize(numberToDispatch);
     }
 
     protected boolean dispatch(final MessageReference node) throws IOException {

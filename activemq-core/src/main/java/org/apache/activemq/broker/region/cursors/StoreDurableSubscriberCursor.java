@@ -42,6 +42,7 @@ import org.apache.commons.logging.LogFactory;
 public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
 
     private static final Log LOG = LogFactory.getLog(StoreDurableSubscriberCursor.class);
+    private static final int UNKNOWN = -1;
     private final String clientId;
     private final String subscriberName;
     private final Map<Destination, TopicStorePrefetch> topics = new HashMap<Destination, TopicStorePrefetch>();
@@ -49,7 +50,7 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
     private final PendingMessageCursor nonPersistent;
     private PendingMessageCursor currentCursor;
     private final Subscription subscription;
-    private int lastAddPriority = 0;
+    private int cacheCurrentPriority = UNKNOWN;
     private boolean immediatePriorityDispatch = true;
     /**
      * @param broker Broker for this cursor
@@ -72,12 +73,15 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
         this.nonPersistent.setMaxBatchSize(maxBatchSize);
         this.nonPersistent.setSystemUsage(systemUsage);
         this.storePrefetches.add(this.nonPersistent);
+
+        if (prioritizedMessages) {
+            setMaxAuditDepth(10*getMaxAuditDepth());
+        }
     }
 
     @Override
     public synchronized void start() throws Exception {
         if (!isStarted()) {
-            lastAddPriority = 0;
             super.start();
             for (PendingMessageCursor tsp : storePrefetches) {
             	tsp.setMessageAudit(getMessageAudit());
@@ -107,11 +111,10 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
     public synchronized void add(ConnectionContext context, Destination destination) throws Exception {
         if (destination != null && !AdvisorySupport.isAdvisoryTopic(destination.getActiveMQDestination())) {
             TopicStorePrefetch tsp = new TopicStorePrefetch(this.subscription,(Topic)destination, clientId, subscriberName);
-            tsp.setMaxBatchSize(getMaxBatchSize());
+            tsp.setMaxBatchSize(destination.getMaxPageSize());
             tsp.setSystemUsage(systemUsage);
+            tsp.setMessageAudit(getMessageAudit());
             tsp.setEnableAudit(isEnableAudit());
-            tsp.setMaxAuditDepth(getMaxAuditDepth());
-            tsp.setMaxProducersToAudit(getMaxProducersToAudit());
             tsp.setMemoryUsageHighWaterMark(getMemoryUsageHighWaterMark());
             topics.put(destination, tsp);
             storePrefetches.add(tsp);
@@ -184,16 +187,29 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
                 Destination dest = msg.getRegionDestination();
                 TopicStorePrefetch tsp = topics.get(dest);
                 if (tsp != null) {
-                    tsp.addMessageLast(node);
+
+                    // tps becomes a highest priority only cache when we have a new higher priority
+                    // message and we are not currently caching
+                    final int priority = msg.getPriority();
                     if (isStarted() && this.prioritizedMessages && immediatePriorityDispatch && !tsp.cacheEnabled) {
-                        final int priority = msg.getPriority();
-                        if (priority > lastAddPriority) {
+                        if (priority > tsp.getLastDispatchPriority()) {
                             // go get the latest priority message
-                            LOG.debug("Clearing cursor on high priority message " + priority);
-                            tsp.clear();
+                            if (LOG.isTraceEnabled()) {
+                                LOG.trace("enabling cache for cursor on high priority message " + priority);
+                            }
+                            tsp.cacheEnabled = true;
+                            cacheCurrentPriority = priority;
                         }
-                        lastAddPriority = priority;
+                    } else if (cacheCurrentPriority > 0 && priority < cacheCurrentPriority) {
+                        // go to the store to get next priority message as lower priority messages may be recovered
+                        // already
+                        tsp.clear();
+                        cacheCurrentPriority = UNKNOWN;
+                        if (LOG.isTraceEnabled()) {
+                            LOG.trace("disabling/clearing cache for cursor on lower priority message " + priority);
+                        }
                     }
+                    tsp.addMessageLast(node);
                 }
             }
 
@@ -272,12 +288,10 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
 
     @Override
     public void setMaxBatchSize(int newMaxBatchSize) {
-        if (newMaxBatchSize > getMaxBatchSize()) {
-            for (PendingMessageCursor storePrefetch : storePrefetches) {
-                storePrefetch.setMaxBatchSize(newMaxBatchSize);
-            }
-            super.setMaxBatchSize(newMaxBatchSize);
+        for (PendingMessageCursor storePrefetch : storePrefetches) {
+            storePrefetch.setMaxBatchSize(newMaxBatchSize);
         }
+        super.setMaxBatchSize(newMaxBatchSize);
     }
 
     @Override

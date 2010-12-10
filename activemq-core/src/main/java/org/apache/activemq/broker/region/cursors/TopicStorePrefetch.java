@@ -104,6 +104,10 @@ class TopicStorePrefetch extends AbstractStoreCursor {
                 maxBatchSize, this);
     }
 
+    public int getLastDispatchPriority() {
+        return last != null? last.getMessage().getPriority() : 9;
+    }
+
     @Override
     public String toString() {
         return "TopicStorePrefetch" + System.identityHashCode(this) + "(" + clientId + "," + subscriberName + ")";

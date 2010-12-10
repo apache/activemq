@@ -264,6 +264,12 @@ public class ActiveMQMessageTest extends TestCase {
         ActiveMQMessage msg = new ActiveMQMessage();
         msg.setJMSPriority(this.jmsPriority);
         assertTrue(msg.getJMSPriority() == this.jmsPriority);
+
+        msg.setJMSPriority(-90);
+        assertEquals(0, msg.getJMSPriority());
+
+        msg.setJMSPriority(90);
+        assertEquals(9, msg.getJMSPriority());                
     }
 
     public void testClearProperties() throws JMSException {

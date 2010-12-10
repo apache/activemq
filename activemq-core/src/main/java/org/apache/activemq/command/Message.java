@@ -357,7 +357,13 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
     }
 
     public void setPriority(byte priority) {
-        this.priority = priority;
+        if (priority < 0) {
+            this.priority = 0;
+        } else if (priority > 9) {
+            this.priority = 9;
+        } else {
+            this.priority = priority;
+        }
     }
 
     /**

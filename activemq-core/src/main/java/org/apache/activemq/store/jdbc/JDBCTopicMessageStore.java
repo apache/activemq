@@ -66,7 +66,7 @@ public class JDBCTopicMessageStore extends JDBCMessageStore implements TopicMess
                 adapter.doSetLastAck(c, destination, clientId, subscriptionName, res[0], res[1]);
             }
             if (LOG.isTraceEnabled()) {
-                LOG.trace(clientId + ":" + subscriptionName + " ack, seq: " + res[0] + ", priority: " + res[1]);
+                LOG.trace(clientId + ":" + subscriptionName + " ack, seq: " + res[0] + ", priority: " + res[1] + " mid:" + messageId);
             }
         } catch (SQLException e) {
             JDBCPersistenceAdapter.log("JDBC Failure: ", e);
@@ -150,6 +150,9 @@ public class JDBCTopicMessageStore extends JDBCMessageStore implements TopicMess
             } else {
                 adapter.doRecoverNextMessages(c, destination, clientId, subscriptionName,
                         lastRecovered.sequence, 0, maxReturned, jdbcListener);
+            }
+            if (LOG.isTraceEnabled()) {
+                LOG.trace(key + " last recovered: " + lastRecovered);
             }
         } catch (SQLException e) {
             JDBCPersistenceAdapter.log("JDBC Failure: ", e);

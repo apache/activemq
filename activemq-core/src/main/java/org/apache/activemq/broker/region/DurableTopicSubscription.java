@@ -26,6 +26,7 @@ import javax.jms.JMSException;
 
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
+import org.apache.activemq.broker.region.cursors.PendingMessageCursor;
 import org.apache.activemq.broker.region.cursors.StoreDurableSubscriberCursor;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ConsumerInfo;
@@ -84,6 +85,11 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
         node.getRegionDestination().acknowledge(this.getContext(), this, ack, node);
     }
 
+    @Override
+    protected void setPendingBatchSize(PendingMessageCursor pending, int numberToDispatch) {
+        // statically configured via maxPageSize
+    }
+
     public void add(ConnectionContext context, Destination destination) throws Exception {
         super.add(context, destination);
         // do it just once per destination
@@ -117,12 +123,6 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
             this.context = context;
             this.info = info;
             LOG.debug("Activating " + this);
-            int prefetch = info.getPrefetchSize();
-            if (prefetch>0) {
-                prefetch += prefetch/2;
-            }
-            int depth = Math.max(prefetch, this.pending.getMaxAuditDepth());
-            this.pending.setMaxAuditDepth(depth);
             if (!keepDurableSubsActive) {
                 for (Iterator<Destination> iter = destinations.values()
                         .iterator(); iter.hasNext();) {
@@ -134,6 +134,8 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
             synchronized (pending) {
                 pending.setSystemUsage(memoryManager);
                 pending.setMemoryUsageHighWaterMark(getCursorMemoryHighWaterMark());
+                pending.setMaxAuditDepth(getMaxAuditDepth());
+                pending.setMaxProducersToAudit(getMaxProducersToAudit());
                 pending.start();
                 // If nothing was in the persistent store, then try to use the
                 // recovery policy.

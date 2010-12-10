@@ -95,8 +95,9 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
              * the cache. If subsequently, we pull out that message from the store (before its deleted)
              * it will be a duplicate - but should be ignored
              */
-            if (LOG.isDebugEnabled()) {
-                LOG.debug(regionDestination.getActiveMQDestination().getPhysicalName() + " cursor got duplicate: " + message);
+            if (LOG.isTraceEnabled()) {
+                LOG.trace(regionDestination.getActiveMQDestination().getPhysicalName()
+                        + " cursor got duplicate: " + message.getMessageId() + ", " + message.getPriority());
             }
             storeHasMessages = true;
         }
@@ -125,7 +126,6 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
     private synchronized void clearIterator(boolean ensureIterator) {
         boolean haveIterator = this.iterator != null;
         this.iterator=null;
-        last = null;
         if(haveIterator&&ensureIterator) {
             ensureIterator();
         }
@@ -176,8 +176,8 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
         } else {
             if (cacheEnabled) {
                 cacheEnabled=false;
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug(regionDestination.getActiveMQDestination().getPhysicalName() + " disabling cache on size:" + size
+                if (LOG.isTraceEnabled()) {
+                    LOG.trace(regionDestination.getActiveMQDestination().getPhysicalName() + " disabling cache on size:" + size
                             + ", lastCachedIdSeq: " + (lastCachedId == null ? -1 : lastCachedId.getBrokerSequenceId())
                             + " current node seqId: " + node.getMessageId().getBrokerSequenceId());
                 }
@@ -239,11 +239,6 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
         clearIterator(false);
         batchResetNeeded = true;
         this.cacheEnabled=false;
-        if (isStarted()) { 
-            size = getStoreSize();
-        } else {
-            size = 0;
-        }
     }
     
     
