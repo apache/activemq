@@ -266,6 +266,7 @@ public class ManagedRegionBroker extends RegionBroker {
                 ObjectName inactiveName = subscriptionKeys.get(subscriptionKey);
                 if (inactiveName != null) {
                     inactiveDurableTopicSubscribers.remove(inactiveName);
+                    managementContext.unregisterMBean(inactiveName);
                 }
             } catch (Exception e) {
                 LOG.error("Failed to unregister subscription " + sub, e);
