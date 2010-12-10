@@ -25,7 +25,18 @@ public class BitArrayBinTest extends TestCase {
         doTestSetAroundWindow(512, 2000);
         doTestSetAroundWindow(128, 512);
     }
-       
+
+    public void testSetHiLo() throws Exception {
+        BitArrayBin toTest = new BitArrayBin(50);
+        toTest.setBit(0, true);
+        toTest.setBit(100, true);
+        toTest.setBit(150, true);
+        assertTrue("set", toTest.getBit(0));
+
+        toTest.setBit(0, true);
+        assertTrue("set", toTest.getBit(0));        
+    }
+    
     private void doTestSetAroundWindow(int window, int dataSize) throws Exception {
 
         BitArrayBin toTest = new BitArrayBin(window);
