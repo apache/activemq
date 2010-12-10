@@ -70,7 +70,7 @@ import org.apache.commons.logging.LogFactory;
 public class FailoverTransport implements CompositeTransport {
 
     private static final Log LOG = LogFactory.getLog(FailoverTransport.class);
-
+    private static final int DEFAULT_INITIAL_RECONNECT_DELAY = 10;
     private TransportListener transportListener;
     private boolean disposed;
     private boolean connected;
@@ -90,7 +90,7 @@ public class FailoverTransport implements CompositeTransport {
     private final TaskRunner reconnectTask;
     private boolean started;
     private boolean initialized;
-    private long initialReconnectDelay = 10;
+    private long initialReconnectDelay = DEFAULT_INITIAL_RECONNECT_DELAY;
     private long maxReconnectDelay = 1000 * 30;
     private double backOffMultiplier = 2d;
     private long timeout = -1;
@@ -99,7 +99,7 @@ public class FailoverTransport implements CompositeTransport {
     private int maxReconnectAttempts;
     private int startupMaxReconnectAttempts;
     private int connectFailures;
-    private long reconnectDelay = -1;
+    private long reconnectDelay = DEFAULT_INITIAL_RECONNECT_DELAY;
     private Exception connectionFailure;
     private boolean firstConnection = true;
     // optionally always have a backup created
@@ -805,7 +805,7 @@ public class FailoverTransport implements CompositeTransport {
                 if (connectList.isEmpty()) {
                     failure = new IOException("No uris available to connect to.");
                 } else {
-                    if (!useExponentialBackOff || reconnectDelay == -1) {
+                    if (!useExponentialBackOff || reconnectDelay == DEFAULT_INITIAL_RECONNECT_DELAY) {
                         reconnectDelay = initialReconnectDelay;
                     }
                     synchronized (backupMutex) {
