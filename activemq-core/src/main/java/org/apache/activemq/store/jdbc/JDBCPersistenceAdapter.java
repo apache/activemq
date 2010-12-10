@@ -224,7 +224,6 @@ public class JDBCPersistenceAdapter extends DataSourceSupport implements Persist
     }
 
     public long getLastMessageBrokerSequenceId() throws IOException {
-        // Get a connection and insert the message into the DB.
         TransactionContext c = getTransactionContext();
         try {
             long seq =  getAdapter().doGetLastMessageStoreSequenceId(c);
