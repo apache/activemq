@@ -45,6 +45,14 @@ org.activemq.Amq = function() {
 	// Best to keep this to a value less than one minute.
 	var timeout;
 
+	// A session should not be considered initialized until the JSESSIONID is returned
+	// from the initial GET request.  Otherwise subscription POSTS may register the
+	// subscription with the wrong session.
+	var sessionInitialized = false;
+
+	// This callback will be called after the first GET request returns.
+	var sessionInitializedCallback;	
+
 	// Poll delay. if set to positive integer, this is the time to wait in ms
 	// before sending the next poll after the last completes.
 	var pollDelay;
@@ -136,16 +144,27 @@ org.activemq.Amq = function() {
 		}
 	};
 
+	var initHandler = function(data) {
+		sessionInitialized = true;
+		if(sessionInitializedCallback) {
+			sessionInitializedCallback();
+		}
+		sendPoll();
+	}
+
 	var sendPoll = function() {
 		// Workaround IE6 bug where it caches the response
 		// Generate a unique query string with date and random
 		var now = new Date();
-		var data = 'timeout=' + timeout * 1000
+		var timeoutArg = sessionInitialized ? timeout : 0.001;
+		var data = 'timeout=' + timeoutArg * 1000
 				 + '&d=' + now.getTime()
 				 + '&r=' + Math.random();
+		var successCallback = sessionInitialized ? pollHandler : initHandler;
+
 		var options = { method: 'get',
 			data: addClientId( data ),
-			success: pollHandler,
+			success: successCallback,
 			error: pollErrorHandler};
 		adapter.ajax(uri, options);
 	};
@@ -206,6 +225,7 @@ org.activemq.Amq = function() {
 			pollDelay = typeof options.pollDelay == 'number' ? options.pollDelay : 0;
 			timeout = typeof options.timeout == 'number' ? options.timeout : 25;
 			logging = options.logging;
+			sessionInitializedCallback = options.sessionInitializedCallback
 			clientId = options.clientId;
 			adapter.init(options);
 			sendPoll();

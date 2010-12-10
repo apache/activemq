@@ -107,7 +107,7 @@
       var requests = org.activemq.AmqAdapter.getRequests();
       
       assertEqual( 'get', requests[ 0 ].options.method );
-      assert( requests[ 0 ].options.data.match( /timeout=30000&d=\d+&r=[\d.]+/ ) );
+      assert( requests[ 0 ].options.data.match( /timeout=1&d=\d+&r=[\d.]+/ ) );
     }},
     
     testPostIsSentIfNoBatchIsInProgress: function() { with( this ) {
