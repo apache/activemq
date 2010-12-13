@@ -55,9 +55,9 @@ public class PolicyEntry extends DestinationMapEntry {
     private PendingQueueMessageStoragePolicy pendingQueuePolicy;
     private PendingDurableSubscriberMessageStoragePolicy pendingDurableSubscriberPolicy;
     private PendingSubscriberMessageStoragePolicy pendingSubscriberPolicy;
-    private int maxProducersToAudit=32;
-    private int maxAuditDepth=2048;
-    private int maxQueueAuditDepth=2048;
+    private int maxProducersToAudit=BaseDestination.MAX_PRODUCERS_TO_AUDIT;
+    private int maxAuditDepth=BaseDestination.MAX_AUDIT_DEPTH;
+    private int maxQueueAuditDepth=BaseDestination.MAX_AUDIT_DEPTH;
     private boolean enableAudit=true;
     private boolean producerFlowControl = true;
     private long blockedProducerWarningInterval = Destination.DEFAULT_BLOCKED_PRODUCER_WARNING_INTERVAL;
@@ -217,7 +217,12 @@ public class PolicyEntry extends DestinationMapEntry {
             cursor.setSystemUsage(memoryManager);
             sub.setPending(cursor);
         }
-        sub.setMaxAuditDepth(getMaxAuditDepth());
+        int auditDepth = getMaxAuditDepth();
+        if (auditDepth == BaseDestination.MAX_AUDIT_DEPTH && this.isPrioritizedMessages()) {
+            sub.setMaxAuditDepth(auditDepth * 10);
+        } else {
+            sub.setMaxAuditDepth(auditDepth);
+        }
         sub.setMaxProducersToAudit(getMaxProducersToAudit());
         sub.setUsePrefetchExtension(isUsePrefetchExtension());        
     }

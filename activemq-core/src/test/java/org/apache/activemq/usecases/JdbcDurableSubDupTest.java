@@ -50,7 +50,8 @@ public class JdbcDurableSubDupTest {
 
     private static final Log LOG = LogFactory.getLog(JdbcDurableSubDupTest.class);
     final int prefetchVal = 150;
-    String url = "tcp://localhost:61616?jms.watchTopicAdvisories=false";
+    String urlOptions = "jms.watchTopicAdvisories=false";
+    String url = null;
     String queueName = "topicTest?consumer.prefetchSize=" + prefetchVal;
     String xmlMessage = "<Example 01234567890123456789012345678901234567890123456789 MessageText>";
 
@@ -83,10 +84,11 @@ public class JdbcDurableSubDupTest {
         policyMap.setDefaultEntry(policyEntry);
         broker.setDestinationPolicy(policyMap);
 
-        broker.addConnector("tcp://localhost:61616");
+        broker.addConnector("tcp://localhost:0");
         broker.setDeleteAllMessagesOnStartup(true);
         broker.start();
         broker.waitUntilStarted();
+        url = broker.getTransportConnectors().get(0).getConnectUri().toString() + "?" + urlOptions;
     }
 
     @After

@@ -63,7 +63,7 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
         
     }
 
-    public boolean isActive() {
+    public final boolean isActive() {
         return active.get();
     }
 
@@ -220,6 +220,12 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
         super.add(node);
     }
 
+    protected void dispatchPending() throws IOException {
+        if (isActive()) {
+            super.dispatchPending();
+        }
+    }
+    
     protected void doAddRecoveredMessage(MessageReference message) throws Exception {
         synchronized(pending) {
             pending.addRecoveredMessage(message);
@@ -239,7 +245,7 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
     }
 
     protected boolean canDispatch(MessageReference node) {
-        return active.get();
+        return isActive();
     }
 
     protected void acknowledge(ConnectionContext context, MessageAck ack, MessageReference node) throws IOException {

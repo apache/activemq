@@ -36,10 +36,11 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
     private Iterator<MessageReference> iterator = null;
     protected boolean cacheEnabled=false;
     protected boolean batchResetNeeded = true;
-    protected boolean storeHasMessages = false;
+    private boolean storeHasMessages = false;
     protected int size;
     private MessageId lastCachedId;
-    
+    private boolean hadSpace = false;
+
     protected AbstractStoreCursor(Destination destination) {
         super((destination != null ? destination.isPrioritizedMessages():false));
         this.regionDestination=destination;
@@ -89,6 +90,7 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
             batchList.addMessageLast(message);
             clearIterator(true);
             recovered = true;
+            storeHasMessages = true;
         } else {
             /*
              * we should expect to get these - as the message is recorded as it before it goes into
@@ -99,7 +101,6 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
                 LOG.trace(regionDestination.getActiveMQDestination().getPhysicalName()
                         + " cursor got duplicate: " + message.getMessageId() + ", " + message.getPriority());
             }
-            storeHasMessages = true;
         }
         return recovered;
     }
@@ -187,6 +188,7 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
                 }
             }
         }
+        this.storeHasMessages = true;
         size++;
     }
 
@@ -229,7 +231,7 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
     }
     
     
-    public final synchronized void gc() {
+    public synchronized void gc() {
         for (Iterator<MessageReference>i = batchList.iterator();i.hasNext();) {
             MessageReference msg = i.next();
             rollback(msg.getMessageId());
@@ -240,8 +242,13 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
         batchResetNeeded = true;
         this.cacheEnabled=false;
     }
-    
-    
+
+    @Override
+    public boolean hasSpace() {
+        hadSpace = super.hasSpace();
+        return hadSpace;
+    }
+
     protected final synchronized void fillBatch() {
         if (LOG.isTraceEnabled()) {
             LOG.trace("fillBatch - batchResetNeeded=" + batchResetNeeded
@@ -251,7 +258,7 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
             resetBatch();
             this.batchResetNeeded = false;
         }
-        if( this.batchList.isEmpty() && (this.storeHasMessages ||this.size >0)) {
+        if (this.batchList.isEmpty() && this.storeHasMessages && this.size >0) {
             this.storeHasMessages = false;
             try {
                 doFillBatch();
@@ -259,7 +266,7 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
                 LOG.error("Failed to fill batch", e);
                 throw new RuntimeException(e);
             }
-            if (!this.batchList.isEmpty()) {
+            if (!this.batchList.isEmpty() || !hadSpace) {
                 this.storeHasMessages=true;
             }
         }

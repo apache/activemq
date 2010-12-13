@@ -144,6 +144,9 @@ public class JDBCTopicMessageStore extends JDBCMessageStore implements TopicMess
                 }
 
             };
+            if (LOG.isTraceEnabled()) {
+                LOG.trace(key + " existing last recovered: " + lastRecovered);
+            }
             if (isPrioritizedMessages()) {
                 adapter.doRecoverNextMessagesWithPriority(c, destination, clientId, subscriptionName,
                         lastRecovered.sequence, lastRecovered.priority, maxReturned, jdbcListener);
@@ -223,7 +226,7 @@ public class JDBCTopicMessageStore extends JDBCMessageStore implements TopicMess
         int result = 0;
         TransactionContext c = persistenceAdapter.getTransactionContext();
         try {
-                result = adapter.doGetDurableSubscriberMessageCount(c, destination, clientId, subscriberName, isPrioritizedMessages());
+            result = adapter.doGetDurableSubscriberMessageCount(c, destination, clientId, subscriberName, isPrioritizedMessages());
         } catch (SQLException e) {
             JDBCPersistenceAdapter.log("JDBC Failure: ", e);
             throw IOExceptionSupport.create("Failed to get Message Count: " + clientId + ". Reason: " + e, e);

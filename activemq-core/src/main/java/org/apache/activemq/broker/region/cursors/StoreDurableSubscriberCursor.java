@@ -50,7 +50,7 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
     private final PendingMessageCursor nonPersistent;
     private PendingMessageCursor currentCursor;
     private final Subscription subscription;
-    private int cacheCurrentPriority = UNKNOWN;
+    private int cacheCurrentLowestPriority = UNKNOWN;
     private boolean immediatePriorityDispatch = true;
     /**
      * @param broker Broker for this cursor
@@ -187,27 +187,27 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
                 Destination dest = msg.getRegionDestination();
                 TopicStorePrefetch tsp = topics.get(dest);
                 if (tsp != null) {
-
-                    // tps becomes a highest priority only cache when we have a new higher priority
-                    // message and we are not currently caching
+                    // cache can be come high priority cache for immediate dispatch
                     final int priority = msg.getPriority();
                     if (isStarted() && this.prioritizedMessages && immediatePriorityDispatch && !tsp.cacheEnabled) {
-                        if (priority > tsp.getLastDispatchPriority()) {
-                            // go get the latest priority message
+                        if (priority > tsp.getCurrentLowestPriority()) {
                             if (LOG.isTraceEnabled()) {
-                                LOG.trace("enabling cache for cursor on high priority message " + priority);
+                                LOG.trace("enabling cache for cursor on high priority message " + priority
+                                        + ", current lowest: " + tsp.getCurrentLowestPriority());
                             }
                             tsp.cacheEnabled = true;
-                            cacheCurrentPriority = priority;
+                            cacheCurrentLowestPriority = tsp.getCurrentLowestPriority();
                         }
-                    } else if (cacheCurrentPriority > 0 && priority < cacheCurrentPriority) {
+                    } else if (cacheCurrentLowestPriority != UNKNOWN && priority <= cacheCurrentLowestPriority) {
                         // go to the store to get next priority message as lower priority messages may be recovered
-                        // already
-                        tsp.clear();
-                        cacheCurrentPriority = UNKNOWN;
+                        // already and need to acked sequence order
                         if (LOG.isTraceEnabled()) {
-                            LOG.trace("disabling/clearing cache for cursor on lower priority message " + priority);
+                            LOG.trace("disabling/clearing cache for cursor on lower priority message "
+                                    + priority + ", tsp current lowest: " + tsp.getCurrentLowestPriority()
+                                    + " cache lowest: " + cacheCurrentLowestPriority);
                         }
+                        tsp.cacheEnabled = false;
+                        cacheCurrentLowestPriority = UNKNOWN;
                     }
                     tsp.addMessageLast(node);
                 }
@@ -299,6 +299,7 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
         for (PendingMessageCursor tsp : storePrefetches) {
             tsp.gc();
         }
+        cacheCurrentLowestPriority = UNKNOWN;
     }
 
     @Override

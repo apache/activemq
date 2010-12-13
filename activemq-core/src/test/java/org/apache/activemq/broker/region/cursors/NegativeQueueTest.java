@@ -98,7 +98,7 @@ public class NegativeQueueTest extends AutoFailTestSupport {
     protected static int PREFETCH_SIZE = 1000;  
     
     protected BrokerService broker;
-    protected String bindAddress = "tcp://localhost:60706";
+    protected String bindAddress = "tcp://localhost:0";
     
     public void testWithDefaultPrefetch() throws Exception{
         PREFETCH_SIZE = 1000;
@@ -311,6 +311,7 @@ public class NegativeQueueTest extends AutoFailTestSupport {
         configureBroker(answer);
         answer.start();
         answer.waitUntilStarted();
+        bindAddress = answer.getTransportConnectors().get(0).getConnectUri().toString();
         return answer;
     }
     
@@ -329,7 +330,7 @@ public class NegativeQueueTest extends AutoFailTestSupport {
         pMap.setDefaultEntry(policy);
         answer.setDestinationPolicy(pMap);
         answer.setDeleteAllMessagesOnStartup(true);
-        answer.addConnector(bindAddress);
+        answer.addConnector("tcp://localhost:0");
 
         MemoryUsage memoryUsage = new MemoryUsage();
         memoryUsage.setLimit(MEMORY_USAGE); 

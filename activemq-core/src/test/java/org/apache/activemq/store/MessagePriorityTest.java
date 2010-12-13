@@ -54,6 +54,7 @@ abstract public class MessagePriorityTest extends CombinationTestSupport {
     public boolean useCache = true;
     public boolean dispatchAsync = true;
     public boolean prioritizeMessages = true;
+    public boolean immediatePriorityDispatch = true;
     public int prefetchVal = 500;
 
     public int MSG_NUM = 600;
@@ -73,7 +74,7 @@ abstract public class MessagePriorityTest extends CombinationTestSupport {
         policy.setUseCache(useCache);
         StorePendingDurableSubscriberMessageStoragePolicy durableSubPending =
                 new StorePendingDurableSubscriberMessageStoragePolicy();
-        durableSubPending.setImmediatePriorityDispatch(true);
+        durableSubPending.setImmediatePriorityDispatch(immediatePriorityDispatch);
         policy.setPendingDurableSubscriberPolicy(durableSubPending);
         PolicyMap policyMap = new PolicyMap();
         policyMap.put(new ActiveMQQueue("TEST"), policy);

@@ -49,6 +49,9 @@ public abstract class BaseDestination implements Destination {
     public static final int MAX_BROWSE_PAGE_SIZE = MAX_PAGE_SIZE * 2;
     public static final long EXPIRE_MESSAGE_PERIOD = 30 * 1000;
     public static final long DEFAULT_INACTIVE_TIMEOUT_BEFORE_GC = 60 * 1000;
+    public static final int MAX_PRODUCERS_TO_AUDIT = 64;
+    public static final int MAX_AUDIT_DEPTH = 2048;
+
     protected final ActiveMQDestination destination;
     protected final Broker broker;
     protected final MessageStore store;
