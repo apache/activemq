@@ -48,5 +48,13 @@ public final class DefaultThreadPools {
     public static TaskRunnerFactory getDefaultTaskRunnerFactory() {
         return DEFAULT_TASK_RUNNER_FACTORY;
     }
+
+    /**
+     * Useful to cleanup when it is known that all brokers and connections are
+     * close and stopped, eg: when un deploying from web container.
+     */
+    public static void shutdown() {
+        DEFAULT_TASK_RUNNER_FACTORY.shutdown();
+    }
     
 }

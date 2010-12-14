@@ -47,6 +47,9 @@ import org.apache.activemq.wireformat.WireFormat;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+
+import static org.apache.activemq.thread.DefaultThreadPools.getDefaultTaskRunnerFactory;
+
 /**
  * An implementation of the {@link Transport} interface using raw tcp/ip
  * 
@@ -55,7 +58,6 @@ import org.apache.commons.logging.LogFactory;
  */
 public class TcpTransport extends TransportThreadSupport implements Transport, Service, Runnable {
     private static final Log LOG = LogFactory.getLog(TcpTransport.class);
-    private static final ThreadPoolExecutor SOCKET_CLOSE;
     protected final URI remoteLocation;
     protected final URI localLocation;
     protected final WireFormat wireFormat;
@@ -516,7 +518,7 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
                 //closing the socket can hang also 
                 final CountDownLatch latch = new CountDownLatch(1);
                 
-                SOCKET_CLOSE.execute(new Runnable() {
+                getDefaultTaskRunnerFactory().execute(new Runnable() {
     
                     public void run() {
                         try {
@@ -612,19 +614,6 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
         return super.narrow(target);
     }
     
-
-    static {
-        SOCKET_CLOSE =   new ThreadPoolExecutor(0, Integer.MAX_VALUE, 10, TimeUnit.SECONDS, new SynchronousQueue<Runnable>(), new ThreadFactory() {
-            public Thread newThread(Runnable runnable) {
-                Thread thread = new Thread(runnable, "TcpSocketClose: "+runnable);
-                thread.setPriority(Thread.MAX_PRIORITY);
-                thread.setDaemon(true);
-                return thread;
-            }
-        });
-    }
-
-
     public int getReceiveCounter() {
         return receiveCounter;
     }

@@ -28,6 +28,8 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.bugs.embedded.ThreadExplorer;
 import org.apache.activemq.network.NetworkConnector;
 
+import static org.apache.activemq.thread.DefaultThreadPools.shutdown;
+
 public class VmTransportNetworkBrokerTest extends TestCase {
 
     private static final String VM_BROKER_URI = 
@@ -60,10 +62,9 @@ public class VmTransportNetworkBrokerTest extends TestCase {
         assertTrue("Threads are leaking: " + ThreadExplorer.show("active sleep") + ", threadCount=" + threadCount + " threadCountAfterSleep=" + threadCountAfterSleep,
                 threadCountAfterSleep < threadCount + 8);
 
-        connection.stop();
+        connection.close();
         broker.stop();
         broker.waitUntilStopped();
-
     }
 
     public void testNoDanglingThreadsAfterStop() throws Exception {
@@ -73,13 +74,22 @@ public class VmTransportNetworkBrokerTest extends TestCase {
         broker.setSchedulerSupport(true);
         broker.setDedicatedTaskRunner(true);
         broker.setPersistent(false);
-        broker.addConnector("tcp://localhost:61616");
+        broker.addConnector("tcp://localhost:61616?wireFormat.maxInactivityDuration=1000&wireFormat.maxInactivityDurationInitalDelay=1000");
         broker.start();
+
+        ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory("tcp://localhost:61616?wireFormat.maxInactivityDuration=1000&wireFormat.maxInactivityDurationInitalDelay=1000");
+        Connection connection = cf.createConnection("system", "manager");
+        connection.start();
+        connection.close();
         broker.stop();
         broker.waitUntilStopped();
+        shutdown();
+
+        // let it settle
+        TimeUnit.SECONDS.sleep(5);        
         
         int threadCountAfterStop = Thread.activeCount();
-        assertTrue("Threads are leaking: " + ThreadExplorer.show("active afer stop") + ". threadCount=" + threadCount + " threadCountAfterStop=" + threadCountAfterStop,
+        assertTrue("Threads are leaking: " + ThreadExplorer.show("active after stop") + ". threadCount=" + threadCount + " threadCountAfterStop=" + threadCountAfterStop,
                 threadCountAfterStop == threadCount);
 
     }

@@ -41,8 +41,7 @@ import org.apache.commons.logging.LogFactory;
 public class InactivityMonitor extends TransportFilter {
 
     private static final Log LOG = LogFactory.getLog(InactivityMonitor.class);
-    private static final ThreadPoolExecutor ASYNC_TASKS;
-
+    private static ThreadPoolExecutor ASYNC_TASKS;
     private static int CHECKER_COUNTER;
     private static long DEFAULT_CHECK_TIME_MILLS = 30000;
     private static Timer  READ_CHECK_TIMER;
@@ -311,6 +310,7 @@ public class InactivityMonitor extends TransportFilter {
             writeCheckTime = readCheckTime>3 ? readCheckTime/3 : readCheckTime;
             synchronized( InactivityMonitor.class ) {
                 if( CHECKER_COUNTER == 0 ) {
+                    ASYNC_TASKS = createExecutor();
                     READ_CHECK_TIMER = new Timer("InactivityMonitor ReadCheck",true);
                     WRITE_CHECK_TIMER = new Timer("InactivityMonitor WriteCheck",true);
                 }
@@ -354,20 +354,22 @@ public class InactivityMonitor extends TransportFilter {
                     READ_CHECK_TIMER.cancel();
                     WRITE_CHECK_TIMER = null;
                     READ_CHECK_TIMER = null;
+                    ASYNC_TASKS.shutdownNow();
+                    ASYNC_TASKS = null;
                 }
             }
         }
     }
 
+    private ThreadFactory factory = new ThreadFactory() {
+        public Thread newThread(Runnable runnable) {
+            Thread thread = new Thread(runnable, "InactivityMonitor Async Task: "+runnable);
+            thread.setDaemon(true);
+            return thread;
+        }
+    };
 
-    static {
-        ASYNC_TASKS =   new ThreadPoolExecutor(0, Integer.MAX_VALUE, 10, TimeUnit.SECONDS, new SynchronousQueue<Runnable>(), new ThreadFactory() {
-            public Thread newThread(Runnable runnable) {
-                Thread thread = new Thread(runnable, "InactivityMonitor Async Task: "+runnable);
-                thread.setDaemon(true);
-                return thread;
-            }
-        });
+    private ThreadPoolExecutor createExecutor() {
+        return new ThreadPoolExecutor(0, Integer.MAX_VALUE, 10, TimeUnit.SECONDS, new SynchronousQueue<Runnable>(), factory);
     }
-
 }
