@@ -117,7 +117,7 @@ public class Journal {
 	private ReplicationTarget replicationTarget;
     protected boolean checksum;
     protected boolean checkForCorruptionOnStartup;
-    private Timer timer = new Timer("KahaDB Scheduler", true);
+    private Timer timer;
    
 
     public synchronized void start() throws IOException {

@@ -20,10 +20,12 @@ import java.net.URI;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
+import javax.jms.Connection;
 import junit.framework.TestCase;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.bugs.embedded.ThreadExplorer;
 import org.apache.activemq.network.NetworkConnector;
 
 public class VmTransportNetworkBrokerTest extends TestCase {
@@ -45,7 +47,8 @@ public class VmTransportNetworkBrokerTest extends TestCase {
         broker.start();
         
         ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory(new URI(VM_BROKER_URI));
-        cf.createConnection("system", "manager").start();
+        Connection connection = cf.createConnection("system", "manager");
+        connection.start();
         
         // let it settle
         TimeUnit.SECONDS.sleep(5);
@@ -54,9 +57,31 @@ public class VmTransportNetworkBrokerTest extends TestCase {
         TimeUnit.SECONDS.sleep(30);
         int threadCountAfterSleep = Thread.activeCount();
         
-        assertTrue("Threads are leaking, threadCount=" + threadCount + " threadCountAfterSleep=" + threadCountAfterSleep, 
+        assertTrue("Threads are leaking: " + ThreadExplorer.show("active sleep") + ", threadCount=" + threadCount + " threadCountAfterSleep=" + threadCountAfterSleep,
                 threadCountAfterSleep < threadCount + 8);
-                
-        broker.stop(); 
+
+        connection.stop();
+        broker.stop();
+        broker.waitUntilStopped();
+
     }
+
+    public void testNoDanglingThreadsAfterStop() throws Exception {
+
+        int threadCount = Thread.activeCount();
+        BrokerService broker = new BrokerService();
+        broker.setSchedulerSupport(true);
+        broker.setDedicatedTaskRunner(true);
+        broker.setPersistent(false);
+        broker.addConnector("tcp://localhost:61616");
+        broker.start();
+        broker.stop();
+        broker.waitUntilStopped();
+        
+        int threadCountAfterStop = Thread.activeCount();
+        assertTrue("Threads are leaking: " + ThreadExplorer.show("active afer stop") + ". threadCount=" + threadCount + " threadCountAfterStop=" + threadCountAfterStop,
+                threadCountAfterStop == threadCount);
+
+    }
+
 }
