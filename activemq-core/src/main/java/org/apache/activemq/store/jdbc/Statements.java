@@ -76,6 +76,7 @@ public class Statements {
     private String updateDurableLastAckStatement;
     private String deleteOldMessagesStatementWithPriority;
     private String durableSubscriberMessageCountStatementWithPriority;
+    private String dropAckPKAlterStatementEnd;
 
     public String[] getCreateSchemaStatements() {
         if (createSchemaStatements == null) {
@@ -100,11 +101,22 @@ public class Statements {
                 "ALTER TABLE " + getFullMessageTableName() + " ADD PRIORITY " + sequenceDataType,
                 "CREATE INDEX " + getFullMessageTableName() + "_PIDX ON " + getFullMessageTableName() + " (PRIORITY)",
                 "ALTER TABLE " + getFullAckTableName() + " ADD PRIORITY " + sequenceDataType  + " DEFAULT 5 NOT NULL",
-                "ALTER TABLE " + getFullAckTableName() + " DROP PRIMARY KEY",
+                "ALTER TABLE " + getFullAckTableName() + " " + getDropAckPKAlterStatementEnd(),
                 "ALTER TABLE " + getFullAckTableName() + " ADD PRIMARY KEY (CONTAINER, CLIENT_ID, SUB_NAME, PRIORITY)",
             };
         }
         return createSchemaStatements;
+    }
+
+    public String getDropAckPKAlterStatementEnd() {
+        if (dropAckPKAlterStatementEnd == null) {
+            dropAckPKAlterStatementEnd = "DROP PRIMARY KEY";
+        }
+        return dropAckPKAlterStatementEnd;
+    }
+
+    public void setDropAckPKAlterStatementEnd(String dropAckPKAlterStatementEnd) {
+        this.dropAckPKAlterStatementEnd = dropAckPKAlterStatementEnd;
     }
 
     public String[] getDropSchemaStatements() {

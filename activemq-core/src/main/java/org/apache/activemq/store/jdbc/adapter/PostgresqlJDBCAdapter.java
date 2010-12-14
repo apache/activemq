@@ -38,10 +38,19 @@ import org.apache.activemq.store.jdbc.Statements;
  * @version $Revision: 1.1 $
  */
 public class PostgresqlJDBCAdapter extends BytesJDBCAdapter {
+    public String acksPkName = "activemq_acks_pkey";
 
     public void setStatements(Statements statements) {
         statements.setBinaryDataType("BYTEA");
+        statements.setDropAckPKAlterStatementEnd("DROP CONSTRAINT \"" + getAcksPkName() + "\"");
         super.setStatements(statements);
     }
 
+    private String getAcksPkName() {
+        return acksPkName;
+    }
+
+    public void setAcksPkName(String acksPkName) {
+        this.acksPkName = acksPkName;
+    }
 }
