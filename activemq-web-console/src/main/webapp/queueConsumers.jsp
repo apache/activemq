@@ -59,7 +59,7 @@
 	<td>${row.selector}</td>
 	<td>${row.enqueueCounter}</td>
 	<td>${row.dequeueCounter}</td>
-	<td>${row.dispachedCounter}</td>
+	<td>${row.dispatchedCounter}</td>
 	<td>${row.dispatchedQueueSize}</td>
 	<td>
 		${row.prefetchSize}<br/>

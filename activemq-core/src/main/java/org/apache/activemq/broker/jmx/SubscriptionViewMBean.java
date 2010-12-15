@@ -113,7 +113,7 @@ public interface SubscriptionViewMBean {
      * @return number of messages that matched the subscription
      */
     @MBeanInfo("Number of messages that sent to the client.")
-    long getDispachedCounter();
+    long getDispatchedCounter();
 
     /**
      * @return number of messages that matched the subscription

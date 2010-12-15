@@ -244,7 +244,7 @@ public class SubscriptionView implements SubscriptionViewMBean {
     /**
      * @return number of messages that matched the subscription
      */
-    public long getDispachedCounter() {
+    public long getDispatchedCounter() {
         return subscription != null ? subscription.getDispatchedCounter() : 0;
     }
 

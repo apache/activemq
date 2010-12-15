@@ -110,7 +110,7 @@ No connection could be found for ID <c:out value="${requestContext.connectionQue
 	<td><c:out value="${consumer.selector}" /></td>
 	<td><c:out value="${consumer.enqueueCounter}" /></td>
 	<td><c:out value="${consumer.dequeueCounter}" /></td>
-	<td><c:out value="${consumer.dispachedCounter}" /></td>
+	<td><c:out value="${consumer.dispatchedCounter}" /></td>
 	<td><c:out value="${consumer.dispatchedQueueSize}" /></td>
 	<td>
 		<c:out value="${consumer.prefetchSize}" /><br/>

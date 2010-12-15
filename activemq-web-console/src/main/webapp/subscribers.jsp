@@ -99,7 +99,7 @@
 <td>${row.selector}</td>
 <td>${row.pendingQueueSize}</td>
 <td>${row.dispatchedQueueSize}</td>
-<td>${row.dispachedCounter}</td>
+<td>${row.dispatchedCounter}</td>
 <td>${row.enqueueCounter}</td>
 <td>${row.dequeueCounter}</td>
 <td>
@@ -140,7 +140,7 @@
 <td>${row.selector}</td>
 <td>${row.pendingQueueSize}</td>
 <td>${row.dispatchedQueueSize}</td>
-<td>${row.dispachedCounter}</td>
+<td>${row.dispatchedCounter}</td>
 <td>${row.enqueueCounter}</td>
 <td>${row.dequeueCounter}</td>
 <td>
