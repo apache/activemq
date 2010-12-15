@@ -609,8 +609,8 @@ public class FailoverTransport implements CompositeTransport {
     public void add(boolean rebalance, URI u[]) {
         boolean newURI = false;
         for (int i = 0; i < u.length; i++) {
-            if (contains(u[i])==false) {
-                uris.add(i, u[i]);
+            if (!contains(u[i])) {
+                uris.add(u[i]);
                 newURI = true;
             }
         }
@@ -1096,7 +1096,7 @@ public class FailoverTransport implements CompositeTransport {
     }
     
     private boolean contains(URI newURI) {
-       
+
         boolean result = false;
         try {
         for (URI uri:uris) {
