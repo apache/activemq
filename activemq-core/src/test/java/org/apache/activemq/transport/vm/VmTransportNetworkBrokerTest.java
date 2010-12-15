@@ -27,8 +27,8 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.bugs.embedded.ThreadExplorer;
 import org.apache.activemq.network.NetworkConnector;
+import org.apache.activemq.thread.DefaultThreadPools;
 
-import static org.apache.activemq.thread.DefaultThreadPools.shutdown;
 
 public class VmTransportNetworkBrokerTest extends TestCase {
 
@@ -38,8 +38,10 @@ public class VmTransportNetworkBrokerTest extends TestCase {
     CountDownLatch started = new CountDownLatch(1);
     CountDownLatch gotConnection = new CountDownLatch(1);
 
-    public void testNoThreadLeakWithActiveVMConnection() throws Exception {
-        
+    public void testNoThreadLeak() throws Exception {
+
+        // with VMConnection and simple discovery network connector
+        int originalThreadCount = Thread.activeCount();
         BrokerService broker = new BrokerService();
         broker.setDedicatedTaskRunner(true);
         broker.setPersistent(false);
@@ -55,43 +57,42 @@ public class VmTransportNetworkBrokerTest extends TestCase {
         // let it settle
         TimeUnit.SECONDS.sleep(5);
         
-        int threadCount = Thread.activeCount();
+        int threadCountAfterStart = Thread.activeCount();
         TimeUnit.SECONDS.sleep(30);
         int threadCountAfterSleep = Thread.activeCount();
         
-        assertTrue("Threads are leaking: " + ThreadExplorer.show("active sleep") + ", threadCount=" + threadCount + " threadCountAfterSleep=" + threadCountAfterSleep,
-                threadCountAfterSleep < threadCount + 8);
+        assertTrue("Threads are leaking: " + ThreadExplorer.show("active sleep") + ", threadCount=" +threadCountAfterStart + " threadCountAfterSleep=" + threadCountAfterSleep,
+                threadCountAfterSleep < threadCountAfterStart + 8);
 
         connection.close();
         broker.stop();
         broker.waitUntilStopped();
-    }
 
-    public void testNoDanglingThreadsAfterStop() throws Exception {
+        // testNoDanglingThreadsAfterStop with tcp transport
 
-        int threadCount = Thread.activeCount();
-        BrokerService broker = new BrokerService();
+        broker = new BrokerService();
         broker.setSchedulerSupport(true);
         broker.setDedicatedTaskRunner(true);
         broker.setPersistent(false);
         broker.addConnector("tcp://localhost:61616?wireFormat.maxInactivityDuration=1000&wireFormat.maxInactivityDurationInitalDelay=1000");
         broker.start();
 
-        ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory("tcp://localhost:61616?wireFormat.maxInactivityDuration=1000&wireFormat.maxInactivityDurationInitalDelay=1000");
-        Connection connection = cf.createConnection("system", "manager");
+        cf = new ActiveMQConnectionFactory("tcp://localhost:61616?wireFormat.maxInactivityDuration=1000&wireFormat.maxInactivityDurationInitalDelay=1000");
+        connection = cf.createConnection("system", "manager");
         connection.start();
         connection.close();
         broker.stop();
         broker.waitUntilStopped();
-        shutdown();
+
+        // must only be called when all brokers and connections are done!
+        DefaultThreadPools.shutdown();
 
         // let it settle
         TimeUnit.SECONDS.sleep(5);        
         
         int threadCountAfterStop = Thread.activeCount();
-        assertTrue("Threads are leaking: " + ThreadExplorer.show("active after stop") + ". threadCount=" + threadCount + " threadCountAfterStop=" + threadCountAfterStop,
-                threadCountAfterStop == threadCount);
+        assertTrue("Threads are leaking: " + ThreadExplorer.show("active after stop") + ". originalThreadCount=" + originalThreadCount + " threadCountAfterStop=" + threadCountAfterStop,
+                threadCountAfterStop == originalThreadCount);
 
     }
-
 }

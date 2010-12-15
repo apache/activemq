@@ -23,6 +23,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import org.apache.activemq.command.ShutdownInfo;
+import org.apache.activemq.thread.DefaultThreadPools;
 import org.apache.activemq.thread.Task;
 import org.apache.activemq.thread.TaskRunner;
 import org.apache.activemq.thread.TaskRunnerFactory;
@@ -44,8 +45,6 @@ public class VMTransport implements Transport, Task {
 
     private static final Object DISCONNECT = new Object();
     private static final AtomicLong NEXT_ID = new AtomicLong(0);
-    // still possible to configure dedicated task runner through system property but not programmatically
-    private static final TaskRunnerFactory TASK_RUNNER_FACTORY = new TaskRunnerFactory("VMTransport", Thread.NORM_PRIORITY, true, 1000, false);
     protected VMTransport peer;
     protected TransportListener transportListener;
     protected boolean disposed;
@@ -331,7 +330,7 @@ public class VMTransport implements Transport, Task {
         if (async) {
             synchronized (lazyInitMutext) {
                 if (taskRunner == null) {
-                    taskRunner = TASK_RUNNER_FACTORY.createTaskRunner(this, "VMTransport: " + toString());
+                    taskRunner = DefaultThreadPools.getDefaultTaskRunnerFactory().createTaskRunner(this, "VMTransport: " + toString());
                 }
             }
             try {

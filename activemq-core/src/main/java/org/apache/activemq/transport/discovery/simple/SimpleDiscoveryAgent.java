@@ -25,6 +25,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.activemq.command.DiscoveryEvent;
+import org.apache.activemq.thread.DefaultThreadPools;
 import org.apache.activemq.transport.discovery.DiscoveryAgent;
 import org.apache.activemq.transport.discovery.DiscoveryListener;
 import org.apache.commons.logging.Log;
@@ -38,8 +39,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class SimpleDiscoveryAgent implements DiscoveryAgent {
 
-    private final static Log LOG = LogFactory.getLog(SimpleDiscoveryAgent.class); 
-    private static final ThreadPoolExecutor ASYNC_TASKS;
+    private final static Log LOG = LogFactory.getLog(SimpleDiscoveryAgent.class);
     private long initialReconnectDelay = 1000;
     private long maxReconnectDelay = 1000 * 30;
     private long backOffMultiplier = 2;
@@ -110,14 +110,14 @@ public class SimpleDiscoveryAgent implements DiscoveryAgent {
         if (event.failed.compareAndSet(false, true)) {
 
             listener.onServiceRemove(event);
-            ASYNC_TASKS.execute(new Runnable() {
+            DefaultThreadPools.getDefaultTaskRunnerFactory().execute(new Runnable() {
                 public void run() {
 
                     // We detect a failed connection attempt because the service
                     // fails right
                     // away.
                     if (event.connectTime + minConnectTime > System.currentTimeMillis()) {
-                        LOG.debug("Failure occured soon after the discovery event was generated.  It will be clasified as a connection failure: "+event);
+                        LOG.debug("Failure occurred soon after the discovery event was generated.  It will be classified as a connection failure: "+event);
 
                         event.connectFailures++;
 
@@ -132,7 +132,7 @@ public class SimpleDiscoveryAgent implements DiscoveryAgent {
                                     return;
                                 }
 
-                                LOG.debug("Waiting "+event.reconnectDelay+" ms before attepting to reconnect.");
+                                LOG.debug("Waiting "+event.reconnectDelay+" ms before attempting to reconnect.");
                                 sleepMutex.wait(event.reconnectDelay);
                             } catch (InterruptedException ie) {
                                 Thread.currentThread().interrupt();
@@ -163,7 +163,7 @@ public class SimpleDiscoveryAgent implements DiscoveryAgent {
                     event.failed.set(false);
                     listener.onServiceAdd(event);
                 }
-            });
+            }, "Simple Discovery Agent");
         }
     }
 
@@ -214,16 +214,4 @@ public class SimpleDiscoveryAgent implements DiscoveryAgent {
     public void setUseExponentialBackOff(boolean useExponentialBackOff) {
         this.useExponentialBackOff = useExponentialBackOff;
     }
-    
-    static {
-        ASYNC_TASKS =   new ThreadPoolExecutor(0, Integer.MAX_VALUE, 30, TimeUnit.SECONDS, new SynchronousQueue<Runnable>(), new ThreadFactory() {
-            public Thread newThread(Runnable runnable) {
-                Thread thread = new Thread(runnable, "Simple Discovery Agent: "+runnable);
-                thread.setDaemon(true);
-                return thread;
-            }
-        });
-    }
-
-
 }

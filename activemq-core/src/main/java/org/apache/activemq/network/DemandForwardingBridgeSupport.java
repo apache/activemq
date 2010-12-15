@@ -25,9 +25,6 @@ import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.SynchronousQueue;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
@@ -68,6 +65,8 @@ import org.apache.activemq.command.ShutdownInfo;
 import org.apache.activemq.command.WireFormatInfo;
 import org.apache.activemq.filter.DestinationFilter;
 import org.apache.activemq.filter.MessageEvaluationContext;
+import org.apache.activemq.thread.DefaultThreadPools;
+import org.apache.activemq.thread.TaskRunnerFactory;
 import org.apache.activemq.transport.DefaultTransportListener;
 import org.apache.activemq.transport.FutureResponse;
 import org.apache.activemq.transport.ResponseCallback;
@@ -92,7 +91,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public abstract class DemandForwardingBridgeSupport implements NetworkBridge, BrokerServiceAware {
     private static final Log LOG = LogFactory.getLog(DemandForwardingBridgeSupport.class);
-    private static final ThreadPoolExecutor ASYNC_TASKS;
+    private final TaskRunnerFactory asyncTaskRunner = DefaultThreadPools.getDefaultTaskRunnerFactory();
     protected static final String DURABLE_SUB_PREFIX = "NC-DS_";
     protected final Transport localBroker;
     protected final Transport remoteBroker;
@@ -251,7 +250,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
     }
 
     protected void triggerLocalStartBridge() throws IOException {
-        ASYNC_TASKS.execute(new Runnable() {
+        asyncTaskRunner.execute(new Runnable() {
             public void run() {
                 final String originalName = Thread.currentThread().getName();
                 Thread.currentThread().setName("StartLocalBridge: localBroker=" + localBroker);
@@ -267,7 +266,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
     }
 
     protected void triggerRemoteStartBridge() throws IOException {
-        ASYNC_TASKS.execute(new Runnable() {
+        asyncTaskRunner.execute(new Runnable() {
             public void run() {
                 final String originalName = Thread.currentThread().getName();
                 Thread.currentThread().setName("StartRemotelBridge: localBroker=" + localBroker);
@@ -391,7 +390,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                 try {
                     remoteBridgeStarted.set(false);
                     final CountDownLatch sendShutdown = new CountDownLatch(1);
-                    ASYNC_TASKS.execute(new Runnable() {
+                    asyncTaskRunner.execute(new Runnable() {
                         public void run() {
                             try {
                                 localBroker.oneway(new ShutdownInfo());
@@ -433,7 +432,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                 LOG.warn("Network connection between " + localBroker + " and " + remoteBroker + " shutdown due to a remote error: " + error);
             }
             LOG.debug("The remote Exception was: " + error, error);
-            ASYNC_TASKS.execute(new Runnable() {
+            asyncTaskRunner.execute(new Runnable() {
                 public void run() {
                     ServiceSupport.dispose(getControllingService());
                 }
@@ -647,7 +646,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
         if (!disposed.get()) {
             LOG.info("Network connection between " + localBroker + " and " + remoteBroker + " shutdown due to a local error: " + error);
             LOG.debug("The local Exception was:" + error, error);
-            ASYNC_TASKS.execute(new Runnable() {
+            asyncTaskRunner.execute(new Runnable() {
                 public void run() {
                     ServiceSupport.dispose(getControllingService());
                 }
@@ -674,7 +673,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
             subscriptionMapByLocalId.remove(sub.getLocalInfo().getConsumerId());
 
             // continue removal in separate thread to free up this thread for outstanding responses
-            ASYNC_TASKS.execute(new Runnable() {
+            asyncTaskRunner.execute(new Runnable() {
                 public void run() {
                     sub.waitForCompletion();
                     try {
@@ -1277,15 +1276,4 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
     public void setBrokerService(BrokerService brokerService) {
         this.brokerService = brokerService;
     }
-
-    static {
-        ASYNC_TASKS = new ThreadPoolExecutor(0, Integer.MAX_VALUE, 30, TimeUnit.SECONDS, new SynchronousQueue<Runnable>(), new ThreadFactory() {
-            public Thread newThread(Runnable runnable) {
-                Thread thread = new Thread(runnable, "NetworkBridge");
-                thread.setDaemon(true);
-                return thread;
-            }
-        });
-    }
-
 }
