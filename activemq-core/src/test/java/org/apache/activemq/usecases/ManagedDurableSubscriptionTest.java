@@ -46,10 +46,9 @@ public class ManagedDurableSubscriptionTest extends org.apache.activemq.TestSupp
         stopBroker();
         startBroker();
 
-        MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
         ObjectName inactiveSubscriptionObjectName = broker.getAdminView().getInactiveDurableTopicSubscribers()[0];
 
-        Object inactive = mbs.getAttribute(inactiveSubscriptionObjectName, "Active");
+        Object inactive = broker.getManagementContext().getAttribute(inactiveSubscriptionObjectName, "Active");
         assertTrue("Subscription is active.", Boolean.FALSE.equals(inactive));
 
         // activate
@@ -58,14 +57,14 @@ public class ManagedDurableSubscriptionTest extends org.apache.activemq.TestSupp
 
         ObjectName activeSubscriptionObjectName = broker.getAdminView().getDurableTopicSubscribers()[0];
 
-        Object active = mbs.getAttribute(activeSubscriptionObjectName, "Active");
+        Object active = broker.getManagementContext().getAttribute(activeSubscriptionObjectName, "Active");
         assertTrue("Subscription is INactive.", Boolean.TRUE.equals(active));
 
         // deactivate
         connection.close();
         connection = null;
 
-        inactive = mbs.getAttribute(inactiveSubscriptionObjectName, "Active");
+        inactive = broker.getManagementContext().getAttribute(inactiveSubscriptionObjectName, "Active");
         assertTrue("Subscription is active.", Boolean.FALSE.equals(inactive));
 
     }

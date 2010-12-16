@@ -140,7 +140,7 @@ public class NetworkBrokerDetachTest {
         }
         
         assertTrue("got expected consumer count from mbean within time limit", 
-                verifyConsumerCount(1, destination, BROKER_NAME));
+                verifyConsumerCount(1, destination, broker));
         
         
         LOG.info("Stopping Consumer on the networked broker ...");
@@ -148,7 +148,7 @@ public class NetworkBrokerDetachTest {
         consConn.close();
         
         // We should have 0 consumer for the queue on the local broker
-        assertTrue("got expected 0 count from mbean within time limit", verifyConsumerCount(0, destination, BROKER_NAME));
+        assertTrue("got expected 0 count from mbean within time limit", verifyConsumerCount(0, destination, broker));
     }
 
     
@@ -167,10 +167,10 @@ public class NetworkBrokerDetachTest {
         registerDurableConsumer(broker, counter);
         
         assertTrue("got expected consumer count from local broker mbean within time limit",
-                verifyConsumerCount(2, destination, BROKER_NAME));
+                verifyConsumerCount(2, destination, broker));
         
         assertTrue("got expected consumer count from network broker mbean within time limit",
-                verifyConsumerCount(2, destination, REM_BROKER_NAME));
+                verifyConsumerCount(2, destination, networkedBroker));
         
         sendMessageTo(destination, broker);
         
@@ -194,14 +194,14 @@ public class NetworkBrokerDetachTest {
         
         // expect similar after restart
         assertTrue("got expected consumer count from local broker mbean within time limit",
-                verifyConsumerCount(2, destination, BROKER_NAME));
+                verifyConsumerCount(2, destination, broker));
  
         // a durable sub is auto bridged on restart unless dynamicOnly=true
         assertTrue("got expected consumer count from network broker mbean within time limit",
-                verifyConsumerCount(2, destination, REM_BROKER_NAME));
+                verifyConsumerCount(2, destination, networkedBroker));
 
-        assertTrue("got no inactive subs on broker", verifyDurableConsumerCount(0, BROKER_NAME));
-        assertTrue("got no inactive subs on other broker", verifyDurableConsumerCount(0, REM_BROKER_NAME));
+        assertTrue("got no inactive subs on broker", verifyDurableConsumerCount(0, broker));
+        assertTrue("got no inactive subs on other broker", verifyDurableConsumerCount(0, networkedBroker));
 
         assertTrue("Got two more messages after restart", verifyMessageCount(4, count));
         TimeUnit.SECONDS.sleep(1);
@@ -259,20 +259,20 @@ public class NetworkBrokerDetachTest {
     }
     
     // JMX Helper Methods 
-    private boolean verifyConsumerCount(final long expectedCount, final ActiveMQDestination destination, final String brokerName) throws Exception {
+    private boolean verifyConsumerCount(final long expectedCount, final ActiveMQDestination destination, final BrokerService broker) throws Exception {
         return Wait.waitFor(new Wait.Condition() {
             public boolean isSatisified() throws Exception {
                 boolean result = false;
-                MBeanServerConnection mbsc = getMBeanServerConnection();
-                if (mbsc != null) {                
+                try {
                     // We should have 1 consumer for the queue on the local broker
-                    Object consumers = getAttribute(mbsc, brokerName, destination.isQueue() ? "Queue" : "Topic", "Destination=" + destination.getPhysicalName(), "ConsumerCount");
+                    Object consumers = broker.getManagementContext().getAttribute(getObjectName(broker.getBrokerName(), destination.isQueue() ? "Queue" : "Topic", "Destination=" + destination.getPhysicalName()), "ConsumerCount");
                     if (consumers != null) {
-                        LOG.info("Consumers for " + destination.getPhysicalName() + " on " + brokerName + " : " + consumers);
+                        LOG.info("Consumers for " + destination.getPhysicalName() + " on " + broker + " : " + consumers);
                         if (expectedCount == ((Long)consumers).longValue()) {
                             result = true;
                         }
                     }
+                } catch (Exception ignoreAndRetry) {
                 }
                 return result;
             }      
@@ -280,15 +280,15 @@ public class NetworkBrokerDetachTest {
     }
     
     
-    private boolean verifyDurableConsumerCount(final long expectedCount, final String brokerName) throws Exception {
+    private boolean verifyDurableConsumerCount(final long expectedCount, final BrokerService broker) throws Exception {
         return Wait.waitFor(new Wait.Condition() {
             public boolean isSatisified() throws Exception {
                 boolean result = false;
                 MBeanServerConnection mbsc = getMBeanServerConnection();
                 if (mbsc != null) {
-                    Set subs = getMbeans(mbsc, brokerName, "Subscription", "active=false,*");
+                    Set subs = broker.getManagementContext().queryNames(getObjectName(broker.getBrokerName(), "Subscription", "active=false,*"), null);
                     if (subs != null) {
-                        LOG.info("inactive durable subs on " + brokerName + " : " + subs);
+                        LOG.info("inactive durable subs on " + broker + " : " + subs);
                         if (expectedCount == subs.size()) {
                             result = true;
                         }
@@ -299,7 +299,6 @@ public class NetworkBrokerDetachTest {
         });
     }
 
-    
     private MBeanServerConnection getMBeanServerConnection() throws MalformedURLException {
         final JMXServiceURL url = new JMXServiceURL("service:jmx:rmi:///jndi/rmi://localhost:1099/jmxrmi");
         MBeanServerConnection mbsc = null;
@@ -316,26 +315,6 @@ public class NetworkBrokerDetachTest {
         return mbsc;
     }
     
-    
-    private Set getMbeans(MBeanServerConnection mbsc, String brokerName, String type, String pattern) throws Exception {
-        Set obj = null;
-        try {
-            obj = mbsc.queryMBeans(getObjectName(brokerName, type, pattern), null);
-        } catch (InstanceNotFoundException ignored) {
-            LOG.warn("getAttribute ex: " + ignored);
-        }
-        return obj;
-    }
-    
-    private Object getAttribute(MBeanServerConnection mbsc, String brokerName, String type, String pattern, String attrName) throws Exception {
-        Object obj = null;
-        try {
-            obj = mbsc.getAttribute(getObjectName(brokerName, type, pattern), attrName);
-        } catch (InstanceNotFoundException ignored) {
-            LOG.warn("getAttribute ex: " + ignored);
-        }
-        return obj;
-    }
     
     private ObjectName getObjectName(String brokerName, String type, String pattern) throws Exception {
       ObjectName beanName = new ObjectName(

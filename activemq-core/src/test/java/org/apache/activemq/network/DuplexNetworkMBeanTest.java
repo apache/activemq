@@ -125,13 +125,12 @@ public class DuplexNetworkMBeanTest {
             if (timeout > 0) {
                 Thread.sleep(100);
             }
-            MBeanServerConnection mbsc = getMBeanServerConnection();
-            if (mbsc != null) {
-                LOG.info("Query name: " + beanName);
-                mbeans = mbsc.queryMBeans(beanName, null);
-                if (mbeans != null) {
-                    count = mbeans.size();
-                }
+            LOG.info("Query name: " + beanName);
+            mbeans = broker.getManagementContext().queryNames(beanName, null);
+            if (mbeans != null) {
+                count = mbeans.size();
+            } else {
+                logAllMbeans(broker);
             }
         } while ((mbeans == null || mbeans.isEmpty()) && expiryTime > System.currentTimeMillis());
         
@@ -145,15 +144,10 @@ public class DuplexNetworkMBeanTest {
         return count;
     }
 
-    private MBeanServerConnection getMBeanServerConnection() throws MalformedURLException {
-        final JMXServiceURL url = new JMXServiceURL("service:jmx:rmi:///jndi/rmi://localhost:1099/jmxrmi");
-        MBeanServerConnection mbsc = null;
+    private void logAllMbeans(BrokerService broker) throws MalformedURLException {
         try {
-            JMXConnector jmxc = JMXConnectorFactory.connect(url, null);
-            mbsc = jmxc.getMBeanServerConnection();
-
             // trace all existing MBeans
-            Set<?> all = mbsc.queryMBeans(null, null);
+            Set<?> all = broker.getManagementContext().queryNames(null, null);
             LOG.info("Total MBean count=" + all.size());
             for (Object o : all) {
                 ObjectInstance bean = (ObjectInstance)o;
@@ -162,6 +156,5 @@ public class DuplexNetworkMBeanTest {
         } catch (Exception ignored) {
             LOG.warn("getMBeanServer ex: " + ignored);
         }
-        return mbsc;
     }
 }
