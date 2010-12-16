@@ -492,7 +492,8 @@ public class RegionBroker extends EmptyBroker {
     @Override
     public void send(ProducerBrokerExchange producerExchange, Message message) throws Exception {
         message.setBrokerInTime(System.currentTimeMillis());
-        if (producerExchange.isMutable() || producerExchange.getRegion() == null) {
+        if (producerExchange.isMutable() || producerExchange.getRegion() == null
+                || (producerExchange.getRegion() != null && producerExchange.getRegion().getDestinationMap().get(message.getDestination()) == null)) {
             ActiveMQDestination destination = message.getDestination();
             // ensure the destination is registered with the RegionBroker
             producerExchange.getConnectionContext().getBroker().addDestination(producerExchange.getConnectionContext(), destination,false);
@@ -514,6 +515,7 @@ public class RegionBroker extends EmptyBroker {
                 throw createUnknownDestinationTypeException(destination);
             }
             producerExchange.setRegion(region);
+            producerExchange.setRegionDestination(null);
         }
         producerExchange.getRegion().send(producerExchange, message);
     }

@@ -16,10 +16,7 @@
  */
 package org.apache.activemq.broker.jmx;
 
-import javax.jms.Connection;
-import javax.jms.Message;
-import javax.jms.MessageProducer;
-import javax.jms.Session;
+import javax.jms.*;
 import javax.management.MBeanServer;
 import javax.management.MBeanServerInvocationHandler;
 import javax.management.MalformedObjectNameException;
@@ -109,6 +106,38 @@ public class PurgeTest extends EmbeddedBrokerTestSupport {
 
     public void initCombosForTestDelete() {
         addCombinationValues("persistenceAdapter", new Object[] {new MemoryPersistenceAdapter(), new AMQPersistenceAdapter(), new JDBCPersistenceAdapter()});
+    }
+
+    public void testDeleteSameProducer() throws Exception {
+        connection = connectionFactory.createConnection();
+        connection.start();
+        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        destination = createDestination();
+
+        MessageProducer producer = session.createProducer(destination);
+        Message message = session.createTextMessage("Test Message");
+        producer.send(message);
+
+
+        MessageConsumer consumer = session.createConsumer(destination);
+
+        Message received = consumer.receive(1000);
+        assertEquals(message, received);
+
+        ObjectName brokerViewMBeanName = assertRegisteredObjectName(domain + ":Type=Broker,BrokerName=localhost");
+        BrokerViewMBean brokerProxy = (BrokerViewMBean)MBeanServerInvocationHandler.newProxyInstance(mbeanServer, brokerViewMBeanName, BrokerViewMBean.class, true);
+
+        brokerProxy.removeQueue(getDestinationString());
+
+
+        producer.send(message);
+
+        received = consumer.receive(1000);
+
+        assertNotNull("Message not received", received);
+        assertEquals(message, received);
+
+
     }
 
     public void testDelete() throws Exception {
