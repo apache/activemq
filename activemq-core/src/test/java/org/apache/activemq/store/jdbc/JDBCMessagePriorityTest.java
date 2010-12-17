@@ -41,11 +41,12 @@ import org.apache.derby.jdbc.EmbeddedDataSource;
 public class JDBCMessagePriorityTest extends MessagePriorityTest {
 
     private static final Log LOG = LogFactory.getLog(JDBCMessagePriorityTest.class);
+    EmbeddedDataSource dataSource;
 
     @Override
     protected PersistenceAdapter createPersistenceAdapter(boolean delete) throws Exception {
         JDBCPersistenceAdapter jdbc = new JDBCPersistenceAdapter();
-        EmbeddedDataSource dataSource = new EmbeddedDataSource();
+        dataSource = new EmbeddedDataSource();
         dataSource.setDatabaseName("derbyDb");
         dataSource.setCreateDatabase("create");
         dataSource.setShutdownDatabase("false");
@@ -53,6 +54,17 @@ public class JDBCMessagePriorityTest extends MessagePriorityTest {
         jdbc.deleteAllMessages();
         jdbc.setCleanupPeriod(2000);
         return jdbc;
+    }
+
+
+    protected void tearDown() throws Exception {
+       super.tearDown();
+       try {
+           dataSource.setShutdownDatabase("true");
+           dataSource.getConnection();
+       } catch (Exception ignored) {
+       }
+
     }
 
     // this cannot be a general test as kahaDB just has support for 3 priority levels
