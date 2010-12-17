@@ -34,10 +34,12 @@ import org.apache.activemq.BlobMessage;
 import org.apache.activemq.EmbeddedBrokerTestSupport;
 import org.apache.activemq.command.ActiveMQBlobMessage;
 import org.apache.activemq.util.IOHelper;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 
 public class FilesystemBlobTest extends EmbeddedBrokerTestSupport {
-
+    private static final Log LOG = LogFactory.getLog(FilesystemBlobTest.class);
     
     private Connection connection;
     private String tmpDir =  System.getProperty("user.dir") + "/target/FilesystemBlobTest";
@@ -45,6 +47,7 @@ public class FilesystemBlobTest extends EmbeddedBrokerTestSupport {
         super.setUp();
         // replace \ with / to let it work on windows too
         String fileUrl = "file:///" +tmpDir.replaceAll("\\\\", "/");
+        LOG.info("Using file: " + fileUrl);
         bindAddress = "vm://localhost?jms.blobTransferPolicy.defaultUploadUrl=" + fileUrl;
         
         connectionFactory = createConnectionFactory();
