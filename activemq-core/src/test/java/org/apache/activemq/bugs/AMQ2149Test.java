@@ -36,6 +36,7 @@ import javax.jms.TransactionRolledBackException;
 import junit.framework.TestCase;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.AutoFailTestSupport;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.DestinationStatistics;
@@ -52,7 +53,7 @@ interface Configurer {
     public void configure(BrokerService broker) throws Exception;
 }
 
-public class AMQ2149Test extends TestCase {
+public class AMQ2149Test extends AutoFailTestSupport {
 
     private static final Log LOG = LogFactory.getLog(AMQ2149Test.class);
 
@@ -112,6 +113,8 @@ public class AMQ2149Test extends TestCase {
     }
 
     public void setUp() throws Exception {
+        setMaxTestTime(30*60*1000);
+        setAutoFail(true);
         dataDirFile = new File("target/"+ getName());
         numtoSend = DEFAULT_NUM_TO_SEND;
         brokerStopPeriod = DEFAULT_BROKER_STOP_PERIOD;
