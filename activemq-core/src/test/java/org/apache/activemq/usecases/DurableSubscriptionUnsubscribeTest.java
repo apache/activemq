@@ -21,6 +21,9 @@ import org.apache.activemq.TestSupport;
 import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.ConnectionContext;
+import org.apache.activemq.broker.jmx.DurableSubscriptionViewMBean;
+import org.apache.activemq.broker.jmx.SubscriptionView;
+import org.apache.activemq.broker.jmx.SubscriptionViewMBean;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.DurableTopicSubscription;
 import org.apache.activemq.broker.region.Subscription;
@@ -77,12 +80,12 @@ public class DurableSubscriptionUnsubscribeTest extends TestSupport {
             assertCount(100, 0);
         }
 
-        MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
         ObjectName[] subs = broker.getAdminView().getInactiveDurableTopicSubscribers();
 
         for (int i = 0; i < subs.length; i++) {
-            ObjectName sub = subs[i];
-            mbs.invoke(sub, "destroy", null, null);
+            ObjectName subName = subs[i];
+            DurableSubscriptionViewMBean sub = (DurableSubscriptionViewMBean)broker.getManagementContext().newProxyInstance(subName, DurableSubscriptionViewMBean.class, true);
+            sub.destroy();
 
             if (i % 20 == 0) {
                 Thread.sleep(1000);
@@ -226,12 +229,11 @@ public class DurableSubscriptionUnsubscribeTest extends TestSupport {
 
     private int countMBean() throws MalformedObjectNameException, InstanceNotFoundException {
         int count = 0;
-        MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
         for (int i = 0; i < 100; i++) {
             String name = "org.apache.activemq:BrokerName=" + getName() + ",Type=Subscription,active=false,name=" + getName() + "_SubsId" + i;
             ObjectName sub = new ObjectName(name);
             try {
-                ObjectInstance oi = mbs.getObjectInstance(sub);
+                broker.getManagementContext().getObjectInstance(sub);
                 count++;
             }
             catch (InstanceNotFoundException ignore) {

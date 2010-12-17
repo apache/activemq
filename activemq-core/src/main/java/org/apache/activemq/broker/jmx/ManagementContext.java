@@ -305,7 +305,7 @@ public class ManagementContext implements Service {
         return getMBeanServer().queryNames(name, query);
     }
     
-    public ObjectInstance getObjectInstance(ObjectName name) throws Exception {
+    public ObjectInstance getObjectInstance(ObjectName name) throws InstanceNotFoundException {
         return getMBeanServer().getObjectInstance(name);
     }
     
