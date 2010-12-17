@@ -209,7 +209,7 @@ public class PolicyEntry extends DestinationMapEntry {
         int prefetch = sub.getPrefetchSize();
         sub.setCursorMemoryHighWaterMark(getCursorMemoryHighWaterMark());
         //override prefetch size if not set by the Consumer
-        if (prefetch == ActiveMQPrefetchPolicy.DEFAULT_DURABLE_TOPIC_PREFETCH){
+        if (prefetch == ActiveMQPrefetchPolicy.DEFAULT_DURABLE_TOPIC_PREFETCH || prefetch == ActiveMQPrefetchPolicy.DEFAULT_OPTIMIZE_DURABLE_TOPIC_PREFETCH){
             sub.setPrefetchSize(getDurableTopicPrefetch());
         }
         if (pendingDurableSubscriberPolicy != null) {

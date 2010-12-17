@@ -42,11 +42,15 @@ import javax.jms.TopicConnectionFactory;
 import javax.jms.TopicPublisher;
 import javax.jms.TopicSession;
 import javax.jms.TopicSubscriber;
+import javax.management.ObjectName;
 import junit.framework.Test;
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.CombinationTestSupport;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.jmx.BrokerView;
+import org.apache.activemq.broker.region.policy.PolicyEntry;
+import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
 import org.apache.activemq.store.kahadb.KahaDBStore;
@@ -297,6 +301,30 @@ public class DurableConsumerTest extends CombinationTestSupport{
     public void testConsumer() throws Exception{
         doTestConsumer(false);
     }
+
+    public void testPrefetchViaBrokerConfig() throws Exception {
+
+        Integer prefetchVal = new Integer(150);
+        PolicyEntry policyEntry = new PolicyEntry();
+        policyEntry.setDurableTopicPrefetch(prefetchVal.intValue());
+        policyEntry.setPrioritizedMessages(true);
+        PolicyMap policyMap = new PolicyMap();
+        policyMap.setDefaultEntry(policyEntry);
+        broker.setDestinationPolicy(policyMap);
+        broker.start();
+
+        factory = createConnectionFactory();
+        Connection consumerConnection = factory.createConnection();
+        consumerConnection.setClientID(CONSUMER_NAME);
+        Session consumerSession = consumerConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        Topic topic = consumerSession.createTopic(getClass().getName());
+        MessageConsumer consumer = consumerSession.createDurableSubscriber(topic, CONSUMER_NAME);
+        consumerConnection.start();
+
+        ObjectName activeSubscriptionObjectName = broker.getAdminView().getDurableTopicSubscribers()[0];
+        Object prefetchFromSubView = broker.getManagementContext().getAttribute(activeSubscriptionObjectName, "PrefetchSize");
+        assertEquals(prefetchVal, prefetchFromSubView);
+    }
     
     public void doTestConsumer(boolean forceRecover) throws Exception{
         
@@ -407,7 +435,6 @@ public class DurableConsumerTest extends CombinationTestSupport{
         answer.setPersistenceAdapter(kaha);
         answer.addConnector(bindAddress);
         answer.setUseShutdownHook(false);
-        answer.setUseJmx(false);
         answer.setAdvisorySupport(false);
         answer.setDedicatedTaskRunner(useDedicatedTaskRunner);
     }
