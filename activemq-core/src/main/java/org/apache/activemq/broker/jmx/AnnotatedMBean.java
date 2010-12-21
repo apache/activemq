@@ -169,10 +169,10 @@ public class AnnotatedMBean extends StandardMBean {
             if (subject != null) {
                 caller = "";
                 for (Principal principal : subject.getPrincipals()) {
-                    caller += principal + " ";
+                    caller += principal.getName() + " ";
                 }
             }
-            LOG.info(caller + " called " + this.getMBeanInfo().getClassName() + "." + s  + Arrays.toString(objects) + "");
+            LOG.info(caller.trim() + " called " + this.getMBeanInfo().getClassName() + "." + s  + Arrays.toString(objects) + "");
         }
         return super.invoke(s, objects, strings);
     }
