@@ -119,6 +119,13 @@ ACTIVEMQ_USER=""
 # Set jvm memory configuration
 ACTIVEMQ_OPTS_MEMORY="-Xms256M -Xmx256M"
 
+if [ -z "$ACTIVEMQ_OPTS" ] ; then
+    ACTIVEMQ_OPTS="$ACTIVEMQ_OPTS_MEMORY -Dorg.apache.activemq.UseDedicatedTaskRunner=true -Djava.util.logging.config.file=logging.properties"
+fi
+
+# Uncomment to enable audit logging
+#ACTIVEMQ_OPTS="$ACTIVEMQ_OPTS -Dorg.apache.activemq.audit=true"
+
 # Set jvm jmx configuration
 # This enables jmx access over a configured jmx-tcp-port.
 # You have to configure the first four settings if you run a ibm jvm, caused by the
@@ -468,10 +475,8 @@ invoke_start(){
       exit 0
     fi
 
-    if [ -z "$ACTIVEMQ_OPTS" ] ; then
-        ACTIVEMQ_OPTS="$ACTIVEMQ_OPTS_MEMORY -Dorg.apache.activemq.UseDedicatedTaskRunner=true -Djava.util.logging.config.file=logging.properties"
-    fi
     ACTIVEMQ_OPTS="$ACTIVEMQ_OPTS $ACTIVEMQ_SUNJMX_START $ACTIVEMQ_SSL_OPTS"
+
     echo "INFO: Starting - inspect logfiles specified in logging.properties and log4j.properties to get details"
     invokeJar $ACTIVEMQ_PIDFILE
     exit "$?" 
@@ -493,9 +498,7 @@ invoke_console(){
       echo "ERROR: ActiveMQ is already running"
       exit 1
     fi
-    if [ -z "$ACTIVEMQ_OPTS" ] ; then
-        ACTIVEMQ_OPTS="$ACTIVEMQ_OPTS_MEMORY -Dorg.apache.activemq.UseDedicatedTaskRunner=true -Djava.util.logging.config.file=logging.properties"
-    fi
+
     ACTIVEMQ_OPTS="$ACTIVEMQ_OPTS $ACTIVEMQ_SUNJMX_START $ACTIVEMQ_SSL_OPTS"
 
     COMMANDLINE_ARGS="start $(echo $COMMANDLINE_ARGS|sed 's,^console,,')"

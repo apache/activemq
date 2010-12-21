@@ -16,20 +16,19 @@
  */
 package org.apache.activemq.broker.jmx;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
+import java.security.AccessController;
+import java.security.Principal;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.management.InstanceAlreadyExistsException;
-import javax.management.MBeanAttributeInfo;
-import javax.management.MBeanOperationInfo;
-import javax.management.MBeanParameterInfo;
-import javax.management.MBeanRegistrationException;
-import javax.management.MBeanServer;
-import javax.management.NotCompliantMBeanException;
-import javax.management.ObjectName;
-import javax.management.StandardMBean;
+import javax.management.*;
+import javax.security.auth.Subject;
 
 /**
  * MBean that looks for method/parameter descriptions in the Info annotation.
@@ -37,10 +36,17 @@ import javax.management.StandardMBean;
 public class AnnotatedMBean extends StandardMBean {
 
   private static final Map<String, Class<?>> primitives = new HashMap<String, Class<?>>();
+
+  private static final Log LOG = LogFactory.getLog("org.apache.activemq.audit");
+
+  private static boolean audit;
+
   static {
     Class<?>[] p = { byte.class, short.class, int.class, long.class, float.class, double.class, char.class, boolean.class, };
-    for (Class<?> c : p)
+    for (Class<?> c : p) {
       primitives.put(c.getName(), c);
+    }
+    audit = "true".equalsIgnoreCase(System.getProperty("org.apache.activemq.audit"));
   }
   
   @SuppressWarnings("unchecked")
@@ -154,4 +160,20 @@ public class AnnotatedMBean extends StandardMBean {
       return null;
     }
   }
+
+    @Override
+    public Object invoke(String s, Object[] objects, String[] strings) throws MBeanException, ReflectionException {
+        if (audit) {
+            Subject subject = Subject.getSubject(AccessController.getContext());
+            String caller = "anonymous";
+            if (subject != null) {
+                caller = "";
+                for (Principal principal : subject.getPrincipals()) {
+                    caller += principal + " ";
+                }
+            }
+            LOG.info(caller + " called " + this.getMBeanInfo().getClassName() + "." + s  + Arrays.toString(objects) + "");
+        }
+        return super.invoke(s, objects, strings);
+    }
 }
