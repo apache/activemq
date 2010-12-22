@@ -16,13 +16,14 @@
  */
 package org.apache.activemq.web;
 
+import org.apache.activemq.broker.util.AuditLog;
+import org.apache.activemq.broker.util.DefaultAuditLog;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Enumeration;
 
 public class AuditFilter implements Filter {
@@ -30,9 +31,11 @@ public class AuditFilter implements Filter {
     private static final Log LOG = LogFactory.getLog("org.apache.activemq.audit");
 
     private boolean audit;
+    private AuditLog auditLog;
 
     public void init(FilterConfig filterConfig) throws ServletException {
-       audit = "true".equalsIgnoreCase(System.getProperty("org.apache.activemq.audit"));
+        audit = "true".equalsIgnoreCase(System.getProperty("org.apache.activemq.audit"));
+        auditLog = DefaultAuditLog.getAuditLog();
     }
 
     public void destroy() {
@@ -53,7 +56,7 @@ public class AuditFilter implements Filter {
             if (http.getRemoteUser() != null) {
                 user = http.getRemoteUser();
             }
-            LOG.info(user + " requested " + http.getRequestURI() + " [" + formattedParams + "] from " + http.getRemoteAddr());
+            auditLog.log(user + " requested " + http.getRequestURI() + " [" + formattedParams + "] from " + http.getRemoteAddr());
         }
         chain.doFilter(request, response);
     }

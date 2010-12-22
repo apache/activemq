@@ -16,6 +16,8 @@
  */
 package org.apache.activemq.broker.jmx;
 
+import org.apache.activemq.broker.util.AuditLog;
+import org.apache.activemq.broker.util.DefaultAuditLog;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -40,6 +42,7 @@ public class AnnotatedMBean extends StandardMBean {
   private static final Log LOG = LogFactory.getLog("org.apache.activemq.audit");
 
   private static boolean audit;
+  private static AuditLog auditLog;
 
   static {
     Class<?>[] p = { byte.class, short.class, int.class, long.class, float.class, double.class, char.class, boolean.class, };
@@ -47,6 +50,7 @@ public class AnnotatedMBean extends StandardMBean {
       primitives.put(c.getName(), c);
     }
     audit = "true".equalsIgnoreCase(System.getProperty("org.apache.activemq.audit"));
+    auditLog = DefaultAuditLog.getAuditLog();
   }
   
   @SuppressWarnings("unchecked")
@@ -172,7 +176,7 @@ public class AnnotatedMBean extends StandardMBean {
                     caller += principal.getName() + " ";
                 }
             }
-            LOG.info(caller.trim() + " called " + this.getMBeanInfo().getClassName() + "." + s  + Arrays.toString(objects));
+            auditLog.log(caller.trim() + " called " + this.getMBeanInfo().getClassName() + "." + s  + Arrays.toString(objects));
         }
         return super.invoke(s, objects, strings);
     }
