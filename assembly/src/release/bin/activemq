@@ -286,7 +286,7 @@ if [ ! -x "$JAVACMD" ] ; then
 fi
 # Stop here if no java installation is defined/found
 if [ ! -x "$JAVACMD" ] ; then
-  echo "ERROR: Configuration varaiable JAVA_HOME or JAVACMD is not defined correctly."
+  echo "ERROR: Configuration variable JAVA_HOME or JAVACMD is not defined correctly."
   echo "       (JAVA_HOME='$JAVAHOME', JAVACMD='$JAVACMD')"
   exit 1
 fi
@@ -603,7 +603,7 @@ show_help() {
   RET="$?"
   cat << EOF
 Tasks provided by the sysv init script:
-    restart         - stop running instance (is there is one), start new instance
+    restart         - stop running instance (if there is one), start new instance
     console         - start broker in foreground, useful for debugging purposes
     status          - check if activemq process is running
     setup           - create the specified configuration file for this init script
@@ -611,7 +611,7 @@ Tasks provided by the sysv init script:
 
 Configuration of this script:
     The configuration of this script can be placed on /etc/default/activemq or $HOME/.activemqrc.
-    To use addtional configurations for running multiple instances on the same operating system
+    To use additional configurations for running multiple instances on the same operating system
     rename or symlink script to a name matching to activemq-instance-<INSTANCENAME>.
     This changes the configuration location to /etc/default/activemq-instance-<INSTANCENAME> and
     \$HOME/.activemqrc-instance-<INSTANCENAME>. Configuration files in /etc have higher precedence. 
