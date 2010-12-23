@@ -20,13 +20,7 @@ package org.apache.activemq.web;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Date;
-import java.util.Iterator;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.*;
 
 import javax.jms.Destination;
 import javax.jms.JMSException;
@@ -297,10 +291,10 @@ public class MessageListenerServlet extends MessageServletSupport {
             response.setContentType("text/xml");
             response.setHeader("Cache-Control", "no-cache");
             
-            if (message == null) {
+            if (message == null && client.getListener().getUnconsumedMessages().size() == 0) {
                 Continuation continuation = ContinuationSupport.getContinuation(request);
                 
-                if (continuation.isExpired()) {  
+                if (continuation.isExpired()) {
                     response.setStatus(HttpServletResponse.SC_OK);
                     StringWriter swriter = new StringWriter();
                     PrintWriter writer = new PrintWriter(swriter);
@@ -319,6 +313,7 @@ public class MessageListenerServlet extends MessageServletSupport {
                 
                 // Fetch the listeners
                 AjaxListener listener = client.getListener();
+                listener.access();
 
                 // register this continuation with our listener.
                 listener.setContinuation(continuation);
@@ -348,6 +343,18 @@ public class MessageListenerServlet extends MessageServletSupport {
                 consumer = (MessageAvailableConsumer)consumers.get(i);
                 if (consumer.getAvailableListener() == null) {
                     continue;
+                }
+
+                LinkedList<Message> unconsumedMessages = ((AjaxListener)consumer.getAvailableListener()).getUnconsumedMessages();
+                LOG.debug("Send " + unconsumedMessages.size() + " unconsumed messages");
+                for (Message msg : unconsumedMessages) {
+                    messages++;
+                    String id = consumerIdMap.get(consumer);
+                    String destinationName = consumerDestinationNameMap.get(consumer);
+                    writeMessageResponse(writer, msg, id, destinationName);
+                    if (messages >= maximumMessages) {
+                        break;
+                    }
                 }
 
                 // Look for any available messages

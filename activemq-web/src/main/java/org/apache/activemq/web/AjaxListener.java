@@ -27,6 +27,8 @@ import org.apache.commons.logging.LogFactory;
 
 import org.apache.activemq.MessageAvailableListener;
 
+import java.util.LinkedList;
+
 /*
  * Listen for available messages and wakeup any continuations.
  */
@@ -37,10 +39,12 @@ public class AjaxListener implements MessageAvailableListener {
     private AjaxWebClient client;
     private long lastAccess;
     private Continuation continuation;
+    private LinkedList<Message> unconsumedMessages = new LinkedList<Message>();
 
     AjaxListener(AjaxWebClient client, long maximumReadTimeout) {
         this.client = client;
         this.maximumReadTimeout = maximumReadTimeout;
+        access();
     }
 
     public void access() {
@@ -51,9 +55,13 @@ public class AjaxListener implements MessageAvailableListener {
         this.continuation = continuation;
     }
 
+    public LinkedList<Message> getUnconsumedMessages() {
+        return unconsumedMessages;
+    }
+
     public synchronized void onMessageAvailable(MessageConsumer consumer) {
         if (LOG.isDebugEnabled()) {
-            LOG.debug("message for " + consumer + "continuation=" + continuation);
+            LOG.debug("message for " + consumer + " continuation=" + continuation);
         }
         if (continuation != null) {
             try {
@@ -70,6 +78,15 @@ public class AjaxListener implements MessageAvailableListener {
                     client.closeConsumers();
                 };
             }.start();
+        } else {
+            try {
+                Message message = consumer.receive(10);
+                if (message != null) {
+                    unconsumedMessages.addLast(message);
+                }
+            } catch (Exception e) {
+                LOG.error("Error receiving message " + e, e);
+            }
         }
     }
 }
