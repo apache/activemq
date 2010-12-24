@@ -16,14 +16,27 @@
  */
 package org.apache.activemq.broker.util;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import java.util.ArrayList;
+import java.util.ServiceLoader;
 
-public class DefaultAuditLog implements AuditLog {
+public class AuditLogService {
 
-    private static final Log LOG = LogFactory.getLog("org.apache.activemq.audit");
+    private ArrayList<AuditLog> auditLogs = new ArrayList<AuditLog>();
+
+    public AuditLogService() {
+        ServiceLoader<AuditLog> logs = ServiceLoader.load(AuditLog.class);
+        for (AuditLog log : logs) {
+            auditLogs.add(log);
+        }
+        // add default audit log if non was found
+        if (auditLogs.size() == 0) {
+            auditLogs.add(new DefaultAuditLog());
+        }
+    }
 
     public void log(String message) {
-         LOG.info(message);
+        for (AuditLog log : auditLogs) {
+            log.log(message);
+        }
     }
 }

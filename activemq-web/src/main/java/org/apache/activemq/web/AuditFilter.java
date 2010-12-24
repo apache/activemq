@@ -17,6 +17,7 @@
 package org.apache.activemq.web;
 
 import org.apache.activemq.broker.util.AuditLog;
+import org.apache.activemq.broker.util.AuditLogService;
 import org.apache.activemq.broker.util.DefaultAuditLog;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -31,11 +32,11 @@ public class AuditFilter implements Filter {
     private static final Log LOG = LogFactory.getLog("org.apache.activemq.audit");
 
     private boolean audit;
-    private AuditLog auditLog;
+    private AuditLogService auditLog;
 
     public void init(FilterConfig filterConfig) throws ServletException {
         audit = "true".equalsIgnoreCase(System.getProperty("org.apache.activemq.audit"));
-        auditLog = DefaultAuditLog.getAuditLog();
+        auditLog = new AuditLogService();
     }
 
     public void destroy() {
