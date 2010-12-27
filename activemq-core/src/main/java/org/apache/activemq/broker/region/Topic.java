@@ -317,7 +317,6 @@ public class Topic extends BaseDestination implements Task {
                     synchronized (messagesWaitingForSpace) {
                         messagesWaitingForSpace.add(new Runnable() {
                             public void run() {
-
                                 try {
 
                                     // While waiting for space to free up... the
@@ -350,13 +349,7 @@ public class Topic extends BaseDestination implements Task {
                             }
                         });
 
-                        // If the user manager is not full, then the task will
-                        // not
-                        // get called..
-                        if (!memoryUsage.notifyCallbackWhenNotFull(sendMessagesWaitingForSpaceTask)) {
-                            // so call it directly here.
-                            sendMessagesWaitingForSpaceTask.run();
-                        }
+                        registerCallbackForNotFullNotification();
                         context.setDontSendReponse(true);
                         return;
                     }
@@ -576,8 +569,21 @@ public class Topic extends BaseDestination implements Task {
                 Runnable op = messagesWaitingForSpace.removeFirst();
                 op.run();
             }
+
+            if (!messagesWaitingForSpace.isEmpty()) {
+                registerCallbackForNotFullNotification();
+            }
         }
         return false;
+    }
+
+    private void registerCallbackForNotFullNotification() {
+        // If the usage manager is not full, then the task will not
+        // get called..
+        if (!memoryUsage.notifyCallbackWhenNotFull(sendMessagesWaitingForSpaceTask)) {
+            // so call it directly here.
+            sendMessagesWaitingForSpaceTask.run();
+        }
     }
 
     // Properties
