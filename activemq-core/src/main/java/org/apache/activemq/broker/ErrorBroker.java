@@ -312,4 +312,12 @@ public class ErrorBroker implements Broker {
     public ThreadPoolExecutor getExecutor() {
         throw new BrokerStoppedException(this.message);
     }
+
+    public void networkBridgeStarted(BrokerInfo brokerInfo) {
+        throw new BrokerStoppedException(this.message);
+    }
+
+    public void networkBridgeStopped(BrokerInfo brokerInfo) {
+        throw new BrokerStoppedException(this.message);
+    }
 }

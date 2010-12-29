@@ -47,6 +47,7 @@ public final class AdvisorySupport {
     public static final String MESSAGE_CONSUMED_TOPIC_PREFIX = ADVISORY_TOPIC_PREFIX + "MessageConsumed.";
     public static final String MESSAGE_DLQ_TOPIC_PREFIX = ADVISORY_TOPIC_PREFIX + "MessageDLQd.";
     public static final String MASTER_BROKER_TOPIC_PREFIX = ADVISORY_TOPIC_PREFIX + "MasterBroker";
+    public static final String NETWORK_BRIDGE_TOPIC_PREFIX = ADVISORY_TOPIC_PREFIX + "NetworkBridge";
     public static final String AGENT_TOPIC = "ActiveMQ.Agent";
     public static final String ADIVSORY_MESSAGE_TYPE = "Advisory";
     public static final String MSG_PROPERTY_ORIGIN_BROKER_ID = "originBrokerId";
@@ -199,6 +200,10 @@ public final class AdvisorySupport {
 
     public static ActiveMQTopic getMasterBrokerAdvisoryTopic() {
         return new ActiveMQTopic(MASTER_BROKER_TOPIC_PREFIX);
+    }
+
+    public static ActiveMQTopic getNetworkBridgeAdvisoryTopic() {
+        return new ActiveMQTopic(NETWORK_BRIDGE_TOPIC_PREFIX);
     }
 
     public static ActiveMQTopic getFullAdvisoryTopic(Destination destination) throws JMSException {

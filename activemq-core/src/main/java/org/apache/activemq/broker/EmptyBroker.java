@@ -282,6 +282,12 @@ public class EmptyBroker implements Broker {
     public void nowMasterBroker() {        
     }
 
+    public void networkBridgeStarted(BrokerInfo brokerInfo) {
+    }
+
+    public void networkBridgeStopped(BrokerInfo brokerInfo) {
+    }
+
     public void processConsumerControl(ConsumerBrokerExchange consumerExchange,
             ConsumerControl control) {     
     }

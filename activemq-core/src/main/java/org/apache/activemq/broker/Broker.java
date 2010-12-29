@@ -33,6 +33,7 @@ import org.apache.activemq.command.MessageDispatch;
 import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.command.SessionInfo;
 import org.apache.activemq.command.TransactionId;
+import org.apache.activemq.network.NetworkBridge;
 import org.apache.activemq.store.kahadb.plist.PListStore;
 import org.apache.activemq.thread.Scheduler;
 import org.apache.activemq.usage.Usage;
@@ -378,6 +379,10 @@ public interface Broker extends Region, Service {
     Scheduler getScheduler();
     
     ThreadPoolExecutor getExecutor();
+
+    void networkBridgeStarted(BrokerInfo brokerInfo);
+
+    void networkBridgeStopped(BrokerInfo brokerInfo);
 
 
 }

@@ -28,19 +28,8 @@ import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.broker.region.TopicSubscription;
-import org.apache.activemq.command.ActiveMQDestination;
-import org.apache.activemq.command.ActiveMQMessage;
-import org.apache.activemq.command.ActiveMQTopic;
-import org.apache.activemq.command.Command;
-import org.apache.activemq.command.ConnectionId;
-import org.apache.activemq.command.ConnectionInfo;
-import org.apache.activemq.command.ConsumerId;
-import org.apache.activemq.command.ConsumerInfo;
-import org.apache.activemq.command.DestinationInfo;
-import org.apache.activemq.command.Message;
-import org.apache.activemq.command.MessageId;
-import org.apache.activemq.command.ProducerId;
-import org.apache.activemq.command.ProducerInfo;
+import org.apache.activemq.command.*;
+import org.apache.activemq.network.NetworkBridge;
 import org.apache.activemq.security.SecurityContext;
 import org.apache.activemq.state.ProducerState;
 import org.apache.activemq.usage.Usage;
@@ -400,6 +389,44 @@ public class AdvisoryBroker extends BrokerFilter {
         } catch (Exception e) {
             LOG.warn("Failed to fire message consumed advisory");
         } 
+    }
+
+    @Override
+    public void networkBridgeStarted(BrokerInfo brokerInfo) {
+        try {
+         if (brokerInfo != null) {
+             ActiveMQMessage advisoryMessage = new ActiveMQMessage();
+             advisoryMessage.setBooleanProperty("started", true);
+
+             ActiveMQTopic topic = AdvisorySupport.getNetworkBridgeAdvisoryTopic();
+
+             ConnectionContext context = new ConnectionContext();
+             context.setSecurityContext(SecurityContext.BROKER_SECURITY_CONTEXT);
+             context.setBroker(getBrokerService().getBroker());
+             fireAdvisory(context, topic, brokerInfo, null, advisoryMessage);
+         }
+        } catch (Exception e) {
+            LOG.warn("Failed to fire network bridge advisory");
+        }
+    }
+
+    @Override
+    public void networkBridgeStopped(BrokerInfo brokerInfo) {
+        try {
+         if (brokerInfo != null) {
+             ActiveMQMessage advisoryMessage = new ActiveMQMessage();
+             advisoryMessage.setBooleanProperty("started", false);
+
+             ActiveMQTopic topic = AdvisorySupport.getNetworkBridgeAdvisoryTopic();
+
+             ConnectionContext context = new ConnectionContext();
+             context.setSecurityContext(SecurityContext.BROKER_SECURITY_CONTEXT);
+             context.setBroker(getBrokerService().getBroker());
+             fireAdvisory(context, topic, brokerInfo, null, advisoryMessage);
+         }
+        } catch (Exception e) {
+            LOG.warn("Failed to fire network bridge advisory");
+        }
     }
 
     protected void fireAdvisory(ConnectionContext context, ActiveMQTopic topic, Command command) throws Exception {

@@ -309,6 +309,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                     localSessionInfo = new SessionInfo(localConnectionInfo, 1);
                     localBroker.oneway(localSessionInfo);
 
+                    brokerService.getBroker().networkBridgeStarted(remoteBrokerInfo);
                     LOG.info("Network connection between " + localBroker + " and " + remoteBroker + "(" + remoteBrokerName + ") has been established.");
 
                 } else {
@@ -419,6 +420,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                     ss.throwFirstException();
                 }
             }
+            brokerService.getBroker().networkBridgeStopped(remoteBrokerInfo);
             LOG.info(configuration.getBrokerName() + " bridge to " + remoteBrokerName + " stopped");
             remoteBrokerNameKnownLatch.countDown();
         }
