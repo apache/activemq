@@ -19,6 +19,9 @@
 <title>Messages Scheduled for Future Delivery</title>
 </head>
 <body>
+
+<c:choose>
+<c:when test="${requestContext.brokerQuery.jobSchedulerStarted}">
 <div style="margin-top: 5em">
 	<table id="Jobs" class="sortable autostripe">
 	<thead>
@@ -51,6 +54,14 @@
 	</c:forEach>
 	</tbody>
 	</table>
+</c:when>
+<c:otherwise>
+<div style="margin-top: 5em">
+<p align="center">Scheduler not started!</p>
+</div>
+</c:otherwise>
+</c:choose>
+
 </body>
 </html>
 	

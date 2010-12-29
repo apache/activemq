@@ -203,4 +203,6 @@ public interface BrokerFacade {
      */
     Collection<JobFacade> getScheduledJobs() throws Exception;
 
+    boolean isJobSchedulerStarted();
+
 }

@@ -217,4 +217,14 @@ public abstract class BrokerFacadeSupport implements BrokerFacade {
         }
         return result;
     }
+
+
+    public boolean isJobSchedulerStarted() {
+        try {
+            JobSchedulerViewMBean jobScheduler = getJobScheduler();
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
 }
