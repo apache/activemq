@@ -68,10 +68,12 @@ public class DuplexNetworkMBeanTest {
             networkedBroker = createNetworkedBroker();
             networkedBroker.start();
             assertEquals(1, countMbeans(networkedBroker, "NetworkBridge", 2000));
+            assertEquals(1, countMbeans(broker, "NetworkBridge", 2000));
             assertEquals(1, countMbeans(broker, "Connection"));
             networkedBroker.stop();
             networkedBroker.waitUntilStopped();
             assertEquals(0, countMbeans(networkedBroker, "stopped"));
+            assertEquals(0, countMbeans(broker, "NetworkBridge"));
         }
         
         assertEquals(0, countMbeans(networkedBroker, "NetworkBridge"));

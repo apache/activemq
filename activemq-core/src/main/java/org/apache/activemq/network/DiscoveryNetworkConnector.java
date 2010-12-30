@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
+import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.SslContext;
 import org.apache.activemq.command.DiscoveryEvent;
 import org.apache.activemq.transport.Transport;
@@ -38,6 +39,8 @@ import org.apache.activemq.util.URISupport;
 import org.apache.activemq.util.URISupport.CompositeData;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import javax.management.ObjectName;
 
 /**
  * A network connector which uses a discovery agent to detect the remote brokers
@@ -206,7 +209,11 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
     }
 
     protected NetworkBridge createBridge(Transport localTransport, Transport remoteTransport, final DiscoveryEvent event) {
-        NetworkBridgeListener listener = new NetworkBridgeListener() {
+        class DiscoverNetworkBridgeListener extends MBeanNetworkListener {
+
+            public DiscoverNetworkBridgeListener(BrokerService brokerService, ObjectName connectorName) {
+                super(brokerService, connectorName);
+            }
 
             public void bridgeFailed() {
                 if (!serviceSupport.isStopped()) {
@@ -217,16 +224,9 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
                 }
 
             }
+        }
+        NetworkBridgeListener listener = new DiscoverNetworkBridgeListener(getBrokerService(), getObjectName());
 
-            public void onStart(NetworkBridge bridge) {
-                registerNetworkBridgeMBean(bridge);
-            }
-
-            public void onStop(NetworkBridge bridge) {
-                unregisterNetworkBridgeMBean(bridge);
-            }
-
-        };
         DemandForwardingBridge result = NetworkBridgeFactory.createBridge(this, localTransport, remoteTransport, listener);
         result.setBrokerService(getBrokerService());
         return configureBridge(result);

@@ -21,6 +21,7 @@ import org.apache.activemq.network.NetworkBridge;
 public class NetworkBridgeView implements NetworkBridgeViewMBean {
 
     private final NetworkBridge bridge;
+    private boolean createByDuplex = false;
 
     public NetworkBridgeView(NetworkBridge bridge) {
         this.bridge = bridge;
@@ -58,4 +59,11 @@ public class NetworkBridgeView implements NetworkBridgeViewMBean {
         return bridge.getDequeueCounter();
     }
 
+    public boolean isCreatedByDuplex() {
+        return createByDuplex;
+    }
+
+    public void setCreateByDuplex(boolean createByDuplex) {
+        this.createByDuplex = createByDuplex;
+    }
 }

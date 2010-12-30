@@ -32,4 +32,6 @@ public interface NetworkBridgeViewMBean extends Service {
 
     long getDequeueCounter();
 
+    boolean isCreatedByDuplex();
+
 }

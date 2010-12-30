@@ -1702,6 +1702,14 @@ public class BrokerService implements Service {
                 + "NetworkConnectorName=" + JMXSupport.encodeObjectNamePart(connector.getName()));
     }
 
+
+    public ObjectName createDuplexNetworkConnectorObjectName(String transport)
+            throws MalformedObjectNameException {
+        return new ObjectName(getManagementContext().getJmxDomainName() + ":" + "BrokerName="
+                + JMXSupport.encodeObjectNamePart(getBrokerName()) + "," + "Type=NetworkConnector,"
+                + "NetworkConnectorName=duplex" + JMXSupport.encodeObjectNamePart(transport));
+    }
+
     protected void unregisterNetworkConnectorMBean(NetworkConnector connector) {
         if (isUseJmx()) {
             try {

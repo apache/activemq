@@ -148,6 +148,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
         this.duplexInitiatingConnection = connection;
         start();
         serviceRemoteCommand(remoteBrokerInfo);
+        brokerService.getBroker().networkBridgeStarted(remoteBrokerInfo);
     }
 
     public void start() throws Exception {

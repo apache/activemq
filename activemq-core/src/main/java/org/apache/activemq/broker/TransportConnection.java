@@ -33,6 +33,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import javax.management.ObjectName;
 import javax.transaction.xa.XAResource;
 
 import org.apache.activemq.broker.ft.MasterBroker;
@@ -72,9 +73,7 @@ import org.apache.activemq.command.ShutdownInfo;
 import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.command.TransactionInfo;
 import org.apache.activemq.command.WireFormatInfo;
-import org.apache.activemq.network.DemandForwardingBridge;
-import org.apache.activemq.network.NetworkBridgeConfiguration;
-import org.apache.activemq.network.NetworkBridgeFactory;
+import org.apache.activemq.network.*;
 import org.apache.activemq.security.MessageAuthorizationPolicy;
 import org.apache.activemq.state.CommandVisitor;
 import org.apache.activemq.state.ConnectionState;
@@ -1209,7 +1208,13 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
                 uri = URISupport.createURIWithQuery(uri, URISupport.createQueryString(map));
                 Transport localTransport = TransportFactory.connect(uri);
                 Transport remoteBridgeTransport = new ResponseCorrelator(transport);
-                duplexBridge = NetworkBridgeFactory.createBridge(config, localTransport, remoteBridgeTransport);
+                String duplexName = localTransport.toString();
+                if (duplexName.contains("#")) {
+                    duplexName = duplexName.substring(duplexName.lastIndexOf("#"));
+                }
+                MBeanNetworkListener listener = new MBeanNetworkListener(broker.getBrokerService(), broker.getBrokerService().createDuplexNetworkConnectorObjectName(duplexName));
+                listener.setCreatedByDuplex(true);
+                duplexBridge = NetworkBridgeFactory.createBridge(config, localTransport, remoteBridgeTransport, listener);
                 duplexBridge.setBrokerService(broker.getBrokerService());
                 // now turn duplex off this side
                 info.setDuplexConnection(false);
