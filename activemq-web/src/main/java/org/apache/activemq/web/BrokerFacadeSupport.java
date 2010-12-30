@@ -26,17 +26,8 @@ import javax.management.ObjectName;
 import javax.management.QueryExp;
 import javax.management.openmbean.CompositeData;
 import javax.management.openmbean.TabularData;
-import org.apache.activemq.broker.jmx.BrokerViewMBean;
-import org.apache.activemq.broker.jmx.ConnectionViewMBean;
-import org.apache.activemq.broker.jmx.ConnectorViewMBean;
-import org.apache.activemq.broker.jmx.DestinationViewMBean;
-import org.apache.activemq.broker.jmx.DurableSubscriptionViewMBean;
-import org.apache.activemq.broker.jmx.JobSchedulerViewMBean;
-import org.apache.activemq.broker.jmx.ManagementContext;
-import org.apache.activemq.broker.jmx.NetworkConnectorViewMBean;
-import org.apache.activemq.broker.jmx.QueueViewMBean;
-import org.apache.activemq.broker.jmx.SubscriptionViewMBean;
-import org.apache.activemq.broker.jmx.TopicViewMBean;
+
+import org.apache.activemq.broker.jmx.*;
 import org.springframework.util.StringUtils;
 
 /**
@@ -179,6 +170,14 @@ public abstract class BrokerFacadeSupport implements BrokerFacade {
         Set<ObjectName> queryResult = queryNames(query, null);
         return getManagedObjects(queryResult.toArray(new ObjectName[queryResult.size()]),
                 NetworkConnectorViewMBean.class);
+    }
+
+    public Collection<NetworkBridgeViewMBean> getNetworkBridges() throws Exception {
+        String brokerName = getBrokerName();
+        ObjectName query = new ObjectName("org.apache.activemq:BrokerName=" + brokerName + ",Type=NetworkBridge,*");
+        Set<ObjectName> queryResult = queryNames(query, null);
+        return getManagedObjects(queryResult.toArray(new ObjectName[queryResult.size()]),
+                NetworkBridgeViewMBean.class);
     }
 
     @SuppressWarnings("unchecked")

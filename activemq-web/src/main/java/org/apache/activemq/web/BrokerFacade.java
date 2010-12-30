@@ -17,15 +17,8 @@
 package org.apache.activemq.web;
 
 import java.util.Collection;
-import org.apache.activemq.broker.jmx.BrokerViewMBean;
-import org.apache.activemq.broker.jmx.ConnectionViewMBean;
-import org.apache.activemq.broker.jmx.ConnectorViewMBean;
-import org.apache.activemq.broker.jmx.DurableSubscriptionViewMBean;
-import org.apache.activemq.broker.jmx.JobSchedulerViewMBean;
-import org.apache.activemq.broker.jmx.NetworkConnectorViewMBean;
-import org.apache.activemq.broker.jmx.QueueViewMBean;
-import org.apache.activemq.broker.jmx.SubscriptionViewMBean;
-import org.apache.activemq.broker.jmx.TopicViewMBean;
+
+import org.apache.activemq.broker.jmx.*;
 import org.apache.activemq.command.ActiveMQDestination;
 
 /**
@@ -163,7 +156,18 @@ public interface BrokerFacade {
 	 */
 	Collection<NetworkConnectorViewMBean> getNetworkConnectors()
 			throws Exception;
+
+
 	/**
+	 * The brokers network bridges.
+	 *
+	 * @return not <code>null</code>
+	 * @throws Exception
+	 */
+    Collection<NetworkBridgeViewMBean> getNetworkBridges()
+            throws Exception;
+
+    /**
 	 * Purges the given destination
 	 * 
 	 * @param destination

@@ -77,6 +77,8 @@
                             &#124;
                             <a href="<c:url value='/connections.jsp'/>" title="Connections">Connections</a>
                             &#124;
+                            <a href="<c:url value='/network.jsp'/>" title="Network">Network</a>
+                            &#124;
  							<a href="<c:url value='/scheduled.jsp'/>" title="Scheduled">Scheduled</a>
                             &#124;
                             <a href="<c:url value='/send.jsp'/>"
