@@ -52,6 +52,7 @@ public class AdvisoryNetworkBridgeTest extends TestCase {
         assertNotNull(advisory);
         assertTrue(advisory.getDataStructure() instanceof BrokerInfo);
         assertTrue(advisory.getBooleanProperty("started"));
+        assertCreatedByDuplex(advisory.getBooleanProperty("createdByDuplex"));
         
         broker2.stop();
         broker2.waitUntilStopped();
@@ -60,7 +61,10 @@ public class AdvisoryNetworkBridgeTest extends TestCase {
         assertNotNull(advisory);
         assertTrue(advisory.getDataStructure() instanceof BrokerInfo);
         assertFalse(advisory.getBooleanProperty("started"));
+    }
 
+    public void assertCreatedByDuplex(boolean createdByDuplex) {
+        assertFalse(createdByDuplex);
     }
 
     public void createBroker1() throws Exception {

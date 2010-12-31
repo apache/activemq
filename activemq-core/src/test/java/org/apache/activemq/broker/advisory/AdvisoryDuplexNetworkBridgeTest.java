@@ -40,4 +40,8 @@ public class AdvisoryDuplexNetworkBridgeTest extends AdvisoryNetworkBridgeTest {
         broker2.start();
         broker2.waitUntilStarted();
     }
+
+    public void assertCreatedByDuplex(boolean createdByDuplex) {
+        assertTrue(createdByDuplex);
+    }
 }

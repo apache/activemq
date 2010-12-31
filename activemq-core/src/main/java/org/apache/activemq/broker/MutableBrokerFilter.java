@@ -322,8 +322,8 @@ public class MutableBrokerFilter implements Broker {
        return getNext().getExecutor();
     }
 
-    public void networkBridgeStarted(BrokerInfo brokerInfo) {
-        getNext().networkBridgeStarted(brokerInfo);
+    public void networkBridgeStarted(BrokerInfo brokerInfo, boolean createdByDuplex) {
+        getNext().networkBridgeStarted(brokerInfo, createdByDuplex);
     }
 
     public void networkBridgeStopped(BrokerInfo brokerInfo) {

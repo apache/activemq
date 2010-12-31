@@ -392,11 +392,12 @@ public class AdvisoryBroker extends BrokerFilter {
     }
 
     @Override
-    public void networkBridgeStarted(BrokerInfo brokerInfo) {
+    public void networkBridgeStarted(BrokerInfo brokerInfo, boolean createdByDuplex) {
         try {
          if (brokerInfo != null) {
              ActiveMQMessage advisoryMessage = new ActiveMQMessage();
              advisoryMessage.setBooleanProperty("started", true);
+             advisoryMessage.setBooleanProperty("createdByDuplex", createdByDuplex);
 
              ActiveMQTopic topic = AdvisorySupport.getNetworkBridgeAdvisoryTopic();
 

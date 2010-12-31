@@ -28,6 +28,7 @@
 <tr>
     <th>Remote Broker</th>
     <th>Remote Address</th>
+    <th>Created By Duplex</th>
     <th>Messages Enqueued</th>
     <th>Messages Dequeued</th>
 </tr>
@@ -37,6 +38,7 @@
 <tr>
 	<td>${nb.remoteBrokerName}</td>
 	<td>${nb.remoteAddress}</td>
+	<td>${nb.createdByDuplex}</td>
 	<td>${nb.enqueueCounter}</td>
 	<td>${nb.dequeueCounter}</td>
 </tr>

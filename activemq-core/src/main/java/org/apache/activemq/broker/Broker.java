@@ -380,7 +380,7 @@ public interface Broker extends Region, Service {
     
     ThreadPoolExecutor getExecutor();
 
-    void networkBridgeStarted(BrokerInfo brokerInfo);
+    void networkBridgeStarted(BrokerInfo brokerInfo, boolean createdByDuplex);
 
     void networkBridgeStopped(BrokerInfo brokerInfo);
 

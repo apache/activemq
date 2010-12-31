@@ -313,7 +313,7 @@ public class ErrorBroker implements Broker {
         throw new BrokerStoppedException(this.message);
     }
 
-    public void networkBridgeStarted(BrokerInfo brokerInfo) {
+    public void networkBridgeStarted(BrokerInfo brokerInfo, boolean createdByDuplex) {
         throw new BrokerStoppedException(this.message);
     }
 

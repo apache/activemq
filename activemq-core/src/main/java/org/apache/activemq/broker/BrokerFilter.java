@@ -312,8 +312,8 @@ public class BrokerFilter implements Broker {
        return next.getExecutor();
     }
 
-    public void networkBridgeStarted(BrokerInfo brokerInfo) {
-        next.networkBridgeStarted(brokerInfo);
+    public void networkBridgeStarted(BrokerInfo brokerInfo, boolean createdByDuplex) {
+        next.networkBridgeStarted(brokerInfo, createdByDuplex);
     }
 
     public void networkBridgeStopped(BrokerInfo brokerInfo) {
