@@ -36,9 +36,7 @@ public class AdvisoryNetworkBridgeTest extends TestCase {
 
 
     public void testAdvisory() throws Exception {
-        broker1 = BrokerFactory.createBroker(new URI("xbean:org/apache/activemq/network/reconnect-broker1.xml"));
-        broker1.start();
-        broker1.waitUntilStarted();
+        createBroker1();
 
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("vm://broker1");
         Connection conn = factory.createConnection();
@@ -48,9 +46,7 @@ public class AdvisoryNetworkBridgeTest extends TestCase {
         
         Thread.sleep(1000);
 
-        broker2 = BrokerFactory.createBroker(new URI("xbean:org/apache/activemq/network/reconnect-broker2.xml"));
-        broker2.start();
-        broker2.waitUntilStarted();
+        createBroker2();
         
         ActiveMQMessage advisory = (ActiveMQMessage)consumer.receive(2000);
         assertNotNull(advisory);
@@ -66,6 +62,19 @@ public class AdvisoryNetworkBridgeTest extends TestCase {
         assertFalse(advisory.getBooleanProperty("started"));
 
     }
+
+    public void createBroker1() throws Exception {
+        broker1 = BrokerFactory.createBroker(new URI("xbean:org/apache/activemq/network/reconnect-broker1.xml"));
+        broker1.start();
+        broker1.waitUntilStarted();
+    }
+
+    public void createBroker2() throws Exception {
+        broker2 = BrokerFactory.createBroker(new URI("xbean:org/apache/activemq/network/reconnect-broker2.xml"));
+        broker2.start();
+        broker2.waitUntilStarted();
+    }
+
 
     @Override
     protected void tearDown() throws Exception {
