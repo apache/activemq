@@ -159,7 +159,7 @@ public abstract class CertificateLoginModule implements LoginModule {
      * name returned will be used to look up access levels as well as group
      * associations.
      * 
-     * @param dn The distinguished name.
+     * @param certs The distinguished name.
      * @return The unique name if the certificate is recognized, null otherwise.
      */
     protected abstract String getUserNameForCertificates(final X509Certificate[] certs) throws LoginException;
