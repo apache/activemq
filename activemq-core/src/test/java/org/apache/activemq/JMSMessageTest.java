@@ -47,12 +47,12 @@ import org.apache.activemq.command.ActiveMQDestination;
 public class JMSMessageTest extends JmsTestSupport {
 
     public ActiveMQDestination destination;
-    public int deliveryMode;
+    public int deliveryMode = DeliveryMode.NON_PERSISTENT;
     public int prefetch;
     public int ackMode;
-    public byte destinationType;
+    public byte destinationType = ActiveMQDestination.QUEUE_TYPE;
     public boolean durableConsumer;
-    public String connectURL;
+    public String connectURL = "vm://localhost?marshal=false";
 
     /**
      * Run all these tests in both marshaling and non-marshaling mode.
@@ -474,7 +474,9 @@ public class JMSMessageTest extends JmsTestSupport {
             //validate jms spec 1.1 section 3.4.11 table 3.1
             // JMSDestination, JMSDeliveryMode,  JMSExpiration, JMSPriority, JMSMessageID, and JMSTimestamp
             //must be set by sending a message.
-            assertEquals(destination, message.getJMSDestination());
+
+            // exception for jms destination as the format is provider defined so it is only set on the copy
+            assertNull(message.getJMSDestination());
             assertEquals(Session.AUTO_ACKNOWLEDGE, message.getJMSDeliveryMode());
             assertTrue(start  + timeToLive <= message.getJMSExpiration());
             assertTrue(end + timeToLive >= message.getJMSExpiration());

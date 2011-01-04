@@ -1701,8 +1701,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
             TransactionId txid = transactionContext.getTransactionId();
             long sequenceNumber = producer.getMessageSequence();
 
-            //Set the "JMS" header fields on the orriginal message, see 1.1 spec section 3.4.11
-            message.setJMSDestination(destination);
+            //Set the "JMS" header fields on the original message, see 1.1 spec section 3.4.11
             message.setJMSDeliveryMode(deliveryMode);
             long expiration = 0L;
             if (!producer.getDisableMessageTimestamp()) {
@@ -1728,7 +1727,8 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
             }
             //clear the brokerPath in case we are re-sending this message
             msg.setBrokerPath(null);
-
+            // destination format is provider specific so only set on transformed message
+            msg.setJMSDestination(destination);
 
             msg.setTransactionId(txid);
             if (connection.isCopyMessageOnSend()) {
