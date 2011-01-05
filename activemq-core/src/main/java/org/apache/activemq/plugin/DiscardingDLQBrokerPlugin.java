@@ -58,6 +58,7 @@ public class DiscardingDLQBrokerPlugin implements BrokerPlugin {
         cb.setDropTemporaryQueues(isDropTemporaryQueues());
         cb.setDropTemporaryTopics(isDropTemporaryTopics());
         cb.setDestFilter(getDestFilter());
+        cb.setReportInterval(getReportInterval());
         return cb;
     }
 
