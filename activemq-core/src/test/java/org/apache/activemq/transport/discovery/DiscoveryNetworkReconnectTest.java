@@ -110,6 +110,8 @@ public class DiscoveryNetworkReconnectTest {
                     new ObjectName("Test:BrokerName=BrokerNC,Type=NetworkConnector,NetworkConnectorName=localhost"))));
             allowing (managementContext).registerMBean(with(any(Object.class)), with(equal(            
                     new ObjectName("Test:BrokerName=BrokerNC,Type=Topic,Destination=ActiveMQ.Advisory.Connection"))));
+            allowing (managementContext).registerMBean(with(any(Object.class)), with(equal(
+                    new ObjectName("Test:BrokerName=BrokerNC,Type=Topic,Destination=ActiveMQ.Advisory.NetworkBridge"))));
             allowing (managementContext).registerMBean(with(any(Object.class)), with(equal(            
                     new ObjectName("Test:BrokerName=BrokerNC,Type=jobScheduler,jobSchedulerName=JMS"))));
             
@@ -137,7 +139,9 @@ public class DiscoveryNetworkReconnectTest {
             allowing (managementContext).unregisterMBean(with(equal(
                     new ObjectName("Test:BrokerName=BrokerNC,Type=NetworkConnector,NetworkConnectorName=localhost"))));
             allowing (managementContext).unregisterMBean(with(equal(            
-                    new ObjectName("Test:BrokerName=BrokerNC,Type=Topic,Destination=ActiveMQ.Advisory.Connection"))));        
+                    new ObjectName("Test:BrokerName=BrokerNC,Type=Topic,Destination=ActiveMQ.Advisory.Connection"))));
+            allowing (managementContext).unregisterMBean(with(equal(
+                    new ObjectName("Test:BrokerName=BrokerNC,Type=Topic,Destination=ActiveMQ.Advisory.NetworkBridge"))));
         }});
         
         brokerB = new BrokerService();
