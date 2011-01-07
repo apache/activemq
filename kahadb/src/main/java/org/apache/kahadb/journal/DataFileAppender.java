@@ -139,8 +139,6 @@ class DataFileAppender {
 
     /**
      * Construct a Store writer
-     * 
-     * @param fileId
      */
     public DataFileAppender(Journal dataManager) {
         this.journal = dataManager;
@@ -148,17 +146,6 @@ class DataFileAppender {
         this.maxWriteBatchSize = this.journal.getWriteBatchSize();
     }
 
-    /**
-     * @param type
-     * @param marshaller
-     * @param payload
-     * @param type
-     * @param sync
-     * @return
-     * @throws IOException
-     * @throws
-     * @throws
-     */
     public Location storeItem(ByteSequence data, byte type, boolean sync) throws IOException {
     	
         // Write the packet our internal buffer.
@@ -423,12 +410,12 @@ class DataFileAppender {
             synchronized (enqueueMutex) {
                 firstAsyncException = e;
                 if (wb != null) {
-                    wb.latch.countDown();
                     wb.exception.set(e);
+                    wb.latch.countDown();
                 }
                 if (nextWriteBatch != null) {
-            	    nextWriteBatch.latch.countDown();
-            	    nextWriteBatch.exception.set(e);
+                    nextWriteBatch.exception.set(e);
+                    nextWriteBatch.latch.countDown();
                 }
             }
         } catch (InterruptedException e) {

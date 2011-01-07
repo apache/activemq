@@ -1250,7 +1250,7 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
         oout.writeObject(metadata.producerSequenceIdTracker);
         oout.flush();
         oout.close();
-        return store(new KahaProducerAuditCommand().setAudit(new Buffer(baos.toByteArray())));
+        return store(new KahaProducerAuditCommand().setAudit(new Buffer(baos.toByteArray())), true, null, null);
     }
 
     public HashSet<Integer> getJournalFilesBeingReplicated() {

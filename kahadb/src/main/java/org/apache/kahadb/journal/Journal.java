@@ -158,6 +158,11 @@ public class Journal {
             List<DataFile> l = new ArrayList<DataFile>(fileMap.values());
             Collections.sort(l);
             for (DataFile df : l) {
+                if (df.getLength() == 0) {
+                    // possibly the result of a previous failed write
+                    LOG.info("ignoring zero length, partially initialised journal data file: " + df);
+                    continue;
+                }
                 dataFiles.addLast(df);
                 fileByFileMap.put(df.getFile(), df);
 
