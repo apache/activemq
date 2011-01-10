@@ -21,6 +21,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.activemq.Service;
 import org.apache.activemq.command.ShutdownInfo;
+import org.apache.activemq.command.WireFormatInfo;
 import org.apache.activemq.transport.DefaultTransportListener;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.util.IOExceptionSupport;
@@ -64,6 +65,10 @@ class ProxyConnection implements Service {
                     shuttingDown.set(true);
                     shutdown = true;
                 }
+                // skipping WireFormat infos
+                if (command.getClass() == WireFormatInfo.class) {
+                    return;
+                }
                 try {
                     remoteTransport.oneway(command);
                     if (shutdown) {
@@ -84,6 +89,10 @@ class ProxyConnection implements Service {
         this.remoteTransport.setTransportListener(new DefaultTransportListener() {
             public void onCommand(Object command) {
                 try {
+                    // skipping WireFormat infos
+                    if (command.getClass() == WireFormatInfo.class) {
+                        return;
+                    }
                     localTransport.oneway(command);
                 } catch (IOException error) {
                     onFailure(error);

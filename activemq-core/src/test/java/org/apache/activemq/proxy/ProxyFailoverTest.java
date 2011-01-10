@@ -68,9 +68,8 @@ public class ProxyFailoverTest extends TestCase {
         producer.start();
 
 
-        ActiveMQConnectionFactory consumerFactory = new ActiveMQConnectionFactory("tcp://localhost:51618?wireFormat.cacheEnabled=false");
-        // if used with cached enabled it will fail
-        //ActiveMQConnectionFactory consumerFactory = new ActiveMQConnectionFactory("tcp://localhost:51618");
+        //ActiveMQConnectionFactory consumerFactory = new ActiveMQConnectionFactory("tcp://localhost:51618?wireFormat.cacheEnabled=false");
+        ActiveMQConnectionFactory consumerFactory = new ActiveMQConnectionFactory("tcp://localhost:51618");
         Connection consumerConnection = consumerFactory.createConnection();
         consumerConnection.start();
         Session consumerSession = consumerConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
