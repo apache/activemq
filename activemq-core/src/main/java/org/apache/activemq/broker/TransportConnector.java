@@ -114,6 +114,8 @@ public class TransportConnector implements Connector, BrokerServiceAware {
         rc.setBrokerService(brokerService);
         rc.setUpdateClusterClients(isUpdateClusterClients());
         rc.setRebalanceClusterClients(isRebalanceClusterClients());
+        rc.setUpdateClusterFilter(getUpdateClusterFilter());
+        rc.setUpdateClusterClientsOnRemove(isUpdateClusterClientsOnRemove());
         return rc;
     }
 
