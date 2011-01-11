@@ -26,6 +26,10 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.net.URL;
 
+import org.apache.activemq.Service;
+import org.apache.activemq.store.PersistenceAdapter;
+import org.apache.activemq.transport.Transport;
+import org.apache.activemq.transport.discovery.DiscoveryAgent;
 import org.apache.activemq.util.FactoryFinder;
 import org.apache.activemq.util.FactoryFinder.ObjectFactory;
 import org.apache.commons.logging.LogFactory;
@@ -63,6 +67,7 @@ public class Activator implements BundleActivator, SynchronousBundleListener, Ob
         debug("activating");
         this.bundleContext = bundleContext;
         debug("checking existing bundles");
+        bundleContext.addBundleListener(this);
         for (Bundle bundle : bundleContext.getBundles()) {
             if (bundle.getState() == Bundle.RESOLVED || bundle.getState() == Bundle.STARTING ||
                 bundle.getState() == Bundle.ACTIVE || bundle.getState() == Bundle.STOPPING) {
@@ -197,9 +202,15 @@ public class Activator implements BundleActivator, SynchronousBundleListener, Ob
     }
 
     private boolean isImportingUs(Bundle bundle) {
+        return isImportingClass(bundle, Service.class)
+                || isImportingClass(bundle, Transport.class)
+                || isImportingClass(bundle, DiscoveryAgent.class)
+                || isImportingClass(bundle, PersistenceAdapter.class);
+    }
+
+    private boolean isImportingClass(Bundle bundle, Class clazz) {
         try {
-            // If that bundle can load our classes.. then it must be importing us.
-            return bundle.loadClass(Activator.class.getName())==Activator.class;
+            return bundle.loadClass(clazz.getName())==clazz;
         } catch (ClassNotFoundException e) {
             return false;
         }
