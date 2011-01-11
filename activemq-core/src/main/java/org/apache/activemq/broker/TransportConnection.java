@@ -584,7 +584,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         ConnectionId connectionId = info.getSessionId().getParentId();
         TransportConnectionState cs = lookupConnectionState(connectionId);
         // Avoid replaying dup commands
-        if (!cs.getSessionIds().contains(info.getSessionId())) {
+        if (cs != null && !cs.getSessionIds().contains(info.getSessionId())) {
             broker.addSession(cs.getContext(), info);
             try {
                 cs.addSession(info);

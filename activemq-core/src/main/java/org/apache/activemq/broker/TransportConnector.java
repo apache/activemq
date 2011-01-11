@@ -254,7 +254,7 @@ public class TransportConnector implements Connector, BrokerServiceAware {
         LOG.info("Connector " + getName() + " Started");
     }
 
-    private String getPublishableConnectString() throws Exception {
+    public String getPublishableConnectString() throws Exception {
         URI theConnectURI = getConnectUri();
         String publishableConnectString = theConnectURI.toString();
         // strip off server side query parameters which may not be compatible to
@@ -386,23 +386,26 @@ public class TransportConnector implements Connector, BrokerServiceAware {
         boolean rebalance = isRebalanceClusterClients();
         String connectedBrokers = "";
         String self = "";
-        if (brokerService.getDefaultSocketURI() != null) {
-            self += brokerService.getDefaultSocketURI().toString();
-            self += ",";
-        }
-        if (rebalance == false) {
-            connectedBrokers += self;
-        }
-        if (this.broker.getPeerBrokerInfos() != null) {
-            for (BrokerInfo info : this.broker.getPeerBrokerInfos()) {
-                if (isMatchesClusterFilter(info.getBrokerName())) {
-                    connectedBrokers += info.getBrokerURL();
-                    connectedBrokers += ",";
+
+        if (isUpdateClusterClients()) {
+            if (brokerService.getDefaultSocketURIString() != null) {
+                self += brokerService.getDefaultSocketURIString();
+                self += ",";
+            }
+            if (rebalance == false) {
+                connectedBrokers += self;
+            }
+            if (this.broker.getPeerBrokerInfos() != null) {
+                for (BrokerInfo info : this.broker.getPeerBrokerInfos()) {
+                    if (isMatchesClusterFilter(info.getBrokerName())) {
+                        connectedBrokers += info.getBrokerURL();
+                        connectedBrokers += ",";
+                    }
                 }
             }
-        }
-        if (rebalance) {
-            connectedBrokers += self;
+            if (rebalance) {
+                connectedBrokers += self;
+            }
         }
 
         ConnectionControl control = new ConnectionControl();

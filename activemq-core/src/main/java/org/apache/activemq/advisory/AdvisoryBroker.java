@@ -29,7 +29,6 @@ import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.broker.region.TopicSubscription;
 import org.apache.activemq.command.*;
-import org.apache.activemq.network.NetworkBridge;
 import org.apache.activemq.security.SecurityContext;
 import org.apache.activemq.state.ProducerState;
 import org.apache.activemq.usage.Usage;
@@ -484,8 +483,8 @@ public class AdvisoryBroker extends BrokerFilter {
             advisoryMessage.setStringProperty(AdvisorySupport.MSG_PROPERTY_ORIGIN_BROKER_ID, id);
             
             String url = getBrokerService().getVmConnectorURI().toString();
-            if (getBrokerService().getDefaultSocketURI() != null) {
-                url = getBrokerService().getDefaultSocketURI().toString();
+            if (getBrokerService().getDefaultSocketURIString() != null) {
+                url = getBrokerService().getDefaultSocketURIString();
             }
             advisoryMessage.setStringProperty(AdvisorySupport.MSG_PROPERTY_ORIGIN_BROKER_URL, url);
             

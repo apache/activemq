@@ -58,6 +58,21 @@ private final List<ActiveMQConnection>connections = new ArrayList<ActiveMQConnec
       }
       assertTrue(set.size() > 1);
   }
+
+    public void testClusterURIOptionsStrip() throws Exception{
+        createClients();
+        if (brokerB == null) {
+            // add in server side only url param, should not be propagated
+            brokerB = createBrokerB(BROKER_B_BIND_ADDRESS + "?transport.closeAsync=false");
+        }
+        Thread.sleep(3000);
+        Set<String> set = new HashSet<String>();
+        for (ActiveMQConnection c:connections) {
+            set.add(c.getTransportChannel().getRemoteAddress());
+        }
+        assertTrue(set.size() > 1);
+    }
+
   
   public void testClusterConnectedBeforeClients() throws Exception{
       
@@ -80,7 +95,7 @@ private final List<ActiveMQConnection>connections = new ArrayList<ActiveMQConnec
     @Override
     protected void setUp() throws Exception {
         if (brokerA == null) {
-           brokerA = createBrokerA(BROKER_A_BIND_ADDRESS);
+           brokerA = createBrokerA(BROKER_A_BIND_ADDRESS + "?transport.closeAsync=false");
         }
         
         
@@ -103,6 +118,7 @@ private final List<ActiveMQConnection>connections = new ArrayList<ActiveMQConnec
     
     protected BrokerService createBrokerA(String uri) throws Exception {
         BrokerService answer = new BrokerService();
+        answer.setUseJmx(false);
         configureConsumerBroker(answer,uri);
         answer.start();
         return answer;
@@ -119,6 +135,7 @@ private final List<ActiveMQConnection>connections = new ArrayList<ActiveMQConnec
     
     protected BrokerService createBrokerB(String uri) throws Exception {
         BrokerService answer = new BrokerService();
+        answer.setUseJmx(false);
         configureNetwork(answer,uri);
         answer.start();
         return answer;

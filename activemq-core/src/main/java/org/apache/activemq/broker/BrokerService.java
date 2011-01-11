@@ -152,7 +152,7 @@ public class BrokerService implements Service {
     private boolean deleteAllMessagesOnStartup;
     private boolean advisorySupport = true;
     private URI vmConnectorURI;
-    private URI defaultSocketURI;
+    private String defaultSocketURIString;
     private PolicyMap destinationPolicy;
     private final AtomicBoolean started = new AtomicBoolean(false);
     private final AtomicBoolean stopped = new AtomicBoolean(false);
@@ -1315,24 +1315,24 @@ public class BrokerService implements Service {
         this.vmConnectorURI = vmConnectorURI;
     }
     
-    public URI getDefaultSocketURI() {
+    public String getDefaultSocketURIString() {
        
             if (started.get()) {
-                if (this.defaultSocketURI==null) {
+                if (this.defaultSocketURIString ==null) {
                     for (TransportConnector tc:this.transportConnectors) {
-                        URI result = null;
+                        String result = null;
                         try {
-                            result = tc.getConnectUri();
+                            result = tc.getPublishableConnectString();
                         } catch (Exception e) {
                           LOG.warn("Failed to get the ConnectURI for "+tc,e);
                         }
                         if (result != null) {
-                            this.defaultSocketURI=result;
+                            this.defaultSocketURIString =result;
                             break;
                         }
                     }
                 }
-                return this.defaultSocketURI;
+                return this.defaultSocketURIString;
             }
        return null;
     }
@@ -2076,8 +2076,8 @@ public class BrokerService implements Service {
                     connector.setLocalUri(uri);
                     connector.setBrokerName(getBrokerName());
                     connector.setDurableDestinations(durableDestinations);
-                    if (getDefaultSocketURI() != null) {
-                        connector.setBrokerURL(getDefaultSocketURI().toString());
+                    if (getDefaultSocketURIString() != null) {
+                        connector.setBrokerURL(getDefaultSocketURIString());
                     }
                     connector.start();
                 }
