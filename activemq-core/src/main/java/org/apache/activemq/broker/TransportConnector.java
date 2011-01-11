@@ -255,13 +255,16 @@ public class TransportConnector implements Connector, BrokerServiceAware {
     }
 
     public String getPublishableConnectString() throws Exception {
+        String publishableConnectString = null;
         URI theConnectURI = getConnectUri();
-        String publishableConnectString = theConnectURI.toString();
-        // strip off server side query parameters which may not be compatible to
-        // clients
-        if (theConnectURI.getRawQuery() != null) {
-            publishableConnectString = publishableConnectString.substring(0, publishableConnectString
-                    .indexOf(theConnectURI.getRawQuery()) - 1);
+        if (theConnectURI != null) {
+            publishableConnectString = theConnectURI.toString();
+            // strip off server side query parameters which may not be compatible to
+            // clients
+            if (theConnectURI.getRawQuery() != null) {
+                publishableConnectString = publishableConnectString.substring(0, publishableConnectString
+                        .indexOf(theConnectURI.getRawQuery()) - 1);
+            }
         }
         if (LOG.isDebugEnabled()) {
             LOG.debug("Publishing: " + publishableConnectString + " for broker transport URI: " + theConnectURI);
