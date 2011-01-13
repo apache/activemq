@@ -36,7 +36,9 @@ public class AuditFilter implements Filter {
 
     public void init(FilterConfig filterConfig) throws ServletException {
         audit = "true".equalsIgnoreCase(System.getProperty("org.apache.activemq.audit"));
-        auditLog = new AuditLogService();
+        if (audit) {
+            auditLog = AuditLogService.getAuditLog();
+        }
     }
 
     public void destroy() {

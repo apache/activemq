@@ -52,7 +52,7 @@ public class AnnotatedMBean extends StandardMBean {
     }
     audit = "true".equalsIgnoreCase(System.getProperty("org.apache.activemq.audit"));
     if (audit) {
-        auditLog = new AuditLogService();
+        auditLog = AuditLogService.getAuditLog();
     }
   }
   

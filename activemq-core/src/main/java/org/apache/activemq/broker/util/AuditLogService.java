@@ -16,26 +16,37 @@
  */
 package org.apache.activemq.broker.util;
 
-import java.util.ArrayList;
-import java.util.ServiceLoader;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 public class AuditLogService {
 
-    private ArrayList<AuditLog> auditLogs = new ArrayList<AuditLog>();
+    private static final Log LOG = LogFactory.getLog(AuditLogService.class);
 
-    public AuditLogService() {
-        ServiceLoader<AuditLog> logs = ServiceLoader.load(AuditLog.class);
-        for (AuditLog log : logs) {
-            auditLogs.add(log);
+    private AuditLogFactory factory;
+
+    private static AuditLogService auditLog;
+
+    public static AuditLogService getAuditLog() {
+        if (auditLog == null) {
+            auditLog = new AuditLogService();
         }
-        // add default audit log if non was found
-        if (auditLogs.size() == 0) {
-            auditLogs.add(new DefaultAuditLog());
+        return auditLog;
+    }
+
+    private AuditLogService() {
+	   String auditLogFactory = System.getProperty("org.apache.activemq.audit.factory", "org.apache.activemq.broker.util.DefaultAuditLogFactory");
+       try {
+           factory = (AuditLogFactory) Class.forName(auditLogFactory).newInstance();
+       } catch (Exception e) {
+           LOG.warn("Cannot instantiate audit log factory '" + auditLogFactory + "', using default audit log factory", e);
+           factory = new DefaultAuditLogFactory();
         }
+
     }
 
     public void log(String message) {
-        for (AuditLog log : auditLogs) {
+        for (AuditLog log : factory.getAuditLogs()) {
             log.log(message);
         }
     }
