@@ -120,6 +120,7 @@ public class FailoverTransport implements CompositeTransport {
     private SslContext brokerSslContext;
     private String updateURIsURL = null;
     private boolean rebalanceUpdateURIs=true;
+    private boolean doRebalance = false;
 
     public FailoverTransport() throws InterruptedIOException {
         brokerSslContext = SslContext.getCurrentSslContext();
@@ -131,7 +132,7 @@ public class FailoverTransport implements CompositeTransport {
                 boolean buildBackup = true;
                 boolean doReconnect = !disposed;
                 synchronized (backupMutex) {
-                    if (connectedTransport.get() == null && !disposed) {
+                    if ((connectedTransport.get() == null || doRebalance) && !disposed) {
                         result = doReconnect();
                         buildBackup = false;
                     }
@@ -623,7 +624,7 @@ public class FailoverTransport implements CompositeTransport {
         for (int i = 0; i < u.length; i++) {
             uris.remove(u[i]);
         }
-        reconnect(rebalance);
+        // rebalance is automatic if any connected to removed/stopped broker
     }
 
     public void add(boolean rebalance, String u) {
@@ -643,15 +644,7 @@ public class FailoverTransport implements CompositeTransport {
         synchronized (reconnectMutex) {
             if (started) {
                 if (rebalance) {
-                    Transport transport = this.connectedTransport.getAndSet(null);
-                    if (transport != null) {
-                        try {
-                            transport.stop();
-                        } catch (Exception e) {
-                            LOG.debug("Caught an exception stopping existing transport", e);
-                        }
-                    }
-
+                    doRebalance = true;
                 }
                 LOG.debug("Waking up reconnect task");
                 try {
@@ -683,7 +676,7 @@ public class FailoverTransport implements CompositeTransport {
         if (removed) {
             l.add(failedConnectTransportURI);
         }
-        LOG.debug("urlList connectionList:" + l);
+        LOG.debug("urlList connectionList:" + l + ", from: " + uris);
         return l;
     }
 
@@ -798,13 +791,31 @@ public class FailoverTransport implements CompositeTransport {
                 reconnectMutex.notifyAll();
             }
 
-            if (connectedTransport.get() != null || disposed || connectionFailure != null) {
+            if ((connectedTransport.get() != null && !doRebalance) || disposed || connectionFailure != null) {
                 return false;
             } else {
                 List<URI> connectList = getConnectList();
                 if (connectList.isEmpty()) {
                     failure = new IOException("No uris available to connect to.");
                 } else {
+                    if (doRebalance) {
+                        if (connectList.get(0).equals(connectedTransportURI)) {
+                            // already connected to first in the list, no need to rebalance
+                            doRebalance = false;
+                            return false;
+                        } else {
+                            LOG.debug("Doing rebalance from: " + connectedTransportURI + " to " + connectList);
+                            try {
+                                Transport transport = this.connectedTransport.getAndSet(null);
+                                if (transport != null) {
+                                    transport.stop();
+                                }
+                            } catch (Exception e) {
+                                LOG.debug("Caught an exception stopping existing transport for rebalance", e);
+                            }
+                        }
+                        doRebalance = false;
+                    }
                     if (!useExponentialBackOff || reconnectDelay == DEFAULT_INITIAL_RECONNECT_DELAY) {
                         reconnectDelay = initialReconnectDelay;
                     }

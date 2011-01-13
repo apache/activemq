@@ -228,19 +228,11 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
 
             localBroker.start();
             remoteBroker.start();
-            if (configuration.isDuplex() && duplexInitiatingConnection == null) {
-                // initiator side of duplex network
-                remoteBrokerNameKnownLatch.await();
-            }
             if (!disposed.get()) {
                 try {
                     triggerRemoteStartBridge();
                 } catch (IOException e) {
                     LOG.warn("Caught exception from remote start", e);
-                }
-                NetworkBridgeListener l = this.networkBridgeListener;
-                if (l != null) {
-                    l.onStart(this);
                 }
     	    } else {
                 LOG.warn ("Bridge was disposed before the start() method was fully executed.");
@@ -309,6 +301,10 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                     localSessionInfo = new SessionInfo(localConnectionInfo, 1);
                     localBroker.oneway(localSessionInfo);
                     brokerService.getBroker().networkBridgeStarted(remoteBrokerInfo, this.createdByDuplex);
+                    NetworkBridgeListener l = this.networkBridgeListener;
+                    if (l != null) {
+                        l.onStart(this);
+                    }
                     LOG.info("Network connection between " + localBroker + " and " + remoteBroker + "(" + remoteBrokerName + ") has been established.");
 
                 } else {
@@ -419,6 +415,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                     ss.throwFirstException();
                 }
             }
+            brokerService.getBroker().removeBroker(null, remoteBrokerInfo);
             brokerService.getBroker().networkBridgeStopped(remoteBrokerInfo);
             LOG.info(configuration.getBrokerName() + " bridge to " + remoteBrokerName + " stopped");
             remoteBrokerNameKnownLatch.countDown();
@@ -480,6 +477,8 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                     serviceRemoteBrokerInfo(command);
                     // Let the local broker know the remote broker's ID.
                     localBroker.oneway(command);
+                    // new peer broker (a consumer can work with remote broker also)
+                    brokerService.getBroker().addBroker(null, remoteBrokerInfo);
                 } else if (command.getClass() == ConnectionError.class) {
                     ConnectionError ce = (ConnectionError) command;
                     serviceRemoteException(ce.getException());

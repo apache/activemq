@@ -1015,9 +1015,6 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
                     ignore.printStackTrace();
                 }
             }
-            if (brokerInfo != null) {
-                broker.removeBroker(this, brokerInfo);
-            }
         }
         LOG.debug("Connection Stopped: " + getRemoteAddress());
     }
@@ -1182,7 +1179,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
             // so this TransportConnection is the rear end of a network bridge
             // We have been requested to create a two way pipe ...
             try {
-                // We first look if existing network connection already exists for the same broker Id
+                // We first look if existing network connection already exists for the same broker Id and network connector name
                 // It's possible in case of brief network fault to have this transport connector side of the connection always active
                 // and the duplex network connector side wanting to open a new one
                 // In this case, the old connection must be broken
@@ -1234,7 +1231,6 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
             LOG.warn("Unexpected extra broker info command received: " + info);
         }
         this.brokerInfo = info;
-        broker.addBroker(this, info);
         networkConnection = true;
         List<TransportConnectionState> connectionStates = listConnectionStates();
         for (TransportConnectionState cs : connectionStates) {

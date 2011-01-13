@@ -45,6 +45,7 @@ public class BrokerInfo extends BaseCommand {
     long connectionId;
     String brokerUploadUrl;
     String networkProperties;
+    transient int refCount = 0;
     
     public BrokerInfo copy() {
         BrokerInfo copy = new BrokerInfo();
@@ -264,5 +265,16 @@ public class BrokerInfo extends BaseCommand {
            e.printStackTrace();
         }
         return result;
+    }
+
+    public int getRefCount() {
+        return refCount;
+    }
+
+    public void incrementRefCount() {
+        refCount++;
+    }
+    public int decrementRefCount() {
+        return --refCount;
     }
 }

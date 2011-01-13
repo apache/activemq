@@ -152,17 +152,21 @@ public class JmsMultipleBrokersTestSupport extends CombinationTestSupport {
         maxSetupTime = 8000;
     }
 
-    
-    protected void waitForBridgeFormation() throws Exception {
+
+    protected void waitForBridgeFormation(final int min) throws Exception {
         for (BrokerItem brokerItem : brokers.values()) {
             final BrokerService broker = brokerItem.broker;
             if (!broker.getNetworkConnectors().isEmpty()) {
                 Wait.waitFor(new Wait.Condition() {
                     public boolean isSatisified() throws Exception {
-                        return !broker.getNetworkConnectors().get(0).activeBridges().isEmpty();
+                        return (broker.getNetworkConnectors().get(0).activeBridges().size() >= min);
                     }});
             }
         }
+    }
+
+    protected void waitForBridgeFormation() throws Exception {
+        waitForBridgeFormation(1);
     }
 
     protected void startAllBrokers() throws Exception {
@@ -517,6 +521,7 @@ public class JmsMultipleBrokersTestSupport extends CombinationTestSupport {
             }
 
             broker.stop();
+            broker.waitUntilStopped();
             consumers.clear();
 
             broker = null;

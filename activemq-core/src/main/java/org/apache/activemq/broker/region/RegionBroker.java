@@ -94,7 +94,7 @@ public class RegionBroker extends EmptyBroker {
 
     private final CopyOnWriteArrayList<Connection> connections = new CopyOnWriteArrayList<Connection>();
     private final Map<ActiveMQDestination, Destination> destinations = new ConcurrentHashMap<ActiveMQDestination, Destination>();
-    private final CopyOnWriteArrayList<BrokerInfo> brokerInfos = new CopyOnWriteArrayList<BrokerInfo>();
+    private final Map<BrokerId, BrokerInfo> brokerInfos = new HashMap<BrokerId, BrokerInfo>();
 
     private final LongSequenceGenerator sequenceGenerator = new LongSequenceGenerator();
     private BrokerId brokerId;
@@ -640,14 +640,25 @@ public class RegionBroker extends EmptyBroker {
 
     @Override
     public synchronized void addBroker(Connection connection, BrokerInfo info) {
-        brokerInfos.add(info);
+        BrokerInfo existing = brokerInfos.get(info.getBrokerId());
+        if (existing == null) {
+            existing = info.copy();
+            existing.setPeerBrokerInfos(null);
+            brokerInfos.put(info.getBrokerId(), existing);
+        }
+        existing.incrementRefCount();
+        LOG.debug(getBrokerName() + " addBroker:" + info.getBrokerName() + " brokerInfo size : " + brokerInfos.size());
         addBrokerInClusterUpdate();
     }
 
     @Override
     public synchronized void removeBroker(Connection connection, BrokerInfo info) {
         if (info != null) {
-            brokerInfos.remove(info);
+            BrokerInfo existing = brokerInfos.get(info.getBrokerId());
+            if (existing != null && existing.decrementRefCount() == 0) {
+               brokerInfos.remove(info.getBrokerId());
+            }
+            LOG.debug(getBrokerName() + " removeBroker:" + info.getBrokerName() + " brokerInfo size : " + brokerInfos.size());
             removeBrokerInClusterUpdate();
         }
     }
@@ -655,7 +666,7 @@ public class RegionBroker extends EmptyBroker {
     @Override
     public synchronized BrokerInfo[] getPeerBrokerInfos() {
         BrokerInfo[] result = new BrokerInfo[brokerInfos.size()];
-        result = brokerInfos.toArray(result);
+        result = brokerInfos.values().toArray(result);
         return result;
     }
 
