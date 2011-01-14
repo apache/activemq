@@ -747,7 +747,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
 
     private void expireMessages() {
         if (LOG.isDebugEnabled()) {
-            LOG.debug("Expiring messages ..");
+            LOG.debug(getActiveMQDestination().getQualifiedName() + " expiring messages ..");
         }
 
         // just track the insertion count
@@ -771,6 +771,9 @@ public class Queue extends BaseDestination implements Task, UsageListener {
         };
         doBrowse(browsedMessages, this.getMaxExpirePageSize());
         asyncWakeup();
+        if (LOG.isDebugEnabled()) {
+            LOG.debug(getActiveMQDestination().getQualifiedName() + " expiring messages done.");
+        }
     }
 
     public void gc() {
