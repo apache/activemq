@@ -60,6 +60,7 @@ public class JmsMultipleClientsTestSupport extends CombinationTestSupport {
     protected int messageSize = 1024;
 
     protected boolean useConcurrentSend = true;
+    protected boolean autoFail = true;
     protected boolean durable;
     public boolean topic;
     protected boolean persistent;
@@ -217,7 +218,7 @@ public class JmsMultipleClientsTestSupport extends CombinationTestSupport {
     }
 
     protected void setUp() throws Exception {
-        super.setAutoFail(true);
+        super.setAutoFail(autoFail);
         super.setUp();
         broker = createBroker();
         broker.start();
