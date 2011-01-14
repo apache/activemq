@@ -49,7 +49,7 @@ public class JDBCMessagePriorityTest extends MessagePriorityTest {
         dataSource = new EmbeddedDataSource();
         dataSource.setDatabaseName("derbyDb");
         dataSource.setCreateDatabase("create");
-        dataSource.setShutdownDatabase("false");
+        dataSource.setShutdownDatabase(null);
         jdbc.setDataSource(dataSource);
         jdbc.deleteAllMessages();
         jdbc.setCleanupPeriod(2000);
@@ -60,9 +60,14 @@ public class JDBCMessagePriorityTest extends MessagePriorityTest {
     protected void tearDown() throws Exception {
        super.tearDown();
        try {
-           dataSource.setShutdownDatabase("true");
-           dataSource.getConnection();
+            if (dataSource != null) {
+                // ref http://svn.apache.org/viewvc/db/derby/code/trunk/java/testing/org/apache/derbyTesting/junit/JDBCDataSource.java?view=markup
+                dataSource.setShutdownDatabase("shutdown");
+                dataSource.getConnection();
+           }
        } catch (Exception ignored) {
+       } finally {
+            dataSource.setShutdownDatabase(null);
        }
 
     }
