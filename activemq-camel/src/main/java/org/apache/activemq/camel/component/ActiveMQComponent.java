@@ -18,6 +18,7 @@ package org.apache.activemq.camel.component;
 
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.Service;
 import org.apache.camel.CamelContext;
 import org.apache.camel.component.jms.JmsComponent;
@@ -59,6 +60,9 @@ public class ActiveMQComponent extends JmsComponent {
             ((ActiveMQConfiguration) answer.getConfiguration())
                     .setBrokerURL(brokerURL);
         }
+
+        // set the connection factory with the provided broker url
+        answer.setConnectionFactory(new ActiveMQConnectionFactory(brokerURL));
         return answer;
     }
 
@@ -73,7 +77,7 @@ public class ActiveMQComponent extends JmsComponent {
         super(configuration);
     }
 
-   
+
     public void setBrokerURL(String brokerURL) {
         if (getConfiguration() instanceof ActiveMQConfiguration) {
             ((ActiveMQConfiguration)getConfiguration()).setBrokerURL(brokerURL);
