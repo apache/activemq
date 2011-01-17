@@ -66,4 +66,15 @@ public class StoreUsage extends Usage<StoreUsage> {
             return super.getPercentUsage();
         }
     }
+
+    @Override
+    public boolean waitForSpace(long timeout, int highWaterMark) throws InterruptedException {
+        if (parent != null) {
+            if (parent.waitForSpace(timeout, highWaterMark)) {
+                return true;
+            }
+        }
+
+        return super.waitForSpace(timeout, highWaterMark);
+    }
 }

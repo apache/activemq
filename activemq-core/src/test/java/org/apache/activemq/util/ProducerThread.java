@@ -32,6 +32,7 @@ public class ProducerThread extends Thread {
     Destination dest;
     Session sess;
     int sleep = 0;
+    int sentCount = 0;
 
     public ProducerThread(Session sess, Destination dest) {
         this.dest = dest;
@@ -42,9 +43,9 @@ public class ProducerThread extends Thread {
         MessageProducer producer = null;
         try {
             producer = sess.createProducer(dest);
-            for (int i = 0; i < messageCount; i++) {
-                producer.send(sess.createTextMessage("test message: " + i));
-                LOG.info("Sent 'test message: " + i + "'");
+            for (sentCount = 0; sentCount < messageCount; sentCount++) {
+                producer.send(sess.createTextMessage("test message: " + sentCount));
+                LOG.info("Sent 'test message: " + sentCount + "'");
                 if (sleep > 0) {
                     Thread.sleep(sleep);
                 }
@@ -69,5 +70,13 @@ public class ProducerThread extends Thread {
 
     public void setSleep(int sleep) {
         this.sleep = sleep;
+    }
+
+    public int getMessageCount() {
+        return messageCount;
+    }
+
+    public int getSentCount() {
+        return sentCount;
     }
 }
