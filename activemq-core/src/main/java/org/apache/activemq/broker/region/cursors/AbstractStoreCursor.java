@@ -252,7 +252,7 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
     protected final synchronized void fillBatch() {
         if (LOG.isTraceEnabled()) {
             LOG.trace("fillBatch - batchResetNeeded=" + batchResetNeeded
-                    + ", hasMessages=" + this.storeHasMessages + ", size=" + this.size);
+                    + ", hasMessages=" + this.storeHasMessages + ", size=" + this.size + ", cacheEnabled=" + this.cacheEnabled);
         }
         if (batchResetNeeded) {
             resetBatch();
