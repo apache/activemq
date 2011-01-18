@@ -660,7 +660,7 @@ public abstract class BaseDestination implements Destination {
     public boolean canGC() {
         boolean result = false;
         if (isGcIfInactive()&& this.lastActiveTime != 0l) {
-            if ((System.currentTimeMillis() - this.lastActiveTime) > getInactiveTimoutBeforeGC()) {
+            if ((System.currentTimeMillis() - this.lastActiveTime) >= getInactiveTimoutBeforeGC()) {
                 result = true;
             }
         }
