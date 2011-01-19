@@ -14,32 +14,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.activemq.broker.util;
+package org.apache.activemq.web;
 
-public class AuditLogService {
+import org.apache.activemq.broker.util.AuditLogEntry;
 
-    private AuditLogFactory factory;
+import java.util.Arrays;
+import java.util.Map;
 
-    private static AuditLogService auditLog;
-
-    public static AuditLogService getAuditLog() {
-        if (auditLog == null) {
-            auditLog = new AuditLogService();
+public class HttpAuditLogEntry extends AuditLogEntry {
+    @Override
+    public String toString() {
+        String formattedParams = "";
+        Map<String, String[]> params = (Map<String, String[]>)parameters.get("params");
+        if (params != null) {
+            for (String paramName : params.keySet()) {
+                formattedParams += paramName + "='" + Arrays.toString(params.get(paramName)) + "' ";
+            }
         }
-        return auditLog;
-    }
 
-    private AuditLogService() {
-        factory = new DefaultAuditLogFactory();
-    }
-
-    public void log(AuditLogEntry entry) {
-        for (AuditLog log : factory.getAuditLogs()) {
-            log.log(entry);
-        }
-    }
-
-    public void setFactory(AuditLogFactory factory) {
-        this.factory = factory;
+        return user + " requested " + operation + " [" + formattedParams + "] from  " + remoteAddr +" at " + getFormattedTime();
     }
 }

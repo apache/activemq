@@ -19,6 +19,6 @@ package org.apache.activemq.broker.util;
 
 public interface AuditLog {
 
-    public void log(String message);
+    public void log(AuditLogEntry entry);
 
 }

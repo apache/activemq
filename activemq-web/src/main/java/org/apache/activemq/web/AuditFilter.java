@@ -16,16 +16,14 @@
  */
 package org.apache.activemq.web;
 
-import org.apache.activemq.broker.util.AuditLog;
+import org.apache.activemq.broker.util.AuditLogEntry;
 import org.apache.activemq.broker.util.AuditLogService;
-import org.apache.activemq.broker.util.DefaultAuditLog;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
-import java.util.Enumeration;
 
 public class AuditFilter implements Filter {
 
@@ -48,18 +46,15 @@ public class AuditFilter implements Filter {
         if (audit && request instanceof HttpServletRequest) {
 
             HttpServletRequest http = (HttpServletRequest)request;
-            Enumeration params = http.getParameterNames();
-            String formattedParams = "";
-            while (params.hasMoreElements()) {
-                String paramName = (String)params.nextElement();
-                String paramValue = http.getParameter(paramName);
-                formattedParams += paramName + "='" + paramValue + "' ";
-            }
-            String user = "anonymous";
+            AuditLogEntry entry = new HttpAuditLogEntry();
             if (http.getRemoteUser() != null) {
-                user = http.getRemoteUser();
+                entry.setUser(http.getRemoteUser());
             }
-            auditLog.log(user + " requested " + http.getRequestURI() + " [" + formattedParams + "] from " + http.getRemoteAddr());
+            entry.setTimestamp(System.currentTimeMillis());
+            entry.setOperation(http.getRequestURI());
+            entry.setRemoteAddr(http.getRemoteAddr());
+            entry.getParameters().put("params", http.getParameterMap());
+            auditLog.log(entry);
         }
         chain.doFilter(request, response);
     }

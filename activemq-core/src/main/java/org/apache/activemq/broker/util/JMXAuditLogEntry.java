@@ -16,30 +16,12 @@
  */
 package org.apache.activemq.broker.util;
 
-public class AuditLogService {
+import java.util.Arrays;
 
-    private AuditLogFactory factory;
+public class JMXAuditLogEntry extends AuditLogEntry {
 
-    private static AuditLogService auditLog;
-
-    public static AuditLogService getAuditLog() {
-        if (auditLog == null) {
-            auditLog = new AuditLogService();
-        }
-        return auditLog;
-    }
-
-    private AuditLogService() {
-        factory = new DefaultAuditLogFactory();
-    }
-
-    public void log(AuditLogEntry entry) {
-        for (AuditLog log : factory.getAuditLogs()) {
-            log.log(entry);
-        }
-    }
-
-    public void setFactory(AuditLogFactory factory) {
-        this.factory = factory;
+    @Override
+    public String toString() {
+        return user.trim() + " called " + operation + Arrays.toString((Object[])parameters.get("arguments")) + " at " + getFormattedTime();
     }
 }

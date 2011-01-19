@@ -23,7 +23,7 @@ public class DefaultAuditLog implements AuditLog {
 
     private static final Log LOG = LogFactory.getLog("org.apache.activemq.audit");
 
-    public void log(String message) {
-         LOG.info(message);
+    public void log(AuditLogEntry entry) {
+         LOG.info(entry.toString());
     }
 }

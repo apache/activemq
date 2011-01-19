@@ -16,9 +16,7 @@
  */
 package org.apache.activemq.broker.jmx;
 
-import org.apache.activemq.broker.util.AuditLog;
-import org.apache.activemq.broker.util.AuditLogService;
-import org.apache.activemq.broker.util.DefaultAuditLog;
+import org.apache.activemq.broker.util.*;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -179,7 +177,14 @@ public class AnnotatedMBean extends StandardMBean {
                     caller += principal.getName() + " ";
                 }
             }
-            auditLog.log(caller.trim() + " called " + this.getMBeanInfo().getClassName() + "." + s  + Arrays.toString(objects));
+
+            AuditLogEntry entry = new JMXAuditLogEntry();
+            entry.setUser(caller);
+            entry.setTimestamp(System.currentTimeMillis());
+            entry.setOperation(this.getMBeanInfo().getClassName() + "." + s);
+            entry.getParameters().put("arguments", objects);
+
+            auditLog.log(entry);
         }
         return super.invoke(s, objects, strings);
     }
