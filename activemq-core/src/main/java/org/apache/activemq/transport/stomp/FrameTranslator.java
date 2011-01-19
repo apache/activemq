@@ -77,6 +77,10 @@ public interface FrameTranslator {
             if (message.getUserID() != null) {
                 headers.put(Stomp.Headers.Message.USERID, message.getUserID());
             }
+
+            if (message.getOriginalDestination() != null) {
+                headers.put(Stomp.Headers.Message.ORIGINAL_DESTINATION, ft.convertDestination(converter, message.getOriginalDestination()));
+            }
             
             // now lets add all the message headers
             final Map<String, Object> properties = message.getProperties();

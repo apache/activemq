@@ -82,6 +82,7 @@ public interface Stomp {
             String TYPE = "type";
             String SUBSCRIPTION = "subscription";
             String USERID = "JMSXUserID";
+            String ORIGINAL_DESTINATION = "original-destination";
         }
 
         public interface Subscribe {
