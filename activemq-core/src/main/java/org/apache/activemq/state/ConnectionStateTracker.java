@@ -302,7 +302,7 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
     protected void restoreTempDestinations(Transport transport, ConnectionState connectionState)
         throws IOException {
         // Restore the connection's temp destinations.
-        for (Iterator iter2 = connectionState.getTempDesinations().iterator(); iter2.hasNext();) {
+        for (Iterator iter2 = connectionState.getTempDestinations().iterator(); iter2.hasNext();) {
             transport.oneway((DestinationInfo)iter2.next());
         }
     }

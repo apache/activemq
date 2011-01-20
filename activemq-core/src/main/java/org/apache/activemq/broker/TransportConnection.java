@@ -726,7 +726,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
                 }
             }
             // Cascade the connection stop to temp destinations.
-            for (Iterator iter = cs.getTempDesinations().iterator(); iter.hasNext();) {
+            for (Iterator iter = cs.getTempDestinations().iterator(); iter.hasNext();) {
                 DestinationInfo di = (DestinationInfo) iter.next();
                 try {
                     broker.removeDestination(cs.getContext(), di.getDestination(), 0);

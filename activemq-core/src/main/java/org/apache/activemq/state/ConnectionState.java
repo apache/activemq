@@ -119,7 +119,7 @@ public class ConnectionState {
         return sessions.keySet();
     }
 
-    public List<DestinationInfo> getTempDesinations() {
+    public List<DestinationInfo> getTempDestinations() {
         return tempDestinations;
     }
 
