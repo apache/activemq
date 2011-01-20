@@ -42,11 +42,15 @@ public interface StreamConnection extends Connection {
 
     InputStream createInputStream(Destination dest, String messageSelector, boolean noLocal) throws JMSException;
 
+    InputStream createInputStream(Destination dest, String messageSelector, boolean noLocal, long timeout) throws JMSException;
+
     InputStream createDurableInputStream(Topic dest, String name) throws JMSException;
 
     InputStream createDurableInputStream(Topic dest, String name, String messageSelector) throws JMSException;
 
     InputStream createDurableInputStream(Topic dest, String name, String messageSelector, boolean noLocal) throws JMSException;
+    
+    InputStream createDurableInputStream(Topic dest, String name, String messageSelector, boolean noLocal, long timeout) throws JMSException;
 
     OutputStream createOutputStream(Destination dest) throws JMSException;
 

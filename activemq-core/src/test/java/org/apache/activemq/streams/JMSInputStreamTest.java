@@ -75,7 +75,7 @@ public class JMSInputStreamTest extends JmsTestSupport {
      * @param props
      * @throws JMSException
      */
-    private void setUpConnection(Map<String, Object> props) throws JMSException {
+    private void setUpConnection(Map<String, Object> props, long timeout) throws JMSException {
         connection2 = (ActiveMQConnection)factory.createConnection(userName, password);
         connections.add(connection2);
         OutputStream amqOut;
@@ -85,7 +85,11 @@ public class JMSInputStreamTest extends JmsTestSupport {
             amqOut = connection.createOutputStream(destination);
         }
         out = new DataOutputStream(amqOut);
-        amqIn = (ActiveMQInputStream) connection2.createInputStream(destination);
+        if (timeout == -1) {
+            amqIn = (ActiveMQInputStream) connection2.createInputStream(destination);
+        } else {
+            amqIn = (ActiveMQInputStream) connection2.createInputStream(destination, null, false, timeout);
+        }
         in = new DataInputStream(amqIn);
     }
     /*
@@ -95,26 +99,21 @@ public class JMSInputStreamTest extends JmsTestSupport {
         super.tearDown();
     }
 
-    public void testStreams() throws Exception {
-        setUpConnection(null);
-        out.writeInt(4);
-        out.flush();
-        assertTrue(in.readInt() == 4);
-        out.writeFloat(2.3f);
-        out.flush();
-        assertTrue(in.readFloat() == 2.3f);
-        String str = "this is a test string";
-        out.writeUTF(str);
-        out.flush();
-        assertTrue(in.readUTF().equals(str));
-        for (int i = 0; i < 100; i++) {
-            out.writeLong(i);
-        }
-        out.flush();
+    /**
+     * Test for AMQ-3010
+     */
+    public void testInputStreamTimeout() throws Exception {
+        long timeout = 500;
         
-        for (int i = 0; i < 100; i++) {
-            assertTrue(in.readLong() == i);
+        setUpConnection(null, timeout);
+        try {
+            in.read();
+            fail();
+        } catch (ActiveMQInputStream.ReadTimeoutException e) {
+            // timeout reached, everything ok
         }
+        in.close();
+        
     }
 
     // Test for AMQ-2988
@@ -126,7 +125,7 @@ public class JMSInputStreamTest extends JmsTestSupport {
         Map<String,Object> jmsProperties = new HashMap<String, Object>();
         jmsProperties.put(name1, value1);
         jmsProperties.put(name2, value2);
-        setUpConnection(jmsProperties);
+        setUpConnection(jmsProperties, -1);
         
         out.writeInt(4);
         out.flush();
@@ -173,7 +172,7 @@ public class JMSInputStreamTest extends JmsTestSupport {
     }
     
     public void testLarge() throws Exception {
-        setUpConnection(null);
+        setUpConnection(null, -1);
         
         final int testData = 23;
         final int dataLength = 4096;
@@ -213,5 +212,27 @@ public class JMSInputStreamTest extends JmsTestSupport {
             }
         }
         assertTrue(complete.get());
+    }
+    
+    public void testStreams() throws Exception {
+        setUpConnection(null, -1);
+        out.writeInt(4);
+        out.flush();
+        assertTrue(in.readInt() == 4);
+        out.writeFloat(2.3f);
+        out.flush();
+        assertTrue(in.readFloat() == 2.3f);
+        String str = "this is a test string";
+        out.writeUTF(str);
+        out.flush();
+        assertTrue(in.readUTF().equals(str));
+        for (int i = 0; i < 100; i++) {
+            out.writeLong(i);
+        }
+        out.flush();
+        
+        for (int i = 0; i < 100; i++) {
+            assertTrue(in.readLong() == i);
+        }
     }
 }

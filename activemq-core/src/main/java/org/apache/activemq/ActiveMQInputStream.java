@@ -57,8 +57,10 @@ public class ActiveMQInputStream extends InputStream implements ActiveMQDispatch
 
     private ProducerId producerId;
     private long nextSequenceId;
+    private long timeout;
+    private boolean firstReceived;
 
-    public ActiveMQInputStream(ActiveMQConnection connection, ConsumerId consumerId, ActiveMQDestination dest, String selector, boolean noLocal, String name, int prefetch)
+    public ActiveMQInputStream(ActiveMQConnection connection, ConsumerId consumerId, ActiveMQDestination dest, String selector, boolean noLocal, String name, int prefetch,  long timeout)
         throws JMSException {
         this.connection = connection;
 
@@ -82,6 +84,9 @@ public class ActiveMQInputStream extends InputStream implements ActiveMQDispatch
             }
         }
 
+        if (timeout < -1) throw new IllegalArgumentException("Timeout must be >= -1");
+        this.timeout = timeout;
+        
         this.info = new ConsumerInfo(consumerId);
         this.info.setSubscriptionName(name);
 
@@ -150,11 +155,17 @@ public class ActiveMQInputStream extends InputStream implements ActiveMQDispatch
         return jmsProperties;
     }
 
-    public ActiveMQMessage receive() throws JMSException {
+    public ActiveMQMessage receive() throws JMSException, ReadTimeoutException {
         checkClosed();
         MessageDispatch md;
         try {
-            md = unconsumedMessages.dequeue(-1);
+            if (firstReceived || timeout == -1) {
+                md = unconsumedMessages.dequeue(-1);
+                firstReceived = true;
+            } else {
+                md = unconsumedMessages.dequeue(timeout);
+                if (md == null) throw new ReadTimeoutException();
+            }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw JMSExceptionSupport.create(e);
@@ -186,6 +197,11 @@ public class ActiveMQInputStream extends InputStream implements ActiveMQDispatch
         }
     }
 
+    /**
+     * 
+     * @see InputStream#read()
+     * @throws ReadTimeoutException if a timeout was given and the first chunk of the message could not read within the timeout
+     */
     @Override
     public int read() throws IOException {
         fillBuffer();
@@ -195,7 +211,12 @@ public class ActiveMQInputStream extends InputStream implements ActiveMQDispatch
 
         return buffer[pos++] & 0xff;
     }
-
+    
+    /**
+     * 
+     * @see InputStream#read(byte[], int, int)
+     * @throws ReadTimeoutException if a timeout was given and the first chunk of the message could not read within the timeout
+     */
     @Override
     public int read(byte[] b, int off, int len) throws IOException {
         fillBuffer();
@@ -273,4 +294,14 @@ public class ActiveMQInputStream extends InputStream implements ActiveMQDispatch
         return "ActiveMQInputStream { value=" + info.getConsumerId() + ", producerId=" + producerId + " }";
     }
 
+
+    /**
+     * Exception which should get thrown if the first chunk of the stream could not read within the configured timeout
+     *
+     */
+    public class ReadTimeoutException extends IOException {
+        public ReadTimeoutException() {
+            super();
+        }
+    }
 }

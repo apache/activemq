@@ -2040,9 +2040,15 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     }
 
     public InputStream createInputStream(Destination dest, String messageSelector, boolean noLocal) throws JMSException {
-        return doCreateInputStream(dest, messageSelector, noLocal, null);
+        return createInputStream(dest, messageSelector, noLocal,  -1);
     }
 
+
+
+    public InputStream createInputStream(Destination dest, String messageSelector, boolean noLocal, long timeout) throws JMSException {
+        return doCreateInputStream(dest, messageSelector, noLocal, null, timeout);
+    }
+    
     public InputStream createDurableInputStream(Topic dest, String name) throws JMSException {
         return createInputStream(dest, null, false);
     }
@@ -2052,13 +2058,17 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     }
 
     public InputStream createDurableInputStream(Topic dest, String name, String messageSelector, boolean noLocal) throws JMSException {
-        return doCreateInputStream(dest, messageSelector, noLocal, name);
+        return createDurableInputStream(dest, name, messageSelector, noLocal, -1);
     }
 
-    private InputStream doCreateInputStream(Destination dest, String messageSelector, boolean noLocal, String subName) throws JMSException {
+    public InputStream createDurableInputStream(Topic dest, String name, String messageSelector, boolean noLocal, long timeout) throws JMSException {
+        return doCreateInputStream(dest, messageSelector, noLocal, name, timeout);
+    }
+    
+    private InputStream doCreateInputStream(Destination dest, String messageSelector, boolean noLocal, String subName, long timeout) throws JMSException {
         checkClosedOrFailed();
         ensureConnectionInfoSent();
-        return new ActiveMQInputStream(this, createConsumerId(), ActiveMQDestination.transform(dest), messageSelector, noLocal, subName, prefetchPolicy.getInputStreamPrefetch());
+        return new ActiveMQInputStream(this, createConsumerId(), ActiveMQDestination.transform(dest), messageSelector, noLocal, subName, prefetchPolicy.getInputStreamPrefetch(), timeout);
     }
 
     /**
@@ -2367,4 +2377,5 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     public void setCheckForDuplicates(boolean checkForDuplicates) {
         this.checkForDuplicates = checkForDuplicates;
     }
+
 }
