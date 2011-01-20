@@ -48,6 +48,8 @@ import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.broker.region.policy.SharedDeadLetterStrategy;
 import org.apache.activemq.command.ActiveMQBlobMessage;
 import org.apache.activemq.command.ActiveMQQueue;
+import org.apache.activemq.command.ActiveMQTempQueue;
+import org.apache.activemq.util.JMXSupport;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -605,6 +607,33 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
 
     protected String getSecondDestinationString() {
         return "test.new.destination." + getClass() + "." + getName();
+    }
+
+
+    public void testTempQueueJMXDelete() throws Exception {
+        connection = connectionFactory.createConnection();
+        
+        connection.setClientID(clientID);
+        connection.start();
+        Session session = connection.createSession(transacted, authMode);
+        ActiveMQTempQueue tQueue = (ActiveMQTempQueue) session.createTemporaryQueue();
+        Thread.sleep(1000);
+        ObjectName queueViewMBeanName = assertRegisteredObjectName(domain + ":Type="+  JMXSupport.encodeObjectNamePart(tQueue.getDestinationTypeAsString())+",Destination=" + JMXSupport.encodeObjectNamePart(tQueue.getPhysicalName()) + ",BrokerName=localhost");
+        
+        // should not throw an exception
+        mbeanServer.getObjectInstance(queueViewMBeanName);
+
+        tQueue.delete();
+        Thread.sleep(1000);
+        try {
+            // should throw an exception
+            mbeanServer.getObjectInstance(queueViewMBeanName);
+
+            fail("should be deleted already!");
+        } catch (Exception e) {
+            // expected!
+        }
+
     }
 
     // Test for AMQ-3029
