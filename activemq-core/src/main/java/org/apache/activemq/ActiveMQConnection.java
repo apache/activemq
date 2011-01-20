@@ -643,6 +643,14 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
                         c.dispose();
                     }
 
+                    // As TemporaryQueue and TemporaryTopic instances are bound
+                    // to a connection we should just delete them after the connection
+                    // is closed to free up memory
+                    for (Iterator<ActiveMQTempDestination> i = this.activeTempDestinations.values().iterator(); i.hasNext();) {
+                        ActiveMQTempDestination c = i.next();
+                        c.delete();
+                    }
+                    
                     if (isConnectionInfoSentToBroker) {
                         // If we announced ourselfs to the broker.. Try to let
                         // the broker
