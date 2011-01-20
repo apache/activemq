@@ -946,7 +946,7 @@ public class RegionBroker extends EmptyBroker {
 
             if (list.isEmpty() == false) {
 
-                ConnectionContext context = new ConnectionContext();
+                ConnectionContext context = BrokerSupport.getConnectionContext(this);
                 context.setBroker(this);
 
                 for (BaseDestination dest : list) {
