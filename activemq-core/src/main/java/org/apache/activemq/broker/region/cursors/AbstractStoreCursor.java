@@ -34,7 +34,6 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
     protected final Destination regionDestination;
     private final PendingList batchList;
     private Iterator<MessageReference> iterator = null;
-    protected boolean cacheEnabled=false;
     protected boolean batchResetNeeded = true;
     private boolean storeHasMessages = false;
     protected int size;
@@ -59,9 +58,7 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
             resetBatch();
             this.size = getStoreSize();
             this.storeHasMessages=this.size > 0;
-            if (!this.storeHasMessages&&useCache) {
-                cacheEnabled=true;
-            }
+            cacheEnabled = !this.storeHasMessages&&useCache;
         } 
     }
     
@@ -171,6 +168,12 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
     
     
     public final synchronized void addMessageLast(MessageReference node) throws Exception {
+        if (!cacheEnabled && size==0 && isStarted() && useCache && hasSpace()) {
+            if (LOG.isDebugEnabled()) {
+                LOG.debug(regionDestination.getActiveMQDestination().getPhysicalName() + " enabling cache on empty add");
+            }
+            cacheEnabled=true;
+        }
         if (cacheEnabled && hasSpace()) {
             recoverMessage(node.getMessage(),true);
             lastCachedId = node.getMessageId();
@@ -209,12 +212,6 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
         }
         if (last != null) {
             last.decrementReferenceCount();
-        }
-        if (size==0 && isStarted() && useCache && hasSpace() && isStoreEmpty()) {
-            if (LOG.isDebugEnabled()) {
-                LOG.debug(regionDestination.getActiveMQDestination().getPhysicalName() + " enabling cache on last remove");
-            }
-            cacheEnabled=true;
         }
     }
 

@@ -169,4 +169,9 @@ public interface QueueViewMBean extends DestinationViewMBean {
     @MBeanInfo("Number of messages available to be paged in by the cursor.")
     public int cursorSize();
 
+    /**
+     * @return true if caching is currently enabled of for the destination
+     */
+    @MBeanInfo("Caching is enabled")
+    boolean isCacheEnabled();
 }

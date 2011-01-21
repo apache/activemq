@@ -14,10 +14,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.activemq.broker.region;
+package org.apache.activemq.bugs;
 
-import java.io.File;
-
+import java.util.concurrent.TimeUnit;
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
 import javax.jms.JMSException;
@@ -29,9 +28,6 @@ import javax.jms.Session;
 import javax.jms.TextMessage;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
-
-import junit.framework.TestCase;
-
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.jmx.QueueViewMBean;
@@ -39,12 +35,18 @@ import org.apache.activemq.broker.region.policy.FilePendingQueueMessageStoragePo
 import org.apache.activemq.broker.region.policy.PendingQueueMessageStoragePolicy;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
-import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
-public class QueuePurgeTest extends TestCase {
-    private static final Log LOG = LogFactory.getLog(QueuePurgeTest.class);
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
+public class AMQ3145Test {
+    private static final Log LOG = LogFactory.getLog(AMQ3145Test.class);
     private final String MESSAGE_TEXT = new String(new byte[1024]);
     BrokerService broker;
     ConnectionFactory factory;
@@ -53,22 +55,26 @@ public class QueuePurgeTest extends TestCase {
     Queue queue;
     MessageConsumer consumer;
 
-    protected void setUp() throws Exception {
+    @Before
+    public void createBroker() throws Exception {
+        createBroker(true);
+    }
+
+    public void createBroker(boolean deleteAll) throws Exception {
         broker = new BrokerService();
-        broker.setDataDirectory("target/activemq-data");
+        broker.setDeleteAllMessagesOnStartup(deleteAll);
+        broker.setDataDirectory("target/AMQ3145Test");
         broker.setUseJmx(true);
-        broker.setDeleteAllMessagesOnStartup(true);
-        KahaDBPersistenceAdapter persistenceAdapter = new KahaDBPersistenceAdapter();
-        persistenceAdapter.setDirectory(new File("target/activemq-data/kahadb/QueuePurgeTest"));
-        broker.setPersistenceAdapter(persistenceAdapter);
         broker.addConnector("tcp://localhost:0");
         broker.start();
         factory = new ActiveMQConnectionFactory(broker.getTransportConnectors().get(0).getConnectUri().toString());
         connection = factory.createConnection();
         connection.start();
+        session = connection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
     }
 
-    protected void tearDown() throws Exception {
+    @After
+    public void tearDown() throws Exception {
         if (consumer != null) {
             consumer.close();
         }
@@ -78,42 +84,20 @@ public class QueuePurgeTest extends TestCase {
         broker.stop();
     }
 
-    public void testPurgeQueueWithActiveConsumer() throws Exception {
-        createProducerAndSendMessages(10000);
+    @Test
+    public void testCacheDisableReEnable() throws Exception {
+        createProducerAndSendMessages(1);
         QueueViewMBean proxy = getProxyToQueueViewMBean();
-        createConsumer();
-        proxy.purge();
-        assertEquals("Queue size is not zero, it's " + proxy.getQueueSize(), 0,
-                proxy.getQueueSize());
-    }
-    
-    
-    public void testPurgeLargeQueue() throws Exception {       
-        applyBrokerSpoolingPolicy();
-        createProducerAndSendMessages(90000);
-        QueueViewMBean proxy = getProxyToQueueViewMBean();
-        LOG.info("purging..");
-        proxy.purge();
-        assertEquals("Queue size is not zero, it's " + proxy.getQueueSize(), 0,
-                proxy.getQueueSize());
-        assertTrue("cache is disabled, temp store being used", !proxy.isCacheEnabled());
-    }
+        assertTrue("cache is enabled", proxy.isCacheEnabled());
+        tearDown();
+        createBroker(false);
+        proxy = getProxyToQueueViewMBean();
+        assertEquals("one pending message", 1, proxy.getQueueSize());
+        assertTrue("cache is disabled when there is a pending message", !proxy.isCacheEnabled());
 
-    public void testRepeatedExpiryProcessingOfLargeQueue() throws Exception {       
-        applyBrokerSpoolingPolicy();
-        final int exprityPeriod = 1000;
-        applyExpiryDuration(exprityPeriod);
-        createProducerAndSendMessages(90000);
-        QueueViewMBean proxy = getProxyToQueueViewMBean();
-        LOG.info("waiting for expiry to kick in a bunch of times to verify it does not blow mem");
-        Thread.sleep(10000);
-        assertEquals("Queue size is has not changed " + proxy.getQueueSize(), 90000,
-                proxy.getQueueSize());
-    }
-    
-
-    private void applyExpiryDuration(int i) {
-        broker.getDestinationPolicy().getDefaultEntry().setExpireMessagesPeriod(i);
+        createConsumer(1);
+        createProducerAndSendMessages(1);
+        assertTrue("cache is enabled again on next send when there are no messages", proxy.isCacheEnabled());
     }
 
     private void applyBrokerSpoolingPolicy() {
@@ -124,21 +108,6 @@ public class QueuePurgeTest extends TestCase {
         defaultEntry.setPendingQueuePolicy(pendingQueuePolicy);
         policyMap.setDefaultEntry(defaultEntry);
         broker.setDestinationPolicy(policyMap);
-    }
-
-    
-    public void testPurgeLargeQueueWithConsumer() throws Exception {       
-        applyBrokerSpoolingPolicy();
-        createProducerAndSendMessages(90000);
-        QueueViewMBean proxy = getProxyToQueueViewMBean();
-        createConsumer();
-        long start = System.currentTimeMillis();
-        LOG.info("purging..");
-        proxy.purge();
-        LOG.info("purge done: " + (System.currentTimeMillis() - start) + "ms");
-        assertEquals("Queue size is not zero, it's " + proxy.getQueueSize(), 0,
-                proxy.getQueueSize());
-        assertEquals("usage goes to duck", 0, proxy.getMemoryPercentUsage());
     }
 
     private QueueViewMBean getProxyToQueueViewMBean()
@@ -153,7 +122,6 @@ public class QueuePurgeTest extends TestCase {
     }
 
     private void createProducerAndSendMessages(int numToSend) throws Exception {
-        session = connection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
         queue = session.createQueue("test1");
         MessageProducer producer = session.createProducer(queue);
         for (int i = 0; i < numToSend; i++) {
@@ -166,13 +134,13 @@ public class QueuePurgeTest extends TestCase {
         producer.close();
     }
 
-    private void createConsumer() throws Exception {
+    private void createConsumer(int numToConsume) throws Exception {
         consumer = session.createConsumer(queue);
         // wait for buffer fill out
-        Thread.sleep(5 * 1000);
-        for (int i = 0; i < 500; ++i) {
-            Message message = consumer.receive();
+        for (int i = 0; i < numToConsume; ++i) {
+            Message message = consumer.receive(2000);
             message.acknowledge();
         }
+        consumer.close();
     }
 }

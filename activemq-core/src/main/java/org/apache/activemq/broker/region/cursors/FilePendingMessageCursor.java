@@ -63,12 +63,10 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
     /**
      * @param broker
      * @param name
-     * @param prioritizedMessages 
-     * @param store
+     * @param prioritizedMessages
      */
     public FilePendingMessageCursor(Broker broker, String name, boolean prioritizedMessages) {
         super(prioritizedMessages);
-        this.useCache = false;
         this.broker = broker;
         // the store can be null if the BrokerService has persistence
         // turned off
@@ -201,6 +199,7 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
                     if (hasSpace() || this.store == null) {
                         memoryList.add(node);
                         node.incrementReferenceCount();
+                        cacheEnabled = true;
                         return true;
                     }
                 }
@@ -248,6 +247,7 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
                     if (hasSpace()) {
                         memoryList.addFirst(node);
                         node.incrementReferenceCount();
+                        cacheEnabled = true;
                         return;
                     }
                 }
@@ -428,6 +428,7 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
 
             }
             memoryList.clear();
+            cacheEnabled = false;
         }
     }
 

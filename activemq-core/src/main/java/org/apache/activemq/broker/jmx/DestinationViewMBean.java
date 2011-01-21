@@ -307,9 +307,9 @@ public interface DestinationViewMBean {
     public void setMaxPageSize(@MBeanInfo("pageSize") int pageSize);
     
     /**
-     * @return true if caching is enabled of for the destination
+     * @return true if caching is allowed of for the destination
      */
-    @MBeanInfo("Caching is enabled")
+    @MBeanInfo("Caching is allowed")
     public boolean isUseCache();
     
     /**

@@ -285,7 +285,7 @@ public interface PendingMessageCursor extends Service {
     public void setUseCache(boolean useCache);
     
     /**
-     * @return true if a cache is being used
+     * @return true if a cache may be used
      */
     public boolean isUseCache();
     
@@ -294,5 +294,10 @@ public interface PendingMessageCursor extends Service {
      * @param id
      */
     public void rollback(MessageId id);
+
+    /**
+     * @return true if cache is being used
+     */
+    public boolean isCacheEnabled();
    
 }

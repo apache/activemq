@@ -37,7 +37,6 @@ public class VMPendingMessageCursor extends AbstractPendingMessageCursor {
     
     public VMPendingMessageCursor(boolean prioritizedMessages) {
         super(prioritizedMessages);
-        this.useCache = false;
         if (this.prioritizedMessages) {
             this.list= new PrioritizedPendingList();
         }else {

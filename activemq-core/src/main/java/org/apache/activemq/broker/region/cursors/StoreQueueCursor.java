@@ -180,7 +180,7 @@ public class StoreQueueCursor extends AbstractPendingMessageCursor {
      * Informs the Broker if the subscription needs to intervention to recover
      * it's state e.g. DurableTopicSubscriber may do
      * 
-     * @see org.apache.activemq.region.cursors.PendingMessageCursor
+     * @see org.apache.activemq.broker.region.cursors.PendingMessageCursor
      * @return true if recovery required
      */
     public boolean isRecoveryRequired() {
@@ -293,5 +293,19 @@ public class StoreQueueCursor extends AbstractPendingMessageCursor {
             }
         }
         return currentCursor;
+    }
+
+    @Override
+    public boolean isCacheEnabled() {
+        cacheEnabled = isUseCache();
+        if (cacheEnabled) {
+            if (persistent != null) {
+                cacheEnabled &= persistent.isCacheEnabled();
+            }
+            if (nonPersistent != null) {
+                cacheEnabled &= nonPersistent.isCacheEnabled();
+            }
+        }
+        return cacheEnabled;
     }
 }

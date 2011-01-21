@@ -34,7 +34,7 @@ import org.apache.activemq.usage.SystemUsage;
 
 /**
  * @author gtully
- * @see https://issues.apache.org/activemq/browse/AMQ-2020
+ * https://issues.apache.org/activemq/browse/AMQ-2020
  **/
 public class StoreQueueCursorNoDuplicateTest extends TestCase {
     ActiveMQQueue destination = new ActiveMQQueue("queue-"
@@ -83,6 +83,7 @@ public class StoreQueueCursorNoDuplicateTest extends TestCase {
         underTest.setSystemUsage(systemUsage);
         underTest.setEnableAudit(false);
         underTest.start();
+        assertTrue("cache enabled", underTest.isUseCache() && underTest.isCacheEnabled());
 
         final ConnectionContext contextNotInTx = new ConnectionContext();
         for (int i = 0; i < count; i++) {
@@ -93,6 +94,7 @@ public class StoreQueueCursorNoDuplicateTest extends TestCase {
             underTest.addMessageLast(msg);
         }
 
+        assertTrue("cache is disabled as limit reached", !underTest.isCacheEnabled());
         int dequeueCount = 0;
 
         underTest.setMaxBatchSize(2);

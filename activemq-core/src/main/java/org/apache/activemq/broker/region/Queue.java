@@ -667,7 +667,11 @@ public class Queue extends BaseDestination implements Task, UsageListener {
         try {
             if (store != null && message.isPersistent()) {        
                 message.getMessageId().setBrokerSequenceId(getDestinationSequenceId());
-                result = store.asyncAddQueueMessage(context, message);
+                if (messages.isCacheEnabled()) {
+                    result = store.asyncAddQueueMessage(context, message);
+                } else {
+                    store.addMessage(context, message);
+                }
                 if (isReduceMemoryFootprint()) {
                     message.clearMarshalledState();
                 }

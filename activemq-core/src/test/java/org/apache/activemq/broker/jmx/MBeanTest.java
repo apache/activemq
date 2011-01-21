@@ -156,6 +156,8 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         // check memory usage migration
         assertTrue("new dest has some memory usage", queueNew.getMemoryPercentUsage() > 0);
         assertEquals("old dest has no memory usage", 0, queue.getMemoryPercentUsage());
+        assertTrue("use cache", queueNew.isUseCache());
+        assertTrue("cache enabled", queueNew.isCacheEnabled());
     }
 
     public void testRetryMessages() throws Exception {

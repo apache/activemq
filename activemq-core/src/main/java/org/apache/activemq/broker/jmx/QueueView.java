@@ -168,4 +168,12 @@ public class QueueView extends DestinationView implements QueueViewMBean {
         }
         return false;
     }
+
+    public boolean isCacheEnabled() {
+        Queue queue = (Queue) destination;
+        if (queue.getMessages() != null){
+            return queue.getMessages().isCacheEnabled();
+        }
+        return false;
+    }
 }

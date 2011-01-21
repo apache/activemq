@@ -33,7 +33,7 @@ public class ExpiryHogTest extends JmsMultipleClientsTestSupport {
 
     int numMessages = 4;
 
-    public void testHog() throws Exception {
+    public void testImmediateDispatchWhenCacheDisabled() throws Exception {
         ConnectionFactory f = createConnectionFactory();
         destination = createDestination();
         startConsumers(f, destination);
@@ -53,7 +53,7 @@ public class ExpiryHogTest extends JmsMultipleClientsTestSupport {
         bs.setDestinationPolicy(policyMap);
 
         KahaDBPersistenceAdapter ad = (KahaDBPersistenceAdapter) bs.getPersistenceAdapter();
-        ad.setConcurrentStoreAndDispatchQueues(false);
+        ad.setConcurrentStoreAndDispatchQueues(true);
         return bs;
     }
 
