@@ -29,6 +29,7 @@ public class ConsumerThread extends Thread {
     int received = 0;
     Destination dest;
     Session sess;
+    boolean breakOnNull = true;
 
     public ConsumerThread(Session sess, Destination dest) {
         this.dest = dest;
@@ -47,7 +48,9 @@ public class ConsumerThread extends Thread {
                     LOG.info("Received " + ((TextMessage)msg).getText());
                     received++;
                 } else {
-                    break;
+                    if (breakOnNull) {
+                        break;
+                    }
                 }
             }
         } catch (JMSException e) {
@@ -65,5 +68,13 @@ public class ConsumerThread extends Thread {
 
     public int getReceived() {
         return received;
+    }
+
+    public void setMessageCount(int messageCount) {
+        this.messageCount = messageCount;
+    }
+
+    public void setBreakOnNull(boolean breakOnNull) {
+        this.breakOnNull = breakOnNull;
     }
 }

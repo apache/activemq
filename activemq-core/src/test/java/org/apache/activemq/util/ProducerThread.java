@@ -19,10 +19,7 @@ package org.apache.activemq.util;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import javax.jms.Destination;
-import javax.jms.JMSException;
-import javax.jms.MessageProducer;
-import javax.jms.Session;
+import javax.jms.*;
 
 public class ProducerThread extends Thread {
 
@@ -30,7 +27,7 @@ public class ProducerThread extends Thread {
 
     int messageCount = 1000;
     Destination dest;
-    Session sess;
+    protected Session sess;
     int sleep = 0;
     int sentCount = 0;
 
@@ -44,7 +41,7 @@ public class ProducerThread extends Thread {
         try {
             producer = sess.createProducer(dest);
             for (sentCount = 0; sentCount < messageCount; sentCount++) {
-                producer.send(sess.createTextMessage("test message: " + sentCount));
+                producer.send(createMessage(sentCount));
                 LOG.info("Sent 'test message: " + sentCount + "'");
                 if (sleep > 0) {
                     Thread.sleep(sleep);
@@ -63,6 +60,9 @@ public class ProducerThread extends Thread {
         }
     }
 
+    protected Message createMessage(int i) throws Exception {
+        return sess.createTextMessage("test message: " + i);
+    }
 
     public void setMessageCount(int messageCount) {
         this.messageCount = messageCount;
