@@ -174,7 +174,7 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport {
     @Override
     public void addConnection(ConnectionContext context, ConnectionInfo info) throws Exception {
         if (isLogAll() || isLogConnectionEvents()) {
-            LOG.info("Adding Connection : " + context);
+            LOG.info("Adding Connection : " + info);
         }
         super.addConnection(context, info);
     }
