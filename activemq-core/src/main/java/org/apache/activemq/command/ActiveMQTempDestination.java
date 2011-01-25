@@ -48,7 +48,9 @@ public abstract class ActiveMQTempDestination extends ActiveMQDestination {
     }
 
     public void delete() throws JMSException {
-        connection.deleteTempDestination(this);
+        if (connection != null) {
+            connection.deleteTempDestination(this);
+        }
     }
 
     public ActiveMQConnection getConnection() {
