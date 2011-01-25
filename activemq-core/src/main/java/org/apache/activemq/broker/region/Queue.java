@@ -189,7 +189,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                 }
             } catch (InterruptedException e) {
                 if (LOG.isDebugEnabled()) {
-                    LOG.debug(getName() + "P roducer Flow Control Timeout Task is stopping");
+                    LOG.debug(getName() + "Producer Flow Control Timeout Task is stopping");
                 }
             }
         }
@@ -833,6 +833,9 @@ public class Queue extends BaseDestination implements Task, UsageListener {
     public void start() throws Exception {
         if (memoryUsage != null) {
             memoryUsage.start();
+        }
+        if (systemUsage.getStoreUsage() != null) {
+            systemUsage.getStoreUsage().start();
         }
         systemUsage.getMemoryUsage().addUsageListener(this);
         messages.start();
