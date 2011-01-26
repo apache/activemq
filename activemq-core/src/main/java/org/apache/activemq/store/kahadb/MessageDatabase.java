@@ -1174,7 +1174,7 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
             			break;
             		}
             	}
-                LOG.trace("gc candidates after first tx:" + firstTxLocation.getDataFileId() + ", " + gcCandidateSet);
+                LOG.trace("gc candidates after first tx:" + firstTxLocation + ", " + gcCandidateSet);
             }
 
             // Go through all the destinations to see if any of them can remove GC candidates.
