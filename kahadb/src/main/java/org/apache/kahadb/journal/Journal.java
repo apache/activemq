@@ -684,7 +684,7 @@ public class Journal {
         return fileByFileMap.keySet();
     }
 
-    public Map<Integer, DataFile> getFileMap() {
+    public synchronized Map<Integer, DataFile> getFileMap() {
         return new TreeMap<Integer, DataFile>(fileMap);
     }
     
