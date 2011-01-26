@@ -213,6 +213,7 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
     private boolean checksumJournalFiles = false;
     private int databaseLockedWaitDelay = DEFAULT_DATABASE_LOCKED_WAIT_DELAY;
     protected boolean forceRecoverIndex = false;
+    private final Object checkpointThreadLock = new Object();
 
     public MessageDatabase() {
     }
@@ -273,38 +274,49 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
 	}
 	
 	private void startCheckpoint() {
-        checkpointThread = new Thread("ActiveMQ Journal Checkpoint Worker") {
-            @Override
-            public void run() {
-                try {
-                    long lastCleanup = System.currentTimeMillis();
-                    long lastCheckpoint = System.currentTimeMillis();
-                    // Sleep for a short time so we can periodically check 
-                    // to see if we need to exit this thread.
-                    long sleepTime = Math.min(checkpointInterval, 500);
-                    while (opened.get()) {
-                        Thread.sleep(sleepTime);
-                        long now = System.currentTimeMillis();
-                        if( now - lastCleanup >= cleanupInterval ) {
-                            checkpointCleanup(true);
-                            lastCleanup = now;
-                            lastCheckpoint = now;
-                        } else if( now - lastCheckpoint >= checkpointInterval ) {
-                            checkpointCleanup(false);
-                            lastCheckpoint = now;
+        synchronized (checkpointThreadLock) {
+            boolean start = false;
+            if (checkpointThread == null) {
+                start = true;
+            } else if (!checkpointThread.isAlive()) {
+                start = true;
+                LOG.info("KahaDB: Recovering checkpoint thread after death");
+            }
+            if (start) {
+                checkpointThread = new Thread("ActiveMQ Journal Checkpoint Worker") {
+                    @Override
+                    public void run() {
+                        try {
+                            long lastCleanup = System.currentTimeMillis();
+                            long lastCheckpoint = System.currentTimeMillis();
+                            // Sleep for a short time so we can periodically check
+                            // to see if we need to exit this thread.
+                            long sleepTime = Math.min(checkpointInterval, 500);
+                            while (opened.get()) {
+                                Thread.sleep(sleepTime);
+                                long now = System.currentTimeMillis();
+                                if( now - lastCleanup >= cleanupInterval ) {
+                                    checkpointCleanup(true);
+                                    lastCleanup = now;
+                                    lastCheckpoint = now;
+                                } else if( now - lastCheckpoint >= checkpointInterval ) {
+                                    checkpointCleanup(false);
+                                    lastCheckpoint = now;
+                                }
+                            }
+                        } catch (InterruptedException e) {
+                            // Looks like someone really wants us to exit this thread...
+                        } catch (IOException ioe) {
+                            LOG.error("Checkpoint failed", ioe);
+                            brokerService.handleIOException(ioe);
                         }
                     }
-                } catch (InterruptedException e) {
-                    // Looks like someone really wants us to exit this thread...
-                } catch (IOException ioe) {
-                    LOG.error("Checkpoint failed", ioe);
-                    brokerService.handleIOException(ioe);
-                }
+                };
+
+                checkpointThread.setDaemon(true);
+                checkpointThread.start();
             }
-                    
-        };
-        checkpointThread.setDaemon(true);
-        checkpointThread.start();
+        }
 	}
 
 	public void open() throws IOException {
@@ -378,7 +390,9 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
 	            this.indexLock.writeLock().unlock();
 	        }
 	        journal.close();
-	        checkpointThread.join();
+            synchronized (checkpointThreadLock) {
+	            checkpointThread.join();
+            }
 	        lockFile.unlock();
 	        lockFile=null;
 		}
@@ -761,7 +775,6 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
                 this.indexLock.writeLock().unlock();
             }
             if (!checkpointThread.isAlive()) {
-                LOG.info("KahaDB: Recovering checkpoint thread after exception");
                 startCheckpoint();
             }
             if (after != null) {
