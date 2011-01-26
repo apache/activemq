@@ -1137,8 +1137,9 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
         pageFile.flush();
 
         if( cleanup ) {
-        	
-        	final TreeSet<Integer> gcCandidateSet = new TreeSet<Integer>(journal.getFileMap().keySet());
+
+            final TreeSet<Integer> completeFileSet = new TreeSet<Integer>(journal.getFileMap().keySet());
+            final TreeSet<Integer> gcCandidateSet = new TreeSet<Integer>(completeFileSet);
         	
         	// Don't GC files under replication
         	if( journalFilesBeingReplicated!=null ) {
@@ -1220,7 +1221,7 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
                 Set<Integer> referencedFileIds = ackMessageFileMap.get(candidate);
                 if (referencedFileIds != null) {
                     for (Integer referencedFileId : referencedFileIds) {
-                        if (journal.getFileMap().containsKey(referencedFileId) && !gcCandidates.contains(referencedFileId)) {
+                        if (completeFileSet.contains(referencedFileId) && !gcCandidates.contains(referencedFileId)) {
                             // active file that is not targeted for deletion is referenced so don't delete
                             candidates.remove();
                             break;
