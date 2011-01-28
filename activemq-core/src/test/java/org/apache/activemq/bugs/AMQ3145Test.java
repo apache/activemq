@@ -67,6 +67,7 @@ public class AMQ3145Test {
         broker.setUseJmx(true);
         broker.addConnector("tcp://localhost:0");
         broker.start();
+        broker.waitUntilStarted();
         factory = new ActiveMQConnectionFactory(broker.getTransportConnectors().get(0).getConnectUri().toString());
         connection = factory.createConnection();
         connection.start();

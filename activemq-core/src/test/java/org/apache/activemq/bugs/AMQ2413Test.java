@@ -18,6 +18,8 @@ package org.apache.activemq.bugs;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Vector;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -43,8 +45,14 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.broker.region.policy.VMPendingQueueMessageStoragePolicy;
+import org.apache.activemq.command.MessageId;
+import org.apache.activemq.command.ProducerId;
+import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 public class AMQ2413Test extends CombinationTestSupport implements MessageListener {
+    private static final Log LOG = LogFactory.getLog(AMQ2413Test.class);
     BrokerService broker;
     private ActiveMQConnectionFactory factory;
 
@@ -53,6 +61,7 @@ public class AMQ2413Test extends CombinationTestSupport implements MessageListen
     private static final int RECEIVER_THINK_TIME = 1;
     private static final int CONSUMER_COUNT = 1;
     private static final int PRODUCER_COUNT = 50;
+    private static final int TO_SEND = SEND_COUNT / PRODUCER_COUNT;
 
     public int deliveryMode = DeliveryMode.NON_PERSISTENT;
     public int ackMode = Session.DUPS_OK_ACKNOWLEDGE;
@@ -75,6 +84,9 @@ public class AMQ2413Test extends CombinationTestSupport implements MessageListen
         broker = new BrokerService();
         broker.setDataDirectory("target" + File.separator + "test-data" + File.separator + "AMQ2401Test");
         broker.setDeleteAllMessagesOnStartup(true);
+
+        KahaDBPersistenceAdapter kahaDb = (KahaDBPersistenceAdapter) broker.getPersistenceAdapter();
+        kahaDb.setConcurrentStoreAndDispatchQueues(false);
         broker.addConnector("tcp://0.0.0.0:2401");
         PolicyMap policies = new PolicyMap();
         PolicyEntry entry = new PolicyEntry();
@@ -150,8 +162,9 @@ public class AMQ2413Test extends CombinationTestSupport implements MessageListen
     public void onMessage(Message message) {
         receivedMessages.release();
         if (count.incrementAndGet() % 100 == 0) {
-            System.out.println("Received message " + count);
+            LOG.info("Received message " + count);
         }
+        track(message);
         if (RECEIVER_THINK_TIME > 0) {
             try {
                 Thread.currentThread().sleep(RECEIVER_THINK_TIME);
@@ -160,6 +173,26 @@ public class AMQ2413Test extends CombinationTestSupport implements MessageListen
             }
         }
 
+    }
+
+    HashMap<ProducerId, boolean[]> tracker = new HashMap<ProducerId, boolean[]>();
+    private synchronized void track(Message message) {
+        try {
+            MessageId id = new MessageId(message.getJMSMessageID());
+            ProducerId pid = id.getProducerId();
+            int seq = (int)id.getProducerSequenceId();
+            boolean[] ids = tracker.get(pid);
+            if (ids == null) {
+                ids = new boolean[TO_SEND + 1];
+                ids[seq] = true;
+                tracker.put(pid, ids);
+            } else {
+                assertTrue("not already received: " + id, !ids[seq]);
+                ids[seq] = true;
+            }
+        } catch (Exception e) {
+            LOG.error(e);
+        }
     }
 
     /**
@@ -172,12 +205,26 @@ public class AMQ2413Test extends CombinationTestSupport implements MessageListen
             while (count.get() < SEND_COUNT) {
                 if (!receivedMessages.tryAcquire(HANG_THRESHOLD, TimeUnit.SECONDS)) {
                     if (count.get() == SEND_COUNT) break;
+                    verifyTracking();
                     throw new TimeoutException("@count=" + count.get() + " Message not received for more than " + HANG_THRESHOLD + " seconds");
                 }
             }
         } finally {
             running.set(false);
         }
+    }
+
+    private void verifyTracking() {
+        Vector<MessageId> missing = new Vector<MessageId>();
+        for (ProducerId pid : tracker.keySet()) {
+            boolean[] ids = tracker.get(pid);
+            for (int i=1; i<TO_SEND + 1; i++) {
+                if (!ids[i]) {
+                    missing.add(new MessageId(pid, i));
+                }
+            }
+        }
+        assertTrue("No missing messages: " + missing, missing.isEmpty());
     }
 
     private interface Service {
@@ -210,12 +257,13 @@ public class AMQ2413Test extends CombinationTestSupport implements MessageListen
 
         public void run() {
 
-            int count = SEND_COUNT / PRODUCER_COUNT;
-            for (int i = 1; i <= count; i++) {
+
+            int i = 1;
+            for (; i <= TO_SEND; i++) {
                 try {
 
                     if (+i % 100 == 0) {
-                        System.out.println(thread.currentThread().getName() + " Sending message " + i);
+                        LOG.info(thread.currentThread().getName() + " Sending message " + i);
                     }
                     message = session.createBytesMessage();
                     message.writeBytes(new byte[1024]);
@@ -226,6 +274,7 @@ public class AMQ2413Test extends CombinationTestSupport implements MessageListen
                     break;
                 }
             }
+            LOG.info(thread.currentThread().getName() + " Sent: " + (i-1));
         }
 
         public void close() {

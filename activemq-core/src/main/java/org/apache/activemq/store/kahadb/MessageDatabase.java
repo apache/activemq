@@ -2136,18 +2136,18 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
             if (sequence != null) {
                 Long nextPosition = new Long(sequence.longValue() + 1);
                 if (defaultPriorityIndex.containsKey(tx, sequence)) {
-                    lastDefaultKey = nextPosition;
+                    lastDefaultKey = sequence;
                     cursor.defaultCursorPosition = nextPosition.longValue();
                 } else if (highPriorityIndex != null) {
                     if (highPriorityIndex.containsKey(tx, sequence)) {
-                        lastHighKey = nextPosition;
+                        lastHighKey = sequence;
                         cursor.highPriorityCursorPosition = nextPosition.longValue();
                     } else if (lowPriorityIndex.containsKey(tx, sequence)) {
-                        lastLowKey = nextPosition;
+                        lastLowKey = sequence;
                         cursor.lowPriorityCursorPosition = nextPosition.longValue();
                     }
                 } else {
-                    lastDefaultKey = nextPosition;
+                    lastDefaultKey = sequence;
                     cursor.defaultCursorPosition = nextPosition.longValue();
                 }
             }

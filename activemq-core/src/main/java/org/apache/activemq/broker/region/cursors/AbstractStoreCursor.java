@@ -168,27 +168,30 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
     
     
     public final synchronized void addMessageLast(MessageReference node) throws Exception {
-        if (!cacheEnabled && size==0 && isStarted() && useCache && hasSpace()) {
-            if (LOG.isDebugEnabled()) {
-                LOG.debug(regionDestination.getActiveMQDestination().getPhysicalName() + " enabling cache on empty add");
-            }
-            cacheEnabled=true;
-        }
-        if (cacheEnabled && hasSpace()) {
-            recoverMessage(node.getMessage(),true);
-            lastCachedId = node.getMessageId();
-        } else {
-            if (cacheEnabled) {
-                cacheEnabled=false;
+        if (hasSpace()) {
+            if (!cacheEnabled && size==0 && isStarted() && useCache) {
                 if (LOG.isTraceEnabled()) {
-                    LOG.trace(regionDestination.getActiveMQDestination().getPhysicalName() + " disabling cache on size:" + size
-                            + ", lastCachedIdSeq: " + (lastCachedId == null ? -1 : lastCachedId.getBrokerSequenceId())
-                            + " current node seqId: " + node.getMessageId().getBrokerSequenceId());
+                    LOG.trace(regionDestination.getActiveMQDestination().getPhysicalName()
+                            + " enabling cache for empty store " + node.getMessageId());
                 }
-                // sync with store on disabling the cache
-                if (lastCachedId != null) {
-                    setBatch(lastCachedId);
+                cacheEnabled=true;
+            }
+            if (cacheEnabled) {
+                recoverMessage(node.getMessage(),true);
+                lastCachedId = node.getMessageId();
+            }
+        } else if (cacheEnabled) {
+            cacheEnabled=false;
+            // sync with store on disabling the cache
+            if (lastCachedId != null) {
+                if (LOG.isTraceEnabled()) {
+                    LOG.trace(regionDestination.getActiveMQDestination().getPhysicalName()
+                            + " disabling cache on size:" + size
+                            + ", lastCachedId: " + lastCachedId
+                            + " current node Id: " + node.getMessageId());
                 }
+                setBatch(lastCachedId);
+                lastCachedId = null;
             }
         }
         this.storeHasMessages = true;

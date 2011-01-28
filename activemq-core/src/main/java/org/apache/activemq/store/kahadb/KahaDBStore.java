@@ -487,15 +487,13 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
                         StoredDestination sd = getStoredDestination(dest, tx);
                         Entry<Long, MessageKeys> entry = null;
                         int counter = 0;
-                        for (Iterator<Entry<Long, MessageKeys>> iterator = sd.orderIndex.iterator(tx); iterator
-                                .hasNext()
-                                && listener.hasSpace();) {
+                        for (Iterator<Entry<Long, MessageKeys>> iterator = sd.orderIndex.iterator(tx);
+                             listener.hasSpace() && iterator.hasNext(); ) {
                             entry = iterator.next();
                             Message msg = loadMessage(entry.getValue().location);
-                            //System.err.println("RECOVER " + msg.getMessageId().getProducerSequenceId());
                             listener.recoverMessage(msg);
                             counter++;
-                            if (counter >= maxReturned || listener.hasSpace() == false) {
+                            if (counter >= maxReturned) {
                                 break;
                             }
                         }
@@ -531,7 +529,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
                 // operations... but for now we must
                 // externally synchronize...
                
-                indexLock.readLock().lock();
+                indexLock.writeLock().lock();
                 try {
                         pageFile.tx().execute(new Transaction.Closure<IOException>() {
                         public void execute(Transaction tx) throws IOException {
@@ -543,7 +541,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
                         }
                     });
                 }finally {
-                    indexLock.readLock().unlock();
+                    indexLock.writeLock().unlock();
                 }
                 
             } finally {
