@@ -502,7 +502,7 @@ public class TransactionContext implements XAResource {
     public void commit(Xid xid, boolean onePhase) throws XAException {
 
         if (LOG.isDebugEnabled()) {
-            LOG.debug("Commit: " + xid);
+            LOG.debug("Commit: " + xid + ", onePhase=" + onePhase);
         }
         
         // We allow interleaving multiple transactions, so
@@ -534,14 +534,16 @@ public class TransactionContext implements XAResource {
 
         } catch (JMSException e) {
             LOG.warn("commit of: " + x + " failed with: " + e, e);
-            List<TransactionContext> l = ENDED_XA_TRANSACTION_CONTEXTS.remove(x);
-            if (l != null && !l.isEmpty()) {
-                for (TransactionContext ctx : l) {
-                    try {
-                        ctx.afterRollback();
-                    } catch (Throwable ignored) {
-                        if (LOG.isDebugEnabled()) {
-                            LOG.debug("failed to firing afterRollback callbacks commit failure, txid: " + x + ", context: " + ctx, ignored);
+            if (onePhase) {
+                List<TransactionContext> l = ENDED_XA_TRANSACTION_CONTEXTS.remove(x);
+                if (l != null && !l.isEmpty()) {
+                    for (TransactionContext ctx : l) {
+                        try {
+                            ctx.afterRollback();
+                        } catch (Throwable ignored) {
+                            if (LOG.isDebugEnabled()) {
+                                LOG.debug("failed to firing afterRollback callbacks commit failure, txid: " + x + ", context: " + ctx, ignored);
+                            }
                         }
                     }
                 }
@@ -745,5 +747,12 @@ public class TransactionContext implements XAResource {
     public void cleanup() {
         associatedXid = null;
         transactionId = null;
+    }
+
+    @Override
+    public String toString() {
+        return "TransactionContext{" +
+                "transactionId=" + transactionId +
+                '}';
     }
 }
