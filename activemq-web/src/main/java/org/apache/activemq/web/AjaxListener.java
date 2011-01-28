@@ -66,12 +66,22 @@ public class AjaxListener implements MessageAvailableListener {
         if (continuation != null) {
             try {
                 Message message = consumer.receive(10);
-                continuation.setAttribute("message", message);
-                continuation.setAttribute("consumer", consumer);
+                LOG.debug( "message is " + message );
+                if( message != null ) {
+                    if( continuation.isSuspended() ) {
+                        LOG.debug( "Resuming suspended continuation " + continuation );
+                        continuation.setAttribute("message", message);
+                        continuation.setAttribute("consumer", consumer);
+                        continuation.resume();
+                    } else {
+                        LOG.debug( "Message available, but continuation is already resumed.  Buffer for next time." );
+                        bufferMessageForDelivery( message );
+                    }
+                }
             } catch (Exception e) {
                 LOG.error("Error receiving message " + e, e);
             }
-            continuation.resume();
+            
         } else if (System.currentTimeMillis() - lastAccess > 2 * this.maximumReadTimeout) {
             new Thread() {
                 public void run() {
@@ -81,11 +91,17 @@ public class AjaxListener implements MessageAvailableListener {
         } else {
             try {
                 Message message = consumer.receive(10);
-                if (message != null) {
-                    unconsumedMessages.addLast(message);
-                }
+                bufferMessageForDelivery( message );
             } catch (Exception e) {
                 LOG.error("Error receiving message " + e, e);
+            }
+        }
+    }
+    
+    public void bufferMessageForDelivery( Message message ) {
+        if( message != null ) {
+            synchronized( unconsumedMessages ) {
+                unconsumedMessages.addLast(message);
             }
         }
     }

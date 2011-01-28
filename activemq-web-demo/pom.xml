@@ -132,13 +132,6 @@
       <artifactId>derby</artifactId>
     </dependency>
 
-    <dependency>
-       <groupId>commons-httpclient</groupId>
-       <artifactId>commons-httpclient</artifactId>
-       <version>3.1</version>
-       <scope>test</scope>
-    </dependency>
-
   </dependencies>
 
   <properties>

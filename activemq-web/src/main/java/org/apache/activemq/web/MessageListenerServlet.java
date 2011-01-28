@@ -264,6 +264,8 @@ public class MessageListenerServlet extends MessageServletSupport {
         }
 
         Message message = null;
+        // this is non-null if we're resuming the continuation.
+        // attributes set in AjaxListener
         message = (Message)request.getAttribute("message"); 
         
         synchronized (client) {
@@ -310,6 +312,7 @@ public class MessageListenerServlet extends MessageServletSupport {
 
                 continuation.setTimeout(timeout);
                 continuation.suspend();
+                LOG.debug( "Suspending continuation " + continuation );
                 
                 // Fetch the listeners
                 AjaxListener listener = client.getListener();
@@ -347,13 +350,17 @@ public class MessageListenerServlet extends MessageServletSupport {
 
                 LinkedList<Message> unconsumedMessages = ((AjaxListener)consumer.getAvailableListener()).getUnconsumedMessages();
                 LOG.debug("Send " + unconsumedMessages.size() + " unconsumed messages");
-                for (Message msg : unconsumedMessages) {
-                    messages++;
-                    String id = consumerIdMap.get(consumer);
-                    String destinationName = consumerDestinationNameMap.get(consumer);
-                    writeMessageResponse(writer, msg, id, destinationName);
-                    if (messages >= maximumMessages) {
-                        break;
+                synchronized( unconsumedMessages ) {
+                    for (Iterator<Message> it = unconsumedMessages.iterator(); it.hasNext(); ) {
+                        messages++;
+                        Message msg = it.next();
+                        String id = consumerIdMap.get(consumer);
+                        String destinationName = consumerDestinationNameMap.get(consumer);
+                        writeMessageResponse(writer, msg, id, destinationName);
+                        it.remove();
+                        if (messages >= maximumMessages) {
+                            break;
+                        }
                     }
                 }
 

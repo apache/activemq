@@ -51,6 +51,7 @@ public class JettyTestSupport extends TestCase {
         broker.setPersistent(false);
         broker.setUseJmx(true);
         broker.addConnector("tcp://localhost:61616");
+        broker.addConnector("stomp://localhost:61613");
         broker.start();
         broker.waitUntilStarted();
         
