@@ -160,7 +160,7 @@ public class JmsMultipleBrokersTestSupport extends CombinationTestSupport {
                 Wait.waitFor(new Wait.Condition() {
                     public boolean isSatisified() throws Exception {
                         return (broker.getNetworkConnectors().get(0).activeBridges().size() >= min);
-                    }});
+                    }}, Wait.MAX_WAIT_MILLIS * 2);
             }
         }
     }
