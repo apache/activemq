@@ -108,7 +108,7 @@ public class JDBCXACommitExceptionTest extends JDBCCommitExceptionTest {
                 LOG.debug("Caught exception:", e);
 
                 try {
-                    LOG.debug("Rolling back transaction (just in case, no need to do this as it is implicit in a commit failure) " + tid);
+                    LOG.debug("Rolling back transaction (just in case, no need to do this as it is implicit in a 1pc commit failure) " + tid);
                     resource.rollback(tid);
                 }
                 catch (XAException ex) {

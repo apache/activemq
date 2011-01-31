@@ -88,7 +88,7 @@ public class TransactionContext implements XAResource {
     }
 
     public boolean isInXATransaction() {
-        return transactionId != null && transactionId.isXATransaction();
+        return (transactionId != null && transactionId.isXATransaction()) || !ENDED_XA_TRANSACTION_CONTEXTS.isEmpty();
     }
 
     public boolean isInLocalTransaction() {
@@ -579,6 +579,7 @@ public class TransactionContext implements XAResource {
         } catch (JMSException e) {
             throw toXAException(e);
         }
+        ENDED_XA_TRANSACTION_CONTEXTS.remove(x);
     }
 
     public boolean isSameRM(XAResource xaResource) throws XAException {
