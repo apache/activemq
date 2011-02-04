@@ -40,6 +40,7 @@ import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.amq.AMQPersistenceAdapter;
 import org.apache.activemq.store.jdbc.JDBCPersistenceAdapter;
 import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
+import org.apache.activemq.store.memory.MemoryPersistenceAdapter;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -173,7 +174,7 @@ public abstract class TestSupport extends CombinationTestSupport {
                         regionBroker.getTopicRegion().getDestinationMap();
     }
 
-    public static enum PersistenceAdapterChoice {KahaDB, AMQ, JDBC };
+    public static enum PersistenceAdapterChoice {KahaDB, AMQ, JDBC, MEM };
 
     public PersistenceAdapter setDefaultPersistenceAdapter(BrokerService broker) throws IOException {
         return setPersistenceAdapter(broker, defaultPersistenceAdapter);
@@ -190,6 +191,9 @@ public abstract class TestSupport extends CombinationTestSupport {
             break;
         case KahaDB:
             adapter = new KahaDBPersistenceAdapter();
+            break;
+        case MEM:
+            adapter = new MemoryPersistenceAdapter();
             break;
         }
         broker.setPersistenceAdapter(adapter);
