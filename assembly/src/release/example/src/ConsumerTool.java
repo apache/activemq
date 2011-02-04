@@ -65,6 +65,8 @@ public class ConsumerTool extends Thread implements MessageListener, ExceptionLi
     private String consumerName = "James";
     private long sleepTime;
     private long receiveTimeOut;
+	private long batch = 10; // Default batch size for CLIENT_ACKNOWLEDGEMENT or SESSION_TRANSACTED
+	private long messagesReceived = 0;
 
     public static void main(String[] args) {
         ArrayList<ConsumerTool> threads = new ArrayList();
@@ -161,6 +163,9 @@ public class ConsumerTool extends Thread implements MessageListener, ExceptionLi
     }
 
     public void onMessage(Message message) {
+
+		messagesReceived++;
+
         try {
 
             if (message instanceof TextMessage) {
@@ -185,9 +190,15 @@ public class ConsumerTool extends Thread implements MessageListener, ExceptionLi
             }
 
             if (transacted) {
-                session.commit();
+				if ((messagesReceived % batch) == 0) {
+					System.out.println("Commiting transaction for last " + batch + " messages; messages so far = " + messagesReceived);
+					session.commit();
+				}
             } else if (ackMode == Session.CLIENT_ACKNOWLEDGE) {
-                message.acknowledge();
+				if ((messagesReceived % batch) == 0) {
+					System.out.println("Acknowledging last " + batch + " messages; messages so far = " + messagesReceived);
+					message.acknowledge();
+				}
             }
 
         } catch (JMSException e) {
@@ -334,5 +345,9 @@ public class ConsumerTool extends Thread implements MessageListener, ExceptionLi
 
     public void setVerbose(boolean verbose) {
         this.verbose = verbose;
+    }
+
+    public void setBatch(long batch) {
+        this.batch = batch;
     }
 }

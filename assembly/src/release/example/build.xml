@@ -94,6 +94,7 @@
                  receive-time-out - An integer to specify the time to wait for
                                     message consumption
                   parallelThreads - The number of parallel threads
+                            batch - Batch size for transactions and client acknowledgment (default 10)
 				
             --------------------------------------------------------				
             ant producer &lt;options&gt; - Creates a producer publishing a number of messages
@@ -218,7 +219,8 @@
 			<arg value="--sleep-time=${sleepTime}" />
 			<arg value="--verbose=${verbose}"/>
 			<arg value="--ack-mode=${ack-mode}"/>		
-			<arg value="--receive-time-out=${receive-time-out}"/>					
+			<arg value="--receive-time-out=${receive-time-out}"/>
+            <arg value="--batch=${batch}"/>
 		</java>
 	</target>
 
