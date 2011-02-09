@@ -59,6 +59,8 @@ public class HttpClientTransport extends HttpTransportSupport {
     private boolean trace;
     private GetMethod httpMethod;
     private volatile int receiveCounter;
+
+    private int soTimeout = MAX_CLIENT_TIMEOUT;
     
     public HttpClientTransport(TextWireFormat wireFormat, URI remoteUrl) {
         super(wireFormat, remoteUrl);
@@ -84,7 +86,7 @@ public class HttpClientTransport extends HttpTransportSupport {
 
             HttpClient client = getSendHttpClient();
             HttpClientParams params = new HttpClientParams();
-            params.setSoTimeout(MAX_CLIENT_TIMEOUT);
+            params.setSoTimeout(soTimeout);
             client.setParams(params);
             int answer = client.executeMethod(httpMethod);
             if (answer != HttpStatus.SC_OK) {
@@ -227,4 +229,11 @@ public class HttpClientTransport extends HttpTransportSupport {
         return receiveCounter;
     }
 
+    public int getSoTimeout() {
+        return soTimeout;
+    }
+
+    public void setSoTimeout(int soTimeout) {
+        this.soTimeout = soTimeout;
+    }
 }
