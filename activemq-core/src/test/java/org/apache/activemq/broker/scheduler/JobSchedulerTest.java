@@ -163,9 +163,9 @@ public class JobSchedulerTest {
 
         for (int i = 0; i < COUNT; i++) {
             String str = new String("test" + i);
-           
+
                 scheduler.schedule(ID + i, new ByteSequence(str.getBytes()), "", start + (i * 1000), 10000 + i, 0);
-           
+
         }
         start = System.currentTimeMillis();
         long finish = start + 12000+ (COUNT * 1000);
@@ -188,9 +188,9 @@ public class JobSchedulerTest {
 
         for (int i = 0; i < COUNT; i++) {
             String str = new String("test" + i);
-           
+
                 scheduler.schedule(ID + i, new ByteSequence(str.getBytes()), "", start + (i * 1000), 10000 + i, 0);
-           
+
         }
         start = System.currentTimeMillis();
         long finish = start + 12000+ (COUNT * 1000);
@@ -201,7 +201,7 @@ public class JobSchedulerTest {
 
     @Before
     public void setUp() throws Exception {
-        File directory = new File("target/test/ScheduledDB");
+        File directory = new File("target/test/ScheduledJobsDB");
         IOHelper.mkdirs(directory);
         IOHelper.deleteChildren(directory);
         startStore(directory);

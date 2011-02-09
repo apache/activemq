@@ -88,7 +88,7 @@ class JobSchedulerImpl extends ServiceSupport implements Runnable, JobScheduler 
         this.jobListeners.remove(l);
     }
 
-    public void schedule(final String jobId, final ByteSequence payload, final long delay) throws IOException {
+    public synchronized void schedule(final String jobId, final ByteSequence payload, final long delay) throws IOException {
         this.store.getPageFile().tx().execute(new Transaction.Closure<IOException>() {
             public void execute(Transaction tx) throws IOException {
                 schedule(tx, jobId, payload, "", 0, delay, 0);
@@ -96,7 +96,7 @@ class JobSchedulerImpl extends ServiceSupport implements Runnable, JobScheduler 
         });
     }
 
-    public void schedule(final String jobId, final ByteSequence payload, final String cronEntry) throws Exception {
+    public synchronized void schedule(final String jobId, final ByteSequence payload, final String cronEntry) throws Exception {
         this.store.getPageFile().tx().execute(new Transaction.Closure<IOException>() {
             public void execute(Transaction tx) throws IOException {
                 schedule(tx, jobId, payload, cronEntry, 0, 0, 0);
@@ -105,7 +105,7 @@ class JobSchedulerImpl extends ServiceSupport implements Runnable, JobScheduler 
 
     }
 
-    public void schedule(final String jobId, final ByteSequence payload, final String cronEntry, final long delay,
+    public synchronized void schedule(final String jobId, final ByteSequence payload, final String cronEntry, final long delay,
             final long period, final int repeat) throws IOException {
         this.store.getPageFile().tx().execute(new Transaction.Closure<IOException>() {
             public void execute(Transaction tx) throws IOException {
