@@ -150,7 +150,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
     private final TaskRunnerFactory taskRunnerFactory;
     private TransportConnectionStateRegister connectionStateRegister = new SingleTransportConnectionStateRegister();
     private final ReentrantReadWriteLock serviceLock = new ReentrantReadWriteLock();
-    private BrokerId	duplexRemoteBrokerId;
+    private String duplexNetworkConnectorId;
 
     /**
      * @param connector
@@ -946,7 +946,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
                             serviceLock.writeLock().unlock();
                         }
                     }
-                });
+                }, "StopAsync:" + transport.getRemoteAddress());
             } catch (Throwable t) {
                 LOG.warn("cannot create async transport stopper thread.. not waiting for stop to complete, reason:", t);
                 stopped.countDown();
@@ -1179,25 +1179,32 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
             // so this TransportConnection is the rear end of a network bridge
             // We have been requested to create a two way pipe ...
             try {
-                // We first look if existing network connection already exists for the same broker Id and network connector name
-                // It's possible in case of brief network fault to have this transport connector side of the connection always active
-                // and the duplex network connector side wanting to open a new one
-                // In this case, the old connection must be broken
-                BrokerId	remoteBrokerId = info.getBrokerId();
-                setDuplexRemoteBrokerId(remoteBrokerId);
-                CopyOnWriteArrayList<TransportConnection> connections = this.connector.getConnections();
-                for (Iterator<TransportConnection> iter = connections.iterator(); iter.hasNext();) {
-            		TransportConnection c = iter.next();
-                    if ((c != this) && (remoteBrokerId.equals(c.getDuplexRemoteBrokerId()))) {
-                        LOG.warn("An existing duplex active connection already exists for this broker (" + remoteBrokerId + "). Stopping it.");
-                        c.stop();
-                    }
-                }
                 Properties properties = MarshallingSupport.stringToProperties(info.getNetworkProperties());
                 Map<String, String> props = createMap(properties);
                 NetworkBridgeConfiguration config = new NetworkBridgeConfiguration();
                 IntrospectionSupport.setProperties(config, props, "");
                 config.setBrokerName(broker.getBrokerName());
+
+                // check for existing duplex connection hanging about
+
+                // We first look if existing network connection already exists for the same broker Id and network connector name
+                // It's possible in case of brief network fault to have this transport connector side of the connection always active
+                // and the duplex network connector side wanting to open a new one
+                // In this case, the old connection must be broken
+                String duplexNetworkConnectorId = config.getName() + "@" + info.getBrokerId(); 
+                CopyOnWriteArrayList<TransportConnection> connections = this.connector.getConnections();
+                synchronized (connections) {
+                    for (Iterator<TransportConnection> iter = connections.iterator(); iter.hasNext();) {
+                        TransportConnection c = iter.next();
+                        if ((c != this) && (duplexNetworkConnectorId.equals(c.getDuplexNetworkConnectorId()))) {
+                            LOG.warn("Stopping an existing active duplex connection [" + c + "] for network connector (" + duplexNetworkConnectorId + ").");
+                            c.stopAsync();
+                            // better to wait for a bit rather than get connection id already in use and failure to start new bridge
+                            c.getStopped().await(1, TimeUnit.SECONDS);
+                        }
+                    }
+                    setDuplexNetworkConnectorId(duplexNetworkConnectorId);
+                }
                 URI uri = broker.getVmConnectorURI();
                 HashMap<String, String> map = new HashMap<String, String>(URISupport.parseParameters(uri));
                 map.put("network", "true");
@@ -1217,13 +1224,14 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
                 info.setDuplexConnection(false);
                 duplexBridge.setCreatedByDuplex(true);
                 duplexBridge.duplexStart(this, brokerInfo, info);
-                LOG.info("Created Duplex Bridge back to " + info.getBrokerName());
+                LOG.info("Started responder end of duplex bridge " + duplexNetworkConnectorId);
                 return null;
             } catch (TransportDisposedIOException e) {
-                LOG.warn("Duplex Bridge back to " + info.getBrokerName() + " was correctly stopped before it was correctly started.");
+                LOG.warn("Duplex bridge " + duplexNetworkConnectorId + " was stopped before it was correctly started.");
                 return null;
             } catch (Exception e) {
-                LOG.error("Creating duplex network bridge", e);
+                LOG.error("Failed to create responder end of duplex network bridge " + duplexNetworkConnectorId , e);
+                return null;
             }
         }
         // We only expect to get one broker info command per connection
@@ -1415,11 +1423,15 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         return connectionStateRegister.lookupConnectionState(connectionId);
     }
 
-    protected synchronized void setDuplexRemoteBrokerId(BrokerId remoteBrokerId) {
-        this.duplexRemoteBrokerId = remoteBrokerId;
+    protected synchronized void setDuplexNetworkConnectorId(String duplexNetworkConnectorId) {
+        this.duplexNetworkConnectorId = duplexNetworkConnectorId;
     }
 
-    protected synchronized BrokerId getDuplexRemoteBrokerId() {
-        return this.duplexRemoteBrokerId;
+    protected synchronized String getDuplexNetworkConnectorId() {
+        return this.duplexNetworkConnectorId;
+    }
+    
+    protected CountDownLatch getStopped() {
+        return stopped;
     }
 }

@@ -232,15 +232,6 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
         return configureBridge(result);
     }
 
-    public String getName() {
-        String name = super.getName();
-        if (name == null) {
-            name = discoveryAgent.toString();
-            super.setName(name);
-        }
-        return name;
-    }
-
     @Override
     public String toString() {
         return "DiscoveryNetworkConnector:" + getName() + ":" + getBrokerService();

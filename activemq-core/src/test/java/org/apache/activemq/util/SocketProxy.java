@@ -50,7 +50,7 @@ public class SocketProxy {
     
     private CountDownLatch closed = new CountDownLatch(1);
 
-    public List<Connection> connections = new LinkedList<Connection>();
+    public List<Bridge> connections = new LinkedList<Bridge>();
 
     private int listenPort = 0;
 
@@ -102,16 +102,31 @@ public class SocketProxy {
      * close all proxy connections and acceptor
      */
     public void close() {
-        List<Connection> connections;
+        List<Bridge> connections;
         synchronized(this.connections) {
-            connections = new ArrayList<Connection>(this.connections);
+            connections = new ArrayList<Bridge>(this.connections);
         }            
         LOG.info("close, numConnectons=" + connections.size());
-        for (Connection con : connections) {
+        for (Bridge con : connections) {
             closeConnection(con);
         }
         acceptor.close();
         closed.countDown();
+    }
+
+    /*
+     * close all proxy receive connections, leaving acceptor
+     * open
+     */
+    public void halfClose() {
+        List<Bridge> connections;
+        synchronized(this.connections) {
+            connections = new ArrayList<Bridge>(this.connections);
+        }            
+        LOG.info("halfClose, numConnectons=" + connections.size());
+        for (Bridge con : connections) {
+            halfCloseConnection(con);
+        }
     }
 
     public boolean waitUntilClosed(long timeoutSeconds) throws InterruptedException {
@@ -138,7 +153,7 @@ public class SocketProxy {
         synchronized(connections) {
             LOG.info("pause, numConnectons=" + connections.size());
             acceptor.pause();
-            for (Connection con : connections) {
+            for (Bridge con : connections) {
                 con.pause();
             }
         }
@@ -150,18 +165,26 @@ public class SocketProxy {
     public void goOn() {
         synchronized(connections) {
             LOG.info("goOn, numConnectons=" + connections.size());
-            for (Connection con : connections) {
+            for (Bridge con : connections) {
                 con.goOn();
             }
         }
         acceptor.goOn();
     }
 
-    private void closeConnection(Connection c) {
+    private void closeConnection(Bridge c) {
         try {
             c.close();
         } catch (Exception e) {
             LOG.debug("exception on close of: " + c, e);
+        }
+    }
+
+    private void halfCloseConnection(Bridge c) {
+        try {
+            c.halfClose();
+        } catch (Exception e) {
+            LOG.debug("exception on half close of: " + c, e);
         }
     }
 
@@ -171,14 +194,14 @@ public class SocketProxy {
         return new URI(uri.getScheme(), uri.getUserInfo(), uri.getHost(), listenPort, uri.getPath(), uri.getQuery(), uri.getFragment());
     }
 
-    public class Connection {
+    public class Bridge {
 
         private Socket receiveSocket;
         private Socket sendSocket;
         private Pump requestThread;
         private Pump responseThread;
 
-        public Connection(Socket socket, URI target) throws Exception {
+        public Bridge(Socket socket, URI target) throws Exception {
             receiveSocket = socket;
             sendSocket = new Socket();
             if (receiveBufferSize > 0) {
@@ -207,10 +230,14 @@ public class SocketProxy {
             sendSocket.close();
         }
 
+        public void halfClose() throws Exception {
+            receiveSocket.close();
+        }
+
         private void linkWithThreads(Socket source, Socket dest) {
             requestThread = new Pump(source, dest);
-            responseThread = new Pump(dest, source);
             requestThread.start();
+            responseThread = new Pump(dest, source);
             responseThread.start();
         }
 
@@ -252,12 +279,15 @@ public class SocketProxy {
                 } catch (Exception e) {
                     LOG.debug("read/write failed, reason: " + e.getLocalizedMessage());
                     try {
-                        close();
+                        if (!receiveSocket.isClosed()) {
+                            // for halfClose, on read/write failure if we close the
+                            // remote end will see a close at the same time.
+                            close();
+                        }
                     } catch (Exception ignore) {
                     }
                 }
             }
-
         }
     }
 
@@ -293,14 +323,13 @@ public class SocketProxy {
                     pause.get().await();
                     try {
                         Socket source = socket.accept();
-                        LOG.info("accepted " + source + ", receiveBufferSize:" + source.getReceiveBufferSize());
                         pause.get().await();
                         if (receiveBufferSize > 0) {
                             source.setReceiveBufferSize(receiveBufferSize);
                         }
                         LOG.info("accepted " + source + ", receiveBufferSize:" + source.getReceiveBufferSize());
                         synchronized(connections) {
-                            connections.add(new Connection(source, target));
+                            connections.add(new Bridge(source, target));
                         }
                     } catch (SocketTimeoutException expected) {
                     }

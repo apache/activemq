@@ -134,4 +134,8 @@ public class VMTransportServer implements TransportServer {
     public InetSocketAddress getSocketAddress() {
         return null;
     }
+    
+    public int getConnectionCount() {
+        return connectionCount.intValue();
+    }
 }

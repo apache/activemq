@@ -219,8 +219,9 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                             remoteBridgeStarted.set(true);
                             startedLatch.countDown();
                             LOG.info("Outbound transport to " + remoteBrokerName + " resumed");
-                        } catch (Exception e) {
+                        } catch (Throwable e) {
                             LOG.error("Caught exception  from local start in resume transport", e);
+                            serviceLocalException(e);
                         }
                     }
                 }
@@ -248,7 +249,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                 Thread.currentThread().setName("StartLocalBridge: localBroker=" + localBroker);
                 try {
                     startLocalBridge();
-                } catch (Exception e) {
+                } catch (Throwable e) {
                     serviceLocalException(e);
                 } finally {
                     Thread.currentThread().setName(originalName);
@@ -273,7 +274,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
         });
     }
 
-    protected void startLocalBridge() throws Exception {
+    protected void startLocalBridge() throws Throwable {
         if (localBridgeStarted.compareAndSet(false, true)) {
             synchronized (this) {
                 if (LOG.isTraceEnabled()) {
@@ -284,7 +285,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                 if (!disposed.get()) {
                     localConnectionInfo = new ConnectionInfo();
                     localConnectionInfo.setConnectionId(new ConnectionId(idGenerator.generateId()));
-                    localClientId = "NC_" + remoteBrokerName + "_inbound_" + configuration.getBrokerName();
+                    localClientId = configuration.getName() + "_" + remoteBrokerName + "_inbound_" + configuration.getBrokerName();
                     localConnectionInfo.setClientId(localClientId);
                     localConnectionInfo.setUserName(configuration.getUserName());
                     localConnectionInfo.setPassword(configuration.getPassword());
@@ -296,10 +297,14 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                         X509Certificate[] peerCerts = ((SslTransport) originalTransport).getPeerCertificates();
                         localConnectionInfo.setTransportContext(peerCerts);
                     }
-                    localBroker.oneway(localConnectionInfo);
-
+                    // sync requests that may fail
+                    Object resp = localBroker.request(localConnectionInfo);
+                    if (resp instanceof ExceptionResponse) {
+                        throw ((ExceptionResponse)resp).getException();
+                    }
                     localSessionInfo = new SessionInfo(localConnectionInfo, 1);
                     localBroker.oneway(localSessionInfo);
+
                     brokerService.getBroker().networkBridgeStarted(remoteBrokerInfo, this.createdByDuplex);
                     NetworkBridgeListener l = this.networkBridgeListener;
                     if (l != null) {
@@ -346,7 +351,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                 }
                 remoteConnectionInfo = new ConnectionInfo();
                 remoteConnectionInfo.setConnectionId(new ConnectionId(idGenerator.generateId()));
-                remoteConnectionInfo.setClientId("NC_" + configuration.getBrokerName() + "_outbound");
+                remoteConnectionInfo.setClientId(configuration.getName() + "_" + configuration.getBrokerName() + "_outbound");
                 remoteConnectionInfo.setUserName(configuration.getUserName());
                 remoteConnectionInfo.setPassword(configuration.getPassword());
                 remoteBroker.oneway(remoteConnectionInfo);
@@ -857,7 +862,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
     /**
      * @return Returns the staticallyIncludedDestinations.
      */
-    public ActiveMQDestination[] getStaticallyIncludedDestinations() {
+    public ActiveMQDestination[] getStaticallyIncludedestinations() {
         return staticallyIncludedDestinations;
     }
 

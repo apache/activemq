@@ -210,11 +210,11 @@ public abstract class NetworkConnector extends NetworkBridgeConfiguration implem
         if (localURI == null) {
             throw new IllegalStateException("You must configure the 'localURI' property");
         }
-        LOG.info("Network Connector " + getName() + " Started");
+        LOG.info("Network Connector " + this + " Started");
     }
 
     protected void handleStop(ServiceStopper stopper) throws Exception {
-        LOG.info("Network Connector " + getName() + " Stopped");
+        LOG.info("Network Connector " + this + " Stopped");
     }
 
     public ObjectName getObjectName() {

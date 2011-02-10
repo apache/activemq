@@ -39,7 +39,7 @@ public class NetworkBridgeConfiguration {
     private String userName;
     private String password;
     private String destinationFilter = ">";
-    private String name = null;
+    private String name = "NC";
     
     private List<ActiveMQDestination> excludedDestinations;
     private List<ActiveMQDestination> dynamicallyIncludedDestinations;
@@ -223,9 +223,6 @@ public class NetworkBridgeConfiguration {
      * @return the name
      */
     public String getName() {
-        if(this.name == null) {
-            this.name = "localhost";
-        }
         return this.name;
     }
 

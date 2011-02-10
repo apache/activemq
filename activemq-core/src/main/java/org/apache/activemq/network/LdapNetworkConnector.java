@@ -269,20 +269,9 @@ public class      LdapNetworkConnector
       context.close();
    }
 
-   /**
-    * returns the name of the connector
-    *
-    * @return connector name
-    */
-   public String getName() {
-
-        String name = super.getName();
-        if (name == null) {
-            name = this.getClass().getName() + " [" + ldapURI.toString() + "]";
-            super.setName(name);
-        }
-        return name;
-    }
+   public String toString() {
+       return this.getClass().getName() + getName()  + "[" + ldapURI.toString() + "]";
+   }
 
    /**
      * add connector of the given URI

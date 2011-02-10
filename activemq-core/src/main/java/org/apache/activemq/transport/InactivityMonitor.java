@@ -243,7 +243,7 @@ public class InactivityMonitor extends TransportFilter {
             try {
 
                 if( failed.get() ) {
-                    throw new InactivityIOException("Channel was inactive for too long: "+next.getRemoteAddress());
+                    throw new InactivityIOException("Cannot send, channel has already failed: "+next.getRemoteAddress());
                 }
                 if (o.getClass() == WireFormatInfo.class) {
                     synchronized (this) {

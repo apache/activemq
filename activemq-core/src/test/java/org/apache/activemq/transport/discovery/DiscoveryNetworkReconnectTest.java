@@ -107,7 +107,7 @@ public class DiscoveryNetworkReconnectTest {
             allowing (managementContext).registerMBean(with(any(Object.class)), with(equal(
                     new ObjectName("Test:BrokerName=BrokerNC,Type=Broker"))));
             allowing (managementContext).registerMBean(with(any(Object.class)), with(equal(
-                    new ObjectName("Test:BrokerName=BrokerNC,Type=NetworkConnector,NetworkConnectorName=localhost"))));
+                    new ObjectName("Test:BrokerName=BrokerNC,Type=NetworkConnector,NetworkConnectorName=NC"))));
             allowing (managementContext).registerMBean(with(any(Object.class)), with(equal(            
                     new ObjectName("Test:BrokerName=BrokerNC,Type=Topic,Destination=ActiveMQ.Advisory.Connection"))));
             allowing (managementContext).registerMBean(with(any(Object.class)), with(equal(
@@ -116,7 +116,7 @@ public class DiscoveryNetworkReconnectTest {
                     new ObjectName("Test:BrokerName=BrokerNC,Type=jobScheduler,jobSchedulerName=JMS"))));
             
             atLeast(maxReconnects - 1).of (managementContext).registerMBean(with(any(Object.class)), with(new NetworkBridgeObjectNameMatcher<ObjectName>(
-                        new ObjectName("Test:BrokerName=BrokerNC,Type=NetworkBridge,NetworkConnectorName=localhost,Name=localhost/127.0.0.1_" 
+                        new ObjectName("Test:BrokerName=BrokerNC,Type=NetworkBridge,NetworkConnectorName=NC,Name=localhost/127.0.0.1_" 
                             + proxy.getUrl().getPort())))); will(new CustomAction("signal register network mbean") {
                                 public Object invoke(Invocation invocation) throws Throwable {
                                     LOG.info("Mbean Registered: " + invocation.getParameter(0));
@@ -125,7 +125,7 @@ public class DiscoveryNetworkReconnectTest {
                                 }
                             });
             atLeast(maxReconnects - 1).of (managementContext).unregisterMBean(with(new NetworkBridgeObjectNameMatcher<ObjectName>(
-                    new ObjectName("Test:BrokerName=BrokerNC,Type=NetworkBridge,NetworkConnectorName=localhost,Name=localhost/127.0.0.1_" 
+                    new ObjectName("Test:BrokerName=BrokerNC,Type=NetworkBridge,NetworkConnectorName=NC,Name=localhost/127.0.0.1_" 
                             + proxy.getUrl().getPort())))); will(new CustomAction("signal unregister network mbean") {
                                 public Object invoke(Invocation invocation) throws Throwable {
                                     LOG.info("Mbean Unregistered: " + invocation.getParameter(0));
@@ -137,7 +137,7 @@ public class DiscoveryNetworkReconnectTest {
             allowing (managementContext).unregisterMBean(with(equal(
                     new ObjectName("Test:BrokerName=BrokerNC,Type=Broker"))));
             allowing (managementContext).unregisterMBean(with(equal(
-                    new ObjectName("Test:BrokerName=BrokerNC,Type=NetworkConnector,NetworkConnectorName=localhost"))));
+                    new ObjectName("Test:BrokerName=BrokerNC,Type=NetworkConnector,NetworkConnectorName=NC"))));
             allowing (managementContext).unregisterMBean(with(equal(            
                     new ObjectName("Test:BrokerName=BrokerNC,Type=Topic,Destination=ActiveMQ.Advisory.Connection"))));
             allowing (managementContext).unregisterMBean(with(equal(
