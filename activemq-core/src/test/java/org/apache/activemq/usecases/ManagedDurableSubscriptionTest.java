@@ -17,11 +17,9 @@
 package org.apache.activemq.usecases;
 
 import java.io.File;
-import java.lang.management.ManagementFactory;
 
 import javax.jms.Connection;
 import javax.jms.Session;
-import javax.management.MBeanServer;
 import javax.management.ObjectName;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
@@ -77,6 +75,7 @@ public class ManagedDurableSubscriptionTest extends org.apache.activemq.TestSupp
         persistenceAdapter.setDirectory(new File("activemq-data/" + getName()));
         broker.setPersistenceAdapter(persistenceAdapter);
         broker.setUseJmx(true);
+        broker.getManagementContext().setCreateConnector(false);
         broker.setBrokerName(getName());
         broker.start();
 
