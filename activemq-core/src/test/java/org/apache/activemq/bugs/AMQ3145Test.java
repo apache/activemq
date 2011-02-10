@@ -16,7 +16,6 @@
  */
 package org.apache.activemq.bugs;
 
-import java.util.concurrent.TimeUnit;
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
 import javax.jms.JMSException;
@@ -65,6 +64,7 @@ public class AMQ3145Test {
         broker.setDeleteAllMessagesOnStartup(deleteAll);
         broker.setDataDirectory("target/AMQ3145Test");
         broker.setUseJmx(true);
+        broker.getManagementContext().setCreateConnector(false);
         broker.addConnector("tcp://localhost:0");
         broker.start();
         broker.waitUntilStarted();
