@@ -34,8 +34,8 @@ import org.apache.activemq.command.MessageId;
 import org.apache.activemq.command.ProducerId;
 import org.apache.activemq.command.SessionId;
 import org.apache.activemq.util.IdGenerator;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This implementation of {@link SubscriptionRecoveryPolicy} will perform a user
@@ -46,7 +46,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class QueryBasedSubscriptionRecoveryPolicy implements SubscriptionRecoveryPolicy {
 
-    private static final Log LOG = LogFactory.getLog(QueryBasedSubscriptionRecoveryPolicy.class);
+    private static final Logger LOG = LoggerFactory.getLogger(QueryBasedSubscriptionRecoveryPolicy.class);
 
     private MessageQuery query;
     private final AtomicLong messageSequence = new AtomicLong(0);

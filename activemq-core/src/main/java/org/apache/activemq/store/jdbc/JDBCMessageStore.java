@@ -32,15 +32,15 @@ import org.apache.activemq.util.ByteSequence;
 import org.apache.activemq.util.ByteSequenceData;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.wireformat.WireFormat;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @version $Revision: 1.10 $
  */
 public class JDBCMessageStore extends AbstractMessageStore {
 
-    private static final Log LOG = LogFactory.getLog(JDBCMessageStore.class);
+    private static final Logger LOG = LoggerFactory.getLogger(JDBCMessageStore.class);
     protected final WireFormat wireFormat;
     protected final JDBCAdapter adapter;
     protected final JDBCPersistenceAdapter persistenceAdapter;

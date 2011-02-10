@@ -29,15 +29,15 @@ import javax.jms.Session;
 
 import org.apache.activemq.EmbeddedBrokerTestSupport;
 import org.apache.activemq.ReconnectWithSameClientIDTest;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * 
  * @version $Revision$
  */
 public class ConsumerListenerTest extends EmbeddedBrokerTestSupport implements ConsumerListener {
-    private static final Log LOG = LogFactory.getLog(ConsumerListenerTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ConsumerListenerTest.class);
 
     protected Session consumerSession1;
     protected Session consumerSession2;

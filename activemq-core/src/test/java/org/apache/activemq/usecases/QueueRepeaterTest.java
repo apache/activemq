@@ -33,8 +33,8 @@ import javax.jms.TextMessage;
 import junit.framework.TestCase;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.command.ActiveMQQueue;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author pragmasoft
@@ -42,7 +42,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public final class QueueRepeaterTest extends TestCase {
 
-    private static final Log LOG = LogFactory.getLog(QueueRepeaterTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(QueueRepeaterTest.class);
 
     private volatile String receivedText;
 
@@ -83,10 +83,10 @@ public final class QueueRepeaterTest extends TestCase {
                         consumerSession.rollback();
                         LOG.info("rolled back transaction");
                     } catch (JMSException e1) {
-                        LOG.info(e1);
+                        LOG.info(e1.toString());
                         e1.printStackTrace();
                     }
-                    LOG.info(e);
+                    LOG.info(e.toString());
                     e.printStackTrace();
                 }
             }

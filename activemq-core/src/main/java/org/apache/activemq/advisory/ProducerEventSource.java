@@ -34,8 +34,8 @@ import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.command.ProducerId;
 import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.command.RemoveInfo;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * An object which can be used to listen to the number of active consumers
@@ -44,7 +44,7 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision: 359679 $
  */
 public class ProducerEventSource implements Service, MessageListener {
-    private static final Log LOG = LogFactory.getLog(ProducerEventSource.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ProducerEventSource.class);
 
     private final Connection connection;
     private final ActiveMQDestination destination;

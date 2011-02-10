@@ -26,8 +26,8 @@ import javax.management.ObjectName;
 import org.apache.activemq.broker.jmx.AnnotatedMBean;
 import org.apache.activemq.broker.jmx.ManagementContext;
 import org.apache.activemq.util.JMXSupport;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Class implementing the TransportLoggerViewMBean interface.
@@ -42,7 +42,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class TransportLoggerView implements TransportLoggerViewMBean {
 
-    private static final Log log = LogFactory.getLog(TransportLoggerView.class);
+    private static final Logger log = LoggerFactory.getLogger(TransportLoggerView.class);
     
     /**
      * Set with the TransportLoggerViews objects created.

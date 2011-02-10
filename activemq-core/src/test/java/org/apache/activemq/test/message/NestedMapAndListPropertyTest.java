@@ -25,8 +25,8 @@ import javax.jms.JMSException;
 import javax.jms.Message;
 
 import org.apache.activemq.test.JmsTopicSendReceiveWithTwoConnectionsAndEmbeddedBrokerTest;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Tests that a Message can have nested Map and List properties attached.
@@ -35,7 +35,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class NestedMapAndListPropertyTest extends JmsTopicSendReceiveWithTwoConnectionsAndEmbeddedBrokerTest {
 
-    private static final Log LOG = LogFactory.getLog(NestedMapAndListPropertyTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(NestedMapAndListPropertyTest.class);
 
     protected void assertMessageValid(int index, Message message) throws JMSException {
         Object value = message.getObjectProperty("textField");

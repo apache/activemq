@@ -34,15 +34,15 @@ import org.apache.activemq.ActiveMQQueueSession;
 import org.apache.activemq.ActiveMQSession;
 import org.apache.activemq.ActiveMQTopicSession;
 import org.apache.activemq.command.MessageDispatch;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @version $Revision$ $Date$
  */
 public class ServerSessionPoolImpl implements ServerSessionPool {
 
-    private static final Log LOG = LogFactory.getLog(ServerSessionPoolImpl.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ServerSessionPoolImpl.class);
 
     private final ActiveMQEndpointWorker activeMQAsfEndpointWorker;
     private final int maxSessions;

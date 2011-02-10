@@ -50,8 +50,8 @@ import org.apache.activemq.util.ServiceStopper;
 import org.apache.activemq.util.ServiceSupport;
 import org.apache.activemq.wireformat.WireFormat;
 import org.apache.activemq.wireformat.WireFormatFactory;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A TCP based implementation of {@link TransportServer}
@@ -62,7 +62,7 @@ import org.apache.commons.logging.LogFactory;
 
 public class TcpTransportServer extends TransportServerThreadSupport implements ServiceListener{
 
-    private static final Log LOG = LogFactory.getLog(TcpTransportServer.class);
+    private static final Logger LOG = LoggerFactory.getLogger(TcpTransportServer.class);
     protected ServerSocket serverSocket;
     protected int backlog = 5000;
     protected WireFormatFactory wireFormatFactory = new OpenWireFormatFactory();

@@ -29,8 +29,8 @@ import org.apache.activeio.packet.Packet;
 import org.apache.activemq.kaha.impl.async.JournalFacade.RecordLocationFacade;
 import org.apache.activemq.kaha.impl.async.ReadOnlyAsyncDataManager;
 import org.apache.activemq.util.ByteSequence;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Tests the AsyncDataManager based Journal
@@ -39,7 +39,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class JournalImplTest extends TestCase {
 
-    Log log = LogFactory.getLog(JournalImplTest.class);
+    Logger log = LoggerFactory.getLogger(JournalImplTest.class);
 
     int size = 1024 * 10;
     int logFileCount = 2;
@@ -126,7 +126,7 @@ public class JournalImplTest extends TestCase {
         l = journal.getNextRecordLocation(l);
         assertNull(l);
 
-        log.info(journal);
+        log.info(journal.toString());
     }
 
     public void testReadOnlyRead() throws InvalidRecordLocationException, InterruptedException, IOException {

@@ -27,11 +27,11 @@ import org.apache.activemq.command.DataStructure;
 import org.apache.activemq.command.DestinationInfo;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageDispatch;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class AdvisoryConsumer implements ActiveMQDispatcher {
-    private static final transient Log LOG = LogFactory.getLog(AdvisoryConsumer.class);
+    private static final transient Logger LOG = LoggerFactory.getLogger(AdvisoryConsumer.class);
 
     int deliveredCounter;
 

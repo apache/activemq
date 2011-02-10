@@ -38,8 +38,8 @@ import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.command.ActiveMQDestination;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Small burn test moves sends a moderate amount of messages through the broker,
@@ -49,7 +49,7 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision$
  */
 public class LoadTestBurnIn extends JmsTestSupport {
-    private static final transient Log LOG = LogFactory.getLog(LoadTestBurnIn.class);
+    private static final transient Logger LOG = LoggerFactory.getLogger(LoadTestBurnIn.class);
 
     public ActiveMQDestination destination;
     public int deliveryMode;

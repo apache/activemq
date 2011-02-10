@@ -36,8 +36,8 @@ import org.apache.activemq.transport.reliable.ReliableTransport;
 import org.apache.activemq.transport.reliable.ReplayStrategy;
 import org.apache.activemq.transport.reliable.Replayer;
 import org.apache.activemq.util.ServiceStopper;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A UDP based implementation of {@link TransportServer}
@@ -46,7 +46,7 @@ import org.apache.commons.logging.LogFactory;
  */
 
 public class UdpTransportServer extends TransportServerSupport {
-    private static final Log LOG = LogFactory.getLog(UdpTransportServer.class);
+    private static final Logger LOG = LoggerFactory.getLogger(UdpTransportServer.class);
 
     private UdpTransport serverTransport;
     private ReplayStrategy replayStrategy;

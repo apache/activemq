@@ -17,8 +17,8 @@
 
 package org.apache.activemq.jaas;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.security.auth.Subject;
 import javax.security.auth.callback.CallbackHandler;
@@ -41,7 +41,7 @@ public class GuestLoginModule implements LoginModule {
     private static final String GUEST_USER = "org.apache.activemq.jaas.guest.user";
     private static final String GUEST_GROUP = "org.apache.activemq.jaas.guest.group";
 
-    private static final Log LOG = LogFactory.getLog(GuestLoginModule.class);
+    private static final Logger LOG = LoggerFactory.getLogger(GuestLoginModule.class);
     
 
     private String userName = "guest";

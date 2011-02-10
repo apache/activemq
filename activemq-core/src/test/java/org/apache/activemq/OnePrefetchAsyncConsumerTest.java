@@ -35,12 +35,12 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.ActiveMQQueue;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 // see: https://issues.apache.org/activemq/browse/AMQ-2651
 public class OnePrefetchAsyncConsumerTest extends EmbeddedBrokerTestSupport {
-    private static final Log LOG = LogFactory.getLog(OnePrefetchAsyncConsumerTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(OnePrefetchAsyncConsumerTest.class);
 
     private TestMutex testMutex;
     protected Connection connection;

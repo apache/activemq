@@ -18,8 +18,8 @@ package org.apache.activemq.web;
 
 import org.apache.activemq.broker.util.AuditLogEntry;
 import org.apache.activemq.broker.util.AuditLogService;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
@@ -27,7 +27,7 @@ import java.io.IOException;
 
 public class AuditFilter implements Filter {
 
-    private static final Log LOG = LogFactory.getLog("org.apache.activemq.audit");
+    private static final Logger LOG = LoggerFactory.getLogger("org.apache.activemq.audit");
 
     private boolean audit;
     private AuditLogService auditLog;

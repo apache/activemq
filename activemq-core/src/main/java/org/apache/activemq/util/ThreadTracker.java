@@ -19,8 +19,8 @@ package org.apache.activemq.util;
 import java.util.HashMap;
 import java.util.Map.Entry;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Debugging tool to track entry points through code, useful to see runtime call paths
@@ -35,7 +35,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class ThreadTracker {
 
-    static final Log LOG = LogFactory.getLog(ThreadTracker.class);  
+    static final Logger LOG = LoggerFactory.getLogger(ThreadTracker.class);  
     static HashMap<String, Tracker> trackers = new HashMap<String, Tracker>();
     
     /**

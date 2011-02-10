@@ -33,14 +33,14 @@ import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.jms.JmsMessage;
 import org.apache.camel.component.mock.AssertionClause;
 import org.apache.camel.component.mock.MockEndpoint;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @version $Revision$
  */
 public class ActiveMQJmsHeaderRouteTest extends ContextTestSupport {
-    private static final transient Log LOG = LogFactory.getLog(ActiveMQJmsHeaderRouteTest.class);
+    private static final transient Logger LOG = LoggerFactory.getLogger(ActiveMQJmsHeaderRouteTest.class);
 
     protected Object expectedBody = "<time>" + new Date() + "</time>";
     protected ActiveMQQueue replyQueue = new ActiveMQQueue("test.reply.queue");

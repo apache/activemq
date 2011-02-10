@@ -34,12 +34,12 @@ import org.apache.activemq.network.NetworkTestSupport;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportFactory;
 import org.apache.activemq.transport.multicast.MulticastTransportTest;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class FailoverTransportBrokerTest extends NetworkTestSupport {
 
-    private static final Log LOG = LogFactory.getLog(FailoverTransportBrokerTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(FailoverTransportBrokerTest.class);
 
     public ActiveMQDestination destination;
     public int deliveryMode;

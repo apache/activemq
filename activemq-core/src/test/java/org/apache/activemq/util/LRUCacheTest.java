@@ -18,12 +18,12 @@ package org.apache.activemq.util;
 
 import static org.junit.Assert.assertEquals;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.junit.Test;
 
 public class LRUCacheTest {
-    protected static final Log LOG = LogFactory.getLog(LRUCacheTest.class);
+    protected static final Logger LOG = LoggerFactory.getLogger(LRUCacheTest.class);
     
     @Test
     public void testResize() throws Exception {

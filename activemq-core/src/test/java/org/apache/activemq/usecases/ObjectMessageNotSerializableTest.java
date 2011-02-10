@@ -35,13 +35,13 @@ import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQObjectMessage;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 public class ObjectMessageNotSerializableTest extends CombinationTestSupport {
 
-    private static final Log LOG = LogFactory.getLog(ObjectMessageNotSerializableTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ObjectMessageNotSerializableTest.class);
     
     BrokerService broker;
     AtomicInteger numReceived = new AtomicInteger(0);

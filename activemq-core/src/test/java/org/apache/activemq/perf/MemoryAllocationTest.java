@@ -31,8 +31,8 @@ import junit.framework.TestCase;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @version $Revision: 1.3 $
@@ -40,7 +40,7 @@ import org.apache.commons.logging.LogFactory;
 public class MemoryAllocationTest extends TestCase {
 
     protected static final int MESSAGE_COUNT = 2000;
-    private static final Log LOG = LogFactory.getLog(MemoryAllocationTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(MemoryAllocationTest.class);
 
     protected BrokerService broker;
     protected String bindAddress = "vm://localhost";

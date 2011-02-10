@@ -25,12 +25,12 @@ import org.apache.activemq.transport.discovery.DiscoveryAgentFactory;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.util.URISupport;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class MulticastDiscoveryAgentFactory extends DiscoveryAgentFactory {
 	
-	  private static final Log LOG = LogFactory.getLog(MulticastDiscoveryAgentFactory.class); 
+	  private static final Logger LOG = LoggerFactory.getLogger(MulticastDiscoveryAgentFactory.class); 
 
     
     protected DiscoveryAgent doCreateDiscoveryAgent(URI uri) throws IOException {

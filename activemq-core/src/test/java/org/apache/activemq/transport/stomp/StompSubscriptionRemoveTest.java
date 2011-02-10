@@ -32,15 +32,15 @@ import junit.framework.TestCase;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQQueue;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * 
  * @version $Revision$
  */
 public class StompSubscriptionRemoveTest extends TestCase {
-    private static final Log LOG = LogFactory.getLog(StompSubscriptionRemoveTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(StompSubscriptionRemoveTest.class);
     private static final String COMMAND_MESSAGE = "MESSAGE";
     private static final String HEADER_MESSAGE_ID = "message-id";
     private static final int STOMP_PORT = 61613;

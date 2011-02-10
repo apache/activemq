@@ -37,12 +37,12 @@ import javax.jms.TextMessage;
 import junit.framework.TestCase;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class QueueDuplicatesTest extends TestCase {
 
-    private static final Log LOG = LogFactory.getLog(QueueDuplicatesTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(QueueDuplicatesTest.class);
 
     private static DateFormat formatter = new SimpleDateFormat("HH:mm:ss SSS");
     private String brokerUrl;

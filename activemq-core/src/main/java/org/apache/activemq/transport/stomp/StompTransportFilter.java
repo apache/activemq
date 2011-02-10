@@ -28,8 +28,8 @@ import org.apache.activemq.transport.TransportFilter;
 import org.apache.activemq.transport.TransportListener;
 import org.apache.activemq.transport.tcp.SslTransport;
 import org.apache.activemq.util.IOExceptionSupport;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * The StompTransportFilter normally sits on top of a TcpTransport that has been
@@ -40,7 +40,7 @@ import org.apache.commons.logging.LogFactory;
  * @author <a href="http://hiramchirino.com">chirino</a>
  */
 public class StompTransportFilter extends TransportFilter implements StompTransport {
-    private static final Log LOG = LogFactory.getLog(StompTransportFilter.class);
+    private static final Logger LOG = LoggerFactory.getLogger(StompTransportFilter.class);
     private final ProtocolConverter protocolConverter;
     private final FrameTranslator frameTranslator;
 

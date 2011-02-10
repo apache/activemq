@@ -23,8 +23,8 @@ import java.util.Date;
 import javax.jms.MessageConsumer;
 import javax.servlet.http.HttpServletRequest;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.apache.activemq.MessageAvailableConsumer;
 
@@ -32,7 +32,7 @@ import org.apache.activemq.MessageAvailableConsumer;
  * Collection of all data needed to fulfill requests from a single web client.
  */
 public class AjaxWebClient extends WebClient {
-    private static final Log LOG = LogFactory.getLog(AjaxWebClient.class);
+    private static final Logger LOG = LoggerFactory.getLogger(AjaxWebClient.class);
     
     // an instance which has not been accessed in this many milliseconds can be removed.
     final long expireAfter = 60 * 1000;

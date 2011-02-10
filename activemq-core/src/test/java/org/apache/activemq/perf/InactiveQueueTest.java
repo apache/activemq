@@ -27,14 +27,14 @@ import javax.jms.TopicSubscriber;
 import junit.framework.TestCase;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @version $Revision: 454471 $
  */
 public class InactiveQueueTest extends TestCase {
-    private static final transient Log LOG = LogFactory.getLog(InactiveQueueTest.class);
+    private static final transient Logger LOG = LoggerFactory.getLogger(InactiveQueueTest.class);
 
     private static final int MESSAGE_COUNT = 0;
     private static final String DEFAULT_PASSWORD = "";

@@ -32,8 +32,8 @@ import javax.jms.TextMessage;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.EmbeddedBrokerTestSupport;
 import org.apache.activemq.RedeliveryPolicy;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.jms.core.MessageCreator;
 
 /**
@@ -41,7 +41,7 @@ import org.springframework.jms.core.MessageCreator;
  */
 public class RollbacksWhileConsumingLargeQueueTest extends EmbeddedBrokerTestSupport implements MessageListener {
 
-    private static final transient Log LOG = LogFactory.getLog(RollbacksWhileConsumingLargeQueueTest.class);
+    private static final transient Logger LOG = LoggerFactory.getLogger(RollbacksWhileConsumingLargeQueueTest.class);
 
     protected int numberOfMessagesOnQueue = 650;
     private Connection connection;

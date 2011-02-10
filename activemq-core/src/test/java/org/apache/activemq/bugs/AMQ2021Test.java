@@ -38,8 +38,8 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This is a test case for the issue reported at:
@@ -49,7 +49,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class AMQ2021Test extends TestCase implements ExceptionListener, UncaughtExceptionHandler {
 
-    private static final Log log = LogFactory.getLog(AMQ2021Test.class);
+    private static final Logger log = LoggerFactory.getLogger(AMQ2021Test.class);
     BrokerService brokerService;
     ArrayList<Thread> threads = new ArrayList<Thread>();
     Vector<Throwable> exceptions;

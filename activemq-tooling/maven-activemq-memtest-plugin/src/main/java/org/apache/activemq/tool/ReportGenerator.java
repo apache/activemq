@@ -24,12 +24,12 @@ import java.io.PrintWriter;
 import java.util.Enumeration;
 import java.util.Properties;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ReportGenerator {
 
-    private static final Log LOG = LogFactory.getLog(ReportGenerator.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ReportGenerator.class);
     private String reportDirectory;
     private String reportName;
     private PrintWriter writer;

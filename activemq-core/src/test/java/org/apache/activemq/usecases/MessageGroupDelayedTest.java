@@ -37,13 +37,13 @@ import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.ActiveMQQueue;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 
 public class MessageGroupDelayedTest extends JmsTestSupport {
-  public static final Log log = LogFactory.getLog(MessageGroupDelayedTest.class);
+  public static final Logger log = LoggerFactory.getLogger(MessageGroupDelayedTest.class);
   protected Connection connection;
   protected Session session;
   protected MessageProducer producer;

@@ -27,14 +27,14 @@ import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.thread.TaskRunnerFactory;
 import org.apache.activemq.usage.SystemUsage;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * 
  */
 public abstract class AbstractTempRegion extends AbstractRegion {
-    private static final Log LOG = LogFactory.getLog(TempQueueRegion.class);
+    private static final Logger LOG = LoggerFactory.getLogger(TempQueueRegion.class);
 
     private Map<CachedDestination, Destination> cachedDestinations = new HashMap<CachedDestination, Destination>();
     private final boolean doCacheTempDestinations;

@@ -25,8 +25,8 @@ import java.util.List;
 
 import org.apache.activemq.thread.Scheduler;
 import org.apache.activemq.util.ByteSequence;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * An AsyncDataManager that works in read only mode against multiple data directories.
@@ -34,7 +34,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class ReadOnlyAsyncDataManager extends AsyncDataManager {
     
-    private static final Log LOG = LogFactory.getLog(ReadOnlyAsyncDataManager.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ReadOnlyAsyncDataManager.class);
     private final ArrayList<File> dirs;
 
     public ReadOnlyAsyncDataManager(final ArrayList<File> dirs) {

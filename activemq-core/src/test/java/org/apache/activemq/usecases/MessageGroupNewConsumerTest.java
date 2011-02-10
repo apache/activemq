@@ -28,8 +28,8 @@ import javax.jms.Session;
 import javax.jms.TextMessage;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import junit.framework.TestCase;
 
 /*
@@ -42,7 +42,7 @@ import junit.framework.TestCase;
  * See bug AMQ-2016: Message grouping fails when consumers are added
  */
 public class MessageGroupNewConsumerTest extends TestCase {
-    private static final Log LOG = LogFactory.getLog(MessageGroupNewConsumerTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(MessageGroupNewConsumerTest.class);
     private Connection connection;
     // Released after the messages are created
     private CountDownLatch latchMessagesCreated = new CountDownLatch(1);

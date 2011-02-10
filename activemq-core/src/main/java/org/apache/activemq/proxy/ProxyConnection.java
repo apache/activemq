@@ -26,12 +26,12 @@ import org.apache.activemq.transport.DefaultTransportListener;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.ServiceStopper;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 class ProxyConnection implements Service {
 
-    private static final Log LOG = LogFactory.getLog(ProxyConnection.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ProxyConnection.class);
 
     private final Transport localTransport;
     private final Transport remoteTransport;

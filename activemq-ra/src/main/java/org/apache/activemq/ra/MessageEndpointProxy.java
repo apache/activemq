@@ -22,8 +22,8 @@ import javax.jms.Message;
 import javax.jms.MessageListener;
 import javax.resource.ResourceException;
 import javax.resource.spi.endpoint.MessageEndpoint;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author <a href="mailto:michael.gaffney@panacya.com">Michael Gaffney </a>
@@ -32,7 +32,7 @@ public class MessageEndpointProxy implements MessageListener, MessageEndpoint {
 
     private static final MessageEndpointState ALIVE = new MessageEndpointAlive();
     private static final MessageEndpointState DEAD = new MessageEndpointDead();
-    private static final Log LOG = LogFactory.getLog(MessageEndpointProxy.class);
+    private static final Logger LOG = LoggerFactory.getLogger(MessageEndpointProxy.class);
 
     private static int proxyCount;
     private final int proxyID;

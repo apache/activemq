@@ -32,8 +32,8 @@ import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.camel.ProducerTemplate;
 import org.apache.camel.impl.DefaultProducerTemplate;
 import org.apache.camel.spring.SpringTestSupport;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 /**
@@ -41,7 +41,7 @@ import org.springframework.context.support.ClassPathXmlApplicationContext;
  */
 public class CamelJmsTest extends SpringTestSupport {
     
-    private static final Log LOG = LogFactory.getLog(CamelJmsTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(CamelJmsTest.class);
     
     protected String expectedBody = "<hello>world!</hello>";
 

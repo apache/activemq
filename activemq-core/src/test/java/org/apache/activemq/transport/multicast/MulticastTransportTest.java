@@ -23,8 +23,8 @@ import org.apache.activemq.transport.CommandJoiner;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.udp.UdpTransportTest;
 import org.apache.activemq.util.IntSequenceGenerator;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -32,7 +32,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class MulticastTransportTest extends UdpTransportTest {
     
-    private static final Log LOG = LogFactory.getLog(MulticastTransportTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(MulticastTransportTest.class);
 
     private String multicastURI = "multicast://224.1.2.3:6255";
     

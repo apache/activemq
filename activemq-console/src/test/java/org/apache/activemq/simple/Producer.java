@@ -35,12 +35,12 @@ import javax.jms.TextMessage;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.command.ActiveMQQueue;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public final class Producer {
 
-    private static final Log LOG = LogFactory.getLog(Producer.class);
+    private static final Logger LOG = LoggerFactory.getLogger(Producer.class);
 
     private Producer() {
     }

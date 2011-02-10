@@ -27,7 +27,7 @@ import org.apache.activemq.command.ProducerAck;
 import org.apache.activemq.command.ProducerId;
 import org.apache.activemq.command.WireFormatInfo;
 import org.apache.activemq.transport.LogWriter;
-import org.apache.commons.logging.Log;
+import org.slf4j.Logger;
 
 /**
  * Custom implementation of LogWriter interface.
@@ -38,37 +38,37 @@ import org.apache.commons.logging.Log;
 public class CustomLogWriter implements LogWriter {
     
     // doc comment inherited from LogWriter
-    public void initialMessage(Log log) {
+    public void initialMessage(Logger log) {
         
     }
 
     // doc comment inherited from LogWriter
-    public void logRequest (Log log, Object command) {
+    public void logRequest (Logger log, Object command) {
         log.debug("$$ SENDREQ: " + CustomLogWriter.commandToString(command));
     }
     
     // doc comment inherited from LogWriter
-    public void logResponse (Log log, Object response) {
+    public void logResponse (Logger log, Object response) {
         log.debug("$$ GOT_RESPONSE: "+response);
     }
     
     // doc comment inherited from LogWriter
-    public void logAsyncRequest (Log log, Object command) {
+    public void logAsyncRequest (Logger log, Object command) {
         log.debug("$$ SENDING_ASNYC_REQUEST: "+command);
     }
     
     // doc comment inherited from LogWriter
-    public void logOneWay (Log log, Object command) {
+    public void logOneWay (Logger log, Object command) {
         log.debug("$$ SENDING: " + CustomLogWriter.commandToString(command));
     }
     
     // doc comment inherited from LogWriter
-    public void logReceivedCommand (Log log, Object command) {
+    public void logReceivedCommand (Logger log, Object command) {
         log.debug("$$ RECEIVED: " + CustomLogWriter.commandToString(command));
     }
     
     // doc comment inherited from LogWriter
-    public void logReceivedException (Log log, IOException error) {
+    public void logReceivedException (Logger log, IOException error) {
         log.debug("$$ RECEIVED_EXCEPTION: "+error, error);
     }
     

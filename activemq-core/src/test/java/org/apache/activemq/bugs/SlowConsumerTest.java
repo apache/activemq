@@ -33,12 +33,12 @@ import junit.framework.TestCase;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQQueue;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class SlowConsumerTest extends TestCase {
 
-    private static final Log LOG = LogFactory.getLog(SlowConsumerTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(SlowConsumerTest.class);
     private static final int MESSAGES_COUNT = 10000;
 
     protected int messageLogFrequency = 2500;

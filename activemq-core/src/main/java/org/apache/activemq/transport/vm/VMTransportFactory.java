@@ -37,15 +37,15 @@ import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.util.ServiceSupport;
 import org.apache.activemq.util.URISupport;
 import org.apache.activemq.util.URISupport.CompositeData;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class VMTransportFactory extends TransportFactory {
     
     public static final ConcurrentHashMap<String, BrokerService> BROKERS = new ConcurrentHashMap<String, BrokerService>();
     public static final ConcurrentHashMap<String, TransportConnector> CONNECTORS = new ConcurrentHashMap<String, TransportConnector>();
     public static final ConcurrentHashMap<String, VMTransportServer> SERVERS = new ConcurrentHashMap<String, VMTransportServer>();
-    private static final Log LOG = LogFactory.getLog(VMTransportFactory.class);
+    private static final Logger LOG = LoggerFactory.getLogger(VMTransportFactory.class);
     
     BrokerFactoryHandler brokerFactoryHandler;
 

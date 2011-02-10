@@ -44,8 +44,8 @@ import junit.framework.Test;
 import org.apache.activemq.broker.jmx.DestinationViewMBean;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Test cases used to test the JMS message consumer.
@@ -54,7 +54,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class JMSConsumerTest extends JmsTestSupport {
 
-    private static final Log LOG = LogFactory.getLog(JMSConsumerTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(JMSConsumerTest.class);
 
     public ActiveMQDestination destination;
     public int deliveryMode;

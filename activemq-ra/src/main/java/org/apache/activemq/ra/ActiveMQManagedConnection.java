@@ -34,8 +34,8 @@ import javax.transaction.xa.XAResource;
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.LocalTransactionEventListener;
 import org.apache.activemq.TransactionContext;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * ActiveMQManagedConnection maps to real physical connection to the server.
@@ -55,7 +55,7 @@ public class ActiveMQManagedConnection implements ManagedConnection, ExceptionLi
                                                                                             // DissociatableManagedConnection
                                                                                             // {
 
-    private static final Log LOG = LogFactory.getLog(ActiveMQManagedConnection.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ActiveMQManagedConnection.class);
 
     private PrintWriter logWriter;
 

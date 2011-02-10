@@ -31,12 +31,12 @@ import junit.framework.TestCase;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class OutOfOrderTestCase extends TestCase {
 	
-	private static final Log log = LogFactory.getLog(OutOfOrderTestCase.class);
+	private static final Logger log = LoggerFactory.getLogger(OutOfOrderTestCase.class);
 	
 	public static final String BROKER_URL = "tcp://localhost:61616";
 	private static final int PREFETCH = 10;

@@ -24,15 +24,15 @@ import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportFactory;
 import org.apache.activemq.transport.TransportListener;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @version $Revision: 1.1 $
  */
 public class BadConnectionTest extends TestCase {
 
-    private static final Log LOG = LogFactory.getLog(BadConnectionTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(BadConnectionTest.class);
 
     protected Transport transport;
 

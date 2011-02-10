@@ -26,13 +26,13 @@ import java.util.StringTokenizer;
 
 import javax.jms.ConnectionFactory;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public abstract class ClassLoaderSPIConnectionFactory implements SPIConnectionFactory {
 
     public static final String KEY_EXT_DIR = "extDir";
-    private static final Log LOG = LogFactory.getLog(ClassLoaderSPIConnectionFactory.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ClassLoaderSPIConnectionFactory.class);
 
     public final ConnectionFactory createConnectionFactory(Properties settings) throws Exception {
 

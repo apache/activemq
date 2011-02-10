@@ -42,11 +42,11 @@ import org.apache.activemq.broker.SslContext;
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.transport.TransportBrokerTestSupport;
 import org.apache.activemq.transport.TransportFactory;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class SslBrokerServiceTest extends TransportBrokerTestSupport {
-    private static final Log LOG = LogFactory.getLog(SslBrokerServiceTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(SslBrokerServiceTest.class);
 
     TransportConnector needClientAuthConnector;
     TransportConnector limitedCipherSuites;

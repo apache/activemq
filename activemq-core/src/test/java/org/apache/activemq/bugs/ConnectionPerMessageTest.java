@@ -29,12 +29,12 @@ import javax.jms.Topic;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.EmbeddedBrokerTestSupport;
 import org.apache.activemq.broker.BrokerService;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ConnectionPerMessageTest extends EmbeddedBrokerTestSupport {
 
-	private static final Log LOG = LogFactory.getLog(ConnectionPerMessageTest.class);
+	private static final Logger LOG = LoggerFactory.getLogger(ConnectionPerMessageTest.class);
 	private static final int COUNT = 20000;
 	protected String bindAddress;
 
@@ -48,7 +48,7 @@ public class ConnectionPerMessageTest extends EmbeddedBrokerTestSupport {
 		for (int i = 0; i < COUNT; i++) {
 
 			if (i % 1000 == 0) {
-				LOG.info(i);
+				LOG.info(new Integer(i).toString());
 			}
 
 			Connection conn = null;

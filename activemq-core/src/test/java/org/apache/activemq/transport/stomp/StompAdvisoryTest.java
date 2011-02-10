@@ -29,8 +29,8 @@ import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.util.URISupport;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jms.*;
 import java.io.File;
@@ -47,7 +47,7 @@ import java.util.Map;
  * @version $Revision: 1461 $
  */
 public class StompAdvisoryTest extends TestCase {
-    private static final Log LOG = LogFactory.getLog(StompAdvisoryTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(StompAdvisoryTest.class);
 
     protected ConnectionFactory factory;
     protected ActiveMQConnection connection;
@@ -139,7 +139,7 @@ public class StompAdvisoryTest extends TestCase {
         c.start();
 
         StompFrame f = stompConnection.receive();
-        LOG.debug(f);
+        LOG.debug(f.toString());
         assertEquals(f.getAction(),"MESSAGE");
         assertTrue("Should have a body", f.getBody().length() > 0);
         assertTrue(f.getBody().startsWith("{\"ConnectionInfo\":"));
@@ -149,7 +149,7 @@ public class StompAdvisoryTest extends TestCase {
         c.close();
 
         f = stompConnection.receive();
-        LOG.debug(f);
+        LOG.debug(f.toString());
         assertEquals(f.getAction(),"MESSAGE");
         assertNotNull("Body is not null", f.getBody());
         assertTrue("Body should have content", f.getBody().length() > 0);
@@ -173,7 +173,7 @@ public class StompAdvisoryTest extends TestCase {
         c.start();
 
         StompFrame f = stompConnection.receive();
-        LOG.debug(f);
+        LOG.debug(f.toString());
         assertEquals(f.getAction(),"MESSAGE");
         assertTrue("Should have a body", f.getBody().length() > 0);
         assertTrue(f.getBody().startsWith("{\"ConnectionInfo\":"));
@@ -183,7 +183,7 @@ public class StompAdvisoryTest extends TestCase {
         c.close();
 
         f = stompConnection.receive();
-        LOG.debug(f);
+        LOG.debug(f.toString());
         assertEquals(f.getAction(),"MESSAGE");
         assertNotNull("Body is not null", f.getBody());
         assertTrue("Body should have content", f.getBody().length() > 0);
@@ -207,7 +207,7 @@ public class StompAdvisoryTest extends TestCase {
         c.start();
 
         StompFrame f = stompConnection.receive();
-        LOG.debug(f);
+        LOG.debug(f.toString());
         assertEquals(f.getAction(),"MESSAGE");
         assertTrue("Should have a body", f.getBody().length() > 0);
         assertTrue(f.getBody().startsWith("<ConnectionInfo>"));
@@ -217,7 +217,7 @@ public class StompAdvisoryTest extends TestCase {
         c.close();
 
         f = stompConnection.receive();
-        LOG.debug(f);
+        LOG.debug(f.toString());
         assertEquals(f.getAction(),"MESSAGE");
         assertNotNull("Body is not null", f.getBody());
         assertTrue("Body should have content", f.getBody().length() > 0);
@@ -240,7 +240,7 @@ public class StompAdvisoryTest extends TestCase {
         MessageConsumer consumer = session.createConsumer(dest);
 
         StompFrame f = stompConnection.receive();
-        LOG.debug(f);
+        LOG.debug(f.toString());
         assertEquals(f.getAction(),"MESSAGE");
         assertTrue("Should have a body", f.getBody().length() > 0);
         assertTrue(f.getBody().startsWith("{\"ConsumerInfo\":"));
@@ -267,7 +267,7 @@ public class StompAdvisoryTest extends TestCase {
         producer.send(mess);
 
         StompFrame f = stompConnection.receive();
-        LOG.debug(f);
+        LOG.debug(f.toString());
         assertEquals(f.getAction(),"MESSAGE");
         assertTrue("Should have a body", f.getBody().length() > 0);
         assertTrue(f.getBody().startsWith("{\"ProducerInfo\":"));
@@ -298,7 +298,7 @@ public class StompAdvisoryTest extends TestCase {
         producer.send(mess);
 
         StompFrame f = stompConnection.receive();
-        LOG.debug(f);
+        LOG.debug(f.toString());
         assertEquals(f.getAction(),"MESSAGE");
         assertTrue("Should have a body", f.getBody().length() > 0);
         assertTrue(f.getBody().startsWith("<ProducerInfo>"));
@@ -329,7 +329,7 @@ public class StompAdvisoryTest extends TestCase {
         producer.send(mess);
 
         StompFrame f = stompConnection.receive();
-        LOG.debug(f);
+        LOG.debug(f.toString());
         assertEquals(f.getAction(),"MESSAGE");
         assertTrue("Should have a body", f.getBody().length() > 0);
         assertTrue(f.getBody().startsWith("{\"ProducerInfo\":"));

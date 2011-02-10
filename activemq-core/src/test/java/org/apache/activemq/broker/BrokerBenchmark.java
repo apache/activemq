@@ -29,8 +29,8 @@ import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.command.SessionInfo;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * BrokerBenchmark is used to get an idea of the raw performance of a broker.
@@ -45,7 +45,7 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision: 1.9 $
  */
 public class BrokerBenchmark extends BrokerTestSupport {
-    private static final transient Log LOG = LogFactory.getLog(BrokerBenchmark.class);
+    private static final transient Logger LOG = LoggerFactory.getLogger(BrokerBenchmark.class);
 
     public int produceCount = Integer.parseInt(System.getProperty("PRODUCE_COUNT", "10000"));
     public ActiveMQDestination destination;

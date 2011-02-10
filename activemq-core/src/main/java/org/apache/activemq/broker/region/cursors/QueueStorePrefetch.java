@@ -21,8 +21,8 @@ import org.apache.activemq.broker.region.Queue;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.store.MessageStore;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * persist pending messages pending message (messages awaiting dispatch to a
@@ -31,7 +31,7 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision: 474985 $
  */
 class QueueStorePrefetch extends AbstractStoreCursor {
-    private static final Log LOG = LogFactory.getLog(QueueStorePrefetch.class);
+    private static final Logger LOG = LoggerFactory.getLogger(QueueStorePrefetch.class);
     private final MessageStore store;
    
     /**

@@ -70,8 +70,8 @@ import org.apache.activemq.usage.UsageListener;
 import org.apache.activemq.util.ByteSequence;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.wireformat.WireFormat;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * An implementation of {@link PersistenceAdapter} designed for use with a
@@ -86,7 +86,7 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
     private BrokerService brokerService;
 	
     protected Scheduler scheduler;
-    private static final Log LOG = LogFactory.getLog(JournalPersistenceAdapter.class);
+    private static final Logger LOG = LoggerFactory.getLogger(JournalPersistenceAdapter.class);
 
     private Journal journal;
     private PersistenceAdapter longTermPersistence;

@@ -34,8 +34,8 @@ import org.apache.activemq.broker.region.policy.FilePendingQueueMessageStoragePo
 import org.apache.activemq.broker.region.policy.PendingQueueMessageStoragePolicy;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -45,7 +45,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 public class AMQ3145Test {
-    private static final Log LOG = LogFactory.getLog(AMQ3145Test.class);
+    private static final Logger LOG = LoggerFactory.getLogger(AMQ3145Test.class);
     private final String MESSAGE_TEXT = new String(new byte[1024]);
     BrokerService broker;
     ConnectionFactory factory;

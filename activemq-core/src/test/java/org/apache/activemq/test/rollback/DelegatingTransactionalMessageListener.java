@@ -24,11 +24,11 @@ import javax.jms.MessageConsumer;
 import javax.jms.MessageListener;
 import javax.jms.Session;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class DelegatingTransactionalMessageListener implements MessageListener {
-    private static final transient Log LOG = LogFactory.getLog(DelegatingTransactionalMessageListener.class);
+    private static final transient Logger LOG = LoggerFactory.getLogger(DelegatingTransactionalMessageListener.class);
 
     private final MessageListener underlyingListener;
     private boolean transacted = true;

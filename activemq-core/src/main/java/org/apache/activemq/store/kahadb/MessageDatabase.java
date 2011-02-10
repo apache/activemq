@@ -61,8 +61,8 @@ import org.apache.activemq.util.Callback;
 import org.apache.activemq.util.IOHelper;
 import org.apache.activemq.util.ServiceStopper;
 import org.apache.activemq.util.ServiceSupport;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.kahadb.index.BTreeIndex;
 import org.apache.kahadb.index.BTreeVisitor;
 import org.apache.kahadb.journal.DataFile;
@@ -93,7 +93,7 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
     static {
         UNMATCHED = new Buffer(new byte[]{});
     }
-    private static final Log LOG = LogFactory.getLog(MessageDatabase.class);
+    private static final Logger LOG = LoggerFactory.getLogger(MessageDatabase.class);
     private static final int DEFAULT_DATABASE_LOCKED_WAIT_DELAY = 10 * 1000;
 
     static final int CLOSED_STATE = 1;

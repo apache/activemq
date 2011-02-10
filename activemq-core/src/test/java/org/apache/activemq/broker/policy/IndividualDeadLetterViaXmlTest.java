@@ -21,8 +21,8 @@ import javax.jms.Destination;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.xbean.BrokerFactoryBean;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.io.ClassPathResource;
 
 /**
@@ -30,7 +30,7 @@ import org.springframework.core.io.ClassPathResource;
  * @version $Revision$
  */
 public class IndividualDeadLetterViaXmlTest extends DeadLetterTest {
-    private static final Log LOG = LogFactory.getLog(IndividualDeadLetterViaXmlTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(IndividualDeadLetterViaXmlTest.class);
 
 
     protected BrokerService createBroker() throws Exception {

@@ -36,8 +36,8 @@ import javax.servlet.http.HttpSession;
 
 import org.apache.activemq.MessageAvailableConsumer;
 import org.apache.activemq.MessageAvailableListener;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.eclipse.jetty.continuation.Continuation;
 import org.eclipse.jetty.continuation.ContinuationSupport;
 
@@ -63,7 +63,7 @@ import org.eclipse.jetty.continuation.ContinuationSupport;
  * @version $Revision: 1.1.1.1 $
  */
 public class MessageListenerServlet extends MessageServletSupport {
-    private static final Log LOG = LogFactory.getLog(MessageListenerServlet.class);
+    private static final Logger LOG = LoggerFactory.getLogger(MessageListenerServlet.class);
     
     private String readTimeoutParameter = "timeout";
     private long defaultReadTimeout = -1;

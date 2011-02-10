@@ -41,15 +41,15 @@ import javax.jms.TopicSubscriber;
 import javax.naming.InitialContext;
 
 import org.apache.activemq.broker.BrokerService;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 public class AMQ2084Test {
 
-    private static final Log LOG = LogFactory.getLog(AMQ2084Test.class);
+    private static final Logger LOG = LoggerFactory.getLogger(AMQ2084Test.class);
     BrokerService broker;
     CountDownLatch qreceived;
     

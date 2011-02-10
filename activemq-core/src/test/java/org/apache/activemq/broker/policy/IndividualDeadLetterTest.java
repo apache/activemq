@@ -31,14 +31,14 @@ import org.apache.activemq.broker.region.policy.IndividualDeadLetterStrategy;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.ActiveMQQueue;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @version $Revision$
  */
 public class IndividualDeadLetterTest extends DeadLetterTest {
-    private static final Log LOG = LogFactory.getLog(IndividualDeadLetterTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(IndividualDeadLetterTest.class);
 
     protected BrokerService createBroker() throws Exception {
         BrokerService broker = super.createBroker();

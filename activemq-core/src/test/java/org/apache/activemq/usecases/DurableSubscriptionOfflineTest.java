@@ -27,14 +27,14 @@ import org.apache.activemq.store.jdbc.JDBCPersistenceAdapter;
 import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
 
 import javax.jms.*;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.util.Vector;
 
 public class DurableSubscriptionOfflineTest extends org.apache.activemq.TestSupport {
 
-    private static final Log LOG = LogFactory.getLog(DurableSubscriptionOfflineTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(DurableSubscriptionOfflineTest.class);
     public Boolean usePrioritySupport = Boolean.TRUE;
     private BrokerService broker;
     private ActiveMQTopic topic;

@@ -24,14 +24,14 @@ import org.apache.activemq.filter.LogicExpression;
 import org.apache.activemq.filter.PropertyExpression;
 import org.apache.activemq.filter.XPathExpression;
 import org.apache.activemq.spring.ConsumerBean;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @version $Revision: 1.2 $
  */
 public class SelectorParserTest extends TestCase {
-    private static final Log LOG = LogFactory.getLog(SelectorParserTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(SelectorParserTest.class);
 
     public void testParseXPath() throws Exception {
         BooleanExpression filter = parse("XPATH '//title[@lang=''eng'']'");

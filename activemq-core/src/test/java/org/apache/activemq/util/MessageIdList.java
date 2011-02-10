@@ -26,8 +26,8 @@ import javax.jms.MessageListener;
 
 import junit.framework.Assert;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A simple container of messages for performing testing and rendezvous style
@@ -42,7 +42,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class MessageIdList extends Assert implements MessageListener {
 
-    private static final Log LOG = LogFactory.getLog(MessageIdList.class);
+    private static final Logger LOG = LoggerFactory.getLogger(MessageIdList.class);
 
     private List<String> messageIds = new ArrayList<String>();
     private Object semaphore;

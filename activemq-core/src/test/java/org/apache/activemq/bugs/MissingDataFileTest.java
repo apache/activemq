@@ -29,8 +29,8 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.store.amq.AMQPersistenceAdapterFactory;
 import org.apache.activemq.usage.SystemUsage;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /*
  * Try and replicate:
@@ -42,7 +42,7 @@ import org.apache.commons.logging.LogFactory;
 
 public class MissingDataFileTest extends TestCase {
 
-    private static final Log LOG = LogFactory.getLog(MissingDataFileTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(MissingDataFileTest.class);
     
     private static int counter = 300;
 
@@ -252,7 +252,7 @@ public class MissingDataFileTest extends TestCase {
                 try {
                     lock.wait(200);
                 } catch (InterruptedException e) {
-                    LOG.error(e);
+                    LOG.error(e.toString());
                 }
                 // check if all messages have been received
                 hasMessages = hectorToHaloCtr < counter || xenaToHaloCtr < counter || troyToHaloCtr < counter || haloToHectorCtr < counter || haloToXenaCtr < counter

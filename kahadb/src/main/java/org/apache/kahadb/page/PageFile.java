@@ -34,8 +34,8 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.zip.Adler32;
 import java.util.zip.Checksum;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.kahadb.util.DataByteArrayOutputStream;
 import org.apache.kahadb.util.IOExceptionSupport;
 import org.apache.kahadb.util.IOHelper;
@@ -68,7 +68,7 @@ public class PageFile {
     private static final int PAGE_FILE_HEADER_SIZE=1024*4;
 
     // Recovery header is (long offset)
-    private static final Log LOG = LogFactory.getLog(PageFile.class);
+    private static final Logger LOG = LoggerFactory.getLogger(PageFile.class);
 
     // A PageFile will use a couple of files in this directory
     private File directory;

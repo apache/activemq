@@ -25,8 +25,8 @@ import java.sql.Statement;
 import javax.sql.DataSource;
 
 import org.apache.activemq.util.IOExceptionSupport;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Helps keep track of the current transaction/JDBC connection.
@@ -35,7 +35,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class TransactionContext {
 
-    private static final Log LOG = LogFactory.getLog(TransactionContext.class);
+    private static final Logger LOG = LoggerFactory.getLogger(TransactionContext.class);
 
     private final DataSource dataSource;
     private Connection connection;

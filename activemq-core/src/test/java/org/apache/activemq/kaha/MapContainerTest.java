@@ -25,13 +25,13 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import org.apache.activemq.kaha.impl.container.BaseContainerImpl;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import junit.framework.TestCase;
 
 public class MapContainerTest extends TestCase {
-    private static final Log LOG = LogFactory.getLog(MapContainerTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(MapContainerTest.class);
     protected static final int COUNT = 10;
 
     protected String name = "test";

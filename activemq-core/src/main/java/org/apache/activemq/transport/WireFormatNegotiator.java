@@ -27,15 +27,15 @@ import org.apache.activemq.command.Command;
 import org.apache.activemq.command.WireFormatInfo;
 import org.apache.activemq.openwire.OpenWireFormat;
 import org.apache.activemq.util.IOExceptionSupport;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Negotiates the wire format with a new connection
  */
 public class WireFormatNegotiator extends TransportFilter {
 
-    private static final Log LOG = LogFactory.getLog(WireFormatNegotiator.class);
+    private static final Logger LOG = LoggerFactory.getLogger(WireFormatNegotiator.class);
 
     private OpenWireFormat wireFormat;
     private final int minimumVersion;

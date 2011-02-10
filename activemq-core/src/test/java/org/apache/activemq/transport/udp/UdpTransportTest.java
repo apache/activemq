@@ -22,8 +22,8 @@ import org.apache.activemq.openwire.OpenWireFormat;
 import org.apache.activemq.transport.CommandJoiner;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.util.IntSequenceGenerator;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * 
@@ -31,7 +31,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class UdpTransportTest extends UdpTestSupport {
 
-    private static final Log LOG = LogFactory.getLog(UdpTransportTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(UdpTransportTest.class);
 
     protected int consumerPort = 9123;
     protected String producerURI = "udp://localhost:" + consumerPort;

@@ -29,11 +29,11 @@ import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class AdvisoryTopicDeletionTest extends TestSupport {
-    private static final Log LOG = LogFactory.getLog(AdvisoryTopicDeletionTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(AdvisoryTopicDeletionTest.class);
 
     private BrokerService broker;
     private Connection connection;

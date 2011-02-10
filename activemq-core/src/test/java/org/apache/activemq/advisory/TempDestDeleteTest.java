@@ -33,14 +33,14 @@ import org.apache.activemq.EmbeddedBrokerTestSupport;
 import org.apache.activemq.broker.region.RegionBroker;
 import org.apache.activemq.command.ActiveMQTempQueue;
 import org.apache.activemq.command.ActiveMQTempTopic;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @version $Revision: 397249 $
  */
 public class TempDestDeleteTest extends EmbeddedBrokerTestSupport implements ConsumerListener {
-    private static final Log LOG = LogFactory.getLog(TempDestDeleteTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(TempDestDeleteTest.class);
 
     protected int consumerCounter;
     protected ConsumerEventSource topicConsumerEventSource;

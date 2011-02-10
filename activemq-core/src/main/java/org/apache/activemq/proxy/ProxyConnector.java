@@ -29,8 +29,8 @@ import org.apache.activemq.transport.TransportFactory;
 import org.apache.activemq.transport.TransportFilter;
 import org.apache.activemq.transport.TransportServer;
 import org.apache.activemq.util.ServiceStopper;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @org.apache.xbean.XBean
@@ -39,7 +39,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class ProxyConnector implements Service {
 
-    private static final Log LOG = LogFactory.getLog(ProxyConnector.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ProxyConnector.class);
     private TransportServer server;
     private URI bind;
     private URI remote;

@@ -26,8 +26,8 @@ import org.apache.activemq.command.Command;
 import org.apache.activemq.command.ExceptionResponse;
 import org.apache.activemq.command.Response;
 import org.apache.activemq.util.IntSequenceGenerator;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Adds the incrementing sequence number to commands along with performing the
@@ -38,7 +38,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class ResponseCorrelator extends TransportFilter {
 
-    private static final Log LOG = LogFactory.getLog(ResponseCorrelator.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ResponseCorrelator.class);
     private final Map<Integer, FutureResponse> requestMap = new HashMap<Integer, FutureResponse>();
     private IntSequenceGenerator sequenceGenerator;
     private final boolean debug = LOG.isDebugEnabled();

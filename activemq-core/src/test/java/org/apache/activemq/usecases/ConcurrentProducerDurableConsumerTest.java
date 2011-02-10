@@ -48,11 +48,11 @@ import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.util.MessageIdList;
 import org.apache.activemq.util.Wait;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ConcurrentProducerDurableConsumerTest extends TestSupport {
-    private static final Log LOG = LogFactory.getLog(ConcurrentProducerDurableConsumerTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ConcurrentProducerDurableConsumerTest.class);
     private int consumerCount = 1;
     BrokerService broker;
     protected List<Connection> connections = Collections.synchronizedList(new ArrayList<Connection>());

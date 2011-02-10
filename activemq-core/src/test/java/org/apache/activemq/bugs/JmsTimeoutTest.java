@@ -31,13 +31,13 @@ import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.EmbeddedBrokerTestSupport;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.transport.RequestTimedOutIOException;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 public class JmsTimeoutTest extends EmbeddedBrokerTestSupport {
 
-		static final Log LOG = LogFactory.getLog(JmsTimeoutTest.class);
+		static final Logger LOG = LoggerFactory.getLogger(JmsTimeoutTest.class);
 	
 		private int messageSize=1024*64;
 		private int messageCount=10000;

@@ -40,8 +40,8 @@ import org.apache.activemq.transport.discovery.DiscoveryAgent;
 import org.apache.activemq.transport.discovery.DiscoveryAgentFactory;
 import org.apache.activemq.util.ServiceStopper;
 import org.apache.activemq.util.ServiceSupport;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @org.apache.xbean.XBean
@@ -49,7 +49,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class TransportConnector implements Connector, BrokerServiceAware {
 
-    final Log LOG = LogFactory.getLog(TransportConnector.class);
+    final Logger LOG = LoggerFactory.getLogger(TransportConnector.class);
 
     protected CopyOnWriteArrayList<TransportConnection> connections = new CopyOnWriteArrayList<TransportConnection>();
     protected TransportStatusDetector statusDector;

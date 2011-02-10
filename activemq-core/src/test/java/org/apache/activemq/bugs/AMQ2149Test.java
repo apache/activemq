@@ -46,8 +46,8 @@ import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.store.amq.AMQPersistenceAdapterFactory;
 import org.apache.activemq.usage.MemoryUsage;
 import org.apache.activemq.usage.SystemUsage;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 interface Configurer {
     public void configure(BrokerService broker) throws Exception;
@@ -55,7 +55,7 @@ interface Configurer {
 
 public class AMQ2149Test extends AutoFailTestSupport {
 
-    private static final Log LOG = LogFactory.getLog(AMQ2149Test.class);
+    private static final Logger LOG = LoggerFactory.getLogger(AMQ2149Test.class);
 
     private static final String BROKER_CONNECTOR = "tcp://localhost:61617";
     private static final String DEFAULT_BROKER_URL = "failover:("+ BROKER_CONNECTOR

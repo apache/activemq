@@ -22,15 +22,15 @@ import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.LocalTransactionId;
 import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.store.TransactionStore;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @version $Revision: 1.3 $
  */
 public class LocalTransaction extends Transaction {
 
-    private static final Log LOG = LogFactory.getLog(LocalTransaction.class);
+    private static final Logger LOG = LoggerFactory.getLogger(LocalTransaction.class);
 
     private final TransactionStore transactionStore;
     private final LocalTransactionId xid;
@@ -120,7 +120,7 @@ public class LocalTransaction extends Transaction {
     }
     
     @Override
-    public Log getLog() {
+    public Logger getLog() {
         return LOG;
     }
 }

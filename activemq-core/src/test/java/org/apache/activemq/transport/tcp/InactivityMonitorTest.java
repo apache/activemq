@@ -32,11 +32,11 @@ import org.apache.activemq.transport.TransportAcceptListener;
 import org.apache.activemq.transport.TransportFactory;
 import org.apache.activemq.transport.TransportListener;
 import org.apache.activemq.transport.TransportServer;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class InactivityMonitorTest extends CombinationTestSupport implements TransportAcceptListener {
-    private static final Log LOG = LogFactory.getLog(InactivityMonitorTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(InactivityMonitorTest.class);
 
     public Runnable serverRunOnCommand;
     public Runnable clientRunOnCommand;
@@ -151,7 +151,7 @@ public class InactivityMonitorTest extends CombinationTestSupport implements Tra
     }
 
     public void onAcceptError(Exception error) {
-        LOG.trace(error);
+        LOG.trace(error.toString());
     }
 
     public void testClientHang() throws Exception {

@@ -34,8 +34,8 @@ import org.apache.activemq.transport.discovery.DiscoveryAgent;
 import org.apache.activemq.transport.discovery.DiscoveryListener;
 import org.apache.activemq.util.JMSExceptionSupport;
 import org.apache.activemq.util.MapHelper;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A {@link DiscoveryAgent} using <a href="http://www.zeroconf.org/">Zeroconf</a>
@@ -44,7 +44,7 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision$
  */
 public class RendezvousDiscoveryAgent implements DiscoveryAgent, ServiceListener {
-    private static final Log LOG = LogFactory.getLog(RendezvousDiscoveryAgent.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RendezvousDiscoveryAgent.class);
 
     private static final String TYPE_SUFFIX = "ActiveMQ-4.";
 

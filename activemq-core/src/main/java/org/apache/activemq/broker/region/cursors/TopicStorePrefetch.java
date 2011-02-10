@@ -23,8 +23,8 @@ import org.apache.activemq.command.MessageId;
 import org.apache.activemq.filter.MessageEvaluationContext;
 import org.apache.activemq.filter.NonCachedMessageEvaluationContext;
 import org.apache.activemq.store.TopicMessageStore;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * persist pendingCount messages pendingCount message (messages awaiting disptach
@@ -33,7 +33,7 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision$
  */
 class TopicStorePrefetch extends AbstractStoreCursor {
-    private static final Log LOG = LogFactory.getLog(TopicStorePrefetch.class);
+    private static final Logger LOG = LoggerFactory.getLogger(TopicStorePrefetch.class);
     private final TopicMessageStore store;
     private final String clientId;
     private final String subscriberName;

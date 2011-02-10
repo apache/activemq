@@ -19,8 +19,8 @@ package org.apache.activemq.util;
 import java.io.IOException;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.store.PersistenceAdapter;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A helper class for running code with a PersistenceAdapter in a transaction.
@@ -28,7 +28,7 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision: 1.2 $
  */
 public class TransactionTemplate {
-    private static final Log LOG = LogFactory.getLog(TransactionTemplate.class);
+    private static final Logger LOG = LoggerFactory.getLogger(TransactionTemplate.class);
     private PersistenceAdapter persistenceAdapter;
     private ConnectionContext context;
 

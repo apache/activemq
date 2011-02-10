@@ -35,13 +35,20 @@ public class HttpClientReconnectTest extends TestCase {
 	ActiveMQConnectionFactory factory;
 
 	protected void setUp() throws Exception {
+        System.setProperty("javax.net.ssl.trustStore", "src/test/resources/client.keystore");
+        System.setProperty("javax.net.ssl.trustStorePassword", "password");
+        System.setProperty("javax.net.ssl.trustStoreType", "jks");
+        System.setProperty("javax.net.ssl.keyStore", "src/test/resources/server.keystore");
+        System.setProperty("javax.net.ssl.keyStorePassword", "password");
+        System.setProperty("javax.net.ssl.keyStoreType", "jks");
+
 		broker = new BrokerService();
-		broker.addConnector("http://localhost:61666?trace=true");
+		broker.addConnector("https://localhost:61666?trace=true");
 		broker.setPersistent(false);
 		broker.setUseJmx(false);
 		broker.deleteAllMessages();
 		broker.start();
-		factory = new ActiveMQConnectionFactory("http://localhost:61666?trace=true");
+		factory = new ActiveMQConnectionFactory("https://localhost:61666?trace=true&soTimeout=1000");
 	}
 
 	protected void tearDown() throws Exception {

@@ -32,15 +32,15 @@ import javax.jms.TextMessage;
 import junit.framework.TestCase;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.support.AbstractApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 public class QueueBridgeTest extends TestCase implements MessageListener {
 
     protected static final int MESSAGE_COUNT = 10;
-    private static final Log LOG = LogFactory.getLog(QueueBridgeTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(QueueBridgeTest.class);
 
     protected AbstractApplicationContext context;
     protected QueueConnection localConnection;

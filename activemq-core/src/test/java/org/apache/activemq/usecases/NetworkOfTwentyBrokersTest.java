@@ -27,11 +27,11 @@ import org.apache.activemq.broker.region.RegionBroker;
 import org.apache.activemq.command.BrokerInfo;
 import org.apache.activemq.network.NetworkConnector;
 import org.apache.activemq.util.ThreadTracker;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class NetworkOfTwentyBrokersTest extends JmsMultipleBrokersTestSupport {
-    private static final Log LOG = LogFactory.getLog(NetworkOfTwentyBrokersTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(NetworkOfTwentyBrokersTest.class);
 
     // This will interconnect all brokers using multicast
     protected void bridgeAllBrokers() throws Exception {

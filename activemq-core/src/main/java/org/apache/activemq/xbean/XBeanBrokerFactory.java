@@ -26,8 +26,8 @@ import org.apache.activemq.broker.BrokerFactoryHandler;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.util.URISupport;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.xbean.spring.context.ResourceXmlApplicationContext;
 import org.apache.xbean.spring.context.impl.URIEditor;
 import org.springframework.beans.BeansException;
@@ -44,7 +44,7 @@ import org.springframework.util.ResourceUtils;
  * @version $Revision$
  */
 public class XBeanBrokerFactory implements BrokerFactoryHandler {
-    private static final transient Log LOG = LogFactory.getLog(XBeanBrokerFactory.class);
+    private static final transient Logger LOG = LoggerFactory.getLogger(XBeanBrokerFactory.class);
 
     static {
         PropertyEditorManager.registerEditor(URI.class, URIEditor.class);

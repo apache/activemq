@@ -36,8 +36,8 @@ import javax.servlet.UnavailableException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
@@ -50,7 +50,7 @@ import org.apache.commons.logging.LogFactory;
  * @author Aleksi Kallio
  */
 public class RestFilter implements Filter {
-    private static final Log LOG = LogFactory.getLog(RestFilter.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RestFilter.class);
 
     private static final String HTTP_HEADER_DESTINATION = "Destination";
     private static final String HTTP_METHOD_MOVE = "MOVE";

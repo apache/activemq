@@ -19,8 +19,8 @@ package org.apache.activemq.broker.util;
 import org.apache.activemq.broker.BrokerPluginSupport;
 import org.apache.activemq.broker.ProducerBrokerExchange;
 import org.apache.activemq.command.Message;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A Broker interceptor which updates a JMS Client's timestamp on the message
@@ -45,7 +45,7 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision$
  */
 public class TimeStampingBrokerPlugin extends BrokerPluginSupport {
-    private static final Log LOG = LogFactory.getLog(TimeStampingBrokerPlugin.class);
+    private static final Logger LOG = LoggerFactory.getLogger(TimeStampingBrokerPlugin.class);
     /** 
     * variable which (when non-zero) is used to override
     * the expiration date for messages that arrive with

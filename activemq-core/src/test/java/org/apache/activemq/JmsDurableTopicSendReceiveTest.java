@@ -26,14 +26,14 @@ import javax.jms.TextMessage;
 import javax.jms.Topic;
 
 import org.apache.activemq.test.JmsTopicSendReceiveTest;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @version $Revision: 1.5 $
  */
 public class JmsDurableTopicSendReceiveTest extends JmsTopicSendReceiveTest {
-    private static final Log LOG = LogFactory.getLog(JmsDurableTopicSendReceiveTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(JmsDurableTopicSendReceiveTest.class);
 
     protected Connection connection2;
     protected Session session2;

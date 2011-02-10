@@ -26,15 +26,15 @@ import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @version $Revision: 1.3 $
  */
 public class ConnectionChurnTest extends TestCase {
     protected static final int CONNECTION_COUNT = 200;
-    private static final Log LOG = LogFactory.getLog(ConnectionChurnTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ConnectionChurnTest.class);
     protected BrokerService broker;
     protected String bindAddress = ActiveMQConnectionFactory.DEFAULT_BROKER_BIND_URL+"?transport.closeAsync=false";
     protected int topicCount;

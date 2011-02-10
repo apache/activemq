@@ -23,15 +23,15 @@ import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.RedeliveryPolicy;
 import org.apache.activemq.command.ActiveMQQueue;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * 
  * @version $Revision$
  */
 public class DeadLetterTest extends DeadLetterTestSupport {
-    private static final Log LOG = LogFactory.getLog(DeadLetterTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(DeadLetterTest.class);
 
     protected int rollbackCount;
 

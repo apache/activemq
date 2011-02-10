@@ -38,8 +38,8 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.network.NetworkConnector;
 import org.apache.activemq.store.memory.MemoryPersistenceAdapter;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.junit.Test;
 import org.springframework.jms.connection.CachingConnectionFactory;
 import org.springframework.jms.connection.SingleConnectionFactory;
@@ -48,7 +48,7 @@ import org.springframework.jms.core.MessageCreator;
 import org.springframework.jms.listener.DefaultMessageListenerContainer;
 
 public class LoadBalanceTest {
-    private static final Log LOG = LogFactory.getLog(LoadBalanceTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(LoadBalanceTest.class);
     private static final String TESTING_QUEUE = "testingqueue";
     private static int networkBridgePrefetch = 1000;
 

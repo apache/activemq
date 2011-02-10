@@ -24,8 +24,8 @@ import java.sql.SQLException;
 import javax.sql.DataSource;
 
 import org.apache.activemq.util.Handler;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Represents an exclusive lock on a database to avoid multiple brokers running
@@ -36,7 +36,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class DefaultDatabaseLocker implements DatabaseLocker {
     public static final long DEFAULT_LOCK_ACQUIRE_SLEEP_INTERVAL = 1000;
-    private static final Log LOG = LogFactory.getLog(DefaultDatabaseLocker.class);
+    private static final Logger LOG = LoggerFactory.getLogger(DefaultDatabaseLocker.class);
     protected DataSource dataSource;
     protected Statements statements;
     protected long lockAcquireSleepInterval = DEFAULT_LOCK_ACQUIRE_SLEEP_INTERVAL;

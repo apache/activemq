@@ -51,8 +51,8 @@ import org.apache.activemq.util.FactoryFinder;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.LongSequenceGenerator;
 import org.apache.activemq.wireformat.WireFormat;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A {@link PersistenceAdapter} implementation using JDBC for persistence
@@ -69,7 +69,7 @@ import org.apache.commons.logging.LogFactory;
 public class JDBCPersistenceAdapter extends DataSourceSupport implements PersistenceAdapter,
     BrokerServiceAware {
 
-    private static final Log LOG = LogFactory.getLog(JDBCPersistenceAdapter.class);
+    private static final Logger LOG = LoggerFactory.getLogger(JDBCPersistenceAdapter.class);
     private static FactoryFinder adapterFactoryFinder = new FactoryFinder(
                                                                    "META-INF/services/org/apache/activemq/store/jdbc/");
     private static FactoryFinder lockFactoryFinder = new FactoryFinder(

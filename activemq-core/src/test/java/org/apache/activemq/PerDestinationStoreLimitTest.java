@@ -38,12 +38,12 @@ import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.transport.tcp.TcpTransport;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 // see: https://issues.apache.org/activemq/browse/AMQ-2668
 public class PerDestinationStoreLimitTest extends JmsTestSupport {
-    static final Log LOG = LogFactory.getLog(PerDestinationStoreLimitTest.class);
+    static final Logger LOG = LoggerFactory.getLogger(PerDestinationStoreLimitTest.class);
     final String oneKb = new String(new byte[1024]);
     
     ActiveMQDestination queueDest = new ActiveMQQueue("PerDestinationStoreLimitTest.Queue");

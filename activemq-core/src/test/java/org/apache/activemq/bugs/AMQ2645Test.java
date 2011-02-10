@@ -32,11 +32,11 @@ import javax.jms.TextMessage;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.EmbeddedBrokerTestSupport;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class AMQ2645Test extends EmbeddedBrokerTestSupport {
-    private static final Log LOG = LogFactory.getLog(AMQ2645Test.class);
+    private static final Logger LOG = LoggerFactory.getLogger(AMQ2645Test.class);
     private final static String QUEUE_NAME = "test.daroo.q";
 
     public void testWaitForTransportInterruptionProcessingHang()
@@ -75,7 +75,7 @@ public class AMQ2645Test extends EmbeddedBrokerTestSupport {
                             thirdMessageReceived.countDown();
                         }
                     } catch (Exception e) {
-                        LOG.error(e);
+                        LOG.error(e.toString());
                         throw new RuntimeException(e);
                     }
                 }

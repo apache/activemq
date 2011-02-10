@@ -35,12 +35,12 @@ import junit.framework.TestCase;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.util.IOHelper;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public final class PublishOnQueueConsumedMessageInTransactionTest extends TestCase implements MessageListener {
 
-    private static final Log LOG = LogFactory.getLog(PublishOnQueueConsumedMessageInTransactionTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(PublishOnQueueConsumedMessageInTransactionTest.class);
 
     private Session producerSession;
     private Session consumerSession;
@@ -126,10 +126,10 @@ public final class PublishOnQueueConsumedMessageInTransactionTest extends TestCa
                 consumerSession.rollback();
                 LOG.info("rolled back transaction");
             } catch (JMSException e1) {
-                LOG.info(e1);
+                LOG.info(e1.toString());
                 e1.printStackTrace();
             }
-            LOG.info(e);
+            LOG.info(e.toString());
             e.printStackTrace();
         }
     }

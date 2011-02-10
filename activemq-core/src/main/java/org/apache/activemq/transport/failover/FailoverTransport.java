@@ -57,8 +57,8 @@ import org.apache.activemq.transport.TransportFactory;
 import org.apache.activemq.transport.TransportListener;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.ServiceSupport;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
@@ -69,7 +69,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class FailoverTransport implements CompositeTransport {
 
-    private static final Log LOG = LogFactory.getLog(FailoverTransport.class);
+    private static final Logger LOG = LoggerFactory.getLogger(FailoverTransport.class);
     private static final int DEFAULT_INITIAL_RECONNECT_DELAY = 10;
     private TransportListener transportListener;
     private boolean disposed;

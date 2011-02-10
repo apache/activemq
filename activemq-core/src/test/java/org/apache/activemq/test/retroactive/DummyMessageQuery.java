@@ -22,8 +22,8 @@ import org.apache.activemq.broker.region.policy.MessageQuery;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQTextMessage;
 import org.apache.activemq.command.Message;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -32,7 +32,7 @@ import org.apache.commons.logging.LogFactory;
 public class DummyMessageQuery implements MessageQuery {
     
     public static final int MESSAGE_COUNT = 10;
-    private static final Log LOG = LogFactory.getLog(DummyMessageQuery.class);
+    private static final Logger LOG = LoggerFactory.getLogger(DummyMessageQuery.class);
 
     
     public void execute(ActiveMQDestination destination, MessageListener listener) throws Exception {

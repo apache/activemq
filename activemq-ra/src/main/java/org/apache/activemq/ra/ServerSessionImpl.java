@@ -34,8 +34,8 @@ import javax.resource.spi.work.WorkManager;
 import org.apache.activemq.ActiveMQSession;
 import org.apache.activemq.ActiveMQSession.DeliveryListener;
 import org.apache.activemq.TransactionContext;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @version $Revision$
@@ -57,7 +57,7 @@ public class ServerSessionImpl implements ServerSession, InboundContext, Work, D
 
 
     private int serverSessionId = getNextLogId();
-    private final Log log = LogFactory.getLog(ServerSessionImpl.class.getName() + ":" + serverSessionId);
+    private final Logger log = LoggerFactory.getLogger(ServerSessionImpl.class.getName() + ":" + serverSessionId);
 
     private ActiveMQSession session;
     private WorkManager workManager;

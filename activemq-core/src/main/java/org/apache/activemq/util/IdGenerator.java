@@ -19,8 +19,8 @@ package org.apache.activemq.util;
 import java.net.ServerSocket;
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Generator for Globally unique Strings.
@@ -28,7 +28,7 @@ import org.apache.commons.logging.LogFactory;
 
 public class IdGenerator {
 
-    private static final Log LOG = LogFactory.getLog(IdGenerator.class);
+    private static final Logger LOG = LoggerFactory.getLogger(IdGenerator.class);
     private static final String UNIQUE_STUB;
     private static int instanceCount;
     private static String hostName;

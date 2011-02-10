@@ -35,8 +35,8 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.MessagePull;
 import org.apache.activemq.command.Response;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.junit.After;
 import org.junit.Test;
 
@@ -46,7 +46,7 @@ import static org.junit.Assert.assertTrue;
 // see: https://issues.apache.org/activemq/browse/AMQ-2877
 public class FailoverPrefetchZeroTest {
 
-    private static final Log LOG = LogFactory.getLog(FailoverPrefetchZeroTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(FailoverPrefetchZeroTest.class);
     private static final String QUEUE_NAME = "FailoverPrefetchZero";
     private String url = "tcp://localhost:61616";
     final int prefetch = 0;

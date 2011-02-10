@@ -23,8 +23,8 @@ import java.util.Map;
 import java.util.StringTokenizer;
 
 import org.apache.activemq.tool.reports.PerformanceStatisticsUtil;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class CpuReportPlugin implements ReportPlugin {
 
@@ -53,7 +53,7 @@ public class CpuReportPlugin implements ReportPlugin {
     public static final String KEY_AVE_IDLE_TIME  = "AveIdleTime";
     public static final String KEY_AVE_WAIT_TIME  = "AveWaitingTime";
 
-    private static final Log LOG = LogFactory.getLog(CpuReportPlugin.class);
+    private static final Logger LOG = LoggerFactory.getLogger(CpuReportPlugin.class);
 
     protected List<Long> blockRecv = new ArrayList<Long>();
     protected List<Long> blockSent = new ArrayList<Long>();

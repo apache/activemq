@@ -24,8 +24,8 @@ import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
 import org.apache.activemq.util.ConsumerThread;
 import org.apache.activemq.util.ProducerThread;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.junit.Test;
 
 import javax.jms.*;
@@ -36,7 +36,7 @@ import static org.junit.Assert.assertEquals;
 
 public class AMQ3120Test {
 
-    private static final Log LOG = LogFactory.getLog(AMQ3120Test.class);
+    private static final Logger LOG = LoggerFactory.getLogger(AMQ3120Test.class);
 
     BrokerService broker = null;
     File kahaDbDir = null;

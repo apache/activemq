@@ -28,8 +28,8 @@ import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.Service;
 import org.apache.activemq.util.IOExceptionSupport;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.commons.pool.ObjectPoolFactory;
 import org.apache.commons.pool.impl.GenericObjectPoolFactory;
 
@@ -58,7 +58,7 @@ import org.apache.commons.pool.impl.GenericObjectPoolFactory;
  * @version $Revision: 1.1 $
  */
 public class PooledConnectionFactory implements ConnectionFactory, Service {
-    private static final transient Log LOG = LogFactory.getLog(PooledConnectionFactory.class);
+    private static final transient Logger LOG = LoggerFactory.getLogger(PooledConnectionFactory.class);
     private ConnectionFactory connectionFactory;
     private Map<ConnectionKey, LinkedList<ConnectionPool>> cache = new HashMap<ConnectionKey, LinkedList<ConnectionPool>>();
     private ObjectPoolFactory poolFactory;

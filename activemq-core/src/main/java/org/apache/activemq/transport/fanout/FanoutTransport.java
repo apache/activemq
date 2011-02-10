@@ -43,8 +43,8 @@ import org.apache.activemq.transport.TransportListener;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.ServiceStopper;
 import org.apache.activemq.util.ServiceSupport;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A Transport that fans out a connection to multiple brokers.
@@ -53,7 +53,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class FanoutTransport implements CompositeTransport {
 
-    private static final Log LOG = LogFactory.getLog(FanoutTransport.class);
+    private static final Logger LOG = LoggerFactory.getLogger(FanoutTransport.class);
 
     private TransportListener transportListener;
     private boolean disposed;

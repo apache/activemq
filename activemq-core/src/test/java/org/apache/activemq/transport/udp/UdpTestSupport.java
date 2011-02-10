@@ -33,15 +33,15 @@ import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportAcceptListener;
 import org.apache.activemq.transport.TransportListener;
 import org.apache.activemq.transport.TransportServer;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @version $Revision$
  */
 public abstract class UdpTestSupport extends TestCase implements TransportListener {
 
-    private static final Log LOG = LogFactory.getLog(UdpTestSupport.class);
+    private static final Logger LOG = LoggerFactory.getLogger(UdpTestSupport.class);
 
     protected Transport producer;
     protected Transport consumer;

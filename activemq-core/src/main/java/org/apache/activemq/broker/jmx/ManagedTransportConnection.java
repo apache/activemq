@@ -25,8 +25,8 @@ import org.apache.activemq.thread.TaskRunnerFactory;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.JMXSupport;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.util.Hashtable;
 import javax.management.ObjectName;
@@ -37,7 +37,7 @@ import javax.management.ObjectName;
  * @version $Revision: 1.1 $
  */
 public class ManagedTransportConnection extends TransportConnection {
-    private static final Log LOG = LogFactory.getLog(ManagedTransportConnection.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ManagedTransportConnection.class);
 
     private final ManagementContext managementContext;
     private final ObjectName connectorName;

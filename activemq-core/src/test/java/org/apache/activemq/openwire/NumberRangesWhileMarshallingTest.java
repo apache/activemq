@@ -24,15 +24,15 @@ import java.io.IOException;
 
 import junit.framework.TestCase;
 import org.apache.activemq.command.SessionId;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @version $Revision$
  */
 public class NumberRangesWhileMarshallingTest extends TestCase {
 
-    private static final Log LOG = LogFactory.getLog(NumberRangesWhileMarshallingTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(NumberRangesWhileMarshallingTest.class);
 
     protected String connectionId = "Cheese";
     protected ByteArrayOutputStream buffer = new ByteArrayOutputStream();

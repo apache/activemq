@@ -23,8 +23,8 @@ import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.util.IOHelper;
 
 import javax.jms.*;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
@@ -35,7 +35,7 @@ import java.io.FileNotFoundException;
  */
 public class KahaDBVersionTest extends TestCase {
 
-    static final Log LOG = LogFactory.getLog(KahaDBVersionTest.class);
+    static final Logger LOG = LoggerFactory.getLogger(KahaDBVersionTest.class);
     final static File VERSION_1_DB= new File("src/test/resources/org/apache/activemq/store/kahadb/KahaDBVersion1");
     final static File VERSION_2_DB= new File("src/test/resources/org/apache/activemq/store/kahadb/KahaDBVersion2");
 

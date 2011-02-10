@@ -39,8 +39,8 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.ActiveMQQueue;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -48,7 +48,7 @@ import org.junit.Test;
 //  https://issues.apache.org/activemq/browse/AMQ-2594
 public abstract class StoreOrderTest {
 
-    private static final Log LOG = LogFactory.getLog(StoreOrderTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(StoreOrderTest.class);
     
     protected BrokerService broker;
     private ActiveMQConnection connection;

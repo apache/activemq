@@ -26,15 +26,15 @@ import org.apache.activemq.transport.udp.ByteBufferPool;
 import org.apache.activemq.transport.udp.CommandDatagramChannel;
 import org.apache.activemq.transport.udp.DatagramHeaderMarshaller;
 import org.apache.activemq.transport.udp.UdpTransport;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @version $Revision: $
  */
 public class UnreliableCommandDatagramChannel extends CommandDatagramChannel {
 
-    private static final Log LOG = LogFactory.getLog(UnreliableCommandDatagramChannel.class);
+    private static final Logger LOG = LoggerFactory.getLogger(UnreliableCommandDatagramChannel.class);
 
     private DropCommandStrategy dropCommandStrategy;
 

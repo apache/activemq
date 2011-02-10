@@ -26,15 +26,15 @@ import javax.jms.MessageProducer;
 import javax.jms.Session;
 
 import org.apache.activemq.EmbeddedBrokerTestSupport;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * 
  * @version $Revision: 359679 $
  */
 public class ProducerListenerTest extends EmbeddedBrokerTestSupport implements ProducerListener {
-    private static final Log LOG = LogFactory.getLog(ProducerListenerTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ProducerListenerTest.class);
 
     protected Session consumerSession1;
     protected Session consumerSession2;

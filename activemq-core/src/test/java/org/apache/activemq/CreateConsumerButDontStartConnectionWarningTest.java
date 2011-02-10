@@ -18,14 +18,14 @@ package org.apache.activemq;
 
 import javax.jms.JMSException;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @version $Revision: 1.1 $
  */
 public class CreateConsumerButDontStartConnectionWarningTest extends JmsQueueSendReceiveTest {
-    private static final transient Log LOG = LogFactory.getLog(CreateConsumerButDontStartConnectionWarningTest.class);
+    private static final transient Logger LOG = LoggerFactory.getLogger(CreateConsumerButDontStartConnectionWarningTest.class);
 
     @Override
     protected void startConnection() throws JMSException {

@@ -30,11 +30,11 @@ import javax.jms.Session;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.EmbeddedBrokerTestSupport;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class AMQ2751Test extends EmbeddedBrokerTestSupport {
-    private static final Log LOG = LogFactory.getLog(AMQ2751Test.class);
+    private static final Logger LOG = LoggerFactory.getLogger(AMQ2751Test.class);
 
     private static String clientIdPrefix = "consumer";
     private static String queueName = "FOO";

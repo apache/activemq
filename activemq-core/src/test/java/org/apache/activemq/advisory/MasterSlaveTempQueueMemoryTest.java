@@ -32,13 +32,13 @@ import org.apache.activemq.broker.region.RegionBroker;
 import org.apache.activemq.broker.region.policy.DispatchPolicy;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 public class MasterSlaveTempQueueMemoryTest extends TempQueueMemoryTest {
    
-    private static final transient Log LOG = LogFactory.getLog(MasterSlaveTempQueueMemoryTest.class);
+    private static final transient Logger LOG = LoggerFactory.getLogger(MasterSlaveTempQueueMemoryTest.class);
     
     String masterBindAddress = "tcp://localhost:61616";
     String slaveBindAddress = "tcp://localhost:62616";

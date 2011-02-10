@@ -50,8 +50,8 @@
     <!-- Required Dependencies -->
     <!-- =============================== -->
     <dependency>
-      <groupId>commons-logging</groupId>
-      <artifactId>commons-logging-api</artifactId>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
     </dependency>
     <dependency>
       <groupId>${project.groupId}</groupId>
@@ -122,14 +122,7 @@
     </dependency>
     <dependency>
          <groupId>org.slf4j</groupId>
-         <artifactId>slf4j-api</artifactId>
-         <version>1.4.3</version>
-         <scope>test</scope>
-    </dependency>
-    <dependency>
-         <groupId>org.slf4j</groupId>
          <artifactId>slf4j-log4j12</artifactId>
-         <version>1.4.3</version>
          <scope>test</scope>
     </dependency>
     <dependency>

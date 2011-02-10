@@ -23,8 +23,8 @@ import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageListener;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A simple container of messages for performing testing and rendezvous style
@@ -40,7 +40,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class MemMessageIdList implements MessageListener {
 
-    protected static final Log LOG = LogFactory.getLog(MemMessageIdList.class);
+    protected static final Logger LOG = LoggerFactory.getLogger(MemMessageIdList.class);
 
     private List<String> messageIds = new ArrayList<String>();
     private Object semaphore;

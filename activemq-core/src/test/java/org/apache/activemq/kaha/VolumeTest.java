@@ -20,13 +20,13 @@ import java.io.IOException;
 import java.util.Iterator;
 
 import junit.framework.TestCase;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class VolumeTest extends TestCase {
 
     protected static final int NUMBER = 1;
-    private static final transient Log LOG = LogFactory.getLog(VolumeTest.class);
+    private static final transient Logger LOG = LoggerFactory.getLogger(VolumeTest.class);
 
     protected Store store;
     protected String name;

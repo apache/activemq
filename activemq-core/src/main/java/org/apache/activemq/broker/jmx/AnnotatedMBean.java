@@ -17,8 +17,8 @@
 package org.apache.activemq.broker.jmx;
 
 import org.apache.activemq.broker.util.*;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
@@ -38,7 +38,7 @@ public class AnnotatedMBean extends StandardMBean {
 
   private static final Map<String, Class<?>> primitives = new HashMap<String, Class<?>>();
 
-  private static final Log LOG = LogFactory.getLog("org.apache.activemq.audit");
+  private static final Logger LOG = LoggerFactory.getLogger("org.apache.activemq.audit");
 
   private static boolean audit;
   private static AuditLogService auditLog;

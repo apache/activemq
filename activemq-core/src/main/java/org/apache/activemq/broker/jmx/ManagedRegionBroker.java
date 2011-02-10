@@ -71,11 +71,11 @@ import org.apache.activemq.usage.SystemUsage;
 import org.apache.activemq.util.JMXSupport;
 import org.apache.activemq.util.ServiceStopper;
 import org.apache.activemq.util.SubscriptionKey;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ManagedRegionBroker extends RegionBroker {
-    private static final Log LOG = LogFactory.getLog(ManagedRegionBroker.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ManagedRegionBroker.class);
     private final ManagementContext managementContext;
     private final ObjectName brokerObjectName;
     private final Map<ObjectName, DestinationView> topics = new ConcurrentHashMap<ObjectName, DestinationView>();

@@ -23,8 +23,8 @@ import org.apache.activemq.transport.stomp.Stomp;
 import java.lang.Thread;
 import java.net.SocketTimeoutException;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.commons.lang.StringUtils;
 
 import java.util.*;
@@ -39,7 +39,7 @@ import javax.jms.Message;
 import javax.jms.TextMessage;
 
 public class AjaxTest extends JettyTestSupport {
-    private static final Log LOG = LogFactory.getLog(AjaxTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(AjaxTest.class);
     
     private class AjaxTestContentExchange extends ContentExchange  {
         private HashMap<String,String> headers;

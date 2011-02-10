@@ -30,8 +30,8 @@ import org.apache.camel.Endpoint;
 import org.apache.camel.impl.DefaultCamelContext;
 import org.apache.camel.spi.BrowsableEndpoint;
 import org.apache.camel.util.CamelContextHelper;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Shows that we can see the queues inside ActiveMQ via Camel
@@ -40,7 +40,7 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision$
  */
 public class AutoExposeQueuesInCamelTest extends EmbeddedBrokerTestSupport {
-    private static final transient Log LOG = LogFactory.getLog(AutoExposeQueuesInCamelTest.class);
+    private static final transient Logger LOG = LoggerFactory.getLogger(AutoExposeQueuesInCamelTest.class);
 
     protected ActiveMQQueue sampleQueue = new ActiveMQQueue("foo.bar");
     protected ActiveMQTopic sampleTopic = new ActiveMQTopic("cheese");

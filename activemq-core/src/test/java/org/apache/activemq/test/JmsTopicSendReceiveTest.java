@@ -23,14 +23,14 @@ import javax.jms.MessageConsumer;
 import javax.jms.Session;
 import javax.jms.Topic;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @version $Revision: 1.2 $
  */
 public class JmsTopicSendReceiveTest extends JmsSendReceiveTestSupport {
-    private static final Log LOG = LogFactory.getLog(JmsTopicSendReceiveTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(JmsTopicSendReceiveTest.class);
 
     protected Connection connection;
 

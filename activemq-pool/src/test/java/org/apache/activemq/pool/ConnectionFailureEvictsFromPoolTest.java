@@ -33,11 +33,11 @@ import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.test.TestSupport;
 import org.apache.activemq.transport.TransportListener;
 import org.apache.activemq.transport.mock.MockTransport;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ConnectionFailureEvictsFromPoolTest extends TestSupport {
-    private static final Log LOG = LogFactory.getLog(ConnectionFailureEvictsFromPoolTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ConnectionFailureEvictsFromPoolTest.class);
     private BrokerService broker;
     private ActiveMQConnectionFactory factory;
     private PooledConnectionFactory pooledFactory;

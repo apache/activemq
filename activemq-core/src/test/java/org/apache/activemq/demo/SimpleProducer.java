@@ -39,8 +39,8 @@ import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A simple polymorphic JMS producer which can work with Queues or Topics which
@@ -50,7 +50,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public final class SimpleProducer {
 
-    private static final Log LOG = LogFactory.getLog(SimpleProducer.class);
+    private static final Logger LOG = LoggerFactory.getLogger(SimpleProducer.class);
 
     private SimpleProducer() {
     }

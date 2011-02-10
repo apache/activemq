@@ -24,8 +24,8 @@ import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.filter.DestinationFilter;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A simple fixed size {@link MessageList} where there is a single, fixed size
@@ -36,7 +36,7 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision: 1.1 $
  */
 public class SimpleMessageList implements MessageList {
-    private static final Log LOG = LogFactory.getLog(SimpleMessageList.class);
+    private static final Logger LOG = LoggerFactory.getLogger(SimpleMessageList.class);
     private final LinkedList<MessageReference> list = new LinkedList<MessageReference>();
     private int maximumSize = 100 * 64 * 1024;
     private int size;

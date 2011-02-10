@@ -48,16 +48,16 @@ import org.apache.activemq.state.ProducerState;
 import org.apache.activemq.store.MessageStore;
 import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.thread.TaskRunnerFactory;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author gtully
  * @see https://issues.apache.org/activemq/browse/AMQ-2020
  **/
 public class QueueDuplicatesFromStoreTest extends TestCase {
-    private static final Log LOG = LogFactory
-            .getLog(QueueDuplicatesFromStoreTest.class);
+    private static final Logger LOG = LoggerFactory
+            .getLogger(QueueDuplicatesFromStoreTest.class);
 
     ActiveMQQueue destination = new ActiveMQQueue("queue-"
             + QueueDuplicatesFromStoreTest.class.getSimpleName());

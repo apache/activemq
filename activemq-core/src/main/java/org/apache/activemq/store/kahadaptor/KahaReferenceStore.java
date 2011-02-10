@@ -34,8 +34,8 @@ import org.apache.activemq.kaha.StoreEntry;
 import org.apache.activemq.store.AbstractMessageStore;
 import org.apache.activemq.store.MessageRecoveryListener;
 import org.apache.activemq.store.ReferenceStore;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author rajdavies
@@ -43,7 +43,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class KahaReferenceStore extends AbstractMessageStore implements ReferenceStore {
 
-    private static final Log LOG = LogFactory.getLog(KahaReferenceStore.class);
+    private static final Logger LOG = LoggerFactory.getLogger(KahaReferenceStore.class);
     protected final MapContainer<MessageId, ReferenceRecord> messageContainer;
     protected KahaReferenceStoreAdapter adapter;
     // keep track of dispatched messages so that duplicate sends that follow a successful

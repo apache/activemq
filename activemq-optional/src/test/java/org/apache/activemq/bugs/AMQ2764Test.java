@@ -32,12 +32,12 @@ import org.apache.activemq.advisory.ConsumerListener;
 import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQQueue;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class AMQ2764Test extends TestCase {
 
-    private static final Log LOG = LogFactory.getLog(AMQ2764Test.class);
+    private static final Logger LOG = LoggerFactory.getLogger(AMQ2764Test.class);
 
     private BrokerService brokerOne;
     private BrokerService brokerTwo;

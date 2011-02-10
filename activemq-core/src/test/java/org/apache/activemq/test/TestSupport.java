@@ -31,8 +31,8 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Useful base class for unit test cases
@@ -40,7 +40,7 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision: 1.4 $
  */
 public abstract class TestSupport extends TestCase {
-    private static final Log LOG = LogFactory.getLog(TestSupport.class);
+    private static final Logger LOG = LoggerFactory.getLogger(TestSupport.class);
     
     protected ActiveMQConnectionFactory connectionFactory;
     protected boolean topic = true;

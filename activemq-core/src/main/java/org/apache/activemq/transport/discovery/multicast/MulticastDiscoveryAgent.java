@@ -39,8 +39,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.activemq.command.DiscoveryEvent;
 import org.apache.activemq.transport.discovery.DiscoveryAgent;
 import org.apache.activemq.transport.discovery.DiscoveryListener;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A {@link DiscoveryAgent} using a multicast address and heartbeat packets
@@ -55,7 +55,7 @@ public class MulticastDiscoveryAgent implements DiscoveryAgent, Runnable {
     public static final String DEFAULT_HOST_IP  = System.getProperty("activemq.partition.discovery", "239.255.2.3"); 
     public static final int    DEFAULT_PORT  = 6155; 
         
-    private static final Log LOG = LogFactory.getLog(MulticastDiscoveryAgent.class);
+    private static final Logger LOG = LoggerFactory.getLogger(MulticastDiscoveryAgent.class);
     private static final String TYPE_SUFFIX = "ActiveMQ-4.";
     private static final String ALIVE = "alive.";
     private static final String DEAD = "dead.";

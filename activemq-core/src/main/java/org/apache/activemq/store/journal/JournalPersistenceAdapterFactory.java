@@ -29,8 +29,8 @@ import org.apache.activemq.store.jdbc.JDBCAdapter;
 import org.apache.activemq.store.jdbc.JDBCPersistenceAdapter;
 import org.apache.activemq.store.jdbc.Statements;
 import org.apache.activemq.thread.TaskRunnerFactory;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Factory class that can create PersistenceAdapter objects.
@@ -42,7 +42,7 @@ public class JournalPersistenceAdapterFactory extends DataSourceSupport implemen
 
     private static final int JOURNAL_LOCKED_WAIT_DELAY = 10 * 1000;
 
-    private static final Log LOG = LogFactory.getLog(JournalPersistenceAdapterFactory.class);
+    private static final Logger LOG = LoggerFactory.getLogger(JournalPersistenceAdapterFactory.class);
 
     private int journalLogFileSize = 1024 * 1024 * 20;
     private int journalLogFiles = 2;

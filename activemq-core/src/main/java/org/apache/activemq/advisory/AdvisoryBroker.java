@@ -34,8 +34,8 @@ import org.apache.activemq.state.ProducerState;
 import org.apache.activemq.usage.Usage;
 import org.apache.activemq.util.IdGenerator;
 import org.apache.activemq.util.LongSequenceGenerator;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This broker filter handles tracking the state of the broker for purposes of
@@ -45,7 +45,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class AdvisoryBroker extends BrokerFilter {
 
-    private static final Log LOG = LogFactory.getLog(AdvisoryBroker.class);
+    private static final Logger LOG = LoggerFactory.getLogger(AdvisoryBroker.class);
     private static final IdGenerator ID_GENERATOR = new IdGenerator();
 
     protected final ConcurrentHashMap<ConnectionId, ConnectionInfo> connections = new ConcurrentHashMap<ConnectionId, ConnectionInfo>();

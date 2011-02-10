@@ -44,15 +44,15 @@ import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.SessionId;
 import org.apache.activemq.util.Wait;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.junit.After;
 import org.junit.Test;
 
 // see https://issues.apache.org/activemq/browse/AMQ-2573
 public class FailoverConsumerUnconsumedTest {
 	
-    private static final Log LOG = LogFactory.getLog(FailoverConsumerUnconsumedTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(FailoverConsumerUnconsumedTest.class);
 	private static final String QUEUE_NAME = "FailoverWithUnconsumed";
 	private String url = "tcp://localhost:61616";
 	final int prefetch = 10;

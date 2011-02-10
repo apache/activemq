@@ -36,12 +36,12 @@ import org.apache.activemq.network.NetworkTestSupport;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportFactory;
 import org.apache.activemq.transport.failover.FailoverTransport;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class DiscoveryTransportBrokerTest extends NetworkTestSupport {
 
-    private static final Log LOG = LogFactory.getLog(DiscoveryTransportBrokerTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(DiscoveryTransportBrokerTest.class);
 
     String groupName;
     

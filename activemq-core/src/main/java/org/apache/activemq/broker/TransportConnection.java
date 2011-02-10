@@ -94,17 +94,17 @@ import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.util.MarshallingSupport;
 import org.apache.activemq.util.ServiceSupport;
 import org.apache.activemq.util.URISupport;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static org.apache.activemq.thread.DefaultThreadPools.getDefaultTaskRunnerFactory;
 /**
  * @version $Revision: 1.8 $
  */
 public class TransportConnection implements Connection, Task, CommandVisitor {
-    private static final Log LOG = LogFactory.getLog(TransportConnection.class);
-    private static final Log TRANSPORTLOG = LogFactory.getLog(TransportConnection.class.getName() + ".Transport");
-    private static final Log SERVICELOG = LogFactory.getLog(TransportConnection.class.getName() + ".Service");
+    private static final Logger LOG = LoggerFactory.getLogger(TransportConnection.class);
+    private static final Logger TRANSPORTLOG = LoggerFactory.getLogger(TransportConnection.class.getName() + ".Transport");
+    private static final Logger SERVICELOG = LoggerFactory.getLogger(TransportConnection.class.getName() + ".Service");
     // Keeps track of the broker and connector that created this connection.
     protected final Broker broker;
     protected final TransportConnector connector;

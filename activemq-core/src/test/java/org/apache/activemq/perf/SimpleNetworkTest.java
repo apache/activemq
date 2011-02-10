@@ -24,13 +24,13 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.ActiveMQPrefetchPolicy;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.network.NetworkConnector;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 public class SimpleNetworkTest extends SimpleTopicTest {
 
-    private static final Log LOG = LogFactory.getLog(SimpleNetworkTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(SimpleNetworkTest.class);
     protected String consumerBindAddress = "tcp://localhost:61616";
     protected String producerBindAddress = "tcp://localhost:61617";
     protected static final String CONSUMER_BROKER_NAME = "Consumer";

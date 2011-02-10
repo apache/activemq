@@ -19,8 +19,8 @@ package org.apache.activemq.broker.jmx;
 import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.broker.region.policy.AbortSlowConsumerStrategy;
 import org.apache.activemq.broker.region.policy.SlowConsumerEntry;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.management.ObjectName;
 import javax.management.openmbean.CompositeType;
@@ -31,7 +31,7 @@ import javax.management.openmbean.TabularType;
 import java.util.Map;
 
 public class AbortSlowConsumerStrategyView implements AbortSlowConsumerStrategyViewMBean {
-    private static final Log LOG = LogFactory.getLog(AbortSlowConsumerStrategyView.class);
+    private static final Logger LOG = LoggerFactory.getLogger(AbortSlowConsumerStrategyView.class);
     private ManagedRegionBroker broker;
     private AbortSlowConsumerStrategy strategy;
 

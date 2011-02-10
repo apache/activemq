@@ -31,8 +31,8 @@ import org.apache.activemq.broker.region.group.MessageGroupHashBucketFactory;
 import org.apache.activemq.broker.region.group.MessageGroupMapFactory;
 import org.apache.activemq.filter.DestinationMapEntry;
 import org.apache.activemq.usage.SystemUsage;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Represents an entry in a {@link PolicyMap} for assigning policies to a
@@ -43,7 +43,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class PolicyEntry extends DestinationMapEntry {
 
-    private static final Log LOG = LogFactory.getLog(PolicyEntry.class);
+    private static final Logger LOG = LoggerFactory.getLogger(PolicyEntry.class);
     private DispatchPolicy dispatchPolicy;
     private SubscriptionRecoveryPolicy subscriptionRecoveryPolicy;
     private boolean sendAdvisoryIfNoConsumers;

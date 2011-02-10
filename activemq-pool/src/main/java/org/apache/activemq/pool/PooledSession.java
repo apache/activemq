@@ -51,14 +51,14 @@ import org.apache.activemq.ActiveMQQueueSender;
 import org.apache.activemq.ActiveMQSession;
 import org.apache.activemq.ActiveMQTopicPublisher;
 import org.apache.activemq.AlreadyClosedException;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @version $Revision: 1.1 $
  */
 public class PooledSession implements Session, TopicSession, QueueSession, XASession {
-    private static final transient Log LOG = LogFactory.getLog(PooledSession.class);
+    private static final transient Logger LOG = LoggerFactory.getLogger(PooledSession.class);
 
     private ActiveMQSession session;
     private SessionPool sessionPool;

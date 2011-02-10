@@ -28,8 +28,8 @@ import org.apache.activemq.util.DataByteArrayInputStream;
 import org.apache.activemq.util.DataByteArrayOutputStream;
 import org.apache.activemq.util.IOHelper;
 import org.apache.activemq.util.LRUCache;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * BTree implementation
@@ -41,7 +41,7 @@ public class TreeIndex implements Index {
     private static final String NAME_PREFIX = "tree-index-";
     private static final int DEFAULT_PAGE_SIZE;
     private static final int DEFAULT_KEY_SIZE;
-    private static final Log LOG = LogFactory.getLog(TreeIndex.class);
+    private static final Logger LOG = LoggerFactory.getLogger(TreeIndex.class);
     private final String name;
     private File directory;
     private File file;

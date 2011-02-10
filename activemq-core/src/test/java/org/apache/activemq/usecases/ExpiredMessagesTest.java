@@ -41,15 +41,15 @@ import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.store.amq.AMQPersistenceAdapter;
 import org.apache.activemq.util.Wait;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import static org.apache.activemq.TestSupport.getDestination;
 import static org.apache.activemq.TestSupport.getDestinationStatistics;
 
 
 public class ExpiredMessagesTest extends CombinationTestSupport {
 
-    private static final Log LOG = LogFactory.getLog(ExpiredMessagesTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ExpiredMessagesTest.class);
     
     BrokerService broker;
     Connection connection;

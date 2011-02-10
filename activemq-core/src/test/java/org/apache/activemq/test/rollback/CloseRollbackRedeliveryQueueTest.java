@@ -26,13 +26,13 @@ import javax.jms.TextMessage;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.EmbeddedBrokerTestSupport;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.jms.core.MessageCreator;
 
 public class CloseRollbackRedeliveryQueueTest extends EmbeddedBrokerTestSupport {
 
-    private static final transient Log LOG = LogFactory.getLog(CloseRollbackRedeliveryQueueTest.class);
+    private static final transient Logger LOG = LoggerFactory.getLogger(CloseRollbackRedeliveryQueueTest.class);
 
     protected int numberOfMessagesOnQueue = 1;
     private Connection connection;

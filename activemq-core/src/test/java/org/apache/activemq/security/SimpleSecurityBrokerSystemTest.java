@@ -31,8 +31,8 @@ import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.command.MessageSendTest;
 import org.apache.activemq.filter.DestinationMap;
 import org.apache.activemq.jaas.GroupPrincipal;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Tests that the broker allows/fails access to destinations based on the
@@ -45,7 +45,7 @@ public class SimpleSecurityBrokerSystemTest extends SecurityTestSupport {
     static final GroupPrincipal GUESTS = new GroupPrincipal("guests");
     static final GroupPrincipal USERS = new GroupPrincipal("users");
     static final GroupPrincipal ADMINS = new GroupPrincipal("admins");
-    private static final Log LOG = LogFactory.getLog(SimpleSecurityBrokerSystemTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(SimpleSecurityBrokerSystemTest.class);
 
     public BrokerPlugin authorizationPlugin;
     public BrokerPlugin authenticationPlugin;

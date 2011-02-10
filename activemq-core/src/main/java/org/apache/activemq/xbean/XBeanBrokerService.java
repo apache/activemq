@@ -23,8 +23,8 @@ import javax.annotation.PreDestroy;
 
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.usage.SystemUsage;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * An ActiveMQ Message Broker. It consists of a number of transport
@@ -41,7 +41,7 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision: 1.1 $
  */
 public class XBeanBrokerService extends BrokerService {
-    private static final transient Log LOG = LogFactory.getLog(XBeanBrokerService.class);
+    private static final transient Logger LOG = LoggerFactory.getLogger(XBeanBrokerService.class);
     
     private boolean start = true;
     

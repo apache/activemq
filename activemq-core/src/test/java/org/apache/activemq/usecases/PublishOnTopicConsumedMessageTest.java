@@ -22,15 +22,15 @@ import javax.jms.Message;
 import javax.jms.MessageProducer;
 
 import org.apache.activemq.test.JmsTopicSendReceiveWithTwoConnectionsTest;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @version $Revision: 1.1.1.1 $
  */
 public class PublishOnTopicConsumedMessageTest extends JmsTopicSendReceiveWithTwoConnectionsTest {
 
-    private static final Log LOG = LogFactory.getLog(PublishOnTopicConsumedMessageTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(PublishOnTopicConsumedMessageTest.class);
 
     private MessageProducer replyProducer;
 

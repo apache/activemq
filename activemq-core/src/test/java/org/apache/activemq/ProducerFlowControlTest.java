@@ -37,11 +37,11 @@ import org.apache.activemq.broker.region.policy.VMPendingQueueMessageStoragePoli
 import org.apache.activemq.broker.region.policy.VMPendingSubscriberMessageStoragePolicy;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.transport.tcp.TcpTransport;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ProducerFlowControlTest extends JmsTestSupport {
-    static final Log LOG = LogFactory.getLog(ProducerFlowControlTest.class);
+    static final Logger LOG = LoggerFactory.getLogger(ProducerFlowControlTest.class);
     ActiveMQQueue queueA = new ActiveMQQueue("QUEUE.A");
     ActiveMQQueue queueB = new ActiveMQQueue("QUEUE.B");
     protected TransportConnector connector;

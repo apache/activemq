@@ -22,14 +22,14 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerRegistry;
 import org.apache.activemq.broker.BrokerService;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @version $Revision$
  */
 public class BrokerPropertiesTest extends TestCase {
-    private static final transient Log LOG = LogFactory.getLog(BrokerPropertiesTest.class);
+    private static final transient Logger LOG = LoggerFactory.getLogger(BrokerPropertiesTest.class);
     
     public void testPropertiesFile() throws Exception {
         BrokerService broker = BrokerFactory.createBroker("properties:org/apache/activemq/config/broker.properties");

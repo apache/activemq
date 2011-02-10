@@ -22,8 +22,8 @@ import javax.jms.MessageProducer;
 import javax.jms.Session;
 
 import org.apache.activemq.util.IndentPrinter;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Statistics for a JMS endpoint, typically a MessageProducer or MessageConsumer
@@ -33,7 +33,7 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision: 1.3 $
  */
 public class JMSEndpointStatsImpl extends StatsImpl {
-    private static final Log LOG = LogFactory.getLog(JMSEndpointStatsImpl.class);
+    private static final Logger LOG = LoggerFactory.getLogger(JMSEndpointStatsImpl.class);
 
     protected CountStatisticImpl messageCount;
     protected CountStatisticImpl pendingMessageCount;

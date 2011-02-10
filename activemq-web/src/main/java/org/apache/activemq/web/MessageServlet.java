@@ -36,8 +36,8 @@ import org.apache.activemq.MessageAvailableConsumer;
 import org.apache.activemq.MessageAvailableListener;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQTextMessage;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.eclipse.jetty.continuation.Continuation;
 import org.eclipse.jetty.continuation.ContinuationSupport;
 
@@ -55,7 +55,7 @@ public class MessageServlet extends MessageServletSupport {
 
     private static final long serialVersionUID = 8737914695188481219L;
 
-    private static final Log LOG = LogFactory.getLog(MessageServlet.class);
+    private static final Logger LOG = LoggerFactory.getLogger(MessageServlet.class);
 
     private String readTimeoutParameter = "readTimeout";
     private long defaultReadTimeout = -1;

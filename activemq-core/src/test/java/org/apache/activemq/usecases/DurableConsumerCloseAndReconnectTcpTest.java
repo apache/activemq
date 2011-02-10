@@ -35,12 +35,12 @@ import org.apache.activemq.transport.TransportFactory;
 import org.apache.activemq.transport.TransportListener;
 import org.apache.activemq.transport.tcp.TcpTransportFactory;
 import org.apache.activemq.util.URISupport;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class DurableConsumerCloseAndReconnectTcpTest extends DurableConsumerCloseAndReconnectTest
 implements ExceptionListener, TransportListener {
-    private static final Log LOG = LogFactory.getLog(DurableConsumerCloseAndReconnectTcpTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(DurableConsumerCloseAndReconnectTcpTest.class);
     
     private BrokerService broker;
     private TransportConnector connector;

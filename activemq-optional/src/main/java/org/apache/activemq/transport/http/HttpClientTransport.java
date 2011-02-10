@@ -36,8 +36,8 @@ import org.apache.commons.httpclient.methods.HeadMethod;
 import org.apache.commons.httpclient.methods.InputStreamRequestEntity;
 import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.commons.httpclient.params.HttpClientParams;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A HTTP {@link org.apache.activemq.transport.TransportChannel} which uses the
@@ -49,7 +49,7 @@ import org.apache.commons.logging.LogFactory;
 public class HttpClientTransport extends HttpTransportSupport {
 
     public static final int MAX_CLIENT_TIMEOUT = 30000;
-    private static final Log LOG = LogFactory.getLog(HttpClientTransport.class);
+    private static final Logger LOG = LoggerFactory.getLogger(HttpClientTransport.class);
     private static final IdGenerator CLIENT_ID_GENERATOR = new IdGenerator();
 
     private HttpClient sendHttpClient;

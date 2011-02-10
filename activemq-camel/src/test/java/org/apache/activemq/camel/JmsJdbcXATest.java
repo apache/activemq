@@ -33,8 +33,8 @@ import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.util.Wait;
 import org.apache.camel.spring.SpringTestSupport;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.enhydra.jdbc.pool.StandardXAPoolDataSource;
 import org.springframework.context.support.AbstractXmlApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
@@ -43,7 +43,7 @@ import org.springframework.context.support.ClassPathXmlApplicationContext;
  *  shows broker heuristic rollback (no prepare memory), hence duplicate message delivery
  */
 public class JmsJdbcXATest extends SpringTestSupport {
-    private static final Log LOG = LogFactory.getLog(JmsJdbcXATest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(JmsJdbcXATest.class);
     BrokerService broker = null;
 
     public java.sql.Connection initDb() throws Exception {

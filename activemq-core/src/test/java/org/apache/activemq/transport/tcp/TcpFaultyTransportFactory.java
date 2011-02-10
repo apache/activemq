@@ -37,8 +37,8 @@ import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.util.URISupport;
 import org.apache.activemq.wireformat.WireFormat;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.net.Socket;
 import java.net.ServerSocket;
@@ -50,7 +50,7 @@ import org.apache.activemq.transport.tcp.ServerSocketTstFactory;
  * Automatically generated socket.close() calls to simulate network faults
  */
 public class TcpFaultyTransportFactory extends TcpTransportFactory {
-    private static final Log LOG = LogFactory.getLog(TcpFaultyTransportFactory.class);
+    private static final Logger LOG = LoggerFactory.getLogger(TcpFaultyTransportFactory.class);
 
    protected TcpFaultyTransport createTcpFaultyTransport(WireFormat wf, SocketFactory socketFactory, URI location, URI localLocation) throws UnknownHostException, IOException {
         return new TcpFaultyTransport(wf, socketFactory, location, localLocation);

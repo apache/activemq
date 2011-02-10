@@ -28,14 +28,14 @@ import javax.jms.Session;
 import javax.jms.TextMessage;
 import javax.jms.Topic;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @version $Revision: 1.2 $
  */
 public class JmsTopicSelectorTest extends TestSupport {
-    private static final Log LOG = LogFactory.getLog(JmsTopicSelectorTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(JmsTopicSelectorTest.class);
 
     protected Connection connection;
     protected Session session;

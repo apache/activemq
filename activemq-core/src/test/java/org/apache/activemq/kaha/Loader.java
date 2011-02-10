@@ -20,8 +20,8 @@ import java.util.Iterator;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Store test
@@ -30,7 +30,7 @@ import org.apache.commons.logging.LogFactory;
  */
 class Loader extends Thread {
 
-    private static final Log LOG = LogFactory.getLog(Loader.class);
+    private static final Logger LOG = LoggerFactory.getLogger(Loader.class);
 
     private String name;
     private Store store;

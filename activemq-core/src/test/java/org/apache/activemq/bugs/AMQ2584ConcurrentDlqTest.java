@@ -42,15 +42,15 @@ import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
 import org.apache.activemq.util.IntrospectionSupport;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 // variation on AMQ2584 where the DLQ consumer works in parallel to producer so
 // that some dups are not suppressed as they are already acked by the consumer
 // the audit needs to be disabled to allow these dupes to be consumed
 public class AMQ2584ConcurrentDlqTest extends org.apache.activemq.TestSupport {
 
-    static final Log LOG = LogFactory.getLog(AMQ2584ConcurrentDlqTest.class);
+    static final Logger LOG = LoggerFactory.getLogger(AMQ2584ConcurrentDlqTest.class);
     BrokerService broker = null;
     ActiveMQTopic topic;
 

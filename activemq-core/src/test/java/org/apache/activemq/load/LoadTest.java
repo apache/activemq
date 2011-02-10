@@ -25,15 +25,15 @@ import javax.jms.Session;
 import junit.framework.TestCase;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @version $Revision: 1.3 $
  */
 public class LoadTest extends TestCase {
 
-    private static final Log LOG = LogFactory.getLog(LoadTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(LoadTest.class);
     
     protected BrokerService broker;
     protected String bindAddress="tcp://localhost:61616";

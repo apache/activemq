@@ -18,8 +18,8 @@ package org.apache.activemq.plugin;
 
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.BrokerPlugin;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A StatisticsBrokerPlugin
@@ -35,7 +35,7 @@ import org.apache.commons.logging.LogFactory;
  *
  */
 public class StatisticsBrokerPlugin implements BrokerPlugin {
-    private static Log LOG = LogFactory.getLog(StatisticsBrokerPlugin.class);
+    private static Logger LOG = LoggerFactory.getLogger(StatisticsBrokerPlugin.class);
     /** 
      * @param broker
      * @return the plug-in

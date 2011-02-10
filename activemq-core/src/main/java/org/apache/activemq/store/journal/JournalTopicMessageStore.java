@@ -33,8 +33,8 @@ import org.apache.activemq.store.TopicMessageStore;
 import org.apache.activemq.transaction.Synchronization;
 import org.apache.activemq.util.Callback;
 import org.apache.activemq.util.SubscriptionKey;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A MessageStore that uses a Journal to store it's messages.
@@ -43,7 +43,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class JournalTopicMessageStore extends JournalMessageStore implements TopicMessageStore {
 
-    private static final Log LOG = LogFactory.getLog(JournalTopicMessageStore.class);
+    private static final Logger LOG = LoggerFactory.getLogger(JournalTopicMessageStore.class);
 
     private TopicMessageStore longTermStore;
     private HashMap<SubscriptionKey, MessageId> ackedLastAckLocations = new HashMap<SubscriptionKey, MessageId>();

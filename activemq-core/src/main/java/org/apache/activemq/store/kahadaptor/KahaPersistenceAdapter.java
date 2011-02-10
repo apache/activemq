@@ -50,8 +50,8 @@ import org.apache.activemq.store.TopicMessageStore;
 import org.apache.activemq.store.TransactionStore;
 import org.apache.activemq.usage.SystemUsage;
 import org.apache.activemq.util.IOHelper;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @org.apache.xbean.XBean
@@ -60,7 +60,7 @@ import org.apache.commons.logging.LogFactory;
 public class KahaPersistenceAdapter implements PersistenceAdapter, BrokerServiceAware {
 
     private static final int STORE_LOCKED_WAIT_DELAY = 10 * 1000;
-    private static final Log LOG = LogFactory.getLog(KahaPersistenceAdapter.class);
+    private static final Logger LOG = LoggerFactory.getLogger(KahaPersistenceAdapter.class);
     private static final String PREPARED_TRANSACTIONS_NAME = "PreparedTransactions";
 
     protected OpenWireFormat wireFormat = new OpenWireFormat();

@@ -46,8 +46,8 @@ import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
 import org.apache.activemq.util.Wait;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -59,7 +59,7 @@ public class NetworkBrokerDetachTest {
 	private final static String DESTINATION_NAME = "testQ";
 	private final static int    NUM_CONSUMERS = 1;
 	
-    protected static final Log LOG = LogFactory.getLog(NetworkBrokerDetachTest.class);
+    protected static final Logger LOG = LoggerFactory.getLogger(NetworkBrokerDetachTest.class);
     protected final int numRestarts = 3;
     protected final int networkTTL = 2;
     protected final boolean dynamicOnly = false;

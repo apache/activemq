@@ -24,14 +24,14 @@ import junit.framework.TestCase;
 
 import org.apache.activemq.spring.SpringConsumer;
 import org.apache.activemq.spring.SpringProducer;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.support.AbstractApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 public class SpringTest extends TestCase {
     
-    private static final Log LOG = LogFactory.getLog(SpringTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(SpringTest.class);
 
     protected AbstractApplicationContext context;
     protected SpringConsumer consumer;

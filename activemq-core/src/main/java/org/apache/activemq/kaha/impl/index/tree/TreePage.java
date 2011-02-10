@@ -25,8 +25,8 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.activemq.kaha.Marshaller;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Page in a BTree
@@ -36,7 +36,7 @@ import org.apache.commons.logging.LogFactory;
 class TreePage {
 
     static final int PAGE_HEADER_SIZE = 18;
-    private static final transient Log LOG = LogFactory.getLog(TreePage.class);
+    private static final transient Logger LOG = LoggerFactory.getLogger(TreePage.class);
 
     static enum Flavour {
         LESS, MORE
@@ -743,11 +743,11 @@ class TreePage {
     }
 
     protected void dump() throws IOException {
-        LOG.info(this);
+        LOG.info(this.toString());
         Set<Long> set = new HashSet<Long>();
         for (TreeEntry entry : treeEntries) {
             if (entry != null) {
-                LOG.info(entry);
+                LOG.info(entry.toString());
                 set.add(entry.getPrevPageId());
                 set.add(entry.getNextPageId());
             }

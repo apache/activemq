@@ -37,8 +37,8 @@ import org.apache.activemq.advisory.ConsumerListener;
 import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQQueue;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * These test cases are used to verifiy that network connections get re
@@ -48,7 +48,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class NetworkReconnectTest extends TestCase {
 
-    private static final Log LOG = LogFactory.getLog(NetworkReconnectTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(NetworkReconnectTest.class);
 
     private BrokerService producerBroker;
     private BrokerService consumerBroker;

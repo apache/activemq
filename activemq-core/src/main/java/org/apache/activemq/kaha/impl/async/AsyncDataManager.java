@@ -40,8 +40,8 @@ import org.apache.activemq.kaha.impl.async.DataFileAppender.WriteKey;
 import org.apache.activemq.thread.Scheduler;
 import org.apache.activemq.util.ByteSequence;
 import org.apache.activemq.util.IOHelper;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 
@@ -73,7 +73,7 @@ public class AsyncDataManager {
     public static final int DEFAULT_CLEANUP_INTERVAL = 1000 * 30;
     public static final int PREFERED_DIFF = 1024 * 512;
 
-    private static final Log LOG = LogFactory.getLog(AsyncDataManager.class);
+    private static final Logger LOG = LoggerFactory.getLogger(AsyncDataManager.class);
     protected Scheduler scheduler;
 
     protected final Map<WriteKey, WriteCommand> inflightWrites = new ConcurrentHashMap<WriteKey, WriteCommand>();

@@ -31,8 +31,8 @@ import java.util.Map.Entry;
 import org.apache.activemq.util.IOHelper;
 import org.apache.activemq.util.ServiceStopper;
 import org.apache.activemq.util.ServiceSupport;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.kahadb.index.BTreeIndex;
 import org.apache.kahadb.journal.Journal;
 import org.apache.kahadb.journal.Location;
@@ -49,7 +49,7 @@ import org.apache.kahadb.util.VariableMarshaller;
  * @org.apache.xbean.XBean
  */
 public class PListStore extends ServiceSupport {
-    static final Log LOG = LogFactory.getLog(PListStore.class);
+    static final Logger LOG = LoggerFactory.getLogger(PListStore.class);
     private static final int DATABASE_LOCKED_WAIT_DELAY = 10 * 1000;
 
     static final int CLOSED_STATE = 1;

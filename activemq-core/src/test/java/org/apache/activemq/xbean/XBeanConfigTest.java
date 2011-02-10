@@ -32,15 +32,15 @@ import org.apache.activemq.broker.region.policy.TimedSubscriptionRecoveryPolicy;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.command.ConnectionId;
 import org.apache.activemq.command.ConnectionInfo;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @version $Revision: 1.1 $
  */
 public class XBeanConfigTest extends TestCase {
 
-    private static final Log LOG = LogFactory.getLog(XBeanConfigTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(XBeanConfigTest.class);
 
     protected BrokerService brokerService;
     protected Broker broker;

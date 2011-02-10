@@ -37,8 +37,8 @@ import org.apache.camel.Endpoint;
 import org.apache.camel.component.jms.JmsEndpoint;
 import org.apache.camel.component.jms.JmsQueueEndpoint;
 import org.apache.camel.util.ObjectHelper;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A helper bean which populates a {@link CamelContext} with ActiveMQ Queue endpoints
@@ -47,7 +47,7 @@ import org.apache.commons.logging.LogFactory;
  * @org.apache.xbean.XBean
  */
 public class CamelEndpointLoader implements CamelContextAware {
-    private static final transient Log LOG = LogFactory.getLog(CamelEndpointLoader.class);
+    private static final transient Logger LOG = LoggerFactory.getLogger(CamelEndpointLoader.class);
     private CamelContext camelContext;
     private EnhancedConnection connection;
     private ConnectionFactory connectionFactory;

@@ -35,8 +35,8 @@ import org.apache.activemq.store.TopicReferenceStore;
 import org.apache.activemq.transaction.Synchronization;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.SubscriptionKey;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A MessageStore that uses a Journal to store it's messages.
@@ -45,7 +45,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class AMQTopicMessageStore extends AMQMessageStore implements TopicMessageStore {
 
-    private static final Log LOG = LogFactory.getLog(AMQTopicMessageStore.class);
+    private static final Logger LOG = LoggerFactory.getLogger(AMQTopicMessageStore.class);
     private TopicReferenceStore topicReferenceStore;
     public AMQTopicMessageStore(AMQPersistenceAdapter adapter,TopicReferenceStore topicReferenceStore, ActiveMQTopic destinationName) {
         super(adapter, topicReferenceStore, destinationName);

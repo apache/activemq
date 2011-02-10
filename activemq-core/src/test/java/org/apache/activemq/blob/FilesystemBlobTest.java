@@ -34,12 +34,12 @@ import org.apache.activemq.BlobMessage;
 import org.apache.activemq.EmbeddedBrokerTestSupport;
 import org.apache.activemq.command.ActiveMQBlobMessage;
 import org.apache.activemq.util.IOHelper;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 public class FilesystemBlobTest extends EmbeddedBrokerTestSupport {
-    private static final Log LOG = LogFactory.getLog(FilesystemBlobTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(FilesystemBlobTest.class);
     
     private Connection connection;
     private String tmpDir =  System.getProperty("user.dir") + "/target/FilesystemBlobTest";

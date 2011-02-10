@@ -37,8 +37,8 @@ import org.apache.activemq.util.ServiceStopper;
 import org.apache.activemq.util.ServiceSupport;
 import org.apache.activemq.util.URISupport;
 import org.apache.activemq.util.URISupport.CompositeData;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.management.ObjectName;
 
@@ -50,7 +50,7 @@ import javax.management.ObjectName;
  * @version $Revision$
  */
 public class DiscoveryNetworkConnector extends NetworkConnector implements DiscoveryListener {
-    private static final Log LOG = LogFactory.getLog(DiscoveryNetworkConnector.class);
+    private static final Logger LOG = LoggerFactory.getLogger(DiscoveryNetworkConnector.class);
 
     private DiscoveryAgent discoveryAgent;
     

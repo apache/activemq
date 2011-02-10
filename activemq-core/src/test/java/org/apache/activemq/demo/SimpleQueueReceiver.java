@@ -37,12 +37,12 @@ import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public final class SimpleQueueReceiver {
 
-    private static final Log LOG = LogFactory.getLog(SimpleQueueReceiver.class);
+    private static final Logger LOG = LoggerFactory.getLogger(SimpleQueueReceiver.class);
 
     private SimpleQueueReceiver() {
     }

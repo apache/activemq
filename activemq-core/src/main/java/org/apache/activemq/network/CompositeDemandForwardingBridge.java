@@ -26,8 +26,8 @@ import org.apache.activemq.command.Endpoint;
 import org.apache.activemq.command.NetworkBridgeFilter;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.util.ServiceSupport;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A demand forwarding bridge which works with multicast style transports where
@@ -38,7 +38,7 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision$
  */
 public class CompositeDemandForwardingBridge extends DemandForwardingBridgeSupport {
-    private static final Log LOG = LogFactory.getLog(CompositeDemandForwardingBridge.class);
+    private static final Logger LOG = LoggerFactory.getLogger(CompositeDemandForwardingBridge.class);
 
     protected final BrokerId remoteBrokerPath[] = new BrokerId[] {null};
     protected Object brokerInfoMutex = new Object();

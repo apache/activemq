@@ -30,8 +30,8 @@ import org.apache.activemq.util.DataByteArrayInputStream;
 import org.apache.activemq.util.DataByteArrayOutputStream;
 import org.apache.activemq.util.IOHelper;
 import org.apache.activemq.util.LRUCache;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * BTree implementation
@@ -46,7 +46,7 @@ public class HashIndex implements Index, HashIndexMBean {
     public static final int DEFAULT_LOAD_FACTOR;
     private static final int LOW_WATER_MARK=1024*16;
     private static final String NAME_PREFIX = "hash-index-";
-    private static final Log LOG = LogFactory.getLog(HashIndex.class);
+    private static final Logger LOG = LoggerFactory.getLogger(HashIndex.class);
     private final String name;
     private File directory;
     private File file;

@@ -40,8 +40,8 @@ import org.apache.activemq.transaction.Transaction;
 import org.apache.activemq.transaction.XATransaction;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.WrappedException;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This broker filter handles the transaction related operations in the Broker
@@ -51,7 +51,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class TransactionBroker extends BrokerFilter {
 
-    private static final Log LOG = LogFactory.getLog(TransactionBroker.class);
+    private static final Logger LOG = LoggerFactory.getLogger(TransactionBroker.class);
 
     // The prepared XA transactions.
     private TransactionStore transactionStore;

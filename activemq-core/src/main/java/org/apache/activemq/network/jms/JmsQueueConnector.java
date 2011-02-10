@@ -26,8 +26,8 @@ import javax.jms.QueueSession;
 import javax.jms.Session;
 import javax.naming.NamingException;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A Bridge to other JMS Queue providers
@@ -37,7 +37,7 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision: 1.1.1.1 $
  */
 public class JmsQueueConnector extends JmsConnector {
-    private static final Log LOG = LogFactory.getLog(JmsQueueConnector.class);
+    private static final Logger LOG = LoggerFactory.getLogger(JmsQueueConnector.class);
     private String outboundQueueConnectionFactoryName;
     private String localConnectionFactoryName;
     private QueueConnectionFactory outboundQueueConnectionFactory;

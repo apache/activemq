@@ -21,8 +21,8 @@ import org.apache.activemq.broker.jmx.AnnotatedMBean;
 import org.apache.activemq.broker.jmx.NetworkBridgeView;
 import org.apache.activemq.broker.jmx.NetworkBridgeViewMBean;
 import org.apache.activemq.util.JMXSupport;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
@@ -31,7 +31,7 @@ import java.util.Map;
 
 public class MBeanNetworkListener implements NetworkBridgeListener {
 
-    private static final Log LOG = LogFactory.getLog(MBeanNetworkListener.class);
+    private static final Logger LOG = LoggerFactory.getLogger(MBeanNetworkListener.class);
 
     BrokerService brokerService;
     ObjectName connectorName;

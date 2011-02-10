@@ -18,7 +18,7 @@ package org.apache.activemq.transport;
 
 import java.io.IOException;
 
-import org.apache.commons.logging.Log;
+import org.slf4j.Logger;
 
 /**
  * This TransportFilter implementation writes output to a log
@@ -30,12 +30,12 @@ import org.apache.commons.logging.Log;
  */
 public class TransportLogger extends TransportFilter {
 
-    private final Log log;
+    private final Logger log;
     private boolean logging;
     private final LogWriter logWriter;
     private TransportLoggerView view;
 
-    public TransportLogger(Transport next, Log log, boolean startLogging, LogWriter logWriter) {
+    public TransportLogger(Transport next, Logger log, boolean startLogging, LogWriter logWriter) {
         // Changed constructor to pass the implementation of the LogWriter interface
         // that will be used to write the messages.
         super(next);

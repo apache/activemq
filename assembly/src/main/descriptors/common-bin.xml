@@ -146,7 +146,8 @@
       <unpack>false</unpack>
       <scope>runtime</scope>
       <includes>
-        <include>commons-logging:commons-logging</include>
+        <include>org.slf4j:slf4j-api</include>
+        <include>org.slf4j:jcl-over-slf4j</include>
         <include>${pom.groupId}:activemq-core</include>
         <include>${pom.groupId}:activemq-console</include>
         <include>${pom.groupId}:activemq-jaas</include>
@@ -191,6 +192,7 @@
         <include>commons-codec:commons-codec</include>
         <include>commons-net:commons-net</include>
         <include>commons-lang:commons-lang</include>
+        <include>org.slf4j:slf4j-log4j12</include>
         <include>log4j:log4j</include>
         <include>org.apache.geronimo.specs:geronimo-j2ee-connector_1.5_spec</include>
         <include>org.apache.xbean:xbean-spring</include>
@@ -224,8 +226,6 @@
         <include>org.eclipse.jetty.aggregate:jetty-all-server</include>
         <include>org.eclipse.jetty:jetty-websocket</include>
         <include>org.apache.geronimo.specs:geronimo-servlet_2.5_spec</include>
-        <include>org.slf4j:slf4j-api</include>
-        <include>org.slf4j:slf4j-jcl</include>
 
         <!-- JSP support -->
         <include>org.mortbay.jetty:jsp-2.1-glassfish</include>

@@ -18,7 +18,7 @@ package org.apache.activemq.transport;
 
 import java.io.IOException;
 
-import org.apache.commons.logging.Log;
+import org.slf4j.Logger;
 
 /**
  * Interface for classes that will be called by the TransportLogger
@@ -38,48 +38,48 @@ public interface LogWriter {
      * Writes a header message to the log.
      * @param log The log to be written to.
      */
-    public void initialMessage(Log log);
+    public void initialMessage(Logger log);
     
     /**
      * Writes a message to a log when a request command is sent.
      * @param log The log to be written to.
      * @param command The command to be logged.
      */
-    public void logRequest (Log log, Object command);
+    public void logRequest (Logger log, Object command);
     
     /**
      * Writes a message to a log when a response command is received.
      * @param log The log to be written to.
      * @param command The command to be logged.
      */
-    public void logResponse (Log log, Object response);
+    public void logResponse (Logger log, Object response);
 
     /**
      * Writes a message to a log when an asynchronous equest command is sent.
      * @param log The log to be written to.
      * @param command The command to be logged.
      */
-    public void logAsyncRequest (Log log, Object command);
+    public void logAsyncRequest (Logger log, Object command);
     
     /**
      * Writes a message to a log when message is sent.
      * @param log The log to be written to.
      * @param command The command to be logged.
      */
-    public void logOneWay (Log log, Object command);
+    public void logOneWay (Logger log, Object command);
     
     /**
      * Writes a message to a log when message is received.
      * @param log The log to be written to.
      * @param command The command to be logged.
      */
-    public void logReceivedCommand (Log log, Object command);
+    public void logReceivedCommand (Logger log, Object command);
     
     /**
      * Writes a message to a log when an exception is received.
      * @param log The log to be written to.
      * @param command The command to be logged.
      */
-    public void logReceivedException (Log log, IOException error);
+    public void logReceivedException (Logger log, IOException error);
     
 }

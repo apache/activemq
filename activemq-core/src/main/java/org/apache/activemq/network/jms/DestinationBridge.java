@@ -26,8 +26,8 @@ import javax.jms.MessageListener;
 import javax.jms.MessageProducer;
 import javax.naming.NamingException;
 import org.apache.activemq.Service;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A Destination bridge is used to bridge between to different JMS systems
@@ -35,7 +35,7 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision: 1.1.1.1 $
  */
 public abstract class DestinationBridge implements Service, MessageListener {
-    private static final Log LOG = LogFactory.getLog(DestinationBridge.class);
+    private static final Logger LOG = LoggerFactory.getLogger(DestinationBridge.class);
     protected MessageConsumer consumer;
     protected AtomicBoolean started = new AtomicBoolean(false);
     protected JmsMesageConvertor jmsMessageConvertor;

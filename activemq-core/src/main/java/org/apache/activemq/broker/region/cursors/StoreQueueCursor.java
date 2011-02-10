@@ -21,8 +21,8 @@ import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.broker.region.Queue;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.usage.SystemUsage;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Store based Cursor for Queues
@@ -31,7 +31,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class StoreQueueCursor extends AbstractPendingMessageCursor {
 
-    private static final Log LOG = LogFactory.getLog(StoreQueueCursor.class);
+    private static final Logger LOG = LoggerFactory.getLogger(StoreQueueCursor.class);
     private final Broker broker;
     private int pendingCount;
     private final Queue queue;

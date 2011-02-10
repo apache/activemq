@@ -24,8 +24,8 @@ import org.apache.camel.EndpointInject;
 import org.apache.camel.CamelContext;
 import org.apache.camel.Exchange;
 import org.apache.camel.util.ObjectHelper;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit38.AbstractJUnit38SpringContextTests;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,7 +35,7 @@ import org.springframework.beans.factory.annotation.Autowired;
  */
 @ContextConfiguration
 public class SetHeaderTest extends AbstractJUnit38SpringContextTests {
-    private static final transient Log LOG = LogFactory.getLog(SetHeaderTest.class);
+    private static final transient Logger LOG = LoggerFactory.getLogger(SetHeaderTest.class);
 
     @Autowired
     protected CamelContext camelContext;

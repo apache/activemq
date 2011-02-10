@@ -20,8 +20,8 @@ import java.net.URI;
 
 import org.apache.activemq.ThreadPriorities;
 import org.apache.activemq.util.ServiceStopper;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A useful base class for implementations of {@link TransportServer} which uses
@@ -30,7 +30,7 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision: 1.1 $
  */
 public abstract class TransportServerThreadSupport extends TransportServerSupport implements Runnable {
-    private static final Log LOG = LogFactory.getLog(TransportServerThreadSupport.class);
+    private static final Logger LOG = LoggerFactory.getLogger(TransportServerThreadSupport.class);
 
     private boolean daemon = true;
     private boolean joinOnStop = true;

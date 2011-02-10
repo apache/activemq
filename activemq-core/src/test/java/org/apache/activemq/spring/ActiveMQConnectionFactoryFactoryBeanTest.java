@@ -20,14 +20,14 @@ package org.apache.activemq.spring;
 import java.util.Arrays;
 
 import junit.framework.TestCase;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @version $Revision: 1.1 $
  */
 public class ActiveMQConnectionFactoryFactoryBeanTest extends TestCase {
-    private static final transient Log LOG = LogFactory.getLog(ActiveMQConnectionFactoryFactoryBeanTest.class);
+    private static final transient Logger LOG = LoggerFactory.getLogger(ActiveMQConnectionFactoryFactoryBeanTest.class);
 
     private ActiveMQConnectionFactoryFactoryBean factory;
 

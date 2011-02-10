@@ -31,8 +31,8 @@ import javax.jms.TopicSubscriber;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.test.JmsTopicSendReceiveTest;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @version $Revision: 1.5 $
@@ -41,7 +41,7 @@ public class JmsDurableTopicSlowReceiveTest extends JmsTopicSendReceiveTest {
     
     static final int NMSG = 200;
     static final int MSIZE = 256000;
-    private static final transient Log LOG = LogFactory.getLog(JmsDurableTopicSlowReceiveTest.class);
+    private static final transient Logger LOG = LoggerFactory.getLogger(JmsDurableTopicSlowReceiveTest.class);
     private static final String COUNT_PROPERY_NAME = "count";
 
     protected Connection connection2;

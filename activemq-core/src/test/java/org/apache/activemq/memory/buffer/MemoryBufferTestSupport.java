@@ -21,15 +21,15 @@ import junit.framework.TestCase;
 import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.memory.buffer.MessageBuffer;
 import org.apache.activemq.memory.buffer.MessageQueue;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
  * @version $Revision: 1.1 $
  */
 public abstract class MemoryBufferTestSupport extends TestCase {
-    private static final Log LOG = LogFactory.getLog(MemoryBufferTestSupport.class);
+    private static final Logger LOG = LoggerFactory.getLogger(MemoryBufferTestSupport.class);
 
     protected MessageBuffer buffer = createMessageBuffer();
     protected MessageQueue qA = buffer.createMessageQueue();

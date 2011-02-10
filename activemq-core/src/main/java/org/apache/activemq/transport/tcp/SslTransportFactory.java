@@ -49,8 +49,8 @@ import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.util.URISupport;
 import org.apache.activemq.wireformat.WireFormat;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * An implementation of the TcpTransportFactory using SSL. The major
@@ -64,7 +64,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class SslTransportFactory extends TcpTransportFactory {
     // The log this uses.,
-    private static final Log LOG = LogFactory.getLog(SslTransportFactory.class);
+    private static final Logger LOG = LoggerFactory.getLogger(SslTransportFactory.class);
     
     /**
      * Overriding to use SslTransportServer and allow for proper reflection.

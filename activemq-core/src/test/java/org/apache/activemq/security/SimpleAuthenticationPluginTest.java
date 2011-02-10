@@ -34,12 +34,12 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.jmx.TopicViewMBean;
 import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ActiveMQQueue;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class SimpleAuthenticationPluginTest extends SecurityTestSupport {
 
-    private static final Log LOG = LogFactory.getLog(SimpleAuthenticationPluginTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(SimpleAuthenticationPluginTest.class);
 
     public static Test suite() {
         return suite(SimpleAuthenticationPluginTest.class);

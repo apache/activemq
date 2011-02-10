@@ -23,14 +23,14 @@ import javax.jms.MessageConsumer;
 import javax.jms.Session;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.store.kahadaptor.KahaPersistenceAdapter;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @version $Revision: 1.3 $
  */
 public class QueueConnectionMemoryTest extends SimpleQueueTest {
-    private static final transient Log LOG = LogFactory.getLog(QueueConnectionMemoryTest.class);
+    private static final transient Logger LOG = LoggerFactory.getLogger(QueueConnectionMemoryTest.class);
 
     protected void setUp() throws Exception {
     }

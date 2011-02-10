@@ -60,8 +60,8 @@ import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.IdGenerator;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.util.LongSequenceGenerator;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContextAware;
 
 /**
@@ -69,7 +69,7 @@ import org.springframework.context.ApplicationContextAware;
  */
 public class ProtocolConverter {
 
-    private static final Log LOG = LogFactory.getLog(ProtocolConverter.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ProtocolConverter.class);
     
     private static final IdGenerator CONNECTION_ID_GENERATOR = new IdGenerator();
 

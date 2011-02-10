@@ -22,15 +22,15 @@ import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.store.MessageRecoveryListener;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *  Store based cursor
  *
  */
 public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor implements MessageRecoveryListener {
-    private static final Log LOG = LogFactory.getLog(AbstractStoreCursor.class);
+    private static final Logger LOG = LoggerFactory.getLogger(AbstractStoreCursor.class);
     protected final Destination regionDestination;
     private final PendingList batchList;
     private Iterator<MessageReference> iterator = null;

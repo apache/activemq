@@ -30,14 +30,14 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.test.JmsSendReceiveTestSupport;
 import org.apache.activemq.test.retroactive.RetroactiveConsumerTestWithSimpleMessageListTest;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @version $Revision: 1.1.1.1 $
  */
 public class CompositePublishTest extends JmsSendReceiveTestSupport {
-    private static final Log LOG = LogFactory.getLog(CompositePublishTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(CompositePublishTest.class);
 
     protected Connection sendConnection;
     protected Connection receiveConnection;

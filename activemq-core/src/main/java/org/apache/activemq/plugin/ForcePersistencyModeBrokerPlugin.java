@@ -19,8 +19,8 @@ package org.apache.activemq.plugin;
 
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.BrokerPlugin;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
@@ -31,7 +31,7 @@ import org.apache.commons.logging.LogFactory;
  *  @org.apache.xbean.XBean element="forcePersistencyModeBrokerPlugin"
  */
 public class ForcePersistencyModeBrokerPlugin implements BrokerPlugin {
-  private static Log LOG = LogFactory.getLog(ForcePersistencyModeBrokerPlugin.class);
+  private static Logger LOG = LoggerFactory.getLogger(ForcePersistencyModeBrokerPlugin.class);
   private boolean persistenceFlag = false;
   
   /**

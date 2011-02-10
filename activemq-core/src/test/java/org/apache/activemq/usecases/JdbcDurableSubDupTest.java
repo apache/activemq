@@ -37,8 +37,8 @@ import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.broker.region.policy.StorePendingDurableSubscriberMessageStoragePolicy;
 import org.apache.activemq.store.jdbc.JDBCPersistenceAdapter;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -48,7 +48,7 @@ import static org.junit.Assert.assertTrue;
 
 public class JdbcDurableSubDupTest {
 
-    private static final Log LOG = LogFactory.getLog(JdbcDurableSubDupTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(JdbcDurableSubDupTest.class);
     final int prefetchVal = 150;
     String urlOptions = "jms.watchTopicAdvisories=false";
     String url = null;

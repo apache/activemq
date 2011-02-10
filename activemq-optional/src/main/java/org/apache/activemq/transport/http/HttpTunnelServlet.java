@@ -39,8 +39,8 @@ import org.apache.activemq.transport.util.TextWireFormat;
 import org.apache.activemq.transport.xstream.XStreamWireFormat;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.ServiceListener;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A servlet which handles server side HTTP transport, delegating to the
@@ -51,7 +51,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class HttpTunnelServlet extends HttpServlet {
     private static final long serialVersionUID = -3826714430767484333L;
-    private static final Log LOG = LogFactory.getLog(HttpTunnelServlet.class);
+    private static final Logger LOG = LoggerFactory.getLogger(HttpTunnelServlet.class);
 
     private TransportAcceptListener listener;
     private HttpTransportFactory transportFactory;

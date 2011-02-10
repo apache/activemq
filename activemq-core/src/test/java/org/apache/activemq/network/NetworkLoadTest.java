@@ -48,8 +48,8 @@ import org.apache.activemq.broker.region.policy.VMPendingSubscriberMessageStorag
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTextMessage;
 import org.apache.activemq.usage.SystemUsage;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This test case is used to load test store and forwarding between brokers.  It sets up
@@ -63,7 +63,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class NetworkLoadTest extends TestCase {
 
-	private static final transient Log LOG = LogFactory.getLog(NetworkLoadTest.class);
+	private static final transient Logger LOG = LoggerFactory.getLogger(NetworkLoadTest.class);
 
 	// How many times do we sample?
     private static final long SAMPLES = Integer.parseInt(System.getProperty("SAMPLES", ""+60*1/5)); 
@@ -315,7 +315,7 @@ public class NetworkLoadTest extends TestCase {
             	}
                 fwdingmsg.append(forwardingClients[j].forwardCounter.get());
     		}
-            LOG.info(fwdingmsg);
+            LOG.info(fwdingmsg.toString());
 
             // The test is just checking to make sure thaat the producer and consumer does not hang
             // due to the network hops take to route the message form the producer to the consumer.

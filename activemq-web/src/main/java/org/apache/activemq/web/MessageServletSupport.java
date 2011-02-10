@@ -34,8 +34,8 @@ import javax.servlet.http.HttpServletRequest;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A useful base class for any JMS related servlet; there are various ways to
@@ -56,7 +56,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public abstract class MessageServletSupport extends HttpServlet {
 
-    private static final transient Log LOG = LogFactory.getLog(MessageServletSupport.class);
+    private static final transient Logger LOG = LoggerFactory.getLogger(MessageServletSupport.class);
 
     private boolean defaultTopicFlag = true;
     private Destination defaultDestination;

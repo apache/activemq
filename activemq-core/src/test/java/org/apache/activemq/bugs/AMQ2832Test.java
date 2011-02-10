@@ -21,8 +21,8 @@ import org.apache.activemq.ActiveMQSession;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.junit.Test;
 
 import javax.jms.Connection;
@@ -38,7 +38,7 @@ import static org.junit.Assert.assertNotNull;
 
 public class AMQ2832Test {
 
-    private static final Log LOG = LogFactory.getLog(AMQ2832Test.class);
+    private static final Logger LOG = LoggerFactory.getLogger(AMQ2832Test.class);
 
     BrokerService broker = null;
     private final Destination destination = new ActiveMQQueue("AMQ2832Test");

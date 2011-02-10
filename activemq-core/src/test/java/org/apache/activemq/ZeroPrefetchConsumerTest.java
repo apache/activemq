@@ -28,15 +28,15 @@ import javax.jms.TextMessage;
 
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.spring.SpringConsumer;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @version $Revision$
  */
 public class ZeroPrefetchConsumerTest extends EmbeddedBrokerTestSupport {
 
-    private static final Log LOG = LogFactory.getLog(ZeroPrefetchConsumerTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ZeroPrefetchConsumerTest.class);
 
     protected Connection connection;
     protected Queue queue;

@@ -24,15 +24,15 @@ import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.thread.TaskRunnerFactory;
 import org.apache.activemq.usage.SystemUsage;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @version $Revision: 1.7 $
  */
 public class TempTopicRegion extends AbstractTempRegion {
 
-    private static final Log LOG = LogFactory.getLog(TempTopicRegion.class);
+    private static final Logger LOG = LoggerFactory.getLogger(TempTopicRegion.class);
 
     public TempTopicRegion(RegionBroker broker, DestinationStatistics destinationStatistics, SystemUsage memoryManager, TaskRunnerFactory taskRunnerFactory,
                            DestinationFactory destinationFactory) {

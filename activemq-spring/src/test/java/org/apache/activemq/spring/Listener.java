@@ -17,8 +17,8 @@
 package org.apache.activemq.spring;
 
 import org.apache.activemq.command.ActiveMQTextMessage;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jms.JMSException;
 import javax.jms.Message;
@@ -27,7 +27,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Listener implements MessageListener {
-    private static final Log LOG = LogFactory.getLog(Listener.class);
+    private static final Logger LOG = LoggerFactory.getLogger(Listener.class);
 
 	List<Message> messages = new ArrayList<Message>();
 	long lastReceived = 0L;

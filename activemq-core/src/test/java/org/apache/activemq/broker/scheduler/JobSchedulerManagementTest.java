@@ -34,12 +34,12 @@ import org.apache.activemq.ScheduledMessage;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.util.IOHelper;
 import org.apache.activemq.util.IdGenerator;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class JobSchedulerManagementTest extends EmbeddedBrokerTestSupport {
 
-    private static final transient Log LOG = LogFactory.getLog(JobSchedulerManagementTest.class);
+    private static final transient Logger LOG = LoggerFactory.getLogger(JobSchedulerManagementTest.class);
 
     public void testRemoveAllScheduled() throws Exception {
         final int COUNT = 5;

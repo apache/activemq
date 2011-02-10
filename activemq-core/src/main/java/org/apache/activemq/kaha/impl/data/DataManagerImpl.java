@@ -32,8 +32,8 @@ import org.apache.activemq.kaha.impl.DataManager;
 import org.apache.activemq.kaha.impl.index.RedoStoreIndexItem;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.IOHelper;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Manages DataFiles
@@ -47,7 +47,7 @@ public final class DataManagerImpl implements DataManager {
     public static final byte REDO_ITEM_TYPE = 2;
     public static final long MAX_FILE_LENGTH = 1024 * 1024 * 32;
     
-    private static final Log LOG = LogFactory.getLog(DataManagerImpl.class);
+    private static final Logger LOG = LoggerFactory.getLogger(DataManagerImpl.class);
     private static final String NAME_PREFIX = "data-";
     
     private final File directory;

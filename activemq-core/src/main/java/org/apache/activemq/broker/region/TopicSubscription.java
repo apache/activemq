@@ -38,12 +38,12 @@ import org.apache.activemq.command.MessagePull;
 import org.apache.activemq.command.Response;
 import org.apache.activemq.transaction.Synchronization;
 import org.apache.activemq.usage.SystemUsage;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class TopicSubscription extends AbstractSubscription {
 
-    private static final Log LOG = LogFactory.getLog(TopicSubscription.class);
+    private static final Logger LOG = LoggerFactory.getLogger(TopicSubscription.class);
     private static final AtomicLong CURSOR_NAME_COUNTER = new AtomicLong(0);
     
     protected PendingMessageCursor matched;

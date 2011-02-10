@@ -30,8 +30,8 @@ import org.apache.activemq.kaha.impl.index.IndexItem;
 import org.apache.activemq.kaha.impl.index.IndexLinkedList;
 import org.apache.activemq.kaha.impl.index.IndexManager;
 import org.apache.activemq.kaha.impl.index.VMIndexLinkedList;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Implementation of a ListContainer
@@ -40,7 +40,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public abstract class BaseContainerImpl {
 
-    private static final Log LOG = LogFactory.getLog(BaseContainerImpl.class);
+    private static final Logger LOG = LoggerFactory.getLogger(BaseContainerImpl.class);
     protected IndexItem root;
     protected IndexLinkedList indexList;
     protected IndexManager indexManager;

@@ -44,8 +44,8 @@ import org.apache.activemq.kaha.impl.index.IndexItem;
 import org.apache.activemq.kaha.impl.index.IndexManager;
 import org.apache.activemq.kaha.impl.index.RedoStoreIndexItem;
 import org.apache.activemq.util.IOHelper;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Store Implementation
@@ -64,7 +64,7 @@ public class KahaStore implements Store {
     //according to the String javadoc, all constant strings are interned so this will be the same object throughout the vm
     //and we can use it as a monitor for the lockset.
     private final static String LOCKSET_MONITOR = PROPERTY_PREFIX + ".Lock.Monitor";
-    private static final Log LOG = LogFactory.getLog(KahaStore.class);
+    private static final Logger LOG = LoggerFactory.getLogger(KahaStore.class);
 
     private final File directory;
     private final String mode;

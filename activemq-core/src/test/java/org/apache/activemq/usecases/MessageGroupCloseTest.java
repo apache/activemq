@@ -18,8 +18,8 @@ package org.apache.activemq.usecases;
 
 import junit.framework.TestCase;
 import org.apache.activemq.ActiveMQConnectionFactory;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jms.*;
 import javax.jms.Queue;
@@ -35,7 +35,7 @@ import java.util.concurrent.CountDownLatch;
  * 1 and 6 have the JMSXGroupFirstForConsumer property set to true.
  */
 public class MessageGroupCloseTest extends TestCase {
-    private static final Log LOG = LogFactory.getLog(MessageGroupNewConsumerTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(MessageGroupNewConsumerTest.class);
     private Connection connection;
     // Released after all messages are created
     private CountDownLatch latchMessagesCreated = new CountDownLatch(1);

@@ -37,8 +37,8 @@ import org.apache.activemq.openwire.OpenWireFormat;
 import org.apache.activemq.store.jdbc.adapter.DefaultJDBCAdapter;
 import org.apache.activemq.util.ByteSequence;
 import org.apache.activemq.wireformat.WireFormat;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.derby.jdbc.EmbeddedDataSource;
 
 import junit.framework.TestCase;
@@ -46,7 +46,7 @@ import junit.framework.TestCase;
 // https://issues.apache.org/activemq/browse/AMQ-2880
 public class JDBCCommitExceptionTest extends TestCase {
 
-    private static final Log LOG = LogFactory.getLog(JDBCCommitExceptionTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(JDBCCommitExceptionTest.class);
 
     protected static final int messagesExpected = 10;
     protected ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(

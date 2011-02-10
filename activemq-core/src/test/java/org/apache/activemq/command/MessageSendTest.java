@@ -22,11 +22,11 @@ import junit.framework.Test;
 
 import org.apache.activemq.JmsQueueSendReceiveTwoConnectionsStartBeforeBrokerTest;
 import org.apache.activemq.util.ByteSequence;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class MessageSendTest extends DataStructureTestSupport {
-    private static final Log LOG = LogFactory.getLog(MessageSendTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(MessageSendTest.class);
 
     public static Test suite() {
         return suite(MessageSendTest.class);

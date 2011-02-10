@@ -22,8 +22,8 @@ import javax.jms.MessageConsumer;
 import org.eclipse.jetty.continuation.Continuation;
 import org.eclipse.jetty.continuation.ContinuationSupport;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.apache.activemq.MessageAvailableListener;
 
@@ -33,7 +33,7 @@ import java.util.LinkedList;
  * Listen for available messages and wakeup any continuations.
  */
 public class AjaxListener implements MessageAvailableListener {
-    private static final Log LOG = LogFactory.getLog(AjaxListener.class);
+    private static final Logger LOG = LoggerFactory.getLogger(AjaxListener.class);
     
     private long maximumReadTimeout;
     private AjaxWebClient client;

@@ -58,13 +58,13 @@ import org.apache.activemq.openwire.v1.BrokerInfoTest;
 import org.apache.activemq.openwire.v1.MessageAckTest;
 import org.apache.activemq.test.TestSupport;
 import org.apache.activemq.util.ByteSequence;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public abstract class DataFileGeneratorTestSupport extends TestSupport {
 
     protected static final Object[] EMPTY_ARGUMENTS = {};
-    private static final Log LOG = LogFactory.getLog(DataFileGeneratorTestSupport.class);
+    private static final Logger LOG = LoggerFactory.getLogger(DataFileGeneratorTestSupport.class);
 
     private static final Throwable SINGLETON_EXCEPTION = new Exception("shared exception");
     private static final File MODULE_BASE_DIR;

@@ -22,11 +22,11 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.activemq.command.Response;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class FutureResponse {
-    private static final Log LOG = LogFactory.getLog(FutureResponse.class);
+    private static final Logger LOG = LoggerFactory.getLogger(FutureResponse.class);
 
     private final ResponseCallback responseCallback;
     private final ArrayBlockingQueue<Response> responseSlot = new ArrayBlockingQueue<Response>(1);

@@ -24,15 +24,15 @@ import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportFactory;
 import org.apache.activemq.transport.TransportServer;
 import org.apache.activemq.transport.tcp.WireformatNegociationTest;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * 
  * @version $Revision$
  */
 public class UdpTransportUsingServerTest extends UdpTestSupport {
-    private static final Log LOG = LogFactory.getLog(UdpTransportUsingServerTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(UdpTransportUsingServerTest.class);
 
     protected int consumerPort = 9123;
     protected String producerURI = "udp://localhost:" + consumerPort;

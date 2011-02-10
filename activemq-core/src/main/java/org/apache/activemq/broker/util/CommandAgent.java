@@ -29,8 +29,8 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.Service;
 import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.util.ServiceStopper;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * An agent which listens to commands on a JMS destination
@@ -39,7 +39,7 @@ import org.apache.commons.logging.LogFactory;
  * @org.apache.xbean.XBean
  */
 public class CommandAgent implements Service, ExceptionListener {
-    private static final Log LOG = LogFactory.getLog(CommandAgent.class);
+    private static final Logger LOG = LoggerFactory.getLogger(CommandAgent.class);
 
     private String brokerUrl = "vm://localhost";
     private String username;

@@ -41,12 +41,12 @@ import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.util.Wait;
 import org.apache.activemq.util.Wait.Condition;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class AMQ2183Test extends AutoFailTestSupport implements UncaughtExceptionHandler, MessageListener {
        
-    private static final Log LOG = LogFactory.getLog(AMQ2183Test.class);
+    private static final Logger LOG = LoggerFactory.getLogger(AMQ2183Test.class);
     private static final int maxSent = 2000;    
     private final Map<Thread, Throwable> exceptions = new ConcurrentHashMap<Thread, Throwable>();
 

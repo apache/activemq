@@ -27,8 +27,8 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.activemq.transport.tcp.TcpBufferedOutputStream;
 import org.apache.activemq.transport.tcp.TimeStampStream;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This filter implements write timeouts for socket write operations.
@@ -56,7 +56,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class WriteTimeoutFilter extends TransportFilter {
 
-    private static final Log LOG = LogFactory.getLog(WriteTimeoutFilter.class);
+    private static final Logger LOG = LoggerFactory.getLogger(WriteTimeoutFilter.class);
     protected static ConcurrentLinkedQueue<WriteTimeoutFilter> writers = new ConcurrentLinkedQueue<WriteTimeoutFilter>();
     protected static AtomicInteger messageCounter = new AtomicInteger(0);
     protected static TimeoutThread timeoutThread = new TimeoutThread(); 

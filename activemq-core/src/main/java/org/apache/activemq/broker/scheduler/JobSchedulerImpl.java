@@ -31,8 +31,8 @@ import javax.jms.MessageFormatException;
 import org.apache.activemq.util.IdGenerator;
 import org.apache.activemq.util.ServiceStopper;
 import org.apache.activemq.util.ServiceSupport;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.kahadb.index.BTreeIndex;
 import org.apache.kahadb.journal.Location;
 import org.apache.kahadb.page.Transaction;
@@ -41,7 +41,7 @@ import org.apache.kahadb.util.LongMarshaller;
 import org.apache.kahadb.util.VariableMarshaller;
 
 class JobSchedulerImpl extends ServiceSupport implements Runnable, JobScheduler {
-    private static final Log LOG = LogFactory.getLog(JobSchedulerImpl.class);
+    private static final Logger LOG = LoggerFactory.getLogger(JobSchedulerImpl.class);
     final JobSchedulerStore store;
     private final AtomicBoolean running = new AtomicBoolean();
     private String name;

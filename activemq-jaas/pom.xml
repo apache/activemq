@@ -70,10 +70,6 @@
 
   <dependencies>
     <dependency>
-        <groupId>commons-logging</groupId>
-        <artifactId>commons-logging</artifactId>
-      </dependency>
-    <dependency>
         <groupId>commons-collections</groupId>
         <artifactId>commons-collections</artifactId>
         <scope>test</scope>
@@ -106,17 +102,15 @@
     <dependency>
         <groupId>log4j</groupId>
         <artifactId>log4j</artifactId>
+        <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
-      <version>${nlog4j-version}</version>
-      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-log4j12</artifactId>
-      <version>${nlog4j-version}</version>
       <scope>test</scope>
     </dependency>
   </dependencies>

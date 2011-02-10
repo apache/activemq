@@ -24,8 +24,8 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.activemq.kaha.impl.DataManager;
 import org.apache.activemq.util.IOHelper;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Optimized Store reader
@@ -35,7 +35,7 @@ import org.apache.commons.logging.LogFactory;
 public final class IndexManager {
 
     public static final String NAME_PREFIX = "index-";
-    private static final Log LOG = LogFactory.getLog(IndexManager.class);
+    private static final Logger LOG = LoggerFactory.getLogger(IndexManager.class);
     private final String name;
     private File directory;
     private File file;

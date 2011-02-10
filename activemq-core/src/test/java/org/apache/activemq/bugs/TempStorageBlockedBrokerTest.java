@@ -43,8 +43,8 @@ import org.apache.activemq.usage.StoreUsage;
 import org.apache.activemq.usage.SystemUsage;
 import org.apache.activemq.usage.TempUsage;
 import org.apache.activemq.util.IOHelper;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -54,7 +54,7 @@ public class TempStorageBlockedBrokerTest {
     public boolean consumeAll = false;
     public int deliveryMode = DeliveryMode.PERSISTENT;
 
-    private static final Log LOG = LogFactory.getLog(TempStorageBlockedBrokerTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(TempStorageBlockedBrokerTest.class);
     private static final int MESSAGES_COUNT = 1000;
     private static byte[] buf = new byte[4 * 1024];
     private BrokerService broker;

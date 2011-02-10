@@ -52,8 +52,8 @@ import org.apache.activemq.usage.StoreUsage;
 import org.apache.activemq.usage.SystemUsage;
 import org.apache.activemq.usage.TempUsage;
 import org.apache.activemq.util.Wait;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Modified CursorSupport Unit test to reproduce the negative queue issue.
@@ -79,7 +79,7 @@ import org.apache.commons.logging.LogFactory;
  * 
  */
 public class NegativeQueueTest extends AutoFailTestSupport {
-    private static final Log LOG = LogFactory.getLog(NegativeQueueTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(NegativeQueueTest.class);
     
     public static SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMdd,hh:mm:ss:SSS");
     

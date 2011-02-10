@@ -36,8 +36,8 @@ import org.apache.activemq.usage.SystemUsage;
 import org.apache.activemq.usage.Usage;
 import org.apache.activemq.usage.UsageListener;
 import org.apache.activemq.wireformat.WireFormat;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.kahadb.util.ByteSequence;
 
 /**
@@ -47,7 +47,7 @@ import org.apache.kahadb.util.ByteSequence;
  * @version $Revision$
  */
 public class FilePendingMessageCursor extends AbstractPendingMessageCursor implements UsageListener {
-    static final Log LOG = LogFactory.getLog(FilePendingMessageCursor.class);
+    static final Logger LOG = LoggerFactory.getLogger(FilePendingMessageCursor.class);
     private static final AtomicLong NAME_COUNT = new AtomicLong();
     protected Broker broker;
     private final PListStore store;

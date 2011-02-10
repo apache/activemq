@@ -52,8 +52,8 @@ import org.apache.activemq.thread.TaskRunnerFactory;
 import org.apache.activemq.thread.Valve;
 import org.apache.activemq.transaction.Synchronization;
 import org.apache.activemq.util.SubscriptionKey;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * The Topic is a destination that sends a copy of a message to every active
@@ -62,7 +62,7 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision: 1.21 $
  */
 public class Topic extends BaseDestination implements Task {
-    protected static final Log LOG = LogFactory.getLog(Topic.class);
+    protected static final Logger LOG = LoggerFactory.getLogger(Topic.class);
     private final TopicMessageStore topicStore;
     protected final CopyOnWriteArrayList<Subscription> consumers = new CopyOnWriteArrayList<Subscription>();
     protected final Valve dispatchValve = new Valve(true);
@@ -662,7 +662,7 @@ public class Topic extends BaseDestination implements Task {
     }
 
     @Override
-    protected Log getLog() {
+    protected Logger getLog() {
         return LOG;
     }
 

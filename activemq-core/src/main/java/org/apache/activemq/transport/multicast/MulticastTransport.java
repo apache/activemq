@@ -32,8 +32,8 @@ import org.apache.activemq.transport.udp.CommandDatagramSocket;
 import org.apache.activemq.transport.udp.DatagramHeaderMarshaller;
 import org.apache.activemq.transport.udp.UdpTransport;
 import org.apache.activemq.util.ServiceStopper;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A multicast based transport.
@@ -42,7 +42,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class MulticastTransport extends UdpTransport {
 
-    private static final Log LOG = LogFactory.getLog(MulticastTransport.class);
+    private static final Logger LOG = LoggerFactory.getLogger(MulticastTransport.class);
 
     private static final int DEFAULT_IDLE_TIME = 5000;
 

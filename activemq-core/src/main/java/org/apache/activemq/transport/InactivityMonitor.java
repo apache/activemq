@@ -29,8 +29,8 @@ import org.apache.activemq.command.KeepAliveInfo;
 import org.apache.activemq.command.WireFormatInfo;
 import org.apache.activemq.thread.SchedulerTimerTask;
 import org.apache.activemq.wireformat.WireFormat;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Used to make sure that commands are arriving periodically from the peer of
@@ -40,7 +40,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class InactivityMonitor extends TransportFilter {
 
-    private static final Log LOG = LogFactory.getLog(InactivityMonitor.class);
+    private static final Logger LOG = LoggerFactory.getLogger(InactivityMonitor.class);
     private static ThreadPoolExecutor ASYNC_TASKS;
     private static int CHECKER_COUNTER;
     private static long DEFAULT_CHECK_TIME_MILLS = 30000;

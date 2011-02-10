@@ -34,12 +34,12 @@ import org.apache.activemq.filter.LogicExpression;
 import org.apache.activemq.filter.MessageEvaluationContext;
 import org.apache.activemq.filter.NoLocalExpression;
 import org.apache.activemq.selector.SelectorParser;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public abstract class AbstractSubscription implements Subscription {
 
-    private static final Log LOG = LogFactory.getLog(AbstractSubscription.class);
+    private static final Logger LOG = LoggerFactory.getLogger(AbstractSubscription.class);
     protected Broker broker;
     protected ConnectionContext context;
     protected ConsumerInfo info;

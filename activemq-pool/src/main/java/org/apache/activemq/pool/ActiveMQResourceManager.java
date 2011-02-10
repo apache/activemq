@@ -23,8 +23,8 @@ import javax.jms.Session;
 import javax.jms.JMSException;
 import javax.transaction.TransactionManager;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQSession;
@@ -60,7 +60,7 @@ import org.apache.geronimo.transaction.manager.WrapperNamedXAResource;
  */
 public class ActiveMQResourceManager {
 
-    private static final Log LOGGER = LogFactory.getLog(ActiveMQResourceManager.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(ActiveMQResourceManager.class);
 
     private String resourceName;
 

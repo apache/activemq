@@ -31,8 +31,8 @@ import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.amq.AMQPersistenceAdapter;
 import org.apache.activemq.store.jdbc.JDBCPersistenceAdapter;
 import org.apache.activemq.store.memory.MemoryPersistenceAdapter;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A specific test of Queue.purge() functionality
@@ -40,7 +40,7 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision$
  */
 public class PurgeTest extends EmbeddedBrokerTestSupport {
-    private static final Log LOG = LogFactory.getLog(PurgeTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(PurgeTest.class);
 
     protected MBeanServer mbeanServer;
     protected String domain = "org.apache.activemq";

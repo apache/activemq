@@ -24,8 +24,8 @@ import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.filter.DestinationFilter;
 import org.apache.activemq.transport.Transport;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Consolidates subscriptions
@@ -33,7 +33,7 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision: 1.1 $
  */
 public class DurableConduitBridge extends ConduitBridge {
-    private static final Log LOG = LogFactory.getLog(DurableConduitBridge.class);
+    private static final Logger LOG = LoggerFactory.getLogger(DurableConduitBridge.class);
 
     /**
      * Constructor

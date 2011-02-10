@@ -29,14 +29,14 @@ import junit.framework.AssertionFailedError;
 import junit.framework.TestCase;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @version $Revision$
  */
 public class InactiveDurableTopicTest extends TestCase {
-    private static final transient Log LOG = LogFactory.getLog(InactiveDurableTopicTest.class);
+    private static final transient Logger LOG = LoggerFactory.getLogger(InactiveDurableTopicTest.class);
 
     private static final int MESSAGE_COUNT = 2000;
     private static final String DEFAULT_PASSWORD = "";

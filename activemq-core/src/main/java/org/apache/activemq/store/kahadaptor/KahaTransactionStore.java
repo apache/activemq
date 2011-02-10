@@ -36,8 +36,8 @@ import org.apache.activemq.store.ProxyTopicMessageStore;
 import org.apache.activemq.store.TopicMessageStore;
 import org.apache.activemq.store.TransactionRecoveryListener;
 import org.apache.activemq.store.TransactionStore;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Provides a TransactionStore implementation that can create transaction aware
@@ -46,7 +46,7 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision: 1.4 $
  */
 public class KahaTransactionStore implements TransactionStore, BrokerServiceAware {	
-    private static final Log LOG = LogFactory.getLog(KahaTransactionStore.class);
+    private static final Logger LOG = LoggerFactory.getLogger(KahaTransactionStore.class);
 	
     private final Map transactions = new ConcurrentHashMap();
     private final Map prepared;

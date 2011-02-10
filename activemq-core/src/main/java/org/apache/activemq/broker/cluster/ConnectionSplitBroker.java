@@ -26,8 +26,8 @@ import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.command.ConsumerInfo;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Monitors for client connections that may fail to another broker - but this
@@ -37,7 +37,7 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision$
  */
 public class ConnectionSplitBroker extends BrokerFilter{
-    private static final Log LOG = LogFactory.getLog(ConnectionSplitBroker.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ConnectionSplitBroker.class);
     private List<ConsumerInfo>networkConsumerList = new ArrayList<ConsumerInfo>();
     public ConnectionSplitBroker(Broker next) {
         super(next);

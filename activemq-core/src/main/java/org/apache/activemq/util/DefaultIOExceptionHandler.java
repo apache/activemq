@@ -19,13 +19,13 @@ package org.apache.activemq.util;
 import java.io.IOException;
 
 import org.apache.activemq.broker.BrokerService;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class DefaultIOExceptionHandler implements IOExceptionHandler {
 
-    private static final Log LOG = LogFactory
-            .getLog(DefaultIOExceptionHandler.class);
+    private static final Logger LOG = LoggerFactory
+            .getLogger(DefaultIOExceptionHandler.class);
     private BrokerService broker;
     private boolean ignoreAllErrors = false;
     private boolean ignoreNoSpaceErrors = true;

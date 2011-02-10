@@ -25,12 +25,12 @@ import javax.jms.Session;
 import junit.framework.TestCase;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQDestination;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ActiveMQInputStreamTest extends TestCase {
 
-    private static final Log LOG = LogFactory.getLog(ActiveMQInputStreamTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ActiveMQInputStreamTest.class);
 
     private static final String BROKER_URL = "tcp://localhost:61616";
     private static final String DESTINATION = "destination";

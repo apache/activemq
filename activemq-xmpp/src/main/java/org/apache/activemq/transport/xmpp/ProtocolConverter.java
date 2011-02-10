@@ -69,8 +69,8 @@ import org.apache.activemq.transport.xmpp.command.HandlerRegistry;
 import org.apache.activemq.util.IdGenerator;
 import org.apache.activemq.util.IntSequenceGenerator;
 import org.apache.activemq.util.LongSequenceGenerator;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.jabber.protocol.disco_info.Feature;
 import org.jabber.protocol.disco_info.Identity;
 import org.jabber.protocol.disco_items.Item;
@@ -80,7 +80,7 @@ import org.jabber.protocol.muc_user.X;
  * TODO lots of this code could be shared with Stomp
  */
 public class ProtocolConverter {
-    private static final transient Log LOG = LogFactory.getLog(ProtocolConverter.class);
+    private static final transient Logger LOG = LoggerFactory.getLogger(ProtocolConverter.class);
     private static final IdGenerator CONNECTION_ID_GENERATOR = new IdGenerator();
     private static final IdGenerator CLIENT_ID_GENERATOR = new IdGenerator("xmpp");
 

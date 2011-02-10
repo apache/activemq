@@ -19,8 +19,8 @@ package org.apache.activemq.broker.region.cursors;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.CombinationTestSupport;
 import org.apache.activemq.broker.BrokerService;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -44,7 +44,7 @@ public abstract class CursorSupport extends CombinationTestSupport {
 
     public int MESSAGE_COUNT = 500;
     public int PREFETCH_SIZE = 50;
-    private static final Log LOG = LogFactory.getLog(CursorSupport.class);
+    private static final Logger LOG = LoggerFactory.getLogger(CursorSupport.class);
 
     protected BrokerService broker;
     protected String bindAddress = "tcp://localhost:60706";
@@ -148,8 +148,8 @@ public abstract class CursorSupport extends CombinationTestSupport {
             Message consumed = consumerList.get(i);
             if (!sent.equals(consumed)) {
                 LOG.error("BAD MATCH AT POS " + i);
-                LOG.error(sent);
-                LOG.error(consumed);
+                LOG.error(sent.toString());
+                LOG.error(consumed.toString());
                 /*
                  * log.error("\n\n\n\n\n"); for (int j = 0; j <
                  * consumerList.size(); j++) { log.error(consumerList.get(j)); }

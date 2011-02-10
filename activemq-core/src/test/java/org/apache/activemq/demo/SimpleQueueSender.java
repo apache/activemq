@@ -40,12 +40,12 @@ import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public final class SimpleQueueSender {
 
-    private static final Log LOG = LogFactory.getLog(SimpleQueueSender.class);
+    private static final Logger LOG = LoggerFactory.getLogger(SimpleQueueSender.class);
 
     private SimpleQueueSender() {
     }

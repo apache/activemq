@@ -49,8 +49,8 @@ import org.apache.activemq.store.kahadb.data.KahaPrepareCommand;
 import org.apache.activemq.store.kahadb.data.KahaRollbackCommand;
 import org.apache.activemq.store.kahadb.data.KahaTransactionInfo;
 import org.apache.activemq.wireformat.WireFormat;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Provides a TransactionStore implementation that can create transaction aware
@@ -59,7 +59,7 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision: 1.4 $
  */
 public class KahaDBTransactionStore implements TransactionStore {
-    static final Log LOG = LogFactory.getLog(KahaDBTransactionStore.class);
+    static final Logger LOG = LoggerFactory.getLogger(KahaDBTransactionStore.class);
     ConcurrentHashMap<Object, Tx> inflightTransactions = new ConcurrentHashMap<Object, Tx>();
     private final WireFormat wireFormat = new OpenWireFormat();
     private final KahaDBStore theStore;

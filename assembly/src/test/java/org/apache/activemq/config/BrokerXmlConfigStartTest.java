@@ -33,12 +33,12 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnection;
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.transport.stomp.StompConnection;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class BrokerXmlConfigStartTest extends TestCase {
 
-    private static final Log LOG = LogFactory.getLog(BrokerXmlConfigStartTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(BrokerXmlConfigStartTest.class);
     Properties secProps;
     public void testStartBrokerUsingXmlConfig() throws Exception {
         doTestStartBrokerUsingXmlConfig("xbean:src/release/conf/activemq.xml");

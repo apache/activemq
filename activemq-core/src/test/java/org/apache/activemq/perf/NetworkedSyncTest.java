@@ -33,8 +33,8 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.network.NetworkConnector;
 import org.apache.activemq.xbean.BrokerFactoryBean;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.xbean.spring.context.ClassPathXmlApplicationContext;
 import org.springframework.core.io.ClassPathResource;
 
@@ -47,7 +47,7 @@ public class NetworkedSyncTest extends TestCase {
     public final static String broker1URL = "tcp://localhost:61616";
     public final static String broker2URL = "tcp://localhost:62616";
     private final String networkConnectorURL = "static://(" + broker2URL + ")";
-    private static final Log LOG = LogFactory.getLog(NetworkedSyncTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(NetworkedSyncTest.class);
     BrokerService broker1 = null;
     BrokerService broker2 = null;
     NetworkConnector connector = null;
@@ -89,7 +89,7 @@ public class NetworkedSyncTest extends TestCase {
                 broker1.waitUntilStopped();
             }
         } catch (Exception e) {
-            LOG.fatal("Error: " + e.getMessage());
+            LOG.error("Error: " + e.getMessage());
             throw e;
             // brokerService.stop();
         }
@@ -110,7 +110,7 @@ public class NetworkedSyncTest extends TestCase {
                 broker2.waitUntilStopped();
             }
         } catch (Exception e) {
-            LOG.fatal("Error: " + e.getMessage());
+            LOG.error("Error: " + e.getMessage());
             throw e;
         }
 
@@ -175,7 +175,7 @@ public class NetworkedSyncTest extends TestCase {
  */
 class Producer implements Runnable {
 
-    private static final Log LOG = LogFactory.getLog(Producer.class);
+    private static final Logger LOG = LoggerFactory.getLogger(Producer.class);
 
     /**
      * connect to broker and constantly send messages
@@ -221,7 +221,7 @@ class Producer implements Runnable {
 
             }
         } catch (Exception ex) {
-            LOG.error(ex);
+            LOG.error(ex.toString());
             return;
         } finally {
             try {
@@ -245,7 +245,7 @@ class Producer implements Runnable {
  */
 class Consumer implements Runnable {
 
-    private static final Log LOG = LogFactory.getLog(Consumer.class);;
+    private static final Logger LOG = LoggerFactory.getLogger(Consumer.class);;
 
     
     /**

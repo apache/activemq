@@ -22,14 +22,14 @@ import javax.jms.Message;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.test.JmsTopicSendReceiveWithTwoConnectionsTest;
 import org.apache.activemq.transport.udp.UdpTransportUsingServerTest;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @version $Revision: 1.1.1.1 $
  */
 public class CompositeConsumeTest extends JmsTopicSendReceiveWithTwoConnectionsTest {
-    private static final Log LOG = LogFactory.getLog(CompositeConsumeTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(CompositeConsumeTest.class);
 
     public void testSendReceive() throws Exception {
         messages.clear();

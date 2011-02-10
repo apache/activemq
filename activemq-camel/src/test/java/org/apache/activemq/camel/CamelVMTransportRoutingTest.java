@@ -34,14 +34,14 @@ import org.apache.activemq.util.ThreadTracker;
 import org.apache.camel.CamelContext;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.impl.DefaultCamelContext;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.junit.Assert;
 
 // see: https://issues.apache.org/activemq/browse/AMQ-2966
 public class CamelVMTransportRoutingTest extends TestCase {
 
-    private static final Log log = LogFactory.getLog(CamelVMTransportRoutingTest.class);
+    private static final Logger log = LoggerFactory.getLogger(CamelVMTransportRoutingTest.class);
 
     private BrokerService broker = null;
     private TransportConnector connector = null;

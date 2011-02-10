@@ -26,15 +26,15 @@ import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.udp.ResponseRedirectInterceptor;
 import org.apache.activemq.transport.udp.UdpTransport;
 import org.apache.activemq.transport.udp.UdpTransportTest;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * 
  * @version $Revision: $
  */
 public class UnreliableUdpTransportTest extends UdpTransportTest {
-    private static final Log LOG = LogFactory.getLog(UnreliableUdpTransportTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(UnreliableUdpTransportTest.class);
 
     protected DropCommandStrategy dropStrategy = new DropCommandStrategy() {
         

@@ -42,8 +42,8 @@ import org.apache.activemq.transport.reliable.Replayer;
 import org.apache.activemq.util.InetAddressUtil;
 import org.apache.activemq.util.IntSequenceGenerator;
 import org.apache.activemq.util.ServiceStopper;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * An implementation of the {@link Transport} interface using raw UDP
@@ -51,7 +51,7 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision$
  */
 public class UdpTransport extends TransportThreadSupport implements Transport, Service, Runnable {
-    private static final Log LOG = LogFactory.getLog(UdpTransport.class);
+    private static final Logger LOG = LoggerFactory.getLogger(UdpTransport.class);
 
     private static final int MAX_BIND_ATTEMPTS = 50;
     private static final long BIND_ATTEMPT_DELAY = 100;

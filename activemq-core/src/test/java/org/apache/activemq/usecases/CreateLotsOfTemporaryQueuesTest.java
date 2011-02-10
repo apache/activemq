@@ -23,14 +23,14 @@ import junit.framework.Test;
 import junit.framework.TestSuite;
 import junit.textui.TestRunner;
 import org.apache.activemq.EmbeddedBrokerAndConnectionTestSupport;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @version $Revision: 1.1 $
  */
 public class CreateLotsOfTemporaryQueuesTest extends EmbeddedBrokerAndConnectionTestSupport {
-    private static final Log LOG = LogFactory.getLog(CreateLotsOfTemporaryQueuesTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(CreateLotsOfTemporaryQueuesTest.class);
 
     private static int numberToCreate = 500;
     private static long sleep = 20;

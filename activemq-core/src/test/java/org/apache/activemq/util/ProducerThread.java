@@ -16,14 +16,14 @@
  */
 package org.apache.activemq.util;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jms.*;
 
 public class ProducerThread extends Thread {
 
-    private static final Log LOG = LogFactory.getLog(ProducerThread.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ProducerThread.class);
 
     int messageCount = 1000;
     Destination dest;

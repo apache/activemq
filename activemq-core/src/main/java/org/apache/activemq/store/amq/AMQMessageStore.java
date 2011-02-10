@@ -51,8 +51,8 @@ import org.apache.activemq.transaction.Synchronization;
 import org.apache.activemq.usage.MemoryUsage;
 import org.apache.activemq.util.Callback;
 import org.apache.activemq.util.TransactionTemplate;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A MessageStore that uses a Journal to store it's messages.
@@ -60,7 +60,7 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision: 1.14 $
  */
 public class AMQMessageStore extends AbstractMessageStore {
-    private static final Log LOG = LogFactory.getLog(AMQMessageStore.class);
+    private static final Logger LOG = LoggerFactory.getLogger(AMQMessageStore.class);
     protected final AMQPersistenceAdapter peristenceAdapter;
     protected final AMQTransactionStore transactionStore;
     protected final ReferenceStore referenceStore;

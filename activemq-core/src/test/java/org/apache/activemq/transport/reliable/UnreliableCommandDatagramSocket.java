@@ -24,14 +24,14 @@ import org.apache.activemq.openwire.OpenWireFormat;
 import org.apache.activemq.transport.udp.CommandDatagramSocket;
 import org.apache.activemq.transport.udp.DatagramHeaderMarshaller;
 import org.apache.activemq.transport.udp.UdpTransport;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @version $Revision: $
  */
 public class UnreliableCommandDatagramSocket extends CommandDatagramSocket {
-    private static final Log LOG = LogFactory.getLog(UnreliableCommandDatagramSocket.class);
+    private static final Logger LOG = LoggerFactory.getLogger(UnreliableCommandDatagramSocket.class);
 
     private DropCommandStrategy dropCommandStrategy;
 

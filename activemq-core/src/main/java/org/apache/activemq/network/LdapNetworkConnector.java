@@ -38,8 +38,8 @@ import javax.naming.event.ObjectChangeListener;
 
 import org.apache.activemq.util.URISupport;
 import org.apache.activemq.util.URISupport.CompositeData;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * class to create dynamic network connectors listed in an directory
@@ -58,7 +58,7 @@ public class      LdapNetworkConnector
        implements NamespaceChangeListener,
                   ObjectChangeListener
 {
-   private static final Log LOG = LogFactory.getLog(LdapNetworkConnector.class);
+   private static final Logger LOG = LoggerFactory.getLogger(LdapNetworkConnector.class);
 
    // force returned entries to implement the ipHost and ipService object classes (RFC 2307)
    private static final String REQUIRED_OBJECT_CLASS_FILTER  = "(&(objectClass=ipHost)(objectClass=ipService))";

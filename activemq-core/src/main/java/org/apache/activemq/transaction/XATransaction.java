@@ -24,15 +24,15 @@ import org.apache.activemq.command.ConnectionId;
 import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.command.XATransactionId;
 import org.apache.activemq.store.TransactionStore;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @version $Revision: 1.4 $
  */
 public class XATransaction extends Transaction {
 
-    private static final Log LOG = LogFactory.getLog(XATransaction.class);
+    private static final Logger LOG = LoggerFactory.getLogger(XATransaction.class);
 
     private final TransactionStore transactionStore;
     private final XATransactionId xid;
@@ -212,7 +212,7 @@ public class XATransaction extends Transaction {
     }
     
     @Override
-    public Log getLog() {
+    public Logger getLog() {
         return LOG;
     }
 }

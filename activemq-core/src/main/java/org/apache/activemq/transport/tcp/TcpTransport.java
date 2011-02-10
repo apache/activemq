@@ -44,8 +44,8 @@ import org.apache.activemq.util.InetAddressUtil;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.util.ServiceStopper;
 import org.apache.activemq.wireformat.WireFormat;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 import static org.apache.activemq.thread.DefaultThreadPools.getDefaultTaskRunnerFactory;
@@ -57,7 +57,7 @@ import static org.apache.activemq.thread.DefaultThreadPools.getDefaultTaskRunner
  * @version $Revision$
  */
 public class TcpTransport extends TransportThreadSupport implements Transport, Service, Runnable {
-    private static final Log LOG = LogFactory.getLog(TcpTransport.class);
+    private static final Logger LOG = LoggerFactory.getLogger(TcpTransport.class);
     protected final URI remoteLocation;
     protected final URI localLocation;
     protected final WireFormat wireFormat;

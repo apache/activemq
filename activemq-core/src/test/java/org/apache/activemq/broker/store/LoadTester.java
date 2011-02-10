@@ -38,15 +38,15 @@ import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.memory.list.SimpleMessageList;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @version $Revision$
  */
 public class LoadTester extends JmsTestSupport {
 
-    private static final Log LOG = LogFactory.getLog(LoadTester.class);
+    private static final Logger LOG = LoggerFactory.getLogger(LoadTester.class);
     
     protected int messageSize = 1024 * 64;
     protected int produceCount = 10000;

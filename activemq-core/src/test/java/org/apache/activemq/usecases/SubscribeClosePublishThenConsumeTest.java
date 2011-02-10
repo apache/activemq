@@ -27,15 +27,15 @@ import javax.jms.TopicSubscriber;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.test.TestSupport;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author Paul Smith
  * @version $Revision: 1.1.1.1 $
  */
 public class SubscribeClosePublishThenConsumeTest extends TestSupport {
-    private static final Log LOG = LogFactory.getLog(SubscribeClosePublishThenConsumeTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(SubscribeClosePublishThenConsumeTest.class);
 
     public void testDurableTopic() throws Exception {
         ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory("vm://locahost");

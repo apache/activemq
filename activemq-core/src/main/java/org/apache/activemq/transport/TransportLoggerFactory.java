@@ -20,8 +20,8 @@ import org.apache.activemq.broker.jmx.AnnotatedMBean;
 import org.apache.activemq.broker.jmx.ManagementContext;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.LogWriterFinder;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import javax.management.ObjectName;
 
@@ -38,7 +38,7 @@ import javax.management.ObjectName;
  */
 public class TransportLoggerFactory {
 
-    private static final Log LOG = LogFactory.getLog(TransportLoggerFactory.class);
+    private static final Logger LOG = LoggerFactory.getLogger(TransportLoggerFactory.class);
 
     private static TransportLoggerFactory instance;
     private static int lastId=0;
@@ -119,7 +119,7 @@ public class TransportLoggerFactory {
      * @return A TransportLogger object.
      * @throws IOException
      */
-    public TransportLogger createTransportLogger(Transport next, Log log) throws IOException {
+    public TransportLogger createTransportLogger(Transport next, Logger log) throws IOException {
         return createTransportLogger(next, getNextId(), log, defaultLogWriterName, defaultDynamicManagement, defaultInitialBehavior, defaultJmxPort);
     }
 
@@ -156,7 +156,7 @@ public class TransportLoggerFactory {
      * @return A TransportLogger object.
      * @throws IOException
      */
-    public TransportLogger createTransportLogger(Transport next, int id, Log log,
+    public TransportLogger createTransportLogger(Transport next, int id, Logger log,
             String logWriterName, boolean dynamicManagement, boolean startLogging, int jmxport) throws IOException {
         try {
             LogWriter logWriter = logWriterFinder.newInstance(logWriterName);
@@ -180,8 +180,8 @@ public class TransportLoggerFactory {
         return ++lastId;
     }
 
-    private static Log createLog(int id) {
-        return LogFactory.getLog(TransportLogger.class.getName()+".Connection:" + id);
+    private static Logger createLog(int id) {
+        return LoggerFactory.getLogger(TransportLogger.class.getName()+".Connection:" + id);
     }
     
     /**

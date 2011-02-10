@@ -23,8 +23,8 @@ import java.net.UnknownHostException;
 import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.net.SocketFactory;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @version $Revision$
@@ -32,7 +32,7 @@ import org.apache.commons.logging.LogFactory;
  * Automatically generated socket.close() calls to simulate network faults
  */
 public class SocketTstFactory extends SocketFactory {
-    private static final Log LOG = LogFactory.getLog(SocketTstFactory.class);
+    private static final Logger LOG = LoggerFactory.getLogger(SocketTstFactory.class);
 
     private static final ConcurrentHashMap<InetAddress, Integer>	closeIter = new ConcurrentHashMap<InetAddress, Integer>();
 

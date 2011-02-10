@@ -37,8 +37,8 @@ import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @version $Revision$ $Date$
@@ -46,7 +46,7 @@ import org.apache.commons.logging.LogFactory;
 public class ActiveMQEndpointWorker {
 
     public static final Method ON_MESSAGE_METHOD;
-    private static final Log LOG = LogFactory.getLog(ActiveMQEndpointWorker.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ActiveMQEndpointWorker.class);
 
     private static final long INITIAL_RECONNECT_DELAY = 1000; // 1 second.
     private static final long MAX_RECONNECT_DELAY = 1000 * 30; // 30 seconds.

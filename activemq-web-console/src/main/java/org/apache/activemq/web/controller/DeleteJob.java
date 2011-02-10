@@ -21,8 +21,8 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.activemq.broker.jmx.JobSchedulerViewMBean;
 import org.apache.activemq.web.BrokerFacade;
 import org.apache.activemq.web.DestinationFacade;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.Controller;
 
@@ -31,7 +31,7 @@ import org.springframework.web.servlet.mvc.Controller;
  */
 public class DeleteJob extends DestinationFacade implements Controller {
     private String jobId;
-    private static final Log LOG = LogFactory.getLog(DeleteJob.class);
+    private static final Logger LOG = LoggerFactory.getLogger(DeleteJob.class);
 
     public DeleteJob(BrokerFacade brokerFacade) {
         super(brokerFacade);

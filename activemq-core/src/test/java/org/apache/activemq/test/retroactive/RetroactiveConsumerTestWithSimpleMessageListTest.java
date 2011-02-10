@@ -33,14 +33,14 @@ import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.test.TemporaryDestinationToFromNameTest;
 import org.apache.activemq.util.MessageIdList;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @version $Revision: 1.1 $
  */
 public class RetroactiveConsumerTestWithSimpleMessageListTest extends EmbeddedBrokerTestSupport {
-    private static final Log LOG = LogFactory.getLog(RetroactiveConsumerTestWithSimpleMessageListTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RetroactiveConsumerTestWithSimpleMessageListTest.class);
 
     protected int messageCount = 20;
     protected Connection connection;

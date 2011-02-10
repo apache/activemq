@@ -53,8 +53,8 @@ import org.apache.activemq.pool.PooledConnectionFactory;
 import org.apache.camel.CamelContext;
 import org.apache.camel.ProducerTemplate;
 import org.apache.camel.impl.DefaultCamelContext;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Represents a messaging client used from inside a web container typically
@@ -72,7 +72,7 @@ public class WebClient implements HttpSessionActivationListener, HttpSessionBind
     public static final String BROKER_URL_INIT_PARAM = "org.apache.activemq.brokerURL";
     public static final String SELECTOR_NAME = "org.apache.activemq.selectorName";
 
-    private static final Log LOG = LogFactory.getLog(WebClient.class);
+    private static final Logger LOG = LoggerFactory.getLogger(WebClient.class);
 
     private static transient ConnectionFactory factory;
 

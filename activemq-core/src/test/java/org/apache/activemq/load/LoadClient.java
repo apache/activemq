@@ -28,14 +28,14 @@ import javax.jms.TextMessage;
 
 import org.apache.activemq.ActiveMQMessageAudit;
 import org.apache.activemq.perf.PerfRate;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @version $Revision: 1.3 $
  */
 public class LoadClient implements Runnable{
-    private static final Log LOG = LogFactory.getLog(LoadClient.class);
+    private static final Logger LOG = LoggerFactory.getLogger(LoadClient.class);
     protected static int SLEEP_TIME = 2;
     protected String name;
     protected ConnectionFactory factory;

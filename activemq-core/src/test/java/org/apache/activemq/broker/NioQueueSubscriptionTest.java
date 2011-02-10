@@ -34,14 +34,14 @@ import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 @SuppressWarnings("unchecked")
 public class NioQueueSubscriptionTest extends QueueSubscriptionTest implements ExceptionListener {
     
-    protected static final Log LOG = LogFactory.getLog(NioQueueSubscriptionTest.class);
+    protected static final Logger LOG = LoggerFactory.getLogger(NioQueueSubscriptionTest.class);
     
     private Map<Thread, Throwable> exceptions = Collections.synchronizedMap(new HashMap<Thread, Throwable>());
     

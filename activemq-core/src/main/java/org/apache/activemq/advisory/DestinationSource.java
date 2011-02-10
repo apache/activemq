@@ -35,8 +35,8 @@ import org.apache.activemq.command.ActiveMQTempQueue;
 import org.apache.activemq.command.ActiveMQTempTopic;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.command.DestinationInfo;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A helper class which keeps track of the Destinations available in a broker and allows you to listen to them
@@ -45,7 +45,7 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision$
  */
 public class DestinationSource implements MessageListener {
-    private static final Log LOG = LogFactory.getLog(ConsumerEventSource.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ConsumerEventSource.class);
     private AtomicBoolean started = new AtomicBoolean(false);
     private final Connection connection;
     private Session session;

@@ -21,14 +21,14 @@ import java.io.IOException;
 import org.apache.activemq.command.Command;
 import org.apache.activemq.command.MessageTest;
 import org.apache.activemq.wireformat.WireFormat;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @version $Revision$
  */
 public class XStreamWireFormatTest extends MessageTest {
-    private static final Log LOG = LogFactory.getLog(XStreamWireFormatTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(XStreamWireFormatTest.class);
 
     public void assertBeanMarshalls(Object original) throws IOException {
         super.assertBeanMarshalls(original);

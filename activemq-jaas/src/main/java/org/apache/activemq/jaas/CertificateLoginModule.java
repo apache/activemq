@@ -33,8 +33,8 @@ import javax.security.auth.login.FailedLoginException;
 import javax.security.auth.login.LoginException;
 import javax.security.auth.spi.LoginModule;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A LoginModule that allows for authentication based on SSL certificates.
@@ -45,7 +45,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public abstract class CertificateLoginModule implements LoginModule {
 
-    private static final Log LOG = LogFactory.getLog(CertificateLoginModule.class);
+    private static final Logger LOG = LoggerFactory.getLogger(CertificateLoginModule.class);
 
     private CallbackHandler callbackHandler;
     private Subject subject;

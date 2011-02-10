@@ -27,13 +27,13 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 public class FilenameGuardFilter implements Filter {
 
-    private static final Log LOG = LogFactory.getLog(FilenameGuardFilter.class);
+    private static final Logger LOG = LoggerFactory.getLogger(FilenameGuardFilter.class);
     
     public void destroy() {
         // nothing to destroy

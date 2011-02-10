@@ -26,15 +26,15 @@ import javax.jms.MapMessage;
 import javax.jms.Message;
 
 import org.apache.activemq.test.JmsTopicSendReceiveWithTwoConnectionsAndEmbeddedBrokerTest;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @version $Revision$
  */
 public class NestedMapMessageTest extends JmsTopicSendReceiveWithTwoConnectionsAndEmbeddedBrokerTest {
 
-    private static final Log LOG = LogFactory.getLog(NestedMapMessageTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(NestedMapMessageTest.class);
 
     protected void assertMessageValid(int index, Message message) throws JMSException {
         assertTrue("Should be a MapMessage: " + message, message instanceof MapMessage);

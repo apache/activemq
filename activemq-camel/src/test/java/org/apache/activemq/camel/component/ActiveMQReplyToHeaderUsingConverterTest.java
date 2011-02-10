@@ -32,14 +32,14 @@ import org.apache.camel.Message;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.AssertionClause;
 import org.apache.camel.component.mock.MockEndpoint;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @version $Revision$
  */
 public class ActiveMQReplyToHeaderUsingConverterTest extends ContextTestSupport {
-    private static final transient Log LOG = LogFactory.getLog(ActiveMQReplyToHeaderUsingConverterTest.class);
+    private static final transient Logger LOG = LoggerFactory.getLogger(ActiveMQReplyToHeaderUsingConverterTest.class);
     protected Object expectedBody = "<time>" + new Date() + "</time>";
     protected String replyQueueName = "queue://test.my.reply.queue";
     protected String correlationID = "ABC-123";

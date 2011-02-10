@@ -38,8 +38,8 @@ import org.apache.activemq.broker.jmx.ManagementContext;
 import org.apache.activemq.broker.jmx.QueueViewMBean;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.web.config.WebConsoleConfiguration;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A {@link BrokerFacade} which uses a JMX-Connection to communicate with a
@@ -49,7 +49,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class RemoteJMXBrokerFacade extends BrokerFacadeSupport {
     
-    private static final transient Log LOG = LogFactory.getLog(RemoteJMXBrokerFacade.class);
+    private static final transient Logger LOG = LoggerFactory.getLogger(RemoteJMXBrokerFacade.class);
     
     private String brokerName;
     private JMXConnector connector;

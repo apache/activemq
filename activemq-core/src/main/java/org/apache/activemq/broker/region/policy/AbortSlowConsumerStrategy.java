@@ -29,8 +29,8 @@ import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.command.ConsumerControl;
 import org.apache.activemq.thread.Scheduler;
 import org.apache.activemq.transport.InactivityIOException;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Abort slow consumers when they reach the configured threshold of slowness, default is slow for 30 seconds
@@ -39,7 +39,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class AbortSlowConsumerStrategy implements SlowConsumerStrategy, Runnable {
     
-    private static final Log LOG = LogFactory.getLog(AbortSlowConsumerStrategy.class);
+    private static final Logger LOG = LoggerFactory.getLogger(AbortSlowConsumerStrategy.class);
 
     private String name = "AbortSlowConsumerStrategy@" + hashCode();
     private Scheduler scheduler;

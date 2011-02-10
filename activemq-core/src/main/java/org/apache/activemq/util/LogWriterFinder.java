@@ -24,8 +24,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.activemq.transport.LogWriter;
 import org.apache.activemq.transport.TransportLoggerView;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Class used to find a LogWriter implementation, and returning
@@ -40,7 +40,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class LogWriterFinder {
     
-    private static final Log log = LogFactory.getLog(TransportLoggerView.class);
+    private static final Logger log = LoggerFactory.getLogger(TransportLoggerView.class);
 
     private final String path;
     private final ConcurrentHashMap classMap = new ConcurrentHashMap();

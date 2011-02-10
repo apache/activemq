@@ -27,8 +27,8 @@ import javax.naming.Reference;
 import javax.naming.StringRefAddr;
 import javax.naming.spi.ObjectFactory;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Converts objects implementing JNDIStorable into a property fields so they can
@@ -36,7 +36,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class JNDIReferenceFactory implements ObjectFactory {
 
-    static Log log = LogFactory.getLog(JNDIReferenceFactory.class);
+    static Logger log = LoggerFactory.getLogger(JNDIReferenceFactory.class);
 
     /**
      * This will be called by a JNDIprovider when a Reference is retrieved from

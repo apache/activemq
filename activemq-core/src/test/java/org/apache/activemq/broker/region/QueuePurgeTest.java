@@ -40,11 +40,11 @@ import org.apache.activemq.broker.region.policy.PendingQueueMessageStoragePolicy
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class QueuePurgeTest extends TestCase {
-    private static final Log LOG = LogFactory.getLog(QueuePurgeTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(QueuePurgeTest.class);
     private final String MESSAGE_TEXT = new String(new byte[1024]);
     BrokerService broker;
     ConnectionFactory factory;

@@ -47,8 +47,8 @@ import org.apache.activemq.transport.tcp.TcpTransportServer;
 import org.apache.activemq.usage.SystemUsage;
 import org.apache.activemq.wireformat.ObjectStreamWireFormat;
 import org.apache.activemq.xbean.BrokerFactoryBean;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.derby.jdbc.EmbeddedDataSource;
 import org.jmock.Expectations;
 import org.jmock.Mockery;
@@ -64,7 +64,7 @@ public class ConfigTest extends TestCase {
     protected static final String JOURNAL_ROOT = "target/test-data/";
     protected static final String DERBY_ROOT = "target/test-data/";
     protected static final String CONF_ROOT = "src/test/resources/org/apache/activemq/config/sample-conf/";
-    private static final Log LOG = LogFactory.getLog(ConfigTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ConfigTest.class);
 
     static {
         System.setProperty("javax.net.ssl.trustStore", "src/test/resources/client.keystore");

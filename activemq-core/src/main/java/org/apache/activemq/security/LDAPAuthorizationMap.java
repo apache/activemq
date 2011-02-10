@@ -36,8 +36,8 @@ import javax.naming.directory.SearchResult;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.jaas.GroupPrincipal;
 import org.apache.activemq.jaas.LDAPLoginModule;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * An {@link AuthorizationMap} which uses LDAP
@@ -66,7 +66,7 @@ public class LDAPAuthorizationMap implements AuthorizationMap {
     public static final String WRITE_BASE = "writeBAse";
     public static final String WRITE_ATTRIBUTE = "writeAttribute";
 
-    private static final Log LOG = LogFactory.getLog(LDAPLoginModule.class);
+    private static final Logger LOG = LoggerFactory.getLogger(LDAPLoginModule.class);
 
     private String initialContextFactory;
     private String connectionURL;
@@ -307,7 +307,7 @@ public class LDAPAuthorizationMap implements AuthorizationMap {
         try {
             context = open();
         } catch (NamingException e) {
-            LOG.error(e);
+            LOG.error(e.toString());
             return new HashSet<GroupPrincipal>();
         }
 
@@ -356,7 +356,7 @@ public class LDAPAuthorizationMap implements AuthorizationMap {
             }
             return roles;
         } catch (NamingException e) {
-            LOG.error(e);
+            LOG.error(e.toString());
             return new HashSet<GroupPrincipal>();
         }
     }
@@ -400,7 +400,7 @@ public class LDAPAuthorizationMap implements AuthorizationMap {
             context = new InitialDirContext(env);
 
         } catch (NamingException e) {
-            LOG.error(e);
+            LOG.error(e.toString());
             throw e;
         }
         return context;

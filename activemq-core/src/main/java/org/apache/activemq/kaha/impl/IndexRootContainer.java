@@ -30,8 +30,8 @@ import org.apache.activemq.kaha.StoreLocation;
 import org.apache.activemq.kaha.impl.data.Item;
 import org.apache.activemq.kaha.impl.index.IndexItem;
 import org.apache.activemq.kaha.impl.index.IndexManager;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A container of roots for other Containers
@@ -42,7 +42,7 @@ import org.apache.commons.logging.LogFactory;
 class IndexRootContainer {
     
     protected static final Marshaller ROOT_MARSHALLER = Store.OBJECT_MARSHALLER;
-    private static final Log LOG = LogFactory.getLog(IndexRootContainer.class);
+    private static final Logger LOG = LoggerFactory.getLogger(IndexRootContainer.class);
 
     protected IndexItem root;
     protected IndexManager indexManager;

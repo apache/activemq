@@ -26,14 +26,14 @@ import javax.jms.MessageListener;
 import javax.jms.Session;
 import javax.jms.Topic;
 import org.apache.activemq.ActiveMQMessageAudit;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @version $Revision: 1.3 $
  */
 public class PerfConsumer implements MessageListener {
-    private static final Log LOG = LogFactory.getLog(PerfConsumer.class);
+    private static final Logger LOG = LoggerFactory.getLogger(PerfConsumer.class);
     protected Connection connection;
     protected MessageConsumer consumer;
     protected long sleepDuration;

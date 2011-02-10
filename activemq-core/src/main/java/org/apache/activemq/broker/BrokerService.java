@@ -92,8 +92,8 @@ import org.apache.activemq.transport.TransportServer;
 import org.apache.activemq.transport.vm.VMTransportFactory;
 import org.apache.activemq.usage.SystemUsage;
 import org.apache.activemq.util.*;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 /**
  * Manages the lifecycle of an ActiveMQ Broker. A BrokerService consists of a
  * number of transport connectors, network connectors and a bunch of properties
@@ -107,7 +107,7 @@ public class BrokerService implements Service {
     public static final String DEFAULT_PORT = "61616";
     public static final String LOCAL_HOST_NAME;
     public static final String DEFAULT_BROKER_NAME = "localhost";
-    private static final Log LOG = LogFactory.getLog(BrokerService.class);
+    private static final Logger LOG = LoggerFactory.getLogger(BrokerService.class);
     private static final long serialVersionUID = 7353129142305630237L;
     private boolean useJmx = true;
     private boolean enableStatistics = true;
@@ -412,7 +412,7 @@ public class BrokerService implements Service {
 
     public void masterFailed() {
         if (shutdownOnMasterFailure) {
-            LOG.fatal("The Master has failed ... shutting down");
+            LOG.error("The Master has failed ... shutting down");
             try {
                 stop();
             } catch (Exception e) {
@@ -893,7 +893,7 @@ public class BrokerService implements Service {
             }
             return systemUsage;
         } catch (IOException e) {
-            LOG.fatal("Cannot create SystemUsage", e);
+            LOG.error("Cannot create SystemUsage", e);
             throw new RuntimeException("Fatally failed to create SystemUsage" + e.getMessage());
         }
     }

@@ -25,12 +25,12 @@ import org.apache.activemq.CombinationTestSupport;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class SimpleAnonymousPluginTest extends SimpleAuthenticationPluginTest {
 
-    private static final Log LOG = LogFactory.getLog(SimpleAnonymousPluginTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(SimpleAnonymousPluginTest.class);
 
     public static Test suite() {
         return suite(SimpleAnonymousPluginTest.class);

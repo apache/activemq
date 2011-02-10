@@ -20,8 +20,8 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * 
@@ -29,7 +29,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class DefaultReplayBuffer implements ReplayBuffer {
 
-    private static final Log LOG = LogFactory.getLog(DefaultReplayBuffer.class);
+    private static final Logger LOG = LoggerFactory.getLogger(DefaultReplayBuffer.class);
 
     private final int size;
     private ReplayBufferListener listener;

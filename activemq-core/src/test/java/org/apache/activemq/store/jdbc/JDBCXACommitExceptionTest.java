@@ -37,14 +37,14 @@ import javax.transaction.xa.XAResource;
 import javax.transaction.xa.Xid;
 
 import org.apache.activemq.ActiveMQXAConnectionFactory;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import junit.framework.TestCase;
 
 // https://issues.apache.org/activemq/browse/AMQ-2880
 public class JDBCXACommitExceptionTest extends JDBCCommitExceptionTest {
-    private static final Log LOG = LogFactory.getLog(JDBCXACommitExceptionTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(JDBCXACommitExceptionTest.class);
 
     private long txGenerator = System.currentTimeMillis();
 

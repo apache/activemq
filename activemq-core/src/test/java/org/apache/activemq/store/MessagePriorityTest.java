@@ -37,12 +37,12 @@ import org.apache.activemq.broker.region.policy.StorePendingDurableSubscriberMes
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 abstract public class MessagePriorityTest extends CombinationTestSupport {
     
-    private static final Log LOG = LogFactory.getLog(MessagePriorityTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(MessagePriorityTest.class);
 
     BrokerService broker;
     PersistenceAdapter adapter;

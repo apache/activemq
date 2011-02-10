@@ -30,8 +30,8 @@ import org.apache.activemq.broker.jmx.ManagementContext;
 import org.apache.activemq.transport.discovery.multicast.MulticastDiscoveryAgentFactory;
 import org.apache.activemq.util.SocketProxy;
 import org.apache.activemq.util.Wait;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
 import org.jmock.Expectations;
@@ -50,7 +50,7 @@ import org.junit.runner.RunWith;
 @RunWith(JMock.class)
 public class DiscoveryNetworkReconnectTest {
 
-    private static final Log LOG = LogFactory.getLog(DiscoveryNetworkReconnectTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(DiscoveryNetworkReconnectTest.class);
     final int maxReconnects = 5;
     final String groupName = "GroupID-" + "DiscoveryNetworkReconnectTest";
     final String discoveryAddress = "multicast://default?group=" + groupName + "&initialReconnectDelay=1000";

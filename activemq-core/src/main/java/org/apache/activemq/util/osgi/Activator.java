@@ -32,8 +32,8 @@ import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.discovery.DiscoveryAgent;
 import org.apache.activemq.util.FactoryFinder;
 import org.apache.activemq.util.FactoryFinder.ObjectFactory;
-import org.apache.commons.logging.LogFactory;
-import org.apache.commons.logging.Log;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleActivator;
@@ -48,7 +48,7 @@ import org.osgi.framework.SynchronousBundleListener;
  */
 public class Activator implements BundleActivator, SynchronousBundleListener, ObjectFactory {
 
-    private static final Log LOG = LogFactory.getLog(Activator.class);
+    private static final Logger LOG = LoggerFactory.getLogger(Activator.class);
 
     private final ConcurrentHashMap<String, Class> serviceCache = new ConcurrentHashMap<String, Class>();
     private final ConcurrentMap<Long, BundleWrapper> bundleWrappers = new ConcurrentHashMap<Long, BundleWrapper>();
@@ -183,7 +183,7 @@ public class Activator implements BundleActivator, SynchronousBundleListener, Ob
     // ================================================================
 
     private void debug(Object msg) {
-        LOG.debug(msg);
+        LOG.debug(msg.toString());
     }
 
     private Properties loadProperties(URL resource) throws IOException {

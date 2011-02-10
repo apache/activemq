@@ -56,14 +56,14 @@ import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
 import org.apache.activemq.store.kahadb.KahaDBStore;
 import org.apache.activemq.util.IOHelper;
 import org.apache.activemq.util.Wait;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @version $Revision: 1.5 $ A Test case for AMQ-1479
  */
 public class DurableConsumerTest extends CombinationTestSupport{
-    private static final Log LOG = LogFactory.getLog(DurableConsumerTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(DurableConsumerTest.class);
     private static int COUNT = 1024 * 10;
     private static String CONSUMER_NAME = "DURABLE_TEST";
     protected BrokerService broker;

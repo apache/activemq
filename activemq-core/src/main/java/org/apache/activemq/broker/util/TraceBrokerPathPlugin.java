@@ -21,8 +21,8 @@ import java.util.Map;
 
 import org.apache.activemq.broker.BrokerPluginSupport;
 import org.apache.activemq.command.MessageDispatch;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * The TraceBrokerPathPlugin can be used in a network of Brokers. Each Broker 
@@ -38,7 +38,7 @@ import org.apache.commons.logging.LogFactory;
 public class TraceBrokerPathPlugin extends BrokerPluginSupport {
 
 	private String stampProperty = "BrokerPath";
-    private static final Log LOG = LogFactory.getLog(TraceBrokerPathPlugin.class);
+    private static final Logger LOG = LoggerFactory.getLogger(TraceBrokerPathPlugin.class);
 	
 	public String getStampProperty() {
 		return stampProperty;

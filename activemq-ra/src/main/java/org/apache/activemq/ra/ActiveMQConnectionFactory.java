@@ -30,8 +30,8 @@ import javax.resource.Referenceable;
 import javax.resource.ResourceException;
 import javax.resource.spi.ConnectionManager;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @version $Revision$
@@ -40,7 +40,7 @@ public class ActiveMQConnectionFactory implements ConnectionFactory, QueueConnec
 
     private static final long serialVersionUID = -5754338187296859149L;
 
-    private static final Log LOG = LogFactory.getLog(ActiveMQConnectionFactory.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ActiveMQConnectionFactory.class);
     private ConnectionManager manager;
     private ActiveMQManagedConnectionFactory factory;
     private Reference reference;

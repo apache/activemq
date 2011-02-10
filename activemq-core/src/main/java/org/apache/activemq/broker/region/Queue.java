@@ -71,8 +71,8 @@ import org.apache.activemq.transaction.Synchronization;
 import org.apache.activemq.usage.Usage;
 import org.apache.activemq.usage.UsageListener;
 import org.apache.activemq.util.BrokerSupport;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * The Queue is a List of MessageEntry objects that are dispatched to matching
@@ -81,7 +81,7 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision: 1.28 $
  */
 public class Queue extends BaseDestination implements Task, UsageListener {
-    protected static final Log LOG = LogFactory.getLog(Queue.class);
+    protected static final Logger LOG = LoggerFactory.getLogger(Queue.class);
     protected final TaskRunnerFactory taskFactory;
     protected TaskRunner taskRunner;
     private final ReentrantReadWriteLock consumersLock = new ReentrantReadWriteLock();
@@ -294,7 +294,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                                 try {
                                     messages.addMessageLast(message);
                                 } catch (Exception e) {
-                                    LOG.fatal("Failed to add message to cursor", e);
+                                    LOG.error("Failed to add message to cursor", e);
                                 }
                             }finally {
                                 messagesLock.writeLock().unlock();
@@ -1405,7 +1405,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                         }
                     }
                 } catch (Exception e) {
-                    LOG.error(e);
+                    LOG.error(e.toString());
                 }
             }
 
@@ -2057,7 +2057,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
     }
 
     @Override
-    protected Log getLog() {
+    protected Logger getLog() {
         return LOG;
     }
 }

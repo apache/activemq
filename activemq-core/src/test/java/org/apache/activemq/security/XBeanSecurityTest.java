@@ -21,8 +21,8 @@ import java.net.URI;
 import junit.framework.Test;
 import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * 
@@ -30,7 +30,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class XBeanSecurityTest extends SecurityTestSupport {
 
-    private static final Log LOG = LogFactory.getLog(XBeanSecurityTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(XBeanSecurityTest.class);
     
     public static Test suite() {
         return suite(XBeanSecurityTest.class);

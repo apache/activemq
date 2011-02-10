@@ -37,15 +37,15 @@ import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.util.URISupport;
 import org.apache.activemq.wireformat.WireFormat;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author David Martin Clavo david(dot)martin(dot)clavo(at)gmail.com (logging improvement modifications)
  * @version $Revision$
  */
 public class TcpTransportFactory extends TransportFactory {
-    private static final Log LOG = LogFactory.getLog(TcpTransportFactory.class);
+    private static final Logger LOG = LoggerFactory.getLogger(TcpTransportFactory.class);
 
     public TransportServer doBind(final URI location) throws IOException {
         try {

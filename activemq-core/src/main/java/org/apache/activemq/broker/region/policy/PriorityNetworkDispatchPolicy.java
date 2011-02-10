@@ -25,8 +25,8 @@ import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.filter.MessageEvaluationContext;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * dispatch policy that ignores lower priority duplicate network consumers,
@@ -36,7 +36,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class PriorityNetworkDispatchPolicy extends SimpleDispatchPolicy {
 
-    private static final Log LOG = LogFactory.getLog(PriorityNetworkDispatchPolicy.class);
+    private static final Logger LOG = LoggerFactory.getLogger(PriorityNetworkDispatchPolicy.class);
     @Override
     public boolean dispatch(MessageReference node,
             MessageEvaluationContext msgContext,

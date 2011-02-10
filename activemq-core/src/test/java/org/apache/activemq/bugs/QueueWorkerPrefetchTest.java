@@ -37,15 +37,15 @@ import junit.framework.TestCase;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.ActiveMQPrefetchPolicy;
 import org.apache.activemq.broker.BrokerService;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Test case demonstrating situation where messages are not delivered to consumers.
  */
 public class QueueWorkerPrefetchTest extends TestCase implements MessageListener
 {
-	 private static final Log LOG = LogFactory.getLog(QueueWorkerPrefetchTest.class);
+	 private static final Logger LOG = LoggerFactory.getLogger(QueueWorkerPrefetchTest.class);
     private static final int BATCH_SIZE = 10;
     private static final long WAIT_TIMEOUT = 1000*10;
 

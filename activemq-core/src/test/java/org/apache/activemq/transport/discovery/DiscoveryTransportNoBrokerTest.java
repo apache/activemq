@@ -31,12 +31,12 @@ import org.apache.activemq.command.DiscoveryEvent;
 import org.apache.activemq.transport.StubCompositeTransport;
 import org.apache.activemq.util.URISupport;
 import org.apache.activemq.util.URISupport.CompositeData;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class DiscoveryTransportNoBrokerTest extends CombinationTestSupport {
 
-    private static final Log LOG = LogFactory.getLog(DiscoveryTransportNoBrokerTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(DiscoveryTransportNoBrokerTest.class);
 
     public void testNoExtraThreads() throws Exception {
         BrokerService broker = new BrokerService();

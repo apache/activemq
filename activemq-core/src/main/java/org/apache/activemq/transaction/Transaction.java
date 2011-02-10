@@ -26,7 +26,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.FutureTask;
 import javax.transaction.xa.XAException;
 import org.apache.activemq.command.TransactionId;
-import org.apache.commons.logging.Log;
+import org.slf4j.Logger;
 
 /**
  * Keeps track of all the actions the need to be done when a transaction does a
@@ -131,7 +131,7 @@ public abstract class Transaction {
 
     public abstract TransactionId getTransactionId();
 
-    public abstract Log getLog();
+    public abstract Logger getLog();
     
     public boolean isPrepared() {
         return getState() == PREPARED_STATE;

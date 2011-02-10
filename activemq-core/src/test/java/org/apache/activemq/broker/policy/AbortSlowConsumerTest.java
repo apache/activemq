@@ -26,8 +26,8 @@ import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.util.MessageIdList;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jms.Connection;
 import javax.jms.ExceptionListener;
@@ -45,7 +45,7 @@ import java.util.concurrent.TimeUnit;
 
 public class AbortSlowConsumerTest extends JmsMultipleClientsTestSupport implements ExceptionListener {
 
-    private static final Log LOG = LogFactory.getLog(AbortSlowConsumerTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(AbortSlowConsumerTest.class);
 
     AbortSlowConsumerStrategy underTest;
 

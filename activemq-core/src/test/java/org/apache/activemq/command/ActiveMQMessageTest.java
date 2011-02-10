@@ -31,15 +31,15 @@ import org.apache.activemq.openwire.OpenWireFormat;
 import org.apache.activemq.state.CommandVisitor;
 import org.apache.activemq.util.ByteSequence;
 import org.apache.activemq.wireformat.WireFormat;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @version $Revision$
  */
 public class ActiveMQMessageTest extends TestCase {
 
-    private static final Log LOG = LogFactory.getLog(ActiveMQMessageTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ActiveMQMessageTest.class);
 
     protected boolean readOnlyMessage;
 

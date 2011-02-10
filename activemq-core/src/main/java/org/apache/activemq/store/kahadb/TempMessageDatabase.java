@@ -39,8 +39,8 @@ import org.apache.activemq.store.kahadb.data.KahaRemoveDestinationCommand;
 import org.apache.activemq.store.kahadb.data.KahaRemoveMessageCommand;
 import org.apache.activemq.store.kahadb.data.KahaSubscriptionCommand;
 import org.apache.activemq.util.ByteSequence;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.kahadb.index.BTreeIndex;
 import org.apache.kahadb.page.PageFile;
 import org.apache.kahadb.page.Transaction;
@@ -51,7 +51,7 @@ import org.apache.kahadb.util.VariableMarshaller;
 
 public class TempMessageDatabase {
 
-    private static final Log LOG = LogFactory.getLog(TempMessageDatabase.class);
+    private static final Logger LOG = LoggerFactory.getLogger(TempMessageDatabase.class);
 
     public static final int CLOSED_STATE = 1;
     public static final int OPEN_STATE = 2;

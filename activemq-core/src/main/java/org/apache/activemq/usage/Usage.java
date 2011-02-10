@@ -24,8 +24,8 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.activemq.Service;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Used to keep track of how much of something is being used so that a
@@ -37,7 +37,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public abstract class Usage<T extends Usage> implements Service {
 
-    private static final Log LOG = LogFactory.getLog(Usage.class);
+    private static final Logger LOG = LoggerFactory.getLogger(Usage.class);
     protected final Object usageMutex = new Object();
     protected int percentUsage;
     protected T parent;

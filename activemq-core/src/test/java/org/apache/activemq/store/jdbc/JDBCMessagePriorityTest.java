@@ -34,13 +34,13 @@ import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.store.MessagePriorityTest;
 import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.util.Wait;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.derby.jdbc.EmbeddedDataSource;
 
 public class JDBCMessagePriorityTest extends MessagePriorityTest {
 
-    private static final Log LOG = LogFactory.getLog(JDBCMessagePriorityTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(JDBCMessagePriorityTest.class);
     EmbeddedDataSource dataSource;
 
     @Override

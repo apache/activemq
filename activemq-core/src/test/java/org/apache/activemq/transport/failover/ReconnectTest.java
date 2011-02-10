@@ -37,8 +37,8 @@ import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.transport.TransportListener;
 import org.apache.activemq.transport.mock.MockTransport;
 import org.apache.activemq.util.ServiceStopper;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @version $Revision: 1.1 $
@@ -48,7 +48,7 @@ public class ReconnectTest extends TestCase {
     public static final int MESSAGES_PER_ITTERATION = 10;
     public static final int WORKER_COUNT = 10;
 
-    private static final Log LOG = LogFactory.getLog(ReconnectTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ReconnectTest.class);
 
     private BrokerService bs;
     private URI tcpUri;

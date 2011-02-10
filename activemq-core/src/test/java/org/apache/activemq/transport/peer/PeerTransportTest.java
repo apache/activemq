@@ -36,8 +36,8 @@ import org.apache.activemq.command.ActiveMQTextMessage;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.util.MessageIdList;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @version $Revision: 1.1.1.1 $
@@ -45,7 +45,7 @@ import org.apache.commons.logging.LogFactory;
 public class PeerTransportTest extends TestCase {
     protected static final int MESSAGE_COUNT = 50;
     protected static final int NUMBER_IN_CLUSTER = 3;
-    private static final Log LOG = LogFactory.getLog(PeerTransportTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(PeerTransportTest.class);
     
     protected ActiveMQDestination destination;
     protected boolean topic = true;

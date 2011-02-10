@@ -22,8 +22,8 @@ import java.util.Collections;
 
 import junit.framework.TestCase;
 import org.apache.activemq.kaha.impl.async.JournalFacade.RecordLocationFacade;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Tests the Location Class
@@ -31,7 +31,7 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision: 1.1 $
  */
 public class LocationTest extends TestCase {
-    private static final transient Log LOG = LogFactory.getLog(LocationTest.class);
+    private static final transient Logger LOG = LoggerFactory.getLogger(LocationTest.class);
 
     @SuppressWarnings("unchecked")
     public synchronized void testRecordLocationImplComparison() throws IOException {
@@ -54,7 +54,7 @@ public class LocationTest extends TestCase {
         Collections.sort(l);
 
         // Did they get sorted to the correct order?
-        LOG.debug(l.get(0));
+        LOG.debug(l.get(0).toString());
         assertSame(l.get(0).getLocation(), l1);
         assertSame(l.get(1).getLocation(), l2);
         assertSame(l.get(2).getLocation(), l3);

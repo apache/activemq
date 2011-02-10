@@ -43,11 +43,11 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.jmx.BrokerViewMBean;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTextMessage;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class StompTest extends CombinationTestSupport {
-    private static final Log LOG = LogFactory.getLog(StompTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(StompTest.class);
 
     protected String bindAddress = "stomp://localhost:61613";
     protected String confUri = "xbean:org/apache/activemq/transport/stomp/stomp-auth-broker.xml";

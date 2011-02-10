@@ -25,12 +25,12 @@ import junit.framework.TestCase;
 import org.apache.activemq.broker.BrokerPlugin;
 import org.apache.activemq.broker.BrokerPluginSupport;
 import org.apache.activemq.broker.BrokerService;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class MasterSlaveSlaveDieTest extends TestCase {
     
-    private static final Log LOG = LogFactory.getLog(MasterSlaveSlaveDieTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(MasterSlaveSlaveDieTest.class);
 
     private final AtomicBoolean pluginStopped = new AtomicBoolean(false);
     class Plugin extends BrokerPluginSupport {

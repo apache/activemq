@@ -21,8 +21,8 @@ import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.context.support.WebApplicationContextUtils;
 import org.springframework.web.context.support.XmlWebApplicationContext;
@@ -34,7 +34,7 @@ import org.springframework.web.context.support.XmlWebApplicationContext;
  */
 public class WebConsoleStarter implements ServletContextListener {
     
-    private static final Log LOG = LogFactory.getLog(WebConsoleStarter.class);
+    private static final Logger LOG = LoggerFactory.getLogger(WebConsoleStarter.class);
 
     public void contextInitialized(ServletContextEvent event) {
         LOG.debug("Initializing ActiveMQ WebConsole...");

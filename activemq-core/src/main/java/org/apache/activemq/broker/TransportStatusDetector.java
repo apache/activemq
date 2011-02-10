@@ -23,8 +23,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.activemq.Service;
 import org.apache.activemq.ThreadPriorities;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Used to provide information on the status of the Connection
@@ -32,7 +32,7 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision: 1.5 $
  */
 public class TransportStatusDetector implements Service, Runnable {
-    private static final Log LOG = LogFactory.getLog(TransportStatusDetector.class);
+    private static final Logger LOG = LoggerFactory.getLogger(TransportStatusDetector.class);
     private TransportConnector connector;
     private Set<TransportConnection> collectionCandidates = new CopyOnWriteArraySet<TransportConnection>();
     private AtomicBoolean started = new AtomicBoolean(false);

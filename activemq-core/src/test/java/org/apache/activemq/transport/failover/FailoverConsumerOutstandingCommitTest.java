@@ -46,14 +46,14 @@ import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.TransactionId;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.junit.After;
 import org.junit.Test;
 
 public class FailoverConsumerOutstandingCommitTest {
 	
-    private static final Log LOG = LogFactory.getLog(FailoverConsumerOutstandingCommitTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(FailoverConsumerOutstandingCommitTest.class);
 	private static final String QUEUE_NAME = "FailoverWithOutstandingCommit";
     private static final String MESSAGE_TEXT = "Test message ";
 	private String url = "tcp://localhost:61616";

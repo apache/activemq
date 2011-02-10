@@ -19,11 +19,11 @@ package org.apache.activemq.usecases;
 import javax.jms.JMSException;
 import javax.jms.Message;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ConsumeQueuePrefetchTest extends ConsumeTopicPrefetchTest {
-    private static final Log LOG = LogFactory.getLog(ConsumeQueuePrefetchTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ConsumeQueuePrefetchTest.class);
     
     protected void setUp() throws Exception {
         topic = false;

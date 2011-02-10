@@ -21,14 +21,14 @@ import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.Message;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @version $Revision: 1.3 $
  */
 public class SlowConsumer extends PerfConsumer {
-    private static final transient Log LOG = LogFactory.getLog(SlowConsumer.class);
+    private static final transient Logger LOG = LoggerFactory.getLogger(SlowConsumer.class);
 
     public SlowConsumer(ConnectionFactory fac, Destination dest, String consumerName) throws JMSException {
         super(fac, dest, consumerName);

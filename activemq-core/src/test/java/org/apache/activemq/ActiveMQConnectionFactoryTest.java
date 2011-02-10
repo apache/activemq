@@ -30,11 +30,11 @@ import javax.jms.Session;
 import org.apache.activemq.broker.BrokerRegistry;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ActiveMQConnectionFactoryTest extends CombinationTestSupport {
-    private static final Log LOG = LogFactory.getLog(ActiveMQConnectionFactoryTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ActiveMQConnectionFactoryTest.class);
 
     private ActiveMQConnection connection;
     private BrokerService broker;

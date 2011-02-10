@@ -24,15 +24,15 @@ import javax.jms.Session;
 import junit.framework.TestCase;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @version $Revision: 1.3 $
  */
 public class SimpleTopicTest extends TestCase {
 
-    private static final Log LOG = LogFactory.getLog(SimpleTopicTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(SimpleTopicTest.class);
     
     protected BrokerService broker;
     protected String clientURI="tcp://localhost:61616?wireFormat.cacheEnabled=true&wireFormat.tightEncodingEnabled=true&jms.useAsyncSend=false&wireFormat.maxInactivityDuration=0";

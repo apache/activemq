@@ -43,7 +43,7 @@ import org.apache.activemq.wireformat.WireFormat;
  */
 public class NIOTransport extends TcpTransport {
 
-    // private static final Log log = LogFactory.getLog(NIOTransport.class);
+    // private static final Logger log = LoggerFactory.getLogger(NIOTransport.class);
     private SocketChannel channel;
     private SelectorSelection selection;
     private ByteBuffer inputBuffer;

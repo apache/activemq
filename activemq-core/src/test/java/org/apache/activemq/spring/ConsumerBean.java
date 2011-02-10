@@ -23,11 +23,11 @@ import javax.jms.Message;
 import javax.jms.MessageListener;
 
 import junit.framework.Assert;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ConsumerBean extends Assert implements MessageListener {
-    private static final Log LOG = LogFactory.getLog(ConsumerBean.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ConsumerBean.class);
     private final List<Message> messages = new ArrayList<Message>();
     private boolean verbose;
 

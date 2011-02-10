@@ -34,8 +34,8 @@ import org.apache.activemq.kaha.impl.DataManager;
 import org.apache.activemq.kaha.impl.data.Item;
 import org.apache.activemq.kaha.impl.index.IndexItem;
 import org.apache.activemq.kaha.impl.index.IndexManager;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Implementation of a ListContainer
@@ -44,7 +44,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class ListContainerImpl extends BaseContainerImpl implements ListContainer {
 
-    private static final Log LOG = LogFactory.getLog(ListContainerImpl.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ListContainerImpl.class);
     protected Marshaller marshaller = Store.OBJECT_MARSHALLER;
 
     public ListContainerImpl(ContainerId id, IndexItem root, IndexManager indexManager,

@@ -16,12 +16,12 @@
  */
 package org.apache.activemq.broker.util;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class DefaultAuditLog implements AuditLog {
 
-    private static final Log LOG = LogFactory.getLog("org.apache.activemq.audit");
+    private static final Logger LOG = LoggerFactory.getLogger("org.apache.activemq.audit");
 
     public void log(AuditLogEntry entry) {
          LOG.info(entry.toString());

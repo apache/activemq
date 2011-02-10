@@ -72,12 +72,13 @@
     <jxta-version>2.0</jxta-version>
     <karaf-version>2.1.0</karaf-version>
     <log4j-version>1.2.14</log4j-version>
-    <nlog4j-version>1.5.2</nlog4j-version>
+    <nlog4j-version>1.5.2</nlog4j-version> <!-- TODO what's this -->
     <org-apache-derby-version>10.1.3.1</org-apache-derby-version>
     <p2psockets-version>1.1.2</p2psockets-version>
     <regexp-version>1.3</regexp-version>
     <rome-version>0.8</rome-version>
-    <slf4j-version>1.5.0</slf4j-version>
+    <!-- pax-logging (osgi) dont support slf4j 1.6.x -->
+    <slf4j-version>1.5.11</slf4j-version>
     <spring-oxm-version>1.5.8</spring-oxm-version>
     <stax-api-version>1.0.1</stax-api-version>
     <stax-version>1.2.0</stax-version>
@@ -355,11 +356,6 @@
             <artifactId>servlet-api</artifactId>
           </exclusion>
         </exclusions>
-      </dependency>
-      <dependency>
-        <groupId>commons-logging</groupId>
-        <artifactId>commons-logging-api</artifactId>
-        <version>${commons-logging-version}</version>
       </dependency>
 
       <dependency>
@@ -915,12 +911,12 @@
       </dependency>
       <dependency>
         <groupId>org.slf4j</groupId>
-        <artifactId>slf4j-jcl</artifactId>
+        <artifactId>slf4j-log4j12</artifactId>
         <version>${slf4j-version}</version>
       </dependency>
       <dependency>
         <groupId>org.slf4j</groupId>
-        <artifactId>slf4j-log4j12</artifactId>
+        <artifactId>jcl-over-slf4j</artifactId>
         <version>${slf4j-version}</version>
       </dependency>
       <dependency>

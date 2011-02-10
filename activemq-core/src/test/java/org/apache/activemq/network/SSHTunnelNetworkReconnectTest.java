@@ -24,8 +24,8 @@ import java.util.Iterator;
 
 import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Test network reconnects over SSH tunnels. This case can be especially tricky
@@ -35,7 +35,7 @@ import org.apache.commons.logging.LogFactory;
  * @author chirino
  */
 public class SSHTunnelNetworkReconnectTest extends NetworkReconnectTest {
-    private static final transient Log LOG = LogFactory.getLog(SSHTunnelNetworkReconnectTest.class);
+    private static final transient Logger LOG = LoggerFactory.getLogger(SSHTunnelNetworkReconnectTest.class);
 
     ArrayList processes = new ArrayList();
 

@@ -25,8 +25,8 @@ import javax.resource.spi.ManagedConnection;
 import javax.resource.spi.ManagedConnectionFactory;
 import javax.security.auth.Subject;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A simple implementation of a ConnectionManager. An Application Server will
@@ -38,7 +38,7 @@ public class SimpleConnectionManager implements ConnectionManager, ConnectionEve
 
     private static final long serialVersionUID = -7662970495944876239L;
 
-    private static final Log LOG = LogFactory.getLog(SimpleConnectionManager.class);
+    private static final Logger LOG = LoggerFactory.getLogger(SimpleConnectionManager.class);
 
     /**
      * @see javax.resource.spi.ConnectionManager#allocateConnection(javax.resource.spi.ManagedConnectionFactory,

@@ -37,8 +37,8 @@ import javax.jms.MessageProducer;
 import javax.jms.Session;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A simple queue sender which does not use JNDI
@@ -47,7 +47,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public final class DefaultQueueSender {
 
-    private static final Log LOG = LogFactory.getLog(DefaultQueueSender.class);
+    private static final Logger LOG = LoggerFactory.getLogger(DefaultQueueSender.class);
 
     private DefaultQueueSender() {    
     }

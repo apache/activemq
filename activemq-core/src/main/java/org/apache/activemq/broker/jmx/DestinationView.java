@@ -48,11 +48,11 @@ import org.apache.activemq.command.Message;
 import org.apache.activemq.filter.BooleanExpression;
 import org.apache.activemq.filter.MessageEvaluationContext;
 import org.apache.activemq.selector.SelectorParser;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class DestinationView implements DestinationViewMBean {
-    private static final Log LOG = LogFactory.getLog(DestinationViewMBean.class);
+    private static final Logger LOG = LoggerFactory.getLogger(DestinationViewMBean.class);
     protected final Destination destination;
     protected final ManagedRegionBroker broker;
 

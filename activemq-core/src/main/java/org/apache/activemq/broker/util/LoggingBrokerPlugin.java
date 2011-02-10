@@ -42,8 +42,8 @@ import org.apache.activemq.command.Response;
 import org.apache.activemq.command.SessionInfo;
 import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.usage.Usage;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A simple Broker intercepter which allows you to enable/disable logging.
@@ -53,7 +53,7 @@ import org.apache.commons.logging.LogFactory;
 
 public class LoggingBrokerPlugin extends BrokerPluginSupport {
 
-    private static final Log LOG = LogFactory.getLog(LoggingBrokerPlugin.class);
+    private static final Logger LOG = LoggerFactory.getLogger(LoggingBrokerPlugin.class);
 
     private boolean logAll = false;
     private boolean logMessageEvents = false;
@@ -78,7 +78,7 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport {
     }
 
     /**
-     * Log all Events that go through the Plugin
+     * Logger all Events that go through the Plugin
      */
     public void setLogAll(boolean logAll) {
         this.logAll = logAll;
@@ -89,7 +89,7 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport {
     }
 
     /**
-     * Log Events that are related to message processing
+     * Logger Events that are related to message processing
      */
     public void setLogMessageEvents(boolean logMessageEvents) {
         this.logMessageEvents = logMessageEvents;
@@ -100,7 +100,7 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport {
     }
 
     /**
-     * Log Events that are related to connections and sessions
+     * Logger Events that are related to connections and sessions
      */
     public void setLogConnectionEvents(boolean logConnectionEvents) {
         this.logConnectionEvents = logConnectionEvents;
@@ -111,7 +111,7 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport {
     }
 
     /**
-     * Log Events that are related to transaction processing
+     * Logger Events that are related to transaction processing
      */
     public void setLogTransactionEvents(boolean logTransactionEvents) {
         this.logTransactionEvents = logTransactionEvents;
@@ -122,7 +122,7 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport {
     }
 
     /**
-     * Log Events that are related to Consumers
+     * Logger Events that are related to Consumers
      */
     public void setLogConsumerEvents(boolean logConsumerEvents) {
         this.logConsumerEvents = logConsumerEvents;
@@ -133,7 +133,7 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport {
     }
 
     /**
-     * Log Events that are related to Producers
+     * Logger Events that are related to Producers
      */
     public void setLogProducerEvents(boolean logProducerEvents) {
         this.logProducerEvents = logProducerEvents;
@@ -144,7 +144,7 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport {
     }
 
     /**
-     * Log Events that are normally internal to the broker
+     * Logger Events that are normally internal to the broker
      */
     public void setLogInternalEvents(boolean logInternalEvents) {
         this.logInternalEvents = logInternalEvents;
@@ -558,7 +558,7 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport {
             buf.append(") Session(");
             buf.append(subs.getConsumerInfo().getConsumerId().getSessionId());
             buf.append(")");
-            LOG.info(buf);
+            LOG.info(buf.toString());
         }
         super.slowConsumer(context, destination, subs);
     }

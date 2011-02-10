@@ -35,15 +35,15 @@ import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.network.NetworkConnector;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @version $Revision: 1.1 $
  */
 public class ConnectorXBeanConfigTest extends TestCase {
 
-    private static final Log LOG = LogFactory.getLog(ConnectorXBeanConfigTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ConnectorXBeanConfigTest.class);
     protected BrokerService brokerService;
 
     public void testConnectorConfiguredCorrectly() throws Exception {

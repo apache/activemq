@@ -48,8 +48,8 @@ import org.apache.activemq.command.TransactionInfo;
 import org.apache.activemq.transport.MutexTransport;
 import org.apache.activemq.transport.ResponseCorrelator;
 import org.apache.activemq.transport.Transport;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * The Message Broker which passes messages to a slave
@@ -58,7 +58,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class MasterBroker extends InsertableMutableBrokerFilter {
 
-    private static final Log LOG = LogFactory.getLog(MasterBroker.class);
+    private static final Logger LOG = LoggerFactory.getLogger(MasterBroker.class);
     private Transport slave;
     private AtomicBoolean started = new AtomicBoolean(false);
 

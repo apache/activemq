@@ -21,12 +21,12 @@ import java.io.IOException;
 
 import org.apache.activemq.broker.ConnectionContext;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 class BrokenPersistenceAdapter extends JDBCPersistenceAdapter {
 
-    private final Log LOG = LogFactory.getLog(BrokenPersistenceAdapter.class);
+    private final Logger LOG = LoggerFactory.getLogger(BrokenPersistenceAdapter.class);
 
     private boolean shouldBreak = false;
 

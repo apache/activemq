@@ -49,8 +49,8 @@ import org.apache.activemq.transport.tcp.TcpTransport;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.ServiceStopper;
 import org.apache.activemq.wireformat.WireFormat;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.jabber.etherx.streams.Features;
 
 /**
@@ -59,7 +59,7 @@ import org.jabber.etherx.streams.Features;
 public class XmppTransport extends TcpTransport {
     protected static final QName ATTRIBUTE_TO = new QName("to");
 
-    private static final transient Log LOG = LogFactory.getLog(XmppTransport.class);
+    private static final transient Logger LOG = LoggerFactory.getLogger(XmppTransport.class);
 
     protected OutputStream outputStream;
     protected InputStream inputStream;

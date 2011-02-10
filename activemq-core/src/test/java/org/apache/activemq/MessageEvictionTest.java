@@ -53,13 +53,13 @@ import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.util.Wait;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.junit.After;
 import org.junit.Test;
 
 public class MessageEvictionTest {
-    static final Log LOG = LogFactory.getLog(MessageEvictionTest.class);
+    static final Logger LOG = LoggerFactory.getLogger(MessageEvictionTest.class);
     private BrokerService broker;
     private ConnectionFactory connectionFactory;
     Connection connection;

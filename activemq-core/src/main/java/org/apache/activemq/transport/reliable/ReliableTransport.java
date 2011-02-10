@@ -28,8 +28,8 @@ import org.apache.activemq.transport.FutureResponse;
 import org.apache.activemq.transport.ResponseCorrelator;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.udp.UdpTransport;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This interceptor deals with out of order commands together with being able to
@@ -38,7 +38,7 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision$
  */
 public class ReliableTransport extends ResponseCorrelator {
-    private static final Log LOG = LogFactory.getLog(ReliableTransport.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ReliableTransport.class);
 
     private ReplayStrategy replayStrategy;
     private SortedSet<Command> commands = new TreeSet<Command>(new CommandIdComparator());

@@ -61,8 +61,8 @@ import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportFactory;
 import org.apache.activemq.util.Wait;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This class duplicates most of the functionality in {@link NetworkTestSupport} 
@@ -75,7 +75,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class BrokerNetworkWithStuckMessagesTest extends TestCase /*NetworkTestSupport*/ {
     
-    private static final Log LOG = LogFactory.getLog(BrokerNetworkWithStuckMessagesTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(BrokerNetworkWithStuckMessagesTest.class);
     
     private BrokerService localBroker; 
     private BrokerService remoteBroker; 

@@ -25,15 +25,15 @@ import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.test.JmsTopicSendReceiveTest;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * 
  * @version $Revision: 564271 $
  */
 public class PluginBrokerTest extends JmsTopicSendReceiveTest {
-    private static final Log LOG = LogFactory.getLog(PluginBrokerTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(PluginBrokerTest.class);
     private BrokerService broker;
 
     protected void setUp() throws Exception {

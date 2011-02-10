@@ -17,8 +17,8 @@
 
 package org.apache.activemq.spring;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -46,7 +46,7 @@ import java.util.Arrays;
 @TransactionConfiguration(transactionManager = "transactionManager", defaultRollback = false)
 public class ParallelXATransactionTest {
 
-    private static final Log LOG = LogFactory.getLog(ParallelXATransactionTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ParallelXATransactionTest.class);
 
     @Resource(name = "transactionManager")
     PlatformTransactionManager txManager = null;

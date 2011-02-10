@@ -25,8 +25,8 @@ import org.apache.activemq.transport.CompositeTransport;
 import org.apache.activemq.transport.TransportFilter;
 import org.apache.activemq.util.ServiceStopper;
 import org.apache.activemq.util.URISupport;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A {@link ReliableTransportChannel} which uses a {@link DiscoveryAgent} to
@@ -36,7 +36,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class DiscoveryTransport extends TransportFilter implements DiscoveryListener {
 
-    private static final Log LOG = LogFactory.getLog(DiscoveryTransport.class);
+    private static final Logger LOG = LoggerFactory.getLogger(DiscoveryTransport.class);
 
     private final CompositeTransport next;
     private DiscoveryAgent discoveryAgent;

@@ -23,8 +23,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.activemq.kaha.Marshaller;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A Page within a HashPage
@@ -33,7 +33,7 @@ import org.apache.commons.logging.LogFactory;
  */
 class HashPage {
     static final int PAGE_HEADER_SIZE = 17;
-    private static final transient Log LOG = LogFactory.getLog(HashPage.class);
+    private static final transient Logger LOG = LoggerFactory.getLogger(HashPage.class);
 
     private int maximumEntries;
     private long id;

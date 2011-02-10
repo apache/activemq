@@ -23,8 +23,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.command.ConsumerInfo;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Represents a network bridge interface
@@ -32,7 +32,7 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision: 1.1 $
  */
 public class DemandSubscription {
-    private static final Log LOG = LogFactory.getLog(DemandSubscription.class);
+    private static final Logger LOG = LoggerFactory.getLogger(DemandSubscription.class);
 
     private final ConsumerInfo remoteInfo;
     private final ConsumerInfo localInfo;

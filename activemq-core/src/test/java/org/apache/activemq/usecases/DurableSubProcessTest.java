@@ -21,8 +21,8 @@ import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.junit.Test;
 
 import javax.jms.*;
@@ -39,7 +39,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 // see https://issues.apache.org/activemq/browse/AMQ-2985
 // this demonstrated receiving old messages eventually along with validating order receipt
 public class DurableSubProcessTest extends org.apache.activemq.TestSupport  {
-    private static final Log LOG = LogFactory.getLog(DurableSubProcessTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(DurableSubProcessTest.class);
     public static final long RUNTIME = 4 * 60 * 1000;
 
     public static final int SERVER_SLEEP = 2 * 1000; // max

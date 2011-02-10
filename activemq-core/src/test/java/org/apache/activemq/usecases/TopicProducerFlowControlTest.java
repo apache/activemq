@@ -33,11 +33,11 @@ import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.util.Wait;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class TopicProducerFlowControlTest extends TestCase implements MessageListener {
-    private static final Log LOG = LogFactory.getLog(TopicProducerFlowControlTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(TopicProducerFlowControlTest.class);
     private static final String brokerName = "testBroker";
     private static final String brokerUrl = "vm://" + brokerName;
     private static final int destinationMemLimit = 2097152; // 2MB

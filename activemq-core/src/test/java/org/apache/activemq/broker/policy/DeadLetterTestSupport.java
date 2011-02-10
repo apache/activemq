@@ -36,14 +36,14 @@ import org.apache.activemq.broker.region.RegionBroker;
 import org.apache.activemq.broker.region.policy.DeadLetterStrategy;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @version $Revision$
  */
 public abstract class DeadLetterTestSupport extends TestSupport {
-    private static final Log LOG = LogFactory.getLog(DeadLetterTestSupport.class);
+    private static final Logger LOG = LoggerFactory.getLogger(DeadLetterTestSupport.class);
 
     protected int messageCount = 10;
     protected long timeToLive;

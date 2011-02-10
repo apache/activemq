@@ -18,8 +18,8 @@ package org.apache.activemq.command;
 
 import javax.jms.JMSException;
 import org.apache.activemq.ActiveMQConnection;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @openwire:marshaller
@@ -27,7 +27,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public abstract class ActiveMQTempDestination extends ActiveMQDestination {
 
-    private static final Log LOG = LogFactory.getLog(ActiveMQTempDestination.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ActiveMQTempDestination.class);
     protected transient ActiveMQConnection connection;
     protected transient String connectionId;
     protected transient int sequenceId;

@@ -24,11 +24,11 @@ import javax.jms.MessageConsumer;
 import org.apache.activemq.JmsMultipleBrokersTestSupport;
 import org.apache.activemq.util.MessageIdList;
 import org.apache.activemq.util.Wait;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class TwoBrokerNetworkLoadBalanceTest extends JmsMultipleBrokersTestSupport {
-    protected static final Log LOG = LogFactory.getLog(TwoBrokerNetworkLoadBalanceTest.class);
+    protected static final Logger LOG = LoggerFactory.getLogger(TwoBrokerNetworkLoadBalanceTest.class);
     public void testLoadBalancing() throws Exception {
         bridgeBrokers("BrokerA", "BrokerB");
         bridgeBrokers("BrokerB", "BrokerA");

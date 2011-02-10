@@ -37,11 +37,11 @@ import org.apache.activemq.transport.stomp.Stomp;
 import org.apache.activemq.transport.stomp.StompConnection;
 import org.apache.activemq.util.SocketProxy;
 import org.apache.activemq.util.URISupport;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class SoWriteTimeoutTest extends JmsTestSupport {
-    private static final Log LOG = LogFactory.getLog(SoWriteTimeoutTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(SoWriteTimeoutTest.class);
     
     final int receiveBufferSize = 16*1024;
     public String brokerTransportScheme = "nio";

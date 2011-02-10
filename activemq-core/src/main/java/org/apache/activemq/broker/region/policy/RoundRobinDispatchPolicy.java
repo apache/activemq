@@ -21,8 +21,8 @@ import java.util.List;
 import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.filter.MessageEvaluationContext;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Simple dispatch policy that sends a message to every subscription that
@@ -32,7 +32,7 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision$
  */
 public class RoundRobinDispatchPolicy implements DispatchPolicy {
-    static final Log LOG = LogFactory.getLog(RoundRobinDispatchPolicy.class);
+    static final Logger LOG = LoggerFactory.getLogger(RoundRobinDispatchPolicy.class);
 
     /**
      * @param node

@@ -21,8 +21,8 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.network.NetworkConnector;
 import org.apache.activemq.util.MessageIdList;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 import javax.jms.MessageConsumer;
@@ -31,7 +31,7 @@ import java.net.URI;
 
 public class AMQ2927Test extends JmsMultipleBrokersTestSupport {
 
-    private static final Log LOG = LogFactory.getLog(AMQ2927Test.class);
+    private static final Logger LOG = LoggerFactory.getLogger(AMQ2927Test.class);
 
     ActiveMQQueue queue = new ActiveMQQueue("TEST");
 

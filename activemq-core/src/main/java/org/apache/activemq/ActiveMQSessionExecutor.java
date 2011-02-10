@@ -24,8 +24,8 @@ import org.apache.activemq.command.MessageDispatch;
 import org.apache.activemq.thread.Task;
 import org.apache.activemq.thread.TaskRunner;
 import org.apache.activemq.util.JMSExceptionSupport;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A utility class used by the Session for dispatching messages asynchronously
@@ -35,7 +35,7 @@ import org.apache.commons.logging.LogFactory;
  * @see javax.jms.Session
  */
 public class ActiveMQSessionExecutor implements Task {
-    private static final Log LOG = LogFactory.getLog(ActiveMQSessionExecutor.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ActiveMQSessionExecutor.class);
 
     private final ActiveMQSession session;
     private final MessageDispatchChannel messageQueue;

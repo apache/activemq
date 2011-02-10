@@ -23,12 +23,12 @@ import javax.jms.JMSException;
 import javax.jms.Session;
 
 import org.apache.activemq.tool.properties.JmsClientProperties;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public abstract class AbstractJmsClient {
 
-    private static final Log LOG = LogFactory.getLog(AbstractJmsClient.class);
+    private static final Logger LOG = LoggerFactory.getLogger(AbstractJmsClient.class);
 
     protected ConnectionFactory factory;
     protected Connection jmsConnection;

@@ -28,8 +28,8 @@ import javax.resource.spi.ManagedConnection;
 import javax.resource.spi.ManagedConnectionFactory;
 import javax.security.auth.Subject;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A simple implementation of a ConnectionManager that can be extended so that
@@ -41,7 +41,7 @@ public class ConnectionManagerAdapter implements ConnectionManager, ConnectionEv
 
     private static final long serialVersionUID = 5205646563916645831L;
 
-    private static final Log LOG = LogFactory.getLog(ConnectionManagerAdapter.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ConnectionManagerAdapter.class);
     ArrayList<ConnectionEventListener> listners = new ArrayList<ConnectionEventListener>();
     ArrayList<ManagedConnection> connections = new ArrayList<ManagedConnection>();
 

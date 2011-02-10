@@ -37,8 +37,8 @@ import javax.naming.NotContextException;
 import javax.naming.OperationNotSupportedException;
 import javax.naming.Reference;
 import javax.naming.spi.NamingManager;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A read-only Context <p/> This version assumes it and all its subcontext are
@@ -62,7 +62,7 @@ import org.apache.commons.logging.LogFactory;
  */
 @SuppressWarnings("unchecked")
 public class ReadOnlyContext implements Context, Serializable {
-    private static final Log LOG = LogFactory.getLog(ReadOnlyContext.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ReadOnlyContext.class);
     public static final String SEPARATOR = "/";
     protected static final NameParser NAME_PARSER = new NameParserImpl();
     private static final long serialVersionUID = -5754338187296859149L;

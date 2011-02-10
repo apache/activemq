@@ -25,8 +25,8 @@ import org.apache.activemq.broker.region.DestinationInterceptor;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.command.Message;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Creates <a href="http://activemq.org/site/mirrored-queues.html">Mirrored
@@ -36,7 +36,7 @@ import org.apache.commons.logging.LogFactory;
  * @org.apache.xbean.XBean
  */
 public class MirroredQueue implements DestinationInterceptor, BrokerServiceAware {
-    private static final transient Log LOG = LogFactory.getLog(MirroredQueue.class);
+    private static final transient Logger LOG = LoggerFactory.getLogger(MirroredQueue.class);
     private String prefix = "VirtualTopic.Mirror.";
     private String postfix = "";
     private boolean copyMessage = true;

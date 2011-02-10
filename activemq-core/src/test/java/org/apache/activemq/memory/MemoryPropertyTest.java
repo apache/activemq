@@ -22,8 +22,8 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.xbean.BrokerFactoryBean;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 
@@ -31,7 +31,7 @@ import junit.framework.TestCase;
 
 public class MemoryPropertyTest extends TestCase {
 
-    private static final transient Log LOG = LogFactory.getLog(MemoryPropertyTest.class);
+    private static final transient Logger LOG = LoggerFactory.getLogger(MemoryPropertyTest.class);
     BrokerService broker;
 
     

@@ -43,8 +43,8 @@ import org.apache.activemq.transport.Transport;
 import org.apache.activemq.util.IdGenerator;
 import org.apache.activemq.util.ServiceStopper;
 import org.apache.activemq.util.ServiceSupport;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Forwards all messages from the local broker to the remote broker.
@@ -56,7 +56,7 @@ import org.apache.commons.logging.LogFactory;
 public class ForwardingBridge implements Service {
 
     private static final IdGenerator ID_GENERATOR = new IdGenerator();
-    private static final Log LOG = LogFactory.getLog(ForwardingBridge.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ForwardingBridge.class);
 
     final AtomicLong enqueueCounter = new AtomicLong();
     final AtomicLong dequeueCounter = new AtomicLong();

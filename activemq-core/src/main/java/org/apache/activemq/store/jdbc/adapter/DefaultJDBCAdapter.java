@@ -38,8 +38,8 @@ import org.apache.activemq.store.jdbc.JDBCMessageRecoveryListener;
 import org.apache.activemq.store.jdbc.JDBCPersistenceAdapter;
 import org.apache.activemq.store.jdbc.Statements;
 import org.apache.activemq.store.jdbc.TransactionContext;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Implements all the default JDBC operations that are used by the JDBCPersistenceAdapter. <p/> sub-classing is
@@ -55,7 +55,7 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision: 1.10 $
  */
 public class DefaultJDBCAdapter implements JDBCAdapter {
-    private static final Log LOG = LogFactory.getLog(DefaultJDBCAdapter.class);
+    private static final Logger LOG = LoggerFactory.getLogger(DefaultJDBCAdapter.class);
     public static final int MAX_ROWS = 10000;
     protected Statements statements;
     protected boolean batchStatments = true;

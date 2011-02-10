@@ -32,8 +32,8 @@ import org.apache.activemq.openwire.OpenWireFormat;
 import org.apache.activemq.transport.reliable.ReplayBuffer;
 import org.apache.activemq.util.ByteArrayInputStream;
 import org.apache.activemq.util.ByteArrayOutputStream;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A strategy for reading datagrams and de-fragmenting them together.
@@ -42,7 +42,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class CommandDatagramSocket extends CommandChannelSupport {
 
-    private static final Log LOG = LogFactory.getLog(CommandDatagramSocket.class);
+    private static final Logger LOG = LoggerFactory.getLogger(CommandDatagramSocket.class);
 
     private DatagramSocket channel;
     private Object readLock = new Object();

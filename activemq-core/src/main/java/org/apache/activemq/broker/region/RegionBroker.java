@@ -67,8 +67,8 @@ import org.apache.activemq.util.IdGenerator;
 import org.apache.activemq.util.InetAddressUtil;
 import org.apache.activemq.util.LongSequenceGenerator;
 import org.apache.activemq.util.ServiceStopper;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Routes Broker operations to the correct messaging regions for processing.
@@ -77,7 +77,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class RegionBroker extends EmptyBroker {
     public static final String ORIGINAL_EXPIRATION = "originalExpiration";
-    private static final Log LOG = LogFactory.getLog(RegionBroker.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RegionBroker.class);
     private static final IdGenerator BROKER_ID_GENERATOR = new IdGenerator();
 
     protected final DestinationStatistics destinationStatistics = new DestinationStatistics();
@@ -861,7 +861,7 @@ public class RegionBroker extends EmptyBroker {
         try {
             return getBrokerService().getBroker();
         } catch (Exception e) {
-            LOG.fatal("Trying to get Root Broker " + e);
+            LOG.error("Trying to get Root Broker " + e);
             throw new RuntimeException("The broker from the BrokerService should not throw an exception");
         }
     }

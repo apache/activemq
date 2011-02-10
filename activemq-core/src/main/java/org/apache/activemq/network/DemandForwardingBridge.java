@@ -25,8 +25,8 @@ import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.NetworkBridgeFilter;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.util.ServiceSupport;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Forwards messages from the local broker to the remote broker based on demand.
@@ -36,7 +36,7 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision$
  */
 public class DemandForwardingBridge extends DemandForwardingBridgeSupport {
-    private static final Log LOG = LogFactory.getLog(DemandForwardingBridge.class);
+    private static final Logger LOG = LoggerFactory.getLogger(DemandForwardingBridge.class);
 
     protected final BrokerId remoteBrokerPath[] = new BrokerId[] {null};
     protected Object brokerInfoMutex = new Object();

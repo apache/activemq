@@ -19,8 +19,8 @@ package org.apache.activemq.ra;
 import javax.jms.JMSException;
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Abstract base class providing support for creating physical
@@ -31,7 +31,7 @@ import org.apache.commons.logging.LogFactory;
 public class ActiveMQConnectionSupport {
     
     private ActiveMQConnectionRequestInfo info = new ActiveMQConnectionRequestInfo();
-    protected Log log = LogFactory.getLog(getClass());
+    protected Logger log = LoggerFactory.getLogger(getClass());
     
     /**
      * Creates a factory for obtaining physical connections to an Active MQ

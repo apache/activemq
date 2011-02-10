@@ -20,12 +20,12 @@ import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.store.MessageRecoveryListener;
 import org.apache.activemq.store.MessageStore;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 final class RecoveryListenerAdapter implements MessageRecoveryListener {
 
-    private static final Log LOG = LogFactory.getLog(RecoveryListenerAdapter.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RecoveryListenerAdapter.class);
     private final MessageStore store;
     private final MessageRecoveryListener listener;
     private int count;

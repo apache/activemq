@@ -21,8 +21,8 @@ import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.BrokerFilter;
 import org.apache.activemq.broker.ProducerBrokerExchange;
 import org.apache.activemq.command.Message;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
@@ -33,7 +33,7 @@ import org.apache.commons.logging.LogFactory;
  * @org.apache.xbean.XBean element="forcePersistencyModeBroker"
  */
 public class ForcePersistencyModeBroker extends BrokerFilter{
-  public static Log log = LogFactory.getLog(ForcePersistencyModeBroker.class);
+  public static Logger log = LoggerFactory.getLogger(ForcePersistencyModeBroker.class);
   private boolean persistence = false;
   
   /**

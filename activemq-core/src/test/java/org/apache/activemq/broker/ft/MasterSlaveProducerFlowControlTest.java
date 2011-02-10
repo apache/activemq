@@ -22,11 +22,11 @@ import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.broker.region.policy.VMPendingQueueMessageStoragePolicy;
 import org.apache.activemq.broker.region.policy.VMPendingSubscriberMessageStoragePolicy;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class MasterSlaveProducerFlowControlTest extends ProducerFlowControlTest {
-    static final Log LOG = LogFactory.getLog(MasterSlaveProducerFlowControlTest.class);
+    static final Logger LOG = LoggerFactory.getLogger(MasterSlaveProducerFlowControlTest.class);
     BrokerService slave;
     protected BrokerService createBroker() throws Exception {
         BrokerService service = super.createBroker();

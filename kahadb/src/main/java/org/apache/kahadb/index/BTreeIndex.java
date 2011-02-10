@@ -23,8 +23,8 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.kahadb.page.Page;
 import org.apache.kahadb.page.PageFile;
 import org.apache.kahadb.page.Transaction;
@@ -59,7 +59,7 @@ import org.apache.kahadb.util.Marshaller;
  */
 public class BTreeIndex<Key,Value> implements Index<Key,Value> {
 
-    private static final Log LOG = LogFactory.getLog(BTreeIndex.class);
+    private static final Logger LOG = LoggerFactory.getLogger(BTreeIndex.class);
 
     /**
      * Interface used to determine the simple prefix of two keys.

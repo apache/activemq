@@ -32,14 +32,14 @@ import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.usecases.CreateLotsOfTemporaryQueuesTest;
 import org.apache.activemq.util.MessageIdList;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @version $Revision$
  */
 public class RetroactiveConsumerWithMessageQueryTest extends EmbeddedBrokerTestSupport {
-    private static final Log LOG = LogFactory.getLog(RetroactiveConsumerWithMessageQueryTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RetroactiveConsumerWithMessageQueryTest.class);
     
     protected int messageCount = 20;
     protected Connection connection;

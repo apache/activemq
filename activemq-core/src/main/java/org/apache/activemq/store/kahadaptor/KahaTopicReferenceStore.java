@@ -38,11 +38,11 @@ import org.apache.activemq.kaha.Store;
 import org.apache.activemq.kaha.StoreEntry;
 import org.apache.activemq.store.MessageRecoveryListener;
 import org.apache.activemq.store.TopicReferenceStore;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class KahaTopicReferenceStore extends KahaReferenceStore implements TopicReferenceStore {
-    private static final Log LOG = LogFactory.getLog(KahaTopicReferenceStore.class);
+    private static final Logger LOG = LoggerFactory.getLogger(KahaTopicReferenceStore.class);
     protected ListContainer<TopicSubAck> ackContainer;
     protected Map<String, TopicSubContainer> subscriberMessages = new ConcurrentHashMap<String, TopicSubContainer>();
     private MapContainer<String, SubscriptionInfo> subscriberContainer;

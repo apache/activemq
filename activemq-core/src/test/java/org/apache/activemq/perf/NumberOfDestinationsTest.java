@@ -32,15 +32,15 @@ import junit.framework.TestCase;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 /**
  * @version $Revision: 1.3 $
  */
 public class NumberOfDestinationsTest extends TestCase {
     protected static final int MESSAGE_COUNT = 1;
     protected static final int NUMBER_OF_DESTINATIONS = 100000;
-    private static final Log LOG = LogFactory.getLog(NumberOfDestinationsTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(NumberOfDestinationsTest.class);
     protected BrokerService broker;
     protected String bindAddress = "vm://localhost";
     protected int destinationCount;

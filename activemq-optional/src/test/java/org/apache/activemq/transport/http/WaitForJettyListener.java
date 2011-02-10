@@ -22,13 +22,13 @@ import java.net.URL;
 import javax.net.SocketFactory;
 
 import org.apache.activemq.util.Wait;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static junit.framework.Assert.assertTrue;
 
 public class WaitForJettyListener {
-    private static final Log LOG = LogFactory.getLog(WaitForJettyListener.class);
+    private static final Logger LOG = LoggerFactory.getLogger(WaitForJettyListener.class);
     
     public static void waitForJettySocketToAccept(String bindLocation) throws Exception {
         final URL url = new URL(bindLocation);

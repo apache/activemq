@@ -32,8 +32,8 @@ import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
 import org.apache.activemq.util.SocketProxy;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jms.Connection;
 import javax.jms.JMSException;
@@ -58,7 +58,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 // https://issues.apache.org/activemq/browse/AMQ-2590
 public class FailoverTransactionTest extends TestSupport {
 
-    private static final Log LOG = LogFactory.getLog(FailoverTransactionTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(FailoverTransactionTest.class);
     private static final String QUEUE_NAME = "FailoverWithTx";
     private String url = "tcp://localhost:61616";
     BrokerService broker;

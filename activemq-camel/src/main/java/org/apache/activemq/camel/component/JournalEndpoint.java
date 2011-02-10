@@ -36,12 +36,12 @@ import org.apache.camel.impl.DefaultConsumer;
 import org.apache.camel.impl.DefaultEndpoint;
 import org.apache.camel.impl.DefaultExchange;
 import org.apache.camel.impl.DefaultProducer;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class JournalEndpoint extends DefaultEndpoint {
 
-    private static final transient Log LOG = LogFactory.getLog(JournalEndpoint.class);
+    private static final transient Logger LOG = LoggerFactory.getLogger(JournalEndpoint.class);
 
     private final File directory;
     private final AtomicReference<DefaultConsumer> consumer = new AtomicReference<DefaultConsumer>();

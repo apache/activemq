@@ -26,12 +26,12 @@ import org.apache.activemq.thread.TaskRunner;
 import org.apache.activemq.thread.TaskRunnerFactory;
 import org.apache.activemq.usage.Usage;
 import org.apache.activemq.usage.UsageListener;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class CacheEvictionUsageListener implements UsageListener {
 
-    private static final Log LOG = LogFactory.getLog(CacheEvictionUsageListener.class);
+    private static final Logger LOG = LoggerFactory.getLogger(CacheEvictionUsageListener.class);
 
     private final List<CacheEvictor> evictors = new CopyOnWriteArrayList<CacheEvictor>();
     private final int usageHighMark;

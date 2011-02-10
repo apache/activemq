@@ -22,15 +22,15 @@ import junit.framework.TestCase;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.transport.StubTransport;
 import org.apache.activemq.transport.StubTransportListener;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @version $Revision$
  */
 public class ReliableTransportTest extends TestCase {
 
-    private static final Log LOG = LogFactory.getLog(ReliableTransportTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ReliableTransportTest.class);
 
     protected ReliableTransport transport;
     protected StubTransportListener listener = new StubTransportListener();

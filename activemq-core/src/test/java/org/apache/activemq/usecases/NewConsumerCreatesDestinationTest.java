@@ -24,15 +24,15 @@ import javax.jms.Session;
 import org.apache.activemq.EmbeddedBrokerAndConnectionTestSupport;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * 
  * @version $Revision: $
  */
 public class NewConsumerCreatesDestinationTest extends EmbeddedBrokerAndConnectionTestSupport {
-    private static final Log LOG = LogFactory.getLog(NewConsumerCreatesDestinationTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(NewConsumerCreatesDestinationTest.class);
 
     private ActiveMQQueue wildcard;
     

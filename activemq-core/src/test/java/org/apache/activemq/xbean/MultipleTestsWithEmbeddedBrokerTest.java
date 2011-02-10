@@ -20,8 +20,8 @@ import javax.jms.Connection;
 
 import org.apache.activemq.EmbeddedBrokerTestSupport;
 import org.apache.activemq.test.retroactive.RetroactiveConsumerWithMessageQueryTest;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * 
@@ -29,7 +29,7 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision$
  */
 public class MultipleTestsWithEmbeddedBrokerTest extends EmbeddedBrokerTestSupport {
-    private static final Log LOG = LogFactory.getLog(MultipleTestsWithEmbeddedBrokerTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(MultipleTestsWithEmbeddedBrokerTest.class);
 
     protected Connection connection;
 

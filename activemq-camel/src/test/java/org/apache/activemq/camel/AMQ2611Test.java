@@ -28,8 +28,8 @@ import org.apache.camel.CamelContext;
 import org.apache.camel.ProducerTemplate;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.impl.DefaultCamelContext;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class AMQ2611Test extends TestCase {
 
@@ -37,7 +37,7 @@ public class AMQ2611Test extends TestCase {
 
     private static final String QUEUE_NAME = "test.queue";
 
-    private static final Log log = LogFactory.getLog(AMQ2611Test.class);
+    private static final Logger log = LoggerFactory.getLogger(AMQ2611Test.class);
 
     private BrokerService brokerService = null;
 

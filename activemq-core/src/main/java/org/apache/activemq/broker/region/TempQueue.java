@@ -24,8 +24,8 @@ import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQTempDestination;
 import org.apache.activemq.store.MessageStore;
 import org.apache.activemq.thread.TaskRunnerFactory;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * The Queue is a List of MessageEntry objects that are dispatched to matching
@@ -34,7 +34,7 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision: 1.28 $
  */
 public class TempQueue extends Queue{
-    private static final Log LOG = LogFactory.getLog(TempQueue.class);
+    private static final Logger LOG = LoggerFactory.getLogger(TempQueue.class);
     private final ActiveMQTempDestination tempDest;
    
     

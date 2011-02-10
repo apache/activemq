@@ -35,8 +35,8 @@ import org.apache.activemq.CombinationTestSupport;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.util.Wait;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 public class AMQ2314Test extends CombinationTestSupport {
@@ -44,7 +44,7 @@ public class AMQ2314Test extends CombinationTestSupport {
     public boolean consumeAll = false;
     public int deliveryMode = DeliveryMode.NON_PERSISTENT;
     
-    private static final Log LOG = LogFactory.getLog(AMQ2314Test.class);
+    private static final Logger LOG = LoggerFactory.getLogger(AMQ2314Test.class);
     private static final int MESSAGES_COUNT = 30000;
     private static byte[]  buf = new byte[1024];
     private BrokerService broker;

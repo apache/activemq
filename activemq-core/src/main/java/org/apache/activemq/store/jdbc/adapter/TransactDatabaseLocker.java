@@ -23,8 +23,8 @@ import java.sql.SQLException;
 
 import org.apache.activemq.store.jdbc.DefaultDatabaseLocker;
 import org.apache.activemq.store.jdbc.JDBCPersistenceAdapter;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Represents an exclusive lock on a database to avoid multiple brokers running
@@ -34,7 +34,7 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision$
  */
 public class TransactDatabaseLocker extends DefaultDatabaseLocker {
-    private static final Log LOG = LogFactory.getLog(TransactDatabaseLocker.class);
+    private static final Logger LOG = LoggerFactory.getLogger(TransactDatabaseLocker.class);
     
     public TransactDatabaseLocker() {
     }

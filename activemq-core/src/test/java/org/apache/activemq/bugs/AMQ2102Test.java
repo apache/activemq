@@ -42,8 +42,8 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.CombinationTestSupport;
 import org.apache.activemq.RedeliveryPolicy;
 import org.apache.activemq.broker.BrokerService;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class AMQ2102Test extends CombinationTestSupport implements UncaughtExceptionHandler {
        
@@ -52,7 +52,7 @@ public class AMQ2102Test extends CombinationTestSupport implements UncaughtExcep
     final static int CONSUME_ALL = -1;
     
     
-    private static final Log LOG = LogFactory.getLog(AMQ2102Test.class);
+    private static final Logger LOG = LoggerFactory.getLogger(AMQ2102Test.class);
     
     private final static Map<Thread, Throwable> exceptions = new ConcurrentHashMap<Thread, Throwable>();
     
@@ -391,7 +391,7 @@ public class AMQ2102Test extends CombinationTestSupport implements UncaughtExcep
         }
 
         public void onException(JMSException exception) {
-           LOG.error(exception);
+           LOG.error(exception.toString());
            exceptions.put(Thread.currentThread(), exception);
         }
     }

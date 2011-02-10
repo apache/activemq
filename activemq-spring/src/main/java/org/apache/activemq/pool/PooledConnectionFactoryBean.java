@@ -21,8 +21,8 @@ import javax.annotation.PreDestroy;
 import javax.jms.ConnectionFactory;
 import javax.transaction.TransactionManager;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.commons.pool.ObjectPoolFactory;
 import org.springframework.beans.factory.FactoryBean;
 
@@ -47,7 +47,7 @@ import org.springframework.beans.factory.FactoryBean;
  */
 public class PooledConnectionFactoryBean implements FactoryBean {
 
-    private static final Log LOGGER = LogFactory.getLog(PooledConnectionFactoryBean.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(PooledConnectionFactoryBean.class);
 
     private PooledConnectionFactory pooledConnectionFactory;
     private ConnectionFactory connectionFactory;

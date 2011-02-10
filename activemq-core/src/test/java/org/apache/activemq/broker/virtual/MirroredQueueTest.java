@@ -29,14 +29,14 @@ import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.spring.ConsumerBean;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @version $Revision: $
  */
 public class MirroredQueueTest extends EmbeddedBrokerTestSupport {
-    private static final transient Log LOG = LogFactory.getLog(MirroredQueueTest.class);
+    private static final transient Logger LOG = LoggerFactory.getLogger(MirroredQueueTest.class);
     private Connection connection;
 
     public void testSendingToQueueIsMirrored() throws Exception {

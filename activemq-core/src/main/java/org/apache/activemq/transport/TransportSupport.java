@@ -19,8 +19,8 @@ package org.apache.activemq.transport;
 import java.io.IOException;
 import java.net.URI;
 import org.apache.activemq.util.ServiceSupport;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A useful base class for transport implementations.
@@ -28,7 +28,7 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision: 1.1 $
  */
 public abstract class TransportSupport extends ServiceSupport implements Transport {
-    private static final Log LOG = LogFactory.getLog(TransportSupport.class);
+    private static final Logger LOG = LoggerFactory.getLogger(TransportSupport.class);
 
     TransportListener transportListener;
 

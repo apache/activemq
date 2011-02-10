@@ -30,12 +30,12 @@ import org.apache.activemq.store.kahadb.KahaDBStore;
 import org.apache.activemq.transport.stomp.Stomp;
 import org.apache.activemq.transport.stomp.StompConnection;
 import org.apache.activemq.transport.stomp.StompFrame;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 public class ThreeBrokerStompTemporaryQueueTest extends JmsMultipleBrokersTestSupport {
-    private static final Log LOG = LogFactory.getLog(ThreeBrokerStompTemporaryQueueTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ThreeBrokerStompTemporaryQueueTest.class);
     private StompConnection stompConnection;
 
     protected NetworkConnector bridgeBrokers(BrokerService localBroker, BrokerService remoteBroker, boolean dynamicOnly, int networkTTL, boolean conduit, boolean failover) throws Exception {

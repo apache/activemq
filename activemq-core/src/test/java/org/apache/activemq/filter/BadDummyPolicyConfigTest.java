@@ -17,15 +17,15 @@
 package org.apache.activemq.filter;
 
 import junit.framework.TestCase;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @version $Revision: 1.1 $
  */
 public class BadDummyPolicyConfigTest extends TestCase {
 
-    private static final Log LOG = LogFactory.getLog(BadDummyPolicyConfigTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(BadDummyPolicyConfigTest.class);
     protected DummyPolicy policy = new DummyPolicy();
 
     public void testNoDestinationSpecified() throws Exception {

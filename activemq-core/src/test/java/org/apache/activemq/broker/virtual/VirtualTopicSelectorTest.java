@@ -30,12 +30,12 @@ import org.apache.activemq.broker.region.virtual.VirtualTopic;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.spring.ConsumerBean;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class VirtualTopicSelectorTest extends CompositeTopicTest {
 
-    private static final Log LOG = LogFactory.getLog(VirtualTopicSelectorTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(VirtualTopicSelectorTest.class);
             
     protected Destination getConsumer1Dsetination() {
         return new ActiveMQQueue("Consumer.1.VirtualTopic.TEST");

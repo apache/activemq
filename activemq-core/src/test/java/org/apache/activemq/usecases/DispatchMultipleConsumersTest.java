@@ -29,8 +29,8 @@ import junit.framework.TestCase;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQQueue;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
@@ -38,7 +38,7 @@ import org.apache.commons.logging.LogFactory;
  *
  */
 public class DispatchMultipleConsumersTest extends TestCase {
-    private final static Log logger = LogFactory.getLog(DispatchMultipleConsumersTest.class);
+    private final static Logger logger = LoggerFactory.getLogger(DispatchMultipleConsumersTest.class);
     BrokerService broker;
     Destination dest;
     String destinationName = "TEST.Q";

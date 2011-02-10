@@ -25,12 +25,12 @@ import javax.jms.MessageConsumer;
 import javax.jms.MessageListener;
 import javax.jms.Session;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.jms.core.JmsTemplate;
 
 public class SpringConsumer extends ConsumerBean implements MessageListener {
-    private static final Log LOG = LogFactory.getLog(SpringConsumer.class);
+    private static final Logger LOG = LoggerFactory.getLogger(SpringConsumer.class);
     private JmsTemplate template;
     private String myId = "foo";
     private Destination destination;

@@ -88,8 +88,8 @@ import org.apache.activemq.transaction.Synchronization;
 import org.apache.activemq.usage.MemoryUsage;
 import org.apache.activemq.util.Callback;
 import org.apache.activemq.util.LongSequenceGenerator;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <P>
@@ -196,7 +196,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
         void afterDelivery(ActiveMQSession session, Message msg);
     }
 
-    private static final Log LOG = LogFactory.getLog(ActiveMQSession.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ActiveMQSession.class);
     private final Scheduler scheduler;
     private final ThreadPoolExecutor connectionExecutor;
 

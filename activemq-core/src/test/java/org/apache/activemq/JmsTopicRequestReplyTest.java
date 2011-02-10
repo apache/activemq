@@ -32,14 +32,14 @@ import javax.jms.TemporaryTopic;
 import javax.jms.TextMessage;
 
 import org.apache.activemq.test.TestSupport;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @version $Revision: 1.3 $
  */
 public class JmsTopicRequestReplyTest extends TestSupport implements MessageListener {
-    private static final Log LOG = LogFactory.getLog(JmsTopicRequestReplyTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(JmsTopicRequestReplyTest.class);
 
     protected boolean useAsyncConsume;
     private Connection serverConnection;

@@ -27,11 +27,11 @@ import javax.jms.TextMessage;
 
 import org.apache.activemq.tool.properties.JmsClientProperties;
 import org.apache.activemq.tool.properties.JmsProducerProperties;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class JmsProducerClient extends AbstractJmsMeasurableClient {
-    private static final Log LOG = LogFactory.getLog(JmsProducerClient.class);
+    private static final Logger LOG = LoggerFactory.getLogger(JmsProducerClient.class);
 
     protected JmsProducerProperties client;
     protected MessageProducer jmsProducer;

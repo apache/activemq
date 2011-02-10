@@ -48,12 +48,12 @@ import org.apache.activemq.broker.region.policy.SimpleDispatchPolicy;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.network.NetworkConnector;
 import org.apache.activemq.util.Wait;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class NoDuplicateOnTopicNetworkTest extends CombinationTestSupport {
-    private static final Log LOG = LogFactory
-            .getLog(NoDuplicateOnTopicNetworkTest.class);
+    private static final Logger LOG = LoggerFactory
+            .getLogger(NoDuplicateOnTopicNetworkTest.class);
 
     private static final String MULTICAST_DEFAULT = "multicast://default";
     private static final String BROKER_1 = "tcp://localhost:61626";

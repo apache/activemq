@@ -28,14 +28,14 @@ import javax.jms.TextMessage;
 
 import org.apache.activemq.command.ActiveMQTextMessage;
 import org.apache.activemq.util.FactoryFinder;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @version $Revision: $
  */
 public class CommandMessageListener implements MessageListener {
-    private static final Log LOG = LogFactory.getLog(CommandMessageListener.class);
+    private static final Logger LOG = LoggerFactory.getLogger(CommandMessageListener.class);
 
     private Session session;
     private MessageProducer producer;

@@ -35,8 +35,8 @@ import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.util.IdGenerator;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @version $Revision: 1.4 $
@@ -46,7 +46,7 @@ public class LargeMessageTestSupport extends ClientTestSupport implements Messag
     protected static final int LARGE_MESSAGE_SIZE = 128 * 1024;
     protected static final int MESSAGE_COUNT = 100;
 
-    private static final Log LOG = LogFactory.getLog(LargeMessageTestSupport.class);
+    private static final Logger LOG = LoggerFactory.getLogger(LargeMessageTestSupport.class);
 
     protected Connection producerConnection;
     protected Connection consumerConnection;

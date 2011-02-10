@@ -25,14 +25,14 @@ import org.apache.activemq.openwire.OpenWireFormat;
 import org.apache.activemq.store.StoreOrderTest;
 import org.apache.activemq.util.ByteSequence;
 import org.apache.activemq.wireformat.WireFormat;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.derby.jdbc.EmbeddedDataSource;
 
 //  https://issues.apache.org/activemq/browse/AMQ-2594
 public class JDBCStoreOrderTest extends StoreOrderTest {
 
-    private static final Log LOG = LogFactory.getLog(JDBCStoreOrderTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(JDBCStoreOrderTest.class);
     
     @Override
      protected void dumpMessages() throws Exception {

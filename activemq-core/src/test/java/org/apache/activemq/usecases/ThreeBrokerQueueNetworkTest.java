@@ -37,14 +37,14 @@ import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.MessageDispatch;
 import org.apache.activemq.util.MessageIdList;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @version $Revision: 1.1.1.1 $
  */
 public class ThreeBrokerQueueNetworkTest extends JmsMultipleBrokersTestSupport {
-    private static final Log LOG = LogFactory.getLog(ThreeBrokerQueueNetworkTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ThreeBrokerQueueNetworkTest.class);
     protected static final int MESSAGE_COUNT = 100;
     private static final long MAX_WAIT_MILLIS = 10000;
 

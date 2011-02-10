@@ -21,13 +21,13 @@ import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.util.Random;
 import javax.net.ServerSocketFactory;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  */
 public class ServerSocketTstFactory extends ServerSocketFactory {
-    private static final Log LOG = LogFactory.getLog(ServerSocketTstFactory.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ServerSocketTstFactory.class);
 
     private class ServerSocketTst {
 

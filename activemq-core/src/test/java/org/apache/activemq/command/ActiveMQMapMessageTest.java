@@ -29,14 +29,14 @@ import javax.jms.MessageNotReadableException;
 import javax.jms.MessageNotWriteableException;
 
 import junit.framework.TestCase;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @version $Revision$
  */
 public class ActiveMQMapMessageTest extends TestCase {
-    private static final Log LOG = LogFactory.getLog(ActiveMQMapMessageTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ActiveMQMapMessageTest.class);
 
     private String name = "testName";
 

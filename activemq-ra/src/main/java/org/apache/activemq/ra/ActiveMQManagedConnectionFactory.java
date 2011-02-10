@@ -33,7 +33,7 @@ import javax.resource.spi.ManagedConnectionFactory;
 import javax.resource.spi.ResourceAdapter;
 import javax.resource.spi.ResourceAdapterAssociation;
 import javax.security.auth.Subject;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.LoggerFactory;
 
 /**
  * @version $Revisio n$ TODO: Must override equals and hashCode (JCA spec 16.4)
@@ -132,7 +132,7 @@ public class ActiveMQManagedConnectionFactory extends ActiveMQConnectionSupport
     private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
         in.defaultReadObject();
         setInfo((ActiveMQConnectionRequestInfo) in.readObject());
-        log = LogFactory.getLog(getClass());
+        log = LoggerFactory.getLogger(getClass());
     }
     
     /**

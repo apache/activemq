@@ -38,8 +38,8 @@ import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.transport.TransportFilter;
 import org.apache.activemq.transport.failover.FailoverTransport;
 import org.apache.activemq.xbean.BrokerFactoryBean;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.support.AbstractApplicationContext;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
@@ -47,7 +47,7 @@ import org.springframework.core.io.Resource;
 public class NetworkFailoverTest extends TestCase {
 
     protected static final int MESSAGE_COUNT = 10;
-    private static final Log LOG = LogFactory.getLog(NetworkFailoverTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(NetworkFailoverTest.class);
 
     protected AbstractApplicationContext context;
     protected Connection localConnection;

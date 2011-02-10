@@ -22,8 +22,8 @@ import java.util.regex.Pattern;
 
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.BrokerPlugin;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author Filip Hanik
@@ -34,7 +34,7 @@ public class DiscardingDLQBrokerPlugin implements BrokerPlugin {
     public DiscardingDLQBrokerPlugin() {
     }
 
-    public static Log log = LogFactory.getLog(DiscardingDLQBrokerPlugin.class);
+    public static Logger log = LoggerFactory.getLogger(DiscardingDLQBrokerPlugin.class);
     private boolean dropTemporaryTopics = true;
     private boolean dropTemporaryQueues = true;
     private boolean dropAll = true;

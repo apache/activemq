@@ -21,8 +21,8 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.ActiveMQPrefetchPolicy;      
 import org.apache.activemq.TestSupport;
 import org.apache.activemq.broker.BrokerService;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jms.ConnectionFactory;
 import javax.jms.JMSException;
@@ -36,7 +36,7 @@ import javax.jms.TopicSession;
 
 public class AMQ2580Test extends TestSupport {
 
-    private static final Log LOG = LogFactory.getLog(AMQ2580Test.class);
+    private static final Logger LOG = LoggerFactory.getLogger(AMQ2580Test.class);
 
     private static final String TOPIC_NAME = "topicName";
     private static final String CLIENT_ID = "client_id";

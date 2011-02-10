@@ -27,8 +27,8 @@ import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.command.Message;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Queue dispatch policy that determines if a message can be sent to a subscription
@@ -37,7 +37,7 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision$
  */
 public class QueueDispatchSelector extends SimpleDispatchSelector {
-    private static final Log LOG = LogFactory.getLog(QueueDispatchSelector.class);
+    private static final Logger LOG = LoggerFactory.getLogger(QueueDispatchSelector.class);
     private Subscription exclusiveConsumer;
    
    

@@ -43,8 +43,8 @@ import org.apache.activemq.transport.TransportFactory;
 import org.apache.activemq.util.IdGenerator;
 import org.apache.activemq.util.ServiceStopper;
 import org.apache.activemq.util.ServiceSupport;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Connects a Slave Broker to a Master when using <a
@@ -56,7 +56,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class MasterConnector implements Service, BrokerServiceAware {
 
-    private static final Log LOG = LogFactory.getLog(MasterConnector.class);
+    private static final Logger LOG = LoggerFactory.getLogger(MasterConnector.class);
     private BrokerService broker;
     private URI remoteURI;
     private URI localURI;

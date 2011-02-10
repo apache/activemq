@@ -35,12 +35,12 @@ import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.methods.DeleteMethod;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.PutMethod;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class HTTPDiscoveryAgent implements DiscoveryAgent {
     
-    private static final Log LOG = LogFactory.getLog(HTTPDiscoveryAgent.class);
+    private static final Logger LOG = LoggerFactory.getLogger(HTTPDiscoveryAgent.class);
     
     private String registryURL = "http://localhost:8080/discovery-registry/default";
     private HttpClient httpClient = new HttpClient();

@@ -41,8 +41,8 @@ import org.apache.activemq.command.Response;
 import org.apache.activemq.thread.Scheduler;
 import org.apache.activemq.transaction.Synchronization;
 import org.apache.activemq.usage.SystemUsage;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A subscription that honors the pre-fetch option of the ConsumerInfo.
@@ -51,7 +51,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public abstract class PrefetchSubscription extends AbstractSubscription {
 
-    private static final Log LOG = LogFactory.getLog(PrefetchSubscription.class);
+    private static final Logger LOG = LoggerFactory.getLogger(PrefetchSubscription.class);
     protected final Scheduler scheduler;
     
     protected PendingMessageCursor pending;

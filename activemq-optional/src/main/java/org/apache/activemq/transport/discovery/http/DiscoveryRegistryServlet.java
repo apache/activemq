@@ -27,12 +27,12 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class DiscoveryRegistryServlet extends HttpServlet {
     
-    private static final Log LOG = LogFactory.getLog(HTTPDiscoveryAgent.class);
+    private static final Logger LOG = LoggerFactory.getLogger(HTTPDiscoveryAgent.class);
     long maxKeepAge = 1000*60*60; // 1 hour.
     ConcurrentHashMap<String, ConcurrentHashMap<String, Long>> serviceGroups = new ConcurrentHashMap<String, ConcurrentHashMap<String, Long>>();
     

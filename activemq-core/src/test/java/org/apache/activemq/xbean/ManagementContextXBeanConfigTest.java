@@ -32,8 +32,8 @@ import javax.management.remote.JMXConnectorFactory;
 import javax.management.remote.JMXServiceURL;
 
 import junit.framework.TestCase;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @version $Revision: 1.1 $
@@ -41,7 +41,7 @@ import org.apache.commons.logging.LogFactory;
 public class ManagementContextXBeanConfigTest extends TestCase {
 
     protected BrokerService brokerService;
-    private static final transient Log LOG = LogFactory.getLog(ManagementContextXBeanConfigTest.class);
+    private static final transient Logger LOG = LoggerFactory.getLogger(ManagementContextXBeanConfigTest.class);
 
     public void testManagmentContextConfiguredCorrectly() throws Exception {
         assertEquals(2011, brokerService.getManagementContext().getConnectorPort());

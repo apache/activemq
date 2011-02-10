@@ -37,12 +37,12 @@ import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportFactory;
 import org.apache.activemq.transport.TransportFilter;
 import org.apache.activemq.transport.mock.MockTransport;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class FanoutTransportBrokerTest extends NetworkTestSupport {
 
-    private static final Log LOG = LogFactory.getLog(FanoutTransportBrokerTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(FanoutTransportBrokerTest.class);
 
     public ActiveMQDestination destination;
     public int deliveryMode;

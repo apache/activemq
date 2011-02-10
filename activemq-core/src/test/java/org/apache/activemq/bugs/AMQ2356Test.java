@@ -25,8 +25,8 @@ import org.apache.activemq.broker.region.policy.VMPendingSubscriberMessageStorag
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.perf.NumberOfDestinationsTest;
 import org.apache.activemq.store.kahadb.KahaDBStore;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.io.File;
 import javax.jms.BytesMessage;
 import javax.jms.Connection;
@@ -63,7 +63,7 @@ deadlocked at less than 30 messages each.
 public class AMQ2356Test extends TestCase {
     protected static final int MESSAGE_COUNT = 1000;
     protected static final int NUMBER_OF_PAIRS = 10;
-    private static final Log LOG = LogFactory.getLog(NumberOfDestinationsTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(NumberOfDestinationsTest.class);
     protected BrokerService broker;
     protected String brokerURL = ActiveMQConnectionFactory.DEFAULT_BROKER_BIND_URL;
     protected int destinationCount;

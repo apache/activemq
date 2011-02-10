@@ -25,12 +25,12 @@ import org.apache.activemq.JmsMultipleBrokersTestSupport;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.util.MessageIdList;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.io.ClassPathResource;
 
 public class MessageReroutingTest extends JmsMultipleBrokersTestSupport {
-    private static final transient Log LOG = LogFactory.getLog(MessageReroutingTest.class);
+    private static final transient Logger LOG = LoggerFactory.getLogger(MessageReroutingTest.class);
     
     
     public Destination dest;

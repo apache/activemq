@@ -27,8 +27,8 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.RedeliveryPolicy;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.camel.CamelContext;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit38.AbstractJUnit38SpringContextTests;
@@ -38,7 +38,7 @@ import org.springframework.test.context.junit38.AbstractJUnit38SpringContextTest
  */
 @ContextConfiguration
 public class CamelRedeliveryTest extends AbstractJUnit38SpringContextTests {
-    private static final transient Log LOG = LogFactory.getLog(CamelRedeliveryTest.class);
+    private static final transient Logger LOG = LoggerFactory.getLogger(CamelRedeliveryTest.class);
 
     @Autowired
     protected CamelContext camelContext;

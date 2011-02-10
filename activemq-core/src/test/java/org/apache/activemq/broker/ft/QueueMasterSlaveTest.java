@@ -25,15 +25,15 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.JmsTopicSendReceiveWithTwoConnectionsTest;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.xbean.BrokerFactoryBean;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.io.ClassPathResource;
 
 /**
  * Test failover for Queues
  */
 public class QueueMasterSlaveTest extends JmsTopicSendReceiveWithTwoConnectionsTest {
-    private static final transient Log LOG = LogFactory.getLog(QueueMasterSlaveTest.class);
+    private static final transient Logger LOG = LoggerFactory.getLogger(QueueMasterSlaveTest.class);
 
     protected BrokerService master;
     protected AtomicReference<BrokerService> slave = new AtomicReference<BrokerService>();

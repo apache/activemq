@@ -33,8 +33,8 @@ import org.apache.activemq.util.ByteSequence;
 import org.apache.activemq.util.Callback;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.ServiceStopper;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @version $Revision$
@@ -44,7 +44,7 @@ import org.apache.commons.logging.LogFactory;
 @Deprecated
 public class HttpTransport extends HttpTransportSupport {
     
-    private static final Log LOG = LogFactory.getLog(HttpTransport.class);
+    private static final Logger LOG = LoggerFactory.getLogger(HttpTransport.class);
     
     private HttpURLConnection sendConnection;
     private HttpURLConnection receiveConnection;

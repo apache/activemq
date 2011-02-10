@@ -45,15 +45,15 @@ import org.apache.activemq.network.DiscoveryNetworkConnector;
 import org.apache.activemq.network.NetworkConnector;
 import org.apache.activemq.pool.PooledConnectionFactory;
 import org.apache.activemq.usage.SystemUsage;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.jms.core.JmsTemplate;
 import org.springframework.jms.core.MessageCreator;
 import org.springframework.jms.listener.DefaultMessageListenerContainer;
 
 public class AMQDeadlockTestW4Brokers extends org.apache.activemq.test.TestSupport {
 
-    private static final transient Log LOG = LogFactory.getLog(AMQDeadlockTestW4Brokers.class);
+    private static final transient Logger LOG = LoggerFactory.getLogger(AMQDeadlockTestW4Brokers.class);
 
     private static final String BROKER_URL1 = "tcp://localhost:61616";
     private static final String BROKER_URL2 = "tcp://localhost:61617";

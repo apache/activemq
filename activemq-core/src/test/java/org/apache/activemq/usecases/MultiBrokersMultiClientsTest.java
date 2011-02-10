@@ -29,8 +29,8 @@ import javax.jms.MessageConsumer;
 
 import org.apache.activemq.JmsMultipleBrokersTestSupport;
 import org.apache.activemq.util.MessageIdList;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @version $Revision: 1.1.1.1 $
@@ -41,7 +41,7 @@ public class MultiBrokersMultiClientsTest extends JmsMultipleBrokersTestSupport 
     public static final int PRODUCER_COUNT = 3; // producers per broker
     public static final int MESSAGE_COUNT = 20; // messages per producer
 
-    private static final Log LOG = LogFactory.getLog(MultiBrokersMultiClientsTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(MultiBrokersMultiClientsTest.class);
 
     protected Map<String, MessageConsumer> consumerMap;
     Map<Thread, Throwable> unhandeledExceptions = new HashMap<Thread, Throwable>();

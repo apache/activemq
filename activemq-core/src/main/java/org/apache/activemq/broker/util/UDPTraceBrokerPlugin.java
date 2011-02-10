@@ -55,8 +55,8 @@ import org.apache.activemq.util.ByteArrayOutputStream;
 import org.apache.activemq.util.ByteSequence;
 import org.apache.activemq.wireformat.WireFormat;
 import org.apache.activemq.wireformat.WireFormatFactory;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A Broker interceptor which allows you to trace all operations to a UDP
@@ -67,7 +67,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class UDPTraceBrokerPlugin extends BrokerPluginSupport {
 
-    private static final Log LOG = LogFactory.getLog(UDPTraceBrokerPlugin.class);
+    private static final Logger LOG = LoggerFactory.getLogger(UDPTraceBrokerPlugin.class);
     protected WireFormat wireFormat;
     protected WireFormatFactory wireFormatFactory;
     protected int maxTraceDatagramSize = 1024 * 4;

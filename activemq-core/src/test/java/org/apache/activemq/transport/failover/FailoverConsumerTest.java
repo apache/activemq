@@ -28,13 +28,13 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.ActiveMQPrefetchPolicy;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.network.NetworkTestSupport;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class FailoverConsumerTest extends NetworkTestSupport {
 
     public static final int MSG_COUNT = 100;
-    private static final Log LOG = LogFactory.getLog(FailoverConsumerTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(FailoverConsumerTest.class);
 
 
     public void testPublisherFailsOver() throws Exception {

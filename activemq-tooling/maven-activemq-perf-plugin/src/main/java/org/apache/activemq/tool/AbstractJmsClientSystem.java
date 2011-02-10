@@ -37,11 +37,11 @@ import org.apache.activemq.tool.reports.XmlFilePerfReportWriter;
 import org.apache.activemq.tool.sampler.CpuSamplerTask;
 import org.apache.activemq.tool.sampler.ThroughputSamplerTask;
 import org.apache.activemq.tool.spi.SPIConnectionFactory;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public abstract class AbstractJmsClientSystem extends AbstractObjectProperties {
-    private static final Log LOG = LogFactory.getLog(AbstractJmsClientSystem.class);
+    private static final Logger LOG = LoggerFactory.getLogger(AbstractJmsClientSystem.class);
 
     protected ThreadGroup clientThreadGroup;
     protected ConnectionFactory jmsConnFactory;

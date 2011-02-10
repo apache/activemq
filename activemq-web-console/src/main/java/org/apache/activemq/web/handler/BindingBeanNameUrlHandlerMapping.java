@@ -22,8 +22,8 @@ import java.util.UUID;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.activemq.web.DestinationFacade;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.ServletRequestDataBinder;
 import org.springframework.web.servlet.handler.BeanNameUrlHandlerMapping;
 import org.springframework.web.servlet.HandlerExecutionChain;
@@ -32,7 +32,7 @@ import org.springframework.web.servlet.HandlerExecutionChain;
  * @version $Revision$
  */
 public class BindingBeanNameUrlHandlerMapping extends BeanNameUrlHandlerMapping {
-    private static final transient Log LOG = LogFactory.getLog(BindingBeanNameUrlHandlerMapping.class);
+    private static final transient Logger LOG = LoggerFactory.getLogger(BindingBeanNameUrlHandlerMapping.class);
 
     protected Object getHandlerInternal(HttpServletRequest request) throws Exception {
         Object object = super.getHandlerInternal(request);

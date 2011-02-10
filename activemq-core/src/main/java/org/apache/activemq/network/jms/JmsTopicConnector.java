@@ -26,8 +26,8 @@ import javax.jms.TopicConnectionFactory;
 import javax.jms.TopicSession;
 import javax.naming.NamingException;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A Bridge to other JMS Topic providers
@@ -37,7 +37,7 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision: 1.1.1.1 $
  */
 public class JmsTopicConnector extends JmsConnector {
-    private static final Log LOG = LogFactory.getLog(JmsTopicConnector.class);
+    private static final Logger LOG = LoggerFactory.getLogger(JmsTopicConnector.class);
     private String outboundTopicConnectionFactoryName;
     private String localConnectionFactoryName;
     private TopicConnectionFactory outboundTopicConnectionFactory;

@@ -28,11 +28,11 @@ import javax.jms.Session;
 import org.apache.activemq.JmsMultipleBrokersTestSupport;
 import org.apache.activemq.broker.jmx.BrokerView;
 import org.apache.activemq.util.Wait;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class AMQ2439Test extends JmsMultipleBrokersTestSupport {
-    private static final Log LOG = LogFactory.getLog(AMQ2439Test.class);
+    private static final Logger LOG = LoggerFactory.getLogger(AMQ2439Test.class);
     Destination dest;
 
     

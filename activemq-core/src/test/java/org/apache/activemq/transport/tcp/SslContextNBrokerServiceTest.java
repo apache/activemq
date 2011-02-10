@@ -32,13 +32,13 @@ import junit.framework.TestCase;
 
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 
 public class SslContextNBrokerServiceTest extends TestCase {
-    private static final transient Log LOG = LogFactory.getLog(SslContextNBrokerServiceTest.class);
+    private static final transient Logger LOG = LoggerFactory.getLogger(SslContextNBrokerServiceTest.class);
     
     private ClassPathXmlApplicationContext context;
     Map beansOfType;

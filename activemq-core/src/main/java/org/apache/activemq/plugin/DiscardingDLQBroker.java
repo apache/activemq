@@ -23,15 +23,15 @@ import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.Message;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author Filip Hanik
  * @version 1.0
  */
 public class DiscardingDLQBroker extends BrokerFilter {
-    public static Log log = LogFactory.getLog(DiscardingDLQBroker.class);
+    public static Logger log = LoggerFactory.getLogger(DiscardingDLQBroker.class);
     private boolean dropTemporaryTopics = true;
     private boolean dropTemporaryQueues = true;
     private boolean dropAll = true;

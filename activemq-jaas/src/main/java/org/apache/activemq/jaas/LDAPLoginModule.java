@@ -49,8 +49,8 @@ import javax.security.auth.login.FailedLoginException;
 import javax.security.auth.login.LoginException;
 import javax.security.auth.spi.LoginModule;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @version $Rev: $ $Date: $
@@ -72,7 +72,7 @@ public class LDAPLoginModule implements LoginModule {
     private static final String ROLE_SEARCH_SUBTREE = "roleSearchSubtree";
     private static final String USER_ROLE_NAME = "userRoleName";
 
-    private static Log log = LogFactory.getLog(LDAPLoginModule.class);
+    private static Logger log = LoggerFactory.getLogger(LDAPLoginModule.class);
 
     protected DirContext context;
 
@@ -165,7 +165,7 @@ public class LDAPLoginModule implements LoginModule {
         try {
             context.close();
         } catch (Exception e) {
-            log.error(e);
+            log.error(e.toString());
         }
     }
 
@@ -382,7 +382,7 @@ public class LDAPLoginModule implements LoginModule {
             context = new InitialDirContext(env);
 
         } catch (NamingException e) {
-            log.error(e);
+            log.error(e.toString());
             throw e;
         }
         return context;

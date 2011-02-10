@@ -44,15 +44,15 @@ import org.apache.activemq.filter.DestinationMap;
 import org.apache.activemq.security.SecurityContext;
 import org.apache.activemq.thread.TaskRunnerFactory;
 import org.apache.activemq.usage.SystemUsage;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @version $Revision: 1.14 $
  */
 public abstract class AbstractRegion implements Region {
 
-    private static final Log LOG = LogFactory.getLog(AbstractRegion.class);
+    private static final Logger LOG = LoggerFactory.getLogger(AbstractRegion.class);
 
     protected final Map<ActiveMQDestination, Destination> destinations = new ConcurrentHashMap<ActiveMQDestination, Destination>();
     protected final DestinationMap destinationMap = new DestinationMap();

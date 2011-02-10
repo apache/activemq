@@ -35,12 +35,12 @@ import java.util.StringTokenizer;
 
 import org.apache.activemq.tool.reports.plugins.CpuReportPlugin;
 import org.apache.activemq.tool.reports.plugins.ThroughputReportPlugin;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class XmlFilePerfReportWriter extends AbstractPerfReportWriter {
 
-    private static final Log LOG = LogFactory.getLog(XmlFilePerfReportWriter.class);
+    private static final Logger LOG = LoggerFactory.getLogger(XmlFilePerfReportWriter.class);
 
     private File tempLogFile;
     private PrintWriter tempLogFileWriter;

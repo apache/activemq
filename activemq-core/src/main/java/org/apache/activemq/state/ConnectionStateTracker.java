@@ -47,8 +47,8 @@ import org.apache.activemq.command.SessionInfo;
 import org.apache.activemq.command.TransactionInfo;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.util.IOExceptionSupport;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Tracks the state of a connection so a newly established transport can be
@@ -57,7 +57,7 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision$
  */
 public class ConnectionStateTracker extends CommandVisitorAdapter {
-    private static final Log LOG = LogFactory.getLog(ConnectionStateTracker.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ConnectionStateTracker.class);
 
     private static final Tracked TRACKED_RESPONSE_MARKER = new Tracked(null);
 

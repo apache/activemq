@@ -23,11 +23,11 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import junit.framework.TestCase;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class TaskRunnerTest extends TestCase {
-    private static final Log LOG = LogFactory.getLog(TaskRunnerTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(TaskRunnerTest.class);
 
     public void testWakeupPooled() throws InterruptedException, BrokenBarrierException {
         System.setProperty("org.apache.activemq.UseDedicatedTaskRunner", "false");

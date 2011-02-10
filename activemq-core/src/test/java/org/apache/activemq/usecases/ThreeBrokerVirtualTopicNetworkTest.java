@@ -32,12 +32,12 @@ import org.apache.activemq.broker.region.virtual.VirtualTopic;
 import org.apache.activemq.network.NetworkConnector;
 import org.apache.activemq.store.kahadb.KahaDBStore;
 import org.apache.activemq.util.MessageIdList;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 public class ThreeBrokerVirtualTopicNetworkTest extends JmsMultipleBrokersTestSupport {
-    private static final Log LOG = LogFactory.getLog(ThreeBrokerVirtualTopicNetworkTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ThreeBrokerVirtualTopicNetworkTest.class);
     protected static final int MESSAGE_COUNT = 1;
     public boolean dynamicOnly = false;
 

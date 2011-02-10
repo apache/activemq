@@ -35,14 +35,14 @@ import javax.jms.TextMessage;
 
 import junit.framework.AssertionFailedError;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @version $Revision: 1.2 $
  */
 public abstract class JmsSendReceiveTestSupport extends TestSupport implements MessageListener {
-    private static final Log LOG = LogFactory.getLog(JmsSendReceiveTestSupport.class);
+    private static final Logger LOG = LoggerFactory.getLogger(JmsSendReceiveTestSupport.class);
 
     protected int messageCount = 100;
     protected String[] data;

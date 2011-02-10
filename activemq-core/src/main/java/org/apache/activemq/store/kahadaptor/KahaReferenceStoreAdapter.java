@@ -48,14 +48,14 @@ import org.apache.activemq.store.TopicMessageStore;
 import org.apache.activemq.store.TopicReferenceStore;
 import org.apache.activemq.store.amq.AMQTx;
 import org.apache.activemq.util.IOHelper;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class KahaReferenceStoreAdapter extends KahaPersistenceAdapter implements ReferenceStoreAdapter {
 
     
 
-    private static final Log LOG = LogFactory.getLog(KahaReferenceStoreAdapter.class);
+    private static final Logger LOG = LoggerFactory.getLogger(KahaReferenceStoreAdapter.class);
     private static final String STORE_STATE = "store-state";
     private static final String QUEUE_DATA = "queue-data";
     private static final String INDEX_VERSION_NAME = "INDEX_VERSION";

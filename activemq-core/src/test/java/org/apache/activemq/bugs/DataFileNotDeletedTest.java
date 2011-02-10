@@ -30,15 +30,15 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.kaha.impl.async.AsyncDataManager;
 import org.apache.activemq.store.amq.AMQPersistenceAdapter;
 import org.apache.activemq.store.amq.AMQPersistenceAdapterFactory;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /*
  * see https://issues.apache.org/activemq/browse/AMQ-1926
  */
 public class DataFileNotDeletedTest extends TestCase {
 
-    private static final Log LOG = LogFactory.getLog(DataFileNotDeletedTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(DataFileNotDeletedTest.class);
 
     private final CountDownLatch latch = new CountDownLatch(max_messages);
     private static int max_messages = 600;

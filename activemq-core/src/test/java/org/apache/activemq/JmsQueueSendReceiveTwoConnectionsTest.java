@@ -17,8 +17,8 @@
 package org.apache.activemq;
 
 import org.apache.activemq.test.JmsTopicSendReceiveWithTwoConnectionsTest;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @version $Revision: 1.2 $

@@ -35,7 +35,7 @@ import org.apache.activemq.store.MessageStore;
 import org.apache.activemq.usage.MemoryUsage;
 import org.apache.activemq.usage.SystemUsage;
 import org.apache.activemq.usage.Usage;
-import org.apache.commons.logging.Log;
+import org.slf4j.Logger;
 
 /**
  * @version $Revision: 1.12 $
@@ -600,7 +600,7 @@ public abstract class BaseDestination implements Destination {
         }
     }
 
-    protected abstract Log getLog();
+    protected abstract Logger getLog();
 
     public void setSlowConsumerStrategy(SlowConsumerStrategy slowConsumerStrategy) {
         this.slowConsumerStrategy = slowConsumerStrategy;

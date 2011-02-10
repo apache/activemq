@@ -50,8 +50,8 @@ import org.apache.activemq.command.ActiveMQBlobMessage;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTempQueue;
 import org.apache.activemq.util.JMXSupport;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A test case of the various MBeans in ActiveMQ. If you want to look at the
@@ -61,7 +61,7 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision$
  */
 public class MBeanTest extends EmbeddedBrokerTestSupport {
-    private static final Log LOG = LogFactory.getLog(MBeanTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(MBeanTest.class);
 
     private static boolean waitForKeyPress;
 

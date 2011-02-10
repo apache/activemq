@@ -25,11 +25,11 @@ import java.util.List;
 import java.util.Properties;
 import java.util.StringTokenizer;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public final class ReflectionUtil {
-    private static final Log LOG = LogFactory.getLog(ReflectionUtil.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ReflectionUtil.class);
 
     private ReflectionUtil() {
     }
@@ -155,7 +155,7 @@ public final class ReflectionUtil {
             LOG.debug(debugInfo);
 
         } catch (Exception e) {
-            LOG.warn(e);
+            LOG.warn(e.toString());
         }
     }
 
@@ -179,7 +179,7 @@ public final class ReflectionUtil {
         try {
             props.putAll(retrieveClassProperties("", obj.getClass(), obj));
         } catch (Exception e) {
-            LOG.warn(e);
+            LOG.warn(e.toString());
         }
         return props;
     }

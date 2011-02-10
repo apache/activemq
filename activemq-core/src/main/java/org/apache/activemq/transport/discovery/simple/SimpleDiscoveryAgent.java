@@ -28,8 +28,8 @@ import org.apache.activemq.command.DiscoveryEvent;
 import org.apache.activemq.thread.DefaultThreadPools;
 import org.apache.activemq.transport.discovery.DiscoveryAgent;
 import org.apache.activemq.transport.discovery.DiscoveryListener;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A simple DiscoveryAgent that allows static configuration of the discovered
@@ -39,7 +39,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class SimpleDiscoveryAgent implements DiscoveryAgent {
 
-    private final static Log LOG = LogFactory.getLog(SimpleDiscoveryAgent.class);
+    private final static Logger LOG = LoggerFactory.getLogger(SimpleDiscoveryAgent.class);
     private long initialReconnectDelay = 1000;
     private long maxReconnectDelay = 1000 * 30;
     private long backOffMultiplier = 2;

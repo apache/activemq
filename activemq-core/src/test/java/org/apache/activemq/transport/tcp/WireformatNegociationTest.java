@@ -32,11 +32,11 @@ import org.apache.activemq.transport.TransportAcceptListener;
 import org.apache.activemq.transport.TransportFactory;
 import org.apache.activemq.transport.TransportListener;
 import org.apache.activemq.transport.TransportServer;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class WireformatNegociationTest extends CombinationTestSupport {
-    private static final Log LOG = LogFactory.getLog(WireformatNegociationTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(WireformatNegociationTest.class);
 
     private TransportServer server;
     private Transport clientTransport;

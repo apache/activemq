@@ -31,8 +31,8 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.Service;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.util.LRUCache;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.jndi.JndiTemplate;
 
 /**
@@ -45,7 +45,7 @@ import org.springframework.jndi.JndiTemplate;
 public abstract class JmsConnector implements Service {
 
     private static int nextId;
-    private static final Log LOG = LogFactory.getLog(JmsConnector.class);
+    private static final Logger LOG = LoggerFactory.getLogger(JmsConnector.class);
     
     protected JndiTemplate jndiLocalTemplate;
     protected JndiTemplate jndiOutboundTemplate;

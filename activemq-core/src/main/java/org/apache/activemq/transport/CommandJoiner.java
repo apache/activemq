@@ -25,8 +25,8 @@ import org.apache.activemq.command.LastPartialCommand;
 import org.apache.activemq.command.PartialCommand;
 import org.apache.activemq.openwire.OpenWireFormat;
 import org.apache.activemq.util.ByteArrayInputStream;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Joins together of partial commands which were split into individual chunks of
@@ -35,7 +35,7 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision$
  */
 public class CommandJoiner extends TransportFilter {
-    private static final Log LOG = LogFactory.getLog(CommandJoiner.class);
+    private static final Logger LOG = LoggerFactory.getLogger(CommandJoiner.class);
 
     private ByteArrayOutputStream out = new ByteArrayOutputStream();
     private OpenWireFormat wireFormat;

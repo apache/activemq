@@ -20,15 +20,15 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @version $Revision: 1.3 $
  */
 public class BrokerRegistry {
 
-    private static final Log LOG = LogFactory.getLog(BrokerRegistry.class);
+    private static final Logger LOG = LoggerFactory.getLogger(BrokerRegistry.class);
     private static final BrokerRegistry INSTANCE = new BrokerRegistry();
 
     private final Object mutex = new Object();

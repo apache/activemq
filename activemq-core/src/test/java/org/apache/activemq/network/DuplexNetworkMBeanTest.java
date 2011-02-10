@@ -30,14 +30,14 @@ import javax.management.remote.JMXConnectorFactory;
 import javax.management.remote.JMXServiceURL;
 
 import org.apache.activemq.broker.BrokerService;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.junit.Test;
 
 public class DuplexNetworkMBeanTest {
 
-    protected static final Log LOG = LogFactory.getLog(DuplexNetworkMBeanTest.class);
+    protected static final Logger LOG = LoggerFactory.getLogger(DuplexNetworkMBeanTest.class);
     protected final int numRestarts = 3;
 
     protected BrokerService createBroker() throws Exception {
@@ -153,7 +153,7 @@ public class DuplexNetworkMBeanTest {
             LOG.info("Total MBean count=" + all.size());
             for (Object o : all) {
                 ObjectInstance bean = (ObjectInstance)o;
-                LOG.info(bean.getObjectName());
+                LOG.info(bean.getObjectName().toString());
             }
         } catch (Exception ignored) {
             LOG.warn("getMBeanServer ex: " + ignored);

@@ -30,8 +30,8 @@ import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.broker.region.Topic;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.usage.SystemUsage;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * persist pending messages pending message (messages awaiting dispatch to a
@@ -41,7 +41,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
 
-    private static final Log LOG = LogFactory.getLog(StoreDurableSubscriberCursor.class);
+    private static final Logger LOG = LoggerFactory.getLogger(StoreDurableSubscriberCursor.class);
     private static final int UNKNOWN = -1;
     private final String clientId;
     private final String subscriberName;

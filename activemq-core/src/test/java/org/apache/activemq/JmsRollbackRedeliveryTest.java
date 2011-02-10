@@ -31,11 +31,11 @@ import javax.jms.Session;
 import javax.jms.TextMessage;
 
 import org.apache.activemq.broker.BrokerService;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class JmsRollbackRedeliveryTest extends AutoFailTestSupport {
-    protected static final Log LOG = LogFactory.getLog(JmsRollbackRedeliveryTest.class);
+    protected static final Logger LOG = LoggerFactory.getLogger(JmsRollbackRedeliveryTest.class);
     final int nbMessages = 10;
     final String destinationName = "Destination";
     final String brokerUrl = "vm://localhost?create=false";

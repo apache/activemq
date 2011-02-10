@@ -35,8 +35,8 @@ import org.apache.activemq.state.ProducerState;
 import org.apache.activemq.usage.SystemUsage;
 import org.apache.activemq.util.IdGenerator;
 import org.apache.activemq.util.LongSequenceGenerator;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.net.URI;
 import java.util.Set;
@@ -47,7 +47,7 @@ import java.util.Set;
  * 
  */
 public class StatisticsBroker extends BrokerFilter {
-    private static Log LOG = LogFactory.getLog(StatisticsBroker.class);
+    private static Logger LOG = LoggerFactory.getLogger(StatisticsBroker.class);
     static final String STATS_DESTINATION_PREFIX = "ActiveMQ.Statistics.Destination";
     static final String STATS_BROKER_PREFIX = "ActiveMQ.Statistics.Broker";
     private static final IdGenerator ID_GENERATOR = new IdGenerator();

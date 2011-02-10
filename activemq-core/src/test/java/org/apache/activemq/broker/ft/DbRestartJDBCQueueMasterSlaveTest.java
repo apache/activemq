@@ -21,12 +21,12 @@ import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageProducer;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.derby.jdbc.EmbeddedDataSource;
 
 public class DbRestartJDBCQueueMasterSlaveTest extends JDBCQueueMasterSlaveTest {
-    private static final transient Log LOG = LogFactory.getLog(DbRestartJDBCQueueMasterSlaveTest.class);
+    private static final transient Logger LOG = LoggerFactory.getLogger(DbRestartJDBCQueueMasterSlaveTest.class);
     
     protected void messageSent() throws Exception {    
         if (++inflightMessageCount == failureCount) {
