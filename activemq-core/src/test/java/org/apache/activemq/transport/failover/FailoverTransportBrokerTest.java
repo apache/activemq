@@ -16,7 +16,9 @@
  */
 package org.apache.activemq.transport.failover;
 
+import java.io.IOException;
 import java.net.URI;
+import java.util.concurrent.TimeUnit;
 
 import javax.jms.DeliveryMode;
 
@@ -26,6 +28,7 @@ import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
+import org.apache.activemq.command.BrokerInfo;
 import org.apache.activemq.command.ConnectionInfo;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.ProducerInfo;
@@ -33,6 +36,7 @@ import org.apache.activemq.command.SessionInfo;
 import org.apache.activemq.network.NetworkTestSupport;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportFactory;
+import org.apache.activemq.transport.TransportListener;
 import org.apache.activemq.transport.multicast.MulticastTransportTest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -111,6 +115,40 @@ public class FailoverTransportBrokerTest extends NetworkTestSupport {
         assertNotNull(receiveMessage(connectionB));
         assertNoMessagesLeft(connectionA);
 
+    }
+
+    public void testNoBrokersInBrokerInfo() throws Exception {
+        final BrokerInfo info[] = new BrokerInfo[1];
+        StubConnection c = createFailoverConnection();
+        c.setListener(new TransportListener() {
+            @Override
+            public void onCommand(Object command) {
+                if (command instanceof BrokerInfo) {
+                    info[0] = (BrokerInfo) command;
+                }
+            }
+
+            @Override
+            public void onException(IOException error) {
+                //To change body of implemented methods use File | Settings | File Templates.
+            }
+
+            @Override
+            public void transportInterupted() {
+                //To change body of implemented methods use File | Settings | File Templates.
+            }
+
+            @Override
+            public void transportResumed() {
+                //To change body of implemented methods use File | Settings | File Templates.
+            }
+        });
+        c.start();
+        int count = 0;
+        while(count++ < 5 && info[0] == null) {
+            TimeUnit.SECONDS.sleep(1);
+        }
+        assertNull("no peer brokers present", info[0].getPeerBrokerInfos());
     }
 
     protected String getLocalURI() {

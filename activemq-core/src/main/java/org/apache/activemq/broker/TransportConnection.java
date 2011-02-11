@@ -887,7 +887,11 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
                 transport.start();
                 active = true;
                 BrokerInfo info = connector.getBrokerInfo().copy();
-                info.setPeerBrokerInfos(this.broker.getPeerBrokerInfos());
+                if (connector.isUpdateClusterClients()) {
+                    info.setPeerBrokerInfos(this.broker.getPeerBrokerInfos());
+                } else {
+                    info.setPeerBrokerInfos(null);
+                }
                 dispatchAsync(info);
                 
                 connector.onStarted(this);
