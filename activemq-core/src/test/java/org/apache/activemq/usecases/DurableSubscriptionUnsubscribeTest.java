@@ -246,6 +246,7 @@ public class DurableSubscriptionUnsubscribeTest extends TestSupport {
     private void startBroker(boolean deleteMessages) throws Exception {
         broker = BrokerFactory.createBroker("broker:(vm://" + getName() + ")");
         broker.setUseJmx(true);
+        broker.getManagementContext().setCreateConnector(false);
         broker.setBrokerName(getName());
 
         broker.setPersistent(true);
