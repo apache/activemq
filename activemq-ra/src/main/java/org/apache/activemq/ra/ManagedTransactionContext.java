@@ -115,7 +115,9 @@ public class ManagedTransactionContext extends TransactionContext {
 
     public boolean isInXATransaction() {
         if (useSharedTxContext) {
-            return sharedContext.isInXATransaction();
+            // context considers endesd XA transactions as active, so just check for presence
+            // of tx when it is shared
+            return sharedContext.isInTransaction();
         } else {
             return super.isInXATransaction();
         }

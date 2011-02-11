@@ -113,7 +113,7 @@ public class ActiveMQQueueBrowser implements QueueBrowser, Enumeration {
             return;
         }
         try {
-            if (session.getTransacted()) {
+            if (session.getTransacted() && session.getTransactionContext().isInLocalTransaction()) {
                 session.commit();
             }
             consumer.close();
