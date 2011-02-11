@@ -129,6 +129,12 @@ public class NetworkOfTwentyBrokersTest extends JmsMultipleBrokersTestSupport {
         startAllBrokers();
         waitForBridgeFormation(X-1);
 
+        LOG.info("Waiting for complete reformation");
+        try {
+            Thread.sleep(10000);
+        } catch (Exception e) {
+        }
+
         verifyPeerBrokerInfos(X-1);
     }
 
