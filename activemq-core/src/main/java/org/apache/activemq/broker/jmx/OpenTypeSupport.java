@@ -306,7 +306,7 @@ public final class OpenTypeSupport {
 
                 rc.put(BODY_PREVIEW, data);
             } catch (JMSException e) {
-                rc.put(BODY_PREVIEW, new byte[] {});
+                rc.put(BODY_PREVIEW, new Byte[] {});
             }
             return rc;
         }
