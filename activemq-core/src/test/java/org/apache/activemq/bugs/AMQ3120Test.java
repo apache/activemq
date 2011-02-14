@@ -109,8 +109,8 @@ public class AMQ3120Test {
 
     @Test
     public void testCleanupOfFiles() throws Exception {
-
-        startBroker(false);
+        final int messageCount = 500;
+        startBroker(true);
         int fileCount = getFileCount(kahaDbDir);
         assertEquals(4, fileCount);
 
@@ -126,9 +126,11 @@ public class AMQ3120Test {
                 return sess.createTextMessage(payload + "::" + i);
             }
         };
-        producer.setSleep(1500);
+        producer.setSleep(650);
+        producer.setMessageCount(messageCount);
         ConsumerThread consumer = new ConsumerThread(consumerSess, destination);
         consumer.setBreakOnNull(false);
+        consumer.setMessageCount(messageCount);
 
         producer.start();
         consumer.start();
@@ -136,6 +138,7 @@ public class AMQ3120Test {
         producer.join();
         consumer.join();
 
+        assertEquals("consumer got all produced messages", producer.getMessageCount(), consumer.getReceived());
 
         broker.stop();
         broker.waitUntilStopped();

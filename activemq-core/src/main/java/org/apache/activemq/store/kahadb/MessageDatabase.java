@@ -1142,7 +1142,10 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
      */
     void checkpointUpdate(Transaction tx, boolean cleanup) throws IOException {
         LOG.debug("Checkpoint started.");
-        
+
+        // reflect last update exclusive of current checkpoint
+        Location firstTxLocation = metadata.lastUpdate;
+
         metadata.state = OPEN_STATE;
         metadata.producerSequenceIdTrackerLocation = checkpointProducerAudit();
         metadata.firstInProgressTransactionLocation = getFirstInProgressTxLocation();
@@ -1153,16 +1156,19 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
 
             final TreeSet<Integer> completeFileSet = new TreeSet<Integer>(journal.getFileMap().keySet());
             final TreeSet<Integer> gcCandidateSet = new TreeSet<Integer>(completeFileSet);
-        	
+
+            LOG.trace("Last update: " + firstTxLocation + ", full gc candidates set: " + gcCandidateSet);
+
         	// Don't GC files under replication
         	if( journalFilesBeingReplicated!=null ) {
         		gcCandidateSet.removeAll(journalFilesBeingReplicated);
         	}
-        	
-        	// Don't GC files after the first in progress tx
-        	Location firstTxLocation = metadata.lastUpdate;
+
+            // Don't GC files after the first in progress tx
             if( metadata.firstInProgressTransactionLocation!=null ) {
-                firstTxLocation = metadata.firstInProgressTransactionLocation;
+                if (metadata.firstInProgressTransactionLocation.getDataFileId() < firstTxLocation.getDataFileId()) {
+                   firstTxLocation = metadata.firstInProgressTransactionLocation;
+                };
             }
             
             if( firstTxLocation!=null ) {
