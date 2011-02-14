@@ -23,6 +23,7 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.jms.BytesMessage;
 import javax.jms.Connection;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
@@ -601,7 +602,26 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         }
         Thread.sleep(1000);
     }
-    
+
+    protected void useConnectionWithByteMessage(Connection connection) throws Exception {
+        connection.setClientID(clientID);
+        connection.start();
+        ActiveMQSession session = (ActiveMQSession) connection.createSession(transacted, authMode);
+        destination = createDestination();
+        MessageProducer producer = session.createProducer(destination);
+        for (int i = 0; i < MESSAGE_COUNT; i++) {
+            BytesMessage message = session.createBytesMessage();
+            message.writeBytes(("Message: " + i).getBytes());
+            message.setIntProperty("counter", i);
+            message.setJMSCorrelationID("MyCorrelationID");
+            message.setJMSReplyTo(new ActiveMQQueue("MyReplyTo"));
+            message.setJMSType("MyType");
+            message.setJMSPriority(5);
+            producer.send(message);
+        }
+        Thread.sleep(1000);
+    }
+
     protected void echo(String text) {
         LOG.info(text);
     }
@@ -666,5 +686,49 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         }
 
         assertTrue("dest has some memory usage", queue.getMemoryPercentUsage() > 0);
+    }
+
+    public void testBrowseBytesMessages() throws Exception {
+        connection = connectionFactory.createConnection();
+        useConnectionWithByteMessage(connection);
+
+        ObjectName queueViewMBeanName = assertRegisteredObjectName(domain + ":Type=Queue,Destination=" + getDestinationString() + ",BrokerName=localhost");
+
+        QueueViewMBean queue = (QueueViewMBean)MBeanServerInvocationHandler.newProxyInstance(mbeanServer, queueViewMBeanName, QueueViewMBean.class, true);
+
+        CompositeData[] compdatalist = queue.browse();
+        int initialQueueSize = compdatalist.length;
+        if (initialQueueSize == 0) {
+            fail("There is no message in the queue:");
+        }
+        else {
+            echo("Current queue size: " + initialQueueSize);
+        }
+        int messageCount = initialQueueSize;
+        String[] messageIDs = new String[messageCount];
+        for (int i = 0; i < messageCount; i++) {
+            CompositeData cdata = compdatalist[i];
+            String messageID = (String) cdata.get("JMSMessageID");
+            assertNotNull("Should have a message ID for message " + i, messageID);
+            messageIDs[i] = messageID;
+
+            Byte[] preview = (Byte[]) cdata.get(CompositeDataConstants.BODY_PREVIEW);
+            assertNotNull("should be a preview", preview);
+            assertTrue("not empty", preview.length > 0);
+        }
+
+        assertTrue("dest has some memory usage", queue.getMemoryPercentUsage() > 0);
+
+        // consume all the messages
+        echo("Attempting to consume all bytes messages from: " + destination);
+        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        MessageConsumer consumer = session.createConsumer(destination);
+        for (int i=0; i<MESSAGE_COUNT; i++) {
+            Message message = consumer.receive(5000);
+            assertNotNull(message);
+            assertTrue(message instanceof BytesMessage);
+        }
+        consumer.close();
+        session.close();
     }
 }

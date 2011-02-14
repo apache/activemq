@@ -283,6 +283,7 @@ public final class OpenTypeSupport {
         @Override
         public Map<String, Object> getFields(Object o) throws OpenDataException {
             ActiveMQBytesMessage m = (ActiveMQBytesMessage)o;
+            m.setReadOnlyBody(true);
             Map<String, Object> rc = super.getFields(o);
             long length = 0;
             try {
