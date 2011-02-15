@@ -455,7 +455,7 @@ class JobSchedulerImpl extends ServiceSupport implements Runnable, JobScheduler 
                 long currentTime = System.currentTimeMillis();
 
                 // Reads the list of the next entries and removes them from the store in one atomic step.
-                // Prevents race conditions on short delays, when storeJob() tries to append new items to the 
+                // Prevents race conditions on short delays, when storeJob() tries to append new items to the
                 // existing list during this read operation (see AMQ-3141).
                 synchronized (this) {
                     Map.Entry<Long, List<JobLocation>> first = getNextToSchedule();
@@ -464,7 +464,6 @@ class JobSchedulerImpl extends ServiceSupport implements Runnable, JobScheduler 
                         final long executionTime = first.getKey();
                         long nextExecutionTime = 0;
                         if (executionTime <= currentTime) {
-    
                             for (final JobLocation job : list) {
                                 int repeat = job.getRepeat();
                                 nextExecutionTime = calculateNextExecutionTime(job, currentTime, repeat);
@@ -488,6 +487,7 @@ class JobSchedulerImpl extends ServiceSupport implements Runnable, JobScheduler 
                                         // execute at
                                         // this time - just a cron job - so fire it
                                         fireJob(job);
+                                        //this.scheduleTime.setWaitTime(this.scheduleTime.DEFAULT_WAIT);
                                     }
                                     if (nextExecutionTime > currentTime) {
                                         // we will run again ...
@@ -517,6 +517,17 @@ class JobSchedulerImpl extends ServiceSupport implements Runnable, JobScheduler 
                             // now remove all jobs that have not been
                             // rescheduled from this execution time
                             remove(executionTime);
+
+                            // If there is a job that should fire before the currently set wait time
+                            // we need to reset wait time otherwise we'll miss it.
+                            Map.Entry<Long, List<JobLocation>> nextUp = getNextToSchedule();
+                            if (nextUp != null) {
+	                            final long timeUntilNextScheduled = nextUp.getKey() - currentTime;
+	                            if (timeUntilNextScheduled < this.scheduleTime.getWaitTime()) {
+	                            	this.scheduleTime.setWaitTime(timeUntilNextScheduled);
+	                            }
+                            }
+
                         } else {
                             if (LOG.isDebugEnabled()) {
                                 LOG.debug("Not yet time to execute the job, waiting " + (executionTime - currentTime) + " ms");
