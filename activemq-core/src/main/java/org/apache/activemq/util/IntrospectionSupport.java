@@ -38,26 +38,30 @@ import org.apache.activemq.command.ActiveMQDestination;
 
 
 public final class IntrospectionSupport {
-	
-	static {
-		// Add Spring and ActiveMQ specific property editors
-		String[] additionalPath = new String[] {
-				"org.springframework.beans.propertyeditors",
-				"org.apache.activemq.util" };
-		synchronized (PropertyEditorManager.class) {
-		    String[] existingSearchPath = PropertyEditorManager.getEditorSearchPath();
-		    String[] newSearchPath = (String[]) Array.newInstance(String.class,
-		            existingSearchPath.length + additionalPath.length);
-		    System.arraycopy(existingSearchPath, 0,
-		            newSearchPath, 0,
-		            existingSearchPath.length);
-		    System.arraycopy(additionalPath, 0, 
-		            newSearchPath, existingSearchPath.length,
-		            additionalPath.length);
-		    PropertyEditorManager.setEditorSearchPath(newSearchPath);
-                    PropertyEditorManager.registerEditor(String[].class, StringArrayEditor.class);
-		}
-	}
+    
+    static {
+        // Add Spring and ActiveMQ specific property editors
+        String[] additionalPath = new String[] {
+                "org.springframework.beans.propertyeditors",
+                "org.apache.activemq.util" };
+        synchronized (PropertyEditorManager.class) {
+            String[] existingSearchPath = PropertyEditorManager.getEditorSearchPath();
+            String[] newSearchPath = (String[]) Array.newInstance(String.class,
+                    existingSearchPath.length + additionalPath.length);
+            System.arraycopy(existingSearchPath, 0,
+                    newSearchPath, 0,
+                    existingSearchPath.length);
+            System.arraycopy(additionalPath, 0, 
+                    newSearchPath, existingSearchPath.length,
+                    additionalPath.length);
+            try {
+                PropertyEditorManager.setEditorSearchPath(newSearchPath);                
+                PropertyEditorManager.registerEditor(String[].class, StringArrayEditor.class);
+            } catch(java.security.AccessControlException ignore) {
+                // we might be in an applet...
+            }
+        }
+    }
     
     private IntrospectionSupport() {
     }
