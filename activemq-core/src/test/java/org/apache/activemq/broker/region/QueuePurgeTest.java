@@ -33,7 +33,9 @@ import javax.management.ObjectName;
 import junit.framework.TestCase;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.CombinationTestSupport;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.BrokerTestSupport;
 import org.apache.activemq.broker.jmx.QueueViewMBean;
 import org.apache.activemq.broker.region.policy.FilePendingQueueMessageStoragePolicy;
 import org.apache.activemq.broker.region.policy.PendingQueueMessageStoragePolicy;
@@ -43,8 +45,9 @@ import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class QueuePurgeTest extends TestCase {
+public class QueuePurgeTest extends CombinationTestSupport {
     private static final Logger LOG = LoggerFactory.getLogger(QueuePurgeTest.class);
+    private static final int NUM_TO_SEND = 40000;
     private final String MESSAGE_TEXT = new String(new byte[1024]);
     BrokerService broker;
     ConnectionFactory factory;
@@ -54,12 +57,17 @@ public class QueuePurgeTest extends TestCase {
     MessageConsumer consumer;
 
     protected void setUp() throws Exception {
+        setMaxTestTime(10*60*1000); // 10 mins
+        setAutoFail(true);
+        super.setUp();
         broker = new BrokerService();
-        broker.setDataDirectory("target/activemq-data");
+
+        File testDataDir = new File("target/activemq-data/QueuePurgeTest");
+        broker.setDataDirectoryFile(testDataDir);
         broker.setUseJmx(true);
         broker.setDeleteAllMessagesOnStartup(true);
         KahaDBPersistenceAdapter persistenceAdapter = new KahaDBPersistenceAdapter();
-        persistenceAdapter.setDirectory(new File("target/activemq-data/kahadb/QueuePurgeTest"));
+        persistenceAdapter.setDirectory(new File(testDataDir, "kahadb"));
         broker.setPersistenceAdapter(persistenceAdapter);
         broker.addConnector("tcp://localhost:0");
         broker.start();
@@ -69,6 +77,7 @@ public class QueuePurgeTest extends TestCase {
     }
 
     protected void tearDown() throws Exception {
+        super.tearDown();
         if (consumer != null) {
             consumer.close();
         }
@@ -78,19 +87,9 @@ public class QueuePurgeTest extends TestCase {
         broker.stop();
     }
 
-    public void testPurgeQueueWithActiveConsumer() throws Exception {
-        createProducerAndSendMessages(10000);
-        QueueViewMBean proxy = getProxyToQueueViewMBean();
-        createConsumer();
-        proxy.purge();
-        assertEquals("Queue size is not zero, it's " + proxy.getQueueSize(), 0,
-                proxy.getQueueSize());
-    }
-    
-    
-    public void testPurgeLargeQueue() throws Exception {       
+    public void testPurgeLargeQueue() throws Exception {
         applyBrokerSpoolingPolicy();
-        createProducerAndSendMessages(90000);
+        createProducerAndSendMessages(NUM_TO_SEND);
         QueueViewMBean proxy = getProxyToQueueViewMBean();
         LOG.info("purging..");
         proxy.purge();
@@ -103,11 +102,11 @@ public class QueuePurgeTest extends TestCase {
         applyBrokerSpoolingPolicy();
         final int exprityPeriod = 1000;
         applyExpiryDuration(exprityPeriod);
-        createProducerAndSendMessages(90000);
+        createProducerAndSendMessages(NUM_TO_SEND);
         QueueViewMBean proxy = getProxyToQueueViewMBean();
         LOG.info("waiting for expiry to kick in a bunch of times to verify it does not blow mem");
         Thread.sleep(10000);
-        assertEquals("Queue size is has not changed " + proxy.getQueueSize(), 90000,
+        assertEquals("Queue size is has not changed " + proxy.getQueueSize(), NUM_TO_SEND,
                 proxy.getQueueSize());
     }
     
@@ -129,7 +128,7 @@ public class QueuePurgeTest extends TestCase {
     
     public void testPurgeLargeQueueWithConsumer() throws Exception {       
         applyBrokerSpoolingPolicy();
-        createProducerAndSendMessages(90000);
+        createProducerAndSendMessages(NUM_TO_SEND);
         QueueViewMBean proxy = getProxyToQueueViewMBean();
         createConsumer();
         long start = System.currentTimeMillis();
@@ -158,7 +157,7 @@ public class QueuePurgeTest extends TestCase {
         MessageProducer producer = session.createProducer(queue);
         for (int i = 0; i < numToSend; i++) {
             TextMessage message = session.createTextMessage(MESSAGE_TEXT + i);
-            if (i  != 0 && i % 50000 == 0) {
+            if (i  != 0 && i % 10000 == 0) {
                 LOG.info("sent: " + i);
             }
             producer.send(message);
