@@ -22,9 +22,12 @@ import java.util.Map;
 
 import javax.jms.Destination;
 import javax.jms.JMSException;
+import javax.jms.MessageListener;
+import javax.jms.MessageProducer;
 
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQMessage;
+import org.apache.activemq.command.Message;
 
 /**
  * Implementations of this interface are used to map back and forth from Stomp
@@ -81,7 +84,7 @@ public interface FrameTranslator {
             if (message.getOriginalDestination() != null) {
                 headers.put(Stomp.Headers.Message.ORIGINAL_DESTINATION, ft.convertDestination(converter, message.getOriginalDestination()));
             }
-            
+
             // now lets add all the message headers
             final Map<String, Object> properties = message.getProperties();
             if (properties != null) {
@@ -107,6 +110,8 @@ public interface FrameTranslator {
             o = headers.remove(Stomp.Headers.Send.PRIORITY);
             if (o != null) {
                 msg.setJMSPriority(Integer.parseInt((String)o));
+            } else {
+                msg.setJMSPriority(javax.jms.Message.DEFAULT_PRIORITY);
             }
 
             o = headers.remove(Stomp.Headers.Send.TYPE);

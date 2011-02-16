@@ -296,6 +296,27 @@ public class StompTest extends CombinationTestSupport {
         assertEquals("GroupID", "abc", amqMessage.getGroupID());
     }
 
+    public void testSendMessageWithNoPriorityReceivesDefault() throws Exception {
+
+        MessageConsumer consumer = session.createConsumer(queue);
+
+        String frame = "CONNECT\n" + "login: system\n" + "passcode: manager\n\n" + Stomp.NULL;
+        stompConnection.sendFrame(frame);
+
+        frame = stompConnection.receiveFrame();
+        assertTrue(frame.startsWith("CONNECTED"));
+
+        frame = "SEND\n" + "correlation-id:c123\n" + "destination:/queue/" + getQueueName() + "\n\n" + "Hello World"
+                + Stomp.NULL;
+
+        stompConnection.sendFrame(frame);
+
+        TextMessage message = (TextMessage)consumer.receive(2500);
+        assertNotNull(message);
+        assertEquals("Hello World", message.getText());
+        assertEquals("getJMSPriority", 4, message.getJMSPriority());
+    }
+    
     public void testReceipts() throws Exception {
 
         StompConnection receiver = new StompConnection();
