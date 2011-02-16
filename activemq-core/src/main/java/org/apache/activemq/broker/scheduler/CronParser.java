@@ -43,7 +43,7 @@ public class CronParser {
             CronEntry hours = entries.get(HOURS);
             CronEntry dayOfMonth = entries.get(DAY_OF_MONTH);
             CronEntry month = entries.get(MONTH);
-            CronEntry dayOfWeek = entries.get(DAY_OF_MONTH);
+            CronEntry dayOfWeek = entries.get(DAY_OF_WEEK);
             
             int currentMinutes = working.get(Calendar.MINUTE);
             if (!isCurrent(minutes, currentMinutes)) {
@@ -71,7 +71,7 @@ public class CronParser {
             }
             int currentDayOfMonth = working.get(Calendar.DAY_OF_MONTH);
             if (!isCurrent(dayOfMonth, currentDayOfMonth)) {
-                int nextDay = getNext(dayOfMonth, currentMonth);
+                int nextDay = getNext(dayOfMonth, currentDayOfMonth);
                 working.add(Calendar.DAY_OF_MONTH, nextDay);
                 result = working.getTimeInMillis();
             }
