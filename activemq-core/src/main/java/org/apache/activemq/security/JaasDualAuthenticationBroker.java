@@ -108,15 +108,15 @@ public class JaasDualAuthenticationBroker extends BrokerFilter {
         Connector connector = context.getConnector();
         if (connector instanceof ManagedTransportConnector) {
             ManagedTransportConnector managedTransportConnector = (ManagedTransportConnector) connector;
-                isSSL = (managedTransportConnector.getServer() instanceof SslTransportServer);
-            } else {
-                isSSL = false;
-            }
+            isSSL = (managedTransportConnector.getServer() instanceof SslTransportServer);
+        } else {
+            isSSL = false;
+        }
+        super.removeConnection(context, info, error);
         if (isSSL) {
             this.sslBroker.removeConnection(context, info, error);
         } else {
             this.nonSslBroker.removeConnection(context, info, error);
         }
-        super.removeConnection(context, info, error);
     }
 }

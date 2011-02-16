@@ -113,6 +113,8 @@ public class BrokerService implements Service {
     private boolean enableStatistics = true;
     private boolean persistent = true;
     private boolean populateJMSXUserID;
+    private boolean useAuthenticatedPrincipalForJMXUserID;
+
     private boolean useShutdownHook = true;
     private boolean useLoggingForShutdownErrors;
     private boolean shutdownOnMasterFailure;
@@ -1882,7 +1884,9 @@ public class BrokerService implements Service {
         broker = new CompositeDestinationBroker(broker);
         broker = new TransactionBroker(broker, getPersistenceAdapter().createTransactionStore());
         if (isPopulateJMSXUserID()) {
-            broker = new UserIDBroker(broker);
+            UserIDBroker userIDBroker = new UserIDBroker(broker);
+            userIDBroker.setUseAuthenticatePrincipal(isUseAuthenticatedPrincipalForJMXUserID());
+            broker = userIDBroker;
         }
         if (isMonitorConnectionSplits()) {
             broker = new ConnectionSplitBroker(broker);
@@ -2337,5 +2341,13 @@ public class BrokerService implements Service {
 
     public void setBrokerId(String brokerId) {
         this.brokerId = new BrokerId(brokerId);
+    }
+
+    public boolean isUseAuthenticatedPrincipalForJMXUserID() {
+        return useAuthenticatedPrincipalForJMXUserID;
+    }
+
+    public void setUseAuthenticatedPrincipalForJMXUserID(boolean useAuthenticatedPrincipalForJMXUserID) {
+        this.useAuthenticatedPrincipalForJMXUserID = useAuthenticatedPrincipalForJMXUserID;
     }
 }

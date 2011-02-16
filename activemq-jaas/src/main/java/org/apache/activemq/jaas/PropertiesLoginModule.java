@@ -59,10 +59,12 @@ public class PropertiesLoginModule implements LoginModule {
     private String user;
     private Set<Principal> principals = new HashSet<Principal>();
     private File baseDir;
+    private boolean loginSucceeded;
 
     public void initialize(Subject subject, CallbackHandler callbackHandler, Map sharedState, Map options) {
         this.subject = subject;
         this.callbackHandler = callbackHandler;
+        loginSucceeded = false;
 
         if (System.getProperty("java.security.auth.login.config") != null) {
             baseDir = new File(System.getProperty("java.security.auth.login.config")).getParentFile();
@@ -121,36 +123,41 @@ public class PropertiesLoginModule implements LoginModule {
         if (!password.equals(new String(tmpPassword))) {
             throw new FailedLoginException("Password does not match");
         }
+        loginSucceeded = true;
         users.clear();
 
         if (debug) {
             LOG.debug("login " + user);
         }
-        return true;
+        return loginSucceeded;
     }
 
     public boolean commit() throws LoginException {
-        principals.add(new UserPrincipal(user));
+        boolean result = loginSucceeded;
+        if (result) {
+            principals.add(new UserPrincipal(user));
 
-        for (Enumeration enumeration = groups.keys(); enumeration.hasMoreElements();) {
-            String name = (String)enumeration.nextElement();
-            String[] userList = ((String)groups.getProperty(name) + "").split(",");
-            for (int i = 0; i < userList.length; i++) {
-                if (user.equals(userList[i])) {
-                    principals.add(new GroupPrincipal(name));
-                    break;
+            for (Enumeration enumeration = groups.keys(); enumeration.hasMoreElements();) {
+                String name = (String)enumeration.nextElement();
+                String[] userList = ((String)groups.getProperty(name) + "").split(",");
+                for (int i = 0; i < userList.length; i++) {
+                    if (user.equals(userList[i])) {
+                        principals.add(new GroupPrincipal(name));
+                        break;
+                    }
                 }
             }
+
+            subject.getPrincipals().addAll(principals);
         }
 
-        subject.getPrincipals().addAll(principals);
-
+        // will whack loginSucceeded
         clear();
 
         if (debug) {
-            LOG.debug("commit");
+            LOG.debug("commit, result: " + result);
         }
-        return true;
+        return result;
     }
 
     public boolean abort() throws LoginException {
@@ -165,7 +172,7 @@ public class PropertiesLoginModule implements LoginModule {
     public boolean logout() throws LoginException {
         subject.getPrincipals().removeAll(principals);
         principals.clear();
-
+        clear();
         if (debug) {
             LOG.debug("logout");
         }
@@ -175,5 +182,6 @@ public class PropertiesLoginModule implements LoginModule {
     private void clear() {
         groups.clear();
         user = null;
+        loginSucceeded = false;
     }
 }

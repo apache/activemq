@@ -16,7 +16,10 @@
  */
 package org.apache.activemq.broker;
 
+import java.util.Set;
 import org.apache.activemq.command.Message;
+import org.apache.activemq.jaas.UserPrincipal;
+import org.apache.activemq.security.SecurityContext;
 
 /**
  * This broker filter will append the producer's user ID into the JMSXUserID header
@@ -27,7 +30,7 @@ import org.apache.activemq.command.Message;
  * 
  */
 public class UserIDBroker extends BrokerFilter {
-    
+    boolean useAuthenticatePrincipal = false;
     public UserIDBroker(Broker next) {
         super(next);
     }
@@ -35,7 +38,30 @@ public class UserIDBroker extends BrokerFilter {
     public void send(ProducerBrokerExchange producerExchange, Message messageSend) throws Exception {
         final ConnectionContext context = producerExchange.getConnectionContext();
         String userID = context.getUserName();
+        if (isUseAuthenticatePrincipal()) {
+            SecurityContext securityContext = context.getSecurityContext();
+            if (securityContext != null) {
+                Set<?> principals = securityContext.getPrincipals();
+                if (principals != null) {
+                    for (Object candidate : principals) {
+                        if (candidate instanceof UserPrincipal) {
+                            userID = ((UserPrincipal)candidate).getName();
+                            break;
+                        }
+                    }
+                }
+            }
+        }
         messageSend.setUserID(userID);
         super.send(producerExchange, messageSend);
+    }
+
+
+    public boolean isUseAuthenticatePrincipal() {
+        return useAuthenticatePrincipal;
+    }
+
+    public void setUseAuthenticatePrincipal(boolean useAuthenticatePrincipal) {
+        this.useAuthenticatePrincipal = useAuthenticatePrincipal;
     }
 }
