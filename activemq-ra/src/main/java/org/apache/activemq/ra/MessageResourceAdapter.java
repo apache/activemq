@@ -28,7 +28,7 @@ import org.apache.activemq.ActiveMQConnection;
  * and deliver messages to those end points using the connection configure in
  * the resource adapter. <p/>Must override equals and hashCode (JCA spec 16.4)
  * 
- * @version $Revision$
+ * 
  */
 public interface MessageResourceAdapter extends ResourceAdapter {
 

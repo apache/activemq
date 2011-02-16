@@ -38,7 +38,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * @author pragmasoft
- * @version $Revision: 1.1.1.1 $
+ * 
  */
 public final class QueueRepeaterTest extends TestCase {
 

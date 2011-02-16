@@ -35,7 +35,7 @@ import javax.jms.TextMessage;
 import javax.jms.Topic;
 
 /**
- * @version $Revision: 1.3 $
+ * 
  */
 public class JmsConnectionStartStopTest extends TestSupport {
 

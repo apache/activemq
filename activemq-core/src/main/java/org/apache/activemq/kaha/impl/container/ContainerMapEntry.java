@@ -22,7 +22,7 @@ import org.apache.activemq.kaha.MapContainer;
 /**
  * Map.Entry implementation for a container
  * 
- * @version $Revision: 1.2 $
+ * 
  */
 class ContainerMapEntry implements Map.Entry {
 

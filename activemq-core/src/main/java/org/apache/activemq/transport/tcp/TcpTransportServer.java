@@ -57,7 +57,7 @@ import org.slf4j.LoggerFactory;
  * A TCP based implementation of {@link TransportServer}
  * 
  * @author David Martin Clavo david(dot)martin(dot)clavo(at)gmail.com (logging improvement modifications)
- * @version $Revision: 1.1 $
+ * 
  */
 
 public class TcpTransportServer extends TransportServerThreadSupport implements ServiceListener{

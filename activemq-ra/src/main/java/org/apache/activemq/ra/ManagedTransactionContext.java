@@ -29,7 +29,7 @@ import org.apache.activemq.transaction.Synchronization;
  * Allows us to switch between using a shared transaction context, or using a
  * local transaction context.
  * 
- * @version $Revision$
+ * 
  */
 public class ManagedTransactionContext extends TransactionContext {
 

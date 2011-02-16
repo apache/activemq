@@ -26,7 +26,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * @version $Revision: 1.1.1.1 $
+ * 
  */
 public class CompositeConsumeTest extends JmsTopicSendReceiveWithTwoConnectionsTest {
     private static final Logger LOG = LoggerFactory.getLogger(CompositeConsumeTest.class);

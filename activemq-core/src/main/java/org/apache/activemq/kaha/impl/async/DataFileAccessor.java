@@ -28,7 +28,7 @@ import org.apache.activemq.util.ByteSequence;
  * Optimized Store reader and updater. Single threaded and synchronous. Use in
  * conjunction with the DataFileAccessorPool of concurrent use.
  * 
- * @version $Revision: 1.1.1.1 $
+ * 
  */
 final class DataFileAccessor {
 

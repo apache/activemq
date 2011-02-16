@@ -35,7 +35,7 @@ import org.apache.activemq.usage.MemoryUsage;
 import org.apache.activemq.usage.Usage;
 
 /**
- * @version $Revision: 1.12 $
+ * 
  */
 public interface Destination extends Service, Task {
 

@@ -22,7 +22,7 @@ import javax.jms.Destination;
 import javax.jms.JMSException;
 
 /**
- * @version $Revision: 1.3 $
+ * 
  */
 public class SimpleNonPersistentTopicTest extends SimpleTopicTest {
 

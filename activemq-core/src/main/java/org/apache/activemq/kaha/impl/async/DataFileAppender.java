@@ -32,7 +32,7 @@ import org.apache.activemq.util.LinkedNode;
  * safe and gains throughput as you increase the number of concurrent writes it
  * does.
  * 
- * @version $Revision: 1.1.1.1 $
+ * 
  */
 class DataFileAppender {
 

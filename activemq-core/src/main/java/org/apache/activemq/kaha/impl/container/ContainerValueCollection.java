@@ -27,7 +27,7 @@ import org.apache.activemq.kaha.impl.index.IndexLinkedList;
 /**
  * Values collection for the MapContainer
  * 
- * @version $Revision: 1.2 $
+ * 
  */
 class ContainerValueCollection extends ContainerCollectionSupport implements Collection {
 

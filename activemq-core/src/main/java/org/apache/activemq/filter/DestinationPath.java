@@ -28,7 +28,7 @@ import org.apache.activemq.command.Message;
 /**
  * Helper class for decomposing a Destination into a number of paths
  * 
- * @version $Revision: 1.3 $
+ * 
  */
 public final class DestinationPath {
     protected static final char SEPARATOR = '.';

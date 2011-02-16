@@ -22,7 +22,7 @@ import org.eclipse.jetty.server.bio.SocketConnector;
 import org.eclipse.jetty.webapp.WebAppContext;
 
 /**
- * @version $Revision$
+ * 
  */
 public final class WebServer {
 

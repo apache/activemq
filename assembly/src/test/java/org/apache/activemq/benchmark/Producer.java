@@ -30,7 +30,7 @@ import javax.jms.Session;
 
 /**
  * @author James Strachan
- * @version $Revision$
+ * 
  */
 public class Producer extends BenchmarkSupport {
 

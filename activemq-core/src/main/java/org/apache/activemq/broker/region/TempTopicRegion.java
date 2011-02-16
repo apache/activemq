@@ -28,7 +28,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * @version $Revision: 1.7 $
+ * 
  */
 public class TempTopicRegion extends AbstractTempRegion {
 

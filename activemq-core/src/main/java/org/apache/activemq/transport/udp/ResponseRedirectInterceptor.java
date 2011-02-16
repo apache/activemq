@@ -22,7 +22,7 @@ import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportFilter;
 
 /**
- * @version $Revision: $
+ * 
  */
 public class ResponseRedirectInterceptor extends TransportFilter {
     private final UdpTransport transport;

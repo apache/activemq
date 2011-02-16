@@ -21,7 +21,7 @@ import javax.jms.JMSException;
 /**
  * An exception thrown when a service is not correctly configured
  *
- * @version $Revision: 1.2 $
+ * 
  */
 public class ConfigurationException extends JMSException {
     private static final long serialVersionUID = 5639082552451065258L;

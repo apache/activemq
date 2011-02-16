@@ -25,7 +25,7 @@ import javax.jms.Queue;
 import javax.jms.Session;
 
 /**
- * @version $Revision: 1.2 $
+ * 
  */
 public class JmsAutoAckTest extends TestSupport {
 

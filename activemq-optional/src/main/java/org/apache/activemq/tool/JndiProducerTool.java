@@ -22,7 +22,7 @@ import javax.jms.Queue;
 import javax.naming.InitialContext;
 
 /**
- * @version $Revision$
+ * 
  */
 public class JndiProducerTool extends ProducerTool {
 

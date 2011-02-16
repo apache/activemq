@@ -22,7 +22,7 @@ import java.util.LinkedList;
 /**
  * Holder for many bitArrays - used for message audit
  * 
- * @version $Revision: 1.1.1.1 $
+ * 
  */
 public class BitArrayBin implements Serializable {
 

@@ -28,7 +28,7 @@ import org.apache.camel.Endpoint;
  * A JMS {@link javax.jms.QueueSender} which sends message exchanges to a Camel
  * {@link org.apache.camel.Endpoint}
  * 
- * @version $Revision: $
+ * 
  */
 public class CamelQueueSender extends CamelMessageProducer implements QueueSender {
 

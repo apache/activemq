@@ -23,7 +23,7 @@ import org.apache.activemq.transport.stomp.Stomp.Headers.Subscribe;
  * 
  * This example demonstrates Stomp Java API
  * 
- * @version $Revision$
+ * 
  *
  */
 public class StompExample {

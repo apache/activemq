@@ -30,7 +30,7 @@ import javax.jms.TopicSubscriber;
  * such as to support <a href="http://activemq.apache.org/camel/">Apache Camel</a>
  * to create and manage endpoints
  *
- * @version $Revision: $
+ * 
  */
 public interface CustomDestination extends Destination {
 

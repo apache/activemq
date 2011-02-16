@@ -28,7 +28,7 @@ import org.apache.activemq.util.IdGenerator;
 /**
  * ActiveMQMessageAuditTest
  * 
- * @version $Revision: 1.1.1.1 $
+ * 
  */
 public class ActiveMQMessageAuditTest extends TestCase {
 

@@ -21,7 +21,7 @@ import java.io.IOException;
 /**
  * Occurs when bad magic occurs in reading a file
  * 
- * @version $Revision: 1.2 $
+ * 
  */
 public class BadMagicException extends IOException {
     /**

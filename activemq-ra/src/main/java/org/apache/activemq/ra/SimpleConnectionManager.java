@@ -32,7 +32,7 @@ import org.slf4j.LoggerFactory;
  * A simple implementation of a ConnectionManager. An Application Server will
  * have a better implementation with pooling and security etc.
  * 
- * @version $Revision$
+ * 
  */
 public class SimpleConnectionManager implements ConnectionManager, ConnectionEventListener {
 

@@ -20,7 +20,7 @@ import java.io.IOException;
 import java.net.URI;
 
 /**
- * @version $Revision: 1.5 $
+ * 
  */
 public class TransportFilter implements TransportListener, Transport {
     protected final Transport next;

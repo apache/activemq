@@ -27,7 +27,7 @@ import org.apache.activemq.filter.MessageEvaluationContext;
  * into the region implementations.  This is used by a queue to deliver
  * messages to the matching subscriptions.
  * 
- * @version $Revision$
+ * 
  */
 public interface DispatchPolicy {
     

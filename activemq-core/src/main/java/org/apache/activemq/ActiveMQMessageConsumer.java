@@ -92,7 +92,7 @@ import org.slf4j.LoggerFactory;
  * It is a client programming error for a <CODE>MessageListener</CODE> to
  * throw an exception.
  * 
- * @version $Revision: 1.22 $
+ * 
  * @see javax.jms.MessageConsumer
  * @see javax.jms.QueueReceiver
  * @see javax.jms.TopicSubscriber

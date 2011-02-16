@@ -25,7 +25,7 @@ import org.apache.activemq.util.DataByteArrayOutputStream;
 /**
  * Optimized Store writer
  * 
- * @version $Revision: 1.1.1.1 $
+ * 
  */
 class StoreIndexWriter {
 

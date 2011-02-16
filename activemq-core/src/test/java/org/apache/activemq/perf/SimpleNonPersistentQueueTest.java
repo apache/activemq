@@ -27,7 +27,7 @@ import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 
 /**
- * @version $Revision: 1.3 $
+ * 
  */
 public class SimpleNonPersistentQueueTest extends SimpleQueueTest {
 

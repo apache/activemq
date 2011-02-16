@@ -32,7 +32,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Consolidates subscriptions
  * 
- * @version $Revision: 1.1 $
+ * 
  */
 public class ConduitBridge extends DemandForwardingBridge {
     private static final Logger LOG = LoggerFactory.getLogger(ConduitBridge.class);

@@ -28,7 +28,7 @@ import org.apache.activemq.command.ActiveMQQueue;
 /**
  * Test cases used to test the JMS message exclusive consumers.
  * 
- * @version $Revision$
+ * 
  */
 public class JMSExclusiveConsumerTest extends JmsTestSupport {
 

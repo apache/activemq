@@ -25,7 +25,7 @@ import javax.management.remote.JMXServiceURL;
 /**
  * Configuration based on system-properties.
  * 
- * @version $Revision: $
+ * 
  */
 public class SystemPropertiesConfiguration extends AbstractConfiguration {
 

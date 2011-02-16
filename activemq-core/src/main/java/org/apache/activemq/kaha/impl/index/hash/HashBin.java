@@ -21,7 +21,7 @@ import java.io.IOException;
 /**
  * Bin in a HashIndex
  * 
- * @version $Revision: 1.1.1.1 $
+ * 
  */
 class HashBin {
     private HashIndex hashIndex;

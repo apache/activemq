@@ -27,7 +27,7 @@ import javax.jms.Session;
  * Base class for simple test cases using a single connection, session
  * producer and consumer
  *
- * @version $Revision: 1.1.1.1 $
+ * 
  */
 public class ProducerConsumerTestSupport extends TestSupport {
     protected Connection connection;

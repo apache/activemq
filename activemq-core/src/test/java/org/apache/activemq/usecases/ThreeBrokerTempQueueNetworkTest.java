@@ -27,7 +27,7 @@ import org.apache.activemq.JmsMultipleBrokersTestSupport;
 import org.apache.activemq.network.NetworkConnector;
 
 /**
- * @version $Revision: 1.1.1.1 $
+ * 
  */
 public class ThreeBrokerTempQueueNetworkTest extends JmsMultipleBrokersTestSupport {
     protected static final int MESSAGE_COUNT = 100;

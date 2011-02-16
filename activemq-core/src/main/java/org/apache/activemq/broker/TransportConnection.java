@@ -99,7 +99,7 @@ import org.slf4j.LoggerFactory;
 
 import static org.apache.activemq.thread.DefaultThreadPools.getDefaultTaskRunnerFactory;
 /**
- * @version $Revision: 1.8 $
+ * 
  */
 public class TransportConnection implements Connection, Task, CommandVisitor {
     private static final Logger LOG = LoggerFactory.getLogger(TransportConnection.class);

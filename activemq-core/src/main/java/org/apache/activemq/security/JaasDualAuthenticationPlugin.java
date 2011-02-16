@@ -25,7 +25,7 @@ import org.apache.activemq.broker.Broker;
  * @org.apache.xbean.XBean description="Provides a JAAS based authentication plugin
  * which uses properties for non-SSL and certificates for SSL"
  * 
- * @version $Revision: $
+ * 
  */
 public class JaasDualAuthenticationPlugin extends JaasAuthenticationPlugin {
     private String sslConfiguration = "activemq-ssl-domain";

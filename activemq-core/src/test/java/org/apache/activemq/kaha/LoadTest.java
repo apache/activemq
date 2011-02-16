@@ -25,7 +25,7 @@ import org.apache.activemq.kaha.impl.KahaStore;
 /**
  * Store test
  * 
- * @version $Revision: 1.2 $
+ * 
  */
 public class LoadTest extends TestCase {
     static final int COUNT = 10000;

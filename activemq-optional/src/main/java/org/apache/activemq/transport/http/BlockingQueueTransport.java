@@ -29,7 +29,7 @@ import org.apache.activemq.util.ServiceStopper;
  * and adds outgoing packets onto a {@link Queue} so that they can be dispatched
  * by the HTTP GET requests from the client.
  *
- * @version $Revision$
+ * 
  */
 public class BlockingQueueTransport extends TransportSupport {
     public static final long MAX_TIMEOUT = 30000L;

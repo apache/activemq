@@ -43,7 +43,7 @@ import org.slf4j.LoggerFactory;
 /**
  * A simple queue sender which does not use JNDI
  * 
- * @version $Revision: 1.1 $
+ * 
  */
 public final class DefaultQueueSender {
 

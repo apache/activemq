@@ -99,7 +99,7 @@ import org.slf4j.LoggerFactory;
  * number of transport connectors, network connectors and a bunch of properties
  * which can be used to configure the broker as its lazily created.
  * 
- * @version $Revision: 1.1 $
+ * 
  * @org.apache.xbean.XBean
  */
 public class BrokerService implements Service {

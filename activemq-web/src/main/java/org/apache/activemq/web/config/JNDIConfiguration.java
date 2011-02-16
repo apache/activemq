@@ -27,7 +27,7 @@ import javax.naming.NamingException;
 /**
  * Configuration based on JNDI values.
  *
- * @version $Revision: $
+ * 
  */
 public class JNDIConfiguration extends AbstractConfiguration {
 

@@ -25,7 +25,7 @@ import org.apache.activemq.command.MessageId;
  * object may hold a hard reference to the message or only hold the
  * id of the message if the message has been persisted on in a MessageStore.
  * 
- * @version $Revision: 1.15 $
+ * 
  */
 public interface MessageReference {
     

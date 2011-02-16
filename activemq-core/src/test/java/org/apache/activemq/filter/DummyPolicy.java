@@ -21,7 +21,7 @@ import java.util.List;
 /**
  * Represents a destination based policy
  * 
- * @version $Revision: 1.1 $
+ * 
  */
 public class DummyPolicy extends DestinationMap {
 

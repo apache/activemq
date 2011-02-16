@@ -32,7 +32,7 @@ import junit.framework.TestCase;
 import org.apache.activemq.ActiveMQConnectionFactory;
 
 /**
- * @version $Revision$
+ * 
  */
 public class ManagedConnectionTest extends TestCase {
 

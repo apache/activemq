@@ -24,7 +24,7 @@ import javax.jms.Message;
 /**
  * Converts Message from one JMS to another
  * 
- * @version $Revision: 1.1.1.1 $
+ * 
  */
 public interface JmsMesageConvertor {
     

@@ -35,7 +35,7 @@ import org.slf4j.LoggerFactory;
  * A simple DiscoveryAgent that allows static configuration of the discovered
  * services.
  * 
- * @version $Revision$
+ * 
  */
 public class SimpleDiscoveryAgent implements DiscoveryAgent {
 

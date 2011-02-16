@@ -39,7 +39,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * An abstraction over JMX mbean registration
  * 
  * @org.apache.xbean.XBean
- * @version $Revision$
+ * 
  */
 public class ManagementContext implements Service {
     /**

@@ -34,7 +34,7 @@ import org.apache.activemq.usage.SystemUsage;
  * An implementation of {@link org.apache.activemq.store.MessageStore} which
  * uses a JPS Container
  * 
- * @version $Revision: 1.7 $
+ * 
  */
 public class KahaMessageStore extends AbstractMessageStore {
 

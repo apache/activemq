@@ -31,7 +31,7 @@ import org.apache.activemq.jaas.GroupPrincipal;
 /**
  * Handles authenticating a users against a simple user name/password map.
  * 
- * @version $Revision$
+ * 
  */
 public class SimpleAuthenticationBroker extends BrokerFilter {
 

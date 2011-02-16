@@ -29,7 +29,7 @@ import org.apache.activemq.util.ByteSequence;
 /**
  * Provides a Journal Facade to the DataManager.
  * 
- * @version $Revision: 1.1.1.1 $
+ * 
  */
 public final class JournalFacade implements Journal {
 

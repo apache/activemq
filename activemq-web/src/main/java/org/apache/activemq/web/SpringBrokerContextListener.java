@@ -37,7 +37,7 @@ import org.springframework.web.context.support.ServletContextResource;
  * As a a default, if a <tt>brokerURI</tt> is not specified it will look up
  * for <tt>activemq.xml</tt>
  * 
- * @version $Revision: 1.1 $
+ * 
  */
 public class SpringBrokerContextListener implements ServletContextListener {
 

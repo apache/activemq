@@ -46,7 +46,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * @version $Revision$
+ * 
  */
 public abstract class NetworkConnector extends NetworkBridgeConfiguration implements Service {
 

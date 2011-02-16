@@ -29,7 +29,7 @@ import org.apache.activemq.command.Message;
  * Allows messages to be added to the end of the buffer such that they are kept
  * around and evicted in a FIFO manner.
  * 
- * @version $Revision: 1.1 $
+ * 
  */
 public class MessageQueue {
 

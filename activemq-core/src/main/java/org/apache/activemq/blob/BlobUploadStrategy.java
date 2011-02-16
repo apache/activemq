@@ -28,7 +28,7 @@ import org.apache.activemq.command.ActiveMQBlobMessage;
 /**
  * Represents a strategy of uploading a file/stream to some remote
  *
- * @version $Revision: $
+ * 
  */
 public interface BlobUploadStrategy {
 

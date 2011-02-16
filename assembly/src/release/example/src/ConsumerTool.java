@@ -39,7 +39,7 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 /**
  * A simple tool for consuming messages
  * 
- * @version $Revision: 1.1.1.1 $
+ * 
  */
 public class ConsumerTool extends Thread implements MessageListener, ExceptionListener {
 

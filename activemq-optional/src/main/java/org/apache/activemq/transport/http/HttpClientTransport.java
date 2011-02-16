@@ -44,7 +44,7 @@ import org.slf4j.LoggerFactory;
  * <a href="http://jakarta.apache.org/commons/httpclient/">commons-httpclient</a>
  * library
  * 
- * @version $Revision$
+ * 
  */
 public class HttpClientTransport extends HttpTransportSupport {
 

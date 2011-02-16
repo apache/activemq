@@ -27,7 +27,7 @@ import org.apache.activemq.filter.MessageEvaluationContext;
  * order.
  * 
  * @org.apache.xbean.XBean
- * @version $Revision$
+ * 
  */
 public class StrictOrderDispatchPolicy implements DispatchPolicy {
 

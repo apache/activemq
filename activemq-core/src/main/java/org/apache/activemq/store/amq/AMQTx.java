@@ -31,7 +31,7 @@ import org.apache.activemq.kaha.impl.async.Location;
 /**
  * Operations
  * 
- * @version $Revision: 1.6 $
+ * 
  */
 public class AMQTx {
 

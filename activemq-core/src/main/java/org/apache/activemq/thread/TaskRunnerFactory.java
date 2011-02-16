@@ -30,7 +30,7 @@ import java.util.concurrent.TimeUnit;
  * processes but that no one task overtakes the system. This is kina like
  * cooperative multitasking.
  * 
- * @version $Revision: 1.5 $
+ * 
  */
 public class TaskRunnerFactory implements Executor {
 

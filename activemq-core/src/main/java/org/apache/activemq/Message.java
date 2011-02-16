@@ -19,7 +19,7 @@ package org.apache.activemq;
 /**
  * Represents the JMS extension methods in Apache ActiveMQ
  *
- * @version $Revision: $
+ * 
  */
 public interface Message extends javax.jms.Message {
 

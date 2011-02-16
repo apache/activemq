@@ -33,7 +33,7 @@ import org.apache.activemq.jaas.JassCredentialCallbackHandler;
 /**
  * Logs a user in using JAAS.
  * 
- * @version $Revision$
+ * 
  */
 public class JaasAuthenticationBroker extends BrokerFilter {
 

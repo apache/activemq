@@ -53,7 +53,7 @@ import org.apache.activemq.util.URISupport.CompositeData;
  * TopicConnectionFactory. You can use this connection to create both
  * QueueConnections and TopicConnections.
  * 
- * @version $Revision: 1.9 $
+ * 
  * @see javax.jms.ConnectionFactory
  */
 public class ActiveMQConnectionFactory extends JNDIBaseStorable implements ConnectionFactory, QueueConnectionFactory, TopicConnectionFactory, StatsCapable, Cloneable {

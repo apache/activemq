@@ -21,7 +21,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.activemq.command.ConnectionInfo;
 
 /**
- * @version $Revision: 1.8 $
+ * 
  */
 
 public class TransportConnectionState extends org.apache.activemq.state.ConnectionState {

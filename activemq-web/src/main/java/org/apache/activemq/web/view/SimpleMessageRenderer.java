@@ -31,7 +31,7 @@ import javax.servlet.http.HttpServletResponse;
  * A simple rendering of the contents of a queue appear as a list of message
  * elements which just contain an ID attribute.
  * 
- * @version $Revision: $
+ * 
  */
 public class SimpleMessageRenderer implements MessageRenderer {
 

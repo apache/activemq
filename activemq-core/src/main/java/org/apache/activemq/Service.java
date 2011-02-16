@@ -25,7 +25,7 @@ package org.apache.activemq;
  * {@link org.springframework.beans.factory.InitializingBean} 
  * and {@link org.springframework.beans.factory.DisposableBean}
  * 
- * @version $Revision: 1.1 $
+ * 
  */
 public interface Service {
 

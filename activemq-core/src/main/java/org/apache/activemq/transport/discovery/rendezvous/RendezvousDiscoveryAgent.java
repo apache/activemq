@@ -41,7 +41,7 @@ import org.slf4j.LoggerFactory;
  * A {@link DiscoveryAgent} using <a href="http://www.zeroconf.org/">Zeroconf</a>
  * via the <a href="http://jmdns.sf.net/">jmDNS</a> library
  * 
- * @version $Revision$
+ * 
  */
 public class RendezvousDiscoveryAgent implements DiscoveryAgent, ServiceListener {
     private static final Logger LOG = LoggerFactory.getLogger(RendezvousDiscoveryAgent.class);

@@ -26,7 +26,7 @@ import org.apache.activemq.kaha.Marshaller;
 /**
  * Marshall an AtomicInteger
  * 
- * @version $Revision: 1.10 $
+ * 
  */
 public class AtomicIntegerMarshaller implements Marshaller<AtomicInteger> {
 

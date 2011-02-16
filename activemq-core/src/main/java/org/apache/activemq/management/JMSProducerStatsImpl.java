@@ -23,7 +23,7 @@ import org.apache.activemq.util.IndentPrinter;
 /**
  * Statistics for a JMS producer
  * 
- * @version $Revision: 1.2 $
+ * 
  */
 public class JMSProducerStatsImpl extends JMSEndpointStatsImpl {
     private String destination;

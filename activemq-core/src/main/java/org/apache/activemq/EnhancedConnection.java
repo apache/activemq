@@ -26,7 +26,7 @@ import org.apache.activemq.advisory.DestinationSource;
 /**
  * A set of enhanced APIs for a JMS provider
  *
- * @version $Revision: 1.1 $
+ * 
  */
 public interface EnhancedConnection extends TopicConnection, QueueConnection, Closeable {
     

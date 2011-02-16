@@ -24,7 +24,7 @@ import javax.resource.spi.ActivationSpec;
 import java.util.List;
 
 /**
- * @version $Revision: 1.1 $
+ * 
  */
 public interface MessageActivationSpec extends ActivationSpec {
     boolean isValidUseRAManagedTransaction(List<String> errorMessages);

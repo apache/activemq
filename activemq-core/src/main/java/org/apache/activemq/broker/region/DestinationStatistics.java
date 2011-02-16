@@ -25,7 +25,7 @@ import org.apache.activemq.management.TimeStatisticImpl;
 /**
  * The J2EE Statistics for the a Destination.
  * 
- * @version $Revision$
+ * 
  */
 public class DestinationStatistics extends StatsImpl {
 

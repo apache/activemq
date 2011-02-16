@@ -38,7 +38,7 @@ import org.slf4j.LoggerFactory;
  *   see what it includes.
  * </broker>   
  * {code}
- * @version $Revision: 1.1 $
+ * 
  */
 public class XBeanBrokerService extends BrokerService {
     private static final transient Logger LOG = LoggerFactory.getLogger(XBeanBrokerService.class);

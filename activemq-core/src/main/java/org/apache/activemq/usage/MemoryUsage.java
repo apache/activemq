@@ -22,7 +22,7 @@ package org.apache.activemq.usage;
  * memory usage.
  * 
  * @org.apache.xbean.XBean
- * @version $Revision: 1.3 $
+ * 
  */
 public class MemoryUsage extends Usage<MemoryUsage> {
 

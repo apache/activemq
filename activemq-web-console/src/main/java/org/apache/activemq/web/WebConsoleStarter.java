@@ -30,7 +30,7 @@ import org.springframework.web.context.support.XmlWebApplicationContext;
 /**
  * Starts the WebConsole.
  * 
- * @version $Revision: 1.1 $
+ * 
  */
 public class WebConsoleStarter implements ServletContextListener {
     

@@ -25,7 +25,7 @@ import javax.jms.TopicPublisher;
 import org.apache.activemq.ActiveMQTopicPublisher;
 
 /**
- * @version $Revision: 1.1 $
+ * 
  */
 public class PooledTopicPublisher extends PooledProducer implements TopicPublisher {
 

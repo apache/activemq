@@ -21,7 +21,7 @@ import org.apache.activemq.command.ActiveMQDestination;
 /**
  * A {@link DestinationFilter} used for composite destinations
  * 
- * @version $Revision: 1.3 $
+ * 
  */
 public class CompositeDestinationFilter extends DestinationFilter {
 

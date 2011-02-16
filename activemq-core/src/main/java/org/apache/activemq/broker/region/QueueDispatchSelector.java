@@ -34,7 +34,7 @@ import org.slf4j.LoggerFactory;
  * Queue dispatch policy that determines if a message can be sent to a subscription
  * 
  * @org.apache.xbean.XBean
- * @version $Revision$
+ * 
  */
 public class QueueDispatchSelector extends SimpleDispatchSelector {
     private static final Logger LOG = LoggerFactory.getLogger(QueueDispatchSelector.class);

@@ -27,7 +27,7 @@ import org.apache.activemq.store.MessageRecoveryListener;
 /**
  * A holder for a durable subscriber
  * 
- * @version $Revision: 1.7 $
+ * 
  */
 class MemoryTopicSub {
 

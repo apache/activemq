@@ -50,7 +50,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Test cases used to test the JMS message consumer.
  * 
- * @version $Revision$
+ * 
  */
 public class JMSConsumerTest extends JmsTestSupport {
 

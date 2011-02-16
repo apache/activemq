@@ -38,7 +38,7 @@ import org.apache.activemq.ActiveMQConnectionMetaData;
  * Resource Adapter to publish messages using the same JMS session that is used to dispatch
  * messages.
  *
- * @version $Revision$
+ * 
  */
 public class InboundConnectionProxy implements Connection, QueueConnection, TopicConnection {
 

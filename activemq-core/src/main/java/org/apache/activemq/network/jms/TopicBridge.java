@@ -31,7 +31,7 @@ import javax.jms.TopicSession;
 /**
  * A Destination bridge is used to bridge between to different JMS systems
  * 
- * @version $Revision: 1.1.1.1 $
+ * 
  */
 class TopicBridge extends DestinationBridge {
     protected Topic consumerTopic;

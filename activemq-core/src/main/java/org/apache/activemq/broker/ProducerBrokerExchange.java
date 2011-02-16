@@ -26,7 +26,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Holds internal state in the broker for a MessageProducer
  * 
- * @version $Revision: 1.8 $
+ * 
  */
 public class ProducerBrokerExchange {
 

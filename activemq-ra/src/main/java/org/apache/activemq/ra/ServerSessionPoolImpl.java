@@ -38,7 +38,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * @version $Revision$ $Date$
+ *  $Date$
  */
 public class ServerSessionPoolImpl implements ServerSessionPool {
 

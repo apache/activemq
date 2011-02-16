@@ -21,7 +21,7 @@ import java.util.Map;
 /**
  * A bunch of utility methods for working with maps
  * 
- * @version $Revision$
+ * 
  */
 public final class MapHelper {
 

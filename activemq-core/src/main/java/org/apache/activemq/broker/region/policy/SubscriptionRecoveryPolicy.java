@@ -31,7 +31,7 @@ import org.apache.activemq.command.Message;
  * into the region implementations.  This is used by a topic to retroactively recover
  * messages that the subscription missed.
  * 
- * @version $Revision$
+ * 
  */
 public interface SubscriptionRecoveryPolicy extends Service {
     

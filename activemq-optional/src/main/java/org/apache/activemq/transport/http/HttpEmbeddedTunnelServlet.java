@@ -27,7 +27,7 @@ import org.apache.activemq.transport.TransportAcceptListener;
  * This servlet embeds an ActiveMQ broker inside a servlet engine which is ideal
  * for deploying ActiveMQ inside a WAR and using this servlet as a HTTP tunnel.
  * 
- * @version $Revision$
+ * 
  */
 public class HttpEmbeddedTunnelServlet extends HttpTunnelServlet {
     private static final long serialVersionUID = -3705734740251302361L;

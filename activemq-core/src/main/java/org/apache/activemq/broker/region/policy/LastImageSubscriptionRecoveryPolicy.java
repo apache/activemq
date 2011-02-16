@@ -32,7 +32,7 @@ import org.apache.activemq.filter.DestinationFilter;
  * last message.
  * 
  * @org.apache.xbean.XBean
- * @version $Revision$
+ * 
  */
 public class LastImageSubscriptionRecoveryPolicy implements SubscriptionRecoveryPolicy {
 

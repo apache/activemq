@@ -23,7 +23,7 @@ import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
 
 /**
- * @version $Revision: 1.4 $
+ * 
  */
 public class ActiveMQInitialContextFactoryTest extends JNDITestSupport {
 

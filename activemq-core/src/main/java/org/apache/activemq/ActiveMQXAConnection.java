@@ -39,7 +39,7 @@ import org.apache.activemq.util.IdGenerator;
  * to use the transactional support  available in their environment, rather
  * than use these XA  interfaces directly.
  *
- * @version $Revision: 1.6 $
+ * 
  * @see javax.jms.Connection
  * @see javax.jms.ConnectionFactory
  * @see javax.jms.QueueConnection

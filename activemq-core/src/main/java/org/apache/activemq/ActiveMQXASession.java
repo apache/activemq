@@ -56,7 +56,7 @@ import org.apache.activemq.command.SessionId;
  * to use the transactional support  available in their environment, rather
  * than use these XA  interfaces directly.
  *
- * @version $Revision: 1.5 $
+ * 
  * @see javax.jms.Session
  * @see javax.jms.QueueSession
  * @see javax.jms.TopicSession

@@ -59,7 +59,7 @@ import org.slf4j.LoggerFactory;
  * The Topic is a destination that sends a copy of a message to every active
  * Subscription registered.
  * 
- * @version $Revision: 1.21 $
+ * 
  */
 public class Topic extends BaseDestination implements Task {
     protected static final Logger LOG = LoggerFactory.getLogger(Topic.class);

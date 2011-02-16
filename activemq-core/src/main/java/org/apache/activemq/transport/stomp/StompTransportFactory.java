@@ -30,7 +30,7 @@ import org.apache.activemq.xbean.XBeanBrokerService;
 /**
  * A <a href="http://stomp.codehaus.org/">STOMP</a> transport factory
  * 
- * @version $Revision: 1.1.1.1 $
+ * 
  */
 public class StompTransportFactory extends TcpTransportFactory implements BrokerServiceAware {
 

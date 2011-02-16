@@ -33,7 +33,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Useful base class for unit test cases
  * 
- * @version $Revision: 1.1.1.1 $
+ * 
  */
 public class TestSupport extends TestCase {
     

@@ -57,7 +57,7 @@ import org.slf4j.LoggerFactory;
 /**
  * A MessageStore that uses a Journal to store it's messages.
  * 
- * @version $Revision: 1.14 $
+ * 
  */
 public class AMQMessageStore extends AbstractMessageStore {
     private static final Logger LOG = LoggerFactory.getLogger(AMQMessageStore.class);

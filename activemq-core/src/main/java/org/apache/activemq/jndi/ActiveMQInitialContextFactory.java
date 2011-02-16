@@ -44,7 +44,7 @@ import org.apache.activemq.command.ActiveMQTopic;
  * child context depending on the QoS such as transient or durable and queue or
  * topic.
  * 
- * @version $Revision: 1.2 $
+ * 
  */
 public class ActiveMQInitialContextFactory implements InitialContextFactory {
 

@@ -24,7 +24,7 @@ import org.slf4j.LoggerFactory;
  * Defines the prefetch message policies for different types of consumers
  * 
  * @org.apache.xbean.XBean element="prefetchPolicy"
- * @version $Revision: 1.3 $
+ * 
  */
 public class ActiveMQPrefetchPolicy extends Object implements Serializable {
     public static final int MAX_PREFETCH_SIZE = Short.MAX_VALUE - 1;

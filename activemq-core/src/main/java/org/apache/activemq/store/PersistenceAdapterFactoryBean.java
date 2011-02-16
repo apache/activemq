@@ -24,7 +24,7 @@ import org.springframework.beans.factory.FactoryBean;
  * 
  * @org.apache.xbean.XBean element="journaledJDBC"
  * 
- * @version $Revision: 1.1 $
+ * 
  */
 public class PersistenceAdapterFactoryBean extends JournalPersistenceAdapterFactory implements FactoryBean {
 

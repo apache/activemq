@@ -32,7 +32,7 @@ import org.slf4j.LoggerFactory;
 /**
  * A Destination bridge is used to bridge between to different JMS systems
  * 
- * @version $Revision: 1.1.1.1 $
+ * 
  */
 public abstract class DestinationBridge implements Service, MessageListener {
     private static final Logger LOG = LoggerFactory.getLogger(DestinationBridge.class);

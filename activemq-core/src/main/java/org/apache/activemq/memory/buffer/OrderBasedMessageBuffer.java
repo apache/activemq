@@ -23,7 +23,7 @@ import java.util.LinkedList;
  * A {@link MessageBuffer} which evicts messages in arrival order so the oldest
  * messages are removed first.
  * 
- * @version $Revision: 1.1 $
+ * 
  */
 public class OrderBasedMessageBuffer implements MessageBuffer {
 

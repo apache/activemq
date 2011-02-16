@@ -19,7 +19,7 @@ package org.apache.activemq.store.jdbc.adapter;
 import org.apache.activemq.store.jdbc.Statements;
 
 /**
- * @version $Revision: 1.2 $
+ * 
  * @org.apache.xbean.XBean element="hsqldb-jdbc-adapter"
  */
 public class HsqldbJDBCAdapter extends BytesJDBCAdapter {

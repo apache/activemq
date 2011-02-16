@@ -26,7 +26,7 @@ import org.apache.activemq.ActiveMQSession;
 /**
  * A JMS {@link javax.jms.Topic} object which refers to a Camel endpoint
  *
- * @version $Revision: $
+ * 
  */
 public class CamelTopic extends CamelDestination implements Topic {
 

@@ -26,7 +26,7 @@ import org.apache.activemq.util.DataByteArrayOutputStream;
  * Optimized Store writer. Synchronously marshalls and writes to the data file.
  * Simple but may introduce a bit of contention when put under load.
  * 
- * @version $Revision: 1.1.1.1 $
+ * 
  */
 public final class SyncDataFileWriter {
 

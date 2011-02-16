@@ -34,7 +34,7 @@ import org.slf4j.LoggerFactory;
  * broker isn't aware they've gone. Can occur with network glitches or client
  * error
  * 
- * @version $Revision$
+ * 
  */
 public class ConnectionSplitBroker extends BrokerFilter{
     private static final Logger LOG = LoggerFactory.getLogger(ConnectionSplitBroker.class);

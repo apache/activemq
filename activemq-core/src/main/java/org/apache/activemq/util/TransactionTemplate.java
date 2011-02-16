@@ -25,7 +25,7 @@ import org.slf4j.LoggerFactory;
 /**
  * A helper class for running code with a PersistenceAdapter in a transaction.
  * 
- * @version $Revision: 1.2 $
+ * 
  */
 public class TransactionTemplate {
     private static final Logger LOG = LoggerFactory.getLogger(TransactionTemplate.class);

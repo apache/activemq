@@ -18,7 +18,7 @@ package org.apache.activemq.test.retroactive;
 
 /**
  *
- * @version $Revision: 1.1 $
+ * 
  */
 public class RetroactiveConsumerTestWithDestinationBasedBufferTest extends RetroactiveConsumerTestWithSimpleMessageListTest {
     protected String getBrokerXml() {

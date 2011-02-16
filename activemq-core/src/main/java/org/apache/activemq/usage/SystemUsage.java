@@ -28,7 +28,7 @@ import org.apache.activemq.store.kahadb.plist.PListStore;
  * manage memory usage.
  * 
  * @org.apache.xbean.XBean
- * @version $Revision: 1.3 $
+ * 
  */
 public class SystemUsage implements Service {
 

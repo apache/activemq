@@ -28,7 +28,7 @@ import org.apache.activemq.command.Message;
  * This SubscriptionRecoveryPolicy disable recovery of messages.
  * 
  * @org.apache.xbean.XBean
- * @version $Revision$
+ * 
  */
 public class NoSubscriptionRecoveryPolicy implements SubscriptionRecoveryPolicy {
 

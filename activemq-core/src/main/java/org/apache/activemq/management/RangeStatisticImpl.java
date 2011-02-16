@@ -20,7 +20,7 @@ package org.apache.activemq.management;
 /**
  * A range statistic implementation
  *
- * @version $Revision: 1.2 $
+ * 
  */
 public class RangeStatisticImpl extends StatisticImpl {
     private long highWaterMark;

@@ -42,7 +42,7 @@ import org.slf4j.LoggerFactory;
  *
  * @org.apache.xbean.XBean element="timeStampingBrokerPlugin"
  * 
- * @version $Revision$
+ * 
  */
 public class TimeStampingBrokerPlugin extends BrokerPluginSupport {
     private static final Logger LOG = LoggerFactory.getLogger(TimeStampingBrokerPlugin.class);

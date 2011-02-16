@@ -36,7 +36,7 @@ import org.apache.activemq.util.ByteArrayInputStream;
  * 
  * @org.apache.xbean.XBean element="streamJDBCAdapter"
  * 
- * @version $Revision: 1.2 $
+ * 
  */
 public class StreamJDBCAdapter extends DefaultJDBCAdapter {
 

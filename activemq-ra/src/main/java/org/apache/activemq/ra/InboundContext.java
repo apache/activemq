@@ -26,7 +26,7 @@ import javax.jms.Session;
  * which can them be used by a pooling based JMS provider for publishing
  * messages using the session used by the current thread.
  *
- * @version $Revision$
+ * 
  */
 public interface InboundContext {
 

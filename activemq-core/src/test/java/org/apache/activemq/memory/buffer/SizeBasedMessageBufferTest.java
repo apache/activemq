@@ -22,7 +22,7 @@ import org.apache.activemq.memory.buffer.SizeBasedMessageBuffer;
 
 /**
  *
- * @version $Revision: 1.1 $
+ * 
  */
 public class SizeBasedMessageBufferTest extends MemoryBufferTestSupport {
 

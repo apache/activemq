@@ -26,7 +26,7 @@ import org.apache.activemq.util.IOHelper;
 /**
  * Used by RootContainers
  * 
- * @version $Revision: 1.1.1.1 $
+ * 
  */
 public class ContainerId implements Externalizable {
     private static final long serialVersionUID = -8883779541021821943L;

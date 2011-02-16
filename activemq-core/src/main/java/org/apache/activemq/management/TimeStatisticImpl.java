@@ -20,7 +20,7 @@ package org.apache.activemq.management;
 /**
  * A time statistic implementation
  *
- * @version $Revision: 1.2 $
+ * 
  */
 public class TimeStatisticImpl extends StatisticImpl {
     private long count;

@@ -24,7 +24,7 @@ import org.springframework.core.io.ClassPathResource;
  * This servlet embeds an ActiveMQ broker inside a servlet engine which is ideal
  * for deploying ActiveMQ inside a WAR and using this servlet as a HTTP tunnel.
  * 
- * @version $Revision$
+ * 
  */
 public class HttpSpringEmbeddedTunnelServlet extends HttpEmbeddedTunnelServlet {
 

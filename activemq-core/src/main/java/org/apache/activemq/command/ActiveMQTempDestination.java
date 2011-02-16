@@ -23,7 +23,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * @openwire:marshaller
- * @version $Revision: 1.5 $
+ * 
  */
 public abstract class ActiveMQTempDestination extends ActiveMQDestination {
 

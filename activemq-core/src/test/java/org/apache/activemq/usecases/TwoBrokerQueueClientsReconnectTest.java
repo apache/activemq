@@ -31,7 +31,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * @version $Revision: 1.1.1.1 $
+ * 
  */
 public class TwoBrokerQueueClientsReconnectTest extends JmsMultipleBrokersTestSupport {
     protected static final int MESSAGE_COUNT = 100; // Best if a factor of 100

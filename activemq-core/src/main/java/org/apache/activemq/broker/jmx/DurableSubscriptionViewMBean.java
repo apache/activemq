@@ -21,7 +21,7 @@ import javax.management.openmbean.OpenDataException;
 import javax.management.openmbean.TabularData;
 
 /**
- * @version $Revision: 1.5 $
+ * 
  */
 public interface DurableSubscriptionViewMBean extends SubscriptionViewMBean {
     /**

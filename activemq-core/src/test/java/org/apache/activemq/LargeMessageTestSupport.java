@@ -39,7 +39,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * @version $Revision: 1.4 $
+ * 
  */
 public class LargeMessageTestSupport extends ClientTestSupport implements MessageListener {
 

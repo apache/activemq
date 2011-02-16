@@ -40,7 +40,7 @@ import org.springframework.jndi.JndiTemplate;
  * JMS providers are still only 1.0.1 compliant, this bridge itself aimed to be
  * JMS 1.0.2 compliant.
  * 
- * @version $Revision: 1.1.1.1 $
+ * 
  */
 public abstract class JmsConnector implements Service {
 

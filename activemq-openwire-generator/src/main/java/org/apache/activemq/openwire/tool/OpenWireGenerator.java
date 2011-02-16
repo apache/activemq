@@ -26,7 +26,7 @@ import org.codehaus.jam.JamClassIterator;
 import org.codehaus.jam.JamService;
 
 /**
- * @version $Revision$
+ * 
  */
 public abstract class OpenWireGenerator {
 

@@ -17,7 +17,7 @@
 package org.apache.activemq.perf;
 
 /**
- * @version $Revision: 1.3 $
+ * 
  */
 public class PerfRate {
 

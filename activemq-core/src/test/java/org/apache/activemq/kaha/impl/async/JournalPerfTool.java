@@ -26,7 +26,7 @@ import org.apache.activeio.journal.JournalPerfToolSupport;
  * A Performance statistics gathering tool for the AsyncDataManager based
  * Journal.
  * 
- * @version $Revision: 1.1 $
+ * 
  */
 public class JournalPerfTool extends JournalPerfToolSupport {
 

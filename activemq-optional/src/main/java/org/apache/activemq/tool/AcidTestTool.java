@@ -42,7 +42,7 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.command.ActiveMQQueue;
 
 /**
- * @version $Revision$
+ * 
  */
 public class AcidTestTool extends TestCase {
 

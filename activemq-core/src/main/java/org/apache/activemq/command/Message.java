@@ -38,7 +38,7 @@ import org.apache.activemq.wireformat.WireFormat;
  * Represents an ActiveMQ message
  * 
  * @openwire:marshaller
- * @version $Revision$
+ * 
  */
 public abstract class Message extends BaseCommand implements MarshallAware, MessageReference {
 

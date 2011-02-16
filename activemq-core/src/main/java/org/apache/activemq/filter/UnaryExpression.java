@@ -27,7 +27,7 @@ import javax.jms.JMSException;
 /**
  * An expression which performs an operation on two expression values
  * 
- * @version $Revision: 1.3 $
+ * 
  */
 public abstract class UnaryExpression implements Expression {
 

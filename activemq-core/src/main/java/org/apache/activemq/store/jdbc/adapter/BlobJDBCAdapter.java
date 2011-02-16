@@ -45,7 +45,7 @@ import org.apache.activemq.util.ByteArrayOutputStream;
  * 
  * @org.apache.xbean.XBean element="blobJDBCAdapter"
  * 
- * @version $Revision: 1.2 $
+ * 
  */
 public class BlobJDBCAdapter extends DefaultJDBCAdapter {
 

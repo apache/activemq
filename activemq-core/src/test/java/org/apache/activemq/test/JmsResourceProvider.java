@@ -31,7 +31,7 @@ import javax.jms.Topic;
 import org.apache.activemq.ActiveMQConnectionFactory;
 
 /**
- * @version $Revision: 1.4 $
+ * 
  */
 public class JmsResourceProvider {
 

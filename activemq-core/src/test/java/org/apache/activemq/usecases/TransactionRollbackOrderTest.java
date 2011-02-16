@@ -40,7 +40,7 @@ import org.slf4j.LoggerFactory;
  * Test case for AMQ-268
  * 
  * @author Paul Smith
- * @version $Revision: 1.1 $
+ * 
  */
 public final class TransactionRollbackOrderTest extends TestCase {
     private static final Logger LOG = LoggerFactory.getLogger(TransactionRollbackOrderTest.class);

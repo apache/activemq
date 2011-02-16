@@ -26,7 +26,7 @@ import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.command.RemoveSubscriptionInfo;
 
 /**
- * @version $Revision: 1.5 $
+ * 
  */
 public class DurableSubscriptionView extends SubscriptionView implements DurableSubscriptionViewMBean {
 

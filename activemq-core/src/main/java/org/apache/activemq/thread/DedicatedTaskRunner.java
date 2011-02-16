@@ -17,7 +17,7 @@
 package org.apache.activemq.thread;
 
 /**
- * @version $Revision: 1.1 $
+ * 
  */
 class DedicatedTaskRunner implements TaskRunner {
 

@@ -21,7 +21,7 @@ import javax.jms.TextMessage;
 /**
  * Represents a processor of text based commands
  *
- * @version $Revision: $
+ * 
  */
 public interface CommandHandler {
     void processCommand(TextMessage request, TextMessage response) throws Exception;

@@ -47,7 +47,7 @@ import org.slf4j.LoggerFactory;
  * This broker filter handles the transaction related operations in the Broker
  * interface.
  * 
- * @version $Revision: 1.10 $
+ * 
  */
 public class TransactionBroker extends BrokerFilter {
 

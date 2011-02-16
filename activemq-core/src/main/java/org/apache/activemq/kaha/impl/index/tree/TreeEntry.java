@@ -24,7 +24,7 @@ import org.apache.activemq.kaha.Marshaller;
 /**
  * Key and index for a BTree
  * 
- * @version $Revision: 1.1.1.1 $
+ * 
  */
 class TreeEntry implements Comparable {
 

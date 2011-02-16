@@ -21,7 +21,7 @@ import javax.jms.JMSException;
 import org.apache.activemq.ActiveMQConnectionFactory;
 
 /**
- * @version $Revision: 1.1.1.1 $
+ * 
  */
 public class TwoMulticastDiscoveryBrokerTopicSendReceiveTest extends TwoBrokerTopicSendReceiveTest {
 

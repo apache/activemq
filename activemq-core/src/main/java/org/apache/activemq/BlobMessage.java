@@ -27,7 +27,7 @@ import javax.jms.JMSException;
  * Represents a message which has a typically out of band Binary Large Object
  * (BLOB)
  * 
- * @version $Revision: $
+ * 
  */
 public interface BlobMessage extends Message {
 

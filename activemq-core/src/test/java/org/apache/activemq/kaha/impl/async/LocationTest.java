@@ -28,7 +28,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Tests the Location Class
  * 
- * @version $Revision: 1.1 $
+ * 
  */
 public class LocationTest extends TestCase {
     private static final transient Logger LOG = LoggerFactory.getLogger(LocationTest.class);

@@ -29,7 +29,7 @@ import org.apache.activemq.wireformat.WireFormat;
  * href="http://xstream.codehaus.org/>XStream</a> library to marshall commands
  * onto the wire
  * 
- * @version $Revision$
+ * 
  */
 public class XStreamWireFormat extends TextWireFormat {
     private XStream xStream;

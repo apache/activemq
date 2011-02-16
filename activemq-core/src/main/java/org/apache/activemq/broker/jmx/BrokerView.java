@@ -39,7 +39,7 @@ import org.apache.activemq.network.NetworkConnector;
 import org.apache.activemq.util.BrokerSupport;
 
 /**
- * @version $Revision$
+ * 
  */
 public class BrokerView implements BrokerViewMBean {
 

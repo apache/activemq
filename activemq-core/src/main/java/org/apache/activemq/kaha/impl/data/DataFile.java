@@ -24,7 +24,7 @@ import java.io.RandomAccessFile;
 /**
  * DataFile
  * 
- * @version $Revision: 1.1.1.1 $
+ * 
  */
 class DataFile {
 

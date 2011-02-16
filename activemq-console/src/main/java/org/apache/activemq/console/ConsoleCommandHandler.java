@@ -30,7 +30,7 @@ import org.apache.activemq.console.formatter.CommandShellOutputFormatter;
 /**
  * A default implementation of the @{link CommandHandler} interface
  *
- * @version $Revision: $
+ * 
  */
 public class ConsoleCommandHandler implements CommandHandler {
 

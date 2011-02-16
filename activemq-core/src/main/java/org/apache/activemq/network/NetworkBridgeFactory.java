@@ -21,7 +21,7 @@ import org.apache.activemq.transport.Transport;
 /**
  * Factory for network bridges
  * 
- * @version $Revision: 1.1 $
+ * 
  */
 public final class NetworkBridgeFactory {
 

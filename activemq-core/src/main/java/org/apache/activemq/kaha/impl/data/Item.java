@@ -19,7 +19,7 @@ package org.apache.activemq.kaha.impl.data;
 /**
  * A a wrapper for a data in the store
  * 
- * @version $Revision: 1.2 $
+ * 
  */
 public interface Item {
     long POSITION_NOT_SET = -1;

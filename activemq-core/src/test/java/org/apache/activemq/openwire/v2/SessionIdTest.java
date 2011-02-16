@@ -29,7 +29,7 @@ import org.apache.activemq.openwire.DataFileGeneratorTestSupport;
  *        under src/gram/script and then use maven openwire:generate to regenerate 
  *        this file.
  *
- * @version $Revision: $
+ * 
  */
 public class SessionIdTest extends DataFileGeneratorTestSupport {
 

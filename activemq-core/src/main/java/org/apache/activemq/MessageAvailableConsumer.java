@@ -23,7 +23,7 @@ import javax.jms.MessageConsumer;
  * message is available for consumption using the receive*() methods
  * which is useful in Ajax style subscription models.
  * 
- * @version $Revision: 1.1 $
+ * 
  */
 public interface MessageAvailableConsumer extends MessageConsumer {
 

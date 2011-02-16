@@ -23,7 +23,7 @@ import junit.framework.TestCase;
 
 /**
  * @author Oliver Belikan
- * @version $Revision: 1.1.1.1 $
+ * 
  */
 public class ExceptionListenerTest extends TestCase implements ExceptionListener {
     boolean isException;

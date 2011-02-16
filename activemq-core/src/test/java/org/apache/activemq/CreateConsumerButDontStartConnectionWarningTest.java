@@ -22,7 +22,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * @version $Revision: 1.1 $
+ * 
  */
 public class CreateConsumerButDontStartConnectionWarningTest extends JmsQueueSendReceiveTest {
     private static final transient Logger LOG = LoggerFactory.getLogger(CreateConsumerButDontStartConnectionWarningTest.class);

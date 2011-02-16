@@ -28,7 +28,7 @@ import org.apache.activemq.command.XATransactionId;
  *        under src/gram/script and then use maven openwire:generate to regenerate 
  *        this file.
  *
- * @version $Revision: $
+ * 
  */
 public class XATransactionIdTest extends TransactionIdTestSupport {
 

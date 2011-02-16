@@ -30,7 +30,7 @@ import org.apache.activemq.EmbeddedBrokerTestSupport;
 import org.apache.activemq.broker.BrokerService;
 
 /**
- * @version $Revision: 1.4 $
+ * 
  */
 public class JMSDurableTopicNoLocalTest extends EmbeddedBrokerTestSupport {
     protected String bindAddress;

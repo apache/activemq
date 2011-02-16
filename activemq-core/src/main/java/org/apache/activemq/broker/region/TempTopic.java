@@ -28,7 +28,7 @@ import org.apache.activemq.thread.TaskRunnerFactory;
  * The Topic is a destination that sends a copy of a message to every active
  * Subscription registered.
  * 
- * @version $Revision: 1.21 $
+ * 
  */
 public class TempTopic  extends Topic  implements Task{
     private final ActiveMQTempDestination tempDest;

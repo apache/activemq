@@ -19,7 +19,7 @@ package org.apache.activemq.filter;
 
 /**
  * 
- * @version $Revision: 1.1 $
+ * 
  */
 public class DummyPolicyEntry extends DestinationMapEntry {
 

@@ -27,7 +27,7 @@ import org.apache.activemq.broker.region.cursors.StoreQueueCursor;
  * @org.apache.xbean.XBean element="storeCursor" description="Pending messages
  *                         paged in from the Store"
  * 
- * @version $Revision$
+ * 
  */
 public class StorePendingQueueMessageStoragePolicy implements PendingQueueMessageStoragePolicy {
 

@@ -18,7 +18,7 @@ package org.apache.activemq;
 
 
 /**
- * @version $Revision: 1.2 $
+ * 
  */
 public interface LocalTransactionEventListener {
     void beginEvent();

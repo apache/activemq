@@ -22,7 +22,7 @@ import java.util.Set;
 /**
  * A Store is holds persistent containers
  * 
- * @version $Revision: 1.2 $
+ * 
  */
 public interface Store {
     /**

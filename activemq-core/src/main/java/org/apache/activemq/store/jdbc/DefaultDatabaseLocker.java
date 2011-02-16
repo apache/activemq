@@ -32,7 +32,7 @@ import org.slf4j.LoggerFactory;
  * against the same logical database.
  * 
  * @org.apache.xbean.XBean element="database-locker"
- * @version $Revision: $
+ * 
  */
 public class DefaultDatabaseLocker implements DatabaseLocker {
     public static final long DEFAULT_LOCK_ACQUIRE_SLEEP_INTERVAL = 1000;

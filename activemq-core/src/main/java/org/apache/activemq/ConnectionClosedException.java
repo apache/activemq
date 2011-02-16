@@ -21,7 +21,7 @@ import javax.jms.IllegalStateException;
 /**
  * An exception thrown when attempt is made to use a connection when the connection has been closed.
  *
- * @version $Revision: 1.2 $
+ * 
  */
 public class ConnectionClosedException extends IllegalStateException {
     private static final long serialVersionUID = -7681404582227153308L;

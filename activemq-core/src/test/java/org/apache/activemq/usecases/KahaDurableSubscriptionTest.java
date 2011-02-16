@@ -22,7 +22,7 @@ import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.kahadaptor.KahaPersistenceAdapter;
 
 /**
- * @version $Revision: 1.1.1.1 $
+ * 
  */
 public class KahaDurableSubscriptionTest extends DurableSubscriptionTestSupport {
 

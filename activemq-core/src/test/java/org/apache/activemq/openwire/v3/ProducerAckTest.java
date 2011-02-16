@@ -28,7 +28,7 @@ import org.apache.activemq.command.ProducerAck;
  *        under src/gram/script and then use maven openwire:generate to regenerate 
  *        this file.
  *
- * @version $Revision: $
+ * 
  */
 public class ProducerAckTest extends BaseCommandTestSupport {
 

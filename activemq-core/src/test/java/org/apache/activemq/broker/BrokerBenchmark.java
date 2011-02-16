@@ -42,7 +42,7 @@ import org.slf4j.LoggerFactory;
  * Persistent vs. Non-Persistent messages. Message Acking uses client ack style
  * batch acking since that typically has the best ack performance.
  * 
- * @version $Revision: 1.9 $
+ * 
  */
 public class BrokerBenchmark extends BrokerTestSupport {
     private static final transient Logger LOG = LoggerFactory.getLogger(BrokerBenchmark.class);

@@ -20,7 +20,7 @@ import org.apache.activemq.state.CommandVisitor;
 
 /**
  * @openwire:marshaller code="30"
- * @version $Revision: 1.6 $
+ * 
  */
 public class Response extends BaseCommand {
 

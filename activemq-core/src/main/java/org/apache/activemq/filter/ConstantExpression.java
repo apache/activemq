@@ -23,7 +23,7 @@ import javax.jms.JMSException;
 /**
  * Represents a constant expression
  * 
- * @version $Revision: 1.2 $
+ * 
  */
 public class ConstantExpression implements Expression {
 

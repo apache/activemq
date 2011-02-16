@@ -26,7 +26,7 @@ import org.apache.activemq.ActiveMQMessageProducer;
 /**
  * A pooled {@link MessageProducer}
  * 
- * @version $Revision: 1.1 $
+ * 
  */
 public class PooledProducer implements MessageProducer {
     private ActiveMQMessageProducer messageProducer;

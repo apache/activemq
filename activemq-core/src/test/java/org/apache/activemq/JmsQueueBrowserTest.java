@@ -39,7 +39,7 @@ import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.command.SessionInfo;
 
 /**
- * @version $Revision: 1.4 $
+ * 
  */
 public class JmsQueueBrowserTest extends JmsTestSupport {
     private static final org.apache.commons.logging.Log LOG = org.apache.commons.logging.LogFactory

@@ -20,7 +20,7 @@ package org.apache.activemq.memory;
 /**
  * Filters another Cache implementation.
  * 
- * @version $Revision$
+ * 
  */
 public class CacheFilter implements Cache {
     

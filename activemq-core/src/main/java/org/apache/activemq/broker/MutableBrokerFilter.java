@@ -50,7 +50,7 @@ import org.apache.activemq.usage.Usage;
  * has more overhead than a BrokerFilter since access to the getNext().broker
  * has to synchronized since it is mutable
  * 
- * @version $Revision: 1.10 $
+ * 
  */
 public class MutableBrokerFilter implements Broker {
 

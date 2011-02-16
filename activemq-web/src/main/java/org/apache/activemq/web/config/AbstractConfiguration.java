@@ -28,7 +28,7 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 /**
  * Base class for configurations.
  * 
- * @version $Revision: $
+ * 
  */
 public abstract class AbstractConfiguration implements WebConsoleConfiguration {
 

@@ -23,7 +23,7 @@ import org.apache.activemq.command.ActiveMQDestination;
 /**
  * Matches messages which contain wildcards like "A.B.*.*"
  *
- * @version $Revision: 1.2 $
+ * 
  */
 public class WildcardDestinationFilter extends DestinationFilter {
 

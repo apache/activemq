@@ -32,7 +32,7 @@ import org.apache.activemq.usage.SystemUsage;
 /**
  * Adapter to the actual persistence mechanism used with ActiveMQ
  *
- * @version $Revision: 1.3 $
+ * 
  */
 public interface PersistenceAdapter extends Service {
 

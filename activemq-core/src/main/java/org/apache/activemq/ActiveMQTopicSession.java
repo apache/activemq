@@ -47,7 +47,7 @@ import javax.jms.TopicSubscriber;
  * Sessions methods but the spec states that TopicSession should throw
  * Exceptions if queue operations are attempted on it.
  * 
- * @version $Revision: 1.2 $
+ * 
  */
 public class ActiveMQTopicSession implements TopicSession {
 

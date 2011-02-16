@@ -33,7 +33,7 @@ import org.slf4j.LoggerFactory;
  * memory usage.
  * 
  * @org.apache.xbean.XBean
- * @version $Revision: 1.3 $
+ * 
  */
 public abstract class Usage<T extends Usage> implements Service {
 

@@ -33,7 +33,7 @@ import org.apache.activemq.transaction.Transaction;
 /**
  * Used to hold context information needed to process requests sent to a broker.
  * 
- * @version $Revision: 1.5 $
+ * 
  */
 public class ConnectionContext {
 

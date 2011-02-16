@@ -20,7 +20,7 @@ package org.apache.activemq.management;
 /**
  * A bounded range statistic implementation
  *
- * @version $Revision: 1.2 $
+ * 
  */
 public class BoundedRangeStatisticImpl extends RangeStatisticImpl {
     private long lowerBound;

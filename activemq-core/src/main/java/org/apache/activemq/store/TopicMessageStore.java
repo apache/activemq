@@ -26,7 +26,7 @@ import org.apache.activemq.command.SubscriptionInfo;
 /**
  * A MessageStore for durable topic subscriptions
  * 
- * @version $Revision: 1.4 $
+ * 
  */
 public interface TopicMessageStore extends MessageStore {
     /**

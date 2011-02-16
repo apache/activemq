@@ -48,7 +48,7 @@ import org.apache.activemq.usage.Usage;
 /**
  * Dumb implementation - used to be overriden by listeners
  * 
- * @version $Revision$
+ * 
  */
 public class EmptyBroker implements Broker {
 

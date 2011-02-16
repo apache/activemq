@@ -60,7 +60,7 @@ import org.slf4j.LoggerFactory;
  * 
  * @author sepandm@gmail.com (Sepand)
  * @author David Martin Clavo david(dot)martin(dot)clavo(at)gmail.com (logging improvement modifications)
- * @version $Revision$
+ * 
  */
 public class SslTransportFactory extends TcpTransportFactory {
     // The log this uses.,

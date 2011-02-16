@@ -27,7 +27,7 @@ import org.apache.activemq.filter.DestinationMap;
 import org.apache.activemq.filter.DestinationMapNode;
 
 /**
- * @version $Revision: $
+ * 
  */
 public class DestinationDotFileInterceptor extends DotFileInterceptorSupport {
 

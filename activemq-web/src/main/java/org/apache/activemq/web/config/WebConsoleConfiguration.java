@@ -24,7 +24,7 @@ import javax.management.remote.JMXServiceURL;
 /**
  * The configuration used for the web console.
  * 
- * @version $Revision: $
+ * 
  */
 public interface WebConsoleConfiguration {
 

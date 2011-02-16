@@ -31,7 +31,7 @@ import org.apache.activemq.usage.SystemUsage;
 
 /**
  * 
- * @version $Revision: 1.9 $
+ * 
  */
 public class QueueRegion extends AbstractRegion {
 

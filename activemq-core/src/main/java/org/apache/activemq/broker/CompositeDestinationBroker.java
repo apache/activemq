@@ -30,7 +30,7 @@ import org.apache.activemq.command.ProducerInfo;
  * the client has to expect many more messages to be dispatched than the
  * pre-fetch setting allows.
  * 
- * @version $Revision: 1.8 $
+ * 
  */
 public class CompositeDestinationBroker extends BrokerFilter {
 

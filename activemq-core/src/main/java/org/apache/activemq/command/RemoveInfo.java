@@ -24,7 +24,7 @@ import org.apache.activemq.state.CommandVisitor;
  * Removes a consumer, producer, session or connection.
  * 
  * @openwire:marshaller code="12"
- * @version $Revision$
+ * 
  */
 public class RemoveInfo extends BaseCommand {
 

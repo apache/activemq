@@ -20,7 +20,7 @@ import org.apache.activemq.state.CommandVisitor;
 
 /**
  * @openwire:marshaller code="90"
- * @version $Revision$
+ * 
  */
 public class MessageDispatchNotification extends BaseCommand {
 

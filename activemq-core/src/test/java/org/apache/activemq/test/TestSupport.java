@@ -37,7 +37,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Useful base class for unit test cases
  * 
- * @version $Revision: 1.4 $
+ * 
  */
 public abstract class TestSupport extends TestCase {
     private static final Logger LOG = LoggerFactory.getLogger(TestSupport.class);

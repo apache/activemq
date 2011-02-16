@@ -20,7 +20,7 @@ package org.apache.activemq.thread;
  * A Valve is a synchronization object used enable or disable the "flow" of
  * concurrent processing.
  * 
- * @version $Revision: 1.2 $
+ * 
  */
 public final class Valve {
 

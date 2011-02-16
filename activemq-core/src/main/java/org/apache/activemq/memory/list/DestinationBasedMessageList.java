@@ -37,7 +37,7 @@ import org.apache.activemq.memory.buffer.OrderBasedMessageBuffer;
  * list for each destination to reduce contention on the list and to speed up
  * recovery times by only recovering the interested topics.
  * 
- * @version $Revision: 1.1 $
+ * 
  */
 public class DestinationBasedMessageList implements MessageList {
 

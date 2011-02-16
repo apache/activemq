@@ -20,7 +20,7 @@ import org.apache.activemq.util.IntrospectionSupport;
 
 /**
  * @openwire:marshaller code="53"
- * @version $Revision: 1.6 $
+ * 
  */
 public class JournalTrace implements DataStructure {
 

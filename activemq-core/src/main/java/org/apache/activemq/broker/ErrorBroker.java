@@ -49,7 +49,7 @@ import org.apache.activemq.usage.Usage;
  * Implementation of the broker where all it's methods throw an
  * BrokerStoppedException.
  * 
- * @version $Revision$
+ * 
  */
 public class ErrorBroker implements Broker {
 

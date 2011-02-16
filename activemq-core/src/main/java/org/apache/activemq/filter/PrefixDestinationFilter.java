@@ -23,7 +23,7 @@ import org.apache.activemq.command.ActiveMQDestination;
 /**
  * Matches messages which match a prefix like "A.B.>"
  *
- * @version $Revision: 1.2 $
+ * 
  */
 public class PrefixDestinationFilter extends DestinationFilter {
 

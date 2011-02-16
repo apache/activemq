@@ -29,7 +29,7 @@ import com.thoughtworks.xstream.XStream;
 /**
  * This renderer uses XStream to render messages on a queue as full XML elements
  * 
- * @version $Revision: $
+ * 
  */
 public class XmlMessageRenderer extends SimpleMessageRenderer {
 

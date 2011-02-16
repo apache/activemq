@@ -54,7 +54,7 @@ import org.slf4j.LoggerFactory;
 /**
  * The Message Broker which passes messages to a slave
  * 
- * @version $Revision: 1.8 $
+ * 
  */
 public class MasterBroker extends InsertableMutableBrokerFilter {
 

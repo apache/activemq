@@ -25,7 +25,7 @@ import org.apache.activemq.broker.BrokerPlugin;
  * 
  * @org.apache.xbean.XBean
  * 
- * @version $Revision: $
+ * 
  */
 public class DestinationDotFilePlugin implements BrokerPlugin {
     private String file = "ActiveMQDestinations.dot";

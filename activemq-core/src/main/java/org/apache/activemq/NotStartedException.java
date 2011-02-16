@@ -22,7 +22,7 @@ import javax.jms.IllegalStateException;
  * An exception thrown when an operation is invoked on a service
  * which has not yet been started.
  *
- * @version $Revision: 1.2 $
+ * 
  */
 public class NotStartedException extends IllegalStateException {
 

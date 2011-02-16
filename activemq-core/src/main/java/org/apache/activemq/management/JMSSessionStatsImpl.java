@@ -25,7 +25,7 @@ import org.apache.activemq.util.IndentPrinter;
 /**
  * Statistics for a JMS session
  * 
- * @version $Revision: 1.2 $
+ * 
  */
 public class JMSSessionStatsImpl extends StatsImpl {
     private List producers;

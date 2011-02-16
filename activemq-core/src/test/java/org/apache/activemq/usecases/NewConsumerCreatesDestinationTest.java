@@ -29,7 +29,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * 
- * @version $Revision: $
+ * 
  */
 public class NewConsumerCreatesDestinationTest extends EmbeddedBrokerAndConnectionTestSupport {
     private static final Logger LOG = LoggerFactory.getLogger(NewConsumerCreatesDestinationTest.class);

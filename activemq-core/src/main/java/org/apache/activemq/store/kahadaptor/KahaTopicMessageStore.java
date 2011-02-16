@@ -35,7 +35,7 @@ import org.apache.activemq.store.MessageRecoveryListener;
 import org.apache.activemq.store.TopicMessageStore;
 
 /**
- * @version $Revision: 1.5 $
+ * 
  */
 public class KahaTopicMessageStore extends KahaMessageStore implements TopicMessageStore {
 

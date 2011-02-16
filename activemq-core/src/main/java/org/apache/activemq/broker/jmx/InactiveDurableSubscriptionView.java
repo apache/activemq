@@ -26,7 +26,7 @@ import org.apache.activemq.command.SubscriptionInfo;
 
 /**
  * 
- * @version $Revision: 1.5 $
+ * 
  */
 public class InactiveDurableSubscriptionView extends DurableSubscriptionView implements DurableSubscriptionViewMBean {
     protected SubscriptionInfo subscriptionInfo;

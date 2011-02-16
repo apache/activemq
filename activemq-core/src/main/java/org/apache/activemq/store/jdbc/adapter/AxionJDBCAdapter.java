@@ -26,7 +26,7 @@ import org.apache.activemq.store.jdbc.Statements;
  * - We cannot delete durable sub messages that have be acknowledged by all consumers.
  * 
  * @org.apache.xbean.XBean element="axionJDBCAdapter"
- * @version $Revision: 1.4 $
+ * 
  */
 public class AxionJDBCAdapter extends StreamJDBCAdapter {
 

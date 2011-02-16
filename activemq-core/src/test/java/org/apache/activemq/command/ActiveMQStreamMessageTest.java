@@ -26,7 +26,7 @@ import javax.jms.MessageNotWriteableException;
 import junit.framework.TestCase;
 
 /**
- * @version $Revision$
+ * 
  */
 public class ActiveMQStreamMessageTest extends TestCase {
 

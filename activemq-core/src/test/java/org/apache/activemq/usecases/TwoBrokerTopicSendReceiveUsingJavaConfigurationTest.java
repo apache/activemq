@@ -22,7 +22,7 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 
 /**
- * @version $Revision: 1.1.1.1 $
+ * 
  */
 public class TwoBrokerTopicSendReceiveUsingJavaConfigurationTest extends TwoBrokerTopicSendReceiveTest {
     BrokerService receiveBroker;

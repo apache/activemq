@@ -22,7 +22,7 @@ import java.util.Map;
 /**
  * A simple least-recently-used cache of a fixed size.
  * 
- * @version $Revision:$
+ * 
  */
 public class LRUMap<K,V> extends LinkedHashMap<K,V>{
 

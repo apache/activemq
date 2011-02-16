@@ -35,7 +35,7 @@ import org.apache.activemq.command.XATransactionId;
 /**
  * Used to simulate the recovery that occurs when a broker shuts down.
  * 
- * @version $Revision$
+ * 
  */
 public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
 

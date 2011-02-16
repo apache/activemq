@@ -21,7 +21,7 @@ import javax.management.j2ee.statistics.Statistic;
 /**
  * Base class for a Statistic implementation
  * 
- * @version $Revision: 1.2 $
+ * 
  */
 public class StatisticImpl implements Statistic, Resettable {
 

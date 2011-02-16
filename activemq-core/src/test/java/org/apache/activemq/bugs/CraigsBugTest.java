@@ -27,7 +27,7 @@ import org.apache.activemq.EmbeddedBrokerTestSupport;
 import org.apache.activemq.command.ActiveMQQueue;
 
 /**
- * @version $Revision: $
+ * 
  */
 public class CraigsBugTest extends EmbeddedBrokerTestSupport {
 

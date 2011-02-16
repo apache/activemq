@@ -18,7 +18,7 @@ package org.apache.activemq.command;
 
 /**
  * @openwire:marshaller code="31"
- * @version $Revision: 1.4 $
+ * 
  */
 public class ExceptionResponse extends Response {
 

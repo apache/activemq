@@ -22,7 +22,7 @@ import org.apache.activemq.util.HexSupport;
 
 /**
  * @openwire:marshaller code="112"
- * @version $Revision: 1.6 $
+ * 
  */
 public class XATransactionId extends TransactionId implements Xid, Comparable {
 

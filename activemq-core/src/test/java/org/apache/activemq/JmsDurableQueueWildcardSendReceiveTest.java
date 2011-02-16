@@ -21,7 +21,7 @@ import javax.jms.DeliveryMode;
 import org.apache.activemq.test.JmsTopicSendReceiveTest;
 
 /**
- * @version $Revision: 1.2 $
+ * 
  */
 public class JmsDurableQueueWildcardSendReceiveTest extends JmsTopicSendReceiveTest {
 

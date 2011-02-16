@@ -21,7 +21,7 @@ import org.apache.activemq.kaha.StoreEntry;
 /**
  * A linked list used by IndexItems
  * 
- * @version $Revision: 1.2 $
+ * 
  */
 public final class VMIndexLinkedList implements Cloneable, IndexLinkedList {
     private transient IndexItem root;

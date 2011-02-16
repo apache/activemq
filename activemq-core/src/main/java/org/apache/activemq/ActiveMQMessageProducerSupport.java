@@ -26,7 +26,7 @@ import javax.jms.MessageProducer;
 /**
  * A useful base class for implementing a {@link MessageProducer}
  *
- * @version $Revision: $
+ * 
  */
 public abstract class ActiveMQMessageProducerSupport implements MessageProducer, Closeable {
     protected ActiveMQSession session;

@@ -35,7 +35,7 @@ import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 /**
- * @version $Revision: 1.3 $
+ * 
  */
 public class NumberOfDestinationsTest extends TestCase {
     protected static final int MESSAGE_COUNT = 1;

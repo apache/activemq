@@ -27,7 +27,7 @@ import javax.jms.Session;
 import javax.jms.Topic;
 
 /**
- * @version $Revision: 1.3 $
+ * 
  */
 public class MemConsumer extends MemMessageIdList implements MessageListener {
 

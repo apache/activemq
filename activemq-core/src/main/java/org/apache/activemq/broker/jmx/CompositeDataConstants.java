@@ -18,7 +18,7 @@
 package org.apache.activemq.broker.jmx;
 
 /**
- * @version $Revision: 1.1 $
+ * 
  */
 public interface CompositeDataConstants {
     String PROPERTIES = "PropertiesText";

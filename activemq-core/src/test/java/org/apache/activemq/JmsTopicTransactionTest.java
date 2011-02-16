@@ -20,7 +20,7 @@ import org.apache.activemq.test.JmsResourceProvider;
 
 
 /**
- * @version $Revision: 1.3 $
+ * 
  */
 public class JmsTopicTransactionTest extends JmsTransactionTestSupport {
 

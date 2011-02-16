@@ -21,7 +21,7 @@ import org.apache.activemq.Service;
 /**
  * A listener for service start, stop events
  * 
- * @version $Revision: 1.1 $
+ * 
  */
 public interface ServiceListener{
     

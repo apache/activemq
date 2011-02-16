@@ -32,7 +32,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.core.io.ClassPathResource;
 
 /**
- * @version $Revision: 1.1.1.1 $
+ * 
  */
 public class TwoBrokerTopicSendReceiveTest extends JmsTopicSendReceiveWithTwoConnectionsTest {
     private static final Logger LOG = LoggerFactory.getLogger(TwoBrokerTopicSendReceiveTest.class);

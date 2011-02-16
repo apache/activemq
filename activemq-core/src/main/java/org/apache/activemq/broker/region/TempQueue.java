@@ -31,7 +31,7 @@ import org.slf4j.LoggerFactory;
  * The Queue is a List of MessageEntry objects that are dispatched to matching
  * subscriptions.
  * 
- * @version $Revision: 1.28 $
+ * 
  */
 public class TempQueue extends Queue{
     private static final Logger LOG = LoggerFactory.getLogger(TempQueue.class);

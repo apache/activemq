@@ -28,7 +28,7 @@ import org.apache.activemq.broker.region.cursors.PendingMessageCursor;
  * @org.apache.xbean.XBean element="fileCursor" description="Pending messages
  *                         for durable subscribers held in temporary files"
  * 
- * @version $Revision$
+ * 
  */
 public class FilePendingSubscriberMessageStoragePolicy implements PendingSubscriberMessageStoragePolicy {
 

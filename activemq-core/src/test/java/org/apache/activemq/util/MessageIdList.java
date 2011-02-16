@@ -38,7 +38,7 @@ import org.slf4j.LoggerFactory;
  * method so that you can aggregate the total number of messages consumed across
  * a number of consumers.
  * 
- * @version $Revision: 1.6 $
+ * 
  */
 public class MessageIdList extends Assert implements MessageListener {
 

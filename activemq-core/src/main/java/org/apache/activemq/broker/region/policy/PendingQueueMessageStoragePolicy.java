@@ -24,7 +24,7 @@ import org.apache.activemq.broker.region.cursors.PendingMessageCursor;
  * Abstraction to allow different policies for holding messages awaiting
  * dispatch on a Queue
  * 
- * @version $Revision$
+ * 
  */
 public interface PendingQueueMessageStoragePolicy {
 

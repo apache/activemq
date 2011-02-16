@@ -20,7 +20,7 @@ package org.apache.activemq.jndi;
 /**
  * Test case for AMQ-140
  *
- * @version $Revision: 1.2 $
+ * 
  */
 public class DestinationNameWithSlashTest extends JNDITestSupport {
     public void testNameWithSlash() throws Exception {

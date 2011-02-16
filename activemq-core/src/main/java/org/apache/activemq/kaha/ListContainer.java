@@ -23,7 +23,7 @@ import java.util.NoSuchElementException;
  * Represents a container of persistent objects in the store Acts as a map, but
  * values can be retrieved in insertion order
  * 
- * @version $Revision: 1.2 $
+ * 
  */
 public interface ListContainer<V> extends List<V> {
 

@@ -23,7 +23,7 @@ import org.apache.activemq.usage.MemoryUsage;
  * Simple CacheFilter that increases/decreases usage on a UsageManager as
  * objects are added/removed from the Cache.
  * 
- * @version $Revision$
+ * 
  */
 public class UsageManagerCacheFilter extends CacheFilter {
 

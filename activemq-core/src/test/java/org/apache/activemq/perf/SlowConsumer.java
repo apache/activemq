@@ -25,7 +25,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * @version $Revision: 1.3 $
+ * 
  */
 public class SlowConsumer extends PerfConsumer {
     private static final transient Logger LOG = LoggerFactory.getLogger(SlowConsumer.class);

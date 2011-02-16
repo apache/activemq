@@ -21,7 +21,7 @@ import org.apache.activemq.util.IntrospectionSupport;
 
 /**
  * @openwire:marshaller code="10"
- * @version $Revision$
+ * 
  */
 public class KeepAliveInfo extends BaseCommand {
 

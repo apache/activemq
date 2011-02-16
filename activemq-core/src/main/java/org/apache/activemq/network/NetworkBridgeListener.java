@@ -19,7 +19,7 @@ package org.apache.activemq.network;
 /**
  * called when a bridge fails
  * 
- * @version $Revision: 1.1 $
+ * 
  */
 public interface NetworkBridgeListener {
 

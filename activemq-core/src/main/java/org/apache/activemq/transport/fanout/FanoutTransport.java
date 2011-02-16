@@ -49,7 +49,7 @@ import org.slf4j.LoggerFactory;
 /**
  * A Transport that fans out a connection to multiple brokers.
  * 
- * @version $Revision$
+ * 
  */
 public class FanoutTransport implements CompositeTransport {
 

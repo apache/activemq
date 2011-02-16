@@ -19,7 +19,7 @@ package org.apache.activemq.management;
 
 
 /**
- * @version $Revision: 1.2 $
+ * 
  */
 public class BoundedRangeStatisticTest extends RangeStatisticTest {
 

@@ -24,7 +24,7 @@ import org.apache.activemq.util.IndentPrinter;
 /**
  * Statistics for a JMS connection
  * 
- * @version $Revision: 1.2 $
+ * 
  */
 public class JMSConnectionStatsImpl extends StatsImpl {
     private List sessions;

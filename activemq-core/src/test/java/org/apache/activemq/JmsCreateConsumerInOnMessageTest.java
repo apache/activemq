@@ -25,7 +25,7 @@ import javax.jms.Session;
 import javax.jms.Topic;
 
 /**
- * @version $Revision: 1.2 $
+ * 
  */
 public class JmsCreateConsumerInOnMessageTest extends TestSupport implements MessageListener {
 

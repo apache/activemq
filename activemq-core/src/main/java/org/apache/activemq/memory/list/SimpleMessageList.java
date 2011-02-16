@@ -33,7 +33,7 @@ import org.slf4j.LoggerFactory;
  * possibly slow recovery times as many more messages than is necessary will
  * have to be iterated through for each subscription.
  * 
- * @version $Revision: 1.1 $
+ * 
  */
 public class SimpleMessageList implements MessageList {
     private static final Logger LOG = LoggerFactory.getLogger(SimpleMessageList.class);

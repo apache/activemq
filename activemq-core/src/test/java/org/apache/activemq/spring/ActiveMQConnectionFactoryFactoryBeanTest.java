@@ -24,7 +24,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * @version $Revision: 1.1 $
+ * 
  */
 public class ActiveMQConnectionFactoryFactoryBeanTest extends TestCase {
     private static final transient Logger LOG = LoggerFactory.getLogger(ActiveMQConnectionFactoryFactoryBeanTest.class);

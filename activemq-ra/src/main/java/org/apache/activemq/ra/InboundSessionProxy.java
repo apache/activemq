@@ -47,7 +47,7 @@ import javax.jms.TopicSubscriber;
  * Resource Adapter to publish messages using the same JMS session that is used
  * to dispatch messages.
  * 
- * @version $Revision$
+ * 
  */
 public class InboundSessionProxy implements Session, QueueSession, TopicSession {
 

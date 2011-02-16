@@ -27,7 +27,7 @@ import org.apache.activemq.broker.region.cursors.PendingMessageCursor;
  * @org.apache.xbean.XBean element="fileQueueCursor" description="Pending
  *                         messages paged in from file"
  * 
- * @version $Revision$
+ * 
  */
 public class FilePendingQueueMessageStoragePolicy implements PendingQueueMessageStoragePolicy {
 

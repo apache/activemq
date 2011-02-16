@@ -23,7 +23,7 @@ import java.io.IOException;
 /**
  *Marshaller for marshalling in/out objects to a RawContainer
  * 
- * @version $Revision: 1.2 $
+ * 
  */
 public interface Marshaller<T> {
     

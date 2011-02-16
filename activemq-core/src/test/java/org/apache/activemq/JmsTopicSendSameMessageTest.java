@@ -19,7 +19,7 @@ package org.apache.activemq;
 import javax.jms.TextMessage;
 
 /**
- * @version $Revision: 1.3 $
+ * 
  */
 public class JmsTopicSendSameMessageTest extends JmsTopicSendReceiveWithTwoConnectionsTest {
 

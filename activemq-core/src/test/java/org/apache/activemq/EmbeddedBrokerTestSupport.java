@@ -28,7 +28,7 @@ import javax.jms.Destination;
 /**
  * A useful base class which creates and closes an embedded broker
  * 
- * @version $Revision: 1.1 $
+ * 
  */
 public abstract class EmbeddedBrokerTestSupport extends CombinationTestSupport {
 

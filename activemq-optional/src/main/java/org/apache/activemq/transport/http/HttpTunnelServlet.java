@@ -47,7 +47,7 @@ import org.slf4j.LoggerFactory;
  * ActiveMQ broker. This servlet is designed for being embedded inside an
  * ActiveMQ Broker using an embedded Jetty or Tomcat instance.
  * 
- * @version $Revision$
+ * 
  */
 public class HttpTunnelServlet extends HttpServlet {
     private static final long serialVersionUID = -3826714430767484333L;

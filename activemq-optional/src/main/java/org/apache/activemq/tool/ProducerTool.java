@@ -28,7 +28,7 @@ import javax.jms.TextMessage;
 /**
  * A simple tool for publishing messages
  * 
- * @version $Revision$
+ * 
  */
 public class ProducerTool extends ToolSupport {
 

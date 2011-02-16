@@ -22,7 +22,7 @@ import org.apache.activemq.util.LinkedNode;
 /**
  * A Page within a HashPageInfo
  * 
- * @version $Revision: 1.1.1.1 $
+ * 
  */
 class HashPageInfo extends LinkedNode{
 

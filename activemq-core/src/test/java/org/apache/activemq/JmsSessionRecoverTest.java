@@ -37,7 +37,7 @@ import org.apache.activemq.command.ActiveMQTopic;
 /**
  * Testcases to see if Session.recover() work.
  * 
- * @version $Revision: 1.3 $
+ * 
  */
 public class JmsSessionRecoverTest extends TestCase {
 

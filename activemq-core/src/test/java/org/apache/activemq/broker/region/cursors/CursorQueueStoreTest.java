@@ -31,7 +31,7 @@ import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.broker.region.policy.StorePendingQueueMessageStoragePolicy;
 
 /**
- * @version $Revision: 1.3 $
+ * 
  */
 public class CursorQueueStoreTest extends CursorSupport {
 

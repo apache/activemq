@@ -54,7 +54,7 @@ import static org.apache.activemq.thread.DefaultThreadPools.getDefaultTaskRunner
  * An implementation of the {@link Transport} interface using raw tcp/ip
  * 
  * @author David Martin Clavo david(dot)martin(dot)clavo(at)gmail.com (logging improvement modifications)
- * @version $Revision$
+ * 
  */
 public class TcpTransport extends TransportThreadSupport implements Transport, Service, Runnable {
     private static final Logger LOG = LoggerFactory.getLogger(TcpTransport.class);

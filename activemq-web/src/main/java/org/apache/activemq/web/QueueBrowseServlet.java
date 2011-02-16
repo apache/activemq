@@ -46,7 +46,7 @@ import org.apache.activemq.web.view.XmlMessageRenderer;
  * <li>selector - specifies the SQL 92 selector to apply to the queue</li>
  * </ul>
  *
- * @version $Revision: $
+ * 
  */
 public class QueueBrowseServlet extends HttpServlet {
     private static FactoryFinder factoryFinder = new FactoryFinder("META-INF/services/org/apache/activemq/web/view/");

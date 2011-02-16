@@ -29,7 +29,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * @version $Revision$
+ * 
  */
 public class URISupport {
 

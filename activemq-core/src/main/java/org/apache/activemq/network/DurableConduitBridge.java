@@ -30,7 +30,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Consolidates subscriptions
  * 
- * @version $Revision: 1.1 $
+ * 
  */
 public class DurableConduitBridge extends ConduitBridge {
     private static final Logger LOG = LoggerFactory.getLogger(DurableConduitBridge.class);

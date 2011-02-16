@@ -21,7 +21,7 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.test.JmsTopicSendReceiveWithTwoConnectionsTest;
 
 /**
- * @version $Revision$
+ * 
  */
 public class NIOJmsSendAndReceiveTest extends JmsTopicSendReceiveWithTwoConnectionsTest {
     protected BrokerService broker;

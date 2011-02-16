@@ -26,7 +26,7 @@ import java.io.Serializable;
  * instead of BitSet because BitSet does not allow for efficent serialization.
  * Will store up to 64 boolean values
  * 
- * @version $Revision: 1.1.1.1 $
+ * 
  */
 public class BitArray implements Serializable {
     

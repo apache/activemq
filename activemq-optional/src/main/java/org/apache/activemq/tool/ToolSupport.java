@@ -28,7 +28,7 @@ import org.apache.activemq.util.IndentPrinter;
 /**
  * Abstract base class useful for implementation inheritence
  * 
- * @version $Revision$
+ * 
  */
 public class ToolSupport {
 

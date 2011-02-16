@@ -25,7 +25,7 @@ import javax.naming.NamingException;
 /**
  * A default implementation of {@link NameParser}
  *
- * @version $Revision: 1.2 $
+ * 
  */
 public class NameParserImpl implements NameParser {
     public Name parse(String name) throws NamingException {

@@ -27,7 +27,7 @@ import org.apache.camel.Endpoint;
  * A JMS {@link javax.jms.QueueReceiver} which consumes message exchanges from a
  * Camel {@link org.apache.camel.Endpoint}
  *
- * @version $Revision: $
+ * 
  */
 public class CamelQueueReceiver extends CamelMessageConsumer implements QueueReceiver {
 

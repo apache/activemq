@@ -31,7 +31,7 @@ import junit.framework.TestCase;
 import org.apache.activemq.ActiveMQConnectionFactory;
 
 /**
- * @version $Revision: 1.3 $
+ * 
  */
 public abstract class JNDITestSupport extends TestCase {
     

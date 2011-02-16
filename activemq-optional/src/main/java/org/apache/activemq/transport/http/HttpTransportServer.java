@@ -34,7 +34,7 @@ import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.servlet.ServletMapping;
 
 /**
- * @version $Revision$
+ * 
  */
 public class HttpTransportServer extends TransportServerSupport {
     private URI bindAddress;

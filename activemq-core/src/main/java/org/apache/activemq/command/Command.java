@@ -22,7 +22,7 @@ import org.apache.activemq.state.CommandVisitor;
  * The Command Pattern so that we can send and receive commands on the different
  * transports
  * 
- * @version $Revision: 1.7 $
+ * 
  */
 public interface Command extends DataStructure {
 

@@ -30,7 +30,7 @@ import javax.servlet.http.HttpServletResponse;
 /**
  * Represents a rendering of the messages
  * 
- * @version $Revision: $
+ * 
  */
 public interface MessageRenderer {
 

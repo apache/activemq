@@ -38,7 +38,7 @@ import javax.jms.Session;
 import javax.jms.TextMessage;
 
 /**
- * @version $Revision: 1.3 $
+ * 
  */
 public abstract class CursorSupport extends CombinationTestSupport {
 

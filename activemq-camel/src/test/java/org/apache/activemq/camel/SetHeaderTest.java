@@ -31,7 +31,7 @@ import org.springframework.test.context.junit38.AbstractJUnit38SpringContextTest
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
- * @version $Revision: 1.1 $
+ * 
  */
 @ContextConfiguration
 public class SetHeaderTest extends AbstractJUnit38SpringContextTests {

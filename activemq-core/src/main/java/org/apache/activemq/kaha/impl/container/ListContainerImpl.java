@@ -40,7 +40,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Implementation of a ListContainer
  * 
- * @version $Revision: 1.2 $
+ * 
  */
 public class ListContainerImpl extends BaseContainerImpl implements ListContainer {
 

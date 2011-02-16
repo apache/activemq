@@ -27,7 +27,7 @@ import org.apache.activemq.util.JMSExceptionSupport;
 /**
  * Represents a filter which only operates on Destinations
  * 
- * @version $Revision: 1.3 $
+ * 
  */
 public abstract class DestinationFilter implements BooleanExpression {
 

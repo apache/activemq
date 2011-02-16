@@ -23,7 +23,7 @@ import org.apache.activemq.util.IntrospectionSupport;
 /**
  * 
  * @openwire:marshaller
- * @version $Revision: 1.11 $
+ * 
  */
 public abstract class BaseCommand implements Command {
 

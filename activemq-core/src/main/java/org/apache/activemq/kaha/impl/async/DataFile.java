@@ -26,7 +26,7 @@ import org.apache.activemq.util.LinkedNode;
 /**
  * DataFile
  * 
- * @version $Revision: 1.1.1.1 $
+ * 
  */
 public class DataFile extends LinkedNode implements Comparable<DataFile> {
 

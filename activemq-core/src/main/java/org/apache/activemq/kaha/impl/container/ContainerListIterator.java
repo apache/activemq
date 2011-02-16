@@ -22,7 +22,7 @@ import org.apache.activemq.kaha.impl.index.IndexItem;
 import org.apache.activemq.kaha.impl.index.IndexLinkedList;
 
 /**
- * @version $Revision: 1.2 $
+ * 
  */
 public class ContainerListIterator extends ContainerValueCollectionIterator implements ListIterator {
 

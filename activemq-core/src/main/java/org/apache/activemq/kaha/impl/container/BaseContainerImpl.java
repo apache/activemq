@@ -36,7 +36,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Implementation of a ListContainer
  * 
- * @version $Revision: 1.2 $
+ * 
  */
 public abstract class BaseContainerImpl {
 

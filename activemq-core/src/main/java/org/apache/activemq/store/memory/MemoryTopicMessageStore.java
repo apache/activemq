@@ -34,7 +34,7 @@ import org.apache.activemq.util.LRUCache;
 import org.apache.activemq.util.SubscriptionKey;
 
 /**
- * @version $Revision: 1.5 $
+ * 
  */
 public class MemoryTopicMessageStore extends MemoryMessageStore implements TopicMessageStore {
 

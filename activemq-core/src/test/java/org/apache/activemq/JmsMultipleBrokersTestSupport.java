@@ -63,7 +63,7 @@ import org.springframework.core.io.Resource;
  * Test case support that allows the easy management and connection of several
  * brokers.
  * 
- * @version $Revision$
+ * 
  */
 public class JmsMultipleBrokersTestSupport extends CombinationTestSupport {
     public static final String AUTO_ASSIGN_TRANSPORT = "tcp://localhost:0";

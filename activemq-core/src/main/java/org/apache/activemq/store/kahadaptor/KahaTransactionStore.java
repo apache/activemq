@@ -43,7 +43,7 @@ import org.slf4j.LoggerFactory;
  * Provides a TransactionStore implementation that can create transaction aware
  * MessageStore objects from non transaction aware MessageStore objects.
  * 
- * @version $Revision: 1.4 $
+ * 
  */
 public class KahaTransactionStore implements TransactionStore, BrokerServiceAware {	
     private static final Logger LOG = LoggerFactory.getLogger(KahaTransactionStore.class);

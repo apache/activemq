@@ -30,7 +30,7 @@ import org.apache.activemq.wireformat.WireFormat;
 /**
  * Marshall an AMQTx
  * 
- * @version $Revision: 1.10 $
+ * 
  */
 public class AMQTxMarshaller implements Marshaller<AMQTx> {
 

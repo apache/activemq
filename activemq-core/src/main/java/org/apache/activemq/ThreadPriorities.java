@@ -20,7 +20,7 @@ package org.apache.activemq;
 /**
 * A holder for different thread priorites used in ActiveMQ
 * 
-* @version $Revision: 1.9 $
+* 
 */
 
 public interface ThreadPriorities {

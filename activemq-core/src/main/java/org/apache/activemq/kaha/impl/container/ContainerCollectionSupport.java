@@ -19,7 +19,7 @@ package org.apache.activemq.kaha.impl.container;
 /**
  * Base class for container collections
  * 
- * @version $Revision: 1.2 $
+ * 
  */
 class ContainerCollectionSupport {
 

@@ -20,7 +20,7 @@ package org.apache.activemq.broker;
  * An interface used to represent a component that wants the {@link BrokerService} 
  * to be injected
  * 
- * @version $Revision: $
+ * 
  */
 public interface BrokerServiceAware {
 

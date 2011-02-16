@@ -27,7 +27,7 @@ import org.apache.camel.Endpoint;
  * A JMS {@link javax.jms.TopicSubscriber} which consumes message exchanges from a
  * Camel {@link Endpoint}
  *
- * @version $Revision: $
+ * 
  */
 public class CamelTopicSubscriber extends CamelMessageConsumer implements TopicSubscriber {
 

@@ -27,7 +27,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Useful base class
  * 
- * @version $Revision: $
+ * 
  */
 public abstract class DotFileInterceptorSupport extends BrokerFilter {
     private final Logger log = LoggerFactory.getLogger(DotFileInterceptorSupport.class);

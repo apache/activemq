@@ -34,7 +34,7 @@ import org.apache.activemq.command.TransactionId;
 /**
  * Used to add listeners for Broker actions
  * 
- * @version $Revision: 1.10 $
+ * 
  */
 public class BrokerBroadcaster extends BrokerFilter {
     protected volatile Broker[] listeners = new Broker[0];

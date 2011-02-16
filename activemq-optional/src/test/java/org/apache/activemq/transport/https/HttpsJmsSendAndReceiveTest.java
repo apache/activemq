@@ -19,7 +19,7 @@ package org.apache.activemq.transport.https;
 import org.apache.activemq.transport.http.HttpJmsSendAndReceiveTest;
 
 /**
- * @version $Revision$
+ * 
  */
 public class HttpsJmsSendAndReceiveTest extends HttpJmsSendAndReceiveTest {
 

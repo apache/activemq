@@ -28,7 +28,7 @@ import org.apache.camel.Endpoint;
  * A JMS {@link javax.jms.TopicPublisher} which sends message exchanges to a
  * Camel {@link Endpoint}
  *
- * @version $Revision: $
+ * 
  */
 public class CamelTopicPublisher extends CamelMessageProducer implements TopicPublisher {
 

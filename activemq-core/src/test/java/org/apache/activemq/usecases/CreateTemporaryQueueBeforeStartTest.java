@@ -34,7 +34,7 @@ import org.apache.activemq.broker.BrokerService;
 
 /**
  * @author Peter Henning
- * @version $Revision: 1.1.1.1 $
+ * 
  */
 public class CreateTemporaryQueueBeforeStartTest extends TestCase {
     protected String bindAddress = "tcp://localhost:61621";

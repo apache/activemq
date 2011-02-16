@@ -23,7 +23,7 @@ import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.journal.JournalPersistenceAdapterFactory;
 
 /**
- * @version $Revision: 1.1.1.1 $
+ * 
  */
 public class JournalDurableSubscriptionTest extends DurableSubscriptionTestSupport {
 

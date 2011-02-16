@@ -26,7 +26,7 @@ import org.apache.camel.CamelContextAware;
  * A JMS ConnectionFactory which resolves non-JMS destinations or instances of
  * {@link CamelDestination} to use the {@link CamelContext} to perform smart routing etc
  *
- * @version $Revision: $
+ * 
  */
 public class CamelConnectionFactory extends ActiveMQConnectionFactory implements CamelContextAware {
     private CamelContext camelContext;

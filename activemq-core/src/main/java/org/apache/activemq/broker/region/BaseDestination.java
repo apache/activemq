@@ -38,7 +38,7 @@ import org.apache.activemq.usage.Usage;
 import org.slf4j.Logger;
 
 /**
- * @version $Revision: 1.12 $
+ * 
  */
 public abstract class BaseDestination implements Destination {
     /**

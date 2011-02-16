@@ -48,7 +48,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Manages DataFiles
  * 
- * @version $Revision: 1.1.1.1 $
+ * 
  */
 public class AsyncDataManager {
 

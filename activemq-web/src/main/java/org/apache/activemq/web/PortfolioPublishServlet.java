@@ -32,7 +32,7 @@ import javax.servlet.http.HttpServletResponse;
 /**
  * A servlet which will publish dummy market data prices
  * 
- * @version $Revision: 1.1.1.1 $
+ * 
  */
 public class PortfolioPublishServlet extends MessageServletSupport {
 

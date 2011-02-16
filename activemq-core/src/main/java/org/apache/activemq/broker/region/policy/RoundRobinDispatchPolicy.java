@@ -29,7 +29,7 @@ import org.slf4j.LoggerFactory;
  * matches the message.
  * 
  * @org.apache.xbean.XBean
- * @version $Revision$
+ * 
  */
 public class RoundRobinDispatchPolicy implements DispatchPolicy {
     static final Logger LOG = LoggerFactory.getLogger(RoundRobinDispatchPolicy.class);

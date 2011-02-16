@@ -24,7 +24,7 @@ import java.util.Random;
  * are rolled back.
  * 
  * @org.apache.xbean.XBean element="redeliveryPolicy"
- * @version $Revision: 1.11 $
+ * 
  */
 public class RedeliveryPolicy implements Cloneable, Serializable {
 

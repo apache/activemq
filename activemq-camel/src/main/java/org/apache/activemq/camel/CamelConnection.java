@@ -24,7 +24,7 @@ import org.apache.camel.CamelContext;
 import org.apache.camel.CamelContextAware;
 
 /**
- * @version $Revision: $
+ * 
  */
 public class CamelConnection extends ActiveMQConnection implements CamelContextAware {
 

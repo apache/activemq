@@ -19,7 +19,7 @@ package org.apache.activemq.management;
 /**
  * Represents some statistic that is capable of being reset
  *
- * @version $Revision: 1.2 $
+ * 
  */
 public interface Resettable {
 

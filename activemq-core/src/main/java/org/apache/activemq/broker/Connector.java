@@ -23,7 +23,7 @@ import org.apache.activemq.command.BrokerInfo;
 /**
  * A connector creates and manages client connections that talk to the Broker.
  * 
- * @version $Revision: 1.3 $
+ * 
  */
 public interface Connector extends Service {
 

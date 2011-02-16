@@ -42,7 +42,7 @@ import org.apache.activemq.usage.Usage;
  * The Message Broker which routes messages, maintains subscriptions and
  * connections, acknowledges messages and handles transactions.
  * 
- * @version $Revision: 1.8 $
+ * 
  */
 public interface Broker extends Region, Service {
 

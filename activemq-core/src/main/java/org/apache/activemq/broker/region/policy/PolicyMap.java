@@ -28,7 +28,7 @@ import org.apache.activemq.filter.DestinationMap;
  * 
  * @org.apache.xbean.XBean
  * 
- * @version $Revision: 1.1 $
+ * 
  */
 public class PolicyMap extends DestinationMap {
 

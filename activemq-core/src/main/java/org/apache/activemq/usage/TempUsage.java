@@ -25,7 +25,7 @@ import org.apache.activemq.store.kahadb.plist.PListStore;
  * memory usage.
  * 
  * @org.apache.xbean.XBean
- * @version $Revision: 1.3 $
+ * 
  */
 public class TempUsage extends Usage<TempUsage> {
 

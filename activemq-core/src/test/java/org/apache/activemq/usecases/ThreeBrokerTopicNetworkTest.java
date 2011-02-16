@@ -35,7 +35,7 @@ import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.util.MessageIdList;
 
 /**
- * @version $Revision: 1.1.1.1 $
+ * 
  */
 public class ThreeBrokerTopicNetworkTest extends JmsMultipleBrokersTestSupport {
     protected static final int MESSAGE_COUNT = 100;

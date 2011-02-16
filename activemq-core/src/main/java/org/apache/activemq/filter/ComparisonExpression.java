@@ -26,7 +26,7 @@ import javax.jms.JMSException;
 /**
  * A filter performing a comparison of two objects
  * 
- * @version $Revision: 1.2 $
+ * 
  */
 public abstract class ComparisonExpression extends BinaryExpression implements BooleanExpression {
 

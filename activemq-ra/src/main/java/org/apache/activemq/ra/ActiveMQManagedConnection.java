@@ -48,7 +48,7 @@ import org.slf4j.LoggerFactory;
  * transaction. This is bad if used outside of an app server since the user may
  * be trying to create 2 different sessions to coordinate 2 different uow.
  * 
- * @version $Revision$
+ * 
  */
 public class ActiveMQManagedConnection implements ManagedConnection, ExceptionListener { // TODO:
                                                                                             // ,

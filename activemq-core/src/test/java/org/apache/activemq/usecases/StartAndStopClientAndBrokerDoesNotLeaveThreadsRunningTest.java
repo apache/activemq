@@ -30,7 +30,7 @@ import org.apache.activemq.spring.ConsumerBean;
 
 /**
  * 
- * @version $Revision: $
+ * 
  */
 public class StartAndStopClientAndBrokerDoesNotLeaveThreadsRunningTest extends TestCase {
 

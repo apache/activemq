@@ -26,7 +26,7 @@ import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.filter.DestinationFilter;
 
 /**
- * @version $Revision: 1.5 $
+ * 
  */
 public class SubscriptionView implements SubscriptionViewMBean {
 

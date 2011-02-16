@@ -34,7 +34,7 @@ import org.apache.activemq.wireformat.WireFormat;
 
 /**
  * 
- * @version $Revision$
+ * 
  */
 public final class OpenWireFormat implements WireFormat {
 

@@ -21,7 +21,7 @@ import javax.resource.spi.ConnectionEventListener;
 
 
 /**
- * @version $Revision$
+ * 
  */
 public class ConnectionEventListenerAdapter implements ConnectionEventListener {
 

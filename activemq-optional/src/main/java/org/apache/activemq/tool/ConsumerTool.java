@@ -30,7 +30,7 @@ import javax.jms.Topic;
 /**
  * A simple tool for consuming messages
  * 
- * @version $Revision$
+ * 
  */
 public class ConsumerTool extends ToolSupport implements MessageListener {
 

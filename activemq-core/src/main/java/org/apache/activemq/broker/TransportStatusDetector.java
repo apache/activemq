@@ -29,7 +29,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Used to provide information on the status of the Connection
  * 
- * @version $Revision: 1.5 $
+ * 
  */
 public class TransportStatusDetector implements Service, Runnable {
     private static final Logger LOG = LoggerFactory.getLogger(TransportStatusDetector.class);

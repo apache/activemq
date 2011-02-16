@@ -38,7 +38,7 @@ import org.slf4j.LoggerFactory;
  * Tests that the broker allows/fails access to destinations based on the
  * security policy installed on the broker.
  * 
- * @version $Revision$
+ * 
  */
 public class SimpleSecurityBrokerSystemTest extends SecurityTestSupport {
 

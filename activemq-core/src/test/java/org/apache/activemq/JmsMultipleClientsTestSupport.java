@@ -48,7 +48,7 @@ import org.apache.activemq.util.MessageIdList;
  * Test case support used to test multiple message comsumers and message
  * producers connecting to a single broker.
  * 
- * @version $Revision$
+ * 
  */
 public class JmsMultipleClientsTestSupport extends CombinationTestSupport {
 

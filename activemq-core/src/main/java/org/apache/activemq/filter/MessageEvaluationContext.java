@@ -29,7 +29,7 @@ import org.apache.activemq.command.Message;
  * evaluation results associated with the message in the
  * MessageEvaluationContext.
  * 
- * @version $Revision: 1.4 $
+ * 
  */
 public class MessageEvaluationContext {
 

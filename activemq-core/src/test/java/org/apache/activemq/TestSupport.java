@@ -47,7 +47,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Useful base class for unit test cases
  * 
- * @version $Revision: 1.5 $
+ * 
  */
 public abstract class TestSupport extends CombinationTestSupport {
 

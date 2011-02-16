@@ -51,7 +51,7 @@ import org.slf4j.LoggerFactory;
  * difference). The tests simulate storing 1000 1k jms messages to see the rate
  * of processing msg/sec.
  * 
- * @version $Revision$
+ * 
  */
 public class JmsBenchmark extends JmsTestSupport {
     private static final transient Logger LOG = LoggerFactory.getLogger(JmsBenchmark.class);

@@ -27,7 +27,7 @@ import org.apache.activemq.broker.XARecoveryBrokerTest;
 /**
  * Used to verify that recovery works correctly against 
  * 
- * @version $Revision$
+ * 
  */
 public class DefaultStoreXARecoveryBrokerTest extends XARecoveryBrokerTest {
 

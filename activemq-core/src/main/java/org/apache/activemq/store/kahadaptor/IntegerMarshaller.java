@@ -25,7 +25,7 @@ import org.apache.activemq.kaha.Marshaller;
 /**
  * Marshall an Integer
  * 
- * @version $Revision: 1.10 $
+ * 
  */
 public class IntegerMarshaller implements Marshaller<Integer> {
 

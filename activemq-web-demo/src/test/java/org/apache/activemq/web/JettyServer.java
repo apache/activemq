@@ -28,7 +28,7 @@ import org.eclipse.jetty.webapp.WebAppContext;
  * A simple bootstrap class for starting Jetty in your IDE using the local web
  * application.
  * 
- * @version $Revision$
+ * 
  */
 public final class JettyServer {
 

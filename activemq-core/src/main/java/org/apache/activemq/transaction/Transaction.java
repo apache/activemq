@@ -32,7 +32,7 @@ import org.slf4j.Logger;
  * Keeps track of all the actions the need to be done when a transaction does a
  * commit or rollback.
  * 
- * @version $Revision: 1.5 $
+ * 
  */
 public abstract class Transaction {
 

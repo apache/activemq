@@ -29,7 +29,7 @@ import javax.jms.TopicConnectionFactory;
  * be used with the ActiveMQ JCA Resource Adapter to publish messages using the
  * same underlying JMS session that is used to dispatch messages.
  *
- * @version $Revision$
+ * 
  */
 public class InboundConnectionProxyFactory implements ConnectionFactory, QueueConnectionFactory, TopicConnectionFactory {
 

@@ -30,7 +30,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Optimized Store reader
  * 
- * @version $Revision: 1.1.1.1 $
+ * 
  */
 public final class IndexManager {
 

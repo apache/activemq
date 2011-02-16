@@ -20,7 +20,7 @@ package org.apache.activemq.command;
  * Represents a discovery event containing the details of the service
  * 
  * @openwire:marshaller code="40"
- * @version $Revision:$
+ * 
  */
 public class DiscoveryEvent implements DataStructure {
 

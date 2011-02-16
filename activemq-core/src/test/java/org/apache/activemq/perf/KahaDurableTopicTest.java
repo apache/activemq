@@ -20,7 +20,7 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.store.kahadaptor.KahaPersistenceAdapter;
 
 /**
- * @version $Revision: 1.3 $
+ * 
  */
 public class KahaDurableTopicTest extends SimpleDurableTopicTest {
 

@@ -32,7 +32,7 @@ import javax.jms.Topic;
  * best use case is to send and receive large amounts of data that would be to
  * large to hold in a single JMS message.
  * 
- * @version $Revision$
+ * 
  */
 public interface StreamConnection extends Connection {
 

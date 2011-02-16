@@ -26,7 +26,7 @@ import org.slf4j.LoggerFactory;
  * Abstract base class providing support for creating physical
  * connections to an ActiveMQ instance.
  * 
- * @version $Revision$
+ * 
  */
 public class ActiveMQConnectionSupport {
     

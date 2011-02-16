@@ -113,7 +113,7 @@ public class JavaTestsGenerator extends MultiSourceGenerator {
         out.println(" *        under src/gram/script and then use maven openwire:generate to regenerate ");
         out.println(" *        this file.");
         out.println(" *");
-        out.println(" * @version $Revision: $");
+        out.println(" * ");
         out.println(" */");
         out.println("public " + getAbstractClassText() + "class " + className + " extends " + baseClass + " {");
         out.println("");

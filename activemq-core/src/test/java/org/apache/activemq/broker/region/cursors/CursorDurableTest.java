@@ -26,7 +26,7 @@ import javax.jms.Topic;
 import org.apache.activemq.broker.BrokerService;
 
 /**
- * @version $Revision: 1.3 $
+ * 
  */
 public class CursorDurableTest extends CursorSupport {
 

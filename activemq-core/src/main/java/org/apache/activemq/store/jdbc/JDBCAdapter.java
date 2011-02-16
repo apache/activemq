@@ -25,7 +25,7 @@ import org.apache.activemq.command.ProducerId;
 import org.apache.activemq.command.SubscriptionInfo;
 
 /**
- * @version $Revision: 1.5 $
+ * 
  */
 public interface JDBCAdapter {
 

@@ -26,7 +26,7 @@ import org.apache.activemq.command.BrokerInfo;
  * A TransportServer asynchronously accepts {@see Transport} objects and then
  * delivers those objects to a {@see TransportAcceptListener}.
  * 
- * @version $Revision: 1.4 $
+ * 
  */
 public interface TransportServer extends Service {
 

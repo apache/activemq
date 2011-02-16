@@ -19,7 +19,7 @@ package org.apache.activemq.kaha;
 /**
  * Entry for Store data
  * 
- * @version $Revision: 1.2 $
+ * 
  */
 public interface StoreEntry {
 

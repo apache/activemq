@@ -18,7 +18,7 @@ package org.apache.activemq.command;
 
 /**
  * @openwire:marshaller code="122"
- * @version $Revision$
+ * 
  */
 public class ConsumerId implements DataStructure {
 

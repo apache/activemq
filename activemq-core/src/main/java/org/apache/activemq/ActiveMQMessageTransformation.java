@@ -52,7 +52,7 @@ import org.apache.activemq.command.ActiveMQTopic;
  * A helper class for converting normal JMS interfaces into ActiveMQ specific
  * ones.
  * 
- * @version $Revision: 1.1 $
+ * 
  */
 public final class ActiveMQMessageTransformation {
 

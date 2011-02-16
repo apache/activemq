@@ -21,7 +21,7 @@ import java.io.IOException;
 /**
  * An asynchronous listener of commands
  * 
- * @version $Revision$
+ * 
  */
 public class DefaultTransportListener implements TransportListener {
 

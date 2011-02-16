@@ -65,7 +65,7 @@ import org.slf4j.LoggerFactory;
  * A Transport that is made reliable by being able to fail over to another
  * transport when a transport failure is detected.
  * 
- * @version $Revision$
+ * 
  */
 public class FailoverTransport implements CompositeTransport {
 

@@ -20,7 +20,7 @@ package org.apache.activemq.security;
  * An MBean for adding and removing users, roles
  * and destinations.
  * 
- * @version $Revision: 1.1 $
+ * 
  */
 public interface SecurityAdminMBean {
     

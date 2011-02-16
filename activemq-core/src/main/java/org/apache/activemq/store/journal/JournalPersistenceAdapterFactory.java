@@ -36,7 +36,7 @@ import org.slf4j.LoggerFactory;
  * Factory class that can create PersistenceAdapter objects.
  * 
  * @org.apache.xbean.XBean
- * @version $Revision: 1.4 $
+ * 
  */
 public class JournalPersistenceAdapterFactory extends DataSourceSupport implements PersistenceAdapterFactory {
 

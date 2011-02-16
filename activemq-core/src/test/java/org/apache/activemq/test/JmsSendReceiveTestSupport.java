@@ -39,7 +39,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * @version $Revision: 1.2 $
+ * 
  */
 public abstract class JmsSendReceiveTestSupport extends TestSupport implements MessageListener {
     private static final Logger LOG = LoggerFactory.getLogger(JmsSendReceiveTestSupport.class);

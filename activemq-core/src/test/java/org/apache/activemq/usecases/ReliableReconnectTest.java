@@ -40,7 +40,7 @@ import org.apache.activemq.test.TestSupport;
 import org.apache.activemq.util.IdGenerator;
 
 /**
- * @version $Revision: 1.1.1.1 $
+ * 
  */
 public class ReliableReconnectTest extends TestSupport {
     

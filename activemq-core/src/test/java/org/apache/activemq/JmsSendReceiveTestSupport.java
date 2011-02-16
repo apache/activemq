@@ -37,7 +37,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * @version $Revision: 1.7 $
+ * 
  */
 public class JmsSendReceiveTestSupport extends TestSupport implements MessageListener {
     private static final Logger LOG = LoggerFactory.getLogger(JmsSendReceiveTestSupport.class);

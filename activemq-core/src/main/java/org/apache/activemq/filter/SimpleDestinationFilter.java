@@ -23,7 +23,7 @@ import org.apache.activemq.command.ActiveMQDestination;
 /**
  * Matches messages sent to an exact destination
  *
- * @version $Revision: 1.3 $
+ * 
  */
 public class SimpleDestinationFilter extends DestinationFilter {
 

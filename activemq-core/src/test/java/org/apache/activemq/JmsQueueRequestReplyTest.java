@@ -17,7 +17,7 @@
 package org.apache.activemq;
 
 /**
- * @version $Revision: 1.2 $
+ * 
  */
 public class JmsQueueRequestReplyTest extends JmsTopicRequestReplyTest {
 

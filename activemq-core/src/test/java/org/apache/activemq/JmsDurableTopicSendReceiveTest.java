@@ -30,7 +30,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * @version $Revision: 1.5 $
+ * 
  */
 public class JmsDurableTopicSendReceiveTest extends JmsTopicSendReceiveTest {
     private static final Logger LOG = LoggerFactory.getLogger(JmsDurableTopicSendReceiveTest.class);

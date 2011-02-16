@@ -29,7 +29,7 @@ import org.apache.activemq.store.amq.AMQTx;
 /**
  * Adapter to the actual persistence mechanism used with ActiveMQ
  * 
- * @version $Revision: 1.3 $
+ * 
  */
 public interface ReferenceStoreAdapter extends PersistenceAdapter {
 

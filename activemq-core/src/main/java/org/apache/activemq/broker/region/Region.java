@@ -38,7 +38,7 @@ import org.apache.activemq.command.Response;
  * a broker.  A Broker is composed of multiple message processing Regions that
  * provide different QOS options.
  * 
- * @version $Revision$
+ * 
  */
 public interface Region extends Service {
 

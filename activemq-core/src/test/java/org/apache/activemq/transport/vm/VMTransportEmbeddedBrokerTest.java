@@ -37,7 +37,7 @@ import org.apache.activemq.util.IOExceptionSupport;
 /**
  * Used to see if the VM transport starts an embedded broker on demand.
  * 
- * @version $Revision$
+ * 
  */
 public class VMTransportEmbeddedBrokerTest extends BrokerTestSupport {
 

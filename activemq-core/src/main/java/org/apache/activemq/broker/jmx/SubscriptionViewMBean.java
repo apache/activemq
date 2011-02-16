@@ -19,7 +19,7 @@ package org.apache.activemq.broker.jmx;
 import javax.jms.InvalidSelectorException;
 
 /**
- * @version $Revision: 1.5 $
+ * 
  */
 public interface SubscriptionViewMBean {
 

@@ -21,7 +21,7 @@ import org.apache.activemq.xbean.BrokerFactoryBean;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 /**
- * @version $Revision: 1.3 $
+ * 
  */
 public class KahaQueueTest extends SimpleQueueTest {
     final static String config = "org/apache/activemq/perf/kahadbBroker.xml";

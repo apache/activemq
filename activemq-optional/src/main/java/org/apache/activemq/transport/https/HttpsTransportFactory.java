@@ -34,7 +34,7 @@ import org.apache.activemq.wireformat.WireFormat;
 /**
  * Factory of HTTPS based transports
  * 
- * @version $Revision: 1.1 $
+ * 
  */
 public class HttpsTransportFactory extends HttpTransportFactory {
     

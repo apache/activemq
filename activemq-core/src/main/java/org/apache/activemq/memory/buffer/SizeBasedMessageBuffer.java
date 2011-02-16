@@ -23,7 +23,7 @@ import java.util.List;
 /**
  * A {@link MessageBuffer} which evicts from the largest buffers first.
  * 
- * @version $Revision: 1.1 $
+ * 
  */
 public class SizeBasedMessageBuffer implements MessageBuffer {
 

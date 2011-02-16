@@ -23,7 +23,7 @@ import javax.jms.JMSException;
 /**
  * Represents an expression
  * 
- * @version $Revision: 1.2 $
+ * 
  */
 public interface Expression {
 

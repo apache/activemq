@@ -38,7 +38,7 @@ import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQMessage;
 
 /**
- * @version $Revision: 1.3 $
+ * 
  */
 public class AdvisoryTests extends TestCase {
     protected static final int MESSAGE_COUNT = 2000;

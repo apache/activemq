@@ -33,7 +33,7 @@ import java.util.Properties;
  * The fixed version of the UTF8 encoding function. Some older JVM's UTF8
  * encoding function breaks when handling large strings.
  * 
- * @version $Revision$
+ * 
  */
 public final class MarshallingSupport {
 

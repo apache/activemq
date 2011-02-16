@@ -22,7 +22,7 @@ import org.apache.activemq.kaha.StoreEntry;
 /**
  * Holds information for location of message
  * 
- * @version $Revision: 1.10 $
+ * 
  */
 public class ConsumerMessageRef {
 

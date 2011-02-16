@@ -27,7 +27,7 @@ import org.apache.activemq.kaha.impl.index.IndexItem;
 /**
  * A Set of keys for the container
  * 
- * @version $Revision: 1.2 $
+ * 
  */
 public class ContainerKeySet extends ContainerCollectionSupport implements Set {
 

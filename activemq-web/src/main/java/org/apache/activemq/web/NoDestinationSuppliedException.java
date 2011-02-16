@@ -21,7 +21,7 @@ import javax.servlet.ServletException;
 /**
  * Exception thrown if there was no destination available
  *
- * @version $Revision: 1.1.1.1 $
+ * 
  */
 public class NoDestinationSuppliedException extends ServletException {
 

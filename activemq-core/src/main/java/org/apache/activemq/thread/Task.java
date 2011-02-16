@@ -19,7 +19,7 @@ package org.apache.activemq.thread;
 /**
  * Represents a task that may take a few iterations to complete.
  * 
- * @version $Revision: 1.3 $
+ * 
  */
 public interface Task {
     boolean iterate();

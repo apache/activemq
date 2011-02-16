@@ -34,7 +34,7 @@ import org.slf4j.LoggerFactory;
  * corelation of responses to requests to create a blocking request-response
  * semantics.
  * 
- * @version $Revision: 1.4 $
+ * 
  */
 public class ResponseCorrelator extends TransportFilter {
 

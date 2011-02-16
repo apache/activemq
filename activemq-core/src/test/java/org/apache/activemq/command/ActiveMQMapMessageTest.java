@@ -33,7 +33,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * @version $Revision$
+ * 
  */
 public class ActiveMQMapMessageTest extends TestCase {
     private static final Logger LOG = LoggerFactory.getLogger(ActiveMQMapMessageTest.class);

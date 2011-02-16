@@ -26,7 +26,7 @@ import org.apache.activemq.ActiveMQSession;
 /**
  * A JMS {@link Queue} object which refers to a Camel endpoint
  *
- * @version $Revision: $
+ * 
  */
 public class CamelQueue extends CamelDestination implements Queue {
 

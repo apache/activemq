@@ -19,7 +19,7 @@ package org.apache.activemq.thread;
 import java.util.concurrent.Executor;
 
 /**
- * @version $Revision: 1.1 $
+ * 
  */
 class PooledTaskRunner implements TaskRunner {
 

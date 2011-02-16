@@ -30,7 +30,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Stores a messages/acknowledgements for a transaction
  * 
- * @version $Revision: 1.4 $
+ * 
  */
 class KahaTransaction {
     protected List<TxCommand> list = new ArrayList<TxCommand>();

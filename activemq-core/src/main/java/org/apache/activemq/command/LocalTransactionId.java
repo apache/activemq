@@ -18,7 +18,7 @@ package org.apache.activemq.command;
 
 /**
  * @openwire:marshaller code="111"
- * @version $Revision: 1.11 $
+ * 
  */
 public class LocalTransactionId extends TransactionId implements Comparable<LocalTransactionId> {
 

@@ -25,7 +25,7 @@ import org.apache.camel.ContextTestSupport;
 import org.apache.camel.builder.RouteBuilder;
 
 /**
- * @version $Revision: 1.1 $
+ * 
  */
 public class InvokeJmsMessageListenerTest extends ContextTestSupport {
     protected MyMessageListener messageListener = new MyMessageListener();

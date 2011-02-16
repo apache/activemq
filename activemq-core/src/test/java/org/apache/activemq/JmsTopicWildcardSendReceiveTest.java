@@ -29,7 +29,7 @@ import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.test.JmsTopicSendReceiveTest;
 
 /**
- * @version $Revision: 1.4 $
+ * 
  */
 public class JmsTopicWildcardSendReceiveTest extends JmsTopicSendReceiveTest {
 

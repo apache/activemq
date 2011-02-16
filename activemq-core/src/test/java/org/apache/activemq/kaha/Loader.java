@@ -26,7 +26,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Store test
  * 
- * @version $Revision: 1.2 $
+ * 
  */
 class Loader extends Thread {
 

@@ -17,7 +17,7 @@
 package org.apache.activemq;
 
 /**
- * @version $Revision: 1.2 $
+ * 
  */
 public class JMSQueueRedeliverTest extends JmsTopicRedeliverTest {
     protected void setUp() throws Exception {

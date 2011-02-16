@@ -55,7 +55,7 @@ import org.apache.commons.pool.impl.GenericObjectPoolFactory;
  * 
  * @org.apache.xbean.XBean element="pooledConnectionFactory"
  * 
- * @version $Revision: 1.1 $
+ * 
  */
 public class PooledConnectionFactory implements ConnectionFactory, Service {
     private static final transient Logger LOG = LoggerFactory.getLogger(PooledConnectionFactory.class);

@@ -26,7 +26,7 @@ import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.jdbc.JDBCPersistenceAdapter;
 
 /**
- * @version $Revision: 1.1 $
+ * 
  */
 public class JDBCPersistenceXBeanConfigTest extends TestCase {
 

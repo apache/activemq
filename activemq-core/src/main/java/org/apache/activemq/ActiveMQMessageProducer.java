@@ -61,7 +61,7 @@ import org.apache.activemq.util.IntrospectionSupport;
  * A JMS provider should do its best to expire messages accurately; however, the
  * JMS API does not define the accuracy provided.
  * 
- * @version $Revision: 1.14 $
+ * 
  * @see javax.jms.TopicPublisher
  * @see javax.jms.QueueSender
  * @see javax.jms.Session#createProducer

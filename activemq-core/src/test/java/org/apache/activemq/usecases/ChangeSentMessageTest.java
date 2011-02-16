@@ -28,7 +28,7 @@ import javax.jms.Session;
 import org.apache.activemq.test.TestSupport;
 
 /**
- * @version $Revision: 1.1.1.1 $
+ * 
  */
 public class ChangeSentMessageTest extends TestSupport {
     private static final int COUNT = 200;

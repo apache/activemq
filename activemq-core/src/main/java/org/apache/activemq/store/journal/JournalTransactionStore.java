@@ -63,7 +63,7 @@ public class JournalTransactionStore implements TransactionStore {
     /**
      * Operations
      * 
-     * @version $Revision: 1.6 $
+     * 
      */
     public static class Tx {
 

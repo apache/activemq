@@ -37,7 +37,7 @@ import org.apache.activemq.thread.Scheduler;
  * subscriptions.
  * 
  * @org.apache.xbean.XBean
- * @version $Revision$
+ * 
  */
 public class TimedSubscriptionRecoveryPolicy implements SubscriptionRecoveryPolicy {
 

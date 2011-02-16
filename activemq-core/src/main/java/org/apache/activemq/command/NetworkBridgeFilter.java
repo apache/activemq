@@ -29,7 +29,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * @openwire:marshaller code="91"
- * @version $Revision: 1.12 $
+ * 
  */
 public class NetworkBridgeFilter implements DataStructure, BooleanExpression {
 

@@ -24,7 +24,7 @@ import org.apache.activemq.command.ConnectionControl;
 import org.apache.activemq.command.Response;
 
 /**
- * @version $Revision: 1.5 $
+ * 
  */
 public interface Connection extends Service {
 

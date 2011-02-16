@@ -25,7 +25,7 @@ import org.slf4j.LoggerFactory;
 /**
  * A useful base class for transport implementations.
  * 
- * @version $Revision: 1.1 $
+ * 
  */
 public abstract class TransportSupport extends ServiceSupport implements Transport {
     private static final Logger LOG = LoggerFactory.getLogger(TransportSupport.class);

@@ -39,7 +39,7 @@ import org.apache.activemq.usage.SystemUsage;
  * other long term persistent storage.
  * 
  * @org.apache.xbean.XBean element="kahaDB"
- * @version $Revision: 1.17 $
+ * 
  */
 public class KahaDBPersistenceAdapter implements PersistenceAdapter, BrokerServiceAware {
     private final KahaDBStore letter = new KahaDBStore();

@@ -45,7 +45,7 @@ import org.slf4j.LoggerFactory;
  * A {@link BrokerFacade} which uses a JMX-Connection to communicate with a
  * broker
  * 
- * @version $Revision: 1.1 $
+ * 
  */
 public class RemoteJMXBrokerFacade extends BrokerFacadeSupport {
     

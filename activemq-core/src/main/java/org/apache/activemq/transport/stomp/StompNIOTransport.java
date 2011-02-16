@@ -46,7 +46,7 @@ import org.apache.activemq.wireformat.WireFormat;
 /**
  * An implementation of the {@link Transport} interface for using Stomp over NIO
  *
- * @version $Revision$
+ * 
  */
 public class StompNIOTransport extends TcpTransport {
 

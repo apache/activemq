@@ -21,7 +21,7 @@ package org.apache.activemq.ra;
  * {@link InboundContext} instance being used to process a message in the
  * current thread so that messages can be produced using the same session.
  * 
- * @version $Revision$
+ * 
  */
 public final class InboundContextSupport {
 

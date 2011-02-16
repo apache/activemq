@@ -23,7 +23,7 @@ import javax.jms.MessageListener;
 /**
  * A simple tool for producing and consuming messages
  * 
- * @version $Revision: 1.1.1.1 $
+ * 
  */
 public class ProducerAndConsumerTool extends ConsumerTool implements MessageListener {
 

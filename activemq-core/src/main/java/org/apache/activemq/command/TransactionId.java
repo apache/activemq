@@ -18,7 +18,7 @@ package org.apache.activemq.command;
 
 /**
  * @openwire:marshaller
- * @version $Revision: 1.6 $
+ * 
  */
 public abstract class TransactionId implements DataStructure {
 

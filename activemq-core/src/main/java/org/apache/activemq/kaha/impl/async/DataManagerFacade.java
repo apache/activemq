@@ -28,7 +28,7 @@ import org.apache.activemq.util.DataByteArrayOutputStream;
 /**
  * Provides a Kaha DataManager Facade to the DataManager.
  * 
- * @version $Revision: 1.1.1.1 $
+ * 
  */
 public final class DataManagerFacade implements org.apache.activemq.kaha.impl.DataManager {
 

@@ -49,7 +49,7 @@ import org.apache.activemq.ActiveMQSession;
  * Acts as a pass through proxy for a JMS Session object. It intercepts events
  * that are of interest of the ActiveMQManagedConnection. There is one proxy for each session.
  * 
- * @version $Revision$
+ * 
  */
 public class ManagedSessionProxy implements Session, QueueSession, TopicSession {
 

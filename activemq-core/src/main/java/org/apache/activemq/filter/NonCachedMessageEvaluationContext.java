@@ -23,7 +23,7 @@ import org.apache.activemq.command.Message;
 /**
  * NonCached version of the MessageEvaluationContext
  * 
- * @version $Revision: 1.4 $
+ * 
  */
 public class NonCachedMessageEvaluationContext extends MessageEvaluationContext {
 

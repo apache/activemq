@@ -48,7 +48,7 @@ import org.apache.log4j.Logger;
 /**
  * TestCase showing the message-destroying described in AMQ-1925
  * 
- * @version $Revision: 1.1 $
+ * 
  */
 public class AMQ1925Test extends TestCase implements ExceptionListener {
 	private static final Logger log = Logger.getLogger(AMQ1925Test.class);

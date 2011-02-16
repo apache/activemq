@@ -22,7 +22,7 @@ import java.io.IOException;
  * This is exception is thrown when the transport layer detects that the underlying socket has been inactive for 
  * too long.
  * 
- * @version $Revision$
+ * 
  */
 public class InactivityIOException extends IOException {
 

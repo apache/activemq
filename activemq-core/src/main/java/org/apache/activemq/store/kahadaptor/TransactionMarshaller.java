@@ -30,7 +30,7 @@ import org.apache.activemq.wireformat.WireFormat;
 /**
  * Marshall a Transaction
  * 
- * @version $Revision: 1.10 $
+ * 
  */
 public class TransactionMarshaller implements Marshaller {
 

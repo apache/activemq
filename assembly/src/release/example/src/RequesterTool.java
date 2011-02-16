@@ -33,7 +33,7 @@ import org.apache.activemq.util.IndentPrinter;
 /**
  * A simple tool for publishing messages
  * 
- * @version $Revision: 1.2 $
+ * 
  */
 public class RequesterTool {
 

@@ -35,7 +35,7 @@ import org.apache.activemq.store.jdbc.Statements;
  * </ul>
  *
  * @org.apache.xbean.XBean element="postgresql-jdbc-adapter"
- * @version $Revision: 1.1 $
+ * 
  */
 public class PostgresqlJDBCAdapter extends BytesJDBCAdapter {
     public String acksPkName = "activemq_acks_pkey";

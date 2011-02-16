@@ -34,7 +34,7 @@ import org.slf4j.LoggerFactory;
  * 
  * @org.apache.xbean.XBean
  * 
- * @version $Revision: 1.1.1.1 $
+ * 
  */
 public class JmsQueueConnector extends JmsConnector {
     private static final Logger LOG = LoggerFactory.getLogger(JmsQueueConnector.class);

@@ -19,7 +19,7 @@ package org.apache.activemq;
 import org.apache.activemq.test.JmsTopicSendReceiveTest;
 
 /**
- * @version $Revision: 1.2 $
+ * 
  */
 public class JmsQueueSendReceiveTest extends JmsTopicSendReceiveTest {
 

@@ -34,7 +34,7 @@ import javax.management.ObjectName;
 /**
  * A managed transport connection
  * 
- * @version $Revision: 1.1 $
+ * 
  */
 public class ManagedTransportConnection extends TransportConnection {
     private static final Logger LOG = LoggerFactory.getLogger(ManagedTransportConnection.class);

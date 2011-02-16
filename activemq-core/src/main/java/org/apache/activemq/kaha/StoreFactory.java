@@ -25,7 +25,7 @@ import org.apache.activemq.kaha.impl.KahaStore;
 /**
  * Factory for creating stores
  * 
- * @version $Revision: 1.2 $
+ * 
  */
 public final class StoreFactory {
 

@@ -37,7 +37,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * @version $Revision: 1.1 $
+ * 
  */
 public class RetroactiveConsumerTestWithSimpleMessageListTest extends EmbeddedBrokerTestSupport {
     private static final Logger LOG = LoggerFactory.getLogger(RetroactiveConsumerTestWithSimpleMessageListTest.class);

@@ -54,7 +54,7 @@ import org.slf4j.LoggerFactory;
  * Tracks the state of a connection so a newly established transport can be
  * re-initialized to the state that was tracked.
  * 
- * @version $Revision$
+ * 
  */
 public class ConnectionStateTracker extends CommandVisitorAdapter {
     private static final Logger LOG = LoggerFactory.getLogger(ConnectionStateTracker.class);

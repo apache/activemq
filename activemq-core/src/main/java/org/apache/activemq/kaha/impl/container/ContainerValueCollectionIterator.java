@@ -23,7 +23,7 @@ import org.apache.activemq.kaha.impl.index.IndexLinkedList;
 /**
  * Values collection iterator for the MapContainer
  * 
- * @version $Revision: 1.2 $
+ * 
  */
 public class ContainerValueCollectionIterator implements Iterator {
 

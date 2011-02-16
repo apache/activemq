@@ -24,7 +24,7 @@ import org.apache.activemq.util.ServiceSupport;
 /**
  * A useful base class for implementations of {@link TransportServer}
  * 
- * @version $Revision: 1.1 $
+ * 
  */
 public abstract class TransportServerSupport extends ServiceSupport implements TransportServer {
 

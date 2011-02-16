@@ -22,7 +22,7 @@ import org.apache.activemq.command.ActiveMQDestination;
 /**
  * Configuration for a NetworkBridge
  * 
- * @version $Revision: 1.1 $
+ * 
  */
 public class NetworkBridgeConfiguration {
 

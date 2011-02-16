@@ -39,7 +39,7 @@ import org.slf4j.LoggerFactory;
  * specific destination or a hierarchical wildcard area of destinations.
  * 
  * @org.apache.xbean.XBean
- * @version $Revision: 1.1 $
+ * 
  */
 public class PolicyEntry extends DestinationMapEntry {
 

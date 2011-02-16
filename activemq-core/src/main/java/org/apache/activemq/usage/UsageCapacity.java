@@ -23,7 +23,7 @@ package org.apache.activemq.usage;
  * 
  * @org.apache.xbean.XBean
  * 
- * @version $Revision: 1.3 $
+ * 
  */
 public interface UsageCapacity{
 

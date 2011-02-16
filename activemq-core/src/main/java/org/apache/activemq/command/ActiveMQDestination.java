@@ -42,7 +42,7 @@ import org.apache.activemq.util.URISupport;
 
 /**
  * @openwire:marshaller
- * @version $Revision: 1.10 $
+ * 
  */
 public abstract class ActiveMQDestination extends JNDIBaseStorable implements DataStructure, Destination, Externalizable, Comparable {
 

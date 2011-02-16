@@ -46,7 +46,7 @@ import org.slf4j.LoggerFactory;
  * to checking to make sure that the broker does not lock up after a while of
  * sustained messaging.
  * 
- * @version $Revision$
+ * 
  */
 public class LoadTestBurnIn extends JmsTestSupport {
     private static final transient Logger LOG = LoggerFactory.getLogger(LoadTestBurnIn.class);

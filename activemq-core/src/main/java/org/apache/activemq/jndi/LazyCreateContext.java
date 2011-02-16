@@ -22,7 +22,7 @@ import javax.naming.NamingException;
 /**
  * Allows users to dynamically create items
  * 
- * @version $Revision: 1.2 $
+ * 
  */
 public abstract class LazyCreateContext extends ReadOnlyContext {
     public Object lookup(String name) throws NamingException {

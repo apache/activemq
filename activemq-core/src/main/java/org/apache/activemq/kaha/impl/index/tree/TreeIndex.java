@@ -34,7 +34,7 @@ import org.slf4j.LoggerFactory;
 /**
  * BTree implementation
  * 
- * @version $Revision: 1.1.1.1 $
+ * 
  */
 public class TreeIndex implements Index {
 

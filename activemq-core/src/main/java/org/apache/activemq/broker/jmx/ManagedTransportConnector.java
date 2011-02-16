@@ -29,7 +29,7 @@ import javax.management.ObjectName;
  * A managed transport connector which can create multiple managed connections
  * as clients connect.
  * 
- * @version $Revision: 1.1 $
+ * 
  */
 public class ManagedTransportConnector extends TransportConnector {
 

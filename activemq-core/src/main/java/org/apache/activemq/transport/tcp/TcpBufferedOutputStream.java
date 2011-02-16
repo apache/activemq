@@ -24,7 +24,7 @@ import java.io.OutputStream;
 /**
  * An optimized buffered outputstream for Tcp
  * 
- * @version $Revision: 1.1.1.1 $
+ * 
  */
 
 public class TcpBufferedOutputStream extends FilterOutputStream implements TimeStampStream {

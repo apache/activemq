@@ -34,7 +34,7 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.store.PersistenceAdapter;
 
 /**
- * @version $Revision: 1.1.1.1 $
+ * 
  */
 public abstract class DurableSubscriptionTestSupport extends TestSupport {
 

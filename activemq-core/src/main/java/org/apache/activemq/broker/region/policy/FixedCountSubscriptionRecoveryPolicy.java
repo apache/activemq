@@ -32,7 +32,7 @@ import org.apache.activemq.filter.DestinationFilter;
  * count of last messages.
  * 
  * @org.apache.xbean.XBean
- * @version $Revision$
+ * 
  */
 public class FixedCountSubscriptionRecoveryPolicy implements SubscriptionRecoveryPolicy {
     private volatile MessageReference messages[];

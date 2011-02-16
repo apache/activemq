@@ -22,7 +22,7 @@ import org.apache.activemq.state.CommandVisitor;
  * An indication to the transport layer that a flush is required.
  * 
  * @openwire:marshaller code="15"
- * @version $Revision$
+ * 
  */
 public class FlushCommand extends BaseCommand {
 

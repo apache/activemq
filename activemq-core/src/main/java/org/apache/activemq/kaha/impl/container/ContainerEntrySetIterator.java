@@ -21,7 +21,7 @@ import java.util.Iterator;
 /**
  * An Iterator for a container entry Set
  * 
- * @version $Revision: 1.2 $
+ * 
  */
 public class ContainerEntrySetIterator implements Iterator {
     private MapContainerImpl container;

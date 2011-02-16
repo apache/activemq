@@ -28,7 +28,7 @@ import org.apache.activemq.transport.tcp.TimeStampStream;
 /**
  * An optimized buffered outputstream for Tcp
  * 
- * @version $Revision: 1.1.1.1 $
+ * 
  */
 
 public class NIOOutputStream extends OutputStream implements TimeStampStream {

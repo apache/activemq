@@ -31,7 +31,7 @@ import org.apache.activemq.util.IOExceptionSupport;
  * middle of the write of the first or second record do not not result in an
  * unknown state.
  * 
- * @version $Revision: 1.1 $
+ * 
  */
 public final class ControlFile {
 

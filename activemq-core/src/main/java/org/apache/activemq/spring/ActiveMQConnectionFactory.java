@@ -27,7 +27,7 @@ import org.springframework.beans.factory.BeanNameAware;
  * 
  * @org.apache.xbean.XBean element="connectionFactory"
  * 
- * @version $Revision: $
+ * 
  */
 public class ActiveMQConnectionFactory extends org.apache.activemq.ActiveMQConnectionFactory implements BeanNameAware {
 

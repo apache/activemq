@@ -26,7 +26,7 @@ import javax.jms.MessageProducer;
 import javax.jms.Session;
 
 /**
- * @version $Revision: 1.3 $
+ * 
  */
 public class MemProducer {
     protected Connection connection;

@@ -21,7 +21,7 @@ package org.apache.activemq.memory.buffer;
  * Represents a collection of MessageQueue instances which are all bound by the
  * same memory buffer to fix the amount of RAM used to some uppper bound.
  * 
- * @version $Revision: 1.1 $
+ * 
  */
 public interface MessageBuffer {
 

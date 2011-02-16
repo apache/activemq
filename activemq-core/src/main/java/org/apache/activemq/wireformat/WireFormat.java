@@ -27,7 +27,7 @@ import org.apache.activemq.util.ByteSequence;
  * Provides a mechanism to marshal commands into and out of packets
  * or into and out of streams, Channels and Datagrams.
  *
- * @version $Revision: 1.1 $
+ * 
  */
 public interface WireFormat {
 

@@ -25,7 +25,7 @@ import org.apache.activemq.kaha.impl.index.IndexItem;
 /**
  * Marshall a TopicSubAck
  * 
- * @version $Revision: 1.10 $
+ * 
  */
 public class StoreEntryMarshaller implements Marshaller {
 

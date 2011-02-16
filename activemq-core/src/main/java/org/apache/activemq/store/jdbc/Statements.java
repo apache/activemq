@@ -17,7 +17,7 @@
 package org.apache.activemq.store.jdbc;
 
 /**
- * @version $Revision: 1.4 $
+ * 
  * 
  * @org.apache.xbean.XBean element="statements"
  * 

@@ -33,7 +33,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * @version $Revision: 1.1.1.1 $
+ * 
  */
 public class DurableConsumerCloseAndReconnectTest extends TestSupport {
     protected static final long RECEIVE_TIMEOUT = 5000L;

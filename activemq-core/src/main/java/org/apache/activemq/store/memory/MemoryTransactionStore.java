@@ -40,7 +40,7 @@ import org.apache.activemq.store.TransactionStore;
  * Provides a TransactionStore implementation that can create transaction aware
  * MessageStore objects from non transaction aware MessageStore objects.
  * 
- * @version $Revision: 1.4 $
+ * 
  */
 public class MemoryTransactionStore implements TransactionStore {
 

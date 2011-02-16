@@ -25,7 +25,7 @@ import java.nio.channels.FileChannel;
  * An AsyncDataFileAppender that uses NIO ByteBuffers and File chanels to more
  * efficently copy data to files.
  * 
- * @version $Revision: 1.1.1.1 $
+ * 
  */
 class NIODataFileAppender extends DataFileAppender {
 

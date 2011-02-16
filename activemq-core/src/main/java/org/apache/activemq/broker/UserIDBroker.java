@@ -24,7 +24,7 @@ import org.apache.activemq.command.Message;
  * Note that you cannot trust the client, especially if working over the internet
  * as they can spoof headers to be anything they like.
  * 
- * @version $Revision: 1.8 $
+ * 
  */
 public class UserIDBroker extends BrokerFilter {
     

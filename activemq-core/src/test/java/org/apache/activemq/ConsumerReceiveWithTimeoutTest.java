@@ -25,7 +25,7 @@ import javax.jms.Queue;
 import javax.jms.Session;
 
 /**
- * @version $Revision: 1.1.1.1 $
+ * 
  */
 public class ConsumerReceiveWithTimeoutTest extends TestSupport {
 

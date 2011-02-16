@@ -64,7 +64,7 @@ import org.slf4j.LoggerFactory;
  * 
  * @org.apache.xbean.XBean element="jdbcPersistenceAdapter"
  * 
- * @version $Revision: 1.9 $
+ * 
  */
 public class JDBCPersistenceAdapter extends DataSourceSupport implements PersistenceAdapter,
     BrokerServiceAware {

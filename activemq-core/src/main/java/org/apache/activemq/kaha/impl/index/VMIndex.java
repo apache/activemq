@@ -29,7 +29,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Index implementation using a HashMap
  *
- * @version $Revision: 1.2 $
+ * 
  */
 public class VMIndex implements Index, IndexMBean {
     private static final Logger LOG = LoggerFactory.getLogger(VMIndex.class);

@@ -52,7 +52,7 @@ import org.slf4j.LoggerFactory;
  * <dd></dd>
  * </dl>
  * 
- * @version $Revision: 1.1.1.1 $
+ * 
  */
 public abstract class MessageServletSupport extends HttpServlet {
 

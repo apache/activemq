@@ -27,7 +27,7 @@ import org.apache.activemq.broker.region.cursors.VMPendingMessageCursor;
  * 
  * @org.apache.xbean.XBean element="vmDurableCursor" description="Pending
  *                         messages held in the JVM"
- * @version $Revision$
+ * 
  */
 public class VMPendingDurableSubscriberMessageStoragePolicy implements PendingDurableSubscriberMessageStoragePolicy {
 

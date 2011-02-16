@@ -41,7 +41,7 @@ import com.sun.syndication.io.SyndFeedOutput;
 /**
  * This renderer uses XStream to render messages on a queue as full XML elements
  * 
- * @version $Revision: $
+ * 
  */
 public class RssMessageRenderer extends SimpleMessageRenderer {
 

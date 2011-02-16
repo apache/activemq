@@ -21,7 +21,7 @@ import java.io.IOException;
 /**
  * Exception thrown if the store is in use by another application
  * 
- * @version $Revision: 1.1.1.1 $
+ * 
  */
 public class StoreLockedExcpetion extends IOException {
 

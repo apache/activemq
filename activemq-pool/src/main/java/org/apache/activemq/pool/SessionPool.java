@@ -28,7 +28,7 @@ import org.apache.commons.pool.PoolableObjectFactory;
 /**
  * Represents the session pool for a given JMS connection.
  * 
- * @version $Revision: 1.1 $
+ * 
  */
 public class SessionPool implements PoolableObjectFactory {
     private ConnectionPool connectionPool;

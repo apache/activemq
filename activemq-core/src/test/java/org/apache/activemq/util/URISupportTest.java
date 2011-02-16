@@ -25,7 +25,7 @@ import org.apache.activemq.util.URISupport.CompositeData;
 
 /**
  *
- * @version $Revision: 1.1 $
+ * 
  */
 public class URISupportTest extends TestCase {
     

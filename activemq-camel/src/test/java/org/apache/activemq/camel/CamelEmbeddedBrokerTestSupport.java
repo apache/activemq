@@ -33,7 +33,7 @@ import org.apache.camel.util.jndi.JndiContext;
 /**
  * A helper class for test cases which use an embedded broker and use Camel to do the routing
  *
- * @version $Revision: 1.1 $
+ * 
  */
 public abstract class CamelEmbeddedBrokerTestSupport extends EmbeddedBrokerTestSupport {
     protected CamelContext camelContext;

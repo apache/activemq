@@ -19,7 +19,7 @@ package org.apache.activemq.memory;
 /**
  * Defines the interface used to cache messages.
  * 
- * @version $Revision$
+ * 
  */
 public interface Cache {
 

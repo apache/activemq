@@ -21,7 +21,7 @@ import org.apache.activemq.command.Response;
 /**
  * ResponseHolder utility
  * 
- * @version $Revision: 1.1.1.1 $
+ * 
  */
 public class ResponseHolder {
     protected Response response;

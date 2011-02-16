@@ -21,7 +21,7 @@ import javax.jms.JMSException;
 /**
  * An expression which performs an operation on two expression values
  * 
- * @version $Revision: 1.2 $
+ * 
  */
 public abstract class ArithmeticExpression extends BinaryExpression {
 

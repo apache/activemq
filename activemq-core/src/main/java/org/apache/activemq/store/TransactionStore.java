@@ -24,7 +24,7 @@ import org.apache.activemq.command.TransactionId;
  * Represents the durable store of the commit/rollback operations taken against
  * the broker.
  * 
- * @version $Revision: 1.2 $
+ * 
  */
 public interface TransactionStore extends Service {
 

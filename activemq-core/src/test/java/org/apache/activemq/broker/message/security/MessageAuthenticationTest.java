@@ -36,7 +36,7 @@ import org.apache.activemq.EmbeddedBrokerTestSupport;
 import org.apache.activemq.spring.ConsumerBean;
 
 /**
- * @version $Revision: 1.1 $
+ * 
  */
 public class MessageAuthenticationTest extends EmbeddedBrokerTestSupport {
 

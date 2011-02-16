@@ -19,7 +19,7 @@ package org.apache.activemq.broker;
 /**
  * Inserts itself into the BrokerStack
  * 
- * @version $Revision: 1.10 $
+ * 
  */
 public class InsertableMutableBrokerFilter extends MutableBrokerFilter {
 

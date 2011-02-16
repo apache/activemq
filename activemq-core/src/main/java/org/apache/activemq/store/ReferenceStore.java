@@ -26,7 +26,7 @@ import org.apache.activemq.command.MessageId;
 /**
  * Represents a message store which is used by the persistent implementations
  * 
- * @version $Revision: 1.5 $
+ * 
  */
 public interface ReferenceStore extends MessageStore {
 

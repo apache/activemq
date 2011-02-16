@@ -33,7 +33,7 @@ import org.apache.activemq.util.ClassLoadingAwareObjectInputStream;
 /**
  * A simple implementation which uses Object Stream serialization.
  * 
- * @version $Revision: 1.1 $
+ * 
  */
 public class ObjectStreamWireFormat implements WireFormat {
 

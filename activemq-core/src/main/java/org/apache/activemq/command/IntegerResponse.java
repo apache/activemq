@@ -18,7 +18,7 @@ package org.apache.activemq.command;
 
 /**
  * @openwire:marshaller code="34"
- * @version $Revision$
+ * 
  */
 public class IntegerResponse extends Response {
 

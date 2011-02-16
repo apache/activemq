@@ -32,7 +32,7 @@ import org.apache.activemq.util.JMSExceptionSupport;
 /**
  * Represents a property expression
  * 
- * @version $Revision: 1.5 $
+ * 
  */
 public class PropertyExpression implements Expression {
 

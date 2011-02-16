@@ -33,7 +33,7 @@ import org.apache.activemq.util.IdGenerator;
  * Abstract base class for some simple benchmark tools
  * 
  * @author James Strachan
- * @version $Revision$
+ * 
  */
 public class BenchmarkSupport {
 

@@ -83,7 +83,7 @@ public class JavaMarshallingGenerator extends MultiSourceGenerator {
         out.println(" *        under src/gram/script and then use maven openwire:generate to regenerate ");
         out.println(" *        this file.");
         out.println(" *");
-        out.println(" * @version $Revision$");
+        out.println(" * ");
         out.println(" */");
         out.println("public " + getAbstractClassText() + "class " + getClassName() + " extends " + getBaseClass() + " {");
         out.println("");
@@ -297,7 +297,7 @@ public class JavaMarshallingGenerator extends MultiSourceGenerator {
         out.println(" *        under src/gram/script and then use maven openwire:generate to regenerate ");
         out.println(" *        this file.");
         out.println(" *");
-        out.println(" * @version $Revision$");
+        out.println(" * ");
         out.println(" */");
         out.println("public class MarshallerFactory {");
         out.println("");

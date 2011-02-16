@@ -23,7 +23,7 @@ import org.apache.activemq.util.ServiceStopper;
 import org.apache.activemq.util.ServiceSupport;
 
 /**
- * @version $Revision$
+ * 
  */
 public final class Scheduler extends ServiceSupport { 
     private final String name;

@@ -22,7 +22,7 @@ import javax.jms.Session;
 import junit.framework.TestCase;
 
 /**
- * @version $Revision: 1.2 $
+ * 
  */
 public class ConnectionCleanupTest extends TestCase {
 

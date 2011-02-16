@@ -26,7 +26,7 @@ import org.apache.activemq.filter.MessageEvaluationContext;
  * matches the message.
  * 
  * @org.apache.xbean.XBean
- * @version $Revision$
+ * 
  */
 public class SimpleDispatchPolicy implements DispatchPolicy {
 

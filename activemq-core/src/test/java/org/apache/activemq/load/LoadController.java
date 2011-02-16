@@ -24,7 +24,7 @@ import javax.jms.Destination;
 import javax.jms.JMSException;
 
 /**
- * @version $Revision: 1.3 $
+ * 
  */
 public class LoadController extends LoadClient{
     private int numberOfBatches=1;

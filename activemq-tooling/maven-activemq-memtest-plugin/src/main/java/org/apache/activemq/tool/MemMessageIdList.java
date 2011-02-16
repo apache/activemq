@@ -36,7 +36,7 @@ import org.slf4j.LoggerFactory;
  * {@link #setParent(MessageListener)} method so that you can aggregate the
  * total number of messages consumed across a number of consumers.
  *
- * @version $Revision: 1.6 $
+ * 
  */
 public class MemMessageIdList implements MessageListener {
 

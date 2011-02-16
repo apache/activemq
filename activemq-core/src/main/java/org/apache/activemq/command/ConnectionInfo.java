@@ -21,7 +21,7 @@ import org.apache.activemq.state.CommandVisitor;
 /**
  * 
  * @openwire:marshaller code="3"
- * @version $Revision: 1.11 $
+ * 
  */
 public class ConnectionInfo extends BaseCommand {
 

@@ -24,7 +24,7 @@ import java.util.concurrent.CountDownLatch;
 /**
  * Used as a location in the data store.
  * 
- * @version $Revision: 1.2 $
+ * 
  */
 public final class Location implements Comparable<Location> {
 

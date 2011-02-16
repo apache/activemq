@@ -23,7 +23,7 @@ import org.apache.activemq.store.jdbc.JDBCPersistenceAdapter;
 import org.apache.derby.jdbc.EmbeddedDataSource;
 
 /**
- * @version $Revision: 1.1.1.1 $
+ * 
  */
 public class JDBCDurableSubscriptionTest extends DurableSubscriptionTestSupport {
 

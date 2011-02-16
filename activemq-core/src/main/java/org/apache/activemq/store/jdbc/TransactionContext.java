@@ -31,7 +31,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Helps keep track of the current transaction/JDBC connection.
  * 
- * @version $Revision: 1.2 $
+ * 
  */
 public class TransactionContext {
 

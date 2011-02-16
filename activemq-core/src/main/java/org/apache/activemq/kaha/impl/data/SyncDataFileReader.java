@@ -25,7 +25,7 @@ import org.apache.activemq.util.DataByteArrayInputStream;
 /**
  * Optimized Store reader
  * 
- * @version $Revision: 1.1.1.1 $
+ * 
  */
 public final class SyncDataFileReader {
 

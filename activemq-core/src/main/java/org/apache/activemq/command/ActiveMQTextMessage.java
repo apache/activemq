@@ -39,7 +39,7 @@ import org.apache.activemq.wireformat.WireFormat;
 
 /**
  * @openwire:marshaller code="28"
- * @version $Revision$
+ * 
  */
 public class ActiveMQTextMessage extends ActiveMQMessage implements TextMessage {
 

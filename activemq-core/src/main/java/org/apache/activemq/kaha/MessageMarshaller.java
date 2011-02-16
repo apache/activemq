@@ -26,7 +26,7 @@ import org.apache.activemq.wireformat.WireFormat;
 /**
  * Implementation of a Marshaller for MessageIds
  * 
- * @version $Revision: 1.2 $
+ * 
  */
 public class MessageMarshaller implements Marshaller<Message> {
 

@@ -35,7 +35,7 @@ import org.apache.activemq.memory.list.SimpleMessageList;
  * time order.
  * 
  * @org.apache.xbean.XBean
- * @version $Revision$
+ * 
  */
 public class FixedSizedSubscriptionRecoveryPolicy implements SubscriptionRecoveryPolicy {
 

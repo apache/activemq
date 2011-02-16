@@ -21,7 +21,7 @@ import org.apache.activemq.kaha.StoreLocation;
 /**
  * A a wrapper for a data in the store
  * 
- * @version $Revision: 1.2 $
+ * 
  */
 public final class DataItem implements Item, StoreLocation {
 

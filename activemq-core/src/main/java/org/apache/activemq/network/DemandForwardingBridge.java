@@ -33,7 +33,7 @@ import org.slf4j.LoggerFactory;
  * 
  * @org.apache.xbean.XBean
  * 
- * @version $Revision$
+ * 
  */
 public class DemandForwardingBridge extends DemandForwardingBridgeSupport {
     private static final Logger LOG = LoggerFactory.getLogger(DemandForwardingBridge.class);

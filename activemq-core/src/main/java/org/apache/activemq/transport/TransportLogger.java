@@ -26,7 +26,7 @@ import org.slf4j.Logger;
  * following layer in the Transport stack.
  * 
  * @author David Martin Clavo david(dot)martin(dot)clavo(at)gmail.com
- * @version $Revision$
+ * 
  */
 public class TransportLogger extends TransportFilter {
 

@@ -25,7 +25,7 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.store.amq.AMQPersistenceAdapterFactory;
 
 /**
- * @version $Revision: 1.3 $
+ * 
  */
 public class SimpleDurableTopicTest extends SimpleTopicTest {
     protected long initialConsumerDelay = 0;

@@ -21,7 +21,7 @@ import javax.jms.Connection;
 /**
  * A base class for a test case which creates an embedded broker and uses a connection and session
  *
- * @version $Revision: 1.1 $
+ * 
  */
 public abstract class EmbeddedBrokerAndConnectionTestSupport extends EmbeddedBrokerTestSupport {
     protected Connection connection;

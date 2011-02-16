@@ -30,7 +30,7 @@ import junit.framework.TestCase;
 import org.apache.activemq.command.ActiveMQDestination;
 
 /**
- * @version $Revision$
+ * 
  */
 public class ActiveMQActivationSpecTest extends TestCase {
 

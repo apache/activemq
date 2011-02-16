@@ -37,7 +37,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 /**
- * @version $Revision: $
+ * 
  */
 public class CamelJmsTest extends SpringTestSupport {
     

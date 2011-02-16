@@ -32,7 +32,7 @@ import org.slf4j.LoggerFactory;
  * 
  * @org.apache.xbean.XBean element="traceBrokerPathPlugin"
  * 
- * @version $Revision$
+ * 
  */
 
 public class TraceBrokerPathPlugin extends BrokerPluginSupport {

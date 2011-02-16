@@ -28,7 +28,7 @@ import org.apache.activemq.filter.BooleanExpression;
 import org.apache.activemq.filter.MessageEvaluationContext;
 
 /**
- * @version $Revision: 1.7 $
+ * 
  */
 public class SelectorTest extends TestCase {
 

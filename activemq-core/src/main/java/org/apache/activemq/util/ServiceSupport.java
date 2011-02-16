@@ -28,7 +28,7 @@ import org.slf4j.LoggerFactory;
  * A helper class for working with services together with a useful base class
  * for service implementations.
  * 
- * @version $Revision: 1.1 $
+ * 
  */
 public abstract class ServiceSupport implements Service {
     private static final Logger LOG = LoggerFactory.getLogger(ServiceSupport.class);

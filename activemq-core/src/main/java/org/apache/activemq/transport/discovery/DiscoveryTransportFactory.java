@@ -30,7 +30,7 @@ import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.util.URISupport.CompositeData;
 
 /**
- * @version $Revision$
+ * 
  */
 public class DiscoveryTransportFactory extends FailoverTransportFactory {
         

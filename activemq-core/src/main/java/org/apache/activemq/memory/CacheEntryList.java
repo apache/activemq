@@ -19,7 +19,7 @@ package org.apache.activemq.memory;
 /**
  * Maintains a simple linked list of CacheEntry objects. It is thread safe.
  * 
- * @version $Revision$
+ * 
  */
 public class CacheEntryList {
 

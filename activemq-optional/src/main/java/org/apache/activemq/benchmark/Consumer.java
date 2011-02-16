@@ -27,7 +27,7 @@ import javax.jms.Topic;
 
 /**
  * @author James Strachan
- * @version $Revision$
+ * 
  */
 public class Consumer extends BenchmarkSupport implements MessageListener {
 

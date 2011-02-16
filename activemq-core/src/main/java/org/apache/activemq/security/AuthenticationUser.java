@@ -21,7 +21,6 @@ package org.apache.activemq.security;
  * 
  * @org.apache.xbean.XBean
  * 
- * @version $Revision
  */
 public class AuthenticationUser {
 

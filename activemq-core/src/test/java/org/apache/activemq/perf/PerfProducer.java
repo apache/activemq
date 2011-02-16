@@ -27,7 +27,7 @@ import javax.jms.MessageProducer;
 import javax.jms.Session;
 
 /**
- * @version $Revision: 1.3 $
+ * 
  */
 public class PerfProducer implements Runnable {
     protected Connection connection;

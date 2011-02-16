@@ -42,7 +42,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * @author David Martin Clavo david(dot)martin(dot)clavo(at)gmail.com (logging improvement modifications)
- * @version $Revision$
+ * 
  */
 public class TcpTransportFactory extends TransportFactory {
     private static final Logger LOG = LoggerFactory.getLogger(TcpTransportFactory.class);

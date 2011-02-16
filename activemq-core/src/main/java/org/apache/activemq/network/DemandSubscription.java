@@ -29,7 +29,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Represents a network bridge interface
  * 
- * @version $Revision: 1.1 $
+ * 
  */
 public class DemandSubscription {
     private static final Logger LOG = LoggerFactory.getLogger(DemandSubscription.class);

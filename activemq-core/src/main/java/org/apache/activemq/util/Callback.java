@@ -22,7 +22,7 @@ package org.apache.activemq.util;
  * and {@link org.apache.activemq.util.ExceptionTemplate}
    objects to provide automatic transactional or exception handling blocks.
  *
- * @version $Revision: 1.2 $
+ * 
  */
 public interface Callback {
 

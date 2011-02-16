@@ -39,7 +39,7 @@ import org.slf4j.LoggerFactory;
 /**
  * A MessageStore that uses a Journal to store it's messages.
  * 
- * @version $Revision: 1.13 $
+ * 
  */
 public class JournalTopicMessageStore extends JournalMessageStore implements TopicMessageStore {
 

@@ -32,7 +32,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * @author Paul Smith
- * @version $Revision: 1.1.1.1 $
+ * 
  */
 public class SubscribeClosePublishThenConsumeTest extends TestSupport {
     private static final Logger LOG = LoggerFactory.getLogger(SubscribeClosePublishThenConsumeTest.class);

@@ -79,7 +79,7 @@ import org.slf4j.LoggerFactory;
  * other long term persistent storage.
  * 
  * @org.apache.xbean.XBean
- * @version $Revision: 1.17 $
+ * 
  */
 public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEventListener, UsageListener, BrokerServiceAware {
 

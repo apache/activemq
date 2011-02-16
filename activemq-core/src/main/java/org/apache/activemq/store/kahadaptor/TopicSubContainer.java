@@ -25,7 +25,7 @@ import org.apache.activemq.kaha.StoreEntry;
 /**
  * Holds information for the subscriber
  * 
- * @version $Revision: 1.10 $
+ * 
  */
 public class TopicSubContainer {
     private transient MapContainer mapContainer;

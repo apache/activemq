@@ -27,7 +27,7 @@ import org.apache.activemq.broker.BrokerService;
 
 /**
  * @author Oliver Belikan
- * @version $Revision: 1.1.1.1 $
+ * 
  */
 public class StartAndStopBrokerTest extends TestCase {
     public void testStartupShutdown() throws Exception {

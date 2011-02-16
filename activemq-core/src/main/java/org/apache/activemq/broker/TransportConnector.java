@@ -45,7 +45,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * @org.apache.xbean.XBean
- * @version $Revision: 1.6 $
+ * 
  */
 public class TransportConnector implements Connector, BrokerServiceAware {
 

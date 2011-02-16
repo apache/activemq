@@ -29,7 +29,7 @@ import org.apache.activemq.command.ProducerId;
 import org.apache.activemq.command.SessionId;
 
 /**
- * @version $Revision: 1.8 $
+ * 
  */
 
 public class SingleTransportConnectionStateRegister  implements TransportConnectionStateRegister{

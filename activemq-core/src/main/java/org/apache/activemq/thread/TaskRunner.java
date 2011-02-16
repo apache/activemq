@@ -19,7 +19,7 @@ package org.apache.activemq.thread;
 /**
  * Allows you to request a thread execute the associated Task.
  * 
- * @version $Revision: 1.3 $
+ * 
  */
 public interface TaskRunner {
     void wakeup() throws InterruptedException;

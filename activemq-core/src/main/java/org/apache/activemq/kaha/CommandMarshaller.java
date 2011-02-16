@@ -27,7 +27,7 @@ import org.apache.activemq.wireformat.WireFormat;
 /**
  * Marshall a Message or a MessageReference
  * 
- * @version $Revision: 1.10 $
+ * 
  */
 public class CommandMarshaller implements Marshaller<Object> {
 

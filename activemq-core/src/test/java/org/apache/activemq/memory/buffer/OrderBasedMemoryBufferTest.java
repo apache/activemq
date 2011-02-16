@@ -22,7 +22,7 @@ import org.apache.activemq.memory.buffer.OrderBasedMessageBuffer;
 
 /**
  *
- * @version $Revision: 1.1 $
+ * 
  */
 public class OrderBasedMemoryBufferTest extends MemoryBufferTestSupport {
 

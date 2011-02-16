@@ -23,7 +23,7 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 /**
  * Test case for AMQ-141
  *
- * @version $Revision: 1.2 $
+ * 
  */
 public class CustomConnectionFactoryNameTest extends ActiveMQInitialContextFactoryTest {
     

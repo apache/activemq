@@ -26,7 +26,7 @@ import java.sql.SQLException;
  * adapter are:
  * 
  * @org.apache.xbean.XBean element="bytesJDBCAdapter"
- * @version $Revision: 1.2 $
+ * 
  */
 public class BytesJDBCAdapter extends DefaultJDBCAdapter {
 

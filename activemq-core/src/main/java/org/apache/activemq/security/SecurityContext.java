@@ -27,7 +27,7 @@ import org.apache.activemq.command.ActiveMQDestination;
 /**
  * Used to cache up authorizations so that subsequent requests are faster.
  * 
- * @version $Revision$
+ * 
  */
 public abstract class SecurityContext {
 

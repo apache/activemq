@@ -19,7 +19,7 @@ package org.apache.activemq.kaha.impl.index.tree;
 /**
  * A conglomarate used for return results from a tree lookup
  * 
- * @version $Revision: 1.1.1.1 $
+ * 
  */
 class TreePageEntry {
 

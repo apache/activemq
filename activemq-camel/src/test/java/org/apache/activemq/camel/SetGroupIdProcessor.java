@@ -22,7 +22,7 @@ import org.apache.camel.Processor;
 import org.apache.camel.Message;
 
 /**
- * @version $Revision: 1.1 $
+ * 
  */
 public class SetGroupIdProcessor implements Processor {
     public void process(Exchange exchange) throws Exception {

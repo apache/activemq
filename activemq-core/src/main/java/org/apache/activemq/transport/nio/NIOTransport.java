@@ -39,7 +39,7 @@ import org.apache.activemq.wireformat.WireFormat;
 /**
  * An implementation of the {@link Transport} interface using raw tcp/ip
  * 
- * @version $Revision$
+ * 
  */
 public class NIOTransport extends TcpTransport {
 

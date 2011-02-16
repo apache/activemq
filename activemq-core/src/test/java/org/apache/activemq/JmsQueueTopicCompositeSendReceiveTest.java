@@ -25,7 +25,7 @@ import org.apache.activemq.test.JmsTopicSendReceiveTest;
 
 
 /**
- * @version $Revision: 1.3 $
+ * 
  */
 public class JmsQueueTopicCompositeSendReceiveTest extends JmsTopicSendReceiveTest {
     private static final org.apache.commons.logging.Log LOG = org.apache.commons.logging.LogFactory

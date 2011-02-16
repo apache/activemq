@@ -22,7 +22,7 @@ import org.apache.activemq.util.IntrospectionSupport;
  * Used to represent a durable subscription.
  * 
  * @openwire:marshaller code="55"
- * @version $Revision: 1.6 $
+ * 
  */
 public class SubscriptionInfo implements DataStructure {
 

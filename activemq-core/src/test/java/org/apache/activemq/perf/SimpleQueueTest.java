@@ -22,7 +22,7 @@ import javax.jms.JMSException;
 import javax.jms.Session;
 
 /**
- * @version $Revision: 1.3 $
+ * 
  */
 public class SimpleQueueTest extends SimpleTopicTest {
 

@@ -28,7 +28,7 @@ import org.apache.activemq.wireformat.WireFormat;
 /**
  * Runs against the broker but marshals all request and response commands.
  * 
- * @version $Revision$
+ * 
  */
 public class MarshallingBrokerTest extends BrokerTest {
 

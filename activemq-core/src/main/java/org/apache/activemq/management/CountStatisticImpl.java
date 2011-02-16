@@ -23,7 +23,7 @@ import javax.management.j2ee.statistics.CountStatistic;
 /**
  * A count statistic implementation
  * 
- * @version $Revision: 1.3 $
+ * 
  */
 public class CountStatisticImpl extends StatisticImpl implements CountStatistic {
 

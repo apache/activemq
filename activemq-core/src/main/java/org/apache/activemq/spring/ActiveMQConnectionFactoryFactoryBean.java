@@ -27,7 +27,7 @@ import org.springframework.beans.factory.FactoryBean;
  * which supports one or more TCP based hostname/ports which can all be configured in a
  * consistent way without too much URL hacking.
  *
- * @version $Revision: 1.1 $
+ * 
  */
 public class ActiveMQConnectionFactoryFactoryBean implements FactoryBean {
     private List<String> tcpHostAndPorts = new ArrayList<String>();

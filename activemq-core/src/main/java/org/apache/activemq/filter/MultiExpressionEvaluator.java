@@ -64,7 +64,7 @@ import javax.jms.JMSException;
  * counter. When a CacheExpressionnotices it's last cached value was generated
  * in an old 'view', it invalidates its cached value.
  * 
- * @version $Revision: 1.2 $ $Date: 2005/08/27 03:52:36 $
+ *  $Date: 2005/08/27 03:52:36 $
  */
 public class MultiExpressionEvaluator {
 

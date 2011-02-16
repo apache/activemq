@@ -26,7 +26,7 @@ import org.apache.activemq.transport.TransportFilter;
 import org.apache.activemq.transport.TransportListener;
 
 /**
- * @version $Revision: 1.5 $
+ * 
  */
 public class MockTransport extends DefaultTransportListener implements Transport {
 

@@ -20,7 +20,7 @@ package org.apache.activemq.management;
 /**
  * A boundary statistic implementation
  *
- * @version $Revision: 1.2 $
+ * 
  */
 public class BoundaryStatisticImpl extends StatisticImpl {
     private long lowerBound;

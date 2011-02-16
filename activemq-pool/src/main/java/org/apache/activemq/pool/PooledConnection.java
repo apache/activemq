@@ -47,7 +47,7 @@ import org.apache.activemq.advisory.DestinationSource;
  * library like <a href="http://jencks.org/">Jencks</a> such as in <a
  * href="http://jencks.org/Message+Driven+POJOs">this example</a>
  * 
- * @version $Revision: 1.1.1.1 $
+ * 
  */
 public class PooledConnection implements TopicConnection, QueueConnection, EnhancedConnection {
 

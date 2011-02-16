@@ -20,7 +20,7 @@ import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageId;
 
 /**
- * @version $Revision: 1.4 $
+ * 
  */
 public interface MessageRecoveryListener {
     boolean recoverMessage(Message message) throws Exception;

@@ -22,7 +22,7 @@ import org.apache.activemq.command.ActiveMQQueue;
 
 /**
  *
- * @version $Revision: $
+ * 
  */
 public class MirroredQueueUsingVirtualTopicQueueTest extends MirroredQueueTest {
 

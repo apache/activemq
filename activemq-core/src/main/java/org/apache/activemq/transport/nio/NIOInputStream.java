@@ -24,7 +24,7 @@ import java.nio.ByteBuffer;
 /**
  * An optimized buffered input stream for Tcp
  * 
- * @version $Revision: 1.1.1.1 $
+ * 
  */
 public class NIOInputStream extends InputStream {
 

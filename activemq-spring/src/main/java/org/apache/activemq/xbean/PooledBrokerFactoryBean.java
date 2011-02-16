@@ -30,7 +30,7 @@ import org.springframework.core.io.Resource;
  * to start an embedded broker but only the first one to deploy should actually
  * start it.
  * 
- * @version $Revision$
+ * 
  */
 public class PooledBrokerFactoryBean implements FactoryBean, InitializingBean, DisposableBean {
 

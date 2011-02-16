@@ -21,7 +21,7 @@ import javax.jms.TemporaryTopic;
 
 /**
  * @openwire:marshaller code="103"
- * @version $Revision: 1.6 $
+ * 
  */
 public class ActiveMQTempTopic extends ActiveMQTempDestination implements TemporaryTopic {
 

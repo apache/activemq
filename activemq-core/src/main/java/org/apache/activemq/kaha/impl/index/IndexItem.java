@@ -28,7 +28,7 @@ import org.apache.activemq.kaha.impl.data.Item;
 /**
  * A an Item with a relative position and location to other Items in the Store
  * 
- * @version $Revision: 1.2 $
+ * 
  */
 public class IndexItem implements Item, StoreEntry {
 

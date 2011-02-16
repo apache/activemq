@@ -41,7 +41,7 @@ import java.util.StringTokenizer;
  * Main class that can bootstrap an ActiveMQ broker console. Handles command
  * line argument parsing to set up and run broker tasks.
  * 
- * @version $Revision$
+ * 
  */
 public class Main {
 

@@ -21,7 +21,7 @@ import org.apache.activemq.command.ActiveMQMessage;
 /**
  * A message implementation which is useful for testing as we can spoof its size
  *  
- * @version $Revision: 1.1 $
+ * 
  */
 public class DummyMessage extends ActiveMQMessage {
 

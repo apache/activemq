@@ -25,7 +25,7 @@ import org.apache.activemq.state.CommandVisitor;
  * broker.
  * 
  * @openwire:marshaller code="19" version="3"
- * @version $Revision: 1.11 $
+ * 
  */
 public class ProducerAck extends BaseCommand {
 

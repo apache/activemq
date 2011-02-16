@@ -31,7 +31,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Page in a BTree
  * 
- * @version $Revision: 1.1.1.1 $
+ * 
  */
 class TreePage {
 

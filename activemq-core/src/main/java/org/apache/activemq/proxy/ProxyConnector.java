@@ -35,7 +35,7 @@ import org.slf4j.LoggerFactory;
 /**
  * @org.apache.xbean.XBean
  * 
- * @version $Revision$
+ * 
  */
 public class ProxyConnector implements Service {
 

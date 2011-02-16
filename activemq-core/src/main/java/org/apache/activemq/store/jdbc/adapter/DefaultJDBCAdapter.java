@@ -52,7 +52,7 @@ import org.slf4j.LoggerFactory;
  * 
  * @org.apache.xbean.XBean element="defaultJDBCAdapter"
  * 
- * @version $Revision: 1.10 $
+ * 
  */
 public class DefaultJDBCAdapter implements JDBCAdapter {
     private static final Logger LOG = LoggerFactory.getLogger(DefaultJDBCAdapter.class);

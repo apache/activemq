@@ -32,7 +32,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * @version $Revision: 1.2 $
+ * 
  */
 public class JmsTopicSelectorTest extends TestSupport {
     private static final Logger LOG = LoggerFactory.getLogger(JmsTopicSelectorTest.class);

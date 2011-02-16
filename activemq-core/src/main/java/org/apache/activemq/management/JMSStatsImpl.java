@@ -25,7 +25,7 @@ import org.apache.activemq.util.IndentPrinter;
 /**
  * Statistics for a number of JMS connections
  * 
- * @version $Revision: 1.2 $
+ * 
  */
 public class JMSStatsImpl extends StatsImpl {
     private List<ActiveMQConnection> connections = new CopyOnWriteArrayList<ActiveMQConnection>();

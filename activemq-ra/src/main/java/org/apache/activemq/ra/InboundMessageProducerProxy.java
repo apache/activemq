@@ -29,7 +29,7 @@ import javax.jms.TopicPublisher;
  * An implementation of {@link MessageProducer} which uses the ActiveMQ JCA ResourceAdapter's
  * current thread's JMS {@link javax.jms.Session} to send messages.
  *
- * @version $Revision$
+ * 
  */
 public class InboundMessageProducerProxy implements MessageProducer, QueueSender, TopicPublisher {
     

@@ -25,7 +25,7 @@ import org.apache.activemq.xbean.BrokerFactoryBean;
 import org.springframework.core.io.ClassPathResource;
 
 /**
- * @version $Revision: 1.1.1.1 $
+ * 
  */
 public class TwoBrokerTopicSendReceiveUsingTcpTest extends TwoBrokerTopicSendReceiveTest {
     private BrokerService receiverBroker;

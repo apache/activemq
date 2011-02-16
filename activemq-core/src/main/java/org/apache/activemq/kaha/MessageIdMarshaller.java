@@ -24,7 +24,7 @@ import org.apache.activemq.command.MessageId;
 /**
  * Implementation of a Marshaller for MessageIds
  * 
- * @version $Revision: 1.2 $
+ * 
  */
 public class MessageIdMarshaller implements Marshaller<MessageId> {
     /**

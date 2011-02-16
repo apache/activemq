@@ -19,7 +19,7 @@ package org.apache.activemq.kaha;
 /**
  * Runtime exception for the Store
  * 
- * @version $Revision: 1.2 $
+ * 
  */
 
 public class RuntimeStoreException extends RuntimeException {

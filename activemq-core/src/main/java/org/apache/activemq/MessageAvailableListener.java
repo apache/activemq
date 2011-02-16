@@ -26,7 +26,7 @@ import javax.jms.MessageConsumer;
  * Note that this notification just indicates a message is available for synchronous consumption,
  * it does not actually consume the message.
  * 
- * @version $Revision: 1.1 $
+ * 
  */
 public interface MessageAvailableListener {
 

@@ -19,7 +19,7 @@ package org.apache.activemq.ra;
 import junit.framework.TestCase;
 
 /**
- * @version $Revision$
+ * 
  */
 public class ActiveMQResourceAdapterJavaBeanEqualityTest extends TestCase {
 

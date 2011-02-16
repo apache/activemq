@@ -55,7 +55,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * @org.apache.xbean.XBean
- * @version $Revision: 1.4 $
+ * 
  */
 public class KahaPersistenceAdapter implements PersistenceAdapter, BrokerServiceAware {
 

@@ -21,7 +21,7 @@ import java.io.PrintWriter;
 /**
  * A helper class for printing indented text
  *
- * @version $Revision: 1.2 $
+ * 
  */
 public class IndentPrinter {
 

@@ -17,7 +17,7 @@
 package org.apache.activemq.command;
 
 /**
- * @version $Revision$
+ * 
  */
 public interface DataStructure {
     

@@ -36,7 +36,7 @@ import org.apache.activemq.command.ActiveMQDestination;
  * Looking up of a value could return a single value or a List of matching
  * values if a wildcard or composite destination is used.
  * 
- * @version $Revision: 1.3 $
+ * 
  */
 public class DestinationMap {
     protected static final String ANY_DESCENDENT = DestinationFilter.ANY_DESCENDENT;

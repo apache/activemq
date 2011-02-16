@@ -30,7 +30,7 @@ import org.slf4j.LoggerFactory;
  * but this class can also be used to represent statistics on a
  * {@link Destination} as well.
  * 
- * @version $Revision: 1.3 $
+ * 
  */
 public class JMSEndpointStatsImpl extends StatsImpl {
     private static final Logger LOG = LoggerFactory.getLogger(JMSEndpointStatsImpl.class);

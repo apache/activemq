@@ -21,7 +21,7 @@ package org.apache.activemq.network.jms;
  * 
  * @org.apache.xbean.XBean
  * 
- * @version $Revision: 1.1.1.1 $
+ * 
  */
 public class OutboundQueueBridge extends QueueBridge {
 

@@ -26,7 +26,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  *
- * @version $Revision: 1.1 $
+ * 
  */
 public abstract class MemoryBufferTestSupport extends TestCase {
     private static final Logger LOG = LoggerFactory.getLogger(MemoryBufferTestSupport.class);

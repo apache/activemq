@@ -22,7 +22,7 @@ import javax.jms.Topic;
 import javax.jms.TopicSession;
 
 /**
- * @version $Revision: 1.4 $
+ * 
  */
 public class JmsTopicSendReceiveSubscriberTest extends JmsTopicSendReceiveTest {
     protected MessageConsumer createConsumer() throws JMSException {

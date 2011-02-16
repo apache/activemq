@@ -29,7 +29,7 @@ import org.springframework.context.support.AbstractApplicationContext;
 /**
  * A useful base class for spring based unit test cases
  * 
- * @version $Revision: 1.1 $
+ * 
  */
 public abstract class SpringTestSupport extends TestCase {
 

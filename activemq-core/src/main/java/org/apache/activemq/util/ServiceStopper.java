@@ -27,7 +27,7 @@ import org.slf4j.LoggerFactory;
  * A helper class used to stop a bunch of services, catching and logging any
  * exceptions and then throwing the first exception when everything is stoped.
  * 
- * @version $Revision: 1.1 $
+ * 
  */
 public class ServiceStopper {
     private Throwable firstException;

@@ -24,7 +24,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * @version $Revision: 1.1 $
+ * 
  */
 public class CompositeDataHelper {
 

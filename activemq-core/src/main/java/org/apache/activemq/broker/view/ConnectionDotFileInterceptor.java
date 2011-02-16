@@ -39,7 +39,7 @@ import java.util.Set;
 import javax.management.ObjectName;
 
 /**
- * @version $Revision: $
+ * 
  */
 public class ConnectionDotFileInterceptor extends DotFileInterceptorSupport {
 

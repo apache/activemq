@@ -21,7 +21,7 @@ import java.io.IOException;
 /**
  * Factory class that can create PersistenceAdapter objects.
  *
- * @version $Revision: 1.3 $
+ * 
  */
 public interface PersistenceAdapterFactory {
     

@@ -20,7 +20,7 @@ import java.net.SocketAddress;
 
 /**
  *
- * @version $Revision: $
+ * 
  */
 public interface DropCommandStrategy {
 

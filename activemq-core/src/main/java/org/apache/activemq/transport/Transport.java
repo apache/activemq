@@ -24,7 +24,7 @@ import org.apache.activemq.Service;
  * Represents the client side of a transport allowing messages to be sent
  * synchronously, asynchronously and consumed.
  * 
- * @version $Revision: 1.5 $
+ * 
  */
 public interface Transport extends Service {
 

@@ -20,7 +20,7 @@ import org.apache.activemq.state.CommandVisitor;
 
 /**
  * @openwire:marshaller code="9"
- * @version $Revision: 1.7 $
+ * 
  */
 public class RemoveSubscriptionInfo extends BaseCommand {
 

@@ -80,7 +80,7 @@ import org.slf4j.LoggerFactory;
  * other long term persistent storage.
  * 
  * @org.apache.xbean.XBean element="amqPersistenceAdapter"
- * @version $Revision: 1.17 $
+ * 
  */
 public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener, BrokerServiceAware {
 

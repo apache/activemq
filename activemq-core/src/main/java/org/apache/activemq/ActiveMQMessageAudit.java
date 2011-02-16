@@ -21,7 +21,7 @@ import org.apache.activemq.command.MessageId;
 /**
  * Provides basic audit functions for Messages
  * 
- * @version $Revision: 1.1.1.1 $
+ * 
  */
 public class ActiveMQMessageAudit extends ActiveMQMessageAuditNoSync {
 

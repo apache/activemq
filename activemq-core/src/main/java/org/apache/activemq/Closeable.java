@@ -23,7 +23,7 @@ import javax.jms.JMSException;
  * that provide a close() method. Useful for when you want to collect a
  * heterogeous set of JMS object in a collection to be closed at a later time.
  * 
- * @version $Revision: 1.2 $
+ * 
  */
 public interface Closeable {
 

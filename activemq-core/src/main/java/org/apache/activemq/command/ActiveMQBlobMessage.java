@@ -31,7 +31,7 @@ import org.apache.activemq.util.JMSExceptionSupport;
 /**
  * An implementation of {@link BlobMessage} for out of band BLOB transfer
  * 
- * @version $Revision: $
+ * 
  * @openwire:marshaller code="29"
  */
 public class ActiveMQBlobMessage extends ActiveMQMessage implements BlobMessage {

@@ -29,7 +29,7 @@ import org.apache.activemq.kaha.Store;
  * @org.apache.xbean.XBean element="storeDurableSubscriberCursor"
  *                         description="Pending messages for a durable
  *                         subscriber are referenced from the Store"
- * @version $Revision$
+ * 
  */
 public class StorePendingDurableSubscriberMessageStoragePolicy implements PendingDurableSubscriberMessageStoragePolicy {
     boolean immediatePriorityDispatch = true;

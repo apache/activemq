@@ -35,7 +35,7 @@ import org.slf4j.LoggerFactory;
  * A simple implementation of a ConnectionManager that can be extended so that
  * it can see how the RA connections are interacting with it.
  * 
- * @version $Revision$
+ * 
  */
 public class ConnectionManagerAdapter implements ConnectionManager, ConnectionEventListener {
 

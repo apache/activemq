@@ -50,7 +50,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Store Implementation
  * 
- * @version $Revision: 1.1.1.1 $
+ * 
  */
 public class KahaStore implements Store {
 

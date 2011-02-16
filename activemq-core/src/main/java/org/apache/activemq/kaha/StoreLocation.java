@@ -19,7 +19,7 @@ package org.apache.activemq.kaha;
 /**
  * Location of a data in the Store
  * 
- * @version $Revision: 1.2 $
+ * 
  */
 public interface StoreLocation {
 

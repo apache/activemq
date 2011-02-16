@@ -23,7 +23,7 @@ import org.apache.activemq.kaha.StoreEntry;
 /**
  * Simplier than a Map
  * 
- * @version $Revision: 1.2 $
+ * 
  */
 public interface Index {
 

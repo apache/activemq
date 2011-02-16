@@ -35,7 +35,7 @@ import org.apache.camel.util.ObjectHelper;
  * A JMS {@link javax.jms.MessageProducer} which sends message exchanges to a
  * Camel {@link Endpoint}
  * 
- * @version $Revision: $
+ * 
  */
 public class CamelMessageProducer extends ActiveMQMessageProducerSupport {
     

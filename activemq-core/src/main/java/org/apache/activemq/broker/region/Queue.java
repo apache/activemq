@@ -78,7 +78,7 @@ import org.slf4j.LoggerFactory;
  * The Queue is a List of MessageEntry objects that are dispatched to matching
  * subscriptions.
  * 
- * @version $Revision: 1.28 $
+ * 
  */
 public class Queue extends BaseDestination implements Task, UsageListener {
     protected static final Logger LOG = LoggerFactory.getLogger(Queue.class);

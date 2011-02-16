@@ -23,7 +23,7 @@ import org.apache.activemq.command.ActiveMQDestination;
  * An interface for recoverying transient messages held by the broker for
  * retractive recovery for subscribers
  * 
- * @version $Revision$
+ * 
  */
 public interface SubscriptionRecovery {
 

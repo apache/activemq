@@ -33,7 +33,7 @@ import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
 /**
- * @version $Revision: 1.5 $
+ * 
  */
 public class JmsRedeliveredTest extends TestCase {
 

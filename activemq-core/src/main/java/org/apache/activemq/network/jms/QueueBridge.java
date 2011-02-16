@@ -30,7 +30,7 @@ import javax.jms.Session;
 /**
  * A Destination bridge is used to bridge between to different JMS systems
  * 
- * @version $Revision: 1.1.1.1 $
+ * 
  */
 class QueueBridge extends DestinationBridge {
     protected Queue consumerQueue;

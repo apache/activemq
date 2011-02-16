@@ -36,7 +36,7 @@ import org.slf4j.LoggerFactory;
 /**
  * BTree implementation
  * 
- * @version $Revision: 1.1.1.1 $
+ * 
  */
 public class HashIndex implements Index, HashIndexMBean {
     public static final int DEFAULT_PAGE_SIZE;

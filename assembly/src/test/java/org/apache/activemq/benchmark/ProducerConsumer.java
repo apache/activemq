@@ -18,7 +18,7 @@ package org.apache.activemq.benchmark;
 
 /**
  * @author James Strachan
- * @version $Revision$
+ * 
  */
 public class ProducerConsumer extends Producer {
 

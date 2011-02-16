@@ -49,7 +49,7 @@ import org.eclipse.jetty.continuation.ContinuationSupport;
  * specify a readTimeout parameter to determine how long the servlet should
  * block for.
  * 
- * @version $Revision: 1.1.1.1 $
+ * 
  */
 public class MessageServlet extends MessageServletSupport {
 

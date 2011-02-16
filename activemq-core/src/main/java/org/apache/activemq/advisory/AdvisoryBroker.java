@@ -41,7 +41,7 @@ import org.slf4j.LoggerFactory;
  * This broker filter handles tracking the state of the broker for purposes of
  * publishing advisory messages to advisory consumers.
  * 
- * @version $Revision$
+ * 
  */
 public class AdvisoryBroker extends BrokerFilter {
 

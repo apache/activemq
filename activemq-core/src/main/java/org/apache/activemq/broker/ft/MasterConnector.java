@@ -52,7 +52,7 @@ import org.slf4j.LoggerFactory;
  * Availability of messages.
  * 
  * @org.apache.xbean.XBean
- * @version $Revision$
+ * 
  */
 public class MasterConnector implements Service, BrokerServiceAware {
 

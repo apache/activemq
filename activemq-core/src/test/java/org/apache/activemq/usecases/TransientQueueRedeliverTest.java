@@ -19,7 +19,7 @@ package org.apache.activemq.usecases;
 import javax.jms.DeliveryMode;
 
 /**
- * @version $Revision: 1.1.1.1 $
+ * 
  */
 public class TransientQueueRedeliverTest extends TopicRedeliverTest {
 

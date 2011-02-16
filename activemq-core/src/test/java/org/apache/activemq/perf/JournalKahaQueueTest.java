@@ -24,7 +24,7 @@ import org.apache.activemq.store.journal.JournalPersistenceAdapter;
 import org.apache.activemq.store.kahadaptor.KahaPersistenceAdapter;
 
 /**
- * @version $Revision: 1.3 $
+ * 
  */
 public class JournalKahaQueueTest extends SimpleQueueTest {
 

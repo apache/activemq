@@ -30,7 +30,7 @@ import org.apache.activemq.wireformat.WireFormat;
 /**
  * Adds the extra methods available to text based wire format implementations
  * 
- * @version $Revision: 1.1 $
+ * 
  */
 public abstract class TextWireFormat implements WireFormat {
 

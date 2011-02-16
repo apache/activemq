@@ -19,7 +19,7 @@ package org.apache.activemq.pool;
 /**
  * A cache key for the session details
  *
- * @version $Revision: 1.1 $
+ * 
  */
 public class SessionKey {
     private boolean transacted;

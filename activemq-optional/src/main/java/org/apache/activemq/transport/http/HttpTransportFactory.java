@@ -40,7 +40,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * @author David Martin Clavo david(dot)martin(dot)clavo(at)gmail.com (logging improvement modifications)
- * @version $Revision$
+ * 
  */
 public class HttpTransportFactory extends TransportFactory {
     

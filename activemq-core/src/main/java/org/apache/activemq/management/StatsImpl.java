@@ -25,7 +25,7 @@ import javax.management.j2ee.statistics.Stats;
 /**
  * Base class for a Stats implementation
  * 
- * @version $Revision: 1.2 $
+ * 
  */
 public class StatsImpl extends StatisticImpl implements Stats, Resettable {
     //use a Set instead of a Map - to conserve Space

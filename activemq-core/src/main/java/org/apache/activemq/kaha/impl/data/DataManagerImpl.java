@@ -38,7 +38,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Manages DataFiles
  * 
- * @version $Revision: 1.1.1.1 $
+ * 
  */
 public final class DataManagerImpl implements DataManager {
 

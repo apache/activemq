@@ -21,7 +21,7 @@ import org.apache.activemq.wireformat.WireFormat;
 import org.apache.activemq.wireformat.WireFormatFactory;
 
 /**
- * @version $Revision$
+ * 
  */
 public class OpenWireFormatFactory implements WireFormatFactory {
 

@@ -60,7 +60,7 @@ import org.eclipse.jetty.continuation.ContinuationSupport;
  * <dd></dd>
  * </dl>
  * 
- * @version $Revision: 1.1.1.1 $
+ * 
  */
 public class MessageListenerServlet extends MessageServletSupport {
     private static final Logger LOG = LoggerFactory.getLogger(MessageListenerServlet.class);

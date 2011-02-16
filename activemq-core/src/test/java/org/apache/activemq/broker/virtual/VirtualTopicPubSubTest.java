@@ -34,7 +34,7 @@ import org.apache.activemq.spring.ConsumerBean;
 
 /**
  *
- * @version $Revision: $
+ * 
  */
 public class VirtualTopicPubSubTest extends EmbeddedBrokerTestSupport {
 

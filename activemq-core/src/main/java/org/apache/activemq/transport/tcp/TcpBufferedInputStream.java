@@ -23,7 +23,7 @@ import java.io.InputStream;
 /**
  * An optimized buffered input stream for Tcp
  * 
- * @version $Revision: 1.1.1.1 $
+ * 
  */
 public class TcpBufferedInputStream extends FilterInputStream {
     private static final int DEFAULT_BUFFER_SIZE = 8192;

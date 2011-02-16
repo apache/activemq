@@ -31,7 +31,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * 
- * @version $Revision: $
+ * 
  */
 public class UnreliableUdpTransportTest extends UdpTransportTest {
     private static final Logger LOG = LoggerFactory.getLogger(UnreliableUdpTransportTest.class);

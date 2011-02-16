@@ -21,7 +21,7 @@ import javax.jms.DeliveryMode;
 import org.apache.activemq.test.JmsResourceProvider;
 
 /**
- * @version $Revision: 1.2 $
+ * 
  */
 public class JmsDurableTopicTransactionTest extends JmsTopicTransactionTest {
 

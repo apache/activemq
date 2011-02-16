@@ -20,7 +20,7 @@ package org.apache.activemq.transport;
  * A useful base class for a transport implementation which has a background
  * reading thread.
  * 
- * @version $Revision: 1.1 $
+ * 
  */
 public abstract class TransportThreadSupport extends TransportSupport implements Runnable {
 

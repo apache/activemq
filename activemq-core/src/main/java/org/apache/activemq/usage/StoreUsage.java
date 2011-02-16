@@ -24,7 +24,7 @@ import org.apache.activemq.store.PersistenceAdapter;
  * memory usage.
  * 
  * @org.apache.xbean.XBean
- * @version $Revision: 1.3 $
+ * 
  */
 public class StoreUsage extends Usage<StoreUsage> {
 

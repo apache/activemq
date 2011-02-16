@@ -20,7 +20,7 @@ package org.apache.activemq.management;
 /**
  * Statistics for a number of JCA connections and connection pools
  *
- * @version $Revision: 1.2 $
+ * 
  */
 public class JCAStatsImpl extends StatsImpl {
     private JCAConnectionStatsImpl[] connectionStats;

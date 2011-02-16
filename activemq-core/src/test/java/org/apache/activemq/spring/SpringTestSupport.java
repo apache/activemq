@@ -27,7 +27,7 @@ import org.springframework.context.support.AbstractApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 /**
- * @version $Revision: 1.1 $
+ * 
  */
 public class SpringTestSupport extends TestCase {
     private static final Logger LOG = LoggerFactory.getLogger(SpringTest.class);

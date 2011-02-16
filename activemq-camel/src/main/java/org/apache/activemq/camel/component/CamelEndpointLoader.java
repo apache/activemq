@@ -43,7 +43,7 @@ import org.slf4j.LoggerFactory;
 /**
  * A helper bean which populates a {@link CamelContext} with ActiveMQ Queue endpoints
  *
- * @version $Revision: 1.1 $
+ * 
  * @org.apache.xbean.XBean
  */
 public class CamelEndpointLoader implements CamelContextAware {

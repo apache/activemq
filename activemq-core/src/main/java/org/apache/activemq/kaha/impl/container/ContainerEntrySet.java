@@ -26,7 +26,7 @@ import java.util.Set;
 /**
  * Set of Map.Entry objects for a container
  * 
- * @version $Revision: 1.2 $
+ * 
  */
 public class ContainerEntrySet extends ContainerCollectionSupport implements Set {
     ContainerEntrySet(MapContainerImpl container) {

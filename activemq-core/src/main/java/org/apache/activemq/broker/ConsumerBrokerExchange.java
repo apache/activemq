@@ -23,7 +23,7 @@ import org.apache.activemq.broker.region.Subscription;
 /**
  * Holds internal state in the broker for a essageConsumer
  * 
- * @version $Revision: 1.8 $
+ * 
  */
 public class ConsumerBrokerExchange {
 

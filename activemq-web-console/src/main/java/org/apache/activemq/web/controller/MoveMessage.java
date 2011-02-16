@@ -31,7 +31,7 @@ import org.springframework.web.servlet.mvc.Controller;
  * Moves a message from one to another queue
  * 
  * @author <a href="http://www.nighttale.net">Dejan Bosanac</a>
- * @version $Revision$
+ * 
  */
 public class MoveMessage extends DestinationFacade implements Controller {
     private String messageId;

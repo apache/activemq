@@ -32,7 +32,7 @@ import org.apache.activemq.command.Response;
 import org.apache.activemq.filter.MessageEvaluationContext;
 
 /**
- * @version $Revision: 1.5 $
+ * 
  */
 public interface Subscription extends SubscriptionRecovery {
 

@@ -19,7 +19,7 @@ package org.apache.activemq.openwire.tool;
 /**
  * A simple helper class to help auto-generate test data when code generating test cases
  * 
- * @version $Revision: 1.1 $
+ * 
  */
 public class TestDataGenerator {
     private int stringCounter;

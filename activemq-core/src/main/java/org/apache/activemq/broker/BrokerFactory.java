@@ -27,7 +27,7 @@ import org.apache.activemq.util.IOExceptionSupport;
  * list of currently supported URI syntaxes is described <a
  * href="http://activemq.apache.org/how-do-i-embed-a-broker-inside-a-connection.html">here</a>
  * 
- * @version $Revision$
+ * 
  */
 public final class BrokerFactory {
 

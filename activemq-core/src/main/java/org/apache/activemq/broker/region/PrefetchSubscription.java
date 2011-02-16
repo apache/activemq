@@ -47,7 +47,7 @@ import org.slf4j.LoggerFactory;
 /**
  * A subscription that honors the pre-fetch option of the ConsumerInfo.
  * 
- * @version $Revision: 1.15 $
+ * 
  */
 public abstract class PrefetchSubscription extends AbstractSubscription {
 

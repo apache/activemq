@@ -24,7 +24,7 @@ import org.apache.activemq.kaha.Marshaller;
 /**
  * Key and index for DiskBased Hash Index
  * 
- * @version $Revision: 1.1.1.1 $
+ * 
  */
 class HashEntry implements Comparable {
 

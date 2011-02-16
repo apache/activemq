@@ -173,7 +173,7 @@ import org.slf4j.LoggerFactory;
  * Support for JTA in the JMS API is targeted at systems vendors who will be
  * integrating the JMS API into their application server products.
  * 
- * @version $Revision: 1.34 $
+ * 
  * @see javax.jms.Session
  * @see javax.jms.QueueSession
  * @see javax.jms.TopicSession

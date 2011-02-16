@@ -21,7 +21,7 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.store.amq.AMQPersistenceAdapter;
 
 /**
- * @version $Revision: 1.3 $
+ * 
  */
 public class AMQStoreDurableTopicTest extends SimpleDurableTopicTest {
 

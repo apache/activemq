@@ -23,7 +23,7 @@ import org.apache.activemq.kaha.impl.index.IndexLinkedList;
 /**
  * Iterator for the set of keys for a container
  * 
- * @version $Revision: 1.2 $
+ * 
  */
 public class ContainerKeySetIterator implements Iterator {
     

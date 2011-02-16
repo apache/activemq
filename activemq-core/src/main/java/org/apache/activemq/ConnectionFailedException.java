@@ -24,7 +24,7 @@ import javax.jms.JMSException;
  * An exception thrown when the a connection failure is detected (peer might
  * close the connection, or a keep alive times out, etc.)
  * 
- * @version $Revision$
+ * 
  */
 public class ConnectionFailedException extends JMSException {
 

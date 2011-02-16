@@ -30,7 +30,7 @@ import org.apache.activemq.util.IOHelper;
  * 
  * @org.apache.xbean.XBean element="amqPersistenceAdapterFactory"
  * 
- * @version $Revision: 1.17 $
+ * 
  */
 public class AMQPersistenceAdapterFactory implements PersistenceAdapterFactory {
     static final int DEFAULT_MAX_REFERNCE_FILE_LENGTH=2*1024*1024;

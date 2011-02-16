@@ -27,7 +27,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * @version $Revision: 1.3 $
+ * 
  */
 public class QueueConnectionMemoryTest extends SimpleQueueTest {
     private static final transient Logger LOG = LoggerFactory.getLogger(QueueConnectionMemoryTest.class);

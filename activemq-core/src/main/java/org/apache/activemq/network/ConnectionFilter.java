@@ -21,7 +21,7 @@ import java.net.URI;
 /**
  * Abstraction that allows you to control which brokers a NetworkConnector connects bridges to.
  * 
- * @version $Revision$
+ * 
  */
 public interface ConnectionFilter {
     /**

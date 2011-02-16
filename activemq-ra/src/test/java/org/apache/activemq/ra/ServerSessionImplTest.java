@@ -33,7 +33,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 /**
- * @version $Revision: 1.1.1.1 $
+ * 
  */
 @RunWith(JMock.class)
 public class ServerSessionImplTest extends TestCase {

@@ -35,7 +35,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Tests the AsyncDataManager based Journal
  * 
- * @version $Revision: 1.1 $
+ * 
  */
 public class JournalImplTest extends TestCase {
 

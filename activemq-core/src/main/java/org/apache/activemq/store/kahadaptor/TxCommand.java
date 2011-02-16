@@ -22,7 +22,7 @@ import org.apache.activemq.command.CommandTypes;
 /**
  * Base class for messages/acknowledgements for a transaction
  * 
- * @version $Revision: 1.4 $
+ * 
  */
 class TxCommand {
     protected Object messageStoreKey;

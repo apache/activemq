@@ -23,7 +23,7 @@ import java.util.Set;
 /**
  * A Simple LRU Set
  * 
- * @version $Revision$
+ * 
  * @param <K>
  * @param <V>
  */

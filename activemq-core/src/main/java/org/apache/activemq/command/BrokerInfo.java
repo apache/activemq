@@ -28,7 +28,7 @@ import org.apache.activemq.util.MarshallingSupport;
  * in discovering other nodes in the cluster.
  * 
  * @openwire:marshaller code="2"
- * @version $Revision: 1.7 $
+ * 
  */
 public class BrokerInfo extends BaseCommand {
     private static final String PASSIVE_SLAVE_KEY = "passiveSlave";

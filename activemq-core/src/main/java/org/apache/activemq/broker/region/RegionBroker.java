@@ -73,7 +73,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Routes Broker operations to the correct messaging regions for processing.
  * 
- * @version $Revision$
+ * 
  */
 public class RegionBroker extends EmptyBroker {
     public static final String ORIGINAL_EXPIRATION = "originalExpiration";

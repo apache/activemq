@@ -22,7 +22,7 @@ import org.apache.activemq.Service;
 /**
  * Represents a network bridge interface
  * 
- * @version $Revision: 1.1 $
+ * 
  */
 public interface NetworkBridge extends Service {
     

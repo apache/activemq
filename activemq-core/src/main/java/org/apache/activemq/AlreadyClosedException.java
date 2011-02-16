@@ -22,7 +22,7 @@ import javax.jms.JMSException;
  * An exception which is closed if you try to access a resource which has already
  * been closed
  *
- * @version $Revision: 1.2 $
+ * 
  */
 public class AlreadyClosedException extends JMSException {
 

@@ -20,7 +20,7 @@ import org.apache.activemq.util.IntrospectionSupport;
 
 /**
  * @openwire:marshaller code="50"
- * @version $Revision$
+ * 
  */
 public class JournalTopicAck implements DataStructure {
 

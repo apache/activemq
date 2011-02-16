@@ -36,7 +36,7 @@ import org.slf4j.LoggerFactory;
 /**
  * A container of roots for other Containers
  * 
- * @version $Revision: 1.2 $
+ * 
  */
 
 class IndexRootContainer {

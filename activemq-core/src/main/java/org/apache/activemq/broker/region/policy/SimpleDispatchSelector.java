@@ -26,7 +26,7 @@ import org.apache.activemq.filter.NonCachedMessageEvaluationContext;
  * Simple dispatch policy that determines if a message can be sent to a subscription
  *
  * @org.apache.xbean.XBean
- * @version $Revision$
+ * 
  */
 public class SimpleDispatchSelector implements DispatchSelector {
 

@@ -20,7 +20,7 @@ import org.apache.activemq.state.CommandVisitor;
 
 /**
  * @openwire:marshaller code="22"
- * @version $Revision: 1.11 $
+ * 
  */
 public class MessageAck extends BaseCommand {
 

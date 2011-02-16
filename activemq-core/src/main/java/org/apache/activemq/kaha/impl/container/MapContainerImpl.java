@@ -46,7 +46,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Implementation of a MapContainer
  * 
- * @version $Revision: 1.2 $
+ * 
  */
 public final class MapContainerImpl extends BaseContainerImpl implements MapContainer {
 

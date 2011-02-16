@@ -29,7 +29,7 @@ import org.apache.activemq.kaha.impl.StoreLockedExcpetion;
 /**
  * Store test
  * 
- * @version $Revision: 1.2 $
+ * 
  */
 public class StoreTest extends TestCase {
 

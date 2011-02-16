@@ -46,7 +46,7 @@ import org.slf4j.LoggerFactory;
  * A {@link DiscoveryAgent} using a multicast address and heartbeat packets
  * encoded using any wireformat, but openwire by default.
  * 
- * @version $Revision$
+ * 
  */
 public class MulticastDiscoveryAgent implements DiscoveryAgent, Runnable {
 

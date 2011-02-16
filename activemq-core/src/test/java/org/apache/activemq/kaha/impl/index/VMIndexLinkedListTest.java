@@ -25,7 +25,7 @@ import org.apache.activemq.kaha.StoreEntry;
 import org.apache.activemq.kaha.impl.data.Item;
 
 /**
- * @version $Revision: 1.2 $
+ * 
  */
 public class VMIndexLinkedListTest extends TestCase {
     static final int NUMBER = 30;

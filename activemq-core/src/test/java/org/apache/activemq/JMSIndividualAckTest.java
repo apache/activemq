@@ -26,7 +26,7 @@ import javax.jms.Session;
 import javax.jms.TextMessage;
 
 /**
- * @version $Revision: 1.4 $
+ * 
  */
 public class JMSIndividualAckTest extends TestSupport {
 

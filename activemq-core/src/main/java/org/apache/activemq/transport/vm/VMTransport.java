@@ -39,7 +39,7 @@ import org.apache.activemq.util.IOExceptionSupport;
 /**
  * A Transport implementation that uses direct method invocations.
  * 
- * @version $Revision$
+ * 
  */
 public class VMTransport implements Transport, Task {
 

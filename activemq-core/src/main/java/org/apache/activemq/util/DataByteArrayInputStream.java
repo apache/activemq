@@ -24,7 +24,7 @@ import java.io.UTFDataFormatException;
 /**
  * Optimized ByteArrayInputStream that can be used more than once
  * 
- * @version $Revision: 1.1.1.1 $
+ * 
  */
 public final class DataByteArrayInputStream extends InputStream implements DataInput {
     private byte[] buf;

@@ -31,7 +31,7 @@ import org.springframework.web.servlet.mvc.Controller;
  * Copies a message from one to another queue
  * 
  * @author <a href="http://www.nighttale.net">Dejan Bosanac</a>
- * @version $Revision$
+ * 
  */
 public class CopyMessage extends DestinationFacade implements Controller {
     private String messageId;

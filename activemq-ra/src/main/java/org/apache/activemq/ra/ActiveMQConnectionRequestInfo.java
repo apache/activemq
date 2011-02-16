@@ -25,7 +25,7 @@ import org.apache.activemq.ActiveMQPrefetchPolicy;
 import org.apache.activemq.RedeliveryPolicy;
 
 /**
- * @version $Revision$ Must override equals and hashCode (JCA spec 16.4)
+ *  Must override equals and hashCode (JCA spec 16.4)
  */
 public class ActiveMQConnectionRequestInfo implements ConnectionRequestInfo, Serializable, Cloneable {
 

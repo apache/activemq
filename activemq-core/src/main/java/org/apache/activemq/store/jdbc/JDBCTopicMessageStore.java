@@ -39,7 +39,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * @version $Revision: 1.6 $
+ * 
  */
 public class JDBCTopicMessageStore extends JDBCMessageStore implements TopicMessageStore {
 

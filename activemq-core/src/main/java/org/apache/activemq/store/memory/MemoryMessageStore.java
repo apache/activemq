@@ -38,7 +38,7 @@ import org.apache.activemq.usage.SystemUsage;
  * An implementation of {@link org.apache.activemq.store.MessageStore} which
  * uses a
  * 
- * @version $Revision: 1.7 $
+ * 
  */
 public class MemoryMessageStore extends AbstractMessageStore {
 

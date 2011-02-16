@@ -18,7 +18,7 @@
 package org.apache.activemq;
 
 /**
- * @version $Revision: 1.2 $
+ * 
  */
 public class JmsQueueSelectorTest extends JmsTopicSelectorTest {
     public void setUp() throws Exception {

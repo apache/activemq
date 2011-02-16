@@ -29,7 +29,7 @@ import org.apache.activemq.util.URISupport.CompositeData;
  * configuration parameters for the broker service. This directly configures the
  * pojo model so there is no dependency on spring for configuration.
  * 
- * @version $Revision$
+ * 
  */
 public class DefaultBrokerFactory implements BrokerFactoryHandler {
 

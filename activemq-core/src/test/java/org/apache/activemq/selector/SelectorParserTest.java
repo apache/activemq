@@ -28,7 +28,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * @version $Revision: 1.2 $
+ * 
  */
 public class SelectorParserTest extends TestCase {
     private static final Logger LOG = LoggerFactory.getLogger(SelectorParserTest.class);

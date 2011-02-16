@@ -56,7 +56,7 @@ import org.slf4j.LoggerFactory;
  *     }
  * </code>
  * 
- * @version $Revision: 1.5 $
+ * 
  */
 public abstract class CombinationTestSupport extends AutoFailTestSupport {
 

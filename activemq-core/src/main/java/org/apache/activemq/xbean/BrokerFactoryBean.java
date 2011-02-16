@@ -38,7 +38,7 @@ import org.springframework.core.io.Resource;
  * configuration file</a> which provides a much neater and more concise XML
  * format.
  * 
- * @version $Revision: 1.1 $
+ * 
  */
 public class BrokerFactoryBean implements FactoryBean, InitializingBean, DisposableBean, ApplicationContextAware {
 

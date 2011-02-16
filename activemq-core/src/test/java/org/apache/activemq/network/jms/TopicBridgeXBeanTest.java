@@ -21,7 +21,7 @@ import org.springframework.context.support.AbstractApplicationContext;
 
 /**
  * 
- * @version $Revision: 1.1 $
+ * 
  */
 public class TopicBridgeXBeanTest extends TopicBridgeSpringTest {
 

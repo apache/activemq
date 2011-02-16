@@ -21,7 +21,7 @@ package org.apache.activemq.filter;
 /**
  * An expression which performs an operation on two expression values.
  * 
- * @version $Revision: 1.2 $
+ * 
  */
 public abstract class BinaryExpression implements Expression {
     protected Expression left;

@@ -40,7 +40,7 @@ import org.apache.activemq.store.jdbc.Statements;
  *
  * @org.apache.xbean.XBean element="oracleJDBCAdapter"
  *
- * @version $Revision: 1.2 $
+ * 
  */
 public class OracleJDBCAdapter extends BlobJDBCAdapter {
 

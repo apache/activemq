@@ -23,7 +23,7 @@ import org.apache.activemq.state.CommandVisitor;
  * 
  * @openwire:marshaller code="14"
  * 
- * @version $Revision: 1.1 $
+ * 
  */
 public class ControlCommand extends BaseCommand {
 

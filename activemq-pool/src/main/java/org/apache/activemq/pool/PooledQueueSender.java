@@ -25,7 +25,7 @@ import javax.jms.QueueSender;
 import org.apache.activemq.ActiveMQQueueSender;
 
 /**
- * @version $Revision: 1.1 $
+ * 
  */
 public class PooledQueueSender extends PooledProducer implements QueueSender {
 

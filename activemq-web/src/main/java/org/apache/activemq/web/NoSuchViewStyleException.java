@@ -20,7 +20,7 @@ import javax.servlet.ServletException;
 
 /**
  * 
- * @version $Revision: $
+ * 
  */
 public class NoSuchViewStyleException extends ServletException {
 

@@ -23,7 +23,7 @@ import java.io.IOException;
 /**
  * Implementation of a Marshaller for byte arrays
  * 
- * @version $Revision: 1.2 $
+ * 
  */
 public class BytesMarshaller implements Marshaller {
     /**

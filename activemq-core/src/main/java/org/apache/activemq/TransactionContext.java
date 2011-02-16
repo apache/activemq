@@ -57,7 +57,7 @@ import org.slf4j.LoggerFactory;
  * This could be done by using the services of a database that supports XA, or a
  * JMS provider may choose to implement this functionality from scratch. <p/>
  * 
- * @version $Revision: 1.10 $
+ * 
  * @see javax.jms.Session
  * @see javax.jms.QueueSession
  * @see javax.jms.TopicSession

@@ -29,7 +29,7 @@ import org.springframework.core.io.Resource;
 /**
  * Test Publish/Consume queue using the release activemq.xml configuration file
  *
- * @version $Revision: 1.2 $
+ * 
  */
 public class PublishOnQueueConsumedMessageUsingActivemqXMLTest extends PublishOnTopicConsumedMessageTest {
     protected static final String JOURNAL_ROOT = "../data/";

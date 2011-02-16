@@ -23,7 +23,7 @@ import java.sql.SQLException;
 import org.apache.activemq.store.jdbc.Statements;
 
 /**
- * @version $Revision: 1.2 $
+ * 
  * @org.apache.xbean.XBean element="db2JDBCAdapter"
  */
 public class DB2JDBCAdapter extends DefaultJDBCAdapter {

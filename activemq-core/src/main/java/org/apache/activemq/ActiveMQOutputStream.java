@@ -34,7 +34,7 @@ import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.util.IOExceptionSupport;
 
 /**
- * @version $Revision$
+ * 
  */
 public class ActiveMQOutputStream extends OutputStream implements Disposable {
 

@@ -29,7 +29,7 @@ import org.apache.activemq.transport.udp.UdpTransport;
  * An unreliable UDP transport that will randomly discard packets to simulate a
  * bad network (or UDP buffers being flooded).
  * 
- * @version $Revision: $
+ * 
  */
 public class UnreliableUdpTransport extends UdpTransport {
 

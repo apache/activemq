@@ -20,7 +20,7 @@ package org.apache.activemq.management;
 /**
  * Represents an object which is capable of providing some stats
  *
- * @version $Revision: 1.2 $
+ * 
  */
 public interface StatsCapable {
 

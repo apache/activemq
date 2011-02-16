@@ -24,7 +24,7 @@ import org.apache.activemq.transport.util.TextWireFormat;
 /**
  * A useful base class for HTTP Transport implementations.
  * 
- * @version $Revision: 1.1 $
+ * 
  */
 public abstract class HttpTransportSupport extends TransportThreadSupport {
     private TextWireFormat textWireFormat;

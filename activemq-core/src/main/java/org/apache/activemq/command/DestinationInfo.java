@@ -24,7 +24,7 @@ import org.apache.activemq.state.CommandVisitor;
  * Used to create and destroy destinations on the broker.
  * 
  * @openwire:marshaller code="8"
- * @version $Revision: 1.9 $
+ * 
  */
 public class DestinationInfo extends BaseCommand {
 

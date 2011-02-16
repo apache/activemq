@@ -27,7 +27,7 @@ import org.apache.activemq.network.NetworkBridgeConfiguration;
 import org.apache.activemq.transport.TransportFactory;
 
 /**
- * @version $Revision: 1.1.1.1 $
+ * 
  */
 public class ThreeBrokerQueueNetworkUsingTcpTest extends ThreeBrokerQueueNetworkTest {
     protected List<DemandForwardingBridge> bridges;

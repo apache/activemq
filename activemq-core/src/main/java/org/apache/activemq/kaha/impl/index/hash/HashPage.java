@@ -29,7 +29,7 @@ import org.slf4j.LoggerFactory;
 /**
  * A Page within a HashPage
  * 
- * @version $Revision: 1.1.1.1 $
+ * 
  */
 class HashPage {
     static final int PAGE_HEADER_SIZE = 17;

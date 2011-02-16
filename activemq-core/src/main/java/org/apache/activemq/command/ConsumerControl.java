@@ -22,7 +22,7 @@ import org.apache.activemq.state.CommandVisitor;
  * Used to start and stop transports as well as terminating clients.
  * 
  * @openwire:marshaller code="17"
- * @version $Revision: 1.1 $
+ * 
  */
 public class ConsumerControl extends BaseCommand {
 

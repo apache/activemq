@@ -60,7 +60,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * @version $Revision: 1.5 $ A Test case for AMQ-1479
+ *  A Test case for AMQ-1479
  */
 public class DurableConsumerTest extends CombinationTestSupport{
     private static final Logger LOG = LoggerFactory.getLogger(DurableConsumerTest.class);

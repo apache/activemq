@@ -23,7 +23,7 @@ import org.apache.activemq.Service;
 /**
  * Represents some kind of lock service to ensure that a broker is the only master
  * 
- * @version $Revision: $
+ * 
  */
 public interface DatabaseLocker extends Service {
 

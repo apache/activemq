@@ -36,7 +36,7 @@ import org.slf4j.LoggerFactory;
  * Used to make sure that commands are arriving periodically from the peer of
  * the transport.
  *
- * @version $Revision$
+ * 
  */
 public class InactivityMonitor extends TransportFilter {
 

@@ -30,7 +30,7 @@ import org.apache.axis.transport.jms.JMSURLHelper;
  * An adapter for using ActiveMQ inside <a
  * href="http://ws.apache.org/axis/">Apache Axis</a>
  * 
- * @version $Revision$
+ * 
  */
 public class ActiveMQVendorAdapter extends BeanVendorAdapter {
 

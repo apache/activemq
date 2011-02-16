@@ -28,7 +28,7 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 
 /**
- * @version $Revision: 1.3 $
+ * 
  */
 public class SlowConsumerTopicTest extends SimpleTopicTest {
 
