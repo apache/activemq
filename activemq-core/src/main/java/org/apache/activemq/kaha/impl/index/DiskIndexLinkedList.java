@@ -22,7 +22,7 @@ import org.apache.activemq.kaha.StoreEntry;
 /**
  * A linked list used by IndexItems
  * 
- * @version $Revision$
+ * 
  */
 public class DiskIndexLinkedList implements IndexLinkedList {
     protected IndexManager indexManager;

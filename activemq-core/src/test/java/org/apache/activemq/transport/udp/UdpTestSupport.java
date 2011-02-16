@@ -37,7 +37,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * @version $Revision$
+ * 
  */
 public abstract class UdpTestSupport extends TestCase implements TransportListener {
 

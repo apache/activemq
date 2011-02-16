@@ -24,7 +24,7 @@ import org.codehaus.jam.JClass;
 import org.codehaus.jam.JProperty;
 
 /**
- * @version $Revision: 379734 $
+ * 
  */
 public class CppHeadersGenerator extends CppClassesGenerator {
 

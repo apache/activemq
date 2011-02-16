@@ -19,7 +19,7 @@ import org.apache.activemq.broker.BrokerService;
 /**
  * This example demonstrates how to run an embedded broker inside your Java code
  * 
- * @version $Revision$
+ * 
  */
 public final class EmbeddedBroker {
 

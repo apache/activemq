@@ -24,7 +24,7 @@ import org.apache.activemq.broker.region.MessageReference;
 /**
  * A strategy for evicting messages from slow consumers.
  * 
- * @version $Revision$
+ * 
  */
 public interface MessageEvictionStrategy {
 

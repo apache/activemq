@@ -22,7 +22,7 @@ import java.util.Set;
 /**
  * Represents a node in the {@link DestinationMap} tree
  *
- * @version $Revision$
+ * 
  */
 public interface DestinationNode {
     void appendMatchingValues(Set answer, String[] paths, int startIndex);

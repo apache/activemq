@@ -26,7 +26,7 @@ import javax.net.ssl.SSLSocketFactory;
 
 
 /**
- * @version $Revision: 1461 $
+ * 
  */
 public class StompSslAuthTest extends StompTest {
 

@@ -20,7 +20,7 @@ package org.apache.activemq.broker.region;
 /**
  * Represents an interceptor on destination instances.
  * 
- * @version $Revision$
+ * 
  */
 public interface DestinationInterceptor {
 

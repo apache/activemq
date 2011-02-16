@@ -23,7 +23,7 @@ import org.apache.activemq.state.CommandVisitor;
  * pieces.
  * 
  * @openwire:marshaller code="60"
- * @version $Revision$
+ * 
  */
 public class PartialCommand implements Command {
 

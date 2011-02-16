@@ -42,7 +42,7 @@ import org.slf4j.LoggerFactory;
  * A helper class which keeps track of the Destinations available in a broker and allows you to listen to them
  * being created or deleted.
  *
- * @version $Revision$
+ * 
  */
 public class DestinationSource implements MessageListener {
     private static final Logger LOG = LoggerFactory.getLogger(ConsumerEventSource.class);

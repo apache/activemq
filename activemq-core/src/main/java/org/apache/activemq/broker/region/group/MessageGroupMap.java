@@ -21,7 +21,7 @@ import org.apache.activemq.command.ConsumerId;
 /**
  * Represents a map of JMSXGroupID values to consumer IDs
  * 
- * @version $Revision$
+ * 
  */
 public interface MessageGroupMap {
 

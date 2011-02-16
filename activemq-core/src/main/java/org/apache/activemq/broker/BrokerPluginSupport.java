@@ -22,7 +22,7 @@ import org.slf4j.LoggerFactory;
 /**
  * A useful base class for implementing broker plugins.
  * 
- * @version $Revision$
+ * 
  */
 public abstract class BrokerPluginSupport extends MutableBrokerFilter implements BrokerPlugin {
     private static final Logger LOG = LoggerFactory.getLogger(BrokerPluginSupport.class);

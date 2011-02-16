@@ -31,7 +31,7 @@ import org.apache.activemq.filter.NonCachedMessageEvaluationContext;
  * Represents a composite {@link Destination} where send()s are replicated to
  * each Destination instance.
  * 
- * @version $Revision$
+ * 
  */
 public class CompositeDestinationFilter extends DestinationFilter {
 

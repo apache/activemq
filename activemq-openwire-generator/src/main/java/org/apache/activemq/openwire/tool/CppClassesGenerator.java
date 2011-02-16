@@ -25,7 +25,7 @@ import org.codehaus.jam.JClass;
 import org.codehaus.jam.JProperty;
 
 /**
- * @version $Revision: 409828 $
+ * 
  */
 public class CppClassesGenerator extends MultiSourceGenerator {
 

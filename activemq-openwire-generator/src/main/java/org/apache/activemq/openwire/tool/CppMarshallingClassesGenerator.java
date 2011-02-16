@@ -29,7 +29,7 @@ import org.codehaus.jam.JClass;
 import org.codehaus.jam.JProperty;
 
 /**
- * @version $Revision: 381410 $
+ * 
  */
 public class CppMarshallingClassesGenerator extends CppMarshallingHeadersGenerator {
 

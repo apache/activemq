@@ -27,7 +27,7 @@ import org.apache.activemq.ActiveMQConnection;
  * A JMS 1.1 log4j appender which uses ActiveMQ by default and does not require
  * any JNDI configurations
  * 
- * @version $Revision$
+ * 
  */
 public class JmsLogAppender extends JmsLogAppenderSupport {
     private String uri = "tcp://localhost:61616";

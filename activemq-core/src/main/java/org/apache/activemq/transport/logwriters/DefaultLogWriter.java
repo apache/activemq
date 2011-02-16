@@ -26,7 +26,7 @@ import org.slf4j.Logger;
  * old logging format.
  * 
  * @author David Martin Clavo david(dot)martin(dot)clavo(at)gmail.com
- * @version $Revision$
+ * 
  */
 public class DefaultLogWriter implements LogWriter {
 

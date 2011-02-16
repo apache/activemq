@@ -24,7 +24,7 @@ import org.apache.activemq.command.Message;
 /**
  * Represents some kind of query which will load initial messages from some source for a new topic subscriber.
  * 
- * @version $Revision$
+ * 
  */
 public interface MessageQuery {
     

@@ -27,7 +27,7 @@ import org.apache.activemq.command.Message;
  * A Destination which implements <a
  * href="http://activemq.org/site/virtual-destinations.html">Virtual Topic</a>
  * 
- * @version $Revision$
+ * 
  */
 public class VirtualTopicInterceptor extends DestinationFilter {
 

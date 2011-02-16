@@ -26,7 +26,7 @@ import org.apache.activemq.broker.BrokerPlugin;
  * 
  * @org.apache.xbean.XBean description="Provides a JAAS based authentication plugin"
  * 
- * @version $Revision$
+ * 
  */
 public class JaasAuthenticationPlugin implements BrokerPlugin {
     protected String configuration = "activemq-domain";

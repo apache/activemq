@@ -37,7 +37,7 @@ import org.slf4j.LoggerFactory;
  * where it resides is no longer in use, the method unregister() will be called.
  * 
  * @author David Martin Clavo david(dot)martin(dot)clavo(at)gmail.com
- * @version $Revision$ 
+ *  
  * @see TransportLoggerViewMBean.
  */
 public class TransportLoggerView implements TransportLoggerViewMBean {

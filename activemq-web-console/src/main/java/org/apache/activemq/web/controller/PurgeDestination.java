@@ -25,7 +25,7 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.Controller;
 
 /**
- * @version $Revision$
+ * 
  */
 public class PurgeDestination extends DestinationFacade implements Controller {
 

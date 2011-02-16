@@ -18,7 +18,7 @@ package org.apache.activemq.security;
 
 /**
  * 
- * @version $Revision$
+ * 
  */
 public class SimpleAuthorizationMapTest extends AuthorizationMapTest {
     

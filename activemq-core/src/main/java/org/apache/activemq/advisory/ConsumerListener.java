@@ -19,7 +19,7 @@ package org.apache.activemq.advisory;
 /**
  * Listen to the changes in the number of active consumers available for a given destination.
  * 
- * @version $Revision$
+ * 
  */
 public interface ConsumerListener {
 

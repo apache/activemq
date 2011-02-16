@@ -19,7 +19,7 @@ package org.apache.activemq.broker.region.group;
 /**
  * Represents an empty {@link MessageGroupSet}
  * 
- * @version $Revision$
+ * 
  */
 public class EmptyMessageGroupSet implements MessageGroupSet {
 

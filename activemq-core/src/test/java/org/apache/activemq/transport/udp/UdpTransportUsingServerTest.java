@@ -29,7 +29,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * 
- * @version $Revision$
+ * 
  */
 public class UdpTransportUsingServerTest extends UdpTestSupport {
     private static final Logger LOG = LoggerFactory.getLogger(UdpTransportUsingServerTest.class);

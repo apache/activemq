@@ -26,7 +26,7 @@ import org.apache.activemq.broker.BrokerTest;
 /**
  * Once the wire format is completed we can test against real persistence storage.
  * 
- * @version $Revision: 712224 $
+ * 
  */
 public class TempKahaDBStoreBrokerTest extends BrokerTest {
 

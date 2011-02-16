@@ -23,7 +23,7 @@ import org.apache.activemq.xbean.XBeanBrokerFactory;
 
 /**
  *
- * @version $Revision$
+ * 
  */
 public class VirtualTopicPubSubUsingXBeanTest extends VirtualTopicPubSubTest {
 

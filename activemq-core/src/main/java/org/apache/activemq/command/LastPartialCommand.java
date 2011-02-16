@@ -22,7 +22,7 @@ import org.apache.activemq.state.CommandVisitor;
  * Represents the end marker of a stream of {@link PartialCommand} instances.
  * 
  * @openwire:marshaller code="61"
- * @version $Revision$
+ * 
  */
 public class LastPartialCommand extends PartialCommand {
 

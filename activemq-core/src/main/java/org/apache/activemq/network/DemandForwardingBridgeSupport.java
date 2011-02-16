@@ -87,7 +87,7 @@ import org.slf4j.LoggerFactory;
 /**
  * A useful base class for implementing demand forwarding bridges.
  * 
- * @version $Revision$
+ * 
  */
 public abstract class DemandForwardingBridgeSupport implements NetworkBridge, BrokerServiceAware {
     private static final Logger LOG = LoggerFactory.getLogger(DemandForwardingBridgeSupport.class);

@@ -23,7 +23,7 @@ import org.apache.activemq.broker.ConnectionContext;
 /**
  * Represents a filter on message references
  * 
- * @version $Revision$
+ * 
  */
 public interface MessageReferenceFilter {
 

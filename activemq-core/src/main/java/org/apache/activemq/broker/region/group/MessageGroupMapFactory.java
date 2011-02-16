@@ -20,7 +20,7 @@ package org.apache.activemq.broker.region.group;
  * Represents a factory used to create new instances of {@link MessageGroupMap}
  * for a destination.
  * 
- * @version $Revision$
+ * 
  */
 public interface MessageGroupMapFactory {
     

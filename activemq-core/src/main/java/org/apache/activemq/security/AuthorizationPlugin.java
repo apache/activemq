@@ -25,7 +25,7 @@ import org.apache.activemq.broker.BrokerPlugin;
  * 
  * @org.apache.xbean.XBean
  * 
- * @version $Revision$
+ * 
  */
 public class AuthorizationPlugin implements BrokerPlugin {
 

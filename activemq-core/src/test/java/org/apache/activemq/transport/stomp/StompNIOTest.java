@@ -18,7 +18,7 @@ package org.apache.activemq.transport.stomp;
 
 
 /**
- * @version $Revision: 732672 $
+ * 
  */
 public class StompNIOTest extends StompTest {
 

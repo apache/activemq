@@ -19,7 +19,7 @@ package org.apache.activemq.command;
 /**
  * A default endpoint.
  * 
- * @version $Revision$
+ * 
  */
 public class BaseEndpoint implements Endpoint {
 

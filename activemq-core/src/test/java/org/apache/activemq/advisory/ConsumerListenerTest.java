@@ -34,7 +34,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * 
- * @version $Revision$
+ * 
  */
 public class ConsumerListenerTest extends EmbeddedBrokerTestSupport implements ConsumerListener {
     private static final Logger LOG = LoggerFactory.getLogger(ConsumerListenerTest.class);

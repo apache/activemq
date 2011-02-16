@@ -53,7 +53,7 @@ import org.apache.kahadb.util.SequenceSet;
  * Recovery Buffer Space: Page Size * 1000 : This is a redo log used to prevent partial page writes from making the file inconsistent
  * Page Space: The pages in the page file.
  * 
- * @version $Revision$
+ * 
  */
 public class PageFile {
     

@@ -17,7 +17,7 @@
 package org.apache.activemq.network;
 
 /**
- * @version $Revision$
+ * 
  */
 public class MulticastNetworkTest extends SimpleNetworkTest {
 

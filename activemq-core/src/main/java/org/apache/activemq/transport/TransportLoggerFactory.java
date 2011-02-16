@@ -33,7 +33,7 @@ import javax.management.ObjectName;
  * all TransportLogger objects at once.
  * 
  * @author David Martin Clavo david(dot)martin(dot)clavo(at)gmail.com
- * @version $Revision$
+ * 
  * @see TransportLoggerControlMBean
  */
 public class TransportLoggerFactory {

@@ -23,7 +23,7 @@ import org.apache.activemq.command.ActiveMQDestination;
 /**
  * An exception thrown if a destination is attempted to be created when it already exists.
  * 
- * @version $Revision$
+ * 
  */
 public class DestinationAlreadyExistsException extends JMSException {
     private final ActiveMQDestination destination;

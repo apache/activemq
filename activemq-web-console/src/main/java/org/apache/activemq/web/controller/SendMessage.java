@@ -32,7 +32,7 @@ import org.springframework.web.servlet.mvc.Controller;
 /**
  * Sends a message
  * 
- * @version $Revision$
+ * 
  */
 public class SendMessage extends DestinationFacade implements Controller {
 

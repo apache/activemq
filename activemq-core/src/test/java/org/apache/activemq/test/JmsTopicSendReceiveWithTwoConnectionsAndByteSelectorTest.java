@@ -21,7 +21,7 @@ import javax.jms.Message;
 import javax.jms.MessageConsumer;
 
 /**
- * @version $Revision$
+ * 
  */
 public class JmsTopicSendReceiveWithTwoConnectionsAndByteSelectorTest extends JmsTopicSendReceiveWithTwoConnectionsTest {
     

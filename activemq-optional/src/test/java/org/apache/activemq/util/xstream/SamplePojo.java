@@ -19,7 +19,7 @@ package org.apache.activemq.util.xstream;
 import java.io.Serializable;
 
 /**
- * @version $Revision$
+ * 
  */
 public class SamplePojo implements Serializable {
     private String name;

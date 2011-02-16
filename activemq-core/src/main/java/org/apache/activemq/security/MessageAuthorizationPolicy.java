@@ -23,7 +23,7 @@ import org.apache.activemq.command.Message;
  * A plugin to allow custom message-level security checks to be performed before
  * a message is consumed.
  * 
- * @version $Revision$
+ * 
  */
 public interface MessageAuthorizationPolicy {
 

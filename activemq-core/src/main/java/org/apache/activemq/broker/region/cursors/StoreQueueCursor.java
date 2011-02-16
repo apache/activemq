@@ -27,7 +27,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Store based Cursor for Queues
  * 
- * @version $Revision: 474985 $
+ * 
  */
 public class StoreQueueCursor extends AbstractPendingMessageCursor {
 

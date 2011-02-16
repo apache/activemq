@@ -19,7 +19,7 @@ package org.apache.activemq.broker.virtual;
 import org.apache.activemq.spring.ConsumerBean;
 
 /**
- * @version $Revision$
+ * 
  */
 public class FilteredQueueTest extends CompositeQueueTest {
 

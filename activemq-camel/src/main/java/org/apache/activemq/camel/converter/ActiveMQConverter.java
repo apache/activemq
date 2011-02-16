@@ -21,7 +21,7 @@ import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.camel.Converter;
 
 /**
- * @version $Revision$
+ * 
  */
 @Converter
 public class ActiveMQConverter {

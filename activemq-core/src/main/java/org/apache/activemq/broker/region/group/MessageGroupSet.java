@@ -19,7 +19,7 @@ package org.apache.activemq.broker.region.group;
 /**
  * Represents a set of Message Group IDs
  * 
- * @version $Revision$
+ * 
  */
 public interface MessageGroupSet {
 

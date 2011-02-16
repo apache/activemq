@@ -35,7 +35,7 @@ import org.apache.activemq.command.ActiveMQDestination;
 /**
  * An implementation of {@link BrokerFacade} which uses a local in JVM broker
  * 
- * @version $Revision$
+ * 
  */
 public class LocalBrokerFacade extends BrokerFacadeSupport {
 	private BrokerService brokerService;

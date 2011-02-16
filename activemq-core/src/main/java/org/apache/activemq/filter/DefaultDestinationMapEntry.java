@@ -21,7 +21,7 @@ package org.apache.activemq.filter;
  * 
  * @org.apache.xbean.XBean element="destinationEntry"
  * 
- * @version $Revision$
+ * 
  */
 public class DefaultDestinationMapEntry extends DestinationMapEntry {
     private Object value;

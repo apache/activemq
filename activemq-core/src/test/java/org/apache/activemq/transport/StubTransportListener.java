@@ -22,7 +22,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
  * 
- * @version $Revision$
+ * 
  */
 public class StubTransportListener implements TransportListener {
 

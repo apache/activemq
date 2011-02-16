@@ -39,7 +39,7 @@ import org.apache.activemq.command.SessionInfo;
 /**
  * Used to verify that recovery works correctly against 
  * 
- * @version $Revision: 712224 $
+ * 
  */
 public class KahaDBStoreRecoveryBrokerTest extends RecoveryBrokerTest {
 

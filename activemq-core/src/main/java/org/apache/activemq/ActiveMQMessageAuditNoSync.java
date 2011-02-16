@@ -31,7 +31,7 @@ import org.apache.activemq.util.LRUCache;
 /**
  * Provides basic audit functions for Messages without sync
  * 
- * @version $Revision$
+ * 
  */
 public class ActiveMQMessageAuditNoSync implements Serializable {
 

@@ -25,7 +25,7 @@ import org.apache.activemq.command.ActiveMQMessage;
 /**
  * A comparator which works on SendCommand objects to compare the destinations
  * 
- * @version $Revision$
+ * 
  */
 public class MessageDestinationComparator extends MessageComparatorSupport {
 

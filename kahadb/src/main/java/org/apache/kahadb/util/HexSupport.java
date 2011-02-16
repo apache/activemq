@@ -19,7 +19,7 @@ package org.apache.kahadb.util;
 /**
  * Used to convert to hex from byte arrays and back.
  * 
- * @version $Revision$
+ * 
  */
 public final class HexSupport {
     

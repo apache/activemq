@@ -32,7 +32,7 @@ import org.codehaus.jam.JPackage;
 import org.codehaus.jam.JProperty;
 
 /**
- * @version $Revision: 384826 $
+ * 
  */
 public class JavaMarshallingGenerator extends MultiSourceGenerator {
 

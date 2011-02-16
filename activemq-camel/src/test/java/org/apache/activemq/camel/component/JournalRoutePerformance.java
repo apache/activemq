@@ -28,7 +28,7 @@ import org.apache.camel.builder.RouteBuilder;
  * Used to get an idea of what kind of performance can be expected from 
  * the journal.
  * 
- * @version $Revision$
+ * 
  */
 public class JournalRoutePerformance extends ContextTestSupport {
 

@@ -28,7 +28,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * 
- * @version $Revision$
+ * 
  */
 public class DeadLetterTest extends DeadLetterTestSupport {
     private static final Logger LOG = LoggerFactory.getLogger(DeadLetterTest.class);

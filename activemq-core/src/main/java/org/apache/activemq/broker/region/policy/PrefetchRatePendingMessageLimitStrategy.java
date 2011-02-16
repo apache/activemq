@@ -24,7 +24,7 @@ import org.apache.activemq.broker.region.TopicSubscription;
  * 
  * @org.apache.xbean.XBean
  * 
- * @version $Revision$
+ * 
  */
 public class PrefetchRatePendingMessageLimitStrategy implements PendingMessageLimitStrategy {
 

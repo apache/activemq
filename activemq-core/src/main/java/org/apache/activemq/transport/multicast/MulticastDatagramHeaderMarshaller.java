@@ -26,7 +26,7 @@ import org.apache.activemq.transport.udp.DatagramHeaderMarshaller;
 
 /**
  * 
- * @version $Revision$
+ * 
  */
 public class MulticastDatagramHeaderMarshaller extends DatagramHeaderMarshaller {
 

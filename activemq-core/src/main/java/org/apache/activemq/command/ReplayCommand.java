@@ -25,7 +25,7 @@ import org.apache.activemq.state.CommandVisitor;
  * TCP/IP if a socket has been re-established.
  * 
  * @openwire:marshaller code="65"
- * @version $Revision$
+ * 
  */
 public class ReplayCommand extends BaseCommand {
 

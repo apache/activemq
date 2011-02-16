@@ -28,7 +28,7 @@ import java.net.URISyntaxException;
  * 
  * @org.apache.xbean.XBean
  * 
- * @version $Revision: 427613 $
+ * 
  */
 public class MulticastTraceBrokerPlugin extends UDPTraceBrokerPlugin {
 

@@ -19,7 +19,7 @@ package org.apache.activemq.broker.ft;
 /**
  * Lets test using a <masterConnector/> element instead of the old masterConnectorURI attribute
  * 
- * @version $Revision$
+ * 
  */
 public class QueueMasterSlaveUsingMasterConnectorElementTest extends QueueMasterSlaveTest {
 

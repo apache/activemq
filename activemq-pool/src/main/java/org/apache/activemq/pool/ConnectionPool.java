@@ -33,7 +33,7 @@ import org.apache.commons.pool.ObjectPoolFactory;
 /**
  * Holds a real JMS connection along with the session pools associated with it.
  * 
- * @version $Revision$
+ * 
  */
 public class ConnectionPool {
 

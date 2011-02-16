@@ -35,7 +35,7 @@ import org.apache.kahadb.util.VariableMarshaller;
 /**
  * BTree implementation
  * 
- * @version $Revision$
+ * 
  */
 public class HashIndex<Key,Value> implements Index<Key,Value> {
 

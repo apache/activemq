@@ -22,7 +22,7 @@ import org.apache.activemq.command.Message;
 /**
  * A strategy for choosing which destination is used for dead letter queue messages.
  * 
- * @version $Revision$
+ * 
  */
 public interface DeadLetterStrategy {
     

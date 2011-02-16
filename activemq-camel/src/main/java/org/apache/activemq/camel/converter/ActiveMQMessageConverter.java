@@ -33,7 +33,7 @@ import org.apache.camel.component.jms.JmsBinding;
 import org.apache.camel.component.jms.JmsEndpoint;
 
 /**
- * @version $Revision$
+ * 
  */
 @Converter
 public class ActiveMQMessageConverter {

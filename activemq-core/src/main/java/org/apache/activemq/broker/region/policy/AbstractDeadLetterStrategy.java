@@ -25,7 +25,7 @@ import org.slf4j.LoggerFactory;
  * A strategy for choosing which destination is used for dead letter queue
  * messages.
  * 
- * @version $Revision: 426366 $
+ * 
  */
 public abstract class AbstractDeadLetterStrategy implements DeadLetterStrategy {
     private static final Logger LOG = LoggerFactory.getLogger(AbstractDeadLetterStrategy.class);

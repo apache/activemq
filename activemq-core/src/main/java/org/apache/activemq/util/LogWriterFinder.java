@@ -36,7 +36,7 @@ import org.slf4j.LoggerFactory;
  * directory.
  * 
  * @author David Martin Clavo david(dot)martin(dot)clavo(at)gmail.com
- * @version $Revision$
+ * 
  */
 public class LogWriterFinder {
     

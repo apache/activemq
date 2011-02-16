@@ -35,7 +35,7 @@ import org.slf4j.LoggerFactory;
  * This interceptor deals with out of order commands together with being able to
  * handle dropped commands and the re-requesting dropped commands.
  * 
- * @version $Revision$
+ * 
  */
 public class ReliableTransport extends ResponseCorrelator {
     private static final Logger LOG = LoggerFactory.getLogger(ReliableTransport.class);

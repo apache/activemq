@@ -20,7 +20,7 @@ import org.apache.activemq.Service;
 import org.apache.activemq.broker.BrokerService;
 
 /**
- * @version $Revision$
+ * 
  */
 public class XmppBroker implements Service {
     private BrokerService broker = new BrokerService();

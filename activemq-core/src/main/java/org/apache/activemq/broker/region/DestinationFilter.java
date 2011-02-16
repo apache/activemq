@@ -35,7 +35,7 @@ import org.apache.activemq.usage.Usage;
 
 /**
  * 
- * @version $Revision$
+ * 
  */
 public class DestinationFilter implements Destination {
 

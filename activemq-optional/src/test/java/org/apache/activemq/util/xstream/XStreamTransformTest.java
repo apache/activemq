@@ -35,7 +35,7 @@ import com.thoughtworks.xstream.io.json.JettisonMappedXmlDriver;
 import static org.apache.activemq.util.oxm.AbstractXMLMessageTransformer.MessageTransform.*;
 
 /**
- * @version $Revision$
+ * 
  */
 public class XStreamTransformTest extends TestCase {
     protected ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory("vm://localhost?broker.persistent=false&broker.useJmx=false");

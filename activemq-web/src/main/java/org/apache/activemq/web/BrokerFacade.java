@@ -25,7 +25,7 @@ import org.apache.activemq.command.ActiveMQDestination;
  * A facade for either a local in JVM broker or a remote broker over JMX
  *
  * 
- * @version $Revision$
+ * 
  */
 public interface BrokerFacade {
 

@@ -27,7 +27,7 @@ import org.apache.activemq.filter.DestinationMap;
  * 
  * @org.apache.xbean.XBean
  * 
- * @version $Revision$
+ * 
  */
 public class SimpleAuthorizationMap implements AuthorizationMap {
 

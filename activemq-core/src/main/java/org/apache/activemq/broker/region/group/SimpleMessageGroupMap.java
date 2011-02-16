@@ -27,7 +27,7 @@ import org.apache.activemq.command.ConsumerId;
  * which can become a memory leak if clients die before they complete a message
  * group.
  * 
- * @version $Revision$
+ * 
  */
 public class SimpleMessageGroupMap implements MessageGroupMap {
     private Map<String, ConsumerId> map = new ConcurrentHashMap<String, ConsumerId>();

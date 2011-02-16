@@ -18,7 +18,7 @@ package org.apache.activemq.usecases;
 
 
 /**
- * @version $Revision$
+ * 
  */
 public class TwoBrokerTopicSendReceiveLotsOfMessagesUsingTcpTest extends TwoBrokerTopicSendReceiveUsingTcpTest {
 

@@ -29,7 +29,7 @@ import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
 
 /**
- * @version $Revision$
+ * 
  */
 public class InvokeMessageListenerTest extends ContextTestSupport {    protected MockEndpoint resultEndpoint;
     protected String startEndpointUri = "activemq:queue:test.a";

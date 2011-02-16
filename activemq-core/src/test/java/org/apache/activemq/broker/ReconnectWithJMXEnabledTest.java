@@ -27,7 +27,7 @@ import org.apache.activemq.EmbeddedBrokerTestSupport;
 
 /**
  * 
- * @version $Revision$
+ * 
  */
 public class ReconnectWithJMXEnabledTest extends EmbeddedBrokerTestSupport {
 

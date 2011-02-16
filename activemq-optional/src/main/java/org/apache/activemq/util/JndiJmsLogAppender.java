@@ -31,7 +31,7 @@ import org.apache.log4j.helpers.LogLog;
  * A JMS 1.1 log4j appender which uses JNDI to locate a JMS ConnectionFactory to
  * use for logging events.
  * 
- * @version $Revision$
+ * 
  */
 public class JndiJmsLogAppender extends JmsLogAppenderSupport {
 

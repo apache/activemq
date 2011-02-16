@@ -26,7 +26,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * @version $Revision$
+ * 
  */
 public class BrokerPropertiesTest extends TestCase {
     private static final transient Logger LOG = LoggerFactory.getLogger(BrokerPropertiesTest.class);

@@ -27,7 +27,7 @@ import org.apache.activemq.xbean.XBeanBrokerFactory;
 
 /**
  * 
- * @version $Revision$
+ * 
  */
 public class CreateDestinationsOnStartupViaXBeanTest extends EmbeddedBrokerTestSupport {
 

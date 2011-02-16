@@ -37,7 +37,7 @@ import org.slf4j.LoggerFactory;
  * persist pending messages pending message (messages awaiting dispatch to a
  * consumer) cursor
  * 
- * @version $Revision$
+ * 
  */
 public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
 

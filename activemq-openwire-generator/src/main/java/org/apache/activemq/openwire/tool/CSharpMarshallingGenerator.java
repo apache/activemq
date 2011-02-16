@@ -30,7 +30,7 @@ import org.codehaus.jam.JClass;
 import org.codehaus.jam.JProperty;
 
 /**
- * @version $Revision: 384390 $
+ * 
  */
 public class CSharpMarshallingGenerator extends JavaMarshallingGenerator {
 

@@ -32,7 +32,7 @@ import org.slf4j.LoggerFactory;
  * Creates <a href="http://activemq.org/site/mirrored-queues.html">Mirrored
  * Queue</a> using a prefix and postfix to define the topic name on which to mirror the queue to.
  *
- * @version $Revision$
+ * 
  * @org.apache.xbean.XBean
  */
 public class MirroredQueue implements DestinationInterceptor, BrokerServiceAware {

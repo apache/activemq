@@ -24,7 +24,7 @@ import java.util.List;
  * A default implementation of {@link BufferPool} which keeps a pool of direct
  * byte buffers.
  * 
- * @version $Revision$
+ * 
  */
 public class DefaultBufferPool extends SimpleBufferPool implements ByteBufferPool {
 

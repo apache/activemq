@@ -43,7 +43,7 @@ import com.thoughtworks.xstream.io.xml.XppReader;
  * 
  * @deprecated as of 5.3.0 release replaced by {@link org.apache.activemq.util.oxm.XStreamMessageTransformer}
  * 
- * @version $Revision$
+ * 
  */
 @Deprecated
 public class XStreamMessageTransformer extends MessageTransformerSupport {

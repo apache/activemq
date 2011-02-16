@@ -31,7 +31,7 @@ import org.apache.activemq.filter.DestinationMapEntry;
  * destination or a hierarchical wildcard area of destinations.
  * 
  * @org.apache.xbean.XBean
- * @version $Revision$
+ * 
  */
 public class AuthorizationEntry extends DestinationMapEntry {
 

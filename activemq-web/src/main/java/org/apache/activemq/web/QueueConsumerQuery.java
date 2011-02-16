@@ -25,7 +25,7 @@ import org.apache.activemq.broker.jmx.SubscriptionViewMBean;
 /**
  * Query for Queue consumers.
  * 
- * @version $Revision: 504235 $
+ * 
  */
 public class QueueConsumerQuery extends DestinationFacade {
 

@@ -63,7 +63,7 @@ import org.slf4j.LoggerFactory;
  * socket.
  * 
  * @org.apache.xbean.XBean element="udpTraceBrokerPlugin"
- * @version $Revision: 427613 $
+ * 
  */
 public class UDPTraceBrokerPlugin extends BrokerPluginSupport {
 

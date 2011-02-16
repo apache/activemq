@@ -26,7 +26,7 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.test.JmsTopicSendReceiveWithTwoConnectionsTest;
 
 /**
- * @version $Revision$
+ * 
  */
 public class BrokerXmlConfigFromJNDITest extends JmsTopicSendReceiveWithTwoConnectionsTest {
     protected ActiveMQConnectionFactory createConnectionFactory() throws Exception {

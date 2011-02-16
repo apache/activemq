@@ -24,7 +24,7 @@ import javax.jms.TextMessage;
 import org.apache.activemq.command.ActiveMQTopic;
 
 /**
- * @version $Revision$
+ * 
  */
 public class RetroactiveConsumerTestWithLastImagePolicyWithWildcardTest extends RetroactiveConsumerTestWithSimpleMessageListTest {
     private int counter = 1;

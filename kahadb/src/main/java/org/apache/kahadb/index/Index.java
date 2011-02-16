@@ -26,7 +26,7 @@ import org.apache.kahadb.util.Marshaller;
 /**
  * Simpler than a Map
  * 
- * @version $Revision$
+ * 
  */
 public interface Index<Key,Value> {
     

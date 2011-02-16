@@ -36,7 +36,7 @@ import javax.net.ServerSocketFactory;
  * A TCP based implementation of {@link TransportServer}
  * 
  * @author David Martin Clavo david(dot)martin(dot)clavo(at)gmail.com (logging improvement modifications)
- * @version $Revision$
+ * 
  */
 
 public class TcpFaultyTransportServer extends TcpTransportServer implements ServiceListener{

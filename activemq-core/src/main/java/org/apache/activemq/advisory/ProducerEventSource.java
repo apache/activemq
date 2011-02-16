@@ -41,7 +41,7 @@ import org.slf4j.LoggerFactory;
  * An object which can be used to listen to the number of active consumers
  * available on a given destination.
  * 
- * @version $Revision: 359679 $
+ * 
  */
 public class ProducerEventSource implements Service, MessageListener {
     private static final Logger LOG = LoggerFactory.getLogger(ProducerEventSource.class);

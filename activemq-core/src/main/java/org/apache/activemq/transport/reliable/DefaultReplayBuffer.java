@@ -25,7 +25,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * 
- * @version $Revision$
+ * 
  */
 public class DefaultReplayBuffer implements ReplayBuffer {
 

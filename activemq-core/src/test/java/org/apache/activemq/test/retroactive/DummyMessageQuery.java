@@ -27,7 +27,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  *
- * @version $Revision$
+ * 
  */
 public class DummyMessageQuery implements MessageQuery {
     

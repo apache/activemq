@@ -37,7 +37,7 @@ import org.slf4j.LoggerFactory;
 /**
  * A specific test of Queue.purge() functionality
  *
- * @version $Revision$
+ * 
  */
 public class PurgeTest extends EmbeddedBrokerTestSupport {
     private static final Logger LOG = LoggerFactory.getLogger(PurgeTest.class);

@@ -46,7 +46,7 @@ import org.apache.activemq.store.kahadb.KahaDBStore;
 /**
  * This tests bulk loading and unloading of messages to a Queue.s
  * 
- * @version $Revision: 712224 $
+ * 
  */
 public class KahaBulkLoadingTest extends JmsTestSupport {
 

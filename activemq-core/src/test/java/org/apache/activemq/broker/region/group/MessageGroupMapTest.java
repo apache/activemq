@@ -23,7 +23,7 @@ import org.apache.activemq.command.SessionId;
 
 /**
  * 
- * @version $Revision$
+ * 
  */
 public class MessageGroupMapTest extends TestCase {
 

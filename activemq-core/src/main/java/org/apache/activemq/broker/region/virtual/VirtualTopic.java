@@ -28,7 +28,7 @@ import org.apache.activemq.command.ActiveMQTopic;
  * 
  * @org.apache.xbean.XBean
  * 
- * @version $Revision$
+ * 
  */
 public class VirtualTopic implements VirtualDestination {
 

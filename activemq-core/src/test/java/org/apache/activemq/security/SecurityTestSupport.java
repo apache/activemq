@@ -32,7 +32,7 @@ import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
 
 /**
- * @version $Revision$
+ * 
  */
 public class SecurityTestSupport extends JmsTestSupport {
 

@@ -32,7 +32,7 @@ import javax.jms.Session;
 import javax.jms.TemporaryQueue;
 
 /**
- * @version $Revision: 397249 $
+ * 
  */
 public class TempQueueMemoryTest extends EmbeddedBrokerTestSupport {
     protected Connection serverConnection;

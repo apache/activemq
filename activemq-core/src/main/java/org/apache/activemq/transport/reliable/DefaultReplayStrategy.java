@@ -22,7 +22,7 @@ import java.io.IOException;
  * Throws an exception if packets are dropped causing the transport to be
  * closed.
  * 
- * @version $Revision$
+ * 
  */
 public class DefaultReplayStrategy implements ReplayStrategy {
 

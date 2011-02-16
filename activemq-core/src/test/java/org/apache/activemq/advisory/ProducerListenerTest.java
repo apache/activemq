@@ -31,7 +31,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * 
- * @version $Revision: 359679 $
+ * 
  */
 public class ProducerListenerTest extends EmbeddedBrokerTestSupport implements ProducerListener {
     private static final Logger LOG = LoggerFactory.getLogger(ProducerListenerTest.class);

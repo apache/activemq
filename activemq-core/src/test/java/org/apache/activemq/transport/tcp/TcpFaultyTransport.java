@@ -39,7 +39,7 @@ import javax.net.SocketFactory;
  * An implementation of the {@link Transport} interface using raw tcp/ip
  * 
  * @author David Martin Clavo david(dot)martin(dot)clavo(at)gmail.com (logging improvement modifications)
- * @version $Revision$
+ * 
  */
 public class TcpFaultyTransport extends TcpTransport implements Transport, Service, Runnable {
 

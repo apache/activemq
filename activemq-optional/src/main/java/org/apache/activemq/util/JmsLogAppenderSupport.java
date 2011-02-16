@@ -36,7 +36,7 @@ import org.apache.log4j.spi.LoggingEvent;
  * An abstract base class for implementation inheritence for a log4j JMS
  * appender
  * 
- * @version $Revision$
+ * 
  */
 public abstract class JmsLogAppenderSupport extends AppenderSkeleton {
 

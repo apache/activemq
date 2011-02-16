@@ -26,7 +26,7 @@ import org.apache.activemq.transport.reliable.Replayer;
 
 /**
  *
- * @version $Revision$
+ * 
  */
 public interface CommandChannel extends Replayer, Service {
 

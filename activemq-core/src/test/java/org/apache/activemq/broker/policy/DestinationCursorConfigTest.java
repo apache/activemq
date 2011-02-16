@@ -28,7 +28,7 @@ import org.apache.activemq.xbean.BrokerFactoryBean;
 import org.springframework.core.io.ClassPathResource;
 
 /**
- * @version $Revision: 2765 $
+ * 
  */
 public class DestinationCursorConfigTest extends TestSupport {
     protected BrokerService broker;

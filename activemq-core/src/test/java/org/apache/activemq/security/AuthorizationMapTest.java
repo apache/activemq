@@ -26,7 +26,7 @@ import org.apache.activemq.jaas.GroupPrincipal;
 
 /**
  * 
- * @version $Revision$
+ * 
  */
 public class AuthorizationMapTest extends TestCase {
     static final GroupPrincipal GUESTS = new GroupPrincipal("guests");

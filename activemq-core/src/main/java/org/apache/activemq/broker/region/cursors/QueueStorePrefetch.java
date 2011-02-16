@@ -28,7 +28,7 @@ import org.slf4j.LoggerFactory;
  * persist pending messages pending message (messages awaiting dispatch to a
  * consumer) cursor
  * 
- * @version $Revision: 474985 $
+ * 
  */
 class QueueStorePrefetch extends AbstractStoreCursor {
     private static final Logger LOG = LoggerFactory.getLogger(QueueStorePrefetch.class);

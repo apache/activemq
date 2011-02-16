@@ -27,7 +27,7 @@ import org.springframework.core.io.ClassPathResource;
 
 /**
  *
- * @version $Revision$
+ * 
  */
 public class IndividualDeadLetterViaXmlTest extends DeadLetterTest {
     private static final Logger LOG = LoggerFactory.getLogger(IndividualDeadLetterViaXmlTest.class);

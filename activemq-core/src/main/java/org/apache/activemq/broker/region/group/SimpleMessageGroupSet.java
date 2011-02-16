@@ -22,7 +22,7 @@ import java.util.Set;
 /**
  * A simple implementation which just uses a {@link Set}
  * 
- * @version $Revision$
+ * 
  */
 public class SimpleMessageGroupSet implements MessageGroupSet {
 

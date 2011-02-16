@@ -29,7 +29,7 @@ import org.apache.activemq.demo.DefaultQueueSender;
  * A helper class which can be handy for running a broker in your IDE from the
  * activemq-core module.
  * 
- * @version $Revision$
+ * 
  */
 public final class Main {
     protected static boolean createConsumers;

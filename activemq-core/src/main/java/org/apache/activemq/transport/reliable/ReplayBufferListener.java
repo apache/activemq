@@ -19,7 +19,7 @@ package org.apache.activemq.transport.reliable;
 /**
  * Listens to events on a {@link ReplayBuffer}
  * 
- * @version $Revision$
+ * 
  */
 public interface ReplayBufferListener {
 

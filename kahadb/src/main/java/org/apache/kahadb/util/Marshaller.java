@@ -21,7 +21,7 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 /**
- * @version $Revision$
+ * 
  */
 public interface Marshaller<T> {
     

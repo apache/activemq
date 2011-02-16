@@ -23,7 +23,7 @@ import java.io.IOException;
 /**
  * Implementation of a Marshaller for Strings
  * 
- * @version $Revision$
+ * 
  */
 public class StringMarshaller implements Marshaller<String> {
     

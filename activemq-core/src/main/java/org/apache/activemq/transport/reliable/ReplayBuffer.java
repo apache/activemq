@@ -23,7 +23,7 @@ import java.io.IOException;
  * an unreliable transport. The buffers are of type Object as they could be datagrams
  * or byte[] or ByteBuffer - depending on the underlying transport implementation.
  * 
- * @version $Revision$
+ * 
  */
 public interface ReplayBuffer {
 

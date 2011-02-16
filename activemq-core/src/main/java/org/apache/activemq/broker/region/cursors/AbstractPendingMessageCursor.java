@@ -34,7 +34,7 @@ import org.apache.activemq.usage.SystemUsage;
  * Abstract method holder for pending message (messages awaiting disptach to a
  * consumer) cursor
  * 
- * @version $Revision$
+ * 
  */
 public abstract class AbstractPendingMessageCursor implements PendingMessageCursor {
     protected int memoryUsageHighWaterMark = 70;

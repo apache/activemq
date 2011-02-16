@@ -22,7 +22,7 @@ import org.apache.activemq.command.ProducerId;
 /**
  * An event generated when a consumer stops.
  * 
- * @version $Revision: 359679 $
+ * 
  */
 public class ProducerStoppedEvent extends ProducerEvent {
 

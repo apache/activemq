@@ -23,7 +23,7 @@ package org.apache.activemq.command;
  * for all commands. For transports like multicast there could be different
  * endpoints being used on the same transport.
  * 
- * @version $Revision$
+ * 
  */
 public interface Endpoint {
     

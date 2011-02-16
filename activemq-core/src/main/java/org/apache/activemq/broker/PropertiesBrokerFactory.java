@@ -32,7 +32,7 @@ import org.apache.activemq.util.IntrospectionSupport;
  * A {@link BrokerFactoryHandler} which uses a properties file to configure the
  * broker's various policies.
  * 
- * @version $Revision$
+ * 
  */
 public class PropertiesBrokerFactory implements BrokerFactoryHandler {
 

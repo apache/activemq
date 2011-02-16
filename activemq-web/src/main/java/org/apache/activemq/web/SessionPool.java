@@ -26,7 +26,7 @@ import javax.jms.Session;
 /**
  * A simple pool of JMS Session objects intended for use by Queue browsers.
  * 
- * @version $Revision$
+ * 
  */
 public class SessionPool {
 

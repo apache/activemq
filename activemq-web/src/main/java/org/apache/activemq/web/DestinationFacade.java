@@ -24,7 +24,7 @@ import org.apache.activemq.command.ActiveMQDestination;
 import org.springframework.web.servlet.ModelAndView;
 
 /**
- * @version $Revision$
+ * 
  */
 public class DestinationFacade {
 

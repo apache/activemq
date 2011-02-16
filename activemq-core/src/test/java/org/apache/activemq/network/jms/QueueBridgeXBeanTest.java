@@ -22,7 +22,7 @@ import org.springframework.context.support.AbstractApplicationContext;
 
 /**
  *
- * @version $Revision$
+ * 
  */
 public class QueueBridgeXBeanTest extends QueueBridgeTest {
 

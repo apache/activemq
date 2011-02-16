@@ -44,7 +44,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * @version $Revision: 1461 $
+ * 
  */
 public class StompAdvisoryTest extends TestCase {
     private static final Logger LOG = LoggerFactory.getLogger(StompAdvisoryTest.class);

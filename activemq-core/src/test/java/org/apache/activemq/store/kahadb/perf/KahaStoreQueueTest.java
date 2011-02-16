@@ -22,7 +22,7 @@ import org.apache.activemq.perf.SimpleQueueTest;
 import org.apache.activemq.store.kahadb.KahaDBStore;
 
 /**
- * @version $Revision: 712224 $
+ * 
  */
 public class KahaStoreQueueTest extends SimpleQueueTest {
 

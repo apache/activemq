@@ -45,7 +45,7 @@ import org.apache.activemq.util.ServiceSupport;
  * 
  * @org.apache.xbean.XBean element="resourceAdapter" rootElement="true"
  *                         description="The JCA Resource Adaptor for ActiveMQ"
- * @version $Revision$
+ * 
  */
 public class ActiveMQResourceAdapter extends ActiveMQConnectionSupport implements MessageResourceAdapter {
 

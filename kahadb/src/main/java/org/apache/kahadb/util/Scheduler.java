@@ -21,7 +21,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 /**
- * @version $Revision$
+ * 
  */
 public final class Scheduler {
 

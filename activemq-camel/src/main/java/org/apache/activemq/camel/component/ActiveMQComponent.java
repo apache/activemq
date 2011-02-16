@@ -28,7 +28,7 @@ import org.springframework.jms.connection.SingleConnectionFactory;
 /**
  * The <a href="http://activemq.apache.org/camel/activemq.html">ActiveMQ Component</a>
  *
- * @version $Revision$
+ * 
  */
 public class ActiveMQComponent extends JmsComponent {
     private final CopyOnWriteArrayList<SingleConnectionFactory> singleConnectionFactoryList =

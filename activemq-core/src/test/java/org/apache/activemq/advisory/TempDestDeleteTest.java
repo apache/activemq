@@ -37,7 +37,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * @version $Revision: 397249 $
+ * 
  */
 public class TempDestDeleteTest extends EmbeddedBrokerTestSupport implements ConsumerListener {
     private static final Logger LOG = LoggerFactory.getLogger(TempDestDeleteTest.class);

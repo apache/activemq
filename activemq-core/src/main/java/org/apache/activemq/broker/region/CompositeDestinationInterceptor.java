@@ -19,7 +19,7 @@ package org.apache.activemq.broker.region;
 /**
  * Represents a Composite Pattern of a {@link DestinationInterceptor}
  * 
- * @version $Revision$
+ * 
  */
 public class CompositeDestinationInterceptor implements DestinationInterceptor {
 

@@ -25,7 +25,7 @@ import org.apache.activemq.Service;
  * This strategy could just create new buffers for each call or
  * it could pool them.
  * 
- * @version $Revision$
+ * 
  */
 public interface ByteBufferPool extends Service {
 

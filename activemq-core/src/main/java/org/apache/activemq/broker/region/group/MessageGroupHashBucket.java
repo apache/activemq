@@ -21,7 +21,7 @@ import org.apache.activemq.command.ConsumerId;
 /**
  * Uses hash-code buckets to associate consumers with sets of message group IDs.
  * 
- * @version $Revision$
+ * 
  */
 public class MessageGroupHashBucket implements MessageGroupMap {
 

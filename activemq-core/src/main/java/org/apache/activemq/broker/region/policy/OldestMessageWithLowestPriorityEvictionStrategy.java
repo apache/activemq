@@ -27,7 +27,7 @@ import org.apache.activemq.broker.region.MessageReference;
  * 
  * @org.apache.xbean.XBean
  * 
- * @version $Revision$messageEvictionStrategy
+ * messageEvictionStrategy
  */
 public class OldestMessageWithLowestPriorityEvictionStrategy extends MessageEvictionStrategySupport {
 

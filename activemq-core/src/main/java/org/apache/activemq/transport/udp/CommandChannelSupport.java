@@ -26,7 +26,7 @@ import org.apache.activemq.util.IntSequenceGenerator;
 
 /**
  * 
- * @version $Revision$
+ * 
  */
 public abstract class CommandChannelSupport implements CommandChannel {
 

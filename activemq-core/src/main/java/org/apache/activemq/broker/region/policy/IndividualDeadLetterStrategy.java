@@ -25,7 +25,7 @@ import org.apache.activemq.command.ActiveMQTopic;
  * DLQ using the subject naming hierarchy.
  * 
  * @org.apache.xbean.XBean
- * @version $Revision$
+ * 
  */
 public class IndividualDeadLetterStrategy extends AbstractDeadLetterStrategy {
 

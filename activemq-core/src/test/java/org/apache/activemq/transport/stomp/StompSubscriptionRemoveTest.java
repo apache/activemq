@@ -37,7 +37,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * 
- * @version $Revision$
+ * 
  */
 public class StompSubscriptionRemoveTest extends TestCase {
     private static final Logger LOG = LoggerFactory.getLogger(StompSubscriptionRemoveTest.class);

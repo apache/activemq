@@ -25,7 +25,7 @@ import org.apache.activemq.command.ProducerId;
 /**
  * An event when the number of producers on a given destination changes.
  * 
- * @version $Revision: 359679 $
+ * 
  */
 public abstract class ProducerEvent extends EventObject {
     private static final long serialVersionUID = 2442156576867593780L;

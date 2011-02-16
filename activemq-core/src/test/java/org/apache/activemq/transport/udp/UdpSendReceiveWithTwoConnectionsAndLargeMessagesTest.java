@@ -18,7 +18,7 @@ package org.apache.activemq.transport.udp;
 
 /**
  *
- * @version $Revision$
+ * 
  */
 public class UdpSendReceiveWithTwoConnectionsAndLargeMessagesTest extends UdpSendReceiveWithTwoConnectionsTest {
 

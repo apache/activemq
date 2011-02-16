@@ -19,7 +19,7 @@ package org.apache.activemq.broker;
 /**
  * Represents a plugin into a Broker
  * 
- * @version $Revision$
+ * 
  */
 public interface BrokerPlugin {
 

@@ -57,7 +57,7 @@ import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 
 /**
- * @version $Revision$
+ * 
  */
 public class ConfigTest extends TestCase {
 

@@ -22,7 +22,7 @@ import org.apache.activemq.perf.SimpleDurableTopicTest;
 import org.apache.activemq.store.kahadb.KahaDBStore;
 
 /**
- * @version $Revision: 712224 $
+ * 
  */
 public class KahaStoreDurableTopicTest extends SimpleDurableTopicTest {
 

@@ -21,7 +21,7 @@ import java.util.Set;
 import org.apache.activemq.command.ActiveMQDestination;
 
 /**
- * @version $Revision$
+ * 
  */
 public interface AuthorizationMap {
 

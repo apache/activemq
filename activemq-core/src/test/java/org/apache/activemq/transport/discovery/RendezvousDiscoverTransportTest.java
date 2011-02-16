@@ -18,7 +18,7 @@ package org.apache.activemq.transport.discovery;
 
 /**
  *
- * @version $Revision$
+ * 
  */
 public class RendezvousDiscoverTransportTest extends DiscoveryTransportBrokerTest {
 

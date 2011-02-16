@@ -35,7 +35,7 @@ import org.apache.activemq.command.ProducerInfo;
  * Verifies if a authenticated user can do an operation against the broker using
  * an authorization map.
  * 
- * @version $Revision$
+ * 
  */
 public class AuthorizationBroker extends BrokerFilter implements SecurityAdminMBean {
 

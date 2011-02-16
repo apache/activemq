@@ -42,7 +42,7 @@ import org.slf4j.LoggerFactory;
 /**
  * A UDP based implementation of {@link TransportServer}
  * 
- * @version $Revision$
+ * 
  */
 
 public class UdpTransportServer extends TransportServerSupport {

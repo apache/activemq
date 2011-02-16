@@ -18,7 +18,7 @@ package org.apache.activemq.xbean;
 
 /**
  *
- * @version $Revision$
+ * 
  */
 public class MultipleTestsWithEmbeddedBrokerAndPersistenceTest extends MultipleTestsWithEmbeddedBrokerTest {
 

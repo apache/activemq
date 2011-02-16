@@ -22,7 +22,7 @@ import org.apache.activemq.command.ProducerInfo;
 /**
  * An event when a new consumer has started.
  * 
- * @version $Revision: 359679 $
+ * 
  */
 public class ProducerStartedEvent extends ProducerEvent {
 

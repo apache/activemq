@@ -50,7 +50,7 @@ import org.apache.kahadb.util.Sequence;
 /**
  * Manages DataFiles
  * 
- * @version $Revision$
+ * 
  */
 public class Journal {
 

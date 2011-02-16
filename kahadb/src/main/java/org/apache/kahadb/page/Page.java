@@ -31,7 +31,7 @@ import org.apache.kahadb.util.Marshaller;
 /**
  * A Page within a file.
  * 
- * @version $Revision$
+ * 
  */
 public class Page<T> {
 

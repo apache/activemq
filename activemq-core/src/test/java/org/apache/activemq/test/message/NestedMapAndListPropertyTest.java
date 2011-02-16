@@ -31,7 +31,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Tests that a Message can have nested Map and List properties attached.
  * 
- * @version $Revision$
+ * 
  */
 public class NestedMapAndListPropertyTest extends JmsTopicSendReceiveWithTwoConnectionsAndEmbeddedBrokerTest {
 

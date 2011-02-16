@@ -23,7 +23,7 @@ import org.apache.activemq.command.ActiveMQDestination;
 /**
  * Represents some kind of virtual destination.
  * 
- * @version $Revision$
+ * 
  */
 public interface VirtualDestination extends DestinationInterceptor {
 

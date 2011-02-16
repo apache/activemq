@@ -54,7 +54,7 @@ import org.slf4j.LoggerFactory;
 import org.jabber.etherx.streams.Features;
 
 /**
- * @version $Revision$
+ * 
  */
 public class XmppTransport extends TcpTransport {
     protected static final QName ATTRIBUTE_TO = new QName("to");

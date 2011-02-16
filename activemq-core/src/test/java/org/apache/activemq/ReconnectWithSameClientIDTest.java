@@ -27,7 +27,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * 
- * @version $Revision$
+ * 
  */
 public class ReconnectWithSameClientIDTest extends EmbeddedBrokerTestSupport {
     private static final Logger LOG = LoggerFactory.getLogger(ReconnectWithSameClientIDTest.class);

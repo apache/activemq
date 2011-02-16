@@ -22,7 +22,7 @@ import org.apache.activemq.command.ConsumerId;
 /**
  * An event generated when a consumer stops.
  * 
- * @version $Revision$
+ * 
  */
 public class ConsumerStoppedEvent extends ConsumerEvent {
 

@@ -20,7 +20,7 @@ import org.apache.activemq.broker.BrokerService;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 /**
- * @version $Revision$
+ * 
  */
 public class MultipleTestsWithSpringXBeanFactoryBeanTest extends MultipleTestsWithEmbeddedBrokerTest {
 

@@ -23,7 +23,7 @@ import java.io.IOException;
 /**
  * Implementation of a Marshaller for a Integer
  * 
- * @version $Revision$
+ * 
  */
 public class IntegerMarshaller implements Marshaller<Integer> {
     

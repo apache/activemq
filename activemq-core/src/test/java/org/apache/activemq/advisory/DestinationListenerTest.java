@@ -36,7 +36,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 
 /**
- * @version $Revision$
+ * 
  */
 public class DestinationListenerTest extends EmbeddedBrokerTestSupport implements DestinationListener {
     private static final transient Logger LOG = LoggerFactory.getLogger(DestinationListenerTest.class);

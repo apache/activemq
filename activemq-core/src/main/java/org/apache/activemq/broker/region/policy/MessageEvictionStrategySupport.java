@@ -19,7 +19,7 @@ package org.apache.activemq.broker.region.policy;
 /**
  * A useful base class for implementation inheritence.
  * 
- * @version $Revision$
+ * 
  */
 public abstract class MessageEvictionStrategySupport implements MessageEvictionStrategy {
 

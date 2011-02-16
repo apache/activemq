@@ -52,7 +52,7 @@ import org.springframework.web.context.support.WebApplicationContextUtils;
  * from the applicationContext - which is ideal for POJOs which implement
  * queries in view technologies.
  * 
- * @version $Revision$
+ * 
  */
 public class ApplicationContextFilter implements Filter {
 

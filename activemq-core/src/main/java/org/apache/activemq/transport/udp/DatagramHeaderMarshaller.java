@@ -30,7 +30,7 @@ import org.apache.activemq.command.Endpoint;
 
 /**
  * 
- * @version $Revision$
+ * 
  */
 public class DatagramHeaderMarshaller {
 

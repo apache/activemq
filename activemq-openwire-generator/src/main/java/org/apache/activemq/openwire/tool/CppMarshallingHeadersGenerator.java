@@ -20,7 +20,7 @@ import java.io.File;
 import java.io.PrintWriter;
 
 /**
- * @version $Revision: 381410 $
+ * 
  */
 public class CppMarshallingHeadersGenerator extends JavaMarshallingGenerator {
 

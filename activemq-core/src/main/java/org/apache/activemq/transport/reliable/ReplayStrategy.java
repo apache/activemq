@@ -22,7 +22,7 @@ import java.io.IOException;
 /**
  * A pluggable strategy for how to deal with dropped packets.
  * 
- * @version $Revision$
+ * 
  */
 public interface ReplayStrategy {
 

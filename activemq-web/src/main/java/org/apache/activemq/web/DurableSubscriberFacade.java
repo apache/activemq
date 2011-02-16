@@ -18,7 +18,7 @@ package org.apache.activemq.web;
 
 /**
  * 
- * @version $Revision$
+ * 
  */
 public class DurableSubscriberFacade extends DestinationFacade {
 

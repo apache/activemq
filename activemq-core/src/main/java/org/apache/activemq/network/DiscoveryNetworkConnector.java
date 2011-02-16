@@ -47,7 +47,7 @@ import javax.management.ObjectName;
  * available and setup a connection to each available remote broker
  * 
  * @org.apache.xbean.XBean element="networkConnector"
- * @version $Revision$
+ * 
  */
 public class DiscoveryNetworkConnector extends NetworkConnector implements DiscoveryListener {
     private static final Logger LOG = LoggerFactory.getLogger(DiscoveryNetworkConnector.class);

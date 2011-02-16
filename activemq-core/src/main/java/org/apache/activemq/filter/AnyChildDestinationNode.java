@@ -25,7 +25,7 @@ import java.util.Set;
  * An implementation of {@link DestinationNode} which navigates all the children of the given node
  * ignoring the name of the current path (so for navigating using * in a wildcard).
  *
- * @version $Revision$
+ * 
  */
 public class AnyChildDestinationNode implements DestinationNode {
     private DestinationNode node;

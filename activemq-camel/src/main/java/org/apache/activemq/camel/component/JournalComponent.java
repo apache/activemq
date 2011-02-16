@@ -26,7 +26,7 @@ import java.util.Map;
 /**
  * The <a href="http://camel.apache.org/activemq-journal.html">ActiveMQ Journal Component</a>
  *
- * @version $Revision$
+ * 
  */
 public class JournalComponent extends DefaultComponent {
 

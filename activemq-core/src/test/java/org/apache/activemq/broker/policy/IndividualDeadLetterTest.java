@@ -35,7 +35,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * @version $Revision$
+ * 
  */
 public class IndividualDeadLetterTest extends DeadLetterTest {
     private static final Logger LOG = LoggerFactory.getLogger(IndividualDeadLetterTest.class);

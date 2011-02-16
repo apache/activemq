@@ -19,7 +19,7 @@ package org.apache.activemq.transport.xmpp.command;
 /**
  * Represents a handler of a type of event
  *
- * @version $Revision$
+ * 
  */
 public interface Handler<T> {
     void handle(T event) throws Exception;

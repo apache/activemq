@@ -28,7 +28,7 @@ import org.apache.derby.jdbc.EmbeddedDataSource;
  * A helper class which provides a factory method to create a default
  * {@link DataSource) if one is not provided.
  * 
- * @version $Revision$
+ * 
  */
 public class DataSourceSupport {
 

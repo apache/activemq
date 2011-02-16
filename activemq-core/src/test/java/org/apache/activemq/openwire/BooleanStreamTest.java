@@ -26,7 +26,7 @@ import junit.framework.AssertionFailedError;
 import junit.framework.TestCase;
 
 /**
- * @version $Revision$
+ * 
  */
 public class BooleanStreamTest extends TestCase {
 

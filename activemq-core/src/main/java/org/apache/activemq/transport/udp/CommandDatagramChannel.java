@@ -38,7 +38,7 @@ import org.slf4j.LoggerFactory;
 /**
  * A strategy for reading datagrams and de-fragmenting them together.
  * 
- * @version $Revision$
+ * 
  */
 public class CommandDatagramChannel extends CommandChannelSupport {
 

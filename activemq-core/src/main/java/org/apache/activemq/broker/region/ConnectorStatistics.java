@@ -24,7 +24,7 @@ import org.apache.activemq.management.StatsImpl;
 /**
  * The J2EE Statistics for the a Destination.
  * 
- * @version $Revision$
+ * 
  */
 public class ConnectorStatistics extends StatsImpl {
 

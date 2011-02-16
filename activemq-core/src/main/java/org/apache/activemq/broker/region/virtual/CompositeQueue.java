@@ -25,7 +25,7 @@ import org.apache.activemq.command.ActiveMQQueue;
  * 
  * @org.apache.xbean.XBean
  * 
- * @version $Revision$
+ * 
  */
 public class CompositeQueue extends CompositeDestination {
 

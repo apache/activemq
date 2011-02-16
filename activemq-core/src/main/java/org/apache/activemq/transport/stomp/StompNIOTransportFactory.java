@@ -40,7 +40,7 @@ import org.apache.activemq.xbean.XBeanBrokerService;
 /**
  * A <a href="http://stomp.codehaus.org/">STOMP</a> over NIO transport factory
  * 
- * @version $Revision: 645574 $
+ * 
  */
 public class StompNIOTransportFactory extends NIOTransportFactory implements BrokerServiceAware {
 

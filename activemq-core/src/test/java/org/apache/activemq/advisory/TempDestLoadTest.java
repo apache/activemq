@@ -28,7 +28,7 @@ import org.apache.activemq.broker.region.RegionBroker;
 import org.apache.activemq.command.ActiveMQDestination;
 
 /**
- * @version $Revision: 397249 $
+ * 
  */
 public class TempDestLoadTest extends EmbeddedBrokerTestSupport {
   

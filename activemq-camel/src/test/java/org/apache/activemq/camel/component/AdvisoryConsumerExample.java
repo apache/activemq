@@ -32,7 +32,7 @@ import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.camel.component.jms.JmsMessage;
 
 /**
- * @version $Revision$
+ * 
  */
 public class AdvisoryConsumerExample extends ContextTestSupport {
 

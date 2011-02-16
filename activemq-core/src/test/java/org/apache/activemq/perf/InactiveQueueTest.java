@@ -31,7 +31,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * @version $Revision: 454471 $
+ * 
  */
 public class InactiveQueueTest extends TestCase {
     private static final transient Logger LOG = LoggerFactory.getLogger(InactiveQueueTest.class);

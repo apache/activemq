@@ -22,7 +22,7 @@ package org.apache.activemq.security;
  * destination
  * 
  * @org.apache.xbean.XBean
- * @version $Revision: 426366 $
+ * 
  */
 public class TempDestinationAuthorizationEntry extends AuthorizationEntry {
 

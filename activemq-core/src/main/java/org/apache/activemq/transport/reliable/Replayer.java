@@ -21,7 +21,7 @@ import java.io.IOException;
 /**
  * Used by a {@link ReplayBuffer} to replay buffers back over an unreliable transport
  * 
- * @version $Revision$
+ * 
  */
 public interface Replayer {
 

@@ -24,7 +24,7 @@ import org.apache.activemq.broker.jmx.ManagementContext;
  * which is an MBean used to control all TransportLoggers at once.
  * 
  * @author David Martin Clavo david(dot)martin(dot)clavo(at)gmail.com
- * @version $Revision$
+ * 
  */
 public class TransportLoggerControl implements TransportLoggerControlMBean {
 

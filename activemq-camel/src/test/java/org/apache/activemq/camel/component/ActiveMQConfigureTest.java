@@ -29,7 +29,7 @@ import org.springframework.jms.listener.AbstractMessageListenerContainer;
 import org.springframework.jms.connection.SingleConnectionFactory;
 
 /**
- * @version $Revision$
+ * 
  */
 public class ActiveMQConfigureTest extends ContextTestSupport {
     

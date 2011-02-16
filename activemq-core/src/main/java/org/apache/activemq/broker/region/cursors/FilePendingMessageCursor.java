@@ -44,7 +44,7 @@ import org.apache.kahadb.util.ByteSequence;
  * persist pending messages pending message (messages awaiting dispatch to a
  * consumer) cursor
  * 
- * @version $Revision$
+ * 
  */
 public class FilePendingMessageCursor extends AbstractPendingMessageCursor implements UsageListener {
     static final Logger LOG = LoggerFactory.getLogger(FilePendingMessageCursor.class);

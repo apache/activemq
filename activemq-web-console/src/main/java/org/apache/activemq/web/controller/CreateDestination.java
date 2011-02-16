@@ -26,7 +26,7 @@ import org.springframework.web.servlet.mvc.Controller;
 
 /**
  * 
- * @version $Revision$
+ * 
  */
 public class CreateDestination extends DestinationFacade implements Controller {
 

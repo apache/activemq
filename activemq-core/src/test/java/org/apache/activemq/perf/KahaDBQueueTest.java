@@ -21,7 +21,7 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
 
 /**
- * @version $Revision$
+ * 
  */
 public class KahaDBQueueTest extends SimpleQueueTest {
 

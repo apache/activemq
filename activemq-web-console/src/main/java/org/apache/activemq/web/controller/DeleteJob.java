@@ -27,7 +27,7 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.Controller;
 
 /**
- * @version $Revision: 700405 $
+ * 
  */
 public class DeleteJob extends DestinationFacade implements Controller {
     private String jobId;

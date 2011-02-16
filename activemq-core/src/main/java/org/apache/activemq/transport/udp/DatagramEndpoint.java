@@ -22,7 +22,7 @@ import org.apache.activemq.command.BaseEndpoint;
 
 /**
  * 
- * @version $Revision$
+ * 
  */
 public class DatagramEndpoint extends BaseEndpoint {
 

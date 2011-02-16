@@ -28,7 +28,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * @version $Revision$
+ * 
  */
 public final class IOHelper {
     protected static final int MAX_DIR_NAME_LENGTH;

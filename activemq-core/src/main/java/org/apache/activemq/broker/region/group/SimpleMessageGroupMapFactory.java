@@ -22,7 +22,7 @@ package org.apache.activemq.broker.region.group;
  * 
  * @org.apache.xbean.XBean
  * 
- * @version $Revision$
+ * 
  */
 public class SimpleMessageGroupMapFactory implements MessageGroupMapFactory {
 

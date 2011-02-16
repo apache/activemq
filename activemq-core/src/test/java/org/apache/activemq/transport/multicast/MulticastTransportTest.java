@@ -28,7 +28,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  *
- * @version $Revision$
+ * 
  */
 public class MulticastTransportTest extends UdpTransportTest {
     

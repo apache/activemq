@@ -28,7 +28,7 @@ import org.codehaus.jam.JClass;
 import org.codehaus.jam.JProperty;
 
 /**
- * @version $Revision: 383749 $
+ * 
  */
 public class CSourcesGenerator extends CHeadersGenerator {
 

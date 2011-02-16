@@ -32,7 +32,7 @@ import org.codehaus.jam.JProperty;
 import org.codehaus.jam.JamClassIterator;
 
 /**
- * @version $Revision: 386442 $
+ * 
  */
 public abstract class SingleSourceGenerator extends OpenWireGenerator {
 

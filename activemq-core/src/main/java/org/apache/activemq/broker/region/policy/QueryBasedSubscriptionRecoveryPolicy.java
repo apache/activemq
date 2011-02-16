@@ -42,7 +42,7 @@ import org.slf4j.LoggerFactory;
  * specific query mechanism to load any messages they may have missed.
  * 
  * @org.apache.xbean.XBean
- * @version $Revision$
+ * 
  */
 public class QueryBasedSubscriptionRecoveryPolicy implements SubscriptionRecoveryPolicy {
 

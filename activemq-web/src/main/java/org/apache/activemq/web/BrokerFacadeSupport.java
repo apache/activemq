@@ -33,7 +33,7 @@ import org.springframework.util.StringUtils;
 /**
  * A useful base class for an implementation of {@link BrokerFacade}
  * 
- * @version $Revision$
+ * 
  */
 public abstract class BrokerFacadeSupport implements BrokerFacade {
     public abstract ManagementContext getManagementContext();

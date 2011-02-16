@@ -28,7 +28,7 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.Controller;
 
 /**
- * @version $Revision$
+ * 
  */
 public class DeleteMessage extends DestinationFacade implements Controller {
     private String messageId;

@@ -35,7 +35,7 @@ import org.slf4j.LoggerFactory;
 /**
  * An agent which listens to commands on a JMS destination
  * 
- * @version $Revision$
+ * 
  * @org.apache.xbean.XBean
  */
 public class CommandAgent implements Service, ExceptionListener {

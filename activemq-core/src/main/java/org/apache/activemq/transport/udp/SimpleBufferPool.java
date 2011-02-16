@@ -22,7 +22,7 @@ import java.nio.ByteBuffer;
  * A simple implementation of {@link BufferPool} which does no pooling and just
  * creates new buffers each time
  * 
- * @version $Revision$
+ * 
  */
 public class SimpleBufferPool implements ByteBufferPool {
 

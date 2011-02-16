@@ -31,7 +31,7 @@ import org.apache.activemq.usage.SystemUsage;
  * Interface to pending message (messages awaiting disptach to a consumer)
  * cursor
  * 
- * @version $Revision$
+ * 
  */
 public interface PendingMessageCursor extends Service {
 

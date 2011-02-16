@@ -28,7 +28,7 @@ import org.apache.activemq.wireformat.WireFormat;
 /**
  * A factory of multicast transport classes
  * 
- * @version $Revision$
+ * 
  */
 public class MulticastTransportFactory extends UdpTransportFactory {
 

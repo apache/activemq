@@ -35,7 +35,7 @@ import org.apache.activemq.test.TestSupport;
 import org.apache.activemq.util.SocketProxy;
 
 /**
- * @version $Revision$
+ * 
  */
 public class PooledTopicPublisherTest extends TestSupport {
 

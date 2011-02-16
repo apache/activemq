@@ -36,7 +36,7 @@ import org.apache.activemq.jaas.GroupPrincipal;
  *                         configured with a map of user-passwords and a map of
  *                         user-groups or a list of authentication users"
  * 
- * @version $Revision$
+ * 
  */
 public class SimpleAuthenticationPlugin implements BrokerPlugin {
     private Map<String, String> userPasswords;

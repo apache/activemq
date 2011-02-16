@@ -21,7 +21,7 @@ import javax.jms.Connection;
 import org.apache.activemq.test.JmsTopicSendReceiveWithTwoConnectionsTest;
 
 /**
- * @version $Revision$
+ * 
  */
 public class JmsSendReceiveTwoConnectionsWithSenderUsingPoolTest extends JmsTopicSendReceiveWithTwoConnectionsTest {
 

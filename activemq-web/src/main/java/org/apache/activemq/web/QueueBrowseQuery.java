@@ -25,7 +25,7 @@ import org.springframework.beans.factory.DisposableBean;
 
 /**
  * 
- * @version $Revision$
+ * 
  */
 public class QueueBrowseQuery extends DestinationFacade implements DisposableBean {
     private SessionPool sessionPool;

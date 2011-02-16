@@ -25,7 +25,7 @@ import org.apache.activemq.broker.util.CommandMessageListener;
  * A simple interactive console which can be used to communicate with a running
  * broker assuming that the classpath is fully setup
  * 
- * @version $Revision$
+ * 
  */
 public final class SimpleConsole {
     

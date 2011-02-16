@@ -31,7 +31,7 @@ import org.apache.activemq.filter.DestinationMap;
  * for each operation.
  * 
  * @org.apache.xbean.XBean element="authorizationMap"
- * @version $Revision$
+ * 
  */
 public class DefaultAuthorizationMap extends DestinationMap implements AuthorizationMap {
 

@@ -40,7 +40,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * @version $Revision$
+ * 
  */
 public abstract class DeadLetterTestSupport extends TestSupport {
     private static final Logger LOG = LoggerFactory.getLogger(DeadLetterTestSupport.class);

@@ -29,7 +29,7 @@ import org.apache.activemq.broker.region.QueueMessageReference;
  * hold pending messages in a linked list (messages awaiting disptach to a
  * consumer) cursor
  * 
- * @version $Revision$
+ * 
  */
 public class VMPendingMessageCursor extends AbstractPendingMessageCursor {
     private final PendingList list;

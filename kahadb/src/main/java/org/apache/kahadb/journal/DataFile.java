@@ -27,7 +27,7 @@ import org.apache.kahadb.util.SequenceSet;
 /**
  * DataFile
  * 
- * @version $Revision$
+ * 
  */
 public class DataFile extends LinkedNode<DataFile> implements Comparable<DataFile> {
 

@@ -29,7 +29,7 @@ import org.apache.kahadb.util.VariableMarshaller;
 /**
  * Bin in a HashIndex
  * 
- * @version $Revision$
+ * 
  */
 class HashBin<Key, Value> {
     

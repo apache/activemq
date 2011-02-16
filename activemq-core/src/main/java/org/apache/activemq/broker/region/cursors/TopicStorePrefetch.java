@@ -30,7 +30,7 @@ import org.slf4j.LoggerFactory;
  * persist pendingCount messages pendingCount message (messages awaiting disptach
  * to a consumer) cursor
  * 
- * @version $Revision$
+ * 
  */
 class TopicStorePrefetch extends AbstractStoreCursor {
     private static final Logger LOG = LoggerFactory.getLogger(TopicStorePrefetch.class);

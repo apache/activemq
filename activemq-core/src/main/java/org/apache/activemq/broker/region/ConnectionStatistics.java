@@ -23,7 +23,7 @@ import org.apache.activemq.management.StatsImpl;
 /**
  * The J2EE Statistics for the Connection.
  * 
- * @version $Revision$
+ * 
  */
 public class ConnectionStatistics extends StatsImpl {
 

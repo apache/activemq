@@ -22,7 +22,7 @@ import java.util.Map;
 /**
  * A registry of handlers
  *
- * @version $Revision$
+ * 
  */
 public class HandlerRegistry {
     private Map<Class, Handler> map = new HashMap<Class, Handler>();

@@ -29,7 +29,7 @@ import org.springframework.web.servlet.handler.BeanNameUrlHandlerMapping;
 import org.springframework.web.servlet.HandlerExecutionChain;
 
 /**
- * @version $Revision$
+ * 
  */
 public class BindingBeanNameUrlHandlerMapping extends BeanNameUrlHandlerMapping {
     private static final transient Logger LOG = LoggerFactory.getLogger(BindingBeanNameUrlHandlerMapping.class);

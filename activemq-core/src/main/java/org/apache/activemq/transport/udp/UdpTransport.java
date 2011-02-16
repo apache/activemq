@@ -48,7 +48,7 @@ import org.slf4j.LoggerFactory;
 /**
  * An implementation of the {@link Transport} interface using raw UDP
  * 
- * @version $Revision$
+ * 
  */
 public class UdpTransport extends TransportThreadSupport implements Transport, Service, Runnable {
     private static final Logger LOG = LoggerFactory.getLogger(UdpTransport.class);

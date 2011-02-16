@@ -29,7 +29,7 @@ import org.apache.activemq.transport.tcp.TcpTransportServer;
 import org.apache.activemq.wireformat.WireFormat;
 
 /**
- * @version $Revision$
+ * 
  */
 public class XmppTransportServer extends TcpTransportServer {
 

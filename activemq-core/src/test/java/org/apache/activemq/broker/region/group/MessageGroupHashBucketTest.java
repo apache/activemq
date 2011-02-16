@@ -19,7 +19,7 @@ package org.apache.activemq.broker.region.group;
 
 /**
  *
- * @version $Revision$
+ * 
  */
 public class MessageGroupHashBucketTest extends MessageGroupMapTest {
 

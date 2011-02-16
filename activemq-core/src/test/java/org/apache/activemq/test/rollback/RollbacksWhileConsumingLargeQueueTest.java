@@ -37,7 +37,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.jms.core.MessageCreator;
 
 /**
- * @version $Revision$
+ * 
  */
 public class RollbacksWhileConsumingLargeQueueTest extends EmbeddedBrokerTestSupport implements MessageListener {
 

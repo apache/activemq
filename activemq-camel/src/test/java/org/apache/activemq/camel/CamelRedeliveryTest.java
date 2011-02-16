@@ -34,7 +34,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit38.AbstractJUnit38SpringContextTests;
 
 /**
- * @version $Revision$
+ * 
  */
 @ContextConfiguration
 public class CamelRedeliveryTest extends AbstractJUnit38SpringContextTests {

@@ -32,7 +32,7 @@ import org.slf4j.LoggerFactory;
 /**
  * A wire format which uses XMPP format of messages
  *
- * @version $Revision$
+ * 
  */
 public class XmppWireFormat implements WireFormat {
     

@@ -31,7 +31,7 @@ import org.springframework.context.support.ClassPathXmlApplicationContext;
 /**
  * 
  * @author Neil Clayton
- * @version $Revision$
+ * 
  */
 public class MultipleTestsWithSpringFactoryBeanTest extends TestCase {
     

@@ -22,7 +22,7 @@ import org.apache.camel.ContextTestSupport;
 import org.apache.camel.Endpoint;
 
 /**
- * @version $Revision$
+ * 
  */
 public class JournalConfigureTest extends ContextTestSupport {
 

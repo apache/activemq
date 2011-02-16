@@ -33,7 +33,7 @@ import org.apache.activemq.filter.DestinationMap;
  * href="http://activemq.apache.org/virtual-destinations.html">Virtual Topics</a>.
  * 
  * @org.apache.xbean.XBean
- * @version $Revision$
+ * 
  */
 public class VirtualDestinationInterceptor implements DestinationInterceptor {
 

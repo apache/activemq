@@ -21,7 +21,7 @@ import org.apache.activemq.kaha.StoreEntry;
 /**
  * Inteface to LinkedList of Indexes
  * 
- * @version $Revision$
+ * 
  */
 public interface IndexLinkedList {
     

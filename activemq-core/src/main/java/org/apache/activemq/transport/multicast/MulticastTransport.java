@@ -38,7 +38,7 @@ import org.slf4j.LoggerFactory;
 /**
  * A multicast based transport.
  * 
- * @version $Revision$
+ * 
  */
 public class MulticastTransport extends UdpTransport {
 

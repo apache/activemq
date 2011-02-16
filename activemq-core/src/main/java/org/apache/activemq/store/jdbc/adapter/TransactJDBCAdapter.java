@@ -23,7 +23,7 @@ import org.apache.activemq.store.jdbc.Statements;
  *
  * @org.apache.xbean.XBean element="transact-jdbc-adapter"
  * 
- * @version $Revision$
+ * 
  */
 public class TransactJDBCAdapter extends ImageBasedJDBCAdaptor {
     public void setStatements(Statements statements) {

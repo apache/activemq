@@ -26,7 +26,7 @@ import org.codehaus.jam.JamServiceFactory;
 import org.codehaus.jam.JamServiceParams;
 
 /**
- * @version $Revision: 384826 $
+ * 
  */
 public class CppGeneratorTask extends Task {
 

@@ -26,7 +26,7 @@ import org.slf4j.LoggerFactory;
 /**
  * 
  * @author Neil Clayton
- * @version $Revision$
+ * 
  */
 public class MultipleTestsWithEmbeddedBrokerTest extends EmbeddedBrokerTestSupport {
     private static final Logger LOG = LoggerFactory.getLogger(MultipleTestsWithEmbeddedBrokerTest.class);

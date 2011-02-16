@@ -23,7 +23,7 @@ import org.apache.activemq.state.CommandVisitor;
  * 
  * @openwire:marshaller code="20"
  * 
- * @version $Revision$
+ * 
  */
 public class MessagePull extends BaseCommand {
 

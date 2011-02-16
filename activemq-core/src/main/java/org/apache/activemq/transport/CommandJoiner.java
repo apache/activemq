@@ -32,7 +32,7 @@ import org.slf4j.LoggerFactory;
  * Joins together of partial commands which were split into individual chunks of
  * data.
  * 
- * @version $Revision$
+ * 
  */
 public class CommandJoiner extends TransportFilter {
     private static final Logger LOG = LoggerFactory.getLogger(CommandJoiner.class);

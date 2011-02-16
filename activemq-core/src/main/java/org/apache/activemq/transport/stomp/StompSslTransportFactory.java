@@ -29,7 +29,7 @@ import org.apache.activemq.wireformat.WireFormat;
 /**
  * A <a href="http://stomp.codehaus.org/">STOMP</a> over SSL transport factory
  * 
- * @version $Revision$
+ * 
  */
 public class StompSslTransportFactory extends SslTransportFactory implements BrokerServiceAware {
 

@@ -32,7 +32,7 @@ import org.jivesoftware.smack.packet.Packet;
 import org.jivesoftware.smackx.muc.MultiUserChat;
 
 /**
- * @version $Revision$
+ * 
  */
 public class XmppTest extends TestCase {
 

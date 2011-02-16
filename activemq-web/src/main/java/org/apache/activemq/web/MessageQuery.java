@@ -30,7 +30,7 @@ import javax.jms.TextMessage;
 /**
  * Allow the user to browse a message on a queue by its ID
  * 
- * @version $Revision$
+ * 
  */
 public class MessageQuery extends QueueBrowseQuery {
 

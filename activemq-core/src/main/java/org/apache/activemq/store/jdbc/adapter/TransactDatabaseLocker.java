@@ -31,7 +31,7 @@ import org.slf4j.LoggerFactory;
  * against the same logical database.
  * 
  * @org.apache.xbean.XBean element="transact-database-locker"
- * @version $Revision$
+ * 
  */
 public class TransactDatabaseLocker extends DefaultDatabaseLocker {
     private static final Logger LOG = LoggerFactory.getLogger(TransactDatabaseLocker.class);

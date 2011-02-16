@@ -27,7 +27,7 @@ import java.io.ObjectOutputStream;
 /**
  * Implementation of a Marshaller for Objects
  * 
- * @version $Revision$
+ * 
  */
 public class ObjectMarshaller extends VariableMarshaller<Object> {
 

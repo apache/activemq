@@ -43,7 +43,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * @version $Revision$
+ * 
  */
 public class InvokeRequestReplyUsingJmsReplyToHeaderTest extends ContextTestSupport {
     private static final transient Logger LOG = LoggerFactory.getLogger(ActiveMQReplyToHeaderUsingConverterTest.class);

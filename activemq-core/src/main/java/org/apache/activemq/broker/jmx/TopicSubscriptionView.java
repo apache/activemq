@@ -21,7 +21,7 @@ import org.apache.activemq.broker.region.TopicSubscription;
 
 /**
  * 
- * @version $Revision$
+ * 
  */
 public class TopicSubscriptionView extends SubscriptionView implements TopicSubscriptionViewMBean {
 

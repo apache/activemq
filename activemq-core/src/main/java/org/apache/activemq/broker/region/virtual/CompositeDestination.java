@@ -22,7 +22,7 @@ import org.apache.activemq.broker.region.Destination;
 
 /**
  * 
- * @version $Revision$
+ * 
  */
 public abstract class CompositeDestination implements VirtualDestination {
 

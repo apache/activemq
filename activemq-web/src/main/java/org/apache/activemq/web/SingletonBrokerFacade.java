@@ -22,7 +22,7 @@ import org.apache.activemq.broker.BrokerService;
 /**
  * A facade for the broker in the same JVM and ClassLoader
  * 
- * @version $Revision$
+ * 
  */
 public class SingletonBrokerFacade extends LocalBrokerFacade {
     public SingletonBrokerFacade() {

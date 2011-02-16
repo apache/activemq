@@ -59,7 +59,7 @@ import org.slf4j.LoggerFactory;
  * various MBeans after the test has been run then run this test case as a
  * command line application.
  * 
- * @version $Revision$
+ * 
  */
 public class MBeanTest extends EmbeddedBrokerTestSupport {
     private static final Logger LOG = LoggerFactory.getLogger(MBeanTest.class);

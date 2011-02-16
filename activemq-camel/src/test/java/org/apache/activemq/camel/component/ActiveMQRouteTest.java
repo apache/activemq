@@ -25,7 +25,7 @@ import org.apache.camel.component.jms.JmsEndpoint;
 import org.apache.camel.component.mock.MockEndpoint;
 
 /**
- * @version $Revision$
+ * 
  */
 public class ActiveMQRouteTest extends ContextTestSupport {
     protected MockEndpoint resultEndpoint;

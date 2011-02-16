@@ -23,7 +23,7 @@ import java.io.IOException;
 /**
  * Implementation of a Marshaller for a Long
  * 
- * @version $Revision$
+ * 
  */
 public class LongMarshaller implements Marshaller<Long> {
     

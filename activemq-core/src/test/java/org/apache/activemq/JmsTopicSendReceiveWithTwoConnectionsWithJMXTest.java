@@ -18,7 +18,7 @@ package org.apache.activemq;
 
 /**
  * 
- * @version $Revision$
+ * 
  */
 public class JmsTopicSendReceiveWithTwoConnectionsWithJMXTest extends
     JmsTopicSendReceiveWithTwoConnectionsTest {

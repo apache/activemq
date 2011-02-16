@@ -37,7 +37,7 @@ import org.apache.activemq.thread.TaskRunnerFactory;
  * {@link org.apache.activemq.broker.region.Destination}.
  * 
  * @author fateev@amazon.com
- * @version $Revision$
+ * 
  */
 public class DestinationFactoryImpl extends DestinationFactory {
 

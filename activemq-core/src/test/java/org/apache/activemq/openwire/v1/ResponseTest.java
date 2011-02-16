@@ -26,7 +26,7 @@ import org.apache.activemq.command.Response;
  * change, please see the modify the groovy scripts in the under src/gram/script
  * and then use maven openwire:generate to regenerate this file.
  * 
- * @version $Revision$
+ * 
  */
 public class ResponseTest extends BaseCommandTestSupport {
 

@@ -26,7 +26,7 @@ import org.apache.activemq.broker.region.TopicSubscription;
  * This allows us to keep dispatching messages to slow consumers while not blocking fast consumers
  * and discarding the messages oldest first.
  *  
- * @version $Revision$
+ * 
  */
 public interface PendingMessageLimitStrategy {
 

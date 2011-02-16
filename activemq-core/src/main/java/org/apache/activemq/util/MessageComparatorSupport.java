@@ -24,7 +24,7 @@ import javax.jms.Message;
 /**
  * A base class for comparators which works on JMS {@link Message} objects
  * 
- * @version $Revision$
+ * 
  */
 public abstract class MessageComparatorSupport implements Comparator, Serializable {
 

@@ -23,7 +23,7 @@ import org.apache.activemq.command.ActiveMQTopic;
 
 /**
  *
- * @version $Revision$
+ * 
  */
 public class CompositeTopicTest extends CompositeQueueTest {
     

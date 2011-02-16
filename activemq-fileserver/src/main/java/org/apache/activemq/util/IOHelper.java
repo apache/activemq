@@ -24,7 +24,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 /**
- * @version $Revision: 661435 $
+ * 
  */
 public final class IOHelper {
     protected static final int MAX_DIR_NAME_LENGTH;

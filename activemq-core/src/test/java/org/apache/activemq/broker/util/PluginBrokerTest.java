@@ -30,7 +30,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * 
- * @version $Revision: 564271 $
+ * 
  */
 public class PluginBrokerTest extends JmsTopicSendReceiveTest {
     private static final Logger LOG = LoggerFactory.getLogger(PluginBrokerTest.class);

@@ -35,7 +35,7 @@ import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 
 /**
- * @version $Revision$
+ * 
  */
 public class NoConsumerDeadLetterTest extends DeadLetterTestSupport {
 

@@ -37,7 +37,7 @@ import org.slf4j.LoggerFactory;
  * Shows that we can see the queues inside ActiveMQ via Camel
  * by enabling the {@link ActiveMQComponent#setExposeAllQueues(boolean)} flag
  *
- * @version $Revision$
+ * 
  */
 public class AutoExposeQueuesInCamelTest extends EmbeddedBrokerTestSupport {
     private static final transient Logger LOG = LoggerFactory.getLogger(AutoExposeQueuesInCamelTest.class);

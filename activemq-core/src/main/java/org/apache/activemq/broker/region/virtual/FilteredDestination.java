@@ -30,7 +30,7 @@ import org.apache.activemq.selector.SelectorParser;
  *
  * @org.apache.xbean.XBean
  *
- * @version $Revision$
+ * 
  */
 public class FilteredDestination {
     

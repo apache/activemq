@@ -22,7 +22,7 @@ import javax.jms.Message;
 /**
  * A useful base class for message transformers.
  *
- * @version $Revision$
+ * 
  */
 public abstract class MessageTransformerSupport implements MessageTransformer {
 

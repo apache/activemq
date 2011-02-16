@@ -24,7 +24,7 @@ import org.apache.activemq.util.ServiceStopper;
 
 /**
  * 
- * @version $Revision$
+ * 
  */
 public class StubTransport extends TransportSupport {
 
