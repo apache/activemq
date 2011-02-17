@@ -493,6 +493,11 @@ public class KahaDBPersistenceAdapter implements PersistenceAdapter, BrokerServi
         letter.setForceRecoverIndex(forceRecoverIndex);
     }
 
+    //  for testing
+    public KahaDBStore getStore() {
+        return letter;
+    }
+
     @Override
     public String toString() {
         String path = getDirectory() != null ? getDirectory().toString() : "DIRECTORY_NOT_SET";

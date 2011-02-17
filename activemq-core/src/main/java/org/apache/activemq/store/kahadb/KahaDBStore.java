@@ -960,29 +960,6 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
     // Internal conversion methods.
     // /////////////////////////////////////////////////////////////////
 
-    KahaTransactionInfo createTransactionInfo(TransactionId txid) {
-        if (txid == null) {
-            return null;
-        }
-        KahaTransactionInfo rc = new KahaTransactionInfo();
-
-        if (txid.isLocalTransaction()) {
-            LocalTransactionId t = (LocalTransactionId) txid;
-            KahaLocalTransactionId kahaTxId = new KahaLocalTransactionId();
-            kahaTxId.setConnectionId(t.getConnectionId().getValue());
-            kahaTxId.setTransacitonId(t.getValue());
-            rc.setLocalTransacitonId(kahaTxId);
-        } else {
-            XATransactionId t = (XATransactionId) txid;
-            KahaXATransactionId kahaTxId = new KahaXATransactionId();
-            kahaTxId.setBranchQualifier(new Buffer(t.getBranchQualifier()));
-            kahaTxId.setGlobalTransactionId(new Buffer(t.getGlobalTransactionId()));
-            kahaTxId.setFormatId(t.getFormatId());
-            rc.setXaTransacitonId(kahaTxId);
-        }
-        return rc;
-    }
-
     KahaLocation convert(Location location) {
         KahaLocation rc = new KahaLocation();
         rc.setLogId(location.getDataFileId());

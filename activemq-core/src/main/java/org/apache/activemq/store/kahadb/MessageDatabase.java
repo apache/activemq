@@ -351,6 +351,11 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
         }
     }
 
+    // for testing
+    public LockFile getLockFile() {
+        return lockFile;
+    }
+
     public void load() throws IOException {
     	
         this.indexLock.writeLock().lock();
@@ -417,10 +422,8 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
         close();
     }
 
-    /**
-     * @return
-     */
-    private Location getFirstInProgressTxLocation() {
+    // public for testing
+    public Location getFirstInProgressTxLocation() {
         Location l = null;
         synchronized (inflightTransactions) {
             if (!inflightTransactions.isEmpty()) {
@@ -474,6 +477,21 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
                     recoverIndex(tx);
                 }
             });
+
+            // rollback any recovered inflight local transactions
+            Set<TransactionId> toRollback = new HashSet<TransactionId>();
+            synchronized (inflightTransactions) {
+                for (Iterator<TransactionId> it = inflightTransactions.keySet().iterator(); it.hasNext(); ) {
+                    TransactionId id = it.next();
+                    if (id.isLocalTransaction()) {
+                        toRollback.add(id);
+                    }
+                }
+                for (TransactionId tx: toRollback) {
+                    LOG.debug("rolling back recovered indoubt local transaction " + tx);
+                    store(new KahaRollbackCommand().setTransactionInfo(createTransactionInfo(tx)), false, null, null);
+                }
+            }
         }finally {
             this.indexLock.writeLock().unlock();
         }
@@ -1986,7 +2004,33 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
     public void setDatabaseLockedWaitDelay(int databaseLockedWaitDelay) {
         this.databaseLockedWaitDelay = databaseLockedWaitDelay;
     }
-    
+
+    // /////////////////////////////////////////////////////////////////
+    // Internal conversion methods.
+    // /////////////////////////////////////////////////////////////////
+
+    KahaTransactionInfo createTransactionInfo(TransactionId txid) {
+        if (txid == null) {
+            return null;
+        }
+        KahaTransactionInfo rc = new KahaTransactionInfo();
+
+        if (txid.isLocalTransaction()) {
+            LocalTransactionId t = (LocalTransactionId) txid;
+            KahaLocalTransactionId kahaTxId = new KahaLocalTransactionId();
+            kahaTxId.setConnectionId(t.getConnectionId().getValue());
+            kahaTxId.setTransacitonId(t.getValue());
+            rc.setLocalTransacitonId(kahaTxId);
+        } else {
+            XATransactionId t = (XATransactionId) txid;
+            KahaXATransactionId kahaTxId = new KahaXATransactionId();
+            kahaTxId.setBranchQualifier(new Buffer(t.getBranchQualifier()));
+            kahaTxId.setGlobalTransactionId(new Buffer(t.getGlobalTransactionId()));
+            kahaTxId.setFormatId(t.getFormatId());
+            rc.setXaTransacitonId(kahaTxId);
+        }
+        return rc;
+    }
 
     class MessageOrderCursor{
         long defaultCursorPosition;
