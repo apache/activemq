@@ -145,9 +145,10 @@ public class FailoverTransportBrokerTest extends NetworkTestSupport {
         });
         c.start();
         int count = 0;
-        while(count++ < 5 && info[0] == null) {
+        while(count++ < 20 && info[0] == null) {
             TimeUnit.SECONDS.sleep(1);
         }
+        assertNotNull("got a valid brokerInfo after 20 secs", info[0]);
         assertNull("no peer brokers present", info[0].getPeerBrokerInfos());
     }
 

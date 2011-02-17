@@ -123,7 +123,8 @@ public class FailoverTransactionTest extends TestSupport {
     }
 
     public void initCombosForTestFailoverCommitReplyLost() {
-        addCombinationValues("defaultPersistenceAdapter", PersistenceAdapterChoice.values());
+        addCombinationValues("defaultPersistenceAdapter",
+                new Object[]{PersistenceAdapterChoice.KahaDB, PersistenceAdapterChoice.AMQ, PersistenceAdapterChoice.JDBC});
     }
 
     public void testFailoverCommitReplyLost() throws Exception {
