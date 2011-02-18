@@ -123,6 +123,7 @@ public class FailoverTransportBrokerTest extends NetworkTestSupport {
         c.setListener(new TransportListener() {
             @Override
             public void onCommand(Object command) {
+                LOG.info("Got command: " + command);
                 if (command instanceof BrokerInfo) {
                     info[0] = (BrokerInfo) command;
                 }
