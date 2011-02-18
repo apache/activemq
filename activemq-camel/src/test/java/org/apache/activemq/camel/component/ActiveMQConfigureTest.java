@@ -35,7 +35,7 @@ public class ActiveMQConfigureTest extends ContextTestSupport {
     
     public void testJmsTemplateUsesPoolingConnectionFactory() throws Exception {
         JmsEndpoint endpoint = resolveMandatoryEndpoint("activemq:test.foo");
-        JmsProducer producer = endpoint.createProducer();
+        JmsProducer producer = (JmsProducer) endpoint.createProducer();
 
         JmsTemplate template = assertIsInstanceOf(JmsTemplate.class, producer.getInOutTemplate());
         assertEquals("pubSubDomain", false, template.isPubSubDomain());
@@ -44,7 +44,7 @@ public class ActiveMQConfigureTest extends ContextTestSupport {
 
     public void testJmsTemplateUsesSingleConnectionFactory() throws Exception {
         JmsEndpoint endpoint = resolveMandatoryEndpoint("activemq:test.foo?useSingleConnection=true");
-        JmsProducer producer = endpoint.createProducer();
+        JmsProducer producer = (JmsProducer) endpoint.createProducer();
 
         JmsTemplate template = assertIsInstanceOf(JmsTemplate.class, producer.getInOutTemplate());
         assertEquals("pubSubDomain", false, template.isPubSubDomain());
@@ -54,7 +54,7 @@ public class ActiveMQConfigureTest extends ContextTestSupport {
 
     public void testJmsTemplateDoesNotUsePoolingConnectionFactory() throws Exception {
         JmsEndpoint endpoint = resolveMandatoryEndpoint("activemq:test.foo?usePooledConnection=false");
-        JmsProducer producer = endpoint.createProducer();
+        JmsProducer producer = (JmsProducer) endpoint.createProducer();
 
         JmsTemplate template = assertIsInstanceOf(JmsTemplate.class, producer.getInOutTemplate());
         assertEquals("pubSubDomain", false, template.isPubSubDomain());
