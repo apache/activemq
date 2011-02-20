@@ -262,16 +262,23 @@ public class MessageListenerServlet extends MessageServletSupport {
         if (LOG.isDebugEnabled()) {
             LOG.debug("doMessage timeout=" + timeout);
         }
-
-        Message message = null;
+        
         // this is non-null if we're resuming the continuation.
         // attributes set in AjaxListener
-        message = (Message)request.getAttribute("message"); 
+        UndeliveredAjaxMessage undelivered_message = null;
+        Message message = null;
+        undelivered_message = (UndeliveredAjaxMessage)request.getAttribute("undelivered_message");
+        if( undelivered_message != null ) {
+            message = (Message)undelivered_message.getMessage();
+        }
         
         synchronized (client) {
 
             List consumers = client.getConsumers();
-            MessageAvailableConsumer consumer = (MessageAvailableConsumer)request.getAttribute("consumer");
+            MessageAvailableConsumer consumer = null;
+            if( undelivered_message != null ) {
+                consumer = (MessageAvailableConsumer)undelivered_message.getConsumer();
+            }
 
             if (message == null) {
                 // Look for a message that is ready to go
@@ -293,7 +300,7 @@ public class MessageListenerServlet extends MessageServletSupport {
             response.setContentType("text/xml");
             response.setHeader("Cache-Control", "no-cache");
             
-            if (message == null && client.getListener().getUnconsumedMessages().size() == 0) {
+            if (message == null && client.getListener().getUndeliveredMessages().size() == 0) {
                 Continuation continuation = ContinuationSupport.getContinuation(request);
                 
                 if (continuation.isExpired()) {
@@ -331,37 +338,43 @@ public class MessageListenerServlet extends MessageServletSupport {
             Map<MessageAvailableConsumer, String> consumerDestinationNameMap = client.getDestinationNameMap();
             response.setStatus(HttpServletResponse.SC_OK);
             writer.println("<ajax-response>");
-
+            
             // Send any message we already have
             if (message != null) {
                 String id = consumerIdMap.get(consumer);
                 String destinationName = consumerDestinationNameMap.get(consumer);
+                LOG.debug( "sending pre-existing message" );
                 writeMessageResponse(writer, message, id, destinationName);
                 
                 messages++;
             }
-
+            
+            // send messages buffered while continuation was unavailable.
+            LinkedList<UndeliveredAjaxMessage> undeliveredMessages = ((AjaxListener)consumer.getAvailableListener()).getUndeliveredMessages();
+            LOG.debug("Send " + undeliveredMessages.size() + " unconsumed messages");
+            synchronized( undeliveredMessages ) {
+                for (Iterator<UndeliveredAjaxMessage> it = undeliveredMessages.iterator(); it.hasNext(); ) {
+                    messages++;
+                    UndeliveredAjaxMessage undelivered = it.next();
+                    Message msg = (Message)undelivered.getMessage();
+                    consumer = (MessageAvailableConsumer)undelivered.getConsumer();
+                    String id = consumerIdMap.get(consumer);
+                    String destinationName = consumerDestinationNameMap.get(consumer);
+                    LOG.debug( "sending undelivered/buffered messages" );
+                    LOG.debug( "msg:" +msg+ ", id:" +id+ ", destinationName:" +destinationName);
+                    writeMessageResponse(writer, msg, id, destinationName);
+                    it.remove();
+                    if (messages >= maximumMessages) {
+                        break;
+                    }
+                }
+            }
+            
             // Send the rest of the messages
             for (int i = 0; i < consumers.size() && messages < maximumMessages; i++) {
                 consumer = (MessageAvailableConsumer)consumers.get(i);
                 if (consumer.getAvailableListener() == null) {
                     continue;
-                }
-
-                LinkedList<Message> unconsumedMessages = ((AjaxListener)consumer.getAvailableListener()).getUnconsumedMessages();
-                LOG.debug("Send " + unconsumedMessages.size() + " unconsumed messages");
-                synchronized( unconsumedMessages ) {
-                    for (Iterator<Message> it = unconsumedMessages.iterator(); it.hasNext(); ) {
-                        messages++;
-                        Message msg = it.next();
-                        String id = consumerIdMap.get(consumer);
-                        String destinationName = consumerDestinationNameMap.get(consumer);
-                        writeMessageResponse(writer, msg, id, destinationName);
-                        it.remove();
-                        if (messages >= maximumMessages) {
-                            break;
-                        }
-                    }
                 }
 
                 // Look for any available messages
@@ -373,6 +386,7 @@ public class MessageListenerServlet extends MessageServletSupport {
                     messages++;
                     String id = consumerIdMap.get(consumer);
                     String destinationName = consumerDestinationNameMap.get(consumer);
+                    LOG.debug( "sending final available messages" );
                     writeMessageResponse(writer, message, id, destinationName);
                 }
             }

@@ -463,4 +463,75 @@ public class AjaxTest extends JettyTestSupport {
         assertEquals( "Poll response is not correct.", expected, poll.getResponseContent() );
     }
     
+    public void testAjaxClientReceivesMessagesForMultipleTopics() throws Exception {
+        LOG.debug( "*** testAjaxClientReceivesMessagesForMultipleTopics ***" );
+        HttpClient httpClient = new HttpClient();
+        httpClient.start();
+        httpClient.setConnectorType(HttpClient.CONNECTOR_SELECT_CHANNEL);
+        
+        LOG.debug( "SENDING LISTEN FOR /topic/topicA" );
+        AjaxTestContentExchange contentExchange = new AjaxTestContentExchange();
+        contentExchange.setMethod( "POST" );
+        contentExchange.setURL("http://localhost:8080/amq");
+        contentExchange.setRequestContent( new ByteArrayBuffer("destination=topic://topicA&type=listen&message=handlerA") );
+        contentExchange.setRequestContentType( "application/x-www-form-urlencoded; charset=UTF-8" );
+        httpClient.send(contentExchange);
+        contentExchange.waitForDone();
+        String jsessionid = contentExchange.getJsessionId();
+        
+        LOG.debug( "SENDING LISTEN FOR /topic/topicB" );
+        contentExchange = new AjaxTestContentExchange();
+        contentExchange.setMethod( "POST" );
+        contentExchange.setURL("http://localhost:8080/amq");
+        contentExchange.setRequestContent( new ByteArrayBuffer("destination=topic://topicB&type=listen&message=handlerB") );
+        contentExchange.setRequestContentType( "application/x-www-form-urlencoded; charset=UTF-8" );
+        contentExchange.setRequestHeader( "Cookie", jsessionid );
+        httpClient.send(contentExchange);
+        contentExchange.waitForDone();
+        
+        // client 1 polls for messages
+        LOG.debug( "SENDING POLL" );
+        AjaxTestContentExchange poll = new AjaxTestContentExchange();
+        poll.setMethod( "GET" );
+        poll.setURL("http://localhost:8080/amq?timeout=5000");
+        poll.setRequestHeader( "Cookie", jsessionid );
+        httpClient.send( poll );
+        
+        // while client 1 is polling, client 2 sends messages to the topics
+        LOG.debug( "SENDING MESSAGES" );
+        contentExchange = new AjaxTestContentExchange();
+        contentExchange.setMethod( "POST" );
+        contentExchange.setURL("http://localhost:8080/amq");
+        contentExchange.setRequestContent( new ByteArrayBuffer(
+            "destination=topic://topicA&type=send&message=A1&"+
+            "d1=topic://topicB&t1=send&m1=B1&"+
+            "d2=topic://topicA&t2=send&m2=A2&"+
+            "d3=topic://topicB&t3=send&m3=B2"
+        ) );
+        contentExchange.setRequestContentType( "application/x-www-form-urlencoded; charset=UTF-8" );
+        httpClient.send(contentExchange);
+        contentExchange.waitForDone();
+        LOG.debug( "DONE POSTING MESSAGES" );
+        
+        // wait for poll to finish
+        poll.waitForDone();
+        String response = poll.getResponseContent();
+        
+        // not all messages might be delivered during the 1st poll.  We need to check again.
+        poll = new AjaxTestContentExchange();
+        poll.setMethod( "GET" );
+        poll.setURL("http://localhost:8080/amq?timeout=5000");
+        poll.setRequestHeader( "Cookie", jsessionid );
+        httpClient.send( poll );
+        poll.waitForDone();
+
+        String fullResponse = response + poll.getResponseContent();
+        LOG.debug( "full response " + fullResponse );
+        assertContains( "<response id='handlerA' destination='topic://topicA' >A1</response>\n", fullResponse );
+        assertContains( "<response id='handlerB' destination='topic://topicB' >B1</response>\n", fullResponse );
+        assertContains( "<response id='handlerA' destination='topic://topicA' >A2</response>\n", fullResponse );
+        assertContains( "<response id='handlerB' destination='topic://topicB' >B2</response>\n", fullResponse );
+        assertResponseCount( 4, fullResponse );
+     }
+    
 }

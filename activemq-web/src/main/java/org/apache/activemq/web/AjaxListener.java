@@ -39,7 +39,7 @@ public class AjaxListener implements MessageAvailableListener {
     private AjaxWebClient client;
     private long lastAccess;
     private Continuation continuation;
-    private LinkedList<Message> unconsumedMessages = new LinkedList<Message>();
+    private LinkedList<UndeliveredAjaxMessage> undeliveredMessages = new LinkedList<UndeliveredAjaxMessage>();
 
     AjaxListener(AjaxWebClient client, long maximumReadTimeout) {
         this.client = client;
@@ -55,10 +55,10 @@ public class AjaxListener implements MessageAvailableListener {
         this.continuation = continuation;
     }
 
-    public LinkedList<Message> getUnconsumedMessages() {
-        return unconsumedMessages;
+    public LinkedList<UndeliveredAjaxMessage> getUndeliveredMessages() {
+        return undeliveredMessages;
     }
-
+    
     public synchronized void onMessageAvailable(MessageConsumer consumer) {
         if (LOG.isDebugEnabled()) {
             LOG.debug("message for " + consumer + " continuation=" + continuation);
@@ -70,12 +70,11 @@ public class AjaxListener implements MessageAvailableListener {
                 if( message != null ) {
                     if( continuation.isSuspended() ) {
                         LOG.debug( "Resuming suspended continuation " + continuation );
-                        continuation.setAttribute("message", message);
-                        continuation.setAttribute("consumer", consumer);
+                        continuation.setAttribute("undelivered_message", new UndeliveredAjaxMessage( message, consumer ) );
                         continuation.resume();
                     } else {
                         LOG.debug( "Message available, but continuation is already resumed.  Buffer for next time." );
-                        bufferMessageForDelivery( message );
+                        bufferMessageForDelivery( message, consumer );
                     }
                 }
             } catch (Exception e) {
@@ -91,17 +90,17 @@ public class AjaxListener implements MessageAvailableListener {
         } else {
             try {
                 Message message = consumer.receive(10);
-                bufferMessageForDelivery( message );
+                bufferMessageForDelivery( message, consumer );
             } catch (Exception e) {
                 LOG.error("Error receiving message " + e, e);
             }
         }
     }
     
-    public void bufferMessageForDelivery( Message message ) {
+    public void bufferMessageForDelivery( Message message, MessageConsumer consumer ) {
         if( message != null ) {
-            synchronized( unconsumedMessages ) {
-                unconsumedMessages.addLast(message);
+            synchronized( undeliveredMessages ) {
+                undeliveredMessages.addLast( new UndeliveredAjaxMessage( message, consumer ) );
             }
         }
     }
