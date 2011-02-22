@@ -297,7 +297,7 @@ public class StoreQueueCursor extends AbstractPendingMessageCursor {
 
     @Override
     public boolean isCacheEnabled() {
-        cacheEnabled = isUseCache();
+        boolean cacheEnabled = isUseCache();
         if (cacheEnabled) {
             if (persistent != null) {
                 cacheEnabled &= persistent.isCacheEnabled();
@@ -305,6 +305,7 @@ public class StoreQueueCursor extends AbstractPendingMessageCursor {
             if (nonPersistent != null) {
                 cacheEnabled &= nonPersistent.isCacheEnabled();
             }
+            setCacheEnabled(cacheEnabled);
         }
         return cacheEnabled;
     }

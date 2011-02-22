@@ -40,6 +40,25 @@ import org.slf4j.LoggerFactory;
  */
 public class JDBCMessageStore extends AbstractMessageStore {
 
+    class Duration {
+        static final int LIMIT = 100;
+        final long start = System.currentTimeMillis();
+        final String name;
+
+        Duration(String name) {
+            this.name = name;
+        }
+        void end() {
+            end(null);
+        }
+        void end(Object o) {
+            long duration = System.currentTimeMillis() - start;
+
+            if (duration > LIMIT) {
+                System.err.println(name + " took a long time: " + duration + "ms " + o);
+            }
+        }
+    }
     private static final Logger LOG = LoggerFactory.getLogger(JDBCMessageStore.class);
     protected final WireFormat wireFormat;
     protected final JDBCAdapter adapter;
@@ -58,7 +77,6 @@ public class JDBCMessageStore extends AbstractMessageStore {
     }
     
     public void addMessage(ConnectionContext context, Message message) throws IOException {
-
         MessageId messageId = message.getMessageId();
         if (audit != null && audit.isDuplicate(message)) {
             if (LOG.isDebugEnabled()) {
@@ -90,6 +108,10 @@ public class JDBCMessageStore extends AbstractMessageStore {
         } finally {
             c.close();
         }
+        onAdd(sequenceId, message.getPriority());
+    }
+
+    protected void onAdd(long sequenceId, byte priority) {
     }
 
     public void addMessageReference(ConnectionContext context, MessageId messageId, long expirationTime, String messageRef) throws IOException {

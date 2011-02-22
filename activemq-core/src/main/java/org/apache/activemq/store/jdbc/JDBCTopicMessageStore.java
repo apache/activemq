@@ -18,10 +18,10 @@ package org.apache.activemq.store.jdbc;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.Arrays;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.activemq.ActiveMQMessageAudit;
 import org.apache.activemq.broker.ConnectionContext;
@@ -102,22 +102,120 @@ public class JDBCTopicMessageStore extends JDBCMessageStore implements TopicMess
         }
     }
 
-    private class LastRecovered {
-        long sequence = 0;
-        byte priority = 9;
+    private class LastRecovered implements Iterable<LastRecoveredEntry> {
+        LastRecoveredEntry[] perPriority = new LastRecoveredEntry[10];
+        LastRecovered() {
+            for (int i=0; i<perPriority.length; i++) {
+                perPriority[i] = new LastRecoveredEntry(i);
+            }
+        }
 
-        public void update(long sequence, Message msg) {
-            this.sequence = sequence;
-            this.priority = msg.getPriority();
+        public void updateStored(long sequence, int priority) {
+            perPriority[priority].stored = sequence;
+        }
+
+        public LastRecoveredEntry defaultPriority() {
+            return perPriority[javax.jms.Message.DEFAULT_PRIORITY];
         }
 
         public String toString() {
-            return "" + sequence + ":" + priority;
+            return Arrays.deepToString(perPriority);
+        }
+
+        public Iterator<LastRecoveredEntry> iterator() {
+            return new PriorityIterator();
+        }
+
+        class PriorityIterator implements Iterator<LastRecoveredEntry> {
+            int current = 9;
+            public boolean hasNext() {
+                for (int i=current; i>=0; i--) {
+                    if (perPriority[i].hasMessages()) {
+                        current = i;
+                        return true;
+                    }
+                }
+                return false;
+            }
+
+            public LastRecoveredEntry next() {
+                return perPriority[current];
+            }
+
+            public void remove() {
+                throw new RuntimeException("not implemented");
+            }
+        }
+    }
+
+    private class LastRecoveredEntry {
+        final int priority;
+        long recovered = 0;
+        long stored = Integer.MAX_VALUE;
+
+        public LastRecoveredEntry(int priority) {
+            this.priority = priority;
+        }
+
+        public String toString() {
+            return priority + "-" + stored + ":" + recovered;
+        }
+
+        public void exhausted() {
+            stored = recovered;
+        }
+
+        public boolean hasMessages() {
+            return stored > recovered;
+        }
+    }
+
+    class LastRecoveredAwareListener implements JDBCMessageRecoveryListener {
+        final MessageRecoveryListener delegate;
+        final int maxMessages;
+        LastRecoveredEntry lastRecovered;
+        int recoveredCount;
+        int recoveredMarker;
+
+        public LastRecoveredAwareListener(MessageRecoveryListener delegate, int maxMessages) {
+            this.delegate = delegate;
+            this.maxMessages = maxMessages;
+        }
+
+        public boolean recoverMessage(long sequenceId, byte[] data) throws Exception {
+            if (delegate.hasSpace()) {
+                Message msg = (Message) wireFormat.unmarshal(new ByteSequence(data));
+                msg.getMessageId().setBrokerSequenceId(sequenceId);
+                if (delegate.recoverMessage(msg)) {
+                    lastRecovered.recovered = sequenceId;
+                    recoveredCount++;
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        public boolean recoverMessageReference(String reference) throws Exception {
+            return delegate.recoverMessageReference(new MessageId(reference));
+        }
+
+        public void setLastRecovered(LastRecoveredEntry lastRecovered) {
+            this.lastRecovered = lastRecovered;
+            recoveredMarker = recoveredCount;
+        }
+
+        public boolean complete() {
+            return  !delegate.hasSpace() || recoveredCount == maxMessages;
+        }
+
+        public boolean stalled() {
+            return recoveredMarker == recoveredCount;
         }
     }
 
     public synchronized void recoverNextMessages(final String clientId, final String subscriptionName, final int maxReturned, final MessageRecoveryListener listener)
             throws Exception {
+        //Duration duration = new Duration("recoverNextMessages");
         TransactionContext c = persistenceAdapter.getTransactionContext();
 
         String key = getSubscriptionKey(clientId, subscriptionName);
@@ -125,38 +223,38 @@ public class JDBCTopicMessageStore extends JDBCMessageStore implements TopicMess
            subscriberLastRecoveredMap.put(key, new LastRecovered());
         }
         final LastRecovered lastRecovered = subscriberLastRecoveredMap.get(key);        
+        LastRecoveredAwareListener recoveredAwareListener = new LastRecoveredAwareListener(listener, maxReturned);
         try {
-            JDBCMessageRecoveryListener jdbcListener = new JDBCMessageRecoveryListener() {
-                public boolean recoverMessage(long sequenceId, byte[] data) throws Exception {
-                    if (listener.hasSpace()) {
-                        Message msg = (Message) wireFormat.unmarshal(new ByteSequence(data));
-                        msg.getMessageId().setBrokerSequenceId(sequenceId);
-                        if (listener.recoverMessage(msg)) {
-                            lastRecovered.update(sequenceId, msg);
-                            return true;
-                        }
-                    }
-                    return false;
-                }
-
-                public boolean recoverMessageReference(String reference) throws Exception {
-                    return listener.recoverMessageReference(new MessageId(reference));
-                }
-
-            };
             if (LOG.isTraceEnabled()) {
                 LOG.trace(key + " existing last recovered: " + lastRecovered);
             }
             if (isPrioritizedMessages()) {
-                adapter.doRecoverNextMessagesWithPriority(c, destination, clientId, subscriptionName,
-                        lastRecovered.sequence, lastRecovered.priority, maxReturned, jdbcListener);
+                Iterator<LastRecoveredEntry> it = lastRecovered.iterator();
+                for ( ; it.hasNext() && !recoveredAwareListener.complete(); ) {
+                    LastRecoveredEntry entry = it.next();
+                    recoveredAwareListener.setLastRecovered(entry);
+                    //Duration microDuration = new Duration("recoverNextMessages:loop");
+                    adapter.doRecoverNextMessagesWithPriority(c, destination, clientId, subscriptionName,
+                        entry.recovered, entry.priority, maxReturned, recoveredAwareListener);
+                    //microDuration.end(entry);
+                    if (recoveredAwareListener.stalled()) {
+                        if (recoveredAwareListener.complete()) {
+                            break;
+                        } else {
+                            entry.exhausted();
+                        }
+                    }
+                }
             } else {
+                LastRecoveredEntry last = lastRecovered.defaultPriority();
+                recoveredAwareListener.setLastRecovered(last);
                 adapter.doRecoverNextMessages(c, destination, clientId, subscriptionName,
-                        lastRecovered.sequence, 0, maxReturned, jdbcListener);
+                        last.recovered, 0, maxReturned, recoveredAwareListener);
             }
             if (LOG.isTraceEnabled()) {
                 LOG.trace(key + " last recovered: " + lastRecovered);
             }
+            //duration.end();
         } catch (SQLException e) {
             JDBCPersistenceAdapter.log("JDBC Failure: ", e);
         } finally {
@@ -167,6 +265,14 @@ public class JDBCTopicMessageStore extends JDBCMessageStore implements TopicMess
     public void resetBatching(String clientId, String subscriptionName) {
         subscriberLastRecoveredMap.remove(getSubscriptionKey(clientId, subscriptionName));
     }
+
+    protected void onAdd(long sequenceId, byte priority) {
+        // update last recovered state
+        for (LastRecovered last : subscriberLastRecoveredMap.values()) {
+            last.updateStored(sequenceId, priority);
+        }
+    }
+
 
     public void addSubsciption(SubscriptionInfo subscriptionInfo, boolean retroactive) throws IOException {
         TransactionContext c = persistenceAdapter.getTransactionContext();
@@ -223,6 +329,7 @@ public class JDBCTopicMessageStore extends JDBCMessageStore implements TopicMess
     }
 
     public int getMessageCount(String clientId, String subscriberName) throws IOException {
+        //Duration duration = new Duration("getMessageCount");
         int result = 0;
         TransactionContext c = persistenceAdapter.getTransactionContext();
         try {
@@ -236,6 +343,7 @@ public class JDBCTopicMessageStore extends JDBCMessageStore implements TopicMess
         if (LOG.isTraceEnabled()) {
             LOG.trace(clientId + ":" + subscriberName + ", messageCount: " + result);
         }
+        //duration.end();
         return result;
     }
 

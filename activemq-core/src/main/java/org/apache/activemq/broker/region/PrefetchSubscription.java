@@ -64,7 +64,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
     private int maxProducersToAudit=32;
     private int maxAuditDepth=2048;
     protected final SystemUsage usageManager;
-    private final Object pendingLock = new Object();
+    protected final Object pendingLock = new Object();
     private final Object dispatchLock = new Object();
     private final CountDownLatch okForAckAsDispatchDone = new CountDownLatch(1);
     

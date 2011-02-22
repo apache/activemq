@@ -281,13 +281,13 @@ public class Statements {
     
     public String getFindDurableSubMessagesByPriorityStatement() {
         if (findDurableSubMessagesByPriorityStatement == null) {
-            findDurableSubMessagesByPriorityStatement = "SELECT M.ID, M.MSG FROM " + getFullMessageTableName() + " M, "
-                                              + getFullAckTableName() + " D "
+            findDurableSubMessagesByPriorityStatement = "SELECT M.ID, M.MSG FROM " + getFullMessageTableName() + " M,"
+                                              + " " + getFullAckTableName() + " D"
                                               + " WHERE D.CONTAINER=? AND D.CLIENT_ID=? AND D.SUB_NAME=?"
                                               + " AND M.CONTAINER=D.CONTAINER"
                                               + " AND M.PRIORITY=D.PRIORITY AND M.ID > D.LAST_ACKED_ID"
-                                              + " AND ( (M.ID > ?) OR (M.PRIORITY < ?) )" 
-                                              + " ORDER BY M.PRIORITY DESC, M.ID";
+                                              + " AND M.ID > ? AND M.PRIORITY = ?"
+                                              + " ORDER BY M.ID";
         }
         return findDurableSubMessagesByPriorityStatement;
     }    

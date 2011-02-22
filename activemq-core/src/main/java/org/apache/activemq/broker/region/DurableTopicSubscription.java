@@ -131,7 +131,7 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
                     topic.activate(context, this);
                 }
             }
-            synchronized (pending) {
+            synchronized (pendingLock) {
                 pending.setSystemUsage(memoryManager);
                 pending.setMemoryUsageHighWaterMark(getCursorMemoryHighWaterMark());
                 pending.setMaxAuditDepth(getMaxAuditDepth());

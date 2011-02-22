@@ -132,6 +132,6 @@ class TopicStorePrefetch extends AbstractStoreCursor {
 
     @Override
     public String toString() {
-        return "TopicStorePrefetch" + System.identityHashCode(this) + "(" + clientId + "," + subscriberName + ")";
+        return "TopicStorePrefetch(" + clientId + "," + subscriberName + ")" + super.toString();
     }
 }

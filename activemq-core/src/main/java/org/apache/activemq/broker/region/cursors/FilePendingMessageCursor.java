@@ -199,7 +199,7 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
                     if (hasSpace() || this.store == null) {
                         memoryList.add(node);
                         node.incrementReferenceCount();
-                        cacheEnabled = true;
+                        setCacheEnabled(true);
                         return true;
                     }
                 }
@@ -247,7 +247,7 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
                     if (hasSpace()) {
                         memoryList.addFirst(node);
                         node.incrementReferenceCount();
-                        cacheEnabled = true;
+                        setCacheEnabled(true);
                         return;
                     }
                 }
@@ -428,7 +428,7 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
 
             }
             memoryList.clear();
-            cacheEnabled = false;
+            setCacheEnabled(false);
         }
     }
 

@@ -187,15 +187,15 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
                 Destination dest = msg.getRegionDestination();
                 TopicStorePrefetch tsp = topics.get(dest);
                 if (tsp != null) {
-                    // cache can be come high priority cache for immediate dispatch
+                    // cache can become high priority cache for immediate dispatch
                     final int priority = msg.getPriority();
-                    if (isStarted() && this.prioritizedMessages && immediatePriorityDispatch && !tsp.cacheEnabled) {
+                    if (isStarted() && this.prioritizedMessages && immediatePriorityDispatch && !tsp.isCacheEnabled()) {
                         if (priority > tsp.getCurrentLowestPriority()) {
                             if (LOG.isTraceEnabled()) {
                                 LOG.trace("enabling cache for cursor on high priority message " + priority
                                         + ", current lowest: " + tsp.getCurrentLowestPriority());
                             }
-                            tsp.cacheEnabled = true;
+                            tsp.setCacheEnabled(true);
                             cacheCurrentLowestPriority = tsp.getCurrentLowestPriority();
                         }
                     } else if (cacheCurrentLowestPriority != UNKNOWN && priority <= cacheCurrentLowestPriority) {
@@ -206,7 +206,7 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
                                     + priority + ", tsp current lowest: " + tsp.getCurrentLowestPriority()
                                     + " cache lowest: " + cacheCurrentLowestPriority);
                         }
-                        tsp.cacheEnabled = false;
+                        tsp.setCacheEnabled(false);
                         cacheCurrentLowestPriority = UNKNOWN;
                     }
                     tsp.addMessageLast(node);

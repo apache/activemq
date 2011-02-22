@@ -45,7 +45,7 @@ public abstract class AbstractPendingMessageCursor implements PendingMessageCurs
     protected boolean enableAudit=true;
     protected ActiveMQMessageAudit audit;
     protected boolean useCache=true;
-    protected boolean cacheEnabled=true;
+    private boolean cacheEnabled=true;
     private boolean started=false;
     protected MessageReference last = null;
     protected final boolean prioritizedMessages;
@@ -329,7 +329,11 @@ public abstract class AbstractPendingMessageCursor implements PendingMessageCurs
 
     }
 
-    public boolean isCacheEnabled() {
+    public synchronized boolean isCacheEnabled() {
         return cacheEnabled;
+    }
+
+    public synchronized void setCacheEnabled(boolean val) {
+        cacheEnabled = val;
     }
 }

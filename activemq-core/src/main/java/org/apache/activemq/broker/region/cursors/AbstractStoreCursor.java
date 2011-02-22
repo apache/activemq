@@ -45,7 +45,7 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
         this.regionDestination=destination;
         if (this.prioritizedMessages) {
             this.batchList= new PrioritizedPendingList();
-        }else {
+        } else {
             this.batchList = new OrderedPendingList();
         }
     }
@@ -58,7 +58,7 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
             resetBatch();
             this.size = getStoreSize();
             this.storeHasMessages=this.size > 0;
-            cacheEnabled = !this.storeHasMessages&&useCache;
+            setCacheEnabled(!this.storeHasMessages&&useCache);
         } 
     }
     
@@ -95,8 +95,7 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
              * it will be a duplicate - but should be ignored
              */
             if (LOG.isTraceEnabled()) {
-                LOG.trace(regionDestination.getActiveMQDestination().getPhysicalName()
-                        + " cursor got duplicate: " + message.getMessageId() + ", " + message.getPriority());
+                LOG.trace(this + " - cursor got duplicate: " + message.getMessageId() + ", " + message.getPriority());
             }
         }
         return recovered;
@@ -108,7 +107,7 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
             try {
                 fillBatch();
             } catch (Exception e) {
-                LOG.error("Failed to fill batch", e);
+                LOG.error(this + " - Failed to fill batch", e);
                 throw new RuntimeException(e);
             }
         }
@@ -145,7 +144,7 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
             try {
                 fillBatch();
             } catch (Exception e) {
-                LOG.error("Failed to fill batch", e);
+                LOG.error(this + " - Failed to fill batch", e);
                 throw new RuntimeException(e);
             }
         }
@@ -169,24 +168,22 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
     
     public final synchronized void addMessageLast(MessageReference node) throws Exception {
         if (hasSpace()) {
-            if (!cacheEnabled && size==0 && isStarted() && useCache) {
+            if (!isCacheEnabled() && size==0 && isStarted() && useCache) {
                 if (LOG.isTraceEnabled()) {
-                    LOG.trace(regionDestination.getActiveMQDestination().getPhysicalName()
-                            + " enabling cache for empty store " + node.getMessageId());
+                    LOG.trace(this + " - enabling cache for empty store " + node.getMessageId());
                 }
-                cacheEnabled=true;
+                setCacheEnabled(true);
             }
-            if (cacheEnabled) {
+            if (isCacheEnabled()) {
                 recoverMessage(node.getMessage(),true);
                 lastCachedId = node.getMessageId();
             }
-        } else if (cacheEnabled) {
-            cacheEnabled=false;
+        } else if (isCacheEnabled()) {
+            setCacheEnabled(false);
             // sync with store on disabling the cache
             if (lastCachedId != null) {
                 if (LOG.isTraceEnabled()) {
-                    LOG.trace(regionDestination.getActiveMQDestination().getPhysicalName()
-                            + " disabling cache on size:" + size
+                    LOG.trace(this + " - disabling cache"
                             + ", lastCachedId: " + lastCachedId
                             + " current node Id: " + node.getMessageId());
                 }
@@ -203,7 +200,7 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
 
     
     public final synchronized void addMessageFirst(MessageReference node) throws Exception {
-        cacheEnabled=false;
+        setCacheEnabled(false);
         size++;
     }
 
@@ -221,7 +218,7 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
     
     public final synchronized void remove(MessageReference node) {
         size--;
-        cacheEnabled=false;
+        setCacheEnabled(false);
         batchList.remove(node);
     }
     
@@ -240,7 +237,7 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
         batchList.clear();
         clearIterator(false);
         batchResetNeeded = true;
-        this.cacheEnabled=false;
+        setCacheEnabled(false);
     }
 
     @Override
@@ -251,8 +248,7 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
 
     protected final synchronized void fillBatch() {
         if (LOG.isTraceEnabled()) {
-            LOG.trace("fillBatch - batchResetNeeded=" + batchResetNeeded
-                    + ", hasMessages=" + this.storeHasMessages + ", size=" + this.size + ", cacheEnabled=" + this.cacheEnabled);
+            LOG.trace(this + " - fillBatch");
         }
         if (batchResetNeeded) {
             resetBatch();
@@ -263,7 +259,7 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
             try {
                 doFillBatch();
             } catch (Exception e) {
-                LOG.error("Failed to fill batch", e);
+                LOG.error(this + " - Failed to fill batch", e);
                 throw new RuntimeException(e);
             }
             if (!this.batchList.isEmpty() || !hadSpace) {
@@ -290,7 +286,11 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
         }
         return size;
     }
-    
+
+    public String toString() {
+        return regionDestination.getActiveMQDestination().getPhysicalName() + ",batchResetNeeded=" + batchResetNeeded
+                    + ",storeHasMessages=" + this.storeHasMessages + ",size=" + this.size + ",cacheEnabled=" + isCacheEnabled();
+    }
     
     protected abstract void doFillBatch() throws Exception;
     
