@@ -81,6 +81,7 @@ public class DurableSubscriptionReactivationTest extends EmbeddedBrokerTestSuppo
         BrokerService answer = super.createBroker();
         answer.setKeepDurableSubsActive(keepDurableSubsActive);
         answer.setPersistenceAdapter(new JDBCPersistenceAdapter());
+        answer.setDeleteAllMessagesOnStartup(true);
         return answer;
     }
 
