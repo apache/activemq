@@ -65,7 +65,7 @@ public class ConcurrentProducerDurableConsumerTest extends TestSupport {
 
     public void initCombosForTestSendRateWithActivatingConsumers() throws Exception {
         addCombinationValues("defaultPersistenceAdapter",
-                new Object[]{PersistenceAdapterChoice.KahaDB, PersistenceAdapterChoice.JDBC, PersistenceAdapterChoice.MEM});
+                new Object[]{PersistenceAdapterChoice.KahaDB, /* too slow for hudson - PersistenceAdapterChoice.JDBC,*/  PersistenceAdapterChoice.MEM});
     }
 
     public void testSendRateWithActivatingConsumers() throws Exception {
