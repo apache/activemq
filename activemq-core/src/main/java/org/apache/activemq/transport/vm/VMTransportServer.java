@@ -75,13 +75,13 @@ public class VMTransportServer implements TransportServer {
         connectionCount.incrementAndGet();
         VMTransport client = new VMTransport(location) {
             public void stop() throws Exception {
-                if (disposed) {
-                    return;
-                }
-                super.stop();
-                if (connectionCount.decrementAndGet() == 0 && disposeOnDisconnect) {
-                    VMTransportServer.this.stop();
-                }
+            	if (stopping.compareAndSet(false, true) && !disposed) {
+					super.stop();
+					if (connectionCount.decrementAndGet() == 0
+							&& disposeOnDisconnect) {
+						VMTransportServer.this.stop();
+					}
+				}
             };
         };
 

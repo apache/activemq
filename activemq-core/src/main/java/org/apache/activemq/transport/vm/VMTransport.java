@@ -59,7 +59,7 @@ public class VMTransport implements Transport, Task {
     private TaskRunner taskRunner;
     private final Object lazyInitMutext = new Object();
     private final Valve enqueueValve = new Valve(true);
-    private final AtomicBoolean stopping = new AtomicBoolean();
+    protected final AtomicBoolean stopping = new AtomicBoolean();
     private volatile int receiveCounter;
     
     public VMTransport(URI location) {
