@@ -43,7 +43,7 @@ import org.slf4j.LoggerFactory;
 /**
  * A helper bean which populates a {@link CamelContext} with ActiveMQ Queue endpoints
  *
- * 
+ *
  * @org.apache.xbean.XBean
  */
 public class CamelEndpointLoader implements CamelContextAware {
@@ -189,9 +189,9 @@ public class CamelEndpointLoader implements CamelContextAware {
         String queueUri = getQueueUri(queue);
         // lur cache of endpoints so they will disappear in time
         // this feature needs a new component api - list available endpoints
-        //camelContext.removeEndpoints(queueUri);
+        camelContext.removeEndpoints(queueUri);
     }
-    
+
     protected void addTopic(ActiveMQTopic topic) throws Exception {
         String topicUri = getTopicUri(topic);
         ActiveMQComponent jmsComponent = getComponent();
@@ -207,6 +207,6 @@ public class CamelEndpointLoader implements CamelContextAware {
         String topicUri = getTopicUri(topic);
         // lur cache of endpoints so they will disappear in time
         // this feature needs a new component api - list available endpoints
-        //camelContext.removeEndpoints(topicUri);
+        camelContext.removeEndpoints(topicUri);
     }
 }
