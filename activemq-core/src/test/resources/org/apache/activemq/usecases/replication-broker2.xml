@@ -65,8 +65,8 @@
                 dynamicOnly="true"
                 prefetchSize="1000"
                 conduitSubscriptions="true"
-                decreaseNetworkConsumerPriority="false"
-                suppressDuplicateTopicSubscriptions="false"
+                decreaseNetworkConsumerPriority="true"
+                suppressDuplicateTopicSubscriptions="true"
                 networkTTL="3">
             </networkConnector>
             <networkConnector name="broker2-broker3"
@@ -74,8 +74,8 @@
                 dynamicOnly="true"
                 prefetchSize="1000"
                 conduitSubscriptions="true"
-                decreaseNetworkConsumerPriority="false"
-                suppressDuplicateTopicSubscriptions="false"
+                decreaseNetworkConsumerPriority="true"
+                suppressDuplicateTopicSubscriptions="true"
                 networkTTL="3">
             </networkConnector>
             <networkConnector name="broker2-broker4"
@@ -83,8 +83,8 @@
                 dynamicOnly="true"
                 prefetchSize="1000"
                 conduitSubscriptions="true"
-                decreaseNetworkConsumerPriority="false"
-                suppressDuplicateTopicSubscriptions="false"
+                decreaseNetworkConsumerPriority="true"
+                suppressDuplicateTopicSubscriptions="true"
                 networkTTL="3">
             </networkConnector>
 		</networkConnectors>
