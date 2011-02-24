@@ -27,6 +27,7 @@ import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.MessageReference;
+import org.apache.activemq.broker.region.RegionBroker;
 import org.apache.activemq.usage.MemoryUsage;
 import org.apache.activemq.util.ByteArrayInputStream;
 import org.apache.activemq.util.ByteArrayOutputStream;
@@ -36,9 +37,9 @@ import org.apache.activemq.wireformat.WireFormat;
 
 /**
  * Represents an ActiveMQ message
- * 
+ *
  * @openwire:marshaller
- * 
+ *
  */
 public abstract class Message extends BaseCommand implements MarshallAware, MessageReference {
 
@@ -122,6 +123,9 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
 
         if (properties != null) {
             copy.properties = new HashMap<String, Object>(properties);
+
+            // The new message hasn't expired, so remove this feild.
+            copy.properties.remove(RegionBroker.ORIGINAL_EXPIRATION);
         } else {
             copy.properties = properties;
         }
@@ -177,7 +181,7 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
         lazyCreateProperties();
         properties.put(name, value);
     }
-    
+
     public void removeProperty(String name) throws IOException {
         lazyCreateProperties();
         properties.remove(name);
@@ -438,7 +442,7 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
      * consumer id is an active consumer on the broker, the message is dropped.
      * Used by the AdvisoryBroker to replay advisory messages to a specific
      * consumer.
-     * 
+     *
      * @openwire:property version=1 cache=true
      */
     public ConsumerId getTargetConsumerId() {
@@ -502,7 +506,7 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
 
     /**
      * The route of brokers the command has moved through.
-     * 
+     *
      * @openwire:property version=1 cache=true
      */
     public BrokerId[] getBrokerPath() {
@@ -541,7 +545,7 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
      * Used to schedule the arrival time of a message to a broker. The broker
      * will not dispatch a message to a consumer until it's arrival time has
      * elapsed.
-     * 
+     *
      * @openwire:property version=1
      */
     public long getArrival() {
@@ -556,7 +560,7 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
      * Only set by the broker and defines the userID of the producer connection
      * who sent this message. This is an optional field, it needs to be enabled
      * on the broker to have this field populated.
-     * 
+     *
      * @openwire:property version=1
      */
     public String getUserID() {
@@ -589,11 +593,11 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
             this.memoryUsage=regionDestination.getMemoryUsage();
         }
     }
-    
+
     public MemoryUsage getMemoryUsage() {
         return this.memoryUsage;
     }
-    
+
     public void setMemoryUsage(MemoryUsage usage) {
         this.memoryUsage=usage;
     }
@@ -614,7 +618,7 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
         if (rc == 1 && getMemoryUsage() != null) {
             getMemoryUsage().increaseUsage(size);
             //System.err.println("INCREASE USAGE " + System.identityHashCode(getMemoryUsage()) + " PERCENT = " + getMemoryUsage().getPercentUsage());
-           
+
         }
 
         //System.out.println(" + "+getMemoryUsage().getName()+" :::: "+getMessageId()+"rc="+rc);
@@ -634,7 +638,7 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
             //Thread.dumpStack();
             //System.err.println("DECREADED USAGE " + System.identityHashCode(getMemoryUsage()) + " PERCENT = " + getMemoryUsage().getPercentUsage());
         }
-       
+
         //System.out.println(" - "+getMemoryUsage().getName()+" :::: "+getMessageId()+"rc="+rc);
 
         return rc;
@@ -653,7 +657,7 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
         }
         return size;
     }
-    
+
     protected int getMinimumMessageSize() {
         int result = DEFAULT_MINIMUM_MESSAGE_SIZE;
         //let destination override
@@ -697,7 +701,7 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
     /**
      * If a message is stored in multiple nodes on a cluster, all the cluster
      * members will be listed here. Otherwise, it will be null.
-     * 
+     *
      * @openwire:property version=3 cache=true
      */
     public BrokerId[] getCluster() {
@@ -734,16 +738,16 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
     public void setBrokerOutTime(long brokerOutTime) {
         this.brokerOutTime = brokerOutTime;
     }
-    
+
     public boolean isDropped() {
         return false;
     }
-    
+
     @Override
     public String toString() {
         return toString(null);
     }
-    
+
     @Override
     public String toString(Map<String, Object>overrideFields) {
         try {
@@ -751,5 +755,5 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
         } catch (IOException e) {
         }
         return super.toString(overrideFields);
-    }    
+    }
 }
