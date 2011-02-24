@@ -27,6 +27,8 @@ public class JmsProducerProperties extends JmsClientProperties {
     protected long sendCount  = 1000000; // Send a million messages by default
     protected long sendDuration = 5 * 60 * 1000; // Send for 5 mins by default
     protected String sendType = TIME_BASED_SENDING;
+    protected long sendDelay = 0;  // delay in milliseconds between each producer send
+    
     // If true, create a different message on each send, otherwise reuse.
     protected boolean createNewMsg; 
 
@@ -76,5 +78,13 @@ public class JmsProducerProperties extends JmsClientProperties {
 
     public void setCreateNewMsg(boolean createNewMsg) {
         this.createNewMsg = createNewMsg;
+    }
+    
+    public void setSendDelay(long delay) {
+    	this.sendDelay = delay;
+    }
+    
+    public long getSendDelay() {
+    	return this.sendDelay;
     }
 }

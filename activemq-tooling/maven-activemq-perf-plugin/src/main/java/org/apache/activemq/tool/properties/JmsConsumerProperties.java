@@ -26,6 +26,7 @@ public class JmsConsumerProperties extends JmsClientProperties {
 
     protected long recvCount    = 1000000;       // Receive a million messages by default
     protected long recvDuration = 5 * 60 * 1000; // Receive for 5 mins by default
+    protected long recvDelay = 0; // delay in milliseconds for processing received msg 
     protected String recvType   = TIME_BASED_RECEIVING;
 
     public boolean isDurable() {
@@ -74,5 +75,13 @@ public class JmsConsumerProperties extends JmsClientProperties {
 
     public void setRecvType(String recvType) {
         this.recvType = recvType;
+    }
+    
+    public void setRecvDelay(long delay) {
+    	this.recvDelay = delay;
+    }
+    
+    public long getRecvDelay() {
+    	return this.recvDelay;
     }
 }

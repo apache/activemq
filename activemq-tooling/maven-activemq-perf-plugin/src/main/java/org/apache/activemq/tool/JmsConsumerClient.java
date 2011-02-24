@@ -85,6 +85,7 @@ public class JmsConsumerClient extends AbstractJmsMeasurableClient {
             while (System.currentTimeMillis() < endTime) {
                 getJmsConsumer().receive();
                 incThroughput();
+                sleep();
             }
         } finally {
             if (client.isDurable() && client.isUnsubscribe()) {
@@ -110,6 +111,7 @@ public class JmsConsumerClient extends AbstractJmsMeasurableClient {
                 getJmsConsumer().receive();
                 incThroughput();
                 recvCount++;
+                sleep();
             }
         } finally {
             if (client.isDurable() && client.isUnsubscribe()) {
@@ -129,6 +131,7 @@ public class JmsConsumerClient extends AbstractJmsMeasurableClient {
         getJmsConsumer().setMessageListener(new MessageListener() {
             public void onMessage(Message msg) {
                 incThroughput();
+                sleep();
             }
         });
 
@@ -235,5 +238,16 @@ public class JmsConsumerClient extends AbstractJmsMeasurableClient {
 
     public void setClient(JmsClientProperties clientProps) {
         client = (JmsConsumerProperties)clientProps;
+    }
+    
+    protected void sleep() {
+        if (client.getRecvDelay() > 0) {
+        	try {
+        		LOG.trace("Sleeping for " + client.getRecvDelay() + " milliseconds");
+        		Thread.sleep(client.getRecvDelay());
+        	} catch (java.lang.InterruptedException ex) {
+        		LOG.warn(ex.getMessage());
+        	}
+        }
     }
 }
