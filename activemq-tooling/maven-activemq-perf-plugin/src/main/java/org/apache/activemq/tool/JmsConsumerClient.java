@@ -160,7 +160,9 @@ public class JmsConsumerClient extends AbstractJmsMeasurableClient {
             public void onMessage(Message msg) {
                 incThroughput();
                 recvCount.incrementAndGet();
-                recvCount.notify();
+                synchronized (recvCount) {
+                    recvCount.notify();
+                }
             }
         });
 
@@ -169,7 +171,9 @@ public class JmsConsumerClient extends AbstractJmsMeasurableClient {
             LOG.info("Starting to asynchronously receive " + client.getRecvCount() + " messages...");
             try {
                 while (recvCount.get() < count) {
-                    recvCount.wait();
+                    synchronized (recvCount) {
+                        recvCount.wait();
+                    }
                 }
             } catch (InterruptedException e) {
                 throw new JMSException("JMS consumer thread wait has been interrupted. Message: " + e.getMessage());
