@@ -16,26 +16,16 @@
  */
 package org.apache.activemq.usecases;
 
-import org.apache.activemq.ActiveMQConnectionFactory;
-import org.apache.activemq.broker.BrokerFactory;
-import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.command.ActiveMQTopic;
-import org.apache.activemq.store.amq.AMQPersistenceAdapter;
-import org.apache.activemq.store.kahadaptor.KahaPersistenceAdapter;
-import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
-import org.junit.Ignore;
-import org.junit.Test;
-
 import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.Vector;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
 import javax.jms.JMSException;
@@ -43,25 +33,42 @@ import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
+import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.broker.BrokerFactory;
+import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.command.ActiveMQTopic;
+import org.apache.activemq.store.amq.AMQPersistenceAdapter;
+import org.apache.activemq.store.kahadaptor.KahaPersistenceAdapter;
+import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 public class DurableSubProcessWithRestartTest {
-
+    private static final Logger LOG = LoggerFactory.getLogger(DurableSubProcessWithRestartTest.class);
     public static final long RUNTIME = 5 * 60 * 1000;
 
     public static final int SERVER_SLEEP = 2 * 1000; // max
     public static final int CARGO_SIZE = 400; // max
 
     public static final int MAX_CLIENTS = 5;
-    public static final Random CLIENT_LIFETIME = new Random(30 * 1000,
-            2 * 60 * 1000);
-    public static final Random CLIENT_ONLINE = new Random(2 * 1000, 15 * 1000);
-    public static final Random CLIENT_OFFLINE = new Random(1 * 1000, 20 * 1000);
+    public static final Random CLIENT_LIFETIME = new Random(5 * 1000,
+            2 * 5 * 1000);
+    public static final Random CLIENT_ONLINE = new Random(2 * 1000, 2 * 1000);
+    public static final Random CLIENT_OFFLINE = new Random(10 * 1000, 10 * 1000);
 
     public static final Persistence PERSISTENT_ADAPTER = Persistence.KAHADB;
-    public static final long BROKER_RESTART = 1 * 60 * 1000;
+    public static final long BROKER_RESTART = 1 * 10 * 1000;
 
     public static final boolean ALLOW_SUBSCRIPTION_ABANDONMENT = true;
-    public static final boolean CHECK_REDELIVERY = false;
+    public static final boolean CHECK_REDELIVERY = true;
 
     private BrokerService broker;
     private ActiveMQTopic topic;
@@ -73,8 +80,11 @@ public class DurableSubProcessWithRestartTest {
     private final ReentrantReadWriteLock processLock = new ReentrantReadWriteLock(
             true);
     private int restartCount = 0;
+    static final Vector<Throwable> exceptions = new Vector<Throwable>();
 
-    @Ignore("Needs some more investigation") @Test
+    // this is a nice test but it takes 5mins, may be handy in the future
+    // resulting bug https://issues.apache.org/jira/browse/AMQ-3190
+    @Ignore("covered by org.apache.activemq.usecases.DurableSubscriptionOfflineTest.testNoMissOnMatchingSubAfterRestart()") @Test
     public void testProcess() {
         try {
             server.start();
@@ -105,11 +115,12 @@ public class DurableSubProcessWithRestartTest {
         }
 
         processLock.writeLock().lock();
-        System.out.println("DONE.");
+        assertTrue("no exceptions: " + exceptions, exceptions.isEmpty());
+        LOG.info("DONE.");
     }
 
     private void restartBroker() throws Exception {
-        System.out.println("Broker restart: waiting for components.");
+        LOG.info("Broker restart: waiting for components.");
 
         processLock.writeLock().lock();
         try {
@@ -117,7 +128,7 @@ public class DurableSubProcessWithRestartTest {
             startBroker(false);
 
             restartCount++;
-            System.out.println("Broker restarted. count: " + restartCount);
+            LOG.info("Broker restarted. count: " + restartCount);
         } finally {
             processLock.writeLock().unlock();
         }
@@ -133,7 +144,7 @@ public class DurableSubProcessWithRestartTest {
     final class Server extends Thread {
 
         final String url = "vm://"
-                + getName()
+                + DurableSubProcessWithRestartTest.getName()
                 + "?"
                 + "jms.redeliveryPolicy.maximumRedeliveries=2&jms.redeliveryPolicy.initialRedeliveryDelay=500&"
                 + "jms.producerWindowSize=20971520&jms.prefetchPolicy.all=100&"
@@ -182,12 +193,12 @@ public class DurableSubProcessWithRestartTest {
                         .randomClientType() : null; // sends this types
                 int count = random(200);
 
-                System.out.println("Sending Trans[id=" + trans + ", count="
+                LOG.info("Sending Trans[id=" + trans + ", count="
                         + count + ", clientType=" + clientType + "]");
 
                 Connection con = cf.createConnection();
                 Session sess = con
-                        .createSession(true, Session.AUTO_ACKNOWLEDGE);
+                        .createSession(true, Session.SESSION_TRANSACTED);
                 MessageProducer prod = sess.createProducer(null);
 
                 for (int i = 0; i < count; i++) {
@@ -216,7 +227,7 @@ public class DurableSubProcessWithRestartTest {
                 clientManager.onServerMessage(message);
 
                 sess.commit();
-                System.out.println("Committed Trans[id=" + trans + ", count="
+                LOG.info("Committed Trans[id=" + trans + ", count="
                         + count + ", clientType=" + clientType + "], ID=" + messageRover);
 
                 sess.close();
@@ -344,7 +355,7 @@ public class DurableSubProcessWithRestartTest {
             }
             client.start();
 
-            System.out.println(client.toString() + " created. " + this);
+            LOG.info(client.toString() + " created. " + this);
         }
 
         public void removeClient(Client client) {
@@ -451,7 +462,7 @@ public class DurableSubProcessWithRestartTest {
                 if (!ALLOW_SUBSCRIPTION_ABANDONMENT || random(1) > 0)
                     unsubscribe();
                 else {
-                    System.out.println("Client abandon the subscription. "
+                    LOG.info("Client abandon the subscription. "
                             + this);
 
                     // housekeeper should sweep these abandoned subscriptions
@@ -462,7 +473,7 @@ public class DurableSubProcessWithRestartTest {
             }
 
             clientManager.removeClient(this);
-            System.out.println(toString() + " DONE.");
+            LOG.info(toString() + " DONE.");
         }
 
         private void process(long millis) throws JMSException {
@@ -471,7 +482,7 @@ public class DurableSubProcessWithRestartTest {
             boolean inTransaction = false;
             int transCount = 0;
 
-            System.out.println(toString() + " ONLINE.");
+            LOG.info(toString() + " ONLINE.");
             Connection con = openConnection();
             Session sess = con.createSession(false, Session.CLIENT_ACKNOWLEDGE);
             MessageConsumer consumer = sess.createDurableSubscriber(topic,
@@ -498,7 +509,7 @@ public class DurableSubProcessWithRestartTest {
                     if (message.propertyExists("COMMIT")) {
                         message.acknowledge(); // CLIENT_ACKNOWLEDGE
 
-                        System.out.println("Received Trans[id="
+                        LOG.info("Received Trans[id="
                                 + message.getIntProperty("TRANS") + ", count="
                                 + transCount + "] in " + this + ".");
 
@@ -513,7 +524,7 @@ public class DurableSubProcessWithRestartTest {
                 sess.close();
                 con.close();
 
-                System.out.println(toString() + " OFFLINE.");
+                LOG.info(toString() + " OFFLINE.");
 
                 // Check if the messages are in the waiting
                 // list for long time.
@@ -539,7 +550,7 @@ public class DurableSubProcessWithRestartTest {
             try {
                 Integer receivedId = (Integer) message.getObjectProperty("ID");
                 if (processed != null && processed.contains(receivedId))
-                    System.out.println("! Message has been processed before. "
+                    LOG.info("! Message has been processed before. "
                             + this + " message = " + message);
 
                 if (serverMessage == null)
@@ -555,10 +566,14 @@ public class DurableSubProcessWithRestartTest {
                             + " received: " + message + "\r\n" + "   server: "
                             + serverMessage);
 
-                if (!serverId.equals(receivedId))
-                    exit("" + this + " failed: Received wrong message.\r\n"
+                if (!serverId.equals(receivedId)) {
+                    String detail = processed != null ?
+                        Arrays.toString(processed.toArray()) + "\n"
+                        : "";
+                    exit(detail + this + " failed: Received wrong message.\r\n"
                             + " received: " + message + "\r\n" + "   server: "
                             + serverMessage);
+                }
 
                 checkDeliveryTime(message);
 
@@ -652,13 +667,13 @@ public class DurableSubProcessWithRestartTest {
         }
 
         private void sweep() throws Exception {
-            System.out.println("Housekeeper sweeping.");
+            LOG.info("Housekeeper sweeping.");
 
             int closed = 0;
             ArrayList<String> sweeped = new ArrayList<String>();
             try {
                 for (String clientId : abandonedSubscriptions) {
-                    System.out.println("Sweeping out subscription of "
+                    LOG.info("Sweeping out subscription of "
                             + clientId + ".");
                     broker.getAdminView().destroyDurableSubscriber(clientId,
                             Client.SUBSCRIPTION_NAME);
@@ -666,12 +681,12 @@ public class DurableSubProcessWithRestartTest {
                     closed++;
                 }
             } catch (Exception ignored) {
-                System.out.println("Ex on destroy sub "  + ignored);
+                LOG.info("Ex on destroy sub " + ignored);
             } finally {
                 abandonedSubscriptions.removeAll(sweeped);
             }
 
-            System.out.println("Housekeeper sweeped out " + closed
+            LOG.info("Housekeeper sweeped out " + closed
                     + " subscriptions.");
         }
     }
@@ -717,12 +732,14 @@ public class DurableSubProcessWithRestartTest {
     }
 
     public static void exit(String message, Throwable e) {
-        Throwable log = new RuntimeException(message, e);
-        log.printStackTrace();
-        System.exit(0);
+        Throwable cause = new RuntimeException(message, e);
+        LOG.error(message, cause);
+        exceptions.add(cause);
+        fail(cause.toString());
     }
 
-    protected void setUp() throws Exception {
+    @Before
+    public void setUp() throws Exception {
         topic = new ActiveMQTopic("TopicT");
         startBroker();
 
@@ -732,7 +749,8 @@ public class DurableSubProcessWithRestartTest {
 
     }
 
-    protected void tearDown() throws Exception {
+    @After
+    public void tearDown() throws Exception {
         destroyBroker();
     }
 
@@ -750,6 +768,7 @@ public class DurableSubProcessWithRestartTest {
 
         broker = BrokerFactory.createBroker("broker:(vm://" + getName() + ")");
         broker.setBrokerName(getName());
+        broker.setAdvisorySupport(false);
         broker.setDeleteAllMessagesOnStartup(deleteAllMessages);
 
         switch (PERSISTENT_ADAPTER) {
@@ -801,8 +820,8 @@ public class DurableSubProcessWithRestartTest {
         broker.start();
     }
 
-    private String getName() {
-        return DurableSubProcessWithRestartTest.class.getName();
+    protected static String getName() {
+        return "DurableSubProcessWithRestartTest";
     }
 
     private static boolean delete(File path) {

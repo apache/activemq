@@ -1618,6 +1618,13 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
                                 Math.max(rc.orderIndex.nextMessageId, entry.getValue().lastAckedSequence +1);
                     }
                 }
+            } else {
+                // update based on ackPositions for unmatched, last entry is always the next
+                if (!rc.ackPositions.isEmpty(tx)) {
+                    Entry<Long,HashSet<String>> last = rc.ackPositions.getLast(tx);
+                    rc.orderIndex.nextMessageId =
+                        Math.max(rc.orderIndex.nextMessageId, last.getKey());
+                }
             }
 
         }
@@ -1648,6 +1655,7 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
         }
     }
 
+    final HashSet nextMessageIdMarker = new HashSet<String>();
     // on a new message add, all existing subs are interested in this message
     private void addAckLocationForNewMessage(Transaction tx, StoredDestination sd, Long messageSequence) throws IOException {
         HashSet hs = new HashSet<String>();
@@ -1656,6 +1664,8 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
             hs.add(entry.getKey());
         }
         sd.ackPositions.put(tx, messageSequence, hs);
+        // add empty next to keep track of nextMessage
+        sd.ackPositions.put(tx, messageSequence+1, nextMessageIdMarker);
     }
 
     private void removeAckLocationsForSub(Transaction tx, StoredDestination sd, String subscriptionKey) throws IOException {

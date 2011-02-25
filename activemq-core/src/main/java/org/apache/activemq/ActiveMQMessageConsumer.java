@@ -1259,7 +1259,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                             session.sendAck(ack);
                         } else {
                             if (LOG.isDebugEnabled()) {
-                                LOG.debug(getConsumerId() + " tracking transacted redlivery of duplicate: " + md.getMessage());
+                                LOG.debug(getConsumerId() + " tracking transacted redelivery of duplicate: " + md.getMessage());
                             }
                             boolean needsPoisonAck = false;
                             synchronized (deliveredMessages) {
