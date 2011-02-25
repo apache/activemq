@@ -39,7 +39,7 @@ import org.apache.activemq.wireformat.WireFormat;
 
 /**
  * @openwire:marshaller code="28"
- * 
+ *
  */
 public class ActiveMQTextMessage extends ActiveMQMessage implements TextMessage {
 
@@ -86,6 +86,7 @@ public class ActiveMQTextMessage extends ActiveMQMessage implements TextMessage 
                     text = MarshallingSupport.readUTF8(dataIn);
                     dataIn.close();
                     setContent(null);
+                    setCompressed(false);
                 }
             } catch (IOException ioe) {
                 throw JMSExceptionSupport.create(ioe);
@@ -135,7 +136,7 @@ public class ActiveMQTextMessage extends ActiveMQMessage implements TextMessage 
      * If this message body was read-only, calling this method leaves the
      * message body in the same state as an empty body in a newly created
      * message.
-     * 
+     *
      * @throws JMSException if the JMS provider fails to clear the message body
      *                 due to some internal error.
      */
@@ -154,16 +155,16 @@ public class ActiveMQTextMessage extends ActiveMQMessage implements TextMessage 
         }
         return super.getSize();
     }
-    
+
     public String toString() {
         try {
             String text = getText();
-        	if (text != null && text.length() > 63) {
-        		text = text.substring(0, 45) + "..." + text.substring(text.length() - 12);
-        		HashMap<String, Object> overrideFields = new HashMap<String, Object>();
-        		overrideFields.put("text", text);
-        		return super.toString(overrideFields);
-        	}
+            if (text != null && text.length() > 63) {
+                text = text.substring(0, 45) + "..." + text.substring(text.length() - 12);
+                HashMap<String, Object> overrideFields = new HashMap<String, Object>();
+                overrideFields.put("text", text);
+                return super.toString(overrideFields);
+            }
         } catch (JMSException e) {
         }
         return super.toString();
