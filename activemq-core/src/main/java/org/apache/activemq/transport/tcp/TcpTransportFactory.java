@@ -42,7 +42,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * @author David Martin Clavo david(dot)martin(dot)clavo(at)gmail.com (logging improvement modifications)
- * 
+ *
  */
 public class TcpTransportFactory extends TransportFactory {
     private static final Logger LOG = LoggerFactory.getLogger(TcpTransportFactory.class);
@@ -68,7 +68,7 @@ public class TcpTransportFactory extends TransportFactory {
     /**
      * Allows subclasses of TcpTransportFactory to create custom instances of
      * TcpTransportServer.
-     * 
+     *
      * @param location
      * @param serverSocketFactory
      * @return
@@ -86,7 +86,7 @@ public class TcpTransportFactory extends TransportFactory {
 
         Map<String, Object> socketOptions = IntrospectionSupport.extractProperties(options, "socket.");
         tcpTransport.setSocketOptions(socketOptions);
-        
+
         if (tcpTransport.isTrace()) {
             try {
                 transport = TransportLoggerFactory.getInstance().createTransportLogger(transport, tcpTransport.getLogWriterName(),
@@ -101,7 +101,7 @@ public class TcpTransportFactory extends TransportFactory {
             transport = new InactivityMonitor(transport, format);
             IntrospectionSupport.setProperties(transport, options);
         }
-        
+
 
         // Only need the WireFormatNegotiator if using openwire
         if (format instanceof OpenWireFormat) {
@@ -129,7 +129,10 @@ public class TcpTransportFactory extends TransportFactory {
                 String localString = location.getScheme() + ":/" + path;
                 localLocation = new URI(localString);
             } catch (Exception e) {
-                LOG.warn("path isn't a valid local location for TcpTransport to use", e);
+                LOG.warn("path isn't a valid local location for TcpTransport to use", e.getMessage());
+                if(LOG.isDebugEnabled()) {
+                    LOG.debug("Failure detail", e);
+                }
             }
         }
         SocketFactory socketFactory = createSocketFactory();
@@ -139,7 +142,7 @@ public class TcpTransportFactory extends TransportFactory {
     /**
      * Allows subclasses of TcpTransportFactory to provide a create custom
      * TcpTransport intances.
-     * 
+     *
      * @param location
      * @param wf
      * @param socketFactory
