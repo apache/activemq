@@ -17,6 +17,7 @@
 package org.apache.activemq.web;
 
 import java.net.Socket;
+import java.net.URI;
 import java.net.URL;
 
 import javax.jms.Connection;
@@ -38,23 +39,26 @@ import org.eclipse.jetty.webapp.WebAppContext;
 
 public class JettyTestSupport extends TestCase {
     private static final Logger LOG = LoggerFactory.getLogger(JettyTestSupport.class);
-    
+
     BrokerService broker;
     Server server;
     ActiveMQConnectionFactory factory;
     Connection connection;
     Session session;
     MessageProducer producer;
-    
+
+    URI tcpUri;
+    URI stompUri;
+
     protected void setUp() throws Exception {
         broker = new BrokerService();
         broker.setPersistent(false);
         broker.setUseJmx(true);
-        broker.addConnector("tcp://localhost:61616");
-        broker.addConnector("stomp://localhost:61613");
+        tcpUri = broker.addConnector("tcp://localhost:61616").getConnectUri();
+        stompUri = broker.addConnector("stomp://localhost:61613").getConnectUri();
         broker.start();
         broker.waitUntilStarted();
-        
+
         server = new Server();
         SelectChannelConnector connector = new SelectChannelConnector();
         connector.setPort(8080);
@@ -70,8 +74,8 @@ public class JettyTestSupport extends TestCase {
         });
         server.start();
         waitForJettySocketToAccept("http://localhost:8080");
-        
-        factory = new ActiveMQConnectionFactory("tcp://localhost:61616");
+
+        factory = new ActiveMQConnectionFactory(tcpUri);
         connection = factory.createConnection();
         connection.start();
         session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -102,5 +106,5 @@ public class JettyTestSupport extends TestCase {
                 return canConnect;
             }}, 60 * 1000));
     }
-    
+
 }
