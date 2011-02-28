@@ -48,6 +48,7 @@ import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.broker.region.policy.SharedDeadLetterStrategy;
 import org.apache.activemq.command.ActiveMQBlobMessage;
+import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTempQueue;
 import org.apache.activemq.util.JMXSupport;
@@ -159,6 +160,39 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         assertEquals("old dest has no memory usage", 0, queue.getMemoryPercentUsage());
         assertTrue("use cache", queueNew.isUseCache());
         assertTrue("cache enabled", queueNew.isCacheEnabled());
+    }
+
+    public void testRemoveMessages() throws Exception {
+        ObjectName brokerName = assertRegisteredObjectName(domain + ":Type=Broker,BrokerName=localhost");
+        BrokerViewMBean broker = (BrokerViewMBean)MBeanServerInvocationHandler.newProxyInstance(mbeanServer, brokerName, BrokerViewMBean.class, true);
+        broker.addQueue(getDestinationString());
+
+        ObjectName queueViewMBeanName = assertRegisteredObjectName(domain + ":Type=Queue,Destination=" + getDestinationString() + ",BrokerName=localhost");
+
+        QueueViewMBean queue = (QueueViewMBean)MBeanServerInvocationHandler.newProxyInstance(mbeanServer, queueViewMBeanName, QueueViewMBean.class, true);
+        String msg1 = queue.sendTextMessage("message 1");
+        String msg2 = queue.sendTextMessage("message 2");
+
+        assertTrue(queue.removeMessage(msg2));
+
+        connection = connectionFactory.createConnection();
+        connection.start();
+        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        ActiveMQDestination dest = createDestination();
+
+        MessageConsumer consumer = session.createConsumer(dest);
+        Message message = consumer.receive(1000);
+        assertNotNull(message);
+        assertEquals(msg1, message.getJMSMessageID());
+
+        String msg3 = queue.sendTextMessage("message 3");
+        message = consumer.receive(1000);
+        assertNotNull(message);
+        assertEquals(msg3, message.getJMSMessageID());
+
+        message = consumer.receive(1000);
+        assertNull(message);
+
     }
 
     public void testRetryMessages() throws Exception {

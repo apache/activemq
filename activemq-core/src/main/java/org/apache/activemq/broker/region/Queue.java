@@ -1437,6 +1437,23 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                 } catch (Throwable e) {
                     LOG.error("Failed to page in more queue messages ", e);
                 }
+            } else {
+                // if there are already paged messages
+                // dispatch them
+                if (pagedInMessages.size() != 0) {
+                    pagedInMessagesLock.writeLock().lock();
+                    ArrayList paged = new ArrayList();
+                    try {
+                       paged.addAll(pagedInMessages.values());
+                    } finally {
+                       pagedInMessagesLock.writeLock().unlock();
+                    }
+                    try {
+                        doDispatch(paged);
+                    } catch (Exception e) {
+                       LOG.error("Failed to dispatch already paged messages ", e);
+                    }
+                }
             }
 
             if (pendingBrowserDispatch != null) {
