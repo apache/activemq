@@ -156,13 +156,24 @@ public class JmsMultipleBrokersTestSupport extends CombinationTestSupport {
     protected void waitForBridgeFormation(final int min) throws Exception {
         for (BrokerItem brokerItem : brokers.values()) {
             final BrokerService broker = brokerItem.broker;
-            if (!broker.getNetworkConnectors().isEmpty()) {
-                Wait.waitFor(new Wait.Condition() {
-                    public boolean isSatisified() throws Exception {
-                        return (broker.getNetworkConnectors().get(0).activeBridges().size() >= min);
-                    }}, Wait.MAX_WAIT_MILLIS * 2);
-            }
+            waitForBridgeFormation(broker, min, 0);
         }
+    }
+
+    public boolean waitForBridgeFormation(final BrokerService broker, final int min, final int bridgeIndex) throws Exception {
+        return waitForBridgeFormation(broker, min, bridgeIndex, Wait.MAX_WAIT_MILLIS*2);
+    }
+
+    public boolean waitForBridgeFormation(final BrokerService broker, final int min, final int bridgeIndex, long wait) throws Exception {
+
+        boolean result = false;
+        if (!broker.getNetworkConnectors().isEmpty()) {
+            result = Wait.waitFor(new Wait.Condition() {
+                public boolean isSatisified() throws Exception {
+                    return (broker.getNetworkConnectors().get(bridgeIndex).activeBridges().size() >= min);
+                }}, wait);
+        }
+        return result;
     }
 
     protected void waitForBridgeFormation() throws Exception {

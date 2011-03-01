@@ -56,6 +56,10 @@ public class SocketProxy {
 
     private int receiveBufferSize = -1;
 
+    private boolean pauseAtStart = false;
+
+    private int acceptBacklog = 50;
+
     public SocketProxy() throws Exception {    
     }
     
@@ -84,12 +88,15 @@ public class SocketProxy {
             serverSocket.setReceiveBufferSize(receiveBufferSize);
         }
         if (proxyUrl == null) {
-            serverSocket.bind(new InetSocketAddress(listenPort));
+            serverSocket.bind(new InetSocketAddress(listenPort), acceptBacklog);
             proxyUrl = urlFromSocket(target, serverSocket);
         } else {
             serverSocket.bind(new InetSocketAddress(proxyUrl.getPort()));
         }
         acceptor = new Acceptor(serverSocket, target);
+        if (pauseAtStart) {
+            acceptor.pause();
+        }
         new Thread(null, acceptor, "SocketProxy-Acceptor-" + serverSocket.getLocalPort()).start();
         closed = new CountDownLatch(1);
     }
@@ -186,6 +193,22 @@ public class SocketProxy {
         } catch (Exception e) {
             LOG.debug("exception on half close of: " + c, e);
         }
+    }
+
+    public boolean isPauseAtStart() {
+        return pauseAtStart;
+    }
+
+    public void setPauseAtStart(boolean pauseAtStart) {
+        this.pauseAtStart = pauseAtStart;
+    }
+
+    public int getAcceptBacklog() {
+        return acceptBacklog;
+    }
+
+    public void setAcceptBacklog(int acceptBacklog) {
+        this.acceptBacklog = acceptBacklog;
     }
 
     private URI urlFromSocket(URI uri, ServerSocket serverSocket) throws Exception {

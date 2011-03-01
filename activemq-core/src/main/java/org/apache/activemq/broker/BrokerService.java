@@ -30,6 +30,7 @@ import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -194,8 +195,8 @@ public class BrokerService implements Service {
     private boolean slave = true;
     private int schedulePeriodForDestinationPurge=5000;
     private BrokerContext brokerContext;
-    
-    
+    private boolean networkConnectorStartAsync = false;
+
 	static {
         String localHostName = "localhost";
         try {
@@ -2075,16 +2076,50 @@ public class BrokerService implements Service {
                 waitForSlave();
             }
             if (!stopped.get()) {
+                ThreadPoolExecutor networkConnectorStartExecutor = null;
+                if (isNetworkConnectorStartAsync()) {
+                    // spin up as many threads as needed
+                    networkConnectorStartExecutor = new ThreadPoolExecutor(0, Integer.MAX_VALUE,
+                            10, TimeUnit.SECONDS, new SynchronousQueue<Runnable>(),
+                            new ThreadFactory() {
+                                int count=0;
+                                public Thread newThread(Runnable runnable) {
+                                    Thread thread = new Thread(runnable, "NetworkConnector Start Thread-" +(count++));
+                                    thread.setDaemon(true);
+                                    return thread;
+                                }
+                            });
+                }
+
                 for (Iterator<NetworkConnector> iter = getNetworkConnectors().iterator(); iter.hasNext();) {
-                    NetworkConnector connector = iter.next();
+                    final NetworkConnector connector = iter.next();
                     connector.setLocalUri(uri);
                     connector.setBrokerName(getBrokerName());
                     connector.setDurableDestinations(durableDestinations);
                     if (getDefaultSocketURIString() != null) {
                         connector.setBrokerURL(getDefaultSocketURIString());
                     }
-                    connector.start();
+                    if (networkConnectorStartExecutor != null) {
+                        networkConnectorStartExecutor.execute(new Runnable() {
+                            public void run() {
+                                try {
+                                    LOG.info("Async start of " + connector);
+                                    connector.start();
+                                } catch(Exception e) {
+                                    LOG.error("Async start of network connector: " + connector + " failed", e);
+                                }
+                            }
+                        });
+                    } else {
+                        connector.start();
+                    }
                 }
+                if (networkConnectorStartExecutor != null) {
+                    // executor done when enqueued tasks are complete
+                    networkConnectorStartExecutor.shutdown();
+                    networkConnectorStartExecutor = null;
+                }
+
                 for (Iterator<ProxyConnector> iter = getProxyConnectors().iterator(); iter.hasNext();) {
                     ProxyConnector connector = iter.next();
                     connector.start();
@@ -2349,5 +2384,13 @@ public class BrokerService implements Service {
 
     public void setUseAuthenticatedPrincipalForJMXUserID(boolean useAuthenticatedPrincipalForJMXUserID) {
         this.useAuthenticatedPrincipalForJMXUserID = useAuthenticatedPrincipalForJMXUserID;
+    }
+
+    public boolean isNetworkConnectorStartAsync() {
+        return networkConnectorStartAsync;
+    }
+
+    public void setNetworkConnectorStartAsync(boolean networkConnectorStartAsync) {
+        this.networkConnectorStartAsync = networkConnectorStartAsync;
     }
 }
