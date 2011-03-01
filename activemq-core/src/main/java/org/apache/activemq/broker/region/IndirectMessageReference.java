@@ -72,6 +72,17 @@ public class IndirectMessageReference implements QueueMessageReference {
         return "Message " + message.getMessageId() + " dropped=" + dropped + " acked=" + acked + " locked=" + (lockOwner != null);
     }
 
+    @Override
+    public boolean equals(Object obj) {
+        return this == obj || (obj instanceof IndirectMessageReference &&
+                message.getMessageId().equals(((IndirectMessageReference)obj).getMessage().getMessageId()));
+    }
+
+    @Override
+    public int hashCode() {
+        return message.hashCode();
+    }
+
     public void incrementRedeliveryCounter() {
         message.incrementRedeliveryCounter();
     }
