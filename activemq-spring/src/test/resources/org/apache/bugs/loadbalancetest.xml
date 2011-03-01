@@ -32,7 +32,8 @@
 	<amq:broker brokerName="${lbt.brokerName}" useJmx="false" persistent="false" advisorySupport="true" useLocalHostBrokerName="false">
 
 	    <amq:networkConnectors>
-            <amq:networkConnector conduitSubscriptions="false" decreaseNetworkConsumerPriority="false" networkTTL="3" 
+            <amq:networkConnector conduitSubscriptions="false" decreaseNetworkConsumerPriority="false" networkTTL="3"
+                                  dispatchAsync="false"
                 dynamicOnly="true" uri="multicast://239.255.2.25:6155" name="network" prefetchSize="${lbt.networkBridgePrefetch}">
                 <amq:excludedDestinations>
 	                <amq:topic physicalName=">"/>

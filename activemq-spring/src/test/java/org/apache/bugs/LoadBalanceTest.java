@@ -75,6 +75,7 @@ public class LoadBalanceTest {
                 network1.setPrefetchSize(networkBridgePrefetch);
                 network1.setConduitSubscriptions(false);
                 network1.setDecreaseNetworkConsumerPriority(false);
+                network1.setDispatchAsync(false);
                 brokerService1.start();
             }
             {
@@ -92,6 +93,7 @@ public class LoadBalanceTest {
                 network2.setPrefetchSize(networkBridgePrefetch);
                 network2.setConduitSubscriptions(false);
                 network2.setDecreaseNetworkConsumerPriority(false);
+                network2.setDispatchAsync(false);
                 brokerService2.start();
             }
             final ExecutorService pool = Executors.newSingleThreadExecutor();
