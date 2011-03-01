@@ -75,7 +75,7 @@ public class FailoverTransportBrokerTest extends NetworkTestSupport {
 
         // Start a failover publisher.
         LOG.info("Starting the failover connection.");
-        StubConnection connection3 = createFailoverConnection();
+        StubConnection connection3 = createFailoverConnection(null);
         ConnectionInfo connectionInfo3 = createConnectionInfo();
         SessionInfo sessionInfo3 = createSessionInfo(connectionInfo3);
         ProducerInfo producerInfo3 = createProducerInfo(sessionInfo3);
@@ -119,8 +119,7 @@ public class FailoverTransportBrokerTest extends NetworkTestSupport {
 
     public void testNoBrokersInBrokerInfo() throws Exception {
         final BrokerInfo info[] = new BrokerInfo[1];
-        StubConnection c = createFailoverConnection();
-        c.setListener(new TransportListener() {
+        TransportListener listener = new TransportListener() {
             @Override
             public void onCommand(Object command) {
                 LOG.info("Got command: " + command);
@@ -143,8 +142,8 @@ public class FailoverTransportBrokerTest extends NetworkTestSupport {
             public void transportResumed() {
                 //To change body of implemented methods use File | Settings | File Templates.
             }
-        });
-        c.start();
+        };
+        StubConnection c = createFailoverConnection(listener);
         int count = 0;
         while(count++ < 20 && info[0] == null) {
             TimeUnit.SECONDS.sleep(1);
@@ -161,10 +160,10 @@ public class FailoverTransportBrokerTest extends NetworkTestSupport {
         return "tcp://localhost:0?wireFormat.tcpNoDelayEnabled=true";
     }
 
-    protected StubConnection createFailoverConnection() throws Exception {
+    protected StubConnection createFailoverConnection(TransportListener listener) throws Exception {
         URI failoverURI = new URI("failover://" + connector.getServer().getConnectURI() + "," + remoteConnector.getServer().getConnectURI() + "");
         Transport transport = TransportFactory.connect(failoverURI);
-        StubConnection connection = new StubConnection(transport);
+        StubConnection connection = new StubConnection(transport, listener);
         connections.add(connection);
         return connection;
     }

@@ -167,6 +167,7 @@ public class NetworkTestSupport extends BrokerTestSupport {
         connector.stop();
 
         remoteBroker.stop();
+        remoteBroker.waitUntilStopped();
         remotePersistenceAdapter.stop();
         super.tearDown();
     }

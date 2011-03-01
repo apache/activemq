@@ -52,6 +52,11 @@ public class StubConnection implements Service {
     }
 
     public StubConnection(Transport transport) throws Exception {
+        this(transport, null);
+    }
+
+    public StubConnection(Transport transport, TransportListener transportListener) throws Exception {
+        listener = transportListener;
         this.transport = transport;
         transport.setTransportListener(new DefaultTransportListener() {
             public void onCommand(Object command) {
