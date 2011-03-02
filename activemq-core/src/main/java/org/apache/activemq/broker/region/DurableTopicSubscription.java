@@ -97,7 +97,15 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
             return;
         }
         destinations.put(destination.getActiveMQDestination(), destination);
-        if (destination.getMessageStore() != null) {
+
+        if (active.get() || keepDurableSubsActive) {
+            Topic topic = (Topic)destination;
+            topic.activate(context, this);
+            if (pending.isEmpty(topic)) {
+                topic.recoverRetroactiveMessages(context, this);
+            }
+            this.enqueueCounter+=pending.size();
+        } else if (destination.getMessageStore() != null) {
             TopicMessageStore store = (TopicMessageStore)destination.getMessageStore();
             try {
                 this.enqueueCounter+=store.getMessageCount(subscriptionKey.getClientId(),subscriptionKey.getSubscriptionName());
@@ -105,13 +113,6 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
                 JMSException jmsEx = new JMSException("Failed to retrieve eunqueueCount from store "+ e);
                 jmsEx.setLinkedException(e);
                 throw jmsEx;
-            }
-        }
-        if (active.get() || keepDurableSubsActive) {
-            Topic topic = (Topic)destination;
-            topic.activate(context, this);
-            if (pending.isEmpty(topic)) {
-                topic.recoverRetroactiveMessages(context, this);
             }
         }
         dispatchPending();
@@ -304,5 +305,9 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
     
     protected boolean isDropped(MessageReference node) {
        return false;
-     }
+    }
+
+    public boolean isKeepDurableSubsActive() {
+        return keepDurableSubsActive;
+    }
 }

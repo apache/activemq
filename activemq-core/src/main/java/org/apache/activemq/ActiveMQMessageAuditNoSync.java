@@ -262,4 +262,8 @@ public class ActiveMQMessageAuditNoSync implements Serializable {
         }
         return result;
     }
+
+    public void clear() {
+        map.clear();
+    }
 }

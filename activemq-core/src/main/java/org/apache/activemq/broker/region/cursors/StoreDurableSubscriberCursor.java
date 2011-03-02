@@ -25,8 +25,8 @@ import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.Destination;
+import org.apache.activemq.broker.region.DurableTopicSubscription;
 import org.apache.activemq.broker.region.MessageReference;
-import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.broker.region.Topic;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.usage.SystemUsage;
@@ -49,7 +49,7 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
     private final List<PendingMessageCursor> storePrefetches = new CopyOnWriteArrayList<PendingMessageCursor>();
     private final PendingMessageCursor nonPersistent;
     private PendingMessageCursor currentCursor;
-    private final Subscription subscription;
+    private final DurableTopicSubscription subscription;
     private int cacheCurrentLowestPriority = UNKNOWN;
     private boolean immediatePriorityDispatch = true;
     /**
@@ -59,14 +59,14 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
      * @param maxBatchSize currently ignored
      * @param subscription  subscription for this cursor
      */
-    public StoreDurableSubscriberCursor(Broker broker,String clientId, String subscriberName,int maxBatchSize, Subscription subscription) {
+    public StoreDurableSubscriberCursor(Broker broker,String clientId, String subscriberName,int maxBatchSize, DurableTopicSubscription subscription) {
         super(AbstractPendingMessageCursor.isPrioritizedMessageSubscriber(broker,subscription));
         this.subscription=subscription;
         this.clientId = clientId;
         this.subscriberName = subscriberName;
         if (broker.getBrokerService().isPersistent()) {
             this.nonPersistent = new FilePendingMessageCursor(broker,clientId + subscriberName,this.prioritizedMessages);
-        }else {
+        } else {
             this.nonPersistent = new VMPendingMessageCursor(this.prioritizedMessages);
         }
         
@@ -93,9 +93,18 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
     @Override
     public synchronized void stop() throws Exception {
         if (isStarted()) {
-            super.stop();
-            for (PendingMessageCursor tsp : storePrefetches) {
-                tsp.stop();
+            if (subscription.isKeepDurableSubsActive()) {
+                super.gc();
+                super.getMessageAudit().clear();
+                for (PendingMessageCursor tsp : storePrefetches) {
+                    tsp.gc();
+                    tsp.getMessageAudit().clear();
+                }
+            } else {
+                super.stop();
+                for (PendingMessageCursor tsp : storePrefetches) {
+                    tsp.stop();
+                }
             }
         }
     }
@@ -213,6 +222,28 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
                 }
             }
 
+        }
+    }
+
+    @Override
+    public boolean isTransient() {
+        return subscription.isKeepDurableSubsActive();
+    }
+
+    @Override
+    public void addMessageFirst(MessageReference node) throws Exception {
+        // for keep durable subs active, need to deal with redispatch
+        if (node != null) {
+            Message msg = node.getMessage();
+            if (!msg.isPersistent()) {
+                nonPersistent.addMessageFirst(node);
+            } else {
+                Destination dest = msg.getRegionDestination();
+                TopicStorePrefetch tsp = topics.get(dest);
+                if (tsp != null) {
+                    tsp.addMessageFirst(node);
+                }
+            }
         }
     }
 
@@ -379,5 +410,6 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
 
     public void setImmediatePriorityDispatch(boolean immediatePriorityDispatch) {
         this.immediatePriorityDispatch = immediatePriorityDispatch;
-    }    
+    }
+
 }

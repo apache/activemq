@@ -17,6 +17,7 @@
 package org.apache.activemq.broker.region.policy;
 
 import org.apache.activemq.broker.Broker;
+import org.apache.activemq.broker.region.DurableTopicSubscription;
 import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.broker.region.cursors.PendingMessageCursor;
 
@@ -38,5 +39,5 @@ public interface PendingDurableSubscriberMessageStoragePolicy {
      * @param sub 
      * @return the Pending Message cursor
      */
-    PendingMessageCursor getSubscriberPendingMessageCursor(Broker broker,String clientId, String name, int maxBatchSize, Subscription sub);
+    PendingMessageCursor getSubscriberPendingMessageCursor(Broker broker,String clientId, String name, int maxBatchSize, DurableTopicSubscription sub);
 }
