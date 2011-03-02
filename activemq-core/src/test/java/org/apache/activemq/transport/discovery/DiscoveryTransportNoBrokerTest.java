@@ -125,7 +125,7 @@ public class DiscoveryTransportNoBrokerTest extends CombinationTestSupport {
         CompositeData compositeData = URISupport.parseComposite(uri);
         
         StubCompositeTransport compositeTransport = new StubCompositeTransport();      
-        DiscoveryTransport discoveryTransport = DiscoveryTransportFactory.createTransport(compositeTransport, compositeData);
+        DiscoveryTransport discoveryTransport = DiscoveryTransportFactory.createTransport(compositeTransport, compositeData, compositeData.getParameters());
         
         discoveryTransport.onServiceAdd(new DiscoveryEvent("tcp://localhost:61616"));        
         assertEquals("expected added URI after discovery event", compositeTransport.getTransportURIs().length, 1);
@@ -141,7 +141,7 @@ public class DiscoveryTransportNoBrokerTest extends CombinationTestSupport {
         CompositeData compositeData = URISupport.parseComposite(uri);
         
         StubCompositeTransport compositeTransport = new StubCompositeTransport();      
-        DiscoveryTransport discoveryTransport = DiscoveryTransportFactory.createTransport(compositeTransport, compositeData);
+        DiscoveryTransport discoveryTransport = DiscoveryTransportFactory.createTransport(compositeTransport, compositeData, compositeData.getParameters());
         
         final String serviceName = "tcp://localhost:61616";
         discoveryTransport.onServiceAdd(new DiscoveryEvent(serviceName));        

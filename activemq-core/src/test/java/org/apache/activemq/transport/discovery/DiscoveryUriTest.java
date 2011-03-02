@@ -40,7 +40,7 @@ public class DiscoveryUriTest extends EmbeddedBrokerTestSupport {
     }
 
     public void testConnect() throws Exception {
-        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("discovery:(multicast://default?group=test&reconnectDelay=1000&maxReconnectAttempts=30&useExponentialBackOff=false)");
+        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("discovery:(multicast://default?group=test)?reconnectDelay=1000&maxReconnectAttempts=30&useExponentialBackOff=false");
         Connection conn = factory.createConnection();
         conn.start();
 
@@ -50,5 +50,16 @@ public class DiscoveryUriTest extends EmbeddedBrokerTestSupport {
         MessageConsumer consumer = sess.createConsumer(sess.createQueue("test"));
         Message msg = consumer.receive(1000);
         assertNotNull(msg);
+    }
+
+    public void testFailedConnect() throws Exception {
+        try {
+            ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("discovery:(multicast://default?group=test1)?reconnectDelay=1000&maxReconnectAttempts=3&useExponentialBackOff=false");
+            Connection conn = factory.createConnection();
+            conn.start();
+        } catch (Exception e) {
+            return;
+        }
+        fail("Expected connection failure");
     }
 }

@@ -37,7 +37,7 @@ public class DiscoveryTransportFactory extends FailoverTransportFactory {
     public Transport createTransport(CompositeData compositeData) throws IOException {
         Map<String, String> parameters = new HashMap<String, String>(compositeData.getParameters());
         FailoverTransport failoverTransport = createTransport(parameters);
-        return createTransport(failoverTransport, compositeData);
+        return createTransport(failoverTransport, compositeData, parameters);
     }
     
     /**
@@ -48,10 +48,9 @@ public class DiscoveryTransportFactory extends FailoverTransportFactory {
      * @return a transport that reports discovered brokers to a specific composite transport.
      * @throws IOException
      */
-    public static DiscoveryTransport createTransport(CompositeTransport compositeTransport, CompositeData compositeData) throws IOException {                
+    public static DiscoveryTransport createTransport(CompositeTransport compositeTransport, CompositeData compositeData, Map<String, String> parameters) throws IOException {
         DiscoveryTransport transport = new DiscoveryTransport(compositeTransport);
-        
-        Map<String, String> parameters = new HashMap<String, String>(compositeData.getParameters());
+
         IntrospectionSupport.setProperties(transport, parameters);
         transport.setParameters(parameters);
         

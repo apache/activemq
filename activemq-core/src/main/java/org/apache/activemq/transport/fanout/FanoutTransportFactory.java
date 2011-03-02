@@ -64,7 +64,7 @@ public class FanoutTransportFactory extends TransportFactory {
         CompositeData compositeData = URISupport.parseComposite(location);
         Map<String, String> parameters = compositeData.getParameters();
         FanoutTransport fanoutTransport = createTransport(parameters);        
-        DiscoveryTransport discoveryTransport = DiscoveryTransportFactory.createTransport(fanoutTransport, compositeData);        
+        DiscoveryTransport discoveryTransport = DiscoveryTransportFactory.createTransport(fanoutTransport, compositeData, parameters);
         return discoveryTransport;
     }
 
