@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.spring;
 
+import org.apache.activemq.util.Wait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.junit.Assert;
@@ -60,7 +61,11 @@ public class ListenerTest {
     public void testComposite() throws Exception {
         sendMessages("TEST.1,TEST.2,TEST.3,TEST.4,TEST.5,TEST.6", msgNum);
 
-        Thread.sleep(3000);
+        Wait.waitFor(new Wait.Condition() {
+            public boolean isSatisified() throws Exception {
+                return (6 * msgNum) <= listener.messages.size();
+            }
+        });
 
         LOG.info("messages received= " + listener.messages.size());
         Assert.assertEquals(6 * msgNum, listener.messages.size());
