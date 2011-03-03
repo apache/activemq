@@ -185,6 +185,7 @@ public class JmsMultipleBrokersTestSupport extends CombinationTestSupport {
         for (Iterator<BrokerItem> i = brokerList.iterator(); i.hasNext();) {
             BrokerService broker = i.next().broker;
             broker.start();
+            broker.waitUntilStarted();
         }
 
         Thread.sleep(maxSetupTime);

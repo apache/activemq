@@ -16,6 +16,10 @@
  */
 package org.apache.activemq.broker.region;
 
+import org.apache.activemq.broker.Broker;
+import org.apache.activemq.broker.ConnectionContext;
+import org.apache.activemq.command.ActiveMQDestination;
+
 /**
  * Represents a Composite Pattern of a {@link DestinationInterceptor}
  * 
@@ -41,6 +45,12 @@ public class CompositeDestinationInterceptor implements DestinationInterceptor {
         for (int i = 0; i < interceptors.length; i++) {
             interceptors[i].remove(destination);
         } 
+    }
+
+    public void create(Broker broker, ConnectionContext context, ActiveMQDestination destination) throws Exception {
+        for (int i = 0; i < interceptors.length; i++) {
+            interceptors[i].create(broker, context, destination);
+        }
     }
     
 }

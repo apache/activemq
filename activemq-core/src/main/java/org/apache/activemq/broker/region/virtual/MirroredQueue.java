@@ -16,9 +16,7 @@
  */
 package org.apache.activemq.broker.region.virtual;
 
-import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.broker.BrokerServiceAware;
-import org.apache.activemq.broker.ProducerBrokerExchange;
+import org.apache.activemq.broker.*;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.DestinationFilter;
 import org.apache.activemq.broker.region.DestinationInterceptor;
@@ -85,6 +83,8 @@ public class MirroredQueue implements DestinationInterceptor, BrokerServiceAware
         }
         
     }
+
+    public void create(Broker broker, ConnectionContext context, ActiveMQDestination destination) {}
 
     // Properties
     // -------------------------------------------------------------------------

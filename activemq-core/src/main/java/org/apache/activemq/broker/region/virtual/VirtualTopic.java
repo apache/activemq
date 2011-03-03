@@ -16,9 +16,13 @@
  */
 package org.apache.activemq.broker.region.virtual;
 
+import org.apache.activemq.broker.Broker;
+import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
+import org.apache.activemq.filter.DestinationFilter;
 
 /**
  * Creates <a href="http://activemq.org/site/virtual-destinations.html">Virtual
@@ -47,6 +51,15 @@ public class VirtualTopic implements VirtualDestination {
             new VirtualTopicInterceptor(destination, getPrefix(), getPostfix());
     }
     
+
+    public void create(Broker broker, ConnectionContext context, ActiveMQDestination destination) throws Exception {
+        if (destination.isQueue() && destination.isPattern() && broker.getDestinations(destination).isEmpty()) {
+            DestinationFilter filter = DestinationFilter.parseFilter(new ActiveMQQueue(prefix + DestinationFilter.ANY_DESCENDENT));
+            if (filter.matches(destination)) {
+                broker.addDestination(context, destination, false);
+            }
+        }
+    }
 
     public void remove(Destination destination) {        
     }

@@ -17,6 +17,10 @@
 package org.apache.activemq.broker.region;
 
 
+import org.apache.activemq.broker.Broker;
+import org.apache.activemq.broker.ConnectionContext;
+import org.apache.activemq.command.ActiveMQDestination;
+
 /**
  * Represents an interceptor on destination instances.
  * 
@@ -27,5 +31,7 @@ public interface DestinationInterceptor {
     Destination intercept(Destination destination);
     
     void remove(Destination destination);
+
+    void create(Broker broker, ConnectionContext context, ActiveMQDestination destination) throws Exception;
 
 }

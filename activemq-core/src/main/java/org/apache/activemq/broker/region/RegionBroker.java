@@ -438,6 +438,9 @@ public class RegionBroker extends EmptyBroker {
     @Override
     public Subscription addConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
         ActiveMQDestination destination = info.getDestination();
+        if (destinationInterceptor != null) {
+            destinationInterceptor.create(this, context, destination);
+        }
         synchronized (purgeInactiveDestinationsTask) {
             switch (destination.getDestinationType()) {
             case ActiveMQDestination.QUEUE_TYPE:

@@ -21,10 +21,13 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.activemq.broker.Broker;
+import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.ProducerBrokerExchange;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.DestinationFilter;
 import org.apache.activemq.broker.region.DestinationInterceptor;
+import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.filter.DestinationMap;
 
@@ -45,8 +48,8 @@ public class VirtualDestinationInterceptor implements DestinationInterceptor {
         List<Destination> destinations = new ArrayList<Destination>();
         for (Iterator iter = virtualDestinations.iterator(); iter.hasNext();) {
             VirtualDestination virtualDestination = (VirtualDestination)iter.next();
-            Destination newNestination = virtualDestination.intercept(destination);
-            destinations.add(newNestination);
+            Destination newDestination = virtualDestination.intercept(destination);
+            destinations.add(newDestination);
         }
         if (!destinations.isEmpty()) {
             if (destinations.size() == 1) {
@@ -59,6 +62,12 @@ public class VirtualDestinationInterceptor implements DestinationInterceptor {
         return destination;
     }
     
+
+    public synchronized void create(Broker broker, ConnectionContext context, ActiveMQDestination destination) throws Exception {
+        for (VirtualDestination virt: virtualDestinations) {
+            virt.create(broker, context, destination);
+        }
+    }
 
     public synchronized void remove(Destination destination) {     
     }

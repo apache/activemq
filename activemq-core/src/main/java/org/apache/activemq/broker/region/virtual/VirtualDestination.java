@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.broker.region.virtual;
 
+import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.DestinationInterceptor;
 import org.apache.activemq.command.ActiveMQDestination;

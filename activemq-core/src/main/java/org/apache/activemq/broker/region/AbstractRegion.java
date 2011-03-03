@@ -129,7 +129,9 @@ public abstract class AbstractRegion implements Region {
                     dest.start();
                     destinations.put(destination, dest);
                     destinationMap.put(destination, dest);
-                    addSubscriptionsForDestination(context, dest);
+                    if (!dest.getActiveMQDestination().isPattern()) {
+                        addSubscriptionsForDestination(context, dest);
+                    }
                 }
                 if (dest == null) {
                     throw new JMSException("The destination " + destination + " does not exist.");

@@ -47,7 +47,7 @@ public class PrefixDestinationFilter extends DestinationFilter {
         if (path.length >= length) {
             int size = length - 1;
             for (int i = 0; i < size; i++) {
-                if (!prefixes[i].equals(path[i])) {
+                if (!path[i].equals(ANY_CHILD) && !prefixes[i].equals(ANY_CHILD) && !prefixes[i].equals(path[i])) {
                     return false;
                 }
             }

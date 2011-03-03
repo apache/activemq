@@ -18,7 +18,10 @@ package org.apache.activemq.broker.region.virtual;
 
 import java.util.Collection;
 
+import org.apache.activemq.broker.Broker;
+import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.Destination;
+import org.apache.activemq.command.ActiveMQDestination;
 
 /**
  * 
@@ -35,6 +38,8 @@ public abstract class CompositeDestination implements VirtualDestination {
         return new CompositeDestinationFilter(destination, getForwardTo(), isForwardOnly(), isCopyMessage());
     }
     
+    public void create(Broker broker, ConnectionContext context, ActiveMQDestination destination) {
+    }
 
     public void remove(Destination destination) {        
     }

@@ -82,9 +82,9 @@ public class SingleBrokerVirtualDestinationsWithWildcardTest extends JmsMultiple
         startAllBrokers();
 
         sendReceive("Consumer.a.local.test.>", false, "Consumer.a.local.test.>", false, 1, 1);
-        sendReceive("local.test.1", true, "Consumer.a.local.test.>", false, 1, 2); // duplicates due to wildcard queue pre-created
+        sendReceive("local.test.1", true, "Consumer.a.local.test.>", false, 1, 1);
         sendReceive("Consumer.a.global.test.>", false, "Consumer.a.global.test.>", false, 1, 1);
-        sendReceive("global.test.1", true, "Consumer.a.global.test.>", false, 1, 2); // duplicates due to wildcard queue pre-created
+        sendReceive("global.test.1", true, "Consumer.a.global.test.>", false, 1, 1);
 
         destroyAllBrokers();
     }
@@ -109,8 +109,6 @@ public class SingleBrokerVirtualDestinationsWithWildcardTest extends JmsMultiple
 
     private BrokerService createAndConfigureBroker(URI uri) throws Exception {
         BrokerService broker = createBroker(uri);
-        // without this  testVirtualDestinationsWithWildcardWithoutIndividualVirtualQueue will fail
-        broker.setDestinations(new ActiveMQDestination[] {new ActiveMQQueue("Consumer.a.local.test.1"), new ActiveMQQueue("Consumer.a.global.test.1")});
 
         configurePersistenceAdapter(broker);
 
