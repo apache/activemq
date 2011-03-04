@@ -22,9 +22,9 @@ import java.util.Random;
 /**
  * Configuration options used to control how messages are re-delivered when they
  * are rolled back.
- * 
+ *
  * @org.apache.xbean.XBean element="redeliveryPolicy"
- * 
+ *
  */
 public class RedeliveryPolicy implements Cloneable, Serializable {
 
@@ -34,6 +34,7 @@ public class RedeliveryPolicy implements Cloneable, Serializable {
     // +/-15% for a 30% spread -cgs
     private double collisionAvoidanceFactor = 0.15d;
     private int maximumRedeliveries = 6;
+    private long maximumRedeliveryDelay = -1;
     private long initialRedeliveryDelay = 1000L;
     private boolean useCollisionAvoidance;
     private boolean useExponentialBackOff;
@@ -75,6 +76,14 @@ public class RedeliveryPolicy implements Cloneable, Serializable {
         this.initialRedeliveryDelay = initialRedeliveryDelay;
     }
 
+    public long getMaximumRedeliveryDelay() {
+        return maximumRedeliveryDelay;
+    }
+
+    public void setMaximumRedeliveryDelay(long maximumRedeliveryDelay) {
+        this.maximumRedeliveryDelay = maximumRedeliveryDelay;
+    }
+
     public int getMaximumRedeliveries() {
         return maximumRedeliveries;
     }
@@ -90,6 +99,10 @@ public class RedeliveryPolicy implements Cloneable, Serializable {
             nextDelay = redeliveryDelay;
         } else if (useExponentialBackOff && backOffMultiplier > 1) {
             nextDelay = (long) (previousDelay * backOffMultiplier);
+            if(maximumRedeliveryDelay != -1 && nextDelay > maximumRedeliveryDelay) {
+                // in case the user made max redelivery delay less than redelivery delay for some reason.
+                nextDelay = Math.max(maximumRedeliveryDelay, redeliveryDelay);
+            }
         } else {
             nextDelay = previousDelay;
         }
