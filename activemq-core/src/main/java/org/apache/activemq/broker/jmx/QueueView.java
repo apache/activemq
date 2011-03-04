@@ -22,6 +22,7 @@ import javax.jms.JMSException;
 
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.Queue;
+import org.apache.activemq.broker.region.QueueMessageReference;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.util.BrokerSupport;
@@ -35,7 +36,8 @@ public class QueueView extends DestinationView implements QueueViewMBean {
     }
 
     public CompositeData getMessage(String messageId) throws OpenDataException {
-        Message rc = ((Queue)destination).getMessage(messageId);
+        QueueMessageReference ref = ((Queue)destination).getMessage(messageId);
+        Message rc = ref.getMessage();
         if (rc == null) {
             return null;
         }
@@ -99,14 +101,13 @@ public class QueueView extends DestinationView implements QueueViewMBean {
      */
     public boolean retryMessage(String messageId) throws Exception {
         Queue queue = (Queue) destination;
-        Message rc = queue.getMessage(messageId);
+        QueueMessageReference ref = queue.getMessage(messageId);
+        Message rc = ref.getMessage();
         if (rc != null) {
-            rc = rc.copy();
-            rc.getMessage().setRedeliveryCounter(0);
             ActiveMQDestination originalDestination = rc.getOriginalDestination();
             if (originalDestination != null) {
                 ConnectionContext context = BrokerSupport.getConnectionContext(broker.getContextBroker());
-                return queue.moveMessageTo(context, rc, originalDestination);
+                return queue.moveMessageTo(context, ref, originalDestination);
             }
             else {
                 throw new JMSException("No original destination for message: "+ messageId);

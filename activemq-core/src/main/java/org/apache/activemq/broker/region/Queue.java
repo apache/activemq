@@ -353,6 +353,13 @@ public class Queue extends BaseDestination implements Task, UsageListener {
     LinkedList<BrowserDispatch> browserDispatches = new LinkedList<BrowserDispatch>();
 
     public void addSubscription(ConnectionContext context, Subscription sub) throws Exception {
+        if (LOG.isDebugEnabled()) {
+            LOG.debug(getActiveMQDestination().getQualifiedName() + " add sub: " + sub + ", dequeues: "
+                    + getDestinationStatistics().getDequeues().getCount() + ", dispatched: "
+                    + getDestinationStatistics().getDispatched().getCount() + ", inflight: "
+                    + getDestinationStatistics().getInflight().getCount());
+        }
+
         super.addSubscription(context, sub);
         // synchronize with dispatch method so that no new messages are sent
         // while setting up a subscription. avoid out of order messages,
@@ -427,7 +434,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
         pagedInPendingDispatchLock.writeLock().lock();
         try {
             if (LOG.isDebugEnabled()) {
-                LOG.debug("remove sub: " + sub + ", lastDeliveredSeqId: " + lastDeiveredSequenceId + ", dequeues: "
+                LOG.debug(getActiveMQDestination().getQualifiedName() + " remove sub: " + sub + ", lastDeliveredSeqId: " + lastDeiveredSequenceId + ", dequeues: "
                         + getDestinationStatistics().getDequeues().getCount() + ", dispatched: "
                         + getDestinationStatistics().getDispatched().getCount() + ", inflight: "
                         + getDestinationStatistics().getInflight().getCount());
@@ -1058,13 +1065,13 @@ public class Queue extends BaseDestination implements Task, UsageListener {
         }
     }
 
-    public Message getMessage(String id) {
+    public QueueMessageReference getMessage(String id) {
         MessageId msgId = new MessageId(id);
         pagedInMessagesLock.readLock().lock();
         try{
-            QueueMessageReference r = this.pagedInMessages.get(msgId);
-            if (r != null) {
-                return r.getMessage();
+            QueueMessageReference ref = this.pagedInMessages.get(msgId);
+            if (ref != null) {
+                return ref;
             }
         }finally {
             pagedInMessagesLock.readLock().unlock();
@@ -1074,15 +1081,12 @@ public class Queue extends BaseDestination implements Task, UsageListener {
             try {
                 messages.reset();
                 while (messages.hasNext()) {
-                    MessageReference r = messages.next();
-                    r.decrementReferenceCount();
-                    messages.rollback(r.getMessageId());
-                    if (msgId.equals(r.getMessageId())) {
-                        Message m = r.getMessage();
-                        if (m != null) {
-                            return m;
-                        }
-                        break;
+                    MessageReference mr = messages.next();
+                    QueueMessageReference qmr = createMessageReference(mr.getMessage());
+                    qmr.decrementReferenceCount();
+                    messages.rollback(qmr.getMessageId());
+                    if (msgId.equals(qmr.getMessageId())) {
+                        return qmr;
                     }
                 }
             } finally {
@@ -1261,22 +1265,21 @@ public class Queue extends BaseDestination implements Task, UsageListener {
 
     /**
      * Move a message
-     * 
+     *
      * @param context
      *            connection context
      * @param m
-     *            message
+     *            QueueMessageReference
      * @param dest
      *            ActiveMQDestination
      * @throws Exception
      */
-    public boolean moveMessageTo(ConnectionContext context, Message m, ActiveMQDestination dest) throws Exception {
-        QueueMessageReference r = createMessageReference(m);
-        BrokerSupport.resend(context, m, dest);
-        removeMessage(context, r);
+    public boolean moveMessageTo(ConnectionContext context, QueueMessageReference m, ActiveMQDestination dest) throws Exception {
+        BrokerSupport.resend(context, m.getMessage(), dest);
+        removeMessage(context, m);
         messagesLock.writeLock().lock();
         try{
-            messages.rollback(r.getMessageId());
+            messages.rollback(m.getMessageId());
         }finally {
             messagesLock.writeLock().unlock();
         }
@@ -1317,7 +1320,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
     public int moveMatchingMessagesTo(ConnectionContext context, MessageReferenceFilter filter,
             ActiveMQDestination dest, int maximumMessages) throws Exception {
         int movedCounter = 0;
-        Set<MessageReference> set = new CopyOnWriteArraySet<MessageReference>();
+        Set<QueueMessageReference> set = new CopyOnWriteArraySet<QueueMessageReference>();
         do {
             doPageIn(true);
             pagedInMessagesLock.readLock().lock();
@@ -1326,13 +1329,12 @@ public class Queue extends BaseDestination implements Task, UsageListener {
             }finally {
                 pagedInMessagesLock.readLock().unlock();
             }
-            List<MessageReference> list = new ArrayList<MessageReference>(set);
-            for (MessageReference ref : list) {
-                IndirectMessageReference r = (IndirectMessageReference) ref;
-                if (filter.evaluate(context, r)) {
+            List<QueueMessageReference> list = new ArrayList<QueueMessageReference>(set);
+            for (QueueMessageReference ref : list) {
+                if (filter.evaluate(context, ref)) {
                     // We should only move messages that can be locked.
-                    moveMessageTo(context, ref.getMessage(), dest);
-                    set.remove(r);
+                    moveMessageTo(context, ref, dest);
+                    set.remove(ref);
                     if (++movedCounter >= maximumMessages && maximumMessages > 0) {
                         return movedCounter;
                     }

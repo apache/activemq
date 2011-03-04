@@ -279,8 +279,6 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         assertEquals("browse queue size", initialQueueSize, actualCount);
         
         assertEquals("dest has some memory usage", dlqMemUsage, queue.getMemoryPercentUsage());
-        assertEquals("dlq still has memory usage", dlqMemUsage, dlq.getMemoryPercentUsage());
-        
     }
 
     public void testMoveMessagesBySelector() throws Exception {

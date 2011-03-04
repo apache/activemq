@@ -106,7 +106,7 @@ public class InactivityMonitor extends TransportFilter {
         public void run() {
             long now = System.currentTimeMillis();
             if( lastRunTime != 0 && LOG.isDebugEnabled() ) {
-                LOG.debug(""+(now-lastRunTime)+" ms elapsed since last write check.");
+                LOG.debug(this + " "+(now-lastRunTime)+" ms elapsed since last write check.");
 
             }
             lastRunTime = now;
@@ -142,7 +142,7 @@ public class InactivityMonitor extends TransportFilter {
 
         if (!commandSent.get() && useKeepAlive) {
             if (LOG.isTraceEnabled()) {
-                LOG.trace("No message sent since last write check, sending a KeepAliveInfo");
+                LOG.trace(this + " no message sent since last write check, sending a KeepAliveInfo");
             }
             ASYNC_TASKS.execute(new Runnable() {
                 public void run() {
@@ -160,7 +160,7 @@ public class InactivityMonitor extends TransportFilter {
             });
         } else {
             if (LOG.isTraceEnabled()) {
-                LOG.trace("Message sent since last write check, resetting flag");
+                LOG.trace(this + " message sent since last write check, resetting flag");
             }
         }
 
