@@ -36,13 +36,13 @@ import org.apache.activemq.command.ActiveMQTopic;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class XBeanSecurityWithGuestTest extends JmsTestSupport {
+public class XBeanSecurityWithGuestNoCredentialsOnlyTest extends JmsTestSupport {
 
-    private static final Logger LOG = LoggerFactory.getLogger(XBeanSecurityWithGuestTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(XBeanSecurityWithGuestNoCredentialsOnlyTest.class);
     public ActiveMQDestination destination;
     
     public static Test suite() {
-        return suite(XBeanSecurityWithGuestTest.class);
+        return suite(XBeanSecurityWithGuestNoCredentialsOnlyTest.class);
     }
     
     public void testUserSendGoodPassword() throws JMSException {
@@ -52,10 +52,12 @@ public class XBeanSecurityWithGuestTest extends JmsTestSupport {
     }
     
     public void testUserSendWrongPassword() throws JMSException {
-        Message m = doSend(false);
-        // note brokerService.useAuthenticatedPrincipalForJMXUserID=true for this
-        assertEquals("guest", ((ActiveMQMessage)m).getUserID());
-        assertEquals("guest", m.getStringProperty("JMSXUserID"));
+        try {
+            doSend(true);
+            fail("expect exception on connect");
+        } catch (JMSException expected) {
+            assertTrue("cause as expected", expected.getCause() instanceof SecurityException);
+        }
     }
 
     public void testUserSendNoCredentials() throws JMSException {
@@ -66,7 +68,7 @@ public class XBeanSecurityWithGuestTest extends JmsTestSupport {
     }
 
     protected BrokerService createBroker() throws Exception {
-        return createBroker("org/apache/activemq/security/jaas-broker-guest.xml");
+        return createBroker("org/apache/activemq/security/jaas-broker-guest-no-creds-only.xml");
     }
 
     protected BrokerService createBroker(String uri) throws Exception {
@@ -129,8 +131,8 @@ public class XBeanSecurityWithGuestTest extends JmsTestSupport {
     }
 
     public void initCombosForTestUserSendNoCredentials() {
-        addCombinationValues("userName", new Object[] {"", null});
-        addCombinationValues("password", new Object[] {"", null});
+        addCombinationValues("userName", new Object[] {null, "system"});
+        addCombinationValues("password", new Object[] {null});
         addCombinationValues("destination", new Object[] {new ActiveMQQueue("GuestQueue")});
     }
 

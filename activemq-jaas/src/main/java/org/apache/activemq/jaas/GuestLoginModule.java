@@ -17,17 +17,20 @@
 
 package org.apache.activemq.jaas;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.security.auth.Subject;
-import javax.security.auth.callback.CallbackHandler;
-import javax.security.auth.login.LoginException;
-import javax.security.auth.spi.LoginModule;
+import java.io.IOException;
 import java.security.Principal;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import javax.security.auth.Subject;
+import javax.security.auth.callback.Callback;
+import javax.security.auth.callback.CallbackHandler;
+import javax.security.auth.callback.PasswordCallback;
+import javax.security.auth.callback.UnsupportedCallbackException;
+import javax.security.auth.login.LoginException;
+import javax.security.auth.spi.LoginModule;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Always login the user with a default 'guest' identity.
@@ -48,13 +51,17 @@ public class GuestLoginModule implements LoginModule {
     private String groupName = "guests";
     private Subject subject;
     private boolean debug;
+    private boolean credentialsInvalidate;
     private Set<Principal> principals = new HashSet<Principal>();
+    private CallbackHandler callbackHandler;
+    private boolean loginSucceeded;
 
 
     public void initialize(Subject subject, CallbackHandler callbackHandler, Map sharedState, Map options) {
         this.subject = subject;
-
+        this.callbackHandler = callbackHandler;
         debug = "true".equalsIgnoreCase((String)options.get("debug"));
+        credentialsInvalidate = "true".equalsIgnoreCase((String)options.get("credentialsInvalidate"));
         if (options.get(GUEST_USER) != null) {
             userName = (String)options.get(GUEST_USER);
         }
@@ -71,19 +78,37 @@ public class GuestLoginModule implements LoginModule {
     }
 
     public boolean login() throws LoginException {
-
+        loginSucceeded = true;
+        if (credentialsInvalidate) {
+            PasswordCallback passwordCallback = new PasswordCallback("Password: ", false);
+            try {
+                 callbackHandler.handle(new Callback[]{passwordCallback});
+                 if (passwordCallback.getPassword() != null) {
+                     if (debug) {
+                        LOG.debug("Guest login failing (credentialsInvalidate=true) on presence of a password");
+                     }
+                     loginSucceeded = false;
+                     passwordCallback.clearPassword();
+                 };
+             } catch (IOException ioe) {
+             } catch (UnsupportedCallbackException uce) {
+             }
+        }
         if (debug) {
-            LOG.debug("login " + userName);
-        }return true;
+            LOG.debug("Guest login " + loginSucceeded);
+        }
+        return loginSucceeded;
     }
 
     public boolean commit() throws LoginException {
-        subject.getPrincipals().addAll(principals);
+        if (loginSucceeded) {
+            subject.getPrincipals().addAll(principals);
+        }
 
         if (debug) {
             LOG.debug("commit");
         }
-        return true;
+        return loginSucceeded;
     }
 
     public boolean abort() throws LoginException {
@@ -91,7 +116,8 @@ public class GuestLoginModule implements LoginModule {
         if (debug) {
             LOG.debug("abort");
         }
-        return true;    }
+        return true;
+    }
 
     public boolean logout() throws LoginException {
         subject.getPrincipals().removeAll(principals);

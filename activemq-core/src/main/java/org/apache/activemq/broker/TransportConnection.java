@@ -694,8 +694,11 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         try {
             broker.addConnection(context, info);
         } catch (Exception e) {
-            brokerConnectionStates.remove(info);
-            LOG.warn("Failed to add Connection, reason: " +  e.toString());
+            synchronized (brokerConnectionStates) {
+                brokerConnectionStates.remove(info.getConnectionId());
+            }
+            unregisterConnectionState(info.getConnectionId());
+            LOG.warn("Failed to add Connection " + info.getConnectionId() + ", reason: " +  e.toString());
             if (LOG.isDebugEnabled()) {
                 LOG.debug("Exception detail:", e);
             }
@@ -741,7 +744,10 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
             try {
                 broker.removeConnection(cs.getContext(), cs.getInfo(), null);
             } catch (Throwable e) {
-                SERVICELOG.warn("Failed to remove connection " + cs.getInfo(), e);
+                SERVICELOG.warn("Failed to remove connection " + cs.getInfo() + ", reason: " + e.toString());
+                if (LOG.isDebugEnabled()) {
+                    SERVICELOG.debug("Exception detail:", e);
+                }
             }
             TransportConnectionState state = unregisterConnectionState(id);
             if (state != null) {
