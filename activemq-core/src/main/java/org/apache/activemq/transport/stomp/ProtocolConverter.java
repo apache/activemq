@@ -206,7 +206,11 @@ public class ProtocolConverter {
     }
 
     protected void handleException(Throwable exception, StompFrame command) throws IOException {
-        LOG.warn("Exception occured processing: \n" + command, exception);
+        LOG.warn("Exception occurred processing: \n" + command + ": " + exception.toString());
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("Exception detail", exception);
+        }
+
         // Let the stomp client know about any protocol errors.
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         PrintWriter stream = new PrintWriter(new OutputStreamWriter(baos, "UTF-8"));
