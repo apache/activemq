@@ -17,11 +17,20 @@
  */
 package org.apache.activemq.karaf.commands;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+
 import org.apache.felix.gogo.commands.Action;
 import org.apache.felix.gogo.commands.Argument;
 import org.apache.felix.gogo.commands.basic.AbstractCommand;
 import org.apache.felix.gogo.commands.basic.ActionPreparator;
 import org.apache.felix.gogo.commands.basic.DefaultActionPreparator;
+import org.apache.felix.service.command.CommandSession;
 import org.apache.karaf.shell.console.BlueprintContainerAware;
 import org.apache.karaf.shell.console.BundleContextAware;
 import org.apache.karaf.shell.console.CompletableFunction;
@@ -30,15 +39,6 @@ import org.apache.karaf.shell.console.commands.GenericType;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.blueprint.container.BlueprintContainer;
 import org.osgi.service.blueprint.container.Converter;
-import org.osgi.service.command.CommandSession;
-
-import java.lang.reflect.Field;
-import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
 
 /**
  * Base command to process options and wrap native ActiveMQ console commands.
@@ -62,6 +62,7 @@ public class ActiveMQCommand extends AbstractCommand implements CompletableFunct
         this.actionId = actionId;
     }
 
+    @Override
     public List<Completer> getCompleters() {
         return completers;
     }
@@ -143,6 +144,7 @@ public class ActiveMQCommand extends AbstractCommand implements CompletableFunct
         }
     }
 
+    @Override
     public Action createNewAction() {
         Action action = (Action) blueprintContainer.getComponentInstance(actionId);
         if (action instanceof BlueprintContainerAware) {

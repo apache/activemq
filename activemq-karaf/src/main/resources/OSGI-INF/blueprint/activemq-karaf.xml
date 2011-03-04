@@ -41,7 +41,7 @@
 
     <service ref="listcommand" activation="lazy" >
         <interfaces>
-            <value>org.osgi.service.command.Function</value>
+            <value>org.apache.felix.service.command.Function</value>
             <value>org.apache.karaf.shell.console.CompletableFunction</value>
         </interfaces>
         <service-properties>
@@ -67,7 +67,7 @@
 
     <service ref="querycommand" activation="lazy" >
         <interfaces>
-            <value>org.osgi.service.command.Function</value>
+            <value>org.apache.felix.service.command.Function</value>
             <value>org.apache.karaf.shell.console.CompletableFunction</value>
         </interfaces>
         <service-properties>
@@ -93,7 +93,7 @@
 
     <service ref="browsecommand" activation="lazy" >
         <interfaces>
-            <value>org.osgi.service.command.Function</value>
+            <value>org.apache.felix.service.command.Function</value>
             <value>org.apache.karaf.shell.console.CompletableFunction</value>
         </interfaces>
         <service-properties>
@@ -119,7 +119,7 @@
 
     <service ref="bstatcommand" activation="lazy" >
         <interfaces>
-            <value>org.osgi.service.command.Function</value>
+            <value>org.apache.felix.service.command.Function</value>
             <value>org.apache.karaf.shell.console.CompletableFunction</value>
         </interfaces>
         <service-properties>
@@ -145,7 +145,7 @@
 
     <service ref="purgecommand" activation="lazy" >
         <interfaces>
-            <value>org.osgi.service.command.Function</value>
+            <value>org.apache.felix.service.command.Function</value>
             <value>org.apache.karaf.shell.console.CompletableFunction</value>
         </interfaces>
         <service-properties>
