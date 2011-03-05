@@ -18,8 +18,8 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html>
 <head>
-	<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
-	<title>${requestContext.brokerQuery.brokerAdmin.brokerName} : <decorator:title default="ActiveMQ Console" /></title>
+    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+    <title>${requestContext.brokerQuery.brokerAdmin.brokerName} : <decorator:title default="ActiveMQ Console" /></title>
     <style type="text/css" media="screen">
         @import url(<c:url value="/styles/sorttable.css"/>);
         @import url(<c:url value="/styles/type-settings.css"/>);
@@ -27,18 +27,17 @@
         @import url(<c:url value="/styles/prettify.css"/>);
     </style>
     <c:if test="${!disableJavaScript}">
-	    <script type='text/javascript' src='<c:url value="/js/common.js"/>'></script>
-	    <script type='text/javascript' src='<c:url value="/js/css.js"/>'></script>
-	    <script type='text/javascript' src='<c:url value="/js/standardista-table-sorting.js"/>'></script>
-	    <script type='text/javascript' src='<c:url value="/js/prettify.js"/>'></script>
-	    <script>addEvent(window, 'load', prettyPrint)</script>
+        <script type='text/javascript' src='<c:url value="/js/common.js"/>'></script>
+        <script type='text/javascript' src='<c:url value="/js/css.js"/>'></script>
+        <script type='text/javascript' src='<c:url value="/js/standardista-table-sorting.js"/>'></script>
+        <script type='text/javascript' src='<c:url value="/js/prettify.js"/>'></script>
+        <script>addEvent(window, 'load', prettyPrint)</script>
     </c:if>
 
-	<decorator:head />
+    <decorator:head />
 </head>
 
 <body>
-
 
 <div class="white_box">
     <div class="header">
@@ -79,7 +78,7 @@
                             &#124;
                             <a href="<c:url value='/network.jsp'/>" title="Network">Network</a>
                             &#124;
- 							<a href="<c:url value='/scheduled.jsp'/>" title="Scheduled">Scheduled</a>
+                             <a href="<c:url value='/scheduled.jsp'/>" title="Scheduled">Scheduled</a>
                             &#124;
                             <a href="<c:url value='/send.jsp'/>"
                                title="Send">Send</a>
@@ -150,7 +149,7 @@
             <div class="footer_l">
                 <div class="footer_r">
                     <div>
-                        Copyright 2005-2007 The Apache Software Foundation.
+                        Copyright 2005-2011 The Apache Software Foundation.
 
                         (<a href="?printable=true">printable version</a>)
                     </div>
