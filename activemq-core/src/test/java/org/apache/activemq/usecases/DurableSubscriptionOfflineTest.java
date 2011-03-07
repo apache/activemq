@@ -32,13 +32,17 @@ import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.store.jdbc.JDBCPersistenceAdapter;
+import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
+import org.apache.activemq.util.Wait;
+import org.apache.kahadb.journal.Journal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class DurableSubscriptionOfflineTest extends org.apache.activemq.TestSupport {
 
     private static final Logger LOG = LoggerFactory.getLogger(DurableSubscriptionOfflineTest.class);
-    public Boolean usePrioritySupport = Boolean.TRUE;
+    public boolean usePrioritySupport = Boolean.TRUE;
+    public int journalMaxFileLength = Journal.DEFAULT_MAX_FILE_LENGTH;
     private BrokerService broker;
     private ActiveMQTopic topic;
     private Vector<Exception> exceptions = new Vector<Exception>();
@@ -97,6 +101,9 @@ public class DurableSubscriptionOfflineTest extends org.apache.activemq.TestSupp
         if (broker.getPersistenceAdapter() instanceof JDBCPersistenceAdapter) {
             // ensure it kicks in during tests
             ((JDBCPersistenceAdapter)broker.getPersistenceAdapter()).setCleanupPeriod(2*1000);
+        } else if (broker.getPersistenceAdapter() instanceof KahaDBPersistenceAdapter) {
+            // have lots of journal files
+            ((KahaDBPersistenceAdapter)broker.getPersistenceAdapter()).setJournalMaxFileLength(journalMaxFileLength);
         }
         broker.start();
     }
@@ -1047,6 +1054,71 @@ public class DurableSubscriptionOfflineTest extends org.apache.activemq.TestSupp
 
         session.close();
         con.close();
+    }
+
+    // use very small journal to get lots of files to cleanup
+    public void initCombosForTestCleanupDeletedSubAfterRestart() throws Exception {
+        this.addCombinationValues("journalMaxFileLength",
+                new Object[]{new Integer(64*1024)});
+    }
+
+    // https://issues.apache.org/jira/browse/AMQ-3206
+    public void testCleanupDeletedSubAfterRestart() throws Exception {
+        Connection con = createConnection("cli1");
+        Session session = con.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        session.createDurableSubscriber(topic, "SubsId", null, true);
+        session.close();
+        con.close();
+
+        con = createConnection("cli2");
+        session = con.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        session.createDurableSubscriber(topic, "SubsId", null, true);
+        session.close();
+        con.close();
+
+        con = createConnection();
+        session = con.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        MessageProducer producer = session.createProducer(null);
+
+        final int toSend = 500;
+        final String payload = new byte[40*1024].toString();
+        int sent = 0;
+        for (int i = sent; i < toSend; i++) {
+            Message message = session.createTextMessage(payload);
+            message.setStringProperty("filter", "false");
+            message.setIntProperty("ID", i);
+            producer.send(topic, message);
+            sent++;
+        }
+        con.close();
+        LOG.info("sent: " + sent);
+
+        // kill off cli1
+        con = createConnection("cli1");
+        session = con.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        session.unsubscribe("SubsId");
+
+        destroyBroker();
+        createBroker(false);
+
+        con = createConnection("cli2");
+        session = con.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        MessageConsumer consumer = session.createDurableSubscriber(topic, "SubsId", null, true);
+        final Listener listener = new Listener();
+        consumer.setMessageListener(listener);
+        assertTrue("got all sent", Wait.waitFor(new Wait.Condition() {
+            public boolean isSatisified() throws Exception {
+                LOG.info("Want: " + toSend  + ", current: " + listener.count);
+                return listener.count == toSend;
+            }
+        }));
+        session.close();
+        con.close();
+
+        destroyBroker();
+        createBroker(false);
+        KahaDBPersistenceAdapter pa = (KahaDBPersistenceAdapter) broker.getPersistenceAdapter();
+        assertEquals("only one journal file left after restart", 1, pa.getStore().getJournal().getFileMap().size());
     }
 
     public static class Listener implements MessageListener {

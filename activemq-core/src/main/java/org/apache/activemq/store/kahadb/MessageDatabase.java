@@ -1133,10 +1133,10 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
 
     void updateIndex(Transaction tx, KahaSubscriptionCommand command, Location location) throws IOException {
         StoredDestination sd = getStoredDestination(command.getDestination(), tx);
+        final String subscriptionKey = command.getSubscriptionKey();
 
         // If set then we are creating it.. otherwise we are destroying the sub
         if (command.hasSubscriptionInfo()) {
-            String subscriptionKey = command.getSubscriptionKey();
             sd.subscriptions.put(tx, subscriptionKey, command);
             long ackLocation=NOT_ACKED;
             if (!command.getRetroactive()) {
@@ -1147,7 +1147,6 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
             sd.subscriptionAcks.put(tx, subscriptionKey, new LastAck(ackLocation));
         } else {
             // delete the sub...
-            String subscriptionKey = command.getSubscriptionKey();
             sd.subscriptions.remove(tx, subscriptionKey);
             sd.subscriptionAcks.remove(tx, subscriptionKey);
             removeAckLocationsForSub(tx, sd, subscriptionKey);
@@ -1206,7 +1205,7 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
             	if( gcCandidateSet.isEmpty() ) {
                 	break;
                 }
-                
+
                 // Use a visitor to cut down the number of pages that we load
                 entry.getValue().locationIndex.visit(tx, new BTreeVisitor<Location, Long>() {
                     int last=-1;
@@ -1234,7 +1233,7 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
 							return !subset.isEmpty();
                     	}
                     }
-    
+
                     public void visit(List<Location> keys, List<Long> values) {
                     	for (Location l : keys) {
                             int fileId = l.getDataFileId();
@@ -1242,9 +1241,8 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
                         		gcCandidateSet.remove(fileId);
                                 last = fileId;
                             }
-						}                        
+                        }
                     }
-    
                 });
                 LOG.trace("gc candidates after dest:" + entry.getKey() + ", " + gcCandidateSet);
             }
@@ -1669,7 +1667,7 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
     }
 
     private void removeAckLocationsForSub(Transaction tx, StoredDestination sd, String subscriptionKey) throws IOException {
-        if (!sd.ackPositions.isEmpty(tx)) {        
+        if (!sd.ackPositions.isEmpty(tx)) {
             Long end = sd.ackPositions.getLast(tx).getKey();
             for (Long sequence = sd.ackPositions.getFirst(tx).getKey(); sequence <= end; sequence++) {
                 removeAckLocation(tx, sd, subscriptionKey, sequence);
@@ -1704,6 +1702,9 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
                         sd.messageIdIndex.remove(tx, entry.getValue().messageId);
                         sd.orderIndex.remove(tx, entry.getKey());
                     }
+                } else {
+                    // update
+                    sd.ackPositions.put(tx, sequenceId, hs);
                 }
             }
         }
