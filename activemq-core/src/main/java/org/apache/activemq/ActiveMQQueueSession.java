@@ -47,8 +47,8 @@ import javax.jms.TopicSubscriber;
  * other operations. The ActiveMQSessions implement both Topic and Queue
  * Sessions methods but the spec states that Queue session should throw
  * Exceptions if topic operations are attempted on it.
- * 
- * 
+ *
+ *
  */
 public class ActiveMQQueueSession implements QueueSession {
 
@@ -294,11 +294,15 @@ public class ActiveMQQueueSession implements QueueSession {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see java.lang.Object#equals(java.lang.Object)
      */
     public boolean equals(Object arg0) {
-        return next.equals(arg0);
+        if(this != arg0) {
+            return next.equals(arg0);
+        }
+
+        return true;
     }
 
     /**
@@ -327,7 +331,7 @@ public class ActiveMQQueueSession implements QueueSession {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see java.lang.Object#hashCode()
      */
     public int hashCode() {
@@ -349,7 +353,7 @@ public class ActiveMQQueueSession implements QueueSession {
     }
 
     /**
-     * 
+     *
      */
     public void run() {
         next.run();
@@ -365,7 +369,7 @@ public class ActiveMQQueueSession implements QueueSession {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see java.lang.Object#toString()
      */
     public String toString() {
