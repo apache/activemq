@@ -29,20 +29,20 @@ public class CronParserTest {
 
     @Test
     public void testgetNextTimeDayOfWeek() throws MessageFormatException {
-        
-        
+
+
         // using an absolute date so that result will be absolute - Monday 15 Nov 2010
         Calendar current = Calendar.getInstance();
         current.set(2010, Calendar.NOVEMBER, 15, 9, 15, 30);
         System.out.println("start:" + current.getTime());
-        
+
         String test = "* * * * 5";
         long next = CronParser.getNextScheduledTime(test, current.getTimeInMillis());
-        
+
         Calendar result = Calendar.getInstance();
         result.setTimeInMillis(next);
         System.out.println("next:" + result.getTime());
-        
+
         assertEquals(30,result.get(Calendar.SECOND));
         assertEquals(15,result.get(Calendar.MINUTE));
         assertEquals(9,result.get(Calendar.HOUR));
@@ -51,23 +51,49 @@ public class CronParserTest {
         assertEquals(Calendar.NOVEMBER,result.get(Calendar.MONTH));
         assertEquals(2010,result.get(Calendar.YEAR));
     }
-    
+
+    @Test
+    public void testgetNextTimeCase1() throws MessageFormatException {
+
+
+        // using an absolute date so that result will be absolute - Monday 15 Nov 2010
+        Calendar current = Calendar.getInstance();
+        current.set(2011, Calendar.MARCH, 7, 9, 15, 30);
+        System.out.println("start:" + current.getTime());
+
+        String test = "50 20 * * 5";
+        long next = CronParser.getNextScheduledTime(test, current.getTimeInMillis());
+
+        Calendar result = Calendar.getInstance();
+        result.setTimeInMillis(next);
+        System.out.println("next:" + result.getTime());
+
+        assertEquals(30,result.get(Calendar.SECOND));
+        assertEquals(50,result.get(Calendar.MINUTE));
+        assertEquals(20,result.get(Calendar.HOUR_OF_DAY));
+        // expecting Friday 11th
+        assertEquals(11,result.get(Calendar.DAY_OF_MONTH));
+        assertEquals(Calendar.FRIDAY,result.get(Calendar.DAY_OF_WEEK));
+        assertEquals(Calendar.MARCH,result.get(Calendar.MONTH));
+        assertEquals(2011,result.get(Calendar.YEAR));
+    }
+
     @Test
     public void testgetNextTimeMonth() throws MessageFormatException {
-        
-        
+
+
         // using an absolute date so that result will be absolute - Monday 15 Nov 2010
         Calendar current = Calendar.getInstance();
         current.set(2010, Calendar.NOVEMBER, 15, 9, 15, 30);
         System.out.println("start:" + current.getTime());
-        
+
         String test = "* * * 12 *";
         long next = CronParser.getNextScheduledTime(test, current.getTimeInMillis());
-        
+
         Calendar result = Calendar.getInstance();
         result.setTimeInMillis(next);
         System.out.println("next:" + result.getTime());
-        
+
         assertEquals(30,result.get(Calendar.SECOND));
         assertEquals(15,result.get(Calendar.MINUTE));
         assertEquals(9,result.get(Calendar.HOUR));
@@ -75,7 +101,7 @@ public class CronParserTest {
         assertEquals(Calendar.DECEMBER,result.get(Calendar.MONTH));
         assertEquals(2010,result.get(Calendar.YEAR));
     }
-    
+
     @Test
     public void testgetNextTimeDays() throws MessageFormatException {
 
@@ -84,14 +110,14 @@ public class CronParserTest {
         Calendar current = Calendar.getInstance();
         current.set(2010, Calendar.NOVEMBER, 15, 9, 15, 30);
         System.out.println("start:" + current.getTime());
-        
+
         String test = "* * 16 * *";
         long next = CronParser.getNextScheduledTime(test, current.getTimeInMillis());
 
         Calendar result = Calendar.getInstance();
         result.setTimeInMillis(next);
         System.out.println("next:" + result.getTime());
-        
+
         assertEquals(30,result.get(Calendar.SECOND));
         assertEquals(15,result.get(Calendar.MINUTE));
         assertEquals(9,result.get(Calendar.HOUR));
@@ -99,7 +125,7 @@ public class CronParserTest {
         assertEquals(Calendar.NOVEMBER,result.get(Calendar.MONTH));
         assertEquals(2010,result.get(Calendar.YEAR));
     }
-    
+
     @Test
     public void testgetNextTimeMinutes() throws MessageFormatException {
         String test = "30 * * * *";
@@ -108,22 +134,22 @@ public class CronParserTest {
         calender.setTimeInMillis(current);
         System.out.println("start:" + calender.getTime());
         long next = CronParser.getNextScheduledTime(test, current);
-        
+
         calender.setTimeInMillis(next);
         System.out.println("next:" + calender.getTime());
         long result = next - current;
         assertEquals(60*10*1000,result);
     }
-    
+
     @Test
     public void testgetNextTimeHours() throws MessageFormatException {
         String test = "* 1 * * *";
-        
+
         Calendar calender = Calendar.getInstance();
         calender.set(1972, 2, 2, 17, 10, 0);
         long current = calender.getTimeInMillis();
         long next = CronParser.getNextScheduledTime(test, current);
-        
+
         calender.setTimeInMillis(next);
         long result = next - current;
         long expected = 60*1000*60*8;
@@ -133,12 +159,12 @@ public class CronParserTest {
     @Test
     public void testgetNextTimeHoursZeroMin() throws MessageFormatException {
         String test = "0 1 * * *";
-        
+
         Calendar calender = Calendar.getInstance();
         calender.set(1972, 2, 2, 17, 10, 0);
         long current = calender.getTimeInMillis();
         long next = CronParser.getNextScheduledTime(test, current);
-        
+
         calender.setTimeInMillis(next);
         long result = next - current;
         long expected = 60*1000*60*7 + 60*1000*50;
@@ -230,13 +256,13 @@ public class CronParserTest {
         test = "0 1 2 3 4";
         list = CronParser.tokenize(test);
         assertEquals(list.size(), 5);
-        
+
         assertEquals(list.get(0), "0");
         assertEquals(list.get(1), "1");
         assertEquals(list.get(2), "2");
         assertEquals(list.get(3), "3");
         assertEquals(list.get(4), "4");
-        
+
     }
 
     public void testGetNextScheduledTime() {
