@@ -618,8 +618,19 @@ public class ActiveMQActivationSpec implements MessageActivationSpec, Serializab
     /**
      * 
      */
-    public void setBackOffMultiplier(short backOffMultiplier) {
+    public void setBackOffMultiplier(double backOffMultiplier) {
         lazyCreateRedeliveryPolicy().setBackOffMultiplier(backOffMultiplier);
+    }
+    
+    public long getMaximumRedeliveryDelay() {
+        if (redeliveryPolicy == null) {
+            return 0;
+        }
+        return redeliveryPolicy.getMaximumRedeliveryDelay();
+    }
+    
+    public void setMaximumRedeliveryDelay(long maximumRedeliveryDelay) {
+        lazyCreateRedeliveryPolicy().setMaximumRedeliveryDelay(maximumRedeliveryDelay);
     }
 
     /**

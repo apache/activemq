@@ -235,6 +235,24 @@ public class ActiveMQConnectionSupport {
         info.setInitialRedeliveryDelay(value);
     }
 
+
+    /**
+     * @return initial redelivery delay
+     */
+    public Long getMaximumRedeliveryDelay() {
+        return info.getMaximumRedeliveryDelay();
+    }
+
+    /**
+     * @param value
+     */
+    public void setMaximumRedeliveryDelay(Long value) {
+        if ( log.isDebugEnabled() ) {
+            log.debug("setting [maximumRedeliveryDelay] to: " + value);
+        }
+        info.setMaximumRedeliveryDelay(value);
+    }
+
     /**
      * @return input stream prefetch
      */

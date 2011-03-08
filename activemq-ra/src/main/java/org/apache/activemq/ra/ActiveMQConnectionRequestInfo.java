@@ -205,6 +205,10 @@ public class ActiveMQConnectionRequestInfo implements ConnectionRequestInfo, Ser
         return Long.valueOf(redeliveryPolicy().getInitialRedeliveryDelay());
     }
 
+    public Long getMaximumRedeliveryDelay() {
+        return Long.valueOf(redeliveryPolicy().getMaximumRedeliveryDelay());
+    }
+
     public Integer getMaximumRedeliveries() {
         return Integer.valueOf(redeliveryPolicy().getMaximumRedeliveries());
     }
@@ -222,6 +226,12 @@ public class ActiveMQConnectionRequestInfo implements ConnectionRequestInfo, Ser
     public void setInitialRedeliveryDelay(Long value) {
         if (value != null) {
             redeliveryPolicy().setInitialRedeliveryDelay(value.longValue());
+        }
+    }
+
+    public void setMaximumRedeliveryDelay(Long value) {
+        if (value != null) {
+            redeliveryPolicy().setMaximumRedeliveryDelay(value.longValue());
         }
     }
 
