@@ -205,6 +205,11 @@ public class FailoverTransport implements CompositeTransport {
         };
     }
 
+    public final void disposeTransport(Transport transport) {
+        transport.setTransportListener(disposedListener);
+        ServiceSupport.dispose(transport);
+    }
+
     public final void handleTransportFailure(IOException e) throws InterruptedException {
         if (LOG.isTraceEnabled()) {
             LOG.trace(this + " handleTransportFailure: " + e);
@@ -218,8 +223,7 @@ public class FailoverTransport implements CompositeTransport {
         }
         if (transport != null) {
 
-            transport.setTransportListener(disposedListener);
-            ServiceSupport.dispose(transport);
+            disposeTransport(transport);
 
             boolean reconnectOk = false;
             synchronized (reconnectMutex) {
@@ -808,7 +812,7 @@ public class FailoverTransport implements CompositeTransport {
                             try {
                                 Transport transport = this.connectedTransport.getAndSet(null);
                                 if (transport != null) {
-                                    transport.stop();
+                                    disposeTransport(transport);
                                 }
                             } catch (Exception e) {
                                 LOG.debug("Caught an exception stopping existing transport for rebalance", e);

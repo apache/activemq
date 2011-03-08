@@ -52,7 +52,7 @@ public class FailoverClusterTest extends TestCase {
         if (brokerB == null) {
             brokerB = createBrokerB(BROKER_B_BIND_ADDRESS);
         }
-        Thread.sleep(5000);
+        Thread.sleep(3000);
         Set<String> set = new HashSet<String>();
         for (ActiveMQConnection c : connections) {
             set.add(c.getTransportChannel().getRemoteAddress());
@@ -66,7 +66,7 @@ public class FailoverClusterTest extends TestCase {
             // add in server side only url param, should not be propagated
             brokerB = createBrokerB(BROKER_B_BIND_ADDRESS + "?transport.closeAsync=false");
         }
-        Thread.sleep(5000);
+        Thread.sleep(3000);
         Set<String> set = new HashSet<String>();
         for (ActiveMQConnection c : connections) {
             set.add(c.getTransportChannel().getRemoteAddress());
