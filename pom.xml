@@ -449,6 +449,13 @@
         <version>3.0.0</version>
         <optional>true</optional>
       </dependency>
+      
+    <!-- For jsvc support -->
+    <dependency>
+      <groupId>commons-daemon</groupId>
+      <artifactId>commons-daemon</artifactId>
+      <version>1.0.3</version>
+    </dependency> 
 
       <!-- for the XML parsing -->
       <dependency>
@@ -941,11 +948,11 @@
       </dependency>
       
       <!-- FTP support for BlobMessages -->
-    	<dependency>
-    	    <groupId>commons-net</groupId>
-    	    <artifactId>commons-net</artifactId>
-    	    <version>${commons-net-version}</version>
-    	</dependency>
+        <dependency>
+            <groupId>commons-net</groupId>
+            <artifactId>commons-net</artifactId>
+            <version>${commons-net-version}</version>
+        </dependency>
 
       <dependency>
         <groupId>org.apache.velocity</groupId>

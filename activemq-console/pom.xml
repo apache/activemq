@@ -125,7 +125,13 @@
     <dependency>
       <groupId>com.ibm.icu</groupId>
       <artifactId>icu4j</artifactId>
-    </dependency>  
+    </dependency> 
+    
+    <dependency>
+      <groupId>commons-daemon</groupId>
+      <artifactId>commons-daemon</artifactId>
+    </dependency> 
+
   </dependencies>
 
   <build>
