@@ -43,6 +43,10 @@ public class MapTransportConnectionStateRegister  implements TransportConnection
 
     public TransportConnectionState unregisterConnectionState(ConnectionId connectionId) {
         TransportConnectionState rc = connectionStates.remove(connectionId);
+        if (rc.getReferenceCounter().get() > 1) {
+            rc.decrementReference();
+            connectionStates.put(connectionId, rc);
+        }
         return rc;
     }
 

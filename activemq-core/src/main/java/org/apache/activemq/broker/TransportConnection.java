@@ -697,6 +697,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
             synchronized (brokerConnectionStates) {
                 brokerConnectionStates.remove(info.getConnectionId());
             }
+            unregisterConnectionState(info.getConnectionId());
             LOG.warn("Failed to add Connection " + info.getConnectionId() + ", reason: " +  e.toString());
             if (LOG.isDebugEnabled()) {
                 LOG.debug("Exception detail:", e);
