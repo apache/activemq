@@ -134,7 +134,7 @@ public class TopicProducerFlowControlTest extends TestCase implements MessageLis
             public boolean isSatisified() throws Exception {
                 return consumed.get() == numMessagesToSend;
             }
-        }, 60 * 1000);
+        }, 5 * 60 * 1000); // give it plenty of time before failing
 
         assertEquals("Didn't produce all messages", numMessagesToSend, produced.get());
         assertEquals("Didn't consume all messages", numMessagesToSend, consumed.get());
