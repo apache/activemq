@@ -113,6 +113,28 @@ public class URISupportTest extends TestCase {
         parameters = URISupport.parseParameters(uri);
     }
     
+    public void testCompositeCreateURIWithQuery() throws Exception {
+    	String queryString = "query=value";
+    	URI originalURI = new URI("outerscheme:(innerscheme:innerssp)");
+    	URI querylessURI = originalURI;
+    	assertEquals(querylessURI, URISupport.createURIWithQuery(originalURI, null));
+    	assertEquals(querylessURI, URISupport.createURIWithQuery(originalURI, ""));
+    	assertEquals(new URI(querylessURI + "?" + queryString), URISupport.createURIWithQuery(originalURI, queryString));
+    	originalURI = new URI("outerscheme:(innerscheme:innerssp)?outerquery=0");
+    	assertEquals(querylessURI, URISupport.createURIWithQuery(originalURI, null));
+    	assertEquals(querylessURI, URISupport.createURIWithQuery(originalURI, ""));
+    	assertEquals(new URI(querylessURI + "?" + queryString), URISupport.createURIWithQuery(originalURI, queryString));
+    	originalURI = new URI("outerscheme:(innerscheme:innerssp?innerquery=0)");
+    	querylessURI = originalURI;
+    	assertEquals(querylessURI, URISupport.createURIWithQuery(originalURI, null));
+    	assertEquals(querylessURI, URISupport.createURIWithQuery(originalURI, ""));
+    	assertEquals(new URI(querylessURI + "?" + queryString), URISupport.createURIWithQuery(originalURI, queryString));
+    	originalURI = new URI("outerscheme:(innerscheme:innerssp?innerquery=0)?outerquery=0");
+    	assertEquals(querylessURI, URISupport.createURIWithQuery(originalURI, null));
+    	assertEquals(querylessURI, URISupport.createURIWithQuery(originalURI, ""));
+    	assertEquals(new URI(querylessURI + "?" + queryString), URISupport.createURIWithQuery(originalURI, queryString));
+    }
+    
     private void verifyParams(Map<String,String> parameters) {
         assertEquals(parameters.get("proxyHost"), "localhost");
         assertEquals(parameters.get("proxyPort"), "80");

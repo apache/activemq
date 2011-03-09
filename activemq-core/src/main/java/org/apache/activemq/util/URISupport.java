@@ -174,12 +174,16 @@ public class URISupport {
         String schemeSpecificPart = uri.getRawSchemeSpecificPart();
         // strip existing query if any
         int questionMark = schemeSpecificPart.lastIndexOf("?");
+        // make sure question mark is not within parentheses
+        if (questionMark < schemeSpecificPart.lastIndexOf(")")) {
+        	questionMark = -1;
+        }
         if (questionMark > 0) {
             schemeSpecificPart = schemeSpecificPart.substring(0, questionMark);
         }
         if (query != null && query.length() > 0) {
             schemeSpecificPart += "?" + query;
-         }
+        }
         return new URI(uri.getScheme(), schemeSpecificPart, uri.getFragment());
     }
 
