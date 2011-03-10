@@ -23,7 +23,7 @@
   http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd">
   <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer"/>
 
-  <broker brokerName="broker2" persistent="false" useShutdownHook="false" useJmx="false" xmlns="http://activemq.apache.org/schema/core">
+  <broker brokerName="broker2" brokerId="broker2" persistent="false" useShutdownHook="false" useJmx="false" xmlns="http://activemq.apache.org/schema/core">
 
     <transportConnectors>
       <!-- configure a low inactivity monitor check time to ensure all messages are received quickly, ask for a response as

@@ -23,7 +23,7 @@
   http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd">
   <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer"/>
 
-  <broker brokerName="broker1" persistent="false" useShutdownHook="false" useJmx="false" xmlns="http://activemq.apache.org/schema/core">
+  <broker brokerName="broker1" brokerId="broker1" persistent="false" useShutdownHook="false" useJmx="false" xmlns="http://activemq.apache.org/schema/core">
 
     <destinations>
       <queue physicalName="RECONNECT.TEST.QUEUE"/>
@@ -31,7 +31,7 @@
 
     <networkConnectors>
       <!--<networkConnector uri="static:(http://localhost:61617?proxyHost=localhost&amp;proxyPort=80)" duplex="true">-->
-      <networkConnector uri="static:(http://localhost:61617?readCheckTime=4000&amp;initialDelayTime=4000&amp;keepAliveResponseRequired=true)" duplex="true">
+      <networkConnector name="1-2" uri="static:(http://localhost:61617?readCheckTime=4000&amp;initialDelayTime=4000&amp;keepAliveResponseRequired=true)" duplex="true">
         <staticallyIncludedDestinations>
           <queue physicalName="RECONNECT.TEST.QUEUE"/>
         </staticallyIncludedDestinations>
