@@ -59,6 +59,7 @@ public class LoadBalanceTest {
         final int total = 100;
         final AtomicInteger broker1Count = new AtomicInteger(0);
         final AtomicInteger broker2Count = new AtomicInteger(0);
+        final CountDownLatch startProducer = new CountDownLatch(1);
         try {
             {
                 brokerService1 = new BrokerService();
@@ -137,6 +138,9 @@ public class LoadBalanceTest {
                         });
                         container2.afterPropertiesSet();
                         container2.start();
+
+                        assertTrue("wait for start signal", startProducer.await(20, TimeUnit.SECONDS));
+
                         final CachingConnectionFactory cachingConnectionFactory = new CachingConnectionFactory(
                                 singleConnectionFactory2);
                         final JmsTemplate template = new JmsTemplate(
@@ -173,6 +177,10 @@ public class LoadBalanceTest {
                 }
             });
             pool.shutdown();
+
+            waitForBridgeFormation(10000);
+            startProducer.countDown();
+
             pool.awaitTermination(10, TimeUnit.SECONDS);
             LOG.info("broker1Count " + broker1Count.get() + ", broker2Count " + broker2Count.get());
 
