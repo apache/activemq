@@ -66,6 +66,7 @@ public class NestedMapAndListPropertyTest extends JmsTopicSendReceiveWithTwoConn
         assertEquals("listField[0]", "a", list.get(0));
         assertEquals("listField[1]", "b", list.get(1));
         assertEquals("listField[2]", "c", list.get(2));
+        assertEquals("JohnDoe", message.getStringProperty("JMSXUserID"));
     }
 
     protected Message createMessage(int index) throws JMSException {
@@ -85,6 +86,7 @@ public class NestedMapAndListPropertyTest extends JmsTopicSendReceiveWithTwoConn
 
         answer.setObjectProperty("mapField", nestedMap);
         answer.setObjectProperty("listField", Arrays.asList(new Object[] {"a", "b", "c"}));
+        answer.setStringProperty("JMSXUserID", "JohnDoe");
 
         return answer;
     }

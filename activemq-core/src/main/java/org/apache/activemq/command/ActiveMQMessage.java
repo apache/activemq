@@ -593,11 +593,14 @@ public class ActiveMQMessage extends Message implements org.apache.activemq.Mess
     }
 
     public String getStringProperty(String name) throws JMSException {
-        Object value = getObjectProperty(name);
-        if (value == null) {
-            if (name.equals("JMSXUserID")) {
-                value = getUserID();
+        Object value = null;
+        if (name.equals("JMSXUserID")) {
+            value = getUserID();
+            if (value == null) {
+                value = getObjectProperty(name);
             }
+        } else {
+            value = getObjectProperty(name);
         }
         if (value == null) {
             return null;

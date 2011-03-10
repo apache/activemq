@@ -60,4 +60,21 @@ public class JmsTopicSendReceiveWithEmbeddedBrokerAndUserIDTest extends JmsTopic
             assertEquals("JMSXUserID header", userName, userID);
         }
     }
+
+    public void testSpoofedJMSXUserIdIsIgnored() throws Exception {
+        Thread.sleep(1000);
+        messages.clear();
+
+        for (int i = 0; i < data.length; i++) {
+            Message message = createMessage(i);
+            configureMessage(message);
+            message.setStringProperty("JMSXUserID", "spoofedId");
+            if (verbose) {
+                LOG.info("About to send a message: " + message + " with text: " + data[i]);
+            }
+            sendMessage(i, message);
+        }
+        assertMessagesAreReceived();
+        LOG.info("" + data.length + " messages(s) received, closing down connections");
+    }
 }
