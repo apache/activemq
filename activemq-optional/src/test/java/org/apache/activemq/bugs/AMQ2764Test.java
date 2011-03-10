@@ -32,6 +32,7 @@ import org.apache.activemq.advisory.ConsumerListener;
 import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQQueue;
+import org.apache.activemq.transport.http.WaitForJettyListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -221,6 +222,8 @@ public class AMQ2764Test extends TestCase {
         if (brokerOne == null) {
             brokerOne = createFirstBroker();
             brokerOne.start();
+            brokerOne.waitUntilStarted();
+            WaitForJettyListener.waitForJettySocketToAccept("http://localhost:61616");
         }
     }
 
@@ -235,6 +238,8 @@ public class AMQ2764Test extends TestCase {
         if (brokerTwo == null) {
             brokerTwo = createSecondBroker();
             brokerTwo.start();
+            brokerTwo.waitUntilStarted();
+            WaitForJettyListener.waitForJettySocketToAccept("http://localhost:61617");
         }
     }
 
