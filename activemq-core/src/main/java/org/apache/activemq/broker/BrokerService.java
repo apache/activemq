@@ -114,7 +114,7 @@ public class BrokerService implements Service {
     private boolean enableStatistics = true;
     private boolean persistent = true;
     private boolean populateJMSXUserID;
-    private boolean useAuthenticatedPrincipalForJMXUserID;
+    private boolean useAuthenticatedPrincipalForJMSXUserID;
 
     private boolean useShutdownHook = true;
     private boolean useLoggingForShutdownErrors;
@@ -1886,7 +1886,7 @@ public class BrokerService implements Service {
         broker = new TransactionBroker(broker, getPersistenceAdapter().createTransactionStore());
         if (isPopulateJMSXUserID()) {
             UserIDBroker userIDBroker = new UserIDBroker(broker);
-            userIDBroker.setUseAuthenticatePrincipal(isUseAuthenticatedPrincipalForJMXUserID());
+            userIDBroker.setUseAuthenticatePrincipal(isUseAuthenticatedPrincipalForJMSXUserID());
             broker = userIDBroker;
         }
         if (isMonitorConnectionSplits()) {
@@ -2378,12 +2378,12 @@ public class BrokerService implements Service {
         this.brokerId = new BrokerId(brokerId);
     }
 
-    public boolean isUseAuthenticatedPrincipalForJMXUserID() {
-        return useAuthenticatedPrincipalForJMXUserID;
+    public boolean isUseAuthenticatedPrincipalForJMSXUserID() {
+        return useAuthenticatedPrincipalForJMSXUserID;
     }
 
-    public void setUseAuthenticatedPrincipalForJMXUserID(boolean useAuthenticatedPrincipalForJMXUserID) {
-        this.useAuthenticatedPrincipalForJMXUserID = useAuthenticatedPrincipalForJMXUserID;
+    public void setUseAuthenticatedPrincipalForJMSXUserID(boolean useAuthenticatedPrincipalForJMSXUserID) {
+        this.useAuthenticatedPrincipalForJMSXUserID = useAuthenticatedPrincipalForJMSXUserID;
     }
 
     public boolean isNetworkConnectorStartAsync() {

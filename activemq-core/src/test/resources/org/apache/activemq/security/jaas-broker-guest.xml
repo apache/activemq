@@ -27,7 +27,7 @@
 
   <broker useJmx="false" persistent="false" xmlns="http://activemq.apache.org/schema/core"
           populateJMSXUserID="true"
-          useAuthenticatedPrincipalForJMXUserID="true">
+          useAuthenticatedPrincipalForJMSXUserID="true">
 
     <plugins>
       <!--  use JAAS to authenticate using the login.config file on the classpath to configure JAAS -->
