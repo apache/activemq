@@ -327,9 +327,15 @@ public class InactivityMonitor extends TransportFilter {
             configured = true;
         } else if (localWireFormatInfo != null && remoteWireFormatInfo != null) {
             if (!ignoreRemoteWireFormat) {
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("Using min of local: " + localWireFormatInfo + " and remote: " + remoteWireFormatInfo);
+                }
                 readCheckTime = Math.min(localWireFormatInfo.getMaxInactivityDuration(), remoteWireFormatInfo.getMaxInactivityDuration());
                 initialDelayTime = Math.min(localWireFormatInfo.getMaxInactivityDurationInitalDelay(), remoteWireFormatInfo.getMaxInactivityDurationInitalDelay());
             } else {
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("Using local: " + localWireFormatInfo);
+                }
                 readCheckTime = localWireFormatInfo.getMaxInactivityDuration();
                 initialDelayTime = localWireFormatInfo.getMaxInactivityDurationInitalDelay();
             }
