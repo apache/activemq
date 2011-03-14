@@ -19,6 +19,7 @@ package org.apache.activemq.broker.scheduler;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import java.io.File;
+import java.util.Calendar;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -50,6 +51,33 @@ public class JobSchedulerTest {
         }
         latch.await(5, TimeUnit.SECONDS);
         assertEquals(0,latch.getCount());
+    }
+
+    @Test
+    public void testAddCronAndByteSequence() throws Exception {
+
+        final CountDownLatch latch = new CountDownLatch(1);
+        scheduler.addListener(new JobListener() {
+
+            public void scheduledJob(String id, ByteSequence job) {
+                latch.countDown();
+            }
+
+        });
+
+        Calendar current = Calendar.getInstance();
+
+        int minutes = current.get(Calendar.MINUTE) + 1;
+        int hour = current.get(Calendar.HOUR_OF_DAY);
+        int day = current.get(Calendar.DAY_OF_WEEK) - 1;
+
+        String cronTab = String.format("%d %d * * %d", minutes, hour, day);
+
+        String str = new String("test1");
+        scheduler.schedule("id:1", new ByteSequence(str.getBytes()), cronTab, 0, 0, 0);
+
+        assertTrue(latch.await(60, TimeUnit.SECONDS));
+        assertEquals(0, latch.getCount());
     }
 
     @Test
