@@ -18,6 +18,7 @@ package org.apache.activemq.transport.discovery.simple;
 
 import java.io.IOException;
 import java.net.URI;
+import java.util.Map;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -28,6 +29,7 @@ import org.apache.activemq.command.DiscoveryEvent;
 import org.apache.activemq.thread.DefaultThreadPools;
 import org.apache.activemq.transport.discovery.DiscoveryAgent;
 import org.apache.activemq.transport.discovery.DiscoveryListener;
+import org.apache.activemq.util.MDCHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -110,8 +112,11 @@ public class SimpleDiscoveryAgent implements DiscoveryAgent {
         if (event.failed.compareAndSet(false, true)) {
 
             listener.onServiceRemove(event);
+            final Map context = MDCHelper.getCopyOfContextMap();
             DefaultThreadPools.getDefaultTaskRunnerFactory().execute(new Runnable() {
                 public void run() {
+
+                    MDCHelper.setContextMap(context);
 
                     // We detect a failed connection attempt because the service
                     // fails right

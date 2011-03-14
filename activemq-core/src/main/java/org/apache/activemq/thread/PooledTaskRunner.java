@@ -16,6 +16,9 @@
  */
 package org.apache.activemq.thread;
 
+import org.apache.activemq.util.MDCHelper;
+
+import java.util.Map;
 import java.util.concurrent.Executor;
 
 /**
@@ -36,8 +39,10 @@ class PooledTaskRunner implements TaskRunner {
         this.executor = executor;
         this.maxIterationsPerRun = maxIterationsPerRun;
         this.task = task;
+        final Map context = MDCHelper.getCopyOfContextMap();
         runable = new Runnable() {
             public void run() {
+                MDCHelper.setContextMap(context);
                 runningThread = Thread.currentThread();
                 try {
                     runTask();

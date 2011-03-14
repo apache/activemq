@@ -95,6 +95,8 @@ import org.apache.activemq.usage.SystemUsage;
 import org.apache.activemq.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
+
 /**
  * Manages the lifecycle of an ActiveMQ Broker. A BrokerService consists of a
  * number of transport connectors, network connectors and a bunch of properties
@@ -471,6 +473,9 @@ public class BrokerService implements Service {
             // throw new IllegalStateException("Allready started.");
             return;
         }
+
+        MDC.put("broker", brokerName);
+
         try {
         	if (systemExitOnShutdown && useShutdownHook) {
         		throw new ConfigurationException("'useShutdownHook' property cannot be be used with 'systemExitOnShutdown', please turn it off (useShutdownHook=false)");
@@ -537,6 +542,8 @@ public class BrokerService implements Service {
                 LOG.warn("Failed to stop broker after failure in start ", ex);
             }
             throw e;
+        } finally {
+            MDC.remove("broker");
         }
     }
 
@@ -550,7 +557,9 @@ public class BrokerService implements Service {
         if (!started.get()) {
             return;
         }
-        
+
+        MDC.put("broker", brokerName);
+
         if (systemExitOnShutdown) {
         	new Thread() {
         		@Override
@@ -559,7 +568,7 @@ public class BrokerService implements Service {
         		}
         	}.start();
         }
-        
+
         LOG.info("ActiveMQ Message Broker (" + getBrokerName() + ", " + brokerId + ") is shutting down");
         removeShutdownHook();
         ServiceStopper stopper = new ServiceStopper();
@@ -578,7 +587,7 @@ public class BrokerService implements Service {
             stopper.stop(broker);
             broker = null;
         }
-        
+
         if (tempDataStore != null) {
             tempDataStore.stop();
             tempDataStore = null;
@@ -624,10 +633,10 @@ public class BrokerService implements Service {
             this.executor.shutdownNow();
             this.executor = null;
         }
-        
+
         this.destinationInterceptors = null;
         this.destinationFactory = null;
-        
+
         LOG.info("ActiveMQ JMS Message Broker (" + getBrokerName() + ", " + brokerId + ") stopped");
         synchronized (shutdownHooks) {
             for (Runnable hook : shutdownHooks) {
@@ -638,7 +647,9 @@ public class BrokerService implements Service {
                 }
             }
         }
-        
+
+        MDC.remove("broker");
+
         stopper.throwFirstException();
     }
     
@@ -2100,9 +2111,11 @@ public class BrokerService implements Service {
                         connector.setBrokerURL(getDefaultSocketURIString());
                     }
                     if (networkConnectorStartExecutor != null) {
+                        final Map context = MDCHelper.getCopyOfContextMap();
                         networkConnectorStartExecutor.execute(new Runnable() {
                             public void run() {
                                 try {
+                                    MDCHelper.setContextMap(context);
                                     LOG.info("Async start of " + connector);
                                     connector.start();
                                 } catch(Exception e) {

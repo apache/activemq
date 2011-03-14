@@ -90,10 +90,7 @@ import org.apache.activemq.transport.ResponseCorrelator;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportDisposedIOException;
 import org.apache.activemq.transport.TransportFactory;
-import org.apache.activemq.util.IntrospectionSupport;
-import org.apache.activemq.util.MarshallingSupport;
-import org.apache.activemq.util.ServiceSupport;
-import org.apache.activemq.util.URISupport;
+import org.apache.activemq.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -946,10 +943,12 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
                 cs.getContext().getStopping().set(true);
             }
             try {
+                final Map context = MDCHelper.getCopyOfContextMap();
                 getDefaultTaskRunnerFactory().execute(new Runnable(){
                     public void run() {
                         serviceLock.writeLock().lock();
                         try {
+                            MDCHelper.setContextMap(context);
                             doStop();
                         } catch (Throwable e) {
                             LOG.debug("Error occured while shutting down a connection to '" + transport.getRemoteAddress()
