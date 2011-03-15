@@ -966,41 +966,27 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
             }
         }
 
-        final DestinationFilter filter = DestinationFilter.parseFilter(destination);
-
         ActiveMQDestination[] dests = excludedDestinations;
         if (dests != null && dests.length > 0) {
             for (int i = 0; i < dests.length; i++) {
-                DestinationFilter exclusionFilter = filter;
                 ActiveMQDestination match = dests[i];
-                if (exclusionFilter instanceof org.apache.activemq.filter.SimpleDestinationFilter) {
-                    DestinationFilter newFilter = DestinationFilter.parseFilter(match);
-                    if (!(newFilter instanceof org.apache.activemq.filter.SimpleDestinationFilter)) {
-                        exclusionFilter = newFilter;
-                        match = destination;
-                    }
-                }
-                if (match != null && exclusionFilter.matches(match) && dests[i].getDestinationType() == destination.getDestinationType()) {
+                DestinationFilter exclusionFilter = DestinationFilter.parseFilter(match);
+                if (match != null && exclusionFilter.matches(destination) && dests[i].getDestinationType() == destination.getDestinationType()) {
                     return false;
                 }
             }
         }
+
         dests = dynamicallyIncludedDestinations;
         if (dests != null && dests.length > 0) {
             for (int i = 0; i < dests.length; i++) {
-                DestinationFilter inclusionFilter = filter;
                 ActiveMQDestination match = dests[i];
-                if (inclusionFilter instanceof org.apache.activemq.filter.SimpleDestinationFilter) {
-                    DestinationFilter newFilter = DestinationFilter.parseFilter(match);
-                    if (!(newFilter instanceof org.apache.activemq.filter.SimpleDestinationFilter)) {
-                        inclusionFilter = newFilter;
-                        match = destination;
-                    }
-                }
-                if (match != null && inclusionFilter.matches(match) && dests[i].getDestinationType() == destination.getDestinationType()) {
+                DestinationFilter inclusionFilter = DestinationFilter.parseFilter(match);
+                if (match != null && inclusionFilter.matches(destination) && dests[i].getDestinationType() == destination.getDestinationType()) {
                     return true;
                 }
             }
+
             return false;
         }
         return true;
