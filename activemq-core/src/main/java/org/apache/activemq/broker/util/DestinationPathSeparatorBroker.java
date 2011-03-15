@@ -39,7 +39,7 @@ public class DestinationPathSeparatorBroker extends BrokerPluginSupport {
     String pathSeparator = "/";
 
     protected ActiveMQDestination convertDestination(ActiveMQDestination destination) {
-        if (destination.getPhysicalName().contains(pathSeparator)) {
+        if (destination != null && destination.getPhysicalName().contains(pathSeparator)) {
             List<String> l = new ArrayList<String>();
             StringTokenizer iter = new StringTokenizer(destination.getPhysicalName(), pathSeparator);
             while (iter.hasMoreTokens()) {
