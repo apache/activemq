@@ -75,7 +75,7 @@ public class DiscoveryTransport extends TransportFilter implements DiscoveryList
             try {
                 URI uri = new URI(url);
                 LOG.info("Adding new broker connection URL: " + uri);
-                uri = URISupport.applyParameters(uri, parameters);
+                uri = URISupport.applyParameters(uri, parameters, DISCOVERED_OPTION_PREFIX);
                 serviceURIs.put(event.getServiceName(), uri);
                 next.add(false,new URI[] {uri});
             } catch (URISyntaxException e) {

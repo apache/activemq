@@ -100,8 +100,7 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
             }
             URI connectUri = uri;
             try {
-                connectUri = URISupport.removeQuery(connectUri);
-                connectUri = URISupport.applyParameters(connectUri, parameters);
+                connectUri = URISupport.applyParameters(connectUri, parameters, DISCOVERED_OPTION_PREFIX);
             } catch (URISyntaxException e) {
                 LOG.warn("could not apply query parameters: " + parameters + " to: " + connectUri, e);
             }

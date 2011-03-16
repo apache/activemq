@@ -16,6 +16,13 @@
  */
 package org.apache.activemq.network;
 
+import java.net.URI;
+import java.util.HashMap;
+import java.util.Vector;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+
 import static org.junit.Assert.assertTrue;
 
 import javax.jms.Connection;
@@ -32,6 +39,7 @@ import org.apache.activemq.broker.SslContext;
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.transport.tcp.SslBrokerServiceTest;
+import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.util.Wait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,14 +52,21 @@ public class FailoverStaticNetworkTest {
 
 	private final static String DESTINATION_NAME = "testQ";
 	protected BrokerService brokerA;
+    protected BrokerService brokerA1;
     protected BrokerService brokerB;
+    protected BrokerService brokerC;
 
 
     private SslContext sslContext;
-    
+
     protected BrokerService createBroker(String scheme, String listenPort, String[] networkToPorts) throws Exception {
+        return createBroker(scheme, listenPort, networkToPorts, null);
+    }
+
+    protected BrokerService createBroker(String scheme, String listenPort, String[] networkToPorts,
+                                         HashMap<String, String> networkProps) throws Exception {
         BrokerService broker = new BrokerService();
-        broker.setUseJmx(true);
+        broker.setUseJmx(false);
         broker.getManagementContext().setCreateConnector(false);
         broker.setSslContext(sslContext);
         broker.setDeleteAllMessagesOnStartup(true);
@@ -63,12 +78,30 @@ public class FailoverStaticNetworkTest {
             for (int i=1;i<networkToPorts.length; i++) {
                 builder.append("," + scheme + "://localhost:" + networkToPorts[i]);
             }
-            builder.append(")?randomize=false)");
-            broker.addNetworkConnector(builder.toString());
+            // limit the reconnects in case of initial random connection to slave
+            // leaving randomize on verifies that this config is picked up
+            builder.append(")?maxReconnectAttempts=1)");
+            NetworkConnector nc = broker.addNetworkConnector(builder.toString());
+            if (networkProps != null) {
+                IntrospectionSupport.setProperties(nc, networkProps);
+            }
         }
         return broker;
     }
-  
+
+    private BrokerService createBroker(String listenPort, String dataDir) throws Exception {
+        BrokerService broker = new BrokerService();
+        broker.setUseJmx(false);
+        broker.getManagementContext().setCreateConnector(false);
+        broker.setBrokerName("Broker_Shared");
+        // lazy create transport connector on start completion
+        TransportConnector connector = new TransportConnector();
+        connector.setUri(new URI("tcp://localhost:" + listenPort));
+        broker.addConnector(connector);
+        broker.setDataDirectory(dataDir);
+        return broker;
+    }
+
     @Before
     public void setUp() throws Exception {
         KeyManager[] km = SslBrokerServiceTest.getKeyManager();
@@ -83,6 +116,16 @@ public class FailoverStaticNetworkTest {
         
         brokerA.stop();
         brokerA.waitUntilStopped();
+
+        if (brokerA1 != null) {
+            brokerA1.stop();
+            brokerA1.waitUntilStopped();
+        }
+
+        if (brokerC != null) {
+            brokerC.stop();
+            brokerC.waitUntilStopped();
+        }
     }
 
     @Test
@@ -123,6 +166,100 @@ public class FailoverStaticNetworkTest {
         doTestNetworkSendReceive();
     }
 
+    @Test
+    public void testSendReceiveFailoverDuplex() throws Exception {
+        final Vector<Throwable> errors = new Vector<Throwable>();
+        final String dataDir = "target/data/shared";
+        brokerA = createBroker("61617", dataDir);
+        brokerA.start();
+
+        final BrokerService slave = createBroker("63617", dataDir);
+        brokerA1 = slave;
+        ExecutorService executor = Executors.newCachedThreadPool();
+        executor.execute(new Runnable() {
+            public void run() {
+                try {
+                    slave.start();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    errors.add(e);
+                }
+            }
+        });
+        executor.shutdown();
+
+        HashMap<String, String> networkConnectorProps = new HashMap<String, String>();
+        networkConnectorProps.put("duplex", "true");
+        brokerB = createBroker("tcp", "62617", new String[]{"61617", "63617"}, networkConnectorProps);
+        brokerB.start();
+
+        doTestNetworkSendReceive(brokerA, brokerB);
+        doTestNetworkSendReceive(brokerB, brokerA);
+
+        LOG.info("stopping brokerA (master shared_broker)");
+        brokerA.stop();
+        brokerA.waitUntilStopped();
+
+        // wait for slave to start
+        brokerA1.waitUntilStarted();
+
+        doTestNetworkSendReceive(brokerA1, brokerB);
+        doTestNetworkSendReceive(brokerB, brokerA1);
+
+        assertTrue("No unexpected exceptions " + errors, errors.isEmpty());
+    }
+
+    @Test
+    // master slave piggy in the middle setup
+    public void testSendReceiveFailoverDuplexWithPIM() throws Exception {
+        final String dataDir = "target/data/shared/pim";
+        brokerA = createBroker("61617", dataDir);
+        brokerA.start();
+
+        final BrokerService slave = createBroker("63617", dataDir);
+        brokerA1 = slave;
+        ExecutorService executor = Executors.newCachedThreadPool();
+        executor.execute(new Runnable() {
+            public void run() {
+                try {
+                    slave.start();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+        executor.shutdown();
+
+        HashMap<String, String> networkConnectorProps = new HashMap<String, String>();
+        networkConnectorProps.put("duplex", "true");
+        networkConnectorProps.put("networkTTL", "2");
+
+        brokerB = createBroker("tcp", "62617", new String[]{"61617", "63617"}, networkConnectorProps);
+        brokerB.start();
+
+        assertTrue("all props applied", networkConnectorProps.isEmpty());
+        networkConnectorProps.put("duplex", "true");
+        networkConnectorProps.put("networkTTL", "2");
+
+        brokerC = createBroker("tcp", "64617", new String[]{"61617", "63617"}, networkConnectorProps);
+        brokerC.start();
+        assertTrue("all props applied a second time", networkConnectorProps.isEmpty());
+
+        //Thread.sleep(4000);
+        doTestNetworkSendReceive(brokerC, brokerB);
+        doTestNetworkSendReceive(brokerB, brokerC);
+
+        LOG.info("stopping brokerA (master shared_broker)");
+        brokerA.stop();
+        brokerA.waitUntilStopped();
+
+        doTestNetworkSendReceive(brokerC, brokerB);
+        doTestNetworkSendReceive(brokerB, brokerC);
+
+        brokerC.stop();
+        brokerC.waitUntilStopped();
+    }
+
     /**
      * networked broker started after target so first connect attempt succeeds
      * start order is important
@@ -150,20 +287,25 @@ public class FailoverStaticNetworkTest {
     }
 
     private void doTestNetworkSendReceive() throws Exception, JMSException {
-        LOG.info("Creating Consumer on the networked brokerA ...");
+        doTestNetworkSendReceive(brokerB, brokerA);
+    }
+
+    private void doTestNetworkSendReceive(BrokerService to, BrokerService from) throws Exception, JMSException {
+
+        LOG.info("Creating Consumer on the networked broker ..." + from);
         
         SslContext.setCurrentSslContext(sslContext);
         // Create a consumer on brokerA
-        ConnectionFactory consFactory = createConnectionFactory(brokerA);
+        ConnectionFactory consFactory = createConnectionFactory(from);
         Connection consConn = consFactory.createConnection();
         consConn.start();
         Session consSession = consConn.createSession(false, Session.AUTO_ACKNOWLEDGE);
         ActiveMQDestination destination = (ActiveMQDestination) consSession.createQueue(DESTINATION_NAME);
         final MessageConsumer consumer = consSession.createConsumer(destination);
 
-        LOG.info("publishing to brokerB");
+        LOG.info("publishing to " + to);
 
-        sendMessageTo(destination, brokerB);
+        sendMessageTo(destination, to);
         
         boolean gotMessage = Wait.waitFor(new Wait.Condition() {
             public boolean isSatisified() throws Exception {

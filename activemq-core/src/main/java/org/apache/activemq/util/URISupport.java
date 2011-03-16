@@ -131,24 +131,29 @@ public class URISupport {
             CompositeData data = URISupport.parseComposite(uri);
             Map<String, String> parameters = new HashMap<String, String>();
             parameters.putAll(data.getParameters());
-            for (URI component : data.getComponents()) {
-                parameters.putAll(component.getQuery() == null ? emptyMap() : parseQuery(stripPrefix(component.getQuery(), "?")));
-            }
-            if (parameters.isEmpty()) 
+            if (parameters.isEmpty()) {
                 parameters = emptyMap();
+            }
             
             return parameters;
         }
     }
 
     public static URI applyParameters(URI uri, Map<String, String> queryParameters) throws URISyntaxException {
+        return applyParameters(uri, queryParameters, "");
+    }
+
+    public static URI applyParameters(URI uri, Map<String, String> queryParameters, String optionPrefix) throws URISyntaxException {
         if (queryParameters != null && !queryParameters.isEmpty()) {
             StringBuffer newQuery = uri.getRawQuery() != null ? new StringBuffer(uri.getRawQuery()) : new StringBuffer() ;
             for ( Map.Entry<String, String> param: queryParameters.entrySet()) {
-                if (newQuery.length()!=0) {
-                    newQuery.append('&');
+                if (param.getKey().startsWith(optionPrefix)) {
+                    if (newQuery.length()!=0) {
+                        newQuery.append('&');
+                    }
+                    final String key = param.getKey().substring(optionPrefix.length());
+                    newQuery.append(key).append('=').append(param.getValue());
                 }
-                newQuery.append(param.getKey()).append('=').append(param.getValue());
             }
             uri = createURIWithQuery(uri, newQuery.toString());
         }
@@ -219,7 +224,6 @@ public class URISupport {
      * @param uri
      * @param rc
      * @param ssp
-     * @param p
      * @throws URISyntaxException
      */
     private static void parseComposite(URI uri, CompositeData rc, String ssp) throws URISyntaxException {
@@ -269,7 +273,7 @@ public class URISupport {
     }
 
     /**
-     * @param componentString
+     * @param str
      * @return
      */
     private static String[] splitComponents(String str) {

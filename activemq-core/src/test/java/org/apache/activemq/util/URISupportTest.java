@@ -18,6 +18,7 @@ package org.apache.activemq.util;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.HashMap;
 import java.util.Map;
 
 import junit.framework.TestCase;
@@ -103,7 +104,7 @@ public class URISupportTest extends TestCase {
     }
     
     public void testParsingParams() throws Exception {
-        URI uri = new URI("static:(http://localhost:61617?proxyHost=localhost&proxyPort=80)");
+        URI uri = new URI("static:(http://localhost:61617?proxyHost=jo&proxyPort=90)?proxyHost=localhost&proxyPort=80");
         Map<String,String>parameters = URISupport.parseParameters(uri);
         verifyParams(parameters);
         uri = new URI("static://http://localhost:61617?proxyHost=localhost&proxyPort=80");
@@ -133,6 +134,28 @@ public class URISupportTest extends TestCase {
     	assertEquals(querylessURI, URISupport.createURIWithQuery(originalURI, null));
     	assertEquals(querylessURI, URISupport.createURIWithQuery(originalURI, ""));
     	assertEquals(new URI(querylessURI + "?" + queryString), URISupport.createURIWithQuery(originalURI, queryString));
+    }
+
+    public void testApplyParameters() throws Exception {
+
+        URI uri = new URI("http://0.0.0.0:61616");
+        Map<String,String> parameters = new HashMap<String, String>();
+        parameters.put("t.proxyHost", "localhost");
+        parameters.put("t.proxyPort", "80");
+
+        uri = URISupport.applyParameters(uri, parameters);
+        Map<String,String> appliedParameters = URISupport.parseParameters(uri);
+        assertEquals("all params applied  with no prefix", 2, appliedParameters.size());
+
+        // strip off params again
+        uri = URISupport.createURIWithQuery(uri, null);
+
+        uri = URISupport.applyParameters(uri, parameters, "joe");
+        appliedParameters = URISupport.parseParameters(uri);
+        assertTrue("no params applied as none match joe", appliedParameters.isEmpty());
+
+        uri = URISupport.applyParameters(uri, parameters, "t.");
+        verifyParams(URISupport.parseParameters(uri));
     }
     
     private void verifyParams(Map<String,String> parameters) {

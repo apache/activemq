@@ -105,7 +105,7 @@ public class DiscoveryTransportNoBrokerTest extends CombinationTestSupport {
         String groupId = "WillNotMatch" + startT;
         try {
             String urlStr = "discovery:(multicast://default?group=" + groupId + 
-                ")?useExponentialBackOff=false&maxReconnectAttempts=2&reconnectDelay=" + initialReconnectDelay;          
+                ")?useExponentialBackOff=false&maxReconnectAttempts=2&reconnectDelay=" + initialReconnectDelay;
             ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(urlStr);
             LOG.info("Connecting.");
             Connection connection = factory.createConnection();
@@ -121,7 +121,8 @@ public class DiscoveryTransportNoBrokerTest extends CombinationTestSupport {
     public void testSetDiscoveredBrokerProperties() throws Exception {
         final String extraParameterName = "connectionTimeout";
         final String extraParameterValue = "3000";
-        final URI uri = new URI("discovery:(multicast://default)?initialReconnectDelay=100&" + extraParameterName + "=" + extraParameterValue);        
+        final URI uri = new URI("discovery:(multicast://default)?initialReconnectDelay=100&"
+                + DiscoveryListener.DISCOVERED_OPTION_PREFIX + extraParameterName + "=" + extraParameterValue);
         CompositeData compositeData = URISupport.parseComposite(uri);
         
         StubCompositeTransport compositeTransport = new StubCompositeTransport();      

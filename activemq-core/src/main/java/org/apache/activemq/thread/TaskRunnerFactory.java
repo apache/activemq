@@ -22,12 +22,13 @@ import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Manages the thread pool for long running tasks. Long running tasks are not
  * always active but when they are active, they may need a few iterations of
  * processing for them to become idle. The manager ensures that each task is
- * processes but that no one task overtakes the system. This is kina like
+ * processes but that no one task overtakes the system. This is kinda like
  * cooperative multitasking.
  * 
  * 
@@ -39,6 +40,7 @@ public class TaskRunnerFactory implements Executor {
     private String name;
     private int priority;
     private boolean daemon;
+    private AtomicLong id = new AtomicLong(0);
 
     public TaskRunnerFactory() {
         this("ActiveMQ Task", Thread.NORM_PRIORITY, true, 1000);
@@ -89,14 +91,14 @@ public class TaskRunnerFactory implements Executor {
         if (executor != null) {
             executor.execute(runnable);
         } else {
-            new Thread(runnable, name).start();
+            new Thread(runnable, name + "-" + id.incrementAndGet()).start();
         }
     }
 
     protected ExecutorService createDefaultExecutor() {
         ThreadPoolExecutor rc = new ThreadPoolExecutor(0, Integer.MAX_VALUE, 10, TimeUnit.SECONDS, new SynchronousQueue<Runnable>(), new ThreadFactory() {
             public Thread newThread(Runnable runnable) {
-                Thread thread = new Thread(runnable, name);
+                Thread thread = new Thread(runnable, name + "-" + id.incrementAndGet());
                 thread.setDaemon(daemon);
                 thread.setPriority(priority);
                 return thread;

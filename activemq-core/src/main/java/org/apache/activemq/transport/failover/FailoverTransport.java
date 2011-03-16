@@ -141,7 +141,7 @@ public class FailoverTransport implements CompositeTransport {
                     buildBackups();
                 } else {
                     // build backups on the next iteration
-                    result = true;
+                    buildBackup = true;
                     try {
                         reconnectTask.wakeup();
                     } catch (InterruptedException e) {
