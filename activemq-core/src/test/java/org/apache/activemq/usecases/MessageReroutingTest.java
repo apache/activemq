@@ -44,7 +44,7 @@ public class MessageReroutingTest extends JmsMultipleBrokersTestSupport {
         createBroker(new ClassPathResource("org/apache/activemq/usecases/rerouting-activemq-C.xml"));
         createBroker(new ClassPathResource("org/apache/activemq/usecases/rerouting-activemq-B.xml"));
         createBroker(new ClassPathResource("org/apache/activemq/usecases/rerouting-activemq-A.xml"));
-        
+
         brokers.get("broker-A").broker.waitUntilStarted();
     }
     

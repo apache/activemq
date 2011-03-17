@@ -39,6 +39,7 @@ import org.apache.activemq.util.URISupport;
 import org.apache.activemq.util.URISupport.CompositeData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 
 public class VMTransportFactory extends TransportFactory {
     
@@ -121,6 +122,7 @@ public class VMTransportFactory extends TransportFactory {
                             broker = BrokerFactory.createBroker(brokerURI);
                         }
                         broker.start();
+                        MDC.put("broker", broker.getBrokerName());
                     } catch (URISyntaxException e) {
                         throw IOExceptionSupport.create(e);
                     }
@@ -230,6 +232,7 @@ public class VMTransportFactory extends TransportFactory {
             if (broker != null) {
                 ServiceSupport.dispose(broker);
             }
+            MDC.remove("broker");
         }
     }
 

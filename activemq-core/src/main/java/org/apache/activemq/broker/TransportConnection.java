@@ -93,6 +93,7 @@ import org.apache.activemq.transport.TransportFactory;
 import org.apache.activemq.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 
 import static org.apache.activemq.thread.DefaultThreadPools.getDefaultTaskRunnerFactory;
 /**
@@ -300,6 +301,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
     }
 
     public Response service(Command command) {
+        MDC.put("connector", connector.getUri().toString());
         Response response = null;
         boolean responseRequired = command.isResponseRequired();
         int commandId = command.getCommandId();
@@ -331,6 +333,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
             }
             context = null;
         }
+        MDC.remove("connector");
         return response;
     }
 

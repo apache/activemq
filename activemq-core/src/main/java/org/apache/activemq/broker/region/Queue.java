@@ -73,6 +73,7 @@ import org.apache.activemq.usage.UsageListener;
 import org.apache.activemq.util.BrokerSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 
 /**
  * The Queue is a List of MessageEntry objects that are dispatched to matching
@@ -1362,6 +1363,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
      * @see org.apache.activemq.thread.Task#iterate()
      */
     public boolean iterate() {
+        MDC.put("destination", getName());
         boolean pageInMoreMessages = false;
         synchronized (iteratingMutex) {
 
@@ -1478,6 +1480,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
             if (pendingWakeups.get() > 0) {
                 pendingWakeups.decrementAndGet();
             }
+            MDC.remove("destination");
             return pendingWakeups.get() > 0;
         }
     }
