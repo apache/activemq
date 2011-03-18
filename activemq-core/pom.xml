@@ -417,9 +417,6 @@
           </includes>
           <excludes>
             <exclude>**/perf/SimpleDurableTopicTest.*</exclude>
-          </excludes>
-          <excludes>
-
             <!-- These tests run too slow to execute as part of the unit tests -->
             <exclude>**/TransactionNotStartedErrorTest.*</exclude>
             <exclude>**/DefaultStoreBrokerTest.*</exclude>

@@ -392,7 +392,8 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                     Subscription exclusiveConsumer = dispatchSelector.getExclusiveConsumer();
                     if (exclusiveConsumer == null) {
                         exclusiveConsumer = sub;
-                    } else if (sub.getConsumerInfo().getPriority() > exclusiveConsumer.getConsumerInfo().getPriority()) {
+                    } else if (sub.getConsumerInfo().getPriority() == Byte.MAX_VALUE ||
+                        sub.getConsumerInfo().getPriority() > exclusiveConsumer.getConsumerInfo().getPriority()) {
                         exclusiveConsumer = sub;
                     }
                     dispatchSelector.setExclusiveConsumer(exclusiveConsumer);
