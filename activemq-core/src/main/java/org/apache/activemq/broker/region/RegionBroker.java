@@ -806,16 +806,16 @@ public class RegionBroker extends EmptyBroker {
 
     
     @Override
-    public void messageExpired(ConnectionContext context, MessageReference node) {
+    public void messageExpired(ConnectionContext context, MessageReference node, Subscription subscription) {
         if (LOG.isDebugEnabled()) {
             LOG.debug("Message expired " + node);
         }
-        getRoot().sendToDeadLetterQueue(context, node);
+        getRoot().sendToDeadLetterQueue(context, node, null);
     }
     
     @Override
     public void sendToDeadLetterQueue(ConnectionContext context,
-	        MessageReference node){
+	        MessageReference node, Subscription subscription){
 		try{
 			if(node!=null){
 				Message message=node.getMessage();
@@ -838,8 +838,7 @@ public class RegionBroker extends EmptyBroker {
 							// it is only populated if the message is routed to
 							// another destination like the DLQ
 							ActiveMQDestination deadLetterDestination=deadLetterStrategy
-							        .getDeadLetterQueueFor(message
-							                .getDestination());
+							        .getDeadLetterQueueFor(message, subscription);
 							if (context.getBroker()==null) {
 								context.setBroker(getRoot());
 							}

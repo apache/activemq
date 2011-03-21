@@ -21,6 +21,7 @@ import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.BrokerFilter;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.MessageReference;
+import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.Message;
 import org.slf4j.Logger;
@@ -44,7 +45,8 @@ public class DiscardingDLQBroker extends BrokerFilter {
     }
 
     @Override
-    public void sendToDeadLetterQueue(ConnectionContext ctx, MessageReference msgRef) {
+    public void sendToDeadLetterQueue(ConnectionContext ctx, MessageReference msgRef,
+                                      Subscription subscription) {
         if (log.isTraceEnabled()) {
             log.trace("Discarding DLQ BrokerFilter[pass through] - skipping message:" + (msgRef != null ? msgRef.getMessage() : null));
         }
@@ -73,7 +75,7 @@ public class DiscardingDLQBroker extends BrokerFilter {
             skipMessage("dropOnly",msgRef);
         } else {
             dropped = false;
-            next.sendToDeadLetterQueue(ctx, msgRef);
+            next.sendToDeadLetterQueue(ctx, msgRef, subscription);
         }
         if (dropped && getReportInterval()>0) {
             if ((++dropCount)%getReportInterval() == 0 ) {

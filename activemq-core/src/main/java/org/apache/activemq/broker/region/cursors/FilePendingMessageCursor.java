@@ -453,7 +453,8 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
         if (LOG.isDebugEnabled()) {
             LOG.debug("Discarding message " + message);
         }
-        broker.getRoot().sendToDeadLetterQueue(new ConnectionContext(new NonCachedMessageEvaluationContext()), message);
+        broker.getRoot().sendToDeadLetterQueue(new ConnectionContext(new NonCachedMessageEvaluationContext()),
+                message, null);
     }
 
     protected ByteSequence getByteSequence(Message message) throws IOException {

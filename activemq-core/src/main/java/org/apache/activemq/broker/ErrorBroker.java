@@ -256,11 +256,12 @@ public class ErrorBroker implements Broker {
         throw new BrokerStoppedException(this.message);
     }
 
-    public void messageExpired(ConnectionContext context, MessageReference message) {
+    public void messageExpired(ConnectionContext context, MessageReference message, Subscription subscription) {
         throw new BrokerStoppedException(this.message);
     }
 
-    public void sendToDeadLetterQueue(ConnectionContext context, MessageReference messageReference) {
+    public void sendToDeadLetterQueue(ConnectionContext context, MessageReference messageReference,
+                                      Subscription subscription) {
         throw new BrokerStoppedException(this.message);
     }
 

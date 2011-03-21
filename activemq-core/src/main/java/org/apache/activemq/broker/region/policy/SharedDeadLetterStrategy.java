@@ -16,8 +16,10 @@
  */
 package org.apache.activemq.broker.region.policy;
 
+import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
+import org.apache.activemq.command.Message;
 
 /**
  * A default implementation of {@link DeadLetterStrategy} which uses
@@ -34,7 +36,7 @@ public class SharedDeadLetterStrategy extends AbstractDeadLetterStrategy {
 
     private ActiveMQDestination deadLetterQueue = new ActiveMQQueue(DEFAULT_DEAD_LETTER_QUEUE_NAME);
 
-    public ActiveMQDestination getDeadLetterQueueFor(ActiveMQDestination originalDestination) {
+    public ActiveMQDestination getDeadLetterQueueFor(Message message, Subscription subscription) {
         return deadLetterQueue;
     }
 

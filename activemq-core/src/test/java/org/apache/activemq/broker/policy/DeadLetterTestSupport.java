@@ -66,10 +66,14 @@ public abstract class DeadLetterTestSupport extends TestSupport {
         broker = createBroker();
         broker.start();
         connection = createConnection();
-        connection.setClientID(toString());
+        connection.setClientID(createClientId());
 
         session = connection.createSession(transactedMode, acknowledgeMode);
         connection.start();
+    }
+
+    protected String createClientId() {
+        return toString();
     }
 
     protected void tearDown() throws Exception {

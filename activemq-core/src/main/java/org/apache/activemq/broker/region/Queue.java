@@ -539,7 +539,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                 && !context.isInRecoveryMode();
         if (message.isExpired()) {
             // message not stored - or added to stats yet - so chuck here
-            broker.getRoot().messageExpired(context, message);
+            broker.getRoot().messageExpired(context, message, null);
             if (sendProducerAck) {
                 ProducerAck ack = new ProducerAck(producerInfo.getProducerId(), message.getSize());
                 context.getConnection().dispatchAsync(ack);
@@ -591,7 +591,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                                     // message may have expired.
                                     if (message.isExpired()) {
                                         LOG.error("expired waiting for space..");
-                                        broker.messageExpired(context, message);
+                                        broker.messageExpired(context, message, null);
                                         destinationStatistics.getExpired().increment();
                                     } else {
                                         doMessageSend(producerExchangeCopy, message);
@@ -644,7 +644,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                         if (LOG.isDebugEnabled()) {
                             LOG.debug("Expired message: " + message);
                         }
-                        broker.getRoot().messageExpired(context, message);
+                        broker.getRoot().messageExpired(context, message, null);
                         return;
                     }
                 }
@@ -699,7 +699,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                             // It could take while before we receive the commit
                             // op, by that time the message could have expired..
                             if (broker.isExpired(message)) {
-                                broker.messageExpired(context, message);
+                                broker.messageExpired(context, message, null);
                                 destinationStatistics.getExpired().increment();
                                 return;
                             }
@@ -1594,7 +1594,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
         if (LOG.isDebugEnabled()) {
             LOG.debug("message expired: " + reference);
         }
-        broker.messageExpired(context, reference);
+        broker.messageExpired(context, reference, subs);
         destinationStatistics.getExpired().increment();
         try {
             removeMessage(context, subs, (QueueMessageReference) reference);

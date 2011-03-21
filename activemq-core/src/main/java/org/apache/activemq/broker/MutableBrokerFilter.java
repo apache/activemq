@@ -265,12 +265,13 @@ public class MutableBrokerFilter implements Broker {
         return getNext().isExpired(messageReference);
     }
 
-    public void messageExpired(ConnectionContext context, MessageReference message) {
-        getNext().messageExpired(context, message);
+    public void messageExpired(ConnectionContext context, MessageReference message, Subscription subscription) {
+        getNext().messageExpired(context, message, subscription);
     }
 
-    public void sendToDeadLetterQueue(ConnectionContext context, MessageReference messageReference) {
-        getNext().sendToDeadLetterQueue(context, messageReference);
+    public void sendToDeadLetterQueue(ConnectionContext context, MessageReference messageReference,
+                                      Subscription subscription) {
+        getNext().sendToDeadLetterQueue(context, messageReference, subscription);
     }
 
     public Broker getRoot() {

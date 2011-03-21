@@ -276,7 +276,7 @@ public class Topic extends BaseDestination implements Task {
         // There is delay between the client sending it and it arriving at the
         // destination.. it may have expired.
         if (message.isExpired()) {
-            broker.messageExpired(context, message);
+            broker.messageExpired(context, message, null);
             getDestinationStatistics().getExpired().increment();
             if (sendProducerAck) {
                 ProducerAck ack = new ProducerAck(producerInfo.getProducerId(), message.getSize());
@@ -322,7 +322,7 @@ public class Topic extends BaseDestination implements Task {
                                     // While waiting for space to free up... the
                                     // message may have expired.
                                     if (message.isExpired()) {
-                                        broker.messageExpired(context, message);
+                                        broker.messageExpired(context, message, null);
                                         getDestinationStatistics().getExpired().increment();
                                     } else {
                                         doMessageSend(producerExchange, message);
@@ -451,7 +451,7 @@ public class Topic extends BaseDestination implements Task {
                     // expired..
                     if (broker.isExpired(message)) {
                         getDestinationStatistics().getExpired().increment();
-                        broker.messageExpired(context, message);
+                        broker.messageExpired(context, message, null);
                         message.decrementReferenceCount();
                         return;
                     }
@@ -644,7 +644,7 @@ public class Topic extends BaseDestination implements Task {
     }
 
     public void messageExpired(ConnectionContext context, Subscription subs, MessageReference reference) {
-        broker.messageExpired(context, reference);
+        broker.messageExpired(context, reference, subs);
         // AMQ-2586: Better to leave this stat at zero than to give the user
         // misleading metrics.
         // destinationStatistics.getMessages().decrement();

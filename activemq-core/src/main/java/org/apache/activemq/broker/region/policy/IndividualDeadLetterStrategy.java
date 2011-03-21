@@ -16,9 +16,12 @@
  */
 package org.apache.activemq.broker.region.policy;
 
+import org.apache.activemq.broker.region.DurableTopicSubscription;
+import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
+import org.apache.activemq.command.Message;
 
 /**
  * A {@link DeadLetterStrategy} where each destination has its own individual
@@ -33,12 +36,14 @@ public class IndividualDeadLetterStrategy extends AbstractDeadLetterStrategy {
     private String queuePrefix = "ActiveMQ.DLQ.Queue.";
     private boolean useQueueForQueueMessages = true;
     private boolean useQueueForTopicMessages = true;
+    private boolean destinationPerDurableSubscriber;
 
-    public ActiveMQDestination getDeadLetterQueueFor(ActiveMQDestination originalDestination) {
-        if (originalDestination.isQueue()) {
-            return createDestination(originalDestination, queuePrefix, useQueueForQueueMessages);
+    public ActiveMQDestination getDeadLetterQueueFor(Message message,
+                                                     Subscription subscription) {
+        if (message.getDestination().isQueue()) {
+            return createDestination(message, queuePrefix, useQueueForQueueMessages, subscription);
         } else {
-            return createDestination(originalDestination, topicPrefix, useQueueForTopicMessages);
+            return createDestination(message, topicPrefix, useQueueForTopicMessages, subscription);
         }
     }
 
@@ -91,10 +96,30 @@ public class IndividualDeadLetterStrategy extends AbstractDeadLetterStrategy {
         this.useQueueForTopicMessages = useQueueForTopicMessages;
     }
 
+    public boolean isDestinationPerDurableSubscriber() {
+        return destinationPerDurableSubscriber;
+    }
+
+    /**
+     * sets whether durable topic subscriptions are to get individual dead letter destinations.
+     * When true, the DLQ is of the form 'topicPrefix.clientId:subscriptionName'
+     * The default is false.
+     * @param destinationPerDurableSubscriber
+     */
+    public void setDestinationPerDurableSubscriber(boolean destinationPerDurableSubscriber) {
+        this.destinationPerDurableSubscriber = destinationPerDurableSubscriber;
+    }
+
     // Implementation methods
     // -------------------------------------------------------------------------
-    protected ActiveMQDestination createDestination(ActiveMQDestination originalDestination, String prefix, boolean useQueue) {
-        String name = prefix + originalDestination.getPhysicalName();
+    protected ActiveMQDestination createDestination(Message message,
+                                                    String prefix,
+                                                    boolean useQueue,
+                                                    Subscription subscription ) {
+        String name = prefix + message.getDestination().getPhysicalName();
+        if (destinationPerDurableSubscriber && subscription instanceof DurableTopicSubscription) {
+            name += "." + ((DurableTopicSubscription)subscription).getSubscriptionKey();
+        }
         if (useQueue) {
             return new ActiveMQQueue(name);
         } else {

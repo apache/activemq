@@ -16,6 +16,8 @@
  */
 package org.apache.activemq.broker.region.policy;
 
+import org.apache.activemq.broker.region.MessageReference;
+import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.Message;
 
@@ -35,10 +37,10 @@ public interface DeadLetterStrategy {
     boolean isSendToDeadLetterQueue(Message message);
 
     /**
-     * Returns the dead letter queue for the given destination.
+     * Returns the dead letter queue for the given message and subscription.
      */
-    ActiveMQDestination getDeadLetterQueueFor(ActiveMQDestination originalDestination);
-    
+    ActiveMQDestination getDeadLetterQueueFor(Message message, Subscription subscription);
+
     /**
      * @return true if processes expired messages
      */

@@ -40,7 +40,6 @@ import org.apache.activemq.command.RemoveSubscriptionInfo;
 import org.apache.activemq.command.Response;
 import org.apache.activemq.command.SessionInfo;
 import org.apache.activemq.command.TransactionId;
-import org.apache.activemq.network.NetworkBridge;
 import org.apache.activemq.store.kahadb.plist.PListStore;
 import org.apache.activemq.thread.Scheduler;
 import org.apache.activemq.usage.Usage;
@@ -254,12 +253,13 @@ public class BrokerFilter implements Broker {
         return next.isExpired(messageReference);
     }
 
-    public void messageExpired(ConnectionContext context, MessageReference message) {
-        next.messageExpired(context, message);
+    public void messageExpired(ConnectionContext context, MessageReference message, Subscription subscription) {
+        next.messageExpired(context, message, subscription);
     }
 
-    public void sendToDeadLetterQueue(ConnectionContext context, MessageReference messageReference) {
-        next.sendToDeadLetterQueue(context, messageReference);
+    public void sendToDeadLetterQueue(ConnectionContext context, MessageReference messageReference,
+                                      Subscription subscription) {
+        next.sendToDeadLetterQueue(context, messageReference, subscription);
     }
 
     public Broker getRoot() {

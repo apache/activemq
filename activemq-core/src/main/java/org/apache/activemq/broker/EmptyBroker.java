@@ -247,10 +247,12 @@ public class EmptyBroker implements Broker {
         return false;
     }
 
-    public void messageExpired(ConnectionContext context, MessageReference message) {
+    public void messageExpired(ConnectionContext context, MessageReference message, Subscription subscription) {
     }
 
-    public void sendToDeadLetterQueue(ConnectionContext context, MessageReference messageReference) {
+    public void sendToDeadLetterQueue(ConnectionContext context,
+                                      MessageReference messageReference,
+                                      Subscription subscription) {
     }
 
     public Broker getRoot() {

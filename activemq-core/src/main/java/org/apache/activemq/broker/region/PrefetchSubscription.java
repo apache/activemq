@@ -453,7 +453,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
      * @throws Exception
      */
     protected void sendToDLQ(final ConnectionContext context, final MessageReference node) throws IOException, Exception {
-        broker.getRoot().sendToDeadLetterQueue(context, node);
+        broker.getRoot().sendToDeadLetterQueue(context, node, this);
     }
     
     public int getInFlightSize() {

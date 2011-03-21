@@ -216,7 +216,7 @@ public class TopicSubscription extends AbstractSubscription {
                     dispatchedCounter.incrementAndGet();
                     node.decrementReferenceCount();
                     node.getRegionDestination().getDestinationStatistics().getExpired().increment();
-                    broker.messageExpired(getContext(), node);
+                    broker.messageExpired(getContext(), node, this);
                     break;
                 }
             }
@@ -543,7 +543,7 @@ public class TopicSubscription extends AbstractSubscription {
         if (dest != null) {
             dest.messageDiscarded(getContext(), this, message);
         }
-        broker.getRoot().sendToDeadLetterQueue(getContext(), message);
+        broker.getRoot().sendToDeadLetterQueue(getContext(), message, this);
     }
 
     @Override

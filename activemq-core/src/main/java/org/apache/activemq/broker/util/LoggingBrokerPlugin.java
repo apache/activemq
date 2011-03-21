@@ -474,7 +474,7 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport {
     }
 
     @Override
-    public void messageExpired(ConnectionContext context, MessageReference message) {
+    public void messageExpired(ConnectionContext context, MessageReference message, Subscription subscription) {
         if (isLogAll() || isLogInternalEvents()) {
             String msg = "Unable to display message.";
 
@@ -482,11 +482,12 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport {
 
             LOG.info("Message has expired : " + msg);
         }
-        super.messageExpired(context, message);
+        super.messageExpired(context, message, subscription);
     }
 
     @Override
-    public void sendToDeadLetterQueue(ConnectionContext context, MessageReference messageReference) {
+    public void sendToDeadLetterQueue(ConnectionContext context, MessageReference messageReference,
+                                      Subscription subscription) {
         if (isLogAll() || isLogInternalEvents()) {
             String msg = "Unable to display message.";
 
@@ -494,7 +495,7 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport {
 
             LOG.info("Sending to DLQ : " + msg);
         }
-        super.sendToDeadLetterQueue(context, messageReference);
+        super.sendToDeadLetterQueue(context, messageReference, subscription);
     }
 
     @Override

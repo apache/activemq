@@ -251,8 +251,8 @@ public class AdvisoryBroker extends BrokerFilter {
     }
 
     @Override
-    public void messageExpired(ConnectionContext context, MessageReference messageReference) {
-        super.messageExpired(context, messageReference);
+    public void messageExpired(ConnectionContext context, MessageReference messageReference, Subscription subscription) {
+        super.messageExpired(context, messageReference, subscription);
         try {
             if(!messageReference.isAdvisory()) {
                 ActiveMQTopic topic = AdvisorySupport.getExpiredMessageTopic(messageReference.getMessage().getDestination());
@@ -376,8 +376,9 @@ public class AdvisoryBroker extends BrokerFilter {
     }
     
     @Override
-    public void sendToDeadLetterQueue(ConnectionContext context,MessageReference messageReference){
-        super.sendToDeadLetterQueue(context, messageReference);
+    public void sendToDeadLetterQueue(ConnectionContext context, MessageReference messageReference,
+                                      Subscription subscription){
+        super.sendToDeadLetterQueue(context, messageReference, subscription);
         try {
             if(!messageReference.isAdvisory()) {
                 ActiveMQTopic topic = AdvisorySupport.getMessageDLQdAdvisoryTopic(messageReference.getMessage().getDestination());

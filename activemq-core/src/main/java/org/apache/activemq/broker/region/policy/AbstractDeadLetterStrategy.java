@@ -17,6 +17,9 @@
 package org.apache.activemq.broker.region.policy;
 
 import org.apache.activemq.ActiveMQMessageAudit;
+import org.apache.activemq.broker.region.MessageReference;
+import org.apache.activemq.broker.region.Subscription;
+import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
