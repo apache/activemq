@@ -867,7 +867,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
     /**
      * @return Returns the staticallyIncludedDestinations.
      */
-    public ActiveMQDestination[] getStaticallyIncludedestinations() {
+    public ActiveMQDestination[] getStaticallyIncludedDestinations() {
         return staticallyIncludedDestinations;
     }
 
