@@ -37,12 +37,14 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.broker.region.policy.VMPendingQueueMessageStoragePolicy;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import junit.framework.TestCase;
 
 /**
  * An AMQ-2401 Test
- * 
+ *
  */
 public class AMQ2401Test extends TestCase implements MessageListener{
     BrokerService broker;
@@ -51,6 +53,8 @@ public class AMQ2401Test extends TestCase implements MessageListener{
     private static final int CONSUMER_COUNT = 50;
     private static final int PRODUCER_COUNT = 1;
     private static final int LOG_INTERVAL = 10;
+
+    private static final Logger LOG = LoggerFactory.getLogger(AMQ2401Test.class);
 
     private ArrayList<Service> services = new ArrayList<Service>(CONSUMER_COUNT + PRODUCER_COUNT);
     int count = 0;
@@ -87,7 +91,7 @@ public class AMQ2401Test extends TestCase implements MessageListener{
         try {
 
             latch = new CountDownLatch(SEND_COUNT);
-            
+
             for(int i = 0; i < CONSUMER_COUNT; i++)
             {
                 TestConsumer consumer = new TestConsumer();
@@ -100,7 +104,7 @@ public class AMQ2401Test extends TestCase implements MessageListener{
                 producer.start();
                 services.add(producer);
             }
-            waitForMessageReceipt(3000);
+            waitForMessageReceipt(TimeUnit.SECONDS.toMillis(30));
 
         } finally {
             if (p != null) {
@@ -113,37 +117,38 @@ public class AMQ2401Test extends TestCase implements MessageListener{
         }
 
     }
-    
+
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see javax.jms.MessageListener#onMessage(javax.jms.Message)
      */
     public void onMessage(Message message) {
         latch.countDown();
         if (++count % LOG_INTERVAL == 0) {
-            System.out.println("Received message " + count);
+            LOG.debug("Received message " + count);
         }
         try {
-            Thread.currentThread().sleep(1);
+            Thread.sleep(1);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
-        
+
     }
 
     /**
      * @throws InterruptedException
      * @throws TimeoutException
-     * 
+     *
      */
     private void waitForMessageReceipt(long timeout) throws InterruptedException, TimeoutException {
-        // TODO Auto-generated method stub
         if (!latch.await(timeout, TimeUnit.MILLISECONDS)) {
-            throw new TimeoutException("Consumner didn't receive messages");
+            throw new TimeoutException(String.format(
+                "Consumner didn't receive expected # of messages, %d of %d received.",
+                latch.getCount(), SEND_COUNT ));
         }
     }
-    
+
     private interface Service {
         public void start() throws Exception;
 
@@ -177,7 +182,7 @@ public class AMQ2401Test extends TestCase implements MessageListener{
             for (int i = 1; i <= count; i++) {
                 try {
                     if( (i% LOG_INTERVAL)==0 ) {
-                        System.out.println("Sending: " + i);
+                        LOG.debug("Sending: " + i);
                     }
                     message = session.createBytesMessage();
                     message.writeBytes(new byte[1024]);
@@ -197,12 +202,10 @@ public class AMQ2401Test extends TestCase implements MessageListener{
         }
     }
 
-    
     private class TestConsumer implements Runnable, Service {
         ActiveMQConnection connection;
         Session session;
         MessageConsumer consumer;
-        Thread thread;
 
         TestConsumer() throws Exception {
             factory.setOptimizeAcknowledge(false);
@@ -227,7 +230,7 @@ public class AMQ2401Test extends TestCase implements MessageListener{
 
         /*
          * (non-Javadoc)
-         * 
+         *
          * @see java.lang.Runnable#run()
          */
         public void run() {
@@ -238,8 +241,6 @@ public class AMQ2401Test extends TestCase implements MessageListener{
                     e.printStackTrace();
                 }
             }
-
         }
-
     }
 }
