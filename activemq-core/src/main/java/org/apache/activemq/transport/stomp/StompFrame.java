@@ -180,7 +180,11 @@ public class StompFrame implements Command {
             Map.Entry entry = (Map.Entry)iter.next();
             buffer.append(entry.getKey());
             buffer.append(":");
-            buffer.append(entry.getValue());
+            if (entry.getKey().toString().toLowerCase().contains(Stomp.Headers.Connect.PASSCODE)) {
+                buffer.append("*****");
+            } else {
+                buffer.append(entry.getValue());
+            }
             buffer.append("\n");
         }
         buffer.append("\n");
