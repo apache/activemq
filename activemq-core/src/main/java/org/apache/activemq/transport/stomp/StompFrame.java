@@ -18,7 +18,6 @@ package org.apache.activemq.transport.stomp;
 
 import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -30,7 +29,7 @@ import org.apache.activemq.state.CommandVisitor;
 
 /**
  * Represents all the data in a STOMP frame.
- * 
+ *
  * @author <a href="http://hiramchirino.com">chirino</a>
  */
 public class StompFrame implements Command {
@@ -42,21 +41,21 @@ public class StompFrame implements Command {
     private byte[] content = NO_DATA;
 
     public StompFrame(String command) {
-    	this(command, null, null);
+        this(command, null, null);
     }
-    
+
     public StompFrame(String command, Map<String, String> headers) {
-    	this(command, headers, null);
-    }    
-    
+        this(command, headers, null);
+    }
+
     public StompFrame(String command, Map<String, String> headers, byte[] data) {
         this.action = command;
         if (headers != null)
-        	this.headers = headers;
+            this.headers = headers;
         if (data != null)
-        	this.content = data;
+            this.content = data;
     }
-    
+
     public StompFrame() {
     }
 
@@ -71,13 +70,13 @@ public class StompFrame implements Command {
     public byte[] getContent() {
         return content;
     }
-    
+
     public String getBody() {
-    	try {
-    		return new String(content, "UTF-8");
-    	} catch (UnsupportedEncodingException e) {
-    		return new String(content);
-    	}
+        try {
+            return new String(content, "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            return new String(content);
+        }
     }
 
     public void setContent(byte[] data) {
@@ -138,7 +137,7 @@ public class StompFrame implements Command {
     public boolean isShutdownInfo() {
         return false;
     }
-    
+
     public boolean isConnectionControl() {
         return false;
     }
@@ -171,16 +170,24 @@ public class StompFrame implements Command {
         return false;
     }
 
+    public String marshal() {
+        return toString(false);
+    }
+
     public String toString() {
+        return toString(true);
+    }
+
+    private String toString(boolean hidePasscode) {
         StringBuffer buffer = new StringBuffer();
         buffer.append(getAction());
         buffer.append("\n");
-        Map headers = getHeaders();
-        for (Iterator iter = headers.entrySet().iterator(); iter.hasNext();) {
-            Map.Entry entry = (Map.Entry)iter.next();
+        Map<String, String> headers = getHeaders();
+        for (Iterator<Map.Entry<String,String>> iter = headers.entrySet().iterator(); iter.hasNext();) {
+            Map.Entry<String, String> entry = (Map.Entry<String,String>)iter.next();
             buffer.append(entry.getKey());
             buffer.append(":");
-            if (entry.getKey().toString().toLowerCase().contains(Stomp.Headers.Connect.PASSCODE)) {
+            if (hidePasscode && entry.getKey().toString().toLowerCase().contains(Stomp.Headers.Connect.PASSCODE)) {
                 buffer.append("*****");
             } else {
                 buffer.append(entry.getValue());

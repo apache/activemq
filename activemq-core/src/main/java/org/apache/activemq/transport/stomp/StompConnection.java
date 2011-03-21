@@ -32,13 +32,13 @@ public class StompConnection {
 
     private Socket stompSocket;
     private ByteArrayOutputStream inputBuffer = new ByteArrayOutputStream();
-    
+
     public void open(String host, int port) throws IOException, UnknownHostException {
         open(new Socket(host, port));
     }
-    
+
     public void open(Socket socket) {
-    	stompSocket = socket;
+        stompSocket = socket;
     }
 
     public void close() throws IOException {
@@ -55,23 +55,23 @@ public class StompConnection {
         outputStream.write(0);
         outputStream.flush();
     }
-    
+
     public void sendFrame(String frame, byte[] data) throws Exception {
         byte[] bytes = frame.getBytes("UTF-8");
         OutputStream outputStream = stompSocket.getOutputStream();
         outputStream.write(bytes);
         outputStream.write(data);
         outputStream.write(0);
-        outputStream.flush();        
+        outputStream.flush();
     }
-    
+
     public StompFrame receive() throws Exception {
         return receive(RECEIVE_TIMEOUT);
-    }    
-    
+    }
+
     public StompFrame receive(long timeOut) throws Exception {
-    	stompSocket.setSoTimeout((int)timeOut);
-    	InputStream is = stompSocket.getInputStream();
+        stompSocket.setSoTimeout((int)timeOut);
+        InputStream is = stompSocket.getInputStream();
         StompWireFormat wf = new StompWireFormat();
         DataInputStream dis = new DataInputStream(is);
         return (StompFrame)wf.unmarshal(dis);
@@ -104,143 +104,143 @@ public class StompConnection {
         }
     }
 
-	private String stringFromBuffer(ByteArrayOutputStream inputBuffer) throws Exception {
-	    byte[] ba = inputBuffer.toByteArray();
+    private String stringFromBuffer(ByteArrayOutputStream inputBuffer) throws Exception {
+        byte[] ba = inputBuffer.toByteArray();
         inputBuffer.reset();
         return new String(ba, "UTF-8");
     }
 
     public Socket getStompSocket() {
-		return stompSocket;
-	}
+        return stompSocket;
+    }
 
-	public void setStompSocket(Socket stompSocket) {
-		this.stompSocket = stompSocket;
-	}
-	
+    public void setStompSocket(Socket stompSocket) {
+        this.stompSocket = stompSocket;
+    }
+
     public void connect(String username, String password) throws Exception {
         connect(username, password, null);
     }
-	
+
     public void connect(String username, String password, String client) throws Exception {
-    	HashMap<String, String> headers = new HashMap();
-    	headers.put("login", username);
-    	headers.put("passcode", password);
-    	if (client != null) {
-    		headers.put("client-id", client);
-    	}
-    	StompFrame frame = new StompFrame("CONNECT", headers);
-        sendFrame(frame.toString());
-        
+        HashMap<String, String> headers = new HashMap<String, String>();
+        headers.put("login", username);
+        headers.put("passcode", password);
+        if (client != null) {
+            headers.put("client-id", client);
+        }
+        StompFrame frame = new StompFrame("CONNECT", headers);
+        sendFrame(frame.marshal());
+
         StompFrame connect = receive();
         if (!connect.getAction().equals(Stomp.Responses.CONNECTED)) {
-        	throw new Exception ("Not connected: " + connect.getBody());
+            throw new Exception ("Not connected: " + connect.getBody());
         }
     }
-    
+
     public void disconnect() throws Exception {
-    	StompFrame frame = new StompFrame("DISCONNECT");
-        sendFrame(frame.toString());    	
+        StompFrame frame = new StompFrame("DISCONNECT");
+        sendFrame(frame.toString());
     }
-    
+
     public void send(String destination, String message) throws Exception {
-    	send(destination, message, null, null);
+        send(destination, message, null, null);
     }
-    
+
     public void send(String destination, String message, String transaction, HashMap<String, String> headers) throws Exception {
-    	if (headers == null) {
-    		headers = new HashMap<String, String>();
-    	}
-    	headers.put("destination", destination);
-    	if (transaction != null) {
-    		headers.put("transaction", transaction);
-    	}
-    	StompFrame frame = new StompFrame("SEND", headers, message.getBytes());
-        sendFrame(frame.toString());    	
+        if (headers == null) {
+            headers = new HashMap<String, String>();
+        }
+        headers.put("destination", destination);
+        if (transaction != null) {
+            headers.put("transaction", transaction);
+        }
+        StompFrame frame = new StompFrame("SEND", headers, message.getBytes());
+        sendFrame(frame.toString());
     }
-    
+
     public void subscribe(String destination) throws Exception {
-    	subscribe(destination, null, null);
+        subscribe(destination, null, null);
     }
-    
+
     public void subscribe(String destination, String ack) throws Exception {
-    	subscribe(destination, ack, new HashMap<String, String>());
+        subscribe(destination, ack, new HashMap<String, String>());
     }
-    
+
     public void subscribe(String destination, String ack, HashMap<String, String> headers) throws Exception {
-		if (headers == null) {
-			headers = new HashMap<String, String>();
-		}
-		headers.put("destination", destination);
-    	if (ack != null) {
-    		headers.put("ack", ack);
-    	}
-    	StompFrame frame = new StompFrame("SUBSCRIBE", headers);
-        sendFrame(frame.toString());    	
+        if (headers == null) {
+            headers = new HashMap<String, String>();
+        }
+        headers.put("destination", destination);
+        if (ack != null) {
+            headers.put("ack", ack);
+        }
+        StompFrame frame = new StompFrame("SUBSCRIBE", headers);
+        sendFrame(frame.toString());
     }
-    
+
     public void unsubscribe(String destination) throws Exception {
-    	unsubscribe(destination, null);
+        unsubscribe(destination, null);
     }
-    
+
     public void unsubscribe(String destination, HashMap<String, String> headers) throws Exception {
-		if (headers == null) {
-			headers = new HashMap<String, String>();
-		}
-		headers.put("destination", destination);
-    	StompFrame frame = new StompFrame("UNSUBSCRIBE", headers);
-        sendFrame(frame.toString());    	
-    }    
-    
+        if (headers == null) {
+            headers = new HashMap<String, String>();
+        }
+        headers.put("destination", destination);
+        StompFrame frame = new StompFrame("UNSUBSCRIBE", headers);
+        sendFrame(frame.toString());
+    }
+
     public void begin(String transaction) throws Exception {
-    	HashMap<String, String> headers = new HashMap<String, String>();
-    	headers.put("transaction", transaction);
-    	StompFrame frame = new StompFrame("BEGIN", headers);
-    	sendFrame(frame.toString());
+        HashMap<String, String> headers = new HashMap<String, String>();
+        headers.put("transaction", transaction);
+        StompFrame frame = new StompFrame("BEGIN", headers);
+        sendFrame(frame.toString());
     }
-    
+
     public void abort(String transaction) throws Exception {
-    	HashMap<String, String> headers = new HashMap<String, String>();
-    	headers.put("transaction", transaction);
-    	StompFrame frame = new StompFrame("ABORT", headers);
-    	sendFrame(frame.toString());
+        HashMap<String, String> headers = new HashMap<String, String>();
+        headers.put("transaction", transaction);
+        StompFrame frame = new StompFrame("ABORT", headers);
+        sendFrame(frame.toString());
     }
-    
+
     public void commit(String transaction) throws Exception {
-    	HashMap<String, String> headers = new HashMap<String, String>();
-    	headers.put("transaction", transaction);
-    	StompFrame frame = new StompFrame("COMMIT", headers);
-    	sendFrame(frame.toString());
+        HashMap<String, String> headers = new HashMap<String, String>();
+        headers.put("transaction", transaction);
+        StompFrame frame = new StompFrame("COMMIT", headers);
+        sendFrame(frame.toString());
     }
-    
+
     public void ack(StompFrame frame) throws Exception {
-    	ack(frame.getHeaders().get("message-id"), null);
-    }    
-    
+        ack(frame.getHeaders().get("message-id"), null);
+    }
+
     public void ack(StompFrame frame, String transaction) throws Exception {
-    	ack(frame.getHeaders().get("message-id"), transaction);
+        ack(frame.getHeaders().get("message-id"), transaction);
     }
-    
+
     public void ack(String messageId) throws Exception {
-    	ack(messageId, null);
+        ack(messageId, null);
     }
-    
+
     public void ack(String messageId, String transaction) throws Exception {
-    	HashMap<String, String> headers = new HashMap<String, String>();
-    	headers.put("message-id", messageId);
-    	if (transaction != null)
-    		headers.put("transaction", transaction);
-    	StompFrame frame = new StompFrame("ACK", headers);
-    	sendFrame(frame.toString());	
+        HashMap<String, String> headers = new HashMap<String, String>();
+        headers.put("message-id", messageId);
+        if (transaction != null)
+            headers.put("transaction", transaction);
+        StompFrame frame = new StompFrame("ACK", headers);
+        sendFrame(frame.toString());
     }
-    
+
     protected String appendHeaders(HashMap<String, Object> headers) {
-    	StringBuffer result = new StringBuffer();
-    	for (String key : headers.keySet()) {
-    		result.append(key + ":" + headers.get(key) + "\n");
-    	}
-    	result.append("\n");
-    	return result.toString();
+        StringBuffer result = new StringBuffer();
+        for (String key : headers.keySet()) {
+            result.append(key + ":" + headers.get(key) + "\n");
+        }
+        result.append("\n");
+        return result.toString();
     }
 
 }
