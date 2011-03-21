@@ -400,4 +400,10 @@ public final class MarshallingSupport {
         return result;
     }
 
+    public static String truncate64(String text) {
+        if (text.length() > 63) {
+            text = text.substring(0, 45) + "..." + text.substring(text.length() - 12);
+        }
+        return text;
+    }
 }

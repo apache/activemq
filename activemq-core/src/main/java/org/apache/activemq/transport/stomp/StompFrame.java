@@ -26,6 +26,7 @@ import org.apache.activemq.command.Command;
 import org.apache.activemq.command.Endpoint;
 import org.apache.activemq.command.Response;
 import org.apache.activemq.state.CommandVisitor;
+import org.apache.activemq.util.MarshallingSupport;
 
 /**
  * Represents all the data in a STOMP frame.
@@ -170,24 +171,24 @@ public class StompFrame implements Command {
         return false;
     }
 
-    public String marshal() {
-        return toString(false);
-    }
-
     public String toString() {
-        return toString(true);
+        return format(true);
     }
 
-    private String toString(boolean hidePasscode) {
+    public String format() {
+        return format(false);
+    }
+
+    public String format(boolean forLogging) {
         StringBuffer buffer = new StringBuffer();
         buffer.append(getAction());
         buffer.append("\n");
-        Map<String, String> headers = getHeaders();
-        for (Iterator<Map.Entry<String,String>> iter = headers.entrySet().iterator(); iter.hasNext();) {
-            Map.Entry<String, String> entry = (Map.Entry<String,String>)iter.next();
+        Map headers = getHeaders();
+        for (Iterator iter = headers.entrySet().iterator(); iter.hasNext();) {
+            Map.Entry entry = (Map.Entry)iter.next();
             buffer.append(entry.getKey());
             buffer.append(":");
-            if (hidePasscode && entry.getKey().toString().toLowerCase().contains(Stomp.Headers.Connect.PASSCODE)) {
+            if (forLogging && entry.getKey().toString().toLowerCase().contains(Stomp.Headers.Connect.PASSCODE)) {
                 buffer.append("*****");
             } else {
                 buffer.append(entry.getValue());
@@ -197,7 +198,11 @@ public class StompFrame implements Command {
         buffer.append("\n");
         if (getContent() != null) {
             try {
-                buffer.append(new String(getContent(), "UTF-8"));
+                String contentString = new String(getContent(), "UTF-8");
+                if (forLogging) {
+                    contentString = MarshallingSupport.truncate64(contentString);
+                }
+                buffer.append(contentString);
             } catch (Throwable e) {
                 buffer.append(Arrays.toString(getContent()));
             }
