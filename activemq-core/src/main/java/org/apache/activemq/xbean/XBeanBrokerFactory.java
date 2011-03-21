@@ -62,9 +62,8 @@ public class XBeanBrokerFactory implements BrokerFactoryHandler {
     public BrokerService createBroker(URI config) throws Exception {
 
         String uri = config.getSchemeSpecificPart();
-        Map<String,String> parameters = URISupport.parseQuery(uri);
-        if (!parameters.isEmpty()) {
-            IntrospectionSupport.setProperties(this, parameters);
+        if (uri.lastIndexOf('?') != -1) {
+            IntrospectionSupport.setProperties(this, URISupport.parseQuery(uri));
             uri = uri.substring(0, uri.lastIndexOf('?'));
         }
 
