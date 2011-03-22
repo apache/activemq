@@ -810,7 +810,7 @@ public class RegionBroker extends EmptyBroker {
         if (LOG.isDebugEnabled()) {
             LOG.debug("Message expired " + node);
         }
-        getRoot().sendToDeadLetterQueue(context, node, null);
+        getRoot().sendToDeadLetterQueue(context, node, subscription);
     }
     
     @Override
