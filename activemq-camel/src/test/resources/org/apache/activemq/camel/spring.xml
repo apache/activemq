@@ -23,10 +23,7 @@
     ">
 
   <!-- START SNIPPET: example -->
-  <camelContext id="camel" xmlns="http://camel.apache.org/schema/spring">
-    <beanPostProcessor/>
-    
-  </camelContext>
+  <camelContext id="camel" xmlns="http://camel.apache.org/schema/spring"/>
 
   <bean id="connectionFactory" class="org.apache.activemq.spring.ActiveMQConnectionFactory">
     <property name="brokerURL" value="vm://localhost?broker.persistent=false"/>
