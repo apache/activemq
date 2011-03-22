@@ -46,6 +46,7 @@
 
         <!-- You can use Spring XML syntax to define the routes here using the <route> element -->
         <route>
+            <description>Example Camel Route</description>
             <from uri="activemq:example.A"/>
             <to uri="activemq:example.B"/>
         </route>
