@@ -42,7 +42,8 @@ public class AMQ2751Test extends EmbeddedBrokerTestSupport {
     public void testRecoverRedelivery() throws Exception {
 
         final CountDownLatch redelivery = new CountDownLatch(6);
-        final ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("failover:(" + this.bindAddress + ")");
+        final ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(
+                "failover:(" + broker.getTransportConnectors().get(0).getConnectUri() + ")");
         try {
 
             Connection connection = factory.createConnection();
@@ -62,7 +63,7 @@ public class AMQ2751Test extends EmbeddedBrokerTestSupport {
                         if (message.getJMSRedelivered()) {
                             LOG.info("It's a redelivery.");
                             redelivery.countDown();
-                        } 
+                        }
                         LOG.info("calling recover() on the session to force redelivery.");
                         session.recover();
                     } catch (JMSException e) {
@@ -76,7 +77,7 @@ public class AMQ2751Test extends EmbeddedBrokerTestSupport {
 
             MessageProducer producer = session.createProducer(queue);
             producer.send(session.createTextMessage("test"));
-            
+
             assertTrue("we got 6 redeliveries", redelivery.await(20, TimeUnit.SECONDS));
 
         } finally {
@@ -87,7 +88,7 @@ public class AMQ2751Test extends EmbeddedBrokerTestSupport {
 
     @Override
     protected void setUp() throws Exception {
-        bindAddress = "tcp://0.0.0.0:61617";
+        bindAddress = "tcp://localhost:0";
         super.setUp();
     }
 }
