@@ -61,8 +61,7 @@
     <geronimo-version>1.0</geronimo-version>
     <howl-version>0.1.8</howl-version>
     <hsqldb-version>1.7.2.2</hsqldb-version>
-    <icu-version>4.0.1</icu-version>
-    <jasypt-version>1.6</jasypt-version>
+    <jasypt-version>1.7</jasypt-version>
     <jdom-version>1.0</jdom-version>
     <jetty-version>7.1.6.v20100715</jetty-version>
     <jsp-version>2.1.v20100127</jsp-version>
@@ -831,12 +830,6 @@
         <artifactId>jasypt</artifactId>
         <version>${jasypt-version}</version>
       </dependency>
-      
-      <dependency>
-        <groupId>com.ibm.icu</groupId>
-        <artifactId>icu4j</artifactId>
-        <version>${icu-version}</version>
-      </dependency>                    
 
       <!-- testing dependencies -->
       <dependency>

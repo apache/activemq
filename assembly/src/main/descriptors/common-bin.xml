@@ -213,7 +213,6 @@
         <include>org.apache.velocity:velocity</include>
         <include>net.sf.josql:josql</include>
         <include>org.jasypt:jasypt</include>
-        <include>com.ibm.icu:icu4j</include>
       </includes>
     </dependencySet>
     <dependencySet>
