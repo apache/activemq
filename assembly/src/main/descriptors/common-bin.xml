@@ -177,7 +177,6 @@
       <unpack>false</unpack>
       <scope>runtime</scope>
       <includes>
-        <include>${pom.groupId}:activemq-rar</include>
         <include>${pom.groupId}:activemq-optional</include>
         <include>${pom.groupId}:activemq-pool</include>
         <include>${pom.groupId}:activemq-xmpp</include>

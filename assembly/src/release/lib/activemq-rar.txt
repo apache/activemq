@@ -1,0 +1,3 @@
+ActiveMQ RAR is no longer included in the distribution.
+
+Please download it separately from: http://repo1.maven.org/maven2/org/apache/activemq/activemq-rar/
