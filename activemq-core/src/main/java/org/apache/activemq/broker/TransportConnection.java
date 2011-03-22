@@ -81,6 +81,7 @@ import org.apache.activemq.state.ConsumerState;
 import org.apache.activemq.state.ProducerState;
 import org.apache.activemq.state.SessionState;
 import org.apache.activemq.state.TransactionState;
+import org.apache.activemq.thread.DefaultThreadPools;
 import org.apache.activemq.thread.Task;
 import org.apache.activemq.thread.TaskRunner;
 import org.apache.activemq.thread.TaskRunnerFactory;
@@ -95,10 +96,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
-import static org.apache.activemq.thread.DefaultThreadPools.getDefaultTaskRunnerFactory;
-/**
- * 
- */
 public class TransportConnection implements Connection, Task, CommandVisitor {
     private static final Logger LOG = LoggerFactory.getLogger(TransportConnection.class);
     private static final Logger TRANSPORTLOG = LoggerFactory.getLogger(TransportConnection.class.getName() + ".Transport");
@@ -947,7 +944,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
             }
             try {
                 final Map context = MDCHelper.getCopyOfContextMap();
-                getDefaultTaskRunnerFactory().execute(new Runnable(){
+                DefaultThreadPools.getDefaultTaskRunnerFactory().execute(new Runnable(){
                     public void run() {
                         serviceLock.writeLock().lock();
                         try {

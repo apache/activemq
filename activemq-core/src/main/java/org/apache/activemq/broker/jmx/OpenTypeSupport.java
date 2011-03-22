@@ -16,15 +16,6 @@
  */
 package org.apache.activemq.broker.jmx;
 
-import static org.apache.activemq.broker.jmx.CompositeDataConstants.BODY_LENGTH;
-import static org.apache.activemq.broker.jmx.CompositeDataConstants.BODY_PREVIEW;
-import static org.apache.activemq.broker.jmx.CompositeDataConstants.CONTENT_MAP;
-import static org.apache.activemq.broker.jmx.CompositeDataConstants.JMSXGROUP_ID;
-import static org.apache.activemq.broker.jmx.CompositeDataConstants.JMSXGROUP_SEQ;
-import static org.apache.activemq.broker.jmx.CompositeDataConstants.MESSAGE_TEXT;
-import static org.apache.activemq.broker.jmx.CompositeDataConstants.ORIGINAL_DESTINATION;
-import static org.apache.activemq.broker.jmx.CompositeDataConstants.MESSAGE_URL;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
@@ -44,7 +35,6 @@ import javax.management.openmbean.SimpleType;
 import javax.management.openmbean.TabularDataSupport;
 import javax.management.openmbean.TabularType;
 
-import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.broker.region.policy.SlowConsumerEntry;
 import org.apache.activemq.broker.scheduler.Job;
 import org.apache.activemq.command.ActiveMQBlobMessage;
@@ -54,7 +44,6 @@ import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ActiveMQObjectMessage;
 import org.apache.activemq.command.ActiveMQStreamMessage;
 import org.apache.activemq.command.ActiveMQTextMessage;
-import org.apache.activemq.command.Message;
 
 public final class OpenTypeSupport {
 
@@ -137,9 +126,9 @@ public final class OpenTypeSupport {
             addItem("JMSPriority", "JMSPriority", SimpleType.INTEGER);
             addItem("JMSRedelivered", "JMSRedelivered", SimpleType.BOOLEAN);
             addItem("JMSTimestamp", "JMSTimestamp", SimpleType.DATE);
-            addItem(JMSXGROUP_ID, "Message Group ID", SimpleType.STRING);
-            addItem(JMSXGROUP_SEQ, "Message Group Sequence Number", SimpleType.INTEGER);
-            addItem(ORIGINAL_DESTINATION, "Original Destination Before Senting To DLQ", SimpleType.STRING);
+            addItem(CompositeDataConstants.JMSXGROUP_ID, "Message Group ID", SimpleType.STRING);
+            addItem(CompositeDataConstants.JMSXGROUP_SEQ, "Message Group Sequence Number", SimpleType.INTEGER);
+            addItem(CompositeDataConstants.ORIGINAL_DESTINATION, "Original Destination Before Senting To DLQ", SimpleType.STRING);
             addItem(CompositeDataConstants.PROPERTIES, "User Properties Text", SimpleType.STRING);
 
             // now lets expose the type safe properties
@@ -176,9 +165,9 @@ public final class OpenTypeSupport {
             rc.put("JMSPriority", Integer.valueOf(m.getJMSPriority()));
             rc.put("JMSRedelivered", Boolean.valueOf(m.getJMSRedelivered()));
             rc.put("JMSTimestamp", new Date(m.getJMSTimestamp()));
-            rc.put(JMSXGROUP_ID, m.getGroupID());
-            rc.put(JMSXGROUP_SEQ, m.getGroupSequence());
-            rc.put(ORIGINAL_DESTINATION, toString(m.getOriginalDestination()));
+            rc.put(CompositeDataConstants.JMSXGROUP_ID, m.getGroupID());
+            rc.put(CompositeDataConstants.JMSXGROUP_SEQ, m.getGroupSequence());
+            rc.put(CompositeDataConstants.ORIGINAL_DESTINATION, toString(m.getOriginalDestination()));
             try {
                 rc.put(CompositeDataConstants.PROPERTIES, "" + m.getProperties());
             } catch (IOException e) {
@@ -276,8 +265,8 @@ public final class OpenTypeSupport {
         @Override
         protected void init() throws OpenDataException {
             super.init();
-            addItem(BODY_LENGTH, "Body length", SimpleType.LONG);
-            addItem(BODY_PREVIEW, "Body preview", new ArrayType(1, SimpleType.BYTE));
+            addItem(CompositeDataConstants.BODY_LENGTH, "Body length", SimpleType.LONG);
+            addItem(CompositeDataConstants.BODY_PREVIEW, "Body preview", new ArrayType(1, SimpleType.BYTE));
         }
 
         @Override
@@ -288,9 +277,9 @@ public final class OpenTypeSupport {
             long length = 0;
             try {
                 length = m.getBodyLength();
-                rc.put(BODY_LENGTH, Long.valueOf(length));
+                rc.put(CompositeDataConstants.BODY_LENGTH, Long.valueOf(length));
             } catch (JMSException e) {
-                rc.put(BODY_LENGTH, Long.valueOf(0));
+                rc.put(CompositeDataConstants.BODY_LENGTH, Long.valueOf(0));
             }
             try {
                 byte preview[] = new byte[(int)Math.min(length, 255)];
@@ -304,9 +293,9 @@ public final class OpenTypeSupport {
                     data[i] = new Byte(preview[i]);
                 }
 
-                rc.put(BODY_PREVIEW, data);
+                rc.put(CompositeDataConstants.BODY_PREVIEW, data);
             } catch (JMSException e) {
-                rc.put(BODY_PREVIEW, new Byte[] {});
+                rc.put(CompositeDataConstants.BODY_PREVIEW, new Byte[] {});
             }
             return rc;
         }
@@ -323,7 +312,7 @@ public final class OpenTypeSupport {
         @Override
         protected void init() throws OpenDataException {
             super.init();
-            addItem(CONTENT_MAP, "Content map", SimpleType.STRING);
+            addItem(CompositeDataConstants.CONTENT_MAP, "Content map", SimpleType.STRING);
         }
 
         @Override
@@ -331,9 +320,9 @@ public final class OpenTypeSupport {
             ActiveMQMapMessage m = (ActiveMQMapMessage)o;
             Map<String, Object> rc = super.getFields(o);
             try {
-                rc.put(CONTENT_MAP, "" + m.getContentMap());
+                rc.put(CompositeDataConstants.CONTENT_MAP, "" + m.getContentMap());
             } catch (JMSException e) {
-                rc.put(CONTENT_MAP, "");
+                rc.put(CompositeDataConstants.CONTENT_MAP, "");
             }
             return rc;
         }
@@ -385,7 +374,7 @@ public final class OpenTypeSupport {
         @Override
         protected void init() throws OpenDataException {
             super.init();
-            addItem(MESSAGE_TEXT, MESSAGE_TEXT, SimpleType.STRING);
+            addItem(CompositeDataConstants.MESSAGE_TEXT, CompositeDataConstants.MESSAGE_TEXT, SimpleType.STRING);
         }
 
         @Override
@@ -393,9 +382,9 @@ public final class OpenTypeSupport {
             ActiveMQTextMessage m = (ActiveMQTextMessage)o;
             Map<String, Object> rc = super.getFields(o);
             try {
-                rc.put(MESSAGE_TEXT, "" + m.getText());
+                rc.put(CompositeDataConstants.MESSAGE_TEXT, "" + m.getText());
             } catch (JMSException e) {
-                rc.put(MESSAGE_TEXT, "");
+                rc.put(CompositeDataConstants.MESSAGE_TEXT, "");
             }
             return rc;
         }
@@ -446,7 +435,7 @@ public final class OpenTypeSupport {
         @Override
         protected void init() throws OpenDataException {
             super.init();
-            addItem(MESSAGE_URL, "Body Url", SimpleType.STRING);
+            addItem(CompositeDataConstants.MESSAGE_URL, "Body Url", SimpleType.STRING);
         }
 
         @Override
@@ -454,9 +443,9 @@ public final class OpenTypeSupport {
             ActiveMQBlobMessage m = (ActiveMQBlobMessage)o;
             Map<String, Object> rc = super.getFields(o);
             try {
-                rc.put(MESSAGE_URL, "" + m.getURL().toString());
+                rc.put(CompositeDataConstants.MESSAGE_URL, "" + m.getURL().toString());
             } catch (JMSException e) {
-                rc.put(MESSAGE_URL, "");
+                rc.put(CompositeDataConstants.MESSAGE_URL, "");
             }
             return rc;
         }

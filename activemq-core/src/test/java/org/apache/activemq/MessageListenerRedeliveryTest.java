@@ -36,6 +36,7 @@ import javax.jms.TextMessage;
 import junit.framework.TestCase;
 
 import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -71,7 +72,7 @@ public class MessageListenerRedeliveryTest extends TestCase {
     }
 
     protected Connection createConnection() throws Exception {
-        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("vm://localhost?broker.persistent=false");
+        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("vm://localhost?broker.persistent=false&marshal=true");
         factory.setRedeliveryPolicy(getRedeliveryPolicy());
         return factory.createConnection();
     }
@@ -293,11 +294,14 @@ public class MessageListenerRedeliveryTest extends TestCase {
         Message message = createTextMessage(session);
         producer.send(message);
 
+        final Message[] dlqMessage = new Message[1];
         ActiveMQDestination dlqDestination = new ActiveMQQueue("ActiveMQ.DLQ");
         MessageConsumer dlqConsumer = session.createConsumer(dlqDestination);
         final CountDownLatch gotDlqMessage = new CountDownLatch(1);
         dlqConsumer.setMessageListener(new MessageListener() {
             public void onMessage(Message message) {
+                LOG.info("DLQ Message Received: " + message);
+                dlqMessage[0] = message;
                 gotDlqMessage.countDown();
             }
         });
@@ -319,6 +323,13 @@ public class MessageListenerRedeliveryTest extends TestCase {
         
         // check DLQ
         assertTrue("got dlq message", gotDlqMessage.await(20, TimeUnit.SECONDS));
+
+        // check DLQ message cause is captured
+        message = dlqMessage[0];
+        assertNotNull("dlq message captured", message);
+        String cause = message.getStringProperty(ActiveMQMessage.DLQ_DELIVERY_FAILURE_CAUSE_PROPERTY);
+        assertTrue("cause exception is remembered", cause.contains("RuntimeException"));
+        assertTrue("is correct exception", cause.contains(getName()));
         
         session.close();
     }

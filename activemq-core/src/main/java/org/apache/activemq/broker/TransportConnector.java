@@ -16,7 +16,6 @@
  */
 package org.apache.activemq.broker;
 
-import static org.apache.activemq.thread.DefaultThreadPools.getDefaultTaskRunnerFactory;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -32,6 +31,7 @@ import org.apache.activemq.broker.region.ConnectorStatistics;
 import org.apache.activemq.command.BrokerInfo;
 import org.apache.activemq.command.ConnectionControl;
 import org.apache.activemq.security.MessageAuthorizationPolicy;
+import org.apache.activemq.thread.DefaultThreadPools;
 import org.apache.activemq.thread.TaskRunnerFactory;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportAcceptListener;
@@ -213,7 +213,7 @@ public class TransportConnector implements Connector, BrokerServiceAware {
         getServer().setAcceptListener(new TransportAcceptListener() {
             public void onAccept(final Transport transport) {
                 try {
-                    getDefaultTaskRunnerFactory().execute(new Runnable() {
+                    DefaultThreadPools.getDefaultTaskRunnerFactory().execute(new Runnable() {
                         public void run() {
                             MDCHelper.setContextMap(context);
                             try {

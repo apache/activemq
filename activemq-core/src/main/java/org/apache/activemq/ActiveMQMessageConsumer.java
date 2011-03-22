@@ -1123,6 +1123,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                     // Acknowledge the last message.
                     
                     MessageAck ack = new MessageAck(lastMd, MessageAck.POSION_ACK_TYPE, deliveredMessages.size());
+                    ack.setPoisonCause(lastMd.getRollbackCause());
 					ack.setFirstMessageId(firstMsgId);
                     session.sendAck(ack,true);
                     // Adjust the window size.
@@ -1233,6 +1234,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                                 LOG.error(getConsumerId() + " Exception while processing message: " + md.getMessage().getMessageId(), e);
                                 if (isAutoAcknowledgeBatch() || isAutoAcknowledgeEach() || session.isIndividualAcknowledge()) {
                                     // schedual redelivery and possible dlq processing
+                                    md.setRollbackCause(e);
                                     rollback();
                                 } else {
                                     // Transacted or Client ack: Deliver the

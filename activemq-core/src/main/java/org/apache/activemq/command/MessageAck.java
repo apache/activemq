@@ -71,6 +71,7 @@ public class MessageAck extends BaseCommand {
     protected ActiveMQDestination destination;
     protected TransactionId transactionId;
     protected int messageCount;
+    protected Throwable poisonCause;
 
     protected transient String consumerKey;
 
@@ -208,6 +209,20 @@ public class MessageAck extends BaseCommand {
 
     public void setMessageCount(int messageCount) {
         this.messageCount = messageCount;
+    }
+
+    /**
+     * The cause of a poison ack, if a message listener
+     * throws an exception it will be recorded here
+     *
+     * @openwire:property version=7
+     */
+    public Throwable getPoisonCause() {
+        return poisonCause;
+    }
+
+    public void setPoisonCause(Throwable poisonCause) {
+        this.poisonCause = poisonCause;
     }
 
     public Response visit(CommandVisitor visitor) throws Exception {

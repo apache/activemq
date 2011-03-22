@@ -37,6 +37,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.net.SocketFactory;
 import org.apache.activemq.Service;
+import org.apache.activemq.thread.DefaultThreadPools;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportLoggerFactory;
 import org.apache.activemq.transport.TransportThreadSupport;
@@ -46,9 +47,6 @@ import org.apache.activemq.util.ServiceStopper;
 import org.apache.activemq.wireformat.WireFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-
-import static org.apache.activemq.thread.DefaultThreadPools.getDefaultTaskRunnerFactory;
 
 /**
  * An implementation of the {@link Transport} interface using raw tcp/ip
@@ -518,7 +516,7 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
                 //closing the socket can hang also 
                 final CountDownLatch latch = new CountDownLatch(1);
                 
-                getDefaultTaskRunnerFactory().execute(new Runnable() {
+                DefaultThreadPools.getDefaultTaskRunnerFactory().execute(new Runnable() {
     
                     public void run() {
                         try {

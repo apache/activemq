@@ -21,7 +21,6 @@ import java.io.IOException;
 import java.net.URI;
 import java.security.KeyManagementException;
 import java.security.SecureRandom;
-import java.util.Arrays;
 
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.TrustManager;
