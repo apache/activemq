@@ -16,38 +16,21 @@
  */
 package org.apache.activemq.broker.util;
 
-import java.util.Set;
-import javax.annotation.PostConstruct;
-import org.apache.activemq.broker.BrokerPluginSupport;
-import org.apache.activemq.broker.Connection;
-import org.apache.activemq.broker.ConnectionContext;
-import org.apache.activemq.broker.ConsumerBrokerExchange;
-import org.apache.activemq.broker.ProducerBrokerExchange;
+import org.apache.activemq.broker.*;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.broker.region.Subscription;
-import org.apache.activemq.command.ActiveMQDestination;
-import org.apache.activemq.command.BrokerInfo;
-import org.apache.activemq.command.ConnectionInfo;
-import org.apache.activemq.command.ConsumerInfo;
-import org.apache.activemq.command.DestinationInfo;
-import org.apache.activemq.command.Message;
-import org.apache.activemq.command.MessageAck;
-import org.apache.activemq.command.MessageDispatch;
-import org.apache.activemq.command.MessageDispatchNotification;
-import org.apache.activemq.command.MessagePull;
-import org.apache.activemq.command.ProducerInfo;
-import org.apache.activemq.command.RemoveSubscriptionInfo;
-import org.apache.activemq.command.Response;
-import org.apache.activemq.command.SessionInfo;
-import org.apache.activemq.command.TransactionId;
+import org.apache.activemq.command.*;
 import org.apache.activemq.usage.Usage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.PostConstruct;
+import java.util.Set;
+
 /**
  * A simple Broker intercepter which allows you to enable/disable logging.
- * 
+ *
  * @org.apache.xbean.XBean
  */
 
@@ -58,13 +41,13 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport {
     private boolean logAll = false;
     private boolean logMessageEvents = false;
     private boolean logConnectionEvents = true;
+    private boolean logSessionEvents = true;
     private boolean logTransactionEvents = false;
     private boolean logConsumerEvents = false;
     private boolean logProducerEvents = false;
     private boolean logInternalEvents = false;
 
     /**
-     * 
      * @throws Exception
      * @org.apache.xbean.InitMethod
      */
@@ -100,10 +83,21 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport {
     }
 
     /**
-     * Logger Events that are related to connections and sessions
+     * Logger Events that are related to connections
      */
     public void setLogConnectionEvents(boolean logConnectionEvents) {
         this.logConnectionEvents = logConnectionEvents;
+    }
+
+    public boolean isLogSessionEvents() {
+        return logSessionEvents;
+    }
+
+    /**
+     * Logger Events that are related to sessions
+     */
+    public void setLogSessionEvents(boolean logSessionEvents) {
+        this.logSessionEvents = logSessionEvents;
     }
 
     public boolean isLogTransactionEvents() {
@@ -367,7 +361,7 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport {
 
     @Override
     public void addSession(ConnectionContext context, SessionInfo info) throws Exception {
-        if (isLogAll() || isLogConnectionEvents()) {
+        if (isLogAll() || isLogSessionEvents()) {
             LOG.info("Adding Session : " + info);
         }
         super.addSession(context, info);
@@ -375,7 +369,7 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport {
 
     @Override
     public void removeSession(ConnectionContext context, SessionInfo info) throws Exception {
-        if (isLogAll() || isLogConnectionEvents()) {
+        if (isLogAll() || isLogSessionEvents()) {
             LOG.info("Removing Session : " + info);
         }
         super.removeSession(context, info);
@@ -579,6 +573,8 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport {
         buf.append(isLogAll());
         buf.append(", logConnectionEvents=");
         buf.append(isLogConnectionEvents());
+        buf.append(", logSessionEvents=");
+        buf.append(isLogSessionEvents());
         buf.append(", logConsumerEvents=");
         buf.append(isLogConsumerEvents());
         buf.append(", logProducerEvents=");
