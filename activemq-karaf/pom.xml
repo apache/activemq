@@ -102,6 +102,11 @@
                      <type>xml</type>
                      <classifier>features</classifier>
                    </artifact>
+                  <artifact>
+                    <file>target/classes/features-2.1.xml</file>
+                     <type>xml</type>
+                     <classifier>features-2.1</classifier>
+                   </artifact>
                  </artifacts>
                </configuration>
              </execution>
