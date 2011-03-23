@@ -176,11 +176,11 @@ public class LoadBalanceTest {
                     return null;
                 }
             });
-            pool.shutdown();
 
             waitForBridgeFormation(10000);
             startProducer.countDown();
 
+            pool.shutdown();
             pool.awaitTermination(10, TimeUnit.SECONDS);
             LOG.info("broker1Count " + broker1Count.get() + ", broker2Count " + broker2Count.get());
 
