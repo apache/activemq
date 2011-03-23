@@ -63,7 +63,7 @@ public class LockFile {
             readFile = new RandomAccessFile(file, "rw");
             IOException reason = null;
             try {
-                lock = readFile.getChannel().tryLock();
+                lock = readFile.getChannel().tryLock(0, readFile.getChannel().size(), false);
             } catch (OverlappingFileLockException e) {
                 reason = IOExceptionSupport.create("File '" + file + "' could not be locked.",e);
             } catch (IOException ioe) {

@@ -499,7 +499,7 @@ public class KahaStore implements Store {
                 String property = System.getProperty(key);
                 if (null == property) {
                     if (!BROKEN_FILE_LOCK) {
-                        lock = lockFile.getChannel().tryLock();
+                        lock = lockFile.getChannel().tryLock(0, lockFile.getChannel().size(), false);
                         if (lock == null) {
                             throw new StoreLockedExcpetion("Kaha Store " + directory.getName() + "  is already opened by another application");
                         } else
