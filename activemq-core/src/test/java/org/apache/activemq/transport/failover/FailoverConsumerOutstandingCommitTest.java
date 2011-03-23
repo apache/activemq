@@ -52,55 +52,58 @@ import org.junit.After;
 import org.junit.Test;
 
 public class FailoverConsumerOutstandingCommitTest {
-	
-    private static final Logger LOG = LoggerFactory.getLogger(FailoverConsumerOutstandingCommitTest.class);
-	private static final String QUEUE_NAME = "FailoverWithOutstandingCommit";
-    private static final String MESSAGE_TEXT = "Test message ";
-	private String url = "tcp://localhost:61616";
-	final int prefetch = 10;
-	BrokerService broker;
-	
-	public void startCleanBroker() throws Exception {
-	    startBroker(true);
-	}
-	
-	@After
-	public void stopBroker() throws Exception {
-	    if (broker != null) {
-	        broker.stop();
-	    }
-	}
-	
-	public void startBroker(boolean deleteAllMessagesOnStartup) throws Exception {
-	    broker = createBroker(deleteAllMessagesOnStartup);
-        broker.start();
-	}
 
-	public BrokerService createBroker(boolean deleteAllMessagesOnStartup) throws Exception {   
-	    broker = new BrokerService();
-	    broker.addConnector(url);
-	    broker.setDeleteAllMessagesOnStartup(deleteAllMessagesOnStartup);
-	    PolicyMap policyMap = new PolicyMap();
-	    PolicyEntry defaultEntry = new PolicyEntry();
-	    
-	    // optimizedDispatche and sync dispatch ensure that the dispatch happens
-	    // before the commit reply that the consumer.clearDispatchList is waiting for.
-	    defaultEntry.setOptimizedDispatch(true);
+    private static final Logger LOG = LoggerFactory.getLogger(FailoverConsumerOutstandingCommitTest.class);
+    private static final String QUEUE_NAME = "FailoverWithOutstandingCommit";
+    private static final String MESSAGE_TEXT = "Test message ";
+    private static final String TRANSPORT_URI = "tcp://localhost:0";
+    private String url;
+    final int prefetch = 10;
+    BrokerService broker;
+
+    @After
+    public void stopBroker() throws Exception {
+        if (broker != null) {
+            broker.stop();
+        }
+    }
+
+    public void startBroker(boolean deleteAllMessagesOnStartup) throws Exception {
+        broker = createBroker(deleteAllMessagesOnStartup);
+        broker.start();
+    }
+
+    public BrokerService createBroker(boolean deleteAllMessagesOnStartup) throws Exception {
+        return createBroker(deleteAllMessagesOnStartup, TRANSPORT_URI);
+    }
+
+    public BrokerService createBroker(boolean deleteAllMessagesOnStartup, String bindAddress) throws Exception {
+        broker = new BrokerService();
+        broker.addConnector(bindAddress);
+        broker.setDeleteAllMessagesOnStartup(deleteAllMessagesOnStartup);
+        PolicyMap policyMap = new PolicyMap();
+        PolicyEntry defaultEntry = new PolicyEntry();
+
+        // optimizedDispatche and sync dispatch ensure that the dispatch happens
+        // before the commit reply that the consumer.clearDispatchList is waiting for.
+        defaultEntry.setOptimizedDispatch(true);
         policyMap.setDefaultEntry(defaultEntry);
         broker.setDestinationPolicy(policyMap);
-	    
-	    return broker;
-	}
 
-	@Test
-	public void testFailoverConsumerDups() throws Exception {
-	    doTestFailoverConsumerDups(true);
-	}
-	
-	public void doTestFailoverConsumerDups(final boolean watchTopicAdvisories) throws Exception {
-	    
+        url = broker.getTransportConnectors().get(0).getConnectUri().toString();
+
+        return broker;
+    }
+
+    @Test
+    public void testFailoverConsumerDups() throws Exception {
+        doTestFailoverConsumerDups(true);
+    }
+
+    public void doTestFailoverConsumerDups(final boolean watchTopicAdvisories) throws Exception {
+
         broker = createBroker(true);
-            
+
         broker.setPlugins(new BrokerPlugin[] {
                 new BrokerPluginSupport() {
                     @Override
@@ -108,7 +111,7 @@ public class FailoverConsumerOutstandingCommitTest {
                             TransactionId xid, boolean onePhase) throws Exception {
                         // so commit will hang as if reply is lost
                         context.setDontSendReponse(true);
-                        Executors.newSingleThreadExecutor().execute(new Runnable() {   
+                        Executors.newSingleThreadExecutor().execute(new Runnable() {
                             public void run() {
                                 LOG.info("Stopping broker before commit...");
                                 try {
@@ -122,17 +125,17 @@ public class FailoverConsumerOutstandingCommitTest {
                 }
         });
         broker.start();
-        
+
         ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory("failover:(" + url + ")");
         cf.setWatchTopicAdvisories(watchTopicAdvisories);
         cf.setDispatchAsync(false);
-        
+
         final ActiveMQConnection connection = (ActiveMQConnection) cf.createConnection();
         connection.start();
-        
+
         final Session producerSession = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         final Queue destination = producerSession.createQueue(QUEUE_NAME + "?consumer.prefetchSize=" + prefetch);
-        
+
         final Session consumerSession = connection.createSession(true, Session.AUTO_ACKNOWLEDGE);
 
 
@@ -144,9 +147,9 @@ public class FailoverConsumerOutstandingCommitTest {
 
             public void onMessage(Message message) {
                 LOG.info("consume one and commit");
-               
+
                 assertNotNull("got message", message);
-               
+
                 try {
                     consumerSession.commit();
                 } catch (JMSException e) {
@@ -157,7 +160,7 @@ public class FailoverConsumerOutstandingCommitTest {
                 LOG.info("done commit");
             }
         });
-        
+
         // may block if broker shutodwn happens quickly
         Executors.newSingleThreadExecutor().execute(new Runnable() {
             public void run() {
@@ -171,15 +174,15 @@ public class FailoverConsumerOutstandingCommitTest {
                 LOG.info("producer done");
             }
         });
-     
+
         // will be stopped by the plugin
         broker.waitUntilStopped();
-        broker = createBroker(false);
+        broker = createBroker(false, url);
         broker.start();
 
         assertTrue("consumer added through failover", commitDoneLatch.await(20, TimeUnit.SECONDS));
         assertTrue("another message was recieved after failover", messagesReceived.await(20, TimeUnit.SECONDS));
-        
+
         connection.close();
     }
 
@@ -187,12 +190,12 @@ public class FailoverConsumerOutstandingCommitTest {
     public void TestFailoverConsumerOutstandingSendTxIncomplete() throws Exception {
         doTestFailoverConsumerOutstandingSendTx(false);
     }
-	
+
     @Test
     public void TestFailoverConsumerOutstandingSendTxComplete() throws Exception {
         doTestFailoverConsumerOutstandingSendTx(true);
     }
-    
+
     public void doTestFailoverConsumerOutstandingSendTx(final boolean doActualBrokerCommit) throws Exception {
         final boolean watchTopicAdvisories = true;
         broker = createBroker(true);
@@ -233,7 +236,7 @@ public class FailoverConsumerOutstandingCommitTest {
         final Session producerSession = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         final Queue destination = producerSession.createQueue(QUEUE_NAME
                 + "?consumer.prefetchSize=" + prefetch);
-        
+
         final Queue signalDestination = producerSession.createQueue(QUEUE_NAME + ".signal"
                 + "?consumer.prefetchSize=" + prefetch);
 
@@ -280,7 +283,7 @@ public class FailoverConsumerOutstandingCommitTest {
 
         // will be stopped by the plugin
         broker.waitUntilStopped();
-        broker = createBroker(false);
+        broker = createBroker(false, url);
         broker.start();
 
         assertTrue("commit done through failover", commitDoneLatch.await(20, TimeUnit.SECONDS));
@@ -291,8 +294,8 @@ public class FailoverConsumerOutstandingCommitTest {
         assertEquals("get message 0 second", MESSAGE_TEXT + "0", receivedMessages.get(1).getText());
         assertTrue("another message was received", messagesReceived.await(20, TimeUnit.SECONDS));
         assertEquals("get message 1 eventually", MESSAGE_TEXT + "1", receivedMessages.get(2).getText());
-        
-        
+
+
         connection.close();
     }
 
@@ -312,28 +315,28 @@ public class FailoverConsumerOutstandingCommitTest {
         final Session consumerSession = connection.createSession(true, Session.SESSION_TRANSACTED);
         final MessageConsumer testConsumer = consumerSession.createConsumer(destination);
         assertNull("no message yet", testConsumer.receiveNoWait());
-        
+
         produceMessage(producerSession, destination, 1);
         producerSession.close();
 
         // consume then rollback after restart
         Message msg = testConsumer.receive(5000);
         assertNotNull(msg);
-        
+
         // restart with outstanding delivered message
         broker.stop();
         broker.waitUntilStopped();
-        broker = createBroker(false);
+        broker = createBroker(false, url);
         broker.start();
-        
+
         consumerSession.rollback();
-        
+
         // receive again
         msg = testConsumer.receive(10000);
         assertNotNull("got message again after rollback", msg);
 
         consumerSession.commit();
-        
+
         // close before sweep
         consumerSession.close();
         msg = receiveMessage(cf, destination);

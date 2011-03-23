@@ -48,13 +48,10 @@ public class FailoverPrefetchZeroTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(FailoverPrefetchZeroTest.class);
     private static final String QUEUE_NAME = "FailoverPrefetchZero";
-    private String url = "tcp://localhost:61616";
+    private static final String TRANSPORT_URI = "tcp://localhost:0";
+    private String url;
     final int prefetch = 0;
     BrokerService broker;
-
-    public void startCleanBroker() throws Exception {
-        startBroker(true);
-    }
 
     @After
     public void stopBroker() throws Exception {
@@ -69,9 +66,16 @@ public class FailoverPrefetchZeroTest {
     }
 
     public BrokerService createBroker(boolean deleteAllMessagesOnStartup) throws Exception {
+        return createBroker(deleteAllMessagesOnStartup, TRANSPORT_URI);
+    }
+
+    public BrokerService createBroker(boolean deleteAllMessagesOnStartup, String bindAddress) throws Exception {
         broker = new BrokerService();
-        broker.addConnector(url);
+        broker.addConnector(bindAddress);
         broker.setDeleteAllMessagesOnStartup(deleteAllMessagesOnStartup);
+
+        url = broker.getTransportConnectors().get(0).getConnectUri().toString();
+
         return broker;
     }
 
@@ -135,7 +139,7 @@ public class FailoverPrefetchZeroTest {
         // will be stopped by the plugin
         assertTrue("pull completed on broker", pullDone.await(30, TimeUnit.SECONDS));
         broker.waitUntilStopped();
-        broker = createBroker(false);
+        broker = createBroker(false, url);
         broker.start();
 
         assertTrue("receive completed through failover", receiveDone.await(30, TimeUnit.SECONDS));

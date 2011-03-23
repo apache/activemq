@@ -60,15 +60,12 @@ public class FailoverTransactionTest extends TestSupport {
 
     private static final Logger LOG = LoggerFactory.getLogger(FailoverTransactionTest.class);
     private static final String QUEUE_NAME = "FailoverWithTx";
-    private String url = "tcp://localhost:61616";
+    private static final String TRANSPORT_URI = "tcp://localhost:0";
+    private String url;
     BrokerService broker;
 
     public static Test suite() {
         return suite(FailoverTransactionTest.class);
-    }
-
-    public void startCleanBroker() throws Exception {
-        startBroker(true);
     }
 
     public void setUp() throws Exception {
@@ -87,17 +84,33 @@ public class FailoverTransactionTest extends TestSupport {
         }
     }
 
+    private void startCleanBroker() throws Exception {
+        startBroker(true);
+    }
+
     public void startBroker(boolean deleteAllMessagesOnStartup) throws Exception {
         broker = createBroker(deleteAllMessagesOnStartup);
         broker.start();
     }
 
+    public void startBroker(boolean deleteAllMessagesOnStartup, String bindAddress) throws Exception {
+        broker = createBroker(deleteAllMessagesOnStartup, bindAddress);
+        broker.start();
+    }
+
     public BrokerService createBroker(boolean deleteAllMessagesOnStartup) throws Exception {
+        return createBroker(deleteAllMessagesOnStartup, TRANSPORT_URI);
+    }
+
+    public BrokerService createBroker(boolean deleteAllMessagesOnStartup, String bindAddress) throws Exception {
         broker = new BrokerService();
         broker.setUseJmx(false);
         broker.setAdvisorySupport(false);
-        broker.addConnector(url);
+        broker.addConnector(bindAddress);
         broker.setDeleteAllMessagesOnStartup(deleteAllMessagesOnStartup);
+
+        url = broker.getTransportConnectors().get(0).getConnectUri().toString();
+
         return broker;
     }
 
@@ -114,7 +127,7 @@ public class FailoverTransactionTest extends TestSupport {
 
         // restart to force failover and connection state recovery before the commit
         broker.stop();
-        startBroker(false);
+        startBroker(false, url);
 
         session.commit();
         assertNotNull("we got the message", consumer.receive(20000));
@@ -182,7 +195,7 @@ public class FailoverTransactionTest extends TestSupport {
 
         // will be stopped by the plugin
         broker.waitUntilStopped();
-        broker = createBroker(false);
+        broker = createBroker(false, url);
         setDefaultPersistenceAdapter(broker);
         broker.start();
 
@@ -202,7 +215,7 @@ public class FailoverTransactionTest extends TestSupport {
         broker.waitUntilStopped();
 
         LOG.info("Checking for remaining/hung messages..");
-        broker = createBroker(false);
+        broker = createBroker(false, url);
         setDefaultPersistenceAdapter(broker);
         broker.start();
 
@@ -285,7 +298,7 @@ public class FailoverTransactionTest extends TestSupport {
 
         // will be stopped by the plugin
         broker.waitUntilStopped();
-        broker = createBroker(false);
+        broker = createBroker(false, url);
         setDefaultPersistenceAdapter(broker);
         LOG.info("restarting....");
         broker.start();
@@ -309,7 +322,7 @@ public class FailoverTransactionTest extends TestSupport {
         broker.waitUntilStopped();
 
         LOG.info("Checking for remaining/hung messages with second restart..");
-        broker = createBroker(false);
+        broker = createBroker(false, url);
         setDefaultPersistenceAdapter(broker);
         broker.start();
 
@@ -430,7 +443,7 @@ public class FailoverTransactionTest extends TestSupport {
         broker.waitUntilStopped();
 
         LOG.info("Checking for remaining/hung messages with restart..");
-        broker = createBroker(false);
+        broker = createBroker(false, url);
         setDefaultPersistenceAdapter(broker);
         broker.start();
 
@@ -462,7 +475,7 @@ public class FailoverTransactionTest extends TestSupport {
 
         // restart to force failover and connection state recovery before the commit
         broker.stop();
-        startBroker(false);
+        startBroker(false, url);
 
         session.commit();
 
@@ -493,7 +506,7 @@ public class FailoverTransactionTest extends TestSupport {
 
         // restart to force failover and connection state recovery before the commit
         broker.stop();
-        startBroker(false);
+        startBroker(false, url);
 
         session.commit();
         for (int i = 0; i < count; i++) {
@@ -543,7 +556,7 @@ public class FailoverTransactionTest extends TestSupport {
 
         // restart to force failover and connection state recovery before the commit
         broker.stop();
-        startBroker(false);
+        startBroker(false, url);
 
         session.commit();
         for (int i = 0; i < count - 1; i++) {
@@ -671,7 +684,7 @@ public class FailoverTransactionTest extends TestSupport {
 
         // will be stopped by the plugin
         broker.waitUntilStopped();
-        broker = createBroker(false);
+        broker = createBroker(false, url);
         setDefaultPersistenceAdapter(broker);
         broker.start();
 
@@ -708,7 +721,7 @@ public class FailoverTransactionTest extends TestSupport {
         broker.waitUntilStopped();
 
         LOG.info("Checking for remaining/hung messages..");
-        broker = createBroker(false);
+        broker = createBroker(false, url);
         setDefaultPersistenceAdapter(broker);
         broker.start();
 
@@ -744,7 +757,7 @@ public class FailoverTransactionTest extends TestSupport {
         assertNotNull(msg);
 
         broker.stop();
-        broker = createBroker(false);
+        broker = createBroker(false, url);
         // use empty jdbc store so that default wait(0) for redeliveries will timeout after failover
         setPersistenceAdapter(broker, PersistenceAdapterChoice.JDBC);
         broker.start();
@@ -756,7 +769,7 @@ public class FailoverTransactionTest extends TestSupport {
         }
 
         broker.stop();
-        broker = createBroker(false);
+        broker = createBroker(false, url);
         broker.start();
 
         assertNotNull("should get rolledback message from original restarted broker", consumer.receive(20000));
@@ -784,7 +797,7 @@ public class FailoverTransactionTest extends TestSupport {
         assertNotNull("got message just produced", msg);
 
         broker.stop();
-        broker = createBroker(false);
+        broker = createBroker(false, url);
         // use empty jdbc store so that wait for re-deliveries occur when failover resumes
         setPersistenceAdapter(broker, PersistenceAdapterChoice.JDBC);
         broker.start();
@@ -803,7 +816,7 @@ public class FailoverTransactionTest extends TestSupport {
         });
 
         broker.stop();
-        broker = createBroker(false);
+        broker = createBroker(false, url);
         broker.start();
 
         assertTrue("commit was successful", commitDone.await(30, TimeUnit.SECONDS));
@@ -836,7 +849,7 @@ public class FailoverTransactionTest extends TestSupport {
         MessageConsumer consumer2 = consumerSession.createConsumer(consumerSession.createQueue(QUEUE_NAME + "?consumer.prefetchSize=1"));
 
         broker.stop();
-        broker = createBroker(false);
+        broker = createBroker(false, url);
         broker.start();
 
         final CountDownLatch commitDone = new CountDownLatch(1);
@@ -851,7 +864,7 @@ public class FailoverTransactionTest extends TestSupport {
                 try {
                     consumerSession.commit();
                 } catch (JMSException ex) {
-                    exceptions.add(ex);                    
+                    exceptions.add(ex);
                 } finally {
                     commitDone.countDown();
                 }

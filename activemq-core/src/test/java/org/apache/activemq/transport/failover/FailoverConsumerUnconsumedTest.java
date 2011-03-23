@@ -51,51 +51,55 @@ import org.junit.Test;
 
 // see https://issues.apache.org/activemq/browse/AMQ-2573
 public class FailoverConsumerUnconsumedTest {
-	
+
     private static final Logger LOG = LoggerFactory.getLogger(FailoverConsumerUnconsumedTest.class);
-	private static final String QUEUE_NAME = "FailoverWithUnconsumed";
-	private String url = "tcp://localhost:61616";
-	final int prefetch = 10;
-	BrokerService broker;
-	
-	public void startCleanBroker() throws Exception {
-	    startBroker(true);
-	}
-	
-	@After
-	public void stopBroker() throws Exception {
-	    if (broker != null) {
-	        broker.stop();
-	    }
-	}
-	
-	public void startBroker(boolean deleteAllMessagesOnStartup) throws Exception {
-	    broker = createBroker(deleteAllMessagesOnStartup);
+    private static final String QUEUE_NAME = "FailoverWithUnconsumed";
+    private static final String TRANSPORT_URI = "tcp://localhost:0";
+    private String url;
+    final int prefetch = 10;
+    BrokerService broker;
+
+    @After
+    public void stopBroker() throws Exception {
+        if (broker != null) {
+            broker.stop();
+        }
+    }
+
+    public void startBroker(boolean deleteAllMessagesOnStartup) throws Exception {
+        broker = createBroker(deleteAllMessagesOnStartup);
         broker.start();
-	}
+    }
 
-	public BrokerService createBroker(boolean deleteAllMessagesOnStartup) throws Exception {   
-	    broker = new BrokerService();
-	    broker.addConnector(url);
-	    broker.setDeleteAllMessagesOnStartup(deleteAllMessagesOnStartup);
-	    return broker;
-	}
+    public BrokerService createBroker(boolean deleteAllMessagesOnStartup) throws Exception {
+        return createBroker(deleteAllMessagesOnStartup, TRANSPORT_URI);
+    }
 
-	@Test
-	public void testFailoverConsumerDups() throws Exception {
-	    doTestFailoverConsumerDups(true);
-	}
-	 
-	@Test
+    public BrokerService createBroker(boolean deleteAllMessagesOnStartup, String bindAddress) throws Exception {
+        broker = new BrokerService();
+        broker.addConnector(bindAddress);
+        broker.setDeleteAllMessagesOnStartup(deleteAllMessagesOnStartup);
+
+        this.url = broker.getTransportConnectors().get(0).getConnectUri().toString();
+
+        return broker;
+    }
+
+    @Test
+    public void testFailoverConsumerDups() throws Exception {
+        doTestFailoverConsumerDups(true);
+    }
+
+    @Test
     public void testFailoverConsumerDupsNoAdvisoryWatch() throws Exception {
         doTestFailoverConsumerDups(false);
     }
-	
-	public void doTestFailoverConsumerDups(final boolean watchTopicAdvisories) throws Exception {
-	    
-	    final int maxConsumers = 4;
+
+    public void doTestFailoverConsumerDups(final boolean watchTopicAdvisories) throws Exception {
+
+        final int maxConsumers = 4;
         broker = createBroker(true);
-            
+
         broker.setPlugins(new BrokerPlugin[] {
                 new BrokerPluginSupport() {
                     int consumerCount;
@@ -106,7 +110,7 @@ public class FailoverConsumerUnconsumedTest {
                             final ConsumerInfo info) throws Exception {
                          if (++consumerCount == maxConsumers + (watchTopicAdvisories ? 1:0)) {
                              context.setDontSendReponse(true);
-                             Executors.newSingleThreadExecutor().execute(new Runnable() {   
+                             Executors.newSingleThreadExecutor().execute(new Runnable() {
                                  public void run() {
                                      LOG.info("Stopping broker on consumer: " + info.getConsumerId());
                                      try {
@@ -122,13 +126,13 @@ public class FailoverConsumerUnconsumedTest {
                 }
         });
         broker.start();
-        
+
         ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory("failover:(" + url + ")");
         cf.setWatchTopicAdvisories(watchTopicAdvisories);
-        
+
         final ActiveMQConnection connection = (ActiveMQConnection) cf.createConnection();
         connection.start();
-        
+
         final Session consumerSession = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         final Queue destination = consumerSession.createQueue(QUEUE_NAME + "?jms.consumer.prefetch=" + prefetch);
 
@@ -136,9 +140,9 @@ public class FailoverConsumerUnconsumedTest {
         for (int i=0; i<maxConsumers -1; i++) {
             testConsumers.add(new TestConsumer(consumerSession, destination, connection));
         }
-        
+
         produceMessage(consumerSession, destination, maxConsumers * prefetch);
-               
+
         assertTrue("add messages are dispatched", Wait.waitFor(new Wait.Condition() {
             public boolean isSatisified() throws Exception {
                 int totalUnconsumed = 0;
@@ -146,14 +150,14 @@ public class FailoverConsumerUnconsumedTest {
                     long unconsumed = testConsumer.unconsumedSize();
                     LOG.info(testConsumer.getConsumerId() + " unconsumed: " + unconsumed);
                     totalUnconsumed += unconsumed;
-                }   
+                }
                 return totalUnconsumed == (maxConsumers-1) * prefetch;
             }
         }));
-        
+
         final CountDownLatch commitDoneLatch = new CountDownLatch(1);
-        
-        Executors.newSingleThreadExecutor().execute(new Runnable() {   
+
+        Executors.newSingleThreadExecutor().execute(new Runnable() {
             public void run() {
                 try {
                     LOG.info("add last consumer...");
@@ -165,7 +169,7 @@ public class FailoverConsumerUnconsumedTest {
                 }
             }
         });
-               
+
         // will be stopped by the plugin
         broker.waitUntilStopped();
 
@@ -182,11 +186,11 @@ public class FailoverConsumerUnconsumedTest {
             }
         }));
 
-        broker = createBroker(false);
+        broker = createBroker(false, this.url);
         broker.start();
 
         assertTrue("consumer added through failover", commitDoneLatch.await(30, TimeUnit.SECONDS));
-        
+
         // each should again get prefetch messages - all unconsumed deliveries should be rolledback
         assertTrue("after start all messages are re dispatched", Wait.waitFor(new Wait.Condition() {
             public boolean isSatisified() throws Exception {
@@ -195,14 +199,14 @@ public class FailoverConsumerUnconsumedTest {
                     long unconsumed = testConsumer.unconsumedSize();
                     LOG.info(testConsumer.getConsumerId() + " after restart: unconsumed: " + unconsumed);
                     totalUnconsumed += unconsumed;
-                }   
+                }
                 return totalUnconsumed == (maxConsumers) * prefetch;
             }
         }));
-        
+
         connection.close();
     }
-        
+
     private void produceMessage(final Session producerSession, Queue destination, long count)
         throws JMSException {
         MessageProducer producer = producerSession.createProducer(destination);
@@ -212,22 +216,22 @@ public class FailoverConsumerUnconsumedTest {
         }
         producer.close();
     }
-    
+
     // allow access to unconsumedMessages
     class TestConsumer extends ActiveMQMessageConsumer {
-        
+
         TestConsumer(Session consumerSession, Destination destination, ActiveMQConnection connection) throws Exception {
-            super((ActiveMQSession) consumerSession, 
-                new ConsumerId(new SessionId(connection.getConnectionInfo().getConnectionId(),1), nextGen()), 
+            super((ActiveMQSession) consumerSession,
+                new ConsumerId(new SessionId(connection.getConnectionInfo().getConnectionId(),1), nextGen()),
                 ActiveMQMessageTransformation.transformDestination(destination), null, "",
                 prefetch, -1, false, false, true, null);
         }
-    
+
         public int unconsumedSize() {
             return unconsumedMessages.size();
         }
     }
-    
+
     static long idGen = 100;
     private static long nextGen() {
         idGen -=5;
