@@ -27,6 +27,7 @@ import javax.jms.Session;
 import junit.framework.TestCase;
 import org.apache.activemq.broker.BrokerPlugin;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.broker.util.UDPTraceBrokerPlugin;
 import org.apache.activemq.broker.view.ConnectionDotFilePlugin;
 
@@ -36,12 +37,13 @@ public class TimeStampTest extends TestCase {
         broker.setPersistent(false);
         broker.setUseJmx(true);
         broker.setPlugins(new BrokerPlugin[] {new ConnectionDotFilePlugin(), new UDPTraceBrokerPlugin()});
-        broker.addConnector("tcp://localhost:61616");
-        broker.addConnector("stomp://localhost:61613");
+        TransportConnector tcpConnector = broker.addConnector("tcp://localhost:0");
+        broker.addConnector("stomp://localhost:0");
         broker.start();
 
         // Create a ConnectionFactory
-        ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory("tcp://localhost:61616");
+        ActiveMQConnectionFactory connectionFactory =
+            new ActiveMQConnectionFactory(tcpConnector.getConnectUri());
 
         // Create a Connection
         Connection connection = connectionFactory.createConnection();
