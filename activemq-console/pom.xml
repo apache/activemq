@@ -37,6 +37,7 @@
       sun.management*;resolution:=optional,
       org.josql*;resolution:=optional,
       org.apache.velocity*;resolution:=optional,
+      org.apache.commons.deamon*;resolution:=optional;
       *
     </activemq.osgi.import.pkg>
     <activemq.osgi.export>
