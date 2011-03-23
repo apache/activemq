@@ -174,11 +174,13 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
         }
         if (this.brokerService != null) {
             this.taskRunnerFactory = this.brokerService.getTaskRunnerFactory();
-        }else {
+            this.scheduler = this.brokerService.getScheduler();
+        } else {
+            this.taskRunnerFactory = new TaskRunnerFactory("AMQPersistenceAdaptor Task", getJournalThreadPriority(),
+                true, 1000, isUseDedicatedTaskRunner());
             this.scheduler = new Scheduler("AMQPersistenceAdapter Scheduler");
         }
-        this.taskRunnerFactory= new TaskRunnerFactory("AMQPersistenceAdaptor Task", getJournalThreadPriority(),
-                true, 1000, isUseDedicatedTaskRunner());
+
         IOHelper.mkdirs(this.directory);
         lockFile = new RandomAccessFile(new File(directory, "lock"), "rw");
         lock();
@@ -201,10 +203,6 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
         referenceStoreAdapter.setUsageManager(usageManager);
         referenceStoreAdapter.setMaxDataFileLength(getMaxReferenceFileLength());
         
-        if (brokerService != null) {
-            this.scheduler = this.brokerService.getBroker().getScheduler();
-        }
-                
         if (failIfJournalIsLocked) {
             asyncDataManager.lock();
         } else {
@@ -336,6 +334,11 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
         IOException firstException = null;
         referenceStoreAdapter.stop();
         referenceStoreAdapter = null;
+
+        if (this.brokerService == null) {
+            this.taskRunnerFactory.shutdown();
+            this.scheduler.stop();
+        }
         try {
             LOG.debug("Journal close");
             asyncDataManager.close();

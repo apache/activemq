@@ -333,8 +333,6 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
     /**
      * When we checkpoint we move all the journalled data to long term storage.
      * 
-     * @param stopping
-     * @param b
      */
     public void checkpoint(boolean sync, boolean fullCheckpoint) {
         try {

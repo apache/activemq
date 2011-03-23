@@ -2231,7 +2231,7 @@ public class BrokerService implements Service {
         return this.executor;
     }
     
-    protected synchronized Scheduler getScheduler() {
+    public synchronized Scheduler getScheduler() {
         if (this.scheduler==null) {
             this.scheduler = new Scheduler("ActiveMQ Broker["+getBrokerName()+"] Scheduler");
             try {
