@@ -30,6 +30,7 @@ import javax.transaction.xa.XAException;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
+import org.apache.activemq.command.MessageId;
 import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.command.XATransactionId;
 import org.apache.activemq.openwire.OpenWireFormat;
@@ -194,6 +195,14 @@ public class KahaDBTransactionStore implements TransactionStore {
             public void removeAsyncMessage(ConnectionContext context, MessageAck ack) throws IOException {
                 KahaDBTransactionStore.this.removeAsyncMessage(context, getDelegate(), ack);
             }
+
+            @Override
+            public void acknowledge(ConnectionContext context, String clientId, String subscriptionName,
+                            MessageId messageId, MessageAck ack) throws IOException {
+                KahaDBTransactionStore.this.acknowledge(context, (TopicMessageStore)getDelegate(), clientId,
+                        subscriptionName, messageId, ack);
+            }
+
         };
     }
 
@@ -216,9 +225,6 @@ public class KahaDBTransactionStore implements TransactionStore {
         return tx;
     }
 
-    /**
-     * @see org.apache.activemq.store.TransactionStore#commit(org.apache.activemq.service.Transaction)
-     */
     public void commit(TransactionId txid, boolean wasPrepared, Runnable preCommit, Runnable postCommit)
             throws IOException {
         if (txid != null) {
@@ -457,6 +463,31 @@ public class KahaDBTransactionStore implements TransactionStore {
             destination.removeAsyncMessage(context, ack);
         }
     }
+
+    final void acknowledge(ConnectionContext context, final TopicMessageStore destination, final String clientId, final String subscriptionName,
+                           final MessageId messageId, final MessageAck ack) throws IOException {
+
+        if (ack.isInTransaction()) {
+            if (ack.getTransactionId().isXATransaction() || theStore.isConcurrentStoreAndDispatchTransactions()== false) {
+                destination.acknowledge(context, clientId, subscriptionName, messageId, ack);
+            } else {
+                Tx tx = getTx(ack.getTransactionId());
+                tx.add(new RemoveMessageCommand(context) {
+                    public MessageAck getMessageAck() {
+                        return ack;
+                    }
+
+                    public Future<Object> run(ConnectionContext ctx) throws IOException {
+                        destination.acknowledge(ctx, clientId, subscriptionName, messageId, ack);
+                        return AbstractMessageStore.FUTURE;
+                    }
+                });
+            }
+        } else {
+            destination.acknowledge(context, clientId, subscriptionName, messageId, ack);
+        }
+    }
+
 
     private KahaTransactionInfo getTransactionInfo(TransactionId txid) {
         return theStore.createTransactionInfo(txid);

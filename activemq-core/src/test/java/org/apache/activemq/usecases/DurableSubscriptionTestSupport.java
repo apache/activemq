@@ -280,6 +280,38 @@ public abstract class DurableSubscriptionTestSupport extends TestSupport {
         assertNull(consumer.receive(5000));
     }
 
+    public void testDurableSubscriptionRollbackRedeliver() throws Exception {
+
+        // Create the durable sub.
+        connection.start();
+
+        session = connection.createSession(true, javax.jms.Session.SESSION_TRANSACTED);
+        Topic topic = session.createTopic("TestTopic");
+        consumer = session.createDurableSubscriber(topic, "sub1");
+
+        Session producerSession = connection.createSession(false, javax.jms.Session.AUTO_ACKNOWLEDGE);
+        producer = producerSession.createProducer(topic);
+        producer.setDeliveryMode(DeliveryMode.PERSISTENT);
+
+        producer.send(session.createTextMessage("Msg:1"));
+
+        // receive and rollback
+        assertTextMessageEquals("Msg:1", consumer.receive(5000));
+        session.rollback();
+        consumer.close();
+        session.close();
+
+        session = connection.createSession(true, javax.jms.Session.SESSION_TRANSACTED);
+
+        // Ensure that consumer will receive messages sent and rolled back
+        consumer = session.createDurableSubscriber(topic, "sub1");
+
+        assertTextMessageEquals("Msg:1", consumer.receive(5000));
+        session.commit();
+
+        assertNull(consumer.receive(5000));
+    }
+
     public void xtestInactiveDurableSubscriptionOneConnection() throws Exception {
         session = connection.createSession(false, javax.jms.Session.AUTO_ACKNOWLEDGE);
         Topic topic = session.createTopic("TestTopic");

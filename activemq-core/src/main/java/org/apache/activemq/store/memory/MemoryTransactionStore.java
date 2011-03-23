@@ -25,6 +25,7 @@ import javax.transaction.xa.XAException;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
+import org.apache.activemq.command.MessageId;
 import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.command.XATransactionId;
 import org.apache.activemq.store.AbstractMessageStore;
@@ -173,6 +174,13 @@ public class MemoryTransactionStore implements TransactionStore {
             public void removeAsyncMessage(ConnectionContext context, MessageAck ack) throws IOException {
                 MemoryTransactionStore.this.removeMessage(getDelegate(), ack);       
             }
+
+            @Override
+            public void acknowledge(ConnectionContext context, String clientId, String subscriptionName,
+                            MessageId messageId, MessageAck ack) throws IOException {
+                MemoryTransactionStore.this.acknowledge((TopicMessageStore)getDelegate(), clientId,
+                        subscriptionName, messageId, ack);
+            }
         };
     }
 
@@ -196,10 +204,6 @@ public class MemoryTransactionStore implements TransactionStore {
         return tx;
     }
 
-    /**
-     * @throws XAException
-     * @see org.apache.activemq.store.TransactionStore#commit(org.apache.activemq.service.Transaction)
-     */
     public void commit(TransactionId txid, boolean wasPrepared, Runnable preCommit,Runnable postCommit) throws IOException {
         if (preCommit != null) {
             preCommit.run();
@@ -306,6 +310,29 @@ public class MemoryTransactionStore implements TransactionStore {
             destination.removeMessage(null, ack);
         }
     }
+
+    final void acknowledge(final TopicMessageStore destination, final String clientId, final String subscriptionName,
+                           final MessageId messageId, final MessageAck ack) throws IOException {
+        if (doingRecover) {
+            return;
+        }
+
+        if (ack.isInTransaction()) {
+            Tx tx = getTx(ack.getTransactionId());
+            tx.add(new RemoveMessageCommand() {
+                public MessageAck getMessageAck() {
+                    return ack;
+                }
+
+                public void run(ConnectionContext ctx) throws IOException {
+                    destination.acknowledge(ctx, clientId, subscriptionName, messageId, ack);
+                }
+            });
+        } else {
+            destination.acknowledge(null, clientId, subscriptionName, messageId, ack);
+        }
+    }
+
 
     public void delete() {
         inflightTransactions.clear();

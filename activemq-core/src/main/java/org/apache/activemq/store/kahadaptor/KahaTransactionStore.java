@@ -27,6 +27,7 @@ import org.apache.activemq.broker.BrokerServiceAware;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
+import org.apache.activemq.command.MessageId;
 import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.command.XATransactionId;
 import org.apache.activemq.kaha.RuntimeStoreException;
@@ -84,6 +85,12 @@ public class KahaTransactionStore implements TransactionStore, BrokerServiceAwar
             public void removeMessage(ConnectionContext context, final MessageAck ack) throws IOException {
                 KahaTransactionStore.this.removeMessage(getDelegate(), ack);
             }
+
+            @Override
+            public void acknowledge(ConnectionContext context, String clientId, String subscriptionName,
+                            MessageId messageId, MessageAck ack) throws IOException {
+                KahaTransactionStore.this.acknowledge((TopicMessageStore)getDelegate(), clientId, subscriptionName, messageId, ack);
+            }
         };
     }
 
@@ -98,10 +105,6 @@ public class KahaTransactionStore implements TransactionStore, BrokerServiceAwar
         }
     }
 
-    /**
-     * @throws XAException
-     * @see org.apache.activemq.store.TransactionStore#commit(org.apache.activemq.service.Transaction)
-     */
     public void commit(TransactionId txid, boolean wasPrepared, Runnable before,Runnable after) throws IOException {
         if(before != null) {
             before.run();
@@ -180,6 +183,23 @@ public class KahaTransactionStore implements TransactionStore, BrokerServiceAwar
             }
             throw rse;
     	}
+    }
+
+    final void acknowledge(final TopicMessageStore destination, String clientId,
+                           String subscriptionName, MessageId messageId, MessageAck ack) throws IOException {
+        try {
+            if (ack.isInTransaction()) {
+                KahaTransaction tx = getOrCreateTx(ack.getTransactionId());
+                tx.add((KahaMessageStore)destination, clientId, subscriptionName, messageId, ack);
+            } else {
+                destination.acknowledge(null, clientId, subscriptionName, messageId, ack);
+            }
+        } catch (RuntimeStoreException rse) {
+            if (rse.getCause() instanceof IOException) {
+                brokerService.handleIOException((IOException)rse.getCause());
+            }
+            throw rse;
+        }
     }
 
     protected synchronized KahaTransaction getTx(TransactionId key) {

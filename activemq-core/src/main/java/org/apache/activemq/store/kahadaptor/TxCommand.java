@@ -18,6 +18,7 @@ package org.apache.activemq.store.kahadaptor;
 
 import org.apache.activemq.command.BaseCommand;
 import org.apache.activemq.command.CommandTypes;
+import org.apache.activemq.command.MessageId;
 
 /**
  * Base class for messages/acknowledgements for a transaction
@@ -27,6 +28,9 @@ import org.apache.activemq.command.CommandTypes;
 class TxCommand {
     protected Object messageStoreKey;
     protected BaseCommand command;
+    private String clientId;
+    private String subscriptionName;
+    private MessageId messageId;
 
     /**
      * @return Returns the messageStoreKey.
@@ -67,7 +71,34 @@ class TxCommand {
      * @return true if a MessageAck command
      */
     public boolean isRemove() {
-        return command != null && command.getDataStructureType() == CommandTypes.MESSAGE_ACK;
+        return command != null && command.getDataStructureType() == CommandTypes.MESSAGE_ACK && subscriptionName == null;
     }
 
+    public boolean isAck() {
+        return command != null && command.getDataStructureType() == CommandTypes.MESSAGE_ACK && subscriptionName != null;
+    }
+
+    public void setClientId(String clientId) {
+        this.clientId = clientId;
+    }
+
+    public void setSubName(String subscriptionName) {
+        this.subscriptionName = subscriptionName;
+    }
+
+    public void setMessageId(MessageId messageId) {
+        this.messageId = messageId;
+    }
+
+    public String getClientId() {
+        return clientId;
+    }
+
+    public String getSubscriptionName() {
+        return subscriptionName;
+    }
+
+    public MessageId getMessageId() {
+        return messageId;
+    }
 }

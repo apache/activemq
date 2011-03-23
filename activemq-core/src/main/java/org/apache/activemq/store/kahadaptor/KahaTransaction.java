@@ -20,10 +20,13 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.BaseCommand;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
+import org.apache.activemq.command.MessageId;
 import org.apache.activemq.store.MessageStore;
+import org.apache.activemq.store.TopicMessageStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,6 +42,16 @@ class KahaTransaction {
         TxCommand tx = new TxCommand();
         tx.setCommand(command);
         tx.setMessageStoreKey(store.getId());
+        list.add(tx);
+    }
+
+    public void add(KahaMessageStore destination, String clientId, String subscriptionName, MessageId messageId, MessageAck ack) {
+        TxCommand tx = new TxCommand();
+        tx.setCommand(ack);
+        tx.setMessageStoreKey(destination.getId());
+        tx.setClientId(clientId);
+        tx.setSubName(subscriptionName);
+        tx.setMessageId(messageId);
         list.add(tx);
     }
 
@@ -89,6 +102,9 @@ class KahaTransaction {
             MessageStore ms = transactionStore.getStoreById(command.getMessageStoreKey());
             if (command.isRemove()) {
                 ms.removeMessage(null, (MessageAck)command.getCommand());
+            } else if (command.isAck()) {
+                ((TopicMessageStore)ms).acknowledge(null, command.getClientId(), command.getSubscriptionName(),
+                        command.getMessageId(), (MessageAck)command.getCommand());
             }
         }
     }
