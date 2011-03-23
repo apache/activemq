@@ -234,10 +234,6 @@
       <groupId>org.jasypt</groupId>
       <artifactId>jasypt</artifactId>
     </dependency>
-    <dependency>
-      <groupId>com.ibm.icu</groupId>
-      <artifactId>icu4j</artifactId>
-    </dependency> 
 
     <!-- database testing -->
     <dependency>
