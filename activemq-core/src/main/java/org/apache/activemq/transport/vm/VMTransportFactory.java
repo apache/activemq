@@ -122,7 +122,7 @@ public class VMTransportFactory extends TransportFactory {
                             broker = BrokerFactory.createBroker(brokerURI);
                         }
                         broker.start();
-                        MDC.put("broker", broker.getBrokerName());
+                        MDC.put("activemq.broker", broker.getBrokerName());
                     } catch (URISyntaxException e) {
                         throw IOExceptionSupport.create(e);
                     }
@@ -232,7 +232,7 @@ public class VMTransportFactory extends TransportFactory {
             if (broker != null) {
                 ServiceSupport.dispose(broker);
             }
-            MDC.remove("broker");
+            MDC.remove("activemq.broker");
         }
     }
 

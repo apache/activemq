@@ -1364,7 +1364,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
      * @see org.apache.activemq.thread.Task#iterate()
      */
     public boolean iterate() {
-        MDC.put("destination", getName());
+        MDC.put("activemq.destination", getName());
         boolean pageInMoreMessages = false;
         synchronized (iteratingMutex) {
 
@@ -1481,7 +1481,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
             if (pendingWakeups.get() > 0) {
                 pendingWakeups.decrementAndGet();
             }
-            MDC.remove("destination");
+            MDC.remove("activemq.destination");
             return pendingWakeups.get() > 0;
         }
     }

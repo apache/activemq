@@ -474,7 +474,7 @@ public class BrokerService implements Service {
             return;
         }
 
-        MDC.put("broker", brokerName);
+        MDC.put("activemq.broker", brokerName);
 
         try {
         	if (systemExitOnShutdown && useShutdownHook) {
@@ -543,7 +543,7 @@ public class BrokerService implements Service {
             }
             throw e;
         } finally {
-            MDC.remove("broker");
+            MDC.remove("activemq.broker");
         }
     }
 
@@ -558,7 +558,7 @@ public class BrokerService implements Service {
             return;
         }
 
-        MDC.put("broker", brokerName);
+        MDC.put("activemq.broker", brokerName);
 
         if (systemExitOnShutdown) {
         	new Thread() {
@@ -648,7 +648,7 @@ public class BrokerService implements Service {
             }
         }
 
-        MDC.remove("broker");
+        MDC.remove("activemq.broker");
 
         stopper.throwFirstException();
     }

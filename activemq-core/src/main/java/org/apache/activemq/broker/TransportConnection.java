@@ -298,7 +298,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
     }
 
     public Response service(Command command) {
-        MDC.put("connector", connector.getUri().toString());
+        MDC.put("activemq.connector", connector.getUri().toString());
         Response response = null;
         boolean responseRequired = command.isResponseRequired();
         int commandId = command.getCommandId();
@@ -330,7 +330,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
             }
             context = null;
         }
-        MDC.remove("connector");
+        MDC.remove("activemq.connector");
         return response;
     }
 
