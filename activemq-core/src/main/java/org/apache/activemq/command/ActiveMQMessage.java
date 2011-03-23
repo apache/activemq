@@ -44,7 +44,7 @@ import org.apache.activemq.util.TypeConversionSupport;
  */
 public class ActiveMQMessage extends Message implements org.apache.activemq.Message, ScheduledMessage {
     public static final byte DATA_STRUCTURE_TYPE = CommandTypes.ACTIVEMQ_MESSAGE;
-    public static final String DLQ_DELIVERY_FAILURE_CAUSE_PROPERTY = "DLQ_DELIVERY_FAILURE_CAUSE";
+    public static final String DLQ_DELIVERY_FAILURE_CAUSE_PROPERTY = "dlqDeliveryFailureCause";
     private static final Map<String, PropertySetter> JMS_PROPERTY_SETERS = new HashMap<String, PropertySetter>();
 
     protected transient Callback acknowledgeCallback;
