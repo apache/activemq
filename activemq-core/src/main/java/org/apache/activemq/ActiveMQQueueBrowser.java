@@ -47,7 +47,7 @@ import org.apache.activemq.command.MessageDispatch;
  * A <CODE>QueueBrowser</CODE> can be created from either a <CODE>Session
  * </CODE>
  * or a <CODE>QueueSession</CODE>.
- * 
+ *
  * @see javax.jms.Session#createBrowser
  * @see javax.jms.QueueSession#createBrowser
  * @see javax.jms.QueueBrowser
@@ -69,7 +69,7 @@ public class ActiveMQQueueBrowser implements QueueBrowser, Enumeration {
 
     /**
      * Constructor for an ActiveMQQueueBrowser - used internally
-     * 
+     *
      * @param theSession
      * @param dest
      * @param selector
@@ -95,6 +95,7 @@ public class ActiveMQQueueBrowser implements QueueBrowser, Enumeration {
     private ActiveMQMessageConsumer createConsumer() throws JMSException {
         browseDone.set(false);
         ActiveMQPrefetchPolicy prefetchPolicy = session.connection.getPrefetchPolicy();
+
         return new ActiveMQMessageConsumer(session, consumerId, destination, null, selector, prefetchPolicy.getQueueBrowserPrefetch(), prefetchPolicy
             .getMaximumPendingMessageLimit(), false, true, dispatchAsync, null) {
             public void dispatch(MessageDispatch md) {
@@ -126,7 +127,7 @@ public class ActiveMQQueueBrowser implements QueueBrowser, Enumeration {
     /**
      * Gets an enumeration for browsing the current queue messages in the order
      * they would be received.
-     * 
+     *
      * @return an enumeration for browsing the messages
      * @throws JMSException if the JMS provider fails to get the enumeration for
      *                 this browser due to some internal error.
@@ -209,7 +210,7 @@ public class ActiveMQQueueBrowser implements QueueBrowser, Enumeration {
 
     /**
      * Gets the queue associated with this queue browser.
-     * 
+     *
      * @return the queue
      * @throws JMSException if the JMS provider fails to get the queue
      *                 associated with this browser due to some internal error.
@@ -228,15 +229,19 @@ public class ActiveMQQueueBrowser implements QueueBrowser, Enumeration {
 
     /**
      * Wait on a semaphore for a fixed amount of time for a message to come in.
+     * @throws JMSException
      */
     protected void waitForMessage() {
         try {
+            consumer.sendPullCommand(-1);
             synchronized (semaphore) {
                 semaphore.wait(2000);
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
+        } catch (JMSException e) {
         }
+
     }
 
     protected void notifyMessageAvailable() {
