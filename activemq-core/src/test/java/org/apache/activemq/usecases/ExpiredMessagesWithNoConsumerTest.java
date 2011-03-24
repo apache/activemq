@@ -226,7 +226,7 @@ public class ExpiredMessagesWithNoConsumerTest extends CombinationTestSupport {
                 producingThread.join(1000);
                 return !producingThread.isAlive();
             }      
-        }));
+        }, Wait.MAX_WAIT_MILLIS * 2));
              
         final DestinationViewMBean view = createView(destination);
             
