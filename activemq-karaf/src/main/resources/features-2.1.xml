@@ -18,7 +18,6 @@
 -->
 
 <features name="activemq-${activemq-version}">
-  <repository>mvn:org.apache.karaf/apache-karaf/2.1.0/xml/features</repository>
 
     <feature name="activemq" version="${activemq-version}">
         <bundle>mvn:org.apache.geronimo.specs/geronimo-annotation_1.0_spec/1.1.1</bundle>
@@ -37,9 +36,7 @@
         <bundle>mvn:org.apache.activemq/activemq-console/${activemq-version}</bundle>
         <bundle>mvn:org.apache.activemq/activemq-ra/${activemq-version}</bundle> 
         <bundle>mvn:org.apache.activemq/activemq-pool/${activemq-version}</bundle>
-        <bundle>mvn:org.apache.felix/org.apache.felix.gogo.command/0.8.0</bundle>
-        <bundle>mvn:org.apache.felix/org.apache.felix.gogo.runtime/0.8.0</bundle>
-        <bundle>mvn:org.apache.activemq/activemq-karaf/${activemq-version}</bundle> 
+        <bundle>mvn:org.apache.activemq/activemq-karaf/5.4.2</bundle> <!-- use the old one for compatibility reasons -->
         <bundle>mvn:org.apache.aries.transaction/org.apache.aries.transaction.manager/${aries-version}</bundle>
     </feature>
 
