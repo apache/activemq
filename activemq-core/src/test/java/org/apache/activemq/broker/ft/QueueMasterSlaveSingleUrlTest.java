@@ -30,6 +30,12 @@ public class QueueMasterSlaveSingleUrlTest extends QueueMasterSlaveTest {
     private final String brokerUrl = "tcp://localhost:62001";
     private final String singleUriString = "failover://(" + brokerUrl +")?randomize=false";
 
+    @Override
+    protected void setUp() throws Exception {
+        setAutoFail(true);
+        super.setUp();
+    }
+
     protected ActiveMQConnectionFactory createConnectionFactory() throws Exception {
         return new ActiveMQConnectionFactory(singleUriString);
     }
