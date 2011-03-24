@@ -36,8 +36,7 @@ import org.apache.activemq.network.NetworkConnector;
 public class FailoverClusterTest extends TestCase {
 
     private static final int NUMBER = 10;
-    private static final String BROKER_A_BIND_ADDRESS = "tcp://0.0.0.0:61616";
-    private static final String BROKER_B_BIND_ADDRESS = "tcp://0.0.0.0:61617";
+    private static final String BROKER_BIND_ADDRESS = "tcp://0.0.0.0:0";
     private static final String BROKER_A_NAME = "BROKERA";
     private static final String BROKER_B_NAME = "BROKERB";
     private BrokerService brokerA;
@@ -50,7 +49,7 @@ public class FailoverClusterTest extends TestCase {
     public void testClusterConnectedAfterClients() throws Exception {
         createClients();
         if (brokerB == null) {
-            brokerB = createBrokerB(BROKER_B_BIND_ADDRESS);
+            brokerB = createBrokerB(BROKER_BIND_ADDRESS);
         }
         Thread.sleep(3000);
         Set<String> set = new HashSet<String>();
@@ -64,7 +63,7 @@ public class FailoverClusterTest extends TestCase {
         createClients();
         if (brokerB == null) {
             // add in server side only url param, should not be propagated
-            brokerB = createBrokerB(BROKER_B_BIND_ADDRESS + "?transport.closeAsync=false");
+            brokerB = createBrokerB(BROKER_BIND_ADDRESS + "?transport.closeAsync=false");
         }
         Thread.sleep(3000);
         Set<String> set = new HashSet<String>();
@@ -78,7 +77,7 @@ public class FailoverClusterTest extends TestCase {
     public void testClusterConnectedBeforeClients() throws Exception {
 
         if (brokerB == null) {
-            brokerB = createBrokerB(BROKER_B_BIND_ADDRESS);
+            brokerB = createBrokerB(BROKER_BIND_ADDRESS);
         }
         Thread.sleep(5000);
         createClients();
@@ -86,7 +85,7 @@ public class FailoverClusterTest extends TestCase {
         brokerA.stop();
         Thread.sleep(2000);
 
-        URI brokerBURI = new URI(BROKER_B_BIND_ADDRESS);
+        URI brokerBURI = new URI( brokerB.getTransportConnectors().get(0).getPublishableConnectString());
         for (ActiveMQConnection c : connections) {
             String addr = c.getTransportChannel().getRemoteAddress();
             assertTrue(addr.indexOf("" + brokerBURI.getPort()) > 0);
@@ -96,7 +95,7 @@ public class FailoverClusterTest extends TestCase {
     @Override
     protected void setUp() throws Exception {
         if (brokerA == null) {
-            brokerA = createBrokerA(BROKER_A_BIND_ADDRESS + "?transport.closeAsync=false");
+            brokerA = createBrokerA(BROKER_BIND_ADDRESS + "?transport.closeAsync=false");
             clientUrl = "failover://(" + brokerA.getTransportConnectors().get(0).getPublishableConnectString() + ")";
         }
     }
@@ -144,7 +143,7 @@ public class FailoverClusterTest extends TestCase {
     protected void configureNetwork(BrokerService answer, String uri) throws Exception {
         answer.setBrokerName(BROKER_B_NAME);
         answer.setPersistent(false);
-        NetworkConnector network = answer.addNetworkConnector("static://" + BROKER_A_BIND_ADDRESS);
+        NetworkConnector network = answer.addNetworkConnector("static://" + brokerA.getTransportConnectors().get(0).getPublishableConnectString());
         network.setDuplex(true);
         TransportConnector connector = answer.addConnector(uri);
         connector.setRebalanceClusterClients(true);
