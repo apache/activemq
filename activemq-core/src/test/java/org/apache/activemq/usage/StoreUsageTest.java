@@ -29,6 +29,8 @@ import javax.jms.Session;
 
 public class StoreUsageTest extends EmbeddedBrokerTestSupport {
 
+    final int WAIT_TIME_MILLS = 20*1000;
+
     @Override
     protected BrokerService createBroker() throws Exception {
         BrokerService broker = super.createBroker();
@@ -51,17 +53,17 @@ public class StoreUsageTest extends EmbeddedBrokerTestSupport {
         producer.start();
 
         // wait for the producer to block
-        Thread.sleep(5000);
+        Thread.sleep(WAIT_TIME_MILLS / 2);
 
         broker.getAdminView().setStoreLimit(1024 * 1024);
 
-        Thread.sleep(5000);
+        Thread.sleep(WAIT_TIME_MILLS);
 
         Wait.waitFor(new Wait.Condition() {
             public boolean isSatisified() throws Exception {
                 return producer.getSentCount() == producer.getMessageCount();
             }
-        }, 5000);
+        }, WAIT_TIME_MILLS * 2);
 
         assertEquals("Producer didn't send all messages", producer.getMessageCount(), producer.getSentCount());
 
