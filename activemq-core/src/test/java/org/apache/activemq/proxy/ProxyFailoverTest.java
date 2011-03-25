@@ -76,7 +76,7 @@ public class ProxyFailoverTest extends TestCase {
         ConsumerThread consumer = new ConsumerThread(consumerSession, consumerSession.createQueue("ProxyTest"));
         consumer.start();
 
-        Thread.sleep(5000);
+        Thread.sleep(10*1000);
 
         remoteBroker.stop();
         remoteBroker.waitUntilStopped();
