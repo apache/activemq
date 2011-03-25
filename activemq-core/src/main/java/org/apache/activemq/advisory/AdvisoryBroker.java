@@ -263,7 +263,7 @@ public class AdvisoryBroker extends BrokerFilter {
                 fireAdvisory(context, topic, payload, null, advisoryMessage);
             }
         } catch (Exception e) {
-            LOG.warn("Failed to fire message expired advisory");
+            handleFireFailure("expired", e);
         }
     }
     
@@ -278,7 +278,7 @@ public class AdvisoryBroker extends BrokerFilter {
                 fireAdvisory(context, topic,payload);
             }
         } catch (Exception e) {
-            LOG.warn("Failed to fire message consumed advisory");
+            handleFireFailure("consumed", e);
         }
     }
     
@@ -293,7 +293,7 @@ public class AdvisoryBroker extends BrokerFilter {
                 fireAdvisory(context, topic,payload);
             }
         } catch (Exception e) {
-            LOG.warn("Failed to fire message delivered advisory");
+            handleFireFailure("delivered", e);
         }
     }
     
@@ -313,7 +313,7 @@ public class AdvisoryBroker extends BrokerFilter {
                 fireAdvisory(context, topic, payload, null, advisoryMessage);
             }
         } catch (Exception e) {
-            LOG.warn("Failed to fire message discarded advisory");
+            handleFireFailure("discarded", e);
         }
     }
     
@@ -326,7 +326,7 @@ public class AdvisoryBroker extends BrokerFilter {
             advisoryMessage.setStringProperty(AdvisorySupport.MSG_PROPERTY_CONSUMER_ID, subs.getConsumerInfo().getConsumerId().toString());
             fireAdvisory(context, topic, subs.getConsumerInfo(), null, advisoryMessage);
         } catch (Exception e) {
-            LOG.warn("Failed to fire message slow consumer advisory");
+            handleFireFailure("slow consumer", e);
         }
     }
     
@@ -339,7 +339,7 @@ public class AdvisoryBroker extends BrokerFilter {
             advisoryMessage.setStringProperty(AdvisorySupport.MSG_PROPERTY_PRODUCER_ID, producerInfo.getProducerId().toString());
             fireAdvisory(context, topic, producerInfo, null, advisoryMessage);
         } catch (Exception e) {
-            LOG.warn("Failed to fire message fast producer advisory");
+            handleFireFailure("fast producer", e);
         }
     }
     
@@ -355,7 +355,7 @@ public class AdvisoryBroker extends BrokerFilter {
                 fireAdvisory(context, topic, null, null, advisoryMessage);
 
             } catch (Exception e) {
-                LOG.warn("Failed to fire message is full advisory");
+                handleFireFailure("is full", e);
             }
         }
     }
@@ -371,7 +371,7 @@ public class AdvisoryBroker extends BrokerFilter {
             context.setBroker(getBrokerService().getBroker());
             fireAdvisory(context, topic,null,null,advisoryMessage);
         } catch (Exception e) {
-            LOG.warn("Failed to fire message master broker advisory");
+            handleFireFailure("now master broker", e);
         }
     }
     
@@ -387,7 +387,7 @@ public class AdvisoryBroker extends BrokerFilter {
                 fireAdvisory(context, topic,payload);
             }
         } catch (Exception e) {
-            LOG.warn("Failed to fire message consumed advisory");
+            handleFireFailure("add to DLQ", e);
         } 
     }
 
@@ -407,7 +407,7 @@ public class AdvisoryBroker extends BrokerFilter {
              fireAdvisory(context, topic, brokerInfo, null, advisoryMessage);
          }
         } catch (Exception e) {
-            LOG.warn("Failed to fire network bridge advisory");
+            handleFireFailure("network bridge started", e);
         }
     }
 
@@ -426,7 +426,14 @@ public class AdvisoryBroker extends BrokerFilter {
              fireAdvisory(context, topic, brokerInfo, null, advisoryMessage);
          }
         } catch (Exception e) {
-            LOG.warn("Failed to fire network bridge advisory");
+            handleFireFailure("network bridge stopped", e);
+        }
+    }
+
+    private void handleFireFailure(String message, Throwable cause) {
+        LOG.warn("Failed to fire "  + message + " advisory, reason: " + cause);
+        if (LOG.isDebugEnabled()) {
+            LOG.debug(message + " detail", cause);
         }
     }
 
