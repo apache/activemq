@@ -26,7 +26,7 @@ import javax.jms.MessageProducer;
 /**
  * A useful base class for implementing a {@link MessageProducer}
  *
- * 
+ *
  */
 public abstract class ActiveMQMessageProducerSupport implements MessageProducer, Closeable {
     protected ActiveMQSession session;
@@ -131,7 +131,7 @@ public abstract class ActiveMQMessageProducerSupport implements MessageProducer,
      */
     public void setDeliveryMode(int newDeliveryMode) throws JMSException {
         if (newDeliveryMode != DeliveryMode.PERSISTENT && newDeliveryMode != DeliveryMode.NON_PERSISTENT) {
-            throw new javax.jms.IllegalStateException("unkown delivery mode: " + newDeliveryMode);
+            throw new javax.jms.IllegalStateException("unknown delivery mode: " + newDeliveryMode);
         }
         checkClosed();
         this.defaultDeliveryMode = newDeliveryMode;
