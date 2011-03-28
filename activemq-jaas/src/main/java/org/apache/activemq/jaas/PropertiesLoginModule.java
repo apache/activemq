@@ -52,53 +52,75 @@ public class PropertiesLoginModule implements LoginModule {
     private CallbackHandler callbackHandler;
 
     private boolean debug;
-    private String usersFile;
-    private String groupsFile;
-    private Properties users = new Properties();
-    private Properties groups = new Properties();
+    private boolean reload = true;
+    private static String usersFile;
+    private static String groupsFile;
+    private static Properties users;
+    private static Properties groups;
     private String user;
     private Set<Principal> principals = new HashSet<Principal>();
     private File baseDir;
     private boolean loginSucceeded;
+
 
     public void initialize(Subject subject, CallbackHandler callbackHandler, Map sharedState, Map options) {
         this.subject = subject;
         this.callbackHandler = callbackHandler;
         loginSucceeded = false;
 
-        if (System.getProperty("java.security.auth.login.config") != null) {
-            baseDir = new File(System.getProperty("java.security.auth.login.config")).getParentFile();
-        } else {
-            baseDir = new File(".");
+        debug = "true".equalsIgnoreCase((String)options.get("debug"));
+        if (options.get("reload") != null) {
+            reload = "true".equalsIgnoreCase((String)options.get("reload"));
         }
 
-        debug = "true".equalsIgnoreCase((String)options.get("debug"));
-        usersFile = (String)options.get(USER_FILE) + "";
-        groupsFile = (String)options.get(GROUP_FILE) + "";
+        if (reload || users == null) {
+            setBaseDir();
+            usersFile = (String)options.get(USER_FILE) + "";
+            File uf = new File(baseDir, usersFile);
+            try {
+                users = new Properties();
+                java.io.FileInputStream in = new java.io.FileInputStream(uf);
+                users.load(in);
+                in.close();
+            } catch (IOException ioe) {
+                LOG.warn("Unable to load user properties file " + uf);
+            }
+            if (debug) {
+                LOG.debug("Using usersFile=" + usersFile);
+            }
+        }
+        if (reload || groups == null) {
+            setBaseDir();
+            groupsFile = (String)options.get(GROUP_FILE) + "";
+            File gf = new File(baseDir, groupsFile);
+            try {
+                groups = new Properties();
+                java.io.FileInputStream in = new java.io.FileInputStream(gf);
+                groups.load(in);
+                in.close();
+            } catch (IOException ioe) {
+                LOG.warn("Unable to load group properties file " + gf);
+            }
+            if (debug) {
+                LOG.debug("Using groupsFile=" + groupsFile);
+            }
+        }
+    }
 
-        if (debug) {
-            LOG.debug("Initialized debug=" + debug + " usersFile=" + usersFile + " groupsFile=" + groupsFile + " basedir=" + baseDir);
+    private void setBaseDir() {
+        if (baseDir == null) {
+            if (System.getProperty("java.security.auth.login.config") != null) {
+                baseDir = new File(System.getProperty("java.security.auth.login.config")).getParentFile();
+            } else {
+                baseDir = new File(".");
+            }
+            if (debug) {
+                LOG.debug("Using basedir=" + baseDir);
+            }
         }
     }
 
     public boolean login() throws LoginException {
-        File f = new File(baseDir, usersFile);
-        try {
-            java.io.FileInputStream in = new java.io.FileInputStream(f);
-            users.load(in);
-            in.close();
-        } catch (IOException ioe) {
-            throw new LoginException("Unable to load user properties file " + f);
-        }
-        f = new File(baseDir, groupsFile);
-        try {
-            java.io.FileInputStream in = new java.io.FileInputStream(f);
-            groups.load(in);
-            in.close();
-        } catch (IOException ioe) {
-            throw new LoginException("Unable to load group properties file " + f);
-        }
-
         Callback[] callbacks = new Callback[2];
 
         callbacks[0] = new NameCallback("Username: ");
@@ -124,7 +146,6 @@ public class PropertiesLoginModule implements LoginModule {
             throw new FailedLoginException("Password does not match");
         }
         loginSucceeded = true;
-        users.clear();
 
         if (debug) {
             LOG.debug("login " + user);
@@ -180,7 +201,6 @@ public class PropertiesLoginModule implements LoginModule {
     }
 
     private void clear() {
-        groups.clear();
         user = null;
         loginSucceeded = false;
     }
