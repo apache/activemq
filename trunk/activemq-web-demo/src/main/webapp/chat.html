@@ -1,0 +1,219 @@
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one or more
+  contributor license agreements.  See the NOTICE file distributed with
+  this work for additional information regarding copyright ownership.
+  The ASF licenses this file to You under the Apache License, Version 2.0
+  (the "License"); you may not use this file except in compliance with
+  the License.  You may obtain a copy of the License at
+  
+  http://www.apache.org/licenses/LICENSE-2.0
+  
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+ 
+ 
+ 
+ 
+ 
+ 
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"> 
+ 
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd"> 
+<html> 
+<head> 
+    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" /> 
+    <title>Chat Example - ActiveMQ Web Demos</title> 
+    <link rel="stylesheet" href="chat.css" type="text/css">
+    <style type="text/css" media="screen"> 
+        @import url(/admin/styles/sorttable.css);
+        @import url(/admin/styles/type-settings.css);
+        @import url(/admin/styles/site.css);
+        @import url(/admin/styles/prettify.css);
+    </style>
+
+	<!--<script type="text/javascript" src="js/prototype.js"></script>-->
+	<!--<script type="text/javascript" src="js/amq_prototype_adapter.js"></script>-->
+	<script type="text/javascript" src="js/jquery-1.4.2.min.js"></script>
+	<script type="text/javascript" src="js/amq_jquery_adapter.js"></script>
+
+	<script type="text/javascript" src="js/amq.js"></script>
+	<script type="text/javascript" src="js/chat.js"></script>
+	<script type="text/javascript">
+
+		// Note, normally you wouldn't just add an onload function in this
+		// manner. In fact, you typically want to fire this method on the
+		// document.onready event, however this type of functionality is verbose
+		// and best left to the domain of your favorite js library.
+		//
+		// For example, in jQuery the following onload would be replaced with:
+		// jQuery(function() {
+		//     org.activemq.Amq.init({ uri: 'amq' });
+		//     org.activemq.Chat.init();
+		// }
+		window.onload = function() {
+			org.activemq.Amq.init({ uri: 'amq', logging: true, timeout: 45, clientId:(new Date()).getTime().toString() });
+			org.activemq.Chat.init();
+		};
+	</script>    
+    
+</head> 
+ 
+<body> 
+ 
+ 
+<div class="white_box"> 
+    <div class="header"> 
+        <div class="header_l"> 
+            <div class="header_r"> 
+            </div> 
+        </div> 
+    </div> 
+    <div class="content"> 
+        <div class="content_l"> 
+            <div class="content_r"> 
+ 
+                <div> 
+ 
+                    <!-- Banner --> 
+                    <div id="asf_logo"> 
+                        <div id="activemq_logo"> 
+                            <a style="float:left; width:280px;display:block;text-indent:-5000px;text-decoration:none;line-height:60px; margin-top:10px; margin-left:100px;"
+                               href="http://activemq.apache.org/"
+                               title="The most popular and powerful open source Message Broker">ActiveMQ</a> 
+                            <a style="float:right; width:210px;display:block;text-indent:-5000px;text-decoration:none;line-height:60px; margin-top:15px; margin-right:10px;"
+                               href="http://www.apache.org/" title="The Apache Software Foundation">ASF</a> 
+                        </div> 
+                    </div> 
+ 
+ 
+                    <div class="top_red_bar"> 
+                        <div id="site-breadcrumbs"> 
+                            <a href="index.html" title="Home">Home</a>
+                        </div> 
+                        <div id="site-quicklinks"><P> 
+                            <a href="http://activemq.apache.org/support.html"
+                               title="Get help and support using Apache ActiveMQ">Support</a></p> 
+                        </div> 
+                    </div> 
+ 
+                    <table border="0"> 
+                        <tbody> 
+                            <tr> 
+                                <td valign="top" width="100%" style="overflow:hidden;"> 
+                                    <div class="body-content">
+
+<h1>Chat Example</h1>
+
+<p>Welcome to the Ajax chat example</p>
+
+<div id="chatroom">
+	<div id="chat"></div>
+
+	<div id="members"></div>
+
+	<div id="input">
+		<div id="join" class="hidden">
+			Username:&nbsp;
+			<input id="username" type="text"/>
+			<button id="joinB">Join</button>
+		</div>
+		<div id="joined" class="hidden">
+			Chat:&nbsp;
+			<input id="phrase" type="text" />
+			<button id="sendB">Send</button>
+			<button id="leaveB">Leave</button>
+		</div>
+	</div>
+</div>
+
+<p>
+	This Chat example creates an ActiveMQ broker using the configuration
+	information found in the <code>web.xml</code> file. There isn't much there.
+	Just a name-value parameter named <code>org.apache.activemq.brokerURL</code>
+	is assigned a value of <code>vm://localhost?broker.persistent=false</code>.
+	This is enough however to lazy-initialize the broker when it is needed.
+</p>
+<p>
+	The client leverages a javascript library <code>amq.js</code> to perform all
+	of the JMS-related client side code. This involves establishing a
+	communication pipeline to the JMS server. This pipeline uses a long-poll
+	connection to the server. All JMS communication will be received down this
+	pipe, and when the JMS server has no traffic to send, this pipeline will
+	patiently wait until there is new traffic or until it times out. If a
+	timeout does occur, the connection will reconnect to the server for another
+	round. (Of course you will want/need to use a server that supports
+	continuations in order for this to scale beyond a few hundred clients.)
+</p>
+<p>
+	The <code>chat.js</code> file contains the script to respond to the UI
+	interactions. It also talks to the <code>amq.js</code> file to send messages
+	and provides a message handler that will respond to incoming JMS messages.
+</p>
+<p>
+	There is no server-side state in this application. The client sets up a JMS
+	Topic on the server and attaches itself as a listener to this topic. From
+	that point, all messages that are sent to the topic are received by each
+	listener. Even the list of members in the chat room are the result of
+	clients replying to a ping request.
+</p>
+<p>
+	Please note that <code>amq.js</code> has been refactored to allow AJAX calls
+	to be made using any javascript library. Example adapter classes for <a href="http://jquery.com/">jQuery</a>
+	and <a href="http://www.prototypejs.org/">Prototype</a> have been provided.
+</p>
+
+
+                                  </div> 
+                                </td> 
+                                <td valign="top"> 
+ 
+                                    <div class="navigation"> 
+                                        <div class="navigation_top"> 
+                                            <div class="navigation_bottom"> 
+                                                <H3>Useful Links</H3> 
+ 
+                                                <ul class="alternate" type="square"> 
+                                                    <li><a href="http://activemq.apache.org/"
+                                                           title="The most popular and powerful open source Message Broker">Documentation</a></li> 
+                                                    <li><a href="http://activemq.apache.org/faq.html">FAQ</a></li> 
+                                                    <li><a href="http://activemq.apache.org/download.html">Downloads</a> 
+                                                    </li> 
+                                                    <li><a href="http://activemq.apache.org/discussion-forums.html">Forums</a> 
+                                                    </li> 
+                                                </ul> 
+                                            </div> 
+                                        </div> 
+                                    </div> 
+                                </td> 
+                            </tr> 
+                        </tbody> 
+                    </table> 
+ 
+ 
+                    <div class="bottom_red_bar"></div> 
+                </div> 
+            </div> 
+        </div> 
+    </div> 
+    <div class="black_box"> 
+        <div class="footer"> 
+            <div class="footer_l"> 
+                <div class="footer_r"> 
+                    <div> 
+                        Copyright 2005-2007 The Apache Software Foundation.
+ 
+                        (<a href="?printable=true">printable version</a>)
+                    </div> 
+                </div> 
+            </div> 
+        </div> 
+    </div> 
+</div> 
+<div class="design_attribution"><a href="http://hiramchirino.com/">Graphic Design By Hiram</a></div> 
+ 
+</body> 
+</html> 

@@ -1,0 +1,270 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one or more
+  contributor license agreements.  See the NOTICE file distributed with
+  this work for additional information regarding copyright ownership.
+  The ASF licenses this file to You under the Apache License, Version 2.0
+  (the "License"); you may not use this file except in compliance with
+  the License.  You may obtain a copy of the License at
+  
+  http://www.apache.org/licenses/LICENSE-2.0
+  
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>org.apache.activemq</groupId>
+    <artifactId>activemq-parent</artifactId>
+    <version>5.5.0</version>
+  </parent>
+
+  <artifactId>activemq-rar</artifactId>
+  <packaging>rar</packaging>
+  <name>ActiveMQ :: RAR</name>
+  <description>A JCA Resource Adapter used to integrate ActiveMQ with transactional enterprise containers</description>
+
+  <dependencies>
+  
+    <!-- activemq -->
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>activemq-ra</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>org.apache.geronimo.specs</groupId>
+          <artifactId>geronimo-jms_1.1_spec</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.apache.geronimo.specs</groupId>
+          <artifactId>geronimo-j2ee-connector_1.5_spec</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.apache.geronimo.specs</groupId>
+          <artifactId>geronimo-ejb_2.1_spec</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.apache.geronimo.specs</groupId>
+          <artifactId>geronimo-jacc_1.1_spec</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.apache.geronimo.specs</groupId>
+          <artifactId>geronimo-jta_1.0.1B_spec</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.apache.geronimo.specs</groupId>
+          <artifactId>geronimo-servlet_2.5_spec</artifactId>
+        </exclusion>
+        <exclusion>
+           <groupId>mx4j</groupId>
+           <artifactId>mx4j</artifactId>
+        </exclusion>
+        <exclusion>
+           <groupId>geronimo</groupId>
+           <artifactId>geronimo-kernel</artifactId>
+        </exclusion>
+        <exclusion>
+           <groupId>geronimo</groupId>
+           <artifactId>geronimo-j2ee</artifactId>
+        </exclusion>
+        <exclusion>
+           <groupId>axion</groupId>
+           <artifactId>axion</artifactId>
+        </exclusion>
+        <exclusion>
+           <groupId>${project.groupId}</groupId>
+           <artifactId>activemq-jaas</artifactId>
+        </exclusion>
+        <exclusion>
+           <groupId>howl</groupId>
+           <artifactId>howl-logger</artifactId>
+        </exclusion>
+        <exclusion>
+           <groupId>activemq</groupId>
+           <artifactId>smackx</artifactId>
+        </exclusion>
+        <exclusion>
+           <groupId>activemq</groupId>
+           <artifactId>smack</artifactId>
+        </exclusion>
+        <exclusion>
+           <groupId>mx4j</groupId>
+           <artifactId>mx4j-jmx</artifactId>
+        </exclusion>
+        <exclusion>
+           <groupId>mx4j</groupId>
+           <artifactId>mx4j-impl</artifactId>
+        </exclusion>
+        <exclusion>
+           <groupId>mx4j</groupId>
+           <artifactId>mx4j-remote</artifactId>
+        </exclusion>
+        <exclusion>
+           <groupId>mx4j</groupId>
+           <artifactId>mx4j-tools</artifactId>
+        </exclusion>
+        <exclusion>
+           <groupId>qdox</groupId>
+           <artifactId>qdox</artifactId>
+        </exclusion>
+        <exclusion>
+           <groupId>stax</groupId>
+           <artifactId>stax-api</artifactId>
+        </exclusion>
+        <exclusion>
+           <groupId>stax</groupId>
+           <artifactId>stax</artifactId>
+        </exclusion>
+        <exclusion>
+           <groupId>junit</groupId>
+           <artifactId>junit</artifactId>
+        </exclusion>
+        <exclusion>
+           <groupId>regexp</groupId>
+           <artifactId>regexp</artifactId>
+        </exclusion>
+        <exclusion>
+           <groupId>org.apache.activemq</groupId>
+           <artifactId>activemq-jmdns_1.0</artifactId>
+        </exclusion>
+        <exclusion>
+           <groupId>xalan</groupId>
+           <artifactId>xalan</artifactId>
+        </exclusion>
+        <exclusion>
+           <groupId>xmlbeans</groupId>
+           <artifactId>xbean</artifactId>
+        </exclusion>
+        <exclusion>
+           <groupId>xmlbeans</groupId>
+           <artifactId>xmlpublic</artifactId>
+        </exclusion>
+        <exclusion>
+           <groupId>xmlbeans</groupId>
+           <artifactId>xbean_xpath</artifactId>
+        </exclusion>
+        <exclusion>
+           <groupId>xerces</groupId>
+           <artifactId>xercesImpl</artifactId>
+        </exclusion>
+        <exclusion>
+           <groupId>xml-apis</groupId>
+           <artifactId>xml-apis</artifactId>
+        </exclusion>
+        <exclusion>
+           <groupId>ant</groupId>
+           <artifactId>ant</artifactId>
+        </exclusion>
+        <exclusion>
+           <groupId>commons-collections</groupId>
+           <artifactId>commons-collections</artifactId>
+        </exclusion>
+        <exclusion>
+           <groupId>commons-primitives</groupId>
+           <artifactId>commons-primitives</artifactId>
+        </exclusion>
+        <exclusion>
+           <groupId>commons-pool</groupId>
+           <artifactId>commons-pool</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.xbean</groupId>
+      <artifactId>xbean-spring</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>mx4j</groupId>
+          <artifactId>mx4j</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>ant</groupId>
+          <artifactId>ant</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>stax</groupId>
+          <artifactId>stax-api</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>qdox</groupId>
+          <artifactId>qdox</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-core</artifactId>
+    </dependency>
+    <dependency>
+        <groupId>org.springframework</groupId>
+        <artifactId>spring-context</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.derby</groupId>
+      <artifactId>derby</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.geronimo.specs</groupId>
+      <artifactId>geronimo-j2ee-management_1.1_spec</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>log4j</groupId>
+      <artifactId>log4j</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-log4j12</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.activemq</groupId>
+      <artifactId>activemq-all</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <scope>test</scope>
+    </dependency>  
+  </dependencies>
+  <build>
+    <plugins>
+      <plugin>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <forkMode>pertest</forkMode>
+          <childDelegation>false</childDelegation>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-resources-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>copy-conf</id>
+            <phase>process-test-resources</phase>
+            <goals>
+              <goal>copy-resources</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>target/test-classes</outputDirectory>
+              <resources>
+                <resource>
+                  <directory>src/main/rar</directory>
+                </resource>
+              </resources>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+  
+</project>
+

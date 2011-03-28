@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+    Licensed to the Apache Software Foundation (ASF) under one or more
+    contributor license agreements.  See the NOTICE file distributed with
+    this work for additional information regarding copyright ownership.
+    The ASF licenses this file to You under the Apache License, Version 2.0
+    (the "License"); you may not use this file except in compliance with
+    the License.  You may obtain a copy of the License at
+   
+    http://www.apache.org/licenses/LICENSE-2.0
+   
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+-->
+<!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd">
+<beans>
+
+  <bean id="handlerMapping" class="org.apache.activemq.web.handler.BindingBeanNameUrlHandlerMapping" singleton="false">
+    <!--
+    <property name="uriToClassNames">
+      <props><prop key="/foo.action">org.apache.activemq.web.controller.Foo</prop></props>
+    </property>
+    -->
+  </bean>
+
+  <bean name="/createDestination.action" class="org.apache.activemq.web.controller.CreateDestination" autowire="constructor"  singleton="false"/>
+  <bean name="/deleteDestination.action" class="org.apache.activemq.web.controller.DeleteDestination" autowire="constructor"  singleton="false"/>
+  <bean name="/createSubscriber.action" class="org.apache.activemq.web.controller.CreateSubscriber" autowire="constructor"  singleton="false"/>
+  <bean name="/deleteSubscriber.action" class="org.apache.activemq.web.controller.DeleteSubscriber" autowire="constructor"  singleton="false"/>
+  <bean name="/sendMessage.action" class="org.apache.activemq.web.controller.SendMessage" autowire="constructor"  singleton="false"/>
+  <bean name="/purgeDestination.action" class="org.apache.activemq.web.controller.PurgeDestination" autowire="constructor"  singleton="false"/>
+  <bean name="/deleteMessage.action" class="org.apache.activemq.web.controller.DeleteMessage" autowire="constructor"  singleton="false"/>
+  <bean name="/copyMessage.action" class="org.apache.activemq.web.controller.CopyMessage" autowire="constructor"  singleton="false"/>	
+  <bean name="/moveMessage.action" class="org.apache.activemq.web.controller.MoveMessage" autowire="constructor"  singleton="false"/>
+  <bean name="/deleteJob.action" class="org.apache.activemq.web.controller.DeleteJob" autowire="constructor"  singleton="false"/>
+
+  <!--
+    - This bean resolves specific types of exception to corresponding error views.
+    - The default behaviour of DispatcherServlet is to propagate all exceptions to the
+    - servlet container: This will happen here with all other types of exception.
+  -->
+  <bean id="exceptionResolver" class="org.springframework.web.servlet.handler.SimpleMappingExceptionResolver">
+    <property name="exceptionMappings">
+      <props><!-- <prop key="org.springframework.dao.DataAccessException">dataAccessFailure</prop> --></props>
+    </property>
+  </bean>
+
+  <!--
+    - This bean resolves default view names for controllers that do not explicitly
+    - specify a view name in their return ModelAndView (see ClinicController).
+    - This translator takes the request URL and extracts a view name from it: e.g.
+    - "/welcome.html" -> "welcome", plus configured "View" suffix -> "welcomeView".
+  -->
+  <!--
+    <bean id="viewNameTranslator" class="org.springframework.web.servlet.view.DefaultRequestToViewNameTranslator">
+    <property name="suffix" value="View"/>
+    </bean>
+  -->
+</beans>

@@ -1,0 +1,72 @@
+<!--
+    Licensed to the Apache Software Foundation (ASF) under one or more
+    contributor license agreements.  See the NOTICE file distributed with
+    this work for additional information regarding copyright ownership.
+    The ASF licenses this file to You under the Apache License, Version 2.0
+    (the "License"); you may not use this file except in compliance with
+    the License.  You may obtain a copy of the License at
+   
+    http://www.apache.org/licenses/LICENSE-2.0
+   
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+-->
+<!-- START SNIPPET: example -->
+<beans
+  xmlns="http://www.springframework.org/schema/beans"
+  xmlns:amq="http://activemq.apache.org/schema/core"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.0.xsd
+  http://activemq.apache.org/schema/core http://activemq.apache.org/schema/core/activemq-core.xsd">
+  
+  <broker xmlns="http://activemq.apache.org/schema/core" brokerName="broker1" useJmx="false" persistent="false">
+
+  
+    <networkConnectors>
+      <networkConnector uri="static://(ssl://localhost:61618)"
+         name="tobackbone"
+         duplex="true"
+         prefetchSize="1"
+         networkTTL="10">
+   </networkConnector>
+    </networkConnectors>
+    
+ <plugins>
+      <jaasCertificateAuthenticationPlugin configuration="broker1" />
+      <!--  lets configure a destination based authorization mechanism -->
+
+      <authorizationPlugin>
+        <map>
+          <authorizationMap>
+            <authorizationEntries>
+              <authorizationEntry queue=">" read="admins" write="admins" admin="admins" />
+
+              <authorizationEntry topic=">" read="admins" write="admins" admin="admins" />
+
+              <authorizationEntry topic="ActiveMQ.Advisory.>" read="guests,users" write="guests,users" admin="guests,users"/>
+            </authorizationEntries>
+             
+          </authorizationMap>
+        </map>
+      </authorizationPlugin>
+    </plugins>
+
+    <sslContext>
+        <sslContext keyStore="org/apache/activemq/security/broker1.ks"
+                    keyStorePassword="password"
+                    trustStore="org/apache/activemq/security/broker1.ts"
+                    trustStorePassword="password"/>
+    </sslContext>
+
+    <!-- The transport connectors ActiveMQ will listen to -->
+    <transportConnectors>
+       <transportConnector name="ssl" uri="ssl://0.0.0.0:61617?transport.closeAsync=false&amp;wantClientAuth=true&amp;needClientAuth=true"/>
+    </transportConnectors>
+
+  </broker>
+  
+</beans>
+<!-- END SNIPPET: example -->

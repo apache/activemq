@@ -1,0 +1,213 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Licensed to the Apache Software Foundation (ASF) under one or more
+    contributor license agreements.  See the NOTICE file distributed with
+    this work for additional information regarding copyright ownership.
+    The ASF licenses this file to You under the Apache License, Version 2.0
+    (the "License"); you may not use this file except in compliance with
+    the License.  You may obtain a copy of the License at
+   
+    http://www.apache.org/licenses/LICENSE-2.0
+   
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+-->
+
+<!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN"
+  "http://www.springframework.org/dtd/spring-beans.dtd">
+
+<beans>
+  <bean id="environment" class="org.springframework.beans.factory.config.PropertiesFactoryBean">
+    <property name="properties">
+      <props>
+        <prop key="java.naming.security.authentication">simple</prop>
+        <prop key="java.naming.security.principal">uid=admin,ou=system</prop>
+        <prop key="java.naming.security.credentials">secret</prop>
+        <!--<prop key="kdc.entryBaseDn">ou=users,dc=example,dc=com</prop>-->
+        <!--<prop key="kdc.java.naming.security.credentials">secret</prop>-->
+        <!--<prop key="changepw.entryBaseDn">ou=users,dc=example,dc=com</prop>-->
+        <!--<prop key="changepw.java.naming.security.credentials">secret</prop>-->
+        <!-- Set this key to a space delimited set of attributeType descriptions
+             and their OID's if you want an attributeType to be handled as 
+             binary content.
+ 
+             The server will use the schema to derive the set of attributeTypes
+             to treat as binary.  The union if the values you provide here 
+             will be taken as the set of binaries. Note to be consistent you 
+             must add both the OID and all the names an attributeType can have.
+        -->
+        <!-- 
+        <prop key="java.naming.ldap.attributes.binary"></prop>
+        -->
+      </props>
+    </property>
+  </bean>
+  
+  <bean id="configuration" class="org.apache.directory.server.core.configuration.MutableStartupConfiguration">
+    <property name="workingDirectory"><value>example.com</value></property>
+
+    <!-- Uncomment below to have the server load entries on startup!        -->
+    <!-- ldifDirectory property can point to a relative file, directory or  -->
+    <!-- can point to an absolute path to either using the URL path         -->
+    <!-- notation: i.e. file:///Users/jack/apacheds/ldifs                   -->
+
+    <!-- Entries will optionally be filtered using LdifLoadFilters in the   -->
+    <!-- order specified.  The included Krb5KdcEntryFilter will filter      -->
+    <!-- kerberos principals creating keys for them using their             -->
+    <!-- userPassword attribute if present.                                 -->
+
+    <!--<property name="ldifDirectory">
+      <value>example.ldif</value>
+    </property>
+    <property name="ldifFilters">
+      <list>
+        <bean class="org.apache.directory.server.protocol.shared.store.Krb5KdcEntryFilter"/>
+      </list>
+    </property>-->
+
+    <property name="allowAnonymousAccess"><value>false</value></property>
+    <property name="accessControlEnabled"><value>false</value></property>
+    <!--  
+    <property name="enableNtp"><value>false</value></property>
+    <property name="enableKerberos"><value>false</value></property>
+    <property name="enableChangePassword"><value>false</value></property>
+    <property name="ldapPort"><value>10389</value></property>
+    <property name="contextPartitionConfigurations">
+      <set>
+        <ref bean="examplePartitionConfiguration"/>
+      </set>
+    </property>
+    -->
+    <property name="bootstrapSchemas">
+      <set>
+        <bean class="org.apache.directory.server.core.schema.bootstrap.AutofsSchema"/>
+        <bean class="org.apache.directory.server.core.schema.bootstrap.CorbaSchema"/>
+        <bean class="org.apache.directory.server.core.schema.bootstrap.CoreSchema"/>
+        <bean class="org.apache.directory.server.core.schema.bootstrap.CosineSchema"/>
+        <bean class="org.apache.directory.server.core.schema.bootstrap.ApacheSchema"/>
+        <bean class="org.apache.directory.server.core.schema.bootstrap.CollectiveSchema"/>
+        <bean class="org.apache.directory.server.core.schema.bootstrap.InetorgpersonSchema"/>
+        <bean class="org.apache.directory.server.core.schema.bootstrap.JavaSchema"/>
+        <bean class="org.apache.directory.server.core.schema.bootstrap.Krb5kdcSchema"/>
+        <bean class="org.apache.directory.server.core.schema.bootstrap.NisSchema"/>
+        <bean class="org.apache.directory.server.core.schema.bootstrap.SystemSchema"/>
+        <bean class="org.apache.directory.server.core.schema.bootstrap.ApachednsSchema"/>
+      </set>
+    </property>
+    
+      <!-- 
+    <property name="extendedOperationHandlers">
+      <list>
+        <bean class="org.apache.directory.server.ldap.support.extended.GracefulShutdownHandler"/>
+        <bean class="org.apache.directory.server.ldap.support.extended.LaunchDiagnosticUiHandler"/>
+       </list>
+    </property>
+
+    <property name="interceptorConfigurations">
+      <list>
+        <bean class="org.apache.directory.server.core.configuration.MutableInterceptorConfiguration">
+          <property name="name"><value>normalizationService</value></property>
+          <property name="interceptor">
+            <bean class="org.apache.directory.server.core.normalization.NormalizationService" />
+          </property>
+        </bean>
+        <bean class="org.apache.directory.server.core.configuration.MutableInterceptorConfiguration">
+          <property name="name"><value>authenticationService</value></property>
+          <property name="interceptor">
+            <bean class="org.apache.directory.server.core.authn.AuthenticationService" />
+          </property>
+        </bean>
+        <bean class="org.apache.directory.server.core.configuration.MutableInterceptorConfiguration">
+          <property name="name"><value>referralService</value></property>
+          <property name="interceptor">
+            <bean class="org.apache.directory.server.core.referral.ReferralService" />
+          </property>
+        </bean>
+        <bean class="org.apache.directory.server.core.configuration.MutableInterceptorConfiguration">
+          <property name="name"><value>authorizationService</value></property>
+          <property name="interceptor">
+            <bean class="org.apache.directory.server.core.authz.AuthorizationService" />
+          </property>
+        </bean>
+        <bean class="org.apache.directory.server.core.configuration.MutableInterceptorConfiguration">
+          <property name="name"><value>defaultAuthorizationService</value></property>
+          <property name="interceptor">
+            <bean class="org.apache.directory.server.core.authz.DefaultAuthorizationService" />
+          </property>
+        </bean>
+        <bean class="org.apache.directory.server.core.configuration.MutableInterceptorConfiguration">
+          <property name="name"><value>exceptionService</value></property>
+          <property name="interceptor">
+            <bean class="org.apache.directory.server.core.exception.ExceptionService" />
+          </property>
+        </bean>
+        <bean class="org.apache.directory.server.core.configuration.MutableInterceptorConfiguration">
+          <property name="name"><value>schemaService</value></property>
+          <property name="interceptor">
+            <bean class="org.apache.directory.server.core.schema.SchemaService" />
+          </property>
+        </bean>
+        <bean class="org.apache.directory.server.core.configuration.MutableInterceptorConfiguration">
+          <property name="name"><value>subentryService</value></property>
+          <property name="interceptor">
+            <bean class="org.apache.directory.server.core.subtree.SubentryService" />
+          </property>
+        </bean>
+        <bean class="org.apache.directory.server.core.configuration.MutableInterceptorConfiguration">
+          <property name="name"><value>operationalAttributeService</value></property>
+          <property name="interceptor">
+            <bean class="org.apache.directory.server.core.operational.OperationalAttributeService" />
+          </property>
+        </bean>
+        <bean class="org.apache.directory.server.core.configuration.MutableInterceptorConfiguration">
+          <property name="name"><value>collectiveAttributeService</value></property>
+          <property name="interceptor">
+            <bean class="org.apache.directory.server.core.collective.CollectiveAttributeService" />
+          </property>
+        </bean>
+        <bean class="org.apache.directory.server.core.configuration.MutableInterceptorConfiguration">
+          <property name="name"><value>eventService</value></property>
+          <property name="interceptor">
+            <bean class="org.apache.directory.server.core.event.EventService" />
+          </property>
+        </bean>
+      </list>
+    </property>
+ -->
+  </bean>
+  
+  <bean id="examplePartitionConfiguration" class="org.apache.directory.server.core.configuration.MutableDirectoryPartitionConfiguration">
+    <property name="name"><value>example</value></property>
+    <property name="suffix"><value>dc=example,dc=com</value></property>
+    <property name="indexedAttributes">
+      <set>
+        <value>dc</value>
+        <value>ou</value>
+        <value>objectClass</value>
+        <value>krb5PrincipalName</value>
+        <value>uid</value>
+      </set>
+    </property>
+    <property name="contextEntry">
+      <value>
+        objectClass: top
+        objectClass: domain
+        objectClass: extensibleObject
+        dc: example
+      </value>
+    </property>
+  </bean>
+
+  <bean class="org.springframework.beans.factory.config.CustomEditorConfigurer">
+    <property name="customEditors">
+      <map>
+        <entry key="javax.naming.directory.Attributes">
+          <bean class="org.apache.directory.server.core.configuration.AttributesPropertyEditor"/>
+        </entry>
+      </map>
+   </property>
+  </bean>
+</beans>

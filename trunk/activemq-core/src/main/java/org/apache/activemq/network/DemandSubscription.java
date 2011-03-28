@@ -1,0 +1,128 @@
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.apache.activemq.network;
+
+import java.util.Set;
+import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import org.apache.activemq.command.ConsumerId;
+import org.apache.activemq.command.ConsumerInfo;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+/**
+ * Represents a network bridge interface
+ * 
+ * 
+ */
+public class DemandSubscription {
+    private static final Logger LOG = LoggerFactory.getLogger(DemandSubscription.class);
+
+    private final ConsumerInfo remoteInfo;
+    private final ConsumerInfo localInfo;
+    private Set<ConsumerId> remoteSubsIds = new CopyOnWriteArraySet<ConsumerId>();
+
+    private AtomicInteger dispatched = new AtomicInteger(0);
+    private AtomicBoolean activeWaiter = new AtomicBoolean();
+
+    DemandSubscription(ConsumerInfo info) {
+        remoteInfo = info;
+        localInfo = info.copy();
+        localInfo.setNetworkSubscription(true);
+        remoteSubsIds.add(info.getConsumerId());
+    }
+
+    /**
+     * Increment the consumers associated with this subscription
+     * 
+     * @param id
+     * @return true if added
+     */
+    public boolean add(ConsumerId id) {
+        return remoteSubsIds.add(id);
+    }
+
+    /**
+     * Increment the consumers associated with this subscription
+     * 
+     * @param id
+     * @return true if removed
+     */
+    public boolean remove(ConsumerId id) {
+        return remoteSubsIds.remove(id);
+    }
+
+    /**
+     * @return true if there are no interested consumers
+     */
+    public boolean isEmpty() {
+        return remoteSubsIds.isEmpty();
+    }
+
+    /**
+     * @return Returns the localInfo.
+     */
+    public ConsumerInfo getLocalInfo() {
+        return localInfo;
+    }
+
+    /**
+     * @return Returns the remoteInfo.
+     */
+    public ConsumerInfo getRemoteInfo() {
+        return remoteInfo;
+    }
+
+    public void waitForCompletion() {
+        if (dispatched.get() > 0) {
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Waiting for completion for sub: " + localInfo.getConsumerId() + ", dispatched: " + this.dispatched.get());
+            }
+            activeWaiter.set(true);
+            if (dispatched.get() > 0) {
+                synchronized (activeWaiter) {
+                    try {
+                        activeWaiter.wait();
+                    } catch (InterruptedException ignored) {
+                    }
+                }
+                if (this.dispatched.get() > 0) {
+                    LOG.warn("demand sub interrupted or timedout while waiting for outstanding responses, expect potentially " + this.dispatched.get() + " duplicate deliveried");
+                }
+            }
+        }
+    }
+
+    public void decrementOutstandingResponses() {
+        if (dispatched.decrementAndGet() == 0 && activeWaiter.get()) {
+            synchronized (activeWaiter) {
+                activeWaiter.notifyAll();
+            }
+        }
+    }
+
+    public boolean incrementOutstandingResponses() {
+        dispatched.incrementAndGet();
+        if (activeWaiter.get()) {
+            decrementOutstandingResponses();
+            return false;
+        }
+        return true;
+    }
+}

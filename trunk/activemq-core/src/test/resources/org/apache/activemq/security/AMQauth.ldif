@@ -1,0 +1,112 @@
+## ---------------------------------------------------------------------------
+## Licensed to the Apache Software Foundation (ASF) under one or more
+## contributor license agreements.  See the NOTICE file distributed with
+## this work for additional information regarding copyright ownership.
+## The ASF licenses this file to You under the Apache License, Version 2.0
+## (the "License"); you may not use this file except in compliance with
+## the License.  You may obtain a copy of the License at
+## 
+## http://www.apache.org/licenses/LICENSE-2.0
+## 
+## Unless required by applicable law or agreed to in writing, software
+## distributed under the License is distributed on an "AS IS" BASIS,
+## WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+## See the License for the specific language governing permissions and
+## limitations under the License.
+## ---------------------------------------------------------------------------
+
+version: 1
+dn: dc=example,dc=com
+objectClass: top
+objectClass: domain
+objectClass: extensibleObject
+dc: example
+
+dn: o=ActiveMQ,dc=example,dc=com
+objectclass: organization
+objectclass: top
+o: ActiveMQ
+
+dn: ou=users,o=ActiveMQ,dc=example,dc=com
+objectclass: organizationalUnit
+objectclass: top
+ou: users
+
+dn: uid=ngcutura,ou=users,o=ActiveMQ,dc=example,dc=com
+objectclass: inetOrgPerson
+objectclass: organizationalPerson
+objectclass: person
+objectclass: top
+cn: Goran Cutura
+sn: Cutura
+uid: ngcutura
+userpassword:: e3NoYX0wZE9sTGxnU2ZRT3NSaFR5OGx3NUM3K1hlSkE9
+
+dn: cn=roles,uid=ngcutura,ou=users,o=ActiveMQ,dc=example,dc=com
+objectclass: groupOfUniqueNames
+objectclass: top
+cn: roles
+uniquemember: aa
+
+dn: ou=destinations,o=ActiveMQ,dc=example,dc=com
+objectclass: organizationalUnit
+objectclass: top
+ou: destinations
+
+dn: ou=topics,ou=destinations,o=ActiveMQ,dc=example,dc=com
+objectclass: organizationalUnit
+objectclass: top
+ou: topics
+
+dn: uid=topic1,ou=topics,ou=destinations,o=ActiveMQ,dc=example,dc=com
+objectclass: uidObject
+objectclass: top
+uid: topic1
+
+dn: cn=admin,uid=topic1,ou=topics,ou=destinations,o=ActiveMQ,dc=example,dc=com
+objectclass: groupOfUniqueNames
+objectclass: top
+cn: admin
+uniquemember: role1
+
+dn: cn=read,uid=topic1,ou=topics,ou=destinations,o=ActiveMQ,dc=example,dc=com
+objectclass: groupOfUniqueNames
+objectclass: top
+cn: read
+uniquemember: role2
+
+dn: cn=write,uid=topic1,ou=topics,ou=destinations,o=ActiveMQ,dc=example,dc=com
+objectclass: groupOfUniqueNames
+objectclass: top
+cn: write
+uniquemember: role3
+
+dn: ou=queues,ou=destinations,o=ActiveMQ,dc=example,dc=com
+objectclass: organizationalUnit
+objectclass: top
+ou: queues
+
+dn: uid=queue1,ou=queues,ou=destinations,o=ActiveMQ,dc=example,dc=com
+objectclass: uidObject
+objectclass: top
+uid: queue1
+
+dn: cn=read,uid=queue1,ou=queues,ou=destinations,o=ActiveMQ,dc=example,dc=com
+objectclass: groupOfUniqueNames
+objectclass: top
+cn: read
+uniquemember: role1
+
+dn: cn=write,uid=queue1,ou=queues,ou=destinations,o=ActiveMQ,dc=example,dc=com
+objectclass: groupOfUniqueNames
+objectclass: top
+cn: write
+uniquemember: role1
+uniquemember: role2
+
+dn: cn=admin,uid=queue1,ou=queues,ou=destinations,o=ActiveMQ,dc=example,dc=com
+objectclass: groupOfUniqueNames
+objectclass: top
+cn: admin
+uniquemember: role1
+

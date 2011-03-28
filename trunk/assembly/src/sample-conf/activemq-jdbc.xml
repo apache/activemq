@@ -1,0 +1,98 @@
+<!--
+    Licensed to the Apache Software Foundation (ASF) under one or more
+    contributor license agreements.  See the NOTICE file distributed with
+    this work for additional information regarding copyright ownership.
+    The ASF licenses this file to You under the Apache License, Version 2.0
+    (the "License"); you may not use this file except in compliance with
+    the License.  You may obtain a copy of the License at
+   
+    http://www.apache.org/licenses/LICENSE-2.0
+   
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+-->
+<!--  
+    Use JDBC for message persistence
+    For more information, see:
+    
+    http://activemq.apache.org/persistence.html
+    
+    You need to add Derby database to your classpath in order to make this example work.
+    Download it from http://db.apache.org/derby/ and put it in the ${ACTIVEMQ_HOME}/lib/optional/ folder
+    Optionally you can configure any other RDBM as shown below
+    
+    To run ActiveMQ with this configuration add xbean:conf/activemq-jdbc.xml to your command
+    
+    e.g. $ bin/activemq console xbean:conf/activemq-jdbc.xml
+ -->
+<beans
+  xmlns="http://www.springframework.org/schema/beans"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.0.xsd
+  http://activemq.apache.org/schema/core http://activemq.apache.org/schema/core/activemq-core.xsd">
+
+  <!-- Allows us to use system properties as variables in this configuration file -->
+  <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+      <property name="locations">
+          <value>file:${activemq.base}/conf/credentials.properties</value>
+      </property>
+  </bean>
+
+  <broker useJmx="false" brokerName="jdbcBroker" xmlns="http://activemq.apache.org/schema/core">
+    <persistenceAdapter>
+       <jdbcPersistenceAdapter dataDirectory="${activemq.base}/data" dataSource="#derby-ds"/>
+    </persistenceAdapter>
+
+    <transportConnectors>
+       <transportConnector name="default" uri="tcp://0.0.0.0:61616"/>
+    </transportConnectors>
+  </broker>
+ 
+  <!-- Embedded Derby DataSource Sample Setup -->
+  <bean id="derby-ds" class="org.apache.derby.jdbc.EmbeddedDataSource">
+    <property name="databaseName" value="derbydb"/>
+    <property name="createDatabase" value="create"/>
+  </bean>
+ 
+  <!-- Postgres DataSource Sample Setup -->
+  <!--
+  <bean id="postgres-ds" class="org.postgresql.ds.PGPoolingDataSource">
+    <property name="serverName" value="localhost"/>
+    <property name="databaseName" value="activemq"/>
+    <property name="portNumber" value="0"/>
+    <property name="user" value="activemq"/>
+    <property name="password" value="activemq"/>
+    <property name="dataSourceName" value="postgres"/>
+    <property name="initialConnections" value="1"/>
+    <property name="maxConnections" value="10"/>
+  </bean>
+  -->
+
+  <!-- MySql DataSource Sample Setup -->
+  <!--
+  <bean id="mysql-ds" class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close">
+    <property name="driverClassName" value="com.mysql.jdbc.Driver"/>
+    <property name="url" value="jdbc:mysql://localhost/activemq?relaxAutoCommit=true"/>
+    <property name="username" value="activemq"/>
+    <property name="password" value="activemq"/>
+    <property name="maxActive" value="200"/>
+    <property name="poolPreparedStatements" value="true"/>
+  </bean>
+  -->
+
+  <!-- Oracle DataSource Sample Setup -->
+  <!--
+  <bean id="oracle-ds" class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close">
+    <property name="driverClassName" value="oracle.jdbc.driver.OracleDriver"/>
+    <property name="url" value="jdbc:oracle:thin:@localhost:1521:AMQDB"/>
+    <property name="username" value="scott"/>
+    <property name="password" value="tiger"/>
+    <property name="maxActive" value="200"/>
+    <property name="poolPreparedStatements" value="true"/>
+  </bean>
+  -->
+
+</beans>
