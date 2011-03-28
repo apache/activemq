@@ -19,7 +19,7 @@
   <parent>
     <artifactId>activemq-parent</artifactId>
     <groupId>org.apache.activemq</groupId>
-    <version>5.5-SNAPSHOT</version>
+    <version>5.5.0</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <artifactId>activemq-jmdns_1.0</artifactId>
