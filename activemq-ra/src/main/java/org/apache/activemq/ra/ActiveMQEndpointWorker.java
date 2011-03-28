@@ -70,7 +70,7 @@ public class ActiveMQEndpointWorker {
     private final ActiveMQDestination dest;
     private final Work connectWork;
     private final AtomicBoolean connecting = new AtomicBoolean(false);    
-    private final String shutdownMutex = "shutdownMutex";
+    private final Object shutdownMutex = new String("shutdownMutex");
     
     private ActiveMQConnection connection;
     private ConnectionConsumer consumer;
