@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.openwire;
 
+import org.apache.activemq.command.CommandTypes;
 import org.apache.activemq.command.WireFormatInfo;
 import org.apache.activemq.wireformat.WireFormat;
 import org.apache.activemq.wireformat.WireFormatFactory;
@@ -30,7 +31,7 @@ public class OpenWireFormatFactory implements WireFormatFactory {
     // default negotiation.
     //
 
-    private int version = OpenWireFormat.DEFAULT_VERSION;
+    private int version = CommandTypes.PROTOCOL_VERSION;
     private boolean stackTraceEnabled = true;
     private boolean tcpNoDelayEnabled = true;
     private boolean cacheEnabled = true;
@@ -59,7 +60,7 @@ public class OpenWireFormatFactory implements WireFormatFactory {
             throw ise;
         }
 
-        OpenWireFormat f = new OpenWireFormat();
+        OpenWireFormat f = new OpenWireFormat(version);
         f.setPreferedWireFormatInfo(info);
         return f;
     }
