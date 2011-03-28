@@ -148,7 +148,7 @@
 
 
 	<target name="compile" depends="init" description="Compile all Java">
-		<javac srcdir="src" destdir="${class.dir}">
+		<javac srcdir="src" destdir="${class.dir}" includeantruntime="false">
 			<classpath refid="javac.classpath" />
 		</javac>
 		<copy todir="${class.dir}">
