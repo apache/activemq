@@ -1639,7 +1639,7 @@ public class BrokerService implements Service {
         }
     }
 
-    protected void stopAllConnectors(ServiceStopper stopper) {
+    public void stopAllConnectors(ServiceStopper stopper) {
         for (Iterator<NetworkConnector> iter = getNetworkConnectors().iterator(); iter.hasNext();) {
             NetworkConnector connector = iter.next();
             unregisterNetworkConnectorMBean(connector);
@@ -2063,7 +2063,7 @@ public class BrokerService implements Service {
      * 
      * @throws Exception
      */
-    protected void startAllConnectors() throws Exception {
+    public void startAllConnectors() throws Exception {
         if (!isSlave()) {
             Set<ActiveMQDestination> durableDestinations = getBroker().getDurableDestinations();
             List<TransportConnector> al = new ArrayList<TransportConnector>();
@@ -2330,10 +2330,20 @@ public class BrokerService implements Service {
     public void setPassiveSlave(boolean passiveSlave) {
         this.passiveSlave = passiveSlave;
     }
-    
+
+    /**
+     * override the Default IOException handler, called when persistence adapter
+     * has experiences File or JDBC I/O Exceptions
+     *
+     * @param ioExceptionHandler
+     */
     public void setIoExceptionHandler(IOExceptionHandler ioExceptionHandler) {
-        ioExceptionHandler.setBrokerService(this);
+        configureService(ioExceptionHandler);
         this.ioExceptionHandler = ioExceptionHandler;
+    }
+
+    public IOExceptionHandler getIoExceptionHandler() {
+        return ioExceptionHandler;
     }
 
     /**

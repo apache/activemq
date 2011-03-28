@@ -88,7 +88,7 @@ public class DefaultDatabaseLocker implements DatabaseLocker {
                                     + exceptionHandler.getClass().getCanonicalName()
                                     + " threw this exception: "
                                     + handlerException
-                                    + " while trying to handle this excpetion: "
+                                    + " while trying to handle this exception: "
                                     + e, handlerException);
                         }
 

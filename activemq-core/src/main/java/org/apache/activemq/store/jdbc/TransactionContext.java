@@ -38,6 +38,7 @@ public class TransactionContext {
     private static final Logger LOG = LoggerFactory.getLogger(TransactionContext.class);
 
     private final DataSource dataSource;
+    private final JDBCPersistenceAdapter persistenceAdapter;
     private Connection connection;
     private boolean inTx;
     private PreparedStatement addMessageStatement;
@@ -46,8 +47,9 @@ public class TransactionContext {
     // a cheap dirty level that we can live with    
     private int transactionIsolation = Connection.TRANSACTION_READ_UNCOMMITTED;
     
-    public TransactionContext(DataSource dataSource) {
-        this.dataSource = dataSource;
+    public TransactionContext(JDBCPersistenceAdapter persistenceAdapter) throws IOException {
+        this.persistenceAdapter = persistenceAdapter;
+        this.dataSource = persistenceAdapter.getDataSource();
     }
 
     public Connection getConnection() throws IOException {
@@ -60,7 +62,10 @@ public class TransactionContext {
                 }
             } catch (SQLException e) {
                 JDBCPersistenceAdapter.log("Could not get JDBC connection: ", e);
-                throw IOExceptionSupport.create(e);
+                IOException ioe = IOExceptionSupport.create(e);
+                persistenceAdapter.getBrokerService().handleIOException(ioe);
+                throw ioe;
+
             }
 
             try {

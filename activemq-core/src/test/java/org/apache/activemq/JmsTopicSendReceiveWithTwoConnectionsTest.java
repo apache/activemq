@@ -49,8 +49,8 @@ public class JmsTopicSendReceiveWithTwoConnectionsTest extends JmsSendReceiveTes
         LOG.info("Created sendConnection: " + sendConnection);
         LOG.info("Created receiveConnection: " + receiveConnection);
 
-        session = sendConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        receiveSession = receiveConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        session = createSendSession(sendConnection);
+        receiveSession = createReceiveSession(receiveConnection);
 
         LOG.info("Created sendSession: " + session);
         LOG.info("Created receiveSession: " + receiveSession);
@@ -78,6 +78,14 @@ public class JmsTopicSendReceiveWithTwoConnectionsTest extends JmsSendReceiveTes
         consumer.setMessageListener(this);
 
         LOG.info("Started connections");
+    }
+
+    protected Session createReceiveSession(Connection receiveConnection) throws Exception {
+        return receiveConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+    }
+
+    protected Session createSendSession(Connection sendConnection) throws Exception {
+        return sendConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
     }
 
     protected Connection createReceiveConnection() throws Exception {

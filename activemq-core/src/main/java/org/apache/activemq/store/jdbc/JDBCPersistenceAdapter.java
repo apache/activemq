@@ -18,6 +18,7 @@ package org.apache.activemq.store.jdbc;
 
 import java.io.File;
 import java.io.IOException;
+import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Collections;
 import java.util.Set;
@@ -489,7 +490,7 @@ public class JDBCPersistenceAdapter extends DataSourceSupport implements Persist
     }
 
     public TransactionContext getTransactionContext() throws IOException {
-        TransactionContext answer = new TransactionContext(getDataSource());
+        TransactionContext answer = new TransactionContext(this);
         if (transactionIsolation > 0) {
             answer.setTransactionIsolation(transactionIsolation);
         }
@@ -619,7 +620,7 @@ public class JDBCPersistenceAdapter extends DataSourceSupport implements Persist
         try {
             brokerService.stop();
         } catch (Exception e) {
-            LOG.warn("Failure occured while stopping broker");
+            LOG.warn("Failure occurred while stopping broker");
         }
     }
 
@@ -642,7 +643,23 @@ public class JDBCPersistenceAdapter extends DataSourceSupport implements Persist
     public void setDirectory(File dir) {
     }
 
+    // interesting bit here is proof that DB is ok
     public void checkpoint(boolean sync) throws IOException {
+        // by pass TransactionContext to avoid IO Exception handler
+        Connection connection = null;
+        try {
+            connection = getDataSource().getConnection();
+        } catch (SQLException e) {
+            LOG.debug("Could not get JDBC connection for checkpoint: " + e);
+            throw IOExceptionSupport.create(e);
+        } finally {
+            if (connection != null) {
+                try {
+                    connection.close();
+                } catch (Throwable ignored) {
+                }
+            }
+        }
     }
 
     public long size(){
