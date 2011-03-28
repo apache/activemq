@@ -25,13 +25,13 @@
 
   <groupId>org.apache.activemq</groupId>
   <artifactId>activemq-parent</artifactId>
-  <version>5.5.0</version>
+  <version>5.6-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>ActiveMQ</name>
   <inceptionYear>2005</inceptionYear>
 
   <properties>
-    <activemq-version>5.5.0</activemq-version>
+    <activemq-version>5.6-SNAPSHOT</activemq-version>
     <siteId>activemq-${activemq-version}</siteId>
     <projectName>Apache ActiveMQ</projectName>
     <!-- base url for site deployment.  See distribution management for full url.  Override this in settings.xml for staging -->
@@ -161,9 +161,9 @@
   </modules>
 
   <scm>
-    <connection>scm:svn:https://svn.apache.org/repos/asf/activemq/tags/activemq-5.5.0</connection>
-    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/activemq/tags/activemq-5.5.0</developerConnection>
-    <url>http://svn.apache.org/viewvc/activemq/tags/activemq-5.5.0</url>
+    <connection>scm:svn:https://svn.apache.org/repos/asf/activemq/trunk</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/activemq/trunk</developerConnection>
+    <url>http://svn.apache.org/viewvc/activemq/trunk/</url>
   </scm>
   
   <repositories>
