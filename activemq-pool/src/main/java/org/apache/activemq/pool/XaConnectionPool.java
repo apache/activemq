@@ -52,6 +52,7 @@ public class XaConnectionPool extends ConnectionPool {
             PooledSession session = (PooledSession) super.createSession(transacted, ackMode);
             if (isXa) {
                 session.setIgnoreClose(true);
+                session.setIsXa(true);
                 transactionManager.getTransaction().registerSynchronization(new Synchronization(session));
                 incrementReferenceCount();
                 transactionManager.getTransaction().enlistResource(createXaResource(session));
@@ -88,6 +89,7 @@ public class XaConnectionPool extends ConnectionPool {
                 // This will return session to the pool.
                 session.setIgnoreClose(false);
                 session.close();
+                session.setIsXa(false);
                 decrementReferenceCount();
             } catch (JMSException e) {
                 throw new RuntimeException(e);

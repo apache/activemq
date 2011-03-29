@@ -70,6 +70,7 @@ public class PooledSession implements Session, TopicSession, QueueSession, XASes
 
     private final CopyOnWriteArrayList<MessageConsumer> consumers = new CopyOnWriteArrayList<MessageConsumer>();
     private final CopyOnWriteArrayList<QueueBrowser> browsers = new CopyOnWriteArrayList<QueueBrowser>();
+    private boolean isXa;
 
     public PooledSession(ActiveMQSession aSession, SessionPool sessionPool) {
         this.session = aSession;
@@ -105,8 +106,7 @@ public class PooledSession implements Session, TopicSession, QueueSession, XASes
             }
             browsers.clear();
 
-            // maybe do a rollback?
-            if (transactional) {
+            if (transactional && !isXa) {
                 try {
                     getInternalSession().rollback();
                 } catch (JMSException e) {
@@ -336,5 +336,9 @@ public class PooledSession implements Session, TopicSession, QueueSession, XASes
 
     public String toString() {
         return "PooledSession { " + session + " }";
+    }
+
+    public void setIsXa(boolean isXa) {
+        this.isXa = isXa;
     }
 }
