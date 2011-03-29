@@ -263,7 +263,7 @@ public abstract class DataFileGeneratorTestSupport extends TestSupport {
         OpenWireFormat wf = new OpenWireFormat();
         wf.setCacheEnabled(true);
         wf.setStackTraceEnabled(false);
-        wf.setVersion(OpenWireFormat.DEFAULT_VERSION);
+        wf.setVersion(OpenWireFormat.DEFAULT_WIRE_VERSION);
         return wf;
     }
 
