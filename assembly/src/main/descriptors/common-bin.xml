@@ -164,12 +164,6 @@
         <include>org.apache.camel:camel-jetty</include>
         <include>org.apache.camel:camel-jms</include>
         <include>org.apache.activemq:activemq-camel</include>
-				<!-- Java 5 only -->
-        <include>javax.xml.bind:jaxb-api</include>
-        <include>javax.activation:activation</include>
-        <include>com.sun.xml.bind:jaxb-impl</include>
-        <include>stax:stax-api</include>
-        <include>stax:stax</include>
       </includes>
     </dependencySet>
     <dependencySet>

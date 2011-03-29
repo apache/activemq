@@ -158,12 +158,7 @@
       <groupId>xalan</groupId>
       <artifactId>xalan</artifactId>
       <optional>true</optional>
-    </dependency>     
-    <dependency>
-      <groupId>stax</groupId>
-      <artifactId>stax-api</artifactId>
-      <optional>true</optional>
-    </dependency>    
+    </dependency>
 
     <dependency>
       <groupId>log4j</groupId>

@@ -143,20 +143,6 @@
       <groupId>org.apache.camel</groupId>
       <artifactId>camel-jms</artifactId>
     </dependency>
-    <!-- for the XML parsing -->
-    <dependency>
-      <groupId>javax.xml.bind</groupId>
-      <artifactId>jaxb-api</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.sun.xml.bind</groupId>
-      <artifactId>jaxb-impl</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>javax.activation</groupId>
-      <artifactId>activation</artifactId>
-      <version>1.1</version>
-    </dependency>
 
     <!-- commons -->
     <dependency>
@@ -312,15 +298,6 @@
     <dependency>
       <groupId>org.mortbay.jetty</groupId>
       <artifactId>jsp-2.1-glassfish</artifactId>
-    </dependency>
-                     
-    <dependency>
-      <groupId>stax</groupId>
-      <artifactId>stax-api</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>stax</groupId>
-      <artifactId>stax</artifactId>
     </dependency>
     <dependency>
       <groupId>org.jasypt</groupId>
