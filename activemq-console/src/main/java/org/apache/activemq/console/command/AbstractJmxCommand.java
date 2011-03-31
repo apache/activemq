@@ -37,14 +37,20 @@ import javax.management.remote.JMXServiceURL;
 import sun.management.ConnectorAddressLink;
 
 public abstract class AbstractJmxCommand extends AbstractCommand {
-    public static final String DEFAULT_JMX_URL    = "service:jmx:rmi:///jndi/rmi://localhost:1099/jmxrmi";
-
+    public static String DEFAULT_JMX_URL;
+    private static String jmxUser;
+    private static String jmxPassword;
+    
     private JMXServiceURL jmxServiceUrl;
-    private String jmxUser;
-    private String jmxPassword;
     private boolean jmxUseLocal;
     private JMXConnector jmxConnector;
     private MBeanServerConnection jmxConnection;
+    
+    static {
+    	DEFAULT_JMX_URL = System.getProperty("activemq.jmx.url", "service:jmx:rmi:///jndi/rmi://localhost:1099/jmxrmi");
+    	jmxUser = System.getProperty("activemq.jmx.user");
+    	jmxPassword = System.getProperty("activemq.jmx.password");
+    }
 
     /**
      * Get the current specified JMX service url.
