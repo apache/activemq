@@ -297,10 +297,6 @@ public class BrokerService implements Service {
      * @throws Exception
      */
     public NetworkConnector addNetworkConnector(URI discoveryAddress) throws Exception {
-        if (!isAdvisorySupport()) {
-            throw new javax.jms.IllegalStateException(
-                    "Networks require advisory messages to function - advisories are currently disabled");
-        }
         NetworkConnector connector = new DiscoveryNetworkConnector(discoveryAddress);
         return addNetworkConnector(connector);
     }

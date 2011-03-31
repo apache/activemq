@@ -834,7 +834,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
         }finally {
             messagesLock.readLock().unlock();
         }
-        return "Queue: destination=" + destination.getPhysicalName() + ", subscriptions=" + consumers.size()
+        return destination.getQualifiedName() + ", subscriptions=" + consumers.size()
                 + ", memory=" + memoryUsage.getPercentUsage() + "%, size=" + size + ", in flight groups="
                 + messageGroupOwners;
     }

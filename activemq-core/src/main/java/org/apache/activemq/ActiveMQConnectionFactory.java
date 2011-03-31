@@ -83,6 +83,8 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
 
     private IdGenerator clientIdGenerator;
     private String clientIDPrefix;
+    private IdGenerator connectionIdGenerator;
+    private String connectionIDPrefix;
 
     // client policies
     private ActiveMQPrefetchPolicy prefetchPolicy = new ActiveMQPrefetchPolicy();
@@ -288,7 +290,8 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     }
 
     protected ActiveMQConnection createActiveMQConnection(Transport transport, JMSStatsImpl stats) throws Exception {
-        ActiveMQConnection connection = new ActiveMQConnection(transport, getClientIdGenerator(), stats);
+        ActiveMQConnection connection = new ActiveMQConnection(transport, getClientIdGenerator(),
+                getConnectionIdGenerator(), stats);
         return connection;
     }
 
@@ -841,6 +844,29 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
 
     protected void setClientIdGenerator(IdGenerator clientIdGenerator) {
         this.clientIdGenerator = clientIdGenerator;
+    }
+
+    /**
+     * Sets the prefix used by connection id generator
+     * @param connectionIDPrefix
+     */
+    public void setConnectionIDPrefix(String connectionIDPrefix) {
+        this.connectionIDPrefix = connectionIDPrefix;
+    }
+
+    protected synchronized IdGenerator getConnectionIdGenerator() {
+        if (connectionIdGenerator == null) {
+            if (connectionIDPrefix != null) {
+                connectionIdGenerator = new IdGenerator(connectionIDPrefix);
+            } else {
+                connectionIdGenerator = new IdGenerator();
+            }
+        }
+        return connectionIdGenerator;
+    }
+
+    protected void setConnectionIdGenerator(IdGenerator connectionIdGenerator) {
+        this.connectionIdGenerator = connectionIdGenerator;
     }
 
     /**

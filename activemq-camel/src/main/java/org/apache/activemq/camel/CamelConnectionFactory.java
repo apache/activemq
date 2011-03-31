@@ -45,7 +45,7 @@ public class CamelConnectionFactory extends ActiveMQConnectionFactory implements
     // Implementation methods
     //-----------------------------------------------------------------------
     protected CamelConnection createActiveMQConnection(Transport transport, JMSStatsImpl stats) throws Exception {
-        CamelConnection connection = new CamelConnection(transport, getClientIdGenerator(), stats);
+        CamelConnection connection = new CamelConnection(transport, getClientIdGenerator(), getConnectionIdGenerator(), stats);
         CamelContext context = getCamelContext();
         if (context != null) {
             connection.setCamelContext(context);

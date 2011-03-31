@@ -20,6 +20,7 @@ import javax.jms.JMSException;
 import javax.jms.TemporaryTopic;
 
 /**
+ * @org.apache.xbean.XBean element="tempTopic" description="An ActiveMQ Temporary Topic Destination"
  * @openwire:marshaller code="103"
  * 
  */

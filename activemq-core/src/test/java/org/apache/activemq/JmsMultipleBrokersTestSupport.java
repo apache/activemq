@@ -52,11 +52,14 @@ import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.network.DiscoveryNetworkConnector;
+import org.apache.activemq.network.NetworkBridge;
 import org.apache.activemq.network.NetworkConnector;
 import org.apache.activemq.util.IdGenerator;
 import org.apache.activemq.util.MessageIdList;
 import org.apache.activemq.util.Wait;
 import org.apache.activemq.xbean.BrokerFactoryBean;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.io.Resource;
 
 /**
@@ -66,6 +69,7 @@ import org.springframework.core.io.Resource;
  * 
  */
 public class JmsMultipleBrokersTestSupport extends CombinationTestSupport {
+    private static final Logger LOG = LoggerFactory.getLogger(JmsMultipleBrokersTestSupport.class);
     public static final String AUTO_ASSIGN_TRANSPORT = "tcp://localhost:0";
     public static int maxSetupTime = 5000;
 
@@ -170,7 +174,14 @@ public class JmsMultipleBrokersTestSupport extends CombinationTestSupport {
         if (!broker.getNetworkConnectors().isEmpty()) {
             result = Wait.waitFor(new Wait.Condition() {
                 public boolean isSatisified() throws Exception {
-                    return (broker.getNetworkConnectors().get(bridgeIndex).activeBridges().size() >= min);
+                    int activeCount = 0;
+                    for (NetworkBridge bridge : broker.getNetworkConnectors().get(bridgeIndex).activeBridges()) {
+                        if (bridge.getRemoteBrokerName() != null) {
+                            LOG.info("found bridge to " + bridge.getRemoteBrokerName() + " on broker :" + broker.getBrokerName());
+                            activeCount++;
+                        }
+                    }
+                    return activeCount >= min;
                 }}, wait);
         }
         return result;

@@ -393,7 +393,7 @@ public class RegionBroker extends EmptyBroker {
 
                 // This seems to cause the destination to be added but without
                 // advisories firing...
-                context.getBroker().addDestination(context, destination, false);
+                context.getBroker().addDestination(context, destination, true);
                 switch (destination.getDestinationType()) {
                 case ActiveMQDestination.QUEUE_TYPE:
                     queueRegion.addProducer(context, info);

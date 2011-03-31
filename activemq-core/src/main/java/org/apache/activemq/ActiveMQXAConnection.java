@@ -50,8 +50,9 @@ import org.apache.activemq.util.IdGenerator;
  */
 public class ActiveMQXAConnection extends ActiveMQConnection implements XATopicConnection, XAQueueConnection, XAConnection {
 
-    protected ActiveMQXAConnection(Transport transport, IdGenerator clientIdGenerator, JMSStatsImpl factoryStats) throws Exception {
-        super(transport, clientIdGenerator, factoryStats);
+    protected ActiveMQXAConnection(Transport transport, IdGenerator clientIdGenerator,
+                                   IdGenerator connectionIdGenerator, JMSStatsImpl factoryStats) throws Exception {
+        super(transport, clientIdGenerator, connectionIdGenerator, factoryStats);
     }
 
     public XASession createXASession() throws JMSException {

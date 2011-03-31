@@ -28,10 +28,12 @@ import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.ConsumerBrokerExchange;
 import org.apache.activemq.broker.DestinationAlreadyExistsException;
 import org.apache.activemq.broker.ProducerBrokerExchange;
+import org.apache.activemq.broker.TransportConnection;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ConsumerControl;
 import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.command.ConsumerInfo;
+import org.apache.activemq.command.DestinationInfo;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageDispatchNotification;
@@ -130,6 +132,18 @@ public abstract class AbstractRegion implements Region {
                     destinations.put(destination, dest);
                     destinationMap.put(destination, dest);
                     addSubscriptionsForDestination(context, dest);
+                    if (destination.isTemporary()) {
+                        // need to associate with the connection so it can get removed
+                        if (context.getConnection() instanceof TransportConnection) {
+                            TransportConnection transportConnection = (TransportConnection) context.getConnection();
+                            DestinationInfo info = new DestinationInfo(context.getConnectionId(),
+                                    DestinationInfo.ADD_OPERATION_TYPE,
+                                    destination);
+                            transportConnection.processAddDestination(info);
+                            LOG.debug("assigning ownership of auto created temp : " + destination + " to connection:"
+                                    + context.getConnectionId());
+                        }
+                    }
                 }
                 if (dest == null) {
                     throw new JMSException("The destination " + destination + " does not exist.");

@@ -127,19 +127,21 @@ public class SimpleDiscoveryAgent implements DiscoveryAgent {
                         event.connectFailures++;
 
                         if (maxReconnectAttempts > 0 && event.connectFailures >= maxReconnectAttempts) {
-                            LOG.debug("Reconnect attempts exceeded "+maxReconnectAttempts+" tries.  Reconnecting has been disabled.");
+                            LOG.warn("Reconnect attempts exceeded "+maxReconnectAttempts+" tries.  Reconnecting has been disabled.");
                             return;
                         }
 
                         synchronized (sleepMutex) {
                             try {
                                 if (!running.get()) {
+                                    LOG.debug("Reconnecting disabled: stopped");
                                     return;
                                 }
 
                                 LOG.debug("Waiting "+event.reconnectDelay+" ms before attempting to reconnect.");
                                 sleepMutex.wait(event.reconnectDelay);
                             } catch (InterruptedException ie) {
+                                LOG.debug("Reconnecting disabled: " + ie);
                                 Thread.currentThread().interrupt();
                                 return;
                             }
@@ -161,6 +163,7 @@ public class SimpleDiscoveryAgent implements DiscoveryAgent {
                     }
 
                     if (!running.get()) {
+                        LOG.debug("Reconnecting disabled: stopped");
                         return;
                     }
 

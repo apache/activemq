@@ -20,6 +20,7 @@ import javax.jms.JMSException;
 import javax.jms.TemporaryQueue;
 
 /**
+ * @org.apache.xbean.XBean element="tempQueue" description="An ActiveMQ Temporary Queue Destination"
  * @openwire:marshaller code="102"
  * 
  */
