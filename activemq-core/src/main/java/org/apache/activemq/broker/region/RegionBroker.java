@@ -104,7 +104,7 @@ public class RegionBroker extends EmptyBroker {
     private ConnectionContext adminConnectionContext;
     private final Scheduler scheduler;
     private final ThreadPoolExecutor executor;
-    
+    private boolean allowTempAutoCreationOnSend;
     private final Runnable purgeInactiveDestinationsTask = new Runnable() {
         public void run() {
             purgeInactiveDestinations();
@@ -499,7 +499,7 @@ public class RegionBroker extends EmptyBroker {
                 || (producerExchange.getRegion() != null && producerExchange.getRegion().getDestinationMap().get(message.getDestination()) == null)) {
             ActiveMQDestination destination = message.getDestination();
             // ensure the destination is registered with the RegionBroker
-            producerExchange.getConnectionContext().getBroker().addDestination(producerExchange.getConnectionContext(), destination,false);
+            producerExchange.getConnectionContext().getBroker().addDestination(producerExchange.getConnectionContext(), destination, isAllowTempAutoCreationOnSend());
             Region region;
             switch (destination.getDestinationType()) {
             case ActiveMQDestination.QUEUE_TYPE:
@@ -935,6 +935,10 @@ public class RegionBroker extends EmptyBroker {
         synchronized (purgeInactiveDestinationsTask) {
             List<BaseDestination> list = new ArrayList<BaseDestination>();
             Map<ActiveMQDestination, Destination> map = getDestinationMap();
+            if (isAllowTempAutoCreationOnSend()) {
+                map.putAll(tempQueueRegion.getDestinationMap());
+                map.putAll(tempTopicRegion.getDestinationMap());
+            }
             long timeStamp = System.currentTimeMillis();
             for (Destination d : map.values()) {
                 if (d instanceof BaseDestination) {
@@ -956,12 +960,20 @@ public class RegionBroker extends EmptyBroker {
                             dest.getName() + " Inactive for longer than " + dest.getInactiveTimoutBeforeGC()
                                     + " ms - removing ...");
                     try {
-                        getRoot().removeDestination(context, dest.getActiveMQDestination(), 0);
+                        getRoot().removeDestination(context, dest.getActiveMQDestination(), isAllowTempAutoCreationOnSend() ? 1 : 0);
                     } catch (Exception e) {
                         LOG.error("Failed to remove inactive destination " + dest, e);
                     }
                 }
             }
         }
+    }
+
+    public boolean isAllowTempAutoCreationOnSend() {
+        return allowTempAutoCreationOnSend;
+    }
+
+    public void setAllowTempAutoCreationOnSend(boolean allowTempAutoCreationOnSend) {
+        this.allowTempAutoCreationOnSend = allowTempAutoCreationOnSend;
     }
 }

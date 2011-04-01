@@ -198,6 +198,7 @@ public class BrokerService implements Service {
     private int schedulePeriodForDestinationPurge=5000;
     private BrokerContext brokerContext;
     private boolean networkConnectorStartAsync = false;
+    private boolean allowTempAutoCreationOnSend;
 
 	static {
         String localHostName = "localhost";
@@ -1833,6 +1834,7 @@ public class BrokerService implements Service {
         regionBroker.setKeepDurableSubsActive(keepDurableSubsActive);
         regionBroker.setBrokerName(getBrokerName());
         regionBroker.getDestinationStatistics().setEnabled(enableStatistics);
+        regionBroker.setAllowTempAutoCreationOnSend(isAllowTempAutoCreationOnSend());
         if (brokerId != null) {
             regionBroker.setBrokerId(brokerId);
         }
@@ -2411,5 +2413,21 @@ public class BrokerService implements Service {
 
     public void setNetworkConnectorStartAsync(boolean networkConnectorStartAsync) {
         this.networkConnectorStartAsync = networkConnectorStartAsync;
+    }
+
+    public boolean isAllowTempAutoCreationOnSend() {
+        return allowTempAutoCreationOnSend;
+    }
+
+    /**
+     * enable if temp destinations need to be propagated through a network when
+     * advisorySupport==false. This is used in conjunction with the policy
+     * gcInactiveDestinations for matching temps so they can get removed
+     * when inactive
+     *
+     * @param allowTempAutoCreationOnSend
+     */
+    public void setAllowTempAutoCreationOnSend(boolean allowTempAutoCreationOnSend) {
+        this.allowTempAutoCreationOnSend = allowTempAutoCreationOnSend;
     }
 }

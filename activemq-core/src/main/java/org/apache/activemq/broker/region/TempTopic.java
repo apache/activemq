@@ -68,5 +68,15 @@ public class TempTopic  extends Topic  implements Task{
     
     public void initialize() {
     }
-   
+
+    @Override
+    public boolean isActive() {
+        boolean isActive = super.isActive();
+        if (isActive && brokerService.isAllowTempAutoCreationOnSend()) {
+            synchronized (consumers) {
+                isActive = hasRegularConsumers(consumers);
+            }
+        }
+        return isActive;
+    }
 }

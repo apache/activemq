@@ -17,6 +17,7 @@
 package org.apache.activemq.broker.region;
 
 import java.io.IOException;
+import java.util.Collection;
 import javax.jms.ResourceAllocationException;
 import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.broker.Broker;
@@ -92,7 +93,7 @@ public abstract class BaseDestination implements Destination {
     private boolean reduceMemoryFootprint = false;
 
     /**
-     * @param broker
+     * @param brokerService
      * @param store
      * @param destination
      * @param parentStats
@@ -241,7 +242,7 @@ public abstract class BaseDestination implements Destination {
         return store;
     }
 
-    public final boolean isActive() {
+    public boolean isActive() {
         return destinationStatistics.getConsumers().getCount() != 0 || destinationStatistics.getProducers().getCount() != 0;
     }
 
@@ -673,5 +674,16 @@ public abstract class BaseDestination implements Destination {
 
     protected boolean isReduceMemoryFootprint() {
         return this.reduceMemoryFootprint;
+    }
+
+   protected boolean hasRegularConsumers(Collection<Subscription> consumers) {
+        boolean hasRegularConsumers = false;
+        for (Subscription subscription: consumers) {
+            if (!subscription.getConsumerInfo().isNetworkSubscription()) {
+                hasRegularConsumers = true;
+                break;
+            }
+        }
+        return hasRegularConsumers;
     }
 }

@@ -54,7 +54,7 @@ public class NetworkAsyncStartTest extends JmsMultipleBrokersTestSupport {
         LOG.info("starting B transport connector");
         BrokerService brokerB = brokers.get("BrokerB").broker;
         brokerB.addConnector(brokerBUri);
-        brokerC.start();
+        brokerB.start();
 
         assertTrue("got bridge to B", waitForBridgeFormation(brokerA, 1, 0));
         assertTrue("got bridge to B&C", waitForBridgeFormation(brokerA, 1, 1));

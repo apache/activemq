@@ -26,6 +26,7 @@ import java.net.URLConnection;
 import java.net.URLStreamHandler;
 import java.net.URLStreamHandlerFactory;
 import java.util.Map;
+import java.util.Vector;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
@@ -51,6 +52,7 @@ import org.slf4j.LoggerFactory;
 public class RequestReplyNoAdvisoryNetworkTest extends JmsMultipleBrokersTestSupport {
     private static final transient Logger LOG = LoggerFactory.getLogger(RequestReplyNoAdvisoryNetworkTest.class);
 
+    Vector<BrokerService> brokers = new Vector<BrokerService>();
     BrokerService a, b;
     ActiveMQQueue sendQ = new ActiveMQQueue("sendQ");
     static final String connectionIdMarker = "ID:marker.";
@@ -118,6 +120,8 @@ public class RequestReplyNoAdvisoryNetworkTest extends JmsMultipleBrokersTestSup
         });
         a = new XBeanBrokerFactory().createBroker(new URI("xbean:" + localProtocolScheme + ":A"));
         b = new XBeanBrokerFactory().createBroker(new URI("xbean:" + localProtocolScheme + ":B"));
+        brokers.add(a);
+        brokers.add(b);
 
         doTestNonAdvisoryNetworkRequestReply();
     }
@@ -125,6 +129,25 @@ public class RequestReplyNoAdvisoryNetworkTest extends JmsMultipleBrokersTestSup
     public void testNonAdvisoryNetworkRequestReply() throws Exception {
         createBridgeAndStartBrokers();
         doTestNonAdvisoryNetworkRequestReply();
+    }
+
+    public void testNonAdvisoryNetworkRequestReplyWithPIM() throws Exception {
+        a = configureBroker("A");
+        b = configureBroker("B");
+        BrokerService hub = configureBroker("M");
+        hub.setAllowTempAutoCreationOnSend(true);
+        configureForPiggyInTheMiddle(bridge(a, hub));
+        configureForPiggyInTheMiddle(bridge(b, hub));
+
+        startBrokers();
+
+        waitForBridgeFormation(hub, 2, 0);
+        doTestNonAdvisoryNetworkRequestReply();
+    }
+
+    private void configureForPiggyInTheMiddle(NetworkConnector bridge) {
+        bridge.setDuplex(true);
+        bridge.setNetworkTTL(2);
     }
 
     public void doTestNonAdvisoryNetworkRequestReply() throws Exception {
@@ -141,6 +164,7 @@ public class RequestReplyNoAdvisoryNetworkTest extends JmsMultipleBrokersTestSup
         TextMessage message = sendSession.createTextMessage("1");
         message.setJMSReplyTo(realReplyQ);
         producer.send(message);
+        LOG.info("request sent");
 
         // responder
         ActiveMQConnectionFactory consumerFactory = createConnectionFactory(b);
@@ -149,7 +173,7 @@ public class RequestReplyNoAdvisoryNetworkTest extends JmsMultipleBrokersTestSup
         ActiveMQSession consumerSession = (ActiveMQSession)consumerConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         MessageConsumer consumer = consumerSession.createConsumer(sendQ);
         TextMessage received = (TextMessage) consumer.receive(receiveTimeout);
-        assertNotNull(received);
+        assertNotNull("got request from sender ok", received);
 
         LOG.info("got request, sending reply");
 
@@ -166,16 +190,20 @@ public class RequestReplyNoAdvisoryNetworkTest extends JmsMultipleBrokersTestSup
         assertEquals("text is as expected", "got 1", reply.getText());
         sendConnection.close();
 
-        verifyAllTempQueuesAreGone();
-    }
-
-    private void verifyAllTempQueuesAreGone() throws Exception {
-        for (BrokerService brokerService : new BrokerService[]{a, b}) {
-            RegionBroker regionBroker = (RegionBroker) brokerService.getRegionBroker();
-            Map temps = regionBroker.getTempTopicRegion().getDestinationMap();
-            assertTrue("no temp topics on " + brokerService + ", " + temps, temps.isEmpty());
-            temps = regionBroker.getTempQueueRegion().getDestinationMap();
-            assertTrue("no temp queues on " + brokerService + ", " + temps, temps.isEmpty());
+        LOG.info("checking for dangling temp destinations");
+        // ensure all temp dests get cleaned up on all brokers
+        for (BrokerService brokerService : brokers) {
+            final RegionBroker regionBroker = (RegionBroker) brokerService.getRegionBroker();
+            assertTrue("all temps are gone on " + regionBroker.getBrokerName(), Wait.waitFor(new Wait.Condition(){
+                @Override
+                public boolean isSatisified() throws Exception {
+                    Map tempTopics = regionBroker.getTempTopicRegion().getDestinationMap();
+                    LOG.info("temp topics on " + regionBroker.getBrokerName() + ", " + tempTopics);
+                    Map tempQ = regionBroker.getTempQueueRegion().getDestinationMap();
+                    LOG.info("temp queues on " + regionBroker.getBrokerName() + ", " + tempQ);
+                    return tempQ.isEmpty() && tempTopics.isEmpty();
+                }
+            }));
         }
     }
 
@@ -199,27 +227,30 @@ public class RequestReplyNoAdvisoryNetworkTest extends JmsMultipleBrokersTestSup
         b = configureBroker("B");
         bridge(a, b);
         bridge(b, a);
-        a.start();
-        b.start();
+        startBrokers();
     }
 
-    public void tearDown() throws Exception {
-        stop(a);
-        stop(b);
-    }
-
-    private void stop(BrokerService broker) throws Exception {
-        if (broker != null) {
-            broker.stop();
+    private void startBrokers() throws Exception {
+        for (BrokerService broker: brokers) {
+            broker.start();
         }
     }
 
-    private void bridge(BrokerService from, BrokerService to) throws Exception {
-        TransportConnector toConnector = to.addConnector("tcp://localhost:0");
+    public void tearDown() throws Exception {
+        for (BrokerService broker: brokers) {
+            broker.stop();
+        }
+        brokers.clear();
+    }
+
+
+    private NetworkConnector bridge(BrokerService from, BrokerService to) throws Exception {
+        TransportConnector toConnector = to.getTransportConnectors().get(0);
         NetworkConnector bridge =
                 from.addNetworkConnector("static://" + toConnector.getPublishableConnectString());
         bridge.addStaticallyIncludedDestination(sendQ);
         bridge.addStaticallyIncludedDestination(replyQWildcard);
+        return bridge;
     }
 
     private BrokerService configureBroker(String brokerName) throws Exception {
@@ -232,8 +263,13 @@ public class RequestReplyNoAdvisoryNetworkTest extends JmsMultipleBrokersTestSup
         PolicyMap map = new PolicyMap();
         PolicyEntry tempReplyQPolicy = new PolicyEntry();
         tempReplyQPolicy.setOptimizedDispatch(true);
+        tempReplyQPolicy.setGcInactiveDestinations(true);
+        tempReplyQPolicy.setInactiveTimoutBeforeGC(10*1000);
         map.put(replyQWildcard, tempReplyQPolicy);
         broker.setDestinationPolicy(map);
+
+        broker.addConnector("tcp://localhost:0");
+        brokers.add(broker);
         return broker;
     }
 }
