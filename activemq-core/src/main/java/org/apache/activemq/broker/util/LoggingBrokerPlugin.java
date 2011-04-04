@@ -47,7 +47,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * A simple Broker intercepter which allows you to enable/disable logging.
- * 
+ *
  * @org.apache.xbean.XBean
  */
 
@@ -58,13 +58,13 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport {
     private boolean logAll = false;
     private boolean logMessageEvents = false;
     private boolean logConnectionEvents = true;
+    private boolean logSessionEvents = true;
     private boolean logTransactionEvents = false;
     private boolean logConsumerEvents = false;
     private boolean logProducerEvents = false;
     private boolean logInternalEvents = false;
 
     /**
-     * 
      * @throws Exception
      * @org.apache.xbean.InitMethod
      */
@@ -100,10 +100,21 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport {
     }
 
     /**
-     * Logger Events that are related to connections and sessions
+     * Logger Events that are related to connections
      */
     public void setLogConnectionEvents(boolean logConnectionEvents) {
         this.logConnectionEvents = logConnectionEvents;
+    }
+
+    public boolean isLogSessionEvents() {
+        return logSessionEvents;
+    }
+
+    /**
+     * Logger Events that are related to sessions
+     */
+    public void setLogSessionEvents(boolean logSessionEvents) {
+        this.logSessionEvents = logSessionEvents;
     }
 
     public boolean isLogTransactionEvents() {
@@ -367,7 +378,7 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport {
 
     @Override
     public void addSession(ConnectionContext context, SessionInfo info) throws Exception {
-        if (isLogAll() || isLogConnectionEvents()) {
+        if (isLogAll() || isLogSessionEvents()) {
             LOG.info("Adding Session : " + info);
         }
         super.addSession(context, info);
@@ -375,7 +386,7 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport {
 
     @Override
     public void removeSession(ConnectionContext context, SessionInfo info) throws Exception {
-        if (isLogAll() || isLogConnectionEvents()) {
+        if (isLogAll() || isLogSessionEvents()) {
             LOG.info("Removing Session : " + info);
         }
         super.removeSession(context, info);
@@ -580,6 +591,8 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport {
         buf.append(isLogAll());
         buf.append(", logConnectionEvents=");
         buf.append(isLogConnectionEvents());
+        buf.append(", logSessionEvents=");
+        buf.append(isLogSessionEvents());
         buf.append(", logConsumerEvents=");
         buf.append(isLogConsumerEvents());
         buf.append(", logProducerEvents=");
