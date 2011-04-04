@@ -17,6 +17,8 @@
 package org.apache.activemq.broker.region;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import javax.jms.InvalidSelectorException;
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
@@ -81,4 +83,12 @@ public class QueueBrowserSubscription extends QueueSubscription {
         checkDone();
     }
 
+
+    @Override
+    public List<MessageReference> remove(ConnectionContext context, Destination destination) throws Exception {
+        super.remove(context, destination);
+        // there's no unacked messages that needs to be redelivered
+        // in case of browser
+        return new ArrayList<MessageReference>();
+    }
 }

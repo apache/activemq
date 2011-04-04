@@ -187,4 +187,50 @@ public class JmsQueueBrowserTest extends JmsTestSupport {
         assertFalse("nothing left in the browser", browserView.hasMoreElements());
         assertNull("consumer finished", consumer.receiveNoWait());
     }
+
+    public void testBrowseClose() throws Exception {
+        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        ActiveMQQueue destination = new ActiveMQQueue("TEST");
+
+        connection.start();
+
+        TextMessage[] outbound = new TextMessage[]{session.createTextMessage("First Message"),
+                                           session.createTextMessage("Second Message"),
+                                           session.createTextMessage("Third Message")};
+
+
+        MessageProducer producer = session.createProducer(destination);
+        producer.send(outbound[0]);
+        producer.send(outbound[1]);
+        producer.send(outbound[2]);
+
+
+        // create browser first
+        QueueBrowser browser = session.createBrowser((Queue) destination);
+        Enumeration enumeration = browser.getEnumeration();
+
+
+        // browse some messages
+        assertEquals(outbound[0], (Message) enumeration.nextElement());
+        assertEquals(outbound[1], (Message) enumeration.nextElement());
+        //assertEquals(outbound[2], (Message) enumeration.nextElement());
+
+
+        browser.close();
+
+        // create consumer
+        MessageConsumer consumer = session.createConsumer(destination);
+
+        // Receive the first message.
+        TextMessage msg = (TextMessage)consumer.receive(1000);
+        assertEquals("Expected " + outbound[0].getText() + " but received " + msg.getText(),  outbound[0], msg);
+        msg = (TextMessage)consumer.receive(1000);
+        assertEquals("Expected " + outbound[1].getText() + " but received " + msg.getText(), outbound[1], msg);
+        msg = (TextMessage)consumer.receive(1000);
+        assertEquals("Expected " + outbound[2].getText() + " but received " + msg.getText(), outbound[2], msg);
+
+        consumer.close();
+        producer.close();
+
+    }
 }
