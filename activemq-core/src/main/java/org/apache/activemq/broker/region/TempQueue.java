@@ -90,15 +90,4 @@ public class TempQueue extends Queue{
         }
         super.dispose(context);
     }
-
-    @Override
-    public boolean isActive() {
-        boolean isActive = super.isActive();
-        if (isActive && brokerService.isAllowTempAutoCreationOnSend()) {
-            synchronized (consumers) {
-                isActive = hasRegularConsumers(consumers);
-            }
-        }
-        return isActive;
-    }
 }

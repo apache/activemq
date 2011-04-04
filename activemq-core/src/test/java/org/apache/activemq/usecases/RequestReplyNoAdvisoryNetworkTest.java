@@ -264,6 +264,7 @@ public class RequestReplyNoAdvisoryNetworkTest extends JmsMultipleBrokersTestSup
         PolicyEntry tempReplyQPolicy = new PolicyEntry();
         tempReplyQPolicy.setOptimizedDispatch(true);
         tempReplyQPolicy.setGcInactiveDestinations(true);
+        tempReplyQPolicy.setGcWithNetworkConsumers(true);
         tempReplyQPolicy.setInactiveTimoutBeforeGC(10*1000);
         map.put(replyQWildcard, tempReplyQPolicy);
         broker.setDestinationPolicy(map);

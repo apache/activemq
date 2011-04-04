@@ -18,6 +18,7 @@ package org.apache.activemq.broker.region;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.List;
 import javax.jms.ResourceAllocationException;
 import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.broker.Broker;
@@ -89,6 +90,7 @@ public abstract class BaseDestination implements Destination {
     private boolean prioritizedMessages;
     private long inactiveTimoutBeforeGC = DEFAULT_INACTIVE_TIMEOUT_BEFORE_GC;
     private boolean gcIfInactive;
+    private boolean gcWithNetworkConsumers;
     private long lastActiveTime=0l;
     private boolean reduceMemoryFootprint = false;
 
@@ -243,7 +245,12 @@ public abstract class BaseDestination implements Destination {
     }
 
     public boolean isActive() {
-        return destinationStatistics.getConsumers().getCount() != 0 || destinationStatistics.getProducers().getCount() != 0;
+        boolean isActive = destinationStatistics.getConsumers().getCount() != 0 ||
+                           destinationStatistics.getProducers().getCount() != 0;
+        if (isActive && isGcWithNetworkConsumers() && destinationStatistics.getConsumers().getCount() != 0) {
+            isActive = hasRegularConsumers(getConsumers());
+        }
+        return isActive;
     }
 
     public int getMaxPageSize() {
@@ -650,7 +657,19 @@ public abstract class BaseDestination implements Destination {
     public void setGcIfInactive(boolean gcIfInactive) {
         this.gcIfInactive = gcIfInactive;
     }
-    
+
+    /**
+     * Indicate if it is ok to gc destinations that have only network consumers
+     * @param gcWithNetworkConsumers
+     */
+    public void setGcWithNetworkConsumers(boolean gcWithNetworkConsumers) {
+        this.gcWithNetworkConsumers = gcWithNetworkConsumers;
+    }
+
+    public boolean isGcWithNetworkConsumers() {
+        return gcWithNetworkConsumers;
+    }
+
     public void markForGC(long timeStamp) {
         if (isGcIfInactive() && this.lastActiveTime == 0 && isActive() == false
                 && destinationStatistics.messages.getCount() == 0 && getInactiveTimoutBeforeGC() > 0l) {
@@ -676,7 +695,9 @@ public abstract class BaseDestination implements Destination {
         return this.reduceMemoryFootprint;
     }
 
-   protected boolean hasRegularConsumers(Collection<Subscription> consumers) {
+    public abstract List<Subscription> getConsumers();
+
+    protected boolean hasRegularConsumers(List<Subscription> consumers) {
         boolean hasRegularConsumers = false;
         for (Subscription subscription: consumers) {
             if (!subscription.getConsumerInfo().isNetworkSubscription()) {
