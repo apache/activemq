@@ -92,9 +92,7 @@ public class CamelRedeliveryTest extends AbstractJUnit38SpringContextTests {
 
         @RecipientList @Handler
         public String routeTo(ActiveMQMessage body) throws Exception {
-            ActiveMQDestination originalDestination = new ActiveMQQueue("camelRedeliveryQ");
-            // or pull value from the message; body.getOriginalDestination();
-
+            ActiveMQDestination originalDestination = body.getOriginalDestination();
             return "activemq:" + originalDestination.getPhysicalName() + "?explicitQosEnabled=true&messageConverter=#messageConverter";
         }
     }
