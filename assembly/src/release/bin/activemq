@@ -121,10 +121,6 @@ if [ -z "$ACTIVEMQ_OPTS_MEMORY" ] ; then
     ACTIVEMQ_OPTS_MEMORY="-Xms256M -Xmx256M"
 fi
 
-if [ -z "$ACTIVEMQ_OPTS" ] ; then
-    ACTIVEMQ_OPTS="$ACTIVEMQ_OPTS_MEMORY -Dorg.apache.activemq.UseDedicatedTaskRunner=true -Djava.util.logging.config.file=logging.properties"
-fi
-
 # Uncomment to enable audit logging
 #ACTIVEMQ_OPTS="$ACTIVEMQ_OPTS -Dorg.apache.activemq.audit=true"
 
@@ -212,6 +208,10 @@ if [ "$CONFIG_LOAD" != "yes" ];then
       echo "$0 setup [ $CONFIGS ]"
       echo
    fi
+fi
+
+if [ -z "$ACTIVEMQ_OPTS" ] ; then
+    ACTIVEMQ_OPTS="$ACTIVEMQ_OPTS_MEMORY -Dorg.apache.activemq.UseDedicatedTaskRunner=true -Djava.util.logging.config.file=logging.properties"
 fi
 
 # create configuration if requested
