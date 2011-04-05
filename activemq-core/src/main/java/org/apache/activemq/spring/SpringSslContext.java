@@ -17,6 +17,7 @@
 package org.apache.activemq.spring;
 
 import java.io.InputStream;
+import java.net.MalformedURLException;
 import java.security.KeyStore;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
@@ -30,7 +31,6 @@ import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 import org.apache.activemq.broker.SslContext;
-import org.springframework.core.io.Resource;
 
 /**
  * Extends the SslContext so that it's easier to configure from spring.
@@ -48,8 +48,8 @@ public class SpringSslContext extends SslContext {
     private String keyStoreAlgorithm=KeyManagerFactory.getDefaultAlgorithm();
     private String trustStoreAlgorithm=TrustManagerFactory.getDefaultAlgorithm();
 
-    private Resource keyStore;
-    private Resource trustStore;
+    private String keyStore;
+    private String trustStore;
 
     private String keyStorePassword;
     private String trustStorePassword;
@@ -100,7 +100,7 @@ public class SpringSslContext extends SslContext {
         }
         
         KeyStore ks = KeyStore.getInstance(trustStoreType);
-        InputStream is=trustStore.getInputStream();
+        InputStream is=Utils.resourceFromString(trustStore).getInputStream();
         try {
             ks.load(is, trustStorePassword==null? null : trustStorePassword.toCharArray());
         } finally {
@@ -115,7 +115,7 @@ public class SpringSslContext extends SslContext {
         }
         
         KeyStore ks = KeyStore.getInstance(keyStoreType);
-        InputStream is=keyStore.getInputStream();
+        InputStream is=Utils.resourceFromString(keyStore).getInputStream();
         try {
             ks.load(is, keyStorePassword==null? null : keyStorePassword.toCharArray());
         } finally {
@@ -132,20 +132,20 @@ public class SpringSslContext extends SslContext {
         return keyStoreType;
     }
 
-    public Resource getKeyStore() {
+    public String getKeyStore() {
         return keyStore;
     }
 
-    public void setKeyStore(Resource keyResource) {
-        this.keyStore = keyResource;
+    public void setKeyStore(String keyStore) throws MalformedURLException {
+        this.keyStore = keyStore;
     }
 
-    public Resource getTrustStore() {
+    public String getTrustStore() {
         return trustStore;
     }
 
-    public void setTrustStore(Resource trustResource) {
-        this.trustStore = trustResource;
+    public void setTrustStore(String trustStore) throws MalformedURLException {
+        this.trustStore = trustStore;
     }
 
     public String getKeyStoreAlgorithm() {
