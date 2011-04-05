@@ -52,11 +52,13 @@ public class PropertiesLoginModule implements LoginModule {
     private CallbackHandler callbackHandler;
 
     private boolean debug;
-    private boolean reload = true;
+    private boolean reload = false;
     private static String usersFile;
     private static String groupsFile;
     private static Properties users;
     private static Properties groups;
+    private static long usersReloadTime = 0;
+    private static long groupsReloadTime = 0;
     private String user;
     private Set<Principal> principals = new HashSet<Principal>();
     private File baseDir;
@@ -73,36 +75,38 @@ public class PropertiesLoginModule implements LoginModule {
             reload = "true".equalsIgnoreCase((String)options.get("reload"));
         }
 
-        if (reload || users == null) {
-            setBaseDir();
-            usersFile = (String)options.get(USER_FILE) + "";
-            File uf = new File(baseDir, usersFile);
+        setBaseDir();
+        usersFile = (String) options.get(USER_FILE) + "";
+        File uf = new File(baseDir, usersFile);
+        if (reload || users == null || uf.lastModified() > usersReloadTime) {
+            if (debug) {
+                LOG.debug("Reloading users from " + usersFile);
+            }
             try {
                 users = new Properties();
                 java.io.FileInputStream in = new java.io.FileInputStream(uf);
                 users.load(in);
                 in.close();
+                usersReloadTime = System.currentTimeMillis();
             } catch (IOException ioe) {
                 LOG.warn("Unable to load user properties file " + uf);
             }
-            if (debug) {
-                LOG.debug("Using usersFile=" + usersFile);
-            }
         }
-        if (reload || groups == null) {
-            setBaseDir();
-            groupsFile = (String)options.get(GROUP_FILE) + "";
-            File gf = new File(baseDir, groupsFile);
+
+        groupsFile = (String) options.get(GROUP_FILE) + "";
+        File gf = new File(baseDir, groupsFile);
+        if (reload || groups == null || gf.lastModified() > groupsReloadTime) {
+            if (debug) {
+                LOG.debug("Reloading groups from " + groupsFile);
+            }
             try {
                 groups = new Properties();
                 java.io.FileInputStream in = new java.io.FileInputStream(gf);
                 groups.load(in);
                 in.close();
+                groupsReloadTime = System.currentTimeMillis();
             } catch (IOException ioe) {
                 LOG.warn("Unable to load group properties file " + gf);
-            }
-            if (debug) {
-                LOG.debug("Using groupsFile=" + groupsFile);
             }
         }
     }
