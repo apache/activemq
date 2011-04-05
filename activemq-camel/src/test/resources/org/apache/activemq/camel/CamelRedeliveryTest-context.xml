@@ -30,7 +30,10 @@
       <!--  delay redelivery by 1 second using schedualler, the determination 
               of the delay can come form a processor to make it as complicated as needed -->
       <setHeader headerName="AMQ_SCHEDULED_DELAY"><constant>1000</constant></setHeader>
-      <to pattern="InOnly" uri="activemq:camelRedeliveryQ?explicitQosEnabled=true&amp;messageConverter=#messageConverter"/>
+
+      <!-- dynamically configure the destination based on the message -->
+      <to pattern="InOnly" uri="recipientListDestinationGenerator" />
+      <!-- to pattern="InOnly" uri="activemq:camelRedeliveryQ?explicitQosEnabled=true&amp;messageConverter=#messageConverter"/ -->
     </route>
   </camelContext>
 
@@ -39,6 +42,7 @@
   </bean>
   
   <bean id="messageConverter" class="org.apache.activemq.camel.converter.IdentityMessageReuseConverter" />
+  <bean id="recipientListDestinationGenerator" class="org.apache.activemq.camel.CamelRedeliveryTest$DestinationExtractor" />
 
 </beans>
         <!-- END SNIPPET: example -->

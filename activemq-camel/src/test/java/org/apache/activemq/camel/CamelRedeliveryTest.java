@@ -25,8 +25,12 @@ import javax.jms.TextMessage;
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.RedeliveryPolicy;
+import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.camel.CamelContext;
+import org.apache.camel.Handler;
+import org.apache.camel.RecipientList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -82,5 +86,16 @@ public class CamelRedeliveryTest extends AbstractJUnit38SpringContextTests {
         
         // came from camel
         assertTrue("redelivery marker header set, so came from camel", m.getBooleanProperty("CamelRedeliveryMarker"));
+    }
+
+    public static class DestinationExtractor {
+
+        @RecipientList @Handler
+        public String routeTo(ActiveMQMessage body) throws Exception {
+            ActiveMQDestination originalDestination = new ActiveMQQueue("camelRedeliveryQ");
+            // or pull value from the message; body.getOriginalDestination();
+
+            return "activemq:" + originalDestination.getPhysicalName() + "?explicitQosEnabled=true&messageConverter=#messageConverter";
+        }
     }
 }
