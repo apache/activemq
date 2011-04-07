@@ -75,7 +75,7 @@ public final class ControlFile {
 
         if (lock == null) {
             try {
-                lock = randomAccessFile.getChannel().tryLock(0, randomAccessFile.getChannel().size(), false);
+                lock = randomAccessFile.getChannel().tryLock(0, Math.max(1, randomAccessFile.getChannel().size()), false);
             } catch (OverlappingFileLockException e) {
                 throw IOExceptionSupport.create("Control file '" + file + "' could not be locked.",e);
             }

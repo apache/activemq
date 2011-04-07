@@ -1094,7 +1094,7 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
             String property = System.getProperty(key);
             if (null == property) {
                 if (!BROKEN_FILE_LOCK) {
-                    lock = lockFile.getChannel().tryLock(0, lockFile.getChannel().size(), false);
+                    lock = lockFile.getChannel().tryLock(0, Math.max(1, lockFile.getChannel().size()), false);
                     if (lock == null) {
                         result = false;
                     } else {

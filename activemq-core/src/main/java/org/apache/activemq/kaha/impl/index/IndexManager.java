@@ -188,7 +188,7 @@ public final class IndexManager {
     }
     
     public synchronized FileLock getLock() throws IOException {
-        return indexFile.getChannel().tryLock(0, indexFile.getChannel().size(), false);
+        return indexFile.getChannel().tryLock(0, Math.max(1, indexFile.getChannel().size()), false);
     }
 
 
