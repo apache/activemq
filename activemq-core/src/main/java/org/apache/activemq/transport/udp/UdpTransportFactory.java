@@ -37,6 +37,7 @@ import org.apache.activemq.transport.reliable.ReplayStrategy;
 import org.apache.activemq.transport.reliable.Replayer;
 import org.apache.activemq.transport.tcp.TcpTransportFactory;
 import org.apache.activemq.util.IOExceptionSupport;
+import org.apache.activemq.util.IntSequenceGenerator;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.util.URISupport;
 import org.apache.activemq.wireformat.WireFormat;
@@ -60,7 +61,7 @@ public class UdpTransportFactory extends TransportFactory {
             WireFormat wf = createWireFormat(options);
             int port = location.getPort();
             OpenWireFormat openWireFormat = asOpenWireFormat(wf);
-            UdpTransport transport = (UdpTransport) createTransport(location, wf);
+            UdpTransport transport = (UdpTransport) createTransport(location.getPort(), wf);
 
             Transport configuredTransport = configure(transport, wf, options, true);
             UdpTransportServer server = new UdpTransportServer(location, transport, configuredTransport, createReplayStrategy());
@@ -103,6 +104,11 @@ public class UdpTransportFactory extends TransportFactory {
     protected Transport createTransport(URI location, WireFormat wf) throws UnknownHostException, IOException {
         OpenWireFormat wireFormat = asOpenWireFormat(wf);
         return new UdpTransport(wireFormat, location);
+    }
+
+    protected Transport createTransport(int port, WireFormat wf) throws UnknownHostException, IOException {
+        OpenWireFormat wireFormat = asOpenWireFormat(wf);
+        return new UdpTransport(wireFormat, port);
     }
 
     /**

@@ -445,12 +445,6 @@
             <exclude>**/RendezvousDiscoverTransportTest.*</exclude>
             <exclude>**/MissingDataFileTest.*</exclude>
 
-            <!-- UDP related tests someimes fail on some platforms -->
-            <exclude>**/UdpTransportTest.*</exclude>
-            <exclude>**/UdpTransportUsingServerTest.*</exclude>
-            <exclude>**/UdpSendReceiveWithTwoConnectionsTest.*</exclude>
-            <exclude>**/UdpSendReceiveWithTwoConnectionsAndLargeMessagesTest.*</exclude>
-
             <!-- m2 tests failing since move from assembly  -->
             <exclude>**/TwoBrokerMessageNotSentToRemoteWhenNoConsumerTest.*</exclude>
             <exclude>**/TwoBrokerQueueClientsReconnectTest.*</exclude>
