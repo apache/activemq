@@ -943,12 +943,10 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
                 cs.getContext().getStopping().set(true);
             }
             try {
-                final Map context = MDCHelper.getCopyOfContextMap();
                 DefaultThreadPools.getDefaultTaskRunnerFactory().execute(new Runnable(){
                     public void run() {
                         serviceLock.writeLock().lock();
                         try {
-                            MDCHelper.setContextMap(context);
                             doStop();
                         } catch (Throwable e) {
                             LOG.debug("Error occured while shutting down a connection to '" + transport.getRemoteAddress()

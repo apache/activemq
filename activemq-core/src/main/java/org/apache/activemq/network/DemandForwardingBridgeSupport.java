@@ -236,10 +236,8 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
     }
 
     protected void triggerLocalStartBridge() throws IOException {
-        final Map context = MDCHelper.getCopyOfContextMap();
         asyncTaskRunner.execute(new Runnable() {
             public void run() {
-                MDCHelper.setContextMap(context);
                 final String originalName = Thread.currentThread().getName();
                 Thread.currentThread().setName("StartLocalBridge: localBroker=" + localBroker);
                 try {
@@ -254,10 +252,8 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
     }
 
     protected void triggerRemoteStartBridge() throws IOException {
-        final Map context = MDCHelper.getCopyOfContextMap();
         asyncTaskRunner.execute(new Runnable() {
             public void run() {
-                MDCHelper.setContextMap(context);
                 final String originalName = Thread.currentThread().getName();
                 Thread.currentThread().setName("StartRemotelBridge: localBroker=" + localBroker);
                 try {
@@ -388,11 +384,9 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                 try {
                     remoteBridgeStarted.set(false);
                     final CountDownLatch sendShutdown = new CountDownLatch(1);
-                    final Map map = MDCHelper.getCopyOfContextMap();
                     asyncTaskRunner.execute(new Runnable() {
                         public void run() {
                             try {
-                                MDCHelper.setContextMap(map);
                                 localBroker.oneway(new ShutdownInfo());
                                 sendShutdown.countDown();
                                 remoteBroker.oneway(new ShutdownInfo());
@@ -434,10 +428,8 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                 LOG.warn("Network connection between " + localBroker + " and " + remoteBroker + " shutdown due to a remote error: " + error);
             }
             LOG.debug("The remote Exception was: " + error, error);
-            final Map map = MDCHelper.getCopyOfContextMap();
             asyncTaskRunner.execute(new Runnable() {
                 public void run() {
-                    MDCHelper.setContextMap(map);
                     ServiceSupport.dispose(getControllingService());
                 }
             });
@@ -652,10 +644,8 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
         if (!disposed.get()) {
             LOG.info("Network connection between " + localBroker + " and " + remoteBroker + " shutdown due to a local error: " + error);
             LOG.debug("The local Exception was:" + error, error);
-            final Map map = MDCHelper.getCopyOfContextMap();
             asyncTaskRunner.execute(new Runnable() {
                 public void run() {
-                    MDCHelper.setContextMap(map);
                     ServiceSupport.dispose(getControllingService());
                 }
             });
@@ -681,10 +671,8 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
             subscriptionMapByLocalId.remove(sub.getLocalInfo().getConsumerId());
 
             // continue removal in separate thread to free up this thread for outstanding responses
-            final Map map = MDCHelper.getCopyOfContextMap();
             asyncTaskRunner.execute(new Runnable() {
                 public void run() {
-                    MDCHelper.setContextMap(map);
                     sub.waitForCompletion();
                     try {
                         localBroker.oneway(sub.getLocalInfo().createRemoveCommand());

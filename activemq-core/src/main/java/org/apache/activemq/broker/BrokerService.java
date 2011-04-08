@@ -2109,11 +2109,9 @@ public class BrokerService implements Service {
                         connector.setBrokerURL(getDefaultSocketURIString());
                     }
                     if (networkConnectorStartExecutor != null) {
-                        final Map context = MDCHelper.getCopyOfContextMap();
                         networkConnectorStartExecutor.execute(new Runnable() {
                             public void run() {
                                 try {
-                                    MDCHelper.setContextMap(context);
                                     LOG.info("Async start of " + connector);
                                     connector.start();
                                 } catch(Exception e) {

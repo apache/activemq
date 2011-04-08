@@ -16,10 +16,6 @@
  */
 package org.apache.activemq.thread;
 
-import org.apache.activemq.util.MDCHelper;
-
-import java.util.Map;
-
 /**
  * 
  */
@@ -35,10 +31,8 @@ class DedicatedTaskRunner implements TaskRunner {
 
     public DedicatedTaskRunner(Task task, String name, int priority, boolean daemon) {
         this.task = task;
-        final Map context = MDCHelper.getCopyOfContextMap();
         thread = new Thread(name) {
             public void run() {
-                MDCHelper.setContextMap(context);
                 runTask();
             }
         };

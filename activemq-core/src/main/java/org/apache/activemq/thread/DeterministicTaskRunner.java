@@ -16,10 +16,6 @@
  */
 package org.apache.activemq.thread;
 
-import org.apache.activemq.util.MDCHelper;
-import org.slf4j.MDC;
-
-import java.util.Map;
 import java.util.concurrent.Executor;
 
 /**
@@ -39,13 +35,9 @@ public class DeterministicTaskRunner implements TaskRunner {
     public DeterministicTaskRunner(Executor executor, Task task) {
         this.executor = executor;
         this.task = task;
-        final Map context = MDCHelper.getCopyOfContextMap();
         this.runable = new Runnable() {
             public void run() {
                 Thread.currentThread();
-                if (context != null) {
-                    MDCHelper.setContextMap(context);
-                }
                 runTask();
             }
         };

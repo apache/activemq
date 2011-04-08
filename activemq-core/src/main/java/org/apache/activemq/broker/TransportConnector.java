@@ -20,7 +20,6 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Iterator;
-import java.util.Map;
 import java.util.StringTokenizer;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.regex.Pattern;
@@ -39,7 +38,6 @@ import org.apache.activemq.transport.TransportFactory;
 import org.apache.activemq.transport.TransportServer;
 import org.apache.activemq.transport.discovery.DiscoveryAgent;
 import org.apache.activemq.transport.discovery.DiscoveryAgentFactory;
-import org.apache.activemq.util.MDCHelper;
 import org.apache.activemq.util.ServiceStopper;
 import org.apache.activemq.util.ServiceSupport;
 import org.slf4j.Logger;
@@ -209,13 +207,11 @@ public class TransportConnector implements Connector, BrokerServiceAware {
         brokerInfo.setPeerBrokerInfos(broker.getPeerBrokerInfos());
         brokerInfo.setFaultTolerantConfiguration(broker.isFaultTolerantConfiguration());
         brokerInfo.setBrokerURL(getServer().getConnectURI().toString());
-        final Map context = MDCHelper.getCopyOfContextMap();
         getServer().setAcceptListener(new TransportAcceptListener() {
             public void onAccept(final Transport transport) {
                 try {
                     DefaultThreadPools.getDefaultTaskRunnerFactory().execute(new Runnable() {
                         public void run() {
-                            MDCHelper.setContextMap(context);
                             try {
                                 Connection connection = createConnection(transport);
                                 connection.start();
