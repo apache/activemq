@@ -38,9 +38,6 @@ import javax.security.auth.spi.LoginModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * @version $Rev: $ $Date: $
- */
 public class PropertiesLoginModule implements LoginModule {
 
     private static final String USER_FILE = "org.apache.activemq.jaas.properties.user";
@@ -75,12 +72,17 @@ public class PropertiesLoginModule implements LoginModule {
             reload = "true".equalsIgnoreCase((String)options.get("reload"));
         }
 
+        if (options.get("baseDir") != null) {
+            baseDir = new File((String)options.get("baseDir"));
+        }
+
         setBaseDir();
         usersFile = (String) options.get(USER_FILE) + "";
-        File uf = new File(baseDir, usersFile);
+        File uf = baseDir != null ? new File(baseDir, usersFile) : new File(usersFile);
+
         if (reload || users == null || uf.lastModified() > usersReloadTime) {
             if (debug) {
-                LOG.debug("Reloading users from " + usersFile);
+                LOG.debug("Reloading users from " + uf.getAbsolutePath());
             }
             try {
                 users = new Properties();
@@ -94,10 +96,10 @@ public class PropertiesLoginModule implements LoginModule {
         }
 
         groupsFile = (String) options.get(GROUP_FILE) + "";
-        File gf = new File(baseDir, groupsFile);
+        File gf = baseDir != null ? new File(baseDir, groupsFile) : new File(groupsFile);
         if (reload || groups == null || gf.lastModified() > groupsReloadTime) {
             if (debug) {
-                LOG.debug("Reloading groups from " + groupsFile);
+                LOG.debug("Reloading groups from " + gf.getAbsolutePath());
             }
             try {
                 groups = new Properties();
@@ -115,11 +117,9 @@ public class PropertiesLoginModule implements LoginModule {
         if (baseDir == null) {
             if (System.getProperty("java.security.auth.login.config") != null) {
                 baseDir = new File(System.getProperty("java.security.auth.login.config")).getParentFile();
-            } else {
-                baseDir = new File(".");
-            }
-            if (debug) {
-                LOG.debug("Using basedir=" + baseDir);
+                if (debug) {
+                    LOG.debug("Using basedir=" + baseDir.getAbsolutePath());
+                }
             }
         }
     }
@@ -140,6 +140,9 @@ public class PropertiesLoginModule implements LoginModule {
         char[] tmpPassword = ((PasswordCallback)callbacks[1]).getPassword();
         if (tmpPassword == null) {
             tmpPassword = new char[0];
+        }
+        if (user == null) {
+            throw new FailedLoginException("user name is null");
         }
         String password = users.getProperty(user);
 
