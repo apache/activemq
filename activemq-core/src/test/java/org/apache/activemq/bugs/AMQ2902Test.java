@@ -34,6 +34,7 @@ import org.apache.log4j.spi.LoggingEvent;
 
 public class AMQ2902Test extends TestCase {
     final AtomicBoolean gotExceptionInLog = new AtomicBoolean(Boolean.FALSE);
+    final AtomicBoolean failedToFindMDC = new AtomicBoolean(Boolean.FALSE);
 
     Appender appender = new Appender() {
         public void addFilter(Filter newFilter) {
@@ -53,6 +54,9 @@ public class AMQ2902Test extends TestCase {
             if (event.getThrowableInformation() != null
                     && event.getThrowableInformation().getThrowable() instanceof TransportDisposedIOException) {
                 gotExceptionInLog.set(Boolean.TRUE);
+            }
+            if (event.getMDC("activemq.broker") == null) {
+                failedToFindMDC.set(Boolean.TRUE);
             }
             return;
         }
@@ -101,12 +105,15 @@ public class AMQ2902Test extends TestCase {
 
     public void setUp() throws Exception {
         gotExceptionInLog.set(Boolean.FALSE);
+        failedToFindMDC.set(Boolean.FALSE);
         Logger.getRootLogger().addAppender(appender);
         Logger.getLogger(TransportConnection.class.getName() + ".Transport").setLevel(Level.DEBUG);
+        Logger.getLogger(TransportConnection.class.getName()).setLevel(Level.DEBUG);
     }
 
     public void tearDown() throws Exception {
         Logger.getRootLogger().removeAppender(appender);
         assertFalse("got unexpected ex in log on graceful close", gotExceptionInLog.get());
+        assertFalse("MDC is there", failedToFindMDC.get());
     }
 }
