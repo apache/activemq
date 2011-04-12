@@ -28,7 +28,8 @@ public class JmsConsumerProperties extends JmsClientProperties {
     protected long recvDuration = 5 * 60 * 1000; // Receive for 5 mins by default
     protected long recvDelay = 0; // delay in milliseconds for processing received msg 
     protected String recvType   = TIME_BASED_RECEIVING;
-
+    protected String messageSelector = null;
+    
     public boolean isDurable() {
         return durable;
     }
@@ -83,5 +84,14 @@ public class JmsConsumerProperties extends JmsClientProperties {
     
     public long getRecvDelay() {
     	return this.recvDelay;
+    }
+    
+    public String getMessageSelector() {
+    	return this.messageSelector;
+    }
+    
+    public void setMessageSelector(String selector) {
+    	if (selector != null )
+    		this.messageSelector = new String(selector);
     }
 }

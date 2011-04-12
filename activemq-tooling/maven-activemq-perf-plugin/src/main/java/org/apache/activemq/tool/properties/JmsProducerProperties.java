@@ -16,7 +16,17 @@
  */
 package org.apache.activemq.tool.properties;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class JmsProducerProperties extends JmsClientProperties {
+	
+	private static final Logger LOG = LoggerFactory.getLogger(ReflectionUtil.class);
+	
     public static final String TIME_BASED_SENDING  = "time"; // Produce messages base on a time interval
     public static final String COUNT_BASED_SENDING = "count"; // Produce a specific count of messages
     public static final String DELIVERY_MODE_PERSISTENT     = "persistent"; // Persistent message delivery
@@ -29,8 +39,15 @@ public class JmsProducerProperties extends JmsClientProperties {
     protected String sendType = TIME_BASED_SENDING;
     protected long sendDelay = 0;  // delay in milliseconds between each producer send
     
+    protected Map<String,Object> headerMap = null;
+ 
+    
     // If true, create a different message on each send, otherwise reuse.
     protected boolean createNewMsg; 
+    
+    public JmsProducerProperties() {
+    	this.headerMap = new HashMap();
+    }
 
     public String getDeliveryMode() {
         return deliveryMode;
@@ -86,5 +103,54 @@ public class JmsProducerProperties extends JmsClientProperties {
     
     public long getSendDelay() {
     	return this.sendDelay;
+    }
+    
+    
+    /* Operations for supporting message headers */
+    
+    /**
+     * Method for setting a message header. 
+     * @param encodedHeader - the header is encoded as a string using this syntax:
+     * encodedHeader = [headerkey '=' headervalue ':' ]*
+     * E.g. an encodedHeader could read "JMSType=car", or
+     * "JMSType=car:MyHeader=MyValue"
+     *
+     * That implies neither the header key nor the value 
+     * can contain any of the characters ':' and '='.
+     */
+    public void setHeader(String encodedHeader) {
+    	
+    	// remove any trailing ':' characters
+    	if (encodedHeader.endsWith(":")) {
+    		encodedHeader = encodedHeader.substring(0, encodedHeader.length()-1);
+    	}
+
+    	// split headers 
+    	String headers[] = encodedHeader.split(":");
+    	for (String h : headers) {
+    		
+    		// split into header name and value
+    		String tokens[] = h.split("=");
+    		
+    		// sanity check, don't allow empty string for header names
+    		if (tokens.length != 2 || tokens[0].equals("") || tokens[1].equals("") ) {
+    			LOG.error("Error parsing message headers. Header: \"" + h +
+    					"\". This header will be ignored.");
+    		} else {
+    			this.headerMap.put(tokens[0], tokens[1]);
+    		}
+    	}
+    }
+    
+    public Set<String> getHeaderKeys() {
+    	return this.headerMap.keySet();
+    }
+    
+    public Object getHeaderValue(String key) {
+    	return this.headerMap.get(key);
+    }  
+    
+    public void clearHeaders() {
+    	this.headerMap.clear();
     }
 }

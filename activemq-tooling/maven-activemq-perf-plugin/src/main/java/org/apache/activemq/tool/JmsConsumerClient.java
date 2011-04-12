@@ -193,7 +193,11 @@ public class JmsConsumerClient extends AbstractJmsMeasurableClient {
 
     public MessageConsumer createJmsConsumer() throws JMSException {
         Destination[] dest = createDestination(destIndex, destCount);
-        return createJmsConsumer(dest[0]);
+        
+        if (this.client.getMessageSelector() == null)
+        	return createJmsConsumer(dest[0]);
+        else 
+        	return createJmsConsumer(dest[0], this.client.getMessageSelector(), false);
     }
 
     public MessageConsumer createJmsConsumer(Destination dest) throws JMSException {

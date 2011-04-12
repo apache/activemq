@@ -17,6 +17,7 @@
 package org.apache.activemq.tool;
 
 import java.util.Arrays;
+import java.util.Set;
 
 import javax.jms.ConnectionFactory;
 import javax.jms.DeliveryMode;
@@ -248,6 +249,13 @@ public class JmsProducerClient extends AbstractJmsMeasurableClient {
 
     public TextMessage createJmsTextMessage(int size) throws JMSException {
         jmsTextMessage = getSession().createTextMessage(buildText("", size));
+        
+        // support for adding message headers
+        Set<String> headerKeys = this.client.getHeaderKeys();
+        for (String key : headerKeys) {
+        	jmsTextMessage.setObjectProperty(key, this.client.getHeaderValue(key));
+        }
+        
         return jmsTextMessage;
     }
 
