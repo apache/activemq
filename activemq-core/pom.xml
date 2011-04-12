@@ -255,10 +255,19 @@
     <!--  LDAP tests -->
     <dependency>
       <groupId>org.apache.directory.server</groupId>
-      <artifactId>apacheds-core</artifactId>
-      <version>1.0.0</version>
+      <artifactId>apacheds-core-integ</artifactId>
+      <version>${directory-version}</version>
       <scope>test</scope>
     </dependency>
+
+    <dependency>
+      <groupId>org.apache.directory.server</groupId>
+      <artifactId>apacheds-server-integ</artifactId>
+      <version>${directory-version}</version>
+      <scope>test</scope>
+    </dependency>
+
+
     <dependency>
       <groupId>org.jmock</groupId>
       <artifactId>jmock-junit4</artifactId>
@@ -456,10 +465,6 @@
 
             <!-- This test only works on machines which have ssh propertly configured -->
             <exclude>**/SSHTunnelNetworkReconnectTest.*</exclude>
-
-            <!--  see  http://issues.apache.org/activemq/browse/AMQ-826 -->
-            <!--  have not yet figured out the way to configure ApacheDS via Spring  -->
-            <exclude>**/LDAPAuthorizationMapTest.*</exclude>
 
             <!-- http://issues.apache.org/activemq/browse/AMQ-1027 -->
             <exclude>**/FailoverConsumerTest.*</exclude>

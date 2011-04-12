@@ -16,64 +16,59 @@
  */
 package org.apache.activemq.security;
 
-import java.util.HashSet;
-import java.util.Properties;
-import java.util.Set;
-
-import javax.naming.Context;
-import javax.naming.NameClassPair;
-import javax.naming.NamingEnumeration;
-import javax.naming.directory.DirContext;
-import javax.naming.directory.InitialDirContext;
-
 import junit.framework.TestCase;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.jaas.GroupPrincipal;
-import org.apache.directory.server.core.configuration.StartupConfiguration;
-import org.apache.directory.server.core.jndi.CoreContextFactory;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.support.ClassPathXmlApplicationContext;
+import org.apache.directory.server.annotations.CreateLdapServer;
+import org.apache.directory.server.annotations.CreateTransport;
+import org.apache.directory.server.core.annotations.ApplyLdifFiles;
+import org.apache.directory.server.core.integ.AbstractLdapTestUnit;
+import org.apache.directory.server.core.integ.FrameworkRunner;
+import org.apache.directory.server.ldap.LdapServer;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+
+import javax.naming.NameClassPair;
+import javax.naming.NamingEnumeration;
+import javax.naming.directory.DirContext;
+import java.util.HashSet;
+import java.util.Set;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * This test assumes setup like in file 'AMQauth.ldif'. Contents of this file is
  * attached below in comments.
  * 
  * @author ngcutura
- * 
+ *
+ *
  */
-public class LDAPAuthorizationMapTest extends TestCase {
-    private LDAPAuthorizationMap authMap;
+@RunWith( FrameworkRunner.class )
+@CreateLdapServer(transports = {@CreateTransport(protocol = "LDAP")})
+@ApplyLdifFiles(
+   "org/apache/activemq/security/AMQauth.ldif"
+)
+public class LDAPAuthorizationMapTest extends AbstractLdapTestUnit {
+    private static LDAPAuthorizationMap authMap;
 
-    protected void setUp() throws Exception {
-        super.setUp();
+    public static LdapServer ldapServer;
 
-        startLdapServer();
-
+    @Before
+    public void setup() throws Exception {
         authMap = new LDAPAuthorizationMap();
+        authMap.setConnectionURL("ldap://localhost:1024");
     }
 
-    protected void startLdapServer() throws Exception {
-        ApplicationContext factory = new ClassPathXmlApplicationContext("org/apache/activemq/security/ldap-spring.xml");
-        StartupConfiguration cfg = (StartupConfiguration) factory.getBean("configuration");
-        Properties env = (Properties) factory.getBean("environment");
-
-        env.setProperty(Context.PROVIDER_URL, "");
-        env.setProperty(Context.INITIAL_CONTEXT_FACTORY, CoreContextFactory.class.getName());
-        env.putAll(cfg.toJndiEnvironment());
-
-        new InitialDirContext(env);
-    }
-
-    protected void tearDown() throws Exception {
-        super.tearDown();
-    }
-
+    @Test
     public void testOpen() throws Exception {
         DirContext ctx = authMap.open();
         HashSet<String> set = new HashSet<String>();
-        NamingEnumeration list = ctx.list("ou=destinations,o=ActiveMQ,dc=example,dc=com");
+        NamingEnumeration list = ctx.list("ou=destinations,o=ActiveMQ,ou=system");
         while (list.hasMore()) {
             NameClassPair ncp = (NameClassPair) list.next();
             set.add(ncp.getName());
@@ -86,6 +81,7 @@ public class LDAPAuthorizationMapTest extends TestCase {
      * Test method for
      * 'org.apache.activemq.security.LDAPAuthorizationMap.getAdminACLs(ActiveMQDestination)'
      */
+    @Test
     public void testGetAdminACLs() {
         ActiveMQDestination q1 = new ActiveMQQueue("queue1");
         Set aclsq1 = authMap.getAdminACLs(q1);
@@ -102,6 +98,7 @@ public class LDAPAuthorizationMapTest extends TestCase {
      * Test method for
      * 'org.apache.activemq.security.LDAPAuthorizationMap.getReadACLs(ActiveMQDestination)'
      */
+    @Test
     public void testGetReadACLs() {
         ActiveMQDestination q1 = new ActiveMQQueue("queue1");
         Set aclsq1 = authMap.getReadACLs(q1);
@@ -118,6 +115,7 @@ public class LDAPAuthorizationMapTest extends TestCase {
      * Test method for
      * 'org.apache.activemq.security.LDAPAuthorizationMap.getWriteACLs(ActiveMQDestination)'
      */
+    @Test
     public void testGetWriteACLs() {
         ActiveMQDestination q1 = new ActiveMQQueue("queue1");
         Set aclsq1 = authMap.getWriteACLs(q1);

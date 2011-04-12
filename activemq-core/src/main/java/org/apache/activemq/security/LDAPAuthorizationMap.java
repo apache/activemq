@@ -99,8 +99,8 @@ public class LDAPAuthorizationMap implements AuthorizationMap {
         connectionProtocol = "s";
         authentication = "simple";
 
-        topicSearchMatchingFormat = new MessageFormat("uid={0},ou=topics,ou=destinations,o=ActiveMQ,dc=example,dc=com");
-        queueSearchMatchingFormat = new MessageFormat("uid={0},ou=queues,ou=destinations,o=ActiveMQ,dc=example,dc=com");
+        topicSearchMatchingFormat = new MessageFormat("uid={0},ou=topics,ou=destinations,o=ActiveMQ,ou=system");
+        queueSearchMatchingFormat = new MessageFormat("uid={0},ou=queues,ou=destinations,o=ActiveMQ,ou=system");
 
         adminBase = "(cn=admin)";
         adminAttribute = "uniqueMember";
@@ -352,7 +352,8 @@ public class LDAPAuthorizationMap implements AuthorizationMap {
             }
             for (Iterator<String> iter = acls.iterator(); iter.hasNext();) {
                 String roleName = iter.next();
-                roles.add(new GroupPrincipal(roleName));
+                String[] components = roleName.split("=", 2);
+                roles.add(new GroupPrincipal(components[components.length - 1]));
             }
             return roles;
         } catch (NamingException e) {

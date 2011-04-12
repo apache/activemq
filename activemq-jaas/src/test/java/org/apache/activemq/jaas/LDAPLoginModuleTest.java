@@ -16,47 +16,37 @@
  */
 package org.apache.activemq.jaas;
 
-import static org.junit.Assert.assertTrue;
-
-import java.io.IOException;
-import java.net.URL;
-import java.util.HashSet;
-import java.util.Hashtable;
+import org.apache.directory.server.core.integ.AbstractLdapTestUnit;
+import org.apache.directory.server.core.integ.FrameworkRunner;
+import org.apache.directory.server.integ.ServerIntegrationUtils;
+import org.apache.directory.server.ldap.LdapServer;
+import org.apache.directory.server.annotations.CreateLdapServer;
+import org.apache.directory.server.annotations.CreateTransport;
+import org.apache.directory.server.core.annotations.ApplyLdifFiles;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 
 import javax.naming.Context;
 import javax.naming.NameClassPair;
 import javax.naming.NamingEnumeration;
 import javax.naming.directory.DirContext;
 import javax.naming.directory.InitialDirContext;
-import javax.security.auth.callback.Callback;
-import javax.security.auth.callback.CallbackHandler;
-import javax.security.auth.callback.NameCallback;
-import javax.security.auth.callback.PasswordCallback;
-import javax.security.auth.callback.UnsupportedCallbackException;
+import javax.security.auth.callback.*;
 import javax.security.auth.login.LoginContext;
 import javax.security.auth.login.LoginException;
+import java.io.IOException;
+import java.net.URL;
+import java.util.HashSet;
+import java.util.Hashtable;
 
-import org.apache.directory.server.core.integ.Level;
-import org.apache.directory.server.core.integ.annotations.ApplyLdifs;
-import org.apache.directory.server.core.integ.annotations.CleanupLevel;
-import org.apache.directory.server.integ.SiRunner;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import static org.junit.Assert.assertTrue;
 
-import org.apache.directory.server.ldap.LdapServer;
-
-@RunWith ( SiRunner.class ) 
-@CleanupLevel ( Level.CLASS )
-@ApplyLdifs( {
-	"dn: uid=first,ou=system\n" +
-	"uid: first\n" +
-	"userPassword: secret\n" +
-	"objectClass: account\n" +
-	"objectClass: simpleSecurityObject\n" +
-	"objectClass: top\n" 
-}
+@RunWith ( FrameworkRunner.class )
+@CreateLdapServer(transports = {@CreateTransport(protocol = "LDAP")})
+@ApplyLdifFiles(
+   "test.ldif"
 )
-public class LDAPLoginModuleTest {
+public class LDAPLoginModuleTest extends AbstractLdapTestUnit {
 	
     static {
         String path = System.getProperty("java.security.auth.login.config");
@@ -69,8 +59,9 @@ public class LDAPLoginModuleTest {
         }
     }
     
-    private static final String BASE = "ou=system";
+    private static final String BASE = "o=ActiveMQ,ou=system";
     public static LdapServer ldapServer;
+
     private static final String FILTER = "(objectclass=*)";
     
     private static final String PRINCIPAL = "uid=admin,ou=system";

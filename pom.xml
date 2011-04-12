@@ -57,7 +57,7 @@
     <commons-logging-version>1.1</commons-logging-version>
     <commons-pool-version>1.5.4</commons-pool-version>
     <commons-primitives-version>1.0</commons-primitives-version>
-    <directory-version>1.5.5</directory-version>
+    <directory-version>1.5.7</directory-version>
     <geronimo-version>1.0</geronimo-version>
     <howl-version>0.1.8</howl-version>
     <hsqldb-version>1.7.2.2</hsqldb-version>
@@ -67,7 +67,7 @@
     <jsp-version>2.1.v20100127</jsp-version>
     <jettison-version>1.2</jettison-version>
     <jmock-version>2.5.1</jmock-version>
-    <junit-version>4.5</junit-version>
+    <junit-version>4.8.1</junit-version>
     <jxta-version>2.0</jxta-version>
     <karaf-version>2.2.0</karaf-version>
     <log4j-version>1.2.14</log4j-version>
