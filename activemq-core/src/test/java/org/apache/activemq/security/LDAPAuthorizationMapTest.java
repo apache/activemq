@@ -17,10 +17,12 @@
 package org.apache.activemq.security;
 
 import junit.framework.TestCase;
+import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.jaas.GroupPrincipal;
+import org.apache.activemq.spring.ActiveMQConnectionFactory;
 import org.apache.directory.server.annotations.CreateLdapServer;
 import org.apache.directory.server.annotations.CreateTransport;
 import org.apache.directory.server.core.annotations.ApplyLdifFiles;
@@ -34,6 +36,7 @@ import org.junit.runner.RunWith;
 import javax.naming.NameClassPair;
 import javax.naming.NamingEnumeration;
 import javax.naming.directory.DirContext;
+import java.text.MessageFormat;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -62,6 +65,9 @@ public class LDAPAuthorizationMapTest extends AbstractLdapTestUnit {
     public void setup() throws Exception {
         authMap = new LDAPAuthorizationMap();
         authMap.setConnectionURL("ldap://localhost:1024");
+        authMap.setTopicSearchMatchingFormat(new MessageFormat("uid={0},ou=topics,ou=destinations,o=ActiveMQ,ou=system"));
+        authMap.setQueueSearchMatchingFormat(new MessageFormat("uid={0},ou=queues,ou=destinations,o=ActiveMQ,ou=system"));
+        authMap.setAdvisorySearchBase("uid=ActiveMQ.Advisory,ou=topics,ou=destinations,o=ActiveMQ,ou=system");
     }
 
     @Test
@@ -128,5 +134,25 @@ public class LDAPAuthorizationMapTest extends AbstractLdapTestUnit {
         assertEquals(1, aclst1.size());
         assertTrue(aclst1.contains(new GroupPrincipal("role3")));
     }
+
+    @Test
+    public void testComposite() {
+       ActiveMQDestination q1 = new ActiveMQQueue("queue1,topic://topic1");
+       Set aclsq1 = authMap.getWriteACLs(q1);
+       assertEquals(3, aclsq1.size());
+       assertTrue(aclsq1.contains(new GroupPrincipal("role1")));
+       assertTrue(aclsq1.contains(new GroupPrincipal("role2")));
+       assertTrue(aclsq1.contains(new GroupPrincipal("role3")));
+    }
+
+    @Test
+    public void testAdvisory() {
+        ActiveMQDestination dest = AdvisorySupport.getConnectionAdvisoryTopic();
+        Set acls = authMap.getWriteACLs(dest);
+
+        assertEquals(1, acls.size());
+        assertTrue(acls.contains(new GroupPrincipal("role3")));
+    }
+
 
 }

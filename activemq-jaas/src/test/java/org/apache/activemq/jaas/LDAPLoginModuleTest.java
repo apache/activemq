@@ -47,17 +47,6 @@ import static org.junit.Assert.assertTrue;
    "test.ldif"
 )
 public class LDAPLoginModuleTest extends AbstractLdapTestUnit {
-	
-    static {
-        String path = System.getProperty("java.security.auth.login.config");
-        if (path == null) {
-            URL resource = PropertiesLoginModuleTest.class.getClassLoader().getResource("login.config");
-            if (resource != null) {
-                path = resource.getFile();
-                System.setProperty("java.security.auth.login.config", path);
-            }
-        }
-    }
     
     private static final String BASE = "o=ActiveMQ,ou=system";
     public static LdapServer ldapServer;

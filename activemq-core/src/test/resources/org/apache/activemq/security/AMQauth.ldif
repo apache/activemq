@@ -15,8 +15,6 @@
 ## limitations under the License.
 ## ---------------------------------------------------------------------------
 
-version: 1
-
 dn: o=ActiveMQ,ou=system
 objectclass: organization
 objectclass: top
@@ -108,4 +106,29 @@ objectclass: groupOfUniqueNames
 objectclass: top
 cn: admin
 uniquemember: uid=role1
+
+dn: uid=ActiveMQ.Advisory,ou=topics,ou=destinations,o=ActiveMQ,ou=system
+objectclass: uidObject
+objectclass: top
+objectclass: applicationProcess
+uid: ActiveMQ.Advisory
+cn: ActiveMQ.Advisory
+
+dn: cn=admin,uid=ActiveMQ.Advisory,ou=topics,ou=destinations,o=ActiveMQ,ou=system
+objectclass: groupOfUniqueNames
+objectclass: top
+cn: admin
+uniquemember: uid=role1
+
+dn: cn=read,uid=ActiveMQ.Advisory,ou=topics,ou=destinations,o=ActiveMQ,ou=system
+objectclass: groupOfUniqueNames
+objectclass: top
+cn: read
+uniquemember: uid=role2
+
+dn: cn=write,uid=ActiveMQ.Advisory,ou=topics,ou=destinations,o=ActiveMQ,ou=system
+objectclass: groupOfUniqueNames
+objectclass: top
+cn: write
+uniquemember: uid=role3
 
