@@ -81,6 +81,7 @@ public class LDAPAuthorizationMap implements AuthorizationMap {
     private MessageFormat topicSearchMatchingFormat;
     private MessageFormat queueSearchMatchingFormat;
     private String advisorySearchBase = "uid=ActiveMQ.Advisory,ou=topics,ou=destinations,o=ActiveMQ,dc=example,dc=com";
+    private String tempSearchBase = "uid=ActiveMQ.Temp,ou=topics,ou=destinations,o=ActiveMQ,dc=example,dc=com";
 
     private boolean topicSearchSubtreeBool = true;
     private boolean queueSearchSubtreeBool = true;
@@ -140,18 +141,39 @@ public class LDAPAuthorizationMap implements AuthorizationMap {
     }
 
     public Set<GroupPrincipal> getTempDestinationAdminACLs() {
-        // TODO insert implementation
-        return null;
+        try {
+            context = open();
+        } catch (NamingException e) {
+            LOG.error(e.toString());
+            return new HashSet<GroupPrincipal>();
+        }
+        SearchControls constraints = new SearchControls();
+        constraints.setReturningAttributes(new String[] {adminAttribute});
+        return getACLs(tempSearchBase, constraints, adminBase, adminAttribute);
     }
 
     public Set<GroupPrincipal> getTempDestinationReadACLs() {
-        // TODO insert implementation
-        return null;
+        try {
+            context = open();
+        } catch (NamingException e) {
+            LOG.error(e.toString());
+            return new HashSet<GroupPrincipal>();
+        }
+        SearchControls constraints = new SearchControls();
+        constraints.setReturningAttributes(new String[] {readAttribute});
+        return getACLs(tempSearchBase, constraints, readBase, readAttribute);
     }
 
     public Set<GroupPrincipal> getTempDestinationWriteACLs() {
-        // TODO insert implementation
-        return null;
+        try {
+            context = open();
+        } catch (NamingException e) {
+            LOG.error(e.toString());
+            return new HashSet<GroupPrincipal>();
+        }
+        SearchControls constraints = new SearchControls();
+        constraints.setReturningAttributes(new String[] {writeAttribute});
+        return getACLs(tempSearchBase, constraints, writeBase, writeAttribute);
     }
 
     public Set<GroupPrincipal> getAdminACLs(ActiveMQDestination destination) {
@@ -330,6 +352,14 @@ public class LDAPAuthorizationMap implements AuthorizationMap {
         this.advisorySearchBase = advisorySearchBase;
     }
 
+    public String getTempSearchBase() {
+        return tempSearchBase;
+    }
+
+    public void setTempSearchBase(String tempSearchBase) {
+        this.tempSearchBase = tempSearchBase;
+    }
+
     protected Set<GroupPrincipal> getCompositeACLs(ActiveMQDestination destination, String roleBase, String roleAttribute) {
         ActiveMQDestination[] dests = destination.getCompositeDestinations();
         Set<GroupPrincipal> acls = new HashSet<GroupPrincipal>();
@@ -376,6 +406,10 @@ public class LDAPAuthorizationMap implements AuthorizationMap {
 
         constraints.setReturningAttributes(new String[] {roleAttribute});
 
+        return getACLs(destinationBase, constraints, roleBase, roleAttribute);
+    }
+
+    protected Set<GroupPrincipal> getACLs(String destinationBase, SearchControls constraints, String roleBase, String roleAttribute) {
         try {
             Set<GroupPrincipal> roles = new HashSet<GroupPrincipal>();
             Set<String> acls = new HashSet<String>();

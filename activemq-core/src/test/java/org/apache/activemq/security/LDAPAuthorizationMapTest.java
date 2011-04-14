@@ -20,6 +20,7 @@ import junit.framework.TestCase;
 import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
+import org.apache.activemq.command.ActiveMQTempQueue;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.jaas.GroupPrincipal;
 import org.apache.activemq.spring.ActiveMQConnectionFactory;
@@ -68,6 +69,7 @@ public class LDAPAuthorizationMapTest extends AbstractLdapTestUnit {
         authMap.setTopicSearchMatchingFormat(new MessageFormat("uid={0},ou=topics,ou=destinations,o=ActiveMQ,ou=system"));
         authMap.setQueueSearchMatchingFormat(new MessageFormat("uid={0},ou=queues,ou=destinations,o=ActiveMQ,ou=system"));
         authMap.setAdvisorySearchBase("uid=ActiveMQ.Advisory,ou=topics,ou=destinations,o=ActiveMQ,ou=system");
+        authMap.setTempSearchBase("uid=ActiveMQ.Temp,ou=topics,ou=destinations,o=ActiveMQ,ou=system");
     }
 
     @Test
@@ -152,6 +154,14 @@ public class LDAPAuthorizationMapTest extends AbstractLdapTestUnit {
 
         assertEquals(1, acls.size());
         assertTrue(acls.contains(new GroupPrincipal("role3")));
+    }
+
+        @Test
+    public void testTemp() {
+        Set acls = authMap.getTempDestinationAdminACLs();
+
+        assertEquals(1, acls.size());
+        assertTrue(acls.contains(new GroupPrincipal("role1")));
     }
 
 

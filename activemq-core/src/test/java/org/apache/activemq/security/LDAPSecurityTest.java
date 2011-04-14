@@ -76,4 +76,20 @@ public class LDAPSecurityTest extends AbstractLdapTestUnit {
         assertNotNull(msg);
     }
 
+    @Test
+    public void testTempDestinations() throws Exception {
+        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("tcp://localhost:61616");
+        Connection conn = factory.createQueueConnection("jdoe", "sunflower");
+        Session sess = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        conn.start();
+        Queue queue = sess.createTemporaryQueue();
+
+        MessageProducer producer = sess.createProducer(queue);
+        MessageConsumer consumer = sess.createConsumer(queue);
+
+        producer.send(sess.createTextMessage("test"));
+        Message msg = consumer.receive(1000);
+        assertNotNull(msg);
+    }
+
 }

@@ -151,11 +151,12 @@ member: cn=admins
 #######################
 ## Define advisories ##
 #######################
+
 dn: cn=ActiveMQ.Advisory,ou=Topic,ou=Destination,ou=ActiveMQ,ou=system
 cn: ActiveMQ.Advisory
 objectClass: applicationProcess
 objectClass: top
-description: Advisory topic about consumers
+description: Advisory topics
 
 dn: cn=read,cn=ActiveMQ.Advisory,ou=Topic,ou=Destination,ou=ActiveMQ,ou=system
 cn: read
@@ -172,6 +173,37 @@ objectClass: groupOfNames
 objectClass: top
 
 dn: cn=admin,cn=ActiveMQ.Advisory,ou=Topic,ou=Destination,ou=ActiveMQ,ou=system
+cn: admin
+member: cn=admins
+member: cn=users
+objectClass: groupOfNames
+objectClass: top
+
+######################
+## Define temporary ##
+######################
+
+dn: cn=ActiveMQ.Temp,ou=Topic,ou=Destination,ou=ActiveMQ,ou=system
+cn: ActiveMQ.Temp
+objectClass: applicationProcess
+objectClass: top
+description: Temporary destinations
+
+dn: cn=read,cn=ActiveMQ.Temp,ou=Topic,ou=Destination,ou=ActiveMQ,ou=system
+cn: read
+member: cn=admins
+member: cn=users
+objectClass: groupOfNames
+objectClass: top
+
+dn: cn=write,cn=ActiveMQ.Temp,ou=Topic,ou=Destination,ou=ActiveMQ,ou=system
+cn: write
+member: cn=admins
+member: cn=users
+objectClass: groupOfNames
+objectClass: top
+
+dn: cn=admin,cn=ActiveMQ.Temp,ou=Topic,ou=Destination,ou=ActiveMQ,ou=system
 cn: admin
 member: cn=admins
 member: cn=users

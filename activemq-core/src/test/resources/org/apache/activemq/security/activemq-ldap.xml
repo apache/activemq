@@ -54,6 +54,8 @@
                                 value="cn={0},ou=Queue,ou=Destination,ou=ActiveMQ,ou=system"/>
                       <property name="advisorySearchBase"
                                 value="cn=ActiveMQ.Advisory,ou=Topic,ou=Destination,ou=ActiveMQ,ou=system"/>
+                      <property name="tempSearchBase"
+                                value="cn=ActiveMQ.Temp,ou=Topic,ou=Destination,ou=ActiveMQ,ou=system"/>
                       <property name="queueSearchSubtreeBool" value="true"/>
                       <property name="adminBase" value="(cn=admin)"/>
                       <property name="adminAttribute" value="member"/>
