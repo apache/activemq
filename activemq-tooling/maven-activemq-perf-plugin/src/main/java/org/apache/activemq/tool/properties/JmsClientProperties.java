@@ -27,6 +27,9 @@ public class JmsClientProperties extends AbstractObjectProperties {
 
     protected String sessAckMode = SESSION_AUTO_ACKNOWLEDGE;
     protected boolean sessTransacted;
+    
+    // commit transaction after X msgs only. 
+    protected int commitAfterXMsgs = 1;
 
     protected String jmsProvider;
     protected String jmsVersion;
@@ -62,6 +65,14 @@ public class JmsClientProperties extends AbstractObjectProperties {
 
     public void setSessTransacted(boolean sessTransacted) {
         this.sessTransacted = sessTransacted;
+    }
+    
+    public void setCommitAfterXMsgs(int commitAfterXMsg) {
+    	this.commitAfterXMsgs = commitAfterXMsg;
+    }
+    
+    public int getCommitAfterXMsgs() {
+    	return this.commitAfterXMsgs;
     }
 
     public String getJmsProvider() {

@@ -37,6 +37,8 @@ public abstract class AbstractJmsClient {
     protected int destCount = 1;
     protected int destIndex;
     protected String clientName = "";
+    
+    private int internalTxCounter = 0;
 
     public AbstractJmsClient(ConnectionFactory factory) {
         this.factory = factory;
@@ -159,4 +161,25 @@ public abstract class AbstractJmsClient {
         }
     }
 
+    /** 
+     * Helper method that checks if session is 
+     * transacted and whether to commit the tx based on commitAfterXMsgs 
+     * property. 
+     * 
+     * @return true if transaction was committed. 
+     * @throws JMSException in case the call to JMS Session.commit() fails.
+     */
+    public boolean commitTxIfNecessary() throws JMSException {
+    	
+    	internalTxCounter++;
+        if (getClient().isSessTransacted()) {
+        	if ((internalTxCounter % getClient().getCommitAfterXMsgs()) == 0) {
+        		LOG.debug("Committing transaction.");
+        		internalTxCounter = 0;
+        		getSession().commit();
+        		return true;
+        	}
+        }
+        return false;
+    }
 }

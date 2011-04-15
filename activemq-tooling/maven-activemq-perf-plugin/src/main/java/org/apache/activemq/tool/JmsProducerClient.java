@@ -97,6 +97,7 @@ public class JmsProducerClient extends AbstractJmsMeasurableClient {
                             getJmsProducer().send(dest[j], getJmsTextMessage());
                             incThroughput();
                             sleep();
+                            commitTxIfNecessary();
                         }
                     }
                     // Send to only one actual destination
@@ -105,6 +106,7 @@ public class JmsProducerClient extends AbstractJmsMeasurableClient {
                         getJmsProducer().send(getJmsTextMessage());
                         incThroughput();
                         sleep();
+                        commitTxIfNecessary();
                     }
                 }
 
@@ -119,6 +121,7 @@ public class JmsProducerClient extends AbstractJmsMeasurableClient {
                             getJmsProducer().send(dest[j], createJmsTextMessage("Text Message [" + i + "]"));
                             incThroughput();
                             sleep();
+                            commitTxIfNecessary();
                         }
                     }
 
@@ -128,6 +131,7 @@ public class JmsProducerClient extends AbstractJmsMeasurableClient {
                         getJmsProducer().send(createJmsTextMessage("Text Message [" + i + "]"));
                         incThroughput();
                         sleep();
+                        commitTxIfNecessary();
                     }
                 }
             }
@@ -168,6 +172,7 @@ public class JmsProducerClient extends AbstractJmsMeasurableClient {
                             getJmsProducer().send(dest[j], getJmsTextMessage());
                             incThroughput();
                             sleep();
+                            commitTxIfNecessary();
                         }
                     }
                     // Send to only one actual destination
@@ -176,6 +181,7 @@ public class JmsProducerClient extends AbstractJmsMeasurableClient {
                         getJmsProducer().send(getJmsTextMessage());
                         incThroughput();
                         sleep();
+                        commitTxIfNecessary();
                     }
                 }
 
@@ -191,6 +197,7 @@ public class JmsProducerClient extends AbstractJmsMeasurableClient {
                             getJmsProducer().send(dest[j], createJmsTextMessage("Text Message [" + count++ + "]"));
                             incThroughput();
                             sleep();
+                            commitTxIfNecessary();
                         }
                     }
 
@@ -201,6 +208,7 @@ public class JmsProducerClient extends AbstractJmsMeasurableClient {
                         getJmsProducer().send(createJmsTextMessage("Text Message [" + count++ + "]"));
                         incThroughput();
                         sleep();
+                        commitTxIfNecessary();
                     }
                 }
             }
