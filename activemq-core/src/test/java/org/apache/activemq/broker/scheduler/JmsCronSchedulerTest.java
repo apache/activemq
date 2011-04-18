@@ -56,18 +56,18 @@ public class JmsCronSchedulerTest extends EmbeddedBrokerTestSupport {
             public void onMessage(Message message) {
                 latch.countDown();
                 count.incrementAndGet();
-            	LOG.debug("Received one Message, count is at: " + count.get());
+                LOG.debug("Received one Message, count is at: " + count.get());
             }
         });
 
         connection.start();
         for (int i = 0; i < COUNT; i++) {
-	        MessageProducer producer = session.createProducer(destination);
-	        TextMessage message = session.createTextMessage("test msg "+i);
-	        message.setStringProperty(ScheduledMessage.AMQ_SCHEDULED_CRON, "* * * * *");
-	        producer.send(message);
-	        producer.close();
-	        //wait a couple sec so cron start time is different for next message
+            MessageProducer producer = session.createProducer(destination);
+            TextMessage message = session.createTextMessage("test msg "+i);
+            message.setStringProperty(ScheduledMessage.AMQ_SCHEDULED_CRON, "* * * * *");
+            producer.send(message);
+            producer.close();
+            //wait a couple sec so cron start time is different for next message
             Thread.sleep(2000);
         }
         SchedulerBroker sb = (SchedulerBroker) this.broker.getBroker().getAdaptor(SchedulerBroker.class);
@@ -77,6 +77,27 @@ public class JmsCronSchedulerTest extends EmbeddedBrokerTestSupport {
         latch.await(2, TimeUnit.MINUTES);
         //All should messages should have been received by now
         assertEquals(COUNT, count.get());
+    }
+
+    public void testCronScheduleWithTtlSet() throws Exception {
+
+        Connection connection = createConnection();
+        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        MessageConsumer consumer = session.createConsumer(destination);
+        connection.start();
+
+        MessageProducer producer = session.createProducer(destination);
+        producer.setTimeToLive(TimeUnit.MINUTES.toMillis(1));
+        TextMessage message = session.createTextMessage("test msg ");
+        message.setStringProperty(ScheduledMessage.AMQ_SCHEDULED_CRON, "* * * * *");
+
+        producer.send(message);
+        producer.close();
+
+        Thread.sleep(TimeUnit.MINUTES.toMillis(2));
+
+        assertNotNull(consumer.receiveNoWait());
+        assertNull(consumer.receiveNoWait());
     }
 
     @Override
