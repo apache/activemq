@@ -89,6 +89,6 @@ class StompSocket extends TransportSupport implements WebSocket, StompTransport 
     }
 
     public void sendToStomp(StompFrame command) throws IOException {
-        outbound.sendMessage(WebSocket.SENTINEL_FRAME, command.toString());
+        outbound.sendMessage(WebSocket.SENTINEL_FRAME, command.format());
     }
 }
