@@ -133,8 +133,6 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
             try {
                 bridge.start();
                 bridges.put(uri, bridge);
-    	    } catch (TransportDisposedIOException e) {
-                LOG.warn("Network bridge between: " + localURI + " and: " + uri + " was correctly stopped before it was correctly started.");
             } catch (Exception e) {
                 ServiceSupport.dispose(localTransport);
                 ServiceSupport.dispose(remoteTransport);
@@ -145,7 +143,6 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
                 } catch (IOException e1) {
                     LOG.debug("Discovery agent failure while handling failure event: " + e1.getMessage(), e1);
                 }
-                return;
             }
         }
     }
