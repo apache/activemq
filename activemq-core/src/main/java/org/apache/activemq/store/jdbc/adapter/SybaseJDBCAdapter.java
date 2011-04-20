@@ -25,6 +25,7 @@ import org.apache.activemq.store.jdbc.Statements;
  * 
  */
 public class SybaseJDBCAdapter extends ImageBasedJDBCAdaptor {
+    @Override
     public void setStatements(Statements statements) {
         statements.setLockCreateStatement("LOCK TABLE " + statements.getFullLockTableName() + " IN EXCLUSIVE MODE");
 

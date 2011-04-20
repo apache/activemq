@@ -34,6 +34,7 @@ public class BytesJDBCAdapter extends DefaultJDBCAdapter {
      * @see org.apache.activemq.store.jdbc.adapter.DefaultJDBCAdapter#getBinaryData(java.sql.ResultSet,
      *      int)
      */
+    @Override
     protected byte[] getBinaryData(ResultSet rs, int index) throws SQLException {
         return rs.getBytes(index);
     }
@@ -42,6 +43,7 @@ public class BytesJDBCAdapter extends DefaultJDBCAdapter {
      * @see org.apache.activemq.store.jdbc.adapter.DefaultJDBCAdapter#setBinaryData(java.sql.PreparedStatement,
      *      int, byte[])
      */
+    @Override
     protected void setBinaryData(PreparedStatement s, int index, byte[] data) throws SQLException {
         s.setBytes(index, data);
     }

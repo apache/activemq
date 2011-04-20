@@ -28,6 +28,7 @@ import org.apache.activemq.store.jdbc.Statements;
  */
 public class DB2JDBCAdapter extends DefaultJDBCAdapter {
 
+    @Override
     public void setStatements(Statements statements) {
         String lockCreateStatement = "LOCK TABLE " + statements.getFullLockTableName() + " IN EXCLUSIVE MODE";
         statements.setLockCreateStatement(lockCreateStatement);
@@ -35,6 +36,7 @@ public class DB2JDBCAdapter extends DefaultJDBCAdapter {
         super.setStatements(statements);
     }
 
+    @Override
     protected byte[] getBinaryData(ResultSet rs, int index) throws SQLException {
         // Get as a BLOB
         Blob aBlob = rs.getBlob(index);

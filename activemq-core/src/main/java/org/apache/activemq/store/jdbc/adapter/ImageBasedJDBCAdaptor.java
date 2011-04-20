@@ -32,6 +32,7 @@ import org.apache.activemq.store.jdbc.Statements;
  */
 public class ImageBasedJDBCAdaptor extends DefaultJDBCAdapter {
 
+    @Override
     public void setStatements(Statements statements) {
         statements.setBinaryDataType("IMAGE");
         super.setStatements(statements);

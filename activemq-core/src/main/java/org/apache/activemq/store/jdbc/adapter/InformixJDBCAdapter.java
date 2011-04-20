@@ -28,6 +28,7 @@ import org.apache.activemq.store.jdbc.Statements;
  */
 public class InformixJDBCAdapter extends BlobJDBCAdapter {
 
+    @Override
     public void setStatements(Statements statements) {
         statements.setContainerNameDataType("VARCHAR(150)");
         statements.setStringIdDataType("VARCHAR(150)");

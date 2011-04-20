@@ -27,6 +27,8 @@ import java.sql.SQLException;
 
 import javax.jms.JMSException;
 
+import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.command.MessageId;
 import org.apache.activemq.store.jdbc.TransactionContext;
 import org.apache.activemq.util.ByteArrayOutputStream;
 
@@ -49,30 +51,34 @@ import org.apache.activemq.util.ByteArrayOutputStream;
  */
 public class BlobJDBCAdapter extends DefaultJDBCAdapter {
 
-    public void doAddMessage(Connection c, long seq, String messageID, String destinationName, byte[] data)
-        throws SQLException, JMSException {
+    @Override
+    public void doAddMessage(TransactionContext c, long sequence, MessageId messageID, ActiveMQDestination destination, byte[] data,
+            long expiration, byte priority) throws SQLException, IOException {
         PreparedStatement s = null;
         ResultSet rs = null;
+        cleanupExclusiveLock.readLock().lock();
         try {
 
             // Add the Blob record.
-            s = c.prepareStatement(statements.getAddMessageStatement());
-            s.setLong(1, seq);
-            s.setString(2, destinationName);
-            s.setString(3, messageID);
-            s.setString(4, " ");
+            s = c.getConnection().prepareStatement(statements.getAddMessageStatement());
+            s.setLong(1, sequence);
+            s.setString(2, messageID.getProducerId().toString());
+            s.setLong(3, messageID.getProducerSequenceId());
+            s.setString(4, destination.getQualifiedName());
+            s.setLong(5, expiration);
+            s.setLong(6, priority);
 
             if (s.executeUpdate() != 1) {
-                throw new JMSException("Failed to broker message: " + messageID + " in container.");
+                throw new IOException("Failed to add broker message: " + messageID + " in container.");
             }
             s.close();
 
             // Select the blob record so that we can update it.
-            s = c.prepareStatement(statements.getFindMessageStatement());
-            s.setLong(1, seq);
+            s = c.getConnection().prepareStatement(statements.getFindMessageByIdStatement());
+            s.setLong(1, sequence);
             rs = s.executeQuery();
             if (!rs.next()) {
-                throw new JMSException("Failed to broker message: " + messageID + " in container.");
+                throw new IOException("Failed select blob for message: " + messageID + " in container.");
             }
 
             // Update the blob
@@ -83,31 +89,27 @@ public class BlobJDBCAdapter extends DefaultJDBCAdapter {
             s.close();
 
             // Update the row with the updated blob
-            s = c.prepareStatement(statements.getUpdateMessageStatement());
+            s = c.getConnection().prepareStatement(statements.getUpdateMessageStatement());
             s.setBlob(1, blob);
-            s.setLong(2, seq);
+            s.setLong(2, sequence);
 
-        } catch (IOException e) {
-            throw (SQLException)new SQLException("BLOB could not be updated: " + e).initCause(e);
         } finally {
-            try {
-                rs.close();
-            } catch (Throwable ignore) {
-            }
-            try {
-                s.close();
-            } catch (Throwable ignore) {
-            }
+            cleanupExclusiveLock.readLock().unlock();
+            close(rs);
+            close(s);
         }
     }
 
-    public byte[] doGetMessage(TransactionContext c, long seq) throws SQLException {
+    @Override
+    public byte[] doGetMessage(TransactionContext c, MessageId id) throws SQLException, IOException {
         PreparedStatement s = null;
         ResultSet rs = null;
+        cleanupExclusiveLock.readLock().lock();
         try {
 
             s = c.getConnection().prepareStatement(statements.getFindMessageStatement());
-            s.setLong(1, seq);
+            s.setString(1, id.getProducerId().toString());
+            s.setLong(2, id.getProducerSequenceId());
             rs = s.executeQuery();
 
             if (!rs.next()) {
@@ -126,17 +128,10 @@ public class BlobJDBCAdapter extends DefaultJDBCAdapter {
 
             return os.toByteArray();
 
-        } catch (IOException e) {
-            throw (SQLException)new SQLException("BLOB could not be updated: " + e).initCause(e);
         } finally {
-            try {
-                rs.close();
-            } catch (Throwable ignore) {
-            }
-            try {
-                s.close();
-            } catch (Throwable ignore) {
-            }
+            cleanupExclusiveLock.readLock().unlock();
+            close(rs);
+            close(s);
         }
     }
 

@@ -26,6 +26,7 @@ import org.apache.activemq.store.jdbc.Statements;
  * 
  */
 public class TransactJDBCAdapter extends ImageBasedJDBCAdaptor {
+    @Override
     public void setStatements(Statements statements) {
         String lockCreateStatement = "SELECT * FROM " + statements.getFullLockTableName();
 

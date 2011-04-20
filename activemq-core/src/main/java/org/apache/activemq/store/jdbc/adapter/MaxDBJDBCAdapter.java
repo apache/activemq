@@ -24,6 +24,7 @@ import org.apache.activemq.store.jdbc.Statements;
  */
 public class MaxDBJDBCAdapter extends DefaultJDBCAdapter {
 
+    @Override
     public void setStatements(Statements statements) {
         statements.setBinaryDataType("LONG BYTE");
         statements.setStringIdDataType("VARCHAR(250) ASCII");

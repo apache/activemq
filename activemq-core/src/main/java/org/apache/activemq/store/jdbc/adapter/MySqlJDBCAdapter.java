@@ -42,6 +42,7 @@ public class MySqlJDBCAdapter extends DefaultJDBCAdapter {
     String engineType = INNODB;
     String typeStatement = "ENGINE";
 
+    @Override
     public void setStatements(Statements statements) {
         String type = engineType.toUpperCase();
         if( !type.equals(INNODB) &&  !type.equals(NDBCLUSTER) ) {

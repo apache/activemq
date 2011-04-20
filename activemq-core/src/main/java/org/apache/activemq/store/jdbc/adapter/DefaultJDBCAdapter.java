@@ -780,14 +780,14 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         return result;
     }
 
-    private static void close(PreparedStatement s) {
+    protected static void close(PreparedStatement s) {
         try {
             s.close();
         } catch (Throwable e) {
         }
     }
 
-    private static void close(ResultSet rs) {
+    protected static void close(ResultSet rs) {
         try {
             rs.close();
         } catch (Throwable e) {

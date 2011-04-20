@@ -24,6 +24,7 @@ import org.apache.activemq.store.jdbc.Statements;
  */
 public class HsqldbJDBCAdapter extends BytesJDBCAdapter {
 
+    @Override
     public void setStatements(Statements statements) {
         statements.setBinaryDataType("OTHER");
         super.setStatements(statements);

@@ -30,6 +30,7 @@ import org.apache.activemq.store.jdbc.Statements;
  */
 public class AxionJDBCAdapter extends StreamJDBCAdapter {
 
+    @Override
     public void setStatements(Statements statements) {
         
         String[] createStatements = new String[]{

@@ -44,12 +44,14 @@ import org.apache.activemq.store.jdbc.Statements;
  */
 public class OracleJDBCAdapter extends BlobJDBCAdapter {
 
+    @Override
     public void setStatements(Statements statements) {
         statements.setLongDataType("NUMBER");
         statements.setSequenceDataType("NUMBER");
         super.setStatements(statements);
     }
-    
+
+    @Override
     protected byte[] getBinaryData(ResultSet rs, int index) throws SQLException {
         // Get as a BLOB
         Blob aBlob = rs.getBlob(index);
