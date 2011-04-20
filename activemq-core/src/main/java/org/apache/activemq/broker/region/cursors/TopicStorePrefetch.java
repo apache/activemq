@@ -38,8 +38,7 @@ class TopicStorePrefetch extends AbstractStoreCursor {
     private final String clientId;
     private final String subscriberName;
     private final Subscription subscription;
-    private int currentLowestPriority;
-    
+    private byte lastRecoveredPriority = 9;
     /**
      * @param topic
      * @param clientId
@@ -53,15 +52,6 @@ class TopicStorePrefetch extends AbstractStoreCursor {
         this.subscriberName = subscriberName;
         this.maxProducersToAudit=32;
         this.maxAuditDepth=10000;
-        resetCurrentLowestPriority();
-    }
-
-    private void resetCurrentLowestPriority() {
-        currentLowestPriority = 9;
-    }
-
-    public synchronized int getCurrentLowestPriority() {
-        return currentLowestPriority;
     }
 
     public boolean recoverMessageReference(MessageId messageReference) throws Exception {
@@ -80,13 +70,13 @@ class TopicStorePrefetch extends AbstractStoreCursor {
         messageEvaluationContext.setMessageReference(message);
         if (this.subscription.matches(message, messageEvaluationContext)) {
             recovered = super.recoverMessage(message, cached);
-            if (recovered) {
-                currentLowestPriority = Math.min(currentLowestPriority, message.getPriority());                
+            if (recovered && !cached) {
+                lastRecoveredPriority = message.getPriority();
             }
         }
         return recovered;      
     }
-    
+
     @Override
     protected synchronized int getStoreSize() {
         try {
@@ -100,14 +90,9 @@ class TopicStorePrefetch extends AbstractStoreCursor {
     @Override
     protected synchronized boolean isStoreEmpty() {
         try {
-            boolean empty = this.store.isEmpty();
-            if (empty) {
-                resetCurrentLowestPriority();
-            }
-            return empty;
-            
+            return this.store.isEmpty();
         } catch (Exception e) {
-            LOG.error("Failed to get message count", e);
+            LOG.error("Failed to determine if store is empty", e);
             throw new RuntimeException(e);
         }
     }
@@ -119,15 +104,17 @@ class TopicStorePrefetch extends AbstractStoreCursor {
     }
 
     @Override
-    public synchronized void gc() {
-        super.gc();
-        resetCurrentLowestPriority();
-    }
-    
-    @Override
     protected void doFillBatch() throws Exception {
         this.store.recoverNextMessages(clientId, subscriberName,
                 maxBatchSize, this);
+    }
+
+    public byte getLastRecoveredPriority() {
+        return lastRecoveredPriority;
+    }
+
+    public final boolean isPaging() {
+        return !isCacheEnabled() && !batchList.isEmpty();
     }
 
     @Override

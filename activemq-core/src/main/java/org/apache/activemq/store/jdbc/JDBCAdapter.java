@@ -70,7 +70,7 @@ public interface JDBCAdapter {
 
     void doDeleteSubscription(TransactionContext c, ActiveMQDestination destinationName, String clientId, String subscriptionName) throws SQLException, IOException;
 
-    void doDeleteOldMessages(TransactionContext c, boolean isPrioritizedMessages) throws SQLException, IOException;
+    void doDeleteOldMessages(TransactionContext c) throws SQLException, IOException;
 
     long doGetLastMessageStoreSequenceId(TransactionContext c) throws SQLException, IOException;
 

@@ -33,6 +33,7 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.region.policy.PendingDurableSubscriberMessageStoragePolicy;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
+import org.apache.activemq.broker.region.policy.SharedDeadLetterStrategy;
 import org.apache.activemq.broker.region.policy.StorePendingDurableSubscriberMessageStoragePolicy;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
@@ -75,10 +76,19 @@ abstract public class MessagePriorityTest extends CombinationTestSupport {
         StorePendingDurableSubscriberMessageStoragePolicy durableSubPending =
                 new StorePendingDurableSubscriberMessageStoragePolicy();
         durableSubPending.setImmediatePriorityDispatch(immediatePriorityDispatch);
+        durableSubPending.setUseCache(useCache);
         policy.setPendingDurableSubscriberPolicy(durableSubPending);
         PolicyMap policyMap = new PolicyMap();
         policyMap.put(new ActiveMQQueue("TEST"), policy);
         policyMap.put(new ActiveMQTopic("TEST"), policy);
+
+        // do not process expired for one test
+        PolicyEntry ignoreExpired = new PolicyEntry();
+        SharedDeadLetterStrategy ignoreExpiredStrategy = new SharedDeadLetterStrategy();
+        ignoreExpiredStrategy.setProcessExpired(false);
+        ignoreExpired.setDeadLetterStrategy(ignoreExpiredStrategy);
+        policyMap.put(new ActiveMQTopic("TEST_CLEANUP_NO_PRIORITY"), ignoreExpired);
+
         broker.setDestinationPolicy(policyMap);
         broker.start();
         broker.waitUntilStarted();
@@ -305,7 +315,7 @@ abstract public class MessagePriorityTest extends CombinationTestSupport {
         int lowLowCount = 0;
         for (int i=0; i<numToProduce; i++) {
             Message msg = sub.receive(15000);
-            LOG.info("received i=" + i + ", " + (msg!=null? msg.getJMSMessageID() + "-" + msg.getJMSPriority() : null));
+            LOG.info("received i=" + i + ", " + (msg!=null? msg.getJMSMessageID() + ", priority:" + msg.getJMSPriority() : null));
             assertNotNull("Message " + i + " was null", msg);
             assertEquals("Message " + i + " has wrong priority", LOW_PRI+1, msg.getJMSPriority());
             assertTrue("not duplicate ", dups[i] == 0);
@@ -352,5 +362,178 @@ abstract public class MessagePriorityTest extends CombinationTestSupport {
             assertEquals("Message " + i + " has wrong priority", LOW_PRI, msg.getJMSPriority());
         }
     }
-    
+
+
+    public void initCombosForTestHighPriorityDeliveryInterleaved() {
+        addCombinationValues("useCache", new Object[] {Boolean.TRUE, Boolean.FALSE});
+    }
+
+    public void testHighPriorityDeliveryInterleaved() throws Exception {
+
+        // get zero prefetch
+        ActiveMQPrefetchPolicy prefetch = new ActiveMQPrefetchPolicy();
+        prefetch.setAll(0);
+        factory.setPrefetchPolicy(prefetch);
+        conn.close();
+        conn = factory.createConnection();
+        conn.setClientID("priority");
+        conn.start();
+        sess = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
+
+        ActiveMQTopic topic = (ActiveMQTopic)sess.createTopic("TEST");
+        final String subName = "priorityDisconnect";
+        TopicSubscriber sub = sess.createDurableSubscriber(topic, subName);
+        sub.close();
+
+        ProducerThread producerThread = new ProducerThread(topic, 1, HIGH_PRI);
+        producerThread.run();
+
+        producerThread.setMessagePriority(HIGH_PRI -1);
+        producerThread.setMessageCount(1);
+        producerThread.run();
+
+        producerThread.setMessagePriority(LOW_PRI);
+        producerThread.setMessageCount(1);
+        producerThread.run();
+        LOG.info("Ordered priority messages sent");
+
+        sub = sess.createDurableSubscriber(topic, subName);
+        int count = 0;
+
+        Message msg = sub.receive(15000);
+        assertNotNull("Message was null", msg);
+        LOG.info("received " + msg.getJMSMessageID() + ", priority:" + msg.getJMSPriority());
+        assertEquals("Message has wrong priority", HIGH_PRI, msg.getJMSPriority());
+
+        producerThread.setMessagePriority(LOW_PRI+1);
+        producerThread.setMessageCount(1);
+        producerThread.run();
+
+        msg = sub.receive(15000);
+        assertNotNull("Message was null", msg);
+        LOG.info("received " + msg.getJMSMessageID() + ", priority:" + msg.getJMSPriority());
+        assertEquals("high priority", HIGH_PRI -1, msg.getJMSPriority());
+
+        msg = sub.receive(15000);
+        assertNotNull("Message was null", msg);
+        LOG.info("received hi? : " + msg);
+        assertEquals("high priority", LOW_PRI +1, msg.getJMSPriority());
+
+        msg = sub.receive(15000);
+        assertNotNull("Message was null", msg);
+        LOG.info("received hi? : " + msg);
+        assertEquals("high priority", LOW_PRI, msg.getJMSPriority());
+
+        msg = sub.receive(4000);
+        assertNull("Message was null", msg);
+    }
+
+    // immediatePriorityDispatch is only relevant when cache is exhausted
+    public void initCombosForTestHighPriorityDeliveryThroughBackLog() {
+        addCombinationValues("useCache", new Object[] {Boolean.FALSE});
+        addCombinationValues("immediatePriorityDispatch", new Object[] {Boolean.TRUE});
+    }
+
+    public void testHighPriorityDeliveryThroughBackLog() throws Exception {
+
+        // get zero prefetch
+        ActiveMQPrefetchPolicy prefetch = new ActiveMQPrefetchPolicy();
+        prefetch.setAll(0);
+        factory.setPrefetchPolicy(prefetch);
+        conn.close();
+        conn = factory.createConnection();
+        conn.setClientID("priority");
+        conn.start();
+        sess = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
+
+        ActiveMQTopic topic = (ActiveMQTopic)sess.createTopic("TEST");
+        final String subName = "priorityDisconnect";
+        TopicSubscriber sub = sess.createDurableSubscriber(topic, subName);
+        sub.close();
+
+        ProducerThread producerThread = new ProducerThread(topic, 600, LOW_PRI);
+        producerThread.run();
+
+
+        sub = sess.createDurableSubscriber(topic, subName);
+        int count = 0;
+
+        for (;count < 300; count++) {
+            Message msg = sub.receive(15000);
+            assertNotNull("Message was null", msg);
+            assertEquals("high priority", LOW_PRI, msg.getJMSPriority());
+        }
+
+        producerThread.setMessagePriority(HIGH_PRI);
+        producerThread.setMessageCount(1);
+        producerThread.run();
+
+        Message msg = sub.receive(15000);
+        assertNotNull("Message was null", msg);
+        assertEquals("high priority", HIGH_PRI, msg.getJMSPriority());
+
+        for (;count < 600; count++) {
+            msg = sub.receive(15000);
+            assertNotNull("Message was null", msg);
+            assertEquals("high priority", LOW_PRI, msg.getJMSPriority());
+        }
+    }
+
+
+    public void initCombosForTestHighPriorityNonDeliveryThroughBackLog() {
+        addCombinationValues("useCache", new Object[] {Boolean.FALSE});
+        addCombinationValues("immediatePriorityDispatch", new Object[] {Boolean.FALSE});
+    }
+
+    public void testHighPriorityNonDeliveryThroughBackLog() throws Exception {
+
+        // get zero prefetch
+        ActiveMQPrefetchPolicy prefetch = new ActiveMQPrefetchPolicy();
+        prefetch.setAll(0);
+        factory.setPrefetchPolicy(prefetch);
+        conn.close();
+        conn = factory.createConnection();
+        conn.setClientID("priority");
+        conn.start();
+        sess = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
+
+        ActiveMQTopic topic = (ActiveMQTopic)sess.createTopic("TEST");
+        final String subName = "priorityDisconnect";
+        TopicSubscriber sub = sess.createDurableSubscriber(topic, subName);
+        sub.close();
+
+        ProducerThread producerThread = new ProducerThread(topic, 600, LOW_PRI);
+        producerThread.run();
+
+
+        sub = sess.createDurableSubscriber(topic, subName);
+        int count = 0;
+
+        for (;count < 300; count++) {
+            Message msg = sub.receive(15000);
+            assertNotNull("Message was null", msg);
+            assertEquals("high priority", LOW_PRI, msg.getJMSPriority());
+        }
+
+        producerThread.setMessagePriority(HIGH_PRI);
+        producerThread.setMessageCount(1);
+        producerThread.run();
+
+        for (;count < 400; count++) {
+            Message msg = sub.receive(15000);
+            assertNotNull("Message was null", msg);
+            assertEquals("high priority", LOW_PRI, msg.getJMSPriority());
+        }
+
+        Message msg = sub.receive(15000);
+        assertNotNull("Message was null", msg);
+        assertEquals("high priority", HIGH_PRI, msg.getJMSPriority());
+
+        for (;count < 600; count++) {
+            msg = sub.receive(15000);
+            assertNotNull("Message was null", msg);
+            assertEquals("high priority", LOW_PRI, msg.getJMSPriority());
+        }
+    }
+
 }

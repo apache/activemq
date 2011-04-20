@@ -32,7 +32,7 @@ import org.slf4j.LoggerFactory;
 public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor implements MessageRecoveryListener {
     private static final Logger LOG = LoggerFactory.getLogger(AbstractStoreCursor.class);
     protected final Destination regionDestination;
-    private final PendingList batchList;
+    protected final PendingList batchList;
     private Iterator<MessageReference> iterator = null;
     protected boolean batchResetNeeded = true;
     private boolean storeHasMessages = false;
@@ -102,7 +102,7 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
     }
     
     
-    public final void reset() {
+    public final synchronized void reset() {
         if (batchList.isEmpty()) {
             try {
                 fillBatch();
@@ -185,7 +185,7 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
                 if (LOG.isTraceEnabled()) {
                     LOG.trace(this + " - disabling cache"
                             + ", lastCachedId: " + lastCachedId
-                            + " current node Id: " + node.getMessageId());
+                            + " current node Id: " + node.getMessageId() + " batchList size: " + batchList.size());
                 }
                 setBatch(lastCachedId);
                 lastCachedId = null;

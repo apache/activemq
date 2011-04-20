@@ -447,7 +447,7 @@ public class Topic extends BaseDestination implements Task {
                 @Override
                 public void afterCommit() throws Exception {
                     // It could take while before we receive the commit
-                    // operration.. by that time the message could have
+                    // operation.. by that time the message could have
                     // expired..
                     if (broker.isExpired(message)) {
                         getDestinationStatistics().getExpired().increment();

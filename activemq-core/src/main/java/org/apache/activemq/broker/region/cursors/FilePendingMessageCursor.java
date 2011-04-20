@@ -290,15 +290,15 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
      */
     @Override
     public synchronized MessageReference next() {
-        Message message = (Message) iter.next();
-        last = message;
+        MessageReference reference = iter.next();
+        last = reference;
         if (!isDiskListEmpty()) {
             // got from disk
-            message.setRegionDestination(regionDestination);
-            message.setMemoryUsage(this.getSystemUsage().getMemoryUsage());
+            reference.getMessage().setRegionDestination(regionDestination);
+            reference.getMessage().setMemoryUsage(this.getSystemUsage().getMemoryUsage());
         }
-        message.incrementReferenceCount();
-        return message;
+        reference.incrementReferenceCount();
+        return reference;
     }
 
     /**

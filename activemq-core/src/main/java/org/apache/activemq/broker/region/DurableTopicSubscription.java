@@ -207,9 +207,11 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
     
     protected MessageDispatch createMessageDispatch(MessageReference node, Message message) {
         MessageDispatch md = super.createMessageDispatch(node, message);
-        Integer count = redeliveredMessages.get(node.getMessageId());
-        if (count != null) {
-            md.setRedeliveryCounter(count.intValue());
+        if (node != QueueMessageReference.NULL_MESSAGE) {
+            Integer count = redeliveredMessages.get(node.getMessageId());
+            if (count != null) {
+                md.setRedeliveryCounter(count.intValue());
+            }
         }
         return md;
     }

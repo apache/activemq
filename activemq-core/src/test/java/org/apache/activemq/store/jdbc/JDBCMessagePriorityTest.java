@@ -17,9 +17,13 @@
 
 package org.apache.activemq.store.jdbc;
 
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.Statement;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Vector;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import javax.jms.Connection;
 import javax.jms.DeliveryMode;
@@ -30,9 +34,11 @@ import javax.jms.Session;
 import javax.jms.TextMessage;
 import javax.jms.TopicSubscriber;
 import junit.framework.Test;
+import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.store.MessagePriorityTest;
 import org.apache.activemq.store.PersistenceAdapter;
+import org.apache.activemq.util.ThreadTracker;
 import org.apache.activemq.util.Wait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,10 +48,11 @@ public class JDBCMessagePriorityTest extends MessagePriorityTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(JDBCMessagePriorityTest.class);
     EmbeddedDataSource dataSource;
+    JDBCPersistenceAdapter jdbc;
 
     @Override
     protected PersistenceAdapter createPersistenceAdapter(boolean delete) throws Exception {
-        JDBCPersistenceAdapter jdbc = new JDBCPersistenceAdapter();
+        jdbc = new JDBCPersistenceAdapter();
         dataSource = new EmbeddedDataSource();
         dataSource.setDatabaseName("derbyDb");
         dataSource.setCreateDatabase("create");
@@ -136,10 +143,12 @@ public class JDBCMessagePriorityTest extends MessagePriorityTest {
         final int maxPriority = 5;
 
         final AtomicInteger[] messageCounts = new AtomicInteger[maxPriority];
+        final long[] messageIds = new long[maxPriority];
         Vector<ProducerThread> producers = new Vector<ProducerThread>();
         for (int priority = 0; priority < maxPriority; priority++) {
             producers.add(new ProducerThread(topic, MSG_NUM, priority));
             messageCounts[priority] = new AtomicInteger(0);
+            messageIds[priority] = 1l;
         }
 
         for (ProducerThread producer : producers) {
@@ -154,9 +163,12 @@ public class JDBCMessagePriorityTest extends MessagePriorityTest {
             LOG.debug("received i=" + i + ", m=" + (msg != null ?
                     msg.getJMSMessageID() + ", priority: " + msg.getJMSPriority()
                     : null));
+            assertNotNull("Message " + i + " was null, counts: " + Arrays.toString(messageCounts), msg);
             assertNull("no duplicate message failed on : " + msg.getJMSMessageID(), dups.put(msg.getJMSMessageID(), subName));
-            assertNotNull("Message " + i + " was null", msg);
             messageCounts[msg.getJMSPriority()].incrementAndGet();
+            assertEquals("message is in order : " + msg,
+                    messageIds[msg.getJMSPriority()],((ActiveMQMessage)msg).getMessageId().getProducerSequenceId());
+            messageIds[msg.getJMSPriority()]++;
             if (i > 0 && i % closeFrequency == 0) {
                 LOG.info("Closing durable sub.. on: " + i + ", counts: " + Arrays.toString(messageCounts));
                 sub.close();
@@ -271,6 +283,162 @@ public class JDBCMessagePriorityTest extends MessagePriorityTest {
 
         assertTrue("No duplicates : " + duplicates, duplicates.isEmpty());
         assertEquals("got all messages", TO_SEND * 2, count.get());
+    }
+
+    public void testCleanupPriorityDestination() throws Exception {
+        assertEquals("no messages pending", 0, messageTableCount());
+
+        ActiveMQTopic topic = (ActiveMQTopic) sess.createTopic("TEST");
+        final String subName = "priorityConcurrent";
+        Connection consumerConn = factory.createConnection();
+        consumerConn.setClientID("subName");
+        consumerConn.start();
+        Session consumerSession = consumerConn.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        TopicSubscriber sub = consumerSession.createDurableSubscriber(topic, subName);
+        sub.close();
+
+        MessageProducer messageProducer = sess.createProducer(topic);
+        Message message = sess.createTextMessage();
+        message.setJMSPriority(2);
+        messageProducer.send(message, DeliveryMode.PERSISTENT, message.getJMSPriority(), 0);
+        message.setJMSPriority(5);
+        messageProducer.send(message, DeliveryMode.PERSISTENT, message.getJMSPriority(), 0);
+
+        assertEquals("two messages pending", 2, messageTableCount());
+
+        sub = consumerSession.createDurableSubscriber(topic, subName);
+
+        message = sub.receive(5000);
+        assertEquals("got high priority", 5, message.getJMSPriority());
+
+        waitForAck(5);
+
+        for (int i=0; i<10; i++) {
+            jdbc.cleanup();
+        }
+        assertEquals("one messages pending", 1, messageTableCount());
+
+        message = sub.receive(5000);
+        assertEquals("got high priority", 2, message.getJMSPriority());
+
+        waitForAck(2);
+
+        for (int i=0; i<10; i++) {
+            jdbc.cleanup();
+        }
+        assertEquals("no messages pending", 0, messageTableCount());
+    }
+
+
+    public void testCleanupNonPriorityDestination() throws Exception {
+        assertEquals("no messages pending", 0, messageTableCount());
+
+        ActiveMQTopic topic = (ActiveMQTopic) sess.createTopic("TEST_CLEANUP_NO_PRIORITY");
+        final String subName = "subName";
+        Connection consumerConn = factory.createConnection();
+        consumerConn.setClientID("subName");
+        consumerConn.start();
+        Session consumerSession = consumerConn.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        TopicSubscriber sub = consumerSession.createDurableSubscriber(topic, subName);
+        sub.close();
+
+        MessageProducer messageProducer = sess.createProducer(topic);
+        Message message = sess.createTextMessage("ToExpire");
+        messageProducer.send(message, DeliveryMode.PERSISTENT, Message.DEFAULT_PRIORITY, 4000);
+
+        message = sess.createTextMessage("A");
+        messageProducer.send(message);
+        message = sess.createTextMessage("B");
+        messageProducer.send(message);
+        message = null;
+
+        assertEquals("three messages pending", 3, messageTableCount());
+
+        // let first message expire
+        TimeUnit.SECONDS.sleep(5);
+
+        sub = consumerSession.createDurableSubscriber(topic, subName);
+        message = sub.receive(5000);
+        assertNotNull("got message", message);
+        LOG.info("Got: " + message);
+
+        waitForAck(0, 1);
+
+        for (int i=0; i<10; i++) {
+            jdbc.cleanup();
+        }
+        assertEquals("one messages pending", 1, messageTableCount());
+
+        message = sub.receive(5000);
+        assertNotNull("got message two", message);
+        LOG.info("Got: " + message);
+
+        waitForAck(0, 2);
+
+        for (int i=0; i<10; i++) {
+            jdbc.cleanup();
+        }
+        assertEquals("no messages pending", 0, messageTableCount());
+    }
+
+    private int messageTableCount() throws Exception {
+        int count = -1;
+        java.sql.Connection c = dataSource.getConnection();
+        try {
+            PreparedStatement s = c.prepareStatement("SELECT COUNT(*) FROM ACTIVEMQ_MSGS");
+            ResultSet rs = s.executeQuery();
+            if (rs.next()) {
+                count = rs.getInt(1);
+            }
+        } finally {
+            if (c!=null) {
+                c.close();
+            }
+        }
+        return count;
+    }
+
+    private void waitForAck(final int priority) throws Exception {
+        waitForAck(priority, 0);
+    }
+
+    private void waitForAck(final int priority, final int minId) throws Exception {
+       assertTrue("got ack for " + priority, Wait.waitFor(new Wait.Condition() {
+           @Override
+           public boolean isSatisified() throws Exception {
+               int id = 0;
+               java.sql.Connection c = dataSource.getConnection();
+               try {
+                    PreparedStatement s = c.prepareStatement("SELECT LAST_ACKED_ID FROM ACTIVEMQ_ACKS WHERE PRIORITY=" + priority);
+                    ResultSet rs = s.executeQuery();
+                    if (rs.next()) {
+                        id = rs.getInt(1);
+                    }
+                } finally {
+                    if (c!=null) {
+                        c.close();
+                    }
+                }
+               return id>minId;
+           }
+       }));
+    }
+
+    private int messageTableDump() throws Exception {
+        int count = -1;
+        java.sql.Connection c = dataSource.getConnection();
+        try {
+            PreparedStatement s = c.prepareStatement("SELECT * FROM ACTIVEMQ_MSGS");
+            ResultSet rs = s.executeQuery();
+            if (rs.next()) {
+                count = rs.getInt(1);
+            }
+        } finally {
+            if (c!=null) {
+                c.close();
+            }
+        }
+        return count;
     }
 
     public static Test suite() {

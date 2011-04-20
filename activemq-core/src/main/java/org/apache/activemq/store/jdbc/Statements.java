@@ -56,7 +56,6 @@ public class Statements {
     private String findAllDestinationsStatement;
     private String removeAllMessagesStatement;
     private String removeAllSubscriptionsStatement;
-    private String deleteOldMessagesStatement;
     private String[] createSchemaStatements;
     private String[] dropSchemaStatements;
     private String lockCreateStatement;
@@ -379,33 +378,16 @@ public class Statements {
     public String getDeleteOldMessagesStatementWithPriority() {
         if (deleteOldMessagesStatementWithPriority == null) {
             deleteOldMessagesStatementWithPriority = "DELETE FROM " + getFullMessageTableName()
-                                         + " WHERE ( EXPIRATION<>0 AND EXPIRATION<?)"
-                                         + " OR (ID <= "
+                                         + " WHERE (PRIORITY=? AND ID <= "
                                          + "     ( SELECT min(" + getFullAckTableName() + ".LAST_ACKED_ID)"
                                          + "       FROM " + getFullAckTableName() + " WHERE "
                                          +          getFullAckTableName() + ".CONTAINER="
                                          +          getFullMessageTableName() + ".CONTAINER"
-                                         + "        AND " + getFullAckTableName() + ".PRIORITY=" + getFullMessageTableName() + ".PRIORITY )"
+                                         + "        AND " + getFullAckTableName() + ".PRIORITY=?)"
                                          + "   )";
         }
         return deleteOldMessagesStatementWithPriority;
     }
-
-    public String getDeleteOldMessagesStatement() {
-        if (deleteOldMessagesStatement == null) {
-            deleteOldMessagesStatement = "DELETE FROM " + getFullMessageTableName()
-                                         + " WHERE ( EXPIRATION<>0 AND EXPIRATION<?)"
-                                         + " OR (ID <= "
-                                         + "     ( SELECT min(" + getFullAckTableName() + ".LAST_ACKED_ID)"
-                                         + "       FROM " + getFullAckTableName() + " WHERE "
-                                         +          getFullAckTableName() + ".CONTAINER="
-                                         +          getFullMessageTableName() + ".CONTAINER )"
-                                         + "   )";
-
-        }
-        return deleteOldMessagesStatement;
-    }
-
 
     public String getLockCreateStatement() {
         if (lockCreateStatement == null) {
@@ -654,12 +636,8 @@ public class Statements {
         this.createSchemaStatements = createSchemaStatments;
     }
 
-    public void setDeleteOldMessagesStatement(String deleteOldMessagesStatment) {
-        this.deleteOldMessagesStatement = deleteOldMessagesStatment;
-    }
-
-    public void setDeleteOldMessagesStatementWithPriority(String deleteOldMessagesStatmentWithPriority) {
-        this.deleteOldMessagesStatementWithPriority = deleteOldMessagesStatmentWithPriority;
+    public void setDeleteOldMessagesStatementWithPriority(String deleteOldMessagesStatementWithPriority) {
+        this.deleteOldMessagesStatementWithPriority = deleteOldMessagesStatementWithPriority;
     }
 
     public void setDeleteSubscriptionStatement(String deleteSubscriptionStatment) {

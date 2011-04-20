@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
@@ -48,6 +49,8 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 //import org.apache.activemq.store.jdbc.JDBCPersistenceAdapter;
+import org.apache.activemq.broker.region.policy.StorePendingDurableSubscriberMessageStoragePolicy;
+import org.apache.activemq.command.MessageId;
 import org.apache.activemq.util.MessageIdList;
 import org.apache.activemq.util.Wait;
 //import org.apache.commons.dbcp.BasicDataSource;
@@ -113,7 +116,7 @@ public class ConcurrentProducerDurableConsumerTest extends TestSupport {
         });
 
 
-        double[] statsWithActive = produceMessages(destination, 300, 10, session, producer, addConsumerSignal);
+        double[] statsWithActive = produceMessages(destination, 500, 10, session, producer, addConsumerSignal);
 
         LOG.info(" with concurrent activate, ave: " + statsWithActive[1] + ", max: " + statsWithActive[0] + ", multiplier: " + (statsWithActive[0]/ statsWithActive[1]));
 
@@ -130,7 +133,7 @@ public class ConcurrentProducerDurableConsumerTest extends TestSupport {
         LOG.info("Ave time to first message =" + timeToFirstAccumulator/consumers.size());
 
         for (TimedMessageListener listener : consumers.values()) {
-            LOG.info("Ave batch receipt time: " + listener.waitForReceivedLimit(5000) + " max receipt: " + listener.maxReceiptTime);
+            LOG.info("Ave batch receipt time: " + listener.waitForReceivedLimit(10000) + " max receipt: " + listener.maxReceiptTime);
         }
 
         //assertTrue("max (" + statsWithActive[0] + ") within reasonable multiplier of ave (" + statsWithActive[1] + ")",
@@ -249,7 +252,9 @@ public class ConcurrentProducerDurableConsumerTest extends TestSupport {
             for (int j=0; j < toSend; j++) {
                 long singleSendstart = System.currentTimeMillis();
                 TextMessage msg = createTextMessage(session, "" + j);
-                producer.send(msg);
+                // rotate
+                int priority = ((int)count%10);
+                producer.send(msg, DeliveryMode.PERSISTENT, priority, 0);
                 max = Math.max(max, (System.currentTimeMillis() - singleSendstart));
                 if (++count % 500 == 0) {
                     if (addConsumerSignal != null) {
@@ -328,6 +333,12 @@ public class ConcurrentProducerDurableConsumerTest extends TestSupport {
         policy.setPrioritizedMessages(true);
         policy.setMaxPageSize(500);
 
+        StorePendingDurableSubscriberMessageStoragePolicy durableSubPending =
+                new StorePendingDurableSubscriberMessageStoragePolicy();
+        durableSubPending.setImmediatePriorityDispatch(true);
+        durableSubPending.setUseCache(true);
+        policy.setPendingDurableSubscriberPolicy(durableSubPending);
+
         PolicyMap policyMap = new PolicyMap();
         policyMap.setDefaultEntry(policy);
         brokerService.setDestinationPolicy(policyMap);
@@ -390,19 +401,27 @@ public class ConcurrentProducerDurableConsumerTest extends TestSupport {
         long batchReceiptAccumulator = 0;
         long maxReceiptTime = 0;
         AtomicLong count = new AtomicLong(0);
+        Map<Integer, MessageIdList> messageLists = new ConcurrentHashMap<Integer, MessageIdList>(new HashMap<Integer, MessageIdList>());
 
         @Override
         public void onMessage(Message message) {
             final long current = System.currentTimeMillis();
             final long duration = current - mark;
             receiptAccumulator += duration;
-            allMessagesList.onMessage(message);
+            int priority = 0;
+            try {
+                priority = message.getJMSPriority();
+            } catch (JMSException ignored) {}
+            if (!messageLists.containsKey(priority)) {
+                messageLists.put(priority, new MessageIdList());
+            }
+            messageLists.get(priority).onMessage(message);
             if (count.incrementAndGet() == 1) {
                 firstReceipt = duration;
                 firstReceiptLatch.countDown();
                 LOG.info("First receipt in " + firstReceipt + "ms");
             } else if (count.get() % batchSize == 0) {
-                LOG.info("Consumed " + batchSize + " in " + batchReceiptAccumulator + "ms");
+                LOG.info("Consumed " + count.get() + " in " + batchReceiptAccumulator + "ms" + ", priority:" + priority);
                 batchReceiptAccumulator=0;
             }
             maxReceiptTime = Math.max(maxReceiptTime, duration);
@@ -427,8 +446,35 @@ public class ConcurrentProducerDurableConsumerTest extends TestSupport {
                     throw new RuntimeException("Expired waiting for X messages, " + limit);
                 }
                 TimeUnit.SECONDS.sleep(2);
+                String missing = findFirstMissingMessage();
+                if (missing != null) {
+                    LOG.info("first missing = " + missing);
+                    throw new RuntimeException("We have a missing message. " + missing);
+                }
+
             }
             return receiptAccumulator/(limit/batchSize);
+        }
+
+        private String findFirstMissingMessage() {
+            MessageId current = new MessageId();
+            for (MessageIdList priorityList : messageLists.values()) {
+                MessageId previous = null;
+                for (String id : priorityList.getMessageIds()) {
+                    current.setValue(id);
+                    if (previous == null) {
+                        previous = current.copy();
+                    } else {
+                        if (current.getProducerSequenceId() - 1 != previous.getProducerSequenceId() &&
+                            current.getProducerSequenceId() - 10 !=  previous.getProducerSequenceId()) {
+                                return "Missing next after: " + previous + ", got: " + current;
+                        } else {
+                            previous = current.copy();
+                        }
+                    }
+                }
+            }
+            return null;
         }
     }
 

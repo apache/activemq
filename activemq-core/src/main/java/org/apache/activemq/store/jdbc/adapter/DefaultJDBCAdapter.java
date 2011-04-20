@@ -539,7 +539,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         cleanupExclusiveLock.readLock().lock();
         try {
             s = c.getConnection().prepareStatement(this.statements.getFindDurableSubMessagesByPriorityStatement());
-            s.setMaxRows(maxRows);
+            s.setMaxRows(Math.max(maxReturned * 2, maxRows));
             s.setString(1, destination.getQualifiedName());
             s.setString(2, clientId);
             s.setString(3, subscriptionName);
@@ -739,20 +739,18 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         }
     }
 
-    public void doDeleteOldMessages(TransactionContext c, boolean isPrioritizedMessages) throws SQLException, IOException {
+    int priorityIterator = 0;
+    public void doDeleteOldMessages(TransactionContext c) throws SQLException, IOException {
         PreparedStatement s = null;
         cleanupExclusiveLock.writeLock().lock();
         try {
-            if (isPrioritizedMessages) {
-                LOG.debug("Executing SQL: " + this.statements.getDeleteOldMessagesStatementWithPriority());
-                s = c.getConnection().prepareStatement(this.statements.getDeleteOldMessagesStatementWithPriority());
-            } else {
-                LOG.debug("Executing SQL: " + this.statements.getDeleteOldMessagesStatement());
-                s = c.getConnection().prepareStatement(this.statements.getDeleteOldMessagesStatement());
-            }
-            s.setLong(1, System.currentTimeMillis());
+            LOG.debug("Executing SQL: " + this.statements.getDeleteOldMessagesStatementWithPriority());
+            s = c.getConnection().prepareStatement(this.statements.getDeleteOldMessagesStatementWithPriority());
+            int priority = priorityIterator++%10;
+            s.setInt(1, priority);
+            s.setInt(2, priority);
             int i = s.executeUpdate();
-            LOG.debug("Deleted " + i + " old message(s).");
+            LOG.debug("Deleted " + i + " old message(s) at priority: " + priority);
         } finally {
             cleanupExclusiveLock.writeLock().unlock();
             close(s);
@@ -1005,7 +1003,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
             } catch (Throwable ignore) {
             }
         }
-    }  */  
+    }  */
 
     public long doGetLastProducerSequenceId(TransactionContext c, ProducerId id)
             throws SQLException, IOException {

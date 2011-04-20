@@ -34,6 +34,7 @@ import org.apache.activemq.kaha.Store;
  */
 public class StorePendingDurableSubscriberMessageStoragePolicy implements PendingDurableSubscriberMessageStoragePolicy {
     boolean immediatePriorityDispatch = true;
+    boolean useCache = true;
 
     public boolean isImmediatePriorityDispatch() {
         return immediatePriorityDispatch;
@@ -42,11 +43,20 @@ public class StorePendingDurableSubscriberMessageStoragePolicy implements Pendin
     /**
      * Ensure that new higher priority messages will get an immediate dispatch
      * rather than wait for the end of the current cursor batch.
+     * Useful when there is a large message backlog and intermittent high priority messages.
      *
      * @param immediatePriorityDispatch
      */
     public void setImmediatePriorityDispatch(boolean immediatePriorityDispatch) {
         this.immediatePriorityDispatch = immediatePriorityDispatch;
+    }
+
+    public boolean isUseCache() {
+        return useCache;
+    }
+
+    public void setUseCache(boolean useCache) {
+        this.useCache = useCache;
     }
 
     /**
@@ -61,6 +71,7 @@ public class StorePendingDurableSubscriberMessageStoragePolicy implements Pendin
      */
     public PendingMessageCursor getSubscriberPendingMessageCursor(Broker broker,String clientId, String name, int maxBatchSize, DurableTopicSubscription sub) {
         StoreDurableSubscriberCursor cursor = new StoreDurableSubscriberCursor(broker,clientId, name, maxBatchSize, sub);
+        cursor.setUseCache(isUseCache());
         cursor.setImmediatePriorityDispatch(isImmediatePriorityDispatch());
         return cursor;
     }

@@ -101,7 +101,8 @@ public class JDBCMessageStore extends AbstractMessageStore {
         // Get a connection and insert the message into the DB.
         TransactionContext c = persistenceAdapter.getTransactionContext(context);
         try {      
-            adapter.doAddMessage(c,sequenceId, messageId, destination, data, message.getExpiration(), message.getPriority());
+            adapter.doAddMessage(c,sequenceId, messageId, destination, data, message.getExpiration(),
+                    this.isPrioritizedMessages() ? message.getPriority() : 0);
         } catch (SQLException e) {
             JDBCPersistenceAdapter.log("JDBC Failure: ", e);
             throw IOExceptionSupport.create("Failed to broker message: " + messageId + " in container: " + e, e);

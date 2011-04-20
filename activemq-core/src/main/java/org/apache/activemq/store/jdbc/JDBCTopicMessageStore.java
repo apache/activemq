@@ -183,11 +183,11 @@ public class JDBCTopicMessageStore extends JDBCMessageStore implements TopicMess
         }
 
         public boolean recoverMessage(long sequenceId, byte[] data) throws Exception {
-            if (delegate.hasSpace()) {
+            if (delegate.hasSpace() && recoveredCount < maxMessages) {
                 Message msg = (Message) wireFormat.unmarshal(new ByteSequence(data));
                 msg.getMessageId().setBrokerSequenceId(sequenceId);
+                lastRecovered.recovered = sequenceId;
                 if (delegate.recoverMessage(msg)) {
-                    lastRecovered.recovered = sequenceId;
                     recoveredCount++;
                     return true;
                 }
@@ -236,7 +236,7 @@ public class JDBCTopicMessageStore extends JDBCMessageStore implements TopicMess
                     //Duration microDuration = new Duration("recoverNextMessages:loop");
                     adapter.doRecoverNextMessagesWithPriority(c, destination, clientId, subscriptionName,
                         entry.recovered, entry.priority, maxReturned, recoveredAwareListener);
-                    //microDuration.end(entry);
+                    //microDuration.end(new String(entry + " recoveredCount:" + recoveredAwareListener.recoveredCount));
                     if (recoveredAwareListener.stalled()) {
                         if (recoveredAwareListener.complete()) {
                             break;

@@ -114,7 +114,7 @@ final class NullMessageReference implements QueueMessageReference {
     }
 
     public boolean isExpired() {
-        throw new RuntimeException("not implemented");
+        return false;
     }
 
     public boolean isPersistent() {

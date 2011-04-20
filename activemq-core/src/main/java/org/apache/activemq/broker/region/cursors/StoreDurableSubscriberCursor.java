@@ -42,7 +42,6 @@ import org.slf4j.LoggerFactory;
 public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
 
     private static final Logger LOG = LoggerFactory.getLogger(StoreDurableSubscriberCursor.class);
-    private static final int UNKNOWN = -1;
     private final String clientId;
     private final String subscriberName;
     private final Map<Destination, TopicStorePrefetch> topics = new HashMap<Destination, TopicStorePrefetch>();
@@ -50,7 +49,6 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
     private final PendingMessageCursor nonPersistent;
     private PendingMessageCursor currentCursor;
     private final DurableTopicSubscription subscription;
-    private int cacheCurrentLowestPriority = UNKNOWN;
     private boolean immediatePriorityDispatch = true;
     /**
      * @param broker Broker for this cursor
@@ -125,6 +123,7 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
             tsp.setMessageAudit(getMessageAudit());
             tsp.setEnableAudit(isEnableAudit());
             tsp.setMemoryUsageHighWaterMark(getMemoryUsageHighWaterMark());
+            tsp.setUseCache(isUseCache());
             topics.put(destination, tsp);
             storePrefetches.add(tsp);
             if (isStarted()) {
@@ -196,29 +195,17 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
                 Destination dest = msg.getRegionDestination();
                 TopicStorePrefetch tsp = topics.get(dest);
                 if (tsp != null) {
-                    // cache can become high priority cache for immediate dispatch
-                    final int priority = msg.getPriority();
-                    if (isStarted() && this.prioritizedMessages && immediatePriorityDispatch && !tsp.isCacheEnabled()) {
-                        if (priority > tsp.getCurrentLowestPriority()) {
-                            if (LOG.isTraceEnabled()) {
-                                LOG.trace("enabling cache for cursor on high priority message " + priority
-                                        + ", current lowest: " + tsp.getCurrentLowestPriority());
-                            }
-                            tsp.setCacheEnabled(true);
-                            cacheCurrentLowestPriority = tsp.getCurrentLowestPriority();
-                        }
-                    } else if (cacheCurrentLowestPriority != UNKNOWN && priority <= cacheCurrentLowestPriority) {
-                        // go to the store to get next priority message as lower priority messages may be recovered
-                        // already and need to acked sequence order
-                        if (LOG.isTraceEnabled()) {
-                            LOG.trace("disabling/clearing cache for cursor on lower priority message "
-                                    + priority + ", tsp current lowest: " + tsp.getCurrentLowestPriority()
-                                    + " cache lowest: " + cacheCurrentLowestPriority);
-                        }
-                        tsp.setCacheEnabled(false);
-                        cacheCurrentLowestPriority = UNKNOWN;
-                    }
                     tsp.addMessageLast(node);
+                    if (prioritizedMessages && immediatePriorityDispatch && tsp.isPaging()) {
+                        if (msg.getPriority() > tsp.getLastRecoveredPriority()) {
+                            tsp.recoverMessage(node.getMessage(), true);
+                            if (LOG.isTraceEnabled()) {
+                                LOG.trace("cached high priority (" + msg.getPriority() + ") message:" +
+                                    msg.getMessageId() + ", current paged batch priority: " +
+                                    tsp.getLastRecoveredPriority() + ", cache size:" + tsp.batchList.size());
+                            }
+                        }
+                    }
                 }
             }
 
@@ -330,7 +317,6 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
         for (PendingMessageCursor tsp : storePrefetches) {
             tsp.gc();
         }
-        cacheCurrentLowestPriority = UNKNOWN;
     }
 
     @Override
