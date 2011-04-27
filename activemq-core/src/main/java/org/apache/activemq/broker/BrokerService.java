@@ -1465,6 +1465,13 @@ public class BrokerService implements Service {
      */
     public void setTempDataStore(PListStore tempDataStore) {
         this.tempDataStore = tempDataStore;
+        try {
+            tempDataStore.start();
+        } catch (Exception e) {
+            RuntimeException exception = new RuntimeException("Failed to start provided temp data store: " + tempDataStore, e);
+            LOG.error(exception.getLocalizedMessage(), e);
+            throw exception;
+        }
     }
 
     public int getPersistenceThreadPriority() {
