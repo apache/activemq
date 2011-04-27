@@ -36,7 +36,7 @@
         ACTIVEMQ_OPTS_MEMORY="-Xmx11g -Xms6g -Dorg.apache.activemq.UseDedicatedTaskRunner=false -Djava.util.logging.config.file=logging.properties -XX:+UseLargePages"
     -->
     <broker xmlns="http://activemq.apache.org/schema/core" brokerName="localhost" 
-        dataDirectory="${activemq.base}/data" destroyApplicationContextOnStop="true" deleteAllMessagesOnStartup="true"        
+        dataDirectory="${activemq.base}/data" deleteAllMessagesOnStartup="true"        
         advisorySupport="false"
         enableStatistics="false"
         schedulerSupport="false"

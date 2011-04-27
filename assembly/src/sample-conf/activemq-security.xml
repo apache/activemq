@@ -63,7 +63,7 @@
   </bean> 
   -->
 
-  <broker useJmx="true" persistent="false" xmlns="http://activemq.apache.org/schema/core" destroyApplicationContextOnStop="true">
+  <broker useJmx="true" persistent="false" xmlns="http://activemq.apache.org/schema/core" >
 
     <managementContext>
         <managementContext createConnector="true">
