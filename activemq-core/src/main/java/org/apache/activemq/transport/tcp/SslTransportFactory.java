@@ -88,34 +88,15 @@ public class SslTransportFactory extends TcpTransportFactory {
     }
 
     /**
-     * Overriding to allow for proper configuration through reflection.
+     * Overriding to allow for proper configuration through reflection but delegate to get common
+     * configuration
      */
     public Transport compositeConfigure(Transport transport, WireFormat format, Map options) {
 
         SslTransport sslTransport = (SslTransport)transport.narrow(SslTransport.class);
         IntrospectionSupport.setProperties(sslTransport, options);
 
-        Map<String, Object> socketOptions = IntrospectionSupport.extractProperties(options, "socket.");
-
-        sslTransport.setSocketOptions(socketOptions);
-
-        if (sslTransport.isTrace()) {
-            try {
-                transport = TransportLoggerFactory.getInstance().createTransportLogger(transport,
-                        sslTransport.getLogWriterName(), sslTransport.isDynamicManagement(), sslTransport.isStartLogging(), sslTransport.getJmxPort());
-            } catch (Throwable e) {
-                LOG.error("Could not create TransportLogger object for: " + sslTransport.getLogWriterName() + ", reason: " + e, e);
-            }
-        }
-
-        transport = new InactivityMonitor(transport, format);
-
-        // Only need the WireFormatNegotiator if using openwire
-        if (format instanceof OpenWireFormat) {
-            transport = new WireFormatNegotiator(transport, (OpenWireFormat)format, sslTransport.getMinmumWireFormatVersion());
-        }
-
-        return transport;
+        return super.compositeConfigure(transport, format, options);
     }
 
     /**

@@ -16,6 +16,8 @@
  */
 package org.apache.activemq.transport.tcp;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import junit.framework.Test;
 import junit.textui.TestRunner;
 import org.apache.activemq.transport.TransportBrokerTestSupport;
@@ -28,7 +30,12 @@ public class SslTransportBrokerTest extends TransportBrokerTestSupport {
     public static final String TRUST_KEYSTORE = "src/test/resources/client.keystore";
 
     protected String getBindLocation() {
-        return "ssl://localhost:0";
+        return "ssl://localhost:0?transport.soWriteTimeout=20000";
+    }
+
+    @Override
+    protected URI getBindURI() throws URISyntaxException {
+        return new URI("ssl://localhost:0?soWriteTimeout=20000");
     }
 
     protected void setUp() throws Exception {
