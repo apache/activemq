@@ -136,7 +136,26 @@ public class DiscoveryTransportNoBrokerTest extends CombinationTestSupport {
         assertTrue("unable to add parameter to discovered service", parameters.containsKey(extraParameterName));
         assertEquals("incorrect value for parameter added to discovered service", parameters.get(extraParameterName), extraParameterValue);
     }
-    
+
+    public void testSetDiscoveredStaticBrokerProperties() throws Exception {
+        final String extraParameterName = "connectionTimeout";
+        final String extraParameterValue = "3000";
+        final URI uri = new URI("discovery:(static:tcp://localhost:61616)?initialReconnectDelay=100&"
+                + DiscoveryListener.DISCOVERED_OPTION_PREFIX + extraParameterName + "=" + extraParameterValue);
+        CompositeData compositeData = URISupport.parseComposite(uri);
+
+        StubCompositeTransport compositeTransport = new StubCompositeTransport();
+        DiscoveryTransport discoveryTransport = DiscoveryTransportFactory.createTransport(compositeTransport, compositeData, compositeData.getParameters());
+
+        discoveryTransport.start();
+        assertEquals("expected added URI after discovery event", 1, compositeTransport.getTransportURIs().length);
+
+        URI discoveredServiceURI = compositeTransport.getTransportURIs()[0];
+        Map<String, String> parameters = URISupport.parseParameters(discoveredServiceURI);
+        assertTrue("unable to add parameter to discovered service", parameters.containsKey(extraParameterName));
+        assertEquals("incorrect value for parameter added to discovered service", parameters.get(extraParameterName), extraParameterValue);
+    }
+
     public void testAddRemoveDiscoveredBroker() throws Exception {
         final URI uri = new URI("discovery:(multicast://default)?initialReconnectDelay=100&connectionTimeout=3000");        
         CompositeData compositeData = URISupport.parseComposite(uri);
