@@ -1103,9 +1103,11 @@ public class BrokerService implements Service {
         for (TransportConnector connector : transportConnectors) {
             try {
                 URI uri = connector.getConnectUri();
-                String scheme = uri.getScheme();
-                if (scheme != null) {
-                    answer.put(scheme.toLowerCase(), uri.toString());
+                if (uri != null) {
+                    String scheme = uri.getScheme();
+                    if (scheme != null) {
+                        answer.put(scheme.toLowerCase(), uri.toString());
+                    }
                 }
             } catch (Exception e) {
                 LOG.debug("Failed to read URI to build transportURIsAsMap", e);
