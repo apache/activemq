@@ -19,12 +19,12 @@ package org.apache.activemq.broker;
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
+import org.apache.activemq.broker.region.policy.PolicyEntry;
+import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.util.IOHelper;
 
 public class BrokerRestartTestSupport extends BrokerTestSupport {
-
-    private PersistenceAdapter persistenceAdapter;
 
     @Override
     protected BrokerService createBroker() throws Exception {
@@ -33,9 +33,8 @@ public class BrokerRestartTestSupport extends BrokerTestSupport {
         if (dir != null) {
             IOHelper.deleteChildren(dir);
         }
-        //broker.setPersistent(false);
         broker.setDeleteAllMessagesOnStartup(true);
-        persistenceAdapter = broker.getPersistenceAdapter();
+        configureBroker(broker);
         return broker;
     }
 
@@ -45,8 +44,11 @@ public class BrokerRestartTestSupport extends BrokerTestSupport {
      */
     protected BrokerService createRestartedBroker() throws Exception {
         BrokerService broker = new BrokerService();
-        //broker.setPersistenceAdapter(persistenceAdapter);
+        configureBroker(broker);
         return broker;
+    }
+
+    protected void configureBroker(BrokerService broker) {
     }
 
     /**

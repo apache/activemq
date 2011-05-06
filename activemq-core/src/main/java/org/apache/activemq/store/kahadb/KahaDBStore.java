@@ -461,6 +461,9 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
                         for (Iterator<Entry<Long, MessageKeys>> iterator = sd.orderIndex.iterator(tx); iterator
                                 .hasNext();) {
                             Entry<Long, MessageKeys> entry = iterator.next();
+                            if (ackedAndPrepared.contains(entry.getValue().messageId)) {
+                                continue;
+                            }
                             Message msg = loadMessage(entry.getValue().location);
                             listener.recoverMessage(msg);
                         }
@@ -483,6 +486,9 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
                         for (Iterator<Entry<Long, MessageKeys>> iterator = sd.orderIndex.iterator(tx);
                              listener.hasSpace() && iterator.hasNext(); ) {
                             entry = iterator.next();
+                            if (ackedAndPrepared.contains(entry.getValue().messageId)) {
+                                continue;
+                            }
                             Message msg = loadMessage(entry.getValue().location);
                             listener.recoverMessage(msg);
                             counter++;

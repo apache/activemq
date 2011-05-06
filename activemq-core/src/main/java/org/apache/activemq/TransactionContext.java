@@ -135,17 +135,21 @@ public class TransactionContext implements XAResource {
             return;
         }
 
+        Throwable firstException = null;
         int size = synchronizations.size();
-        try {
-            for (int i = 0; i < size; i++) {
+        for (int i = 0; i < size; i++) {
+            try {
                 synchronizations.get(i).afterRollback();
+            } catch (Throwable t) {
+                LOG.debug("Exception from afterRollback on " + synchronizations.get(i), t);
+                if (firstException == null) {
+                    firstException = t;
+                }
             }
-        } catch (JMSException e) {
-            throw e;
-        } catch (Throwable e) {
-            throw JMSExceptionSupport.create(e);
-        } finally {
-            synchronizations = null;
+        }
+        synchronizations = null;
+        if (firstException != null) {
+            throw JMSExceptionSupport.create(firstException);
         }
     }
 
@@ -154,17 +158,21 @@ public class TransactionContext implements XAResource {
             return;
         }
 
+        Throwable firstException = null;
         int size = synchronizations.size();
-        try {
-            for (int i = 0; i < size; i++) {
+        for (int i = 0; i < size; i++) {
+            try {
                 synchronizations.get(i).afterCommit();
+            } catch (Throwable t) {
+                LOG.debug("Exception from afterCommit on " + synchronizations.get(i), t);
+                if (firstException == null) {
+                    firstException = t;
+                }
             }
-        } catch (JMSException e) {
-            throw e;
-        } catch (Throwable e) {
-            throw JMSExceptionSupport.create(e);
-        } finally {
-            synchronizations = null;
+        }
+        synchronizations = null;
+        if (firstException != null) {
+            throw JMSExceptionSupport.create(firstException);
         }
     }
 
@@ -528,7 +536,11 @@ public class TransactionContext implements XAResource {
             List<TransactionContext> l = ENDED_XA_TRANSACTION_CONTEXTS.remove(x);
             if (l != null && !l.isEmpty()) {
                 for (TransactionContext ctx : l) {
-                    ctx.afterCommit();
+                    try {
+                        ctx.afterCommit();
+                    } catch (Exception ignored) {
+                        LOG.debug("ignoring exception from after completion on ended transaction: " + ignored, ignored);
+                    }
                 }
             }
 

@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.command;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import javax.transaction.xa.Xid;
 import org.apache.activemq.util.HexSupport;
@@ -34,6 +35,7 @@ public class XATransactionId extends TransactionId implements Xid, Comparable {
 
     private transient int hash;
     private transient String transactionKey;
+    private transient ArrayList<MessageAck> preparedAcks;
 
     public XATransactionId() {
     }
@@ -50,8 +52,17 @@ public class XATransactionId extends TransactionId implements Xid, Comparable {
 
     public synchronized String getTransactionKey() {
         if (transactionKey == null) {
-            transactionKey = "XID:" + formatId + ":" + HexSupport.toHexFromBytes(globalTransactionId) + ":"
-                             + HexSupport.toHexFromBytes(branchQualifier);
+            StringBuffer s = new StringBuffer();
+            s.append("XID:[globalId=");
+            for (int i = 0; i < globalTransactionId.length; i++) {
+                s.append(Integer.toHexString(globalTransactionId[i]));
+            }
+            s.append(",branchId=");
+            for (int i = 0; i < branchQualifier.length; i++) {
+                s.append(Integer.toHexString(branchQualifier[i]));
+            }
+            s.append("]");
+            transactionKey = s.toString();
         }
         return transactionKey;
     }
@@ -141,4 +152,11 @@ public class XATransactionId extends TransactionId implements Xid, Comparable {
         return getTransactionKey().compareTo(xid.getTransactionKey());
     }
 
+    public void setPreparedAcks(ArrayList<MessageAck> preparedAcks) {
+        this.preparedAcks = preparedAcks;
+    }
+
+    public ArrayList<MessageAck> getPreparedAcks() {
+        return preparedAcks;
+    }
 }

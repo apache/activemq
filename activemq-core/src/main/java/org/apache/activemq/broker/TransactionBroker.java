@@ -17,13 +17,21 @@
 package org.apache.activemq.broker;
 
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.jms.JMSException;
 import javax.transaction.xa.XAException;
 
 import org.apache.activemq.ActiveMQMessageAudit;
+import org.apache.activemq.broker.region.Destination;
+import org.apache.activemq.broker.region.Queue;
+import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.command.BaseCommand;
 import org.apache.activemq.command.ConnectionInfo;
 import org.apache.activemq.command.LocalTransactionId;
 import org.apache.activemq.command.Message;
@@ -90,13 +98,15 @@ public class TransactionBroker extends BrokerFilter {
                 public void recover(XATransactionId xid, Message[] addedMessages, MessageAck[] aks) {
                     try {
                         beginTransaction(context, xid);
+                        Transaction transaction = getTransaction(context, xid, false);
                         for (int i = 0; i < addedMessages.length; i++) {
-                            send(producerExchange, addedMessages[i]);
+                            kickDestinationOnCompletion(context, transaction, addedMessages[i].getDestination(), addedMessages[i]);
                         }
                         for (int i = 0; i < aks.length; i++) {
-                            acknowledge(consumerExchange, aks[i]);
+                            kickDestinationOnCompletion(context, transaction, aks[i].getDestination(), aks[i]);
                         }
-                        prepareTransaction(context, xid);
+                        transaction.setState(Transaction.PREPARED_STATE);
+                        LOG.debug("recovered prepared transaction: " + transaction.getTransactionId());
                     } catch (Throwable e) {
                         throw new WrappedException(e);
                     }
@@ -107,6 +117,64 @@ public class TransactionBroker extends BrokerFilter {
             throw IOExceptionSupport.create("Recovery Failed: " + cause.getMessage(), cause);
         }
         next.start();
+    }
+
+    private void kickDestinationOnCompletion(ConnectionContext context, Transaction transaction,
+                                             ActiveMQDestination amqDestination, BaseCommand ack) throws Exception {
+        Destination destination =  addDestination(context, amqDestination, false);
+        registerSync(destination, transaction, ack);
+    }
+
+    private void registerSync(Destination destination, Transaction transaction, BaseCommand command) {
+        if (destination instanceof Queue) {
+            Synchronization sync = new PreparedDestinationCompletion((Queue) destination, command.isMessage());
+            // ensure one per destination in the list
+            transaction.removeSynchronization(sync);
+            transaction.addSynchronization(sync);
+        }
+    }
+
+    static class PreparedDestinationCompletion extends Synchronization {
+        final Queue queue;
+        final boolean messageSend;
+        public PreparedDestinationCompletion(final Queue queue, boolean messageSend) {
+            this.queue = queue;
+            // rollback relevant to acks, commit to sends
+            this.messageSend = messageSend;
+        }
+
+        @Override
+        public int hashCode() {
+            return System.identityHashCode(queue) +
+                    System.identityHashCode(Boolean.valueOf(messageSend));
+        }
+
+        @Override
+        public boolean equals(Object other) {
+            return other instanceof PreparedDestinationCompletion &&
+                    queue.equals(((PreparedDestinationCompletion) other).queue) &&
+                    messageSend == ((PreparedDestinationCompletion) other).messageSend;
+        }
+
+        @Override
+        public void afterRollback() throws Exception {
+            if (!messageSend) {
+                queue.clearPendingMessages();
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("cleared pending from afterRollback : " + queue);
+                }
+            }
+        }
+
+        @Override
+        public void afterCommit() throws Exception {
+            if (messageSend) {
+                queue.clearPendingMessages();
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("cleared pending from afterCommit : " + queue);
+                }
+            }
+        }
     }
 
     public void stop() throws Exception {
@@ -135,7 +203,7 @@ public class TransactionBroker extends BrokerFilter {
         XATransactionId rc[] = new XATransactionId[txs.size()];
         txs.toArray(rc);
         if (LOG.isDebugEnabled()) {
-            LOG.debug("prepared transacton list size: " + rc.length);
+            LOG.debug("prepared transaction list size: " + rc.length);
         }
         return rc;
     }
@@ -253,7 +321,7 @@ public class TransactionBroker extends BrokerFilter {
             // first find all txs that belongs to the connection
             ArrayList<XATransaction> txs = new ArrayList<XATransaction>();
             for (XATransaction tx : xaTransactions.values()) {
-                if (tx.getConnectionId().equals(info.getConnectionId()) && !tx.isPrepared()) {
+                if (tx.getConnectionId() != null && tx.getConnectionId().equals(info.getConnectionId()) && !tx.isPrepared()) {
                     txs.add(tx);
                 }
             }

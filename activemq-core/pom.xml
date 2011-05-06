@@ -437,10 +437,6 @@
             <!--  these seem to fail only in m2 -->
             <!--<exclude>**/TransactedTopicMasterSlaveTest.*</exclude>-->
 
-            <!-- Kaha in flux - removing tests -->
-            <exclude>**/KahaDBStoreXARecoveryBrokerTest.*</exclude>
-            <exclude>**/KahaDBStoreRecoveryBrokerTest.*</exclude>
-
             <!-- Multicast and UDP based tests fail on GBuild -->
             <exclude>**/PeerTransportTest.*</exclude>
             <exclude>**/MulticastTransportTest.*</exclude>

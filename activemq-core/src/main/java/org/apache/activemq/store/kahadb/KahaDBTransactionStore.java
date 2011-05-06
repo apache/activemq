@@ -26,7 +26,6 @@ import java.util.concurrent.CancellationException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
-import javax.transaction.xa.XAException;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
@@ -268,6 +267,7 @@ public class KahaDBTransactionStore implements TransactionStore {
                 // ensure message order w.r.t to cursor and store for setBatch()
                 synchronized (this) {
                     theStore.store(new KahaCommitCommand().setTransactionInfo(info), true, preCommit, postCommit);
+                    forgetRecoveredAcks(txid);
                 }
             }
         }else {
@@ -283,8 +283,16 @@ public class KahaDBTransactionStore implements TransactionStore {
         if (txid.isXATransaction() || theStore.isConcurrentStoreAndDispatchTransactions() == false) {
             KahaTransactionInfo info = getTransactionInfo(txid);
             theStore.store(new KahaRollbackCommand().setTransactionInfo(info), false, null, null);
+            forgetRecoveredAcks(txid);
         } else {
             inflightTransactions.remove(txid);
+        }
+    }
+
+    protected void forgetRecoveredAcks(TransactionId txid) throws IOException {
+        if (txid.isXATransaction()) {
+            XATransactionId xaTid = ((XATransactionId) txid);
+            theStore.forgetRecoveredAcks(xaTid.getPreparedAcks());
         }
     }
 
@@ -295,8 +303,6 @@ public class KahaDBTransactionStore implements TransactionStore {
     }
 
     public synchronized void recover(TransactionRecoveryListener listener) throws IOException {
-        // All the inflight transactions get rolled back..
-        // inflightTransactions.clear();
         for (Map.Entry<TransactionId, List<Operation>> entry : theStore.preparedTransactions.entrySet()) {
             XATransactionId xid = (XATransactionId) entry.getKey();
             ArrayList<Message> messageList = new ArrayList<Message>();
@@ -320,6 +326,8 @@ public class KahaDBTransactionStore implements TransactionStore {
             MessageAck[] acks = new MessageAck[ackList.size()];
             messageList.toArray(addedMessages);
             ackList.toArray(acks);
+            xid.setPreparedAcks(ackList);
+            theStore.trackRecoveredAcks(ackList);
             listener.recover(xid, addedMessages, acks);
         }
     }

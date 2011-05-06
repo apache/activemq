@@ -21,8 +21,11 @@ import java.io.IOException;
 import javax.jms.ConnectionFactory;
 import javax.jms.Session;
 import javax.jms.JMSException;
+import javax.transaction.SystemException;
 import javax.transaction.TransactionManager;
 
+import javax.transaction.xa.XAResource;
+import org.apache.geronimo.transaction.manager.NamedXAResourceFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.activemq.ActiveMQConnectionFactory;
@@ -116,16 +119,51 @@ public class ActiveMQResourceManager {
                     rm.getResourceName() != null && !"".equals(rm.getResourceName());
         }
 
-        public static boolean recover(ActiveMQResourceManager rm) throws IOException {
+        public static boolean recover(final ActiveMQResourceManager rm) throws IOException {
             if (isRecoverable(rm)) {
                 try {
-                    ActiveMQConnectionFactory connFactory = (ActiveMQConnectionFactory) rm.getConnectionFactory();
+                    final ActiveMQConnectionFactory connFactory = (ActiveMQConnectionFactory) rm.getConnectionFactory();
                     ActiveMQConnection activeConn = (ActiveMQConnection)connFactory.createConnection();
-                    ActiveMQSession session = (ActiveMQSession)activeConn.createSession(true, Session.SESSION_TRANSACTED);
+                    final ActiveMQSession session = (ActiveMQSession)activeConn.createSession(true, Session.SESSION_TRANSACTED);
                     NamedXAResource namedXaResource = new WrapperNamedXAResource(session.getTransactionContext(), rm.getResourceName());
 
                     RecoverableTransactionManager rtxManager = (RecoverableTransactionManager) rm.getTransactionManager();
-                    rtxManager.recoverResourceManager(namedXaResource);
+                    rtxManager.registerNamedXAResourceFactory(new NamedXAResourceFactory() {
+
+                        @Override
+                        public String getName() {
+                            return rm.getResourceName();
+                        }
+
+                        @Override
+                        public NamedXAResource getNamedXAResource() throws SystemException {
+                            try {
+                                final ActiveMQConnection activeConn = (ActiveMQConnection)connFactory.createConnection();
+                                final ActiveMQSession session = (ActiveMQSession)activeConn.createSession(true, Session.SESSION_TRANSACTED);
+                                activeConn.start();
+                                LOGGER.debug("new namedXAResource's connection: " + activeConn);
+
+                                return new ConnectionAndWrapperNamedXAResource(session.getTransactionContext(), getName(), activeConn);
+                            } catch (Exception e) {
+                                SystemException se =  new SystemException("Failed to create ConnectionAndWrapperNamedXAResource, " + e.getLocalizedMessage());
+                                se.initCause(e);
+                                LOGGER.error(se.getLocalizedMessage(), se);
+                                throw se;
+                            }
+                        }
+
+                        @Override
+                        public void returnNamedXAResource(NamedXAResource namedXaResource) {
+                            if (namedXaResource instanceof ConnectionAndWrapperNamedXAResource) {
+                                try {
+                                    LOGGER.debug("closing returned namedXAResource's connection: " + ((ConnectionAndWrapperNamedXAResource)namedXaResource).connection);
+                                    ((ConnectionAndWrapperNamedXAResource)namedXaResource).connection.close();
+                                } catch (Exception ignored) {
+                                    LOGGER.debug("failed to close returned namedXAResource: " + namedXaResource, ignored);
+                                }
+                            }
+                        }
+                    });
                     return true;
                 } catch (JMSException e) {
                   throw IOExceptionSupport.create(e);
@@ -136,4 +174,11 @@ public class ActiveMQResourceManager {
         }
     }
 
+    public static class ConnectionAndWrapperNamedXAResource extends WrapperNamedXAResource {
+        final ActiveMQConnection connection;
+        public ConnectionAndWrapperNamedXAResource(XAResource xaResource, String name, ActiveMQConnection connection) {
+            super(xaResource, name);
+            this.connection = connection;
+        }
+    }
 }

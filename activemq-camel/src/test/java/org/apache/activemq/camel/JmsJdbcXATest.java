@@ -19,7 +19,6 @@ package org.apache.activemq.camel;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 import javax.jms.Connection;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
@@ -33,18 +32,19 @@ import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.util.Wait;
 import org.apache.camel.spring.SpringTestSupport;
+import org.apache.commons.dbcp.BasicDataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.enhydra.jdbc.pool.StandardXAPoolDataSource;
 import org.springframework.context.support.AbstractXmlApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 /**
- *  shows broker heuristic rollback (no prepare memory), hence duplicate message delivery
+ *  shows broker 'once only delivery' and recovery with XA
  */
 public class JmsJdbcXATest extends SpringTestSupport {
     private static final Logger LOG = LoggerFactory.getLogger(JmsJdbcXATest.class);
     BrokerService broker = null;
+    int messageCount;
 
     public java.sql.Connection initDb() throws Exception {
         String createStatement =
@@ -55,9 +55,7 @@ public class JmsJdbcXATest extends SpringTestSupport {
                         "messageContent varchar(2048) NOT NULL, " +
                         "PRIMARY KEY (id) )";
 
-        java.sql.Connection conn = null;
-        StandardXAPoolDataSource pool = getMandatoryBean(StandardXAPoolDataSource.class, "jdbcEnhydraXaDataSource");
-        conn = pool.getConnection();
+        java.sql.Connection conn = getJDBCConnection();
         try {
             conn.createStatement().execute(createStatement);
         } catch (SQLException alreadyExists) {
@@ -73,6 +71,11 @@ public class JmsJdbcXATest extends SpringTestSupport {
         return conn;
     }
 
+    private java.sql.Connection getJDBCConnection() throws Exception {
+        BasicDataSource dataSource = getMandatoryBean(BasicDataSource.class, "managedDataSourceWithRecovery");
+        return dataSource.getConnection();
+    }
+
     private int dumpDb(java.sql.Connection jdbcConn) throws Exception {
         int count = 0;
         ResultSet resultSet = jdbcConn.createStatement().executeQuery("SELECT * FROM SCP_INPUT_MESSAGES");
@@ -86,10 +89,86 @@ public class JmsJdbcXATest extends SpringTestSupport {
         return count;
     }
 
-    public void testRecovery() throws Exception {
+    public void testRecoveryCommit() throws Exception {
+        java.sql.Connection jdbcConn = initDb();
 
-        broker = createBroker(true);
-        broker.setPlugins(new BrokerPlugin[]{
+        sendJMSMessageToKickOffRoute();
+        LOG.info("waiting for route to kick in, it will kill the broker on first 2pc commit");
+        // will be stopped by the plugin on first 2pc commit
+        broker.waitUntilStopped();
+        assertEquals("message in db, commit to db worked", 1, dumpDb(jdbcConn));
+
+        LOG.info("Broker stopped, restarting...");
+        broker = createBroker(false);
+        broker.start();
+        broker.waitUntilStarted();
+        assertEquals("pending transactions", 1, broker.getBroker().getPreparedTransactions(null).length);
+
+        // TM stays actively committing first message ack which won't get redelivered - xa once only delivery
+        LOG.info("waiting for recovery to complete");
+        assertTrue("recovery complete in time", Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                return broker.getBroker().getPreparedTransactions(null).length == 0;
+            }
+        }));
+        // verify recovery complete
+        assertEquals("recovery complete", 0, broker.getBroker().getPreparedTransactions(null).length);
+
+        final java.sql.Connection freshConnection = getJDBCConnection();
+        assertTrue("did not get replay", Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                return 1 == dumpDb(freshConnection);
+            }
+        }));
+        assertEquals("still one message in db", 1, dumpDb(freshConnection));
+
+        // let once complete ok
+        sendJMSMessageToKickOffRoute();
+
+        assertTrue("got second message", Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                return 2 == dumpDb(freshConnection);
+            }
+        }));
+        assertEquals("two messages in db", 2, dumpDb(freshConnection));
+    }
+
+    private void sendJMSMessageToKickOffRoute() throws Exception {
+        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("vm://testXA");
+        factory.setWatchTopicAdvisories(false);
+        Connection connection = factory.createConnection();
+        connection.start();
+        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        MessageProducer producer = session.createProducer(new ActiveMQQueue("scp_transacted"));
+        TextMessage message = session.createTextMessage("Some Text, messageCount:" + messageCount++);
+        message.setJMSCorrelationID("pleaseCorrelate");
+        producer.send(message);
+        connection.close();
+    }
+
+    private BrokerService createBroker(boolean deleteAllMessages) throws Exception {
+        BrokerService brokerService = new BrokerService();
+        brokerService.setDeleteAllMessagesOnStartup(deleteAllMessages);
+        brokerService.setBrokerName("testXA");
+        brokerService.setAdvisorySupport(false);
+        brokerService.setUseJmx(false);
+        brokerService.setDataDirectory("target/data");
+        brokerService.addConnector("tcp://0.0.0.0:61616");
+        return brokerService;
+    }
+
+    @Override
+    protected AbstractXmlApplicationContext createApplicationContext() {
+
+        deleteDirectory("target/data/howl");
+
+        // make broker available to recovery processing on app context start
+        try {
+            broker = createBroker(true);
+            broker.setPlugins(new BrokerPlugin[]{
                 new BrokerPluginSupport() {
                     @Override
                     public void commitTransaction(ConnectionContext context,
@@ -113,54 +192,12 @@ public class JmsJdbcXATest extends SpringTestSupport {
                         }
                     }
                 }
-        });
-        broker.start();
+            });
+            broker.start();
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to start broker", e);
+        }
 
-        final java.sql.Connection jdbcConn = initDb();
-
-        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("vm://testXA");
-        factory.setWatchTopicAdvisories(false);
-        Connection connection = factory.createConnection();
-        connection.start();
-        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        MessageProducer producer = session.createProducer(new ActiveMQQueue("scp_transacted"));
-        TextMessage message = session.createTextMessage("Some Text");
-        message.setJMSCorrelationID("pleaseCorrelate");
-        producer.send(message);
-
-        LOG.info("waiting for route to kick in, it will kill the broker on first 2pc commit");
-        // will be stopped by the plugin on first 2pc commit
-        broker.waitUntilStopped();
-        assertEquals("message in db, commit to db worked", 1, dumpDb(jdbcConn));
-
-        LOG.info("Broker stopped, restarting...");
-        broker = createBroker(false);
-        broker.start();
-        broker.waitUntilStarted();
-
-        LOG.info("waiting for completion or route with replayed message");
-        assertTrue("got a second message in the db", Wait.waitFor(new Wait.Condition() {
-            @Override
-            public boolean isSatisified() throws Exception {
-                return 2 == dumpDb(jdbcConn);
-            }
-        }));
-        assertEquals("message in db", 2, dumpDb(jdbcConn));
-    }
-
-    private BrokerService createBroker(boolean deleteAllMessages) throws Exception {
-        BrokerService brokerService = new BrokerService();
-        brokerService.setDeleteAllMessagesOnStartup(deleteAllMessages);
-        brokerService.setBrokerName("testXA");
-        brokerService.setAdvisorySupport(false);
-        brokerService.setUseJmx(false);
-        brokerService.setDataDirectory("target/data");
-        brokerService.addConnector("tcp://0.0.0.0:61616");
-        return brokerService;
-    }
-
-    @Override
-    protected AbstractXmlApplicationContext createApplicationContext() {
         return new ClassPathXmlApplicationContext("org/apache/activemq/camel/jmsXajdbc.xml");
     }
 }

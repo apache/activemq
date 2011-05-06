@@ -56,13 +56,16 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
             clear();
             super.start();      
             resetBatch();
-            this.size = getStoreSize();
-            this.storeHasMessages=this.size > 0;
+            resetSize();
             setCacheEnabled(!this.storeHasMessages&&useCache);
         } 
     }
-    
-    
+
+    protected void resetSize() {
+        this.size = getStoreSize();
+        this.storeHasMessages=this.size > 0;
+    }
+
     public final synchronized void stop() throws Exception {
         resetBatch();
         super.stop();
@@ -237,6 +240,7 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
         batchList.clear();
         clearIterator(false);
         batchResetNeeded = true;
+        resetSize();
         setCacheEnabled(false);
     }
 
@@ -287,8 +291,9 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
         return size;
     }
 
+    @Override
     public String toString() {
-        return regionDestination.getActiveMQDestination().getPhysicalName() + ",batchResetNeeded=" + batchResetNeeded
+        return super.toString() + ":" + regionDestination.getActiveMQDestination().getPhysicalName() + ",batchResetNeeded=" + batchResetNeeded
                     + ",storeHasMessages=" + this.storeHasMessages + ",size=" + this.size + ",cacheEnabled=" + isCacheEnabled();
     }
     

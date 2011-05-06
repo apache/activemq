@@ -33,6 +33,9 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
+import javax.net.ssl.SSLServerSocket;
+import javax.net.ssl.SSLServerSocketFactory;
+import javax.net.ssl.SSLSocketFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -82,7 +85,7 @@ public class SocketProxy {
     }
 
     public void open() throws Exception {
-        serverSocket = new ServerSocket();
+        serverSocket = createServerSocket(target);
         serverSocket.setReuseAddress(true);
         if (receiveBufferSize > 0) {
             serverSocket.setReceiveBufferSize(receiveBufferSize);
@@ -99,6 +102,24 @@ public class SocketProxy {
         }
         new Thread(null, acceptor, "SocketProxy-Acceptor-" + serverSocket.getLocalPort()).start();
         closed = new CountDownLatch(1);
+    }
+
+    private boolean isSsl(URI target) {
+        return "ssl".equals(target.getScheme());
+    }
+
+    private ServerSocket createServerSocket(URI target) throws Exception {
+        if (isSsl(target)) {
+            return SSLServerSocketFactory.getDefault().createServerSocket();
+        }
+        return new ServerSocket();
+    }
+
+    private Socket createSocket(URI target) throws Exception {
+        if (isSsl(target)) {
+            return SSLSocketFactory.getDefault().createSocket();
+        }
+        return new Socket();
     }
 
     public URI getUrl() {
@@ -226,7 +247,7 @@ public class SocketProxy {
 
         public Bridge(Socket socket, URI target) throws Exception {
             receiveSocket = socket;
-            sendSocket = new Socket();
+            sendSocket = createSocket(target);
             if (receiveBufferSize > 0) {
                 sendSocket.setReceiveBufferSize(receiveBufferSize);
             }

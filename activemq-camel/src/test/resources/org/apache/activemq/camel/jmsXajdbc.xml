@@ -14,107 +14,102 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 -->
-<!-- START SNIPPET: example -->
 
+<!-- START SNIPPET: jms_jdbc_xa -->
 <beans xmlns="http://www.springframework.org/schema/beans"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
        xsi:schemaLocation="
-       http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.0.xsd
+       http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+       http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.0.xsd
        http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd
        http://activemq.apache.org/schema/core http://activemq.apache.org/schema/core/activemq-core.xsd
     ">
 
-        <!-- build broker in code so it can be restarted and modified to test recovery -->
+    <context:annotation-config />
+    <!-- broker creation in code so it can be restarted and modified to test recovery -->
 
-        <!-- some logging that can help
-          log4j.logger.org.apache.activemq.TransactionContext=TRACE
-          log4j.logger.org.springframework.transaction.support.AbstractPlatformTransactionManager=TRACE
-          log4j.logger.org.apache.geronimo.transaction.manager=TRACE
-          log4j.logger.org.enhydra.jdbc=TRACE
-        -->
+    <!-- use jencks factory beans to easily configure howl and geronimo transaction manager -->
+    <bean id="xidFactory" class="org.apache.geronimo.transaction.manager.XidFactoryImpl"/>
+    <!-- Transaction log -->
+    <bean id="transactionLog" class="org.jencks.factory.HowlLogFactoryBean">
+        <property name="logFileDir" value="target/data/howl/txlog"/>
+        <property name="xidFactory" ref="xidFactory"/>
+    </bean>
+    <bean id="jenckTransactionManager" class="org.jencks.factory.TransactionManagerFactoryBean">
+        <property name="transactionLog" ref="transactionLog"/>
+    </bean>
 
-		<!-- XID factory -->
-		<bean id="xidFactory" class="org.apache.geronimo.transaction.manager.XidFactoryImpl" />
+    <bean id="activemqConnectionFactory" class="org.apache.activemq.ActiveMQConnectionFactory">
+        <property name="brokerURL" value="tcp://localhost:61616?jms.dispatchAsync=false"/>
+    </bean>
 
-		<!-- Transaction log -->
-		<bean id="transactionLog" class="org.jencks.factory.HowlLogFactoryBean">	
-			<property name="logFileDir" value="target/data/howl/txlog"/>
-			<property name="xidFactory" ref="xidFactory"/>
-		</bean>
+    <!-- register ActiveMQ with Geronimo to allow out of band transaction recovery/completion on a new connection
+         the resourceName gives the ActiveMQ XAResource an identity, Geronimo NamedXAResource in the transaction log
+    -->
+    <bean id="resourceManager" class="org.apache.activemq.pool.ActiveMQResourceManager" init-method="recoverResource">
+        <property name="transactionManager" ref="jenckTransactionManager"/>
+        <property name="connectionFactory" ref="activemqConnectionFactory"/>
+        <property name="resourceName" value="activemq.broker"/>
+    </bean>
 
-		<!-- Setup the geronimo transaction manager -->
-		<bean id="jenckTransactionManager" class="org.jencks.factory.TransactionManagerFactoryBean">
-			<property name="transactionLog" ref="transactionLog"/>
-		</bean>
+    <bean id="pooledConnectionFactory" class="org.apache.activemq.pool.PooledConnectionFactoryBean"
+          depends-on="jenckTransactionManager">
+        <property name="maxConnections" value="1"/>
+        <property name="transactionManager" ref="jenckTransactionManager"/>
+        <property name="connectionFactory" ref="activemqConnectionFactory"/>
+        <property name="resourceName" value="activemq.broker"/>
+    </bean>
 
-		<!-- Configure the Spring framework to use JTA transactions from Geronimo -->
-		<bean id="jtaTransactionManager" class="org.springframework.transaction.jta.JtaTransactionManager">
-			<property name="transactionManager" ref="jenckTransactionManager"/>
-		</bean>
+    <!-- Configure the Spring framework (used by camel) to use JTA transactions from Geronimo -->
+    <bean id="jtaTransactionManager" class="org.springframework.transaction.jta.JtaTransactionManager">
+        <property name="transactionManager" ref="jenckTransactionManager"/>
+    </bean>
 
-		<!-- Using the jencks ActiveMQ pool to enable XA -->
-		<bean id="jmsXaConnectionFactory" class="org.jencks.amqpool.XaPooledConnectionFactory">
-	    	<constructor-arg value="tcp://localhost:61616" />
-	    	<property name="maxConnections" value="8" />
-	    	<property name="transactionManager" ref="jenckTransactionManager" />
-		</bean>
+    <!-- Define the activemq Camel component so we can integrate with the AMQ broker -->
+    <bean id="activemq" class="org.apache.activemq.camel.component.ActiveMQComponent"
+          depends-on="pooledConnectionFactory">
+        <property name="transacted" value="true"/>
+        <property name="transactionManager" ref="jtaTransactionManager"/>
+        <property name="connectionFactory" ref="pooledConnectionFactory"/>
+        <!-- cache level is important, can be cache connection or none, as session needs to be enlisted
+             in the current transaction they can't be cached, with default cache sessions, they are created
+             up front, before the transaction (required for the route) -->
+        <property name="cacheLevel" value="0"/>
+    </bean>
 
-		<!-- Define the activemq Camel component so we can integrate with the AMQ broker -->
-		<bean id="activemq" class="org.apache.activemq.camel.component.ActiveMQComponent">
-			<property name="transacted" value="true"/>
-			<property name="transactionManager" ref="jtaTransactionManager"/>
-			<property name="connectionFactory" ref="jmsXaConnectionFactory"/>
-            <!-- cache level is important, can be cache connection or none, as session needs to be enlisted
-            in the current transaction they can't be cached, with default cache sessions, they are created
-            up front, before the transaction (required for the route) -->
-            <property name="cacheLevel" value="0" />
-		</bean>
+    <!-- openejb provides geronimo NamedXAResources wrapper around commons dbcp such that they have an identity in the howl log -->
+    <bean id="geronimoXAResourceWrapper"
+          class="org.apache.openejb.resource.GeronimoTransactionManagerFactory.GeronimoXAResourceWrapper"/>
+    <bean id="managedDataSourceWithRecovery" class="org.apache.openejb.resource.jdbc.ManagedDataSourceWithRecovery">
+        <constructor-arg>
+            <ref bean="geronimoXAResourceWrapper"></ref>
+        </constructor-arg>
+        <property name="jdbcDriver" value="org.apache.derby.jdbc.EmbeddedDriver"/>
+        <property name="jdbcUrl" value="jdbc:derby:target/XatestDs;create=true"/>
+        <property name="transactionManager" ref="jenckTransactionManager"/>
+    </bean>
 
-	  <!-- Setup the connection manager -->
-	  <bean id="connectionManager" class="org.jencks.factory.ConnectionManagerFactoryBean">
-	    <property name="transactionManager" ref="jenckTransactionManager" />
-	    <property name="transaction" value="xa" />
-	  </bean>
+    <bean id="required" class="org.apache.camel.spring.spi.SpringTransactionPolicy">
+        <property name="transactionManager" ref="jenckTransactionManager"/>
+        <property name="propagationBehaviorName" value="PROPAGATION_REQUIRED"/>
+    </bean>
 
-	  <!-- Setup the JDBC Managed Connection Factory (that supports XA) -->
-	  <!--bean id="jdbcManagedConnectionFactory" class="org.jencks.tranql.XAPoolDataSourceMCF">
-	    <property name="driverName" value="com.mysql.jdbc.Driver"/>
-	    <property name="url" value="jdbc:mysql://localhost/ScpBuffer?relaxAutoCommit=true"/>
-	    <property name="user" value="rails"/>
-	    <property name="password" value="rails"/>
-	  </bean -->
-	
-	  <bean id="jdbcEnhydraXaDataSource" class="org.enhydra.jdbc.pool.StandardXAPoolDataSource" destroy-method="shutdown">
-	        <property name="dataSource">
-	            <bean class="org.enhydra.jdbc.standard.StandardXADataSource" destroy-method="shutdown">
-
-	                <!-- property name="driverName" value="com.mysql.jdbc.Driver" />
-	                <property name="url" value="jdbc:mysql://localhost/ScpBuffer?relaxAutoCommit=true" / -->
-                    <!-- try embedded derby xa -->
-                    <property name="driverName" value="org.apache.derby.jdbc.EmbeddedDriver" />
-                    <property name="url" value="jdbc:derby:target/XatestDs;create=true" />
-                    <property name="transactionManager" ref="jenckTransactionManager" />
-	            </bean>
-	        </property>
-            <property name="transactionManager" ref="jenckTransactionManager" />
-	   </bean>
-
-		<bean id="required" class="org.apache.camel.spring.spi.SpringTransactionPolicy">
-			<property name="transactionManager" ref="jenckTransactionManager"/>
-			<property name="propagationBehaviorName" value="PROPAGATION_REQUIRED"/>
-		</bean>
-
-		<camelContext id="camel" xmlns="http://camel.apache.org/schema/spring">
-				<route id="queueToDbTransacted">
-					<from uri="activemq:queue:scp_transacted"/>
-                    <transacted ref="required"/>
-					<convertBodyTo type="java.lang.String"/>
-					<to uri="log:BeforeSettingBody?showAll=true"/>
-					<setBody>
-						<simple>INSERT INTO SCP_INPUT_MESSAGES(messageId, messageCorrelationId, messageContent) VALUES('${in.header.JMSMessageId}','${in.header.JMSCorrelationId}','${in.body}')</simple>
-					</setBody>
-					<to uri="jdbc:jdbcEnhydraXaDataSource"/>
-				</route>
-			</camelContext>
+    <!-- the route, from jms to jdbc in an xa transaction -->
+    <camelContext id="camel" xmlns="http://camel.apache.org/schema/spring">
+        <route id="queueToDbTransacted">
+            <from uri="activemq:queue:scp_transacted"/>
+            <transacted ref="required"/>
+            <convertBodyTo type="java.lang.String"/>
+            <to uri="log:BeforeSettingBody?showAll=true"/>
+            <setBody>
+                <simple>INSERT INTO SCP_INPUT_MESSAGES(messageId, messageCorrelationId, messageContent)
+                    VALUES('${in.header.JMSMessageId}','${in.header.JMSCorrelationId}','${in.body}')
+                </simple>
+            </setBody>
+            <to uri="jdbc:managedDataSourceWithRecovery"/>
+        </route>
+    </camelContext>
 
 </beans>
+<!-- END SNIPPET: jms_jdbc_xa -->

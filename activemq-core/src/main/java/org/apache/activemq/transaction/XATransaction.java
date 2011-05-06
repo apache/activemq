@@ -52,7 +52,7 @@ public class XATransaction extends Transaction {
     @Override
     public void commit(boolean onePhase) throws XAException, IOException {
         if (LOG.isDebugEnabled()) {
-            LOG.debug("XA Transaction commit: " + xid);
+            LOG.debug("XA Transaction commit onePhase:" + onePhase + ", xid: " + xid);
         }
 
         switch (getState()) {

@@ -543,13 +543,15 @@ public class RecoveryBrokerTest extends BrokerRestartTestSupport {
         // Begin the transaction.
         XATransactionId txid = createXATransaction(sessionInfo);
         connection.send(createBeginTransaction(connectionInfo, txid));
+        Message m = null;
         for (int i = 0; i < NUMBER; i++) {
-            Message m = receiveMessage(connection);
+            m = receiveMessage(connection);
             assertNotNull(m);
-            MessageAck ack = createAck(consumerInfo, m, 1, MessageAck.STANDARD_ACK_TYPE);
-            ack.setTransactionId(txid);
-            connection.send(ack);
         }
+        MessageAck ack = createAck(consumerInfo, m, NUMBER, MessageAck.STANDARD_ACK_TYPE);
+        ack.setTransactionId(txid);
+        connection.send(ack);
+
         // Don't commit
 
         // restart the broker.
@@ -566,7 +568,7 @@ public class RecoveryBrokerTest extends BrokerRestartTestSupport {
 
         // All messages should be re-delivered.
         for (int i = 0; i < NUMBER; i++) {
-            Message m = receiveMessage(connection);
+            m = receiveMessage(connection);
             assertNotNull(m);
         }
 

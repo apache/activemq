@@ -97,9 +97,4 @@ class QueueStorePrefetch extends AbstractStoreCursor {
         this.store.recoverNextMessages(this.maxBatchSize, this);
     }
 
-    @Override
-    public String toString() {
-        return "QueueStorePrefetch" + System.identityHashCode(this);
-    }
-
 }

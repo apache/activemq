@@ -90,42 +90,52 @@ public class PooledSession implements Session, TopicSession, QueueSession, XASes
         if (!ignoreClose) {
             // TODO a cleaner way to reset??
 
-            // lets reset the session
-            getInternalSession().setMessageListener(null);
+            boolean invalidate = false;
+            try {
+                // lets reset the session
+                getInternalSession().setMessageListener(null);
 
-            // Close any consumers and browsers that may have been created.
-            for (Iterator<MessageConsumer> iter = consumers.iterator(); iter.hasNext();) {
-                MessageConsumer consumer = iter.next();
-                consumer.close();
+                // Close any consumers and browsers that may have been created.
+                for (Iterator<MessageConsumer> iter = consumers.iterator(); iter.hasNext();) {
+                    MessageConsumer consumer = iter.next();
+                    consumer.close();
+                }
+
+                for (Iterator<QueueBrowser> iter = browsers.iterator(); iter.hasNext();) {
+                    QueueBrowser browser = iter.next();
+                    browser.close();
+                }
+
+                if (transactional && !isXa) {
+                    try {
+                        getInternalSession().rollback();
+                    } catch (JMSException e) {
+                        invalidate = true;
+                        LOG.warn("Caught exception trying rollback() when putting session back into the pool, will invalidate. " + e, e);
+                    }
+                }
+            } catch (JMSException ex) {
+                invalidate = true;
+                LOG.warn("Caught exception trying close() when putting session back into the pool, will invalidate. " + ex, ex);
+            } finally {
+                consumers.clear();
+                browsers.clear();
             }
-            consumers.clear();
-
-            for (Iterator<QueueBrowser> iter = browsers.iterator(); iter.hasNext();) {
-                QueueBrowser browser = iter.next();
-                browser.close();
-            }
-            browsers.clear();
-
-            if (transactional && !isXa) {
-                try {
-                    getInternalSession().rollback();
-                } catch (JMSException e) {
-                    LOG.warn("Caught exception trying rollback() when putting session back into the pool: " + e, e);
-
-                    // lets close the session and not put the session back into
-                    // the pool
+            if (invalidate) {
+                // lets close the session and not put the session back into
+                // the pool
+                if (session != null) {
                     try {
                         session.close();
                     } catch (JMSException e1) {
-                        LOG.trace("Ignoring exception as discarding session: " + e1, e1);
+                        LOG.trace("Ignoring exception on close as discarding session: " + e1, e1);
                     }
                     session = null;
-                    sessionPool.invalidateSession(this);
-                    return;
                 }
+                sessionPool.invalidateSession(this);
+            } else {
+                sessionPool.returnSession(this);
             }
-
-            sessionPool.returnSession(this);
         }
     }
 

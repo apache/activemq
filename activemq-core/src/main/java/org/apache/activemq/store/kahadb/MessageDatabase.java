@@ -36,8 +36,10 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.apache.activemq.ActiveMQMessageAuditNoSync;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.BrokerServiceAware;
+import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ConnectionId;
 import org.apache.activemq.command.LocalTransactionId;
+import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.command.SubscriptionInfo;
 import org.apache.activemq.command.TransactionId;
@@ -1719,7 +1721,35 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
     // /////////////////////////////////////////////////////////////////
     protected final LinkedHashMap<TransactionId, List<Operation>> inflightTransactions = new LinkedHashMap<TransactionId, List<Operation>>();
     protected final LinkedHashMap<TransactionId, List<Operation>> preparedTransactions = new LinkedHashMap<TransactionId, List<Operation>>();
- 
+    protected final Set<String> ackedAndPrepared = new HashSet<String>();
+
+    // messages that have prepared (pending) acks cannot be redispatched unless the outcome is rollback,
+    // till then they are skipped by the store.
+    // 'at most once' XA guarantee
+    public void trackRecoveredAcks(ArrayList<MessageAck> acks) {
+        this.indexLock.writeLock().lock();
+        try {
+            for (MessageAck ack : acks) {
+                ackedAndPrepared.add(ack.getLastMessageId().toString());
+            }
+        } finally {
+            this.indexLock.writeLock().unlock();
+        }
+    }
+
+    public void forgetRecoveredAcks(ArrayList<MessageAck> acks) throws IOException {
+        if (acks != null) {
+            this.indexLock.writeLock().lock();
+            try {
+                for (MessageAck ack : acks) {
+                    ackedAndPrepared.remove(ack.getLastMessageId().toString());
+                }
+            } finally {
+                this.indexLock.writeLock().unlock();
+            }
+        }
+    }
+
     private List<Operation> getInflightTx(KahaTransactionInfo info, Location location) {
         TransactionId key = key(info);
         List<Operation> tx;

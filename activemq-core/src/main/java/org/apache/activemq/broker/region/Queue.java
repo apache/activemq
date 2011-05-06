@@ -1132,6 +1132,19 @@ public class Queue extends BaseDestination implements Task, UsageListener {
         getMessages().clear();
     }
 
+    public void clearPendingMessages() {
+        messagesLock.writeLock().lock();
+        try {
+            if (store != null) {
+                store.resetBatching();
+            }
+            messages.gc();
+            asyncWakeup();
+        } finally {
+            messagesLock.writeLock().unlock();
+        }
+    }
+
     /**
      * Removes the message matching the given messageId
      */
