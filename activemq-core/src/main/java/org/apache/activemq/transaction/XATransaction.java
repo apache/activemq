@@ -215,4 +215,8 @@ public class XATransaction extends Transaction {
     public Logger getLog() {
         return LOG;
     }
+
+    public XATransactionId getXid() {
+        return xid;
+    }
 }

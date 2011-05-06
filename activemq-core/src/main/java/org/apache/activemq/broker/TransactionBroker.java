@@ -28,6 +28,7 @@ import javax.jms.JMSException;
 import javax.transaction.xa.XAException;
 
 import org.apache.activemq.ActiveMQMessageAudit;
+import org.apache.activemq.broker.jmx.ManagedRegionBroker;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.Queue;
 import org.apache.activemq.command.ActiveMQDestination;
@@ -98,14 +99,15 @@ public class TransactionBroker extends BrokerFilter {
                 public void recover(XATransactionId xid, Message[] addedMessages, MessageAck[] aks) {
                     try {
                         beginTransaction(context, xid);
-                        Transaction transaction = getTransaction(context, xid, false);
+                        XATransaction transaction = (XATransaction) getTransaction(context, xid, false);
                         for (int i = 0; i < addedMessages.length; i++) {
-                            kickDestinationOnCompletion(context, transaction, addedMessages[i].getDestination(), addedMessages[i]);
+                            forceDestinationWakeupOnCompletion(context, transaction, addedMessages[i].getDestination(), addedMessages[i]);
                         }
                         for (int i = 0; i < aks.length; i++) {
-                            kickDestinationOnCompletion(context, transaction, aks[i].getDestination(), aks[i]);
+                            forceDestinationWakeupOnCompletion(context, transaction, aks[i].getDestination(), aks[i]);
                         }
                         transaction.setState(Transaction.PREPARED_STATE);
+                        registerMBean(transaction);
                         LOG.debug("recovered prepared transaction: " + transaction.getTransactionId());
                     } catch (Throwable e) {
                         throw new WrappedException(e);
@@ -119,8 +121,15 @@ public class TransactionBroker extends BrokerFilter {
         next.start();
     }
 
-    private void kickDestinationOnCompletion(ConnectionContext context, Transaction transaction,
-                                             ActiveMQDestination amqDestination, BaseCommand ack) throws Exception {
+    private void registerMBean(XATransaction transaction) {
+        if (getBrokerService().getRegionBroker() instanceof ManagedRegionBroker ) {
+            ManagedRegionBroker managedRegionBroker = (ManagedRegionBroker) getBrokerService().getRegionBroker();
+            managedRegionBroker.registerRecoveredTransactionMBean(transaction);
+        }
+    }
+
+    private void forceDestinationWakeupOnCompletion(ConnectionContext context, Transaction transaction,
+                                                    ActiveMQDestination amqDestination, BaseCommand ack) throws Exception {
         Destination destination =  addDestination(context, amqDestination, false);
         registerSync(destination, transaction, ack);
     }

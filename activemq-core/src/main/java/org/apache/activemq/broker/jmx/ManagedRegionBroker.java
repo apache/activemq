@@ -54,7 +54,6 @@ import org.apache.activemq.broker.region.Topic;
 import org.apache.activemq.broker.region.TopicRegion;
 import org.apache.activemq.broker.region.TopicSubscription;
 import org.apache.activemq.broker.region.policy.AbortSlowConsumerStrategy;
-import org.apache.activemq.broker.region.policy.SlowConsumerStrategy;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ActiveMQTopic;
@@ -67,6 +66,7 @@ import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.TopicMessageStore;
 import org.apache.activemq.thread.Scheduler;
 import org.apache.activemq.thread.TaskRunnerFactory;
+import org.apache.activemq.transaction.XATransaction;
 import org.apache.activemq.usage.SystemUsage;
 import org.apache.activemq.util.JMXSupport;
 import org.apache.activemq.util.ServiceStopper;
@@ -601,6 +601,45 @@ public class ManagedRegionBroker extends RegionBroker {
             LOG.debug("Failure reason: " + e, e);
         }
         return objectName;
+    }
+
+    protected ObjectName createObjectName(XATransaction transaction) throws MalformedObjectNameException {
+        Hashtable map = brokerObjectName.getKeyPropertyList();
+        ObjectName objectName = new ObjectName(brokerObjectName.getDomain() + ":" + "BrokerName=" + map.get("BrokerName")
+                                               + "," + "Type=RecoveredXaTransaction"
+                                               + "," + "Xid="
+                                               + JMXSupport.encodeObjectNamePart(transaction.getTransactionId().toString()));
+        return objectName;
+    }
+
+    public void registerRecoveredTransactionMBean(XATransaction transaction) {
+        try {
+            ObjectName objectName = createObjectName(transaction);
+            if (!registeredMBeans.contains(objectName))  {
+                RecoveredXATransactionView view = new RecoveredXATransactionView(this, transaction);
+                AnnotatedMBean.registerMBean(managementContext, view, objectName);
+                registeredMBeans.add(objectName);
+            }
+        } catch (Exception e) {
+            LOG.warn("Failed to register prepared transaction MBean: " + transaction);
+            LOG.debug("Failure reason: " + e, e);
+        }
+    }
+
+    public void unregister(XATransaction transaction) {
+        try {
+            ObjectName objectName = createObjectName(transaction);
+            if (registeredMBeans.remove(objectName)) {
+                try {
+                    managementContext.unregisterMBean(objectName);
+                } catch (Throwable e) {
+                    LOG.warn("Failed to unregister MBean: " + objectName);
+                    LOG.debug("Failure reason: " + e, e);
+                }
+            }
+        } catch (Exception e) {
+            LOG.warn("Failed to create object name to unregister " + transaction, e);
+        }
     }
 
     private ObjectName createObjectName(AbortSlowConsumerStrategy strategy) throws MalformedObjectNameException{

@@ -16,10 +16,13 @@
  */
 package org.apache.activemq.broker;
 
+import javax.jms.JMSException;
+import javax.management.InstanceNotFoundException;
+import javax.management.MalformedObjectNameException;
+import javax.management.ObjectName;
 import junit.framework.Test;
 
-import org.apache.activemq.broker.region.policy.PolicyEntry;
-import org.apache.activemq.broker.region.policy.PolicyMap;
+import org.apache.activemq.broker.jmx.RecoveredXATransactionViewMBean;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ConnectionInfo;
@@ -33,7 +36,7 @@ import org.apache.activemq.command.SessionInfo;
 import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.command.TransactionInfo;
 import org.apache.activemq.command.XATransactionId;
-import org.apache.activemq.openwire.v5.MessageMarshaller;
+import org.apache.activemq.util.JMXSupport;
 
 /**
  * Used to simulate the recovery that occurs when a broker shuts down.
@@ -41,6 +44,89 @@ import org.apache.activemq.openwire.v5.MessageMarshaller;
  * 
  */
 public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
+
+    public void testPreparedJmxView() throws Exception {
+
+        ActiveMQDestination destination = createDestination();
+
+        // Setup the producer and send the message.
+        StubConnection connection = createConnection();
+        ConnectionInfo connectionInfo = createConnectionInfo();
+        SessionInfo sessionInfo = createSessionInfo(connectionInfo);
+        ProducerInfo producerInfo = createProducerInfo(sessionInfo);
+        connection.send(connectionInfo);
+        connection.send(sessionInfo);
+        connection.send(producerInfo);
+        ConsumerInfo consumerInfo = createConsumerInfo(sessionInfo, destination);
+        connection.send(consumerInfo);
+
+        // Prepare 4 message sends.
+        for (int i = 0; i < 4; i++) {
+            // Begin the transaction.
+            XATransactionId txid = createXATransaction(sessionInfo);
+            connection.send(createBeginTransaction(connectionInfo, txid));
+
+            Message message = createMessage(producerInfo, destination);
+            message.setPersistent(true);
+            message.setTransactionId(txid);
+            connection.send(message);
+
+            // Prepare
+            connection.send(createPrepareTransaction(connectionInfo, txid));
+        }
+
+        Response response = connection.request(new TransactionInfo(connectionInfo.getConnectionId(), null, TransactionInfo.RECOVER));
+        assertNotNull(response);
+        DataArrayResponse dar = (DataArrayResponse)response;
+        assertEquals(4, dar.getData().length);
+
+        // restart the broker.
+        restartBroker();
+
+        connection = createConnection();
+        connectionInfo = createConnectionInfo();
+        connection.send(connectionInfo);
+
+
+        response = connection.request(new TransactionInfo(connectionInfo.getConnectionId(), null, TransactionInfo.RECOVER));
+        assertNotNull(response);
+        dar = (DataArrayResponse)response;
+        assertEquals(4, dar.getData().length);
+
+        TransactionId first = (TransactionId)dar.getData()[0];
+        // via jmx, force outcome
+        for (int i = 0; i < 4; i++) {
+            RecoveredXATransactionViewMBean mbean =  getProxyToPreparedTransactionViewMBean((TransactionId)dar.getData()[i]);
+            if (i%2==0) {
+                mbean.heuristicCommit();
+            } else {
+                mbean.heuristicRollback();
+            }
+        }
+
+        // verify all completed
+        response = connection.request(new TransactionInfo(connectionInfo.getConnectionId(), null, TransactionInfo.RECOVER));
+        assertNotNull(response);
+        dar = (DataArrayResponse)response;
+        assertEquals(0, dar.getData().length);
+
+        // verify mbeans gone
+        try {
+            RecoveredXATransactionViewMBean gone = getProxyToPreparedTransactionViewMBean(first);
+            gone.heuristicRollback();
+            fail("Excepted not found");
+        } catch (InstanceNotFoundException expectedNotfound) {
+        }
+    }
+
+    private RecoveredXATransactionViewMBean getProxyToPreparedTransactionViewMBean(TransactionId xid) throws MalformedObjectNameException, JMSException {
+
+        ObjectName objectName = new ObjectName("org.apache.activemq:Type=RecoveredXaTransaction,Xid=" +
+                JMXSupport.encodeObjectNamePart(xid.toString()) + ",BrokerName=localhost");
+        RecoveredXATransactionViewMBean proxy = (RecoveredXATransactionViewMBean) broker.getManagementContext().newProxyInstance(objectName,
+                RecoveredXATransactionViewMBean.class, true);
+        return proxy;
+    }
 
     public void testPreparedTransactionRecoveredOnRestart() throws Exception {
 
