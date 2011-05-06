@@ -50,7 +50,7 @@
     <repository>
       <id>com.fusesource.m2</id>
       <name>Fusesource Release Repository</name>
-      <url>http://repo.fusesource.com/maven2</url>
+      <url>http://repo.fusesource.com/nexus/content/groups/public/</url>
       <snapshots>
         <enabled>false</enabled>
       </snapshots>
