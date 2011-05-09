@@ -55,6 +55,7 @@ public class TextFileCertificateLoginModule extends CertificateLoginModule {
     /**
      * Performs initialization of file paths. A standard JAAS override.
      */
+    @Override
     public void initialize(Subject subject, CallbackHandler callbackHandler, Map sharedState, Map options) {
         super.initialize(subject, callbackHandler, sharedState, options);
         if (System.getProperty("java.security.auth.login.config") != null) {
@@ -77,6 +78,7 @@ public class TextFileCertificateLoginModule extends CertificateLoginModule {
      * @throws LoginException Thrown if unable to find user file or connection
      *                 certificate.
      */
+    @Override
     protected String getUserNameForCertificates(final X509Certificate[] certs) throws LoginException {
         if (certs == null) {
             throw new LoginException("Client certificates not found. Cannot authenticate.");
@@ -97,7 +99,7 @@ public class TextFileCertificateLoginModule extends CertificateLoginModule {
         String dn = getDistinguishedName(certs);
 
         Enumeration<Object> keys = users.keys();
-        for (Enumeration vals = users.elements(); vals.hasMoreElements();) {
+        for (Enumeration<Object> vals = users.elements(); vals.hasMoreElements();) {
             if (((String)vals.nextElement()).equals(dn)) {
                 return (String)keys.nextElement();
             } else {
@@ -116,6 +118,7 @@ public class TextFileCertificateLoginModule extends CertificateLoginModule {
      * @return A Set of name Strings for groups this user belongs to.
      * @throws LoginException Thrown if unable to find group definition file.
      */
+    @Override
     protected Set<String> getUserGroups(String username) throws LoginException {
         File groupsFile = new File(baseDir, groupsFilePathname);
 
@@ -128,7 +131,7 @@ public class TextFileCertificateLoginModule extends CertificateLoginModule {
             throw new LoginException("Unable to load group properties file " + groupsFile);
         }
         Set<String> userGroups = new HashSet<String>();
-        for (Enumeration enumeration = groups.keys(); enumeration.hasMoreElements();) {
+        for (Enumeration<Object> enumeration = groups.keys(); enumeration.hasMoreElements();) {
             String groupName = (String)enumeration.nextElement();
             String[] userList = (groups.getProperty(groupName) + "").split(",");
             for (int i = 0; i < userList.length; i++) {

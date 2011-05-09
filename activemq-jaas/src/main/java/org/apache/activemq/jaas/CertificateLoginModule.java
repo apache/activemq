@@ -52,13 +52,14 @@ public abstract class CertificateLoginModule implements LoginModule {
 
     private X509Certificate certificates[];
     private String username;
-    private Set groups;
+    private Set<String> groups;
     private Set<Principal> principals = new HashSet<Principal>();
     private boolean debug;
 
     /**
      * Overriding to allow for proper initialization. Standard JAAS.
      */
+    @Override
     public void initialize(Subject subject, CallbackHandler callbackHandler, Map sharedState, Map options) {
         this.subject = subject;
         this.callbackHandler = callbackHandler;
@@ -73,6 +74,7 @@ public abstract class CertificateLoginModule implements LoginModule {
     /**
      * Overriding to allow for certificate-based login. Standard JAAS.
      */
+    @Override
     public boolean login() throws LoginException {
         Callback[] callbacks = new Callback[1];
 
@@ -102,13 +104,12 @@ public abstract class CertificateLoginModule implements LoginModule {
     /**
      * Overriding to complete login process. Standard JAAS.
      */
+    @Override
     public boolean commit() throws LoginException {
         principals.add(new UserPrincipal(username));
 
-        String currentGroup = null;
-        for (Iterator iter = groups.iterator(); iter.hasNext();) {
-            currentGroup = (String)iter.next();
-            principals.add(new GroupPrincipal(currentGroup));
+        for (String group : groups) {
+             principals.add(new GroupPrincipal(group));
         }
 
         subject.getPrincipals().addAll(principals);
@@ -124,6 +125,7 @@ public abstract class CertificateLoginModule implements LoginModule {
     /**
      * Standard JAAS override.
      */
+    @Override
     public boolean abort() throws LoginException {
         clear();
 
@@ -136,6 +138,7 @@ public abstract class CertificateLoginModule implements LoginModule {
     /**
      * Standard JAAS override.
      */
+    @Override
     public boolean logout() {
         subject.getPrincipals().removeAll(principals);
         principals.clear();
@@ -172,7 +175,7 @@ public abstract class CertificateLoginModule implements LoginModule {
      *                getUserNameForDn returned for the user's DN.
      * @return A Set of the names of the groups this user belongs to.
      */
-    protected abstract Set getUserGroups(final String username) throws LoginException;
+    protected abstract Set<String> getUserGroups(final String username) throws LoginException;
 
     protected String getDistinguishedName(final X509Certificate[] certs) {
         if (certs != null && certs.length > 0 && certs[0] != null) {

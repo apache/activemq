@@ -50,6 +50,7 @@ public class JaasCertificateCallbackHandler implements CallbackHandler {
      * @throws UnsupportedCallbackException Thrown if an unkown Callback type is
      *                 encountered.
      */
+    @Override
     public void handle(Callback[] callbacks) throws IOException, UnsupportedCallbackException {
         for (int i = 0; i < callbacks.length; i++) {
             Callback callback = callbacks[i];

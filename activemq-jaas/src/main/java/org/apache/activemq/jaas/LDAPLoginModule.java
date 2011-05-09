@@ -22,7 +22,7 @@ import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Hashtable;
-import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -82,6 +82,7 @@ public class LDAPLoginModule implements LoginModule {
     private String username;
     private Set<GroupPrincipal> groups = new HashSet<GroupPrincipal>();
 
+    @Override
     public void initialize(Subject subject, CallbackHandler callbackHandler, Map sharedState, Map options) {
         this.subject = subject;
         this.handler = callbackHandler;
@@ -104,6 +105,7 @@ public class LDAPLoginModule implements LoginModule {
         		};
     }
 
+    @Override
     public boolean login() throws LoginException {
 
         Callback[] callbacks = new Callback[2];
@@ -141,21 +143,23 @@ public class LDAPLoginModule implements LoginModule {
         }
     }
 
+    @Override
     public boolean logout() throws LoginException {
         username = null;
         return true;
     }
 
+    @Override
     public boolean commit() throws LoginException {
         Set<Principal> principals = subject.getPrincipals();
         principals.add(new UserPrincipal(username));
-        Iterator<GroupPrincipal> iter = groups.iterator();
-        while (iter.hasNext()) {
-            principals.add(iter.next());
+        for (GroupPrincipal gp : groups) {
+            principals.add(gp);
         }
         return true;
     }
 
+    @Override
     public boolean abort() throws LoginException {
         username = null;
         return true;
@@ -196,7 +200,7 @@ public class LDAPLoginModule implements LoginModule {
             }
 
             // setup attributes
-            ArrayList<String> list = new ArrayList<String>();
+            List<String> list = new ArrayList<String>();
             if (isLoginPropertySet(USER_ROLE_NAME)) {
                 list.add(getLDAPPropertyValue(USER_ROLE_NAME));
             }
@@ -204,13 +208,13 @@ public class LDAPLoginModule implements LoginModule {
             list.toArray(attribs);
             constraints.setReturningAttributes(attribs);
 
-            NamingEnumeration results = context.search(getLDAPPropertyValue(USER_BASE), filter, constraints);
+            NamingEnumeration<SearchResult> results = context.search(getLDAPPropertyValue(USER_BASE), filter, constraints);
 
             if (results == null || !results.hasMore()) {
                 return false;
             }
 
-            SearchResult result = (SearchResult)results.next();
+            SearchResult result = results.next();
 
             if (results.hasMore()) {
                 // ignore for now
@@ -227,7 +231,7 @@ public class LDAPLoginModule implements LoginModule {
             if (attrs == null) {
                 return false;
             }
-            ArrayList<String> roles = null;
+            List<String> roles = null;
             if (isLoginPropertySet(USER_ROLE_NAME)) {
                 roles = addAttributeValues(getLDAPPropertyValue(USER_ROLE_NAME), attrs, roles);
             }
@@ -254,8 +258,8 @@ public class LDAPLoginModule implements LoginModule {
         return true;
     }
 
-    protected ArrayList<String> getRoles(DirContext context, String dn, String username, ArrayList<String> currentRoles) throws NamingException {
-        ArrayList<String> list = currentRoles;
+    protected List<String> getRoles(DirContext context, String dn, String username, List<String> currentRoles) throws NamingException {
+        List<String> list = currentRoles;
         MessageFormat roleSearchMatchingFormat;
         boolean roleSearchSubtreeBool;
         roleSearchMatchingFormat = new MessageFormat(getLDAPPropertyValue(ROLE_SEARCH_MATCHING));
@@ -277,9 +281,9 @@ public class LDAPLoginModule implements LoginModule {
         } else {
             constraints.setSearchScope(SearchControls.ONELEVEL_SCOPE);
         }
-        NamingEnumeration results = context.search(getLDAPPropertyValue(ROLE_BASE), filter, constraints);
+        NamingEnumeration<SearchResult> results = context.search(getLDAPPropertyValue(ROLE_BASE), filter, constraints);
         while (results.hasMore()) {
-            SearchResult result = (SearchResult)results.next();
+            SearchResult result = results.next();
             Attributes attrs = result.getAttributes();
             if (attrs == null) {
                 continue;
@@ -346,7 +350,7 @@ public class LDAPLoginModule implements LoginModule {
         return isValid;
     }
 
-    private ArrayList<String> addAttributeValues(String attrId, Attributes attrs, ArrayList<String> values) throws NamingException {
+    private List<String> addAttributeValues(String attrId, Attributes attrs, List<String> values) throws NamingException {
 
         if (attrId == null || attrs == null) {
             return values;
@@ -358,7 +362,7 @@ public class LDAPLoginModule implements LoginModule {
         if (attr == null) {
             return values;
         }
-        NamingEnumeration e = attr.getAll();
+        NamingEnumeration<?> e = attr.getAll();
         while (e.hasMore()) {
             String value = (String)e.next();
             values.add(value);

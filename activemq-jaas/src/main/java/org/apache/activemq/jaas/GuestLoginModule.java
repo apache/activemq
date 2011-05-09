@@ -56,7 +56,7 @@ public class GuestLoginModule implements LoginModule {
     private CallbackHandler callbackHandler;
     private boolean loginSucceeded;
 
-
+    @Override
     public void initialize(Subject subject, CallbackHandler callbackHandler, Map sharedState, Map options) {
         this.subject = subject;
         this.callbackHandler = callbackHandler;
@@ -77,6 +77,7 @@ public class GuestLoginModule implements LoginModule {
 
     }
 
+    @Override
     public boolean login() throws LoginException {
         loginSucceeded = true;
         if (credentialsInvalidate) {
@@ -100,6 +101,7 @@ public class GuestLoginModule implements LoginModule {
         return loginSucceeded;
     }
 
+    @Override
     public boolean commit() throws LoginException {
         if (loginSucceeded) {
             subject.getPrincipals().addAll(principals);
@@ -111,6 +113,7 @@ public class GuestLoginModule implements LoginModule {
         return loginSucceeded;
     }
 
+    @Override
     public boolean abort() throws LoginException {
 
         if (debug) {
@@ -119,6 +122,7 @@ public class GuestLoginModule implements LoginModule {
         return true;
     }
 
+    @Override
     public boolean logout() throws LoginException {
         subject.getPrincipals().removeAll(principals);
 

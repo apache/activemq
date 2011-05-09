@@ -33,10 +33,12 @@ public class UserPrincipal implements Principal {
         this.name = name;
     }
 
+    @Override
     public String getName() {
         return name;
     }
 
+    @Override
     public boolean equals(Object o) {
         if (this == o) {
             return true;
@@ -54,6 +56,7 @@ public class UserPrincipal implements Principal {
         return true;
     }
 
+    @Override
     public int hashCode() {
         if (hash == 0) {
             hash = name.hashCode();
@@ -61,6 +64,7 @@ public class UserPrincipal implements Principal {
         return hash;
     }
 
+    @Override
     public String toString() {
         return name;
     }

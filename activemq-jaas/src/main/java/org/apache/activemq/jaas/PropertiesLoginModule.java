@@ -61,7 +61,7 @@ public class PropertiesLoginModule implements LoginModule {
     private File baseDir;
     private boolean loginSucceeded;
 
-
+    @Override
     public void initialize(Subject subject, CallbackHandler callbackHandler, Map sharedState, Map options) {
         this.subject = subject;
         this.callbackHandler = callbackHandler;
@@ -124,6 +124,7 @@ public class PropertiesLoginModule implements LoginModule {
         }
     }
 
+    @Override
     public boolean login() throws LoginException {
         Callback[] callbacks = new Callback[2];
 
@@ -160,12 +161,13 @@ public class PropertiesLoginModule implements LoginModule {
         return loginSucceeded;
     }
 
+    @Override
     public boolean commit() throws LoginException {
         boolean result = loginSucceeded;
         if (result) {
             principals.add(new UserPrincipal(user));
 
-            for (Enumeration enumeration = groups.keys(); enumeration.hasMoreElements();) {
+            for (Enumeration<?> enumeration = groups.keys(); enumeration.hasMoreElements();) {
                 String name = (String)enumeration.nextElement();
                 String[] userList = ((String)groups.getProperty(name) + "").split(",");
                 for (int i = 0; i < userList.length; i++) {
@@ -188,6 +190,7 @@ public class PropertiesLoginModule implements LoginModule {
         return result;
     }
 
+    @Override
     public boolean abort() throws LoginException {
         clear();
 
@@ -197,6 +200,7 @@ public class PropertiesLoginModule implements LoginModule {
         return true;
     }
 
+    @Override
     public boolean logout() throws LoginException {
         subject.getPrincipals().removeAll(principals);
         principals.clear();
