@@ -175,8 +175,6 @@ public class PList {
         EntryLocation entry = createEntry(tx, id, this.lastId, EntryLocation.NOT_SET);
         entry.setLocation(location);
         storeEntry(tx, entry);
-        this.store.incrementJournalCount(tx, location);
-
         EntryLocation last = loadEntry(tx, this.lastId);
         last.setNext(entry.getPage().getPageId());
         storeEntry(tx, last);
@@ -210,7 +208,6 @@ public class PList {
         storeEntry(tx, root);
         storeEntry(tx, entry);
 
-        this.store.incrementJournalCount(tx, location);
         this.size++;
     }
 
@@ -433,7 +430,6 @@ public class PList {
                 storeEntry(tx, prev);
             }
 
-            this.store.decrementJournalCount(tx, entry.getLocation());
             entry.reset();
             storeEntry(tx, entry);
             tx.free(entry.getPage().getPageId());

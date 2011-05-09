@@ -1453,6 +1453,7 @@ public class BrokerService implements Service {
                 }
                 this.tempDataStore = new PListStore();
                 this.tempDataStore.setDirectory(getTmpDataDirectory());
+                configureService(tempDataStore);
                 this.tempDataStore.start();
             } catch (Exception e) {
                 throw new RuntimeException(e);
@@ -1467,6 +1468,7 @@ public class BrokerService implements Service {
      */
     public void setTempDataStore(PListStore tempDataStore) {
         this.tempDataStore = tempDataStore;
+        configureService(tempDataStore);
         try {
             tempDataStore.start();
         } catch (Exception e) {

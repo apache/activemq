@@ -163,6 +163,10 @@ public class TempStorageBlockedBrokerTest {
         LOG.info("Subscrition Usage: " + tempUsageBySubscription + ", endUsage: "
                 + broker.getSystemUsage().getTempUsage().getUsage());
 
+        // do a cleanup
+        broker.getTempDataStore().run();
+        LOG.info("Subscrition Usage: " + tempUsageBySubscription + ", endUsage: "
+                        + broker.getSystemUsage().getTempUsage().getUsage());
 
         assertEquals("Incorrect number of Messages Sent: " + messagesSent.get(), messagesSent.get(), MESSAGES_COUNT);
         assertEquals("Incorrect number of Messages Consumed: " + messagesConsumed.get(), messagesConsumed.get(),
@@ -187,6 +191,7 @@ public class TempStorageBlockedBrokerTest {
         IOHelper.deleteChildren(tmpDir);
         PListStore tempStore = new PListStore();
         tempStore.setDirectory(tmpDir);
+        tempStore.setJournalMaxFileLength(50*1024);
         tempStore.start();
 
         SystemUsage sysUsage = new SystemUsage("mySysUsage", persistence, tempStore);

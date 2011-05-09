@@ -25,6 +25,11 @@ import java.io.File;
 import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Vector;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.activemq.util.IOHelper;
 import org.apache.kahadb.util.ByteSequence;
@@ -147,7 +152,78 @@ public class PListTest {
         assertTrue(plist.remove(0));
         assertFalse(plist.remove(3));
     }
-    
+
+
+    @Test
+    public void testConcurrentAddRemove() throws Exception {
+        File directory = store.getDirectory();
+        store.stop();
+        IOHelper.mkdirs(directory);
+        IOHelper.deleteChildren(directory);
+        store = new PListStore();
+        store.setDirectory(directory);
+        store.setJournalMaxFileLength(1024*5);
+        store.start();
+
+        final ByteSequence payload = new ByteSequence(new byte[1024*4]);
+
+
+        final Vector<Throwable> exceptions = new Vector<Throwable>();
+        final int iterations = 1000;
+        final int numLists = 10;
+
+        final PList[] lists = new PList[numLists];
+        for (int i=0; i<numLists; i++) {
+            lists[i] = store.getPList("List" + i);
+        }
+
+        ExecutorService executor = Executors.newFixedThreadPool(100);
+        class A implements Runnable {
+            @Override
+            public void run() {
+                try {
+                    for (int i=0; i<iterations; i++) {
+                        PList candidate = lists[i%numLists];
+                        candidate.addLast(String.valueOf(i), payload);
+                        PListEntry entry = candidate.getFirst();
+                        assertTrue(candidate.remove(String.valueOf(i)));
+                    }
+                } catch (Exception error) {
+                    error.printStackTrace();
+                    exceptions.add(error);
+                }
+            }
+        };
+
+        class B implements  Runnable {
+            @Override
+            public void run() {
+                try {
+                    for (int i=0; i<iterations; i++) {
+                        PList candidate = lists[i%numLists];
+                        candidate.addLast(String.valueOf(i), payload);
+                        PListEntry entry = candidate.getFirst();
+                        assertTrue(candidate.remove(String.valueOf(i)));
+                    }
+                } catch (Exception error) {
+                    error.printStackTrace();
+                    exceptions.add(error);
+                }
+            }
+        };
+
+        executor.execute(new A());
+        executor.execute(new A());
+        executor.execute(new A());
+        executor.execute(new B());
+        executor.execute(new B());
+        executor.execute(new B());
+
+        executor.shutdown();
+        executor.awaitTermination(30, TimeUnit.SECONDS);
+
+        assertTrue("no exceptions", exceptions.isEmpty());
+    }
 
     @Before
     public void setUp() throws Exception {

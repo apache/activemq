@@ -80,4 +80,8 @@ public final class Scheduler extends ServiceSupport {
        }
         
     }
+
+    public String getName() {
+        return name;
+    }
 }

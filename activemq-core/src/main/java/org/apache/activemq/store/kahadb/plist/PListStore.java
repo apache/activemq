@@ -22,17 +22,18 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.Map.Entry;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
+import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.BrokerServiceAware;
+import org.apache.activemq.thread.Scheduler;
 import org.apache.activemq.util.IOHelper;
 import org.apache.activemq.util.ServiceStopper;
 import org.apache.activemq.util.ServiceSupport;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.apache.kahadb.index.BTreeIndex;
 import org.apache.kahadb.journal.Journal;
 import org.apache.kahadb.journal.Location;
@@ -40,15 +41,16 @@ import org.apache.kahadb.page.Page;
 import org.apache.kahadb.page.PageFile;
 import org.apache.kahadb.page.Transaction;
 import org.apache.kahadb.util.ByteSequence;
-import org.apache.kahadb.util.IntegerMarshaller;
 import org.apache.kahadb.util.LockFile;
 import org.apache.kahadb.util.StringMarshaller;
 import org.apache.kahadb.util.VariableMarshaller;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @org.apache.xbean.XBean
  */
-public class PListStore extends ServiceSupport {
+public class PListStore extends ServiceSupport implements BrokerServiceAware, Runnable {
     static final Logger LOG = LoggerFactory.getLogger(PListStore.class);
     private static final int DATABASE_LOCKED_WAIT_DELAY = 10 * 1000;
 
@@ -69,9 +71,16 @@ public class PListStore extends ServiceSupport {
     final MetaDataMarshaller metaDataMarshaller = new MetaDataMarshaller(this);
     Map<String, PList> persistentLists = new HashMap<String, PList>();
     final Object indexLock = new Object();
+    private Scheduler scheduler;
+    private long cleanupInterval = 30000;
 
     public Object getIndexLock() {
         return indexLock;
+    }
+
+    @Override
+    public void setBrokerService(BrokerService brokerService) {
+        this.scheduler = brokerService.getScheduler();
     }
 
     protected class MetaData {
@@ -81,21 +90,16 @@ public class PListStore extends ServiceSupport {
 
         private final PListStore store;
         Page<MetaData> page;
-        BTreeIndex<Integer, Integer> journalRC;
         BTreeIndex<String, PList> storedSchedulers;
 
         void createIndexes(Transaction tx) throws IOException {
             this.storedSchedulers = new BTreeIndex<String, PList>(pageFile, tx.allocate().getPageId());
-            this.journalRC = new BTreeIndex<Integer, Integer>(pageFile, tx.allocate().getPageId());
         }
 
         void load(Transaction tx) throws IOException {
             this.storedSchedulers.setKeyMarshaller(StringMarshaller.INSTANCE);
             this.storedSchedulers.setValueMarshaller(new JobSchedulerMarshaller(this.store));
             this.storedSchedulers.load(tx);
-            this.journalRC.setKeyMarshaller(IntegerMarshaller.INSTANCE);
-            this.journalRC.setValueMarshaller(IntegerMarshaller.INSTANCE);
-            this.journalRC.load(tx);
         }
 
         void loadLists(Transaction tx, Map<String, PList> schedulers) throws IOException {
@@ -110,15 +114,10 @@ public class PListStore extends ServiceSupport {
             this.storedSchedulers = new BTreeIndex<String, PList>(pageFile, is.readLong());
             this.storedSchedulers.setKeyMarshaller(StringMarshaller.INSTANCE);
             this.storedSchedulers.setValueMarshaller(new JobSchedulerMarshaller(this.store));
-            this.journalRC = new BTreeIndex<Integer, Integer>(pageFile, is.readLong());
-            this.journalRC.setKeyMarshaller(IntegerMarshaller.INSTANCE);
-            this.journalRC.setValueMarshaller(IntegerMarshaller.INSTANCE);
         }
 
         public void write(DataOutput os) throws IOException {
             os.writeLong(this.storedSchedulers.getPageId());
-            os.writeLong(this.journalRC.getPageId());
-
         }
     }
 
@@ -276,8 +275,15 @@ public class PListStore extends ServiceSupport {
                         metaData.loadLists(tx, persistentLists);
                     }
                 });
-
                 this.pageFile.flush();
+
+                if (cleanupInterval > 0) {
+                    if (scheduler == null) {
+                        scheduler = new Scheduler(PListStore.class.getSimpleName());
+                        scheduler.start();
+                    }
+                    scheduler.executePeriodically(this, cleanupInterval);
+                }
                 LOG.info(this + " initialized");
             }
         }
@@ -290,6 +296,12 @@ public class PListStore extends ServiceSupport {
 
     @Override
     protected synchronized void doStop(ServiceStopper stopper) throws Exception {
+        if (scheduler != null) {
+            if (PListStore.class.getSimpleName().equals(scheduler.getName())) {
+                scheduler.stop();
+                scheduler = null;
+            }
+        }
         for (PList pl : this.persistentLists.values()) {
             pl.unload();
         }
@@ -308,27 +320,29 @@ public class PListStore extends ServiceSupport {
 
     }
 
-    synchronized void incrementJournalCount(Transaction tx, Location location) throws IOException {
-        int logId = location.getDataFileId();
-        Integer val = this.metaData.journalRC.get(tx, logId);
-        int refCount = val != null ? val.intValue() + 1 : 1;
-        this.metaData.journalRC.put(tx, logId, refCount);
-
+    public void run() {
+        try {
+            final Set<Integer> candidates = journal.getFileMap().keySet();
+            LOG.trace("Full gc candidate set:" + candidates);
+            for (PList list : persistentLists.values()) {
+                PListEntry entry = list.getFirst();
+                while (entry != null) {
+                    claimCandidates(entry, candidates);
+                    entry = list.getNext(entry);
+                }
+                LOG.trace("Remaining gc candidate set after refs from: " + list.getName() + ":" + candidates);
+            }
+            LOG.debug("GC Candidate set:" + candidates);
+            this.journal.removeDataFiles(candidates);
+        } catch (IOException e) {
+            LOG.error("Exception on periodic cleanup: " + e, e);
+        }
     }
 
-    synchronized void decrementJournalCount(Transaction tx, Location location) throws IOException {
-        int logId = location.getDataFileId();
-        if (logId != Location.NOT_SET) {
-            int refCount = this.metaData.journalRC.get(tx, logId);
-            refCount--;
-            if (refCount <= 0) {
-                this.metaData.journalRC.remove(tx, logId);
-                Set<Integer> set = new HashSet<Integer>();
-                set.add(logId);
-                this.journal.removeDataFiles(set);
-            } else {
-                this.metaData.journalRC.put(tx, logId, refCount);
-            }
+    private void claimCandidates(PListEntry entry, Set<Integer> candidates) {
+        EntryLocation location = entry.getEntry();
+        if (location != null) {
+            candidates.remove(location.getLocation().getDataFileId());
         }
     }
 
@@ -402,6 +416,14 @@ public class PListStore extends ServiceSupport {
 
     public void setEnableIndexWriteAsync(boolean enableIndexWriteAsync) {
         this.enableIndexWriteAsync = enableIndexWriteAsync;
+    }
+
+    public long getCleanupInterval() {
+        return cleanupInterval;
+    }
+
+    public void setCleanupInterval(long cleanupInterval) {
+        this.cleanupInterval = cleanupInterval;
     }
 
     @Override
