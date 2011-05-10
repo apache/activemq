@@ -357,7 +357,7 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
     @Override
     public synchronized boolean isFull() {
 
-        return super.isFull() || (systemUsage != null && systemUsage.getTempUsage().isFull());
+        return super.isFull() || (!isDiskListEmpty() && systemUsage != null && systemUsage.getTempUsage().isFull());
 
     }
 
