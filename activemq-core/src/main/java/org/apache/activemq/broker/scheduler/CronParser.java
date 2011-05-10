@@ -296,7 +296,7 @@ public class CronParser {
     }
 
     protected static boolean isAll(String token) {
-        return token != null && token.length() == 1 && token.charAt(0) == '*';
+        return token != null && token.length() == 1 && (token.charAt(0) == '*' || token.charAt(0) == '?');
     }
 
     protected static int getDenominator(final String token) {

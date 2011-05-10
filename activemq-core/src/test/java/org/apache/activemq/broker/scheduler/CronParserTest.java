@@ -258,7 +258,9 @@ public class CronParserTest {
     @Test
     public void testValidate() {
         try {
-            CronParser.validate("30 08 10 06 * ");
+            CronParser.validate("30 08 10 06 ? ");
+            CronParser.validate("30 08 ? 06 5 ");
+            CronParser.validate("30 08 ? 06 * ");
             CronParser.validate("* * * * * ");
             CronParser.validate("* * * * 1-6 ");
             CronParser.validate("* * * * 1,2,5 ");
