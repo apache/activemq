@@ -129,6 +129,7 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
     protected final AtomicReference<CountDownLatch> stoppedLatch = new AtomicReference<CountDownLatch>();
 
     private Map<String, Object> socketOptions;
+    private int soLinger = -1;
     private Boolean keepAlive;
     private Boolean tcpNoDelay;
     private Thread runnerThread;
@@ -358,6 +359,18 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
         this.keepAlive = keepAlive;
     }
 
+    /**
+     * Enable soLinger with the specified soLinger
+     * @param soLinger enabled if > -1
+     */
+    public void setSoLinger(int soLinger) {
+        this.soLinger = soLinger;
+    }
+
+    public int getSoLinger() {
+        return soLinger;
+    }
+
     public Boolean getTcpNoDelay() {
         return tcpNoDelay;
     }
@@ -433,6 +446,10 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
 
         if (keepAlive != null) {
             sock.setKeepAlive(keepAlive.booleanValue());
+        }
+
+        if (soLinger != -1) {
+            sock.setSoLinger(true, soLinger);
         }
         if (tcpNoDelay != null) {
             sock.setTcpNoDelay(tcpNoDelay.booleanValue());

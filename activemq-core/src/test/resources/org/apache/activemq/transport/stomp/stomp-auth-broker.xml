@@ -68,7 +68,7 @@
     </plugins>
     
     <transportConnectors>
-		<transportConnector name="stomp"   uri="stomp://localhost:61613"/>
+		<transportConnector name="stomp"   uri="stomp://localhost:61613?transport.keepAlive=true&amp;transport.soLinger=0"/>
 	</transportConnectors>
     
   </broker>
