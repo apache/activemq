@@ -78,6 +78,8 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
             if (result) {
                 if (eldest.getValue() instanceof Message) {
                     currentCacheSize -= ((Message)eldest.getValue()).getSize();
+                } else if (eldest.getValue() instance of MessagePull) {
+                    currentCacheSize -= 400;
                 }
             }
             return result;
