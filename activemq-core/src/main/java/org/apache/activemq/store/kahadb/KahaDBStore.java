@@ -1067,7 +1067,6 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
         }
 
         public boolean cancel() {
-            releaseLocks();
             if (this.done.compareAndSet(false, true)) {
                 return this.future.cancel(false);
             }
