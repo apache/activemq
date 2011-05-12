@@ -139,6 +139,8 @@ public class TransportUriTest extends EmbeddedBrokerTestSupport {
         // TODO: Add more combinations.
         addCombinationValues("postfix", new Object[]
             {"?tcpNoDelay=true&keepAlive=true&soLinger=0"});
+        addCombinationValues("postfix", new Object[]
+            {"?tcpNoDelay=true&keepAlive=true&soLinger=-1"});
     }
 
     private void testValidOptionsWork(String options, String msg) {
