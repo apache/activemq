@@ -29,6 +29,7 @@ public class ConnectionInfo extends BaseCommand {
 
     protected ConnectionId connectionId;
     protected String clientId;
+    protected String clientIp;
     protected String userName;
     protected String password;
     protected BrokerId[] brokerPath;
@@ -68,6 +69,7 @@ public class ConnectionInfo extends BaseCommand {
         copy.clientMaster = clientMaster;
         copy.transportContext = transportContext;
         copy.faultTolerant= faultTolerant;
+        copy.clientIp = clientIp;
     }
 
     /**
@@ -227,5 +229,13 @@ public class ConnectionInfo extends BaseCommand {
 
     public void setFailoverReconnect(boolean failoverReconnect) {
         this.failoverReconnect = failoverReconnect;
+    }
+
+    public String getClientIp() {
+        return clientIp;
+    }
+
+    public void setClientIp(String clientIp) {
+        this.clientIp = clientIp;
     }
 }

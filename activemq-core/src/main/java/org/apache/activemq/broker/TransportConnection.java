@@ -687,6 +687,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         this.manageable = info.isManageable();
         state.setContext(context);
         state.setConnection(this);
+        info.setClientIp(getRemoteAddress());
        
         try {
             broker.addConnection(context, info);
