@@ -131,16 +131,10 @@ public class LDAPLoginModule implements LoginModule {
         else
         	password="";
 
-        try {
-            boolean result = authenticate(username, password);
-            if (!result) {
-                throw new FailedLoginException();
-            } else {
-                return true;
-            }
-        } catch (Exception e) {
-            throw (LoginException)new LoginException("LDAP Error").initCause(e);
-        }
+        // authenticate will throw LoginException
+        // in case of failed authentication
+        authenticate(username, password);
+        return true;
     }
 
     @Override
@@ -173,13 +167,23 @@ public class LDAPLoginModule implements LoginModule {
         }
     }
 
-    protected boolean authenticate(String username, String password) throws Exception {
+    protected boolean authenticate(String username, String password) throws LoginException {
 
         MessageFormat userSearchMatchingFormat;
         boolean userSearchSubtreeBool;
         
         DirContext context = null;
-        context = open();
+
+        if (log.isDebugEnabled()) {
+            log.debug("Create the LDAP initial context.");
+        }
+        try {
+            context = open();
+        } catch (NamingException ne) {
+            FailedLoginException ex = new FailedLoginException("Error opening LDAP connection");
+            ex.initCause(ne);
+            throw ex;
+        }
         
         if (!isLoginPropertySet(USER_SEARCH_MATCHING))
         	return false;
@@ -208,10 +212,18 @@ public class LDAPLoginModule implements LoginModule {
             list.toArray(attribs);
             constraints.setReturningAttributes(attribs);
 
+            if (log.isDebugEnabled()) {
+                log.debug("Get the user DN.");
+                log.debug("Looking for the user in LDAP with ");
+                log.debug("  base DN: " + getLDAPPropertyValue(USER_BASE));
+                log.debug("  filter: " + filter);
+            }
+
             NamingEnumeration<SearchResult> results = context.search(getLDAPPropertyValue(USER_BASE), filter, constraints);
 
             if (results == null || !results.hasMore()) {
-                return false;
+                log.warn("User " + username + " not found in LDAP.");
+                throw new FailedLoginException("User " + username + " not found in LDAP.");
             }
 
             SearchResult result = results.next();
@@ -229,7 +241,7 @@ public class LDAPLoginModule implements LoginModule {
 
             Attributes attrs = result.getAttributes();
             if (attrs == null) {
-                return false;
+                throw new FailedLoginException("User found, but LDAP entry malformed: " + username);
             }
             List<String> roles = null;
             if (isLoginPropertySet(USER_ROLE_NAME)) {
@@ -240,19 +252,26 @@ public class LDAPLoginModule implements LoginModule {
             if (bindUser(context, dn, password)) {
                 // if authenticated add more roles
                 roles = getRoles(context, dn, username, roles);
+                if (log.isDebugEnabled()) {
+                    log.debug("Roles " + roles + " for user " + username);
+                }
                 for (int i = 0; i < roles.size(); i++) {
                     groups.add(new GroupPrincipal(roles.get(i)));
                 }
             } else {
-                return false;
+                throw new FailedLoginException("Password does not match for user: " + username);
             }
         } catch (CommunicationException e) {
-
+            FailedLoginException ex = new FailedLoginException("Error contacting LDAP");
+            ex.initCause(e);
+            throw ex;
         } catch (NamingException e) {
             if (context != null) {
                 close(context);
             }
-            return false;
+            FailedLoginException ex = new FailedLoginException("Error contacting LDAP");
+            ex.initCause(e);
+            throw ex;
         }
 
         return true;
@@ -280,6 +299,12 @@ public class LDAPLoginModule implements LoginModule {
             constraints.setSearchScope(SearchControls.SUBTREE_SCOPE);
         } else {
             constraints.setSearchScope(SearchControls.ONELEVEL_SCOPE);
+        }
+        if (log.isDebugEnabled()) {
+            log.debug("Get user roles.");
+            log.debug("Looking for the user roles in LDAP with ");
+            log.debug("  base DN: " + getLDAPPropertyValue(ROLE_BASE));
+            log.debug("  filter: " + filter);
         }
         NamingEnumeration<SearchResult> results = context.search(getLDAPPropertyValue(ROLE_BASE), filter, constraints);
         while (results.hasMore()) {
@@ -325,14 +350,22 @@ public class LDAPLoginModule implements LoginModule {
     protected boolean bindUser(DirContext context, String dn, String password) throws NamingException {
         boolean isValid = false;
 
+        if (log.isDebugEnabled()) {
+            log.debug("Binding the user.");
+        }
         context.addToEnvironment(Context.SECURITY_PRINCIPAL, dn);
         context.addToEnvironment(Context.SECURITY_CREDENTIALS, password);
         try {
             context.getAttributes("", null);
             isValid = true;
+            if (log.isDebugEnabled()) {
+                log.debug("User " + dn + " successfully bound.");
+            }
         } catch (AuthenticationException e) {
             isValid = false;
-            log.debug("Authentication failed for dn=" + dn);
+            if (log.isDebugEnabled()) {
+                log.debug("Authentication failed for dn=" + dn);
+            }
         }
 
         if (isLoginPropertySet(CONNECTION_USERNAME)) {
@@ -340,7 +373,6 @@ public class LDAPLoginModule implements LoginModule {
         } else {
             context.removeFromEnvironment(Context.SECURITY_PRINCIPAL);
         }
-
         if (isLoginPropertySet(CONNECTION_PASSWORD)) {
             context.addToEnvironment(Context.SECURITY_CREDENTIALS, getLDAPPropertyValue(CONNECTION_PASSWORD));
         } else {
