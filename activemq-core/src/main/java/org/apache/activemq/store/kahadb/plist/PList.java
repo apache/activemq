@@ -19,6 +19,7 @@ package org.apache.activemq.store.kahadb.plist;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import org.apache.activemq.store.kahadb.plist.EntryLocation.EntryLocationMarshaller;
@@ -26,8 +27,11 @@ import org.apache.kahadb.journal.Location;
 import org.apache.kahadb.page.Page;
 import org.apache.kahadb.page.Transaction;
 import org.apache.kahadb.util.ByteSequence;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class PList {
+    static final Logger LOG = LoggerFactory.getLogger(PList.class);
     final PListStore store;
     private String name;
     private long rootId = EntryLocation.NOT_SET;
@@ -332,6 +336,25 @@ public class PList {
             }
         }
         return result;
+    }
+
+    synchronized public void claimFileLocations(final Set<Integer> candidates) throws IOException {
+        synchronized (indexLock) {
+            this.store.getPageFile().tx().execute(new Transaction.Closure<IOException>() {
+                public void execute(Transaction tx) throws IOException {
+                    long nextId = rootId;
+                    while (nextId != EntryLocation.NOT_SET) {
+                        EntryLocation entry = getNext(tx, nextId);
+                        if (entry != null) {
+                            candidates.remove(entry.getLocation().getDataFileId());
+                            nextId = entry.getNext();
+                        } else {
+                            break;
+                        }
+                    }
+                }
+            });
+        }
     }
 
     boolean remove(Transaction tx, String id) throws IOException {

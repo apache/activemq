@@ -27,7 +27,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.BrokerServiceAware;
 import org.apache.activemq.thread.Scheduler;
@@ -195,46 +194,54 @@ public class PListStore extends ServiceSupport implements BrokerServiceAware, Ru
         }
     }
 
-    synchronized public PList getPList(final String name) throws Exception {
+    public PList getPList(final String name) throws Exception {
         if (!isStarted()) {
             throw new IllegalStateException("Not started");
         }
         intialize();
-        PList result = this.persistentLists.get(name);
-        if (result == null) {
-            final PList pl = new PList(this);
-            pl.setName(name);
-            getPageFile().tx().execute(new Transaction.Closure<IOException>() {
-                public void execute(Transaction tx) throws IOException {
-                    pl.setRootId(tx.allocate().getPageId());
-                    pl.load(tx);
-                    metaData.storedSchedulers.put(tx, name, pl);
+        synchronized (indexLock) {
+            synchronized (this) {
+                PList result = this.persistentLists.get(name);
+                if (result == null) {
+                    final PList pl = new PList(this);
+                    pl.setName(name);
+                    getPageFile().tx().execute(new Transaction.Closure<IOException>() {
+                        public void execute(Transaction tx) throws IOException {
+                            pl.setRootId(tx.allocate().getPageId());
+                            pl.load(tx);
+                            metaData.storedSchedulers.put(tx, name, pl);
+                        }
+                    });
+                    result = pl;
+                    this.persistentLists.put(name, pl);
                 }
-            });
-            result = pl;
-            this.persistentLists.put(name, pl);
-        }
-        final PList load = result;
-        getPageFile().tx().execute(new Transaction.Closure<IOException>() {
-            public void execute(Transaction tx) throws IOException {
-                load.load(tx);
-            }
-        });
+                final PList load = result;
+                getPageFile().tx().execute(new Transaction.Closure<IOException>() {
+                    public void execute(Transaction tx) throws IOException {
+                        load.load(tx);
+                    }
+                });
 
-        return result;
+                return result;
+            }
+        }
     }
 
-    synchronized public boolean removePList(final String name) throws Exception {
+    public boolean removePList(final String name) throws Exception {
         boolean result = false;
-        final PList pl = this.persistentLists.remove(name);
-        result = pl != null;
-        if (result) {
-            getPageFile().tx().execute(new Transaction.Closure<IOException>() {
-                public void execute(Transaction tx) throws IOException {
-                    metaData.storedSchedulers.remove(tx, name);
-                    pl.destroy(tx);
+        synchronized (indexLock) {
+            synchronized (this) {
+                final PList pl = this.persistentLists.remove(name);
+                result = pl != null;
+                if (result) {
+                    getPageFile().tx().execute(new Transaction.Closure<IOException>() {
+                        public void execute(Transaction tx) throws IOException {
+                            metaData.storedSchedulers.remove(tx, name);
+                            pl.destroy(tx);
+                        }
+                    });
                 }
-            });
+            }
         }
         return result;
     }
@@ -324,16 +331,21 @@ public class PListStore extends ServiceSupport implements BrokerServiceAware, Ru
         try {
             final Set<Integer> candidates = journal.getFileMap().keySet();
             LOG.trace("Full gc candidate set:" + candidates);
-            for (PList list : persistentLists.values()) {
-                PListEntry entry = list.getFirst();
-                while (entry != null) {
-                    claimCandidates(entry, candidates);
-                    entry = list.getNext(entry);
+            if (candidates.size() > 1) {
+                List<PList> plists = null;
+                synchronized (this) {
+                    plists = new ArrayList(persistentLists.values());
                 }
-                LOG.trace("Remaining gc candidate set after refs from: " + list.getName() + ":" + candidates);
+                for (PList list : plists) {
+                    list.claimFileLocations(candidates);
+                    if (isStopping()) {
+                        return;
+                    }
+                    LOG.trace("Remaining gc candidate set after refs from: " + list.getName() + ":" + candidates);
+                }
+                LOG.trace("GC Candidate set:" + candidates);
+                this.journal.removeDataFiles(candidates);
             }
-            LOG.debug("GC Candidate set:" + candidates);
-            this.journal.removeDataFiles(candidates);
         } catch (IOException e) {
             LOG.error("Exception on periodic cleanup: " + e, e);
         }

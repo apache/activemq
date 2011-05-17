@@ -26,7 +26,6 @@ import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Vector;
-import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -36,11 +35,16 @@ import org.apache.kahadb.util.ByteSequence;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class PListTest {
-
+    static final Logger LOG = LoggerFactory.getLogger(PListTest.class);
     private PListStore store;
     private PList plist;
+    final ByteSequence payload = new ByteSequence(new byte[400]);
+    final String idSeed = new String("Seed");
+    final Vector<Throwable> exceptions = new Vector<Throwable>();
    
 
     @Test
@@ -225,6 +229,175 @@ public class PListTest {
         assertTrue("no exceptions", exceptions.isEmpty());
     }
 
+
+    @Test
+    public void testConcurrentAddLast() throws Exception {
+        File directory = store.getDirectory();
+        store.stop();
+        IOHelper.mkdirs(directory);
+        IOHelper.deleteChildren(directory);
+        store = new PListStore();
+        store.setDirectory(directory);
+        //store.setJournalMaxFileLength(1024*5);
+        store.start();
+
+
+        final int numThreads = 20;
+        final int iterations = 2000;
+        ExecutorService executor = Executors.newFixedThreadPool(100);
+        for (int i=0; i<numThreads; i++) {
+            new Job(i, PListTest.TaskType.ADD, iterations).run();
+        }
+
+        for (int i=0; i<numThreads; i++) {
+            executor.execute(new Job(i, PListTest.TaskType.ITERATE, iterations));
+        }
+
+        for (int i=0; i<100; i++) {
+            executor.execute(new Job(i+20, PListTest.TaskType.ADD, 100));
+        }
+
+        executor.shutdown();
+        executor.awaitTermination(60*5, TimeUnit.SECONDS);
+    }
+
+    @Test
+    public void testOverFlow() throws Exception {
+        File directory = store.getDirectory();
+        store.stop();
+        IOHelper.mkdirs(directory);
+        IOHelper.deleteChildren(directory);
+        store = new PListStore();
+        store.setDirectory(directory);
+        store.start();
+
+        for (int i=0;i<2000; i++) {
+            new Job(i, PListTest.TaskType.ADD, 5).run();
+
+        }
+        LOG.info("After Load index file: " + store.pageFile.getFile().length());
+        LOG.info("After remove index file: " + store.pageFile.getFile().length());
+    }
+
+
+    @Test
+    public void testConcurrentAddRemoveWithPreload() throws Exception {
+        File directory = store.getDirectory();
+        store.stop();
+        IOHelper.mkdirs(directory);
+        IOHelper.deleteChildren(directory);
+        store = new PListStore();
+        store.setDirectory(directory);
+        store.setJournalMaxFileLength(1024*5);
+        store.setCleanupInterval(5000);
+        store.start();
+
+        final int iterations = 500;
+        final int numLists = 10;
+
+        // prime the store
+
+        // create/delete
+        for (int i=0; i<numLists;i++) {
+            new Job(i, PListTest.TaskType.CREATE, iterations).run();
+        }
+
+        for (int i=0; i<numLists;i++) {
+            new Job(i, PListTest.TaskType.DELETE, iterations).run();
+        }
+
+        // fill
+        for (int i=0; i<numLists;i++) {
+            new Job(i, PListTest.TaskType.ADD, iterations).run();
+        }
+        // empty
+        for (int i=0; i<numLists;i++) {
+            new Job(i, PListTest.TaskType.REMOVE, iterations).run();
+        }
+        // empty
+        for (int i=0; i<numLists;i++) {
+            new Job(i, PListTest.TaskType.DELETE, iterations).run();
+        }
+
+        // fill
+        for (int i=0; i<numLists;i++) {
+            new Job(i, PListTest.TaskType.ADD, iterations).run();
+        }
+
+        // parallel
+        ExecutorService executor = Executors.newFixedThreadPool(100);
+        for (int i=0; i<numLists*2; i++) {
+            executor.execute(new Job(i, i>=numLists ? PListTest.TaskType.ADD : PListTest.TaskType.REMOVE, iterations));
+        }
+
+        executor.shutdown();
+        executor.awaitTermination(60*5, TimeUnit.SECONDS);
+        assertTrue("no excepitons", exceptions.isEmpty());
+    }
+
+    enum TaskType {CREATE, DELETE, ADD, REMOVE, ITERATE}
+
+    class Job implements Runnable {
+
+        int id;
+        TaskType task;
+        int iterations;
+
+        public Job(int id, TaskType t, int iterations) {
+            this.id = id;
+            this.task = t;
+            this.iterations = iterations;
+        }
+
+        @Override
+        public void run() {
+            try {
+                PList plist = null;
+                switch (task) {
+                    case CREATE:
+                        plist = store.getPList("List-" + id);
+                        break;
+                    case DELETE:
+                        store.removePList("List-" + id);
+                        break;
+                    case ADD:
+                        plist = store.getPList("List-" + id);
+
+                        for (int j = 0; j < iterations; j++) {
+                            plist.addLast(idSeed + "id" + j, payload);
+                            if (j > 0 && j % (iterations / 2) == 0) {
+                                LOG.info("Job-" + id + ", Done: " + j);
+                            }
+                        }
+                        break;
+                    case REMOVE:
+                        plist = store.getPList("List-" + id);
+
+                        for (int j = iterations; j > 0; j--) {
+                            plist.remove(idSeed + "id" + j);
+                            if (j > 0 && j % (iterations / 2) == 0) {
+                                LOG.info("Job-" + id + " Done remove: " + j);
+                            }
+                        }
+                        break;
+                    case ITERATE:
+                        plist = store.getPList("List-" + id);
+
+                        PListEntry element = plist.getFirst();
+                        while (element != null) {
+                            element = plist.getNext(element);
+                        }
+                        break;
+                    default:
+                }
+
+            } catch (Exception e) {
+                e.printStackTrace();
+                exceptions.add(e);
+            }
+        }
+    }
+
     @Before
     public void setUp() throws Exception {
         File directory = new File("target/test/PlistDB");
@@ -244,6 +417,7 @@ public class PListTest {
     @After
     public void tearDown() throws Exception {
         store.stop();
+        exceptions.clear();
     }
 
 }
