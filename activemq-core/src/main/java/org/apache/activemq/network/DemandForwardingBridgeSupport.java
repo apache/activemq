@@ -347,6 +347,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                 remoteConnectionInfo.setClientId(configuration.getName() + "_" + configuration.getBrokerName() + "_outbound");
                 remoteConnectionInfo.setUserName(configuration.getUserName());
                 remoteConnectionInfo.setPassword(configuration.getPassword());
+                remoteConnectionInfo.setClientIp(remoteBroker.getRemoteAddress());
                 remoteBroker.oneway(remoteConnectionInfo);
 
                 SessionInfo remoteSessionInfo = new SessionInfo(remoteConnectionInfo, 1);

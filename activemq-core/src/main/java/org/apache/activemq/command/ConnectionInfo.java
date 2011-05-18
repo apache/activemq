@@ -231,6 +231,9 @@ public class ConnectionInfo extends BaseCommand {
         this.failoverReconnect = failoverReconnect;
     }
 
+    /**
+     * @openwire:property version=8
+     */
     public String getClientIp() {
         return clientIp;
     }
