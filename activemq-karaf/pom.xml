@@ -33,7 +33,7 @@
   <properties>
     <xpp3-bundle-version>1.1.4c_3</xpp3-bundle-version>
     <jodatime-bundle-version>1.5.2_2</jodatime-bundle-version>
-    <jdom-bundle-version>1.1_2</jdom-bundle-version>
+    <jdom-bundle-version>1.1_3</jdom-bundle-version>
     <dom4j-bundle-version>1.6.1_2</dom4j-bundle-version>
     <xstream-bundle-version>1.3_3</xstream-bundle-version>
   </properties>
