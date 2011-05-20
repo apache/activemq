@@ -6,9 +6,9 @@
   The ASF licenses this file to You under the Apache License, Version 2.0
   (the "License"); you may not use this file except in compliance with
   the License.  You may obtain a copy of the License at
-  
+
   http://www.apache.org/licenses/LICENSE-2.0
-  
+
   Unless required by applicable law or agreed to in writing, software
   distributed under the License is distributed on an "AS IS" BASIS,
   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -163,13 +163,13 @@
     <developerConnection>scm:svn:https://svn.apache.org/repos/asf/activemq/trunk</developerConnection>
     <url>http://svn.apache.org/viewvc/activemq/trunk/</url>
   </scm>
-  
+
   <repositories>
     <repository>
         <id>com.springsource.repository.bundles.external</id>
         <name>SpringSource Enterprise Bundle Repository - External Bundle Releases</name>
         <url>http://repository.springsource.com/maven/bundles/external</url>
-    </repository> 
+    </repository>
     <repository>
       <id>apache.snapshots</id>
       <url>https://repository.apache.org/content/repositories/snapshots/</url>
@@ -233,7 +233,7 @@
         <groupId>org.apache.activemq</groupId>
         <artifactId>activemq-spring</artifactId>
         <version>${activemq-version}</version>
-      </dependency>      
+      </dependency>
       <dependency>
         <groupId>org.apache.activemq</groupId>
         <artifactId>activemq-web</artifactId>
@@ -395,7 +395,7 @@
         <artifactId>geronimo-servlet_2.5_spec</artifactId>
         <version>1.2</version>
       </dependency>
-      
+
       <dependency>
         <groupId>org.apache.geronimo.specs</groupId>
         <artifactId>geronimo-annotation_1.0_spec</artifactId>
@@ -430,7 +430,7 @@
       <dependency>
         <groupId>org.apache.camel</groupId>
         <artifactId>camel-web</artifactId>
-        <version>2.4.0</version>
+        <version>${camel-version}</version>
         <type>war</type>
       </dependency>
 
@@ -446,7 +446,7 @@
         <version>3.0.0</version>
         <optional>true</optional>
       </dependency>
-      
+
     <!-- For jsvc support -->
     <dependency>
       <groupId>commons-daemon</groupId>
@@ -743,7 +743,7 @@
         <version>${xstream-version}</version>
         <exclusions>
           <exclusion>
-            <!-- xom is an optional dependency of xstream. Its also 
+            <!-- xom is an optional dependency of xstream. Its also
               LGPL, so its really not ASF compatible. -->
             <groupId>xom</groupId>
             <artifactId>xom</artifactId>
@@ -786,7 +786,7 @@
         <artifactId>aopalliance</artifactId>
         <version>${aopalliance-version}</version>
       </dependency>
-      
+
       <dependency>
         <groupId>org.jasypt</groupId>
         <artifactId>jasypt</artifactId>
@@ -822,7 +822,7 @@
         <groupId>org.codehaus.jettison</groupId>
         <artifactId>jettison</artifactId>
         <version>${jettison-version}</version>
-    </dependency>  
+    </dependency>
 
       <dependency>
         <groupId>annogen</groupId>
@@ -901,7 +901,7 @@
         <artifactId>geronimo-transaction</artifactId>
         <version>2.2.1</version>
       </dependency>
-      
+
       <!-- FTP support for BlobMessages -->
         <dependency>
             <groupId>commons-net</groupId>
@@ -1221,7 +1221,7 @@
 
     </plugins>
   </reporting>
-  
+
   <profiles>
 
     <profile>
@@ -1244,38 +1244,38 @@
         </plugins>
       </build>
     </profile>
-    <profile> 
-      <id>deploy</id> 
-      <build> 
-        <defaultGoal>deploy</defaultGoal> 
-        <plugins> 
-          <plugin> 
-            <groupId>org.apache.maven.plugins</groupId> 
-            <artifactId>maven-source-plugin</artifactId> 
-            <version>2.1</version> 
-            <executions> 
-              <execution> 
-                <id>attach-sources</id> 
-                <goals> 
-                  <goal>jar</goal> 
-                </goals> 
-              </execution> 
-            </executions> 
-          </plugin> 
-          <plugin> 
-            <groupId>org.apache.maven.plugins</groupId> 
-            <artifactId>maven-javadoc-plugin</artifactId> 
-            <executions> 
-              <execution> 
-                <id>attach-javadocs</id> 
-                  <goals> 
-                    <goal>jar</goal> 
-                  </goals> 
-              </execution> 
-            </executions> 
-          </plugin> 
-        </plugins> 
-      </build> 
+    <profile>
+      <id>deploy</id>
+      <build>
+        <defaultGoal>deploy</defaultGoal>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-source-plugin</artifactId>
+            <version>2.1</version>
+            <executions>
+              <execution>
+                <id>attach-sources</id>
+                <goals>
+                  <goal>jar</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-javadoc-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>attach-javadocs</id>
+                  <goals>
+                    <goal>jar</goal>
+                  </goals>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
     </profile>
   </profiles>
 
