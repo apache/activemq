@@ -30,7 +30,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CancellationException;
-import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.DelayQueue;
 import java.util.concurrent.Delayed;
@@ -78,8 +77,8 @@ import org.slf4j.MDC;
 /**
  * The Queue is a List of MessageEntry objects that are dispatched to matching
  * subscriptions.
- * 
- * 
+ *
+ *
  */
 public class Queue extends BaseDestination implements Task, UsageListener {
     protected static final Logger LOG = LoggerFactory.getLogger(Queue.class);
@@ -113,7 +112,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
     private CountDownLatch consumersBeforeStartsLatch;
     private final AtomicLong pendingWakeups = new AtomicLong();
     private boolean allConsumersExclusiveByDefault = false;
-    
+
     private final Runnable sendMessagesWaitingForSpaceTask = new Runnable() {
         public void run() {
             asyncWakeup();
@@ -369,7 +368,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
         try {
 
             sub.add(context, this);
-           
+
             // needs to be synchronized - so no contention with dispatching
            // consumersLock.
             consumersLock.writeLock().lock();
@@ -461,7 +460,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                 } else if (isAllConsumersExclusiveByDefault()) {
                     Subscription exclusiveConsumer = null;
                     for (Subscription s : consumers) {
-                        if (exclusiveConsumer == null 
+                        if (exclusiveConsumer == null
                                 || s.getConsumerInfo().getPriority() > exclusiveConsumer
                                 .getConsumerInfo().getPriority()) {
                             exclusiveConsumer = s;
@@ -670,11 +669,11 @@ public class Queue extends BaseDestination implements Task, UsageListener {
             Exception {
         final ConnectionContext context = producerExchange.getConnectionContext();
         Future<Object> result = null;
-        
+
         checkUsage(context, message);
         sendLock.lockInterruptibly();
         try {
-            if (store != null && message.isPersistent()) {        
+            if (store != null && message.isPersistent()) {
                 message.getMessageId().setBrokerSequenceId(getDestinationSequenceId());
                 if (messages.isCacheEnabled()) {
                     result = store.asyncAddQueueMessage(context, message);
@@ -690,7 +689,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                 // a big TX does not blow up
                 // our memory. This increment is decremented once the tx finishes..
                 message.incrementReferenceCount();
-            
+
                 context.getTransaction().addSynchronization(new Synchronization() {
                     @Override
                     public void afterCommit() throws Exception {
@@ -749,11 +748,11 @@ public class Queue extends BaseDestination implements Task, UsageListener {
             }
         } else if (messages.getSystemUsage() != null && systemUsage.getTempUsage().isFull()) {
             final String logMessage = "Usage Manager Temp Store is Full ("
-                    + systemUsage.getTempUsage().getPercentUsage() + "% of " + systemUsage.getTempUsage().getLimit() 
+                    + systemUsage.getTempUsage().getPercentUsage() + "% of " + systemUsage.getTempUsage().getLimit()
                     +"). Stopping producer (" + message.getProducerId()
                 + ") to prevent flooding " + getActiveMQDestination().getQualifiedName() + "."
                 + " See http://activemq.apache.org/producer-flow-control.html for more info";
-            
+
             waitForSpace(context, messages.getSystemUsage().getTempUsage(), logMessage);
         }
     }
@@ -1154,7 +1153,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
 
     /**
      * Removes the messages matching the given selector
-     * 
+     *
      * @return the number of messages removed
      */
     public int removeMatchingMessages(String selector) throws Exception {
@@ -1164,7 +1163,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
     /**
      * Removes the messages matching the given selector up to the maximum number
      * of matched messages
-     * 
+     *
      * @return the number of messages removed
      */
     public int removeMatchingMessages(String selector, int maximumMessages) throws Exception {
@@ -1174,12 +1173,12 @@ public class Queue extends BaseDestination implements Task, UsageListener {
     /**
      * Removes the messages matching the given filter up to the maximum number
      * of matched messages
-     * 
+     *
      * @return the number of messages removed
      */
     public int removeMatchingMessages(MessageReferenceFilter filter, int maximumMessages) throws Exception {
         int movedCounter = 0;
-        Set<MessageReference> set = new CopyOnWriteArraySet<MessageReference>();
+        Set<MessageReference> set = new HashSet<MessageReference>();
         ConnectionContext context = createConnectionContext();
         do {
             doPageIn(true);
@@ -1215,7 +1214,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
 
     /**
      * Copies the messages matching the given selector
-     * 
+     *
      * @return the number of messages copied
      */
     public int copyMatchingMessagesTo(ConnectionContext context, String selector, ActiveMQDestination dest)
@@ -1226,7 +1225,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
     /**
      * Copies the messages matching the given selector up to the maximum number
      * of matched messages
-     * 
+     *
      * @return the number of messages copied
      */
     public int copyMatchingMessagesTo(ConnectionContext context, String selector, ActiveMQDestination dest,
@@ -1237,14 +1236,14 @@ public class Queue extends BaseDestination implements Task, UsageListener {
     /**
      * Copies the messages matching the given filter up to the maximum number of
      * matched messages
-     * 
+     *
      * @return the number of messages copied
      */
     public int copyMatchingMessages(ConnectionContext context, MessageReferenceFilter filter, ActiveMQDestination dest,
             int maximumMessages) throws Exception {
         int movedCounter = 0;
         int count = 0;
-        Set<MessageReference> set = new CopyOnWriteArraySet<MessageReference>();
+        Set<MessageReference> set = new HashSet<MessageReference>();
         do {
             int oldMaxSize = getMaxPageSize();
             setMaxPageSize((int) this.destinationStatistics.getMessages().getCount());
@@ -1311,7 +1310,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
 
     /**
      * Moves the messages matching the given selector
-     * 
+     *
      * @return the number of messages removed
      */
     public int moveMatchingMessagesTo(ConnectionContext context, String selector, ActiveMQDestination dest)
@@ -1335,7 +1334,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
     public int moveMatchingMessagesTo(ConnectionContext context, MessageReferenceFilter filter,
             ActiveMQDestination dest, int maximumMessages) throws Exception {
         int movedCounter = 0;
-        Set<QueueMessageReference> set = new CopyOnWriteArraySet<QueueMessageReference>();
+        Set<QueueMessageReference> set = new HashSet<QueueMessageReference>();
         do {
             doPageIn(true);
             pagedInMessagesLock.readLock().lock();
@@ -1632,8 +1631,8 @@ public class Queue extends BaseDestination implements Task, UsageListener {
             messagesLock.writeLock().unlock();
         }
     }
-    
-    final void messageSent(final ConnectionContext context, final Message msg) throws Exception {     
+
+    final void messageSent(final ConnectionContext context, final Message msg) throws Exception {
         destinationStatistics.getEnqueues().increment();
         destinationStatistics.getMessages().increment();
         messageDelivered(context, msg);
@@ -1751,7 +1750,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
             try {
                 resultList = new ArrayList<QueueMessageReference>(result.size());
                 for (QueueMessageReference ref : result) {
-                    if (!pagedInMessages.containsKey(ref.getMessageId())) {            
+                    if (!pagedInMessages.containsKey(ref.getMessageId())) {
                         pagedInMessages.put(ref.getMessageId(), ref);
                         resultList.add(ref);
                     } else {
@@ -2065,7 +2064,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
 
     /**
      * Find a consumer that matches the id in the message dispatch notification
-     * 
+     *
      * @param messageDispatchNotification
      * @return sub or null if the subscription has been removed before dispatch
      * @throws JMSException
