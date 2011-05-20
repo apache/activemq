@@ -150,7 +150,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
     private IOException failureError;
     
     private long optimizeAckTimestamp = System.currentTimeMillis();
-    private final long optimizeAckTimeout = 300;
+    private long optimizeAcknowledgeTimeOut = 0;
     private long failoverRedeliveryWaitPeriod = 0;
 
     /**
@@ -244,6 +244,9 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
         this.stats = new JMSConsumerStatsImpl(session.getSessionStats(), dest);
         this.optimizeAcknowledge = session.connection.isOptimizeAcknowledge() && session.isAutoAcknowledge()
                                    && !info.isBrowser();
+        if (this.optimizeAcknowledge) {
+            this.optimizeAcknowledgeTimeOut = session.connection.getOptimizeAcknowledgeTimeOut();
+        }
         this.info.setOptimizedAcknowledge(this.optimizeAcknowledge);
         this.failoverRedeliveryWaitPeriod = session.connection.getConsumerFailoverRedeliveryWaitPeriod();
         if (messageListener != null) {
@@ -855,7 +858,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                         if (!deliveredMessages.isEmpty()) {
                             if (optimizeAcknowledge) {
                                 ackCounter++;
-                                if (ackCounter >= (info.getPrefetchSize() * .65) || System.currentTimeMillis() >= (optimizeAckTimestamp + optimizeAckTimeout)) {
+                                if (ackCounter >= (info.getPrefetchSize() * .65) || (optimizeAcknowledgeTimeOut > 0 && System.currentTimeMillis() >= (optimizeAckTimestamp + optimizeAcknowledgeTimeOut))) {
                                 	MessageAck ack = makeAckForAllDeliveredMessages(MessageAck.STANDARD_ACK_TYPE);
                                 	if (ack != null) {
                             		    deliveredMessages.clear();

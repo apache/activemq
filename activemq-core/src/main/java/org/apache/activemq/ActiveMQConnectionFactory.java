@@ -94,6 +94,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
 
     private boolean disableTimeStampsByDefault;
     private boolean optimizedMessageDispatch = true;
+    private long optimizeAcknowledgeTimeOut = 300;
     private boolean copyMessageOnSend = true;
     private boolean useCompression;
     private boolean objectMessageSerializationDefered;
@@ -801,6 +802,18 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
      */
     public void setOptimizeAcknowledge(boolean optimizeAcknowledge) {
         this.optimizeAcknowledge = optimizeAcknowledge;
+    }
+
+    /**
+     * The max time in milliseconds between optimized ack batches
+     * @param optimizeAcknowledgeTimeOut
+     */
+    public void setOptimizeAcknowledgeTimeOut(int optimizeAcknowledgeTimeOut) {
+        this.optimizeAcknowledgeTimeOut =  optimizeAcknowledgeTimeOut;
+    }
+
+    public long getOptimizeAcknowledgeTimeOut() {
+        return optimizeAcknowledgeTimeOut;
     }
 
     public boolean isNestedMapAndListEnabled() {
