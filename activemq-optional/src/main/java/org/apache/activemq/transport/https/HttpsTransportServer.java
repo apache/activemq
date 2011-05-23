@@ -19,7 +19,6 @@ package org.apache.activemq.transport.https;
 import java.net.URI;
 
 import org.apache.activemq.transport.http.HttpTransportServer;
-import org.eclipse.jetty.server.ssl.SslSocketConnector;
 
 public class HttpsTransportServer extends HttpTransportServer {
 
@@ -31,13 +30,19 @@ public class HttpsTransportServer extends HttpTransportServer {
     private String trustCertificateAlgorithm;
     private String keyCertificateAlgorithm;
     private String protocol;
+    private String auth;
 
-    public HttpsTransportServer(URI uri, HttpsTransportFactory factory) {
+	 public HttpsTransportServer(URI uri, HttpsTransportFactory factory) {
         super(uri, factory);
     }
 
     public void doStart() throws Exception {
-        SslSocketConnector sslConnector = new SslSocketConnector();
+    	Krb5AndCertsSslSocketConnector sslConnector = new Krb5AndCertsSslSocketConnector();
+    	
+    	if(auth != null){
+        	sslConnector.setMode(auth);
+        }
+    	
         sslConnector.setKeystore(keyStore);
         sslConnector.setPassword(keyStorePassword);
         // if the keyPassword hasn't been set, default it to the
@@ -60,7 +65,7 @@ public class HttpsTransportServer extends HttpTransportServer {
         if (protocol != null) {
             sslConnector.setProtocol(protocol);
         }
-
+        
         setConnector(sslConnector);
 
         super.doStart();
@@ -132,5 +137,19 @@ public class HttpsTransportServer extends HttpTransportServer {
     public void setTrustCertificateAlgorithm(String trustCertificateAlgorithm) {
         this.trustCertificateAlgorithm = trustCertificateAlgorithm;
     }
+
+    /**
+	 * @return the auth
+	 */
+	public String getAuth() {
+		return auth;
+	}
+
+	/**
+	 * @param auth the auth to set
+	 */
+	public void setAuth(String auth) {
+		this.auth = auth;
+	}
 
 }
