@@ -19,25 +19,14 @@ package org.apache.kahadb.index;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
-import java.io.PrintWriter;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.Map.Entry;
 import java.util.NoSuchElementException;
-import javax.swing.plaf.basic.BasicInternalFrameTitlePane;
-import org.apache.kahadb.index.BTreeIndex.Prefixer;
 import org.apache.kahadb.page.Page;
 import org.apache.kahadb.page.Transaction;
 import org.apache.kahadb.util.LinkedNode;
 import org.apache.kahadb.util.LinkedNodeList;
 import org.apache.kahadb.util.VariableMarshaller;
-import sun.plugin.dom.exception.InvalidStateException;
-import sun.tools.tree.ReturnStatement;
-import sun.util.resources.CurrencyNames_th_TH;
 
 /**
  * The ListNode class represents a node in the List object graph.  It is stored in
@@ -110,7 +99,7 @@ public final class ListNode<Key,Value> {
                     try {
                         nextEntry = index.loadNode(tx, current.next, current);
                     } catch (IOException unexpected) {
-                        InvalidStateException e = new InvalidStateException("failed to load next: " + current.next + ", reason: " + unexpected.getLocalizedMessage());
+                        IllegalStateException e = new IllegalStateException("failed to load next: " + current.next + ", reason: " + unexpected.getLocalizedMessage());
                         e.initCause(unexpected);
                         throw e;
                     }
@@ -180,14 +169,14 @@ public final class ListNode<Key,Value> {
 
         public void remove() {
             if (toRemove == null) {
-                throw new InvalidStateException("can only remove once, call next again");
+                throw new IllegalStateException("can only remove once, call next again");
             }
             try {
                 doRemove(tx, current, toRemove);
                 index.onRemove();
                 toRemove = null;
             } catch (IOException unexpected) {
-                InvalidStateException e = new InvalidStateException(unexpected.getLocalizedMessage());
+                IllegalStateException e = new IllegalStateException(unexpected.getLocalizedMessage());
                 e.initCause(unexpected);
                 throw e;
             }
