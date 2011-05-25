@@ -22,6 +22,7 @@ import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
@@ -30,8 +31,8 @@ import java.util.concurrent.atomic.AtomicLong;
  * processing for them to become idle. The manager ensures that each task is
  * processes but that no one task overtakes the system. This is kinda like
  * cooperative multitasking.
- * 
- * 
+ *
+ * @org.apache.xbean.XBean
  */
 public class TaskRunnerFactory implements Executor {
 
@@ -41,6 +42,8 @@ public class TaskRunnerFactory implements Executor {
     private int priority;
     private boolean daemon;
     private AtomicLong id = new AtomicLong(0);
+    private boolean dedicatedTaskRunner;
+    private AtomicBoolean initDone = new AtomicBoolean(false);
 
     public TaskRunnerFactory() {
         this("ActiveMQ Task", Thread.NORM_PRIORITY, true, 1000);
@@ -50,22 +53,23 @@ public class TaskRunnerFactory implements Executor {
     	this(name,priority,daemon,maxIterationsPerRun,false);
     }
 
-
     public TaskRunnerFactory(String name, int priority, boolean daemon, int maxIterationsPerRun, boolean dedicatedTaskRunner) {
-
         this.name = name;
         this.priority = priority;
         this.daemon = daemon;
         this.maxIterationsPerRun = maxIterationsPerRun;
+        this.dedicatedTaskRunner = dedicatedTaskRunner;
+    }
 
-        // If your OS/JVM combination has a good thread model, you may want to
-        // avoid
-        // using a thread pool to run tasks and use a DedicatedTaskRunner
-        // instead.
-        if (dedicatedTaskRunner || "true".equalsIgnoreCase(System.getProperty("org.apache.activemq.UseDedicatedTaskRunner"))) {
-            executor = null;
-        } else {
-            executor = createDefaultExecutor();
+    public void init() {
+        if (initDone.compareAndSet(false, true)) {
+            // If your OS/JVM combination has a good thread model, you may want to
+            // avoid using a thread pool to run tasks and use a DedicatedTaskRunner instead.
+            if (dedicatedTaskRunner || "true".equalsIgnoreCase(System.getProperty("org.apache.activemq.UseDedicatedTaskRunner"))) {
+                executor = null;
+            } else if (executor == null) {
+                executor = createDefaultExecutor();
+            }
         }
     }
 
@@ -73,9 +77,11 @@ public class TaskRunnerFactory implements Executor {
         if (executor != null) {
             executor.shutdownNow();
         }
+        initDone.set(false);
     }
 
     public TaskRunner createTaskRunner(Task task, String name) {
+        init();
         if (executor != null) {
             return new PooledTaskRunner(executor, task, maxIterationsPerRun);
         } else {
@@ -88,6 +94,7 @@ public class TaskRunnerFactory implements Executor {
     }
     
     public void execute(Runnable runnable, String name) {
+        init();
         if (executor != null) {
             executor.execute(runnable);
         } else {
@@ -108,4 +115,51 @@ public class TaskRunnerFactory implements Executor {
         return rc;
     }
 
+    public ExecutorService getExecutor() {
+        return executor;
+    }
+
+    public void setExecutor(ExecutorService executor) {
+        this.executor = executor;
+    }
+
+    public int getMaxIterationsPerRun() {
+        return maxIterationsPerRun;
+    }
+
+    public void setMaxIterationsPerRun(int maxIterationsPerRun) {
+        this.maxIterationsPerRun = maxIterationsPerRun;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public int getPriority() {
+        return priority;
+    }
+
+    public void setPriority(int priority) {
+        this.priority = priority;
+    }
+
+    public boolean isDaemon() {
+        return daemon;
+    }
+
+    public void setDaemon(boolean daemon) {
+        this.daemon = daemon;
+    }
+
+    public boolean isDedicatedTaskRunner() {
+        return dedicatedTaskRunner;
+    }
+
+    public void setDedicatedTaskRunner(boolean dedicatedTaskRunner) {
+        this.dedicatedTaskRunner = dedicatedTaskRunner;
+    }
 }
