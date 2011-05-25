@@ -634,7 +634,7 @@ public class PageFile {
     }
 
     /**
-     * @param allows you to enable read page caching
+     * @param enablePageCaching allows you to enable read page caching
      */
     public void setEnablePageCaching(boolean enablePageCaching) {
         assertNotLoaded();
@@ -649,7 +649,7 @@ public class PageFile {
     }
 
     /**
-     * @param Sets the maximum number of pages that will get stored in the read page cache.
+     * @param pageCacheSize Sets the maximum number of pages that will get stored in the read page cache.
      */
     public void setPageCacheSize(int pageCacheSize) {
         assertNotLoaded();
@@ -678,6 +678,11 @@ public class PageFile {
 
     public int getRecoveryFileMinPageCount() {
         return recoveryFileMinPageCount;
+    }
+
+    public long getFreePageCount() {
+        assertLoaded();
+        return freeList.size();
     }
 
     public void setRecoveryFileMinPageCount(int recoveryFileMinPageCount) {
@@ -915,8 +920,6 @@ public class PageFile {
 
     /**
      * 
-     * @param timeout
-     * @param unit
      * @return true if there are still pending writes to do.
      * @throws InterruptedException 
      * @throws IOException 

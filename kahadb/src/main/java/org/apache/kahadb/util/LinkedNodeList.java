@@ -48,7 +48,7 @@ public class LinkedNodeList<T extends LinkedNode<T>> {
     }
 
     public T getTail() {
-        return head.prev;
+        return head != null ? head.prev : null;
     }
     
     public void clear() {

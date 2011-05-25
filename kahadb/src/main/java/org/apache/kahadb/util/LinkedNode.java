@@ -262,8 +262,6 @@ public class LinkedNode<T extends LinkedNode<T>> {
         // Update all the nodes in the new list so that they know of their new
         // list owner.
         T n = newList.head;
-        newList.size++;
-        list.size--;
         do {
             n.list = newList;
             n = n.next;
@@ -301,8 +299,6 @@ public class LinkedNode<T extends LinkedNode<T>> {
         // Update all the nodes in the new list so that they know of their new
         // list owner.
         T n = newList.head;
-        newList.size++;
-        list.size--;
         do {
             n.list = newList;
             n = n.next;
