@@ -22,7 +22,7 @@ import org.apache.activemq.Service;
 
 /**
  * @author David Martin Clavo david(dot)martin(dot)clavo(at)gmail.com (for the reloadLog4jProperties method)
- * 
+ *
  */
 public interface BrokerViewMBean extends Service {
 
@@ -31,23 +31,23 @@ public interface BrokerViewMBean extends Service {
      */
     @MBeanInfo("The unique id of the broker.")
     String getBrokerId();
-    
+
     /**
      * @return The name of the broker.
      */
     @MBeanInfo("The name of the broker.")
-    String getBrokerName();    
+    String getBrokerName();
 
     /**
      * @return The name of the broker.
      */
     @MBeanInfo("The version of the broker.")
-    String getBrokerVersion();        
-    
+    String getBrokerVersion();
+
     /**
      * The Broker will fush it's caches so that the garbage collector can
      * recalaim more memory.
-     * 
+     *
      * @throws Exception
      */
     @MBeanInfo("Runs the Garbage Collector.")
@@ -73,6 +73,9 @@ public interface BrokerViewMBean extends Service {
 
     @MBeanInfo("Number of message consumers subscribed to destinations on the broker.")
     long getTotalConsumerCount();
+
+    @MBeanInfo("Number of message producers active on destinations on the broker.")
+    long getTotalProducerCount();
 
     @MBeanInfo("Number of unacknowledged messages on the broker.")
     long getTotalMessageCount();
@@ -100,7 +103,7 @@ public interface BrokerViewMBean extends Service {
     long getTempLimit();
 
     void setTempLimit(@MBeanInfo("bytes") long limit);
-    
+
     @MBeanInfo("Messages are synchronized to disk.")
     boolean isPersistent();
 
@@ -109,7 +112,7 @@ public interface BrokerViewMBean extends Service {
 
     /**
      * Shuts down the JVM.
-     * 
+     *
      * @param exitCode the exit code that will be reported by the JVM process
      *                when it exits.
      */
@@ -154,6 +157,18 @@ public interface BrokerViewMBean extends Service {
     @MBeanInfo("Temporary Queue Subscribers.")
     ObjectName[] getTemporaryQueueSubscribers();
 
+    @MBeanInfo("Topic Producers.")
+    public ObjectName[] getTopicProducers();
+
+    @MBeanInfo("Queue Producers.")
+    public ObjectName[] getQueueProducers();
+
+    @MBeanInfo("Temporary Topic Producers.")
+    public ObjectName[] getTemporaryTopicProducers();
+
+    @MBeanInfo("Temporary Queue Producers.")
+    public ObjectName[] getTemporaryQueueProducers();
+
     @MBeanInfo("Adds a Connector to the broker.")
     String addConnector(@MBeanInfo("discoveryAddress") String discoveryAddress) throws Exception;
 
@@ -168,7 +183,7 @@ public interface BrokerViewMBean extends Service {
 
     /**
      * Adds a Topic destination to the broker.
-     * 
+     *
      * @param name The name of the Topic
      * @throws Exception
      */
@@ -177,7 +192,7 @@ public interface BrokerViewMBean extends Service {
 
     /**
      * Adds a Queue destination to the broker.
-     * 
+     *
      * @param name The name of the Queue
      * @throws Exception
      */
@@ -186,7 +201,7 @@ public interface BrokerViewMBean extends Service {
 
     /**
      * Removes a Topic destination from the broker.
-     * 
+     *
      * @param name The name of the Topic
      * @throws Exception
      */
@@ -195,7 +210,7 @@ public interface BrokerViewMBean extends Service {
 
     /**
      * Removes a Queue destination from the broker.
-     * 
+     *
      * @param name The name of the Queue
      * @throws Exception
      */
@@ -204,7 +219,7 @@ public interface BrokerViewMBean extends Service {
 
     /**
      * Creates a new durable topic subscriber
-     * 
+     *
      * @param clientId the JMS client ID
      * @param subscriberName the durable subscriber name
      * @param topicName the name of the topic to subscribe to
@@ -216,7 +231,7 @@ public interface BrokerViewMBean extends Service {
 
     /**
      * Destroys a durable subscriber
-     * 
+     *
      * @param clientId the JMS client ID
      * @param subscriberName the durable subscriber name
      */
@@ -226,30 +241,30 @@ public interface BrokerViewMBean extends Service {
     /**
      * Reloads log4j.properties from the classpath.
      * This methods calls org.apache.activemq.transport.TransportLoggerControl.reloadLog4jProperties
-     * @throws Throwable 
+     * @throws Throwable
      */
     @MBeanInfo(value="Reloads log4j.properties from the classpath.")
     public void reloadLog4jProperties() throws Throwable;
-    
+
     @MBeanInfo("The url of the openwire connector")
     String getOpenWireURL();
-    
+
     @MBeanInfo("The url of the stomp connector")
     String getStompURL();
-    
+
     @MBeanInfo("The url of the SSL connector")
     String getSslURL();
-    
+
     @MBeanInfo("The url of the Stomp SSL connector")
     String getStompSslURL();
-    
+
     @MBeanInfo("The url of the VM connector")
     String getVMURL();
-    
+
     @MBeanInfo("The location of the data directory")
     public String getDataDirectory();
-    
+
     @MBeanInfo("JMSJobScheduler")
     ObjectName getJMSJobScheduler();
-    
+
 }

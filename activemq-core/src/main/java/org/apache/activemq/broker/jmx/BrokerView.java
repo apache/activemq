@@ -39,7 +39,7 @@ import org.apache.activemq.network.NetworkConnector;
 import org.apache.activemq.util.BrokerSupport;
 
 /**
- * 
+ *
  */
 public class BrokerView implements BrokerViewMBean {
 
@@ -60,17 +60,17 @@ public class BrokerView implements BrokerViewMBean {
     public void setBroker(ManagedRegionBroker broker) {
         this.broker = broker;
     }
-    
+
     public String getBrokerId() {
         return broker.getBrokerId().toString();
     }
-    
+
     public String getBrokerName() {
         return broker.getBrokerName();
-    }    
-    
+    }
+
     public String getBrokerVersion() {
-    	return ActiveMQConnectionMetaData.PROVIDER_VERSION;
+        return ActiveMQConnectionMetaData.PROVIDER_VERSION;
     }
 
     public void gc() throws Exception {
@@ -84,13 +84,13 @@ public class BrokerView implements BrokerViewMBean {
     public void stop() throws Exception {
         brokerService.stop();
     }
-    
+
     public void stopGracefully(String connectorName, String queueName, long timeout, long pollInterval)
             throws Exception {
         brokerService.stopGracefully(connectorName, queueName, timeout, pollInterval);
     }
 
-    
+
     public long getTotalEnqueueCount() {
         return broker.getDestinationStatistics().getEnqueues().getCount();
     }
@@ -101,6 +101,10 @@ public class BrokerView implements BrokerViewMBean {
 
     public long getTotalConsumerCount() {
         return broker.getDestinationStatistics().getConsumers().getCount();
+    }
+
+    public long getTotalProducerCount() {
+        return broker.getDestinationStatistics().getProducers().getCount();
     }
 
     public long getTotalMessageCount() {
@@ -122,7 +126,7 @@ public class BrokerView implements BrokerViewMBean {
     public void setMemoryLimit(long limit) {
         brokerService.getSystemUsage().getMemoryUsage().setLimit(limit);
     }
-    
+
     public long getStoreLimit() {
         return brokerService.getSystemUsage().getStoreUsage().getLimit();
     }
@@ -131,7 +135,7 @@ public class BrokerView implements BrokerViewMBean {
         return brokerService.getSystemUsage().getStoreUsage().getPercentUsage();
     }
 
- 
+
     public long getTempLimit() {
        return brokerService.getSystemUsage().getTempUsage().getLimit();
     }
@@ -147,7 +151,7 @@ public class BrokerView implements BrokerViewMBean {
     public void setTempLimit(long limit) {
         brokerService.getSystemUsage().getTempUsage().setLimit(limit);
     }
-    
+
 
     public void resetStatistics() {
         broker.getDestinationStatistics().reset();
@@ -164,11 +168,11 @@ public class BrokerView implements BrokerViewMBean {
     public boolean isStatisticsEnabled() {
         return broker.getDestinationStatistics().isEnabled();
     }
-    
+
     public boolean isPersistent() {
         return brokerService.isPersistent();
     }
-    
+
     public boolean isSlave() {
         return brokerService.isSlave();
     }
@@ -215,6 +219,22 @@ public class BrokerView implements BrokerViewMBean {
 
     public ObjectName[] getInactiveDurableTopicSubscribers() {
         return broker.getInactiveDurableTopicSubscribers();
+    }
+
+    public ObjectName[] getTopicProducers() {
+        return broker.getTopicProducers();
+    }
+
+    public ObjectName[] getQueueProducers() {
+        return broker.getQueueProducers();
+    }
+
+    public ObjectName[] getTemporaryTopicProducers() {
+        return broker.getTemporaryTopicProducers();
+    }
+
+    public ObjectName[] getTemporaryQueueProducers() {
+        return broker.getTemporaryQueueProducers();
     }
 
     public String addConnector(String discoveryAddress) throws Exception {
@@ -298,10 +318,10 @@ public class BrokerView implements BrokerViewMBean {
         try {
             ClassLoader cl = getClass().getClassLoader();
             Class logManagerClass = cl.loadClass("org.apache.log4j.LogManager");
-            
+
             Method resetConfiguration = logManagerClass.getMethod("resetConfiguration", new Class[]{});
             resetConfiguration.invoke(null, new Object[]{});
-            
+
             URL log4jprops = cl.getResource("log4j.properties");
             if (log4jprops != null) {
                 Class propertyConfiguratorClass = cl.loadClass("org.apache.log4j.PropertyConfigurator");
@@ -312,7 +332,7 @@ public class BrokerView implements BrokerViewMBean {
             throw e.getTargetException();
         }
     }
-    
+
 
     public String getOpenWireURL() {
         String answer = brokerService.getTransportConnectorURIsAsMap().get("tcp");
@@ -338,7 +358,7 @@ public class BrokerView implements BrokerViewMBean {
         URI answer = brokerService.getVmConnectorURI();
         return answer != null ? answer.toString() : "";
     }
-    
+
     public String getDataDirectory() {
         File file = brokerService.getDataDirectoryFile();
         try {
@@ -351,7 +371,7 @@ public class BrokerView implements BrokerViewMBean {
     public ObjectName getJMSJobScheduler() {
         return this.jmsJobScheduler;
     }
-    
+
     public void setJMSJobScheduler(ObjectName name) {
         this.jmsJobScheduler=name;
     }

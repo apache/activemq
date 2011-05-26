@@ -60,6 +60,7 @@ import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageId;
+import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.command.SubscriptionInfo;
 import org.apache.activemq.store.MessageRecoveryListener;
 import org.apache.activemq.store.PersistenceAdapter;
@@ -88,6 +89,10 @@ public class ManagedRegionBroker extends RegionBroker {
     private final Map<ObjectName, SubscriptionView> inactiveDurableTopicSubscribers = new ConcurrentHashMap<ObjectName, SubscriptionView>();
     private final Map<ObjectName, SubscriptionView> temporaryQueueSubscribers = new ConcurrentHashMap<ObjectName, SubscriptionView>();
     private final Map<ObjectName, SubscriptionView> temporaryTopicSubscribers = new ConcurrentHashMap<ObjectName, SubscriptionView>();
+    private final Map<ObjectName, ProducerView> queueProducers = new ConcurrentHashMap<ObjectName, ProducerView>();
+    private final Map<ObjectName, ProducerView> topicProducers = new ConcurrentHashMap<ObjectName, ProducerView>();
+    private final Map<ObjectName, ProducerView> temporaryQueueProducers = new ConcurrentHashMap<ObjectName, ProducerView>();
+    private final Map<ObjectName, ProducerView> temporaryTopicProducers = new ConcurrentHashMap<ObjectName, ProducerView>();
     private final Map<SubscriptionKey, ObjectName> subscriptionKeys = new ConcurrentHashMap<SubscriptionKey, ObjectName>();
     private final Map<Subscription, ObjectName> subscriptionMap = new ConcurrentHashMap<Subscription, ObjectName>();
     private final Set<ObjectName> registeredMBeans = new CopyOnWriteArraySet<ObjectName>();
@@ -258,6 +263,23 @@ public class ManagedRegionBroker extends RegionBroker {
         super.removeConsumer(context, info);
     }
 
+    @Override
+    public void addProducer(ConnectionContext context, ProducerInfo info)
+            throws Exception {
+        super.addProducer(context, info);
+        String connectionClientId = context.getClientId();
+        ObjectName objectName = createObjectName(info, connectionClientId);
+        ProducerView view = new ProducerView(info, connectionClientId, this);
+        registerProducer(objectName, info.getDestination(), view);
+    }
+
+    @Override
+    public void removeProducer(ConnectionContext context, ProducerInfo info) throws Exception {
+        ObjectName objectName = createObjectName(info, context.getClientId());
+        unregisterProducer(objectName);
+        super.removeProducer(context, info);
+    }
+
     public void unregisterSubscription(Subscription sub) {
         ObjectName name = subscriptionMap.remove(sub);
         if (name != null) {
@@ -321,6 +343,44 @@ public class ManagedRegionBroker extends RegionBroker {
                     LOG.warn("Failed to unregister slow consumer strategy MBean: " + key);
                     LOG.debug("Failure reason: " + e, e);
                 }
+            }
+        }
+    }
+
+    protected void registerProducer(ObjectName key, ActiveMQDestination dest, ProducerView view) throws Exception {
+        if (dest.isQueue()) {
+            if (dest.isTemporary()) {
+                temporaryQueueProducers.put(key, view);
+            } else {
+                queueProducers.put(key, view);
+            }
+        } else {
+            if (dest.isTemporary()) {
+                temporaryTopicProducers.put(key, view);
+            } else {
+                topicProducers.put(key, view);
+            }
+        }
+        try {
+            AnnotatedMBean.registerMBean(managementContext, view, key);
+            registeredMBeans.add(key);
+        } catch (Throwable e) {
+            LOG.warn("Failed to register MBean: " + key);
+            LOG.debug("Failure reason: " + e, e);
+        }
+    }
+
+    protected void unregisterProducer(ObjectName key) throws Exception {
+        queueProducers.remove(key);
+        topicProducers.remove(key);
+        temporaryQueueProducers.remove(key);
+        temporaryTopicProducers.remove(key);
+        if (registeredMBeans.remove(key)) {
+            try {
+                managementContext.unregisterMBean(key);
+            } catch (Throwable e) {
+                LOG.warn("Failed to unregister MBean: " + key);
+                LOG.debug("Failure reason: " + e, e);
             }
         }
     }
@@ -406,7 +466,7 @@ public class ManagedRegionBroker extends RegionBroker {
         if (destinations != null) {
             for (Iterator iter = destinations.iterator(); iter.hasNext();) {
                 ActiveMQDestination dest = (ActiveMQDestination)iter.next();
-                if (dest.isTopic()) {                
+                if (dest.isTopic()) {
                     SubscriptionInfo[] infos = destinationFactory.getAllDurableSubscriptions((ActiveMQTopic)dest);
                     if (infos != null) {
                         for (int i = 0; i < infos.length; i++) {
@@ -508,7 +568,7 @@ public class ManagedRegionBroker extends RegionBroker {
                 public boolean hasSpace() {
                     return true;
                 }
-                
+
                 public boolean isDuplicate(MessageId id) {
                     return false;
                 }
@@ -570,6 +630,26 @@ public class ManagedRegionBroker extends RegionBroker {
         return set.toArray(new ObjectName[set.size()]);
     }
 
+    protected ObjectName[] getTopicProducers() {
+        Set<ObjectName> set = topicProducers.keySet();
+        return set.toArray(new ObjectName[set.size()]);
+    }
+
+    protected ObjectName[] getQueueProducers() {
+        Set<ObjectName> set = queueProducers.keySet();
+        return set.toArray(new ObjectName[set.size()]);
+    }
+
+    protected ObjectName[] getTemporaryTopicProducers() {
+        Set<ObjectName> set = temporaryTopicProducers.keySet();
+        return set.toArray(new ObjectName[set.size()]);
+    }
+
+    protected ObjectName[] getTemporaryQueueProducers() {
+        Set<ObjectName> set = temporaryQueueProducers.keySet();
+        return set.toArray(new ObjectName[set.size()]);
+    }
+
     public Broker getContextBroker() {
         return contextBroker;
     }
@@ -584,6 +664,22 @@ public class ManagedRegionBroker extends RegionBroker {
         ObjectName objectName = new ObjectName(brokerObjectName.getDomain() + ":" + "BrokerName=" + map.get("BrokerName") + "," + "Type="
                                                + JMXSupport.encodeObjectNamePart(destName.getDestinationTypeAsString()) + "," + "Destination="
                                                + JMXSupport.encodeObjectNamePart(destName.getPhysicalName()));
+        return objectName;
+    }
+
+    protected ObjectName createObjectName(ProducerInfo producerInfo, String connectionClientId) throws MalformedObjectNameException {
+        // Build the object name for the producer info
+        Hashtable map = brokerObjectName.getKeyPropertyList();
+
+        String destinationType = "destinationType=" + producerInfo.getDestination().getDestinationTypeAsString();
+        String destinationName = "destinationName=" + JMXSupport.encodeObjectNamePart(producerInfo.getDestination().getPhysicalName());
+        String clientId = "clientId=" + JMXSupport.encodeObjectNamePart(connectionClientId);
+        String producerId = "producerId=" + JMXSupport.encodeObjectNamePart(producerInfo.getProducerId().toString());
+
+        ObjectName objectName = new ObjectName(brokerObjectName.getDomain() + ":" + "BrokerName=" + map.get("BrokerName") + ","
+                                               + "Type=Producer" + ","
+                                               + destinationType + "," + destinationName + ","
+                                               + clientId + "," + producerId);
         return objectName;
     }
 
@@ -646,7 +742,7 @@ public class ManagedRegionBroker extends RegionBroker {
         Hashtable map = brokerObjectName.getKeyPropertyList();
         ObjectName objectName = new ObjectName(brokerObjectName.getDomain() + ":" + "BrokerName=" + map.get("BrokerName") + ","
                             + "Type=SlowConsumerStrategy," + "InstanceName=" + JMXSupport.encodeObjectNamePart(strategy.getName()));
-        return objectName;            
+        return objectName;
     }
 
     public ObjectName getSubscriberObjectName(Subscription key) {
