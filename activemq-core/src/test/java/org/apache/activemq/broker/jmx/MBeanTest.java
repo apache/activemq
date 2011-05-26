@@ -100,10 +100,10 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
 
         // test all the various MBeans now we have a producer, consumer and
         // messages on a queue
-//        assertSendViaMBean();
-//        assertQueueBrowseWorks();
-//        assertCreateAndDestroyDurableSubscriptions();
-//        assertConsumerCounts();
+        assertSendViaMBean();
+        assertQueueBrowseWorks();
+        assertCreateAndDestroyDurableSubscriptions();
+        assertConsumerCounts();
         assertProducerCounts();
     }
 
