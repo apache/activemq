@@ -118,7 +118,7 @@ ACTIVEMQ_USER=""
 
 # Set jvm memory configuration
 if [ -z "$ACTIVEMQ_OPTS_MEMORY" ] ; then
-    ACTIVEMQ_OPTS_MEMORY="-Xms256M -Xmx256M"
+    ACTIVEMQ_OPTS_MEMORY="-Xms256M -Xmx1G"
 fi
 
 # Uncomment to enable audit logging
