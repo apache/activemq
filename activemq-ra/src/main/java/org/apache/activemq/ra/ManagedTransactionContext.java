@@ -44,7 +44,7 @@ public class ManagedTransactionContext extends TransactionContext {
 
     public void setUseSharedTxContext(boolean enable) throws JMSException {
         if (isInLocalTransaction() || isInXATransaction()) {
-            throw new JMSException("The resource is allready being used in transaction context.");
+            throw new JMSException("The resource is already being used in transaction context.");
         }
         useSharedTxContext = enable;
     }
