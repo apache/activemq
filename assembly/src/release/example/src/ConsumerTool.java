@@ -111,7 +111,7 @@ public class ConsumerTool extends Thread implements MessageListener, ExceptionLi
     }
 
     public void showParameters() {
-        System.out.println("Connecting to URL: " + url);
+        System.out.println("Connecting to URL: " + url + " (" + user + ":" + password + ")");
         System.out.println("Consuming " + (topic ? "topic" : "queue") + ": " + subject);
         System.out.println("Using a " + (durable ? "durable" : "non-durable") + " subscription");
         System.out.println("Running " + parallelThreads + " parallel threads");

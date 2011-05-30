@@ -39,6 +39,8 @@
 	<property name="receive-time-out" value="0"/>
 	<property name="subscribers" value="1"/>
 	<property name="batch" value="10"/>
+	<property name="user" value=""/>
+	<property name="password" value=""/>
 	
 	<!-- for WAR -->
 	<property name="app.name" value="activemq-web" />
@@ -95,6 +97,8 @@
                                     message consumption
                   parallelThreads - The number of parallel threads
                             batch - Batch size for transactions and client acknowledgment (default 10)
+                             user - Connection username (if connecting to secured broker)
+                         password - Connection password (if connecting to secured broker)
 				
             --------------------------------------------------------				
             ant producer &lt;options&gt; - Creates a producer publishing a number of messages
@@ -116,7 +120,8 @@
                        verbose - Used to print out more info; the default is true
                    messageSize - The size of the message in 1-byte characters
                parallelThreads - The number of parallel threads
-
+                          user - Connection username (if connecting to secured broker)
+                      password - Connection password (if connecting to secured broker)
 		   
            --------------------------------------------------------
 		
@@ -221,6 +226,8 @@
 			<arg value="--ack-mode=${ack-mode}"/>		
 			<arg value="--receive-time-out=${receive-time-out}"/>
             <arg value="--batch=${batch}"/>
+            <arg value="--user=${user}"/>
+            <arg value="--password=${password}"/>
 		</java>
 	</target>
 
@@ -241,7 +248,9 @@
 			<arg value="--time-to-live=${timeToLive}" />
 			<arg value="--sleep-time=${sleepTime}" />
 			<arg value="--transacted=${transacted}" />
-			<arg value="--verbose=${verbose}"/>			
+			<arg value="--verbose=${verbose}"/>
+            <arg value="--user=${user}"/>
+            <arg value="--password=${password}"/>						
 		</java>
 	</target>
 
