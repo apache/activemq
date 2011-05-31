@@ -613,6 +613,10 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         assertEquals("topic1 Producer count", 0, topic1.getProducerCount());
         assertEquals("topic2 Producer count", 0, topic2.getProducerCount());
 
+        MessageProducer producer4 = session.createProducer(null);
+        producer4.close();
+        Thread.sleep(500);
+
         assertEquals("broker Topic Producer count", 0, broker.getTopicProducers().length);
     }
 

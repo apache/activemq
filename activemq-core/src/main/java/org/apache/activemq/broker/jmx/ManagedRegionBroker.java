@@ -348,19 +348,23 @@ public class ManagedRegionBroker extends RegionBroker {
     }
 
     protected void registerProducer(ObjectName key, ActiveMQDestination dest, ProducerView view) throws Exception {
-        if (dest.isQueue()) {
-            if (dest.isTemporary()) {
-                temporaryQueueProducers.put(key, view);
+
+        if (dest != null) {
+            if (dest.isQueue()) {
+                if (dest.isTemporary()) {
+                    temporaryQueueProducers.put(key, view);
+                } else {
+                    queueProducers.put(key, view);
+                }
             } else {
-                queueProducers.put(key, view);
-            }
-        } else {
-            if (dest.isTemporary()) {
-                temporaryTopicProducers.put(key, view);
-            } else {
-                topicProducers.put(key, view);
+                if (dest.isTemporary()) {
+                    temporaryTopicProducers.put(key, view);
+                } else {
+                    topicProducers.put(key, view);
+                }
             }
         }
+
         try {
             AnnotatedMBean.registerMBean(managementContext, view, key);
             registeredMBeans.add(key);
@@ -499,7 +503,7 @@ public class ManagedRegionBroker extends RegionBroker {
     }
 
     protected void addInactiveSubscription(SubscriptionKey key, SubscriptionInfo info) {
-        Hashtable map = brokerObjectName.getKeyPropertyList();
+        Hashtable<String, String> map = brokerObjectName.getKeyPropertyList();
         try {
             ObjectName objectName = new ObjectName(brokerObjectName.getDomain() + ":" + "BrokerName=" + map.get("BrokerName") + "," + "Type=Subscription," + "active=false,"
                                                    + "name=" + JMXSupport.encodeObjectNamePart(key.toString()) + "");
@@ -671,8 +675,17 @@ public class ManagedRegionBroker extends RegionBroker {
         // Build the object name for the producer info
         Hashtable map = brokerObjectName.getKeyPropertyList();
 
-        String destinationType = "destinationType=" + producerInfo.getDestination().getDestinationTypeAsString();
-        String destinationName = "destinationName=" + JMXSupport.encodeObjectNamePart(producerInfo.getDestination().getPhysicalName());
+        String destinationType = "destinationType=";
+        String destinationName = "destinationName=";
+
+        if (producerInfo.getDestination() == null) {
+            destinationType += "NOTSET";
+            destinationName += "NOTSET";
+        } else {
+            destinationType += producerInfo.getDestination().getDestinationTypeAsString();
+            destinationName += JMXSupport.encodeObjectNamePart(producerInfo.getDestination().getPhysicalName());
+        }
+
         String clientId = "clientId=" + JMXSupport.encodeObjectNamePart(connectionClientId);
         String producerId = "producerId=" + JMXSupport.encodeObjectNamePart(producerInfo.getProducerId().toString());
 
