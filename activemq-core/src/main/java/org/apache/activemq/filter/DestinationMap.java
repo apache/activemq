@@ -219,4 +219,11 @@ public class DestinationMap {
             }
         }
     }
+
+    public void reset() {
+        queueRootNode = new DestinationMapNode(null);
+        tempQueueRootNode = new DestinationMapNode(null);
+        topicRootNode = new DestinationMapNode(null);
+        tempTopicRootNode = new DestinationMapNode(null);
+    }
 }
