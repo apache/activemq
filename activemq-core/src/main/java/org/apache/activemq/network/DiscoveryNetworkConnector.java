@@ -195,6 +195,7 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
                 stopper.onException(this, e);
             }
         }
+        bridges.clear();
         try {
             this.discoveryAgent.stop();
         } catch (Exception e) {

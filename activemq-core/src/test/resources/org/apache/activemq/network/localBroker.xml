@@ -28,7 +28,8 @@
       <networkConnector uri="static:(tcp://localhost:61617)"
          dynamicOnly = "false"
          conduitSubscriptions = "true"
-         decreaseNetworkConsumerPriority = "false">
+         decreaseNetworkConsumerPriority = "false"
+         name="networkConnector">
       	<dynamicallyIncludedDestinations>
       		<queue physicalName="include.test.foo"/>
       		<topic physicalName="include.test.bar"/>
