@@ -221,6 +221,14 @@ public abstract class NetworkConnector extends NetworkBridgeConfiguration implem
 	    return serviceSupport.isStarted();
     }
 
+    public boolean isStopped() {
+        return serviceSupport.isStopped();
+    }
+
+    public boolean isStopping() {
+        return serviceSupport.isStopping();
+    }
+
     public ObjectName getObjectName() {
         return objectName;
     }
