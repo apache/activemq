@@ -162,12 +162,13 @@ blockquote {
 
 .tooltip:hover span {
     position: absolute;
-    top: 10px;
+    top: 15px;
     left: 25px;
     display: block;
     background: #ccc;
     color: #880055;
     border: 1px solid #880055;
+    z-index: 10;
 }
 
 div.message {
