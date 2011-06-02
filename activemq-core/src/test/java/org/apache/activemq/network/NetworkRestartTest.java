@@ -72,6 +72,37 @@ public class NetworkRestartTest extends TestCase {
 
     }
 
+    public void testConnectorReAdd() throws Exception {
+        MessageConsumer remoteConsumer = remoteSession.createConsumer(included);
+        MessageProducer localProducer = localSession.createProducer(included);
+
+        localProducer.send(localSession.createTextMessage("before"));
+        Message before = remoteConsumer.receive(1000);
+        assertNotNull(before);
+        assertEquals("before", ((TextMessage)before).getText());
+
+        // restart connector
+
+        NetworkConnector connector = localBroker.getNetworkConnectorByName("networkConnector");
+
+        LOG.info("Removing connector");
+        connector.stop();
+        localBroker.removeNetworkConnector(connector);
+
+        Thread.sleep(5000);
+        LOG.info("Re-adding connector");
+        localBroker.addNetworkConnector(connector);
+        connector.start();
+
+        Thread.sleep(5000);
+
+
+        localProducer.send(localSession.createTextMessage("after"));
+        Message after = remoteConsumer.receive(1000);
+        assertNotNull(after);
+        assertEquals("after", ((TextMessage)after).getText());
+    }
+
 
     protected void setUp() throws Exception {
         super.setUp();
