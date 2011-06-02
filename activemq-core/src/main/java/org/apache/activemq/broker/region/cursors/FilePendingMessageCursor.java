@@ -135,7 +135,9 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
         iterating = false;
         if (flushRequired) {
             flushRequired = false;
-            flushToDisk();
+            if (!hasSpace()) {
+                flushToDisk();
+            }
         }
     }
 
@@ -151,8 +153,9 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
     }
 
     private void destroyDiskList() throws Exception {
-        if (!isDiskListEmpty()) {
+        if (diskList != null) {
             store.removePList(name);
+            diskList = null;
         }
     }
 
@@ -335,7 +338,7 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
      */
     @Override
     public synchronized int size() {
-        return memoryList.size() + (isDiskListEmpty() ? 0 : getDiskList().size());
+        return memoryList.size() + (isDiskListEmpty() ? 0 : (int)getDiskList().size());
     }
 
     /**
@@ -374,12 +377,14 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
     public void onUsageChanged(Usage usage, int oldPercentUsage, int newPercentUsage) {
         if (newPercentUsage >= getMemoryUsageHighWaterMark()) {
             synchronized (this) {
-                flushRequired = true;
-                if (!iterating) {
-                    expireOldMessages();
-                    if (!hasSpace()) {
-                        flushToDisk();
-                        flushRequired = false;
+                if (!flushRequired) {
+                    flushRequired =true;
+                    if (!iterating) {
+                        expireOldMessages();
+                        if (!hasSpace()) {
+                            flushToDisk();
+                            flushRequired = false;
+                        }
                     }
                 }
             }
@@ -412,8 +417,12 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
     }
 
     protected synchronized void flushToDisk() {
-
         if (!memoryList.isEmpty()) {
+            long start = 0;
+             if (LOG.isTraceEnabled()) {
+                start = System.currentTimeMillis();
+                LOG.trace("" + name + ", flushToDisk() mem list size: " +memoryList.size()  + " " +  (systemUsage != null ? systemUsage.getMemoryUsage() : "") );
+             }
             while (!memoryList.isEmpty()) {
                 MessageReference node = memoryList.removeFirst();
                 node.decrementReferenceCount();
@@ -429,6 +438,9 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
             }
             memoryList.clear();
             setCacheEnabled(false);
+             if (LOG.isTraceEnabled()) {
+                LOG.trace("" + name + ", flushToDisk() done - " + (System.currentTimeMillis() - start) + "ms " + (systemUsage != null ? systemUsage.getMemoryUsage() : ""));
+             }
         }
     }
 
@@ -471,35 +483,23 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
     }
 
     final class DiskIterator implements Iterator<MessageReference> {
-        private PListEntry next = null;
-        private PListEntry current = null;
-        PList list;
-
+        private final Iterator<PListEntry> iterator;
         DiskIterator() {
             try {
-                this.list = getDiskList();
-                synchronized (this.list) {
-                    this.current = this.list.getFirst();
-                    this.next = this.current;
-                }
+                iterator = getDiskList().iterator();
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
         }
 
         public boolean hasNext() {
-            return this.next != null;
+            return iterator.hasNext();
         }
 
         public MessageReference next() {
-            this.current = next;
             try {
-                ByteSequence bs = this.current.getByteSequence();
-                synchronized (this.list) {
-                    this.current = this.list.refresh(this.current);
-                    this.next = this.list.getNext(this.current);
-                }
-                return getMessage(bs);
+                PListEntry entry = iterator.next();
+                return getMessage(entry.getByteSequence());
             } catch (IOException e) {
                 LOG.error("I/O error", e);
                 throw new RuntimeException(e);
@@ -507,17 +507,7 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
         }
 
         public void remove() {
-            try {
-                synchronized (this.list) {
-                    this.current = this.list.refresh(this.current);
-                    this.list.remove(this.current);
-                }
-
-            } catch (IOException e) {
-                LOG.error("I/O error", e);
-                throw new RuntimeException(e);
-            }
-
+            iterator.remove();
         }
 
     }

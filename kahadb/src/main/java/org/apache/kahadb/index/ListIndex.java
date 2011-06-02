@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,7 +36,7 @@ public class ListIndex<Key,Value> implements Index<Key,Value> {
     protected PageFile pageFile;
     protected long headPageId;
     protected long tailPageId;
-    private long size;
+    private AtomicLong size = new AtomicLong(0);
 
     protected AtomicBoolean loaded = new AtomicBoolean();
 
@@ -43,9 +44,12 @@ public class ListIndex<Key,Value> implements Index<Key,Value> {
     private Marshaller<Key> keyMarshaller;
     private Marshaller<Value> valueMarshaller;
 
-    public ListIndex(PageFile pageFile, long rootPageId) {
+    public ListIndex() {
+    }
+
+    public ListIndex(PageFile pageFile, long headPageId) {
         this.pageFile = pageFile;
-        this.headPageId = rootPageId;
+        this.headPageId = headPageId;
     }
 
     synchronized public void load(Transaction tx) throws IOException {
@@ -61,15 +65,15 @@ public class ListIndex<Key,Value> implements Index<Key,Value> {
             final Page<ListNode<Key,Value>> p = tx.load(headPageId, null);
             if( p.getType() == Page.PAGE_FREE_TYPE ) {
                  // Need to initialize it..
-                ListNode<Key, Value> root = createNode(p, null);
+                ListNode<Key, Value> root = createNode(p);
                 storeNode(tx, root, true);
-                tailPageId = headPageId;
+                tailPageId = headPageId = p.getPageId();
             } else {
-                ListNode<Key, Value> node = loadNode(tx, headPageId, null);
-                size += node.size(tx);
+                ListNode<Key, Value> node = loadNode(tx, headPageId);
+                size.addAndGet(node.size(tx));
                 while (node.getNext() != -1) {
-                    node = loadNode(tx, node.getNext(), node);
-                    size += node.size(tx);
+                    node = loadNode(tx, node.getNext());
+                    size.addAndGet(node.size(tx));
                     tailPageId = node.getPageId();
                 }
             }
@@ -82,11 +86,11 @@ public class ListIndex<Key,Value> implements Index<Key,Value> {
     }
     
     protected ListNode<Key,Value> getHead(Transaction tx) throws IOException {
-        return loadNode(tx, headPageId, null);
+        return loadNode(tx, headPageId);
     }
 
     protected ListNode<Key,Value> getTail(Transaction tx) throws IOException {
-        return loadNode(tx, tailPageId, null);
+        return loadNode(tx, tailPageId);
     }
 
     synchronized public boolean containsKey(Transaction tx, Key key) throws IOException {
@@ -122,14 +126,14 @@ public class ListIndex<Key,Value> implements Index<Key,Value> {
     synchronized public Value add(Transaction tx, Key key, Value value) throws IOException {
         assertLoaded();
         getTail(tx).put(tx, key, value);
-        size ++;
+        size.incrementAndGet();
         return null;
     }
 
     synchronized public Value addFirst(Transaction tx, Key key, Value value) throws IOException {
         assertLoaded();
         getHead(tx).addFirst(tx, key, value);
-        size++;
+        size.incrementAndGet();
         return null;
     }
 
@@ -146,7 +150,7 @@ public class ListIndex<Key,Value> implements Index<Key,Value> {
     }
 
     public void onRemove() {
-        size--;
+        size.decrementAndGet();
     }
 
     public boolean isTransient() {
@@ -157,8 +161,10 @@ public class ListIndex<Key,Value> implements Index<Key,Value> {
         for (Iterator<ListNode<Key,Value>> iterator = listNodeIterator(tx); iterator.hasNext(); ) {
             ListNode<Key,Value>candidate = iterator.next();
             candidate.clear(tx);
+            // break up the transaction
+            tx.commit();
         }
-        size = 0;
+        size.set(0);
     }
 
     synchronized public Iterator<ListNode<Key, Value>> listNodeIterator(Transaction tx) throws IOException {
@@ -173,7 +179,7 @@ public class ListIndex<Key,Value> implements Index<Key,Value> {
         return getHead(tx).iterator(tx);
     }
     
-    synchronized public Iterator<Map.Entry<Key,Value>> iterator(final Transaction tx, int initialPosition) throws IOException {
+    synchronized public Iterator<Map.Entry<Key,Value>> iterator(final Transaction tx, long initialPosition) throws IOException {
         return getHead(tx).iterator(tx, initialPosition);
     }
 
@@ -191,29 +197,24 @@ public class ListIndex<Key,Value> implements Index<Key,Value> {
         }
     }
 
-    ListNode<Key,Value> loadNode(Transaction tx, long pageId, ListNode<Key,Value> parent) throws IOException {
+    ListNode<Key,Value> loadNode(Transaction tx, long pageId) throws IOException {
         Page<ListNode<Key,Value>> page = tx.load(pageId, marshaller);
         ListNode<Key, Value> node = page.get();
         node.setPage(page);
-        node.setParent(parent);
         return node;
     }
 
-    ListNode<Key,Value> createNode(Page<ListNode<Key,Value>> p, ListNode<Key,Value> parent) throws IOException {
-        ListNode<Key,Value> node = new ListNode<Key,Value>(this);
-        node.setPage(p);
-        node.setParent(parent);
-        node.setEmpty();
-        p.set(node);
-        return node;
-    }
-
-    ListNode<Key,Value> createNode(Transaction tx, ListNode<Key,Value> parent) throws IOException {
-        Page<ListNode<Key,Value>> page = tx.load(tx.<Object>allocate(1).getPageId(), marshaller);
+    ListNode<Key,Value> createNode(Page<ListNode<Key,Value>> page) throws IOException {
         ListNode<Key,Value> node = new ListNode<Key,Value>(this);
         node.setPage(page);
-        node.setParent(parent);
-        node.setEmpty();
+        page.set(node);
+        return node;
+    }
+
+    ListNode<Key,Value> createNode(Transaction tx) throws IOException {
+        Page<ListNode<Key,Value>> page = tx.load(tx.<Object>allocate(1).getPageId(), null);
+        ListNode<Key,Value> node = new ListNode<Key,Value>(this);
+        node.setPage(page);
         page.set(node);
         return node;
     }
@@ -225,6 +226,11 @@ public class ListIndex<Key,Value> implements Index<Key,Value> {
     public PageFile getPageFile() {
         return pageFile;
     }
+
+    public void setPageFile(PageFile pageFile) {
+        this.pageFile = pageFile;
+    }
+
     public long getHeadPageId() {
         return headPageId;
     }
@@ -252,6 +258,6 @@ public class ListIndex<Key,Value> implements Index<Key,Value> {
     }
 
     public long size() {
-        return size;
+        return size.get();
     }
 }

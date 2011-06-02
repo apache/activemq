@@ -228,39 +228,9 @@ public class ListIndexTest extends IndexTestSupport {
         tx.commit();
     }
 
-    public void testVisitor() throws Exception {
-        createPageFileAndIndex(100);
-        ListIndex<String, Long> index = ((ListIndex<String, Long>) this.index);
-        this.index.load(tx);
-        tx.commit();
-
-        // Insert in reverse order..
-        doInsert(1000);
-
-        this.index.unload(tx);
-        tx.commit();
-        this.index.load(tx);
-        tx.commit();
-
-        // BTree should iterate it in sorted order.
-
-        /*index.visit(tx, new BTreeVisitor<String, Long>(){
-            public boolean isInterestedInKeysBetween(String first, String second) {
-                return true;
-            }
-            public void visit(List<String> keys, List<Long> values) {
-            }
-        });*/
-
-
-        this.index.unload(tx);
-        tx.commit();
-    }
-
-
     public void testRandomRemove() throws Exception {
 
-        createPageFileAndIndex(100);
+        createPageFileAndIndex(4*1024);
         ListIndex<String, Long> index = ((ListIndex<String, Long>) this.index);
         this.index.load(tx);
         tx.commit();
@@ -295,21 +265,34 @@ public class ListIndexTest extends IndexTestSupport {
         index.remove(tx, key(1566));
     }
 
-    public void testLargeAppendTimed() throws Exception {
-        createPageFileAndIndex(100);
+    public void testLargeAppendRemoveTimed() throws Exception {
+        createPageFileAndIndex(1024*4);
         ListIndex<String, Long> listIndex = ((ListIndex<String, Long>) this.index);
         this.index.load(tx);
         tx.commit();
         final int COUNT = 50000;
         long start = System.currentTimeMillis();
         for (int i = 0; i < COUNT; i++) {
-            //String test = new String("test" + i);
-            //ByteSequence bs = new ByteSequence(test.getBytes());
              listIndex.put(tx, key(i), (long) i);
              tx.commit();
         }
         LOG.info("Time to add " + COUNT + ": " + (System.currentTimeMillis() - start) + " mills");
         LOG.info("Page count: " + listIndex.getPageFile().getPageCount());
+
+        start = System.currentTimeMillis();
+        tx = pf.tx();
+        int removeCount = 0;
+        Iterator<Map.Entry<String, Long>> iterator = index.iterator(tx);
+        while (iterator.hasNext()) {
+            iterator.next();
+            iterator.remove();
+            removeCount++;
+        }
+        tx.commit();
+        assertEquals("Removed all", COUNT, removeCount);
+        LOG.info("Time to remove " + COUNT + ": " + (System.currentTimeMillis() - start) + " mills");
+        LOG.info("Page count: " + listIndex.getPageFile().getPageCount());
+        LOG.info("Page free count: " + listIndex.getPageFile().getFreePageCount());
     }
 
     void doInsertReverse(int count) throws Exception {

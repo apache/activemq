@@ -280,4 +280,14 @@ public class SequenceSet extends LinkedNodeList<Sequence> {
         return false;
     }
 
+    public long rangeSize() {
+        long result = 0;
+        Sequence sequence = getHead();
+        while (sequence != null) {
+            result += sequence.range();
+            sequence = sequence.getNext();
+        }
+        return result;
+    }
+
 }

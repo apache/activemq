@@ -36,7 +36,6 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.apache.activemq.ActiveMQMessageAuditNoSync;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.BrokerServiceAware;
-import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ConnectionId;
 import org.apache.activemq.command.LocalTransactionId;
 import org.apache.activemq.command.MessageAck;
@@ -63,6 +62,7 @@ import org.apache.activemq.util.Callback;
 import org.apache.activemq.util.IOHelper;
 import org.apache.activemq.util.ServiceStopper;
 import org.apache.activemq.util.ServiceSupport;
+import org.apache.kahadb.util.LocationMarshaller;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.kahadb.index.BTreeIndex;
@@ -816,7 +816,12 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
      * @throws IOException
      */
     public JournalCommand<?> load(Location location) throws IOException {
+        long start = System.currentTimeMillis();
         ByteSequence data = journal.read(location);
+        long end = System.currentTimeMillis();
+        if( LOG_SLOW_ACCESS_TIME>0 && end-start > LOG_SLOW_ACCESS_TIME) {
+            LOG.info("Slow KahaDB access: Journal read took: "+(end-start)+" ms");
+        }
         DataByteArrayInputStream is = new DataByteArrayInputStream(data);
         byte readByte = is.readByte();
         KahaEntryType type = KahaEntryType.valueOf(readByte);
@@ -1472,34 +1477,6 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
         }
     }
 
-    static class LocationMarshaller implements Marshaller<Location> {
-        final static LocationMarshaller INSTANCE = new LocationMarshaller();
-
-        public Location readPayload(DataInput dataIn) throws IOException {
-            Location rc = new Location();
-            rc.setDataFileId(dataIn.readInt());
-            rc.setOffset(dataIn.readInt());
-            return rc;
-        }
-
-        public void writePayload(Location object, DataOutput dataOut) throws IOException {
-            dataOut.writeInt(object.getDataFileId());
-            dataOut.writeInt(object.getOffset());
-        }
-
-        public int getFixedSize() {
-            return 8;
-        }
-
-        public Location deepCopy(Location source) {
-            return new Location(source);
-        }
-
-        public boolean isDeepCopySupported() {
-            return true;
-        }
-    }
-
     static class KahaSubscriptionCommandMarshaller extends VariableMarshaller<KahaSubscriptionCommand> {
         final static KahaSubscriptionCommandMarshaller INSTANCE = new KahaSubscriptionCommandMarshaller();
 
@@ -1569,7 +1546,7 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
         // Figure out the next key using the last entry in the destination.
         rc.orderIndex.configureLast(tx);
 
-        rc.locationIndex.setKeyMarshaller(LocationMarshaller.INSTANCE);
+        rc.locationIndex.setKeyMarshaller(org.apache.kahadb.util.LocationMarshaller.INSTANCE);
         rc.locationIndex.setValueMarshaller(LongMarshaller.INSTANCE);
         rc.locationIndex.load(tx);
 

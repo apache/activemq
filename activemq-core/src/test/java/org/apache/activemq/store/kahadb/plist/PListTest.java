@@ -23,6 +23,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Vector;
@@ -80,7 +81,7 @@ public class PListTest {
             plist.addFirst(test, bs);
         }
         assertEquals(plist.size(), COUNT);
-        int count = plist.size() - 1;
+        long count = plist.size() - 1;
         for (ByteSequence bs : map.values()) {
             String origStr = new String(bs.getData(), bs.getOffset(), bs.getLength());
             PListEntry entry = plist.get(count);
@@ -107,7 +108,7 @@ public class PListTest {
         assertEquals(plist.size(), COUNT);
         PListEntry entry = plist.getFirst();
         while (entry != null) {
-            plist.remove(entry.copy());
+            plist.remove(entry.getId());
             entry = plist.getFirst();
         }
         assertEquals(0,plist.size());
@@ -133,7 +134,6 @@ public class PListTest {
         }
         plist.destroy();
         assertEquals(0,plist.size());
-        assertNull("no first entry", plist.getFirst());
     }
     
     @Test
@@ -292,47 +292,56 @@ public class PListTest {
         store.setCleanupInterval(5000);
         store.start();
 
-        final int iterations = 500;
+        final int iterations = 5000;
         final int numLists = 10;
 
         // prime the store
 
         // create/delete
+        LOG.info("create");
         for (int i=0; i<numLists;i++) {
             new Job(i, PListTest.TaskType.CREATE, iterations).run();
         }
 
+        LOG.info("delete");
         for (int i=0; i<numLists;i++) {
             new Job(i, PListTest.TaskType.DELETE, iterations).run();
         }
 
-        // fill
+        LOG.info("fill");
         for (int i=0; i<numLists;i++) {
             new Job(i, PListTest.TaskType.ADD, iterations).run();
         }
-        // empty
+        LOG.info("remove");
         for (int i=0; i<numLists;i++) {
             new Job(i, PListTest.TaskType.REMOVE, iterations).run();
         }
-        // empty
+
+        LOG.info("check empty");
+        for (int i=0; i<numLists;i++) {
+            assertEquals("empty " + i, 0, store.getPList("List-" + i).size());
+        }
+
+        LOG.info("delete again");
         for (int i=0; i<numLists;i++) {
             new Job(i, PListTest.TaskType.DELETE, iterations).run();
         }
 
-        // fill
+        LOG.info("fill again");
         for (int i=0; i<numLists;i++) {
             new Job(i, PListTest.TaskType.ADD, iterations).run();
         }
 
-        // parallel
-        ExecutorService executor = Executors.newFixedThreadPool(100);
+        LOG.info("parallel add and remove");
+        ExecutorService executor = Executors.newFixedThreadPool(numLists*2);
         for (int i=0; i<numLists*2; i++) {
             executor.execute(new Job(i, i>=numLists ? PListTest.TaskType.ADD : PListTest.TaskType.REMOVE, iterations));
         }
 
         executor.shutdown();
+        LOG.info("wait for parallel work to complete");
         executor.awaitTermination(60*5, TimeUnit.SECONDS);
-        assertTrue("no excepitons", exceptions.isEmpty());
+        assertTrue("no exceptions", exceptions.isEmpty());
     }
 
     enum TaskType {CREATE, DELETE, ADD, REMOVE, ITERATE}
@@ -373,7 +382,7 @@ public class PListTest {
                     case REMOVE:
                         plist = store.getPList("List-" + id);
 
-                        for (int j = iterations; j > 0; j--) {
+                        for (int j = iterations -1; j >= 0; j--) {
                             plist.remove(idSeed + "id" + j);
                             if (j > 0 && j % (iterations / 2) == 0) {
                                 LOG.info("Job-" + id + " Done remove: " + j);
@@ -383,9 +392,10 @@ public class PListTest {
                     case ITERATE:
                         plist = store.getPList("List-" + id);
 
-                        PListEntry element = plist.getFirst();
-                        while (element != null) {
-                            element = plist.getNext(element);
+                        Iterator<PListEntry> iterator = plist.iterator();
+                        PListEntry element = null;
+                        while (iterator.hasNext()) {
+                            element = iterator.next();
                         }
                         break;
                     default:

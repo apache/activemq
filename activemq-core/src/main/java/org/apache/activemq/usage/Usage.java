@@ -284,7 +284,10 @@ public abstract class Usage<T extends Usage> implements Service {
 
     @Override
     public String toString() {
-        return "Usage(" + getName() + ") percentUsage=" + percentUsage + "%, usage=" + retrieveUsage() + " limit=" + limiter.getLimit() + " percentUsageMinDelta=" + percentUsageMinDelta + "%";
+        return "Usage(" + getName() + ") percentUsage=" + percentUsage
+                + "%, usage=" + retrieveUsage() + ", limit=" + limiter.getLimit()
+                + ", percentUsageMinDelta=" + percentUsageMinDelta + "%"
+                + (parent != null ? ";Parent:" + parent.toString() : "");
     }
 
     @SuppressWarnings("unchecked")

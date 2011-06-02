@@ -583,12 +583,12 @@ public abstract class BaseDestination implements Destination {
     
     protected final void waitForSpace(ConnectionContext context, Usage<?> usage, int highWaterMark, String warning) throws IOException, InterruptedException, ResourceAllocationException {
         if (systemUsage.isSendFailIfNoSpace()) {
-            getLog().debug("sendFailIfNoSpace, forcing exception on send: " + warning);
+            getLog().debug("sendFailIfNoSpace, forcing exception on send, usage:  " + usage + ": " + warning);
             throw new ResourceAllocationException(warning);
         }
         if (systemUsage.getSendFailIfNoSpaceAfterTimeout() != 0) {
             if (!usage.waitForSpace(systemUsage.getSendFailIfNoSpaceAfterTimeout(), highWaterMark)) {
-                getLog().debug("sendFailIfNoSpaceAfterTimeout expired, forcing exception on send: " + warning);
+                getLog().debug("sendFailIfNoSpaceAfterTimeout expired, forcing exception on send, usage: " + usage + ": " + warning);
                 throw new ResourceAllocationException(warning);
             }
         } else {
@@ -601,7 +601,7 @@ public abstract class BaseDestination implements Destination {
     
                 long now = System.currentTimeMillis();
                 if (now >= nextWarn) {
-                    getLog().info(warning + " (blocking for: " + (now - start) / 1000 + "s)");
+                    getLog().info("" + usage + ": " + warning + " (blocking for: " + (now - start) / 1000 + "s)");
                     nextWarn = now + blockedProducerWarningInterval;
                 }
             }

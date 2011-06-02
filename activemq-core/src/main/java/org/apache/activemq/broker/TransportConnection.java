@@ -17,6 +17,7 @@
 package org.apache.activemq.broker;
 
 import java.io.IOException;
+import java.net.SocketException;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -228,11 +229,20 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
             transportException.set(e);
             if (TRANSPORTLOG.isDebugEnabled()) {
                 TRANSPORTLOG.debug("Transport failed: " + e, e);
-            } else if (TRANSPORTLOG.isInfoEnabled()) {
+            } else if (TRANSPORTLOG.isInfoEnabled() && !expected(e)) {
                 TRANSPORTLOG.info("Transport failed: " + e);
             }
             stopAsync();
         }
+    }
+
+    private boolean expected(IOException e) {
+        return  e instanceof SocketException && isStomp() && e.getMessage().indexOf("reset") != -1;
+    }
+
+    private boolean isStomp() {
+        URI uri = connector.getUri();
+        return uri != null && uri.getScheme() != null && uri.getScheme().indexOf("stomp") != -1;
     }
 
     /**

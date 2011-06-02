@@ -73,6 +73,10 @@ public class PListStore extends ServiceSupport implements BrokerServiceAware, Ru
     private Scheduler scheduler;
     private long cleanupInterval = 30000;
 
+    private int indexPageSize = PageFile.DEFAULT_PAGE_SIZE;
+    private int indexCacheSize = PageFile.DEFAULT_PAGE_CACHE_SIZE;
+    private int indexWriteBatchSize = PageFile.DEFAULT_WRITE_BATCH_SIZE;
+
     public Object getIndexLock() {
         return indexLock;
     }
@@ -82,6 +86,30 @@ public class PListStore extends ServiceSupport implements BrokerServiceAware, Ru
         this.scheduler = brokerService.getScheduler();
     }
 
+    public int getIndexPageSize() {
+        return indexPageSize;
+    }
+
+    public int getIndexCacheSize() {
+        return indexCacheSize;
+    }
+
+    public int getIndexWriteBatchSize() {
+        return indexWriteBatchSize;
+    }
+
+    public void setIndexPageSize(int indexPageSize) {
+        this.indexPageSize = indexPageSize;
+    }
+
+    public void setIndexCacheSize(int indexCacheSize) {
+        this.indexCacheSize = indexCacheSize;
+    }
+
+    public void setIndexWriteBatchSize(int indexWriteBatchSize) {
+        this.indexWriteBatchSize = indexWriteBatchSize;
+    }
+
     protected class MetaData {
         protected MetaData(PListStore store) {
             this.store = store;
@@ -89,34 +117,34 @@ public class PListStore extends ServiceSupport implements BrokerServiceAware, Ru
 
         private final PListStore store;
         Page<MetaData> page;
-        BTreeIndex<String, PList> storedSchedulers;
+        BTreeIndex<String, PList> lists;
 
         void createIndexes(Transaction tx) throws IOException {
-            this.storedSchedulers = new BTreeIndex<String, PList>(pageFile, tx.allocate().getPageId());
+            this.lists = new BTreeIndex<String, PList>(pageFile, tx.allocate().getPageId());
         }
 
         void load(Transaction tx) throws IOException {
-            this.storedSchedulers.setKeyMarshaller(StringMarshaller.INSTANCE);
-            this.storedSchedulers.setValueMarshaller(new JobSchedulerMarshaller(this.store));
-            this.storedSchedulers.load(tx);
+            this.lists.setKeyMarshaller(StringMarshaller.INSTANCE);
+            this.lists.setValueMarshaller(new PListMarshaller(this.store));
+            this.lists.load(tx);
         }
 
-        void loadLists(Transaction tx, Map<String, PList> schedulers) throws IOException {
-            for (Iterator<Entry<String, PList>> i = this.storedSchedulers.iterator(tx); i.hasNext();) {
+        void loadLists(Transaction tx, Map<String, PList> lists) throws IOException {
+            for (Iterator<Entry<String, PList>> i = this.lists.iterator(tx); i.hasNext();) {
                 Entry<String, PList> entry = i.next();
                 entry.getValue().load(tx);
-                schedulers.put(entry.getKey(), entry.getValue());
+                lists.put(entry.getKey(), entry.getValue());
             }
         }
 
         public void read(DataInput is) throws IOException {
-            this.storedSchedulers = new BTreeIndex<String, PList>(pageFile, is.readLong());
-            this.storedSchedulers.setKeyMarshaller(StringMarshaller.INSTANCE);
-            this.storedSchedulers.setValueMarshaller(new JobSchedulerMarshaller(this.store));
+            this.lists = new BTreeIndex<String, PList>(pageFile, is.readLong());
+            this.lists.setKeyMarshaller(StringMarshaller.INSTANCE);
+            this.lists.setValueMarshaller(new PListMarshaller(this.store));
         }
 
         public void write(DataOutput os) throws IOException {
-            os.writeLong(this.storedSchedulers.getPageId());
+            os.writeLong(this.lists.getPageId());
         }
     }
 
@@ -137,29 +165,9 @@ public class PListStore extends ServiceSupport implements BrokerServiceAware, Ru
         }
     }
 
-    class ValueMarshaller extends VariableMarshaller<List<EntryLocation>> {
-        public List<EntryLocation> readPayload(DataInput dataIn) throws IOException {
-            List<EntryLocation> result = new ArrayList<EntryLocation>();
-            int size = dataIn.readInt();
-            for (int i = 0; i < size; i++) {
-                EntryLocation jobLocation = new EntryLocation();
-                jobLocation.readExternal(dataIn);
-                result.add(jobLocation);
-            }
-            return result;
-        }
-
-        public void writePayload(List<EntryLocation> value, DataOutput dataOut) throws IOException {
-            dataOut.writeInt(value.size());
-            for (EntryLocation jobLocation : value) {
-                jobLocation.writeExternal(dataOut);
-            }
-        }
-    }
-
-    class JobSchedulerMarshaller extends VariableMarshaller<PList> {
+    class PListMarshaller extends VariableMarshaller<PList> {
         private final PListStore store;
-        JobSchedulerMarshaller(PListStore store) {
+        PListMarshaller(PListStore store) {
             this.store = store;
         }
         public PList readPayload(DataInput dataIn) throws IOException {
@@ -168,8 +176,8 @@ public class PListStore extends ServiceSupport implements BrokerServiceAware, Ru
             return result;
         }
 
-        public void writePayload(PList js, DataOutput dataOut) throws IOException {
-            js.write(dataOut);
+        public void writePayload(PList list, DataOutput dataOut) throws IOException {
+            list.write(dataOut);
         }
     }
 
@@ -207,9 +215,9 @@ public class PListStore extends ServiceSupport implements BrokerServiceAware, Ru
                     pl.setName(name);
                     getPageFile().tx().execute(new Transaction.Closure<IOException>() {
                         public void execute(Transaction tx) throws IOException {
-                            pl.setRootId(tx.allocate().getPageId());
+                            pl.setHeadPageId(tx.allocate().getPageId());
                             pl.load(tx);
-                            metaData.storedSchedulers.put(tx, name, pl);
+                            metaData.lists.put(tx, name, pl);
                         }
                     });
                     result = pl;
@@ -236,8 +244,8 @@ public class PListStore extends ServiceSupport implements BrokerServiceAware, Ru
                 if (result) {
                     getPageFile().tx().execute(new Transaction.Closure<IOException>() {
                         public void execute(Transaction tx) throws IOException {
-                            metaData.storedSchedulers.remove(tx, name);
-                            pl.destroy(tx);
+                            metaData.lists.remove(tx, name);
+                            pl.destroy();
                         }
                     });
                 }
@@ -261,6 +269,9 @@ public class PListStore extends ServiceSupport implements BrokerServiceAware, Ru
                 this.journal.setWriteBatchSize(getJournalMaxWriteBatchSize());
                 this.journal.start();
                 this.pageFile = new PageFile(directory, "tmpDB");
+                this.pageFile.setPageSize(getIndexPageSize());
+                this.pageFile.setWriteBatchSize(getIndexWriteBatchSize());
+                this.pageFile.setPageCacheSize(getIndexCacheSize());
                 this.pageFile.load();
 
                 this.pageFile.tx().execute(new Transaction.Closure<IOException>() {
@@ -310,7 +321,7 @@ public class PListStore extends ServiceSupport implements BrokerServiceAware, Ru
             }
         }
         for (PList pl : this.persistentLists.values()) {
-            pl.unload();
+            pl.unload(null);
         }
         if (this.pageFile != null) {
             this.pageFile.unload();
@@ -351,20 +362,13 @@ public class PListStore extends ServiceSupport implements BrokerServiceAware, Ru
         }
     }
 
-    private void claimCandidates(PListEntry entry, Set<Integer> candidates) {
-        EntryLocation location = entry.getEntry();
-        if (location != null) {
-            candidates.remove(location.getLocation().getDataFileId());
-        }
-    }
-
-    synchronized ByteSequence getPayload(Location location) throws IllegalStateException, IOException {
+    ByteSequence getPayload(Location location) throws IllegalStateException, IOException {
         ByteSequence result = null;
         result = this.journal.read(location);
         return result;
     }
 
-    synchronized Location write(ByteSequence payload, boolean sync) throws IllegalStateException, IOException {
+    Location write(ByteSequence payload, boolean sync) throws IllegalStateException, IOException {
         return this.journal.write(payload, sync);
     }
 
@@ -440,7 +444,8 @@ public class PListStore extends ServiceSupport implements BrokerServiceAware, Ru
 
     @Override
     public String toString() {
-        return "PListStore:" + this.directory;
+        String path = getDirectory() != null ? getDirectory().getAbsolutePath() : "DIRECTORY_NOT_SET";
+        return "PListStore:[" + path + " ]";
     }
 
 }

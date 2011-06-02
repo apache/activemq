@@ -21,39 +21,22 @@ import org.apache.kahadb.util.ByteSequence;
 public class PListEntry {
 
     private final ByteSequence byteSequence;
-    private final EntryLocation entry;
+    private final String entry;
 
-    PListEntry(EntryLocation entry, ByteSequence bs) {
+    PListEntry(String entry, ByteSequence bs) {
         this.entry = entry;
         this.byteSequence = bs;
     }
 
-    /**
-     * @return the byteSequence
-     */
     public ByteSequence getByteSequence() {
         return this.byteSequence;
     }
 
     public String getId() {
-        return this.entry.getId();
-    }
-
-    /**
-     * @return the entry
-     */
-    EntryLocation getEntry() {
         return this.entry;
     }
 
     public PListEntry copy() {
         return new PListEntry(this.entry, this.byteSequence);
     }
-
-    @Override
-    public String toString() {
-        return this.entry.getId() + "[pageId=" + this.entry.getPage().getPageId() + ",next=" + this.entry.getNext()
-                + "]";
-    }
-
 }

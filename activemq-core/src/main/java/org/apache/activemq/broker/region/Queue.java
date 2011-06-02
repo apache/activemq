@@ -631,7 +631,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                 } else {
 
                     if (memoryUsage.isFull()) {
-                        waitForSpace(context, memoryUsage, "Usage Manager Memory Limit is full. Producer ("
+                        waitForSpace(context, memoryUsage, "Usage Manager Memory Limit reached. Producer ("
                                 + message.getProducerId() + ") stopped to prevent flooding "
                                 + getActiveMQDestination().getQualifiedName() + "."
                                 + " See http://activemq.apache.org/producer-flow-control.html for more info");
@@ -738,7 +738,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
     private void checkUsage(ConnectionContext context, Message message) throws ResourceAllocationException, IOException, InterruptedException {
         if (message.isPersistent()) {
             if (store != null && systemUsage.getStoreUsage().isFull(getStoreUsageHighWaterMark())) {
-                final String logMessage = "Usage Manager Store is Full, " + getStoreUsageHighWaterMark() + "% of "
+                final String logMessage = "Persistent store is Full, " + getStoreUsageHighWaterMark() + "% of "
                     + systemUsage.getStoreUsage().getLimit() + ". Stopping producer ("
                     + message.getProducerId() + ") to prevent flooding "
                     + getActiveMQDestination().getQualifiedName() + "."
@@ -747,7 +747,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                 waitForSpace(context, systemUsage.getStoreUsage(), getStoreUsageHighWaterMark(), logMessage);
             }
         } else if (messages.getSystemUsage() != null && systemUsage.getTempUsage().isFull()) {
-            final String logMessage = "Usage Manager Temp Store is Full ("
+            final String logMessage = "Temp Store is Full ("
                     + systemUsage.getTempUsage().getPercentUsage() + "% of " + systemUsage.getTempUsage().getLimit()
                     +"). Stopping producer (" + message.getProducerId()
                 + ") to prevent flooding " + getActiveMQDestination().getQualifiedName() + "."

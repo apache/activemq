@@ -19,505 +19,241 @@ package org.apache.activemq.store.kahadb.plist;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
-import org.apache.activemq.store.kahadb.plist.EntryLocation.EntryLocationMarshaller;
+import org.apache.kahadb.index.ListIndex;
+import org.apache.kahadb.index.ListNode;
 import org.apache.kahadb.journal.Location;
-import org.apache.kahadb.page.Page;
 import org.apache.kahadb.page.Transaction;
 import org.apache.kahadb.util.ByteSequence;
+import org.apache.kahadb.util.LocationMarshaller;
+import org.apache.kahadb.util.StringMarshaller;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class PList {
+public class PList extends ListIndex<String, Location> {
     static final Logger LOG = LoggerFactory.getLogger(PList.class);
     final PListStore store;
     private String name;
-    private long rootId = EntryLocation.NOT_SET;
-    private long lastId = EntryLocation.NOT_SET;
-    private final AtomicBoolean loaded = new AtomicBoolean();
-    private int size = 0;
     Object indexLock;
 
     PList(PListStore store) {
         this.store = store;
         this.indexLock = store.getIndexLock();
+        setPageFile(store.getPageFile());
+        setKeyMarshaller(StringMarshaller.INSTANCE);
+        setValueMarshaller(LocationMarshaller.INSTANCE);
     }
 
     public void setName(String name) {
         this.name = name;
     }
 
-    /*
-     * (non-Javadoc)
-     * @see org.apache.activemq.beanstalk.JobScheduler#getName()
-     */
     public String getName() {
         return this.name;
     }
 
-    public synchronized int size() {
-        return this.size;
-    }
-
-    public synchronized boolean isEmpty() {
-        return size == 0;
-    }
-
-    /**
-     * @return the rootId
-     */
-    public long getRootId() {
-        return this.rootId;
-    }
-
-    /**
-     * @param rootId
-     *            the rootId to set
-     */
-    public void setRootId(long rootId) {
-        this.rootId = rootId;
-    }
-
-    /**
-     * @return the lastId
-     */
-    public long getLastId() {
-        return this.lastId;
-    }
-
-    /**
-     * @param lastId
-     *            the lastId to set
-     */
-    public void setLastId(long lastId) {
-        this.lastId = lastId;
-    }
-
-    /**
-     * @return the loaded
-     */
-    public boolean isLoaded() {
-        return this.loaded.get();
-    }
-
     void read(DataInput in) throws IOException {
-        this.rootId = in.readLong();
-        this.name = in.readUTF();
+        this.headPageId = in.readLong();
     }
 
     public void write(DataOutput out) throws IOException {
-        out.writeLong(this.rootId);
-        out.writeUTF(name);
+        out.writeLong(this.headPageId);
     }
 
     public synchronized void destroy() throws IOException {
         synchronized (indexLock) {
             this.store.getPageFile().tx().execute(new Transaction.Closure<IOException>() {
                 public void execute(Transaction tx) throws IOException {
-                    destroy(tx);
+                    clear(tx);
+                    unload(tx);
                 }
             });
         }
     }
 
-    void destroy(Transaction tx) throws IOException {
-        // start from the first
-        EntryLocation entry = getFirst(tx);
-        while (entry != null) {
-            EntryLocation toRemove = entry.copy();
-            entry = getNext(tx, entry.getNext());
-            doRemove(tx, toRemove);
+    public void addLast(final String id, final ByteSequence bs) throws IOException {
+        final Location location = this.store.write(bs, false);
+        synchronized (indexLock) {
+            this.store.getPageFile().tx().execute(new Transaction.Closure<IOException>() {
+                public void execute(Transaction tx) throws IOException {
+                    add(tx, id, location);
+                }
+            });
         }
     }
 
-    synchronized void load(Transaction tx) throws IOException {
-        if (loaded.compareAndSet(false, true)) {
-            final Page<EntryLocation> p = tx.load(this.rootId, null);
-            if (p.getType() == Page.PAGE_FREE_TYPE) {
-                // Need to initialize it..
-                EntryLocation root = createEntry(p, "root", EntryLocation.NOT_SET, EntryLocation.NOT_SET);
+    public void addFirst(final String id, final ByteSequence bs) throws IOException {
+        final Location location = this.store.write(bs, false);
+        synchronized (indexLock) {
+            this.store.getPageFile().tx().execute(new Transaction.Closure<IOException>() {
+                public void execute(Transaction tx) throws IOException {
+                    addFirst(tx, id, location);
+                }
+            });
+        }
+    }
 
-                storeEntry(tx, root);
-                this.lastId = root.getPage().getPageId();
-            } else {
-                // find last id
-                long nextId = this.rootId;
-                while (nextId != EntryLocation.NOT_SET) {
-                    EntryLocation next = getNext(tx, nextId);
-                    if (next != null) {
-                        this.lastId = next.getPage().getPageId();
-                        nextId = next.getNext();
-                        this.size++;
+    public boolean remove(final String id) throws IOException {
+        final AtomicBoolean result = new AtomicBoolean();
+        synchronized (indexLock) {
+            this.store.getPageFile().tx().execute(new Transaction.Closure<IOException>() {
+                public void execute(Transaction tx) throws IOException {
+                    result.set(remove(tx, id) != null);
+                }
+            });
+        }
+        return result.get();
+    }
+
+    public boolean remove(final long position) throws IOException {
+        final AtomicBoolean result = new AtomicBoolean();
+        synchronized (indexLock) {
+            this.store.getPageFile().tx().execute(new Transaction.Closure<IOException>() {
+                public void execute(Transaction tx) throws IOException {
+                    Iterator<Map.Entry<String, Location>> iterator = iterator(tx, position);
+                    if (iterator.hasNext()) {
+                        iterator.next();
+                        iterator.remove();
+                        result.set(true);
+                    } else {
+                        result.set(false);
                     }
                 }
-            }
-        }
-    }
-
-    synchronized public void unload() {
-        if (loaded.compareAndSet(true, false)) {
-            this.rootId = EntryLocation.NOT_SET;
-            this.lastId = EntryLocation.NOT_SET;
-            this.size=0;
-        }
-    }
-
-    synchronized public void addLast(final String id, final ByteSequence bs) throws IOException {
-        final Location location = this.store.write(bs, false);
-        synchronized (indexLock) {
-            this.store.getPageFile().tx().execute(new Transaction.Closure<IOException>() {
-                public void execute(Transaction tx) throws IOException {
-                    addLast(tx, id, bs, location);
-                }
-            });
-        }
-    }
-
-    private void addLast(Transaction tx, String id, ByteSequence bs, Location location) throws IOException {
-        EntryLocation entry = createEntry(tx, id, this.lastId, EntryLocation.NOT_SET);
-        entry.setLocation(location);
-        storeEntry(tx, entry);
-        EntryLocation last = loadEntry(tx, this.lastId);
-        last.setNext(entry.getPage().getPageId());
-        storeEntry(tx, last);
-        this.lastId = entry.getPage().getPageId();
-        this.size++;
-    }
-
-    synchronized public void addFirst(final String id, final ByteSequence bs) throws IOException {
-        final Location location = this.store.write(bs, false);
-        synchronized (indexLock) {
-            this.store.getPageFile().tx().execute(new Transaction.Closure<IOException>() {
-                public void execute(Transaction tx) throws IOException {
-                    addFirst(tx, id, bs, location);
-                }
-            });
-        }
-    }
-
-    private void addFirst(Transaction tx, String id, ByteSequence bs, Location location) throws IOException {
-        EntryLocation entry = createEntry(tx, id, EntryLocation.NOT_SET, EntryLocation.NOT_SET);
-        entry.setLocation(location);
-        EntryLocation oldFirst = getFirst(tx);
-        if (oldFirst != null) {
-            oldFirst.setPrev(entry.getPage().getPageId());
-            storeEntry(tx, oldFirst);
-            entry.setNext(oldFirst.getPage().getPageId());
-
-        }
-        EntryLocation root = getRoot(tx);
-        root.setNext(entry.getPage().getPageId());
-        storeEntry(tx, root);
-        storeEntry(tx, entry);
-
-        this.size++;
-    }
-
-    synchronized public boolean remove(final String id) throws IOException {
-        final AtomicBoolean result = new AtomicBoolean();
-        synchronized (indexLock) {
-            this.store.getPageFile().tx().execute(new Transaction.Closure<IOException>() {
-                public void execute(Transaction tx) throws IOException {
-                    result.set(remove(tx, id));
-                }
             });
         }
         return result.get();
     }
 
-    synchronized public boolean remove(final int position) throws IOException {
-        final AtomicBoolean result = new AtomicBoolean();
-        synchronized (indexLock) {
-            this.store.getPageFile().tx().execute(new Transaction.Closure<IOException>() {
-                public void execute(Transaction tx) throws IOException {
-                    result.set(remove(tx, position));
-                }
-            });
-        }
-        return result.get();
-    }
-
-    synchronized public boolean remove(final PListEntry entry) throws IOException {
-        final AtomicBoolean result = new AtomicBoolean();
-        synchronized (indexLock) {
-            this.store.getPageFile().tx().execute(new Transaction.Closure<IOException>() {
-                public void execute(Transaction tx) throws IOException {
-                    result.set(doRemove(tx, entry.getEntry()));
-                }
-            });
-        }
-        return result.get();
-    }
-
-    synchronized public PListEntry get(final int position) throws IOException {
+    public PListEntry get(final long position) throws IOException {
         PListEntry result = null;
-        final AtomicReference<EntryLocation> ref = new AtomicReference<EntryLocation>();
+        final AtomicReference<Map.Entry<String, Location>> ref = new AtomicReference<Map.Entry<String, Location>>();
         synchronized (indexLock) {
             this.store.getPageFile().tx().execute(new Transaction.Closure<IOException>() {
                 public void execute(Transaction tx) throws IOException {
-                    ref.set(get(tx, position));
+                    Iterator<Map.Entry<String, Location>> iterator = iterator(tx, position);
+                    ref.set(iterator.next());
                 }
             });
         }
         if (ref.get() != null) {
-            ByteSequence bs = this.store.getPayload(ref.get().getLocation());
-            result = new PListEntry(ref.get(), bs);
+            ByteSequence bs = this.store.getPayload(ref.get().getValue());
+            result = new PListEntry(ref.get().getKey(), bs);
         }
         return result;
     }
 
-    synchronized public PListEntry getFirst() throws IOException {
+    public PListEntry getFirst() throws IOException {
         PListEntry result = null;
-        final AtomicReference<EntryLocation> ref = new AtomicReference<EntryLocation>();
+        final AtomicReference<Map.Entry<String, Location>> ref = new AtomicReference<Map.Entry<String, Location>>();
         synchronized (indexLock) {
             this.store.getPageFile().tx().execute(new Transaction.Closure<IOException>() {
                 public void execute(Transaction tx) throws IOException {
                     ref.set(getFirst(tx));
                 }
             });
-            if (ref.get() != null) {
-                ByteSequence bs = this.store.getPayload(ref.get().getLocation());
-                result = new PListEntry(ref.get(), bs);
-            }
+        }
+        if (ref.get() != null) {
+            ByteSequence bs = this.store.getPayload(ref.get().getValue());
+            result = new PListEntry(ref.get().getKey(), bs);
         }
         return result;
     }
 
-    synchronized public PListEntry getLast() throws IOException {
+    public PListEntry getLast() throws IOException {
         PListEntry result = null;
-        final AtomicReference<EntryLocation> ref = new AtomicReference<EntryLocation>();
+        final AtomicReference<Map.Entry<String, Location>> ref = new AtomicReference<Map.Entry<String, Location>>();
         synchronized (indexLock) {
             this.store.getPageFile().tx().execute(new Transaction.Closure<IOException>() {
                 public void execute(Transaction tx) throws IOException {
                     ref.set(getLast(tx));
                 }
             });
-            if (ref.get() != null) {
-                ByteSequence bs = this.store.getPayload(ref.get().getLocation());
-                result = new PListEntry(ref.get(), bs);
-            }
+        }
+        if (ref.get() != null) {
+            ByteSequence bs = this.store.getPayload(ref.get().getValue());
+            result = new PListEntry(ref.get().getKey(), bs);
         }
         return result;
     }
 
-    synchronized public PListEntry getNext(PListEntry entry) throws IOException {
-        PListEntry result = null;
-        final long nextId = entry != null ? entry.getEntry().getNext() : this.rootId;
-        if (nextId != EntryLocation.NOT_SET) {
-            final AtomicReference<EntryLocation> ref = new AtomicReference<EntryLocation>();
-            synchronized (indexLock) {
+    public boolean isEmpty() {
+        return size() == 0;
+    }
+
+    synchronized public Iterator<PListEntry> iterator() throws IOException {
+        return new PListIterator();
+    }
+
+    private final class PListIterator implements Iterator<PListEntry> {
+        final Iterator<Map.Entry<String, Location>> iterator;
+        final Transaction tx;
+
+        PListIterator() throws IOException {
+            tx = store.pageFile.tx();
+            this.iterator = iterator(tx);
+        }
+
+        @Override
+        public boolean hasNext() {
+            return iterator.hasNext();
+        }
+
+        @Override
+        public PListEntry next() {
+            Map.Entry<String, Location> entry = iterator.next();
+            ByteSequence bs = null;
+            try {
+                bs = store.getPayload(entry.getValue());
+            } catch (IOException unexpected) {
+                NoSuchElementException e = new NoSuchElementException(unexpected.getLocalizedMessage());
+                e.initCause(unexpected);
+                throw e;
+            }
+            return new PListEntry(entry.getKey(), bs);
+        }
+
+        @Override
+        public void remove() {
+            try {
+                synchronized (indexLock) {
+                    tx.execute(new Transaction.Closure<IOException>() {
+                        @Override
+                        public void execute(Transaction tx) throws IOException {
+                            iterator.remove();
+                        }
+                    });
+                }
+            } catch (IOException unexpected) {
+                IllegalStateException e = new IllegalStateException(unexpected);
+                e.initCause(unexpected);
+                throw e;
+            }
+        }
+    }
+
+    public void claimFileLocations(final Set<Integer> candidates) throws IOException {
+        synchronized (indexLock) {
+            if (loaded.get()) {
                 this.store.getPageFile().tx().execute(new Transaction.Closure<IOException>() {
                     public void execute(Transaction tx) throws IOException {
-                        ref.set(getNext(tx, nextId));
-                    }
-                });
-                if (ref.get() != null) {
-                    ByteSequence bs = this.store.getPayload(ref.get().getLocation());
-                    result = new PListEntry(ref.get(), bs);
-                }
-            }
-        }
-        return result;
-    }
-
-    synchronized public PListEntry refresh(final PListEntry entry) throws IOException {
-        PListEntry result = null;
-        final AtomicReference<EntryLocation> ref = new AtomicReference<EntryLocation>();
-        synchronized (indexLock) {
-            this.store.getPageFile().tx().execute(new Transaction.Closure<IOException>() {
-                public void execute(Transaction tx) throws IOException {
-                    ref.set(loadEntry(tx, entry.getEntry().getPage().getPageId()));
-                }
-            });
-            if (ref.get() != null) {
-                result = new PListEntry(ref.get(), entry.getByteSequence());
-            }
-        }
-        return result;
-    }
-
-    synchronized public void claimFileLocations(final Set<Integer> candidates) throws IOException {
-        synchronized (indexLock) {
-            this.store.getPageFile().tx().execute(new Transaction.Closure<IOException>() {
-                public void execute(Transaction tx) throws IOException {
-                    long nextId = rootId;
-                    while (nextId != EntryLocation.NOT_SET) {
-                        EntryLocation entry = getNext(tx, nextId);
-                        if (entry != null) {
-                            candidates.remove(entry.getLocation().getDataFileId());
-                            nextId = entry.getNext();
-                        } else {
-                            break;
+                        Iterator<Map.Entry<String,Location>> iterator = iterator(tx);
+                        while (iterator.hasNext()) {
+                            Location location = iterator.next().getValue();
+                            candidates.remove(location.getDataFileId());
                         }
                     }
-                }
-            });
-        }
-    }
-
-    boolean remove(Transaction tx, String id) throws IOException {
-        boolean result = false;
-        long nextId = this.rootId;
-        while (nextId != EntryLocation.NOT_SET) {
-            EntryLocation entry = getNext(tx, nextId);
-            if (entry != null) {
-                if (entry.getId().equals(id)) {
-                    result = doRemove(tx, entry);
-                    break;
-                }
-                nextId = entry.getNext();
-            } else {
-                // not found
-                break;
+                });
             }
         }
-        return result;
     }
 
-    boolean remove(Transaction tx, int position) throws IOException {
-        boolean result = false;
-        long nextId = this.rootId;
-        int count = 0;
-        while (nextId != EntryLocation.NOT_SET) {
-            EntryLocation entry = getNext(tx, nextId);
-            if (entry != null) {
-                if (count == position) {
-                    result = doRemove(tx, entry);
-                    break;
-                }
-                nextId = entry.getNext();
-            } else {
-                // not found
-                break;
-            }
-            count++;
-        }
-        return result;
-    }
-
-    EntryLocation get(Transaction tx, int position) throws IOException {
-        EntryLocation result = null;
-        long nextId = this.rootId;
-        int count = -1;
-        while (nextId != EntryLocation.NOT_SET) {
-            EntryLocation entry = getNext(tx, nextId);
-            if (entry != null) {
-                if (count == position) {
-                    result = entry;
-                    break;
-                }
-                nextId = entry.getNext();
-            } else {
-                break;
-            }
-            count++;
-        }
-        return result;
-    }
-
-    EntryLocation getFirst(Transaction tx) throws IOException {
-        long offset = getRoot(tx).getNext();
-        if (offset != EntryLocation.NOT_SET) {
-            return loadEntry(tx, offset);
-        }
-        return null;
-    }
-
-    EntryLocation getLast(Transaction tx) throws IOException {
-        if (this.lastId != EntryLocation.NOT_SET) {
-            return loadEntry(tx, this.lastId);
-        }
-        return null;
-    }
-
-    private boolean doRemove(Transaction tx, EntryLocation entry) throws IOException {
-        boolean result = false;
-        if (entry != null) {
-
-            EntryLocation prev = getPrevious(tx, entry.getPrev());
-            EntryLocation next = getNext(tx, entry.getNext());
-            long prevId = prev != null ? prev.getPage().getPageId() : this.rootId;
-            long nextId = next != null ? next.getPage().getPageId() : EntryLocation.NOT_SET;
-
-            if (next != null) {
-                next.setPrev(prevId);
-                storeEntry(tx, next);
-            } else {
-                // we are deleting the last one in the list
-                this.lastId = prevId;
-            }
-            if (prev != null) {
-                prev.setNext(nextId);
-                storeEntry(tx, prev);
-            }
-
-            entry.reset();
-            storeEntry(tx, entry);
-            tx.free(entry.getPage().getPageId());
-            result = true;
-            this.size--;
-        }
-        return result;
-    }
-
-    private EntryLocation createEntry(Transaction tx, String id, long previous, long next) throws IOException {
-        Page<EntryLocation> p = tx.allocate();
-        EntryLocation result = new EntryLocation();
-        result.setPage(p);
-        p.set(result);
-        result.setId(id);
-        result.setPrev(previous);
-        result.setNext(next);
-        return result;
-    }
-
-    private EntryLocation createEntry(Page<EntryLocation> p, String id, long previous, long next) throws IOException {
-        EntryLocation result = new EntryLocation();
-        result.setPage(p);
-        p.set(result);
-        result.setId(id);
-        result.setPrev(previous);
-        result.setNext(next);
-        return result;
-    }
-
-    EntryLocation loadEntry(Transaction tx, long pageId) throws IOException {
-        Page<EntryLocation> page = tx.load(pageId, EntryLocationMarshaller.INSTANCE);
-        EntryLocation entry = page.get();
-        if (entry != null) {
-            entry.setPage(page);
-        }
-        return entry;
-    }
-    
-    private void storeEntry(Transaction tx, EntryLocation entry) throws IOException {
-        tx.store(entry.getPage(), EntryLocationMarshaller.INSTANCE, true);
-    }
-
-    EntryLocation getNext(Transaction tx, long next) throws IOException {
-        EntryLocation result = null;
-        if (next != EntryLocation.NOT_SET) {
-            result = loadEntry(tx, next);
-        }
-        return result;
-    }
-
-    private EntryLocation getPrevious(Transaction tx, long previous) throws IOException {
-        EntryLocation result = null;
-        if (previous != EntryLocation.NOT_SET) {
-            result = loadEntry(tx, previous);
-        }
-        return result;
-    }
-
-    private EntryLocation getRoot(Transaction tx) throws IOException {
-        EntryLocation result = loadEntry(tx, this.rootId);
-        return result;
-    }
-
-    ByteSequence getPayload(EntryLocation entry) throws IOException {
-        return this.store.getPayload(entry.getLocation());
+    @Override
+    public String toString() {
+        return "" + name + ",[headPageId=" + headPageId  + ",tailPageId=" + tailPageId + ", size=" + size() + "]";
     }
 }

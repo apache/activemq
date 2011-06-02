@@ -184,6 +184,18 @@ public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
         DataArrayResponse dar = (DataArrayResponse)response;
         assertEquals(4, dar.getData().length);
 
+        // ensure we can close a connection with prepared transactions
+        connection.request(closeConnectionInfo(connectionInfo));
+
+        // open again  to deliver outcome
+        connection = createConnection();
+        connectionInfo = createConnectionInfo();
+        sessionInfo = createSessionInfo(connectionInfo);
+        connection.send(connectionInfo);
+        connection.send(sessionInfo);
+        consumerInfo = createConsumerInfo(sessionInfo, destination);
+        connection.send(consumerInfo);
+
         // Commit the prepared transactions.
         for (int i = 0; i < dar.getData().length; i++) {
             connection.send(createCommitTransaction2Phase(connectionInfo, (TransactionId)dar.getData()[i]));

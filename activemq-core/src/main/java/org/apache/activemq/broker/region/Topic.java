@@ -293,10 +293,7 @@ public class Topic extends BaseDestination implements Task {
 
                 if (warnOnProducerFlowControl) {
                     warnOnProducerFlowControl = false;
-                    LOG
-                            .info("Usage Manager memory limit ("
-                                    + memoryUsage.getLimit()
-                                    + ") reached for "
+                    LOG.info(memoryUsage + ", Usage Manager memory limit reached for "
                                     + getActiveMQDestination().getQualifiedName()
                                     + ". Producers will be throttled to the rate at which messages are removed from this destination to prevent flooding it."
                                     + " See http://activemq.apache.org/producer-flow-control.html for more info");
@@ -304,7 +301,7 @@ public class Topic extends BaseDestination implements Task {
 
                 if (systemUsage.isSendFailIfNoSpace()) {
                     throw new javax.jms.ResourceAllocationException("Usage Manager memory limit ("
-                            + memoryUsage.getLimit() + ") reached. Stopping producer (" + message.getProducerId()
+                            + memoryUsage.getLimit() + ") reached. Rejecting send for producer (" + message.getProducerId()
                             + ") to prevent flooding " + getActiveMQDestination().getQualifiedName() + "."
                             + " See http://activemq.apache.org/producer-flow-control.html for more info");
                 }
@@ -379,7 +376,7 @@ public class Topic extends BaseDestination implements Task {
                             waitForSpace(
                                     context,
                                     memoryUsage,
-                                    "Usage Manager memory limit reached. Stopping producer ("
+                                    "Usage Manager Memory Usage limit reached. Stopping producer ("
                                             + message.getProducerId()
                                             + ") to prevent flooding "
                                             + getActiveMQDestination().getQualifiedName()
@@ -427,7 +424,7 @@ public class Topic extends BaseDestination implements Task {
 
         if (topicStore != null && message.isPersistent() && !canOptimizeOutPersistence()) {
             if (systemUsage.getStoreUsage().isFull(getStoreUsageHighWaterMark())) {
-                final String logMessage = "Usage Manager Store is Full, " + getStoreUsageHighWaterMark() + "% of "
+                final String logMessage = "Persistent store is Full, " + getStoreUsageHighWaterMark() + "% of "
                         + systemUsage.getStoreUsage().getLimit() + ". Stopping producer (" + message.getProducerId()
                         + ") to prevent flooding " + getActiveMQDestination().getQualifiedName() + "."
                         + " See http://activemq.apache.org/producer-flow-control.html for more info";

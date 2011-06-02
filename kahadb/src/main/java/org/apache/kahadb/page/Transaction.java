@@ -38,7 +38,7 @@ import org.apache.kahadb.util.SequenceSet;
  * do multiple update operations in a single unit of work.
  */
 public class Transaction implements Iterable<Page> {
-    
+
     /**
      * The PageOverflowIOException occurs when a page write is requested
      * and it's data is larger than what would fit into a single page.
@@ -142,7 +142,7 @@ public class Transaction implements Iterable<Page> {
     /**
      * Frees up a previously allocated page so that it can be re-allocated again.
      * 
-     * @param page the page to free up
+     * @param pageId the page to free up
      * @throws IOException
      *         If an disk error occurred.
      * @throws IllegalStateException
@@ -155,7 +155,7 @@ public class Transaction implements Iterable<Page> {
     /**
      * Frees up a previously allocated sequence of pages so that it can be re-allocated again.
      * 
-     * @param page the initial page of the sequence that will be getting freed
+     * @param pageId the initial page of the sequence that will be getting freed
      * @param count the number of pages in the sequence
      * 
      * @throws IOException
@@ -216,6 +216,8 @@ public class Transaction implements Iterable<Page> {
             }
 
             page.makeFree(getWriteTransactionId());
+            // ensure free page is visible while write is pending
+            pageFile.addToCache(page.copy());
 
             DataByteArrayOutputStream out = new DataByteArrayOutputStream(pageFile.getPageSize());
             page.write(out);
@@ -451,7 +453,7 @@ public class Transaction implements Iterable<Page> {
                 }
 
                 if (page.getType() == Page.PAGE_FREE_TYPE) {
-                    throw new EOFException("Chunk stream does not exist at page: " + page.getPageId());
+                    throw new EOFException("Chunk stream does not exist, page: " + page.getPageId() + " is marked free");
                 }
 
                 return page;
@@ -560,7 +562,6 @@ public class Transaction implements Iterable<Page> {
      * iterated.
      * 
      * @param includeFreePages - if true, free pages are included in the iteration
-     * @param tx - if not null, then the remove() opeation on the Iterator will operate in scope of that transaction.
      * @throws IllegalStateException
      *         if the PageFile is not loaded
      */
