@@ -37,7 +37,6 @@ import org.apache.activemq.command.DestinationInfo;
 import org.apache.activemq.command.ExceptionResponse;
 import org.apache.activemq.command.IntegerResponse;
 import org.apache.activemq.command.Message;
-import org.apache.activemq.command.MessageId;
 import org.apache.activemq.command.MessagePull;
 import org.apache.activemq.command.ProducerId;
 import org.apache.activemq.command.ProducerInfo;
@@ -60,7 +59,7 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
     private static final Logger LOG = LoggerFactory.getLogger(ConnectionStateTracker.class);
 
     private static final Tracked TRACKED_RESPONSE_MARKER = new Tracked(null);
-
+    private static final int MESSAGE_PULL_SIZE = 400;
     protected final ConcurrentHashMap<ConnectionId, ConnectionState> connectionStates = new ConcurrentHashMap<ConnectionId, ConnectionState>(); 
 
     private boolean trackTransactions;
@@ -79,7 +78,7 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
                 if (eldest.getValue() instanceof Message) {
                     currentCacheSize -= ((Message)eldest.getValue()).getSize();
                 } else if (eldest.getValue() instanceof MessagePull) {
-                    currentCacheSize -= 400;
+                    currentCacheSize -= MESSAGE_PULL_SIZE;
                 }
             }
             return result;
@@ -141,7 +140,7 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
                 }
             } else if (command instanceof MessagePull) {
                 // just needs to be a rough estimate of size, ~4 identifiers
-                currentCacheSize += 400;
+                currentCacheSize += MESSAGE_PULL_SIZE;
             }
         }
     }
@@ -469,7 +468,7 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
                 }
                 return TRACKED_RESPONSE_MARKER;
             }else if (trackMessages) {
-                messageCache.put(send.getMessageId(), send.copy());
+                messageCache.put(send.getMessageId(), send);
             }
         }
         return null;
