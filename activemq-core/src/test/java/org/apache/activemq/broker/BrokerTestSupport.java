@@ -75,11 +75,11 @@ public class BrokerTestSupport extends CombinationTestSupport {
     protected int maxWait = 4000;
 
     protected SystemUsage memoryManager;
+    protected PolicyMap policyMap = new PolicyMap();
 
     protected void setUp() throws Exception {
         super.setUp();
         broker = createBroker();
-        PolicyMap policyMap = new PolicyMap();
         policyMap.setDefaultEntry(getDefaultPolicy());
         broker.setDestinationPolicy(policyMap);
         broker.start();

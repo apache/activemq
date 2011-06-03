@@ -452,7 +452,8 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
         }
 
         public void recover(final MessageRecoveryListener listener) throws Exception {
-            indexLock.readLock().lock();
+            // recovery may involve expiry which will modify
+            indexLock.writeLock().lock();
             try {
                 pageFile.tx().execute(new Transaction.Closure<Exception>() {
                     public void execute(Transaction tx) throws Exception {
@@ -470,7 +471,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
                     }
                 });
             }finally {
-                indexLock.readLock().unlock();
+                indexLock.writeLock().unlock();
             }
         }
 

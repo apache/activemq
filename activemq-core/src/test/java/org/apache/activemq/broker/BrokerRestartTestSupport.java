@@ -48,7 +48,8 @@ public class BrokerRestartTestSupport extends BrokerTestSupport {
         return broker;
     }
 
-    protected void configureBroker(BrokerService broker) {
+    protected void configureBroker(BrokerService broker) throws Exception {
+         broker.setDestinationPolicy(policyMap);
     }
 
     /**
