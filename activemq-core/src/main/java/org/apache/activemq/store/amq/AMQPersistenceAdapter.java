@@ -107,7 +107,6 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
     private Runnable periodicCleanupTask;
     private boolean deleteAllMessages;
     private boolean syncOnWrite;
-    private boolean syncOnTransaction=true;
     private String brokerName = "";
     private File directory;
     private File directoryArchive;
@@ -837,14 +836,6 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
         this.syncOnWrite = syncOnWrite;
     }
     
-    public boolean isSyncOnTransaction() {
-        return syncOnTransaction;
-    }
-
-    public void setSyncOnTransaction(boolean syncOnTransaction) {
-        this.syncOnTransaction = syncOnTransaction;
-    }
-
     /**
      * @param referenceStoreAdapter the referenceStoreAdapter to set
      */
