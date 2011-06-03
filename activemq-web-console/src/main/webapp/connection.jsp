@@ -61,6 +61,10 @@ No connection could be found for ID <c:out value="${requestContext.connectionQue
 			<td class="label">Slow</td>
 			<td><c:out value="${row.slow}" /></td>
 		</tr>
+		<tr>
+			<td class="label">Dispatch Queue Size</td>
+		    <td><c:out value="${row.dispatchQueueSize}" /></td>
+		</tr>
 	</tbody>
 </table>
 

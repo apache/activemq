@@ -52,9 +52,16 @@ public interface ConnectionViewMBean extends Service {
     /**
      * Returns the source address for this connection
      * 
-     * @return the souce address for this connection
+     * @return the source address for this connection
      */
     @MBeanInfo("Source address for this connection")
     String getRemoteAddress();
+
+    /**
+     * Returns the number of messages to be dispatched to this connection
+     * @return the  number of messages pending dispatch
+     */
+    @MBeanInfo("The number of messages pending dispatch")
+    public int getDispatchQueueSize();
 
 }

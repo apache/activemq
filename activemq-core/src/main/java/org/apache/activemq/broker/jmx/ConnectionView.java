@@ -62,6 +62,10 @@ public class ConnectionView implements ConnectionViewMBean {
         return connection.isActive();
     }
 
+    public int getDispatchQueueSize() {
+        return connection.getDispatchQueueSize();
+    }
+
     /**
      * Resets the statistics
      */
