@@ -115,6 +115,9 @@ public class NIOTransport extends TcpTransport {
                     // for it.
                     inputBuffer.flip();
                     nextFrameSize = inputBuffer.getInt() + 4;
+                    if (nextFrameSize > maxFrameSize) {
+                        throw new IOException("Frame size of " + (nextFrameSize / (1024 * 1024)) + " MB larger than max allowed " + (maxFrameSize / (1024 * 1024)) + " MB");
+                    }
                     if (nextFrameSize > inputBuffer.capacity()) {
                         currentBuffer = ByteBuffer.allocate(nextFrameSize);
                         currentBuffer.putInt(nextFrameSize);

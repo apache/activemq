@@ -26,13 +26,9 @@
   <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer"/>
 
   <broker useJmx="false"  xmlns="http://activemq.apache.org/schema/core" persistent="false">
-  
-    <networkConnectors>
-      <networkConnector uri="multicast://default"/>
-    </networkConnectors>
 
     <transportConnectors>
-      <transportConnector uri="tcp://localhost:0" discoveryUri="multicast://default"/>
+      <transportConnector uri="nio://localhost:61616?transport.maxFrameSize=10485760" />
     </transportConnectors>
         
   </broker>
