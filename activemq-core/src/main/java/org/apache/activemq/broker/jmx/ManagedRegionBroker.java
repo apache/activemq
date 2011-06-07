@@ -41,6 +41,7 @@ import javax.management.openmbean.TabularType;
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.ConnectionContext;
+import org.apache.activemq.broker.ProducerBrokerExchange;
 import org.apache.activemq.broker.jmx.OpenTypeSupport.OpenTypeFactory;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.DestinationFactory;
@@ -93,6 +94,7 @@ public class ManagedRegionBroker extends RegionBroker {
     private final Map<ObjectName, ProducerView> topicProducers = new ConcurrentHashMap<ObjectName, ProducerView>();
     private final Map<ObjectName, ProducerView> temporaryQueueProducers = new ConcurrentHashMap<ObjectName, ProducerView>();
     private final Map<ObjectName, ProducerView> temporaryTopicProducers = new ConcurrentHashMap<ObjectName, ProducerView>();
+    private final Map<ObjectName, ProducerView> dynamicDestinationProducers = new ConcurrentHashMap<ObjectName, ProducerView>();
     private final Map<SubscriptionKey, ObjectName> subscriptionKeys = new ConcurrentHashMap<SubscriptionKey, ObjectName>();
     private final Map<Subscription, ObjectName> subscriptionMap = new ConcurrentHashMap<Subscription, ObjectName>();
     private final Set<ObjectName> registeredMBeans = new CopyOnWriteArraySet<ObjectName>();
@@ -280,6 +282,24 @@ public class ManagedRegionBroker extends RegionBroker {
         super.removeProducer(context, info);
     }
 
+    @Override
+    public void send(ProducerBrokerExchange exchange, Message message) throws Exception {
+        if (exchange != null && exchange.getProducerState() != null && exchange.getProducerState().getInfo() != null) {
+            ProducerInfo info = exchange.getProducerState().getInfo();
+            if (info.getDestination() == null && info.getProducerId() != null) {
+                ObjectName objectName = createObjectName(info, exchange.getConnectionContext().getClientId());
+                ProducerView view = this.dynamicDestinationProducers.get(objectName);
+                if (view != null) {
+                    ActiveMQDestination dest = message.getDestination();
+                    if (dest != null) {
+                        view.setLastUsedDestinationName(dest);
+                    }
+                }
+            }
+         }
+        super.send(exchange, message);
+    }
+
     public void unregisterSubscription(Subscription sub) {
         ObjectName name = subscriptionMap.remove(sub);
         if (name != null) {
@@ -363,6 +383,8 @@ public class ManagedRegionBroker extends RegionBroker {
                     topicProducers.put(key, view);
                 }
             }
+        } else {
+            dynamicDestinationProducers.put(key, view);
         }
 
         try {
@@ -379,6 +401,7 @@ public class ManagedRegionBroker extends RegionBroker {
         topicProducers.remove(key);
         temporaryQueueProducers.remove(key);
         temporaryTopicProducers.remove(key);
+        dynamicDestinationProducers.remove(key);
         if (registeredMBeans.remove(key)) {
             try {
                 managementContext.unregisterMBean(key);
@@ -651,6 +674,11 @@ public class ManagedRegionBroker extends RegionBroker {
 
     protected ObjectName[] getTemporaryQueueProducers() {
         Set<ObjectName> set = temporaryQueueProducers.keySet();
+        return set.toArray(new ObjectName[set.size()]);
+    }
+
+    protected ObjectName[] getDynamicDestinationProducers() {
+        Set<ObjectName> set = dynamicDestinationProducers.keySet();
         return set.toArray(new ObjectName[set.size()]);
     }
 

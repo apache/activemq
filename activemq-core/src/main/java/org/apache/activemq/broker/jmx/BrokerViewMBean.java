@@ -169,6 +169,9 @@ public interface BrokerViewMBean extends Service {
     @MBeanInfo("Temporary Queue Producers.")
     public ObjectName[] getTemporaryQueueProducers();
 
+    @MBeanInfo("Dynamic Destination Producers.")
+    public ObjectName[] getDynamicDestinationProducers();
+
     @MBeanInfo("Adds a Connector to the broker.")
     String addConnector(@MBeanInfo("discoveryAddress") String discoveryAddress) throws Exception;
 

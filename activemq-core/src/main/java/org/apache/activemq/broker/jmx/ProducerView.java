@@ -16,6 +16,8 @@
  */
 package org.apache.activemq.broker.jmx;
 
+import javax.jms.Destination;
+
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ProducerInfo;
 
@@ -24,6 +26,8 @@ public class ProducerView implements ProducerViewMBean {
     protected final ProducerInfo info;
     protected final String clientId;
     protected final ManagedRegionBroker broker;
+
+    protected ActiveMQDestination lastUsedDestination;
 
     public ProducerView(ProducerInfo info, String clientId, ManagedRegionBroker broker) {
         this.info = info;
@@ -54,9 +58,11 @@ public class ProducerView implements ProducerViewMBean {
 
     @Override
     public String getDestinationName() {
-        if (info != null) {
+        if (info != null && info.getDestination() != null) {
             ActiveMQDestination dest = info.getDestination();
             return dest.getPhysicalName();
+        } else if (this.lastUsedDestination != null) {
+            return this.lastUsedDestination.getPhysicalName();
         }
         return "NOTSET";
     }
@@ -64,8 +70,12 @@ public class ProducerView implements ProducerViewMBean {
     @Override
     public boolean isDestinationQueue() {
         if (info != null) {
-            ActiveMQDestination dest = info.getDestination();
-            return dest.isQueue();
+            if (info.getDestination() != null) {
+                ActiveMQDestination dest = info.getDestination();
+                return dest.isQueue();
+            } else if(lastUsedDestination != null) {
+                return lastUsedDestination.isQueue();
+            }
         }
         return false;
     }
@@ -73,8 +83,12 @@ public class ProducerView implements ProducerViewMBean {
     @Override
     public boolean isDestinationTopic() {
         if (info != null) {
-            ActiveMQDestination dest = info.getDestination();
-            return dest.isTopic();
+            if (info.getDestination() != null) {
+                ActiveMQDestination dest = info.getDestination();
+                return dest.isTopic();
+            } else if(lastUsedDestination != null) {
+                return lastUsedDestination.isTopic();
+            }
         }
         return false;
     }
@@ -82,8 +96,12 @@ public class ProducerView implements ProducerViewMBean {
     @Override
     public boolean isDestinationTemporary() {
         if (info != null) {
-            ActiveMQDestination dest = info.getDestination();
-            return dest.isTemporary();
+            if (info.getDestination() != null) {
+                ActiveMQDestination dest = info.getDestination();
+                return dest.isTemporary();
+            } else if(lastUsedDestination != null) {
+                return lastUsedDestination.isTemporary();
+            }
         }
         return false;
     }
@@ -111,4 +129,10 @@ public class ProducerView implements ProducerViewMBean {
         return "ProducerView: " + getClientId() + ":" + getConnectionId();
     }
 
+    /**
+     * Set the last used Destination name for a Dynamic Destination Producer.
+     */
+    void setLastUsedDestinationName(ActiveMQDestination destinationName) {
+        this.lastUsedDestination = destinationName;
+    }
 }

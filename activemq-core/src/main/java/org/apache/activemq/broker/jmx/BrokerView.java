@@ -237,6 +237,10 @@ public class BrokerView implements BrokerViewMBean {
         return broker.getTemporaryQueueProducers();
     }
 
+    public ObjectName[] getDynamicDestinationProducers() {
+        return broker.getDynamicDestinationProducers();
+    }
+
     public String addConnector(String discoveryAddress) throws Exception {
         TransportConnector connector = brokerService.addConnector(discoveryAddress);
         connector.start();
