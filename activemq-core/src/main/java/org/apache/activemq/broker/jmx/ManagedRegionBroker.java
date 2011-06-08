@@ -707,7 +707,7 @@ public class ManagedRegionBroker extends RegionBroker {
         String destinationName = "destinationName=";
 
         if (producerInfo.getDestination() == null) {
-            destinationType += "dynamic";
+            destinationType += "Dynamic";
             destinationName = null;
         } else {
             destinationType += producerInfo.getDestination().getDestinationTypeAsString();
