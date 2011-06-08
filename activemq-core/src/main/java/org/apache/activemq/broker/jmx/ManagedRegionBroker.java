@@ -707,8 +707,8 @@ public class ManagedRegionBroker extends RegionBroker {
         String destinationName = "destinationName=";
 
         if (producerInfo.getDestination() == null) {
-            destinationType += "NOTSET";
-            destinationName += "NOTSET";
+            destinationType += "dynamic";
+            destinationName = null;
         } else {
             destinationType += producerInfo.getDestination().getDestinationTypeAsString();
             destinationName += JMXSupport.encodeObjectNamePart(producerInfo.getDestination().getPhysicalName());
@@ -719,7 +719,8 @@ public class ManagedRegionBroker extends RegionBroker {
 
         ObjectName objectName = new ObjectName(brokerObjectName.getDomain() + ":" + "BrokerName=" + map.get("BrokerName") + ","
                                                + "Type=Producer" + ","
-                                               + destinationType + "," + destinationName + ","
+                                               + destinationType + ","
+                                               + (destinationName != null ? destinationName + "," : "")
                                                + clientId + "," + producerId);
         return objectName;
     }
