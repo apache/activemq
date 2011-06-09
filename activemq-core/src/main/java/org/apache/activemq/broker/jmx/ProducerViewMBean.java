@@ -37,6 +37,12 @@ public interface ProducerViewMBean {
     long getSessionId();
 
     /**
+     * @return the id of Producer.
+     */
+    @MBeanInfo("ID of the Producer.")
+    String getProducerId();
+
+    /**
      * @return the destination name
      */
     @MBeanInfo("The name of the destionation the Producer is on.")

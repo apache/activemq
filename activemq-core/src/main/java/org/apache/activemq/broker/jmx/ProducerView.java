@@ -16,8 +16,6 @@
  */
 package org.apache.activemq.broker.jmx;
 
-import javax.jms.Destination;
-
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ProducerInfo;
 
@@ -54,6 +52,14 @@ public class ProducerView implements ProducerViewMBean {
             return info.getProducerId().getSessionId();
         }
         return 0;
+    }
+
+    @Override
+    public String getProducerId() {
+        if (info != null) {
+            return info.getProducerId().toString();
+        }
+        return "NOTSET";
     }
 
     @Override
