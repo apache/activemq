@@ -202,6 +202,10 @@ public final class OpenWireFormat implements WireFormat {
                 // throw new IOException("Packet size does not match marshaled
                 // size");
             }
+
+            if (size > maxFrameSize) {
+                throw new IOException("Frame size of " + (size / (1024 * 1024)) + " MB larger than max allowed " + (maxFrameSize / (1024 * 1024)) + " MB");
+            }
         }
 
         Object command = doUnmarshal(bytesIn);
