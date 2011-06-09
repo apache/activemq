@@ -70,8 +70,6 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
     protected DataInputStream dataIn;
     protected TimeStampStream buffOut = null;
 
-    protected int maxFrameSize = 104857600; //100MB
-
 
     /**
      * The Traffic Class to be set on the socket.
@@ -321,14 +319,6 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
 
     public int getSocketBufferSize() {
         return socketBufferSize;
-    }
-
-    public int getMaxFrameSize() {
-        return maxFrameSize;
-    }
-
-    public void setMaxFrameSize(int maxFrameSize) {
-        this.maxFrameSize = maxFrameSize;
     }
 
     /**

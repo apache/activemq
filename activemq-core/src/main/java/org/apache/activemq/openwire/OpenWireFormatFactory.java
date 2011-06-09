@@ -39,6 +39,7 @@ public class OpenWireFormatFactory implements WireFormatFactory {
     private long maxInactivityDuration = 30*1000;
     private long maxInactivityDurationInitalDelay = 10*1000;
     private int cacheSize = 1024;
+    private long maxFrameSize = OpenWireFormat.DEFAULT_MAX_FRAME_SIZE;
 
     public WireFormat createWireFormat() {
         WireFormatInfo info = new WireFormatInfo();
@@ -53,6 +54,7 @@ public class OpenWireFormatFactory implements WireFormatFactory {
             info.setMaxInactivityDuration(maxInactivityDuration);
             info.setMaxInactivityDurationInitalDelay(maxInactivityDurationInitalDelay);
             info.setCacheSize(cacheSize);
+            info.setMaxFrameSize(maxFrameSize);
         } catch (Exception e) {
             IllegalStateException ise = new IllegalStateException("Could not configure WireFormatInfo");
             ise.initCause(e);
@@ -60,6 +62,7 @@ public class OpenWireFormatFactory implements WireFormatFactory {
         }
 
         OpenWireFormat f = new OpenWireFormat(version);
+        f.setMaxFrameSize(maxFrameSize);
         f.setPreferedWireFormatInfo(info);
         return f;
     }
@@ -135,5 +138,13 @@ public class OpenWireFormatFactory implements WireFormatFactory {
     public void setMaxInactivityDurationInitalDelay(
             long maxInactivityDurationInitalDelay) {
         this.maxInactivityDurationInitalDelay = maxInactivityDurationInitalDelay;
+    }
+
+    public long getMaxFrameSize() {
+        return maxFrameSize;
+    }
+
+    public void setMaxFrameSize(long maxFrameSize) {
+        this.maxFrameSize = maxFrameSize;
     }
 }

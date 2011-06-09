@@ -152,7 +152,7 @@ public class WireformatNegociationTest extends CombinationTestSupport {
     /**
      * @throws Exception
      */
-    public void testWireFomatInfoSeverVersion1() throws Exception {
+    public void testWireFormatInfoSeverVersion1() throws Exception {
 
         startServer("tcp://localhost:61616?wireFormat.version=1");
         startClient("tcp://localhost:61616");
@@ -170,7 +170,7 @@ public class WireformatNegociationTest extends CombinationTestSupport {
     /**
      * @throws Exception
      */
-    public void testWireFomatInfoClientVersion1() throws Exception {
+    public void testWireFormatInfoClientVersion1() throws Exception {
 
         startServer("tcp://localhost:61616");
         startClient("tcp://localhost:61616?wireFormat.version=1");
@@ -188,7 +188,7 @@ public class WireformatNegociationTest extends CombinationTestSupport {
     /**
      * @throws Exception
      */
-    public void testWireFomatInfoCurrentVersion() throws Exception {
+    public void testWireFormatInfoCurrentVersion() throws Exception {
 
         startServer("tcp://localhost:61616");
         startClient("tcp://localhost:61616");
@@ -203,7 +203,7 @@ public class WireformatNegociationTest extends CombinationTestSupport {
         assertEquals(CommandTypes.PROTOCOL_VERSION, serverWF.get().getVersion());
     }
     
-    public void testWireFomatInactivityDurationInitalDelay() throws Exception {
+    public void testWireFormatInactivityDurationInitialDelay() throws Exception {
 
         startServer("tcp://localhost:61616");
         startClient("tcp://localhost:61616?wireFormat.maxInactivityDurationInitalDelay=60000");
@@ -216,6 +216,21 @@ public class WireformatNegociationTest extends CombinationTestSupport {
 
         assertNotNull(serverWF.get());
         assertEquals(CommandTypes.PROTOCOL_VERSION, serverWF.get().getVersion());
+    }
+
+    public void testWireFormatMaxFrameSize() throws Exception {
+
+        startServer("tcp://localhost:61616");
+        startClient("tcp://localhost:61616?wireFormat.maxFrameSize=1048576");
+
+        assertTrue("Connect timeout", negociationCounter.await(10, TimeUnit.SECONDS));
+        assertNull("Async error: " + asyncError, asyncError.get());
+
+        assertNotNull(clientWF.get());
+        assertEquals(1048576, clientWF.get().getMaxFrameSize());
+
+        assertNotNull(serverWF.get());
+        assertEquals(1048576, serverWF.get().getMaxFrameSize());
     }
 
 }

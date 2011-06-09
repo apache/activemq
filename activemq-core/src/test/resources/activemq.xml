@@ -28,7 +28,7 @@
   <broker useJmx="false"  xmlns="http://activemq.apache.org/schema/core" persistent="false">
 
     <transportConnectors>
-      <transportConnector uri="nio://localhost:61616?transport.maxFrameSize=10485760" />
+      <transportConnector uri="nio://localhost:61616?wireFormat.maxFrameSize=1048576" />
     </transportConnectors>
         
   </broker>

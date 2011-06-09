@@ -30,6 +30,7 @@ import java.nio.channels.SocketChannel;
 import javax.net.SocketFactory;
 
 import org.apache.activemq.command.Command;
+import org.apache.activemq.openwire.OpenWireFormat;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.tcp.TcpTransport;
 import org.apache.activemq.util.IOExceptionSupport;
@@ -115,9 +116,14 @@ public class NIOTransport extends TcpTransport {
                     // for it.
                     inputBuffer.flip();
                     nextFrameSize = inputBuffer.getInt() + 4;
-                    if (nextFrameSize > maxFrameSize) {
-                        throw new IOException("Frame size of " + (nextFrameSize / (1024 * 1024)) + " MB larger than max allowed " + (maxFrameSize / (1024 * 1024)) + " MB");
+
+                    if (wireFormat instanceof OpenWireFormat) {
+                        long maxFrameSize = ((OpenWireFormat)wireFormat).getMaxFrameSize();
+                        if (nextFrameSize > maxFrameSize) {
+                            throw new IOException("Frame size of " + (nextFrameSize / (1024 * 1024)) + " MB larger than max allowed " + (maxFrameSize / (1024 * 1024)) + " MB");
+                        }
                     }
+
                     if (nextFrameSize > inputBuffer.capacity()) {
                         currentBuffer = ByteBuffer.allocate(nextFrameSize);
                         currentBuffer.putInt(nextFrameSize);
