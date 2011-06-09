@@ -23,6 +23,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 
 import junit.framework.TestCase;
+import org.apache.activemq.command.ActiveMQTextMessage;
 import org.apache.activemq.command.SessionId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -90,6 +91,32 @@ public class NumberRangesWhileMarshallingTest extends TestCase {
         } catch (IOException e) {
             // worked!
         }
+    }
+
+    public void testMaxFrameSize() throws Exception {
+        OpenWireFormat wf = new OpenWireFormat();
+        wf.setMaxFrameSize(10);
+        ActiveMQTextMessage msg = new ActiveMQTextMessage();
+        msg.setText("This is a test");
+
+        writeObject(msg);
+        ds.writeInt(endOfStreamMarker);
+
+        // now lets read from the stream
+        ds.close();
+
+        ByteArrayInputStream in = new ByteArrayInputStream(buffer.toByteArray());
+        DataInputStream dis = new DataInputStream(in);
+
+        try {
+            wf.unmarshal(dis);
+        } catch (IOException ioe) {
+           return;
+        }
+
+        fail("Should fail because of the large frame size");
+
+
     }
 
     protected void setUp() throws Exception {

@@ -269,7 +269,10 @@ public final class OpenWireFormat implements WireFormat {
     public Object unmarshal(DataInput dis) throws IOException {
         DataInput dataIn = dis;
         if (!sizePrefixDisabled) {
-            dis.readInt();
+            int size = dis.readInt();
+            if (size > maxFrameSize) {
+                throw new IOException("Frame size of " + (size / (1024 * 1024)) + " MB larger than max allowed " + (maxFrameSize / (1024 * 1024)) + " MB");
+            }
             // int size = dis.readInt();
             // byte[] data = new byte[size];
             // dis.readFully(data);
