@@ -103,7 +103,7 @@ fi
 
 # Location of the pidfile
 if [ -z "$ACTIVEMQ_PIDFILE" ]; then
-  ACTIVEMQ_PIDFILE="$ACTIVEMQ_DATA_DIR/activemq.pid"
+  ACTIVEMQ_PIDFILE="$ACTIVEMQ_DATA_DIR/activemq-$(hostname).pid"
 fi
 
 # Location of the java installation
