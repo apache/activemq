@@ -32,8 +32,11 @@ import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageDispatchNotification;
 import org.apache.activemq.command.ProducerInfo;
+import org.apache.activemq.filter.NonCachedMessageEvaluationContext;
+import org.apache.activemq.security.SecurityContext;
 import org.apache.activemq.state.ProducerState;
 import org.apache.activemq.store.MessageStore;
+import org.apache.activemq.thread.Scheduler;
 import org.apache.activemq.usage.MemoryUsage;
 import org.apache.activemq.usage.SystemUsage;
 import org.apache.activemq.usage.Usage;
@@ -93,6 +96,7 @@ public abstract class BaseDestination implements Destination {
     private boolean gcWithNetworkConsumers;
     private long lastActiveTime=0l;
     private boolean reduceMemoryFootprint = false;
+    protected final Scheduler scheduler;
 
     /**
      * @param brokerService
@@ -113,6 +117,7 @@ public abstract class BaseDestination implements Destination {
         this.memoryUsage = this.systemUsage.getMemoryUsage();
         this.memoryUsage.setUsagePortion(1.0f);
         this.regionBroker = brokerService.getRegionBroker();
+        this.scheduler = brokerService.getBroker().getScheduler();
     }
 
     /**
@@ -706,5 +711,13 @@ public abstract class BaseDestination implements Destination {
             }
         }
         return hasRegularConsumers;
+    }
+
+    protected ConnectionContext createConnectionContext() {
+        ConnectionContext answer = new ConnectionContext(new NonCachedMessageEvaluationContext());
+        answer.setBroker(this.broker);
+        answer.getMessageEvaluationContext().setDestination(getActiveMQDestination());
+        answer.setSecurityContext(SecurityContext.BROKER_SECURITY_CONTEXT);
+        return answer;
     }
 }

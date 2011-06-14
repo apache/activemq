@@ -126,7 +126,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
 
     private final Object iteratingMutex = new Object() {
     };
-    private final Scheduler scheduler;
+
 
     class TimeoutMessage implements Delayed {
 
@@ -210,7 +210,6 @@ public class Queue extends BaseDestination implements Task, UsageListener {
         super(brokerService, store, destination, parentStats);
         this.taskFactory = taskFactory;
         this.dispatchSelector = new QueueDispatchSelector(destination);
-        this.scheduler = brokerService.getBroker().getScheduler();
     }
 
     public List<Subscription> getConsumers() {
@@ -1613,14 +1612,6 @@ public class Queue extends BaseDestination implements Task, UsageListener {
         } catch (IOException e) {
             LOG.error("Failed to remove expired Message from the store ", e);
         }
-    }
-
-    protected ConnectionContext createConnectionContext() {
-        ConnectionContext answer = new ConnectionContext(new NonCachedMessageEvaluationContext());
-        answer.setBroker(this.broker);
-        answer.getMessageEvaluationContext().setDestination(getActiveMQDestination());
-        answer.setSecurityContext(SecurityContext.BROKER_SECURITY_CONTEXT);
-        return answer;
     }
 
     final void sendMessage(final Message msg) throws Exception {

@@ -20,12 +20,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
-import javax.jms.Connection;
-import javax.jms.Message;
-import javax.jms.MessageConsumer;
-import javax.jms.MessageListener;
-import javax.jms.MessageProducer;
-import javax.jms.Session;
+import javax.jms.*;
 import javax.management.ObjectName;
 
 import junit.framework.Test;
@@ -41,6 +36,7 @@ import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.broker.region.policy.VMPendingQueueMessageStoragePolicy;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
+import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.util.Wait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -398,6 +394,71 @@ public class ExpiredMessagesWithNoConsumerTest extends CombinationTestSupport {
         assertEquals("inflight goes to zeor on close", 0, view.getInFlightCount());
 
         LOG.info("done: " + getName());
+    }
+
+
+    public void testExpireMessagesForDurableSubscriber() throws Exception {
+        createBroker();
+        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("tcp://localhost:61616");
+        connection = factory.createConnection();
+        connection.setClientID("myConnection");
+        session = connection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
+        connection.start();
+        Topic destination = session.createTopic("test");
+        producer = session.createProducer(destination);
+        final int ttl = 300;
+        producer.setTimeToLive(ttl);
+
+        final long sendCount = 10;
+
+        TopicSubscriber sub = session.createDurableSubscriber(destination, "mySub");
+        sub.close();
+
+        for (int i=0; i < sendCount; i++) {
+            producer.send(session.createTextMessage("test"));
+        }
+
+        DestinationViewMBean view = createView((ActiveMQTopic)destination);
+
+
+        LOG.info("messages sent");
+        LOG.info("expired=" + view.getExpiredCount() + " " +  view.getEnqueueCount());
+        assertEquals(0, view.getExpiredCount());
+        assertEquals(10, view.getEnqueueCount());
+
+
+        Thread.sleep(4000);
+
+        LOG.info("expired=" + view.getExpiredCount() + " " +  view.getEnqueueCount());
+        assertEquals(10, view.getExpiredCount());
+        assertEquals(0, view.getEnqueueCount());
+
+
+        final AtomicLong received = new AtomicLong();
+        sub = session.createDurableSubscriber(destination, "mySub");
+        sub.setMessageListener(new MessageListener() {
+            @Override
+            public void onMessage(Message message) {
+                received.incrementAndGet();
+            }
+        });
+
+        LOG.info("Waiting for messages to arrive");
+
+
+        Wait.waitFor(new Wait.Condition() {
+             public boolean isSatisified() throws Exception {
+                 return received.get() >= sendCount;
+             }
+         }, 1000);
+
+        LOG.info("received=" + received.get());
+        LOG.info("expired=" + view.getExpiredCount() + " " +  view.getEnqueueCount());
+
+        assertEquals(0, received.get());
+        assertEquals(10, view.getExpiredCount());
+        assertEquals(0, view.getEnqueueCount());
+
     }
 
 

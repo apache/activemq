@@ -276,8 +276,8 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
 
     @Override
     public synchronized void remove(MessageReference node) {
-        if (currentCursor != null) {
-            currentCursor.remove(node);
+        for (PendingMessageCursor tsp : storePrefetches) {
+            tsp.remove(node);
         }
     }
 

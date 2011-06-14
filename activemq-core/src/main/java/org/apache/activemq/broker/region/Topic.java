@@ -510,6 +510,10 @@ public class Topic extends BaseDestination implements Task {
             memoryUsage.start();
         }
 
+        if (getExpireMessagesPeriod() > 0) {
+            scheduler.schedualPeriodically(expireMessagesTask, getExpireMessagesPeriod());
+        }
+
     }
 
     public void stop() throws Exception {
@@ -523,14 +527,22 @@ public class Topic extends BaseDestination implements Task {
         if (this.topicStore != null) {
             this.topicStore.stop();
         }
+
+         scheduler.cancel(expireMessagesTask);
     }
 
     public Message[] browse() {
+        final ConnectionContext connectionContext = createConnectionContext();
         final Set<Message> result = new CopyOnWriteArraySet<Message>();
         try {
             if (topicStore != null) {
                 topicStore.recover(new MessageRecoveryListener() {
                     public boolean recoverMessage(Message message) throws Exception {
+                        if (message.isExpired()) {
+                            for (Subscription sub : durableSubcribers.values()) {
+                                messageExpired(connectionContext, sub, message);
+                            }
+                        }
                         result.add(message);
                         return true;
                     }
@@ -640,6 +652,12 @@ public class Topic extends BaseDestination implements Task {
         }
     }
 
+    private final Runnable expireMessagesTask = new Runnable() {
+        public void run() {
+            browse();
+        }
+    };
+
     public void messageExpired(ConnectionContext context, Subscription subs, MessageReference reference) {
         broker.messageExpired(context, reference, subs);
         // AMQ-2586: Better to leave this stat at zero than to give the user
@@ -652,8 +670,11 @@ public class Topic extends BaseDestination implements Task {
         ack.setDestination(destination);
         ack.setMessageID(reference.getMessageId());
         try {
+            if (subs instanceof DurableTopicSubscription) {
+                ((DurableTopicSubscription)subs).removePending(reference);
+            }
             acknowledge(context, subs, ack, reference);
-        } catch (IOException e) {
+        } catch (Exception e) {
             LOG.error("Failed to remove expired Message from the store ", e);
         }
     }
@@ -662,5 +683,6 @@ public class Topic extends BaseDestination implements Task {
     protected Logger getLog() {
         return LOG;
     }
+
 
 }
