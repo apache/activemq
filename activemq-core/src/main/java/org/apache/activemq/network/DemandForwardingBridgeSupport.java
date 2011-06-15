@@ -298,7 +298,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                     localSessionInfo = new SessionInfo(localConnectionInfo, 1);
                     localBroker.oneway(localSessionInfo);
 
-                    brokerService.getBroker().networkBridgeStarted(remoteBrokerInfo, this.createdByDuplex);
+                    brokerService.getBroker().networkBridgeStarted(remoteBrokerInfo, this.createdByDuplex, remoteBroker.toString());
                     NetworkBridgeListener l = this.networkBridgeListener;
                     if (l != null) {
                         l.onStart(this);
@@ -347,7 +347,6 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                 remoteConnectionInfo.setClientId(configuration.getName() + "_" + configuration.getBrokerName() + "_outbound");
                 remoteConnectionInfo.setUserName(configuration.getUserName());
                 remoteConnectionInfo.setPassword(configuration.getPassword());
-                remoteConnectionInfo.setClientIp(remoteBroker.toString());
                 remoteBroker.oneway(remoteConnectionInfo);
 
                 SessionInfo remoteSessionInfo = new SessionInfo(remoteConnectionInfo, 1);

@@ -284,7 +284,7 @@ public class EmptyBroker implements Broker {
     public void nowMasterBroker() {        
     }
 
-    public void networkBridgeStarted(BrokerInfo brokerInfo, boolean createdByDuplex) {
+    public void networkBridgeStarted(BrokerInfo brokerInfo, boolean createdByDuplex, String remoteIp) {
     }
 
     public void networkBridgeStopped(BrokerInfo brokerInfo) {

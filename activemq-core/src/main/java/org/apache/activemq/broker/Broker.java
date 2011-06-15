@@ -382,7 +382,7 @@ public interface Broker extends Region, Service {
     
     ThreadPoolExecutor getExecutor();
 
-    void networkBridgeStarted(BrokerInfo brokerInfo, boolean createdByDuplex);
+    void networkBridgeStarted(BrokerInfo brokerInfo, boolean createdByDuplex, String remoteIp);
 
     void networkBridgeStopped(BrokerInfo brokerInfo);
 

@@ -314,7 +314,7 @@ public class ErrorBroker implements Broker {
         throw new BrokerStoppedException(this.message);
     }
 
-    public void networkBridgeStarted(BrokerInfo brokerInfo, boolean createdByDuplex) {
+    public void networkBridgeStarted(BrokerInfo brokerInfo, boolean createdByDuplex, String remoteIp) {
         throw new BrokerStoppedException(this.message);
     }
 
