@@ -30,7 +30,7 @@ public class Transaction implements Iterable<Page> {
 
 
     private RandomAccessFile tmpFile;
-    private File txfFile;
+    private File txFile;
     private int nextLocation = 0;
 
     /**
@@ -91,7 +91,7 @@ public class Transaction implements Iterable<Page> {
     // List of pages freed in this transaction
     private final SequenceSet freeList = new SequenceSet();
 
-    private long maxTransactionSize = 10485760;
+    private long maxTransactionSize = Integer.parseInt(System.getProperty("maxKahaDBTxSize", "" + 10485760));
 
     private long size = 0;
 
@@ -654,7 +654,7 @@ public class Transaction implements Iterable<Page> {
                     throw new IOException("Can't delete temporary KahaDB transaction file:"  + getTempFile());
                 }
                 tmpFile = null;
-                txfFile = null;
+                txFile = null;
             }
         }
         size = 0;
@@ -678,7 +678,7 @@ public class Transaction implements Iterable<Page> {
                     throw new IOException("Can't delete temporary KahaDB transaction file:"  + getTempFile());
                 }
                 tmpFile = null;
-                txfFile = null;
+                txFile = null;
             }
         }
         size = 0;
@@ -693,10 +693,10 @@ public class Transaction implements Iterable<Page> {
 
 
     protected File getTempFile() {
-        if (txfFile == null) {
-            txfFile = new File(getPageFile().getDirectory(), IOHelper.toFileSystemSafeName(Long.toString(getWriteTransactionId())) + ".tmp");
+        if (txFile == null) {
+            txFile = new File(getPageFile().getDirectory(), IOHelper.toFileSystemSafeName("tx-"+ Long.toString(getWriteTransactionId()) + "-" + Long.toString(System.currentTimeMillis()) + ".tmp"));
         }
-       return txfFile;
+       return txFile;
     }
 
     /**
