@@ -91,7 +91,7 @@ public class Transaction implements Iterable<Page> {
     // List of pages freed in this transaction
     private final SequenceSet freeList = new SequenceSet();
 
-    private long maxTransactionSize = Integer.parseInt(System.getProperty("maxKahaDBTxSize", "" + 10485760));
+    private long maxTransactionSize = Long.parseLong(System.getProperty("maxKahaDBTxSize", "" + 10485760));
 
     private long size = 0;
 
