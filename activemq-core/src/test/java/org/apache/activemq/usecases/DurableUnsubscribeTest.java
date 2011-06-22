@@ -19,6 +19,7 @@ package org.apache.activemq.usecases;
 import java.lang.management.ManagementFactory;
 
 import javax.jms.Connection;
+import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
@@ -43,7 +44,15 @@ public class DurableUnsubscribeTest extends org.apache.activemq.TestSupport {
         Destination d = broker.getDestination(topic);
         assertEquals("Subscription is missing.", 1, d.getConsumers().size());
 
+
         session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        MessageProducer producer = session.createProducer(topic);
+        for (int i = 0; i < 1000; i++) {
+            producer.send(session.createTextMessage("text"));
+        }
+
+        Thread.sleep(1000);
+
         session.unsubscribe("SubsId");
         session.close();
 
@@ -92,7 +101,7 @@ public class DurableUnsubscribeTest extends org.apache.activemq.TestSupport {
 
     private void createBroker() throws Exception {
         broker = BrokerFactory.createBroker("broker:(vm://localhost)");
-        broker.setPersistent(false);
+        //broker.setPersistent(false);
         broker.setUseJmx(true);
         broker.setBrokerName(getName());
         broker.start();

@@ -345,7 +345,7 @@ public class HashIndex<Key,Value> implements Index<Key,Value> {
         tx.store(metadata.page, metadataMarshaller, true);
         calcThresholds();
 
-        LOG.debug("Resizing done.  New bins start at: "+metadata.binPageId);        
+        LOG.debug("Resizing done.  New bins start at: "+metadata.binPageId);
         resizeCapacity=0;
         resizePageId=0;
     }

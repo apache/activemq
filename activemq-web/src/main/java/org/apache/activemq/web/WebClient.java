@@ -61,7 +61,8 @@ import org.slf4j.LoggerFactory;
  * stored inside a HttpSession TODO controls to prevent DOS attacks with users
  * requesting many consumers TODO configure consumers with small prefetch.
  * 
- * 
+ *
+ *
  */
 public class WebClient implements HttpSessionActivationListener, HttpSessionBindingListener, Externalizable {
 

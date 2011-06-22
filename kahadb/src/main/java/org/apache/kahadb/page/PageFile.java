@@ -138,15 +138,35 @@ public class PageFile {
         Page page;
         byte[] current;
         byte[] diskBound;
+        int currentLocation = -1;
+        int diskBoundLocation = -1;
+        File tmpFile;
+        int length;
 
         public PageWrite(Page page, byte[] data) {
             this.page=page;
             current=data;
         }
+
+        public PageWrite(Page page, int currentLocation, int length, File tmpFile) {
+            this.page = page;
+            this.currentLocation = currentLocation;
+            this.tmpFile = tmpFile;
+            this.length = length;
+        }
                 
         public void setCurrent(Page page, byte[] data) {
             this.page=page;
             current=data;
+            currentLocation = -1;
+            diskBoundLocation = -1;
+        }
+
+        public void setCurrentLocation(Page page, int location, int length) {
+            this.page = page;
+            this.currentLocation = location;
+            this.length = length;
+            this.current = null;
         }
 
         @Override
@@ -158,22 +178,42 @@ public class PageFile {
         public Page getPage() {
             return page;
         }
+
+        public byte[] getDiskBound() throws IOException {
+            if (diskBound == null && diskBoundLocation != -1) {
+                diskBound = new byte[length];
+                RandomAccessFile file = new RandomAccessFile(tmpFile, "r");
+                file.seek(diskBoundLocation);
+                int readNum = file.read(diskBound);
+                file.close();
+                diskBoundLocation = -1;
+            }
+            return diskBound;
+        }
         
         void begin() {
-           diskBound = current;
-           current = null;
+           if (currentLocation != -1) {
+              diskBoundLocation = currentLocation;
+              currentLocation = -1;
+              current = null;
+           }  else {
+              diskBound = current;
+              current = null;
+              currentLocation = -1;
+           }
         }
         
         /**
          * @return true if there is no pending writes to do.
          */
         boolean done() {
+            diskBoundLocation = -1;
             diskBound=null;
-            return current == null;
+            return current == null || currentLocation == -1;
         }
         
         boolean isDone() {
-            return diskBound == null && current == null;
+            return diskBound == null && diskBoundLocation == -1 && current == null && currentLocation == -1;
         }
 
     }
@@ -470,7 +510,7 @@ public class PageFile {
         return new File(directory, IOHelper.toFileSystemSafeName(name)+RECOVERY_FILE_SUFFIX);
     } 
 
-    private long toOffset(long pageId) {
+    public long toOffset(long pageId) {
         return PAGE_FILE_HEADER_SIZE+(pageId*pageSize);
     }
 
@@ -823,6 +863,8 @@ public class PageFile {
                 }
             }
 
+            boolean longTx = false;
+
             for (Map.Entry<Long, PageWrite> entry : updates) {
                 Long key = entry.getKey();
                 PageWrite value = entry.getValue();
@@ -830,12 +872,20 @@ public class PageFile {
                 if( write==null ) {
                     writes.put(key, value);
                 } else {
-                    write.setCurrent(value.page, value.current);
+                    if (value.currentLocation != -1) {
+                        write.setCurrentLocation(value.page, value.currentLocation, value.length);
+                        write.tmpFile = value.tmpFile;
+                        longTx = true;
+                    } else {
+                        write.setCurrent(value.page, value.current);
+                    }
                 }
             }
             
             // Once we start approaching capacity, notify the writer to start writing
-            if( canStartWriteBatch() ) {
+            // sync immediately for long txs
+            if( longTx || canStartWriteBatch() ) {
+
                 if( enabledWriteThread  ) {
                     writes.notify();
                 } else {
@@ -919,115 +969,90 @@ public class PageFile {
         }
     }
 
-    /**
-     * 
-     * @return true if there are still pending writes to do.
-     * @throws InterruptedException 
-     * @throws IOException 
-     */
-    private void writeBatch() throws IOException {
-            
-        CountDownLatch checkpointLatch;
-        ArrayList<PageWrite> batch;
-        synchronized( writes ) {
+     private void writeBatch() throws IOException {
+
+         CountDownLatch checkpointLatch;
+         ArrayList<PageWrite> batch;
+         synchronized( writes ) {
             // If there is not enough to write, wait for a notification...
 
             batch = new ArrayList<PageWrite>(writes.size());
             // build a write batch from the current write cache.
             for (PageWrite write : writes.values()) {
                 batch.add(write);
-                // Move the current write to the diskBound write, this lets folks update the 
+                // Move the current write to the diskBound write, this lets folks update the
                 // page again without blocking for this write.
                 write.begin();
-                if (write.diskBound == null) {
+                if (write.diskBound == null && write.diskBoundLocation == -1) {
                     batch.remove(write);
                 }
             }
 
-            // Grab on to the existing checkpoint latch cause once we do this write we can 
+            // Grab on to the existing checkpoint latch cause once we do this write we can
             // release the folks that were waiting for those writes to hit disk.
             checkpointLatch = this.checkpointLatch;
             this.checkpointLatch=null;
-        }
-        
-       try {
-            if (enableRecoveryFile) {
+         }
 
-                // Using Adler-32 instead of CRC-32 because it's much faster and
-                // it's
-                // weakness for short messages with few hundred bytes is not a
-                // factor in this case since we know
-                // our write batches are going to much larger.
-                Checksum checksum = new Adler32();
-                for (PageWrite w : batch) {
-                    try {
-                        checksum.update(w.diskBound, 0, pageSize);
-                    } catch (Throwable t) {
-                        throw IOExceptionSupport.create(
-                                "Cannot create recovery file. Reason: " + t, t);
-                    }
-                }
+         Checksum checksum = new Adler32();
+         recoveryFile.seek(RECOVERY_FILE_HEADER_SIZE);
+         for (PageWrite w : batch) {
+             if (enableRecoveryFile) {
+                 try {
+                     checksum.update(w.getDiskBound(), 0, pageSize);
+                 } catch (Throwable t) {
+                     throw IOExceptionSupport.create("Cannot create recovery file. Reason: " + t, t);
+                 }
+                 recoveryFile.writeLong(w.page.getPageId());
+                 recoveryFile.write(w.getDiskBound(), 0, pageSize);
+             }
 
-                // Can we shrink the recovery buffer??
-                if (recoveryPageCount > recoveryFileMaxPageCount) {
-                    int t = Math.max(recoveryFileMinPageCount, batch.size());
-                    recoveryFile.setLength(recoveryFileSizeForPages(t));
-                }
+             writeFile.seek(toOffset(w.page.getPageId()));
+             writeFile.write(w.getDiskBound(), 0, pageSize);
+             w.done();
+         }
 
-                // Record the page writes in the recovery buffer.
-                recoveryFile.seek(0);
-                // Store the next tx id...
-                recoveryFile.writeLong(nextTxid.get());
-                // Store the checksum for thw write batch so that on recovery we
-                // know if we have a consistent
-                // write batch on disk.
-                recoveryFile.writeLong(checksum.getValue());
-                // Write the # of pages that will follow
-                recoveryFile.writeInt(batch.size());
+         try {
+             if (enableRecoveryFile) {
+                 // Can we shrink the recovery buffer??
+                 if (recoveryPageCount > recoveryFileMaxPageCount) {
+                     int t = Math.max(recoveryFileMinPageCount, batch.size());
+                     recoveryFile.setLength(recoveryFileSizeForPages(t));
+                 }
 
-                // Write the pages.
-                recoveryFile.seek(RECOVERY_FILE_HEADER_SIZE);
+                 // Record the page writes in the recovery buffer.
+                 recoveryFile.seek(0);
+                 // Store the next tx id...
+                 recoveryFile.writeLong(nextTxid.get());
+                 // Store the checksum for thw write batch so that on recovery we
+                 // know if we have a consistent
+                 // write batch on disk.
+                 recoveryFile.writeLong(checksum.getValue());
+                 // Write the # of pages that will follow
+                 recoveryFile.writeInt(batch.size());
+             }
 
-                for (PageWrite w : batch) {
-                    recoveryFile.writeLong(w.page.getPageId());
-                    recoveryFile.write(w.diskBound, 0, pageSize);
-                }
+             if (enableDiskSyncs) {
+                 // Sync to make sure recovery buffer writes land on disk..
+                 recoveryFile.getFD().sync();
+                 writeFile.getFD().sync();
+             }
+         } finally {
+             synchronized (writes) {
+                 for (PageWrite w : batch) {
+                     // If there are no more pending writes, then remove it from
+                     // the write cache.
+                     if (w.isDone()) {
+                         writes.remove(w.page.getPageId());
+                     }
+                 }
+             }
 
-                if (enableDiskSyncs) {
-                    // Sync to make sure recovery buffer writes land on disk..
-                    recoveryFile.getFD().sync();
-                }
-
-                recoveryPageCount = batch.size();
-            }
-
-            for (PageWrite w : batch) {
-                writeFile.seek(toOffset(w.page.getPageId()));
-                writeFile.write(w.diskBound, 0, pageSize);
-                w.done();
-            }
-
-            // Sync again
-            if (enableDiskSyncs) {
-                writeFile.getFD().sync();
-            }
-
-        } finally {
-            synchronized (writes) {
-                for (PageWrite w : batch) {
-                    // If there are no more pending writes, then remove it from
-                    // the write cache.
-                    if (w.isDone()) {
-                        writes.remove(w.page.getPageId());
-                    }
-                }
-            }
-            
-            if( checkpointLatch!=null ) {
-                checkpointLatch.countDown();
-            }
-        }
-    }
+             if (checkpointLatch != null) {
+                 checkpointLatch.countDown();
+             }
+         }
+     }
 
     private long recoveryFileSizeForPages(int pageCount) {
         return RECOVERY_FILE_HEADER_SIZE+((pageSize+8)*pageCount);
@@ -1135,4 +1160,7 @@ public class PageFile {
 		return getMainPageFile();
 	}
 
+    public File getDirectory() {
+        return directory;
+    }
 }

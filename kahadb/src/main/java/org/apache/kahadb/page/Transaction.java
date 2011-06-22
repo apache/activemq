@@ -16,28 +16,22 @@
  */
 package org.apache.kahadb.page;
 
-import java.io.DataInputStream;
-import java.io.EOFException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.NoSuchElementException;
+import java.io.*;
+import java.util.*;
 
 import org.apache.kahadb.page.PageFile.PageWrite;
-import org.apache.kahadb.util.ByteSequence;
-import org.apache.kahadb.util.DataByteArrayInputStream;
-import org.apache.kahadb.util.DataByteArrayOutputStream;
-import org.apache.kahadb.util.Marshaller;
-import org.apache.kahadb.util.Sequence;
-import org.apache.kahadb.util.SequenceSet;
+import org.apache.kahadb.util.*;
 
 /**
  * The class used to read/update a PageFile object.  Using a transaction allows you to
  * do multiple update operations in a single unit of work.
  */
 public class Transaction implements Iterable<Page> {
+
+
+    private RandomAccessFile tmpFile;
+    private File txfFile;
+    private int nextLocation = 0;
 
     /**
      * The PageOverflowIOException occurs when a page write is requested
@@ -91,11 +85,15 @@ public class Transaction implements Iterable<Page> {
     // If this transaction is updating stuff.. this is the tx of 
     private long writeTransactionId=-1;
     // List of pages that this transaction has modified.
-    private HashMap<Long, PageWrite> writes=new HashMap<Long, PageWrite>();
+    private TreeMap<Long, PageWrite> writes=new TreeMap<Long, PageWrite>();
     // List of pages allocated in this transaction
     private final SequenceSet allocateList = new SequenceSet();
     // List of pages freed in this transaction
     private final SequenceSet freeList = new SequenceSet();
+
+    private long maxTransactionSize = 10485760;
+
+    private long size = 0;
 
     Transaction(PageFile pageFile) {
         this.pageFile = pageFile;
@@ -650,7 +648,16 @@ public class Transaction implements Iterable<Page> {
             allocateList.clear();
             writes.clear();
             writeTransactionId = -1;
+            if (tmpFile != null) {
+                tmpFile.close();
+                if (!getTempFile().delete()) {
+                    throw new IOException("Can't delete temporary KahaDB transaction file:"  + getTempFile());
+                }
+                tmpFile = null;
+                txfFile = null;
+            }
         }
+        size = 0;
     }
 
     /**
@@ -665,7 +672,16 @@ public class Transaction implements Iterable<Page> {
             allocateList.clear();
             writes.clear();
             writeTransactionId = -1;
+            if (tmpFile != null) {
+                tmpFile.close();
+                if (getTempFile().delete()) {
+                    throw new IOException("Can't delete temporary KahaDB transaction file:"  + getTempFile());
+                }
+                tmpFile = null;
+                txfFile = null;
+            }
         }
+        size = 0;
     }
 
     private long getWriteTransactionId() {
@@ -675,16 +691,36 @@ public class Transaction implements Iterable<Page> {
         return writeTransactionId;
     }
 
+
+    protected File getTempFile() {
+        if (txfFile == null) {
+            txfFile = new File(getPageFile().getDirectory(), IOHelper.toFileSystemSafeName(Long.toString(getWriteTransactionId())) + ".tmp");
+        }
+       return txfFile;
+    }
+
     /**
      * Queues up a page write that should get done when commit() gets called.
      */
     @SuppressWarnings("unchecked")
     private void write(final Page page, byte[] data) throws IOException {
         Long key = page.getPageId();
-        // TODO: if a large update transaction is in progress, we may want to move
-        // all the current updates to a temp file so that we don't keep using 
-        // up memory.
-        writes.put(key, new PageWrite(page, data));        
+        size += data.length;
+
+        PageWrite write;
+        if (size > maxTransactionSize) {
+            if (tmpFile == null) {
+                tmpFile = new RandomAccessFile(getTempFile(), "rw");
+            }
+            int location = nextLocation;
+            tmpFile.seek(nextLocation);
+            tmpFile.write(data);
+            nextLocation = location + data.length;
+            write = new PageWrite(page, location, data.length, getTempFile());
+        } else {
+            write = new PageWrite(page, data);
+        }
+        writes.put(key, write);
     }   
 
     /**
