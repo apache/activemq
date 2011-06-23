@@ -539,8 +539,10 @@ public class Topic extends BaseDestination implements Task {
                 topicStore.recover(new MessageRecoveryListener() {
                     public boolean recoverMessage(Message message) throws Exception {
                         if (message.isExpired()) {
-                            for (Subscription sub : durableSubcribers.values()) {
-                                messageExpired(connectionContext, sub, message);
+                            for (DurableTopicSubscription sub : durableSubcribers.values()) {
+                                if (!sub.isActive()) {
+                                    messageExpired(connectionContext, sub, message);
+                                }
                             }
                         }
                         result.add(message);
