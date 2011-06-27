@@ -196,4 +196,13 @@ public interface SubscriptionViewMBean {
      */
     @MBeanInfo("Returns true if the subscription (which may be using wildcards) matches the given topic name")
     boolean isMatchingTopic(String topicName);
+
+    /**
+     * Returns true if the subscription is slow
+     *
+     * @return true if the subscription is slow
+     */
+    @MBeanInfo("Returns true if the subscription is slow")
+    boolean isSlowConsumer();
+
 }

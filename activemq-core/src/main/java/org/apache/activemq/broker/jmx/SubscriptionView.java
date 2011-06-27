@@ -305,4 +305,8 @@ public class SubscriptionView implements SubscriptionViewMBean {
         return filter.matches(destination);
     }
 
+    @Override
+    public boolean isSlowConsumer() {
+        return subscription.isSlowConsumer();
+    }
 }
