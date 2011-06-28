@@ -67,6 +67,7 @@ public class BlobJDBCAdapter extends DefaultJDBCAdapter {
             s.setString(4, destination.getQualifiedName());
             s.setLong(5, expiration);
             s.setLong(6, priority);
+            s.setString(7, " ");
 
             if (s.executeUpdate() != 1) {
                 throw new IOException("Failed to add broker message: " + messageID + " in container.");
