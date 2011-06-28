@@ -34,8 +34,8 @@ import org.apache.activemq.usage.MemoryUsage;
 import org.apache.activemq.usage.Usage;
 
 /**
- * 
- * 
+ *
+ *
  */
 public class DestinationFilter implements Destination {
 
@@ -59,6 +59,10 @@ public class DestinationFilter implements Destination {
 
     public void dispose(ConnectionContext context) throws IOException {
         next.dispose(context);
+    }
+
+    public boolean isDisposed() {
+        return next.isDisposed();
     }
 
     public void gc() {
@@ -107,7 +111,7 @@ public class DestinationFilter implements Destination {
 
     /**
      * Sends a message to the given destination which may be a wildcard
-     * 
+     *
      * @param context broker context
      * @param message message to send
      * @param destination possibly wildcard destination to send the message to
@@ -137,7 +141,7 @@ public class DestinationFilter implements Destination {
     public void setBlockedProducerWarningInterval(long blockedProducerWarningInterval) {
         next.setBlockedProducerWarningInterval(blockedProducerWarningInterval);
     }
-    
+
     public long getBlockedProducerWarningInterval() {
         return next.getBlockedProducerWarningInterval();
     }

@@ -43,7 +43,7 @@ import org.apache.activemq.usage.Usage;
 import org.slf4j.Logger;
 
 /**
- * 
+ *
  */
 public abstract class BaseDestination implements Destination {
     /**
@@ -97,6 +97,7 @@ public abstract class BaseDestination implements Destination {
     private long lastActiveTime=0l;
     private boolean reduceMemoryFootprint = false;
     protected final Scheduler scheduler;
+    private boolean disposed = false;
 
     /**
      * @param brokerService
@@ -122,7 +123,7 @@ public abstract class BaseDestination implements Destination {
 
     /**
      * initialize the destination
-     * 
+     *
      * @throws Exception
      */
     public void initialize() throws Exception {
@@ -151,7 +152,7 @@ public abstract class BaseDestination implements Destination {
      * Set's the interval at which warnings about producers being blocked by
      * resource usage will be triggered. Values of 0 or less will disable
      * warnings
-     * 
+     *
      * @param blockedProducerWarningInterval the interval at which warning about
      *            blocked producers will be triggered.
      */
@@ -160,7 +161,7 @@ public abstract class BaseDestination implements Destination {
     }
 
     /**
-     * 
+     *
      * @return the interval at which warning about blocked producers will be
      *         triggered.
      */
@@ -218,7 +219,7 @@ public abstract class BaseDestination implements Destination {
     public void removeProducer(ConnectionContext context, ProducerInfo info) throws Exception {
         destinationStatistics.getProducers().decrement();
     }
-    
+
     public void addSubscription(ConnectionContext context, Subscription sub) throws Exception{
         destinationStatistics.getConsumers().increment();
         this.lastActiveTime=0l;
@@ -420,7 +421,7 @@ public abstract class BaseDestination implements Destination {
 
     /**
      * set the dead letter strategy
-     * 
+     *
      * @param deadLetterStrategy
      */
     public void setDeadLetterStrategy(DeadLetterStrategy deadLetterStrategy) {
@@ -437,7 +438,7 @@ public abstract class BaseDestination implements Destination {
 
     /**
      * called when message is consumed
-     * 
+     *
      * @param context
      * @param messageReference
      */
@@ -449,7 +450,7 @@ public abstract class BaseDestination implements Destination {
 
     /**
      * Called when message is delivered to the broker
-     * 
+     *
      * @param context
      * @param messageReference
      */
@@ -462,7 +463,7 @@ public abstract class BaseDestination implements Destination {
     /**
      * Called when a message is discarded - e.g. running low on memory This will
      * happen only if the policy is enabled - e.g. non durable topics
-     * 
+     *
      * @param context
      * @param messageReference
      */
@@ -474,7 +475,7 @@ public abstract class BaseDestination implements Destination {
 
     /**
      * Called when there is a slow consumer
-     * 
+     *
      * @param context
      * @param subs
      */
@@ -489,7 +490,7 @@ public abstract class BaseDestination implements Destination {
 
     /**
      * Called to notify a producer is too fast
-     * 
+     *
      * @param context
      * @param producerInfo
      */
@@ -501,7 +502,7 @@ public abstract class BaseDestination implements Destination {
 
     /**
      * Called when a Usage reaches a limit
-     * 
+     *
      * @param context
      * @param usage
      */
@@ -518,6 +519,11 @@ public abstract class BaseDestination implements Destination {
         }
         this.destinationStatistics.setParent(null);
         this.memoryUsage.stop();
+        this.disposed = true;
+    }
+
+    public boolean isDisposed() {
+        return this.disposed;
     }
 
     /**
@@ -585,7 +591,7 @@ public abstract class BaseDestination implements Destination {
     protected final void waitForSpace(ConnectionContext context, Usage<?> usage, String warning) throws IOException, InterruptedException, ResourceAllocationException {
         waitForSpace(context, usage, 100, warning);
     }
-    
+
     protected final void waitForSpace(ConnectionContext context, Usage<?> usage, int highWaterMark, String warning) throws IOException, InterruptedException, ResourceAllocationException {
         if (systemUsage.isSendFailIfNoSpace()) {
             getLog().debug("sendFailIfNoSpace, forcing exception on send, usage:  " + usage + ": " + warning);
@@ -603,7 +609,7 @@ public abstract class BaseDestination implements Destination {
                 if (context.getStopping().get()) {
                     throw new IOException("Connection closed, send aborted.");
                 }
-    
+
                 long now = System.currentTimeMillis();
                 if (now >= nextWarn) {
                     getLog().info("" + usage + ": " + warning + " (blocking for: " + (now - start) / 1000 + "s)");
@@ -623,7 +629,7 @@ public abstract class BaseDestination implements Destination {
         return this.slowConsumerStrategy;
     }
 
-   
+
     public boolean isPrioritizedMessages() {
         return this.prioritizedMessages;
     }

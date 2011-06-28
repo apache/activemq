@@ -72,8 +72,8 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Routes Broker operations to the correct messaging regions for processing.
- * 
- * 
+ *
+ *
  */
 public class RegionBroker extends EmptyBroker {
     public static final String ORIGINAL_EXPIRATION = "originalExpiration";
@@ -232,17 +232,17 @@ public class RegionBroker extends EmptyBroker {
         synchronized (clientIdSet) {
             ConnectionContext oldContext = clientIdSet.get(clientId);
             if (oldContext != null) {
-            	if (context.isFaultTolerant() || context.isNetworkConnection()){
-            		//remove the old connection
-            		try{
-            			removeConnection(oldContext, info, new Exception("remove stale client"));
-            		}catch(Exception e){
-            			LOG.warn("Failed to remove stale connection ",e);
-            		}
-            	}else{
+                if (context.isFaultTolerant() || context.isNetworkConnection()){
+                    //remove the old connection
+                    try{
+                        removeConnection(oldContext, info, new Exception("remove stale client"));
+                    }catch(Exception e){
+                        LOG.warn("Failed to remove stale connection ",e);
+                    }
+                }else{
                 throw new InvalidClientIDException("Broker: " + getBrokerName() + " - Client: " + clientId + " already connected from "
                                                    + oldContext.getConnection().getRemoteAddress());
-            	}
+                }
             } else {
                 clientIdSet.put(clientId, context);
             }
@@ -496,7 +496,8 @@ public class RegionBroker extends EmptyBroker {
     public void send(ProducerBrokerExchange producerExchange, Message message) throws Exception {
         message.setBrokerInTime(System.currentTimeMillis());
         if (producerExchange.isMutable() || producerExchange.getRegion() == null
-                || (producerExchange.getRegion() != null && producerExchange.getRegion().getDestinationMap().get(message.getDestination()) == null)) {
+                || (producerExchange.getRegion() != null && producerExchange.getRegion().getDestinationMap().get(message.getDestination()) == null)
+                || (producerExchange.getRegionDestination() != null && producerExchange.getRegionDestination().isDisposed())) {
             ActiveMQDestination destination = message.getDestination();
             // ensure the destination is registered with the RegionBroker
             producerExchange.getConnectionContext().getBroker().addDestination(producerExchange.getConnectionContext(), destination, isAllowTempAutoCreationOnSend());
@@ -520,6 +521,7 @@ public class RegionBroker extends EmptyBroker {
             producerExchange.setRegion(region);
             producerExchange.setRegionDestination(null);
         }
+
         producerExchange.getRegion().send(producerExchange, message);
     }
 
@@ -793,18 +795,18 @@ public class RegionBroker extends EmptyBroker {
         }
         return expired;
     }
-   
+
     private boolean stampAsExpired(Message message) throws IOException {
         boolean stamped=false;
         if (message.getProperty(ORIGINAL_EXPIRATION) == null) {
-            long expiration=message.getExpiration();     
+            long expiration=message.getExpiration();
             message.setProperty(ORIGINAL_EXPIRATION,new Long(expiration));
             stamped = true;
         }
         return stamped;
     }
 
-    
+
     @Override
     public void messageExpired(ConnectionContext context, MessageReference node, Subscription subscription) {
         if (LOG.isDebugEnabled()) {
@@ -812,51 +814,51 @@ public class RegionBroker extends EmptyBroker {
         }
         getRoot().sendToDeadLetterQueue(context, node, subscription);
     }
-    
+
     @Override
     public void sendToDeadLetterQueue(ConnectionContext context,
-	        MessageReference node, Subscription subscription){
-		try{
-			if(node!=null){
-				Message message=node.getMessage();
-				if(message!=null && node.getRegionDestination()!=null){
-					DeadLetterStrategy deadLetterStrategy=node
-					        .getRegionDestination().getDeadLetterStrategy();
-					if(deadLetterStrategy!=null){
-						if(deadLetterStrategy.isSendToDeadLetterQueue(message)){
-						    // message may be inflight to other subscriptions so do not modify
-						    message = message.copy();
-						    stampAsExpired(message);
-						    message.setExpiration(0);
-						    if(!message.isPersistent()){
-							    message.setPersistent(true);
-							    message.setProperty("originalDeliveryMode",
-								        "NON_PERSISTENT");
-							}
-							// The original destination and transaction id do
-							// not get filled when the message is first sent,
-							// it is only populated if the message is routed to
-							// another destination like the DLQ
-							ActiveMQDestination deadLetterDestination=deadLetterStrategy
-							        .getDeadLetterQueueFor(message, subscription);
-							if (context.getBroker()==null) {
-								context.setBroker(getRoot());
-							}
-							BrokerSupport.resendNoCopy(context,message,
-							        deadLetterDestination);
-						}
-					} else {
-					    if (LOG.isDebugEnabled()) {
-					        LOG.debug("Dead Letter message with no DLQ strategy in place, message id: "
+            MessageReference node, Subscription subscription){
+        try{
+            if(node!=null){
+                Message message=node.getMessage();
+                if(message!=null && node.getRegionDestination()!=null){
+                    DeadLetterStrategy deadLetterStrategy=node
+                            .getRegionDestination().getDeadLetterStrategy();
+                    if(deadLetterStrategy!=null){
+                        if(deadLetterStrategy.isSendToDeadLetterQueue(message)){
+                            // message may be inflight to other subscriptions so do not modify
+                            message = message.copy();
+                            stampAsExpired(message);
+                            message.setExpiration(0);
+                            if(!message.isPersistent()){
+                                message.setPersistent(true);
+                                message.setProperty("originalDeliveryMode",
+                                        "NON_PERSISTENT");
+                            }
+                            // The original destination and transaction id do
+                            // not get filled when the message is first sent,
+                            // it is only populated if the message is routed to
+                            // another destination like the DLQ
+                            ActiveMQDestination deadLetterDestination=deadLetterStrategy
+                                    .getDeadLetterQueueFor(message, subscription);
+                            if (context.getBroker()==null) {
+                                context.setBroker(getRoot());
+                            }
+                            BrokerSupport.resendNoCopy(context,message,
+                                    deadLetterDestination);
+                        }
+                    } else {
+                        if (LOG.isDebugEnabled()) {
+                            LOG.debug("Dead Letter message with no DLQ strategy in place, message id: "
                                     + message.getMessageId() + ", destination: " + message.getDestination());
-					    }
-					}
-				}
-			}
-		}catch(Exception e){
-			LOG.warn("Caught an exception sending to DLQ: "+node,e);
-		}
-	}
+                        }
+                    }
+                }
+            }
+        }catch(Exception e){
+            LOG.warn("Caught an exception sending to DLQ: "+node,e);
+        }
+    }
 
     @Override
     public Broker getRoot() {
@@ -867,7 +869,7 @@ public class RegionBroker extends EmptyBroker {
             throw new RuntimeException("The broker from the BrokerService should not throw an exception");
         }
     }
-    
+
     /**
      * @return the broker sequence id
      */
@@ -877,17 +879,17 @@ public class RegionBroker extends EmptyBroker {
             return sequenceGenerator.getNextSequenceId();
         }
     }
-    
-    
+
+
     @Override
     public Scheduler getScheduler() {
         return this.scheduler;
     }
-    
+
     public ThreadPoolExecutor getExecutor() {
         return this.executor;
     }
-    
+
     @Override
     public void processConsumerControl(ConsumerBrokerExchange consumerExchange, ConsumerControl control) {
         ActiveMQDestination destination = control.getDestination();
@@ -899,20 +901,20 @@ public class RegionBroker extends EmptyBroker {
         case ActiveMQDestination.TOPIC_TYPE:
             topicRegion.processConsumerControl(consumerExchange, control);
             break;
-            
+
         case ActiveMQDestination.TEMP_QUEUE_TYPE:
             tempQueueRegion.processConsumerControl(consumerExchange, control);
             break;
-            
+
         case ActiveMQDestination.TEMP_TOPIC_TYPE:
             tempTopicRegion.processConsumerControl(consumerExchange, control);
             break;
-            
+
         default:
             LOG.warn("unmatched destination: " + destination + ", in consumerControl: "  + control);
         }
     }
-    
+
     protected void addBrokerInClusterUpdate() {
         List<TransportConnector> connectors = this.brokerService.getTransportConnectors();
         for (TransportConnector connector : connectors) {
@@ -930,7 +932,7 @@ public class RegionBroker extends EmptyBroker {
             }
         }
     }
-    
+
     protected void purgeInactiveDestinations() {
         synchronized (purgeInactiveDestinationsTask) {
             List<BaseDestination> list = new ArrayList<BaseDestination>();

@@ -35,7 +35,7 @@ import org.apache.activemq.usage.MemoryUsage;
 import org.apache.activemq.usage.Usage;
 
 /**
- * 
+ *
  */
 public interface Destination extends Service, Task {
 
@@ -62,6 +62,8 @@ public interface Destination extends Service, Task {
 
     void dispose(ConnectionContext context) throws IOException;
 
+    boolean isDisposed();
+
     DestinationStatistics getDestinationStatistics();
 
     DeadLetterStrategy getDeadLetterStrategy();
@@ -80,14 +82,14 @@ public interface Destination extends Service, Task {
      * Set's the interval at which warnings about producers being blocked by
      * resource usage will be triggered. Values of 0 or less will disable
      * warnings
-     * 
+     *
      * @param blockedProducerWarningInterval the interval at which warning about
      *            blocked producers will be triggered.
      */
     public void setBlockedProducerWarningInterval(long blockedProducerWarningInterval);
 
     /**
-     * 
+     *
      * @return the interval at which warning about blocked producers will be
      *         triggered.
      */
@@ -140,14 +142,14 @@ public interface Destination extends Service, Task {
 
     /**
      * set the lazy dispatch - default is false
-     * 
+     *
      * @param value
      */
     public void setLazyDispatch(boolean value);
 
     /**
      * Inform the Destination a message has expired
-     * 
+     *
      * @param context
      * @param subs
      * @param node
@@ -156,7 +158,7 @@ public interface Destination extends Service, Task {
 
     /**
      * called when message is consumed
-     * 
+     *
      * @param context
      * @param messageReference
      */
@@ -164,7 +166,7 @@ public interface Destination extends Service, Task {
 
     /**
      * Called when message is delivered to the broker
-     * 
+     *
      * @param context
      * @param messageReference
      */
@@ -173,16 +175,16 @@ public interface Destination extends Service, Task {
     /**
      * Called when a message is discarded - e.g. running low on memory This will
      * happen only if the policy is enabled - e.g. non durable topics
-     * 
+     *
      * @param context
      * @param messageReference
-     * @param sub 
+     * @param sub
      */
     void messageDiscarded(ConnectionContext context, Subscription sub, MessageReference messageReference);
 
     /**
      * Called when there is a slow consumer
-     * 
+     *
      * @param context
      * @param subs
      */
@@ -190,7 +192,7 @@ public interface Destination extends Service, Task {
 
     /**
      * Called to notify a producer is too fast
-     * 
+     *
      * @param context
      * @param producerInfo
      */
@@ -198,7 +200,7 @@ public interface Destination extends Service, Task {
 
     /**
      * Called when a Usage reaches a limit
-     * 
+     *
      * @param context
      * @param usage
      */
@@ -209,12 +211,12 @@ public interface Destination extends Service, Task {
     /**
      * called on Queues in slave mode to allow dispatch to follow subscription
      * choice of master
-     * 
+     *
      * @param messageDispatchNotification
      * @throws Exception
      */
     void processDispatchNotification(MessageDispatchNotification messageDispatchNotification) throws Exception;
-    
+
     boolean isPrioritizedMessages();
 
     SlowConsumerStrategy getSlowConsumerStrategy();
