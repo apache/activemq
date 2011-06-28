@@ -28,6 +28,7 @@ import java.util.LinkedList;
 /**
  * An eviction strategy which evicts the oldest message with the lowest priority first.
  *
+ *
  * @org.apache.xbean.XBean
  *
  * messageEvictionStrategy
@@ -68,10 +69,12 @@ public class UniquePropertyMessageEvictionStrategy extends MessageEvictionStrate
             for (MessageReference ref : pivots.values()) {
                 messages.remove(ref);
             }
-            return (MessageReference[])messages.toArray(new MessageReference[messages.size()]);
-        } else {
-            return new MessageReference[] {(MessageReference) messages.removeFirst()};
+            if (messages.size() != 0) {
+                return (MessageReference[])messages.toArray(new MessageReference[messages.size()]);
+            }
         }
+
+        return new MessageReference[] {(MessageReference) messages.removeFirst()};
 
     }
 }
