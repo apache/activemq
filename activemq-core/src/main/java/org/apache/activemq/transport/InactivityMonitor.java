@@ -36,7 +36,7 @@ import org.slf4j.LoggerFactory;
  * Used to make sure that commands are arriving periodically from the peer of
  * the transport.
  *
- * 
+ *
  */
 public class InactivityMonitor extends TransportFilter {
 
@@ -269,7 +269,7 @@ public class InactivityMonitor extends TransportFilter {
     public void setKeepAliveResponseRequired(boolean val) {
         keepAliveResponseRequired = val;
     }
-    
+
     public void setUseKeepAlive(boolean val) {
         useKeepAlive = val;
     }
@@ -293,7 +293,7 @@ public class InactivityMonitor extends TransportFilter {
     public void setInitialDelayTime(long initialDelayTime) {
         this.initialDelayTime = initialDelayTime;
     }
-    
+
     private synchronized void startMonitorThreads() throws IOException {
         if (monitorStarted.get()) {
             return;
@@ -376,6 +376,8 @@ public class InactivityMonitor extends TransportFilter {
     };
 
     private ThreadPoolExecutor createExecutor() {
-        return new ThreadPoolExecutor(0, Integer.MAX_VALUE, 10, TimeUnit.SECONDS, new SynchronousQueue<Runnable>(), factory);
+        ThreadPoolExecutor exec = new ThreadPoolExecutor(0, Integer.MAX_VALUE, 10, TimeUnit.SECONDS, new SynchronousQueue<Runnable>(), factory);
+        exec.allowCoreThreadTimeOut(true);
+        return exec;
     }
 }
