@@ -954,7 +954,18 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
             }
         }
 
-        ActiveMQDestination[] dests = excludedDestinations;
+        ActiveMQDestination[] dests = staticallyIncludedDestinations;
+        if (dests != null && dests.length > 0) {
+            for (int i = 0; i < dests.length; i++) {
+                ActiveMQDestination match = dests[i];
+                DestinationFilter inclusionFilter = DestinationFilter.parseFilter(match);
+                if (match != null && inclusionFilter.matches(destination) && dests[i].getDestinationType() == destination.getDestinationType()) {
+                    return true;
+                }
+            }
+        }
+
+        dests = excludedDestinations;
         if (dests != null && dests.length > 0) {
             for (int i = 0; i < dests.length; i++) {
                 ActiveMQDestination match = dests[i];

@@ -101,6 +101,12 @@ public class TestBrokerConnectionDuplexExcludedDestinations extends TestCase {
 		hubProducer.setDisableMessageID(true);
 		hubProducer.setDisableMessageTimestamp(true);
 
+		//create spoke producer
+		MessageProducer spokeProducer = hubSession.createProducer(null);
+		spokeProducer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
+		spokeProducer.setDisableMessageID(true);
+		spokeProducer.setDisableMessageTimestamp(true);
+
 		Queue excludedQueueHub = hubSession.createQueue("exclude.test.foo");
 		TextMessage excludedMsgHub = hubSession.createTextMessage();
 		excludedMsgHub.setText(excludedQueueHub.toString());
@@ -108,11 +114,17 @@ public class TestBrokerConnectionDuplexExcludedDestinations extends TestCase {
 		Queue includedQueueHub = hubSession.createQueue("include.test.foo");
 
 		TextMessage includedMsgHub = hubSession.createTextMessage();
-		includedMsgHub.setText(includedQueueHub.toString());		
+		includedMsgHub.setText(includedQueueHub.toString());
+
+		Queue alwaysIncludedQueueHub = hubSession.createQueue("always.include.test.foo");
+
+		TextMessage alwaysIncludedMsgHub = hubSession.createTextMessage();
+		alwaysIncludedMsgHub.setText(alwaysIncludedQueueHub.toString());
 
 		// Sending from Hub queue
 		hubProducer.send(excludedQueueHub, excludedMsgHub);
 		hubProducer.send(includedQueueHub, includedMsgHub);
+        hubProducer.send(alwaysIncludedQueueHub, alwaysIncludedMsgHub);
 
 
 		Queue excludedQueueSpoke = spokeSession.createQueue("exclude.test.foo");
@@ -121,7 +133,21 @@ public class TestBrokerConnectionDuplexExcludedDestinations extends TestCase {
 		Thread.sleep(100);
 
 	    Queue includedQueueSpoke = spokeSession.createQueue("include.test.foo");
-		MessageConsumer includedConsumerSpoke = spokeSession.createConsumer(includedQueueSpoke);		
+		MessageConsumer includedConsumerSpoke = spokeSession.createConsumer(includedQueueSpoke);
+
+		Thread.sleep(100);
+
+	    Queue alwaysIncludedQueueSpoke = spokeSession.createQueue("always.include.test.foo");
+		MessageConsumer alwaysIncludedConsumerSpoke = spokeSession.createConsumer(alwaysIncludedQueueHub);
+
+        Thread.sleep(100);
+        TextMessage alwaysIncludedMsgSpoke = spokeSession.createTextMessage();
+		alwaysIncludedMsgSpoke.setText(alwaysIncludedQueueSpoke.toString());
+        spokeProducer.send(alwaysIncludedQueueSpoke, alwaysIncludedMsgSpoke);
+
+
+		MessageConsumer alwaysIncludedConsumerHub = spokeSession.createConsumer(alwaysIncludedQueueHub);
+
 		
 		// Receiving from excluded Spoke queue
 		Message msg = excludedConsumerSpoke.receive(200);
@@ -130,6 +156,10 @@ public class TestBrokerConnectionDuplexExcludedDestinations extends TestCase {
 		// Receiving from included Spoke queue
 		msg = includedConsumerSpoke.receive(200);
 		assertEquals(includedMsgHub, msg);
+
+		// Receiving from included Spoke queue
+		msg = alwaysIncludedConsumerSpoke.receive(200);
+		assertEquals(alwaysIncludedMsgHub, msg);
 		
 		// we should be able to receive excluded queue message on Hub
 		MessageConsumer excludedConsumerHub = hubSession.createConsumer(excludedQueueHub);

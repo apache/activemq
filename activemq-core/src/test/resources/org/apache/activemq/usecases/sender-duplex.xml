@@ -40,8 +40,8 @@
       		<topic physicalName="exclude.test.bar"/>
       	</excludedDestinations>
         <staticallyIncludedDestinations>
-      		<queue physicalName="always.include.queue"/>
-      		<topic physicalName="always.include.topic"/>
+      		<queue physicalName="always.include.test.foo"/>
+      		<topic physicalName="always.include.test.bar"/>
       	</staticallyIncludedDestinations>
 
       </networkConnector>
