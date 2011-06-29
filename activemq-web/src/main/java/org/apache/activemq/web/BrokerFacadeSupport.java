@@ -22,8 +22,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-import javax.management.ObjectName;
-import javax.management.QueryExp;
+import javax.management.*;
 import javax.management.openmbean.CompositeData;
 import javax.management.openmbean.TabularData;
 
@@ -112,7 +111,8 @@ public abstract class BrokerFacadeSupport implements BrokerFacade {
     @SuppressWarnings("unchecked")
     public Collection<ConnectionViewMBean> getConnections() throws Exception {
         String brokerName = getBrokerName();
-        ObjectName query = new ObjectName("org.apache.activemq:BrokerName=" + brokerName + ",Type=Connection,*");
+        ObjectName query = new ObjectName("org.apache.activemq:BrokerName=" + brokerName + ",Type=Connection,ConnectorName=*,Connection=*");
+
         Set<ObjectName> queryResult = queryNames(query, null);
         return getManagedObjects(queryResult.toArray(new ObjectName[queryResult.size()]), ConnectionViewMBean.class);
     }
@@ -121,7 +121,7 @@ public abstract class BrokerFacadeSupport implements BrokerFacade {
     public Collection<String> getConnections(String connectorName) throws Exception {
         String brokerName = getBrokerName();
         ObjectName query = new ObjectName("org.apache.activemq:BrokerName=" + brokerName
-                + ",Type=Connection,ConnectorName=" + connectorName + ",*");
+                + ",Type=Connection,ConnectorName=" + connectorName + ",Connection=*");
         Set<ObjectName> queryResult = queryNames(query, null);
         Collection<String> result = new ArrayList<String>(queryResult.size());
         for (ObjectName on : queryResult) {
