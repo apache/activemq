@@ -17,6 +17,8 @@
 package org.apache.activemq.broker.region.policy;
 
 import org.apache.activemq.broker.region.MessageReference;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -35,6 +37,8 @@ import java.util.LinkedList;
  */
 public class UniquePropertyMessageEvictionStrategy extends MessageEvictionStrategySupport {
 
+    private static final Logger LOG = LoggerFactory.getLogger(UniquePropertyMessageEvictionStrategy.class);
+
     protected String propertyName;
 
     public String getPropertyName() {
@@ -47,6 +51,7 @@ public class UniquePropertyMessageEvictionStrategy extends MessageEvictionStrate
 
     @Override
     public MessageReference[] evictMessages(LinkedList messages) throws IOException {
+        MessageReference oldest = (MessageReference)messages.getFirst();
         HashMap<Object, MessageReference> pivots = new HashMap<Object, MessageReference>();
         Iterator iter = messages.iterator();
 
@@ -69,12 +74,12 @@ public class UniquePropertyMessageEvictionStrategy extends MessageEvictionStrate
             for (MessageReference ref : pivots.values()) {
                 messages.remove(ref);
             }
+
             if (messages.size() != 0) {
                 return (MessageReference[])messages.toArray(new MessageReference[messages.size()]);
             }
         }
-
-        return new MessageReference[] {(MessageReference) messages.removeFirst()};
+        return new MessageReference[] {oldest};
 
     }
 }

@@ -175,7 +175,7 @@ public class TopicSubscription extends AbstractSubscription {
                             // eviction strategy
                             // for a bad strategy lets just not evict
                             if (messagesToEvict == 0) {
-                                LOG.warn("No messages to evict returned from eviction strategy: " + messageEvictionStrategy);
+                                LOG.warn("No messages to evict returned for "  + destination + " from eviction strategy: " + messageEvictionStrategy + " out of " + list.size() + " candidates");
                                 break;
                             }
                         }
