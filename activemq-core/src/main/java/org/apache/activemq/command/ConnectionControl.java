@@ -33,6 +33,7 @@ public class ConnectionControl extends BaseCommand {
     protected boolean faultTolerant;
     protected String connectedBrokers="";
     protected String reconnectTo = "";
+    protected byte[] token;
     protected boolean rebalanceConnection;
 
     public byte getDataStructureType() {
@@ -165,5 +166,20 @@ public class ConnectionControl extends BaseCommand {
      */
     public void setRebalanceConnection(boolean rebalanceConnection) {
         this.rebalanceConnection = rebalanceConnection;
+    }
+
+    /**
+     * @openwire:property version=8
+     * @return the token
+     */
+    public byte[] getToken() {
+        return this.token;
+    }
+
+    /**
+     * @param token the token to set
+     */
+    public void setToken(byte[] token) {
+        this.token = token;
     }
 }
