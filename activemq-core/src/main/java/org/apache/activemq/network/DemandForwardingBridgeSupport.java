@@ -34,6 +34,7 @@ import org.apache.activemq.broker.TransportConnection;
 import org.apache.activemq.broker.region.AbstractRegion;
 import org.apache.activemq.broker.region.RegionBroker;
 import org.apache.activemq.broker.region.Subscription;
+import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ActiveMQTempDestination;
@@ -75,7 +76,6 @@ import org.apache.activemq.transport.tcp.SslTransport;
 import org.apache.activemq.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.MDC;
 
 /**
  * A useful base class for implementing demand forwarding bridges.
@@ -116,6 +116,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
     protected final AtomicBoolean remoteInterupted = new AtomicBoolean(false);
     protected final AtomicBoolean lastConnectSucceeded = new AtomicBoolean(false);
     protected NetworkBridgeConfiguration configuration;
+    protected NetworkBridgeFilterFactory filterFactory;
 
     final AtomicLong enqueueCounter = new AtomicLong();
     final AtomicLong dequeueCounter = new AtomicLong();
@@ -721,7 +722,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                         
                         Message message = configureMessage(md);
                         if (LOG.isDebugEnabled()) {
-                            LOG.debug("bridging (" + configuration.getBrokerName() + " -> " + remoteBrokerName + ", consumer: " + md.getConsumerId() + ", destination " + message.getDestination() + ", brokerPath: " + Arrays.toString(message.getBrokerPath()) + ", message: " + message);
+                            LOG.debug("bridging (" + configuration.getBrokerName() + " -> " + remoteBrokerName + ") " + message.getMessageId() + ", consumer: " + md.getConsumerId() + ", destination " + message.getDestination() + ", brokerPath: " + Arrays.toString(message.getBrokerPath()) + ", message: " + message);
                         }
                         
                         if (!message.isResponseRequired()) {
@@ -803,23 +804,15 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
     }
 
     private boolean suppressMessageDispatch(MessageDispatch md, DemandSubscription sub) throws Exception {
-        // See if this consumer's brokerPath tells us it came from the broker at the other end
-        // of the bridge. I think we should be making this decision based on the message's
-        // broker bread crumbs and not the consumer's? However, the message's broker bread
-        // crumbs are null, which is another matter.   
         boolean suppress = false;
-        Object consumerInfo = md.getMessage().getDataStructure();
-        if (consumerInfo != null && (consumerInfo instanceof ConsumerInfo)) {
-            suppress = contains(((ConsumerInfo) consumerInfo).getBrokerPath(), remoteBrokerInfo.getBrokerId());
-        }
-        
-        // for durable subs, suppression via filter leaves dangling acks so we need to 
+        // for durable subs, suppression via filter leaves dangling acks so we need to
         // check here and allow the ack irrespective
-        if (!suppress && sub.getLocalInfo().isDurable()) {
+        if (sub.getLocalInfo().isDurable()) {
             MessageEvaluationContext messageEvalContext = new MessageEvaluationContext();
             messageEvalContext.setMessageReference(md.getMessage());
-            suppress = !createNetworkBridgeFilter(null).matches(messageEvalContext);
-        }  
+            messageEvalContext.setDestination(md.getDestination());
+            suppress = !sub.getNetworkBridgeFilter().matches(messageEvalContext);
+        }
         return suppress;
     }
 
@@ -1172,10 +1165,11 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
         subscriptionMapByLocalId.put(sub.getLocalInfo().getConsumerId(), sub);
         subscriptionMapByRemoteId.put(sub.getRemoteInfo().getConsumerId(), sub);
 
+        sub.setNetworkBridgeFilter(createNetworkBridgeFilter(info));
         if (!info.isDurable()) {
             // This works for now since we use a VM connection to the local broker.
             // may need to change if we ever subscribe to a remote broker.
-            sub.getLocalInfo().setAdditionalPredicate(createNetworkBridgeFilter(info));
+            sub.getLocalInfo().setAdditionalPredicate(sub.getNetworkBridgeFilter());
         } else  {
             // need to ack this message if it is ignored as it is durable so
             // we check before we send. see: suppressMessageDispatch()
@@ -1219,7 +1213,20 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
         subscriptionMapByRemoteId.clear();
     }
 
-    protected abstract NetworkBridgeFilter createNetworkBridgeFilter(ConsumerInfo info) throws IOException;
+    protected NetworkBridgeFilter createNetworkBridgeFilter(ConsumerInfo info) throws IOException {
+        if (filterFactory == null)  {
+            if (brokerService != null && brokerService.getDestinationPolicy() != null) {
+                PolicyEntry entry = brokerService.getDestinationPolicy().getEntryFor(info.getDestination());
+                if (entry != null) {
+                    filterFactory = entry.getNetworkBridgeFilterFactory();
+                }
+            }
+            if (filterFactory == null) {
+                filterFactory = new DefaultNetworkBridgeFilterFactory();
+            }
+        }
+         return filterFactory.create(info, getRemoteBrokerPath(), configuration.getNetworkTTL() );
+    }
 
     protected abstract void serviceLocalBrokerInfo(Command command) throws InterruptedException;
 

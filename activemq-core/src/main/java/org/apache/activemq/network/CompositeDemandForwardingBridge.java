@@ -103,10 +103,6 @@ public class CompositeDemandForwardingBridge extends DemandForwardingBridgeSuppo
         // TODO is there much we can do here?
     }
 
-    protected NetworkBridgeFilter createNetworkBridgeFilter(ConsumerInfo info) throws IOException {
-        return new NetworkBridgeFilter(getFromBrokerId(info), configuration.getNetworkTTL());
-    }
-
     protected BrokerId[] getRemoteBrokerPath() {
         return remoteBrokerPath;
     }

@@ -89,10 +89,6 @@ public class DemandForwardingBridge extends DemandForwardingBridgeSupport {
         }
     }
 
-    protected NetworkBridgeFilter createNetworkBridgeFilter(ConsumerInfo info) throws IOException {
-        return new NetworkBridgeFilter(remoteBrokerPath[0], configuration.getNetworkTTL());
-    }
-
     protected BrokerId[] getRemoteBrokerPath() {
         return remoteBrokerPath;
     }

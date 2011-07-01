@@ -212,9 +212,13 @@ public class JmsMultipleBrokersTestSupport extends CombinationTestSupport {
 
     protected BrokerService createBroker(URI brokerUri) throws Exception {
         BrokerService broker = BrokerFactory.createBroker(brokerUri);
+        configureBroker(broker);
         brokers.put(broker.getBrokerName(), new BrokerItem(broker));
 
         return broker;
+    }
+
+    protected void configureBroker(BrokerService broker) {
     }
 
     protected BrokerService createBroker(Resource configFile) throws Exception {

@@ -39,12 +39,15 @@ import javax.management.ObjectName;
 import junit.framework.TestCase;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
+
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.BrokerTestSupport;
 import org.apache.activemq.broker.StubConnection;
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.broker.jmx.ManagementContext;
 import org.apache.activemq.broker.jmx.QueueViewMBean;
+import org.apache.activemq.broker.region.policy.PolicyEntry;
+import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQTextMessage;
 import org.apache.activemq.command.ConnectionId;
@@ -120,7 +123,8 @@ public class BrokerNetworkWithStuckMessagesTest extends TestCase /*NetworkTestSu
         NetworkBridgeConfiguration config = new NetworkBridgeConfiguration();
         config.setBrokerName("local");
         config.setDispatchAsync(false);
-        
+        config.setDuplex(true);
+
         Transport localTransport = createTransport(); 
         Transport remoteTransport = createRemoteTransport();
         
@@ -180,7 +184,7 @@ public class BrokerNetworkWithStuckMessagesTest extends TestCase /*NetworkTestSu
         
         
         // Create a synchronous consumer on the remote broker 
-        final StubConnection connection2 = createRemoteConnection();
+        StubConnection connection2 = createRemoteConnection();
         ConnectionInfo connectionInfo2 = createConnectionInfo();
         SessionInfo sessionInfo2 = createSessionInfo(connectionInfo2);
         connection2.send(connectionInfo2);
@@ -191,69 +195,100 @@ public class BrokerNetworkWithStuckMessagesTest extends TestCase /*NetworkTestSu
         connection2.send(consumerInfo2);
         
         // Consume 5 of the messages from the remote broker and ack them. 
-        // Because the prefetch size is set to 1000 in the createConsumerInfo() 
-        // method, this will cause the messages on the local broker to be 
-        // forwarded to the remote broker. 
         for (int i = 0; i < receiveNumMessages; ++i) {
-            Message message1 = receiveMessage(connection2);
+            Message message1 = receiveMessage(connection2, 20000);
             assertNotNull(message1);
-            connection2.send(createAck(consumerInfo2, message1, 1, MessageAck.STANDARD_ACK_TYPE));
-            
-            Object[] msgs1 = browseQueueWithJmx(remoteBroker);
-            LOG.info("Found [" + msgs1.length + "] messages with JMX");
-//            assertEquals((sendNumMessages-i), msgs.length);
+            connection2.send(createAck(consumerInfo2, message1, 1, MessageAck.INDIVIDUAL_ACK_TYPE));
         }
         
         // Ensure that there are zero messages on the local broker. This tells 
         // us that those messages have been prefetched to the remote broker 
-        // where the demand exists. 
+        // where the demand exists.
+        Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                Object[] result = browseQueueWithJmx(localBroker);
+               return 0 == result.length;
+            }
+        });
         messages = browseQueueWithJmx(localBroker);
         assertEquals(0, messages.length);
-        
+
+        LOG.info("Closing consumer on remote");
         // Close the consumer on the remote broker 
         connection2.send(consumerInfo2.createRemoveCommand());
-        
-        // There should now be 5 messages stuck on the remote broker 
+        // also close connection etc.. so messages get dropped from the local consumer  q
+        connection2.send(connectionInfo2.createRemoveCommand());
+
+        // There should now be 5 messages stuck on the remote broker
         messages = browseQueueWithJmx(remoteBroker);
         assertEquals(5, messages.length);
-        
-        // Create a consumer on the local broker just to confirm that it doesn't 
-        // receive any messages  
+
+         LOG.info("Messages now stuck on remote");
+
+        // receive again on the origin broker
         ConsumerInfo consumerInfo1 = createConsumerInfo(sessionInfo1, destinationInfo1);
         connection1.send(consumerInfo1);
-        Message message1 = receiveMessage(connection1);
-        
-        //////////////////////////////////////////////////////
-        // An assertNull() is done here because this is currently the correct 
-        // behavior. This is actually the purpose of this test - to prove that 
-        // messages are stuck on the remote broker. AMQ-2324 and AMQ-2484 aim 
-        // to fix this situation so that messages don't get stuck. 
-        assertNull(message1);
-        //////////////////////////////////////////////////////
-        
+        LOG.info("create local consumer: " + consumerInfo1);
+
+        Message message1 = receiveMessage(connection1, 20000);
+        assertNotNull("Expect to get a replay as remote consumer is gone", message1);
+        connection1.send(createAck(consumerInfo1, message1, 1, MessageAck.INDIVIDUAL_ACK_TYPE));
+        LOG.info("acked one message on origin, waiting for all messages to percolate back");
+
+        Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                Object[] result = browseQueueWithJmx(localBroker);
+               return 4 == result.length;
+            }
+        });
+        messages = browseQueueWithJmx(localBroker);
+        assertEquals(4, messages.length);
+
+        LOG.info("checking for messages on remote again");
+        // messages won't migrate back again till consumer closes
+        connection2 = createRemoteConnection();
+        connectionInfo2 = createConnectionInfo();
+        sessionInfo2 = createSessionInfo(connectionInfo2);
+        connection2.send(connectionInfo2);
+        connection2.send(sessionInfo2);
         ConsumerInfo consumerInfo3 = createConsumerInfo(sessionInfo2, destinationInfo2);
         connection2.send(consumerInfo3);
-        
-        // Consume the last 5 messages from the remote broker and ack them just 
+        message1 = receiveMessage(connection2, 20000);
+        assertNull("Messages have migrated back: " + message1, message1);
+
+        // Consume the last 4 messages from the local broker and ack them just
         // to clean up the queue. 
-        int counter = 0;
-        for (int i = 0; i < receiveNumMessages; ++i) {
-            message1 = receiveMessage(connection2);
-            assertNotNull(message1);
-            connection2.send(createAck(consumerInfo3, message1, 1, MessageAck.STANDARD_ACK_TYPE));
-            ++counter;
+        int counter = 1;
+        for (; counter < receiveNumMessages; counter++) {
+            message1 = receiveMessage(connection1);
+            connection1.send(createAck(consumerInfo1, message1, 1, MessageAck.INDIVIDUAL_ACK_TYPE));
         }
         // Ensure that 5 messages were received
         assertEquals(receiveNumMessages, counter);
-        
-        // Let those acks percolate... This stinks but it's the only way currently
-        // because these types of internal broker actions are non-deterministic. 
-        Thread.sleep(4000);
-        
-        // Ensure that the queue on the remote broker is empty 
+
+        // verify all messages consumed
+        Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                Object[] result = browseQueueWithJmx(remoteBroker);
+               return 0 == result.length;
+            }
+        });
         messages = browseQueueWithJmx(remoteBroker);
         assertEquals(0, messages.length);
-        
+
+        Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                Object[] result = browseQueueWithJmx(localBroker);
+               return 0 == result.length;
+            }
+        });
+        messages = browseQueueWithJmx(localBroker);
+        assertEquals(0, messages.length);
+
         // Close the consumer on the remote broker 
         connection2.send(consumerInfo3.createRemoveCommand());
         
@@ -269,6 +304,7 @@ public class BrokerNetworkWithStuckMessagesTest extends TestCase /*NetworkTestSu
         localBroker.setPersistent(false);
         connector = createConnector();
         localBroker.addConnector(connector);
+        configureBroker(localBroker);
         localBroker.start();
         localBroker.waitUntilStarted();
         
@@ -278,7 +314,18 @@ public class BrokerNetworkWithStuckMessagesTest extends TestCase /*NetworkTestSu
         
         return localBroker;
     }
-    
+
+    private void configureBroker(BrokerService broker) {
+        PolicyMap policyMap = new PolicyMap();
+        PolicyEntry defaultEntry = new PolicyEntry();
+        defaultEntry.setExpireMessagesPeriod(0);
+        ConditionalNetworkBridgeFilterFactory filterFactory = new ConditionalNetworkBridgeFilterFactory();
+        filterFactory.setReplayWhenNoConsumers(true);
+        defaultEntry.setNetworkBridgeFilterFactory(filterFactory);
+        policyMap.setDefaultEntry(defaultEntry);
+        broker.setDestinationPolicy(policyMap);
+    }
+
     protected BrokerService createRemoteBroker() throws Exception {
         remoteBroker = new BrokerService();
         remoteBroker.setBrokerName("remotehost");
@@ -287,6 +334,8 @@ public class BrokerNetworkWithStuckMessagesTest extends TestCase /*NetworkTestSu
         remoteBroker.setPersistent(false);
         remoteConnector = createRemoteConnector();
         remoteBroker.addConnector(remoteConnector);
+        configureBroker(remoteBroker);
+        remoteBroker.start();
         remoteBroker.waitUntilStarted();
         
         remoteBroker.getManagementContext().setConnectorPort(2222);

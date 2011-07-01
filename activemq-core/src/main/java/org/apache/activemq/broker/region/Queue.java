@@ -1827,28 +1827,25 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                     interestCount++;
                     continue;
                 }
-                if (dispatchSelector.canSelect(s, node)) {
-                    if (!fullConsumers.contains(s)) {
-                        if (!s.isFull()) {
-                            if (assignMessageGroup(s, (QueueMessageReference)node)) {
-                                // Dispatch it.
-                                s.add(node);
-                                target = s;
-                                break;
-                            }
-                        } else {
-                            // no further dispatch of list to a full consumer to
-                            // avoid out of order message receipt
-                            fullConsumers.add(s);
-                        }
+                if (!fullConsumers.contains(s) && !s.isFull()) {
+                    if (dispatchSelector.canSelect(s, node) && assignMessageGroup(s, (QueueMessageReference)node)) {
+                        // Dispatch it.
+                        s.add(node);
+                        target = s;
+                        break;
                     }
-                    interestCount++;
                 } else {
-                    // makes sure it gets dispatched again
-                    if (!node.isDropped() && !((QueueMessageReference) node).isAcked()
-                            && (!node.isDropped() || s.getConsumerInfo().isBrowser())) {
-                        interestCount++;
+                    // no further dispatch of list to a full consumer to
+                    // avoid out of order message receipt
+                    fullConsumers.add(s);
+                    if (LOG.isTraceEnabled()) {
+                        LOG.trace("Sub full " + s);
                     }
+                }
+                // make sure it gets dispatched again
+                if (!node.isDropped() && !((QueueMessageReference) node).isAcked() &&
+                        (!node.isDropped() || s.getConsumerInfo().isBrowser())) {
+                    interestCount++;
                 }
             }
 

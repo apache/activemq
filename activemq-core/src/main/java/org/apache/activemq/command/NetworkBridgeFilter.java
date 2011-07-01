@@ -36,14 +36,14 @@ public class NetworkBridgeFilter implements DataStructure, BooleanExpression {
     public static final byte DATA_STRUCTURE_TYPE = CommandTypes.NETWORK_BRIDGE_FILTER;
     static final Logger LOG = LoggerFactory.getLogger(NetworkBridgeFilter.class);
 
-    private BrokerId networkBrokerId;
-    private int networkTTL;
+    protected BrokerId networkBrokerId;
+    protected int networkTTL;
 
     public NetworkBridgeFilter() {
     }
 
-    public NetworkBridgeFilter(BrokerId remoteBrokerPath, int networkTTL) {
-        this.networkBrokerId = remoteBrokerPath;
+    public NetworkBridgeFilter(BrokerId networkBrokerId, int networkTTL) {
+        this.networkBrokerId = networkBrokerId;
         this.networkTTL = networkTTL;
     }
 
@@ -62,7 +62,7 @@ public class NetworkBridgeFilter implements DataStructure, BooleanExpression {
             // in the dispatch loop
             // so need to get the reference to it
             Message message = mec.getMessage();
-            return message != null && matchesForwardingFilter(message);
+            return message != null && matchesForwardingFilter(message, mec);
         } catch (IOException e) {
             throw JMSExceptionSupport.create(e);
         }
@@ -72,11 +72,11 @@ public class NetworkBridgeFilter implements DataStructure, BooleanExpression {
         return matches(message) ? Boolean.TRUE : Boolean.FALSE;
     }
 
-    protected boolean matchesForwardingFilter(Message message) {
+    protected boolean matchesForwardingFilter(Message message, MessageEvaluationContext mec) {
 
         if (contains(message.getBrokerPath(), networkBrokerId)) {
             if (LOG.isTraceEnabled()) {
-                LOG.trace("Message all ready routed once through this broker ("
+                LOG.trace("Message all ready routed once through target broker ("
                         + networkBrokerId + "), path: "
                         + Arrays.toString(message.getBrokerPath()) + " - ignoring: " + message);
             }
@@ -92,7 +92,6 @@ public class NetworkBridgeFilter implements DataStructure, BooleanExpression {
             return false;
         }
 
-        // Don't propagate advisory messages about network subscriptions
         if (message.isAdvisory() && message.getDataStructure() != null && message.getDataStructure().getDataStructureType() == CommandTypes.CONSUMER_INFO) {
             ConsumerInfo info = (ConsumerInfo)message.getDataStructure();
             hops = info.getBrokerPath() == null ? 0 : info.getBrokerPath().length;
@@ -101,6 +100,12 @@ public class NetworkBridgeFilter implements DataStructure, BooleanExpression {
                     LOG.trace("ConsumerInfo advisory restricted to " + networkTTL + " network hops ignoring: " + message);
                 }
                 return false;
+            }
+
+            if (contains(info.getBrokerPath(), networkBrokerId)) {
+                LOG.trace("ConsumerInfo advisory all ready routed once through target broker ("
+                        + networkBrokerId + "), path: "
+                        + Arrays.toString(info.getBrokerPath()) + " - ignoring: " + message);
             }
         }
         return true;

@@ -23,6 +23,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.command.ConsumerInfo;
+import org.apache.activemq.command.NetworkBridgeFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,6 +41,7 @@ public class DemandSubscription {
 
     private AtomicInteger dispatched = new AtomicInteger(0);
     private AtomicBoolean activeWaiter = new AtomicBoolean();
+    private NetworkBridgeFilter networkBridgeFilter;
 
     DemandSubscription(ConsumerInfo info) {
         remoteInfo = info;
@@ -124,5 +126,13 @@ public class DemandSubscription {
             return false;
         }
         return true;
+    }
+
+    public NetworkBridgeFilter getNetworkBridgeFilter() {
+        return networkBridgeFilter;
+    }
+
+    public void setNetworkBridgeFilter(NetworkBridgeFilter networkBridgeFilter) {
+        this.networkBridgeFilter = networkBridgeFilter;
     }
 }

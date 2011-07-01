@@ -53,6 +53,9 @@ public class NetworkRestartTest extends TestCase {
 
         // restart connector
 
+        // wait for ack back to localbroker with concurrent store and dispatch, dispatch occurs first
+        Thread.sleep(1000);
+
         NetworkConnector connector = localBroker.getNetworkConnectorByName("networkConnector");
 
         LOG.info("Stopping connector");
@@ -82,6 +85,9 @@ public class NetworkRestartTest extends TestCase {
         assertEquals("before", ((TextMessage)before).getText());
 
         // restart connector
+
+        // wait for ack back to localbroker with concurrent store and dispatch, dispatch occurs first
+        Thread.sleep(1000);
 
         NetworkConnector connector = localBroker.getNetworkConnectorByName("networkConnector");
 

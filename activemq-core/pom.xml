@@ -451,8 +451,6 @@
             <exclude>**/MissingDataFileTest.*</exclude>
 
             <!-- m2 tests failing since move from assembly  -->
-            <exclude>**/TwoBrokerMessageNotSentToRemoteWhenNoConsumerTest.*</exclude>
-            <exclude>**/TwoBrokerQueueClientsReconnectTest.*</exclude>
             <exclude>**/QueueConsumerCloseAndReconnectTest.*</exclude>
             <exclude>**/TwoBrokerMulticastQueueTest.*</exclude>
 

@@ -17,6 +17,8 @@
 package org.apache.activemq.usecases;
 
 import java.net.URI;
+import java.util.Collection;
+import java.util.Iterator;
 
 import javax.jms.Connection;
 import javax.jms.Destination;
@@ -27,6 +29,11 @@ import javax.jms.Session;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.ActiveMQPrefetchPolicy;
 import org.apache.activemq.JmsMultipleBrokersTestSupport;
+import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.region.policy.PolicyEntry;
+import org.apache.activemq.broker.region.policy.PolicyMap;
+import org.apache.activemq.network.ConditionalNetworkBridgeFilterFactory;
+import org.apache.activemq.network.NetworkConnector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,6 +43,7 @@ import org.slf4j.LoggerFactory;
 public class TwoBrokerQueueClientsReconnectTest extends JmsMultipleBrokersTestSupport {
     protected static final int MESSAGE_COUNT = 100; // Best if a factor of 100
     protected static final int PREFETCH_COUNT = 1;
+    protected static final int NETWORK_PREFETCH = 1;
     private static final Logger LOG = LoggerFactory.getLogger(TwoBrokerQueueClientsReconnectTest.class);
 
 
@@ -161,6 +169,9 @@ public class TwoBrokerQueueClientsReconnectTest extends JmsMultipleBrokersTestSu
     }
 
     public void doTwoClientsReceiveOneClientDisconnects() throws Exception {
+        // ensure all message do not flow across the network too quickly
+        applyRateLimitNetworkFilter(0.8 * MESSAGE_COUNT);
+
         // Bridge brokers
         bridgeBrokers(broker1, broker2);
         bridgeBrokers(broker2, broker1);
@@ -181,14 +192,14 @@ public class TwoBrokerQueueClientsReconnectTest extends JmsMultipleBrokersTestSu
         // Always send messages to broker A
         sendMessages("BrokerA", dest, MESSAGE_COUNT);
 
-        // Let each client receive 20% of the messages - 40% total
+        LOG.info("Let each client receive 20% of the messages - 40% total");
         msgsClient1 += receiveExactMessages(client1, (int)(MESSAGE_COUNT * 0.20));
         msgsClient2 += receiveExactMessages(client2, (int)(MESSAGE_COUNT * 0.20));
 
         // Disconnect the first client
         client1.close();
 
-        // Let the second client receive the rest of the messages
+        LOG.info("Let the second client receive the rest of the messages");
         msgsClient2 += receiveAllMessages(client2);
         client2.close();
 
@@ -214,6 +225,9 @@ public class TwoBrokerQueueClientsReconnectTest extends JmsMultipleBrokersTestSu
     }
 
     public void doTwoClientsReceiveOneClientReconnects() throws Exception {
+        // ensure all message do not flow across the network too quickly
+        applyRateLimitNetworkFilter(0.2 * MESSAGE_COUNT);
+
         // Bridge brokers
         bridgeBrokers(broker1, broker2);
         bridgeBrokers(broker2, broker1);
@@ -238,22 +252,31 @@ public class TwoBrokerQueueClientsReconnectTest extends JmsMultipleBrokersTestSu
         msgsClient1 += receiveExactMessages(client1, (int)(MESSAGE_COUNT * 0.20));
         msgsClient2 += receiveExactMessages(client2, (int)(MESSAGE_COUNT * 0.20));
 
-        // Disconnect the first client
+        LOG.info("msgsClient1=" + msgsClient1);
+        LOG.info("msgsClient2=" + msgsClient2);
+
+        Thread.sleep(1000);
+        LOG.info("Disconnect the first client");
         client1.close();
 
-        // Let the second client receive 20% more of the total messages
+        LOG.info("Let the second client receive 20% more of the total messages");
         msgsClient2 += receiveExactMessages(client2, (int)(MESSAGE_COUNT * 0.20));
+
+        LOG.info("msgsClient2=" + msgsClient2);
 
         // Create another client for broker 1
         client1 = createConsumer(broker1, dest);
-        Thread.sleep(500);
+        Thread.sleep(1000);
 
         // Let each client receive 20% of the messages - 40% total
         msgsClient1 += receiveExactMessages(client1, (int)(MESSAGE_COUNT * 0.20));
         client1.close();
+        LOG.info("new consumer addition, msgsClient1=" + msgsClient1);
 
+        Thread.sleep(2000);
         msgsClient2 += receiveExactMessages(client2, (int)(MESSAGE_COUNT * 0.20));
         client2.close();
+        LOG.info("msgsClient2=" + msgsClient2);
 
         // First client should have received 40 messages
         assertEquals("Client for " + broker1 + " should have received 40% of the messages.", (int)(MESSAGE_COUNT * 0.40), msgsClient1);
@@ -262,7 +285,23 @@ public class TwoBrokerQueueClientsReconnectTest extends JmsMultipleBrokersTestSu
         assertEquals("Client for " + broker2 + " should have received 60% of the messages.", (int)(MESSAGE_COUNT * 0.60), msgsClient2);
     }
 
+    private void applyRateLimitNetworkFilter(double rateLimit) {
+        ConditionalNetworkBridgeFilterFactory filterFactory = new ConditionalNetworkBridgeFilterFactory();
+        filterFactory.setReplayWhenNoConsumers(true);
+        filterFactory.setRateLimit((int) rateLimit);
+        filterFactory.setRateDuration(1000);
+
+        Collection<BrokerItem> brokerList = brokers.values();
+        for (Iterator<BrokerItem> i = brokerList.iterator(); i.hasNext();) {
+            BrokerService broker = i.next().broker;
+            broker.getDestinationPolicy().getDefaultEntry().setNetworkBridgeFilterFactory(filterFactory);
+        }
+    }
+
     public void testTwoClientsReceiveTwoClientReconnects() throws Exception {
+        // ensure all message do not flow across the network too quickly
+        applyRateLimitNetworkFilter(0.5 * MESSAGE_COUNT);
+
         broker1 = "BrokerA";
         broker2 = "BrokerB";
 
@@ -290,19 +329,18 @@ public class TwoBrokerQueueClientsReconnectTest extends JmsMultipleBrokersTestSu
         msgsClient1 += receiveExactMessages(client1, (int)(MESSAGE_COUNT * 0.20));
         msgsClient2 += receiveExactMessages(client2, (int)(MESSAGE_COUNT * 0.20));
 
-        // Disconnect both clients
+        LOG.info("Disconnect both clients");
         client1.close();
         client2.close();
 
-        // Create another two clients for each broker
-        client1 = createConsumer(broker1, dest);
-        client2 = createConsumer(broker2, dest);
-        Thread.sleep(500);
-
         // Let each client receive 30% more of the total messages - 60% total
+        LOG.info("Serially create another two clients for each broker and consume in turn");
+        client1 = createConsumer(broker1, dest);
         msgsClient1 += receiveExactMessages(client1, (int)(MESSAGE_COUNT * 0.30));
         client1.close();
 
+        // the close will allow replay or the replay of the remaining messages
+        client2 = createConsumer(broker2, dest);
         msgsClient2 += receiveExactMessages(client2, (int)(MESSAGE_COUNT * 0.30));
         client2.close();
 
@@ -317,7 +355,7 @@ public class TwoBrokerQueueClientsReconnectTest extends JmsMultipleBrokersTestSu
         Message msg;
         int i;
         for (i = 0; i < msgCount; i++) {
-            msg = consumer.receive(1000);
+            msg = consumer.receive(4000);
             if (msg == null) {
                 LOG.error("Consumer failed to receive exactly " + msgCount + " messages. Actual messages received is: " + i);
                 break;
@@ -346,6 +384,21 @@ public class TwoBrokerQueueClientsReconnectTest extends JmsMultipleBrokersTestSu
         conn.start();
         Session sess = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
         return sess.createConsumer(dest);
+    }
+
+    protected void configureBroker(BrokerService broker) {
+        PolicyMap policyMap = new PolicyMap();
+        PolicyEntry defaultEntry = new PolicyEntry();
+        defaultEntry.setEnableAudit(false);
+        policyMap.setDefaultEntry(defaultEntry);
+        broker.setDestinationPolicy(policyMap);
+    }
+
+    protected NetworkConnector bridgeBrokers(BrokerService localBroker, BrokerService remoteBroker, boolean dynamicOnly, int networkTTL, boolean conduit, boolean failover) throws Exception {
+        NetworkConnector nc = super.bridgeBrokers(localBroker,remoteBroker, dynamicOnly, networkTTL, conduit, failover);
+        nc.setPrefetchSize(NETWORK_PREFETCH);
+        nc.setDecreaseNetworkConsumerPriority(true);
+        return nc;
     }
 
     public void setUp() throws Exception {

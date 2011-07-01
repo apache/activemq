@@ -92,4 +92,8 @@ public class MessageEvaluationContext {
         dropped = false;
         loaded = false;
     }
+
+    public MessageReference getMessageReference() {
+        return messageReference;
+    }
 }

@@ -30,6 +30,7 @@ import org.apache.activemq.broker.region.cursors.PendingMessageCursor;
 import org.apache.activemq.broker.region.group.MessageGroupHashBucketFactory;
 import org.apache.activemq.broker.region.group.MessageGroupMapFactory;
 import org.apache.activemq.filter.DestinationMapEntry;
+import org.apache.activemq.network.NetworkBridgeFilterFactory;
 import org.apache.activemq.usage.SystemUsage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -93,6 +94,7 @@ public class PolicyEntry extends DestinationMapEntry {
     private boolean gcWithNetworkConsumers;
     private long inactiveTimoutBeforeGC = BaseDestination.DEFAULT_INACTIVE_TIMEOUT_BEFORE_GC;
     private boolean reduceMemoryFootprint;
+    private NetworkBridgeFilterFactory networkBridgeFilterFactory;
 
 
     public void configure(Broker broker,Queue queue) {
@@ -804,5 +806,13 @@ public class PolicyEntry extends DestinationMapEntry {
 
     public void setReduceMemoryFootprint(boolean reduceMemoryFootprint) {
         this.reduceMemoryFootprint = reduceMemoryFootprint;
+    }
+
+    public void setNetworkBridgeFilterFactory(NetworkBridgeFilterFactory networkBridgeFilterFactory) {
+        this.networkBridgeFilterFactory = networkBridgeFilterFactory;
+    }
+
+    public NetworkBridgeFilterFactory getNetworkBridgeFilterFactory() {
+        return networkBridgeFilterFactory;
     }
 }
