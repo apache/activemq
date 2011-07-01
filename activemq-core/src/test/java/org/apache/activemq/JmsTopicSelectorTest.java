@@ -32,7 +32,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * 
+ *
  */
 public class JmsTopicSelectorTest extends TestSupport {
     private static final Logger LOG = LoggerFactory.getLogger(JmsTopicSelectorTest.class);
@@ -141,6 +141,24 @@ public class JmsTopicSelectorTest extends TestSupport {
         }
         consumer.close();
 
+    }
+
+    public void testEmptyPropertySelector() throws Exception {
+        int remaining = 5;
+        Message message = null;
+        consumer = createConsumer("");
+        sendMessages();
+        while (true) {
+            message = consumer.receive(1000);
+            if (message == null) {
+                break;
+            }
+
+            remaining--;
+        }
+        assertEquals(remaining, 0);
+        consumer.close();
+        consumeMessages(remaining);
     }
 
     public void testPropertySelector() throws Exception {
