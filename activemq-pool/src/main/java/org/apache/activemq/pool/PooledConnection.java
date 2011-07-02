@@ -16,6 +16,9 @@
  */
 package org.apache.activemq.pool;
 
+import java.util.Iterator;
+import java.util.concurrent.ConcurrentHashMap;
+
 import javax.jms.Connection;
 import javax.jms.ConnectionConsumer;
 import javax.jms.ConnectionMetaData;
@@ -36,18 +39,19 @@ import org.apache.activemq.ActiveMQSession;
 import org.apache.activemq.AlreadyClosedException;
 import org.apache.activemq.EnhancedConnection;
 import org.apache.activemq.advisory.DestinationSource;
+import org.apache.activemq.command.ActiveMQTempDestination;
 
 /**
  * Represents a proxy {@link Connection} which is-a {@link TopicConnection} and
  * {@link QueueConnection} which is pooled and on {@link #close()} will return
  * itself to the sessionPool.
- * 
+ *
  * <b>NOTE</b> this implementation is only intended for use when sending
  * messages. It does not deal with pooling of consumers; for that look at a
  * library like <a href="http://jencks.org/">Jencks</a> such as in <a
  * href="http://jencks.org/Message+Driven+POJOs">this example</a>
- * 
- * 
+ *
+ *
  */
 public class PooledConnection implements TopicConnection, QueueConnection, EnhancedConnection {
 
@@ -69,6 +73,9 @@ public class PooledConnection implements TopicConnection, QueueConnection, Enhan
     public void close() throws JMSException {
         if (this.pool != null) {
             this.pool.decrementReferenceCount();
+            if (this.pool.getConnection() != null) {
+                this.pool.getConnection().cleanUpTempDestinations();
+            }
             this.pool = null;
         }
     }
@@ -143,7 +150,7 @@ public class PooledConnection implements TopicConnection, QueueConnection, Enhan
 
     // EnhancedCollection API
     // -------------------------------------------------------------------------
-    
+
     public DestinationSource getDestinationSource() throws JMSException {
         return getConnection().getDestinationSource();
     }
@@ -169,5 +176,4 @@ public class PooledConnection implements TopicConnection, QueueConnection, Enhan
     public String toString() {
         return "PooledConnection { " + pool + " }";
     }
-
 }
