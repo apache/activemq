@@ -67,6 +67,9 @@ public class TwoBrokerQueueClientsReconnectTest extends JmsMultipleBrokersTestSu
     }
 
     public void doOneClientReceivesOnly() throws Exception {
+        // allow immediate replay back to origin
+        applyRateLimitNetworkFilter(0);
+
         // Bridge brokers
         bridgeBrokers(broker1, broker2);
         bridgeBrokers(broker2, broker1);
@@ -113,6 +116,9 @@ public class TwoBrokerQueueClientsReconnectTest extends JmsMultipleBrokersTestSu
     }
 
     public void doOneClientReceivesOnlyAfterReconnect() throws Exception {
+        // allow immediate replay back to origin
+        applyRateLimitNetworkFilter(0);
+
         // Bridge brokers
         bridgeBrokers(broker1, broker2);
         bridgeBrokers(broker2, broker1);
