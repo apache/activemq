@@ -548,4 +548,7 @@ public class TransportConnector implements Connector, BrokerServiceAware {
         this.updateClusterFilter = updateClusterFilter;
     }
 
+    public int connectionCount() {
+        return connections.size();
+    }
 }

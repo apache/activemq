@@ -19,6 +19,9 @@ package org.apache.activemq.broker.jmx;
 import org.apache.activemq.Service;
 
 public interface ConnectorViewMBean extends Service {
+
+    @MBeanInfo("Connection count")
+    int connectionCount();
     
     /**
      * Resets the statistics

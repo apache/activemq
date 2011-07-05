@@ -894,9 +894,9 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
     }
 
     public void start() throws Exception {
-        starting = true;
         try {
             synchronized (this) {
+                starting  = true;
                 if (taskRunnerFactory != null) {
                     taskRunner = taskRunnerFactory.createTaskRunner(this, "ActiveMQ Connection Dispatcher: "
                             + getRemoteAddress());
@@ -923,22 +923,15 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
             // stop() can be called from within the above block,
             // but we want to be sure start() completes before
             // stop() runs, so queue the stop until right now:
-            starting = false;
-            if (pendingStop) {
-                LOG.debug("Calling the delayed stop()");
+            setStarting(false);
+            if (isPendingStop()) {
+                LOG.debug("Calling the delayed stop() after start() " + this);
                 stop();
             }
         }
     }
 
     public void stop() throws Exception {
-        synchronized (this) {
-            pendingStop = true;
-            if (starting) {
-                LOG.debug("stop() called in the middle of start(). Delaying...");
-                return;
-            }
-        }
         stopAsync();
         while (!stopped.await(5, TimeUnit.SECONDS)) {
             LOG.info("The connection to '" + transport.getRemoteAddress() + "' is taking a long time to shutdown.");
@@ -946,8 +939,14 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
     }
 
     public void stopAsync() {
-        // If we're in the middle of starting
-        // then go no further... for now.
+        // If we're in the middle of starting then go no further... for now.
+        synchronized (this) {
+            pendingStop = true;
+            if (starting) {
+                LOG.debug("stopAsync() called in the middle of start(). Delaying till start completes..");
+                return;
+            }
+        }
         if (stopping.compareAndSet(false, true)) {
             // Let all the connection contexts know we are shutting down
             // so that in progress operations can notice and unblock.
@@ -962,8 +961,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
                         try {
                             doStop();
                         } catch (Throwable e) {
-                            LOG.debug("Error occured while shutting down a connection to '" + transport.getRemoteAddress()
-                                    + "': ", e);
+                            LOG.debug("Error occurred while shutting down a connection " + this, e);
                         } finally {
                             stopped.countDown();
                             serviceLock.writeLock().unlock();

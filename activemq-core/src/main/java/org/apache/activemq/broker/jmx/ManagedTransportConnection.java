@@ -116,7 +116,6 @@ public class ManagedTransportConnection extends TransportConnection {
     }
 
     protected ObjectName createByAddressObjectName(String type, String value) throws IOException {
-        // Build the object name for the destination
         Hashtable map = connectorName.getKeyPropertyList();
         try {
             return new ObjectName(connectorName.getDomain() + ":" + "BrokerName="
@@ -131,7 +130,6 @@ public class ManagedTransportConnection extends TransportConnection {
     }
 
     protected ObjectName createByClientIdObjectName(String value) throws IOException {
-        // Build the object name for the destination
         Hashtable map = connectorName.getKeyPropertyList();
         try {
             return new ObjectName(connectorName.getDomain() + ":" + "BrokerName="

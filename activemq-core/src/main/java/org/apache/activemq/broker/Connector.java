@@ -59,4 +59,5 @@ public interface Connector extends Service {
      */
     public boolean  isUpdateClusterClientsOnRemove();
 
+    int connectionCount();
 }
