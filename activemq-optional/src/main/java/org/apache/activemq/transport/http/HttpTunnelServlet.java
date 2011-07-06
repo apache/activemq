@@ -46,8 +46,8 @@ import org.slf4j.LoggerFactory;
  * A servlet which handles server side HTTP transport, delegating to the
  * ActiveMQ broker. This servlet is designed for being embedded inside an
  * ActiveMQ Broker using an embedded Jetty or Tomcat instance.
- * 
- * 
+ *
+ *
  */
 public class HttpTunnelServlet extends HttpServlet {
     private static final long serialVersionUID = -3826714430767484333L;
@@ -69,7 +69,7 @@ public class HttpTunnelServlet extends HttpServlet {
         }
         transportFactory = (HttpTransportFactory)getServletContext().getAttribute("transportFactory");
         if (transportFactory == null) {
-            throw new ServletException("No such attribute 'transportFactory' available in the ServletContext");    
+            throw new ServletException("No such attribute 'transportFactory' available in the ServletContext");
         }
         transportOptions = (HashMap)getServletContext().getAttribute("transportOptions");
         wireFormat = (TextWireFormat)getServletContext().getAttribute("wireFormat");
@@ -184,7 +184,7 @@ public class HttpTunnelServlet extends HttpServlet {
         // Optimistically create the client's transport; this transport may be thrown away if the client has already registered.
         BlockingQueueTransport answer = createTransportChannel();
 
-        // Record the client's transport and ensure that it has not already registered; this is thread-safe and only allows one 
+        // Record the client's transport and ensure that it has not already registered; this is thread-safe and only allows one
         // thread to register the client
         if (clients.putIfAbsent(clientID, answer) != null) {
             response.sendError(HttpServletResponse.SC_BAD_REQUEST, "A session for clientID '" + clientID + "' has already been established");
@@ -213,7 +213,7 @@ public class HttpTunnelServlet extends HttpServlet {
             HashMap options = new HashMap(transportOptions);
             transport = transportFactory.serverConfigure(answer, null, options);
         } catch (Exception e) {
-            IOExceptionSupport.create(e);
+            throw IOExceptionSupport.create(e);
         }
 
         // Wait for the transport to be connected or disposed.
