@@ -201,7 +201,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
 
     /**
      * Returns the number of messages to be dispatched to this connection
-     * 
+     *
      * @return size of dispatch queue
      */
     public int getDispatchQueueSize() {
@@ -249,7 +249,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
      * Calls the serviceException method in an async thread. Since handling a
      * service exception closes a socket, we should not tie up broker threads
      * since client sockets may hang or cause deadlocks.
-     * 
+     *
      * @param e
      */
     public void serviceExceptionAsync(final IOException e) {
@@ -700,7 +700,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         if (info.getClientIp() == null) {
             info.setClientIp(getRemoteAddress());
         }
-       
+
         try {
             broker.addConnection(context, info);
         } catch (Exception e) {
@@ -912,7 +912,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
                     info.setPeerBrokerInfos(null);
                 }
                 dispatchAsync(info);
-                
+
                 connector.onStarted(this);
             }
         } catch (Exception e) {
@@ -1160,7 +1160,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
     public synchronized boolean isNetworkConnection() {
         return networkConnection;
     }
-    
+
     public boolean isFaultTolerantConnection() {
        return this.faultTolerantConnection;
     }
@@ -1187,7 +1187,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
             // passive ?
             boolean passive = bService.isPassiveSlave() || info.isPassiveSlave();
             if (passive == false) {
-                
+
                 // stream messages from this broker (the master) to
                 // the slave
                 MutableBrokerFilter parent = (MutableBrokerFilter) broker.getAdaptor(MutableBrokerFilter.class);
@@ -1212,7 +1212,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
                 // It's possible in case of brief network fault to have this transport connector side of the connection always active
                 // and the duplex network connector side wanting to open a new one
                 // In this case, the old connection must be broken
-                String duplexNetworkConnectorId = config.getName() + "@" + info.getBrokerId(); 
+                String duplexNetworkConnectorId = config.getName() + "@" + info.getBrokerId();
                 CopyOnWriteArrayList<TransportConnection> connections = this.connector.getConnections();
                 synchronized (connections) {
                     for (Iterator<TransportConnection> iter = connections.iterator(); iter.hasNext();) {
@@ -1296,7 +1296,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         }
         return null;
     }
-        
+
     public void updateClient(ConnectionControl control) {
         if (isActive() && isBlocked() == false && isFaultTolerantConnection() && this.wireFormatInfo != null
                 && this.wireFormatInfo.getVersion() >= 6) {
@@ -1309,7 +1309,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         if (result == null) {
             synchronized (producerExchanges) {
                 result = new ProducerBrokerExchange();
-                TransportConnectionState state = lookupConnectionState(id);              
+                TransportConnectionState state = lookupConnectionState(id);
                 context = state.getContext();
                 if (context.isReconnect()) {
                     result.setLastStoredSequenceId(broker.getBrokerService().getPersistenceAdapter().getLastProducerSequenceId(id));
@@ -1451,7 +1451,11 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
     protected synchronized String getDuplexNetworkConnectorId() {
         return this.duplexNetworkConnectorId;
     }
-    
+
+    public boolean isStopping() {
+        return stopping.get();
+    }
+
     protected CountDownLatch getStopped() {
         return stopped;
     }
