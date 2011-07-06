@@ -38,7 +38,6 @@ public class MulticastDiscoveryOnFaultyNetworkTest extends JmsMultipleBrokersTes
     private static final String HUB = "HubBroker";
     private static final String SPOKE = "SpokeBroker";
     public boolean useDuplexNetworkBridge;
-    public boolean sumulateStalledNetwork;
 
    private TransportConnector mCastTrpConnector;
    
@@ -121,9 +120,9 @@ public class MulticastDiscoveryOnFaultyNetworkTest extends JmsMultipleBrokersTes
 
         List<TransportConnector> transportConnectors = remoteBroker.getTransportConnectors();
         if (!transportConnectors.isEmpty()) {
-		mCastTrpConnector = ((TransportConnector)transportConnectors.get(0));
-		mCastTrpConnector.setDiscoveryUri(new URI("multicast://default?group=TESTERIC"));
-	}
-	return connector;
+		    mCastTrpConnector = ((TransportConnector)transportConnectors.get(0));
+		    mCastTrpConnector.setDiscoveryUri(new URI("multicast://default?group=TESTERIC"));
+	    }
+	    return connector;
     }
 }

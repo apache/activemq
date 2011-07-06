@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.jms.Connection;
 import javax.jms.JMSException;
@@ -66,10 +67,12 @@ public class NoDuplicateOnTopicNetworkTest extends CombinationTestSupport {
 
     public boolean suppressDuplicateTopicSubs = false;
     public DispatchPolicy dispatchPolicy = new SimpleDispatchPolicy();
+    public boolean durableSub = false;
+    AtomicInteger idCounter = new AtomicInteger(0);
     
     private boolean dynamicOnly = false;
     // no duplicates in cyclic network if networkTTL <=1
-    // when > 1, subscriptions perculate around resulting in duplicates as there is no
+    // when > 1, subscriptions percolate around resulting in duplicates as there is no
     // memory of the original subscription.
     // solution for 6.0 using org.apache.activemq.command.ConsumerInfo.getNetworkConsumerIds()
     private int ttl = 3;
@@ -114,6 +117,7 @@ public class NoDuplicateOnTopicNetworkTest extends CombinationTestSupport {
     private BrokerService createAndStartBroker(String name, String addr)
             throws Exception {
         BrokerService broker = new BrokerService();
+        //broker.setDeleteAllMessagesOnStartup(true);
         broker.setBrokerName(name);
         broker.addConnector(addr).setDiscoveryUri(new URI(MULTICAST_DEFAULT));
         broker.setUseJmx(false);
@@ -148,8 +152,9 @@ public class NoDuplicateOnTopicNetworkTest extends CombinationTestSupport {
     }
 
     public void initCombosForTestProducerConsumerTopic() {
-        this.addCombinationValues("suppresDuplicateTopicSubs", new Object[]{Boolean.TRUE, Boolean.FALSE});
+        this.addCombinationValues("suppressDuplicateTopicSubs", new Object[]{Boolean.TRUE, Boolean.FALSE});
         this.addCombinationValues("dispatchPolicy", new Object[]{new PriorityNetworkDispatchPolicy(), new SimpleDispatchPolicy()});
+        this.addCombinationValues("durableSub", new Object[]{Boolean.TRUE, Boolean.FALSE});
     }
     
     public void testProducerConsumerTopic() throws Exception {
@@ -206,6 +211,7 @@ public class NoDuplicateOnTopicNetworkTest extends CombinationTestSupport {
             }
             map.put(msg, msg);
         }
+        consumer.unSubscribe();
         if (suppressDuplicateTopicSubs || dispatchPolicy instanceof PriorityNetworkDispatchPolicy) {
             assertEquals("no duplicates", 0, duplicateCount);
             assertEquals("got all required messages: " + map.size(), consumer
@@ -227,6 +233,7 @@ public class NoDuplicateOnTopicNetworkTest extends CombinationTestSupport {
         private Topic topic;
         private MessageProducer producer;
         private MessageConsumer consumer;
+        private final String durableID = "DURABLE_ID";
 
         private List<String> receivedStrings = Collections.synchronizedList(new ArrayList<String>());
         private int numMessages = 10;
@@ -262,6 +269,7 @@ public class NoDuplicateOnTopicNetworkTest extends CombinationTestSupport {
             ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(
                     brokerURL);
             connection = factory.createConnection();
+            connection.setClientID("ID" + idCounter.incrementAndGet());
         }
 
         private void createTopic() throws JMSException {
@@ -274,7 +282,11 @@ public class NoDuplicateOnTopicNetworkTest extends CombinationTestSupport {
         }
 
         private void createConsumer() throws JMSException {
-            consumer = session.createConsumer(topic);
+            if (durableSub) {
+                consumer = session.createDurableSubscriber(topic, durableID);
+            } else {
+                consumer = session.createConsumer(topic);
+            }
             consumer.setMessageListener(new MessageListener() {
 
                 public void onMessage(Message arg0) {
@@ -318,6 +330,15 @@ public class NoDuplicateOnTopicNetworkTest extends CombinationTestSupport {
 
         public int getNumMessages() {
             return numMessages;
+        }
+
+        public void unSubscribe() throws Exception {
+            consumer.close();
+            if (durableSub) {
+                session.unsubscribe(durableID);
+                // ensure un-subscription has percolated though the network
+                Thread.sleep(2000);
+            }
         }
     }
 }

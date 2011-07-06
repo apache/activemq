@@ -51,14 +51,14 @@ public class BrokerQueueNetworkWithDisconnectTest extends JmsMultipleBrokersTest
     private SocketProxy socketProxy;
     private long networkDownTimeStart;
     public boolean useDuplexNetworkBridge = true;
-    public boolean sumulateStalledNetwork;
+    public boolean simulateStalledNetwork;
     private long inactiveDuration = 1000;
     private boolean useSocketProxy = true;
 
    
     public void initCombosForTestSendOnAReceiveOnBWithTransportDisconnect() {
         addCombinationValues( "useDuplexNetworkBridge", new Object[]{ Boolean.TRUE, Boolean.FALSE} );
-        addCombinationValues( "sumulateStalledNetwork", new Object[]{ Boolean.TRUE } );
+        addCombinationValues( "simulateStalledNetwork", new Object[]{ Boolean.TRUE } );
     }
     
     public void testSendOnAReceiveOnBWithTransportDisconnect() throws Exception {
@@ -197,7 +197,7 @@ public class BrokerQueueNetworkWithDisconnectTest extends JmsMultipleBrokersTest
     protected void onSend(int i, TextMessage msg) {
         sleep(50);
         if (i == 50 || i == 150) {
-            if (sumulateStalledNetwork) {
+            if (simulateStalledNetwork) {
                 socketProxy.pause();
             } else {
                 socketProxy.close();
@@ -206,7 +206,7 @@ public class BrokerQueueNetworkWithDisconnectTest extends JmsMultipleBrokersTest
         } else if (networkDownTimeStart > 0) {
              // restart after NETWORK_DOWN_TIME seconds
              if (networkDownTimeStart + NETWORK_DOWN_TIME < System.currentTimeMillis()) {
-                 if (sumulateStalledNetwork) {
+                 if (simulateStalledNetwork) {
                      socketProxy.goOn();
                  } else {
                      socketProxy.reopen();

@@ -134,7 +134,7 @@ public class SocketProxy {
         synchronized(this.connections) {
             connections = new ArrayList<Bridge>(this.connections);
         }            
-        LOG.info("close, numConnectons=" + connections.size());
+        LOG.info("close, numConnections=" + connections.size());
         for (Bridge con : connections) {
             closeConnection(con);
         }
@@ -151,7 +151,7 @@ public class SocketProxy {
         synchronized(this.connections) {
             connections = new ArrayList<Bridge>(this.connections);
         }            
-        LOG.info("halfClose, numConnectons=" + connections.size());
+        LOG.info("halfClose, numConnections=" + connections.size());
         for (Bridge con : connections) {
             halfCloseConnection(con);
         }
@@ -174,12 +174,12 @@ public class SocketProxy {
     }
 
     /*
-     * pause accepting new connecitons and data transfer through existing proxy
+     * pause accepting new connections and data transfer through existing proxy
      * connections. All sockets remain open
      */
     public void pause() {
         synchronized(connections) {
-            LOG.info("pause, numConnectons=" + connections.size());
+            LOG.info("pause, numConnections=" + connections.size());
             acceptor.pause();
             for (Bridge con : connections) {
                 con.pause();
@@ -192,7 +192,7 @@ public class SocketProxy {
      */
     public void goOn() {
         synchronized(connections) {
-            LOG.info("goOn, numConnectons=" + connections.size());
+            LOG.info("goOn, numConnections=" + connections.size());
             for (Bridge con : connections) {
                 con.goOn();
             }

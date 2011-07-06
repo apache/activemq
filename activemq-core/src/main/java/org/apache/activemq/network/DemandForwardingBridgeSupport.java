@@ -32,8 +32,10 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.BrokerServiceAware;
 import org.apache.activemq.broker.TransportConnection;
 import org.apache.activemq.broker.region.AbstractRegion;
+import org.apache.activemq.broker.region.DurableTopicSubscription;
 import org.apache.activemq.broker.region.RegionBroker;
 import org.apache.activemq.broker.region.Subscription;
+import org.apache.activemq.broker.region.TopicSubscription;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQMessage;
@@ -1046,12 +1048,16 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
             List<ConsumerId> networkConsumers = sub.getConsumerInfo().getNetworkConsumerIds();
             if (!networkConsumers.isEmpty()) {
                 if (matchFound(candidateConsumers, networkConsumers)) {
-                    suppress = hasLowerPriority(sub, candidate.getLocalInfo());
+                    suppress = isActiveDurableSub(sub) && hasLowerPriority(sub, candidate.getLocalInfo());
                     break;
                 }
             }
         }
         return suppress;
+    }
+
+    private boolean isActiveDurableSub(Subscription sub) {
+        return  (sub.getConsumerInfo().isDurable() && sub instanceof DurableTopicSubscription && ((DurableTopicSubscription)sub).isActive());
     }
 
     private boolean hasLowerPriority(Subscription existingSub, ConsumerInfo candidateInfo) {
