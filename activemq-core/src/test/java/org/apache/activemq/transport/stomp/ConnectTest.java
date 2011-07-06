@@ -40,7 +40,7 @@ public class ConnectTest {
         brokerService = new BrokerService();
         brokerService.setPersistent(false);
         brokerService.setAdvisorySupport(false);
-        brokerService.addConnector("stomp://0.0.0.0:61612");
+        brokerService.addConnector("stomp://0.0.0.0:61612?transport.soLinger=0");
         brokerService.start();
     }
 
