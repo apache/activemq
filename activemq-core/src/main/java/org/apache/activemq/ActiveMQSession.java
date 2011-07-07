@@ -575,7 +575,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
             throw new javax.jms.IllegalStateException("Not a transacted session");
         }
         if (LOG.isDebugEnabled()) {
-            LOG.debug(getSessionId() + " Transaction Rollback");
+            LOG.debug(getSessionId() + " Transaction Rollback, txid:"  + transactionContext.getTransactionId());
         }
         transactionContext.rollback();
     }
