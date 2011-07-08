@@ -109,10 +109,10 @@ public class JDBCMessageStore extends AbstractMessageStore {
         } finally {
             c.close();
         }
-        onAdd(sequenceId, message.getPriority());
+        onAdd(messageId, sequenceId, message.getPriority());
     }
 
-    protected void onAdd(long sequenceId, byte priority) {
+    protected void onAdd(MessageId messageId, long sequenceId, byte priority) {
     }
 
     public void addMessageReference(ConnectionContext context, MessageId messageId, long expirationTime, String messageRef) throws IOException {
