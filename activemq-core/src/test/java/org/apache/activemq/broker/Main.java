@@ -42,11 +42,12 @@ public final class Main {
      */
     public static void main(String[] args) {
         try {
-            // TODO - this seems to break interceptors for some reason
-            // BrokerService broker = BrokerFactory.createBroker(new
-            // URI(brokerURI));
             BrokerService broker = new BrokerService();
             broker.setPersistent(false);
+
+            // String brokerDir = "xbean:...;
+            // System.setProperty("activemq.base", brokerDir);
+            // BrokerService broker = BrokerFactory.createBroker(new URI(brokerDir + "/activemq.xml"));
 
             // for running on Java 5 without mx4j
             ManagementContext managementContext = broker.getManagementContext();
