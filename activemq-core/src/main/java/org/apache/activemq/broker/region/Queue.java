@@ -1491,6 +1491,17 @@ public class Queue extends BaseDestination implements Task, UsageListener {
     }
 
     protected MessageReferenceFilter createSelectorFilter(String selector) throws InvalidSelectorException {
+
+        if (selector == null || selector.isEmpty()) {
+            return new MessageReferenceFilter() {
+
+                @Override
+                public boolean evaluate(ConnectionContext context, MessageReference messageReference) throws JMSException {
+                    return true;
+                }
+            };
+        }
+
         final BooleanExpression selectorExpression = SelectorParser.parse(selector);
 
         return new MessageReferenceFilter() {
