@@ -32,12 +32,15 @@ public class ActiveMQInputStreamTest extends TestCase {
 
     private static final Logger LOG = LoggerFactory.getLogger(ActiveMQInputStreamTest.class);
 
-    private static final String BROKER_URL = "tcp://localhost:61616";
+    private static final String BROKER_URL = "tcp://localhost:0";
     private static final String DESTINATION = "destination";
     private static final int STREAM_LENGTH = 64 * 1024 + 0; // change 0 to 1 to make it not crash
 
-    public void testInputStreamMatchesDefaultChuckSize() throws Exception {
-        BrokerService broker = new BrokerService();
+    private BrokerService broker;
+    private String connectionUri;
+
+    public void setUp() throws Exception {
+        broker = new BrokerService();
         broker.setUseJmx(false);
         broker.setPersistent(false);
         broker.setDestinations(new ActiveMQDestination[] {
@@ -45,8 +48,61 @@ public class ActiveMQInputStreamTest extends TestCase {
         });
         broker.addConnector(BROKER_URL);
         broker.start();
+        broker.waitUntilStarted();
 
-        ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory(BROKER_URL);
+        connectionUri = broker.getTransportConnectors().get(0).getPublishableConnectString();
+    }
+
+    public void tearDown() throws Exception {
+        broker.stop();
+        broker.waitUntilStopped();
+    }
+
+    public void testInputStreamSetSyncSendOption() throws Exception {
+
+        ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory(connectionUri);
+        ActiveMQConnection connection = (ActiveMQConnection) connectionFactory.createConnection();
+        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        Queue destination = session.createQueue(DESTINATION + "?producer.alwaysSyncSend=true");
+
+        OutputStream out = null;
+        try {
+            out = connection.createOutputStream(destination);
+
+            assertTrue(((ActiveMQOutputStream)out).isAlwaysSyncSend());
+
+            LOG.debug("writing...");
+            for (int i = 0; i < STREAM_LENGTH; ++i) {
+                out.write(0);
+            }
+            LOG.debug("wrote " + STREAM_LENGTH + " bytes");
+        } finally {
+            if (out != null) {
+                out.close();
+            }
+        }
+
+        InputStream in = null;
+        try {
+            in = connection.createInputStream(destination);
+            LOG.debug("reading...");
+            int count = 0;
+            while (-1 != in.read()) {
+                ++count;
+            }
+            LOG.debug("read " + count + " bytes");
+        } finally {
+            if (in != null) {
+                in.close();
+            }
+        }
+
+        connection.close();
+    }
+
+    public void testInputStreamMatchesDefaultChuckSize() throws Exception {
+
+        ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory(connectionUri);
         ActiveMQConnection connection = (ActiveMQConnection) connectionFactory.createConnection();
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         Queue destination = session.createQueue(DESTINATION);
@@ -81,6 +137,5 @@ public class ActiveMQInputStreamTest extends TestCase {
         }
 
         connection.close();
-        broker.stop();
     }
 }

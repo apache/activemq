@@ -32,9 +32,10 @@ import org.apache.activemq.command.MessageId;
 import org.apache.activemq.command.ProducerId;
 import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.util.IOExceptionSupport;
+import org.apache.activemq.util.IntrospectionSupport;
 
 /**
- * 
+ *
  */
 public class ActiveMQOutputStream extends OutputStream implements Disposable {
 
@@ -51,6 +52,7 @@ public class ActiveMQOutputStream extends OutputStream implements Disposable {
     private final int deliveryMode;
     private final int priority;
     private final long timeToLive;
+    private boolean alwaysSyncSend = false;
 
     /**
      * JMS Property which is used to specify the size (in kb) which is used as chunk size when splitting the stream. Default is 64kb
@@ -83,6 +85,14 @@ public class ActiveMQOutputStream extends OutputStream implements Disposable {
         }
 
         this.info = new ProducerInfo(producerId);
+
+        // Allows the options on the destination to configure the stream
+        if (destination.getOptions() != null) {
+            Map<String, String> options = new HashMap<String, String>(destination.getOptions());
+            IntrospectionSupport.setProperties(this, options, "producer.");
+            IntrospectionSupport.setProperties(this.info, options, "producer.");
+        }
+
         this.info.setDestination(destination);
 
         this.connection.addOutputStream(this);
@@ -155,8 +165,8 @@ public class ActiveMQOutputStream extends OutputStream implements Disposable {
      */
     private void send(ActiveMQMessage msg, boolean eosMessage) throws JMSException {
         if (properties != null) {
-            for (Iterator iter = properties.keySet().iterator(); iter.hasNext();) {
-                String key = (String) iter.next();
+            for (Iterator<String> iter = properties.keySet().iterator(); iter.hasNext();) {
+                String key = iter.next();
                 Object value = properties.get(key);
                 msg.setObjectProperty(key, value);
             }
@@ -169,11 +179,19 @@ public class ActiveMQOutputStream extends OutputStream implements Disposable {
             msg.setGroupSequence((int) messageSequence);
         }
         MessageId id = new MessageId(info.getProducerId(), messageSequence++);
-        connection.send(info.getDestination(), msg, id, deliveryMode, priority, timeToLive, !eosMessage);
+        connection.send(info.getDestination(), msg, id, deliveryMode, priority, timeToLive, !eosMessage && !isAlwaysSyncSend());
     }
 
     public String toString() {
         return "ActiveMQOutputStream { producerId=" + info.getProducerId() + " }";
+    }
+
+    public boolean isAlwaysSyncSend() {
+        return alwaysSyncSend;
+    }
+
+    public void setAlwaysSyncSend(boolean alwaysSyncSend) {
+        this.alwaysSyncSend = alwaysSyncSend;
     }
 
 }
