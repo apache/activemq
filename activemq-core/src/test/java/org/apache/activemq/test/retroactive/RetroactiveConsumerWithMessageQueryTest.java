@@ -88,7 +88,8 @@ public class RetroactiveConsumerWithMessageQueryTest extends EmbeddedBrokerTestS
 
     protected ConnectionFactory createConnectionFactory() throws Exception {
         ActiveMQConnectionFactory answer = new ActiveMQConnectionFactory(bindAddress);
-        //answer.setUseRetroactiveConsumer(true);
+        // answer.setUseRetroactiveConsumer(true);
+        // option applied via destination policy alwaysRetroactive
         return answer;
     }
 
