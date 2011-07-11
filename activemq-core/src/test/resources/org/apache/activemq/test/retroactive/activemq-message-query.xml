@@ -32,7 +32,7 @@
     <destinationPolicy>
       <policyMap>
         <policyEntries>
-          <policyEntry topic="org.apache.activemq.test.>">
+          <policyEntry topic="org.apache.activemq.test.>" alwaysRetroactive="true" >
             <subscriptionRecoveryPolicy>
               <queryBasedSubscriptionRecoveryPolicy query="#myQuery" />
             </subscriptionRecoveryPolicy>

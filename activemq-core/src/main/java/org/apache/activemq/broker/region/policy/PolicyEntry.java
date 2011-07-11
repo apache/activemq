@@ -61,6 +61,7 @@ public class PolicyEntry extends DestinationMapEntry {
     private int maxQueueAuditDepth=BaseDestination.MAX_AUDIT_DEPTH;
     private boolean enableAudit=true;
     private boolean producerFlowControl = true;
+    private boolean alwaysRetroactive = false;
     private long blockedProducerWarningInterval = Destination.DEFAULT_BLOCKED_PRODUCER_WARNING_INTERVAL;
     private boolean optimizedDispatch=false;
     private int maxPageSize=BaseDestination.MAX_PAGE_SIZE;
@@ -140,6 +141,7 @@ public class PolicyEntry extends DestinationMapEntry {
     
     public void baseConfiguration(Broker broker,BaseDestination destination) {
         destination.setProducerFlowControl(isProducerFlowControl());
+        destination.setAlwaysRetroactive(isAlwaysRetroactive());
         destination.setBlockedProducerWarningInterval(getBlockedProducerWarningInterval());
         destination.setEnableAudit(isEnableAudit());
         destination.setMaxAuditDepth(getMaxQueueAuditDepth());
@@ -411,6 +413,21 @@ public class PolicyEntry extends DestinationMapEntry {
         this.producerFlowControl = producerFlowControl;
     }
 
+    /**
+     * @return true if topic is always retroactive
+     */
+    public boolean isAlwaysRetroactive() {
+        return alwaysRetroactive;
+    }
+
+    /**
+     * @param alwaysRetroactive
+     */
+    public void setAlwaysRetroactive(boolean alwaysRetroactive) {
+        this.alwaysRetroactive = alwaysRetroactive;
+    }
+    
+    
     /**
      * Set's the interval at which warnings about producers being blocked by
      * resource usage will be triggered. Values of 0 or less will disable

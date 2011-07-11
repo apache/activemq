@@ -63,6 +63,7 @@ public abstract class BaseDestination implements Destination {
     protected SystemUsage systemUsage;
     protected MemoryUsage memoryUsage;
     private boolean producerFlowControl = true;
+    private boolean alwaysRetroactive = false;
     protected boolean warnOnProducerFlowControl = true;
     protected long blockedProducerWarningInterval = DEFAULT_BLOCKED_PRODUCER_WARNING_INTERVAL;
 
@@ -146,6 +147,14 @@ public abstract class BaseDestination implements Destination {
      */
     public void setProducerFlowControl(boolean producerFlowControl) {
         this.producerFlowControl = producerFlowControl;
+    }
+    
+    public boolean isAlwaysRetroactive() {
+    	return alwaysRetroactive;
+    }
+    
+    public void setAlwaysRetroactive(boolean alwaysRetroactive) {
+    	this.alwaysRetroactive = alwaysRetroactive;
     }
 
     /**

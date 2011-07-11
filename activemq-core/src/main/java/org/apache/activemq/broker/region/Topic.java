@@ -117,7 +117,7 @@ public class Topic extends BaseDestination implements Task {
         if (!sub.getConsumerInfo().isDurable()) {
 
             // Do a retroactive recovery if needed.
-            if (sub.getConsumerInfo().isRetroactive()) {
+            if (sub.getConsumerInfo().isRetroactive() || isAlwaysRetroactive()) {
 
                 // synchronize with dispatch method so that no new messages are
                 // sent

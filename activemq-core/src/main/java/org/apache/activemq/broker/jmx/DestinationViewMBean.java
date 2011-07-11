@@ -254,6 +254,17 @@ public interface DestinationViewMBean {
     public void setProducerFlowControl(@MBeanInfo("producerFlowControl") boolean producerFlowControl);
     
     /**
+     * @return if we treat consumers as alwaysRetroactive
+     */
+    @MBeanInfo("Always treat consumers as retroActive")
+    boolean isAlwaysRetroactive();
+    
+    /**
+     * @param alwaysRetroactive set as always retroActive
+     */
+    public void setAlwaysRetroactive(@MBeanInfo("alwaysRetroactive") boolean alwaysRetroactive);    
+    
+    /**
      * Set's the interval at which warnings about producers being blocked by
      * resource usage will be triggered. Values of 0 or less will disable
      * warnings

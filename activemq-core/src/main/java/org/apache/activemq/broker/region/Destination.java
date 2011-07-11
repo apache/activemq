@@ -77,6 +77,10 @@ public interface Destination extends Service, Task {
     boolean isProducerFlowControl();
 
     void setProducerFlowControl(boolean value);
+    
+    boolean isAlwaysRetroactive();
+    
+    void setAlwaysRetroactive(boolean value);
 
     /**
      * Set's the interval at which warnings about producers being blocked by

@@ -137,6 +137,14 @@ public class DestinationFilter implements Destination {
     public void setProducerFlowControl(boolean value) {
         next.setProducerFlowControl(value);
     }
+    
+    public boolean isAlwaysRetroactive() {
+    	return next.isAlwaysRetroactive();
+    }
+    
+    public void setAlwaysRetroactive(boolean value) {
+    	next.setAlwaysRetroactive(value);
+    }
 
     public void setBlockedProducerWarningInterval(long blockedProducerWarningInterval) {
         next.setBlockedProducerWarningInterval(blockedProducerWarningInterval);

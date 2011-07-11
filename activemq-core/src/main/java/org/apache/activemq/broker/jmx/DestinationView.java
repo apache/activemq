@@ -339,6 +339,14 @@ public class DestinationView implements DestinationViewMBean {
     public void setProducerFlowControl(boolean producerFlowControl) {
         destination.setProducerFlowControl(producerFlowControl);
     }
+    
+    public boolean isAlwaysRetroactive() {
+    	return destination.isAlwaysRetroactive();
+    }
+    
+    public void setAlwaysRetroactive(boolean alwaysRetroactive) {
+    	destination.setAlwaysRetroactive(alwaysRetroactive);
+    }
 
     /**
      * Set's the interval at which warnings about producers being blocked by
