@@ -959,6 +959,7 @@ public class RegionBroker extends EmptyBroker {
                 map.putAll(tempQueueRegion.getDestinationMap());
                 map.putAll(tempTopicRegion.getDestinationMap());
             }
+            long maxPurgedDests = this.brokerService.getMaxPurgedDestinationsPerSweep();
             long timeStamp = System.currentTimeMillis();
             for (Destination d : map.values()) {
                 if (d instanceof BaseDestination) {
@@ -966,6 +967,10 @@ public class RegionBroker extends EmptyBroker {
                     bd.markForGC(timeStamp);
                     if (bd.canGC()) {
                         list.add(bd);
+
+                        if (maxPurgedDests > 0 && list.size() == maxPurgedDests) {
+                            break;
+                        }
                     }
                 }
             }

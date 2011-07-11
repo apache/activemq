@@ -32,6 +32,7 @@ public class DestinationGCTest extends EmbeddedBrokerTestSupport {
         BrokerService broker = super.createBroker();
         broker.setDestinations(new ActiveMQDestination[] {queue});
         broker.setSchedulePeriodForDestinationPurge(1000);
+        broker.setMaxPurgedDestinationsPerSweep(1);
         PolicyEntry entry = new PolicyEntry();
         entry.setGcInactiveDestinations(true);
         entry.setInactiveTimoutBeforeGC(3000);
@@ -44,6 +45,21 @@ public class DestinationGCTest extends EmbeddedBrokerTestSupport {
     public void testDestinationGc() throws Exception {
         assertEquals(1, broker.getAdminView().getQueues().length);
         Thread.sleep(7000);
+        assertEquals(0, broker.getAdminView().getQueues().length);
+    }
+
+    public void testDestinationGcLimit() throws Exception {
+
+        broker.getAdminView().addQueue("TEST1");
+        broker.getAdminView().addQueue("TEST2");
+        broker.getAdminView().addQueue("TEST3");
+        broker.getAdminView().addQueue("TEST4");
+
+        assertEquals(5, broker.getAdminView().getQueues().length);
+        Thread.sleep(7000);
+        int queues = broker.getAdminView().getQueues().length;
+        assertTrue(queues > 0 && queues < 5);
+        Thread.sleep(10000);
         assertEquals(0, broker.getAdminView().getQueues().length);
     }
 }
