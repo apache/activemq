@@ -34,13 +34,14 @@ public abstract class AbstractDeadLetterStrategy implements DeadLetterStrategy {
     private static final Logger LOG = LoggerFactory.getLogger(AbstractDeadLetterStrategy.class);
     private boolean processNonPersistent = false;
     private boolean processExpired = true;
-    private ActiveMQMessageAudit audit = new ActiveMQMessageAudit();
+    private boolean enableAudit = true;
+    private ActiveMQMessageAudit messageAudit = new ActiveMQMessageAudit();
 
     public boolean isSendToDeadLetterQueue(Message message) {
         boolean result = false;
         if (message != null) {
             result = true;
-            if (audit.isDuplicate(message)) {
+            if (enableAudit && messageAudit.isDuplicate(message)) {
                 result = false;
                 if (LOG.isDebugEnabled()) {
                     LOG.debug("Not adding duplicate to DLQ: " + message.getMessageId() + ", dest: " + message.getDestination());
@@ -84,4 +85,11 @@ public abstract class AbstractDeadLetterStrategy implements DeadLetterStrategy {
         this.processNonPersistent = processNonPersistent;
     }
 
+    public boolean isEnableAudit() {
+        return enableAudit;
+    }
+
+    public void setEnableAudit(boolean enableAudit) {
+        this.enableAudit = enableAudit;
+    }
 }
