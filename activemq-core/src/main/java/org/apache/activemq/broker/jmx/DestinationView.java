@@ -128,7 +128,7 @@ public class DestinationView implements DestinationViewMBean {
     public long getMinEnqueueTime() {
         return destination.getDestinationStatistics().getProcessTime().getMinTime();
     }
-    
+
     public boolean isPrioritizedMessages() {
         return destination.isPrioritizedMessages();
     }
@@ -199,7 +199,7 @@ public class DestinationView implements DestinationViewMBean {
             try {
                 Message message = messages[i];
                 if (selectorExpression == null) {
-                    answer.add(OpenTypeSupport.convert(message));
+                    answer.add(message);
                 } else {
                     ctx.setMessageReference(message);
                     if (selectorExpression.matches(ctx)) {
@@ -339,20 +339,20 @@ public class DestinationView implements DestinationViewMBean {
     public void setProducerFlowControl(boolean producerFlowControl) {
         destination.setProducerFlowControl(producerFlowControl);
     }
-    
+
     public boolean isAlwaysRetroactive() {
-    	return destination.isAlwaysRetroactive();
+        return destination.isAlwaysRetroactive();
     }
-    
+
     public void setAlwaysRetroactive(boolean alwaysRetroactive) {
-    	destination.setAlwaysRetroactive(alwaysRetroactive);
+        destination.setAlwaysRetroactive(alwaysRetroactive);
     }
 
     /**
      * Set's the interval at which warnings about producers being blocked by
      * resource usage will be triggered. Values of 0 or less will disable
      * warnings
-     * 
+     *
      * @param blockedProducerWarningInterval the interval at which warning about
      *            blocked producers will be triggered.
      */
@@ -361,7 +361,7 @@ public class DestinationView implements DestinationViewMBean {
     }
 
     /**
-     * 
+     *
      * @return the interval at which warning about blocked producers will be
      *         triggered.
      */
