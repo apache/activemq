@@ -19,6 +19,7 @@ package org.apache.activemq.transport.nio;
 
 import org.apache.activemq.command.Command;
 import org.apache.activemq.openwire.OpenWireFormat;
+import org.apache.activemq.thread.DefaultThreadPools;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.ServiceStopper;
 import org.apache.activemq.wireformat.WireFormat;
@@ -204,7 +205,6 @@ public class NIOSSLTransport extends NIOTransport  {
         //TODO deal with BUFFER_OVERFLOW
 
         if (status == SSLEngineResult.Status.CLOSED) {
-            //TODO do shutdown
             sslEngine.closeInbound();
             return -1;
         }
@@ -223,10 +223,9 @@ public class NIOSSLTransport extends NIOTransport  {
                     secureRead(ByteBuffer.allocate(sslSession.getApplicationBufferSize()));
                     break;
                 case NEED_TASK:
-                    //TODO use the pool
                     Runnable task;
                     while ((task = sslEngine.getDelegatedTask()) != null) {
-                        task.run();
+                        DefaultThreadPools.getDefaultTaskRunnerFactory().execute(task);
                     }
                     break;
                 case NEED_WRAP:
