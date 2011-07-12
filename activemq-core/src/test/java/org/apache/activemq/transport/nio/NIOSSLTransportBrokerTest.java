@@ -43,9 +43,9 @@ public class NIOSSLTransportBrokerTest extends TransportBrokerTestSupport {
         System.setProperty("javax.net.ssl.trustStorePassword", PASSWORD);
         System.setProperty("javax.net.ssl.trustStoreType", KEYSTORE_TYPE);        
         System.setProperty("javax.net.ssl.keyStore", SERVER_KEYSTORE);
+        System.setProperty("javax.net.ssl.keyStoreType", KEYSTORE_TYPE);
         System.setProperty("javax.net.ssl.keyStorePassword", PASSWORD);
-        System.setProperty("javax.net.ssl.keyStoreType", KEYSTORE_TYPE);        
-        //System.setProperty("javax.net.debug", "ssl,handshake,data,trustmanager");        
+        //System.setProperty("javax.net.debug", "ssl,handshake,data,trustmanager");
 
         maxWait = 10000;
         super.setUp();
