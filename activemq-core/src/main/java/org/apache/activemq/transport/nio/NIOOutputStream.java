@@ -25,6 +25,9 @@ import java.nio.channels.WritableByteChannel;
 
 import org.apache.activemq.transport.tcp.TimeStampStream;
 
+import javax.net.ssl.SSLEngine;
+import javax.net.ssl.SSLEngineResult;
+
 /**
  * An optimized buffered outputstream for Tcp
  * 
@@ -42,6 +45,8 @@ public class NIOOutputStream extends OutputStream implements TimeStampStream {
     private int count;
     private boolean closed;
     private volatile long writeTimestamp = -1;//concurrent reads of this value
+
+    private SSLEngine engine;
 
     /**
      * Constructor
@@ -149,7 +154,16 @@ public class NIOOutputStream extends OutputStream implements TimeStampStream {
     }
 
     protected void write(ByteBuffer data) throws IOException {
-        int remaining = data.remaining();
+        ByteBuffer plain;
+        if (engine != null) {
+            plain = ByteBuffer.allocate(engine.getSession().getPacketBufferSize());
+            plain.clear();
+            engine.wrap(data, plain);
+        }  else {
+            plain = data;
+        }
+        plain.flip();
+        int remaining = plain.remaining();
         int lastRemaining = remaining - 1;
         long delay = 1;
         try {
@@ -176,7 +190,7 @@ public class NIOOutputStream extends OutputStream implements TimeStampStream {
 
                 // Since the write is non-blocking, all the data may not have been
                 // written.
-                out.write(data);
+                out.write(plain);
                 remaining = data.remaining();
             }
         } finally {
@@ -199,4 +213,7 @@ public class NIOOutputStream extends OutputStream implements TimeStampStream {
         return writeTimestamp;
     }
 
+    public void setEngine(SSLEngine engine) {
+        this.engine = engine;
+    }
 }

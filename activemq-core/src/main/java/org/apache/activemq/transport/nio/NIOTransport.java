@@ -45,11 +45,11 @@ import org.apache.activemq.wireformat.WireFormat;
 public class NIOTransport extends TcpTransport {
 
     // private static final Logger log = LoggerFactory.getLogger(NIOTransport.class);
-    private SocketChannel channel;
-    private SelectorSelection selection;
-    private ByteBuffer inputBuffer;
-    private ByteBuffer currentBuffer;
-    private int nextFrameSize;
+    protected SocketChannel channel;
+    protected SelectorSelection selection;
+    protected ByteBuffer inputBuffer;
+    protected ByteBuffer currentBuffer;
+    protected int nextFrameSize;
 
     public NIOTransport(WireFormat wireFormat, SocketFactory socketFactory, URI remoteLocation, URI localLocation) throws UnknownHostException, IOException {
         super(wireFormat, socketFactory, remoteLocation, localLocation);
@@ -89,7 +89,7 @@ public class NIOTransport extends TcpTransport {
         this.buffOut = outPutStream;
     }
 
-    private void serviceRead() {
+    protected void serviceRead() {
         try {
             while (true) {
 

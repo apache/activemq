@@ -72,7 +72,7 @@ public class NIOTransportFactory extends TcpTransportFactory {
         };
     }
 
-    protected SocketFactory createSocketFactory() {
+    protected SocketFactory createSocketFactory() throws IOException {
         return new SocketFactory() {
 
             public Socket createSocket() throws IOException {
