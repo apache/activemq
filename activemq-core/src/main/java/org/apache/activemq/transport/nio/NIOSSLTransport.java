@@ -74,7 +74,9 @@ public class NIOSSLTransport extends NIOTransport  {
             // initialize engine
             sslEngine = sslContext.createSSLEngine();
             sslEngine.setUseClientMode(false);
-            sslEngine.setEnabledCipherSuites(enabledCipherSuites);
+            if (enabledCipherSuites != null) {
+                sslEngine.setEnabledCipherSuites(enabledCipherSuites);
+            }
             sslEngine.setNeedClientAuth(needClientAuth);
             sslEngine.setWantClientAuth(wantClientAuth);
 
