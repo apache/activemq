@@ -30,12 +30,12 @@ public class NIOSSLTransportBrokerTest extends TransportBrokerTestSupport {
     public static final String TRUST_KEYSTORE = "src/test/resources/client.keystore";
 
     protected String getBindLocation() {
-        return "nio+ssl://localhost:0";
+        return "nio+ssl://localhost:0?transport.soWriteTimeout=20000";
     }
 
     @Override
     protected URI getBindURI() throws URISyntaxException {
-        return new URI("nio+ssl://localhost:0");
+        return new URI("nio+ssl://localhost:0?soWriteTimeout=20000");
     }
 
     protected void setUp() throws Exception {

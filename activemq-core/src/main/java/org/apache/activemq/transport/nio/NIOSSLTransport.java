@@ -36,6 +36,10 @@ import java.nio.ByteBuffer;
 
 public class NIOSSLTransport extends NIOTransport  {
 
+    private boolean needClientAuth;
+    private boolean wantClientAuth;
+    private String[] enabledCipherSuites;
+
     protected SSLContext sslContext;
     protected SSLEngine sslEngine;
     protected SSLSession sslSession;
@@ -59,7 +63,6 @@ public class NIOSSLTransport extends NIOTransport  {
 
     @Override
     protected void initializeStreams() throws IOException {
-
         try {
             channel = socket.getChannel();
             channel.configureBlocking(false);
@@ -68,8 +71,13 @@ public class NIOSSLTransport extends NIOTransport  {
                 sslContext = SSLContext.getDefault();
             }
 
+            // initialize engine
             sslEngine = sslContext.createSSLEngine();
             sslEngine.setUseClientMode(false);
+            sslEngine.setEnabledCipherSuites(enabledCipherSuites);
+            sslEngine.setNeedClientAuth(needClientAuth);
+            sslEngine.setWantClientAuth(wantClientAuth);
+
             sslSession = sslEngine.getSession();
 
             inputBuffer = ByteBuffer.allocate(sslSession.getPacketBufferSize());
@@ -245,5 +253,29 @@ public class NIOSSLTransport extends NIOTransport  {
             channel.close();
         }
         super.doStop(stopper);
+    }
+
+    public boolean isNeedClientAuth() {
+        return needClientAuth;
+    }
+
+    public void setNeedClientAuth(boolean needClientAuth) {
+        this.needClientAuth = needClientAuth;
+    }
+
+    public boolean isWantClientAuth() {
+        return wantClientAuth;
+    }
+
+    public void setWantClientAuth(boolean wantClientAuth) {
+        this.wantClientAuth = wantClientAuth;
+    }
+
+    public String[] getEnabledCipherSuites() {
+        return enabledCipherSuites;
+    }
+
+    public void setEnabledCipherSuites(String[] enabledCipherSuites) {
+        this.enabledCipherSuites = enabledCipherSuites;
     }
 }
