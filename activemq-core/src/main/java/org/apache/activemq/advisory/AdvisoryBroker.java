@@ -52,6 +52,7 @@ public class AdvisoryBroker extends BrokerFilter {
     protected final ConcurrentHashMap<ConsumerId, ConsumerInfo> consumers = new ConcurrentHashMap<ConsumerId, ConsumerInfo>();
     protected final ConcurrentHashMap<ProducerId, ProducerInfo> producers = new ConcurrentHashMap<ProducerId, ProducerInfo>();
     protected final ConcurrentHashMap<ActiveMQDestination, DestinationInfo> destinations = new ConcurrentHashMap<ActiveMQDestination, DestinationInfo>();
+    protected final ConcurrentHashMap<BrokerInfo, ActiveMQMessage> networkBridges = new ConcurrentHashMap<BrokerInfo, ActiveMQMessage>();
     protected final ProducerId advisoryProducerId = new ProducerId();
     
     private final LongSequenceGenerator messageIdGenerator = new LongSequenceGenerator();
@@ -122,6 +123,15 @@ public class AdvisoryBroker extends BrokerFilter {
                     ConsumerInfo value = iter.next();
                     ActiveMQTopic topic = AdvisorySupport.getConsumerAdvisoryTopic(value.getDestination());
                     fireConsumerAdvisory(context,value.getDestination(), topic, value, info.getConsumerId());
+                }
+            }
+
+            // Replay network bridges
+            if (AdvisorySupport.isNetworkBridgeAdvisoryTopic(info.getDestination())) {
+                for (Iterator<BrokerInfo> iter = networkBridges.keySet().iterator(); iter.hasNext();) {
+                    BrokerInfo key = iter.next();
+                    ActiveMQTopic topic = AdvisorySupport.getNetworkBridgeAdvisoryTopic();
+                    fireAdvisory(context, topic, key, null, networkBridges.get(key));
                 }
             }
         }
@@ -399,6 +409,7 @@ public class AdvisoryBroker extends BrokerFilter {
              advisoryMessage.setBooleanProperty("started", true);
              advisoryMessage.setBooleanProperty("createdByDuplex", createdByDuplex);
              advisoryMessage.setStringProperty("remoteIp", remoteIp);
+             networkBridges.putIfAbsent(brokerInfo, advisoryMessage);
 
              ActiveMQTopic topic = AdvisorySupport.getNetworkBridgeAdvisoryTopic();
 
@@ -418,6 +429,7 @@ public class AdvisoryBroker extends BrokerFilter {
          if (brokerInfo != null) {
              ActiveMQMessage advisoryMessage = new ActiveMQMessage();
              advisoryMessage.setBooleanProperty("started", false);
+             networkBridges.remove(brokerInfo);
 
              ActiveMQTopic topic = AdvisorySupport.getNetworkBridgeAdvisoryTopic();
 

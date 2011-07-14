@@ -61,6 +61,43 @@ public class AdvisoryNetworkBridgeTest extends TestCase {
         assertNotNull(advisory);
         assertTrue(advisory.getDataStructure() instanceof BrokerInfo);
         assertFalse(advisory.getBooleanProperty("started"));
+
+        conn.close();
+    }
+
+    public void testAddConsumerLater() throws Exception {
+        createBroker1();
+
+        createBroker2();
+
+        Thread.sleep(1000);
+
+        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("vm://broker1");
+        Connection conn = factory.createConnection();
+        Session sess = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        conn.start();
+        MessageConsumer consumer = sess.createConsumer(AdvisorySupport.getNetworkBridgeAdvisoryTopic());
+
+        ActiveMQMessage advisory = (ActiveMQMessage)consumer.receive(2000);
+        assertNotNull(advisory);
+        assertTrue(advisory.getDataStructure() instanceof BrokerInfo);
+        assertTrue(advisory.getBooleanProperty("started"));
+        assertCreatedByDuplex(advisory.getBooleanProperty("createdByDuplex"));
+
+        broker2.stop();
+        broker2.waitUntilStopped();
+
+        advisory = (ActiveMQMessage)consumer.receive(2000);
+        assertNotNull(advisory);
+        assertTrue(advisory.getDataStructure() instanceof BrokerInfo);
+        assertFalse(advisory.getBooleanProperty("started"));
+
+        consumer = sess.createConsumer(AdvisorySupport.getNetworkBridgeAdvisoryTopic());
+        advisory = (ActiveMQMessage)consumer.receive(1000);
+        assertNull(advisory);
+
+        conn.close();
+
     }
 
     public void assertCreatedByDuplex(boolean createdByDuplex) {
