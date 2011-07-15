@@ -19,6 +19,7 @@ package org.apache.activemq.store.kahadb;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -26,7 +27,9 @@ import java.util.concurrent.CancellationException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+
 import org.apache.activemq.broker.ConnectionContext;
+import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageId;
@@ -49,14 +52,13 @@ import org.apache.activemq.store.kahadb.data.KahaPrepareCommand;
 import org.apache.activemq.store.kahadb.data.KahaRollbackCommand;
 import org.apache.activemq.store.kahadb.data.KahaTransactionInfo;
 import org.apache.activemq.wireformat.WireFormat;
+import org.apache.kahadb.journal.Journal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * Provides a TransactionStore implementation that can create transaction aware
  * MessageStore objects from non transaction aware MessageStore objects.
- * 
- * 
  */
 public class KahaDBTransactionStore implements TransactionStore {
     static final Logger LOG = LoggerFactory.getLogger(KahaDBTransactionStore.class);
@@ -70,21 +72,23 @@ public class KahaDBTransactionStore implements TransactionStore {
 
     public class Tx {
         private final ArrayList<AddMessageCommand> messages = new ArrayList<AddMessageCommand>();
-
         private final ArrayList<RemoveMessageCommand> acks = new ArrayList<RemoveMessageCommand>();
+        private final HashSet<ActiveMQDestination> destinations = new HashSet<ActiveMQDestination>();
 
         public void add(AddMessageCommand msg) {
             messages.add(msg);
+            destinations.add(msg.getMessage().getDestination());
         }
 
         public void add(RemoveMessageCommand ack) {
             acks.add(ack);
+            destinations.add(ack.getMessageAck().getDestination());
         }
 
         public Message[] getMessages() {
             Message rc[] = new Message[messages.size()];
             int count = 0;
-            for (Iterator<AddMessageCommand> iter = messages.iterator(); iter.hasNext();) {
+            for (Iterator<AddMessageCommand> iter = messages.iterator(); iter.hasNext(); ) {
                 AddMessageCommand cmd = iter.next();
                 rc[count++] = cmd.getMessage();
             }
@@ -94,7 +98,7 @@ public class KahaDBTransactionStore implements TransactionStore {
         public MessageAck[] getAcks() {
             MessageAck rc[] = new MessageAck[acks.size()];
             int count = 0;
-            for (Iterator<RemoveMessageCommand> iter = acks.iterator(); iter.hasNext();) {
+            for (Iterator<RemoveMessageCommand> iter = acks.iterator(); iter.hasNext(); ) {
                 RemoveMessageCommand cmd = iter.next();
                 rc[count++] = cmd.getMessageAck();
             }
@@ -103,49 +107,56 @@ public class KahaDBTransactionStore implements TransactionStore {
 
         /**
          * @return true if something to commit
-         * @throws IOException
          */
         public List<Future<Object>> commit() throws IOException {
             List<Future<Object>> results = new ArrayList<Future<Object>>();
             // Do all the message adds.
-            for (Iterator<AddMessageCommand> iter = messages.iterator(); iter.hasNext();) {
+            for (Iterator<AddMessageCommand> iter = messages.iterator(); iter.hasNext(); ) {
                 AddMessageCommand cmd = iter.next();
                 results.add(cmd.run());
 
             }
             // And removes..
-            for (Iterator<RemoveMessageCommand> iter = acks.iterator(); iter.hasNext();) {
+            for (Iterator<RemoveMessageCommand> iter = acks.iterator(); iter.hasNext(); ) {
                 RemoveMessageCommand cmd = iter.next();
                 cmd.run();
                 results.add(cmd.run());
             }
-            
+
             return results;
         }
     }
 
     public abstract class AddMessageCommand {
         private final ConnectionContext ctx;
+
         AddMessageCommand(ConnectionContext ctx) {
             this.ctx = ctx;
         }
+
         abstract Message getMessage();
+
         Future<Object> run() throws IOException {
             return run(this.ctx);
         }
+
         abstract Future<Object> run(ConnectionContext ctx) throws IOException;
     }
 
     public abstract class RemoveMessageCommand {
 
         private final ConnectionContext ctx;
+
         RemoveMessageCommand(ConnectionContext ctx) {
             this.ctx = ctx;
         }
+
         abstract MessageAck getMessageAck();
+
         Future<Object> run() throws IOException {
             return run(this.ctx);
         }
+
         abstract Future<Object> run(ConnectionContext context) throws IOException;
     }
 
@@ -197,8 +208,8 @@ public class KahaDBTransactionStore implements TransactionStore {
 
             @Override
             public void acknowledge(ConnectionContext context, String clientId, String subscriptionName,
-                            MessageId messageId, MessageAck ack) throws IOException {
-                KahaDBTransactionStore.this.acknowledge(context, (TopicMessageStore)getDelegate(), clientId,
+                                    MessageId messageId, MessageAck ack) throws IOException {
+                KahaDBTransactionStore.this.acknowledge(context, (TopicMessageStore) getDelegate(), clientId,
                         subscriptionName, messageId, ack);
             }
 
@@ -206,13 +217,17 @@ public class KahaDBTransactionStore implements TransactionStore {
     }
 
     /**
-     * @throws IOException
      * @see org.apache.activemq.store.TransactionStore#prepare(TransactionId)
      */
     public void prepare(TransactionId txid) throws IOException {
         inflightTransactions.remove(txid);
         KahaTransactionInfo info = getTransactionInfo(txid);
-        theStore.store(new KahaPrepareCommand().setTransactionInfo(info), true, null, null);
+        Tx tx = inflightTransactions.get(txid);
+        if (tx != null) {
+            for (Journal journal : theStore.getJournalManager().getJournals(tx.destinations)) {
+                theStore.store(journal, new KahaPrepareCommand().setTransactionInfo(info), true, null, null);
+            }
+        }
     }
 
     public Tx getTx(Object txid) {
@@ -242,7 +257,7 @@ public class KahaDBTransactionStore implements TransactionStore {
                             theStore.brokerService.handleIOException(new IOException(e.getMessage()));
                         } catch (ExecutionException e) {
                             theStore.brokerService.handleIOException(new IOException(e.getMessage()));
-                        }catch(CancellationException e) {
+                        } catch (CancellationException e) {
                         }
                         if (!result.isCancelled()) {
                             doneSomething = true;
@@ -253,9 +268,11 @@ public class KahaDBTransactionStore implements TransactionStore {
                     }
                     if (doneSomething) {
                         KahaTransactionInfo info = getTransactionInfo(txid);
-                        theStore.store(new KahaCommitCommand().setTransactionInfo(info), true, null, null);
+                        for (Journal journal : theStore.getJournalManager().getJournals(tx.destinations)) {
+                            theStore.store(journal, new KahaCommitCommand().setTransactionInfo(info), true, null, null);
+                        }
                     }
-                }else {
+                } else {
                     //The Tx will be null for failed over clients - lets run their post commits
                     if (postCommit != null) {
                         postCommit.run();
@@ -266,23 +283,26 @@ public class KahaDBTransactionStore implements TransactionStore {
                 KahaTransactionInfo info = getTransactionInfo(txid);
                 // ensure message order w.r.t to cursor and store for setBatch()
                 synchronized (this) {
-                    theStore.store(new KahaCommitCommand().setTransactionInfo(info), true, preCommit, postCommit);
+                    for (Journal journal : theStore.getJournalManager().getJournals()) {
+                        theStore.store(journal, new KahaCommitCommand().setTransactionInfo(info), true, preCommit, postCommit);
+                    }
                     forgetRecoveredAcks(txid);
                 }
             }
-        }else {
-           LOG.error("Null transaction passed on commit");
+        } else {
+            LOG.error("Null transaction passed on commit");
         }
     }
 
     /**
-     * @throws IOException
      * @see org.apache.activemq.store.TransactionStore#rollback(TransactionId)
      */
     public void rollback(TransactionId txid) throws IOException {
         if (txid.isXATransaction() || theStore.isConcurrentStoreAndDispatchTransactions() == false) {
             KahaTransactionInfo info = getTransactionInfo(txid);
-            theStore.store(new KahaRollbackCommand().setTransactionInfo(info), false, null, null);
+            for (Journal journal : theStore.getJournalManager().getJournals()) {
+                theStore.store(journal, new KahaRollbackCommand().setTransactionInfo(info), false, null, null);
+            }
             forgetRecoveredAcks(txid);
         } else {
             inflightTransactions.remove(txid);
@@ -349,6 +369,7 @@ public class KahaDBTransactionStore implements TransactionStore {
                     public Message getMessage() {
                         return message;
                     }
+
                     @Override
                     public Future<Object> run(ConnectionContext ctx) throws IOException {
                         destination.addMessage(ctx, message);
@@ -376,6 +397,7 @@ public class KahaDBTransactionStore implements TransactionStore {
                     public Message getMessage() {
                         return message;
                     }
+
                     @Override
                     public Future<Object> run(ConnectionContext ctx) throws IOException {
                         return destination.asyncAddQueueMessage(ctx, message);
@@ -393,7 +415,7 @@ public class KahaDBTransactionStore implements TransactionStore {
             throws IOException {
 
         if (message.getTransactionId() != null) {
-            if (message.getTransactionId().isXATransaction() || theStore.isConcurrentStoreAndDispatchTransactions()==false) {
+            if (message.getTransactionId().isXATransaction() || theStore.isConcurrentStoreAndDispatchTransactions() == false) {
                 destination.addMessage(context, message);
                 return AbstractMessageStore.FUTURE;
             } else {
@@ -403,6 +425,7 @@ public class KahaDBTransactionStore implements TransactionStore {
                     public Message getMessage() {
                         return message;
                     }
+
                     @Override
                     public Future run(ConnectionContext ctx) throws IOException {
                         return destination.asyncAddTopicMessage(ctx, message);
@@ -424,7 +447,7 @@ public class KahaDBTransactionStore implements TransactionStore {
             throws IOException {
 
         if (ack.isInTransaction()) {
-            if (ack.getTransactionId().isXATransaction() || theStore.isConcurrentStoreAndDispatchTransactions()== false) {
+            if (ack.getTransactionId().isXATransaction() || theStore.isConcurrentStoreAndDispatchTransactions() == false) {
                 destination.removeMessage(context, ack);
             } else {
                 Tx tx = getTx(ack.getTransactionId());
@@ -450,7 +473,7 @@ public class KahaDBTransactionStore implements TransactionStore {
             throws IOException {
 
         if (ack.isInTransaction()) {
-            if (ack.getTransactionId().isXATransaction() || theStore.isConcurrentStoreAndDispatchTransactions()==false) {
+            if (ack.getTransactionId().isXATransaction() || theStore.isConcurrentStoreAndDispatchTransactions() == false) {
                 destination.removeAsyncMessage(context, ack);
             } else {
                 Tx tx = getTx(ack.getTransactionId());
@@ -476,7 +499,7 @@ public class KahaDBTransactionStore implements TransactionStore {
                            final MessageId messageId, final MessageAck ack) throws IOException {
 
         if (ack.isInTransaction()) {
-            if (ack.getTransactionId().isXATransaction() || theStore.isConcurrentStoreAndDispatchTransactions()== false) {
+            if (ack.getTransactionId().isXATransaction() || theStore.isConcurrentStoreAndDispatchTransactions() == false) {
                 destination.acknowledge(context, clientId, subscriptionName, messageId, ack);
             } else {
                 Tx tx = getTx(ack.getTransactionId());
