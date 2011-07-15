@@ -463,6 +463,8 @@
             <!--  exclude until we fix problems with apache ds and maven  -->
             <exclude>**/LDAPAuthorizationMapTest.*</exclude>
             <exclude>**/LDAPSecurityTest.*</exclude>
+            <exclude>**/CachedLDAPAuthorizationModuleTest.*</exclude>
+            <exclude>**/CachedLDAPSecurityTest.*</exclude>
 
             <!-- http://issues.apache.org/activemq/browse/AMQ-1027 -->
             <exclude>**/FailoverConsumerTest.*</exclude>
