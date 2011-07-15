@@ -39,14 +39,13 @@
 
           <authorizationPlugin>
               <map>
-                  <bean id="CachedLDAPAuthorizationMap" class="org.apache.activemq.security.CachedLDAPAuthorizationMap"
-                        xmlns="http://www.springframework.org/schema/beans">
-                      <property name="connectionURL" value="ldap://localhost:389" />
-                      <property name="connectionUsername" value="cn=admin,dc=activemq,dc=apache,dc=org" />
-                      <property name="connectionPassword" value="sunflower" />
-                      <property name="baseDn" value="dc=activemq,dc=apache,dc=org" />
-                      <property name="refreshInterval" value="300000" /> <!-- refresh every 5 min -->
-                  </bean>
+                  <cachedLDAPAuthorizationMap
+                      connectionURL="ldap://localhost:389"
+                      connectionUsername="cn=admin,dc=activemq,dc=apache,dc=org"
+                      connectionPassword="sunflower"
+                      baseDn="dc=activemq,dc=apache,dc=org"
+                      refreshInterval="300000"
+                   />
               </map>
           </authorizationPlugin>
       </plugins>

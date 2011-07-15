@@ -39,9 +39,7 @@
 
           <authorizationPlugin>
               <map>
-                  <bean id="CachedLDAPAuthorizationMap" class="org.apache.activemq.security.CachedLDAPAuthorizationMap"
-                        xmlns="http://www.springframework.org/schema/beans">
-                  </bean>
+                    <cachedLDAPAuthorizationMap/>
               </map>
           </authorizationPlugin>
       </plugins>

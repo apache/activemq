@@ -19,12 +19,7 @@ package org.apache.activemq.security;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
-import org.apache.activemq.filter.DestinationMapNode;
-import org.apache.activemq.filter.DestinationNode;
 import org.apache.activemq.jaas.GroupPrincipal;
-import org.apache.activemq.security.AuthorizationEntry;
-import org.apache.activemq.security.DefaultAuthorizationMap;
-import org.apache.activemq.security.TempDestinationAuthorizationEntry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
@@ -37,6 +32,13 @@ import javax.naming.directory.*;
 import javax.naming.event.*;
 import java.util.*;
 
+
+/**
+ * A {@link DefaultAuthorizationMap} implementation which uses LDAP to initialize and update
+ *
+ * @org.apache.xbean.XBean
+ *
+ */
 public class CachedLDAPAuthorizationMap extends DefaultAuthorizationMap implements NamespaceChangeListener,
         ObjectChangeListener, InitializingBean {
 
