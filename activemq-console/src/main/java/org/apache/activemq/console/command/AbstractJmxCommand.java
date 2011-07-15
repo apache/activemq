@@ -19,7 +19,6 @@ package org.apache.activemq.console.command;
 import java.io.File;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
-import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -27,29 +26,29 @@ import java.net.URLClassLoader;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
+import java.util.Properties;
 
 import javax.management.MBeanServerConnection;
 import javax.management.remote.JMXConnector;
 import javax.management.remote.JMXConnectorFactory;
 import javax.management.remote.JMXServiceURL;
 
-import sun.management.ConnectorAddressLink;
-
 public abstract class AbstractJmxCommand extends AbstractCommand {
     public static String DEFAULT_JMX_URL;
     private static String jmxUser;
     private static String jmxPassword;
-    
+    private static final String CONNECTOR_ADDRESS =
+        "com.sun.management.jmxremote.localConnectorAddress";
+
     private JMXServiceURL jmxServiceUrl;
     private boolean jmxUseLocal;
     private JMXConnector jmxConnector;
     private MBeanServerConnection jmxConnection;
-    
+
     static {
-    	DEFAULT_JMX_URL = System.getProperty("activemq.jmx.url", "service:jmx:rmi:///jndi/rmi://localhost:1099/jmxrmi");
-    	jmxUser = System.getProperty("activemq.jmx.user");
-    	jmxPassword = System.getProperty("activemq.jmx.password");
+        DEFAULT_JMX_URL = System.getProperty("activemq.jmx.url", "service:jmx:rmi:///jndi/rmi://localhost:1099/jmxrmi");
+        jmxUser = System.getProperty("activemq.jmx.user");
+        jmxPassword = System.getProperty("activemq.jmx.password");
     }
 
     /**
@@ -59,13 +58,70 @@ public abstract class AbstractJmxCommand extends AbstractCommand {
     protected JMXServiceURL getJmxServiceUrl() {
         return jmxServiceUrl;
     }
-    
-    public static String getJVM() { 
-        return System.getProperty("java.vm.specification.vendor"); 
-    } 
 
-    public static boolean isSunJVM() { 
-        return getJVM().equals("Sun Microsystems Inc."); 
+    public static String getJVM() {
+        return System.getProperty("java.vm.specification.vendor");
+    }
+
+    public static boolean isSunJVM() {
+        return getJVM().equals("Sun Microsystems Inc.");
+    }
+
+    /**
+     * Finds the JMX Url for a VM by its process id
+     *
+     * @param pid
+     * 		The process id value of the VM to search for.
+     *
+     * @return the JMX Url of the VM with the given pid or null if not found.
+     */
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    protected String findJMXUrlByProcessId(int pid) {
+
+        if (isSunJVM()) {
+            try {
+                // Classes are all dynamically loaded, since they are specific to Sun VM
+                // if it fails for any reason default jmx url will be used
+
+                // tools.jar are not always included used by default class loader, so we
+                // will try to use custom loader that will try to load tools.jar
+
+                String javaHome = System.getProperty("java.home");
+                String tools = javaHome + File.separator +
+                        ".." + File.separator + "lib" + File.separator + "tools.jar";
+                URLClassLoader loader = new URLClassLoader(new URL[]{new File(tools).toURI().toURL()});
+
+                Class virtualMachine = Class.forName("com.sun.tools.attach.VirtualMachine", true, loader);
+                Class virtualMachineDescriptor = Class.forName("com.sun.tools.attach.VirtualMachineDescriptor", true, loader);
+
+                Method getVMList = virtualMachine.getMethod("list", (Class[])null);
+                Method attachToVM = virtualMachine.getMethod("attach", String.class);
+                Method getAgentProperties = virtualMachine.getMethod("getAgentProperties", (Class[])null);
+                Method getVMId = virtualMachineDescriptor.getMethod("id",  (Class[])null);
+
+                List allVMs = (List)getVMList.invoke(null, (Object[])null);
+
+                for(Object vmInstance : allVMs) {
+                    String id = (String)getVMId.invoke(vmInstance, (Object[])null);
+                    if (id.equals(Integer.toString(pid))) {
+
+                        Object vm = attachToVM.invoke(null, id);
+
+                        Properties agentProperties = (Properties)getAgentProperties.invoke(vm, (Object[])null);
+                        String connectorAddress = agentProperties.getProperty(CONNECTOR_ADDRESS);
+
+                        if (connectorAddress != null) {
+                            return connectorAddress;
+                        } else {
+                            break;
+                        }
+                    }
+                }
+            } catch (Exception ignore) {
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -73,59 +129,61 @@ public abstract class AbstractJmxCommand extends AbstractCommand {
      * @return JMX service url
      * @throws MalformedURLException
      */
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     protected JMXServiceURL useJmxServiceUrl() throws MalformedURLException {
         if (getJmxServiceUrl() == null) {
             String jmxUrl = DEFAULT_JMX_URL;
             int connectingPid = -1;
             if (isSunJVM()) {
                 try {
-                    // Try to attach to the local process
                     // Classes are all dynamically loaded, since they are specific to Sun VM
                     // if it fails for any reason default jmx url will be used
-                	
-                	
-                    // tools.jar are not always included used by default 
-                    // class loader, so we will try to use custom loader that will
-                    // try to load tools.jar
+
+                    // tools.jar are not always included used by default class loader, so we
+                    // will try to use custom loader that will try to load tools.jar
+
                     String javaHome = System.getProperty("java.home");
                     String tools = javaHome + File.separator +
                             ".." + File.separator + "lib" + File.separator + "tools.jar";
                     URLClassLoader loader = new URLClassLoader(new URL[]{new File(tools).toURI().toURL()});
-                    
-                    // load all classes dynamically so we can compile on non-Sun VMs
-                    
-                    //MonitoredHost host = MonitoredHost.getMonitoredHost(new HostIdentifier((String)null));
-                	Class monitoredHostClass = Class.forName("sun.jvmstat.monitor.MonitoredHost", true, loader);
-                	Method getMonitoredHostMethod = monitoredHostClass.getMethod("getMonitoredHost", String.class);
-                	Object host = getMonitoredHostMethod.invoke(null, (String)null);
-                	//Set vms = host.activeVms();
-                	Method activeVmsMethod = host.getClass().getMethod("activeVms", null);
-                	Set vms = (Set)activeVmsMethod.invoke(host, null);
-                    for (Object vmid: vms) {
-                        int pid = ((Integer) vmid).intValue();
-                        //MonitoredVm mvm = host.getMonitoredVm(new VmIdentifier(vmid.toString()));
-                        Class vmIdentifierClass = Class.forName("sun.jvmstat.monitor.VmIdentifier", true, loader);
-                        Constructor vmIdentifierConstructor = vmIdentifierClass.getConstructor(String.class);
-                        Object vmIdentifier = vmIdentifierConstructor.newInstance(vmid.toString());
-                        Method getMonitoredVmMethod = host.getClass().getMethod("getMonitoredVm", vmIdentifierClass);
-                        Object mvm = getMonitoredVmMethod.invoke(host, vmIdentifier);
-                        //String name =  MonitoredVmUtil.commandLine(mvm);
-                        Class monitoredVmUtilClass = Class.forName("sun.jvmstat.monitor.MonitoredVmUtil", true, loader);
-                        Method commandLineMethod = monitoredVmUtilClass.getMethod("commandLine", Class.forName("sun.jvmstat.monitor.MonitoredVm", true, loader));
-                        String name = (String)commandLineMethod.invoke(null, mvm);
-                        if (name.contains("run.jar start")) {
-                        	connectingPid = pid;
-                            jmxUrl = ConnectorAddressLink.importFrom(pid);
-                            break;
+
+                    Class virtualMachine = Class.forName("com.sun.tools.attach.VirtualMachine", true, loader);
+                    Class virtualMachineDescriptor = Class.forName("com.sun.tools.attach.VirtualMachineDescriptor", true, loader);
+
+                    Method getVMList = virtualMachine.getMethod("list", (Class[])null);
+                    Method attachToVM = virtualMachine.getMethod("attach", String.class);
+                    Method getAgentProperties = virtualMachine.getMethod("getAgentProperties", (Class[])null);
+                    Method getVMDescriptor = virtualMachineDescriptor.getMethod("displayName",  (Class[])null);
+                    Method getVMId = virtualMachineDescriptor.getMethod("id",  (Class[])null);
+
+                    List allVMs = (List)getVMList.invoke(null, (Object[])null);
+
+                    for(Object vmInstance : allVMs) {
+                        String displayName = (String)getVMDescriptor.invoke(vmInstance, (Object[])null);
+                        if (displayName.contains("run.jar start")) {
+                            String id = (String)getVMId.invoke(vmInstance, (Object[])null);
+
+                            Object vm = attachToVM.invoke(null, id);
+
+                            Properties agentProperties = (Properties)getAgentProperties.invoke(vm, (Object[])null);
+                            String connectorAddress = agentProperties.getProperty(CONNECTOR_ADDRESS);
+
+                            if (connectorAddress != null) {
+                                jmxUrl = connectorAddress;
+                                connectingPid = Integer.parseInt(id);
+                                context.print("useJmxServiceUrl Found JMS Url: " + jmxUrl);
+                                break;
+                            }
                         }
                     }
-                } catch (Exception ignore) {}
+                } catch (Exception ignore) {
+                }
             }
-            
+
             if (connectingPid != -1) {
-            	context.print("Connecting to pid: " + connectingPid);
+                context.print("Connecting to pid: " + connectingPid);
             } else {
-            	context.print("Connecting to JMX URL: " + jmxUrl);
+                context.print("Connecting to JMX URL: " + jmxUrl);
             }
             setJmxServiceUrl(jmxUrl);
         }
@@ -160,10 +218,10 @@ public abstract class AbstractJmxCommand extends AbstractCommand {
 
     /**
      * Sets the JMS user name to use
-     * @param jmxUser - the jmx 
+     * @param jmxUser - the jmx
      */
     public void setJmxUser(String jmxUser) {
-        this.jmxUser = jmxUser;
+        AbstractJmxCommand.jmxUser = jmxUser;
     }
 
     /**
@@ -179,7 +237,7 @@ public abstract class AbstractJmxCommand extends AbstractCommand {
      * @param jmxPassword - the password used for JMX authentication
      */
     public void setJmxPassword(String jmxPassword) {
-        this.jmxPassword = jmxPassword;
+        AbstractJmxCommand.jmxPassword = jmxPassword;
     }
 
     /**
@@ -282,7 +340,7 @@ public abstract class AbstractJmxCommand extends AbstractCommand {
                int pid = Integer.parseInt(tokens.remove(0));
                context.print("Connecting to pid: " + pid);
 
-               String jmxUrl = ConnectorAddressLink.importFrom(pid);
+               String jmxUrl = findJMXUrlByProcessId(pid);
                // If jmx url already specified
                if (getJmxServiceUrl() != null) {
                    context.printException(new IllegalArgumentException("JMX URL already specified."));
