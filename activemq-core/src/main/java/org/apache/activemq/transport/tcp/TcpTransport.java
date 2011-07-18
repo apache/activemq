@@ -20,13 +20,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InterruptedIOException;
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.net.Socket;
-import java.net.SocketException;
-import java.net.SocketTimeoutException;
-import java.net.URI;
-import java.net.UnknownHostException;
+import java.net.*;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
@@ -618,7 +612,12 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
 
     public String getRemoteAddress() {
         if (socket != null) {
-            return "" + socket.getRemoteSocketAddress();
+            SocketAddress address = socket.getRemoteSocketAddress();
+            if (address instanceof InetSocketAddress) {
+                return "tcp://" + ((InetSocketAddress)address).getAddress().getHostAddress() + ":" + ((InetSocketAddress)address).getPort();
+            } else {
+                return "" + socket.getRemoteSocketAddress();
+            }
         }
         return null;
     }
