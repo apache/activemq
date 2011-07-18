@@ -28,12 +28,11 @@ import java.util.LinkedList;
 
 
 /**
- * An eviction strategy which evicts the oldest message with the lowest priority first.
+ * An eviction strategy which evicts the oldest message within messages with the same property value
  *
  *
  * @org.apache.xbean.XBean
  *
- * messageEvictionStrategy
  */
 public class UniquePropertyMessageEvictionStrategy extends MessageEvictionStrategySupport {
 
