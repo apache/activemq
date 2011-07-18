@@ -38,6 +38,9 @@ import org.apache.activemq.usage.SystemUsage;
  * An implementation of {@link PersistenceAdapter} designed for use with a
  * {@link Journal} and then check pointing asynchronously on a timeout with some
  * other long term persistent storage.
+ * 
+ * @org.apache.xbean.XBean element="kahaDB"
+ * 
  */
 public class KahaDBPersistenceAdapter implements PersistenceAdapter, BrokerServiceAware {
     private final KahaDBStore letter = new KahaDBStore();
