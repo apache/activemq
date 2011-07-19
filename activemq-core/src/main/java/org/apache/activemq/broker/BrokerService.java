@@ -202,7 +202,7 @@ public class BrokerService implements Service {
     private boolean allowTempAutoCreationOnSend;
 
     private int offlineDurableSubscriberTimeout = -1;
-    private int offlineDurableSubscriberTaskSchedule = 30000;
+    private int offlineDurableSubscriberTaskSchedule = 300000;
 
     static {
         String localHostName = "localhost";
