@@ -201,6 +201,9 @@ public class BrokerService implements Service {
     private boolean networkConnectorStartAsync = false;
     private boolean allowTempAutoCreationOnSend;
 
+    private int offlineDurableSubscriberTimeout = -1;
+    private int offlineDurableSubscriberTaskSchedule = 30000;
+
     static {
         String localHostName = "localhost";
         try {
@@ -2447,5 +2450,21 @@ public class BrokerService implements Service {
      */
     public void setAllowTempAutoCreationOnSend(boolean allowTempAutoCreationOnSend) {
         this.allowTempAutoCreationOnSend = allowTempAutoCreationOnSend;
+    }
+
+    public int getOfflineDurableSubscriberTimeout() {
+        return offlineDurableSubscriberTimeout;
+    }
+
+    public void setOfflineDurableSubscriberTimeout(int offlineDurableSubscriberTimeout) {
+        this.offlineDurableSubscriberTimeout = offlineDurableSubscriberTimeout;
+    }
+
+    public int getOfflineDurableSubscriberTaskSchedule() {
+        return offlineDurableSubscriberTaskSchedule;
+    }
+
+    public void setOfflineDurableSubscriberTaskSchedule(int offlineDurableSubscriberTaskSchedule) {
+        this.offlineDurableSubscriberTaskSchedule = offlineDurableSubscriberTaskSchedule;
     }
 }

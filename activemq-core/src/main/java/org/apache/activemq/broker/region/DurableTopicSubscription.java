@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 
 import javax.jms.InvalidSelectorException;
 import javax.jms.JMSException;
@@ -34,7 +35,6 @@ import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageDispatch;
 import org.apache.activemq.command.MessageId;
-import org.apache.activemq.filter.MessageEvaluationContext;
 import org.apache.activemq.store.TopicMessageStore;
 import org.apache.activemq.usage.SystemUsage;
 import org.apache.activemq.usage.Usage;
@@ -51,6 +51,7 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
     private final SubscriptionKey subscriptionKey;
     private final boolean keepDurableSubsActive;
     private AtomicBoolean active = new AtomicBoolean();
+    private AtomicLong offlineTimestamp = new AtomicLong(-1);
 
     public DurableTopicSubscription(Broker broker, SystemUsage usageManager, ConnectionContext context, ConsumerInfo info, boolean keepDurableSubsActive)
         throws JMSException {
@@ -65,6 +66,10 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
 
     public final boolean isActive() {
         return active.get();
+    }
+
+    public final long getOfflineTimestamp() {
+        return offlineTimestamp.get();
     }
 
     public boolean isFull() {
@@ -149,6 +154,7 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
                 }
             }
             this.active.set(true);
+            this.offlineTimestamp.set(-1);
             dispatchPending();
             this.usageManager.getMemoryUsage().addUsageListener(this);
         }
@@ -157,6 +163,7 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
     public void deactivate(boolean keepDurableSubsActive) throws Exception {
         LOG.debug("Deactivating " + this);
         active.set(false);
+        offlineTimestamp.set(System.currentTimeMillis());
         this.usageManager.getMemoryUsage().removeUsageListener(this);
         synchronized (pending) {
             pending.stop();

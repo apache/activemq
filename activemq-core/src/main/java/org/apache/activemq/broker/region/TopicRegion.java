@@ -16,10 +16,7 @@
  */
 package org.apache.activemq.broker.region;
 
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.jms.InvalidDestinationException;
 import javax.jms.JMSException;
@@ -51,10 +48,54 @@ public class TopicRegion extends AbstractRegion {
     private final SessionId recoveredDurableSubSessionId = new SessionId(new ConnectionId("OFFLINE"), recoveredDurableSubIdGenerator.getNextSequenceId());
     private boolean keepDurableSubsActive;
 
+    private Timer cleanupTimer;
+    private TimerTask cleanupTask;
+
     public TopicRegion(RegionBroker broker, DestinationStatistics destinationStatistics, SystemUsage memoryManager, TaskRunnerFactory taskRunnerFactory,
                        DestinationFactory destinationFactory) {
         super(broker, destinationStatistics, memoryManager, taskRunnerFactory, destinationFactory);
+        if (broker.getBrokerService().getOfflineDurableSubscriberTaskSchedule() != -1 && broker.getBrokerService().getOfflineDurableSubscriberTimeout() != -1) {
+            this.cleanupTimer = new Timer("ActiveMQ Durable Subscriber Cleanup Timer", true);
+            this.cleanupTask = new TimerTask() {
+                public void run() {
+                    doCleanup();
+                }
 
+            };
+            this.cleanupTimer.schedule(cleanupTask, broker.getBrokerService().getOfflineDurableSubscriberTaskSchedule(), broker.getBrokerService().getOfflineDurableSubscriberTaskSchedule());
+        }
+    }
+
+    @Override
+    public void stop() throws Exception {
+        super.stop();
+        if (cleanupTimer != null) {
+            cleanupTimer.cancel();
+        }
+    }
+
+    public void doCleanup() {
+        long now = System.currentTimeMillis();
+        for (Map.Entry<SubscriptionKey, DurableTopicSubscription> entry : durableSubscriptions.entrySet()) {
+            DurableTopicSubscription sub = entry.getValue();
+            if (!sub.isActive()) {
+               long offline = sub.getOfflineTimestamp();
+                if (offline != -1 && now - offline >= broker.getBrokerService().getOfflineDurableSubscriberTimeout()) {
+                    LOG.info("Destroying durable subscriber due to inactivity: " + sub);
+                    try {
+                        RemoveSubscriptionInfo info = new RemoveSubscriptionInfo();
+                        info.setClientId(entry.getKey().getClientId());
+                        info.setSubscriptionName(entry.getKey().getSubscriptionName());
+                        ConnectionContext context = new ConnectionContext();
+                        context.setBroker(broker);
+                        context.setClientId(entry.getKey().getClientId());
+                        removeSubscription(context, info);
+                    } catch (Exception e) {
+                        LOG.error("Failed to remove inactive durable subscriber", e);
+                    }
+                }
+            }
+        }
     }
 
     @Override
