@@ -324,7 +324,13 @@ public class TransportConnector implements Connector, BrokerServiceAware {
 
     protected DiscoveryAgent createDiscoveryAgent() throws IOException {
         if (discoveryUri != null) {
-            return DiscoveryAgentFactory.createDiscoveryAgent(discoveryUri);
+            DiscoveryAgent agent = DiscoveryAgentFactory.createDiscoveryAgent(discoveryUri);
+
+            if( agent!=null && agent instanceof BrokerServiceAware ) {
+                ((BrokerServiceAware)agent).setBrokerService(brokerService);
+            }
+
+            return agent;
         }
         return null;
     }
