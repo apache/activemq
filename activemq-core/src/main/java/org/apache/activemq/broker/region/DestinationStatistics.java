@@ -24,8 +24,8 @@ import org.apache.activemq.management.TimeStatisticImpl;
 
 /**
  * The J2EE Statistics for the a Destination.
- * 
- * 
+ *
+ *
  */
 public class DestinationStatistics extends StatsImpl {
 
@@ -47,19 +47,20 @@ public class DestinationStatistics extends StatsImpl {
         dequeues = new CountStatisticImpl("dequeues", "The number of messages that have been acknowledged from the destination");
         inflight = new CountStatisticImpl("inflight", "The number of messages dispatched but awaiting acknowledgement");
         expired = new CountStatisticImpl("expired", "The number of messages that have expired");
-        
+
         consumers = new CountStatisticImpl("consumers", "The number of consumers that that are subscribing to messages from the destination");
         consumers.setDoReset(false);
         producers = new CountStatisticImpl("producers", "The number of producers that that are publishing messages to the destination");
         producers.setDoReset(false);
         messages = new CountStatisticImpl("messages", "The number of messages that that are being held by the destination");
+        messages.setDoReset(false);
         messagesCached = new PollCountStatisticImpl("messagesCached", "The number of messages that are held in the destination's memory cache");
         processTime = new TimeStatisticImpl("processTime", "information around length of time messages are held by a destination");
         addStatistic("enqueues", enqueues);
         addStatistic("dispatched", dispatched);
         addStatistic("dequeues", dequeues);
         addStatistic("inflight", inflight);
-        addStatistic("expired", expired);  
+        addStatistic("expired", expired);
         addStatistic("consumers", consumers);
         addStatistic("producers", producers);
         addStatistic("messages", messages);
@@ -74,7 +75,7 @@ public class DestinationStatistics extends StatsImpl {
     public CountStatisticImpl getDequeues() {
         return dequeues;
     }
-    
+
     public CountStatisticImpl getInflight() {
         return inflight;
     }
@@ -86,7 +87,7 @@ public class DestinationStatistics extends StatsImpl {
     public CountStatisticImpl getConsumers() {
         return consumers;
     }
-    
+
     public CountStatisticImpl getProducers() {
         return producers;
     }
