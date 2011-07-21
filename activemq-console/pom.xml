@@ -92,6 +92,34 @@
       <artifactId>xbean-spring</artifactId>
     </dependency>
 
+
+	<!-- needed for TestPurgeCommand, but not for compile. -->
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-context</artifactId>
+      <scope>test</scope>
+    </dependency>    
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-log4j12</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>log4j</groupId>
+      <artifactId>log4j</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.derby</groupId>
+      <artifactId>derby</artifactId>
+      <scope>test</scope>
+    </dependency>
+
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
@@ -141,8 +169,26 @@
           <forkMode>pertest</forkMode>
           <childDelegation>false</childDelegation>
           <useFile>true</useFile>          
+           <systemProperties>
+            <property>
+              <name>org.apache.activemq.default.directory.prefix</name>
+              <value>target/</value>
+            </property>
+            <!-- Uncomment the following if you want to configure custom logging (using src/test/resources/log4j.properties)
+                 while running mvn:test
+                 Note: if you want to see log messages on the console window remove
+                       "redirectTestOutputToFile" from the parent pom
+            -->
+            <!--           
+            <property>
+              <name>log4j.configuration</name>
+              <value>file:target/test-classes/log4j.properties</value>
+            </property>
+            -->
+          </systemProperties>
+
           <includes>
-            <include>**/*Test.*</include>
+            <include>**/*Test*</include>
           </includes>
         </configuration>
       </plugin>

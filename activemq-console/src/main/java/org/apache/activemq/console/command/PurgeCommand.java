@@ -22,11 +22,13 @@ import java.util.List;
 import java.util.StringTokenizer;
 
 import javax.management.MBeanServerConnection;
+import javax.management.MBeanServerInvocationHandler;
 import javax.management.ObjectInstance;
 import javax.management.ObjectName;
 import javax.management.openmbean.CompositeData;
 import javax.management.remote.JMXConnector;
 
+import org.apache.activemq.broker.jmx.QueueViewMBean;
 import org.apache.activemq.console.util.JmxMBeansUtil;
 
 public class PurgeCommand extends AbstractJmxCommand {
@@ -84,8 +86,13 @@ public class PurgeCommand extends AbstractJmxCommand {
                     if (queryAddObjects.isEmpty()) {
                         purgeQueue(queueName);
                     } else {
-                        List messages = JmxMBeansUtil.createMessageQueryFilter(createJmxConnection(), queueName).query(queryAddObjects);
-                        purgeMessages(queueName, messages);
+                        QueueViewMBean proxy = (QueueViewMBean) MBeanServerInvocationHandler.newProxyInstance(createJmxConnection(), queueName, QueueViewMBean.class, true);
+                        int removed = 0;
+                        for (String remove : queryAddObjects) {
+                            removed = proxy.removeMatchingMessages(remove);
+                            context.printInfo("Removed: " + removed
+                                    + " messages for msgsel" + remove);
+                        }
                     }
                 }
             }
@@ -104,25 +111,6 @@ public class PurgeCommand extends AbstractJmxCommand {
     public void purgeQueue(ObjectName queue) throws Exception {
         context.printInfo("Purging all messages in queue: " + queue.getKeyProperty("Destination"));
         createJmxConnection().invoke(queue, "purge", new Object[] {}, new String[] {});
-    }
-
-    /**
-     * Purge selected messages in the queue
-     * 
-     * @param queue - ObjectName of the queue to purge the messages from
-     * @param messages - List of messages to purge
-     * @throws Exception
-     */
-    public void purgeMessages(ObjectName queue, List messages) throws Exception {
-        Object[] param = new Object[1];
-        for (Iterator i = messages.iterator(); i.hasNext();) {
-            CompositeData msg = (CompositeData)i.next();
-            param[0] = "" + msg.get("JMSMessageID");
-            context.printInfo("Removing message: " + param[0] + " from queue: " + queue.getKeyProperty("Destination"));
-            createJmxConnection().invoke(queue, "removeMessage", param, new String[] {
-                "java.lang.String"
-            });
-        }
     }
 
     /**
