@@ -18,8 +18,6 @@ package org.apache.activemq.usecases;
 
 import static org.junit.Assert.assertEquals;
 
-import java.util.List;
-
 import javax.jms.DeliveryMode;
 import javax.jms.JMSException;
 import javax.jms.Message;
@@ -31,6 +29,7 @@ import javax.jms.QueueSession;
 import javax.jms.Session;
 import javax.jms.TextMessage;
 import javax.management.MBeanServerConnection;
+import javax.management.MBeanServerInvocationHandler;
 import javax.management.ObjectName;
 import javax.management.remote.JMXConnector;
 import javax.management.remote.JMXConnectorFactory;
@@ -38,6 +37,7 @@ import javax.management.remote.JMXServiceURL;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.jmx.QueueViewMBean;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -47,6 +47,7 @@ import org.slf4j.LoggerFactory;
 public class JMXRemoveQueueThenSendIgnoredTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(JMXRemoveQueueThenSendIgnoredTest.class);
+    private static final String domain = "org.apache.activemq";
 
     private BrokerService brokerService;
     private MessageProducer producer;
@@ -132,10 +133,13 @@ public class JMXRemoveQueueThenSendIgnoredTest {
     private int numberOfMessages() throws Exception {
         JMXConnector jmxConnector = JMXConnectorFactory.connect(new JMXServiceURL("service:jmx:rmi:///jndi/rmi://localhost:1099/jmxrmi"));
         MBeanServerConnection mbeanServerConnection = jmxConnector.getMBeanServerConnection();
-        String beanId = "org.apache.activemq:BrokerName=dev,Type=Queue,Destination=myqueue";
-        List<?> object = (List<?>) mbeanServerConnection.invoke(new ObjectName(beanId), "browseMessages", null, null);
+        ObjectName queueViewMBeanName = new ObjectName(
+            domain + ":Type=Queue,Destination=myqueue,BrokerName=dev");
+        QueueViewMBean queue = (QueueViewMBean)MBeanServerInvocationHandler.newProxyInstance(
+                mbeanServerConnection, queueViewMBeanName, QueueViewMBean.class, true);
+        long size = queue.getQueueSize();
         jmxConnector.close();
-        return object.size();
+        return (int)size;
     }
 
     private void removeQueue() throws Exception {
