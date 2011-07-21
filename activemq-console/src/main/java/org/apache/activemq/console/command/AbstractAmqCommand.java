@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.console.command;
 
+import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -31,6 +32,7 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 public abstract class AbstractAmqCommand extends AbstractCommand {
     private URI brokerUrl;
     private ConnectionFactory factory;
+    private String factoryClassString;
     private final List<Connection> connections = new ArrayList<Connection>();
 
     /**
@@ -48,11 +50,7 @@ public abstract class AbstractAmqCommand extends AbstractCommand {
             return null;
         }
 
-        if (factory == null) {
-            factory = new ActiveMQConnectionFactory(getBrokerUrl());
-        }
-
-        Connection conn = factory.createConnection();
+        Connection conn = getFactory().createConnection();
         connections.add(conn);
 
         return conn;
@@ -75,11 +73,7 @@ public abstract class AbstractAmqCommand extends AbstractCommand {
             return null;
         }
 
-        if (factory == null) {
-            factory = new ActiveMQConnectionFactory(getBrokerUrl());
-        }
-
-        Connection conn = factory.createConnection(username, password);
+        Connection conn = getFactory().createConnection(username, password);
         connections.add(conn);
         conn.start();
 
@@ -134,6 +128,8 @@ public abstract class AbstractAmqCommand extends AbstractCommand {
                 tokens.clear();
                 return;
             }
+        } else if (token.equals("--factory")) {
+            factoryClassString = (String) tokens.remove(0);
         } else {
             // Let the super class handle the option
             super.handleOption(token, tokens);
@@ -167,4 +163,49 @@ public abstract class AbstractAmqCommand extends AbstractCommand {
     protected URI getBrokerUrl() {
         return brokerUrl;
     }
+
+	/**
+	 * @return the factory
+	 */
+	@SuppressWarnings("unchecked")
+    public ConnectionFactory getFactory() {
+        if (factory == null && factoryClassString != null) {
+            try {
+                Class klass = Class.forName(factoryClassString);
+                if (klass.isInstance(ConnectionFactory.class)) {
+                    Class<ConnectionFactory> factoryClass = (Class<ConnectionFactory>) klass;
+                    factory = factoryClass.getConstructor(URI.class)
+                            .newInstance(getBrokerUrl());
+                }
+            } catch (IllegalArgumentException e) {
+                e.printStackTrace();
+            } catch (SecurityException e) {
+                e.printStackTrace();
+            } catch (InstantiationException e) {
+                e.printStackTrace();
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+            } catch (InvocationTargetException e) {
+                e.printStackTrace();
+            } catch (NoSuchMethodException e) {
+                e.printStackTrace();
+            } catch (ClassNotFoundException e) {
+                e.printStackTrace();
+            }
+        }
+
+        // Preserve the fallback case, if someone did specify a bad class, let them realize when things don't work.
+        if (factory == null) {
+            factory = new ActiveMQConnectionFactory(getBrokerUrl());
+        }
+
+        return factory;
+    }
+
+	/**
+	 * @param factory the factory to set
+	 */
+	public void setFactory(ConnectionFactory factory) {
+		this.factory = factory;
+	}
 }
