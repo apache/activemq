@@ -26,14 +26,10 @@ import java.nio.channels.WritableByteChannel;
 import org.apache.activemq.transport.tcp.TimeStampStream;
 
 import javax.net.ssl.SSLEngine;
-import javax.net.ssl.SSLEngineResult;
 
 /**
  * An optimized buffered outputstream for Tcp
- * 
- * 
  */
-
 public class NIOOutputStream extends OutputStream implements TimeStampStream {
 
     private static final int BUFFER_SIZE = 8192;
@@ -50,7 +46,7 @@ public class NIOOutputStream extends OutputStream implements TimeStampStream {
 
     /**
      * Constructor
-     * 
+     *
      * @param out
      */
     public NIOOutputStream(WritableByteChannel out) {
@@ -60,7 +56,7 @@ public class NIOOutputStream extends OutputStream implements TimeStampStream {
     /**
      * Creates a new buffered output stream to write data to the specified
      * underlying output stream with the specified buffer size.
-     * 
+     *
      * @param out the underlying output stream.
      * @param size the buffer size.
      * @throws IllegalArgumentException if size <= 0.
@@ -76,7 +72,7 @@ public class NIOOutputStream extends OutputStream implements TimeStampStream {
 
     /**
      * write a byte on to the stream
-     * 
+     *
      * @param b - byte to write
      * @throws IOException
      */
@@ -90,7 +86,7 @@ public class NIOOutputStream extends OutputStream implements TimeStampStream {
 
     /**
      * write a byte array to the stream
-     * 
+     *
      * @param b the byte buffer
      * @param off the offset into the buffer
      * @param len the length of data to write
@@ -113,7 +109,7 @@ public class NIOOutputStream extends OutputStream implements TimeStampStream {
      * flush the data to the output stream This doesn't call flush on the
      * underlying outputstream, because Tcp is particularly efficent at doing
      * this itself ....
-     * 
+     *
      * @throws IOException
      */
     public void flush() throws IOException {
@@ -127,7 +123,7 @@ public class NIOOutputStream extends OutputStream implements TimeStampStream {
 
     /**
      * close this stream
-     * 
+     *
      * @throws IOException
      */
     public void close() throws IOException {
@@ -137,7 +133,7 @@ public class NIOOutputStream extends OutputStream implements TimeStampStream {
 
     /**
      * Checks that the stream has not been closed
-     * 
+     *
      * @throws IOException
      */
     protected void checkClosed() throws IOException {
@@ -159,10 +155,10 @@ public class NIOOutputStream extends OutputStream implements TimeStampStream {
             plain = ByteBuffer.allocate(engine.getSession().getPacketBufferSize());
             plain.clear();
             engine.wrap(data, plain);
+            plain.flip();
         }  else {
             plain = data;
         }
-        plain.flip();
         int remaining = plain.remaining();
         int lastRemaining = remaining - 1;
         long delay = 1;
@@ -197,15 +193,15 @@ public class NIOOutputStream extends OutputStream implements TimeStampStream {
             writeTimestamp = -1;
         }
     }
-    
-    
+
+
     /* (non-Javadoc)
      * @see org.apache.activemq.transport.tcp.TimeStampStream#isWriting()
      */
     public boolean isWriting() {
         return writeTimestamp > 0;
     }
-    
+
     /* (non-Javadoc)
      * @see org.apache.activemq.transport.tcp.TimeStampStream#getWriteTimestamp()
      */
