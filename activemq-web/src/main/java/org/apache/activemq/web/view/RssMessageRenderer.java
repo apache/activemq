@@ -117,7 +117,7 @@ public class RssMessageRenderer extends SimpleMessageRenderer {
         entry.setTitle(title);
         String link = request.getRequestURI() + "?msgId=" + title;
         entry.setLink(link);
-        entry.setPublishedDate(new Date());
+        entry.setPublishedDate(new Date(message.getJMSTimestamp()));
         return entry;
     }
 
