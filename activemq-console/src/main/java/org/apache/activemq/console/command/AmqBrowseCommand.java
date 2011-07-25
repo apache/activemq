@@ -114,11 +114,11 @@ public class AmqBrowseCommand extends AbstractAmqCommand {
                 }
 
                 // Query for the messages to view
-                List addMsgs = AmqMessagesUtil.getMessages(getBrokerUrl(), dest, queryAddObjects);
+                List addMsgs = AmqMessagesUtil.getMessages(getConnectionFactory(), dest, queryAddObjects);
 
                 // Query for the messages to remove from view
                 if (querySubObjects.size() > 0) {
-                    List subMsgs = AmqMessagesUtil.getMessages(getBrokerUrl(), dest, querySubObjects);
+                    List subMsgs = AmqMessagesUtil.getMessages(getConnectionFactory(), dest, querySubObjects);
                     addMsgs.removeAll(subMsgs);
                 }
 

@@ -22,6 +22,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import javax.jms.Connection;
+import javax.jms.ConnectionFactory;
 import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.QueueBrowser;
@@ -36,10 +37,12 @@ public class AmqMessagesQueryFilter extends AbstractQueryFilter {
     private URI brokerUrl;
     private Destination destination;
 
+    private ConnectionFactory connectionFactory;
+
     /**
      * Create a JMS message query filter
-     * 
-     * @param brokerUrl - broker url to connect to
+     *
+     * @param brokerUrl   - broker url to connect to
      * @param destination - JMS destination to query
      */
     public AmqMessagesQueryFilter(URI brokerUrl, Destination destination) {
@@ -49,8 +52,20 @@ public class AmqMessagesQueryFilter extends AbstractQueryFilter {
     }
 
     /**
+     * Create a JMS message query filter
+     *
+     * @param brokerUrl   - broker url to connect to
+     * @param destination - JMS destination to query
+     */
+    public AmqMessagesQueryFilter(ConnectionFactory connectionFactory, Destination destination) {
+        super(null);
+        this.destination = destination;
+        this.connectionFactory = connectionFactory;
+    }
+
+    /**
      * Queries the specified destination using the message selector format query
-     * 
+     *
      * @param queries - message selector queries
      * @return list messages that matches the selector
      * @throws Exception
@@ -59,7 +74,7 @@ public class AmqMessagesQueryFilter extends AbstractQueryFilter {
         String selector = "";
 
         // Convert to message selector
-        for (Iterator i = queries.iterator(); i.hasNext();) {
+        for (Iterator i = queries.iterator(); i.hasNext(); ) {
             selector = selector + "(" + i.next().toString() + ") AND ";
         }
 
@@ -69,22 +84,22 @@ public class AmqMessagesQueryFilter extends AbstractQueryFilter {
         }
 
         if (destination instanceof ActiveMQQueue) {
-            return queryMessages((ActiveMQQueue)destination, selector);
+            return queryMessages((ActiveMQQueue) destination, selector);
         } else {
-            return queryMessages((ActiveMQTopic)destination, selector);
+            return queryMessages((ActiveMQTopic) destination, selector);
         }
     }
 
     /**
      * Query the messages of a queue destination using a queue browser
-     * 
-     * @param queue - queue destination
+     *
+     * @param queue    - queue destination
      * @param selector - message selector
      * @return list of messages that matches the selector
      * @throws Exception
      */
     protected List queryMessages(ActiveMQQueue queue, String selector) throws Exception {
-        Connection conn = createConnection(getBrokerUrl());
+        Connection conn = createConnection();
 
         Session sess = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
         QueueBrowser browser = sess.createBrowser(queue, selector);
@@ -98,8 +113,8 @@ public class AmqMessagesQueryFilter extends AbstractQueryFilter {
 
     /**
      * Query the messages of a topic destination using a message consumer
-     * 
-     * @param topic - topic destination
+     *
+     * @param topic    - topic destination
      * @param selector - message selector
      * @return list of messages that matches the selector
      * @throws Exception
@@ -114,20 +129,39 @@ public class AmqMessagesQueryFilter extends AbstractQueryFilter {
 
     /**
      * Create and start a JMS connection
-     * 
+     *
      * @param brokerUrl - broker url to connect to.
      * @return JMS connection
      * @throws JMSException
+     * @deprecated Use createConnection() instead, and pass the url to the ConnectionFactory when it's created.
      */
+    @Deprecated
     protected Connection createConnection(URI brokerUrl) throws JMSException {
-        Connection conn = (new ActiveMQConnectionFactory(brokerUrl)).createConnection();
+        // maintain old behaviour, when called this way.
+        connectionFactory = (new ActiveMQConnectionFactory(brokerUrl));
+        return createConnection();
+    }
+
+    /**
+     * Create and start a JMS connection
+     *
+     * @return JMS connection
+     * @throws JMSException
+     */
+    protected Connection createConnection() throws JMSException {
+        // maintain old behaviour, when called either way.
+        if (null == connectionFactory)
+            connectionFactory = (new ActiveMQConnectionFactory(getBrokerUrl()));
+
+        Connection conn = connectionFactory.createConnection();
         conn.start();
         return conn;
     }
 
+
     /**
      * Get the broker url being used.
-     * 
+     *
      * @return broker url
      */
     public URI getBrokerUrl() {
@@ -136,7 +170,7 @@ public class AmqMessagesQueryFilter extends AbstractQueryFilter {
 
     /**
      * Set the broker url to use.
-     * 
+     *
      * @param brokerUrl - broker url
      */
     public void setBrokerUrl(URI brokerUrl) {
@@ -145,7 +179,7 @@ public class AmqMessagesQueryFilter extends AbstractQueryFilter {
 
     /**
      * Get the destination being used.
-     * 
+     *
      * @return - JMS destination
      */
     public Destination getDestination() {
@@ -154,7 +188,7 @@ public class AmqMessagesQueryFilter extends AbstractQueryFilter {
 
     /**
      * Set the destination to use.
-     * 
+     *
      * @param destination - JMS destination
      */
     public void setDestination(Destination destination) {

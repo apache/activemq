@@ -20,6 +20,7 @@ import java.net.URI;
 import java.util.List;
 import java.util.Set;
 
+import javax.jms.ConnectionFactory;
 import javax.jms.Destination;
 
 import org.apache.activemq.console.filter.AmqMessagesQueryFilter;
@@ -47,8 +48,16 @@ public final class AmqMessagesUtil {
         return createMessageQueryFilter(brokerUrl, dest).query(selector);
     }
 
+    public static List getMessages(ConnectionFactory connectionFactory, Destination dest, String selector) throws Exception {
+        return createMessageQueryFilter(connectionFactory, dest).query(selector);
+    }
+
     public static List getMessages(URI brokerUrl, Destination dest, List selectors) throws Exception {
         return createMessageQueryFilter(brokerUrl, dest).query(selectors);
+    }
+
+    public static List getMessages(ConnectionFactory connectionFactory, Destination dest, List selectors) throws Exception {
+        return createMessageQueryFilter(connectionFactory, dest).query(selectors);
     }
 
     public static List filterMessagesView(List messages, Set groupViews, Set attributeViews) throws Exception {
@@ -57,5 +66,9 @@ public final class AmqMessagesUtil {
 
     public static QueryFilter createMessageQueryFilter(URI brokerUrl, Destination dest) {
         return new WildcardToMsgSelectorTransformFilter(new AmqMessagesQueryFilter(brokerUrl, dest));
+    }
+
+    public static QueryFilter createMessageQueryFilter(ConnectionFactory connectionFactory, Destination dest) {
+        return new WildcardToMsgSelectorTransformFilter(new AmqMessagesQueryFilter(connectionFactory, dest));
     }
 }

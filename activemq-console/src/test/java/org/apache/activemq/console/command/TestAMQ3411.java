@@ -23,7 +23,6 @@ import java.util.List;
 
 import junit.framework.TestCase;
 
-import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.console.CommandContext;
 import org.apache.activemq.console.formatter.CommandShellOutputFormatter;
@@ -32,7 +31,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.support.AbstractApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
-public class TestAMQ3410 extends TestCase {
+public class TestAMQ3411 extends TestCase {
 	@SuppressWarnings("unused")
 	private static final Logger LOG = LoggerFactory
 			.getLogger(TestPurgeCommand.class);
@@ -41,8 +40,8 @@ public class TestAMQ3410 extends TestCase {
 
 	private static final Collection<String> DEFAULT_TOKENS = Arrays
 			.asList(new String[] { "FOO.QUEUE" });
-
 	protected AbstractApplicationContext context;
+	protected static final String origPassword = "ABCDEFG";
 
 	protected void setUp() throws Exception {
 		super.setUp();
@@ -76,8 +75,38 @@ public class TestAMQ3410 extends TestCase {
 		tokens.addAll(DEFAULT_TOKENS);
 
 		command.execute(tokens);
-		assertNotNull(command.getConnectionFactory());
-		assertTrue(command.getConnectionFactory() instanceof ActiveMQConnectionFactory);
+
+		assertNotNull(command.getPasswordFactory());
+		assertTrue(command.getPasswordFactory() instanceof DefaultPasswordFactory);
+		assertNull(command.getPassword());
+	}
+
+	public void testUsernamePasswordSet() throws Exception {
+		AmqBrowseCommand command = new AmqBrowseCommand();
+		CommandContext context = new CommandContext();
+
+		String username = "user";
+		String password = "password";
+
+		context.setFormatter(new CommandShellOutputFormatter(System.out));
+
+		command.setCommandContext(context);
+
+		List<String> tokens = new ArrayList<String>();
+		tokens.addAll(DEFAULT_OPTIONS);
+		tokens.add("--password");
+		tokens.add(password);
+
+		tokens.add("--user");
+		tokens.add(username);
+		tokens.addAll(DEFAULT_TOKENS);
+
+		command.execute(tokens);
+
+		assertNotNull(command.getPasswordFactory());
+		assertTrue(command.getPasswordFactory() instanceof DefaultPasswordFactory);
+		assertEquals(password, command.getPassword());
+		assertEquals(username, command.getUsername());
 	}
 
 	public void testFactorySet() throws Exception {
@@ -90,16 +119,18 @@ public class TestAMQ3410 extends TestCase {
 
 		List<String> tokens = new ArrayList<String>();
 		tokens.addAll(DEFAULT_OPTIONS);
-		tokens.add("--factory");
-		tokens.add(DummyConnectionFactory.class.getCanonicalName());
+		tokens.add("--passwordFactory");
+		tokens.add(LowercasingPasswordFactory.class.getCanonicalName());
+		tokens.add("--password");
+		tokens.add(origPassword);
 		tokens.addAll(DEFAULT_TOKENS);
 
 		command.execute(tokens);
+		assertNotNull(command.getPasswordFactory());
+		assertTrue(command.getPasswordFactory() instanceof LowercasingPasswordFactory);
 
-		assertNotNull(command.getConnectionFactory());
-		assertTrue("wrong instance returned: "
-				+ command.getConnectionFactory().getClass().getName(), command
-				.getConnectionFactory() instanceof DummyConnectionFactory);
+		// validate that the factory is indeed being used for the password.
+		assertEquals(origPassword.toLowerCase(), command.getPassword());
 	}
 
 	public void testFactorySetWrong1() throws Exception {
@@ -112,19 +143,24 @@ public class TestAMQ3410 extends TestCase {
 
 		List<String> tokens = new ArrayList<String>();
 		tokens.addAll(DEFAULT_OPTIONS);
-		tokens.add("--factory");
+		tokens.add("--passwordFactory");
 		tokens
-				.add("org.apache.activemq.console.command.TestAMQ3410.DoesntExistFactory");
+				.add("org.apache.activemq.console.command.TestAMQ3411.DoesntExistFactory");
+		tokens.add("--password");
+		tokens.add(origPassword);
+
 		tokens.addAll(DEFAULT_TOKENS);
 
 		try {
-		command.execute(tokens);
-		} catch (Throwable cause) {
+			command.execute(tokens);
+		} catch (Throwable e) {
+			Throwable cause = e;
 			while (null != cause) {
 				if (cause instanceof java.lang.ClassNotFoundException)
 					return;
 				cause = cause.getCause();
-	}
+			}
+			assertFalse(e.toString(), true);
 		}
 		assertFalse("No exception caught", true);
 	}
@@ -139,8 +175,10 @@ public class TestAMQ3410 extends TestCase {
 
 		List<String> tokens = new ArrayList<String>();
 		tokens.addAll(DEFAULT_OPTIONS);
-		tokens.add("--factory");
-		tokens.add(InvalidConnectionFactory.class.getCanonicalName());
+		tokens.add("--passwordFactory");
+		tokens.add("java.lang.Object");
+		tokens.add("--password");
+		tokens.add(origPassword);
 		tokens.addAll(DEFAULT_TOKENS);
 
 		try {
@@ -148,7 +186,7 @@ public class TestAMQ3410 extends TestCase {
 		} catch (Throwable e) {
 			Throwable cause = e;
 			while (null != cause) {
-				if (cause instanceof java.lang.NoSuchMethodException)
+				if (cause instanceof java.lang.ClassCastException)
 					return;
 				cause = cause.getCause();
 			}
@@ -156,31 +194,4 @@ public class TestAMQ3410 extends TestCase {
 		}
 		assertFalse("No exception caught", true);
 	}
-
-	public void testFactorySetWrong3() throws Exception {
-		AmqBrowseCommand command = new AmqBrowseCommand();
-		CommandContext context = new CommandContext();
-
-		context.setFormatter(new CommandShellOutputFormatter(System.out));
-
-		command.setCommandContext(context);
-
-		List<String> tokens = new ArrayList<String>();
-		tokens.addAll(DEFAULT_OPTIONS);
-		tokens.add("--factory");
-		tokens.add("java.lang.Object");
-		tokens.addAll(DEFAULT_TOKENS);
-
-		try {
-		command.execute(tokens);
-		} catch (Throwable cause) {
-			while (null != cause) {
-				if (cause instanceof java.lang.NoSuchMethodException)
-					return;
-				cause = cause.getCause();
-	}
-		}
-		assertFalse(true);
-	}
-
 }

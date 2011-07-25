@@ -33,7 +33,11 @@ public abstract class AbstractAmqCommand extends AbstractCommand {
     private URI brokerUrl;
     private ConnectionFactory factory;
     private String factoryClassString;
+    private String username;
+    private String password;
+    private PasswordFactory passwordFactory;
     private final List<Connection> connections = new ArrayList<Connection>();
+    private String passwordFactoryClassString;
 
     /**
      * Establishes a connection to the remote broker specified by the broker
@@ -43,17 +47,7 @@ public abstract class AbstractAmqCommand extends AbstractCommand {
      * @throws JMSException
      */
     protected Connection createConnection() throws JMSException {
-        if (getBrokerUrl() == null) {
-            context
-                .printException(new IllegalStateException("You must specify a broker "
-                                                          + "URL to connect to using the --amqurl option."));
-            return null;
-        }
-
-        Connection conn = getFactory().createConnection();
-        connections.add(conn);
-
-        return conn;
+        return createConnection(getUsername(), getPassword());
     }
 
     /**
@@ -73,7 +67,14 @@ public abstract class AbstractAmqCommand extends AbstractCommand {
             return null;
         }
 
-        Connection conn = getFactory().createConnection(username, password);
+        ConnectionFactory factory = getConnectionFactory();
+        Connection conn;
+
+        if (null == username && null == password)
+            conn = factory.createConnection();
+        else
+            conn = factory.createConnection(username, password);
+
         connections.add(conn);
         conn.start();
 
@@ -130,6 +131,12 @@ public abstract class AbstractAmqCommand extends AbstractCommand {
             }
         } else if (token.equals("--factory")) {
             factoryClassString = (String) tokens.remove(0);
+        } else if (token.equals("--passwordFactory")) {
+            passwordFactoryClassString = (String) tokens.remove(0);
+        } else if (token.equals("--password")) {
+            password = (String) tokens.remove(0);
+        } else if (token.equals("--user")) {
+            username = (String) tokens.remove(0);
         } else {
             // Let the super class handle the option
             super.handleOption(token, tokens);
@@ -164,48 +171,104 @@ public abstract class AbstractAmqCommand extends AbstractCommand {
         return brokerUrl;
     }
 
-	/**
-	 * @return the factory
-	 */
-	@SuppressWarnings("unchecked")
-    public ConnectionFactory getFactory() {
+    /**
+     * @return the factory
+     */
+    @SuppressWarnings("unchecked")
+    public ConnectionFactory getConnectionFactory() {
         if (factory == null && factoryClassString != null) {
             try {
                 Class klass = Class.forName(factoryClassString);
-                if (klass.isInstance(ConnectionFactory.class)) {
-                    Class<ConnectionFactory> factoryClass = (Class<ConnectionFactory>) klass;
-                    factory = factoryClass.getConstructor(URI.class)
-                            .newInstance(getBrokerUrl());
+
+                if (getUsername() != null || getPassword() != null) {
+                    factory = (ConnectionFactory) klass.getConstructor(
+                            String.class, String.class, URI.class).newInstance(
+                            getUsername(), getPassword(), getBrokerUrl());
+                } else {
+                    factory = (ConnectionFactory) klass.getConstructor(
+                            URI.class).newInstance(getBrokerUrl());
                 }
-            } catch (IllegalArgumentException e) {
-                e.printStackTrace();
-            } catch (SecurityException e) {
-                e.printStackTrace();
-            } catch (InstantiationException e) {
-                e.printStackTrace();
-            } catch (IllegalAccessException e) {
-                e.printStackTrace();
-            } catch (InvocationTargetException e) {
-                e.printStackTrace();
-            } catch (NoSuchMethodException e) {
-                e.printStackTrace();
-            } catch (ClassNotFoundException e) {
-                e.printStackTrace();
+            } catch (Exception e) {
+                throw new RuntimeException(e);
             }
         }
 
-        // Preserve the fallback case, if someone did specify a bad class, let them realize when things don't work.
         if (factory == null) {
-            factory = new ActiveMQConnectionFactory(getBrokerUrl());
+            if (getUsername() != null || getPassword() != null) {
+                factory = new ActiveMQConnectionFactory(getUsername(),
+                        getPassword(), getBrokerUrl());
+            } else {
+                factory = new ActiveMQConnectionFactory(getBrokerUrl());
+            }
         }
 
         return factory;
     }
 
-	/**
-	 * @param factory the factory to set
-	 */
-	public void setFactory(ConnectionFactory factory) {
-		this.factory = factory;
-	}
+    /**
+     * @return the username
+     */
+    public String getUsername() {
+        return username;
+    }
+
+    /**
+     * @param factory the factory to set
+     */
+    public void setFactory(ConnectionFactory factory) {
+        this.factory = factory;
+    }
+
+    /**
+     * @param username the username to set
+     */
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    /**
+     * @return the password
+     */
+    public String getPassword() {
+        if (null == password)
+            return null;
+
+        return getPasswordFactory().getPassword(password);
+    }
+
+    /**
+     * @param password the password to set
+     */
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    /**
+     * @return the passwordFactory
+     */
+    @SuppressWarnings("unchecked")
+    public PasswordFactory getPasswordFactory() {
+        if (passwordFactory == null && passwordFactoryClassString != null) {
+            try {
+                Class klass = Class.forName(passwordFactoryClassString);
+                passwordFactory = (PasswordFactory) klass.newInstance();
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        // Preserve the fallback case, if someone did specify a bad class, let them realize when things don't work.
+        if (passwordFactory == null) {
+            passwordFactory = DefaultPasswordFactory.factory;
+        }
+
+        return passwordFactory;
+    }
+
+    /**
+     * @param passwordFactory the passwordFactory to set
+     */
+    public void setPasswordFactory(PasswordFactory passwordFactory) {
+        this.passwordFactory = passwordFactory;
+    }
 }

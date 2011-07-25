@@ -246,8 +246,6 @@ public class TestPurgeCommand extends TestCase {
 
 			List<String> tokens = new ArrayList<String>();
 			tokens.add("--msgsel");
-//			String[] extras = MSG_SEL_WITH_PROPERTY.split(" ");
-//			tokens.addAll(Arrays.asList(extras));
 			tokens.add(MSG_SEL_WITH_PROPERTY);
 			
 			addMessages();
