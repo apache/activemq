@@ -315,8 +315,8 @@ public class InactivityMonitor extends TransportFilter {
                     WRITE_CHECK_TIMER = new Timer("InactivityMonitor WriteCheck",true);
                 }
                 CHECKER_COUNTER++;
-                WRITE_CHECK_TIMER.scheduleAtFixedRate(writeCheckerTask, initialDelayTime,writeCheckTime);
-                READ_CHECK_TIMER.scheduleAtFixedRate(readCheckerTask, initialDelayTime,readCheckTime);
+                WRITE_CHECK_TIMER.schedule(writeCheckerTask, initialDelayTime, writeCheckTime);
+                READ_CHECK_TIMER.schedule(readCheckerTask, initialDelayTime, readCheckTime);
             }
         }
     }
@@ -356,8 +356,8 @@ public class InactivityMonitor extends TransportFilter {
                 READ_CHECK_TIMER.purge();
                 CHECKER_COUNTER--;
                 if(CHECKER_COUNTER==0) {
-                    WRITE_CHECK_TIMER.cancel();
-                    READ_CHECK_TIMER.cancel();
+                  WRITE_CHECK_TIMER.cancel();
+                  READ_CHECK_TIMER.cancel();
                     WRITE_CHECK_TIMER = null;
                     READ_CHECK_TIMER = null;
                     ASYNC_TASKS.shutdownNow();
