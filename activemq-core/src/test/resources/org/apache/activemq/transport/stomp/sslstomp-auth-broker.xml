@@ -69,6 +69,7 @@
     
     <transportConnectors>
       <transportConnector name="stomp+ssl"   uri="stomp+ssl://localhost:61612"/>
+      <transportConnector name="stomp+nio+ssl"   uri="stomp+nio+ssl://localhost:61613"/>
     </transportConnectors>
 
     

@@ -28,6 +28,7 @@ import javax.net.SocketFactory;
 import javax.net.ssl.*;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.EOFException;
 import java.io.IOException;
 import java.net.Socket;
 import java.net.URI;
@@ -36,18 +37,18 @@ import java.nio.ByteBuffer;
 
 public class NIOSSLTransport extends NIOTransport  {
 
-    private boolean needClientAuth;
-    private boolean wantClientAuth;
-    private String[] enabledCipherSuites;
+    protected boolean needClientAuth;
+    protected boolean wantClientAuth;
+    protected String[] enabledCipherSuites;
 
     protected SSLContext sslContext;
     protected SSLEngine sslEngine;
     protected SSLSession sslSession;
 
 
-    boolean handshakeInProgress = false;
-    SSLEngineResult.Status status = null;
-    SSLEngineResult.HandshakeStatus handshakeStatus = null;
+    protected boolean handshakeInProgress = false;
+    protected SSLEngineResult.Status status = null;
+    protected SSLEngineResult.HandshakeStatus handshakeStatus = null;
 
     public NIOSSLTransport(WireFormat wireFormat, SocketFactory socketFactory, URI remoteLocation, URI localLocation) throws UnknownHostException, IOException {
         super(wireFormat, socketFactory, remoteLocation, localLocation);
@@ -90,11 +91,8 @@ public class NIOSSLTransport extends NIOTransport  {
             outputStream.setEngine(sslEngine);
             this.dataOut = new DataOutputStream(outputStream);
             this.buffOut = outputStream;
-
             sslEngine.beginHandshake();
             handshakeStatus = sslEngine.getHandshakeStatus();
-
-
             doHandshake();
 
         } catch (Exception e) {
@@ -125,8 +123,6 @@ public class NIOSSLTransport extends NIOTransport  {
           }
     }
 
-
-
     protected void serviceRead() {
         try {
             if (handshakeInProgress) {
@@ -136,62 +132,75 @@ public class NIOSSLTransport extends NIOTransport  {
             ByteBuffer plain = ByteBuffer.allocate(sslSession.getApplicationBufferSize());
             plain.position(plain.limit());
 
-            while (true) {
-                if (nextFrameSize == -1) {
-                    if (!plain.hasRemaining()) {
-                        plain.clear();
-                        int readCount = secureRead(plain);
-                        if (readCount == 0)
-                            break;
-                    }
-                    nextFrameSize = plain.getInt();
-                    if (wireFormat instanceof OpenWireFormat) {
-                        long maxFrameSize = ((OpenWireFormat)wireFormat).getMaxFrameSize();
-                        if (nextFrameSize > maxFrameSize) {
-                            throw new IOException("Frame size of " + (nextFrameSize / (1024 * 1024)) + " MB larger than max allowed " + (maxFrameSize / (1024 * 1024)) + " MB");
-                        }
-                    }
-                    currentBuffer = ByteBuffer.allocate(nextFrameSize + 4);
-                    currentBuffer.putInt(nextFrameSize);
-                    if (currentBuffer.hasRemaining()) {
-                        if (currentBuffer.remaining() >= plain.remaining()) {
-                            currentBuffer.put(plain);
-                        } else {
-                            byte[] fill = new byte[currentBuffer.remaining()];
-                            plain.get(fill);
-                            currentBuffer.put(fill);
-                        }
-                    }
+            while(true) {
+                if (!plain.hasRemaining()) {
 
-                    if (currentBuffer.hasRemaining()) {
-                        continue;
-                    } else {
-                        currentBuffer.flip();
-                        Object command = wireFormat.unmarshal(new DataInputStream(new NIOInputStream(currentBuffer)));
-                        doConsume((Command) command);
+                    plain.clear();
+                    int readCount = secureRead(plain);
 
-                        nextFrameSize = -1;
+
+                    if (readCount == 0)
+                        break;
+
+                    // channel is closed, cleanup
+                    if (readCount== -1) {
+                        onException(new EOFException());
+                        selection.close();
+                        break;
                     }
                 }
-            }
 
+                processCommand(plain);
+
+            }
         } catch (IOException e) {
             onException(e);
         } catch (Throwable e) {
             onException(IOExceptionSupport.create(e));
         }
-
     }
 
+    protected void processCommand(ByteBuffer plain) throws Exception {
+        nextFrameSize = plain.getInt();
+        if (wireFormat instanceof OpenWireFormat) {
+            long maxFrameSize = ((OpenWireFormat) wireFormat).getMaxFrameSize();
+            if (nextFrameSize > maxFrameSize) {
+                throw new IOException("Frame size of " + (nextFrameSize / (1024 * 1024)) + " MB larger than max allowed " + (maxFrameSize / (1024 * 1024)) + " MB");
+            }
+        }
+        currentBuffer = ByteBuffer.allocate(nextFrameSize + 4);
+        currentBuffer.putInt(nextFrameSize);
+        if (currentBuffer.hasRemaining()) {
+            if (currentBuffer.remaining() >= plain.remaining()) {
+                currentBuffer.put(plain);
+            } else {
+                byte[] fill = new byte[currentBuffer.remaining()];
+                plain.get(fill);
+                currentBuffer.put(fill);
+            }
+        }
 
+        if (currentBuffer.hasRemaining()) {
+            return;
+        } else {
+            currentBuffer.flip();
+            Object command = wireFormat.unmarshal(new DataInputStream(new NIOInputStream(currentBuffer)));
+            doConsume((Command) command);
+            nextFrameSize = -1;
+        }
+    }
 
-    private int secureRead(ByteBuffer plain) throws Exception {
-        int bytesRead = channel.read(inputBuffer);
-        if (bytesRead == -1) {
-            sslEngine.closeInbound();
-            if (inputBuffer.position() == 0 ||
-                    status == SSLEngineResult.Status.BUFFER_UNDERFLOW) {
-                return -1;
+    protected int secureRead(ByteBuffer plain) throws Exception {
+
+        if (!(inputBuffer.position() != 0 && inputBuffer.hasRemaining())) {
+            int bytesRead = channel.read(inputBuffer);
+
+            if (bytesRead == -1) {
+                sslEngine.closeInbound();
+                if (inputBuffer.position() == 0 ||
+                        status == SSLEngineResult.Status.BUFFER_UNDERFLOW) {
+                    return -1;
+                }
             }
         }
 
@@ -206,11 +215,12 @@ public class NIOSSLTransport extends NIOTransport  {
                 res.bytesProduced() == 0);
 
         if (res.getHandshakeStatus() == SSLEngineResult.HandshakeStatus.FINISHED) {
-            finishHandshake();
+           finishHandshake();
         }
 
         status = res.getStatus();
         handshakeStatus = res.getHandshakeStatus();
+
 
         //TODO deal with BUFFER_OVERFLOW
 
@@ -253,6 +263,7 @@ public class NIOSSLTransport extends NIOTransport  {
     protected void doStop(ServiceStopper stopper) throws Exception {
         if (channel != null) {
             channel.close();
+            channel = null;
         }
         super.doStop(stopper);
     }

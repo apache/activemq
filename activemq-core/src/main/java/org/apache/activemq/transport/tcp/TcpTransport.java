@@ -687,4 +687,8 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
         this.typeOfServiceChosen = false;
         return true;
     }
+
+    public WireFormat getWireFormat() {
+        return wireFormat;
+    }
 }

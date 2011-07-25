@@ -111,6 +111,7 @@ public class StompTest extends CombinationTestSupport {
         }
         broker = BrokerFactory.createBroker(new URI(confUri));
         broker.start();
+        broker.waitUntilStarted();
 
         stompConnect();
 
@@ -143,6 +144,7 @@ public class StompTest extends CombinationTestSupport {
             // Some tests explicitly disconnect from stomp so can ignore
         } finally {
             broker.stop();
+            broker.waitUntilStopped();
         }
     }
 

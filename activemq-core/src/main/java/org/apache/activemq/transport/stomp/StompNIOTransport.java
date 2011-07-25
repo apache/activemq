@@ -54,13 +54,7 @@ public class StompNIOTransport extends TcpTransport {
     private SelectorSelection selection;
 
     private ByteBuffer inputBuffer;
-    ByteArrayOutputStream currentCommand = new ByteArrayOutputStream();
-    boolean processedHeaders = false;
-    String action;
-    HashMap<String, String> headers;
-    int contentLength = -1;
-    int readLength = 0;
-    int previousByte = -1;
+    StompCodec codec;
 
     public StompNIOTransport(WireFormat wireFormat, SocketFactory socketFactory, URI remoteLocation, URI localLocation) throws UnknownHostException, IOException {
         super(wireFormat, socketFactory, remoteLocation, localLocation);
@@ -93,6 +87,7 @@ public class StompNIOTransport extends TcpTransport {
         NIOOutputStream outPutStream = new NIOOutputStream(channel, 8 * 1024);
         this.dataOut = new DataOutputStream(outPutStream);
         this.buffOut = outPutStream;
+        codec = new StompCodec(this);
     }
 
     private void serviceRead() {
@@ -114,57 +109,9 @@ public class StompNIOTransport extends TcpTransport {
 
                inputBuffer.flip();
 
-               int b;
                ByteArrayInputStream input = new ByteArrayInputStream(inputBuffer.array());
+               codec.parse(input, readSize);
 
-               int i = 0;
-               while(i++ < readSize) {
-                   b = input.read();
-                   // skip repeating nulls
-                   if (!processedHeaders && previousByte == 0 && b == 0) {
-                       continue;
-                   }
-
-                   if (!processedHeaders) {
-                       currentCommand.write(b);
-                       // end of headers section, parse action and header
-                       if (previousByte == '\n' && b == '\n') {
-                           if (wireFormat instanceof StompWireFormat) {
-                               DataByteArrayInputStream data = new DataByteArrayInputStream(currentCommand.toByteArray());
-                               action = ((StompWireFormat)wireFormat).parseAction(data);
-                               headers = ((StompWireFormat)wireFormat).parseHeaders(data);
-                               String contentLengthHeader = headers.get(Stomp.Headers.CONTENT_LENGTH);
-                               if (contentLengthHeader != null) {
-                                   contentLength = ((StompWireFormat)wireFormat).parseContentLength(contentLengthHeader);
-                               } else {
-                                   contentLength = -1;
-                               }
-                           }
-                           processedHeaders = true;
-                           currentCommand.reset();
-                       }
-                   } else {
-
-                       if (contentLength == -1) {
-                           // end of command reached, unmarshal
-                           if (b == 0) {
-                               processCommand();
-                           } else {
-                               currentCommand.write(b);
-                           }
-                       } else {
-                           // read desired content length
-                           if (readLength++ == contentLength) {
-                               processCommand();
-                               readLength = 0;
-                           } else {
-                               currentCommand.write(b);
-                           }
-                       }
-                   }
-
-                   previousByte = b;
-               }
                // clear the buffer
                inputBuffer.clear();
 
@@ -174,14 +121,6 @@ public class StompNIOTransport extends TcpTransport {
         } catch (Throwable e) {
             onException(IOExceptionSupport.create(e));
         }
-    }
-
-    private void processCommand() throws Exception {
-        StompFrame frame = new StompFrame(action, headers, currentCommand.toByteArray());
-        doConsume(frame);
-        processedHeaders = false;
-        currentCommand.reset();
-        contentLength = -1;
     }
 
     protected void doStart() throws Exception {

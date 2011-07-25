@@ -128,6 +128,9 @@ public class NIOOutputStream extends OutputStream implements TimeStampStream {
      */
     public void close() throws IOException {
         super.close();
+        if (engine != null) {
+            engine.closeOutbound();
+        }
         closed = true;
     }
 
@@ -159,6 +162,7 @@ public class NIOOutputStream extends OutputStream implements TimeStampStream {
         }  else {
             plain = data;
         }
+
         int remaining = plain.remaining();
         int lastRemaining = remaining - 1;
         long delay = 1;
