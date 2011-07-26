@@ -220,12 +220,17 @@ public class KahaDBTransactionStore implements TransactionStore {
      * @see org.apache.activemq.store.TransactionStore#prepare(TransactionId)
      */
     public void prepare(TransactionId txid) throws IOException {
-        inflightTransactions.remove(txid);
         KahaTransactionInfo info = getTransactionInfo(txid);
-        Tx tx = inflightTransactions.get(txid);
-        if (tx != null) {
-            for (Journal journal : theStore.getJournalManager().getJournals(tx.destinations)) {
+        if (txid.isXATransaction() || theStore.isConcurrentStoreAndDispatchTransactions() == false) {
+            for (Journal journal : theStore.getJournalManager().getJournals()) {
                 theStore.store(journal, new KahaPrepareCommand().setTransactionInfo(info), true, null, null);
+            }
+        } else {
+            Tx tx = inflightTransactions.remove(txid);
+            if (tx != null) {
+                for (Journal journal : theStore.getJournalManager().getJournals(tx.destinations)) {
+                    theStore.store(journal, new KahaPrepareCommand().setTransactionInfo(info), true, null, null);
+                }
             }
         }
     }
