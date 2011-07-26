@@ -16,7 +16,6 @@
  */
 package org.apache.activemq.console.command;
 
-import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
