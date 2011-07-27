@@ -16,21 +16,25 @@
  */
 package org.apache.activemq.camel.component;
 
-import org.springframework.jms.connection.JmsTransactionManager;
 import org.apache.camel.CamelContext;
-import org.apache.camel.ContextTestSupport;
 import org.apache.camel.builder.RouteBuilder;
-import static org.apache.activemq.camel.component.ActiveMQComponent.activeMQComponent;
+
 import org.apache.camel.component.jms.JmsEndpoint;
 import org.apache.camel.component.mock.MockEndpoint;
+import org.apache.camel.test.junit4.CamelTestSupport;
+import org.junit.Before;
+import org.junit.Test;
+import org.springframework.jms.connection.JmsTransactionManager;
+import static org.apache.activemq.camel.component.ActiveMQComponent.activeMQComponent;
 
 /**
  * 
  */
-public class ActiveMQRouteTest extends ContextTestSupport {
+public class ActiveMQRouteTest extends CamelTestSupport {
     protected MockEndpoint resultEndpoint;
     protected String startEndpointUri = "activemq:queue:test.a";
 
+    @Test
     public void testJmsRouteWithTextMessage() throws Exception {
         String expectedBody = "Hello there!";
 
@@ -46,8 +50,8 @@ public class ActiveMQRouteTest extends ContextTestSupport {
         template.sendBodyAndHeader(startEndpointUri, expectedBody, "cheese", 123);
     }
 
-    @Override
-    protected void setUp() throws Exception {
+    @Before
+    public void setUp() throws Exception {
         super.setUp();
 
         resultEndpoint = (MockEndpoint) context.getEndpoint("mock:result");

@@ -18,14 +18,17 @@ package org.apache.activemq.camel.component;
 
 import java.io.File;
 
-import org.apache.camel.ContextTestSupport;
+
 import org.apache.camel.Endpoint;
+import org.apache.camel.test.junit4.CamelTestSupport;
+import org.junit.Test;
 
 /**
  * 
  */
-public class JournalConfigureTest extends ContextTestSupport {
+public class JournalConfigureTest extends CamelTestSupport {
 
+    @Test
     public void testDefaltConfig() throws Exception {
         JournalEndpoint endpoint = resolveMandatoryEndpoint("activemq.journal:target/test");
         assertEquals("directory", new File("target", "test"), endpoint.getDirectory());
@@ -33,6 +36,7 @@ public class JournalConfigureTest extends ContextTestSupport {
         assertEquals("syncProduce", true, endpoint.isSyncProduce());
     }
 
+    @Test
     public void testConfigViaOptions() throws Exception {
         JournalEndpoint endpoint = resolveMandatoryEndpoint("activemq.journal:target/test?syncConsume=true&syncProduce=false");
         assertEquals("directory", new File("target", "test"), endpoint.getDirectory());

@@ -107,7 +107,7 @@
                     VALUES('${in.header.JMSMessageId}','${in.header.JMSCorrelationId}','${in.body}')
                 </simple>
             </setBody>
-            <to uri="jdbc:managedDataSourceWithRecovery"/>
+            <to uri="jdbc:managedDataSourceWithRecovery?resetAutoCommit=false"/>
         </route>
     </camelContext>
 

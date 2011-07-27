@@ -24,17 +24,20 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.util.Wait;
-import org.apache.camel.spring.SpringTestSupport;
+
+import org.apache.camel.test.junit4.CamelSpringTestSupport;
+import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.support.AbstractXmlApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
-public class DlqTest extends SpringTestSupport {
+public class DlqTest extends CamelSpringTestSupport {
     private static final Logger LOG = LoggerFactory.getLogger(DlqTest.class);
     BrokerService broker = null;
     int messageCount;
 
+    @Test
     public void testSendToDlq() throws Exception {
         sendJMSMessageToKickOffRoute();
 

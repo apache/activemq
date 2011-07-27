@@ -29,7 +29,7 @@ import org.apache.camel.CamelContext;
 import org.apache.camel.Endpoint;
 import org.apache.camel.impl.DefaultCamelContext;
 import org.apache.camel.spi.BrowsableEndpoint;
-import org.apache.camel.util.CamelContextHelper;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

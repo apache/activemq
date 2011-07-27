@@ -19,10 +19,11 @@ package org.apache.activemq.camel.component;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.apache.camel.ContextTestSupport;
 import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
 import org.apache.camel.builder.RouteBuilder;
+import org.apache.camel.test.junit4.CamelTestSupport;
+import org.junit.Test;
 
 /**
  * Used to get an idea of what kind of performance can be expected from 
@@ -30,12 +31,13 @@ import org.apache.camel.builder.RouteBuilder;
  * 
  * 
  */
-public class JournalRoutePerformance extends ContextTestSupport {
+public class JournalRoutePerformance extends CamelTestSupport {
 
     AtomicLong produceCounter = new AtomicLong();
     AtomicLong consumeCounter = new AtomicLong();
     AtomicBoolean running = new AtomicBoolean(true);
 
+    @Test
     public void testPerformance() throws Exception {
 
         int payLoadSize = 1024;

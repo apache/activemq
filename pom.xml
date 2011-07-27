@@ -45,7 +45,7 @@
     <aries-version>0.2-incubating</aries-version>
     <axion-version>1.0-M3-dev</axion-version>
     <axis-version>1.2-RC1</axis-version>
-    <camel-version>2.7.0</camel-version>
+    <camel-version>2.8.0</camel-version>
     <cglib-version>2.0</cglib-version>
     <commons-beanutils-version>1.6.1</commons-beanutils-version>
     <commons-collections-version>3.2.1</commons-collections-version>
@@ -425,6 +425,11 @@
       <dependency>
         <groupId>org.apache.camel</groupId>
         <artifactId>camel-jms</artifactId>
+        <version>${camel-version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.camel</groupId>
+        <artifactId>camel-test</artifactId>
         <version>${camel-version}</version>
       </dependency>
       <dependency>

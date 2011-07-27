@@ -24,17 +24,20 @@ import javax.jms.TextMessage;
 import static org.apache.activemq.camel.component.ActiveMQComponent.activeMQComponent;
 import org.apache.activemq.spring.ConsumerBean;
 import org.apache.camel.CamelContext;
-import org.apache.camel.ContextTestSupport;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
+import org.apache.camel.test.junit4.CamelTestSupport;
+import org.junit.Test;
 
 /**
  * 
  */
-public class InvokeMessageListenerTest extends ContextTestSupport {    protected MockEndpoint resultEndpoint;
+public class InvokeMessageListenerTest extends CamelTestSupport {
+    protected MockEndpoint resultEndpoint;
     protected String startEndpointUri = "activemq:queue:test.a";
     protected ConsumerBean listener = new ConsumerBean();
 
+    @Test
     public void testSendTextMessage() throws Exception {
         String expectedBody = "Hello there!";
 

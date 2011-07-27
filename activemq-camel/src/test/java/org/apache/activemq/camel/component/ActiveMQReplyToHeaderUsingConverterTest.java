@@ -26,19 +26,20 @@ import javax.jms.Destination;
 import static org.apache.activemq.camel.component.ActiveMQComponent.activeMQComponent;
 import org.apache.activemq.camel.converter.ActiveMQConverter;
 import org.apache.camel.CamelContext;
-import org.apache.camel.ContextTestSupport;
 import org.apache.camel.Exchange;
 import org.apache.camel.Message;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.AssertionClause;
 import org.apache.camel.component.mock.MockEndpoint;
+import org.apache.camel.test.junit4.CamelTestSupport;
+import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * 
  */
-public class ActiveMQReplyToHeaderUsingConverterTest extends ContextTestSupport {
+public class ActiveMQReplyToHeaderUsingConverterTest extends CamelTestSupport {
     private static final transient Logger LOG = LoggerFactory.getLogger(ActiveMQReplyToHeaderUsingConverterTest.class);
     protected Object expectedBody = "<time>" + new Date() + "</time>";
     protected String replyQueueName = "queue://test.my.reply.queue";
@@ -47,6 +48,7 @@ public class ActiveMQReplyToHeaderUsingConverterTest extends ContextTestSupport 
     protected String messageType = getClass().getName();
     protected boolean useReplyToHeader = false;
 
+    @Test
     public void testSendingAMessageFromCamelSetsCustomJmsHeaders() throws Exception {
         MockEndpoint resultEndpoint = resolveMandatoryEndpoint("mock:result", MockEndpoint.class);
 

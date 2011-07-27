@@ -27,31 +27,30 @@ import java.util.Map;
 
 import javax.jms.Destination;
 
-import org.apache.activemq.command.ActiveMQDestination;
-import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.camel.CamelContext;
-import org.apache.camel.ContextTestSupport;
 import org.apache.camel.Exchange;
 import org.apache.camel.Headers;
 import org.apache.camel.Message;
 import org.apache.camel.Processor;
 import org.apache.camel.builder.RouteBuilder;
-import org.apache.camel.component.jms.JmsConstants;
 import org.apache.camel.component.mock.AssertionClause;
 import org.apache.camel.component.mock.MockEndpoint;
+import org.apache.camel.test.junit4.CamelTestSupport;
+import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * 
  */
-public class InvokeRequestReplyUsingJmsReplyToHeaderTest extends ContextTestSupport {
+public class InvokeRequestReplyUsingJmsReplyToHeaderTest extends CamelTestSupport {
     private static final transient Logger LOG = LoggerFactory.getLogger(ActiveMQReplyToHeaderUsingConverterTest.class);
     protected String replyQueueName = "queue://test.reply";
     protected Object correlationID = "ABC-123";
     protected Object groupID = "GROUP-XYZ";
     private MyServer myBean = new MyServer();
 
+    @Test
     public void testPerformRequestReplyOverJms() throws Exception {
         MockEndpoint resultEndpoint = getMockEndpoint("mock:result");
 

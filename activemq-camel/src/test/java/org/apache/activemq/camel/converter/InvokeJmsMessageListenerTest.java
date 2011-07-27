@@ -21,16 +21,18 @@ import javax.jms.MessageListener;
 import javax.jms.Message;
 import javax.jms.TextMessage;
 
-import org.apache.camel.ContextTestSupport;
 import org.apache.camel.builder.RouteBuilder;
+import org.apache.camel.test.junit4.CamelTestSupport;
+import org.junit.Test;
 
 /**
  * 
  */
-public class InvokeJmsMessageListenerTest extends ContextTestSupport {
+public class InvokeJmsMessageListenerTest extends CamelTestSupport {
     protected MyMessageListener messageListener = new MyMessageListener();
     private String expectedBody = "<hello>world!</hello>";
 
+    @Test
     public void testCamelInvokesMessageListener() throws Exception {
         template.sendBody("direct:start", expectedBody);
 

@@ -18,12 +18,13 @@ package org.apache.activemq.camel.component;
 
 import org.apache.activemq.spring.ActiveMQConnectionFactory;
 import org.apache.activemq.pool.PooledConnectionFactory;
-import org.apache.camel.ContextTestSupport;
 import org.apache.camel.Endpoint;
 import org.apache.camel.component.jms.JmsConsumer;
 import org.apache.camel.component.jms.JmsEndpoint;
 import org.apache.camel.component.jms.JmsProducer;
 import org.apache.camel.processor.CamelLogger;
+import org.apache.camel.test.junit4.CamelTestSupport;
+import org.junit.Test;
 import org.springframework.jms.core.JmsTemplate;
 import org.springframework.jms.listener.AbstractMessageListenerContainer;
 import org.springframework.jms.connection.SingleConnectionFactory;
@@ -31,8 +32,9 @@ import org.springframework.jms.connection.SingleConnectionFactory;
 /**
  * 
  */
-public class ActiveMQConfigureTest extends ContextTestSupport {
-    
+public class ActiveMQConfigureTest extends CamelTestSupport {
+
+    @Test
     public void testJmsTemplateUsesPoolingConnectionFactory() throws Exception {
         JmsEndpoint endpoint = resolveMandatoryEndpoint("activemq:test.foo");
         JmsProducer producer = (JmsProducer) endpoint.createProducer();
@@ -42,6 +44,7 @@ public class ActiveMQConfigureTest extends ContextTestSupport {
         assertIsInstanceOf(PooledConnectionFactory.class, template.getConnectionFactory());
     }
 
+    @Test
     public void testJmsTemplateUsesSingleConnectionFactory() throws Exception {
         JmsEndpoint endpoint = resolveMandatoryEndpoint("activemq:test.foo?useSingleConnection=true");
         JmsProducer producer = (JmsProducer) endpoint.createProducer();
@@ -52,6 +55,7 @@ public class ActiveMQConfigureTest extends ContextTestSupport {
         assertIsInstanceOf(ActiveMQConnectionFactory.class, connectionFactory.getTargetConnectionFactory());
     }
 
+    @Test
     public void testJmsTemplateDoesNotUsePoolingConnectionFactory() throws Exception {
         JmsEndpoint endpoint = resolveMandatoryEndpoint("activemq:test.foo?usePooledConnection=false");
         JmsProducer producer = (JmsProducer) endpoint.createProducer();
@@ -61,6 +65,7 @@ public class ActiveMQConfigureTest extends ContextTestSupport {
         assertIsInstanceOf(ActiveMQConnectionFactory.class, template.getConnectionFactory());
     }
 
+    @Test
     public void testListenerContainerUsesSpringConnectionFactory() throws Exception {
         JmsEndpoint endpoint = resolveMandatoryEndpoint("activemq:topic:test.foo");
         JmsConsumer consumer = endpoint.createConsumer(new CamelLogger());

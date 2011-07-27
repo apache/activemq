@@ -19,19 +19,19 @@ package org.apache.activemq.camel.component;
 import java.util.List;
 
 import org.apache.activemq.util.ByteSequence;
-import org.apache.camel.CamelContext;
-import org.apache.camel.ContextTestSupport;
 import org.apache.camel.Exchange;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.AssertionClause;
 import org.apache.camel.component.mock.MockEndpoint;
-import org.apache.camel.impl.DefaultCamelContext;
+import org.apache.camel.test.junit4.CamelTestSupport;
+import org.junit.Test;
 
 /**
  * 
  */
-public class JournalRouteTest extends ContextTestSupport {
+public class JournalRouteTest extends CamelTestSupport {
 
+    @Test
     public void testSimpleJournalRoute() throws Exception {
 
         byte[] payload = "Hello World".getBytes();

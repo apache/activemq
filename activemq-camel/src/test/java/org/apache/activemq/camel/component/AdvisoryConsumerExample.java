@@ -16,26 +16,24 @@
  */
 package org.apache.activemq.camel.component;
 
-import java.util.List;
 
-import org.apache.activemq.util.ByteSequence;
 import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.DataStructure;
 import org.apache.activemq.command.DestinationInfo;
-import org.apache.camel.ContextTestSupport;
 import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
 import org.apache.camel.Message;
 import org.apache.camel.builder.RouteBuilder;
-import org.apache.camel.component.mock.AssertionClause;
-import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.camel.component.jms.JmsMessage;
+import org.apache.camel.test.junit4.CamelTestSupport;
+import org.junit.Test;
 
 /**
  * 
  */
-public class AdvisoryConsumerExample extends ContextTestSupport {
+public class AdvisoryConsumerExample extends CamelTestSupport {
 
+    @Test
     public void testWorks() throws Exception {
         // lets create a new queue
         template.sendBody("activemq:NewQueue." + System.currentTimeMillis(), "<hello>world!</hello>");

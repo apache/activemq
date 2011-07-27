@@ -26,12 +26,10 @@ import javax.jms.ObjectMessage;
 import javax.jms.Session;
 import javax.jms.TextMessage;
 
-import junit.framework.Assert;
-
 import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.camel.ProducerTemplate;
-import org.apache.camel.impl.DefaultProducerTemplate;
-import org.apache.camel.spring.SpringTestSupport;
+import org.apache.camel.test.junit4.CamelSpringTestSupport;
+import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
@@ -39,12 +37,13 @@ import org.springframework.context.support.ClassPathXmlApplicationContext;
 /**
  * 
  */
-public class CamelJmsTest extends SpringTestSupport {
+public class CamelJmsTest extends CamelSpringTestSupport {
     
     private static final Logger LOG = LoggerFactory.getLogger(CamelJmsTest.class);
     
     protected String expectedBody = "<hello>world!</hello>";
 
+    @Test
     public void testSendingViaJmsIsReceivedByCamel() throws Exception {
         MockEndpoint result = resolveMandatoryEndpoint("mock:result", MockEndpoint.class);
         result.expectedBodiesReceived(expectedBody);
@@ -69,6 +68,7 @@ public class CamelJmsTest extends SpringTestSupport {
         LOG.info("Received message: " + result.getReceivedExchanges());
     }
 
+    @Test
     public void testConsumingViaJMSReceivesMessageFromCamel() throws Exception {
         // lets create a message
         Destination destination = getMandatoryBean(Destination.class, "consumeFrom");
@@ -87,10 +87,10 @@ public class CamelJmsTest extends SpringTestSupport {
         template.sendBody("seda:consumer", expectedBody);
 
         Message message = consumer.receive(5000);
-        Assert.assertNotNull("Should have received a message from destination: " + destination, message);
+        assertNotNull("Should have received a message from destination: " + destination, message);
 
         TextMessage textMessage = assertIsInstanceOf(TextMessage.class, message);
-        Assert.assertEquals("Message body", expectedBody, textMessage.getText());
+        assertEquals("Message body", expectedBody, textMessage.getText());
 
         LOG.info("Received message: " + message);
     }
