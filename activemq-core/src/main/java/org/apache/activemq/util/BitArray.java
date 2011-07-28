@@ -134,7 +134,7 @@ public class BitArray implements Serializable {
     public void writeToStream(DataOutput dataOut) throws IOException {
         dataOut.writeByte(length);
         if (length <= BYTE_SIZE) {
-            dataOut.writeByte((int)bits);
+            dataOut.writeByte((byte)bits);
         } else if (length <= SHORT_SIZE) {
             dataOut.writeShort((short)bits);
         } else if (length <= INT_SIZE) {
