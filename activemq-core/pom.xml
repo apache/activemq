@@ -393,6 +393,7 @@
           <childDelegation>false</childDelegation>
           <useFile>true</useFile>
           <argLine>${surefire.argLine}</argLine>
+          <useManifestOnlyJar>false</useManifestOnlyJar>
 
            <systemProperties>
             <property>
@@ -459,12 +460,6 @@
 
             <!-- This test only works on machines which have ssh propertly configured -->
             <exclude>**/SSHTunnelNetworkReconnectTest.*</exclude>
-
-            <!--  exclude until we fix problems with apache ds and maven  -->
-            <exclude>**/LDAPAuthorizationMapTest.*</exclude>
-            <exclude>**/LDAPSecurityTest.*</exclude>
-            <exclude>**/CachedLDAPAuthorizationModuleTest.*</exclude>
-            <exclude>**/CachedLDAPSecurityTest.*</exclude>
 
             <!-- http://issues.apache.org/activemq/browse/AMQ-1027 -->
             <exclude>**/FailoverConsumerTest.*</exclude>
