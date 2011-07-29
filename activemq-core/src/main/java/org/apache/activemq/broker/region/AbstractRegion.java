@@ -50,7 +50,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * 
+ *
  */
 public abstract class AbstractRegion implements Region {
 
@@ -78,7 +78,7 @@ public abstract class AbstractRegion implements Region {
         this.destinationStatistics = destinationStatistics;
         this.usageManager = memoryManager;
         this.taskRunnerFactory = taskRunnerFactory;
-        if (broker == null) {
+        if (destinationFactory == null) {
             throw new IllegalArgumentException("null destinationFactory");
         }
         this.destinationFactory = destinationFactory;
@@ -223,7 +223,7 @@ public abstract class AbstractRegion implements Region {
 
     /**
      * Provide an exact or wildcard lookup of destinations in the region
-     * 
+     *
      * @return a set of matching destination objects.
      */
     public Set<Destination> getDestinations(ActiveMQDestination destination) {
@@ -314,7 +314,7 @@ public abstract class AbstractRegion implements Region {
 
     /**
      * Get all the Destinations that are in storage
-     * 
+     *
      * @return Set of all stored destinations
      */
     public Set getDurableDestinations() {
@@ -506,7 +506,7 @@ public abstract class AbstractRegion implements Region {
 
     /**
      * Removes a Producer.
-     * 
+     *
      * @param context
      *            the environment the operation is being executed under.
      * @throws Exception
