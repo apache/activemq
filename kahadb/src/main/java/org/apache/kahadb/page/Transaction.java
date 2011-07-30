@@ -28,7 +28,6 @@ import org.apache.kahadb.util.*;
  */
 public class Transaction implements Iterable<Page> {
 
-
     private RandomAccessFile tmpFile;
     private File txFile;
     private int nextLocation = 0;
@@ -42,7 +41,7 @@ public class Transaction implements Iterable<Page> {
             super(message);
         }
     }
-    
+
     /**
      * The InvalidPageIOException is thrown if try to load/store a a page
      * with an invalid page id.
@@ -58,11 +57,11 @@ public class Transaction implements Iterable<Page> {
         public long getPage() {
             return page;
         }
-    }    
-    
+    }
+
     /**
      * This closure interface is intended for the end user implement callbacks for the Transaction.exectue() method.
-     * 
+     *
      * @param <T> The type of exceptions that operation will throw.
      */
     public interface Closure <T extends Throwable> {
@@ -71,18 +70,18 @@ public class Transaction implements Iterable<Page> {
 
     /**
      * This closure interface is intended for the end user implement callbacks for the Transaction.exectue() method.
-     * 
+     *
      * @param <R> The type of result that the closure produces.
      * @param <T> The type of exceptions that operation will throw.
      */
     public interface CallableClosure<R, T extends Throwable> {
         public R execute(Transaction tx) throws T;
     }
-    
+
 
     // The page file that this Transaction operates against.
     private final PageFile pageFile;
-    // If this transaction is updating stuff.. this is the tx of 
+    // If this transaction is updating stuff.. this is the tx of
     private long writeTransactionId=-1;
     // List of pages that this transaction has modified.
     private TreeMap<Long, PageWrite> writes=new TreeMap<Long, PageWrite>();
@@ -106,10 +105,10 @@ public class Transaction implements Iterable<Page> {
         return this.pageFile;
     }
 
-    /** 
+    /**
      * Allocates a free page that you can write data to.
-     * 
-     * @return a newly allocated page.  
+     *
+     * @return a newly allocated page.
      * @throws IOException
      *         If an disk error occurred.
      * @throws IllegalStateException
@@ -119,18 +118,18 @@ public class Transaction implements Iterable<Page> {
         return allocate(1);
     }
 
-    /** 
+    /**
      * Allocates a block of free pages that you can write data to.
-     * 
+     *
      * @param count the number of sequential pages to allocate
-     * @return the first page of the sequential set. 
+     * @return the first page of the sequential set.
      * @throws IOException
      *         If an disk error occurred.
      * @throws IllegalStateException
      *         if the PageFile is not loaded
      */
     public <T> Page<T> allocate(int count) throws IOException {
-        // TODO: we need to track allocated pages so that they can be returned if the 
+        // TODO: we need to track allocated pages so that they can be returned if the
         // transaction gets rolled back.
         Page<T> rc = pageFile.allocate(count);
         allocateList.add(new Sequence(rc.getPageId(), rc.getPageId()+count-1));
@@ -139,7 +138,7 @@ public class Transaction implements Iterable<Page> {
 
     /**
      * Frees up a previously allocated page so that it can be re-allocated again.
-     * 
+     *
      * @param pageId the page to free up
      * @throws IOException
      *         If an disk error occurred.
@@ -152,10 +151,10 @@ public class Transaction implements Iterable<Page> {
 
     /**
      * Frees up a previously allocated sequence of pages so that it can be re-allocated again.
-     * 
+     *
      * @param pageId the initial page of the sequence that will be getting freed
      * @param count the number of pages in the sequence
-     * 
+     *
      * @throws IOException
      *         If an disk error occurred.
      * @throws IllegalStateException
@@ -167,10 +166,10 @@ public class Transaction implements Iterable<Page> {
 
     /**
      * Frees up a previously allocated sequence of pages so that it can be re-allocated again.
-     * 
+     *
      * @param page the initial page of the sequence that will be getting freed
      * @param count the number of pages in the sequence
-     * 
+     *
      * @throws IOException
      *         If an disk error occurred.
      * @throws IllegalStateException
@@ -187,10 +186,10 @@ public class Transaction implements Iterable<Page> {
             page = null;
         }
     }
-    
+
     /**
      * Frees up a previously allocated page so that it can be re-allocated again.
-     * 
+     *
      * @param page the page to free up
      * @throws IOException
      *         If an disk error occurred.
@@ -227,15 +226,15 @@ public class Transaction implements Iterable<Page> {
     }
 
     /**
-     * 
+     *
      * @param page
      *        the page to write. The Page object must be fully populated with a valid pageId, type, and data.
      * @param marshaller
      *        the marshaler to use to load the data portion of the Page, may be null if you do not wish to write the data.
      * @param overflow
-     *        If true, then if the page data marshalls to a bigger size than can fit in one page, then additional 
+     *        If true, then if the page data marshalls to a bigger size than can fit in one page, then additional
      *        overflow pages are automatically allocated and chained to this page to store all the data.  If false,
-     *        and the overflow condition would occur, then the PageOverflowIOException is thrown. 
+     *        and the overflow condition would occur, then the PageOverflowIOException is thrown.
      * @throws IOException
      *         If an disk error occurred.
      * @throws PageOverflowIOException
@@ -344,8 +343,8 @@ public class Transaction implements Iterable<Page> {
 
     /**
      * Loads a page from disk.
-     * 
-     * @param pageId 
+     *
+     * @param pageId
      *        the id of the page to load
      * @param marshaller
      *        the marshaler to use to load the data portion of the Page, may be null if you do not wish to load the data.
@@ -364,14 +363,14 @@ public class Transaction implements Iterable<Page> {
 
     /**
      * Loads a page from disk.
-     * 
-     * @param page - The pageId field must be properly set 
+     *
+     * @param page - The pageId field must be properly set
      * @param marshaller
      *        the marshaler to use to load the data portion of the Page, may be null if you do not wish to load the data.
      * @throws IOException
      *         If an disk error occurred.
      * @throws InvalidPageIOException
-     *         If the page is is not valid.      
+     *         If the page is is not valid.
      * @throws IllegalStateException
      *         if the PageFile is not loaded
      */
@@ -436,9 +435,9 @@ public class Transaction implements Iterable<Page> {
 
             private Page readPage(Page page) throws IOException {
                 // Read the page data
-                
+
                 pageFile.readPage(page.getPageId(), chunk.getData());
-                
+
                 chunk.setOffset(0);
                 chunk.setLength(pageFile.getPageSize());
 
@@ -542,11 +541,11 @@ public class Transaction implements Iterable<Page> {
     }
 
     /**
-     * Allows you to iterate through all active Pages in this object.  Pages with type Page.FREE_TYPE are 
-     * not included in this iteration. 
-     * 
+     * Allows you to iterate through all active Pages in this object.  Pages with type Page.FREE_TYPE are
+     * not included in this iteration.
+     *
      * Pages removed with Iterator.remove() will not actually get removed until the transaction commits.
-     * 
+     *
      * @throws IllegalStateException
      *         if the PageFile is not loaded
      */
@@ -558,7 +557,7 @@ public class Transaction implements Iterable<Page> {
     /**
      * Allows you to iterate through all active Pages in this object.  You can optionally include free pages in the pages
      * iterated.
-     * 
+     *
      * @param includeFreePages - if true, free pages are included in the iteration
      * @throws IllegalStateException
      *         if the PageFile is not loaded
@@ -623,7 +622,7 @@ public class Transaction implements Iterable<Page> {
                     free(lastPage);
                     lastPage = null;
                 } catch (IOException e) {
-                    new RuntimeException(e);
+                    throw new RuntimeException(e);
                 }
             }
         };
@@ -632,7 +631,7 @@ public class Transaction implements Iterable<Page> {
     ///////////////////////////////////////////////////////////////////
     // Commit / Rollback related methods..
     ///////////////////////////////////////////////////////////////////
-    
+
     /**
      * Commits the transaction to the PageFile as a single 'Unit of Work'. Either all page updates associated
      * with the transaction are written to disk or none will.
@@ -643,7 +642,7 @@ public class Transaction implements Iterable<Page> {
             pageFile.write(writes.entrySet());
             // Release the pages that were freed up in the transaction..
             freePages(freeList);
-            
+
             freeList.clear();
             allocateList.clear();
             writes.clear();
@@ -721,7 +720,7 @@ public class Transaction implements Iterable<Page> {
             write = new PageWrite(page, data);
         }
         writes.put(key, write);
-    }   
+    }
 
     /**
      * @param list
@@ -738,22 +737,22 @@ public class Transaction implements Iterable<Page> {
             seq = seq.getNext();
         }
     }
-    
+
     /**
      * @return true if there are no uncommitted page file updates associated with this transaction.
      */
     public boolean isReadOnly() {
         return writeTransactionId==-1;
     }
-    
+
     ///////////////////////////////////////////////////////////////////
     // Transaction closure helpers...
     ///////////////////////////////////////////////////////////////////
-    
+
     /**
      * Executes a closure and if it does not throw any exceptions, then it commits the transaction.
      * If the closure throws an Exception, then the transaction is rolled back.
-     * 
+     *
      * @param <T>
      * @param closure - the work to get exectued.
      * @throws T if the closure throws it
@@ -776,7 +775,7 @@ public class Transaction implements Iterable<Page> {
     /**
      * Executes a closure and if it does not throw any exceptions, then it commits the transaction.
      * If the closure throws an Exception, then the transaction is rolled back.
-     * 
+     *
      * @param <T>
      * @param closure - the work to get exectued.
      * @throws T if the closure throws it
