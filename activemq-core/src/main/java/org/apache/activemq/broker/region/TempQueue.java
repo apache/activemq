@@ -76,7 +76,9 @@ public class TempQueue extends Queue{
                                         .getConnectionId()))) {
 
             tempDest.setConnectionId(sub.getConsumerInfo().getConsumerId().getConnectionId());
-            LOG.debug(" changed ownership of " + this + " to "+ tempDest.getConnectionId());
+            if (LOG.isDebugEnabled()) {
+                LOG.debug(" changed ownership of " + this + " to "+ tempDest.getConnectionId());
+            }
         }
         super.addSubscription(context, sub);
     }

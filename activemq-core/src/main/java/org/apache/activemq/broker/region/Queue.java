@@ -475,7 +475,9 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                         if (ref.getMessageId().getBrokerSequenceId() == lastDeiveredSequenceId) {
                             lastDeliveredRef = ref;
                             markAsRedelivered = true;
-                            LOG.debug("found lastDeliveredSeqID: " + lastDeiveredSequenceId + ", message reference: " + ref.getMessageId());
+                            if (LOG.isDebugEnabled()) {
+                                LOG.debug("found lastDeliveredSeqID: " + lastDeiveredSequenceId + ", message reference: " + ref.getMessageId());
+                            }
                             break;
                         }
                     }
@@ -984,7 +986,9 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                 for (MessageReference ref : toExpire) {
                     pagedInPendingDispatch.remove(ref);
                     if (broker.isExpired(ref)) {
-                        LOG.debug("expiring from pagedInPending: " + ref);
+                        if (LOG.isDebugEnabled()) {
+                            LOG.debug("expiring from pagedInPending: " + ref);
+                        }
                         messageExpired(connectionContext, ref);
                     }
                 }
@@ -1000,7 +1004,9 @@ public class Queue extends BaseDestination implements Task, UsageListener {
             }
             for (MessageReference ref : toExpire) {
                 if (broker.isExpired(ref)) {
-                    LOG.debug("expiring from pagedInMessages: " + ref);
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug("expiring from pagedInMessages: " + ref);
+                    }
                     messageExpired(connectionContext, ref);
                 } else {
                     pagedInMessagesLock.writeLock().lock();
@@ -1021,7 +1027,9 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                             MessageReference node = messages.next();
                             if (node.isExpired()) {
                                 if (broker.isExpired(node)) {
-                                    LOG.debug("expiring from messages: " + node);
+                                    if (LOG.isDebugEnabled()) {
+                                        LOG.debug("expiring from messages: " + node);
+                                    }
                                     messageExpired(connectionContext, createMessageReference(node.getMessage()));
                                 }
                                 messages.remove();

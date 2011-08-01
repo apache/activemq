@@ -214,7 +214,9 @@ public class TopicRegion extends AbstractRegion {
             for (int i = 0; i < infos.length; i++) {
 
                 SubscriptionInfo info = infos[i];
-                LOG.debug("Restoring durable subscription: " + info);
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("Restoring durable subscription: " + info);
+                }
                 SubscriptionKey key = new SubscriptionKey(info);
 
                 // A single durable sub may be subscribing to multiple topics.

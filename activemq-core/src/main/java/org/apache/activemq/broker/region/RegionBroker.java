@@ -669,7 +669,9 @@ public class RegionBroker extends EmptyBroker {
             brokerInfos.put(info.getBrokerId(), existing);
         }
         existing.incrementRefCount();
-        LOG.debug(getBrokerName() + " addBroker:" + info.getBrokerName() + " brokerInfo size : " + brokerInfos.size());
+        if (LOG.isDebugEnabled()) {
+            LOG.debug(getBrokerName() + " addBroker:" + info.getBrokerName() + " brokerInfo size : " + brokerInfos.size());
+        }
         addBrokerInClusterUpdate();
     }
 
@@ -680,7 +682,9 @@ public class RegionBroker extends EmptyBroker {
             if (existing != null && existing.decrementRefCount() == 0) {
                brokerInfos.remove(info.getBrokerId());
             }
-            LOG.debug(getBrokerName() + " removeBroker:" + info.getBrokerName() + " brokerInfo size : " + brokerInfos.size());
+            if (LOG.isDebugEnabled()) {
+                LOG.debug(getBrokerName() + " removeBroker:" + info.getBrokerName() + " brokerInfo size : " + brokerInfos.size());
+            }
             removeBrokerInClusterUpdate();
         }
     }

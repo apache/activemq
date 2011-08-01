@@ -108,7 +108,9 @@ public class TransactionBroker extends BrokerFilter {
                         }
                         transaction.setState(Transaction.PREPARED_STATE);
                         registerMBean(transaction);
-                        LOG.debug("recovered prepared transaction: " + transaction.getTransactionId());
+                        if (LOG.isDebugEnabled()) {
+                            LOG.debug("recovered prepared transaction: " + transaction.getTransactionId());
+                        }
                     } catch (Throwable e) {
                         throw new WrappedException(e);
                     }
