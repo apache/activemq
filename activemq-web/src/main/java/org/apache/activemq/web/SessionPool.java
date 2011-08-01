@@ -23,12 +23,16 @@ import javax.jms.ConnectionFactory;
 import javax.jms.JMSException;
 import javax.jms.Session;
 
+import org.apache.activemq.ActiveMQSession;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * A simple pool of JMS Session objects intended for use by Queue browsers.
- * 
- * 
  */
 public class SessionPool {
+
+    private static final Logger LOG = LoggerFactory.getLogger(SessionPool.class);
 
     private ConnectionFactory connectionFactory;
     private Connection connection;
@@ -78,8 +82,10 @@ public class SessionPool {
         Session answer = null;
         synchronized (sessions) {
             if (sessions.isEmpty()) {
+                LOG.trace("Creating a new session.");
                 answer = createSession();
             } else {
+                LOG.trace("Serving session from the pool.");
                 answer = sessions.removeLast();
             }
         }
@@ -87,10 +93,13 @@ public class SessionPool {
     }
 
     public void returnSession(Session session) {
-        if (session != null) {
+        if (session != null && !((ActiveMQSession) session).isClosed()) {
             synchronized (sessions) {
+                LOG.trace("Returning session to the pool.");
                 sessions.add(session);
             }
+        } else {
+            LOG.debug("Session closed or null, not returning to the pool.");
         }
     }
 

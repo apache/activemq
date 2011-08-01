@@ -724,6 +724,15 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
     }
 
     /**
+     * Checks if the session is closed.
+     *
+     * @return true if the session is closed, false otherwise.
+     */
+    public boolean isClosed() {
+        return closed;
+    }
+
+    /**
      * Stops message delivery in this session, and restarts message delivery
      * with the oldest unacknowledged message.
      * <P>
