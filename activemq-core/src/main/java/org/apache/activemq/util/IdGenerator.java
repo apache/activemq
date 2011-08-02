@@ -128,7 +128,7 @@ public class IdGenerator {
         if (id != null) {
             int index = id.lastIndexOf(':');
             if (index > 0 && (index + 1) < id.length()) {
-                result = id.substring(0, index + 1);
+                result = id.substring(0, index);
             }
         }
         return result;

@@ -16,6 +16,10 @@
  */
 package org.apache.activemq;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.List;
 import junit.framework.TestCase;
@@ -118,5 +122,65 @@ public class ActiveMQMessageAuditTest extends TestCase {
             assertFalse(audit.isInOrder(id));
             assertFalse(audit.isDuplicate(id));
         }
+    }
+
+    public void testSerialization() throws Exception {
+        ActiveMQMessageAuditNoSync audit = new ActiveMQMessageAuditNoSync();
+
+        byte[] bytes =  serialize(audit);
+        System.out.println(bytes.length);
+        audit = recover(bytes);
+
+        List<MessageReference> list = new ArrayList<MessageReference>();
+
+
+        for (int j = 0; j < 1000; j++) {
+            ProducerId pid = new ProducerId();
+            pid.setConnectionId("test");
+            pid.setSessionId(0);
+            pid.setValue(j);
+            System.out.println("producer " + j);
+
+            for (int i = 0; i < 1000; i++) {
+                MessageId id = new MessageId();
+                id.setProducerId(pid);
+                id.setProducerSequenceId(i);
+                ActiveMQMessage msg = new ActiveMQMessage();
+                msg.setMessageId(id);
+                list.add(msg);
+                assertFalse(audit.isDuplicate(msg.getMessageId().toString()));
+
+                if (i % 100 == 0) {
+                    bytes = serialize(audit);
+                    System.out.println(bytes.length);
+                    audit = recover(bytes);
+                }
+
+                if (i % 250 == 0) {
+                    for (MessageReference message : list) {
+                        audit.rollback(message.getMessageId().toString());
+                    }
+                    list.clear();
+                    bytes = serialize(audit);
+                    System.out.println(bytes.length);
+                    audit = recover(bytes);
+                }
+
+            }
+        }
+
+    }
+
+    protected byte[] serialize(ActiveMQMessageAuditNoSync audit) throws Exception {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        ObjectOutputStream oout = new ObjectOutputStream(baos);
+        oout.writeObject(audit);
+        oout.flush();
+        return baos.toByteArray();
+    }
+
+    protected ActiveMQMessageAuditNoSync recover(byte[] bytes) throws Exception {
+        ObjectInputStream objectIn = new ObjectInputStream(new ByteArrayInputStream(bytes));
+        return (ActiveMQMessageAuditNoSync)objectIn.readObject();
     }
 }

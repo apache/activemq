@@ -510,12 +510,11 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
             try {
                 ObjectInputStream objectIn = new ObjectInputStream(audit.getAudit().newInput());
                 metadata.producerSequenceIdTracker = (ActiveMQMessageAuditNoSync) objectIn.readObject();
-            } catch (ClassNotFoundException cfe) {
-                IOException ioe = new IOException("Failed to read producerAudit: " + cfe);
-                ioe.initCause(cfe);
-                throw ioe;
+                return journal.getNextLocation(metadata.producerSequenceIdTrackerLocation);
+            } catch (Exception e) {
+                LOG.warn("Cannot recover message audit", e);
+                return journal.getNextLocation(null);
             }
-            return journal.getNextLocation(metadata.producerSequenceIdTrackerLocation);
         } else {
             // got no audit stored so got to recreate via replay from start of the journal
             return journal.getNextLocation(null);
@@ -546,7 +545,7 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
                 MessageKeys keys = sd.orderIndex.remove(tx, sequenceId);
                 sd.locationIndex.remove(tx, keys.location);
                 sd.messageIdIndex.remove(tx, keys.messageId);
-                metadata.producerSequenceIdTracker.rollback(new MessageId(keys.messageId));
+                metadata.producerSequenceIdTracker.rollback(keys.messageId);
                 undoCounter++;
                 // TODO: do we need to modify the ack positions for the pub sub case?
             }
