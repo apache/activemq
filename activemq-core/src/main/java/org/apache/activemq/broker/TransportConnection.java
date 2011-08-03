@@ -917,7 +917,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
             }
         } catch (Exception e) {
             // Force clean up on an error starting up.
-            stop();
+            pendingStop = true;
             throw e;
         } finally {
             // stop() can be called from within the above block,
