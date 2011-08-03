@@ -197,7 +197,7 @@ public class LinkedNode<T extends LinkedNode<T>> {
 
     public void linkToHead(LinkedNodeList<T> target) {
         if (list != null) {
-            throw new IllegalArgumentException("This node is already linked to a node");
+            throw new IllegalArgumentException("This node is already linked to a list");
         }
 
         if (target.head == null) {

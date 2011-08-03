@@ -133,6 +133,9 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
     @Override
     public synchronized void release() {
         iterating = false;
+        if (iter instanceof DiskIterator) {
+           ((DiskIterator)iter).release();
+        };
         if (flushRequired) {
             flushRequired = false;
             if (!hasSpace()) {
@@ -417,7 +420,7 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
     }
 
     protected synchronized void flushToDisk() {
-        if (!memoryList.isEmpty()) {
+        if (!memoryList.isEmpty() && store != null) {
             long start = 0;
              if (LOG.isTraceEnabled()) {
                 start = System.currentTimeMillis();
@@ -483,7 +486,7 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
     }
 
     final class DiskIterator implements Iterator<MessageReference> {
-        private final Iterator<PListEntry> iterator;
+        private final PList.PListIterator iterator;
         DiskIterator() {
             try {
                 iterator = getDiskList().iterator();
@@ -510,5 +513,8 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
             iterator.remove();
         }
 
+        public void release() {
+            iterator.release();
+        }
     }
 }

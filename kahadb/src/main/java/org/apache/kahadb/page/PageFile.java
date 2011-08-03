@@ -171,7 +171,7 @@ public class PageFile {
 
         @Override
         public String toString() {
-            return "[PageWrite:"+page.getPageId()+"]";
+            return "[PageWrite:"+page.getPageId()+ "-" + page.getType()  + "]";
         }
 
         @SuppressWarnings("unchecked")
@@ -827,9 +827,7 @@ public class PageFile {
 
     public void freePage(long pageId) {
         freeList.add(pageId);
-        if( enablePageCaching ) {
-            pageCache.remove(pageId);
-        }
+        removeFromCache(pageId);
     }
     
     @SuppressWarnings("unchecked")
@@ -932,9 +930,9 @@ public class PageFile {
         }
     }
 
-    void removeFromCache(Page page) {
+    void removeFromCache(long pageId) {
         if (enablePageCaching) {
-            pageCache.remove(page.getPageId());
+            pageCache.remove(pageId);
         }
     }
 

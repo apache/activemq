@@ -76,6 +76,7 @@ public class PListStore extends ServiceSupport implements BrokerServiceAware, Ru
     private int indexPageSize = PageFile.DEFAULT_PAGE_SIZE;
     private int indexCacheSize = PageFile.DEFAULT_PAGE_CACHE_SIZE;
     private int indexWriteBatchSize = PageFile.DEFAULT_WRITE_BATCH_SIZE;
+    private boolean indexEnablePageCaching = true;
 
     public Object getIndexLock() {
         return indexLock;
@@ -108,6 +109,14 @@ public class PListStore extends ServiceSupport implements BrokerServiceAware, Ru
 
     public void setIndexWriteBatchSize(int indexWriteBatchSize) {
         this.indexWriteBatchSize = indexWriteBatchSize;
+    }
+
+    public boolean getIndexEnablePageCaching() {
+        return indexEnablePageCaching;
+    }
+
+    public void setIndexEnablePageCaching(boolean indexEnablePageCaching) {
+        this.indexEnablePageCaching = indexEnablePageCaching;
     }
 
     protected class MetaData {
@@ -223,10 +232,10 @@ public class PListStore extends ServiceSupport implements BrokerServiceAware, Ru
                     result = pl;
                     this.persistentLists.put(name, pl);
                 }
-                final PList load = result;
+                final PList toLoad = result;
                 getPageFile().tx().execute(new Transaction.Closure<IOException>() {
                     public void execute(Transaction tx) throws IOException {
-                        load.load(tx);
+                        toLoad.load(tx);
                     }
                 });
 
@@ -269,6 +278,7 @@ public class PListStore extends ServiceSupport implements BrokerServiceAware, Ru
                 this.journal.setWriteBatchSize(getJournalMaxWriteBatchSize());
                 this.journal.start();
                 this.pageFile = new PageFile(directory, "tmpDB");
+                this.pageFile.setEnablePageCaching(getIndexEnablePageCaching());
                 this.pageFile.setPageSize(getIndexPageSize());
                 this.pageFile.setWriteBatchSize(getIndexWriteBatchSize());
                 this.pageFile.setPageCacheSize(getIndexCacheSize());
@@ -340,12 +350,21 @@ public class PListStore extends ServiceSupport implements BrokerServiceAware, Ru
 
     public void run() {
         try {
+            final int lastJournalFileId = journal.getLastAppendLocation().getDataFileId();
             final Set<Integer> candidates = journal.getFileMap().keySet();
             LOG.trace("Full gc candidate set:" + candidates);
             if (candidates.size() > 1) {
+                // prune current write
+                for (Iterator<Integer> iterator = candidates.iterator(); iterator.hasNext();) {
+                    if (iterator.next() >= lastJournalFileId) {
+                        iterator.remove();
+                    }
+                }
                 List<PList> plists = null;
-                synchronized (this) {
-                    plists = new ArrayList(persistentLists.values());
+                synchronized (indexLock) {
+                    synchronized (this) {
+                        plists = new ArrayList(persistentLists.values());
+                    }
                 }
                 for (PList list : plists) {
                     list.claimFileLocations(candidates);

@@ -204,7 +204,7 @@ public class SequenceSet extends LinkedNodeList<Sequence> {
                 return sequence;
             }
             if (sequence.range() > count ) {
-                Sequence rc = new Sequence(sequence.first, sequence.first+count);
+                Sequence rc = new Sequence(sequence.first, sequence.first+count-1);
                 sequence.first+=count;
                 return rc;
             }

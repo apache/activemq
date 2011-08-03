@@ -26,7 +26,6 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import org.apache.kahadb.index.ListIndex;
-import org.apache.kahadb.index.ListNode;
 import org.apache.kahadb.journal.Location;
 import org.apache.kahadb.page.Transaction;
 import org.apache.kahadb.util.ByteSequence;
@@ -58,11 +57,11 @@ public class PList extends ListIndex<String, Location> {
     }
 
     void read(DataInput in) throws IOException {
-        this.headPageId = in.readLong();
+        setHeadPageId(in.readLong());
     }
 
     public void write(DataOutput out) throws IOException {
-        out.writeLong(this.headPageId);
+        out.writeLong(getHeadPageId());
     }
 
     public synchronized void destroy() throws IOException {
@@ -185,17 +184,19 @@ public class PList extends ListIndex<String, Location> {
         return size() == 0;
     }
 
-    synchronized public Iterator<PListEntry> iterator() throws IOException {
+    public PListIterator iterator() throws IOException {
         return new PListIterator();
     }
 
-    private final class PListIterator implements Iterator<PListEntry> {
+    public final class PListIterator implements Iterator<PListEntry> {
         final Iterator<Map.Entry<String, Location>> iterator;
         final Transaction tx;
 
         PListIterator() throws IOException {
             tx = store.pageFile.tx();
-            this.iterator = iterator(tx);
+            synchronized (indexLock) {
+                this.iterator = iterator(tx);
+            }
         }
 
         @Override
@@ -234,6 +235,16 @@ public class PList extends ListIndex<String, Location> {
                 throw e;
             }
         }
+
+        public void release() {
+            try {
+                tx.rollback();
+            } catch (IOException unexpected) {
+                IllegalStateException e = new IllegalStateException(unexpected);
+                e.initCause(unexpected);
+                throw e;
+            }
+        }
     }
 
     public void claimFileLocations(final Set<Integer> candidates) throws IOException {
@@ -254,6 +265,6 @@ public class PList extends ListIndex<String, Location> {
 
     @Override
     public String toString() {
-        return "" + name + ",[headPageId=" + headPageId  + ",tailPageId=" + tailPageId + ", size=" + size() + "]";
+        return name + "[headPageId=" + getHeadPageId()  + ",tailPageId=" + getTailPageId() + ", size=" + size() + "]";
     }
 }

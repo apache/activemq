@@ -26,6 +26,7 @@ import org.apache.kahadb.page.Page;
 import org.apache.kahadb.page.Transaction;
 import org.apache.kahadb.util.LinkedNode;
 import org.apache.kahadb.util.LinkedNodeList;
+import org.apache.kahadb.util.Marshaller;
 import org.apache.kahadb.util.VariableMarshaller;
 
 /**
@@ -35,22 +36,24 @@ import org.apache.kahadb.util.VariableMarshaller;
 public final class ListNode<Key,Value> {
     private final static boolean ADD_FIRST = true;
     private final static boolean ADD_LAST = false;
-    private final static long NOT_SET = -1;
 
     // The index that this node is part of.
-    private final ListIndex<Key,Value> index;
+    private ListIndex<Key,Value> containingList;
 
     // The page associated with this node
     private Page<ListNode<Key,Value>> page;
 
-    protected LinkedNodeList<KeyValueEntry<Key, Value>> entries = new LinkedNodeList<KeyValueEntry<Key, Value>>();
+    private LinkedNodeList<KeyValueEntry<Key, Value>> entries = new LinkedNodeList<KeyValueEntry<Key, Value>>() {
+
+        @Override
+        public String toString() {
+            return "PageId:" + page.getPageId() + ", index:" + containingList + super.toString();
+        }
+    };
 
     // The next page after this one.
-    private long next = NOT_SET;
+    private long next = ListIndex.NOT_SET;
 
-    public int size(Transaction tx) {
-        return entries.size();
-    }
 
     static final class KeyValueEntry<Key, Value> extends LinkedNode<KeyValueEntry<Key, Value>> implements Entry<Key, Value>
     {
@@ -83,11 +86,13 @@ public final class ListNode<Key,Value> {
     private final class ListNodeIterator implements Iterator<ListNode<Key,Value>> {
 
         private final Transaction tx;
+        private final ListIndex<Key,Value> index;
         ListNode<Key,Value> nextEntry;
 
-        private ListNodeIterator(Transaction tx, ListNode<Key,Value> current) throws IOException {
+        private ListNodeIterator(Transaction tx, ListNode<Key,Value> current) {
             this.tx = tx;
             nextEntry = current;
+            index = current.getContainingList();
         }
 
         public boolean hasNext() {
@@ -96,8 +101,8 @@ public final class ListNode<Key,Value> {
 
         public ListNode<Key,Value> next() {
             ListNode<Key,Value> current = nextEntry;
-            if( nextEntry !=null ) {
-                if (nextEntry.next != NOT_SET) {
+            if( current !=null ) {
+                if (current.next != ListIndex.NOT_SET) {
                     try {
                         nextEntry = index.loadNode(tx, current.next);
                     } catch (IOException unexpected) {
@@ -120,64 +125,96 @@ public final class ListNode<Key,Value> {
     private final class ListIterator implements Iterator<Entry<Key, Value>> {
 
         private final Transaction tx;
-        ListNode<Key,Value> current, prev;
+        private final ListIndex<Key,Value> targetList;
+        ListNode<Key,Value> currentNode, previousNode;
         KeyValueEntry<Key, Value> nextEntry;
-        KeyValueEntry<Key, Value>  toRemove;
+        KeyValueEntry<Key, Value> entryToRemove;
 
-        private ListIterator(Transaction tx, ListNode<Key,Value> current, long nextIndex) throws IOException {
+        private ListIterator(Transaction tx, ListNode<Key,Value> current, long start) {
             this.tx = tx;
-            this.current = current;
+            this.currentNode = current;
+            this.targetList = current.getContainingList();
             nextEntry = current.entries.getHead();
-            if (nextIndex > 0 && nextEntry != null) {
-                for (long i=0; i<nextIndex; i++) {
-                    nextEntry = nextEntry.getNext();
-                    if (nextEntry == null) {
-                        if (!nextFromNextListNode())
-                            throw new NoSuchElementException("Index out of range: " + nextIndex);
-                        }
-                    }
-                }
+            if (start > 0) {
+                moveToRequestedStart(start);
             }
+        }
 
-        private boolean nextFromNextListNode() {
-            boolean haveNext = false;
-            if (current.getNext() != NOT_SET) {
+        private void moveToRequestedStart(final long start) {
+            long count = 0;
+            while (hasNext() && count < start) {
+                next();
+                count++;
+            }
+            if (!hasNext()) {
+                throw new NoSuchElementException("Index " + start + " out of current range: " + count);
+            }
+        }
+
+        private KeyValueEntry<Key, Value> getFromNextNode() {
+            KeyValueEntry<Key, Value> result = null;
+            if (currentNode.getNext() != ListIndex.NOT_SET) {
                 try {
-                    prev = current;
-                    current = index.loadNode(tx, current.getNext());
+                    previousNode = currentNode;
+                    currentNode = targetList.loadNode(tx, currentNode.getNext());
                 } catch (IOException unexpected) {
                     NoSuchElementException e = new NoSuchElementException(unexpected.getLocalizedMessage());
                     e.initCause(unexpected);
                     throw e;
                 }
-                nextEntry = current.entries.getHead();
-                haveNext = nextEntry != null;
+                result = currentNode.entries.getHead();
             }
-            return haveNext;
+            return result;
         }
 
         public boolean hasNext() {
-            return nextEntry !=null || nextFromNextListNode();
+            if (nextEntry == null) {
+                nextEntry = getFromNextNode();
+            }
+            return nextEntry != null;
         }
 
         public Entry<Key, Value> next() {
             if( nextEntry !=null ) {
-                toRemove = nextEntry;
-                nextEntry=toRemove.getNext();
-                return toRemove;
+                entryToRemove = nextEntry;
+                nextEntry = entryToRemove.getNext();
+                return entryToRemove;
             } else {
                 throw new NoSuchElementException();
             }
         }
 
         public void remove() {
-            if (toRemove == null) {
-                throw new IllegalStateException("can only remove once, call next again");
+            if (entryToRemove == null) {
+                throw new IllegalStateException("can only remove once, call hasNext();next() again");
             }
             try {
-                doRemove(tx, current, prev, toRemove);
-                index.onRemove();
-                toRemove = null;
+                entryToRemove.unlink();
+                entryToRemove = null;
+                ListNode<Key,Value> toRemoveNode = null;
+                if (currentNode.entries.isEmpty()) {
+                    // may need to free this node
+                    if (currentNode.isHead() && currentNode.isTail()) {
+                        // store empty list
+                    } else if (currentNode.isHead()) {
+                        // new head
+                        toRemoveNode = currentNode;
+                        nextEntry = getFromNextNode();
+                        targetList.setHeadPageId(currentNode.getPageId());
+                    } else if (currentNode.isTail()) {
+                        toRemoveNode = currentNode;
+                        previousNode.setNext(ListIndex.NOT_SET);
+                        previousNode.store(tx);
+                        targetList.setTailPageId(previousNode.getPageId());
+                    }
+                }
+                targetList.onRemove();
+
+                if (toRemoveNode != null) {
+                    tx.free(toRemoveNode.getPage());
+                } else {
+                    currentNode.store(tx);
+                }
             } catch (IOException unexpected) {
                 IllegalStateException e = new IllegalStateException(unexpected.getLocalizedMessage());
                 e.initCause(unexpected);
@@ -192,11 +229,13 @@ public final class ListNode<Key,Value> {
      * @param <Key>
      * @param <Value>
      */
-    static public class Marshaller<Key,Value> extends VariableMarshaller<ListNode<Key,Value>> {
-        private final ListIndex<Key,Value> index;
+    static public final class NodeMarshaller<Key,Value> extends VariableMarshaller<ListNode<Key,Value>> {
+        private final Marshaller<Key> keyMarshaller;
+        private final Marshaller<Value> valueMarshaller;
 
-        public Marshaller(ListIndex<Key,Value> index) {
-            this.index = index;
+        public NodeMarshaller(Marshaller<Key> keyMarshaller, Marshaller<Value> valueMarshaller) {
+            this.keyMarshaller = keyMarshaller;
+            this.valueMarshaller = valueMarshaller;
         }
 
         public void writePayload(ListNode<Key,Value> node, DataOutput os) throws IOException {
@@ -209,50 +248,23 @@ public final class ListNode<Key,Value> {
             os.writeShort(count);
             KeyValueEntry<Key, Value> entry = node.entries.getHead();
             while (entry != null) {
-                index.getKeyMarshaller().writePayload((Key) entry.getKey(), os);
-                index.getValueMarshaller().writePayload((Value) entry.getValue(), os);
+                keyMarshaller.writePayload((Key) entry.getKey(), os);
+                valueMarshaller.writePayload((Value) entry.getValue(), os);
                 entry = entry.getNext();
             }
         }
 
         @SuppressWarnings("unchecked")
         public ListNode<Key,Value> readPayload(DataInput is) throws IOException {
-            ListNode<Key,Value> node = new ListNode<Key,Value>(index);
+            ListNode<Key,Value> node = new ListNode<Key,Value>();
             node.next = is.readLong();
             final short size = is.readShort();
             for (short i = 0; i < size; i++) {
                 node.entries.addLast(
-                        new KeyValueEntry(index.getKeyMarshaller().readPayload(is),
-                                                     index.getValueMarshaller().readPayload(is)));
+                        new KeyValueEntry(keyMarshaller.readPayload(is),
+                                                     valueMarshaller.readPayload(is)));
             }
             return node;
-        }
-    }
-
-    public ListNode(ListIndex<Key, Value> index) {
-        this.index = index;
-    }
-
-    private void doRemove(final Transaction tx, final ListNode current, final ListNode prev, KeyValueEntry<Key, Value> entry) throws IOException {
-        entry.unlink();
-        if (current.entries.isEmpty()) {
-                if (current.getPageId() == index.getHeadPageId()) {
-                    if (current.getNext() != NOT_SET) {
-                        // new head
-                        index.setHeadPageId(current.getNext());
-                        tx.free(current.getPageId());
-                    } else {
-                        //  store current in empty state
-                        store(tx);
-                    }
-                } else {
-                    // need to unlink the node
-                    prev.setNext(current.next);
-                    index.storeNode(tx, prev, false);
-                    tx.free(current.getPageId());
-                }
-        } else {
-            store(tx);
         }
     }
 
@@ -260,7 +272,7 @@ public final class ListNode<Key,Value> {
         if (key == null) {
             throw new IllegalArgumentException("Key cannot be null");
         }
-        entries.addLast(new KeyValueEntry(key, value));
+        entries.addLast(new KeyValueEntry<Key, Value>(key, value));
         store(tx, ADD_LAST);
         return null;
     }
@@ -269,14 +281,14 @@ public final class ListNode<Key,Value> {
         if (key == null) {
             throw new IllegalArgumentException("Key cannot be null");
         }
-        entries.addFirst(new KeyValueEntry(key, value));
+        entries.addFirst(new KeyValueEntry<Key, Value>(key, value));
         store(tx, ADD_FIRST);
         return null;
     }
 
     private void store(Transaction tx, boolean addFirst) throws IOException {
         try {
-            index.storeNode(tx, this, false);
+            getContainingList().storeNode(tx, this, false);
         } catch ( Transaction.PageOverflowIOException e ) {
                 // If we get an overflow
                 split(tx, addFirst);
@@ -284,23 +296,23 @@ public final class ListNode<Key,Value> {
     }
 
     private void store(Transaction tx) throws IOException {
-        index.storeNode(tx, this, false);
+        getContainingList().storeNode(tx, this, false);
     }
 
     private void split(Transaction tx, boolean isAddFirst) throws IOException {
-        ListNode<Key, Value> extension = index.createNode(tx);
+        ListNode<Key, Value> extension = getContainingList().createNode(tx);
         if (isAddFirst) {
             // head keeps the first entry, insert extension with the rest
             extension.setNext(this.getNext());
             this.setNext(extension.getPageId());
             extension.setEntries(entries.getHead().splitAfter());
         }  else {
-            index.setTailPageId(extension.getPageId());
             this.setNext(extension.getPageId());
             extension.setEntries(entries.getTail().getPrevious().splitAfter());
+            getContainingList().setTailPageId(extension.getPageId());
         }
-        index.storeNode(tx, this, false);
         extension.store(tx, isAddFirst);
+        store(tx);
     }
 
     // called after a split
@@ -308,7 +320,7 @@ public final class ListNode<Key,Value> {
         this.entries = list;
     }
 
-    public Value get(Transaction tx, Key key) throws IOException {
+    public Value get(Transaction tx, Key key) {
         if (key == null) {
             throw new IllegalArgumentException("Key cannot be null");
         }
@@ -324,15 +336,15 @@ public final class ListNode<Key,Value> {
         return result;
     }
 
-    public boolean isEmpty(final Transaction tx) throws IOException {
+    public boolean isEmpty(final Transaction tx)  {
         return entries.isEmpty();
     }
 
-    public Entry<Key,Value> getFirst(Transaction tx) throws IOException {
+    public Entry<Key,Value> getFirst(Transaction tx) {
         return entries.getHead();
     }
 
-    public Entry<Key,Value> getLast(Transaction tx) throws IOException {
+    public Entry<Key,Value> getLast(Transaction tx) {
         return entries.getTail();
     }
 
@@ -353,7 +365,7 @@ public final class ListNode<Key,Value> {
         tx.free(this.getPageId());
     }
 
-    public boolean contains(Transaction tx, Key key) throws IOException {
+    public boolean contains(Transaction tx, Key key) {
         if (key == null) {
             throw new IllegalArgumentException("Key cannot be null");
         }
@@ -392,10 +404,30 @@ public final class ListNode<Key,Value> {
     public void setNext(long next) {
         this.next = next;
     }
-    
+
+    public void setContainingList(ListIndex<Key, Value> list) {
+        this.containingList = list;
+    }
+
+    public ListIndex<Key,Value> getContainingList() {
+        return containingList;
+    }
+
+    public boolean isHead() {
+        return getPageId() == containingList.getHeadPageId();
+    }
+
+    public boolean isTail() {
+        return getPageId() == containingList.getTailPageId();
+    }
+
+    public int size(Transaction tx) {
+        return entries.size();
+    }
+
     @Override
     public String toString() {
-        return "[ListNode(" + page.getPageId() + "->" + next + ") " + entries.toString() + "]";
+        return "[ListNode(" + (page != null ?  page.getPageId() + "->" + next : "null") + ")[" + entries.size() + "]]";
     }
 }
 

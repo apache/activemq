@@ -129,8 +129,6 @@ public class Transaction implements Iterable<Page> {
      *         if the PageFile is not loaded
      */
     public <T> Page<T> allocate(int count) throws IOException {
-        // TODO: we need to track allocated pages so that they can be returned if the
-        // transaction gets rolled back.
         Page<T> rc = pageFile.allocate(count);
         allocateList.add(new Sequence(rc.getPageId(), rc.getPageId()+count-1));
         return rc;
