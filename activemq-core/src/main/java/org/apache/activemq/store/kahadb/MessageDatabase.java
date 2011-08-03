@@ -1178,12 +1178,15 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
                 gcCandidateSet.removeAll(journalFilesBeingReplicated);
             }
 
+            if (metadata.producerSequenceIdTrackerLocation != null) {
+                gcCandidateSet.remove(metadata.producerSequenceIdTrackerLocation.getDataFileId());
+            }
+
             // Don't GC files after the first in progress tx
             if (metadata.firstInProgressTransactionLocation != null) {
                 if (metadata.firstInProgressTransactionLocation.getDataFileId() < firstTxLocation.getDataFileId()) {
                     firstTxLocation = metadata.firstInProgressTransactionLocation;
                 }
-                ;
             }
 
             if (firstTxLocation != null) {
