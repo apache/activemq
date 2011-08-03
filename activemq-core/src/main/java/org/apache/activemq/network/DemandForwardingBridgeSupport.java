@@ -1048,7 +1048,11 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
             List<ConsumerId> networkConsumers = sub.getConsumerInfo().getNetworkConsumerIds();
             if (!networkConsumers.isEmpty()) {
                 if (matchFound(candidateConsumers, networkConsumers)) {
-                    suppress = isActiveDurableSub(sub) && hasLowerPriority(sub, candidate.getLocalInfo());
+                    if (isInActiveDurableSub(sub)) {
+                        suppress = false;
+                    } else {
+                        suppress = hasLowerPriority(sub, candidate.getLocalInfo());
+                    }
                     break;
                 }
             }
@@ -1056,8 +1060,8 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
         return suppress;
     }
 
-    private boolean isActiveDurableSub(Subscription sub) {
-        return  (sub.getConsumerInfo().isDurable() && sub instanceof DurableTopicSubscription && ((DurableTopicSubscription)sub).isActive());
+    private boolean isInActiveDurableSub(Subscription sub) {
+        return  (sub.getConsumerInfo().isDurable() && sub instanceof DurableTopicSubscription && !((DurableTopicSubscription)sub).isActive());
     }
 
     private boolean hasLowerPriority(Subscription existingSub, ConsumerInfo candidateInfo) {
@@ -1067,7 +1071,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
             if (LOG.isDebugEnabled()) {
                 LOG.debug(configuration.getBrokerName() + " Ignoring duplicate subscription from " + remoteBrokerName
                         + ", sub: " + candidateInfo + " is duplicated by network subscription with equal or higher network priority: " 
-                        + existingSub.getConsumerInfo()  + ", networkComsumerIds: " + existingSub.getConsumerInfo().getNetworkConsumerIds());
+                        + existingSub  + ", networkConsumerIds: " + existingSub.getConsumerInfo().getNetworkConsumerIds());
             }
             suppress = true;
         } else {

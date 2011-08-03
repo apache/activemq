@@ -117,7 +117,7 @@ public class NoDuplicateOnTopicNetworkTest extends CombinationTestSupport {
     private BrokerService createAndStartBroker(String name, String addr)
             throws Exception {
         BrokerService broker = new BrokerService();
-        //broker.setDeleteAllMessagesOnStartup(true);
+        broker.setDeleteAllMessagesOnStartup(true);
         broker.setBrokerName(name);
         broker.addConnector(addr).setDiscoveryUri(new URI(MULTICAST_DEFAULT));
         broker.setUseJmx(false);
