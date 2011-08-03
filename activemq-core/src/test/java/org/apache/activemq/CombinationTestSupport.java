@@ -40,7 +40,7 @@ import org.slf4j.LoggerFactory;
  * combinations of options. Usage: If you have a test case called testFoo what
  * you want to run through a few combinations, of of values for the attributes
  * age and color, you would something like: <code>
- *    public void initCombosForTestFoo() {    
+ *    public void initCombosForTestFoo() {
  *        addCombinationValues( "age", new Object[]{ new Integer(21), new Integer(30) } );
  *        addCombinationValues( "color", new Object[]{"blue", "green"} );
  *    }
@@ -55,8 +55,8 @@ import org.slf4j.LoggerFactory;
  *         return suite(FooTest.class);
  *     }
  * </code>
- * 
- * 
+ *
+ *
  */
 public abstract class CombinationTestSupport extends AutoFailTestSupport {
 
@@ -64,7 +64,7 @@ public abstract class CombinationTestSupport extends AutoFailTestSupport {
 
     private HashMap<String, ComboOption> comboOptions = new HashMap<String, ComboOption>();
     private boolean combosEvaluated;
-    private Map options;
+    private Map<String, Object> options;
 
     static class ComboOption {
         final String attribute;
@@ -99,16 +99,35 @@ public abstract class CombinationTestSupport extends AutoFailTestSupport {
         }
     }
 
-    private void setOptions(Map options) throws NoSuchFieldException, IllegalAccessException {
+    private void setOptions(Map<String, Object> options) throws NoSuchFieldException, IllegalAccessException {
         this.options = options;
-        for (Iterator iterator = options.keySet().iterator(); iterator.hasNext();) {
-            String attribute = (String)iterator.next();
+        for (Iterator<String> iterator = options.keySet().iterator(); iterator.hasNext();) {
+            String attribute = iterator.next();
             Object value = options.get(attribute);
             try {
                 Field field = getClass().getField(attribute);
                 field.set(this, value);
             } catch (Throwable e) {
-                LOG.info("Could not set field '" + attribute + "' to value '" + value + "', make sure the field exists and is public.");
+                try {
+                    boolean found = false;
+                    String setterName = "set" + attribute.substring(0, 1).toUpperCase() +
+                                        attribute.substring(1);
+                    for(Method method : getClass().getMethods()) {
+                        if (method.getName().equals(setterName)) {
+                            method.invoke(this, value);
+                            found = true;
+                            break;
+                        }
+                    }
+
+                    if (!found) {
+                        throw new NoSuchMethodError("No setter found for field: " + attribute);
+                    }
+
+                } catch(Throwable ex) {
+                    LOG.info("Could not set field '" + attribute + "' to value '" + value +
+                             "', make sure the field exists and is public or has a setter.");
+                }
             }
         }
     }
@@ -213,15 +232,15 @@ public abstract class CombinationTestSupport extends AutoFailTestSupport {
 
     private static boolean isTestMethod(Method m) {
         String name = m.getName();
-        Class[] parameters = m.getParameterTypes();
-        Class returnType = m.getReturnType();
+        Class<?>[] parameters = m.getParameterTypes();
+        Class<?> returnType = m.getReturnType();
         return parameters.length == 0 && name.startsWith("test") && returnType.equals(Void.TYPE);
     }
 
     public String getName() {
-    	return getName(false);
+        return getName(false);
     }
-    
+
     public String getName(boolean original) {
         if (options != null && !original) {
             return super.getName() + " " + options;
