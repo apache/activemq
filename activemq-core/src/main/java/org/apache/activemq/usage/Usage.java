@@ -45,7 +45,7 @@ public abstract class Usage<T extends Usage> implements Service {
     private int percentUsageMinDelta = 1;
     private final List<UsageListener> listeners = new CopyOnWriteArrayList<UsageListener>();
     private final boolean debug = LOG.isDebugEnabled();
-    private String name;
+    protected String name;
     private float usagePortion = 1.0f;
     private final List<T> children = new CopyOnWriteArrayList<T>();
     private final List<Runnable> callbacks = new LinkedList<Runnable>();
@@ -324,14 +324,14 @@ public abstract class Usage<T extends Usage> implements Service {
         }
     }
 
-    private void addChild(T child) {
+    protected void addChild(T child) {
         children.add(child);
         if (started.get()) {
             child.start();
         }
     }
 
-    private void removeChild(T child) {
+    protected void removeChild(T child) {
         children.remove(child);
     }
 

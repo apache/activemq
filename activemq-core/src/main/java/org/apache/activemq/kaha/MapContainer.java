@@ -82,7 +82,7 @@ public interface MapContainer<K, V> extends Map<K, V> {
      * @param key
      * @return true if the container contains the key
      */
-    boolean containsKey(K key);
+    boolean containsKey(Object key);
 
     /**
      * Get the value associated with the key
@@ -90,20 +90,20 @@ public interface MapContainer<K, V> extends Map<K, V> {
      * @param key
      * @return the value associated with the key from the store
      */
-    V get(K key);
+    V get(Object key);
 
     /**
      * @param o
      * @return true if the MapContainer contains the value o
      */
-    boolean containsValue(K o);
+    boolean containsValue(Object o);
 
     /**
      * Add add entries in the supplied Map
      * 
      * @param map
      */
-    void putAll(Map<K, V> map);
+    void putAll(Map<? extends K, ? extends V> map);
 
     /**
      * @return a Set of all the keys
@@ -137,7 +137,7 @@ public interface MapContainer<K, V> extends Map<K, V> {
      * @param key
      * @return the old value assocaited with the key or null
      */
-    V remove(K key);
+    V remove(Object key);
 
     /**
      * empty the container
