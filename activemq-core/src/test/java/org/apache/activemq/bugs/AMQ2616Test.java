@@ -21,7 +21,6 @@ import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.jms.BytesMessage;
 import javax.jms.Connection;
-import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
 import javax.jms.Queue;
 import javax.jms.Session;
@@ -39,17 +38,18 @@ public class AMQ2616Test extends TestCase {
     private static final int NUMBER = 2000;
     private BrokerService brokerService;
     private final ArrayList<Thread> threads = new ArrayList<Thread>();
-    String ACTIVEMQ_BROKER_BIND = "tcp://0.0.0.0:61616";
-    AtomicBoolean shutdown = new AtomicBoolean();
-    
+    private final String ACTIVEMQ_BROKER_BIND = "tcp://0.0.0.0:0";
+    private final AtomicBoolean shutdown = new AtomicBoolean();
+
+    private String connectionUri;
+
     public void testQueueResourcesReleased() throws Exception{
-        ActiveMQConnectionFactory fac = new ActiveMQConnectionFactory(ACTIVEMQ_BROKER_BIND);
+        ActiveMQConnectionFactory fac = new ActiveMQConnectionFactory(connectionUri);
         Connection tempConnection = fac.createConnection();
         tempConnection.start();
         Session tempSession = tempConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         Queue tempQueue = tempSession.createTemporaryQueue();
-        final MessageConsumer tempConsumer = tempSession.createConsumer(tempQueue);
-               
+
         Connection testConnection = fac.createConnection();
         long startUsage = brokerService.getSystemUsage().getMemoryUsage().getUsage();
         Session testSession = testConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -67,8 +67,8 @@ public class AMQ2616Test extends TestCase {
         endUsage = brokerService.getSystemUsage().getMemoryUsage().getUsage();
         assertEquals(startUsage,endUsage);
     }
-   
-    
+
+
     @Override
     protected void setUp() throws Exception {
         // Start an embedded broker up.
@@ -95,6 +95,10 @@ public class AMQ2616Test extends TestCase {
         brokerService.getSystemUsage().getTempUsage().setLimit(200 * 1024 * 1024);
         brokerService.addConnector(ACTIVEMQ_BROKER_BIND);
         brokerService.start();
+        brokerService.waitUntilStarted();
+
+        connectionUri = brokerService.getTransportConnectors().get(0).getPublishableConnectString();
+
         new ActiveMQQueue(getName());
     }
 

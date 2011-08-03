@@ -21,6 +21,7 @@ import java.util.concurrent.TimeUnit;
 
 import javax.jms.Connection;
 import javax.jms.ConnectionConsumer;
+import javax.jms.ConnectionFactory;
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageListener;
@@ -61,9 +62,9 @@ public class OnePrefetchAsyncConsumerTest extends EmbeddedBrokerTestSupport {
         // Msg3 will cause the test to fail as it will attempt to retrieve an additional ServerSession from
         // an exhausted ServerSessionPool due to the (incorrectly?) incremented prefetchExtension in the PrefetchSubscription
         producer.send(session.createTextMessage("Msg3"));
-        
+
         session.commit();
-        
+
         // wait for test to complete and the test result to get set
         // this happens asynchronously since the messages are delivered asynchronously
         synchronized (testMutex) {
@@ -71,13 +72,18 @@ public class OnePrefetchAsyncConsumerTest extends EmbeddedBrokerTestSupport {
               testMutex.wait();
            }
         }
-        
+
         //test completed, result is ready
         assertTrue("Attempted to retrieve more than one ServerSession at a time", testMutex.testSuccessful);
     }
 
+    @Override
+    protected ConnectionFactory createConnectionFactory() throws Exception {
+        return new ActiveMQConnectionFactory(broker.getTransportConnectors().get(0).getPublishableConnectString());
+    }
+
     protected void setUp() throws Exception {
-        bindAddress = "tcp://localhost:61616";
+        bindAddress = "tcp://localhost:0";
         super.setUp();
 
         testMutex = new TestMutex();
@@ -105,7 +111,7 @@ public class OnePrefetchAsyncConsumerTest extends EmbeddedBrokerTestSupport {
         answer.setDestinationPolicy(policyMap);
         return answer;
     }
-    
+
     protected Queue createQueue() {
         return new ActiveMQQueue(getDestinationString());
     }

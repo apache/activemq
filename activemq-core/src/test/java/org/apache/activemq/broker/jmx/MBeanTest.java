@@ -25,6 +25,7 @@ import java.util.Map;
 
 import javax.jms.BytesMessage;
 import javax.jms.Connection;
+import javax.jms.ConnectionFactory;
 import javax.jms.Destination;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
@@ -48,7 +49,6 @@ import org.apache.activemq.broker.region.BaseDestination;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.broker.region.policy.SharedDeadLetterStrategy;
-import org.apache.activemq.command.ActiveMQBlobMessage;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTempQueue;
@@ -90,8 +90,9 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
     public void testConnectors() throws Exception{
         ObjectName brokerName = assertRegisteredObjectName(domain + ":Type=Broker,BrokerName=localhost");
         BrokerViewMBean broker = (BrokerViewMBean)MBeanServerInvocationHandler.newProxyInstance(mbeanServer, brokerName, BrokerViewMBean.class, true);
-        assertEquals("openwire URL port doesn't equal bind Address", new URI(broker.getOpenWireURL()).getPort(), new URI(this.bindAddress).getPort());
-
+        assertEquals("openwire URL port doesn't equal bind Address",
+                     new URI(broker.getOpenWireURL()).getPort(),
+                     new URI(this.broker.getTransportConnectors().get(0).getPublishableConnectString()).getPort());
     }
 
     public void testMBeans() throws Exception {
@@ -317,9 +318,8 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
 
         String newDestination = getSecondDestinationString();
         long queueSize = queue.getQueueSize();
+        assertTrue(queueSize > 0);
         queue.copyMatchingMessagesTo("counter > 2", newDestination);
-
-
 
         queueViewMBeanName = assertRegisteredObjectName(domain + ":Type=Queue,Destination=" + newDestination + ",BrokerName=localhost");
 
@@ -334,6 +334,7 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         assertEquals("dest has no memory usage", 0, queue.getMemoryPercentUsage());
     }
 
+    @SuppressWarnings("rawtypes")
     protected void assertSendViaMBean() throws Exception {
         String queueName = getDestinationString() + ".SendMBBean";
 
@@ -353,7 +354,7 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         for (int i = 0; i < count; i++) {
             String body = "message:" + i;
 
-            Map headers = new HashMap();
+            Map<String, Object> headers = new HashMap<String, Object>();
             headers.put("JMSCorrelationID", "MyCorrId");
             headers.put("JMSDeliveryMode", Boolean.FALSE);
             headers.put("JMSXGroupID", "MyGroupID");
@@ -370,7 +371,6 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         if (compdatalist.length == 0) {
             fail("There is no message in the queue:");
         }
-        String[] messageIDs = new String[compdatalist.length];
 
         for (int i = 0; i < compdatalist.length; i++) {
             CompositeData cdata = compdatalist[i];
@@ -407,7 +407,6 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
             assertComplexData(i, cdata, "JMSXGroupSeq", 1234);
             assertComplexData(i, cdata, "JMSXGroupID", "MyGroupID");
             assertComplexData(i, cdata, "Text", "message:" + i);
-
         }
     }
 
@@ -632,7 +631,7 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
     }
 
     protected void setUp() throws Exception {
-        bindAddress = "tcp://localhost:61616";
+        bindAddress = "tcp://localhost:0";
         useTopic = false;
         super.setUp();
         mbeanServer = broker.getManagementContext().getMBeanServer();
@@ -654,6 +653,11 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
             connection = null;
         }
         super.tearDown();
+    }
+
+    @Override
+    protected ConnectionFactory createConnectionFactory() throws Exception {
+        return new ActiveMQConnectionFactory(broker.getTransportConnectors().get(0).getPublishableConnectString());
     }
 
     protected BrokerService createBroker() throws Exception {
@@ -690,7 +694,6 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         }
         Thread.sleep(1000);
     }
-
 
     protected void useConnectionWithBlobMessage(Connection connection) throws Exception {
         connection.setClientID(clientID);
@@ -732,7 +735,6 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
     protected void echo(String text) {
         LOG.info(text);
     }
-
 
     protected String getSecondDestinationString() {
         return "test.new.destination." + getClass() + "." + getName();
@@ -815,7 +817,6 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         } catch (Exception e) {
             // expected!
         }
-
     }
 
     // Test for AMQ-3029

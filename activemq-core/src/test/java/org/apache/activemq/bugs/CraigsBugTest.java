@@ -18,7 +18,6 @@ package org.apache.activemq.bugs;
 
 import javax.jms.Connection;
 import javax.jms.JMSException;
-import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.Session;
 
@@ -26,13 +25,12 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.EmbeddedBrokerTestSupport;
 import org.apache.activemq.command.ActiveMQQueue;
 
-/**
- * 
- */
 public class CraigsBugTest extends EmbeddedBrokerTestSupport {
 
+    private String connectionUri;
+
     public void testConnectionFactory() throws Exception {
-        final ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory("tcp://localhost:61616");
+        final ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory(connectionUri);
         final ActiveMQQueue queue = new ActiveMQQueue("testqueue");
         final Connection conn = cf.createConnection();
 
@@ -60,8 +58,10 @@ public class CraigsBugTest extends EmbeddedBrokerTestSupport {
     }
 
     protected void setUp() throws Exception {
-        bindAddress = "tcp://localhost:61616";
+        bindAddress = "tcp://localhost:0";
         super.setUp();
+
+        connectionUri = broker.getTransportConnectors().get(0).getPublishableConnectString();
     }
 
 }

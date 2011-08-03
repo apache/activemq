@@ -38,43 +38,42 @@ import org.apache.activemq.util.Wait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
 public class AMQ2314Test extends CombinationTestSupport {
 
     public boolean consumeAll = false;
     public int deliveryMode = DeliveryMode.NON_PERSISTENT;
-    
+
     private static final Logger LOG = LoggerFactory.getLogger(AMQ2314Test.class);
     private static final int MESSAGES_COUNT = 30000;
     private static byte[]  buf = new byte[1024];
     private BrokerService broker;
-    
-    protected long messageReceiveTimeout = 500L;
+    private String connectionUri;
+
+    private static final long messageReceiveTimeout = 500L;
 
     Destination destination = new ActiveMQTopic("FooTwo");
-    
+
     public void testRemoveSlowSubscriberWhacksTempStore() throws Exception {
         runProducerWithHungConsumer();
     }
-    
+
     public void testMemoryUsageReleasedOnAllConsumed() throws Exception {
         consumeAll = true;
         runProducerWithHungConsumer();
         // do it again to ensure memory limits are decreased
         runProducerWithHungConsumer();
     }
-    
-    
+
     public void runProducerWithHungConsumer() throws Exception {
-    
+
         final CountDownLatch consumerContinue = new CountDownLatch(1);
         final CountDownLatch consumerReady = new CountDownLatch(1);
-        
+
         final long origTempUsage = broker.getSystemUsage().getTempUsage().getUsage();
-        
-        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("tcp://localhost:61616");
+
+        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(connectionUri);
         factory.setAlwaysSyncSend(true);
-        
+
         // ensure messages are spooled to disk for this consumer
         ActiveMQPrefetchPolicy prefetch = new ActiveMQPrefetchPolicy();
         prefetch.setTopicPrefetch(500);
@@ -99,19 +98,19 @@ public class AMQ2314Test extends CombinationTestSupport {
                 }
             }
         };
-        
+
         Thread consumingThread = new Thread("Consuming thread") {
             public void run() {
                 try {
                     int count = 0;
                     Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
                     MessageConsumer consumer = session.createConsumer(destination);
-                    
+
                     while (consumer.receive(messageReceiveTimeout) == null) {
                         consumerReady.countDown();
                     }
                     count++;
-                    LOG.info("Received one... waiting");  
+                    LOG.info("Received one... waiting");
                     consumerContinue.await();
                     if (consumeAll) {
                         LOG.info("Consuming the rest of the messages...");
@@ -128,27 +127,27 @@ public class AMQ2314Test extends CombinationTestSupport {
         };
         consumingThread.start();
         consumerReady.await();
-        
+
         producingThread.start();
         producingThread.join();
-        
+
         final long tempUsageBySubscription = broker.getSystemUsage().getTempUsage().getUsage();
         LOG.info("Orig Usage: " + origTempUsage + ", currentUsage: " + tempUsageBySubscription);
         assertTrue("some temp store has been used", tempUsageBySubscription != origTempUsage);
         consumerContinue.countDown();
         consumingThread.join();
         connection.close();
-       
+
         LOG.info("Subscrition Usage: " + tempUsageBySubscription + ", endUsage: "
                 + broker.getSystemUsage().getTempUsage().getUsage());
-        
+
         assertTrue("temp usage decreased with removed sub", Wait.waitFor(new Wait.Condition(){
             public boolean isSatisified() throws Exception {
                 return broker.getSystemUsage().getTempUsage().getUsage()  < tempUsageBySubscription;
             }
         }));
     }
-    
+
     public void setUp() throws Exception {
         super.setAutoFail(true);
         super.setUp();
@@ -159,17 +158,17 @@ public class AMQ2314Test extends CombinationTestSupport {
         broker.setAdvisorySupport(false);
         broker.setDeleteAllMessagesOnStartup(true);
 
-        broker.addConnector("tcp://localhost:61616").setName("Default");
+        broker.addConnector("tcp://localhost:0").setName("Default");
         broker.start();
+
+        connectionUri = broker.getTransportConnectors().get(0).getPublishableConnectString();
     }
-    
+
     public void tearDown() throws Exception {
         broker.stop();
     }
-    
-    
+
     public static Test suite() {
         return suite(AMQ2314Test.class);
     }
-
 }

@@ -326,7 +326,7 @@ public class ConcurrentProducerDurableConsumerTest extends TestSupport {
     protected BrokerService createBroker() throws Exception {
         BrokerService brokerService = new BrokerService();
         brokerService.setEnableStatistics(false);
-        brokerService.addConnector("tcp://0.0.0.0:61616");
+        brokerService.addConnector("tcp://0.0.0.0:0");
         brokerService.setDeleteAllMessagesOnStartup(true);
 
         PolicyEntry policy = new PolicyEntry();
@@ -343,9 +343,9 @@ public class ConcurrentProducerDurableConsumerTest extends TestSupport {
         policyMap.setDefaultEntry(policy);
         brokerService.setDestinationPolicy(policyMap);
 
-        if (false) {
-              // external mysql works a lot faster
-              //
+//        if (false) {
+//            // external mysql works a lot faster
+//            //
 //            JDBCPersistenceAdapter jdbc = new JDBCPersistenceAdapter();
 //            BasicDataSource ds = new BasicDataSource();
 //            com.mysql.jdbc.Driver d = new com.mysql.jdbc.Driver();
@@ -358,28 +358,29 @@ public class ConcurrentProducerDurableConsumerTest extends TestSupport {
 //            jdbc.setDataSource(ds);
 //            brokerService.setPersistenceAdapter(jdbc);
 
-/* add mysql bits to the pom in the testing dependencies
-<dependency>
-    <groupId>mysql</groupId>
-    <artifactId>mysql-connector-java</artifactId>
-    <version>5.1.10</version>
-    <scope>test</scope>
-</dependency>
-<dependency>
-    <groupId>commons-dbcp</groupId>
-    <artifactId>commons-dbcp</artifactId>
-    <version>1.2.2</version>
-    <scope>test</scope>
-</dependency>
+            /* add mysql bits to the pom in the testing dependencies
+                    <dependency>
+                        <groupId>mysql</groupId>
+                        <artifactId>mysql-connector-java</artifactId>
+                        <version>5.1.10</version>
+                        <scope>test</scope>
+                    </dependency>
+                    <dependency>
+                        <groupId>commons-dbcp</groupId>
+                        <artifactId>commons-dbcp</artifactId>
+                        <version>1.2.2</version>
+                        <scope>test</scope>
+                    </dependency>
              */
-        } else {
+//        } else {
             setDefaultPersistenceAdapter(brokerService);
-        }
+//        }
         return brokerService;
     }
 
     protected ActiveMQConnectionFactory createConnectionFactory() throws Exception {
-        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("tcp://localhost:61616");
+        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(
+            broker.getTransportConnectors().get(0).getPublishableConnectString());
         ActiveMQPrefetchPolicy prefetchPolicy = new ActiveMQPrefetchPolicy();
         prefetchPolicy.setAll(1);
         factory.setPrefetchPolicy(prefetchPolicy);

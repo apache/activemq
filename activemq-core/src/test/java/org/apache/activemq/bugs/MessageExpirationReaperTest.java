@@ -38,101 +38,101 @@ import javax.management.ObjectName;
 
 /**
  * Test to determine if expired messages are being reaped if there is
- * no active consumer connected to the broker. 
- * 
- * @author bsnyder
- *
+ * no active consumer connected to the broker.
  */
 public class MessageExpirationReaperTest {
-    
-    protected BrokerService broker; 
-    protected ConnectionFactory factory;
-    protected ActiveMQConnection connection;
-    protected String destinationName = "TEST.Q";
-    protected String brokerUrl = "tcp://localhost:61616";
-    protected String brokerName = "testBroker";
-    
+
+    private BrokerService broker;
+    private ConnectionFactory factory;
+    private ActiveMQConnection connection;
+    private final String destinationName = "TEST.Q";
+    private final String brokerUrl = "tcp://localhost:0";
+    private final String brokerName = "testBroker";
+    private String connectionUri;
+
     @Before
     public void init() throws Exception {
         createBroker();
-        
+
+        connectionUri = broker.getTransportConnectors().get(0).getPublishableConnectString();
+
         factory = createConnectionFactory();
         connection = (ActiveMQConnection) factory.createConnection();
         connection.start();
     }
-    
+
     @After
     public void cleanUp() throws Exception {
         connection.close();
         broker.stop();
     }
-    
+
     protected void createBroker() throws Exception {
         broker = new BrokerService();
         broker.setDeleteAllMessagesOnStartup(true);
         broker.setBrokerName(brokerName);
         broker.addConnector(brokerUrl);
-        
+
         PolicyMap policyMap = new PolicyMap();
         PolicyEntry defaultEntry = new PolicyEntry();
         defaultEntry.setExpireMessagesPeriod(500);
         policyMap.setDefaultEntry(defaultEntry);
         broker.setDestinationPolicy(policyMap);
-        
+
         broker.start();
     }
-    
+
     protected ConnectionFactory createConnectionFactory() throws Exception {
-        return new ActiveMQConnectionFactory(brokerUrl);
+        return new ActiveMQConnectionFactory(connectionUri);
     }
-    
+
     protected Session createSession() throws Exception {
-        return connection.createSession(false, Session.AUTO_ACKNOWLEDGE);  
+        return connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
     }
-    
+
     @Test
     public void testExpiredMessageReaping() throws Exception {
-        
+
         Session producerSession = createSession();
         ActiveMQDestination destination =  (ActiveMQDestination) producerSession.createQueue(destinationName);
         MessageProducer producer = producerSession.createProducer(destination);
         producer.setTimeToLive(1000);
-        
+
         final int count = 3;
-        // Send some messages with an expiration 
+        // Send some messages with an expiration
         for (int i = 0; i < count; i++) {
             TextMessage message = producerSession.createTextMessage("" + i);
             producer.send(message);
         }
-        
-        // Let the messages expire 
+
+        // Let the messages expire
         Thread.sleep(2000);
-        
+
         DestinationViewMBean view = createView(destination);
-        
+
         assertEquals("Incorrect inflight count: " + view.getInFlightCount(), 0, view.getInFlightCount());
         assertEquals("Incorrect queue size count", 0, view.getQueueSize());
-        assertEquals("Incorrect expired size count", view.getEnqueueCount(), view.getExpiredCount());   
-        
-        // Send more messages with an expiration 
+        assertEquals("Incorrect expired size count", view.getEnqueueCount(), view.getExpiredCount());
+
+        // Send more messages with an expiration
         for (int i = 0; i < count; i++) {
             TextMessage message = producerSession.createTextMessage("" + i);
             producer.send(message);
         }
-        
-        // Let the messages expire 
+
+        // Let the messages expire
         Thread.sleep(2000);
-        
-        // Simply browse the queue 
+
+        // Simply browse the queue
         Session browserSession = createSession();
         QueueBrowser browser = browserSession.createBrowser((Queue) destination);
-        assertFalse("no message in the browser", browser.getEnumeration().hasMoreElements()); 
-        
-        // The messages expire and should be reaped because of the presence of 
-        // the queue browser 
+        assertFalse("no message in the browser", browser.getEnumeration().hasMoreElements());
+
+        // The messages expire and should be reaped because of the presence of
+        // the queue browser
         assertEquals("Wrong inFlightCount: " + view.getInFlightCount(), 0, view.getInFlightCount());
     }
-    
+
     protected DestinationViewMBean createView(ActiveMQDestination destination) throws Exception {
         String domain = "org.apache.activemq";
         ObjectName name;

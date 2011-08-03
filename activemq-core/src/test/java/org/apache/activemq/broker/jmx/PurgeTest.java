@@ -25,6 +25,7 @@ import javax.management.ObjectName;
 import junit.framework.Test;
 import junit.textui.TestRunner;
 
+import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.EmbeddedBrokerTestSupport;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.store.PersistenceAdapter;
@@ -36,8 +37,6 @@ import org.slf4j.LoggerFactory;
 
 /**
  * A specific test of Queue.purge() functionality
- *
- * 
  */
 public class PurgeTest extends EmbeddedBrokerTestSupport {
     private static final Logger LOG = LoggerFactory.getLogger(PurgeTest.class);
@@ -118,7 +117,6 @@ public class PurgeTest extends EmbeddedBrokerTestSupport {
         Message message = session.createTextMessage("Test Message");
         producer.send(message);
 
-
         MessageConsumer consumer = session.createConsumer(destination);
 
         Message received = consumer.receive(1000);
@@ -128,16 +126,12 @@ public class PurgeTest extends EmbeddedBrokerTestSupport {
         BrokerViewMBean brokerProxy = (BrokerViewMBean)MBeanServerInvocationHandler.newProxyInstance(mbeanServer, brokerViewMBeanName, BrokerViewMBean.class, true);
 
         brokerProxy.removeQueue(getDestinationString());
-
-
         producer.send(message);
 
         received = consumer.receive(1000);
 
         assertNotNull("Message not received", received);
         assertEquals(message, received);
-
-
     }
 
     public void testDelete() throws Exception {
@@ -209,7 +203,7 @@ public class PurgeTest extends EmbeddedBrokerTestSupport {
     }
 
     protected void setUp() throws Exception {
-        bindAddress = "tcp://localhost:61616";
+        bindAddress = "tcp://localhost:0";
         useTopic = false;
         super.setUp();
         mbeanServer = broker.getManagementContext().getMBeanServer();
@@ -231,6 +225,11 @@ public class PurgeTest extends EmbeddedBrokerTestSupport {
         answer.setPersistenceAdapter(persistenceAdapter);
         answer.deleteAllMessages();
         return answer;
+    }
+
+    @Override
+    protected ConnectionFactory createConnectionFactory() throws Exception {
+        return new ActiveMQConnectionFactory(broker.getTransportConnectors().get(0).getPublishableConnectString());
     }
 
     protected void echo(String text) {

@@ -41,14 +41,15 @@ public class DataFileNotDeletedTest extends TestCase {
     private static final Logger LOG = LoggerFactory.getLogger(DataFileNotDeletedTest.class);
 
     private final CountDownLatch latch = new CountDownLatch(max_messages);
-    private static int max_messages = 600;
+    private final static int max_messages = 600;
     private static int messageCounter;
     private final String destinationName = getName()+"_Queue";
     private BrokerService broker;
     private Connection receiverConnection;
     private Connection producerConnection;
-    final boolean useTopic = false;
-    
+    private final boolean useTopic = false;
+    private String connectionUri;
+
     AMQPersistenceAdapter persistentAdapter;
     protected static final String payload = new String(new byte[512]);
 
@@ -61,7 +62,7 @@ public class DataFileNotDeletedTest extends TestCase {
         producerConnection = createConnection();
         producerConnection.start();
     }
-    
+
     @Override
     public void tearDown() throws Exception {
         receiverConnection.close();
@@ -72,16 +73,16 @@ public class DataFileNotDeletedTest extends TestCase {
     public void testForDataFileNotDeleted() throws Exception {
         doTestForDataFileNotDeleted(false);
     }
-    
+
     public void testForDataFileNotDeletedTransacted() throws Exception {
         doTestForDataFileNotDeleted(true);
     }
-    
+
     private void doTestForDataFileNotDeleted(boolean transacted) throws Exception {
-        
+
         Receiver receiver = new Receiver() {
             public void receive(String s) throws Exception {
-                messageCounter++; 
+                messageCounter++;
                 latch.countDown();
             }
         };
@@ -94,7 +95,7 @@ public class DataFileNotDeletedTest extends TestCase {
         latch.await();
         assertEquals(max_messages, messageCounter);
         LOG.info("Sent and received + " + messageCounter + ", file count " + persistentAdapter.getAsyncDataManager().getFiles().size());
-        waitFordataFilesToBeCleanedUp(persistentAdapter.getAsyncDataManager(), 60000, 2); 
+        waitFordataFilesToBeCleanedUp(persistentAdapter.getAsyncDataManager(), 60000, 2);
     }
 
     private void waitFordataFilesToBeCleanedUp(
@@ -111,7 +112,7 @@ public class DataFileNotDeletedTest extends TestCase {
     }
 
     private Connection createConnection() throws JMSException {
-        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("tcp://localhost:61616");
+        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(connectionUri);
         return factory.createConnection();
     }
 
@@ -120,7 +121,7 @@ public class DataFileNotDeletedTest extends TestCase {
         broker.setDeleteAllMessagesOnStartup(true);
         broker.setPersistent(true);
         broker.setUseJmx(true);
-        broker.addConnector("tcp://localhost:61616").setName("Default");
+        broker.addConnector("tcp://localhost:0").setName("Default");
         broker.setPersistenceFactory(new AMQPersistenceAdapterFactory());
         AMQPersistenceAdapterFactory factory = (AMQPersistenceAdapterFactory) broker.getPersistenceFactory();
         // ensure there are a bunch of data files but multiple entries in each
@@ -129,10 +130,13 @@ public class DataFileNotDeletedTest extends TestCase {
         factory.setCheckpointInterval(500);
         factory.setCleanupInterval(500);
         factory.setSyncOnWrite(false);
-        
+
         persistentAdapter = (AMQPersistenceAdapter) broker.getPersistenceAdapter();
         broker.start();
         LOG.info("Starting broker..");
+        broker.waitUntilStarted();
+
+        connectionUri = broker.getTransportConnectors().get(0).getPublishableConnectString();
     }
 
     private void buildReceiver(Connection connection, final String queueName, boolean transacted, final Receiver receiver, boolean isTopic) throws Exception {

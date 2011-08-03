@@ -17,18 +17,14 @@
 package org.apache.activemq;
 
 import javax.jms.Connection;
+import javax.jms.ConnectionFactory;
 import javax.jms.InvalidClientIDException;
 import javax.jms.JMSException;
 import javax.jms.Session;
 
-import org.apache.activemq.store.kahadaptor.KahaPersistenceAdapter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * 
- * 
- */
 public class ReconnectWithSameClientIDTest extends EmbeddedBrokerTestSupport {
     private static final Logger LOG = LoggerFactory.getLogger(ReconnectWithSameClientIDTest.class);
 
@@ -59,8 +55,13 @@ public class ReconnectWithSameClientIDTest extends EmbeddedBrokerTestSupport {
         useConnection(connection);
     }
 
+    @Override
+    protected ConnectionFactory createConnectionFactory() throws Exception {
+        return new ActiveMQConnectionFactory(broker.getTransportConnectors().get(0).getPublishableConnectString());
+    }
+
     protected void setUp() throws Exception {
-        bindAddress = "tcp://localhost:61616";
+        bindAddress = "tcp://localhost:0";
         super.setUp();
     }
 
@@ -75,9 +76,5 @@ public class ReconnectWithSameClientIDTest extends EmbeddedBrokerTestSupport {
     protected void useConnection(Connection connection) throws JMSException {
         connection.setClientID("foo");
         connection.start();
-        /**
-         * Session session = connection.createSession(transacted, authMode);
-         * return session;
-         */
     }
 }

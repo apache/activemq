@@ -41,8 +41,8 @@ public class SlowConsumerTest extends TestCase {
     private static final Logger LOG = LoggerFactory.getLogger(SlowConsumerTest.class);
     private static final int MESSAGES_COUNT = 10000;
 
-    protected int messageLogFrequency = 2500;
-    protected long messageReceiveTimeout = 10000L;
+    private final int messageLogFrequency = 2500;
+    private final long messageReceiveTimeout = 10000L;
 
     private Socket stompSocket;
     private ByteArrayOutputStream inputBuffer;
@@ -58,9 +58,10 @@ public class SlowConsumerTest extends TestCase {
         broker.setUseJmx(true);
         broker.setDeleteAllMessagesOnStartup(true);
 
-        broker.addConnector("tcp://localhost:61616").setName("Default");
+        broker.addConnector("tcp://localhost:0").setName("Default");
         broker.start();
-        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("tcp://localhost:61616");
+        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(
+                broker.getTransportConnectors().get(0).getPublishableConnectString());
         final Connection connection = factory.createConnection();
         connection.start();
 

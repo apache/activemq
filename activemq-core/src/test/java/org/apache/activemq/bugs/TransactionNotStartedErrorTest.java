@@ -43,8 +43,8 @@ import org.slf4j.LoggerFactory;
 public class TransactionNotStartedErrorTest extends TestCase {
 
     private static final Logger LOG = LoggerFactory.getLogger(TransactionNotStartedErrorTest.class);
-    
-    private static int counter = 500;
+
+    private static final int counter = 500;
 
     private static int hectorToHaloCtr;
     private static int xenaToHaloCtr;
@@ -54,14 +54,13 @@ public class TransactionNotStartedErrorTest extends TestCase {
     private static int haloToXenaCtr;
     private static int haloToTroyCtr;
 
-    private String hectorToHalo = "hectorToHalo";
-    private String xenaToHalo = "xenaToHalo";
-    private String troyToHalo = "troyToHalo";
+    private final String hectorToHalo = "hectorToHalo";
+    private final String xenaToHalo = "xenaToHalo";
+    private final String troyToHalo = "troyToHalo";
 
-    private String haloToHector = "haloToHector";
-    private String haloToXena = "haloToXena";
-    private String haloToTroy = "haloToTroy";
-
+    private final String haloToHector = "haloToHector";
+    private final String haloToXena = "haloToXena";
+    private final String haloToTroy = "haloToTroy";
 
     private BrokerService broker;
 
@@ -72,8 +71,9 @@ public class TransactionNotStartedErrorTest extends TestCase {
 
     private final Object lock = new Object();
 
-    public Connection createConnection() throws JMSException {
-        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("tcp://localhost:61616");
+    public Connection createConnection() throws Exception {
+        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(
+            broker.getTransportConnectors().get(0).getPublishableConnectString());
         return factory.createConnection();
     }
 
@@ -86,7 +86,7 @@ public class TransactionNotStartedErrorTest extends TestCase {
         broker.setDeleteAllMessagesOnStartup(true);
         broker.setPersistent(true);
         broker.setUseJmx(true);
-        broker.addConnector("tcp://localhost:61616").setName("Default");
+        broker.addConnector("tcp://localhost:0").setName("Default");
         broker.start();
         LOG.info("Starting broker..");
     }
@@ -234,12 +234,10 @@ public class TransactionNotStartedErrorTest extends TestCase {
     }
 
     public MessageSender buildTransactionalProducer(String queueName, Connection connection) throws Exception {
-
         return new MessageSender(queueName, connection, true, false);
     }
 
     public Thread buildProducer(Connection connection, final String queueName) throws Exception {
-
         final Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         final MessageSender producer = new MessageSender(queueName, connection, false, false);
         Thread thread = new Thread() {

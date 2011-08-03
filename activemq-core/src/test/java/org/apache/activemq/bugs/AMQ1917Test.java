@@ -43,21 +43,22 @@ public class AMQ1917Test extends TestCase {
 
         private static final int NUM_MESSAGES = 4000;
         private static final int NUM_THREADS = 10;
-        public static final String REQUEST_QUEUE = "mock.in.queue";
-        public static final String REPLY_QUEUE = "mock.out.queue";
+        private static final String REQUEST_QUEUE = "mock.in.queue";
+        private static final String REPLY_QUEUE = "mock.out.queue";
 
-        Destination requestDestination = ActiveMQDestination.createDestination(
+        private Destination requestDestination = ActiveMQDestination.createDestination(
                 REQUEST_QUEUE, ActiveMQDestination.QUEUE_TYPE);
-        Destination replyDestination = ActiveMQDestination.createDestination(
+        private Destination replyDestination = ActiveMQDestination.createDestination(
                 REPLY_QUEUE, ActiveMQDestination.QUEUE_TYPE);
 
-        CountDownLatch roundTripLatch = new CountDownLatch(NUM_MESSAGES);
-        CountDownLatch errorLatch = new CountDownLatch(1);
-        ThreadPoolExecutor tpe;
-        final String BROKER_URL = "tcp://localhost:61616";
-        BrokerService broker = null;
+        private CountDownLatch roundTripLatch = new CountDownLatch(NUM_MESSAGES);
+        private CountDownLatch errorLatch = new CountDownLatch(1);
+        private ThreadPoolExecutor tpe;
+        private final String BROKER_URL = "tcp://localhost:61616";
+        private String connectionUri;
+        private BrokerService broker = null;
         private boolean working = true;
-        
+
         // trival session/producer pool
         final Session[] sessions = new Session[NUM_THREADS];
         final MessageProducer[] producers = new MessageProducer[NUM_THREADS];
@@ -67,11 +68,13 @@ public class AMQ1917Test extends TestCase {
             broker.setPersistent(false);
             broker.addConnector(BROKER_URL);
             broker.start();
-            
+
+            connectionUri = broker.getTransportConnectors().get(0).getPublishableConnectString();
+
             BlockingQueue<Runnable> queue = new ArrayBlockingQueue<Runnable>(10000);
             tpe = new ThreadPoolExecutor(NUM_THREADS, NUM_THREADS, 60000,
                     TimeUnit.MILLISECONDS, queue);
-            ThreadFactory limitedthreadFactory = new LimitedThreadFactory(tpe.getThreadFactory());  
+            ThreadFactory limitedthreadFactory = new LimitedThreadFactory(tpe.getThreadFactory());
             tpe.setThreadFactory(limitedthreadFactory);
         }
 
@@ -79,29 +82,29 @@ public class AMQ1917Test extends TestCase {
             broker.stop();
             tpe.shutdown();
         }
-        
-        public void testLoadedSendRecieveWithCorrelationId() throws Exception {            
-           
+
+        public void testLoadedSendRecieveWithCorrelationId() throws Exception {
+
             ActiveMQConnectionFactory connectionFactory = new org.apache.activemq.ActiveMQConnectionFactory();
-            connectionFactory.setBrokerURL(BROKER_URL);
-            Connection connection = connectionFactory.createConnection();          
+            connectionFactory.setBrokerURL(connectionUri);
+            Connection connection = connectionFactory.createConnection();
             setupReceiver(connection);
 
             connection = connectionFactory.createConnection();
             connection.start();
-            
-            // trival session/producer pool   
+
+            // trival session/producer pool
             for (int i=0; i<NUM_THREADS; i++) {
                 sessions[i] = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
                 producers[i] = sessions[i].createProducer(requestDestination);
             }
-            
+
             for (int i = 0; i < NUM_MESSAGES; i++) {
                 MessageSenderReceiver msr = new MessageSenderReceiver(requestDestination,
                         replyDestination, "Test Message : " + i);
                 tpe.execute(msr);
             }
-            
+
             while (!roundTripLatch.await(4000, TimeUnit.MILLISECONDS)) {
                 if (errorLatch.await(1000, TimeUnit.MILLISECONDS)) {
                     fail("there was an error, check the console for thread or thread allocation failure");
@@ -129,7 +132,7 @@ public class AMQ1917Test extends TestCase {
                             TextMessage msg = (TextMessage) consumer.receive(20000);
                             if (msg == null) {
                                 errorLatch.countDown();
-                                fail("Response timed out." 
+                                fail("Response timed out."
                                         + " latchCount=" + roundTripLatch.getCount());
                             } else {
                                 String result = msg.getText();
@@ -205,7 +208,7 @@ public class AMQ1917Test extends TestCase {
                 }
             }
         }
-        
+
         public class LimitedThreadFactory implements ThreadFactory {
             int threadCount;
             private ThreadFactory factory;
@@ -217,7 +220,7 @@ public class AMQ1917Test extends TestCase {
                 if (++threadCount > NUM_THREADS) {
                     errorLatch.countDown();
                     fail("too many threads requested");
-                }       
+                }
                 return factory.newThread(arg0);
             }
         }

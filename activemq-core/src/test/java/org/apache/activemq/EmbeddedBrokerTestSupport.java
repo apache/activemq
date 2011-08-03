@@ -27,8 +27,8 @@ import javax.jms.Destination;
 
 /**
  * A useful base class which creates and closes an embedded broker
- * 
- * 
+ *
+ *
  */
 public abstract class EmbeddedBrokerTestSupport extends CombinationTestSupport {
 
@@ -39,7 +39,7 @@ public abstract class EmbeddedBrokerTestSupport extends CombinationTestSupport {
     protected boolean useTopic;
     protected ActiveMQDestination destination;
     protected JmsTemplate template;
-    
+
     protected void setUp() throws Exception {
         if (broker == null) {
             broker = createBroker();
@@ -64,7 +64,7 @@ public abstract class EmbeddedBrokerTestSupport extends CombinationTestSupport {
 
     /**
      * Factory method to create a new {@link JmsTemplate}
-     * 
+     *
      * @return a newly created JmsTemplate
      */
     protected JmsTemplate createJmsTemplate() {
@@ -73,7 +73,7 @@ public abstract class EmbeddedBrokerTestSupport extends CombinationTestSupport {
 
     /**
      * Factory method to create a new {@link Destination}
-     * 
+     *
      * @return newly created Destinaiton
      */
     protected ActiveMQDestination createDestination() {
@@ -101,7 +101,7 @@ public abstract class EmbeddedBrokerTestSupport extends CombinationTestSupport {
 
     /**
      * Factory method to create a new {@link ConnectionFactory} instance
-     * 
+     *
      * @return a newly created connection factory
      */
     protected ConnectionFactory createConnectionFactory() throws Exception {
@@ -110,7 +110,7 @@ public abstract class EmbeddedBrokerTestSupport extends CombinationTestSupport {
 
     /**
      * Factory method to create a new broker
-     * 
+     *
      * @throws Exception
      */
     protected BrokerService createBroker() throws Exception {

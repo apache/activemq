@@ -35,44 +35,43 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class OutOfOrderTestCase extends TestCase {
-	
-	private static final Logger log = LoggerFactory.getLogger(OutOfOrderTestCase.class);
-	
-	public static final String BROKER_URL = "tcp://localhost:61616";
-	private static final int PREFETCH = 10;
-	private static final String CONNECTION_URL = BROKER_URL + "?jms.prefetchPolicy.all=" + PREFETCH;
 
-	public static final String QUEUE_NAME = "QUEUE";
-	private static final String DESTINATION = "QUEUE?consumer.exclusive=true";
-	
-	BrokerService brokerService;
-	Session session;
-	Connection connection;
-	
-	int seq = 0;
-	
-	public void setUp() throws Exception {
-		brokerService = new BrokerService();
-		brokerService.setUseJmx(true);
-		brokerService.addConnector(BROKER_URL);
-		brokerService.deleteAllMessages();
-		brokerService.start();
-		
-		ConnectionFactory connectionFactory = new ActiveMQConnectionFactory(CONNECTION_URL);
-		connection = connectionFactory.createConnection();
-		connection.start();
-		session = connection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
- 
-	}
-	
+    private static final Logger log = LoggerFactory.getLogger(OutOfOrderTestCase.class);
 
-	protected void tearDown() throws Exception {
-		session.close();
-		connection.close();
-		brokerService.stop();
-	}
+    private static final String BROKER_URL = "tcp://localhost:0";
+    private static final int PREFETCH = 10;
+    private static final String CONNECTION_URL_OPTIONS = "?jms.prefetchPolicy.all=" + PREFETCH;
 
+    private static final String DESTINATION = "QUEUE?consumer.exclusive=true";
 
+    private BrokerService brokerService;
+    private Session session;
+    private Connection connection;
+    private String connectionUri;
+
+    private int seq = 0;
+
+    public void setUp() throws Exception {
+        brokerService = new BrokerService();
+        brokerService.setUseJmx(true);
+        brokerService.addConnector(BROKER_URL);
+        brokerService.deleteAllMessages();
+        brokerService.start();
+        brokerService.waitUntilStarted();
+
+        connectionUri = brokerService.getTransportConnectors().get(0).getPublishableConnectString();
+
+        ConnectionFactory connectionFactory = new ActiveMQConnectionFactory(connectionUri + CONNECTION_URL_OPTIONS);
+        connection = connectionFactory.createConnection();
+        connection.start();
+        session = connection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
+    }
+
+    protected void tearDown() throws Exception {
+        session.close();
+        connection.close();
+        brokerService.stop();
+    }
 
     public void testOrder() throws Exception {
 
@@ -102,7 +101,7 @@ public class OutOfOrderTestCase extends TestCase {
         log.info("Consuming messages 20-29 . . .");
         consumeBatch();
     }
-	
+
     protected void consumeBatch() throws Exception {
         Destination destination = session.createQueue(DESTINATION);
         final MessageConsumer messageConsumer = session.createConsumer(destination);
@@ -118,15 +117,15 @@ public class OutOfOrderTestCase extends TestCase {
         }
     }
 
-	private String toString(final Message message) throws JMSException {
-	    String ret = "received message '" + ((TextMessage) message).getText() + "' - " + message.getJMSMessageID();
-		if (message.getJMSRedelivered())
-			 ret += " (redelivered)";
-		return ret;
-		
-	}
+    private String toString(final Message message) throws JMSException {
+        String ret = "received message '" + ((TextMessage) message).getText() + "' - " + message.getJMSMessageID();
+        if (message.getJMSRedelivered())
+             ret += " (redelivered)";
+        return ret;
 
-	private static String createMessageText(final int index) {
-		return "message #" + index;
-	}
+    }
+
+    private static String createMessageText(final int index) {
+        return "message #" + index;
+    }
 }

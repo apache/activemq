@@ -48,7 +48,6 @@ public class MessageGroupCloseTest extends TestCase {
     private HashSet<String> closedGroups2 = new HashSet<String>();
     // with the prefetch too high, this bug is not realized
     private static final String connStr =
-        //"tcp://localhost:61616";
         "vm://localhost?broker.persistent=false&broker.useJmx=false&jms.prefetchPolicy.all=1";
 
     public void testNewConsumer() throws JMSException, InterruptedException {

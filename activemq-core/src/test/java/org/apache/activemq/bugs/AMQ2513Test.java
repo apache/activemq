@@ -31,53 +31,55 @@ import org.apache.activemq.broker.jmx.ManagementContext;
 
 /**
  * This unit test verifies an issue when
- * javax.management.InstanceNotFoundException is thrown after subsequent startups when 
+ * javax.management.InstanceNotFoundException is thrown after subsequent startups when
  * managementContext createConnector="false"
  *
  */
 public class AMQ2513Test extends TestCase {
 
-	BrokerService broker;
-	
-	void createBroker(boolean deleteAllMessagesOnStartup) throws Exception {
+    private BrokerService broker;
+    private String connectionUri;
+
+    void createBroker(boolean deleteAllMessagesOnStartup) throws Exception {
         broker = new BrokerService();
         broker.setBrokerName("localhost");
         broker.setUseJmx(true);
         broker.setDeleteAllMessagesOnStartup(deleteAllMessagesOnStartup);
-        broker.addConnector("tcp://localhost:61616");
+        broker.addConnector("tcp://localhost:0");
 
         ManagementContext ctx = new ManagementContext();
         //if createConnector == true everything is fine
         ctx.setCreateConnector(false);
         broker.setManagementContext(ctx);
-        
-        broker.start();
 
+        broker.start();
         broker.waitUntilStarted();
+
+        connectionUri = broker.getTransportConnectors().get(0).getPublishableConnectString();
     }
-	
-	public void testJmx() throws Exception{
-		createBroker(true);
-		
-		ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("tcp://localhost:61616");
+
+    public void testJmx() throws Exception{
+        createBroker(true);
+
+        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(connectionUri);
         Connection connection = factory.createConnection();
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         MessageProducer producer = session.createProducer(session.createQueue("test"));
         producer.setDeliveryMode(DeliveryMode.PERSISTENT);
         connection.start();
-        
+
         producer.send(session.createTextMessage("test123"));
-        
+
         DestinationViewMBean dv = createView();
         assertTrue(dv.getQueueSize() > 0);
-        
+
         connection.close();
-        
+
         broker.stop();
         broker.waitUntilStopped();
-        
+
         createBroker(false);
-        factory = new ActiveMQConnectionFactory("tcp://localhost:61616");
+        factory = new ActiveMQConnectionFactory(connectionUri);
         connection = factory.createConnection();
         session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         producer = session.createProducer(session.createQueue("test"));
@@ -85,20 +87,20 @@ public class AMQ2513Test extends TestCase {
         connection.start();
         producer.send(session.createTextMessage("test123"));
         connection.close();
-        
+
         dv = createView();
         assertTrue(dv.getQueueSize() > 0);
-        
+
         broker.stop();
         broker.waitUntilStopped();
-        
-	}
-	
-	DestinationViewMBean createView() throws Exception {
+
+    }
+
+    DestinationViewMBean createView() throws Exception {
         String domain = "org.apache.activemq";
         ObjectName name = new ObjectName(domain + ":BrokerName=localhost,Type=Queue,Destination=test");
         return (DestinationViewMBean) broker.getManagementContext().newProxyInstance(name, DestinationViewMBean.class,
                 true);
     }
-	
+
 }

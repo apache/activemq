@@ -1,4 +1,3 @@
-
 /**
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -16,6 +15,7 @@
  * limitations under the License.
  */
 package org.apache.activemq.usecases;
+
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 import javax.jms.Connection;
@@ -32,10 +32,8 @@ import org.apache.activemq.command.ActiveMQQueue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
 /**
  * @author Rajani Chennamaneni
- *
  */
 public class DispatchMultipleConsumersTest extends TestCase {
     private final static Logger logger = LoggerFactory.getLogger(DispatchMultipleConsumersTest.class);
@@ -50,10 +48,10 @@ public class DispatchMultipleConsumersTest extends TestCase {
     AtomicInteger consumedCount;
     CountDownLatch producerLatch;
     CountDownLatch consumerLatch;
-    String brokerURL = "tcp://localhost:61616";
+    String brokerURL;
     String userName = "";
     String password = "";
-    
+
     @Override
     protected void setUp() throws Exception {
         super.setUp();
@@ -61,42 +59,36 @@ public class DispatchMultipleConsumersTest extends TestCase {
         broker.setPersistent(true);
         broker.setUseJmx(true);
         broker.deleteAllMessages();
-        broker.addConnector("tcp://localhost:61616");
+        broker.addConnector("tcp://localhost:0");
         broker.start();
+        broker.waitUntilStarted();
         dest = new ActiveMQQueue(destinationName);
         resetCounters();
+        brokerURL = broker.getTransportConnectors().get(0).getPublishableConnectString();
     }
 
     @Override
     protected void tearDown() throws Exception {
-//      broker.stop();
+        broker.stop();
+        broker.waitUntilStopped();
         super.tearDown();
     }
-    
+
     private void resetCounters() {
         sentCount = new AtomicInteger(0);
         consumedCount = new AtomicInteger(0);
         producerLatch = new CountDownLatch(producerThreads);
         consumerLatch = new CountDownLatch(consumerCount);
     }
-    
+
     public void testDispatch1() {
         for (int i = 1; i <= 5; i++) {
             resetCounters();
             dispatch();
-            /*try {
-                System.out.print("Press Enter to continue/finish:");
-                //pause to check the counts on JConsole
-                System.in.read();
-                System.in.read();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }*/
-            //check for consumed messages count
             assertEquals("Incorrect messages in Iteration " + i, sentCount.get(), consumedCount.get());
         }
     }
-    
+
     private void dispatch() {
         startConsumers();
         startProducers();
@@ -130,15 +122,13 @@ public class DispatchMultipleConsumersTest extends TestCase {
     }
 
     private class ConsumerThread extends Thread {
-        Connection conn;
         Session session;
         MessageConsumer consumer;
 
         public ConsumerThread(Connection conn, String name) {
             super();
-            this.conn = conn;
             this.setName(name);
-            logger.info("Created new consumer thread:" + name);
+            logger.trace("Created new consumer thread:" + name);
             try {
                 session = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
                 consumer = session.createConsumer(dest);
@@ -170,24 +160,25 @@ public class DispatchMultipleConsumersTest extends TestCase {
                         nullCount = 0;
                     }
                     Thread.sleep(100);
-                    logger.info("Message received:" + msg.getJMSMessageID());
+                    if (logger.isTraceEnabled()) {
+                        logger.trace("Message received:" + msg.getJMSMessageID());
+                    }
                     msgCount++;
                 } catch (JMSException e) {
-                    logger.error("Failed to consume:", e);                  
+                    logger.error("Failed to consume:", e);
                 } catch (InterruptedException e) {
-                    logger.error("Interrupted!", e);    
+                    logger.error("Interrupted!", e);
                 }
             }
             try {
                 consumer.close();
             } catch (JMSException e) {
-                logger.error("Failed to close consumer " + getName(), e);   
+                logger.error("Failed to close consumer " + getName(), e);
             }
             consumedCount.addAndGet(msgCount);
             consumerLatch.countDown();
-            logger.info("Consumed " + msgCount + " messages using thread " + getName());
+            logger.trace("Consumed " + msgCount + " messages using thread " + getName());
         }
-        
     }
 
     private class ProducerThread extends Thread {
@@ -195,12 +186,12 @@ public class DispatchMultipleConsumersTest extends TestCase {
         Connection conn;
         Session session;
         MessageProducer producer;
-                
+
         public ProducerThread(ActiveMQConnectionFactory connFactory, int count, String name) {
             super();
             this.count = count;
             this.setName(name);
-            logger.info("Created new producer thread:" + name);
+            logger.trace("Created new producer thread:" + name);
             try {
                 conn = connFactory.createConnection();
                 conn.start();
@@ -224,12 +215,13 @@ public class DispatchMultipleConsumersTest extends TestCase {
             } catch (JMSException e) {
                 logger.error(e.getMessage(), e);
             } catch (InterruptedException e) {
-                logger.error("Interrupted!", e);    
+                logger.error("Interrupted!", e);
             }
             sentCount.addAndGet(i);
             producerLatch.countDown();
-            logger.info("Sent " + i + " messages from thread " + getName());
+            if (logger.isTraceEnabled()) {
+                logger.trace("Sent " + i + " messages from thread " + getName());
+            }
         }
     }
-        
 }
