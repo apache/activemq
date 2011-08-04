@@ -267,7 +267,7 @@ public class ActiveMQMessageAuditNoSync implements Serializable {
 
     public long getLastSeqId(ProducerId id) {
         long result = -1;
-        BitArrayBin bab = map.get(id.toString() + ":");
+        BitArrayBin bab = map.get(id.toString());
         if (bab != null) {
             result = bab.getLastSetIndex();
         }
