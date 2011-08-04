@@ -163,16 +163,15 @@ public class OnePrefetchAsyncConsumerTest extends EmbeddedBrokerTestSupport {
                      // let the session deliver the message
                      session.run();
 
-                     // commit the tx
-                     try {
-                         session.commit();
-                     }
-                     catch (JMSException e) {
-                     }
-
+                     // commit the tx and
                      // return ServerSession to pool
                      synchronized (pool) {
-                         pool.serverSessionInUse = false;
+                        try {
+                            session.commit();
+                        }
+                        catch (JMSException e) {
+                        }
+                        pool.serverSessionInUse = false;
                      }
 
                      // let the test check if the test was completed
