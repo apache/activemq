@@ -65,6 +65,7 @@ public class ManagementContext implements Service {
     private ObjectName namingServiceObjectName;
     private Registry registry;
     private final List<ObjectName> registeredMBeanNames = new CopyOnWriteArrayList<ObjectName>();
+    private boolean allowRemoteAddressInMBeanNames = true;
 
     public ManagementContext() {
         this(null);
@@ -301,7 +302,7 @@ public class ManagementContext implements Service {
         return result;
     }
     
-    public Set queryNames(ObjectName name, QueryExp query) throws Exception{
+    public Set<ObjectName>  queryNames(ObjectName name, QueryExp query) throws Exception{
         return getMBeanServer().queryNames(name, query);
     }
     
@@ -512,5 +513,13 @@ public class ManagementContext implements Service {
 
     public void setEnvironment(Map environment) {
         this.environment = environment;
+    }
+
+    public boolean isAllowRemoteAddressInMBeanNames() {
+        return allowRemoteAddressInMBeanNames;
+    }
+
+    public void setAllowRemoteAddressInMBeanNames(boolean allowRemoteAddressInMBeanNames) {
+        this.allowRemoteAddressInMBeanNames = allowRemoteAddressInMBeanNames;
     }
 }

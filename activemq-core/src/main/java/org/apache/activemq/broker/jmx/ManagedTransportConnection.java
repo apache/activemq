@@ -53,8 +53,10 @@ public class ManagedTransportConnection extends TransportConnection {
         this.managementContext = context;
         this.connectorName = connectorName;
         this.mbean = new ConnectionView(this);
-        byAddressName = createByAddressObjectName("address", transport.getRemoteAddress());
-        registerMBean(byAddressName);
+        if (managementContext.isAllowRemoteAddressInMBeanNames()) {
+            byAddressName = createByAddressObjectName("address", transport.getRemoteAddress());
+            registerMBean(byAddressName);
+        }
     }
 
     public void doStop() throws Exception {
@@ -69,14 +71,6 @@ public class ManagedTransportConnection extends TransportConnection {
             byAddressName = null;
         }
         super.doStop();
-    }
-
-    /**
-     * Sets the connection ID of this connection. On startup this connection ID
-     * is set to an incrementing counter; once the client registers it is set to
-     * the clientID of the JMS client.
-     */
-    public void setConnectionId(String connectionId) throws IOException {
     }
 
     public Response processAddConnection(ConnectionInfo info) throws Exception {
