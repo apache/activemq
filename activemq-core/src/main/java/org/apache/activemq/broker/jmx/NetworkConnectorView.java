@@ -69,9 +69,17 @@ public class NetworkConnectorView implements NetworkConnectorViewMBean {
     public boolean isDynamicOnly() {
         return connector.isDynamicOnly();
     }
-    
+
     public boolean isDuplex() {
         return connector.isDuplex();
+    }
+
+    public boolean isSuppressDuplicateQueueSubscriptions() {
+        return connector.isSuppressDuplicateQueueSubscriptions();
+    }
+
+    public boolean isSuppressDuplicateTopicSubscriptions() {
+        return connector.isSuppressDuplicateTopicSubscriptions();
     }
 
     public void setBridgeTempDestinations(boolean bridgeTempDestinations) {
@@ -117,5 +125,13 @@ public class NetworkConnectorView implements NetworkConnectorViewMBean {
 
     public void setDecreaseNetworkConsumerPriority(boolean decreaseNetworkConsumerPriority) {
         connector.setDecreaseNetworkConsumerPriority(decreaseNetworkConsumerPriority);
+    }
+
+    public void setSuppressDuplicateQueueSubscriptions(boolean val) {
+        connector.setSuppressDuplicateQueueSubscriptions(val);
+    }
+
+    public void setSuppressDuplicateTopicSubscriptions(boolean val) {
+        connector.setSuppressDuplicateTopicSubscriptions(val);
     }
 }

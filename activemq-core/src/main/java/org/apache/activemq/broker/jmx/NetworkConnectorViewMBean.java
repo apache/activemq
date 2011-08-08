@@ -37,8 +37,12 @@ public interface NetworkConnectorViewMBean extends Service {
     boolean isDispatchAsync();
 
     boolean isDynamicOnly();
-    
+
     boolean isDuplex();
+
+    boolean isSuppressDuplicateQueueSubscriptions();
+
+    boolean isSuppressDuplicateTopicSubscriptions();
 
     void setBridgeTempDestinations(boolean bridgeTempDestinations);
 
@@ -59,5 +63,9 @@ public interface NetworkConnectorViewMBean extends Service {
     String getPassword();
 
     void setDecreaseNetworkConsumerPriority(boolean decreaseNetworkConsumerPriority);
+
+    void setSuppressDuplicateQueueSubscriptions(boolean val);
+
+    void setSuppressDuplicateTopicSubscriptions(boolean val);
 
 }
