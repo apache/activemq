@@ -20,7 +20,14 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
-import javax.jms.*;
+import javax.jms.Connection;
+import javax.jms.Message;
+import javax.jms.MessageConsumer;
+import javax.jms.MessageListener;
+import javax.jms.MessageProducer;
+import javax.jms.Session;
+import javax.jms.Topic;
+import javax.jms.TopicSubscriber;
 import javax.management.ObjectName;
 
 import junit.framework.Test;
@@ -141,7 +148,7 @@ public class ExpiredMessagesWithNoConsumerTest extends CombinationTestSupport {
 
         assertTrue("producer failed to complete within allocated time", Wait.waitFor(new Wait.Condition() {
             public boolean isSatisified() throws Exception {
-                producingThread.join(TimeUnit.SECONDS.toMillis(1000));
+                producingThread.join(TimeUnit.SECONDS.toMillis(3000));
                 return !producingThread.isAlive();
             }
         }));
@@ -154,7 +161,7 @@ public class ExpiredMessagesWithNoConsumerTest extends CombinationTestSupport {
                         + ", size= " + view.getQueueSize());
                 return sendCount == view.getExpiredCount();
             }
-        });
+        }, Wait.MAX_WAIT_MILLIS * 5);
         LOG.info("enqueue=" + view.getEnqueueCount() + ", dequeue=" + view.getDequeueCount()
                 + ", inflight=" + view.getInFlightCount() + ", expired= " + view.getExpiredCount()
                 + ", size= " + view.getQueueSize());
