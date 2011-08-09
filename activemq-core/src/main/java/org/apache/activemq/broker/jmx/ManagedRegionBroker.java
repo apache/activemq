@@ -185,7 +185,7 @@ public class ManagedRegionBroker extends RegionBroker {
     public ObjectName registerSubscription(ConnectionContext context, Subscription sub) {
         String connectionClientId = context.getClientId();
         ObjectName brokerJmxObjectName = brokerObjectName;
-        String objectNameStr = getSubscriptionObjectName(sub, connectionClientId, brokerJmxObjectName);
+        String objectNameStr = getSubscriptionObjectName(sub.getConsumerInfo(), connectionClientId, brokerJmxObjectName);
         SubscriptionKey key = new SubscriptionKey(context.getClientId(), sub.getConsumerInfo().getSubscriptionName());
         try {
             ObjectName objectName = new ObjectName(objectNameStr);
@@ -196,7 +196,7 @@ public class ManagedRegionBroker extends RegionBroker {
                 info.setClientId(context.getClientId());
                 info.setSubscriptionName(sub.getConsumerInfo().getSubscriptionName());
                 info.setDestination(sub.getConsumerInfo().getDestination());
-                addInactiveSubscription(key, info);
+                addInactiveSubscription(key, info, sub);
             } else {
                 if (sub.getConsumerInfo().isDurable()) {
                     view = new DurableSubscriptionView(this, context.getClientId(), sub);
@@ -217,21 +217,21 @@ public class ManagedRegionBroker extends RegionBroker {
         }
     }
 
-    public static String getSubscriptionObjectName(Subscription sub, String connectionClientId, ObjectName brokerJmxObjectName) {
+    public static String getSubscriptionObjectName(ConsumerInfo info, String connectionClientId, ObjectName brokerJmxObjectName) {
         Hashtable map = brokerJmxObjectName.getKeyPropertyList();
         String brokerDomain = brokerJmxObjectName.getDomain();
         String objectNameStr = brokerDomain + ":" + "BrokerName=" + map.get("BrokerName") + ",Type=Subscription,";
-        String destinationType = "destinationType=" + sub.getConsumerInfo().getDestination().getDestinationTypeAsString();
-        String destinationName = "destinationName=" + JMXSupport.encodeObjectNamePart(sub.getConsumerInfo().getDestination().getPhysicalName());
+        String destinationType = "destinationType=" + info.getDestination().getDestinationTypeAsString();
+        String destinationName = "destinationName=" + JMXSupport.encodeObjectNamePart(info.getDestination().getPhysicalName());
         String clientId = "clientId=" + JMXSupport.encodeObjectNamePart(connectionClientId);
         String persistentMode = "persistentMode=";
         String consumerId = "";
-        if (sub.getConsumerInfo().isDurable()) {
-            persistentMode += "Durable,subscriptionID=" + JMXSupport.encodeObjectNamePart(sub.getConsumerInfo().getSubscriptionName());
+        if (info.isDurable()) {
+            persistentMode += "Durable,subscriptionID=" + JMXSupport.encodeObjectNamePart(info.getSubscriptionName());
         } else {
             persistentMode += "Non-Durable";
-            if (sub.getConsumerInfo() != null && sub.getConsumerInfo().getConsumerId() != null) {
-                consumerId = ",consumerId=" + JMXSupport.encodeObjectNamePart(sub.getConsumerInfo().getConsumerId().toString());
+            if (info.getConsumerId() != null) {
+                consumerId = ",consumerId=" + JMXSupport.encodeObjectNamePart(info.getConsumerId().toString());
             }
         }
         objectNameStr += persistentMode + ",";
@@ -482,7 +482,7 @@ public class ManagedRegionBroker extends RegionBroker {
                 info.setClientId(subscriptionKey.getClientId());
                 info.setSubscriptionName(subscriptionKey.getSubscriptionName());
                 info.setDestination(new ActiveMQTopic(view.getDestinationName()));
-                addInactiveSubscription(subscriptionKey, info);
+                addInactiveSubscription(subscriptionKey, info, (brokerService.isKeepDurableSubsActive() ? view.subscription : null));
             }
         }
     }
@@ -512,7 +512,7 @@ public class ManagedRegionBroker extends RegionBroker {
             Map.Entry entry = (Entry)i.next();
             SubscriptionKey key = (SubscriptionKey)entry.getKey();
             SubscriptionInfo info = (SubscriptionInfo)entry.getValue();
-            addInactiveSubscription(key, info);
+            addInactiveSubscription(key, info, null);
         }
     }
 
@@ -525,12 +525,11 @@ public class ManagedRegionBroker extends RegionBroker {
         return known;
     }
 
-    protected void addInactiveSubscription(SubscriptionKey key, SubscriptionInfo info) {
-        Hashtable<String, String> map = brokerObjectName.getKeyPropertyList();
+    protected void addInactiveSubscription(SubscriptionKey key, SubscriptionInfo info, Subscription subscription) {
         try {
-            ObjectName objectName = new ObjectName(brokerObjectName.getDomain() + ":" + "BrokerName=" + map.get("BrokerName") + "," + "Type=Subscription," + "active=false,"
-                                                   + "name=" + JMXSupport.encodeObjectNamePart(key.toString()) + "");
-            SubscriptionView view = new InactiveDurableSubscriptionView(this, key.getClientId(), info);
+            ConsumerInfo offlineConsumerInfo = subscription != null ? subscription.getConsumerInfo() : ((TopicRegion)getTopicRegion()).createInactiveConsumerInfo(info);
+            ObjectName objectName = new ObjectName(getSubscriptionObjectName(offlineConsumerInfo, info.getClientId(), brokerObjectName));
+            SubscriptionView view = new InactiveDurableSubscriptionView(this, key.getClientId(), info, subscription);
 
             try {
                 AnnotatedMBean.registerMBean(managementContext, view, objectName);

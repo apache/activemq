@@ -25,10 +25,13 @@ import javax.jms.MessageConsumer;
 import javax.jms.MessageListener;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
+import javax.management.ObjectName;
 import junit.framework.Test;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.jmx.DurableSubscriptionViewMBean;
+import org.apache.activemq.broker.jmx.TopicViewMBean;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.ActiveMQTopic;
@@ -44,12 +47,15 @@ public class DurableSubscriptionOfflineTest extends org.apache.activemq.TestSupp
     private static final Logger LOG = LoggerFactory.getLogger(DurableSubscriptionOfflineTest.class);
     public boolean usePrioritySupport = Boolean.TRUE;
     public int journalMaxFileLength = Journal.DEFAULT_MAX_FILE_LENGTH;
+    public boolean keepDurableSubsActive = true;
     private BrokerService broker;
     private ActiveMQTopic topic;
     private Vector<Exception> exceptions = new Vector<Exception>();
 
     protected ActiveMQConnectionFactory createConnectionFactory() throws Exception {
-        return new ActiveMQConnectionFactory("vm://" + getName(true));
+        ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory("vm://" + getName(true));
+        connectionFactory.setWatchTopicAdvisories(false);
+        return connectionFactory;
     }
 
     @Override
@@ -89,6 +95,8 @@ public class DurableSubscriptionOfflineTest extends org.apache.activemq.TestSupp
         broker.setBrokerName(getName(true));
         broker.setDeleteAllMessagesOnStartup(deleteAllMessages);
         broker.getManagementContext().setCreateConnector(false);
+        broker.setAdvisorySupport(false);
+        broker.setKeepDurableSubsActive(keepDurableSubsActive);
 
         if (usePrioritySupport) {
             PolicyEntry policy = new PolicyEntry();
@@ -320,6 +328,119 @@ public class DurableSubscriptionOfflineTest extends org.apache.activemq.TestSupp
         con.close();
 
         assertEquals("offline consumer got all", sent, listener.count);
+    }
+
+    public void initCombosForTestJMXCountersWithOfflineSubs() throws Exception {
+        this.addCombinationValues("keepDurableSubsActive",
+                new Object[]{Boolean.TRUE, Boolean.FALSE});
+    }
+
+    public void testJMXCountersWithOfflineSubs() throws Exception {
+        // create durable subscription 1
+        Connection con = createConnection("cliId1");
+        Session session = con.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        session.createDurableSubscriber(topic, "SubsId", null, true);
+        session.close();
+        con.close();
+
+        // restart broker
+        broker.stop();
+        createBroker(false /*deleteAllMessages*/);
+
+        // send messages
+        con = createConnection();
+        session = con.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        MessageProducer producer = session.createProducer(null);
+
+        int sent = 0;
+        for (int i = 0; i < 10; i++) {
+            sent++;
+            Message message = session.createMessage();
+            producer.send(topic, message);
+        }
+        session.close();
+        con.close();
+
+        // consume some messages
+        con = createConnection("cliId1");
+        session = con.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        MessageConsumer consumer = session.createDurableSubscriber(topic, "SubsId", null, true);
+
+        for (int i=0; i<sent/2; i++) {
+            Message m =  consumer.receive(4000);
+            assertNotNull("got message: " + i, m);
+            LOG.info("Got :" + i + ", " + m);
+        }
+
+        // check some counters while active
+        ObjectName activeDurableSubName = broker.getAdminView().getDurableTopicSubscribers()[0];
+        LOG.info("active durable sub name: " + activeDurableSubName);
+        final DurableSubscriptionViewMBean durableSubscriptionView = (DurableSubscriptionViewMBean)
+                broker.getManagementContext().newProxyInstance(activeDurableSubName, DurableSubscriptionViewMBean.class, true);
+
+        assertTrue("is active", durableSubscriptionView.isActive());
+        assertEquals("all enqueued", keepDurableSubsActive ? 10 : 0, durableSubscriptionView.getEnqueueCounter());
+        assertTrue("correct waiting acks", Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                return 5 == durableSubscriptionView.getMessageCountAwaitingAcknowledge();
+            }
+        }));
+        assertEquals("correct dequeue", 5, durableSubscriptionView.getDequeueCounter());
+
+
+        ObjectName destinationName = broker.getAdminView().getTopics()[0];
+        TopicViewMBean topicView = (TopicViewMBean) broker.getManagementContext().newProxyInstance(destinationName, TopicViewMBean.class, true);
+        assertEquals("correct enqueue", 10, topicView.getEnqueueCount());
+        assertEquals("still zero dequeue, we don't decrement on each sub ack to stop exceeding the enqueue count with multiple subs", 0, topicView.getDequeueCount());
+        assertEquals("inflight", 5, topicView.getInFlightCount());
+
+        session.close();
+        con.close();
+
+        // check some counters when inactive
+        ObjectName inActiveDurableSubName = broker.getAdminView().getInactiveDurableTopicSubscribers()[0];
+        LOG.info("inactive durable sub name: " + inActiveDurableSubName);
+        DurableSubscriptionViewMBean durableSubscriptionView1 = (DurableSubscriptionViewMBean)
+                broker.getManagementContext().newProxyInstance(inActiveDurableSubName, DurableSubscriptionViewMBean.class, true);
+
+        assertTrue("is not active", !durableSubscriptionView1.isActive());
+        assertEquals("all enqueued", keepDurableSubsActive ? 10 : 0, durableSubscriptionView1.getEnqueueCounter());
+        assertEquals("correct awaiting ack", 0, durableSubscriptionView1.getMessageCountAwaitingAcknowledge());
+        assertEquals("correct dequeue", keepDurableSubsActive ? 5 : 0, durableSubscriptionView1.getDequeueCounter());
+
+        // destination view
+        assertEquals("correct enqueue", 10, topicView.getEnqueueCount());
+        assertEquals("still zero dequeue, we don't decrement on each sub ack to stop exceeding the enqueue count with multiple subs", 0, topicView.getDequeueCount());
+        assertEquals("inflight back to 0 after deactivate", 0, topicView.getInFlightCount());
+
+        // consume the rest
+        con = createConnection("cliId1");
+        session = con.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        consumer = session.createDurableSubscriber(topic, "SubsId", null, true);
+
+        for (int i=0; i<sent/2;i++) {
+            Message m =  consumer.receive(30000);
+            assertNotNull("got message: " + i, m);
+            LOG.info("Got :" + i + ", " + m);
+        }
+
+        activeDurableSubName = broker.getAdminView().getDurableTopicSubscribers()[0];
+        LOG.info("durable sub name: " + activeDurableSubName);
+        final DurableSubscriptionViewMBean durableSubscriptionView2 = (DurableSubscriptionViewMBean)
+                broker.getManagementContext().newProxyInstance(activeDurableSubName, DurableSubscriptionViewMBean.class, true);
+
+        assertTrue("is active", durableSubscriptionView2.isActive());
+        assertEquals("all enqueued", keepDurableSubsActive ? 10 : 0, durableSubscriptionView2.getEnqueueCounter());
+        assertTrue("correct dequeue", Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                long val = durableSubscriptionView2.getDequeueCounter();
+                LOG.info("dequeue count:" + val);
+                return 10 == val;
+            }
+        }));
+
     }
 
     public void initCombosForTestOfflineSubscriptionCanConsumeAfterOnlineSubs() throws Exception {
@@ -1062,6 +1183,8 @@ public class DurableSubscriptionOfflineTest extends org.apache.activemq.TestSupp
     public void initCombosForTestCleanupDeletedSubAfterRestart() throws Exception {
         this.addCombinationValues("journalMaxFileLength",
                 new Object[]{new Integer(64 * 1024)});
+        this.addCombinationValues("keepDurableSubsActive",
+                new Object[]{Boolean.TRUE, Boolean.FALSE});
     }
 
     // https://issues.apache.org/jira/browse/AMQ-3206

@@ -47,7 +47,7 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
 
     private static final Logger LOG = LoggerFactory.getLogger(DurableTopicSubscription.class);
     private final ConcurrentHashMap<MessageId, Integer> redeliveredMessages = new ConcurrentHashMap<MessageId, Integer>();
-    private final ConcurrentHashMap<ActiveMQDestination, Destination> destinations = new ConcurrentHashMap<ActiveMQDestination, Destination>();
+    private final ConcurrentHashMap<ActiveMQDestination, Destination> durableDestinations = new ConcurrentHashMap<ActiveMQDestination, Destination>();
     private final SubscriptionKey subscriptionKey;
     private final boolean keepDurableSubsActive;
     private AtomicBoolean active = new AtomicBoolean();
@@ -96,12 +96,14 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
     }
 
     public void add(ConnectionContext context, Destination destination) throws Exception {
-        super.add(context, destination);
-        // do it just once per destination
-        if (destinations.containsKey(destination.getActiveMQDestination())) {
-            return;
+        if (!destinations.contains(destination)) {
+            super.add(context, destination);
         }
-        destinations.put(destination.getActiveMQDestination(), destination);
+        // do it just once per destination
+        if (durableDestinations.containsKey(destination.getActiveMQDestination())) {
+             return;
+        }
+        durableDestinations.put(destination.getActiveMQDestination(), destination);
 
         if (active.get() || keepDurableSubsActive) {
             Topic topic = (Topic)destination;
@@ -130,7 +132,7 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
             this.info = info;
             LOG.debug("Activating " + this);
             if (!keepDurableSubsActive) {
-                for (Iterator<Destination> iter = destinations.values()
+                for (Iterator<Destination> iter = durableDestinations.values()
                         .iterator(); iter.hasNext();) {
                     Topic topic = (Topic) iter.next();
                     add(context, topic);
@@ -146,7 +148,7 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
                 // If nothing was in the persistent store, then try to use the
                 // recovery policy.
                 if (pending.isEmpty()) {
-                    for (Iterator<Destination> iter = destinations.values()
+                    for (Iterator<Destination> iter = durableDestinations.values()
                             .iterator(); iter.hasNext();) {
                         Topic topic = (Topic) iter.next();
                         topic.recoverRetroactiveMessages(context, this);
@@ -168,10 +170,12 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
         synchronized (pending) {
             pending.stop();
         }
-        if (!keepDurableSubsActive) {
-            for (Iterator<Destination> iter = destinations.values().iterator(); iter.hasNext();) {
-                Topic topic = (Topic)iter.next();
+        for (Iterator<Destination> iter = durableDestinations.values().iterator(); iter.hasNext();) {
+            Topic topic = (Topic)iter.next();
+            if (!keepDurableSubsActive) {
                 topic.deactivate(context, this);
+            } else {
+                topic.getDestinationStatistics().getInflight().subtract(dispatched.size());
             }
         }
         
@@ -270,7 +274,7 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
 
     
     public synchronized String toString() {
-        return "DurableTopicSubscription-" + getSubscriptionKey() + ", id=" + info.getConsumerId() + ", active=" + isActive() + ", destinations=" + destinations.size() + ", total=" + enqueueCounter + ", pending="
+        return "DurableTopicSubscription-" + getSubscriptionKey() + ", id=" + info.getConsumerId() + ", active=" + isActive() + ", destinations=" + durableDestinations.size() + ", total=" + enqueueCounter + ", pending="
                + getPendingQueueSize() + ", dispatched=" + dispatchCounter + ", inflight=" + dispatched.size() + ", prefetchExtension=" + this.prefetchExtension;
     }
 

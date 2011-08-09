@@ -261,16 +261,13 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
             this.batchResetNeeded = false;
         }
         if (this.batchList.isEmpty() && this.storeHasMessages && this.size >0) {
-            this.storeHasMessages = false;
             try {
                 doFillBatch();
             } catch (Exception e) {
                 LOG.error(this + " - Failed to fill batch", e);
                 throw new RuntimeException(e);
             }
-            if (!this.batchList.isEmpty() || !hadSpace) {
-                this.storeHasMessages=true;
-            }
+            this.storeHasMessages = !this.batchList.isEmpty() || !hadSpace;
         }
     }
     

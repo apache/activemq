@@ -259,7 +259,7 @@ public class TopicRegion extends AbstractRegion {
         return rc;
     }
 
-    private ConsumerInfo createInactiveConsumerInfo(SubscriptionInfo info) {
+    public ConsumerInfo createInactiveConsumerInfo(SubscriptionInfo info) {
         ConsumerInfo rc = new ConsumerInfo();
         rc.setSelector(info.getSelector());
         rc.setSubscriptionName(info.getSubscriptionName());

@@ -392,7 +392,7 @@ public class DestinationView implements DestinationViewMBean {
         int index = 0;
         for (Subscription subscription : subscriptions) {
             String connectionClientId = subscription.getContext().getClientId();
-            String objectNameStr = ManagedRegionBroker.getSubscriptionObjectName(subscription, connectionClientId, objectName);
+            String objectNameStr = ManagedRegionBroker.getSubscriptionObjectName(subscription.getConsumerInfo(), connectionClientId, objectName);
             answer[index++] = new ObjectName(objectNameStr);
         }
         return answer;
