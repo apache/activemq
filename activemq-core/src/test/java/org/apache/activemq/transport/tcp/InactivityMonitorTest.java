@@ -44,6 +44,7 @@ public class InactivityMonitorTest extends CombinationTestSupport implements Tra
     private TransportServer server;
     private Transport clientTransport;
     private Transport serverTransport;
+    private int serverPort;
 
     private final AtomicInteger clientReceiveCount = new AtomicInteger(0);
     private final AtomicInteger clientErrorCount = new AtomicInteger(0);
@@ -63,7 +64,7 @@ public class InactivityMonitorTest extends CombinationTestSupport implements Tra
      * @throws URISyntaxException
      */
     private void startClient() throws Exception, URISyntaxException {
-        clientTransport = TransportFactory.connect(new URI("tcp://localhost:61616?trace=true&wireFormat.maxInactivityDuration=1000"));
+        clientTransport = TransportFactory.connect(new URI("tcp://localhost:" + serverPort + "?trace=true&wireFormat.maxInactivityDuration=1000"));
         clientTransport.setTransportListener(new TransportListener() {
             public void onCommand(Object command) {
                 clientReceiveCount.incrementAndGet();
@@ -95,9 +96,11 @@ public class InactivityMonitorTest extends CombinationTestSupport implements Tra
      * @throws Exception
      */
     private void startTransportServer() throws IOException, URISyntaxException, Exception {
-        server = TransportFactory.bind(new URI("tcp://localhost:61616?trace=true&wireFormat.maxInactivityDuration=1000"));
+        server = TransportFactory.bind(new URI("tcp://localhost:0?trace=true&wireFormat.maxInactivityDuration=1000"));
         server.setAcceptListener(this);
         server.start();
+
+        serverPort = server.getSocketAddress().getPort();
     }
 
     protected void tearDown() throws Exception {
@@ -156,11 +159,11 @@ public class InactivityMonitorTest extends CombinationTestSupport implements Tra
 
     public void testClientHang() throws Exception {
 
-        // 
+        //
         // Manually create a client transport so that it does not send KeepAlive
         // packets.
         // this should simulate a client hang.
-        clientTransport = new TcpTransport(new OpenWireFormat(), SocketFactory.getDefault(), new URI("tcp://localhost:61616"), null);
+        clientTransport = new TcpTransport(new OpenWireFormat(), SocketFactory.getDefault(), new URI("tcp://localhost:" + serverPort), null);
         clientTransport.setTransportListener(new TransportListener() {
             public void onCommand(Object command) {
                 clientReceiveCount.incrementAndGet();
@@ -215,7 +218,7 @@ public class InactivityMonitorTest extends CombinationTestSupport implements Tra
     /**
      * Used to test when a operation blocks. This should not cause transport to
      * get disconnected.
-     * 
+     *
      * @throws Exception
      * @throws URISyntaxException
      */

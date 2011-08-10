@@ -21,6 +21,7 @@ import java.io.DataInput;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.net.URI;
 
 import javax.jms.Connection;
 import javax.jms.Message;
@@ -36,14 +37,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * 
- * 
+ *
+ *
  */
 public class StompSubscriptionRemoveTest extends TestCase {
     private static final Logger LOG = LoggerFactory.getLogger(StompSubscriptionRemoveTest.class);
     private static final String COMMAND_MESSAGE = "MESSAGE";
     private static final String HEADER_MESSAGE_ID = "message-id";
-    private static final int STOMP_PORT = 61613;
 
     private StompConnection stompConnection = new StompConnection();
 
@@ -51,11 +51,15 @@ public class StompSubscriptionRemoveTest extends TestCase {
         BrokerService broker = new BrokerService();
         broker.setPersistent(false);
 
-        broker.addConnector("stomp://localhost:61613").setName("Stomp");
-        broker.addConnector("tcp://localhost:61616").setName("Default");
+        broker.addConnector("stomp://localhost:0").setName("Stomp");
+        broker.addConnector("tcp://localhost:0").setName("Default");
         broker.start();
 
-        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("tcp://localhost:61616");
+        final String stompUri = broker.getConnectorByName("Stomp").getPublishableConnectString();
+        final int stompPort = new URI(stompUri).getPort();
+        final String openwireUri = broker.getConnectorByName("Default").getPublishableConnectString();
+
+        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(openwireUri);
         Connection connection = factory.createConnection();
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         MessageProducer producer = session.createProducer(new ActiveMQQueue(getDestinationName()));
@@ -68,7 +72,7 @@ public class StompSubscriptionRemoveTest extends TestCase {
         session.close();
         connection.close();
 
-        stompConnection.open(new Socket("localhost", STOMP_PORT));
+        stompConnection.open(new Socket("localhost", stompPort));
 
         String connectFrame = "CONNECT\n" + "login: brianm\n" + "passcode: wombats\n" + "\n";
         stompConnection.sendFrame(connectFrame);
@@ -95,7 +99,7 @@ public class StompSubscriptionRemoveTest extends TestCase {
         Thread.sleep(1000);
         stompConnection.close();
 
-        stompConnection.open(new Socket("localhost", STOMP_PORT));
+        stompConnection.open(new Socket("localhost", stompPort));
 
         connectFrame = "CONNECT\n" + "login: brianm\n" + "passcode: wombats\n" + "\n";
         stompConnection.sendFrame(connectFrame);

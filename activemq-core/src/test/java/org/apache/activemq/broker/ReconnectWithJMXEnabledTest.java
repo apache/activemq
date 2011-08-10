@@ -17,17 +17,19 @@
 package org.apache.activemq.broker;
 
 import javax.jms.Connection;
+import javax.jms.ConnectionFactory;
 import javax.jms.Destination;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
 
+import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.EmbeddedBrokerTestSupport;
 
 /**
- * 
- * 
+ *
+ *
  */
 public class ReconnectWithJMXEnabledTest extends EmbeddedBrokerTestSupport {
 
@@ -44,13 +46,19 @@ public class ReconnectWithJMXEnabledTest extends EmbeddedBrokerTestSupport {
         broker = createBroker();
         startBroker();
 
+        connectionFactory = createConnectionFactory();
         connection = connectionFactory.createConnection();
         useConnection(connection);
     }
 
     protected void setUp() throws Exception {
-        bindAddress = "tcp://localhost:61616";
+        bindAddress = "tcp://localhost:0";
         super.setUp();
+    }
+
+    @Override
+    protected ConnectionFactory createConnectionFactory() throws Exception {
+        return new ActiveMQConnectionFactory(broker.getTransportConnectors().get(0).getPublishableConnectString());
     }
 
     protected void tearDown() throws Exception {
@@ -79,5 +87,6 @@ public class ReconnectWithJMXEnabledTest extends EmbeddedBrokerTestSupport {
         Message message = session.createTextMessage("Hello World");
         producer.send(message);
         Thread.sleep(1000);
+        consumer.close();
     }
 }
