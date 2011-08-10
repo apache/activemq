@@ -46,7 +46,7 @@ import org.slf4j.LoggerFactory;
  * read-permission-role and write-permission-role are defined then all requests
  * are authorized using the defined roles. Also GET methods are authorized.
  * </p>
- * 
+ *
  * @author Aleksi Kallio
  */
 public class RestFilter implements Filter {
@@ -179,8 +179,9 @@ public class RestFilter implements Filter {
             IOHelper.copyInputStream(request.getInputStream(), out);
         } catch (IOException e) {
             LOG.warn("Exception occured" , e);
-            out.close();
             throw e;
+        } finally {
+            out.close();
         }
 
         response.setStatus(HttpURLConnection.HTTP_NO_CONTENT); // we return no
