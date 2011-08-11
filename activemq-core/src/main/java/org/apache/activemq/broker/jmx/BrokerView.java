@@ -20,6 +20,7 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -321,14 +322,25 @@ public class BrokerView implements BrokerViewMBean {
         // Avoid a direct dependency on log4j.. use reflection.
         try {
             ClassLoader cl = getClass().getClassLoader();
-            Class logManagerClass = cl.loadClass("org.apache.log4j.LogManager");
+            Class<?> logManagerClass = cl.loadClass("org.apache.log4j.LogManager");
 
             Method resetConfiguration = logManagerClass.getMethod("resetConfiguration", new Class[]{});
             resetConfiguration.invoke(null, new Object[]{});
 
-            URL log4jprops = cl.getResource("log4j.properties");
+            String configurationOptionStr = System.getProperty("log4j.configuration");
+            URL log4jprops = null;
+            if (configurationOptionStr != null) {
+                try {
+                    log4jprops = new URL(configurationOptionStr);
+                } catch (MalformedURLException ex) {
+                    log4jprops = cl.getResource("log4j.properties");
+                }
+            } else {
+               log4jprops = cl.getResource("log4j.properties");
+            }
+
             if (log4jprops != null) {
-                Class propertyConfiguratorClass = cl.loadClass("org.apache.log4j.PropertyConfigurator");
+                Class<?> propertyConfiguratorClass = cl.loadClass("org.apache.log4j.PropertyConfigurator");
                 Method configure = propertyConfiguratorClass.getMethod("configure", new Class[]{URL.class});
                 configure.invoke(null, new Object[]{log4jprops});
             }
