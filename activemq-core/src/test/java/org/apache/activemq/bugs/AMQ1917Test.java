@@ -54,7 +54,7 @@ public class AMQ1917Test extends TestCase {
         private CountDownLatch roundTripLatch = new CountDownLatch(NUM_MESSAGES);
         private CountDownLatch errorLatch = new CountDownLatch(1);
         private ThreadPoolExecutor tpe;
-        private final String BROKER_URL = "tcp://localhost:61616";
+        private final String BROKER_URL = "tcp://localhost:0";
         private String connectionUri;
         private BrokerService broker = null;
         private boolean working = true;

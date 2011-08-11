@@ -39,7 +39,8 @@ public class AMQ1687Test extends EmbeddedBrokerTestSupport {
     @Override
     protected ConnectionFactory createConnectionFactory() throws Exception {
         //prefetch change is not required, but test will not fail w/o it, only spew errors in the AMQ log.
-        return new ActiveMQConnectionFactory(this.bindAddress+"?jms.prefetchPolicy.all=5");
+        return new ActiveMQConnectionFactory(
+                broker.getTransportConnectors().get(0).getPublishableConnectString() +"?jms.prefetchPolicy.all=5");
     }
 
     public void testVirtualTopicCreation() throws Exception {
@@ -91,7 +92,7 @@ public class AMQ1687Test extends EmbeddedBrokerTestSupport {
     }
 
     protected void setUp() throws Exception {
-        this.bindAddress="tcp://localhost:61616";
+        this.bindAddress="tcp://localhost:0";
         super.setUp();
     }
     protected void tearDown() throws Exception {
