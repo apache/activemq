@@ -16,48 +16,47 @@
  */
 package org.apache.activemq.transport.stomp;
 
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.Map;
 
-import javax.net.ServerSocketFactory;
 import org.apache.activemq.broker.BrokerContext;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.BrokerServiceAware;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.tcp.TcpTransportFactory;
-import org.apache.activemq.transport.tcp.TcpTransportServer;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.wireformat.WireFormat;
-import org.apache.activemq.xbean.XBeanBrokerService;
 
 /**
  * A <a href="http://stomp.codehaus.org/">STOMP</a> transport factory
- * 
- * 
+ *
+ *
  */
 public class StompTransportFactory extends TcpTransportFactory implements BrokerServiceAware {
 
-	private BrokerContext brokerContext = null;
-	
+    private BrokerContext brokerContext = null;
+
     protected String getDefaultWireFormatType() {
         return "stomp";
     }
 
+    @SuppressWarnings("rawtypes")
     public Transport compositeConfigure(Transport transport, WireFormat format, Map options) {
-        transport = new StompTransportFilter(transport, new LegacyFrameTranslator(), brokerContext);
+        transport = new StompTransportFilter(transport, format, brokerContext);
         IntrospectionSupport.setProperties(transport, options);
         return super.compositeConfigure(transport, format, options);
     }
 
-    protected boolean isUseInactivityMonitor(Transport transport) {
-        // lets disable the inactivity monitor as stomp does not use keep alive
-        // packets
-        return false;
+    public void setBrokerService(BrokerService brokerService) {
+        this.brokerContext = brokerService.getBrokerContext();
     }
 
-	public void setBrokerService(BrokerService brokerService) {
-	    this.brokerContext = brokerService.getBrokerContext();
-	}
+    @Override
+    protected Transport createInactivityMonitor(Transport transport, WireFormat format) {
+        StompInactivityMonitor monitor = new StompInactivityMonitor(transport, format);
+
+        StompTransportFilter filter = (StompTransportFilter) transport.narrow(StompTransportFilter.class);
+        filter.setInactivityMonitor(monitor);
+
+        return monitor;
+    }
 }

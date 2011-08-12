@@ -35,12 +35,11 @@ import org.apache.activemq.transport.tcp.TcpTransport;
 import org.apache.activemq.transport.tcp.TcpTransportServer;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.wireformat.WireFormat;
-import org.apache.activemq.xbean.XBeanBrokerService;
 
 /**
  * A <a href="http://stomp.codehaus.org/">STOMP</a> over NIO transport factory
- * 
- * 
+ *
+ *
  */
 public class StompNIOTransportFactory extends NIOTransportFactory implements BrokerServiceAware {
 
@@ -60,20 +59,15 @@ public class StompNIOTransportFactory extends NIOTransportFactory implements Bro
 
     protected TcpTransport createTcpTransport(WireFormat wf, SocketFactory socketFactory, URI location, URI localLocation) throws UnknownHostException, IOException {
         return new StompNIOTransport(wf, socketFactory, location, localLocation);
-    }  
+    }
 
+    @SuppressWarnings("rawtypes")
     public Transport compositeConfigure(Transport transport, WireFormat format, Map options) {
-        transport = new StompTransportFilter(transport, new LegacyFrameTranslator(), brokerContext);
+        transport = new StompTransportFilter(transport, format, brokerContext);
         IntrospectionSupport.setProperties(transport, options);
         return super.compositeConfigure(transport, format, options);
     }
 
-    protected boolean isUseInactivityMonitor(Transport transport) {
-        // lets disable the inactivity monitor as stomp does not use keep alive
-        // packets
-        return false;
-    }
-    
     public void setBrokerService(BrokerService brokerService) {
         this.brokerContext = brokerService.getBrokerContext();
     }

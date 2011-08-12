@@ -19,7 +19,6 @@ package org.apache.activemq.transport.stomp;
 import org.apache.activemq.transport.tcp.TcpTransport;
 import org.apache.activemq.util.ByteArrayOutputStream;
 import org.apache.activemq.util.DataByteArrayInputStream;
-import org.apache.activemq.wireformat.WireFormat;
 
 import java.io.ByteArrayInputStream;
 import java.util.HashMap;
@@ -41,55 +40,55 @@ public class StompCodec {
     }
 
     public void parse(ByteArrayInputStream input, int readSize) throws Exception {
-               int i = 0;
-               int b;
-               while(i++ < readSize) {
-                   b = input.read();
-                   // skip repeating nulls
-                   if (!processedHeaders && previousByte == 0 && b == 0) {
-                       continue;
-                   }
+       int i = 0;
+       int b;
+       while(i++ < readSize) {
+           b = input.read();
+           // skip repeating nulls
+           if (!processedHeaders && previousByte == 0 && b == 0) {
+               continue;
+           }
 
-                   if (!processedHeaders) {
-                       currentCommand.write(b);
-                       // end of headers section, parse action and header
-                       if (previousByte == '\n' && b == '\n') {
-                           if (transport.getWireFormat() instanceof StompWireFormat) {
-                               DataByteArrayInputStream data = new DataByteArrayInputStream(currentCommand.toByteArray());
-                               action = ((StompWireFormat)transport.getWireFormat()).parseAction(data);
-                               headers = ((StompWireFormat)transport.getWireFormat()).parseHeaders(data);
-                               String contentLengthHeader = headers.get(Stomp.Headers.CONTENT_LENGTH);
-                               if (contentLengthHeader != null) {
-                                   contentLength = ((StompWireFormat)transport.getWireFormat()).parseContentLength(contentLengthHeader);
-                               } else {
-                                   contentLength = -1;
-                               }
-                           }
-                           processedHeaders = true;
-                           currentCommand.reset();
-                       }
-                   } else {
-
-                       if (contentLength == -1) {
-                           // end of command reached, unmarshal
-                           if (b == 0) {
-                               processCommand();
-                           } else {
-                               currentCommand.write(b);
-                           }
+           if (!processedHeaders) {
+               currentCommand.write(b);
+               // end of headers section, parse action and header
+               if (previousByte == '\n' && b == '\n') {
+                   if (transport.getWireFormat() instanceof StompWireFormat) {
+                       DataByteArrayInputStream data = new DataByteArrayInputStream(currentCommand.toByteArray());
+                       action = ((StompWireFormat)transport.getWireFormat()).parseAction(data);
+                       headers = ((StompWireFormat)transport.getWireFormat()).parseHeaders(data);
+                       String contentLengthHeader = headers.get(Stomp.Headers.CONTENT_LENGTH);
+                       if (contentLengthHeader != null) {
+                           contentLength = ((StompWireFormat)transport.getWireFormat()).parseContentLength(contentLengthHeader);
                        } else {
-                           // read desired content length
-                           if (readLength++ == contentLength) {
-                               processCommand();
-                               readLength = 0;
-                           } else {
-                               currentCommand.write(b);
-                           }
+                           contentLength = -1;
                        }
                    }
-
-                   previousByte = b;
+                   processedHeaders = true;
+                   currentCommand.reset();
                }
+           } else {
+
+               if (contentLength == -1) {
+                   // end of command reached, unmarshal
+                   if (b == 0) {
+                       processCommand();
+                   } else {
+                       currentCommand.write(b);
+                   }
+               } else {
+                   // read desired content length
+                   if (readLength++ == contentLength) {
+                       processCommand();
+                       readLength = 0;
+                   } else {
+                       currentCommand.write(b);
+                   }
+               }
+           }
+
+           previousByte = b;
+       }
     }
 
     protected void processCommand() throws Exception {

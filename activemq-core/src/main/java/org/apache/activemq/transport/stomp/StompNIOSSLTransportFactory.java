@@ -54,15 +54,15 @@ public class StompNIOSSLTransportFactory extends StompNIOTransportFactory {
         return new StompNIOSSLTransport(wf, socketFactory, location, localLocation);
     }
 
-        @Override
+    @Override
     public TransportServer doBind(URI location) throws IOException {
-         if (SslContext.getCurrentSslContext() != null) {
-             try {
-                 context = SslContext.getCurrentSslContext().getSSLContext();
-             } catch (Exception e) {
-                 throw new IOException(e);
-             }
-         }
+       if (SslContext.getCurrentSslContext() != null) {
+            try {
+                context = SslContext.getCurrentSslContext().getSSLContext();
+            } catch (Exception e) {
+                throw new IOException(e);
+            }
+        }
         return super.doBind(location);
     }
 

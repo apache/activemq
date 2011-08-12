@@ -16,10 +16,16 @@
  */
 package org.apache.activemq.transport.stomp;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -34,6 +40,7 @@ import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ActiveMQTempQueue;
 import org.apache.activemq.command.ActiveMQTempTopic;
 import org.apache.activemq.command.Command;
+import org.apache.activemq.command.CommandTypes;
 import org.apache.activemq.command.ConnectionError;
 import org.apache.activemq.command.ConnectionId;
 import org.apache.activemq.command.ConnectionInfo;
@@ -62,7 +69,6 @@ import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.util.LongSequenceGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.ApplicationContextAware;
 
 /**
  * @author <a href="http://hiramchirino.com">chirino</a>
@@ -70,8 +76,28 @@ import org.springframework.context.ApplicationContextAware;
 public class ProtocolConverter {
 
     private static final Logger LOG = LoggerFactory.getLogger(ProtocolConverter.class);
-    
+
     private static final IdGenerator CONNECTION_ID_GENERATOR = new IdGenerator();
+
+    private static final String BROKER_VERSION;
+    private static final StompFrame ping = new StompFrame(Stomp.Commands.KEEPALIVE);
+
+    private static final long DEFAULT_OUTBOUND_HEARTBEAT = 100;
+    private static final long DEFAULT_INBOUND_HEARTBEAT = 1000;
+    private static final long DEFAULT_INITIAL_HEARTBEAT_DELAY = 1000;
+
+    static {
+        InputStream in = null;
+        String version = "5.6.0";
+        if ((in = ProtocolConverter.class.getResourceAsStream("/org/apache/activemq/version.txt")) != null) {
+            BufferedReader reader = new BufferedReader(new InputStreamReader(in));
+            try {
+                version = reader.readLine();
+            } catch(Exception e) {
+            }
+        }
+        BROKER_VERSION = version;
+    }
 
     private final ConnectionId connectionId = new ConnectionId(CONNECTION_ID_GENERATOR.generateId());
     private final SessionId sessionId = new SessionId(connectionId, -1);
@@ -84,6 +110,7 @@ public class ProtocolConverter {
 
     private final ConcurrentHashMap<Integer, ResponseHandler> resposeHandlers = new ConcurrentHashMap<Integer, ResponseHandler>();
     private final ConcurrentHashMap<ConsumerId, StompSubscription> subscriptionsByConsumerId = new ConcurrentHashMap<ConsumerId, StompSubscription>();
+    private final ConcurrentHashMap<String, StompSubscription> subscriptions = new ConcurrentHashMap<String, StompSubscription>();
     private final ConcurrentHashMap<String, ActiveMQDestination> tempDestinations = new ConcurrentHashMap<String, ActiveMQDestination>();
     private final ConcurrentHashMap<String, String> tempDestinationAmqToStompMap = new ConcurrentHashMap<String, String>();
     private final Map<String, LocalTransactionId> transactions = new ConcurrentHashMap<String, LocalTransactionId>();
@@ -92,13 +119,15 @@ public class ProtocolConverter {
     private final Object commnadIdMutex = new Object();
     private int lastCommandId;
     private final AtomicBoolean connected = new AtomicBoolean(false);
-    private final FrameTranslator frameTranslator;
+    private final FrameTranslator frameTranslator = new LegacyFrameTranslator();
     private final FactoryFinder FRAME_TRANSLATOR_FINDER = new FactoryFinder("META-INF/services/org/apache/activemq/transport/frametranslator/");
     private final BrokerContext brokerContext;
+    private String version = "1.0";
+    private long hbReadInterval = DEFAULT_INBOUND_HEARTBEAT;
+    private long hbWriteInterval = DEFAULT_OUTBOUND_HEARTBEAT;
 
-    public ProtocolConverter(StompTransport stompTransport, FrameTranslator translator, BrokerContext brokerContext) {
+    public ProtocolConverter(StompTransport stompTransport, BrokerContext brokerContext) {
         this.stompTransport = stompTransport;
-        this.frameTranslator = translator;
         this.brokerContext = brokerContext;
     }
 
@@ -178,6 +207,8 @@ public class ProtocolConverter {
                 onStompSend(command);
             } else if (action.startsWith(Stomp.Commands.ACK)) {
                 onStompAck(command);
+            } else if (action.startsWith(Stomp.Commands.NACK)) {
+                onStompNack(command);
             } else if (action.startsWith(Stomp.Commands.BEGIN)) {
                 onStompBegin(command);
             } else if (action.startsWith(Stomp.Commands.COMMIT)) {
@@ -188,7 +219,8 @@ public class ProtocolConverter {
                 onStompSubscribe(command);
             } else if (action.startsWith(Stomp.Commands.UNSUBSCRIBE)) {
                 onStompUnsubscribe(command);
-            } else if (action.startsWith(Stomp.Commands.CONNECT)) {
+            } else if (action.startsWith(Stomp.Commands.CONNECT) ||
+                       action.startsWith(Stomp.Commands.STOMP)) {
                 onStompConnect(command);
             } else if (action.startsWith(Stomp.Commands.DISCONNECT)) {
                 onStompDisconnect(command);
@@ -199,7 +231,7 @@ public class ProtocolConverter {
         } catch (ProtocolException e) {
             handleException(e, command);
             // Some protocol errors can cause the connection to get closed.
-            if( e.isFatal() ) {
+            if (e.isFatal()) {
                getStompTransport().onException(e);
             }
         }
@@ -219,6 +251,7 @@ public class ProtocolConverter {
 
         HashMap<String, String> headers = new HashMap<String, String>();
         headers.put(Stomp.Headers.Error.MESSAGE, exception.getMessage());
+        headers.put(Stomp.Headers.CONTENT_TYPE, "text/plain");
 
         if (command != null) {
             final String receiptId = command.getHeaders().get(Stomp.Headers.RECEIPT_REQUESTED);
@@ -235,6 +268,11 @@ public class ProtocolConverter {
         checkConnected();
 
         Map<String, String> headers = command.getHeaders();
+        String destination = headers.get(Stomp.Headers.Send.DESTINATION);
+        if (destination == null) {
+            throw new ProtocolException("SEND received without a Destination specified!");
+        }
+
         String stompTx = headers.get(Stomp.Headers.TRANSACTION);
         headers.remove("transaction");
 
@@ -255,22 +293,62 @@ public class ProtocolConverter {
 
         message.onSend();
         sendToActiveMQ(message, createResponseHandler(command));
+    }
 
+    protected void onStompNack(StompFrame command) throws ProtocolException {
+
+        checkConnected();
+
+        if (this.version.equals(Stomp.V1_1)) {
+            throw new ProtocolException("NACK received but connection is in v1.0 mode.");
+        }
+
+        Map<String, String> headers = command.getHeaders();
+
+        String subscriptionId = headers.get(Stomp.Headers.Ack.SUBSCRIPTION);
+        if (subscriptionId == null) {
+            throw new ProtocolException("NACK received without a subscription id for acknowledge!");
+        }
+
+        String messageId = headers.get(Stomp.Headers.Ack.MESSAGE_ID);
+        if (messageId == null) {
+            throw new ProtocolException("NACK received without a message-id to acknowledge!");
+        }
+
+        TransactionId activemqTx = null;
+        String stompTx = headers.get(Stomp.Headers.TRANSACTION);
+        if (stompTx != null) {
+            activemqTx = transactions.get(stompTx);
+            if (activemqTx == null) {
+                throw new ProtocolException("Invalid transaction id: " + stompTx);
+            }
+        }
+
+        if (subscriptionId != null) {
+            StompSubscription sub = this.subscriptions.get(subscriptionId);
+            if (sub != null) {
+                MessageAck ack = sub.onStompMessageNack(messageId, activemqTx);
+                if (ack != null) {
+                    sendToActiveMQ(ack, createResponseHandler(command));
+                } else {
+                    throw new ProtocolException("Unexpected NACK received for message-id [" + messageId + "]");
+                }
+            }
+        }
     }
 
     protected void onStompAck(StompFrame command) throws ProtocolException {
         checkConnected();
 
-        // TODO: acking with just a message id is very bogus
-        // since the same message id could have been sent to 2 different
-        // subscriptions
-        // on the same stomp connection. For example, when 2 subs are created on
-        // the same topic.
-
         Map<String, String> headers = command.getHeaders();
         String messageId = headers.get(Stomp.Headers.Ack.MESSAGE_ID);
         if (messageId == null) {
             throw new ProtocolException("ACK received without a message-id to acknowledge!");
+        }
+
+        String subscriptionId = headers.get(Stomp.Headers.Ack.SUBSCRIPTION);
+        if (this.version.equals(Stomp.V1_1) && subscriptionId == null) {
+            throw new ProtocolException("ACK received without a subscription id for acknowledge!");
         }
 
         TransactionId activemqTx = null;
@@ -283,21 +361,37 @@ public class ProtocolConverter {
         }
 
         boolean acked = false;
-        for (Iterator<StompSubscription> iter = subscriptionsByConsumerId.values().iterator(); iter.hasNext();) {
-            StompSubscription sub = iter.next();
-            MessageAck ack = sub.onStompMessageAck(messageId, activemqTx);
-            if (ack != null) {
-                ack.setTransactionId(activemqTx);
-                sendToActiveMQ(ack, createResponseHandler(command));
-                acked = true;
-                break;
+
+        if (subscriptionId != null) {
+
+            StompSubscription sub = this.subscriptions.get(subscriptionId);
+            if (sub != null) {
+                MessageAck ack = sub.onStompMessageAck(messageId, activemqTx);
+                if (ack != null) {
+                    sendToActiveMQ(ack, createResponseHandler(command));
+                    acked = true;
+                }
+            }
+
+        } else {
+
+            // TODO: acking with just a message id is very bogus since the same message id
+            // could have been sent to 2 different subscriptions on the same Stomp connection.
+            // For example, when 2 subs are created on the same topic.
+
+            for (StompSubscription sub : subscriptionsByConsumerId.values()) {
+                MessageAck ack = sub.onStompMessageAck(messageId, activemqTx);
+                if (ack != null) {
+                    sendToActiveMQ(ack, createResponseHandler(command));
+                    acked = true;
+                    break;
+                }
             }
         }
 
         if (!acked) {
             throw new ProtocolException("Unexpected ACK received for message-id [" + messageId + "]");
         }
-
     }
 
     protected void onStompBegin(StompFrame command) throws ProtocolException {
@@ -324,7 +418,6 @@ public class ProtocolConverter {
         tx.setType(TransactionInfo.BEGIN);
 
         sendToActiveMQ(tx, createResponseHandler(command));
-
     }
 
     protected void onStompCommit(StompFrame command) throws ProtocolException {
@@ -342,8 +435,7 @@ public class ProtocolConverter {
             throw new ProtocolException("Invalid transaction id: " + stompTx);
         }
 
-        for (Iterator<StompSubscription> iter = subscriptionsByConsumerId.values().iterator(); iter.hasNext();) {
-            StompSubscription sub = iter.next();
+        for (StompSubscription sub : subscriptionsByConsumerId.values()) {
             sub.onStompCommit(activemqTx);
         }
 
@@ -353,7 +445,6 @@ public class ProtocolConverter {
         tx.setType(TransactionInfo.COMMIT_ONE_PHASE);
 
         sendToActiveMQ(tx, createResponseHandler(command));
-
     }
 
     protected void onStompAbort(StompFrame command) throws ProtocolException {
@@ -369,8 +460,7 @@ public class ProtocolConverter {
         if (activemqTx == null) {
             throw new ProtocolException("Invalid transaction id: " + stompTx);
         }
-        for (Iterator<StompSubscription> iter = subscriptionsByConsumerId.values().iterator(); iter.hasNext();) {
-            StompSubscription sub = iter.next();
+        for (StompSubscription sub : subscriptionsByConsumerId.values()) {
             try {
                 sub.onStompAbort(activemqTx);
             } catch (Exception e) {
@@ -384,7 +474,6 @@ public class ProtocolConverter {
         tx.setType(TransactionInfo.ROLLBACK);
 
         sendToActiveMQ(tx, createResponseHandler(command));
-
     }
 
     protected void onStompSubscribe(StompFrame command) throws ProtocolException {
@@ -394,6 +483,10 @@ public class ProtocolConverter {
 
         String subscriptionId = headers.get(Stomp.Headers.Subscribe.ID);
         String destination = headers.get(Stomp.Headers.Subscribe.DESTINATION);
+
+        if (this.version.equals(Stomp.V1_1) && subscriptionId == null) {
+            throw new ProtocolException("SUBSCRIBE received without a subscription id!");
+        }
 
         ActiveMQDestination actualDest = translator.convertDestination(this, destination);
 
@@ -406,6 +499,16 @@ public class ProtocolConverter {
         consumerInfo.setPrefetchSize(1000);
         consumerInfo.setDispatchAsync(true);
 
+        String browser = headers.get(Stomp.Headers.Subscribe.BROWSER);
+        if (browser != null && browser.equals(Stomp.TRUE)) {
+
+            if (!this.version.equals(Stomp.V1_1)) {
+                throw new ProtocolException("Queue Browser feature only valid for Stomp v1.1 clients!");
+            }
+
+            consumerInfo.setBrowser(true);
+        }
+
         String selector = headers.remove(Stomp.Headers.Subscribe.SELECTOR);
         consumerInfo.setSelector(selector);
 
@@ -413,7 +516,12 @@ public class ProtocolConverter {
 
         consumerInfo.setDestination(translator.convertDestination(this, destination));
 
-        StompSubscription stompSubscription = new StompSubscription(this, subscriptionId, consumerInfo, headers.get(Stomp.Headers.TRANSFORMATION));
+        StompSubscription stompSubscription;
+        if (!consumerInfo.isBrowser()) {
+            stompSubscription = new StompSubscription(this, subscriptionId, consumerInfo, headers.get(Stomp.Headers.TRANSFORMATION));
+        } else {
+            stompSubscription = new StompQueueBrowserSubscription(this, subscriptionId, consumerInfo, headers.get(Stomp.Headers.TRANSFORMATION));
+        }
         stompSubscription.setDestination(actualDest);
 
         String ackMode = headers.get(Stomp.Headers.Subscribe.ACK_MODE);
@@ -426,8 +534,11 @@ public class ProtocolConverter {
         }
 
         subscriptionsByConsumerId.put(id, stompSubscription);
+        // Stomp v1.0 doesn't need to set this header so we avoid an NPE if not set.
+        if (subscriptionId != null) {
+            subscriptions.put(subscriptionId, stompSubscription);
+        }
         sendToActiveMQ(consumerInfo, createResponseHandler(command));
-
     }
 
     protected void onStompUnsubscribe(StompFrame command) throws ProtocolException {
@@ -441,6 +552,9 @@ public class ProtocolConverter {
         }
 
         String subscriptionId = headers.get(Stomp.Headers.Unsubscribe.ID);
+        if (this.version.equals(Stomp.V1_1) && subscriptionId == null) {
+            throw new ProtocolException("UNSUBSCRIBE received without a subscription id!");
+        }
 
         if (subscriptionId == null && destination == null) {
             throw new ProtocolException("Must specify the subscriptionId or the destination you are unsubscribing from");
@@ -457,17 +571,25 @@ public class ProtocolConverter {
             return;
         }
 
-        // TODO: Unsubscribing using a destination is a bit wierd if multiple
-        // subscriptions
-        // are created with the same destination. Perhaps this should be
-        // removed.
-        //
-        for (Iterator<StompSubscription> iter = subscriptionsByConsumerId.values().iterator(); iter.hasNext();) {
-            StompSubscription sub = iter.next();
-            if ((subscriptionId != null && subscriptionId.equals(sub.getSubscriptionId())) || (destination != null && destination.equals(sub.getDestination()))) {
+        if (subscriptionId != null) {
+
+            StompSubscription sub = this.subscriptions.remove(subscriptionId);
+            if (sub != null) {
                 sendToActiveMQ(sub.getConsumerInfo().createRemoveCommand(), createResponseHandler(command));
-                iter.remove();
                 return;
+            }
+
+        } else {
+
+            // Unsubscribing using a destination is a bit weird if multiple subscriptions
+            // are created with the same destination.
+            for (Iterator<StompSubscription> iter = subscriptionsByConsumerId.values().iterator(); iter.hasNext();) {
+                StompSubscription sub = iter.next();
+                if (destination != null && destination.equals(sub.getDestination())) {
+                    sendToActiveMQ(sub.getConsumerInfo().createRemoveCommand(), createResponseHandler(command));
+                    iter.remove();
+                    return;
+                }
             }
         }
 
@@ -488,10 +610,28 @@ public class ProtocolConverter {
         String login = headers.get(Stomp.Headers.Connect.LOGIN);
         String passcode = headers.get(Stomp.Headers.Connect.PASSCODE);
         String clientId = headers.get(Stomp.Headers.Connect.CLIENT_ID);
+        String heartBeat = headers.get(Stomp.Headers.Connect.HEART_BEAT);
+        String accepts = headers.get(Stomp.Headers.Connect.ACCEPT_VERSION);
 
+        if (accepts == null) {
+            accepts = Stomp.DEFAULT_VERSION;
+        }
+        if (heartBeat == null) {
+            heartBeat = Stomp.DEFAULT_HEART_BEAT;
+        }
+
+        HashSet<String> acceptsVersions = new HashSet<String>(Arrays.asList(accepts.split(Stomp.COMMA)));
+        acceptsVersions.retainAll(Arrays.asList(Stomp.SUPPORTED_PROTOCOL_VERSIONS));
+        if (acceptsVersions.isEmpty()) {
+            throw new ProtocolException("Invlid Protocol version, supported versions are: " +
+                                        Arrays.toString(Stomp.SUPPORTED_PROTOCOL_VERSIONS), true);
+        } else {
+            this.version = Collections.max(acceptsVersions);
+        }
+
+        configureInactivityMonitor(heartBeat);
 
         IntrospectionSupport.setProperties(connectionInfo, headers, "activemq.");
-
         connectionInfo.setConnectionId(connectionId);
         if (clientId != null) {
             connectionInfo.setClientId(clientId);
@@ -544,10 +684,22 @@ public class ProtocolConverter {
                             responseHeaders.put(Stomp.Headers.Response.RECEIPT_ID, requestId);
                         }
 
+                        responseHeaders.put(Stomp.Headers.Connected.VERSION, version);
+                        responseHeaders.put(Stomp.Headers.Connected.HEART_BEAT,
+                                            String.format("%d,%d", hbWriteInterval, hbReadInterval));
+                        responseHeaders.put(Stomp.Headers.Connected.SERVER, "ActiveMQ/"+BROKER_VERSION);
+
                         StompFrame sc = new StompFrame();
                         sc.setAction(Stomp.Responses.CONNECTED);
                         sc.setHeaders(responseHeaders);
                         sendToStomp(sc);
+
+                        if (version.equals(Stomp.V1_1)) {
+                            StompWireFormat format = stompTransport.getWireFormat();
+                            if (format != null) {
+                                format.setEncodingEnabled(true);
+                            }
+                        }
                     }
                 });
 
@@ -576,7 +728,6 @@ public class ProtocolConverter {
      */
     public void onActiveMQCommand(Command command) throws IOException, JMSException {
         if (command.isResponse()) {
-
             Response response = (Response)command;
             ResponseHandler rh = resposeHandlers.remove(Integer.valueOf(response.getCorrelationId()));
             if (rh != null) {
@@ -589,12 +740,13 @@ public class ProtocolConverter {
                 }
             }
         } else if (command.isMessageDispatch()) {
-
             MessageDispatch md = (MessageDispatch)command;
             StompSubscription sub = subscriptionsByConsumerId.get(md.getConsumerId());
             if (sub != null) {
                 sub.onMessageDispatch(md);
             }
+        } else if (command.getDataStructureType() == CommandTypes.KEEP_ALIVE_INFO) {
+            stompTransport.sendToStomp(ping);
         } else if (command.getDataStructureType() == ConnectionError.DATA_STRUCTURE_TYPE) {
             // Pass down any unexpected async errors. Should this close the connection?
             Throwable exception = ((ConnectionError)command).getException();
@@ -642,5 +794,50 @@ public class ProtocolConverter {
 
     public String getCreatedTempDestinationName(ActiveMQDestination destination) {
         return tempDestinationAmqToStompMap.get(destination.getQualifiedName());
+    }
+
+    protected void configureInactivityMonitor(String heartBeatConfig) throws ProtocolException {
+
+        String[] keepAliveOpts = heartBeatConfig.split(Stomp.COMMA);
+
+        if (keepAliveOpts == null || keepAliveOpts.length != 2) {
+            throw new ProtocolException("Invlid heart-beat header:" + heartBeatConfig, true);
+        } else {
+
+            try {
+                hbReadInterval = Long.parseLong(keepAliveOpts[0]);
+                hbWriteInterval = Long.parseLong(keepAliveOpts[1]);
+            } catch(NumberFormatException e) {
+                throw new ProtocolException("Invlid heart-beat header:" + heartBeatConfig, true);
+            }
+
+            if (hbReadInterval > 0) {
+                hbReadInterval = Math.max(DEFAULT_INBOUND_HEARTBEAT, hbReadInterval);
+                hbReadInterval += Math.min(hbReadInterval, 5000);
+            }
+
+            if (hbWriteInterval > 0) {
+                hbWriteInterval = Math.max(DEFAULT_OUTBOUND_HEARTBEAT, hbWriteInterval);
+            }
+
+            try {
+
+                StompInactivityMonitor monitor = this.stompTransport.getInactivityMonitor();
+
+                monitor.setReadCheckTime(hbReadInterval);
+                monitor.setInitialDelayTime(DEFAULT_INITIAL_HEARTBEAT_DELAY);
+                monitor.setWriteCheckTime(hbWriteInterval);
+
+                monitor.startMonitoring();
+
+            } catch(Exception ex) {
+                hbReadInterval = 0;
+                hbWriteInterval = 0;
+            }
+
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Stomp Connect heartbeat conf RW[" + hbReadInterval + "," + hbWriteInterval + "]");
+            }
+        }
     }
 }

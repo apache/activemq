@@ -45,17 +45,16 @@ public class StompSubscription {
     public static final String CLIENT_ACK = Stomp.Headers.Subscribe.AckModeValues.CLIENT;
     public static final String INDIVIDUAL_ACK = Stomp.Headers.Subscribe.AckModeValues.INDIVIDUAL;
 
-    private final ProtocolConverter protocolConverter;
-    private final String subscriptionId;
-    private final ConsumerInfo consumerInfo;
+    protected final ProtocolConverter protocolConverter;
+    protected final String subscriptionId;
+    protected final ConsumerInfo consumerInfo;
 
-    private final LinkedHashMap<MessageId, MessageDispatch> dispatchedMessage = new LinkedHashMap<MessageId, MessageDispatch>();
-    private final LinkedList<MessageDispatch> unconsumedMessage = new LinkedList<MessageDispatch>();
+    protected final LinkedHashMap<MessageId, MessageDispatch> dispatchedMessage = new LinkedHashMap<MessageId, MessageDispatch>();
+    protected final LinkedList<MessageDispatch> unconsumedMessage = new LinkedList<MessageDispatch>();
 
-    private String ackMode = AUTO_ACK;
-    private ActiveMQDestination destination;
-    private String transformation;
-
+    protected String ackMode = AUTO_ACK;
+    protected ActiveMQDestination destination;
+    protected String transformation;
 
     public StompSubscription(ProtocolConverter stompTransport, String subscriptionId, ConsumerInfo consumerInfo, String transformation) {
         this.protocolConverter = stompTransport;
@@ -82,12 +81,12 @@ public class StompSubscription {
         boolean ignoreTransformation = false;
 
         if (transformation != null && !( message instanceof ActiveMQBytesMessage ) ) {
-       		message.setReadOnlyProperties(false);
-        	message.setStringProperty(Stomp.Headers.TRANSFORMATION, transformation);
+               message.setReadOnlyProperties(false);
+            message.setStringProperty(Stomp.Headers.TRANSFORMATION, transformation);
         } else {
-        	if (message.getStringProperty(Stomp.Headers.TRANSFORMATION) != null) {
-        		ignoreTransformation = true;
-        	}
+            if (message.getStringProperty(Stomp.Headers.TRANSFORMATION) != null) {
+                ignoreTransformation = true;
+            }
         }
 
         StompFrame command = protocolConverter.convertMessage(message, ignoreTransformation);
@@ -101,24 +100,25 @@ public class StompSubscription {
     }
 
     synchronized void onStompAbort(TransactionId transactionId) {
-    	unconsumedMessage.clear();
+        unconsumedMessage.clear();
     }
 
     synchronized void onStompCommit(TransactionId transactionId) {
-    	for (Iterator iter = dispatchedMessage.entrySet().iterator(); iter.hasNext();) {
+        for (Iterator<?> iter = dispatchedMessage.entrySet().iterator(); iter.hasNext();) {
+            @SuppressWarnings("rawtypes")
             Map.Entry entry = (Entry)iter.next();
-            MessageId id = (MessageId)entry.getKey();
             MessageDispatch msg = (MessageDispatch)entry.getValue();
             if (unconsumedMessage.contains(msg)) {
-            	iter.remove();
+                iter.remove();
             }
-    	}
-    	unconsumedMessage.clear();
+        }
+
+        unconsumedMessage.clear();
     }
 
     synchronized MessageAck onStompMessageAck(String messageId, TransactionId transactionId) {
 
-    	MessageId msgId = new MessageId(messageId);
+        MessageId msgId = new MessageId(messageId);
 
         if (!dispatchedMessage.containsKey(msgId)) {
             return null;
@@ -129,10 +129,11 @@ public class StompSubscription {
         ack.setConsumerId(consumerInfo.getConsumerId());
 
         if (ackMode == CLIENT_ACK) {
-        	ack.setAckType(MessageAck.STANDARD_ACK_TYPE);
+            ack.setAckType(MessageAck.STANDARD_ACK_TYPE);
             int count = 0;
-            for (Iterator iter = dispatchedMessage.entrySet().iterator(); iter.hasNext();) {
+            for (Iterator<?> iter = dispatchedMessage.entrySet().iterator(); iter.hasNext();) {
 
+                @SuppressWarnings("rawtypes")
                 Map.Entry entry = (Entry)iter.next();
                 MessageId id = (MessageId)entry.getKey();
                 MessageDispatch msg = (MessageDispatch)entry.getValue();
@@ -142,13 +143,12 @@ public class StompSubscription {
                 }
 
                 if (transactionId != null) {
-                	if (!unconsumedMessage.contains(msg)) {
-                		unconsumedMessage.add(msg);
-                	}
+                    if (!unconsumedMessage.contains(msg)) {
+                        unconsumedMessage.add(msg);
+                    }
                 } else {
-                	iter.remove();
+                    iter.remove();
                 }
-
 
                 count++;
 
@@ -156,23 +156,44 @@ public class StompSubscription {
                     ack.setLastMessageId(id);
                     break;
                 }
-
             }
             ack.setMessageCount(count);
             if (transactionId != null) {
-            	ack.setTransactionId(transactionId);
+                ack.setTransactionId(transactionId);
             }
-        }
-        else if (ackMode == INDIVIDUAL_ACK) {
+
+        } else if (ackMode == INDIVIDUAL_ACK) {
             ack.setAckType(MessageAck.INDIVIDUAL_ACK_TYPE);
             ack.setMessageID(msgId);
             if (transactionId != null) {
-            	unconsumedMessage.add(dispatchedMessage.get(msgId));
-            	ack.setTransactionId(transactionId);
+                unconsumedMessage.add(dispatchedMessage.get(msgId));
+                ack.setTransactionId(transactionId);
             }
             dispatchedMessage.remove(msgId);
         }
         return ack;
+    }
+
+    public MessageAck onStompMessageNack(String messageId, TransactionId transactionId) throws ProtocolException {
+
+        MessageId msgId = new MessageId(messageId);
+
+        if (!dispatchedMessage.containsKey(msgId)) {
+            return null;
+        }
+
+        MessageAck ack = new MessageAck();
+        ack.setDestination(consumerInfo.getDestination());
+        ack.setConsumerId(consumerInfo.getConsumerId());
+        ack.setAckType(MessageAck.POSION_ACK_TYPE);
+        ack.setMessageID(msgId);
+        if (transactionId != null) {
+            unconsumedMessage.add(dispatchedMessage.get(msgId));
+            ack.setTransactionId(transactionId);
+        }
+        dispatchedMessage.remove(msgId);
+
+        return null;
     }
 
     public String getAckMode() {
@@ -198,5 +219,4 @@ public class StompSubscription {
     public ConsumerInfo getConsumerInfo() {
         return consumerInfo;
     }
-
 }

@@ -23,14 +23,12 @@ import org.apache.activemq.Service;
 /**
  * Represents the client side of a transport allowing messages to be sent
  * synchronously, asynchronously and consumed.
- * 
- * 
  */
 public interface Transport extends Service {
 
     /**
      * A one way asynchronous send
-     * 
+     *
      * @param command
      * @throws IOException
      */
@@ -40,7 +38,7 @@ public interface Transport extends Service {
      * An asynchronous request response where the Receipt will be returned in
      * the future. If responseCallback is not null, then it will be called when
      * the response has been completed.
-     * 
+     *
      * @param command
      * @param responseCallback TODO
      * @return the FutureResponse
@@ -50,7 +48,7 @@ public interface Transport extends Service {
 
     /**
      * A synchronous request response
-     * 
+     *
      * @param command
      * @return the response
      * @throws IOException
@@ -59,7 +57,7 @@ public interface Transport extends Service {
 
     /**
      * A synchronous request response
-     * 
+     *
      * @param command
      * @param timeout
      * @return the repsonse or null if timeout
@@ -67,53 +65,16 @@ public interface Transport extends Service {
      */
     Object request(Object command, int timeout) throws IOException;
 
-    // /**
-    // * A one way asynchronous send
-    // * @param command
-    // * @throws IOException
-    // */
-    // void oneway(Command command) throws IOException;
-    //
-    // /**
-    // * An asynchronous request response where the Receipt will be returned
-    // * in the future. If responseCallback is not null, then it will be called
-    // * when the response has been completed.
-    // *
-    // * @param command
-    // * @param responseCallback TODO
-    // * @return the FutureResponse
-    // * @throws IOException
-    // */
-    // FutureResponse asyncRequest(Command command, ResponseCallback
-    // responseCallback) throws IOException;
-    //    
-    // /**
-    // * A synchronous request response
-    // * @param command
-    // * @return the response
-    // * @throws IOException
-    // */
-    // Response request(Command command) throws IOException;
-    //
-    // /**
-    // * A synchronous request response
-    // * @param command
-    // * @param timeout
-    // * @return the repsonse or null if timeout
-    // * @throws IOException
-    // */
-    // Response request(Command command, int timeout) throws IOException;
-
     /**
      * Returns the current transport listener
-     * 
+     *
      * @return
      */
     TransportListener getTransportListener();
 
     /**
      * Registers an inbound command listener
-     * 
+     *
      * @param commandListener
      */
     void setTransportListener(TransportListener commandListener);
@@ -131,26 +92,26 @@ public interface Transport extends Service {
 
     /**
      * Indicates if the transport can handle faults
-     * 
+     *
      * @return true if fault tolerant
      */
     boolean isFaultTolerant();
-    
+
     /**
      * @return true if the transport is disposed
      */
     boolean isDisposed();
-    
+
     /**
      * @return true if the transport is connected
      */
     boolean isConnected();
-    
+
     /**
      * @return true if reconnect is supported
      */
     boolean isReconnectSupported();
-    
+
     /**
      * @return true if updating uris is supported
      */
@@ -161,10 +122,10 @@ public interface Transport extends Service {
      * @throws IOException on failure of if not supported
      */
     void reconnect(URI uri) throws IOException;
-    
+
     /**
      * Provide a list of available alternative locations
-     * @param rebalance 
+     * @param rebalance
      * @param uris
      * @throws IOException
      */
@@ -172,10 +133,10 @@ public interface Transport extends Service {
 
     /**
      * Returns a counter which gets incremented as data is read from the transport.
-     * It should only be used to determine if there is progress being made in reading the next command from the transport.  
-     * The value may wrap into the negative numbers. 
-     * 
+     * It should only be used to determine if there is progress being made in reading the next command from the transport.
+     * The value may wrap into the negative numbers.
+     *
      * @return a counter which gets incremented as data is read from the transport.
      */
-    int getReceiveCounter();    
+    int getReceiveCounter();
 }

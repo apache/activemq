@@ -20,9 +20,6 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
-import java.security.KeyManagementException;
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
 import java.security.SecureRandom;
 import java.util.HashMap;
 import java.util.Map;
@@ -30,21 +27,13 @@ import java.util.Map;
 import javax.net.ServerSocketFactory;
 import javax.net.SocketFactory;
 import javax.net.ssl.KeyManager;
-import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLServerSocketFactory;
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 
-import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.broker.BrokerServiceAware;
 import org.apache.activemq.broker.SslContext;
-import org.apache.activemq.openwire.OpenWireFormat;
-import org.apache.activemq.transport.InactivityMonitor;
 import org.apache.activemq.transport.Transport;
-import org.apache.activemq.transport.TransportFactory;
-import org.apache.activemq.transport.TransportLoggerFactory;
 import org.apache.activemq.transport.TransportServer;
-import org.apache.activemq.transport.WireFormatNegotiator;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.util.URISupport;
@@ -57,15 +46,15 @@ import org.slf4j.LoggerFactory;
  * contribution from this class is that it is aware of SslTransportServer and
  * SslTransport classes. All Transports and TransportServers created from this
  * factory will have their needClientAuth option set to false.
- * 
+ *
  * @author sepandm@gmail.com (Sepand)
  * @author David Martin Clavo david(dot)martin(dot)clavo(at)gmail.com (logging improvement modifications)
- * 
+ *
  */
 public class SslTransportFactory extends TcpTransportFactory {
     // The log this uses.,
     private static final Logger LOG = LoggerFactory.getLogger(SslTransportFactory.class);
-    
+
     /**
      * Overriding to use SslTransportServer and allow for proper reflection.
      */
@@ -91,6 +80,7 @@ public class SslTransportFactory extends TcpTransportFactory {
      * Overriding to allow for proper configuration through reflection but delegate to get common
      * configuration
      */
+    @SuppressWarnings("rawtypes")
     public Transport compositeConfigure(Transport transport, WireFormat format, Map options) {
 
         SslTransport sslTransport = (SslTransport)transport.narrow(SslTransport.class);
@@ -120,14 +110,12 @@ public class SslTransportFactory extends TcpTransportFactory {
         return new SslTransport(wf, (SSLSocketFactory)socketFactory, location, localLocation, false);
     }
 
-
-
     /**
      * Creates a new SSL ServerSocketFactory. The given factory will use
      * user-provided key and trust managers (if the user provided them).
-     * 
+     *
      * @return Newly created (Ssl)ServerSocketFactory.
-     * @throws IOException 
+     * @throws IOException
      */
     protected ServerSocketFactory createServerSocketFactory() throws IOException {
         if( SslContext.getCurrentSslContext()!=null ) {
@@ -145,12 +133,12 @@ public class SslTransportFactory extends TcpTransportFactory {
     /**
      * Creates a new SSL SocketFactory. The given factory will use user-provided
      * key and trust managers (if the user provided them).
-     * 
+     *
      * @return Newly created (Ssl)SocketFactory.
-     * @throws IOException 
+     * @throws IOException
      */
     protected SocketFactory createSocketFactory() throws IOException {
-        
+
         if( SslContext.getCurrentSslContext()!=null ) {
             SslContext ctx = SslContext.getCurrentSslContext();
             try {
@@ -161,11 +149,10 @@ public class SslTransportFactory extends TcpTransportFactory {
         } else {
             return SSLSocketFactory.getDefault();
         }
-        
     }
 
     /**
-     * 
+     *
      * @param km
      * @param tm
      * @param random

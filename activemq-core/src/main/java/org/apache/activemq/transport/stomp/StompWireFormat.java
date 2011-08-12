@@ -21,8 +21,9 @@ import java.io.DataInputStream;
 import java.io.DataOutput;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.PushbackInputStream;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 
 import org.apache.activemq.util.ByteArrayInputStream;
@@ -44,6 +45,7 @@ public class StompWireFormat implements WireFormat {
     private static final int MAX_HEADERS = 1000;
     private static final int MAX_DATA_LENGTH = 1024 * 1024 * 100;
 
+    private boolean encodingEnabled = false;
     private int version = 1;
 
     public ByteSequence marshal(Object command) throws IOException {
@@ -63,16 +65,20 @@ public class StompWireFormat implements WireFormat {
     public void marshal(Object command, DataOutput os) throws IOException {
         StompFrame stomp = (org.apache.activemq.transport.stomp.StompFrame)command;
 
-        StringBuffer buffer = new StringBuffer();
+        if (stomp.getAction().equals(Stomp.Commands.KEEPALIVE)) {
+            os.write(Stomp.BREAK);
+            return;
+        }
+
+        StringBuilder buffer = new StringBuilder();
         buffer.append(stomp.getAction());
         buffer.append(Stomp.NEWLINE);
 
         // Output the headers.
-        for (Iterator iter = stomp.getHeaders().entrySet().iterator(); iter.hasNext();) {
-            Map.Entry entry = (Map.Entry)iter.next();
+        for (Map.Entry<String, String> entry : stomp.getHeaders().entrySet()) {
             buffer.append(entry.getKey());
             buffer.append(Stomp.Headers.SEPERATOR);
-            buffer.append(entry.getValue());
+            buffer.append(encodeHeader(entry.getValue()));
             buffer.append(Stomp.NEWLINE);
         }
 
@@ -87,7 +93,7 @@ public class StompWireFormat implements WireFormat {
     public Object unmarshal(DataInput in) throws IOException {
 
         try {
-            
+
             // parse action
             String action = parseAction(in);
 
@@ -129,7 +135,6 @@ public class StompWireFormat implements WireFormat {
                     baos.close();
                     data = baos.toByteArray();
                 }
-
             }
 
             return new StompFrame(action, headers, data);
@@ -137,10 +142,14 @@ public class StompWireFormat implements WireFormat {
         } catch (ProtocolException e) {
             return new StompFrameError(e);
         }
-
     }
 
     private String readLine(DataInput in, int maxLength, String errorMessage) throws IOException {
+        ByteSequence sequence = readHeaderLine(in, maxLength, errorMessage);
+        return new String(sequence.getData(), sequence.getOffset(), sequence.getLength(), "UTF-8").trim();
+    }
+
+    private ByteSequence readHeaderLine(DataInput in, int maxLength, String errorMessage) throws IOException {
         byte b;
         ByteArrayOutputStream baos = new ByteArrayOutputStream(maxLength);
         while ((b = in.readByte()) != '\n') {
@@ -150,10 +159,9 @@ public class StompWireFormat implements WireFormat {
             baos.write(b);
         }
         baos.close();
-        ByteSequence sequence = baos.toByteSequence();
-        return new String(sequence.getData(), sequence.getOffset(), sequence.getLength(), "UTF-8");
+        return baos.toByteSequence();
     }
-    
+
     protected String parseAction(DataInput in) throws IOException {
         String action = null;
 
@@ -171,21 +179,35 @@ public class StompWireFormat implements WireFormat {
         }
         return action;
     }
-    
+
     protected HashMap<String, String> parseHeaders(DataInput in) throws IOException {
         HashMap<String, String> headers = new HashMap<String, String>(25);
         while (true) {
-            String line = readLine(in, MAX_HEADER_LENGTH, "The maximum header length was exceeded");
-            if (line != null && line.trim().length() > 0) {
+            ByteSequence line = readHeaderLine(in, MAX_HEADER_LENGTH, "The maximum header length was exceeded");
+            if (line != null && line.length > 0) {
 
                 if (headers.size() > MAX_HEADERS) {
                     throw new ProtocolException("The maximum number of headers was exceeded", true);
                 }
 
                 try {
-                    int seperatorIndex = line.indexOf(Stomp.Headers.SEPERATOR);
-                    String name = line.substring(0, seperatorIndex).trim();
-                    String value = line.substring(seperatorIndex + 1, line.length()).trim();
+
+                    ByteArrayInputStream headerLine = new ByteArrayInputStream(line);
+                    ByteArrayOutputStream stream = new ByteArrayOutputStream(line.length);
+
+                    // First complete the name
+                    int result = -1;
+                    while ((result = headerLine.read()) != -1) {
+                        if (result != ':') {
+                            stream.write(result);
+                        } else {
+                            break;
+                        }
+                    }
+
+                    ByteSequence nameSeq = stream.toByteSequence();
+                    String name = new String(nameSeq.getData(), nameSeq.getOffset(), nameSeq.getLength(), "UTF-8").trim();
+                    String value = decodeHeader(headerLine).trim();
                     headers.put(name, value);
                 } catch (Exception e) {
                     throw new ProtocolException("Unable to parser header line [" + line + "]", true);
@@ -193,10 +215,10 @@ public class StompWireFormat implements WireFormat {
             } else {
                 break;
             }
-        }     
+        }
         return headers;
     }
-    
+
     protected int parseContentLength(String contentLength) throws ProtocolException {
         int length;
         try {
@@ -208,8 +230,69 @@ public class StompWireFormat implements WireFormat {
         if (length > MAX_DATA_LENGTH) {
             throw new ProtocolException("The maximum data length was exceeded", true);
         }
-        
+
         return length;
+    }
+
+    private String encodeHeader(String header) throws IOException {
+        String result = header;
+        if (this.encodingEnabled) {
+            byte[] utf8buf = header.getBytes("UTF-8");
+            ByteArrayOutputStream stream = new ByteArrayOutputStream(utf8buf.length);
+            for(byte val : utf8buf) {
+                switch(val) {
+                case Stomp.ESCAPE:
+                    stream.write(Stomp.ESCAPE_ESCAPE_SEQ);
+                    break;
+                case Stomp.BREAK:
+                    stream.write(Stomp.NEWLINE_ESCAPE_SEQ);
+                    break;
+                case Stomp.COLON:
+                    stream.write(Stomp.COLON_ESCAPE_SEQ);
+                    break;
+                default:
+                    stream.write(val);
+                }
+            }
+        }
+
+        return result;
+    }
+
+    private String decodeHeader(InputStream header) throws IOException {
+        ByteArrayOutputStream decoded = new ByteArrayOutputStream();
+        PushbackInputStream stream = new PushbackInputStream(header);
+
+        int value = -1;
+        while( (value = stream.read()) != -1) {
+            if (value == 92) {
+
+                int next = stream.read();
+                if (next != -1) {
+                    switch(next) {
+                    case 110:
+                        decoded.write(Stomp.BREAK);
+                        break;
+                    case 99:
+                        decoded.write(Stomp.COLON);
+                        break;
+                    case 92:
+                        decoded.write(Stomp.ESCAPE);
+                        break;
+                    default:
+                        stream.unread(next);
+                        decoded.write(value);
+                    }
+                } else {
+                    decoded.write(value);
+                }
+
+            } else {
+                decoded.write(value);
+            }
+        }
+
+        return new String(decoded.toByteArray(), "UTF-8");
     }
 
     public int getVersion() {
@@ -218,6 +301,14 @@ public class StompWireFormat implements WireFormat {
 
     public void setVersion(int version) {
         this.version = version;
+    }
+
+    public boolean isEncodingEnabled() {
+        return this.encodingEnabled;
+    }
+
+    public void setEncodingEnabled(boolean value) {
+        this.encodingEnabled = value;
     }
 
 }

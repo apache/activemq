@@ -44,7 +44,7 @@ public abstract class TransportFactory {
 
     private static final String WRITE_TIMEOUT_FILTER = "soWriteTimeout";
     private static final String THREAD_NAME_FILTER = "threadName";
-    
+
     public abstract TransportServer doBind(URI location) throws IOException;
 
     public Transport doConnect(URI location, Executor ex) throws Exception {
@@ -57,7 +57,7 @@ public abstract class TransportFactory {
 
     /**
      * Creates a normal transport.
-     * 
+     *
      * @param location
      * @return the transport
      * @throws Exception
@@ -69,7 +69,7 @@ public abstract class TransportFactory {
 
     /**
      * Creates a normal transport.
-     * 
+     *
      * @param location
      * @param ex
      * @return the transport
@@ -83,7 +83,7 @@ public abstract class TransportFactory {
     /**
      * Creates a slimmed down transport that is more efficient so that it can be
      * used by composite transports like reliable and HA.
-     * 
+     *
      * @param location
      * @return the Transport
      * @throws Exception
@@ -96,7 +96,7 @@ public abstract class TransportFactory {
     /**
      * Creates a slimmed down transport that is more efficient so that it can be
      * used by composite transports like reliable and HA.
-     * 
+     *
      * @param location
      * @param ex
      * @return the Transport
@@ -113,12 +113,12 @@ public abstract class TransportFactory {
     }
 
     /**
-     * @deprecated 
+     * @deprecated
      */
     public static TransportServer bind(String brokerId, URI location) throws IOException {
         return bind(location);
     }
-    
+
     public static TransportServer bind(BrokerService brokerService, URI location) throws IOException {
         TransportFactory tf = findTransportFactory(location);
         if( brokerService!=null && tf instanceof BrokerServiceAware ) {
@@ -132,7 +132,7 @@ public abstract class TransportFactory {
         } finally {
             SslContext.setCurrentSslContext(null);
         }
-    }    
+    }
 
     public Transport doConnect(URI location) throws Exception {
         try {
@@ -164,7 +164,7 @@ public abstract class TransportFactory {
             throw IOExceptionSupport.create(e);
         }
     }
-    
+
      /**
       * Allow registration of a transport factory without wiring via META-INF classes
      * @param scheme
@@ -176,7 +176,7 @@ public abstract class TransportFactory {
 
     /**
      * Factory method to create a new transport
-     * 
+     *
      * @throws IOException
      * @throws UnknownHostException
      */
@@ -235,13 +235,14 @@ public abstract class TransportFactory {
     /**
      * Fully configures and adds all need transport filters so that the
      * transport can be used by the JMS client.
-     * 
+     *
      * @param transport
      * @param wf
      * @param options
      * @return
      * @throws Exception
      */
+    @SuppressWarnings("rawtypes")
     public Transport configure(Transport transport, WireFormat wf, Map options) throws Exception {
         transport = compositeConfigure(transport, wf, options);
 
@@ -256,14 +257,15 @@ public abstract class TransportFactory {
      * transport can be used by the ActiveMQ message broker. The main difference
      * between this and the configure() method is that the broker does not issue
      * requests to the client so the ResponseCorrelator is not needed.
-     * 
+     *
      * @param transport
      * @param format
      * @param options
      * @return
      * @throws Exception
      */
-    public Transport serverConfigure(Transport transport, WireFormat format, HashMap options) throws Exception {
+    @SuppressWarnings("rawtypes")
+	public Transport serverConfigure(Transport transport, WireFormat format, HashMap options) throws Exception {
         if (options.containsKey(THREAD_NAME_FILTER)) {
             transport = new ThreadNameFilter(transport);
         }
@@ -276,12 +278,13 @@ public abstract class TransportFactory {
      * Similar to configure(...) but this avoid adding in the MutexTransport and
      * ResponseCorrelator transport layers so that the resulting transport can
      * more efficiently be used as part of a composite transport.
-     * 
+     *
      * @param transport
      * @param format
      * @param options
      * @return
      */
+    @SuppressWarnings("rawtypes")
     public Transport compositeConfigure(Transport transport, WireFormat format, Map options) {
         if (options.containsKey(WRITE_TIMEOUT_FILTER)) {
             transport = new WriteTimeoutFilter(transport);
@@ -294,6 +297,7 @@ public abstract class TransportFactory {
         return transport;
     }
 
+    @SuppressWarnings("rawtypes")
     protected String getOption(Map options, String key, String def) {
         String rc = (String) options.remove(key);
         if( rc == null ) {

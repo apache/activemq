@@ -26,19 +26,14 @@ import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
-import java.util.HashMap;
 
 import javax.net.SocketFactory;
 
-import org.apache.activemq.command.Command;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.nio.NIOOutputStream;
 import org.apache.activemq.transport.nio.SelectorManager;
 import org.apache.activemq.transport.nio.SelectorSelection;
 import org.apache.activemq.transport.tcp.TcpTransport;
-import org.apache.activemq.util.ByteArrayOutputStream;
-import org.apache.activemq.util.ByteSequence;
-import org.apache.activemq.util.DataByteArrayInputStream;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.ServiceStopper;
 import org.apache.activemq.wireformat.WireFormat;
@@ -46,7 +41,7 @@ import org.apache.activemq.wireformat.WireFormat;
 /**
  * An implementation of the {@link Transport} interface for using Stomp over NIO
  *
- * 
+ *
  */
 public class StompNIOTransport extends TcpTransport {
 
@@ -133,7 +128,7 @@ public class StompNIOTransport extends TcpTransport {
         try {
             selection.close();
         } catch (Exception e) {
-        	e.printStackTrace();
+            e.printStackTrace();
         }
         super.doStop(stopper);
     }

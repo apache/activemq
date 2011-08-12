@@ -6,9 +6,9 @@
   The ASF licenses this file to You under the Apache License, Version 2.0
   (the "License"); you may not use this file except in compliance with
   the License.  You may obtain a copy of the License at
-  
+
   http://www.apache.org/licenses/LICENSE-2.0
-  
+
   Unless required by applicable law or agreed to in writing, software
   distributed under the License is distributed on an "AS IS" BASIS,
   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -98,7 +98,7 @@
       <groupId>org.osgi</groupId>
       <artifactId>org.osgi.core</artifactId>
     </dependency>
-    
+
 
     <dependency>
       <groupId>org.apache.activemq</groupId>
@@ -133,7 +133,7 @@
       <groupId>com.thoughtworks.xstream</groupId>
       <artifactId>xstream</artifactId>
       <optional>true</optional>
-    </dependency>        
+    </dependency>
     <dependency>
         <groupId>org.codehaus.jettison</groupId>
         <artifactId>jettison</artifactId>
@@ -150,7 +150,7 @@
     <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring-context</artifactId>
-    </dependency>    
+    </dependency>
 
     <dependency>
       <groupId>org.apache.derby</groupId>
@@ -213,7 +213,7 @@
       <artifactId>spring-test</artifactId>
       <scope>test</scope>
     </dependency>
-    
+
     <dependency>
       <groupId>commons-io</groupId>
       <artifactId>commons-io</artifactId>
@@ -224,7 +224,7 @@
       <artifactId>activemq-jmdns_1.0</artifactId>
       <optional>true</optional>
     </dependency>
-    
+
     <dependency>
       <groupId>org.jasypt</groupId>
       <artifactId>jasypt</artifactId>
@@ -372,8 +372,25 @@
       </plugin>
     </plugins>
     </reporting>
-    
+
   <build>
+
+    <resources>
+      <resource>
+        <directory>${project.basedir}/src/main/resources</directory>
+        <includes>
+          <include>**/*</include>
+        </includes>
+      </resource>
+      <resource>
+        <directory>${project.basedir}/src/main/filtered-resources</directory>
+        <filtering>true</filtering>
+        <includes>
+          <include>**/*</include>
+        </includes>
+      </resource>
+    </resources>
+
     <plugins>
       <plugin>
         <groupId>org.apache.felix</groupId>
@@ -384,7 +401,7 @@
           </instructions>
         </configuration>
       </plugin>
-      
+
       <!-- Configure which tests are included/excuded -->
       <plugin>
         <artifactId>maven-surefire-plugin</artifactId>
@@ -405,7 +422,7 @@
                  Note: if you want to see log messages on the console window remove
                        "redirectTestOutputToFile" from the parent pom
             -->
-            <!--           
+            <!--
             <property>
               <name>log4j.configuration</name>
               <value>file:target/test-classes/log4j.properties</value>
@@ -426,7 +443,7 @@
 
             <!-- These are performance tests so take too long to run -->
             <exclude>**/perf/*</exclude>
-            
+
             <!-- These are load tests so take too long to run -->
             <exclude>**/load/*</exclude>
 
@@ -470,19 +487,19 @@
 
              <!-- A test used for memory profiling only. -->
              <exclude>**/NetworkConnectionsCleanedupTest.*/**</exclude>
-             
+
              <exclude>**/NetworkConnectionsCleanedupTest.*/**</exclude>
-             
+
              <!-- used just to test potential memory leaks manually -->
              <exclude>**/JDBCTestMemory.*</exclude>
-             
+
              <exclude>**/amq1490/*</exclude>
              <exclude>**/archive/*</exclude>
              <exclude>**/NetworkFailoverTest.*/**</exclude>
-             
+
              <exclude>**/vm/VMTransportBrokerTest.*</exclude>
              <exclude>**/broker/MarshallingBrokerTest.*</exclude>
-             
+
 
             <exclude>**/AMQDeadlockTest3.*</exclude>
 
@@ -491,7 +508,7 @@
 
             <!-- breaks hudson: disable till we get a chance to give it the time that it needs - http://hudson.zones.apache.org/hudson/job/ActiveMQ/org.apache.activemq$activemq-core/199/testReport/org.apache.activemq.network/BrokerNetworkWithStuckMessagesTest/testBrokerNetworkWithStuckMessages/ -->
             <exclude>**/BrokerNetworkWithStuckMessagesTest.*</exclude>
-            
+
           </excludes>
         </configuration>
       </plugin>
@@ -519,28 +536,28 @@
           </filesets>
         </configuration>
       </plugin>
-      
+
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-antrun-plugin</artifactId>
 
         <executions>
-	        <execution>
+            <execution>
             <id>package</id>
             <phase>package</phase>
             <configuration>
               <tasks>
                 <echo>Deleting unwanted resources from the test-jar</echo>
                 <delete dir="${project.build.directory}/test-classes" verbose="true">
-									<include name="*.*" />
-								</delete>
+                                    <include name="*.*" />
+                                </delete>
               </tasks>
             </configuration>
             <goals>
               <goal>run</goal>
             </goals>
           </execution>
-  
+
           <execution>
             <id>site</id>
             <phase>site</phase>
@@ -626,7 +643,7 @@
         <artifactId>cobertura-maven-plugin</artifactId>
         <version>2.0</version>
         <configuration>
-	  <check>
+      <check>
             <branchRate>50</branchRate>
             <lineRate>50</lineRate>
             <haltOnFailure>true</haltOnFailure>
@@ -634,12 +651,12 @@
             <totalLineRate>50</totalLineRate>
           </check>
         </configuration>
-      </plugin>      
+      </plugin>
     </plugins>
   </build>
 
   <profiles>
-    
+
     <profile>
       <id>openwire-generate</id>
       <dependencies>
@@ -675,7 +692,7 @@
         </plugins>
       </build>
     </profile>
-    
+
   </profiles>
 
 </project>

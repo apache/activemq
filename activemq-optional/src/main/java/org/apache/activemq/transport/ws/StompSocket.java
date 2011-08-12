@@ -21,9 +21,9 @@ import java.security.cert.X509Certificate;
 
 import org.apache.activemq.command.Command;
 import org.apache.activemq.transport.TransportSupport;
-import org.apache.activemq.transport.stomp.LegacyFrameTranslator;
 import org.apache.activemq.transport.stomp.ProtocolConverter;
 import org.apache.activemq.transport.stomp.StompFrame;
+import org.apache.activemq.transport.stomp.StompInactivityMonitor;
 import org.apache.activemq.transport.stomp.StompTransport;
 import org.apache.activemq.transport.stomp.StompWireFormat;
 import org.apache.activemq.util.ByteSequence;
@@ -32,19 +32,19 @@ import org.apache.activemq.util.ServiceStopper;
 import org.eclipse.jetty.websocket.WebSocket;
 
 /**
- * 
+ *
  * Implements web socket and mediates between servlet and the broker
  *
  */
 class StompSocket extends TransportSupport implements WebSocket, StompTransport {
     Outbound outbound;
-    ProtocolConverter protocolConverter = new ProtocolConverter(this, new LegacyFrameTranslator(), null);
+    ProtocolConverter protocolConverter = new ProtocolConverter(this, null);
     StompWireFormat wireFormat = new StompWireFormat();
 
     public void onConnect(Outbound outbound) {
         this.outbound=outbound;
     }
-    
+
     public void onMessage(byte frame, byte[] data,int offset, int length) {}
 
     public void onMessage(byte frame, String data) {
@@ -90,5 +90,15 @@ class StompSocket extends TransportSupport implements WebSocket, StompTransport 
 
     public void sendToStomp(StompFrame command) throws IOException {
         outbound.sendMessage(WebSocket.SENTINEL_FRAME, command.format());
+    }
+
+    @Override
+    public StompInactivityMonitor getInactivityMonitor() {
+        return null;
+    }
+
+    @Override
+    public StompWireFormat getWireFormat() {
+        return this.wireFormat;
     }
 }

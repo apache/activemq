@@ -79,6 +79,7 @@ public class TcpTransportFactory extends TransportFactory {
         return new TcpTransportServer(this, location, serverSocketFactory);
     }
 
+    @SuppressWarnings("rawtypes")
     public Transport compositeConfigure(Transport transport, WireFormat format, Map options) {
 
         TcpTransport tcpTransport = (TcpTransport)transport.narrow(TcpTransport.class);
@@ -98,10 +99,9 @@ public class TcpTransportFactory extends TransportFactory {
 
         boolean useInactivityMonitor = "true".equals(getOption(options, "useInactivityMonitor", "true"));
         if (useInactivityMonitor && isUseInactivityMonitor(transport)) {
-            transport = new InactivityMonitor(transport, format);
+            transport = createInactivityMonitor(transport, format);
             IntrospectionSupport.setProperties(transport, options);
         }
-
 
         // Only need the WireFormatNegotiator if using openwire
         if (format instanceof OpenWireFormat) {
@@ -161,5 +161,9 @@ public class TcpTransportFactory extends TransportFactory {
 
     protected SocketFactory createSocketFactory() throws IOException {
         return SocketFactory.getDefault();
+    }
+
+    protected Transport createInactivityMonitor(Transport transport, WireFormat format) {
+        return new InactivityMonitor(transport, format);
     }
 }

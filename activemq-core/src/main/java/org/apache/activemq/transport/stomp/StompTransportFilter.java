@@ -28,6 +28,7 @@ import org.apache.activemq.transport.TransportFilter;
 import org.apache.activemq.transport.TransportListener;
 import org.apache.activemq.transport.tcp.SslTransport;
 import org.apache.activemq.util.IOExceptionSupport;
+import org.apache.activemq.wireformat.WireFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,20 +37,24 @@ import org.slf4j.LoggerFactory;
  * configured with the StompWireFormat and is used to convert STOMP commands to
  * ActiveMQ commands. All of the conversion work is done by delegating to the
  * ProtocolConverter.
- * 
+ *
  * @author <a href="http://hiramchirino.com">chirino</a>
  */
 public class StompTransportFilter extends TransportFilter implements StompTransport {
     private static final Logger LOG = LoggerFactory.getLogger(StompTransportFilter.class);
     private final ProtocolConverter protocolConverter;
-    private final FrameTranslator frameTranslator;
+    private StompInactivityMonitor monitor;
+    private StompWireFormat wireFormat;
 
     private boolean trace;
 
-    public StompTransportFilter(Transport next, FrameTranslator translator, BrokerContext brokerContext) {
+    public StompTransportFilter(Transport next, WireFormat wireFormat, BrokerContext brokerContext) {
         super(next);
-        this.frameTranslator = translator;
-        this.protocolConverter = new ProtocolConverter(this, translator, brokerContext);
+        this.protocolConverter = new ProtocolConverter(this, brokerContext);
+
+        if (wireFormat instanceof StompWireFormat) {
+            this.wireFormat = (StompWireFormat) wireFormat;
+        }
     }
 
     public void oneway(Object o) throws IOException {
@@ -66,7 +71,7 @@ public class StompTransportFilter extends TransportFilter implements StompTransp
             if (trace) {
                 LOG.trace("Received: \n" + command);
             }
-           
+
             protocolConverter.onStompCommand((StompFrame)command);
         } catch (IOException e) {
             onException(e);
@@ -92,26 +97,36 @@ public class StompTransportFilter extends TransportFilter implements StompTransp
         }
     }
 
-    public FrameTranslator getFrameTranslator() {
-        return frameTranslator;
-    }
-
     public X509Certificate[] getPeerCertificates() {
-    	if(next instanceof SslTransport) {    	
-    		X509Certificate[] peerCerts = ((SslTransport)next).getPeerCertificates();
-    		if (trace && peerCerts != null) {
+        if(next instanceof SslTransport) {
+            X509Certificate[] peerCerts = ((SslTransport)next).getPeerCertificates();
+            if (trace && peerCerts != null) {
                 LOG.debug("Peer Identity has been verified\n");
             }
-    		return peerCerts;
-    	}
-    	return null;
+            return peerCerts;
+        }
+        return null;
     }
-    
+
     public boolean isTrace() {
         return trace;
     }
 
     public void setTrace(boolean trace) {
         this.trace = trace;
+    }
+
+    @Override
+    public StompInactivityMonitor getInactivityMonitor() {
+        return monitor;
+    }
+
+    public void setInactivityMonitor(StompInactivityMonitor monitor) {
+        this.monitor = monitor;
+    }
+
+    @Override
+    public StompWireFormat getWireFormat() {
+        return this.wireFormat;
     }
 }

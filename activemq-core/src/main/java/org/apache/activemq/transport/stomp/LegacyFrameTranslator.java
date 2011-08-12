@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.transport.stomp;
 
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -23,10 +24,17 @@ import java.util.Map;
 import javax.jms.Destination;
 import javax.jms.JMSException;
 
+import org.apache.activemq.advisory.AdvisorySupport;
+import org.apache.activemq.command.ActiveMQBytesMessage;
+import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.command.ActiveMQMessage;
+import org.apache.activemq.command.ActiveMQTextMessage;
+import org.apache.activemq.command.DataStructure;
+import org.apache.activemq.util.ByteArrayOutputStream;
+import org.apache.activemq.util.ByteSequence;
+
 import com.thoughtworks.xstream.XStream;
 import com.thoughtworks.xstream.io.json.JsonHierarchicalStreamDriver;
-import org.apache.activemq.advisory.AdvisorySupport;
-import org.apache.activemq.command.*;
 
 /**
  * Implements ActiveMQ 4.0 translations
@@ -35,7 +43,7 @@ public class LegacyFrameTranslator implements FrameTranslator {
 
 
     public ActiveMQMessage convertFrame(ProtocolConverter converter, StompFrame command) throws JMSException, ProtocolException {
-        final Map headers = command.getHeaders();
+        final Map<?, ?> headers = command.getHeaders();
         final ActiveMQMessage msg;
         /*
          * To reduce the complexity of this method perhaps a Chain of Responsibility
@@ -46,7 +54,12 @@ public class LegacyFrameTranslator implements FrameTranslator {
             if(intendedType.equalsIgnoreCase("text")){
                 ActiveMQTextMessage text = new ActiveMQTextMessage();
                 try {
-                    text.setText(new String(command.getContent(), "UTF-8"));
+                    //text.setText(new String(command.getContent(), "UTF-8"));
+                    ByteArrayOutputStream bytes = new ByteArrayOutputStream(command.getContent().length + 4);
+                    DataOutputStream data = new DataOutputStream(bytes);
+                    data.writeInt(command.getContent().length);
+                    data.write(command.getContent());
+                    text.setContent(bytes.toByteSequence());
                 } catch (Throwable e) {
                     throw new ProtocolException("Text could not bet set: " + e, false, e);
                 }
@@ -66,7 +79,12 @@ public class LegacyFrameTranslator implements FrameTranslator {
         } else {
             ActiveMQTextMessage text = new ActiveMQTextMessage();
             try {
-                text.setText(new String(command.getContent(), "UTF-8"));
+                //text.setText(new String(command.getContent(), "UTF-8"));
+                ByteArrayOutputStream bytes = new ByteArrayOutputStream(command.getContent().length + 4);
+                DataOutputStream data = new DataOutputStream(bytes);
+                data.writeInt(command.getContent().length);
+                data.write(command.getContent());
+                text.setContent(bytes.toByteSequence());
             } catch (Throwable e) {
                 throw new ProtocolException("Text could not bet set: " + e, false, e);
             }
@@ -86,8 +104,17 @@ public class LegacyFrameTranslator implements FrameTranslator {
 
         if (message.getDataStructureType() == ActiveMQTextMessage.DATA_STRUCTURE_TYPE) {
 
-            ActiveMQTextMessage msg = (ActiveMQTextMessage)message.copy();
-            command.setContent(msg.getText().getBytes("UTF-8"));
+            if (!message.isCompressed() && message.getContent() != null) {
+                ByteSequence msgContent = message.getContent();
+                if (msgContent.getLength() > 4) {
+                    byte[] content = new byte[msgContent.getLength() - 4];
+                    System.arraycopy(msgContent.data, 4, content, 0, content.length);
+                    command.setContent(content);
+                }
+            } else {
+                ActiveMQTextMessage msg = (ActiveMQTextMessage)message.copy();
+                command.setContent(msg.getText().getBytes("UTF-8"));
+            }
 
         } else if (message.getDataStructureType() == ActiveMQBytesMessage.DATA_STRUCTURE_TYPE) {
 
@@ -96,13 +123,13 @@ public class LegacyFrameTranslator implements FrameTranslator {
             byte[] data = new byte[(int)msg.getBodyLength()];
             msg.readBytes(data);
 
-            headers.put(Stomp.Headers.CONTENT_LENGTH, "" + data.length);
+            headers.put(Stomp.Headers.CONTENT_LENGTH, Integer.toString(data.length));
             command.setContent(data);
         } else if (message.getDataStructureType() == ActiveMQMessage.DATA_STRUCTURE_TYPE &&
                 AdvisorySupport.ADIVSORY_MESSAGE_TYPE.equals(message.getType())) {
 
             FrameTranslator.Helper.copyStandardHeadersFromMessageToFrame(
-					converter, message, command, this);
+                    converter, message, command, this);
 
             String body = marshallAdvisory(message.getDataStructure());
             command.setContent(body.getBytes("UTF-8"));
@@ -119,10 +146,10 @@ public class LegacyFrameTranslator implements FrameTranslator {
 
         String rc = converter.getCreatedTempDestinationName(activeMQDestination);
         if( rc!=null ) {
-        	return rc;
+            return rc;
         }
 
-        StringBuffer buffer = new StringBuffer();
+        StringBuilder buffer = new StringBuilder();
         if (activeMQDestination.isQueue()) {
             if (activeMQDestination.isTemporary()) {
                 buffer.append("/remote-temp-queue/");

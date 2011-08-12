@@ -22,10 +22,7 @@ import java.net.Socket;
 import java.util.Iterator;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.ReentrantLock;
 
-import org.apache.activemq.transport.tcp.TcpBufferedOutputStream;
 import org.apache.activemq.transport.tcp.TimeStampStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,15 +36,15 @@ import org.slf4j.LoggerFactory;
  * <code>transport.soWriteTimeout=<value in millis></code>.<br/>
  * For example (15 second timeout on write operations to the socket):</br>
  * <pre><code>
- * &lt;transportConnector 
- *     name=&quot;tcp1&quot; 
+ * &lt;transportConnector
+ *     name=&quot;tcp1&quot;
  *     uri=&quot;tcp://127.0.0.1:61616?transport.soTimeout=10000&amp;transport.soWriteTimeout=15000"
  * /&gt;
  * </code></pre><br/>
  * For example (enable default timeout on the socket):</br>
  * <pre><code>
- * &lt;transportConnector 
- *     name=&quot;tcp1&quot; 
+ * &lt;transportConnector
+ *     name=&quot;tcp1&quot;
  *     uri=&quot;tcp://127.0.0.1:61616?transport.soTimeout=10000&amp;transport.soWriteTimeout=15000"
  * /&gt;
  * </code></pre>
@@ -59,12 +56,12 @@ public class WriteTimeoutFilter extends TransportFilter {
     private static final Logger LOG = LoggerFactory.getLogger(WriteTimeoutFilter.class);
     protected static ConcurrentLinkedQueue<WriteTimeoutFilter> writers = new ConcurrentLinkedQueue<WriteTimeoutFilter>();
     protected static AtomicInteger messageCounter = new AtomicInteger(0);
-    protected static TimeoutThread timeoutThread = new TimeoutThread(); 
-    
+    protected static TimeoutThread timeoutThread = new TimeoutThread();
+
     protected static long sleep = 5000l;
 
     protected long writeTimeout = -1;
-    
+
     public WriteTimeoutFilter(Transport next) {
         super(next);
     }
@@ -80,7 +77,7 @@ public class WriteTimeoutFilter extends TransportFilter {
             deRegisterWrite(this,false,null);
         }
     }
-    
+
     public long getWriteTimeout() {
         return writeTimeout;
     }
@@ -88,7 +85,7 @@ public class WriteTimeoutFilter extends TransportFilter {
     public void setWriteTimeout(long writeTimeout) {
         this.writeTimeout = writeTimeout;
     }
-    
+
     public static long getSleep() {
         return sleep;
     }
@@ -97,21 +94,21 @@ public class WriteTimeoutFilter extends TransportFilter {
         WriteTimeoutFilter.sleep = sleep;
     }
 
-    
+
     protected TimeStampStream getWriter() {
         return next.narrow(TimeStampStream.class);
     }
-    
+
     protected Socket getSocket() {
         return next.narrow(Socket.class);
     }
-    
+
     protected static void registerWrite(WriteTimeoutFilter filter) {
         writers.add(filter);
     }
-    
+
     protected static boolean deRegisterWrite(WriteTimeoutFilter filter, boolean fail, IOException iox) {
-        boolean result = writers.remove(filter); 
+        boolean result = writers.remove(filter);
         if (result) {
             if (fail) {
                 String message = "Forced write timeout for:"+filter.getNext().getRemoteAddress();
@@ -129,17 +126,17 @@ public class WriteTimeoutFilter extends TransportFilter {
         }
         return result;
     }
-    
+
     @Override
     public void start() throws Exception {
         super.start();
     }
-    
+
     @Override
     public void stop() throws Exception {
         super.stop();
     }
-    
+
     protected static class TimeoutThread extends Thread {
         static AtomicInteger instance = new AtomicInteger(0);
         boolean run = true;
@@ -150,14 +147,14 @@ public class WriteTimeoutFilter extends TransportFilter {
             start();
         }
 
-        
+
         public void run() {
             while (run) {
-            	boolean error = false;
+                boolean error = false;
                 try {
-                	if (!interrupted()) {
-                		Iterator<WriteTimeoutFilter> filters = writers.iterator();
-                	    while (run && filters.hasNext()) { 
+                    if (!interrupted()) {
+                        Iterator<WriteTimeoutFilter> filters = writers.iterator();
+                        while (run && filters.hasNext()) {
                             WriteTimeoutFilter filter = filters.next();
                             if (filter.getWriteTimeout()<=0) continue; //no timeout set
                             long writeStart = filter.getWriter().getWriteTimestamp();

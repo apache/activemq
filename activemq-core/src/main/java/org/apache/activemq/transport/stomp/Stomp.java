@@ -20,7 +20,29 @@ public interface Stomp {
     String NULL = "\u0000";
     String NEWLINE = "\n";
 
+    byte BREAK = '\n';
+    byte COLON = ':';
+    byte ESCAPE = '\\';
+    byte[] ESCAPE_ESCAPE_SEQ = { 92, 92 };
+    byte[] COLON_ESCAPE_SEQ = { 92, 99 };
+    byte[] NEWLINE_ESCAPE_SEQ = { 92, 110 };
+
+    String COMMA = ",";
+    String V1_0 = "1.0";
+    String V1_1 = "1.1";
+    String DEFAULT_HEART_BEAT = "0,0";
+    String DEFAULT_VERSION = "1.0";
+    String EMPTY = "";
+
+    String[] SUPPORTED_PROTOCOL_VERSIONS = {"1.1", "1.0"};
+
+    String TEXT_PLAIN = "text/plain";
+    String TRUE = "true";
+    String FALSE = "false";
+    String END = "end";
+
     public static interface Commands {
+        String STOMP = "STOMP";
         String CONNECT = "CONNECT";
         String SEND = "SEND";
         String DISCONNECT = "DISCONNECT";
@@ -34,6 +56,8 @@ public interface Stomp {
         String COMMIT = "COMMIT";
         String ABORT = "ABORT";
         String ACK = "ACK";
+        String NACK = "NACK";
+        String KEEPALIVE = "KEEPALIVE";
     }
 
     public interface Responses {
@@ -48,8 +72,10 @@ public interface Stomp {
         String RECEIPT_REQUESTED = "receipt";
         String TRANSACTION = "transaction";
         String CONTENT_LENGTH = "content-length";
+        String CONTENT_TYPE = "content-type";
         String TRANSFORMATION = "transformation";
         String TRANSFORMATION_ERROR = "transformation-error";
+
         /**
          * This header is used to instruct ActiveMQ to construct the message
          * based with a specific type.
@@ -81,6 +107,7 @@ public interface Stomp {
             String TIMESTAMP = "timestamp";
             String TYPE = "type";
             String SUBSCRIPTION = "subscription";
+            String BROWSER = "browser";
             String USERID = "JMSXUserID";
             String ORIGINAL_DESTINATION = "original-destination";
         }
@@ -90,6 +117,7 @@ public interface Stomp {
             String ACK_MODE = "ack";
             String ID = "id";
             String SELECTOR = "selector";
+            String BROWSER = "browser";
 
             public interface AckModeValues {
                 String AUTO = "auto";
@@ -108,6 +136,9 @@ public interface Stomp {
             String PASSCODE = "passcode";
             String CLIENT_ID = "client-id";
             String REQUEST_ID = "request-id";
+            String ACCEPT_VERSION = "accept-version";
+            String HOST = "host";
+            String HEART_BEAT = "heart-beat";
         }
 
         public interface Error {
@@ -117,30 +148,34 @@ public interface Stomp {
         public interface Connected {
             String SESSION = "session";
             String RESPONSE_ID = "response-id";
+            String SERVER = "server";
+            String VERSION = "version";
+            String HEART_BEAT = "heart-beat";
         }
 
         public interface Ack {
             String MESSAGE_ID = "message-id";
+            String SUBSCRIPTION = "subscription";
         }
     }
 
-	public enum Transformations {
-		JMS_BYTE,
-		JMS_XML,
-		JMS_JSON,
-		JMS_OBJECT_XML,
-		JMS_OBJECT_JSON,
-		JMS_MAP_XML,
-		JMS_MAP_JSON,
-		JMS_ADVISORY_XML,
-		JMS_ADVISORY_JSON;
+    public enum Transformations {
+        JMS_BYTE,
+        JMS_XML,
+        JMS_JSON,
+        JMS_OBJECT_XML,
+        JMS_OBJECT_JSON,
+        JMS_MAP_XML,
+        JMS_MAP_JSON,
+        JMS_ADVISORY_XML,
+        JMS_ADVISORY_JSON;
 
-		public String toString() {
-			return name().replaceAll("_", "-").toLowerCase();
-		}
+        public String toString() {
+            return name().replaceAll("_", "-").toLowerCase();
+        }
 
-		public static Transformations getValue(String value) {
-			return valueOf(value.replaceAll("-", "_").toUpperCase());
-		}
-	}
+        public static Transformations getValue(String value) {
+            return valueOf(value.replaceAll("-", "_").toUpperCase());
+        }
+    }
 }

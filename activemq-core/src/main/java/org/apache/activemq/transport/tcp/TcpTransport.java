@@ -20,16 +20,22 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InterruptedIOException;
-import java.net.*;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.Socket;
+import java.net.SocketAddress;
+import java.net.SocketException;
+import java.net.SocketTimeoutException;
+import java.net.URI;
+import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.SynchronousQueue;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
+
 import javax.net.SocketFactory;
+
 import org.apache.activemq.Service;
 import org.apache.activemq.thread.DefaultThreadPools;
 import org.apache.activemq.transport.Transport;
@@ -63,7 +69,6 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
     protected DataOutputStream dataOut;
     protected DataInputStream dataIn;
     protected TimeStampStream buffOut = null;
-
 
     /**
      * The Traffic Class to be set on the socket.
@@ -636,7 +641,6 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
         return receiveCounter;
     }
     
-
     /**
      * @param sock The socket on which to set the Traffic Class.
      * @return Whether or not the Traffic Class was set on the given socket.

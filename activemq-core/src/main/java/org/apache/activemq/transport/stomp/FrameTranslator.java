@@ -22,12 +22,9 @@ import java.util.Map;
 
 import javax.jms.Destination;
 import javax.jms.JMSException;
-import javax.jms.MessageListener;
-import javax.jms.MessageProducer;
 
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQMessage;
-import org.apache.activemq.command.Message;
 
 /**
  * Implementations of this interface are used to map back and forth from Stomp

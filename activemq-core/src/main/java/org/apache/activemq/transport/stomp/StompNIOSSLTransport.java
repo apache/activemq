@@ -17,12 +17,10 @@
 package org.apache.activemq.transport.stomp;
 
 import org.apache.activemq.transport.nio.NIOSSLTransport;
-import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.wireformat.WireFormat;
 
 import javax.net.SocketFactory;
 import java.io.ByteArrayInputStream;
-import java.io.EOFException;
 import java.io.IOException;
 import java.net.Socket;
 import java.net.URI;

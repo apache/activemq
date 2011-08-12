@@ -26,6 +26,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 import javax.jms.BytesMessage;
 import javax.jms.Connection;
 import javax.jms.JMSException;
@@ -36,6 +37,7 @@ import javax.jms.ObjectMessage;
 import javax.jms.Session;
 import javax.jms.TextMessage;
 import javax.management.ObjectName;
+
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.CombinationTestSupport;
 import org.apache.activemq.broker.BrokerFactory;
@@ -318,7 +320,7 @@ public class StompTest extends CombinationTestSupport {
         assertEquals("Hello World", message.getText());
         assertEquals("getJMSPriority", 4, message.getJMSPriority());
     }
-    
+
     public void testReceipts() throws Exception {
 
         StompConnection receiver = new StompConnection();
@@ -449,7 +451,7 @@ public class StompTest extends CombinationTestSupport {
 
     public void testSendMultipleBytesMessages() throws Exception {
 
-    	final int MSG_COUNT = 50;
+        final int MSG_COUNT = 50;
 
         String frame = "CONNECT\n" + "login: system\n" + "passcode: manager\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);

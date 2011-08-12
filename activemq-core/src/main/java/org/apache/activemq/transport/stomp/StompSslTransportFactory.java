@@ -28,8 +28,8 @@ import org.apache.activemq.wireformat.WireFormat;
 
 /**
  * A <a href="http://stomp.codehaus.org/">STOMP</a> over SSL transport factory
- * 
- * 
+ *
+ *
  */
 public class StompSslTransportFactory extends SslTransportFactory implements BrokerServiceAware {
 
@@ -39,8 +39,9 @@ public class StompSslTransportFactory extends SslTransportFactory implements Bro
         return "stomp";
     }
 
+    @SuppressWarnings("rawtypes")
     public Transport compositeConfigure(Transport transport, WireFormat format, Map options) {
-        transport = new StompTransportFilter(transport, new LegacyFrameTranslator(), brokerContext);
+        transport = new StompTransportFilter(transport, format, brokerContext);
         IntrospectionSupport.setProperties(transport, options);
         return super.compositeConfigure(transport, format, options);
     }

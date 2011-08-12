@@ -28,11 +28,14 @@ import org.apache.activemq.command.Command;
 public interface StompTransport {
 
     public void sendToActiveMQ(Command command);
-    
+
     public void sendToStomp(StompFrame command) throws IOException;
-    
+
     public X509Certificate[] getPeerCertificates();
-    
+
     public void onException(IOException error);
-    
+
+    public StompInactivityMonitor getInactivityMonitor();
+
+    public StompWireFormat getWireFormat();
 }
