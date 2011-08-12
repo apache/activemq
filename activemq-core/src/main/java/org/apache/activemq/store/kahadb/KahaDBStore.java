@@ -100,6 +100,11 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
         this.transactionStore = new KahaDBTransactionStore(this);
     }
 
+    @Override
+    public String toString() {
+        return "KahaDB:[" + directory.getAbsolutePath() + "]";
+    }
+
     public void setBrokerName(String brokerName) {
     }
 
