@@ -34,6 +34,9 @@ public class DurableSubscriberFacade extends DestinationFacade {
     }
 
     public void setClientId(String clientId) {
+        if (clientId != null) {
+            clientId = clientId.trim();
+        }
         this.clientId = clientId;
     }
 
@@ -42,6 +45,9 @@ public class DurableSubscriberFacade extends DestinationFacade {
     }
 
     public void setSubscriberName(String subscriberName) {
+        if (subscriberName != null) {
+            subscriberName = subscriberName.trim();
+        }
         this.subscriberName = subscriberName;
     }
 

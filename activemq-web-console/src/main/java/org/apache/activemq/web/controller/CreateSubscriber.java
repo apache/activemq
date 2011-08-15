@@ -40,6 +40,9 @@ public class CreateSubscriber extends DurableSubscriberFacade implements Control
     }
 
     public void setSelector(String selector) {
+        if (selector != null) {
+            selector = selector.trim();
+        }
         this.selector = selector;
     }
 

@@ -31,8 +31,8 @@ import org.springframework.web.servlet.mvc.Controller;
 
 /**
  * Sends a message
- * 
- * 
+ *
+ *
  */
 public class SendMessage extends DestinationFacade implements Controller {
 
@@ -88,6 +88,9 @@ public class SendMessage extends DestinationFacade implements Controller {
     }
 
     public void setJMSCorrelationID(String correlationID) {
+        if (correlationID != null) {
+            correlationID = correlationID.trim();
+        }
         jmsCorrelationID = correlationID;
     }
 
@@ -96,6 +99,9 @@ public class SendMessage extends DestinationFacade implements Controller {
     }
 
     public void setJMSReplyTo(String replyTo) {
+        if (replyTo != null) {
+            replyTo = replyTo.trim();
+        }
         jmsReplyTo = replyTo;
     }
 
@@ -104,6 +110,9 @@ public class SendMessage extends DestinationFacade implements Controller {
     }
 
     public void setJMSType(String type) {
+        if (type != null) {
+            type = type.trim();
+        }
         jmsType = type;
     }
 
@@ -152,6 +161,9 @@ public class SendMessage extends DestinationFacade implements Controller {
     }
 
     public void setJMSMessageCountHeader(String messageCountHeader) {
+        if (messageCountHeader != null) {
+            messageCountHeader = messageCountHeader.trim();
+        }
         jmsMessageCountHeader = messageCountHeader;
     }
 
@@ -165,6 +177,7 @@ public class SendMessage extends DestinationFacade implements Controller {
         return client.getSession().createMessage();
     }
 
+    @SuppressWarnings("rawtypes")
     protected void appendHeaders(Message message, HttpServletRequest request) throws JMSException {
         message.setJMSCorrelationID(jmsCorrelationID);
         if (jmsReplyTo != null && jmsReplyTo.trim().length() > 0) {
@@ -179,7 +192,7 @@ public class SendMessage extends DestinationFacade implements Controller {
                 Map.Entry entry = (Map.Entry) iter.next();
                 String name = (String) entry.getKey();
                 if (name.equals("secret")) {
-                	continue;
+                    continue;
                 }
                 Object value = entry.getValue();
                 if (isValidPropertyName(name)) {
@@ -233,8 +246,8 @@ public class SendMessage extends DestinationFacade implements Controller {
         // allow JMSX extensions or non JMS properties
         return name.startsWith("JMSX") || !name.startsWith("JMS");
     }
-    
-	public String[] getSupportedHttpMethods() {
-		return new String[]{"POST"};
-	}
+
+    public String[] getSupportedHttpMethods() {
+        return new String[]{"POST"};
+    }
 }

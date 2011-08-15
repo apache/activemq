@@ -88,6 +88,9 @@ public class DestinationFacade {
     }
 
     public void setJMSDestination(String destination) {
+        if (destination != null) {
+            destination = destination.trim();
+        }
         this.jmsDestination = destination;
     }
 
