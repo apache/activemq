@@ -27,7 +27,7 @@ import javax.security.auth.callback.UnsupportedCallbackException;
 /**
  * A Standard JAAS callback handler for SSL certificate requests. Will only
  * handle callbacks of type CertificateCallback.
- * 
+ *
  * @author sepandm@gmail.com (Sepand)
  */
 public class JaasCertificateCallbackHandler implements CallbackHandler {
@@ -35,8 +35,8 @@ public class JaasCertificateCallbackHandler implements CallbackHandler {
 
     /**
      * Basic constructor.
-     * 
-     * @param cert The certificate returned when calling back.
+     *
+     * @param certs The certificate returned when calling back.
      */
     public JaasCertificateCallbackHandler(X509Certificate certs[]) {
         certificates = certs;
@@ -44,7 +44,7 @@ public class JaasCertificateCallbackHandler implements CallbackHandler {
 
     /**
      * Overriding handle method to handle certificates.
-     * 
+     *
      * @param callbacks The callbacks requested.
      * @throws IOException
      * @throws UnsupportedCallbackException Thrown if an unkown Callback type is
