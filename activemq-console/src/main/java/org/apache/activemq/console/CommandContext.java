@@ -32,8 +32,8 @@ public final class CommandContext {
 
     /**
      * Retrieve the output stream being used by the global formatter
-     * 
-     * @return
+     *
+     * @return formatter's output stream
      */
     public OutputStream getOutputStream() {
         if (formatter == null) {
@@ -44,7 +44,7 @@ public final class CommandContext {
 
     /**
      * Print an ObjectInstance format of an mbean
-     * 
+     *
      * @param mbean - mbean to print
      */
     public void printMBean(ObjectInstance mbean) {
@@ -56,7 +56,7 @@ public final class CommandContext {
 
     /**
      * Print an ObjectName format of an mbean
-     * 
+     *
      * @param mbean - mbean to print
      */
     public void printMBean(ObjectName mbean) {
@@ -68,7 +68,7 @@ public final class CommandContext {
 
     /**
      * Print an AttributeList format of an mbean
-     * 
+     *
      * @param mbean - mbean to print
      */
     public void printMBean(AttributeList mbean) {
@@ -80,9 +80,10 @@ public final class CommandContext {
 
     /**
      * Print a Map format of an mbean
-     * 
+     *
      * @param mbean
      */
+    @SuppressWarnings("rawtypes")
     public void printMBean(Map mbean) {
         if (formatter == null) {
             throw new IllegalStateException("No OutputFormatter specified. Use GlobalWriter.instantiate(OutputFormatter).");
@@ -92,9 +93,10 @@ public final class CommandContext {
 
     /**
      * Print a Collection format of mbeans
-     * 
+     *
      * @param mbean - collection of mbeans
      */
+    @SuppressWarnings("rawtypes")
     public void printMBean(Collection mbean) {
         if (formatter == null) {
             throw new IllegalStateException("No OutputFormatter specified. Use GlobalWriter.instantiate(OutputFormatter).");
@@ -104,9 +106,10 @@ public final class CommandContext {
 
     /**
      * Print a Map format of a JMS message
-     * 
+     *
      * @param msg
      */
+    @SuppressWarnings("rawtypes")
     public void printMessage(Map msg) {
         if (formatter == null) {
             throw new IllegalStateException("No OutputFormatter specified. Use GlobalWriter.instantiate(OutputFormatter).");
@@ -116,7 +119,7 @@ public final class CommandContext {
 
     /**
      * Print a Message format of a JMS message
-     * 
+     *
      * @param msg - JMS message to print
      */
     public void printMessage(Message msg) {
@@ -128,9 +131,10 @@ public final class CommandContext {
 
     /**
      * Print a collection of JMS messages
-     * 
+     *
      * @param msg - collection of JMS messages
      */
+    @SuppressWarnings("rawtypes")
     public void printMessage(Collection msg) {
         if (formatter == null) {
             throw new IllegalStateException("No OutputFormatter specified. Use GlobalWriter.instantiate(OutputFormatter).");
@@ -140,7 +144,7 @@ public final class CommandContext {
 
     /**
      * Print help messages
-     * 
+     *
      * @param helpMsgs - help messages to print
      */
     public void printHelp(String[] helpMsgs) {
@@ -152,7 +156,7 @@ public final class CommandContext {
 
     /**
      * Print an information message
-     * 
+     *
      * @param info - information message to print
      */
     public void printInfo(String info) {
@@ -164,7 +168,7 @@ public final class CommandContext {
 
     /**
      * Print an exception message
-     * 
+     *
      * @param e - exception to print
      */
     public void printException(Exception e) {
@@ -176,7 +180,7 @@ public final class CommandContext {
 
     /**
      * Print a version information
-     * 
+     *
      * @param version - version info to print
      */
     public void printVersion(String version) {
@@ -188,9 +192,10 @@ public final class CommandContext {
 
     /**
      * Print a generic key value mapping
-     * 
+     *
      * @param map to print
      */
+    @SuppressWarnings("rawtypes")
     public void print(Map map) {
         if (formatter == null) {
             throw new IllegalStateException("No OutputFormatter specified. Use GlobalWriter.instantiate(OutputFormatter).");
@@ -200,7 +205,7 @@ public final class CommandContext {
 
     /**
      * Print a generic array of strings
-     * 
+     *
      * @param strings - string array to print
      */
     public void print(String[] strings) {
@@ -212,9 +217,10 @@ public final class CommandContext {
 
     /**
      * Print a collection of objects
-     * 
+     *
      * @param collection - collection to print
      */
+    @SuppressWarnings("rawtypes")
     public void print(Collection collection) {
         if (formatter == null) {
             throw new IllegalStateException("No OutputFormatter specified. Use GlobalWriter.instantiate(OutputFormatter).");
@@ -224,7 +230,7 @@ public final class CommandContext {
 
     /**
      * Print a java string
-     * 
+     *
      * @param string - string to print
      */
     public void print(String string) {

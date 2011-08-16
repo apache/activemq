@@ -29,7 +29,6 @@ public interface OutputFormatter {
 
     /**
      * Retrieve the output stream being used by the formatter
-     * @return
      */
     OutputStream getOutputStream();
 
@@ -55,18 +54,21 @@ public interface OutputFormatter {
      * Print a Map format of an mbean
      * @param mbean - mbean to print
      */
+    @SuppressWarnings("rawtypes")
     void printMBean(Map mbean);
 
     /**
      * Print a Collection format of mbeans
      * @param mbean - collection of mbeans
      */
+    @SuppressWarnings("rawtypes")
     void printMBean(Collection mbean);
 
     /**
      * Print a Map format of a JMS message
      * @param msg
      */
+    @SuppressWarnings("rawtypes")
     void printMessage(Map msg);
 
     /**
@@ -79,6 +81,7 @@ public interface OutputFormatter {
      * Print a Collection format of JMS messages
      * @param msg - collection of JMS messages
      */
+    @SuppressWarnings("rawtypes")
     void printMessage(Collection msg);
 
     /**
@@ -109,6 +112,7 @@ public interface OutputFormatter {
      * Print a generic key value mapping
      * @param map to print
      */
+    @SuppressWarnings("rawtypes")
     void print(Map map);
 
     /**
@@ -121,6 +125,7 @@ public interface OutputFormatter {
      * Print a collection of objects
      * @param collection - collection to print
      */
+    @SuppressWarnings("rawtypes")
     void print(Collection collection);
 
     /**

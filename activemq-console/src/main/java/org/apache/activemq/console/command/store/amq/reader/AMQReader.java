@@ -36,7 +36,7 @@ import org.apache.activemq.wireformat.WireFormat;
 
 /**
  * Reads and iterates through data log files for the AMQMessage Store
- * 
+ *
  */
 public class AMQReader implements Iterable<Message> {
 
@@ -48,7 +48,7 @@ public class AMQReader implements Iterable<Message> {
     /**
      * List all the data files in a directory
      * @param directory
-     * @return
+     * @return result
      * @throws IOException
      */
     public static Set<File> listDataFiles(File directory) throws IOException{
@@ -69,25 +69,25 @@ public class AMQReader implements Iterable<Message> {
     /**
      * Create the AMQReader to read a directory of amq data logs - or an
      * individual data log file
-     * 
+     *
      * @param file the directory - or file
-     * @throws IOException 
-     * @throws InvalidSelectorException 
      * @throws IOException
-     * @throws InvalidSelectorException 
+     * @throws InvalidSelectorException
+     * @throws IOException
+     * @throws InvalidSelectorException
      */
     public AMQReader(File file) throws InvalidSelectorException, IOException {
         this(file,null);
     }
-    
+
     /**
      * Create the AMQReader to read a directory of amq data logs - or an
      * individual data log file
-     * 
+     *
      * @param file the directory - or file
      * @param selector the JMS selector or null to select all
      * @throws IOException
-     * @throws InvalidSelectorException 
+     * @throws InvalidSelectorException
      */
     public AMQReader(File file, String selector) throws IOException, InvalidSelectorException {
         String str = selector != null ? selector.trim() : null;
@@ -110,7 +110,7 @@ public class AMQReader implements Iterable<Message> {
         return new AMQIterator(this,this.expression);
     }
 
-    
+
     protected MessageLocation getNextMessage(MessageLocation lastLocation)
             throws IllegalStateException, IOException {
         if (this.file != null) {

@@ -29,7 +29,7 @@ public abstract class RegExQueryFilter extends AbstractQueryFilter {
     /**
      * Creates a regular expression query that is able to match an object using
      * key-value pattern regex filtering
-     * 
+     *
      * @param next
      */
     protected RegExQueryFilter(QueryFilter next) {
@@ -40,11 +40,12 @@ public abstract class RegExQueryFilter extends AbstractQueryFilter {
      * Separates the regular expressions queries from the usual queries. A query
      * is a regex query, if it is key-value pair with the format <key>=<value>,
      * and value is a pattern that satisfies the isRegularExpression method.
-     * 
+     *
      * @param queries - list of queries
      * @return filtered objects that matches the regex query
      * @throws Exception
      */
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     public List query(List queries) throws Exception {
         Map regex = new HashMap();
         List newQueries = new ArrayList();
@@ -80,9 +81,9 @@ public abstract class RegExQueryFilter extends AbstractQueryFilter {
      * Checks if a given string is a regular expression query. Currently, a
      * pattern is a regex query, if it starts with the
      * RegExQueryFilter.REGEX_PREFIX.
-     * 
+     *
      * @param query
-     * @return
+     * @return boolean result of query check
      */
     protected boolean isRegularExpression(String query) {
         return query.startsWith(REGEX_PREFIX);
@@ -90,7 +91,7 @@ public abstract class RegExQueryFilter extends AbstractQueryFilter {
 
     /**
      * Compiles the regex query to a pattern.
-     * 
+     *
      * @param query - query string to compile
      * @return regex pattern
      */
@@ -100,12 +101,13 @@ public abstract class RegExQueryFilter extends AbstractQueryFilter {
 
     /**
      * Filter the specified colleciton using the regex patterns extracted.
-     * 
+     *
      * @param regex - regex map
      * @param data - list of objects to filter
      * @return filtered list of objects that matches the regex map
      * @throws Exception
      */
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     protected List filterCollectionUsingRegEx(Map regex, List data) throws Exception {
         // No regular expressions filtering needed
         if (regex == null || regex.isEmpty()) {
@@ -128,11 +130,12 @@ public abstract class RegExQueryFilter extends AbstractQueryFilter {
 
     /**
      * Determines how the object is to be matched to the regex map.
-     * 
+     *
      * @param data - object to match
      * @param regex - regex map
      * @return true, if the object matches the regex map, false otherwise
      * @throws Exception
      */
+    @SuppressWarnings("rawtypes")
     protected abstract boolean matches(Object data, Map regex) throws Exception;
 }

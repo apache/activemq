@@ -27,29 +27,28 @@ import org.apache.activemq.console.command.Command;
 import org.apache.activemq.console.command.ShutdownCommand;
 import org.apache.activemq.console.command.StartCommand;
 import org.apache.activemq.console.CommandContext;
-import org.apache.activemq.console.Main;
 import org.apache.activemq.console.formatter.CommandShellOutputFormatter;
 import org.apache.commons.daemon.Daemon;
 import org.apache.commons.daemon.DaemonContext;
 
 /**
- * This class launches activemq under Apache JSVC {@link http://commons.apache.org/daemon/jsvc.html}
- * 
+ * This class launches ActiveMQ under <a href="http://commons.apache.org/daemon/jsvc.html">Apache JSVC</a>
+ *
  * @author areese
- * 
+ *
  */
 public class ActiveMQLauncher implements Daemon {
     private List<String> args;
 
     /**
-     * 
+     *
      */
     public ActiveMQLauncher() {
     }
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see org.apache.commons.daemon.Daemon#destroy()
      */
     public void destroy() {
@@ -57,7 +56,7 @@ public class ActiveMQLauncher implements Daemon {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see
      * org.apache.commons.daemon.Daemon#init(org.apache.commons.daemon.DaemonContext
      * )
@@ -69,7 +68,7 @@ public class ActiveMQLauncher implements Daemon {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see org.apache.commons.daemon.Daemon#start()
      */
     public void start() throws Exception {
@@ -84,7 +83,7 @@ public class ActiveMQLauncher implements Daemon {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see org.apache.commons.daemon.Daemon#stop()
      */
     public void stop() throws Exception {
