@@ -43,10 +43,10 @@ public class VirtualDestinationInterceptor implements DestinationInterceptor {
     private DestinationMap destinationMap = new DestinationMap();
     private VirtualDestination[] virtualDestinations;
 
-    public synchronized Destination intercept(Destination destination) {
-        Set virtualDestinations = destinationMap.get(destination.getActiveMQDestination());
+    public Destination intercept(Destination destination) {
+        Set matchingDestinations = destinationMap.get(destination.getActiveMQDestination());
         List<Destination> destinations = new ArrayList<Destination>();
-        for (Iterator iter = virtualDestinations.iterator(); iter.hasNext();) {
+        for (Iterator iter = matchingDestinations.iterator(); iter.hasNext();) {
             VirtualDestination virtualDestination = (VirtualDestination)iter.next();
             Destination newDestination = virtualDestination.intercept(destination);
             destinations.add(newDestination);
