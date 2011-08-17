@@ -53,6 +53,36 @@ public class PooledConnectionFactoryWithTemporaryDestinationsTest extends TestSu
         broker.stop();
     }
 
+    public void testTemporaryQueueWithMultipleConnectionUsers() throws Exception {
+        Connection pooledConnection = null;
+        Connection pooledConnection2 = null;
+        Session session = null;
+        Session session2 = null;
+        Queue tempQueue = null;
+        Queue normalQueue = null;
+        
+        pooledConnection = pooledFactory.createConnection();
+        session = pooledConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        tempQueue = session.createTemporaryQueue();
+        LOG.info("Created queue named: " + tempQueue.getQueueName());
+        
+        assertEquals(1, countBrokerTemporaryQueues());
+        
+        pooledConnection2 = pooledFactory.createConnection();
+        session2 = pooledConnection2.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        normalQueue = session2.createQueue("queue:FOO.TEST");
+        LOG.info("Created queue named: " + normalQueue.getQueueName());        
+
+        // didn't create a temp queue on pooledConnection2 so we should still have a temp queue
+        pooledConnection2.close();        
+        assertEquals(1, countBrokerTemporaryQueues());
+        
+        // after closing pooledConnection, where we created the temp queue, there should 
+        // be no temp queues left
+        pooledConnection.close();        
+        assertEquals(0, countBrokerTemporaryQueues());
+    }
+    
     public void testTemporaryQueueLeakAfterConnectionClose() throws Exception {
         Connection pooledConnection = null;
         Session session = null;

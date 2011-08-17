@@ -144,6 +144,12 @@ public class ConnectionPool {
         lastUsed = System.currentTimeMillis();
         if (referenceCount == 0) {
             expiredCheck();
+            
+            // only clean up temp destinations when all users 
+            // of this connection have called close
+            if (getConnection() != null) {
+                getConnection().cleanUpTempDestinations();
+            }
         }
     }
 

@@ -16,9 +16,6 @@
  */
 package org.apache.activemq.pool;
 
-import java.util.Iterator;
-import java.util.concurrent.ConcurrentHashMap;
-
 import javax.jms.Connection;
 import javax.jms.ConnectionConsumer;
 import javax.jms.ConnectionMetaData;
@@ -39,7 +36,6 @@ import org.apache.activemq.ActiveMQSession;
 import org.apache.activemq.AlreadyClosedException;
 import org.apache.activemq.EnhancedConnection;
 import org.apache.activemq.advisory.DestinationSource;
-import org.apache.activemq.command.ActiveMQTempDestination;
 
 /**
  * Represents a proxy {@link Connection} which is-a {@link TopicConnection} and
@@ -73,9 +69,6 @@ public class PooledConnection implements TopicConnection, QueueConnection, Enhan
     public void close() throws JMSException {
         if (this.pool != null) {
             this.pool.decrementReferenceCount();
-            if (this.pool.getConnection() != null) {
-                this.pool.getConnection().cleanUpTempDestinations();
-            }
             this.pool = null;
         }
     }
