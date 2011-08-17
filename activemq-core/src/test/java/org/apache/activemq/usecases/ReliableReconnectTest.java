@@ -36,13 +36,9 @@ import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.amq.AMQPersistenceAdapter;
-import org.apache.activemq.test.TestSupport;
 import org.apache.activemq.util.IdGenerator;
 
-/**
- * 
- */
-public class ReliableReconnectTest extends TestSupport {
+public class ReliableReconnectTest extends org.apache.activemq.TestSupport {
     
     protected static final int MESSAGE_COUNT = 100;
     protected static final String DEFAULT_BROKER_URL = ActiveMQConnectionFactory.DEFAULT_BROKER_BIND_URL;
@@ -60,11 +56,8 @@ public class ReliableReconnectTest extends TestSupport {
     public ReliableReconnectTest() {
     }
 
-    public ReliableReconnectTest(String n) {
-        super(n);
-    }
-
     protected void setUp() throws Exception {
+        this.setAutoFail(true);
         consumerClientId = idGen.generateId();
         super.setUp();
         topic = true;
