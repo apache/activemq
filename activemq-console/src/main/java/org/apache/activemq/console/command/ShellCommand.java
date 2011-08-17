@@ -40,7 +40,7 @@ public class ShellCommand extends AbstractCommand {
         this.helpFile = new String[] {
             interactive ? "Usage: [task] [task-options] [task data]" : "Usage: Main [--extdir <dir>] [task] [task-options] [task data]", 
             "",
-            "Tasks (default task is start):",
+            "Tasks:",
             "    start           - Creates and starts a broker using a configuration file, or a broker URI.",
             "    create          - Creates a runnable broker instance in the specified path",
             "    stop            - Stops a running broker specified by the broker name.",
@@ -59,6 +59,11 @@ public class ShellCommand extends AbstractCommand {
             "",
             "Task Data:",
             "    - Information needed by each specific task.",
+            "",
+            "JMX system property options:",
+            "    -Dactivemq.jmx.url=<jmx service uri> (default is: 'service:jmx:rmi:///jndi/rmi://localhost:1099/jmxrmi')",
+            "    -Dactivemq.jmx.user=<user name>",
+            "    -Dactivemq.jmx.password=<password>",
             ""
         };
     }
