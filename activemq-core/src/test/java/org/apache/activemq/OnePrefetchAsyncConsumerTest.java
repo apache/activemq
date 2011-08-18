@@ -83,6 +83,7 @@ public class OnePrefetchAsyncConsumerTest extends EmbeddedBrokerTestSupport {
     }
 
     protected void setUp() throws Exception {
+        setAutoFail(true);
         bindAddress = "tcp://localhost:0";
         super.setUp();
 
