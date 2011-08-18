@@ -197,7 +197,7 @@ public class ManagedRegionBroker extends RegionBroker {
                 info.setSubscriptionName(sub.getConsumerInfo().getSubscriptionName());
                 info.setDestination(sub.getConsumerInfo().getDestination());
                 info.setSelector(sub.getSelector());
-                addInactiveSubscription(key, info);
+                addInactiveSubscription(key, info, sub);
             } else {
                 if (sub.getConsumerInfo().isDurable()) {
                     view = new DurableSubscriptionView(this, context.getClientId(), sub);
@@ -484,7 +484,7 @@ public class ManagedRegionBroker extends RegionBroker {
                 info.setSubscriptionName(subscriptionKey.getSubscriptionName());
                 info.setDestination(new ActiveMQTopic(view.getDestinationName()));
                 info.setSelector(view.getSelector());
-                addInactiveSubscription(subscriptionKey, info);
+                addInactiveSubscription(subscriptionKey, info, (brokerService.isKeepDurableSubsActive() ? view.subscription : null));
             }
         }
     }
