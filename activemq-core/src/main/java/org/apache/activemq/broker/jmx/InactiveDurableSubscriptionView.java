@@ -139,4 +139,9 @@ public class InactiveDurableSubscriptionView extends DurableSubscriptionView imp
     public String toString() {
         return "InactiveDurableSubscriptionView: " + getClientId() + ":" + getSubscriptionName();
     }
+
+    @Override
+    public String getSelector() {
+        return subscriptionInfo.getSelector();
+    }
 }
