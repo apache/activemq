@@ -67,12 +67,14 @@ public class OnePrefetchAsyncConsumerTest extends EmbeddedBrokerTestSupport {
 
         // wait for test to complete and the test result to get set
         // this happens asynchronously since the messages are delivered asynchronously
+        long done = System.currentTimeMillis() + getMaxTestTime();
         synchronized (testMutex) {
-           while (!testMutex.testCompleted) {
+           while (!testMutex.testCompleted && System.currentTimeMillis() < done) {
               testMutex.wait();
            }
         }
 
+         assertTrue("completed on time", testMutex.testCompleted);
         //test completed, result is ready
         assertTrue("Attempted to retrieve more than one ServerSession at a time", testMutex.testSuccessful);
     }
@@ -177,7 +179,7 @@ public class OnePrefetchAsyncConsumerTest extends EmbeddedBrokerTestSupport {
 
                      // let the test check if the test was completed
                      synchronized (testMutex) {
-                         testMutex.notify();
+                         testMutex.notifyAll();
                      }
                  }
               }.start();
@@ -197,6 +199,7 @@ public class OnePrefetchAsyncConsumerTest extends EmbeddedBrokerTestSupport {
                       if (!testMutex.testCompleted) {
                           testMutex.testSuccessful = true;
                           testMutex.testCompleted = true;
+                          testMutex.notifyAll();
                       }
                   }
                }
