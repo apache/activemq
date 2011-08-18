@@ -16,8 +16,8 @@
  */
 package org.apache.activemq.network;
 
-import junit.framework.TestCase;
 import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.TestSupport;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.xbean.BrokerFactoryBean;
@@ -28,7 +28,7 @@ import org.springframework.core.io.Resource;
 
 import javax.jms.*;
 
-public class NetworkRestartTest extends TestCase {
+public class NetworkRestartTest extends TestSupport {
 
     private static final Logger LOG = LoggerFactory.getLogger(NetworkRestartTest.class);
 
@@ -111,6 +111,7 @@ public class NetworkRestartTest extends TestCase {
 
 
     protected void setUp() throws Exception {
+        setAutoFail(true);
         super.setUp();
         doSetUp();
     }
