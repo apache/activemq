@@ -29,7 +29,6 @@ import javax.jms.Session;
 import javax.jms.TextMessage;
 import javax.jms.TopicRequestor;
 import javax.jms.TopicSession;
-import junit.framework.TestCase;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQTopic;
@@ -40,7 +39,7 @@ import org.springframework.context.support.AbstractApplicationContext;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 
-public class SimpleNetworkTest extends TestCase {
+public class SimpleNetworkTest extends org.apache.activemq.TestSupport {
 
     protected static final int MESSAGE_COUNT = 10;
     private static final Logger LOG = LoggerFactory.getLogger(SimpleNetworkTest.class);
@@ -173,6 +172,7 @@ public class SimpleNetworkTest extends TestCase {
     
     @Override
     protected void setUp() throws Exception {
+        setAutoFail(true);
         super.setUp();
         doSetUp();
     }
