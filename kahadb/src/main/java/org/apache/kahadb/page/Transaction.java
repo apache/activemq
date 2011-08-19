@@ -636,6 +636,12 @@ public class Transaction implements Iterable<Page> {
      */
     public void commit() throws IOException {
         if( writeTransactionId!=-1 ) {
+            if (tmpFile != null) {
+                tmpFile.close();
+                pageFile.removeTmpFile(getTempFile());
+                tmpFile = null;
+                txFile = null;
+            }
             // Actually do the page writes...
             pageFile.write(writes.entrySet());
             // Release the pages that were freed up in the transaction..
@@ -645,14 +651,6 @@ public class Transaction implements Iterable<Page> {
             allocateList.clear();
             writes.clear();
             writeTransactionId = -1;
-            if (tmpFile != null) {
-                tmpFile.close();
-                if (!getTempFile().delete()) {
-                    throw new IOException("Can't delete temporary KahaDB transaction file:"  + getTempFile());
-                }
-                tmpFile = null;
-                txFile = null;
-            }
         }
         size = 0;
     }
@@ -662,6 +660,12 @@ public class Transaction implements Iterable<Page> {
      */
     public void rollback() throws IOException {
         if( writeTransactionId!=-1 ) {
+            if (tmpFile != null) {
+                tmpFile.close();
+                pageFile.removeTmpFile(getTempFile());
+                tmpFile = null;
+                txFile = null;
+            }
             // Release the pages that were allocated in the transaction...
             freePages(allocateList);
 
@@ -669,14 +673,6 @@ public class Transaction implements Iterable<Page> {
             allocateList.clear();
             writes.clear();
             writeTransactionId = -1;
-            if (tmpFile != null) {
-                tmpFile.close();
-                if (getTempFile().delete()) {
-                    throw new IOException("Can't delete temporary KahaDB transaction file:"  + getTempFile());
-                }
-                tmpFile = null;
-                txFile = null;
-            }
         }
         size = 0;
     }

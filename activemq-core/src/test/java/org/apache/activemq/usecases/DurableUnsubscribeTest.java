@@ -104,6 +104,7 @@ public class DurableUnsubscribeTest extends org.apache.activemq.TestSupport {
         //broker.setPersistent(false);
         broker.setUseJmx(true);
         broker.setBrokerName(getName());
+        broker.deleteAllMessages();
         broker.start();
 
         connection = createConnection();

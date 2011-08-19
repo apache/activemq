@@ -131,6 +131,8 @@ public class PageFile {
     // Persistent settings stored in the page file. 
     private MetaData metaData;
 
+    private ArrayList<File> tmpFilesForRemoval = new ArrayList<File>();
+
     /**
      * Use to keep track of updated pages which have not yet been committed.
      */
@@ -1042,6 +1044,12 @@ public class PageFile {
                      // the write cache.
                      if (w.isDone()) {
                          writes.remove(w.page.getPageId());
+                         if (w.tmpFile != null && tmpFilesForRemoval.contains(w.tmpFile)) {
+                             if (!w.tmpFile.delete()) {
+                                 throw new IOException("Can't delete temporary KahaDB transaction file:" + w.tmpFile);
+                             }
+                             tmpFilesForRemoval.remove(w.tmpFile);
+                         }
                      }
                  }
              }
@@ -1051,6 +1059,10 @@ public class PageFile {
              }
          }
      }
+
+    public void removeTmpFile(File file) {
+        tmpFilesForRemoval.add(file);
+    }
 
     private long recoveryFileSizeForPages(int pageCount) {
         return RECOVERY_FILE_HEADER_SIZE+((pageSize+8)*pageCount);
