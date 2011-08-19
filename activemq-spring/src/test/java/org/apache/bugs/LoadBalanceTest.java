@@ -311,6 +311,12 @@ public class LoadBalanceTest {
                     + " and broker2 got "
                     + broker2Count.get());
         }
+
+
+        BrokerService broker = BrokerRegistry.getInstance().lookup("one");
+        broker.stop();
+        broker = BrokerRegistry.getInstance().lookup("two");
+        broker.stop();
     }
 
     // need to ensure broker bridge is alive before starting the consumer
