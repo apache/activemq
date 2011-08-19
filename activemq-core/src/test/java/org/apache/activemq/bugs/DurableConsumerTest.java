@@ -64,7 +64,7 @@ import org.slf4j.LoggerFactory;
  */
 public class DurableConsumerTest extends CombinationTestSupport{
     private static final Logger LOG = LoggerFactory.getLogger(DurableConsumerTest.class);
-    private static int COUNT = 1024 * 10;
+    private static int COUNT = 1024 * 60;
     private static String CONSUMER_NAME = "DURABLE_TEST";
     protected BrokerService broker;
     

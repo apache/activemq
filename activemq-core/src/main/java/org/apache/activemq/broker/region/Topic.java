@@ -33,6 +33,7 @@ import org.apache.activemq.broker.region.policy.DispatchPolicy;
 import org.apache.activemq.broker.region.policy.NoSubscriptionRecoveryPolicy;
 import org.apache.activemq.broker.region.policy.SimpleDispatchPolicy;
 import org.apache.activemq.broker.region.policy.SubscriptionRecoveryPolicy;
+import org.apache.activemq.broker.util.InsertionCountList;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ExceptionResponse;
 import org.apache.activemq.command.Message;
@@ -532,10 +533,15 @@ public class Topic extends BaseDestination implements Task {
     }
 
     public Message[] browse() {
-        final ConnectionContext connectionContext = createConnectionContext();
-        final Set<Message> result = new CopyOnWriteArraySet<Message>();
+        final List<Message> result = new ArrayList<Message>();
+        doBrowse(result, getMaxBrowsePageSize());
+        return result.toArray(new Message[result.size()]);
+    }
+
+    private void doBrowse(final List<Message> browseList, final int max) {
         try {
             if (topicStore != null) {
+                final ConnectionContext connectionContext = createConnectionContext();
                 topicStore.recover(new MessageRecoveryListener() {
                     public boolean recoverMessage(Message message) throws Exception {
                         if (message.isExpired()) {
@@ -545,7 +551,7 @@ public class Topic extends BaseDestination implements Task {
                                 }
                             }
                         }
-                        result.add(message);
+                        browseList.add(message);
                         return true;
                     }
 
@@ -554,7 +560,7 @@ public class Topic extends BaseDestination implements Task {
                     }
 
                     public boolean hasSpace() {
-                        return true;
+                        return browseList.size() < max;
                     }
 
                     public boolean isDuplicate(MessageId id) {
@@ -563,15 +569,14 @@ public class Topic extends BaseDestination implements Task {
                 });
                 Message[] msgs = subscriptionRecoveryPolicy.browse(getActiveMQDestination());
                 if (msgs != null) {
-                    for (int i = 0; i < msgs.length; i++) {
-                        result.add(msgs[i]);
+                    for (int i = 0; i < msgs.length && browseList.size() < max; i++) {
+                        browseList.add(msgs[i]);
                     }
                 }
             }
         } catch (Throwable e) {
             LOG.warn("Failed to browse Topic: " + getActiveMQDestination().getPhysicalName(), e);
         }
-        return result.toArray(new Message[result.size()]);
     }
 
     public boolean iterate() {
@@ -656,7 +661,8 @@ public class Topic extends BaseDestination implements Task {
 
     private final Runnable expireMessagesTask = new Runnable() {
         public void run() {
-            browse();
+            List<Message> browsedMessages = new InsertionCountList<Message>();
+            doBrowse(browsedMessages, getMaxExpirePageSize());
         }
     };
 

@@ -455,7 +455,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
                     public void execute(Transaction tx) throws Exception {
                         StoredDestination sd = getStoredDestination(dest, tx);
                         sd.orderIndex.resetCursorPosition();
-                        for (Iterator<Entry<Long, MessageKeys>> iterator = sd.orderIndex.iterator(tx); iterator
+                        for (Iterator<Entry<Long, MessageKeys>> iterator = sd.orderIndex.iterator(tx); listener.hasSpace() && iterator
                                 .hasNext(); ) {
                             Entry<Long, MessageKeys> entry = iterator.next();
                             if (ackedAndPrepared.contains(entry.getValue().messageId)) {

@@ -54,6 +54,7 @@ import org.apache.activemq.broker.region.group.MessageGroupMap;
 import org.apache.activemq.broker.region.group.MessageGroupMapFactory;
 import org.apache.activemq.broker.region.policy.DispatchPolicy;
 import org.apache.activemq.broker.region.policy.RoundRobinDispatchPolicy;
+import org.apache.activemq.broker.util.InsertionCountList;
 import org.apache.activemq.command.*;
 import org.apache.activemq.filter.BooleanExpression;
 import org.apache.activemq.filter.MessageEvaluationContext;
@@ -757,24 +758,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
         }
 
         // just track the insertion count
-        List<Message> browsedMessages = new AbstractList<Message>() {
-            int size = 0;
-
-            @Override
-            public void add(int index, Message element) {
-                size++;
-            }
-
-            @Override
-            public int size() {
-                return size;
-            }
-
-            @Override
-            public Message get(int index) {
-                return null;
-            }
-        };
+        List<Message> browsedMessages = new InsertionCountList<Message>();
         doBrowse(browsedMessages, this.getMaxExpirePageSize());
         asyncWakeup();
         if (LOG.isDebugEnabled()) {
