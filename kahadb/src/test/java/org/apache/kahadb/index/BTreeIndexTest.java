@@ -16,17 +16,24 @@
  */
 package org.apache.kahadb.index;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.PrintWriter;
 import java.text.NumberFormat;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
-import org.apache.kahadb.index.BTreeIndex;
-import org.apache.kahadb.index.Index;
 import org.apache.kahadb.util.LongMarshaller;
 import org.apache.kahadb.util.StringMarshaller;
+import org.apache.kahadb.util.VariableMarshaller;
 
 public class BTreeIndexTest extends IndexTestSupport {
 
@@ -212,7 +219,37 @@ public class BTreeIndexTest extends IndexTestSupport {
         index.remove(tx, key(3697));
         index.remove(tx, key(1566));
     }
-    
+
+    public void x_testLargeValue() throws Exception {
+        createPageFileAndIndex(4*1024);
+        long id = tx.allocate().getPageId();
+        tx.commit();
+
+        BTreeIndex<Long, HashSet<String>> test = new BTreeIndex<Long, HashSet<String>>(pf, id);
+        test.setKeyMarshaller(LongMarshaller.INSTANCE);
+        test.setValueMarshaller(HashSetStringMarshaller.INSTANCE);
+        test.load(tx);
+        tx.commit();
+
+        tx =  pf.tx();
+        String val = new String(new byte[93]);
+        final long numMessages = 2000;
+        final int numConsumers = 10000;
+
+        for (long i=0; i<numMessages; i++) {
+            HashSet<String> hs = new HashSet<String>();
+            for (int j=0; j<numConsumers;j++) {
+                hs.add(val + "SOME TEXT" + j);
+            }
+            test.put(tx, i, hs);
+        }
+
+        for (long i=0; i<numMessages; i++) {
+            test.get(tx, i);
+        }
+        tx.commit();
+    }
+
     void doInsertReverse(int count) throws Exception {
         for (int i = count-1; i >= 0; i--) {
             index.put(tx, key(i), (long)i);
@@ -226,5 +263,35 @@ public class BTreeIndexTest extends IndexTestSupport {
     @Override
     protected String key(int i) {
         return "key:"+nf.format(i);
+    }
+
+    static class HashSetStringMarshaller extends VariableMarshaller<HashSet<String>> {
+        final static HashSetStringMarshaller INSTANCE = new HashSetStringMarshaller();
+
+        public void writePayload(HashSet<String> object, DataOutput dataOut) throws IOException {
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            ObjectOutputStream oout = new ObjectOutputStream(baos);
+            oout.writeObject(object);
+            oout.flush();
+            oout.close();
+            byte[] data = baos.toByteArray();
+            dataOut.writeInt(data.length);
+            dataOut.write(data);
+        }
+
+        public HashSet<String> readPayload(DataInput dataIn) throws IOException {
+            int dataLen = dataIn.readInt();
+            byte[] data = new byte[dataLen];
+            dataIn.readFully(data);
+            ByteArrayInputStream bais = new ByteArrayInputStream(data);
+            ObjectInputStream oin = new ObjectInputStream(bais);
+            try {
+                return (HashSet<String>) oin.readObject();
+            } catch (ClassNotFoundException cfe) {
+                IOException ioe = new IOException("Failed to read HashSet<String>: " + cfe);
+                ioe.initCause(cfe);
+                throw ioe;
+            }
+        }
     }
 }
