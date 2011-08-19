@@ -200,4 +200,11 @@ public abstract class TestSupport extends CombinationTestSupport {
         return adapter;
     }
 
+    /**
+     * Test if base directory contains spaces
+     */
+    protected void assertBaseDirectoryContainsSpaces() {
+    	assertFalse("Base directory cannot contain spaces.", new File(System.getProperty("basedir", ".")).getAbsoluteFile().toString().contains(" "));
+    }
+
 }

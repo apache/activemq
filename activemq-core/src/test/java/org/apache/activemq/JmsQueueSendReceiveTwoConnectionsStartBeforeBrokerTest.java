@@ -59,6 +59,7 @@ public class JmsQueueSendReceiveTwoConnectionsStartBeforeBrokerTest extends JmsQ
     }
 
     protected void setUp() throws Exception {
+        setAutoFail(true);
         // now lets asynchronously start a broker
         Thread thread = new Thread() {
             public void run() {

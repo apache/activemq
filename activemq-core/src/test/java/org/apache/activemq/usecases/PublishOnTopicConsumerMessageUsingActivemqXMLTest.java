@@ -74,20 +74,6 @@ public class PublishOnTopicConsumerMessageUsingActivemqXMLTest extends PublishOn
         LOG.info("Broker closed...");
     }
 
-    /*
-    * clean up the journal
-    */
-
-    protected static void recursiveDelete(File file) {
-        if (file.isDirectory()) {
-            File[] files = file.listFiles();
-            for (int i = 0; i < files.length; i++) {
-                recursiveDelete(files[i]);
-            }
-        }
-        file.delete();
-    }
-
     protected BrokerService createBroker(String resource) throws Exception {
         return createBroker(new ClassPathResource(resource));
     }
