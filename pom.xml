@@ -70,13 +70,12 @@
     <junit-version>4.8.1</junit-version>
     <jxta-version>2.0</jxta-version>
     <karaf-version>2.2.0</karaf-version>
-    <log4j-version>1.2.14</log4j-version>
+    <log4j-version>1.2.16</log4j-version>
     <org-apache-derby-version>10.1.3.1</org-apache-derby-version>
     <p2psockets-version>1.1.2</p2psockets-version>
     <regexp-version>1.3</regexp-version>
     <rome-version>0.8</rome-version>
-    <!-- pax-logging (osgi) dont support slf4j 1.6.x -->
-    <slf4j-version>1.5.11</slf4j-version>
+    <slf4j-version>1.6.1</slf4j-version>
     <spring-oxm-version>1.5.8</spring-oxm-version>
     <xalan-version>2.6.0</xalan-version>
     <xmlbeans-version>2.0.0-beta1</xmlbeans-version>
@@ -1039,12 +1038,12 @@
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-war-plugin</artifactId>
           <version>2.1.1</version>
-        </plugin> 
-	<plugin>
-	  <groupId>org.apache.maven.plugins</groupId>
-	  <artifactId>maven-compiler-plugin</artifactId>
-          <version>2.3.2</version>		   
-	</plugin>
+        </plugin>
+    <plugin>
+      <groupId>org.apache.maven.plugins</groupId>
+      <artifactId>maven-compiler-plugin</artifactId>
+          <version>2.3.2</version>
+    </plugin>
       </plugins>
     </pluginManagement>
     <plugins>
