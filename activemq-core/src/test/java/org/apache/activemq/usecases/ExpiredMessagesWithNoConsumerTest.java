@@ -161,7 +161,7 @@ public class ExpiredMessagesWithNoConsumerTest extends CombinationTestSupport {
                         + ", size= " + view.getQueueSize());
                 return sendCount == view.getExpiredCount();
             }
-        }, Wait.MAX_WAIT_MILLIS * 5);
+        }, Wait.MAX_WAIT_MILLIS * 10);
         LOG.info("enqueue=" + view.getEnqueueCount() + ", dequeue=" + view.getDequeueCount()
                 + ", inflight=" + view.getInFlightCount() + ", expired= " + view.getExpiredCount()
                 + ", size= " + view.getQueueSize());
