@@ -680,7 +680,6 @@
         <groupId>commons-pool</groupId>
         <artifactId>commons-pool</artifactId>
         <version>${commons-pool-version}</version>
-        <optional>true</optional>
       </dependency>
 
       <!-- Optional Journal Implementation -->
