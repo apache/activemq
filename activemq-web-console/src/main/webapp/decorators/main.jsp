@@ -119,6 +119,14 @@
 
                                                     <li><a href="xml/topics.jsp" title="View the topics as XML">XML</a></li>
                                                 </ul>
+                                                <H3>Subscribers Views</H3>
+
+                                                <ul class="alternate" type="square">
+
+
+
+                                                    <li><a href="xml/subscribers.jsp" title="View the subscribers as XML">XML</a></li>
+                                                </ul>
                                                 <H3>Useful Links</H3>
 
                                                 <ul class="alternate" type="square">
