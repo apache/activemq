@@ -39,7 +39,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * 
+ *
  */
 public class TopicRegion extends AbstractRegion {
     private static final Logger LOG = LoggerFactory.getLogger(TopicRegion.class);
@@ -60,7 +60,6 @@ public class TopicRegion extends AbstractRegion {
                 public void run() {
                     doCleanup();
                 }
-
             };
             this.cleanupTimer.schedule(cleanupTask, broker.getBrokerService().getOfflineDurableSubscriberTaskSchedule(), broker.getBrokerService().getOfflineDurableSubscriberTaskSchedule());
         }
@@ -118,15 +117,17 @@ public class TopicRegion extends AbstractRegion {
                 if (hasDurableSubChanged(info, sub.getConsumerInfo())) {
                     // Remove the consumer first then add it.
                     durableSubscriptions.remove(key);
-                    synchronized (destinationsMutex) {
-                        for (Iterator<Destination> iter = destinations.values().iterator(); iter.hasNext();) {
-                            Destination dest = iter.next();
+                    destinationsLock.readLock().lock();
+                    try {
+                        for (Destination dest : destinations.values()) {
                             //Account for virtual destinations
                             if (dest instanceof Topic){
                                 Topic topic = (Topic)dest;
                                 topic.deleteSubscription(context, key);
                             }
                         }
+                    } finally {
+                        destinationsLock.readLock().unlock();
                     }
                     super.removeConsumer(context, sub.getConsumerInfo());
                     super.addConsumer(context, info);
@@ -179,16 +180,19 @@ public class TopicRegion extends AbstractRegion {
             throw new JMSException("Durable consumer is in use");
         }
 
-        synchronized (destinationsMutex) {
-            for (Iterator<Destination> iter = destinations.values().iterator(); iter.hasNext();) {
-            	Destination dest = iter.next();
-            	//Account for virtual destinations
-            	if (dest instanceof Topic){
-            	    Topic topic = (Topic)dest;
-            	    topic.deleteSubscription(context, key);
-            	}
+        destinationsLock.readLock().lock();
+        try {
+            for (Destination dest : destinations.values()) {
+                //Account for virtual destinations
+                if (dest instanceof Topic){
+                    Topic topic = (Topic)dest;
+                    topic.deleteSubscription(context, key);
+                }
             }
+        } finally {
+            destinationsLock.readLock().unlock();
         }
+
         if (subscriptions.get(sub.getConsumerInfo()) != null) {
             super.removeConsumer(context, sub.getConsumerInfo());
         } else {
@@ -243,8 +247,7 @@ public class TopicRegion extends AbstractRegion {
             // Now perhaps there other durable subscriptions (via wild card)
             // that would match this destination..
             durableSubscriptions.values();
-            for (Iterator<DurableTopicSubscription> iterator = durableSubscriptions.values().iterator(); iterator.hasNext();) {
-                DurableTopicSubscription sub = iterator.next();
+            for (DurableTopicSubscription sub : durableSubscriptions.values()) {
                 // Skip over subscriptions that we allready added..
                 if (dupChecker.contains(sub)) {
                     continue;
@@ -284,16 +287,16 @@ public class TopicRegion extends AbstractRegion {
     @Override
     protected Subscription createSubscription(ConnectionContext context, ConsumerInfo info) throws JMSException {
         ActiveMQDestination destination = info.getDestination();
-        
+
         if (info.isDurable()) {
             if (AdvisorySupport.isAdvisoryTopic(info.getDestination())) {
                 throw new JMSException("Cannot create a durable subscription for an advisory Topic");
             }
             SubscriptionKey key = new SubscriptionKey(context.getClientId(), info.getSubscriptionName());
             DurableTopicSubscription sub = durableSubscriptions.get(key);
-            
+
             if (sub == null) {
-                
+
                 sub = new DurableTopicSubscription(broker, usageManager, context, info, keepDurableSubsActive);
 
                 if (destination != null && broker.getDestinationPolicy() != null) {
