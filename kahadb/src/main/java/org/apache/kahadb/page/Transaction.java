@@ -30,7 +30,7 @@ public class Transaction implements Iterable<Page> {
 
     private RandomAccessFile tmpFile;
     private File txFile;
-    private int nextLocation = 0;
+    private long nextLocation = 0;
 
     /**
      * The PageOverflowIOException occurs when a page write is requested
@@ -277,36 +277,38 @@ public class Transaction implements Iterable<Page> {
                     // If overflow is allowed
                     if (overflow) {
 
-                        Page next;
-                        if (current.getType() == Page.PAGE_PART_TYPE) {
-                            next = load(current.getNext(), null);
-                        } else {
-                            next = allocate();
-                        }
+                        do {
+                            Page next;
+                            if (current.getType() == Page.PAGE_PART_TYPE) {
+                                next = load(current.getNext(), null);
+                            } else {
+                                next = allocate();
+                            }
 
-                        next.txId = current.txId;
+                            next.txId = current.txId;
 
-                        // Write the page header
-                        int oldPos = pos;
-                        pos = 0;
+                            // Write the page header
+                            int oldPos = pos;
+                            pos = 0;
 
-                        current.makePagePart(next.getPageId(), getWriteTransactionId());
-                        current.write(this);
+                            current.makePagePart(next.getPageId(), getWriteTransactionId());
+                            current.write(this);
 
-                        // Do the page write..
-                        byte[] data = new byte[pageSize];
-                        System.arraycopy(buf, 0, data, 0, pageSize);
-                        Transaction.this.write(current, data);
+                            // Do the page write..
+                            byte[] data = new byte[pageSize];
+                            System.arraycopy(buf, 0, data, 0, pageSize);
+                            Transaction.this.write(current, data);
 
-                        // Reset for the next page chunk
-                        pos = 0;
-                        // The page header marshalled after the data is written.
-                        skip(Page.PAGE_HEADER_SIZE);
-                        // Move the overflow data after the header.
-                        System.arraycopy(buf, pageSize, buf, pos, oldPos - pageSize);
-                        pos += oldPos - pageSize;
-                        current = next;
+                            // Reset for the next page chunk
+                            pos = 0;
+                            // The page header marshalled after the data is written.
+                            skip(Page.PAGE_HEADER_SIZE);
+                            // Move the overflow data after the header.
+                            System.arraycopy(buf, pageSize, buf, pos, oldPos - pageSize);
+                            pos += oldPos - pageSize;
+                            current = next;
 
+                        } while (pos > pageSize);
                     } else {
                         throw new PageOverflowIOException("Page overflow.");
                     }
@@ -705,7 +707,7 @@ public class Transaction implements Iterable<Page> {
             if (tmpFile == null) {
                 tmpFile = new RandomAccessFile(getTempFile(), "rw");
             }
-            int location = nextLocation;
+            long location = nextLocation;
             tmpFile.seek(nextLocation);
             tmpFile.write(data);
             nextLocation = location + data.length;

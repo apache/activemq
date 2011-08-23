@@ -140,8 +140,8 @@ public class PageFile {
         Page page;
         byte[] current;
         byte[] diskBound;
-        int currentLocation = -1;
-        int diskBoundLocation = -1;
+        long currentLocation = -1;
+        long diskBoundLocation = -1;
         File tmpFile;
         int length;
 
@@ -150,7 +150,7 @@ public class PageFile {
             current=data;
         }
 
-        public PageWrite(Page page, int currentLocation, int length, File tmpFile) {
+        public PageWrite(Page page, long currentLocation, int length, File tmpFile) {
             this.page = page;
             this.currentLocation = currentLocation;
             this.tmpFile = tmpFile;
@@ -164,7 +164,7 @@ public class PageFile {
             diskBoundLocation = -1;
         }
 
-        public void setCurrentLocation(Page page, int location, int length) {
+        public void setCurrentLocation(Page page, long location, int length) {
             this.page = page;
             this.currentLocation = location;
             this.length = length;
@@ -186,7 +186,7 @@ public class PageFile {
                 diskBound = new byte[length];
                 RandomAccessFile file = new RandomAccessFile(tmpFile, "r");
                 file.seek(diskBoundLocation);
-                int readNum = file.read(diskBound);
+                file.read(diskBound);
                 file.close();
                 diskBoundLocation = -1;
             }

@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
+import org.apache.kahadb.page.PageFile;
 import org.apache.kahadb.util.LongMarshaller;
 import org.apache.kahadb.util.StringMarshaller;
 import org.apache.kahadb.util.VariableMarshaller;
@@ -220,8 +221,13 @@ public class BTreeIndexTest extends IndexTestSupport {
         index.remove(tx, key(1566));
     }
 
-    public void x_testLargeValue() throws Exception {
-        createPageFileAndIndex(4*1024);
+    public void testLargeValue() throws Exception {
+        //System.setProperty("maxKahaDBTxSize", "" + (1024*1024*1024));
+        pf = new PageFile(directory, getClass().getName());
+        pf.setPageSize(4*1024);
+        pf.setEnablePageCaching(false);
+        pf.load();
+        tx = pf.tx();
         long id = tx.allocate().getPageId();
         tx.commit();
 
@@ -232,9 +238,9 @@ public class BTreeIndexTest extends IndexTestSupport {
         tx.commit();
 
         tx =  pf.tx();
-        String val = new String(new byte[93]);
-        final long numMessages = 2000;
-        final int numConsumers = 10000;
+        String val = new String(new byte[1024]);
+        final long numMessages = 10;
+        final int numConsumers = 200;
 
         for (long i=0; i<numMessages; i++) {
             HashSet<String> hs = new HashSet<String>();
@@ -243,9 +249,53 @@ public class BTreeIndexTest extends IndexTestSupport {
             }
             test.put(tx, i, hs);
         }
+        tx.commit();
+        tx =  pf.tx();
+        for (long i=0; i<numMessages; i++) {
+            HashSet<String> hs = new HashSet<String>();
+            for (int j=numConsumers; j<numConsumers*2;j++) {
+                hs.add(val + "SOME TEXT" + j);
+            }
+            test.put(tx, i, hs);
+        }
 
+        tx.commit();
+        tx =  pf.tx();
         for (long i=0; i<numMessages; i++) {
             test.get(tx, i);
+        }
+        tx.commit();
+    }
+
+    public void testLargeValueOverflow() throws Exception {
+        pf = new PageFile(directory, getClass().getName());
+        pf.setPageSize(4*1024);
+        pf.setEnablePageCaching(false);
+        pf.setWriteBatchSize(1);
+        pf.load();
+        tx = pf.tx();
+        long id = tx.allocate().getPageId();
+
+        BTreeIndex<Long, String> test = new BTreeIndex<Long, String>(pf, id);
+        test.setKeyMarshaller(LongMarshaller.INSTANCE);
+        test.setValueMarshaller(StringMarshaller.INSTANCE);
+        test.load(tx);
+        tx.commit();
+
+        final int stringSize = 6*1024;
+        tx =  pf.tx();
+        String val = new String(new byte[stringSize]);
+        final long numMessages = 1;
+
+        for (long i=0; i<numMessages; i++) {
+            test.put(tx, i, val);
+        }
+        tx.commit();
+
+        tx =  pf.tx();
+        for (long i=0; i<numMessages; i++) {
+            String s = test.get(tx, i);
+            assertEquals("len is as expected", stringSize, s.length());
         }
         tx.commit();
     }
