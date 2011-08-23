@@ -34,10 +34,12 @@
     <activemq.osgi.import.pkg>
       com.thoughtworks.xstream*;resolution:=optional,
       javax.xml.stream*;resolution:=optional,
+      javax.annotation*;resolution:=optional,
+      javax.transaction*;resolution:=optional,
+      javax.security*;resolution:=optional,
       org.codehaus.jettison*;resolution:=optional,
       org.apache.activeio*;resolution:=optional,
       org.apache.camel*;resolution:=optional,
-      org.apache.commons.pool*;resolution:=optional,
       org.apache.commons.net*;resolution:=optional,
       org.apache.derby*;resolution:=optional,
       org.apache.tools.ant*;resolution:=optional,
@@ -122,11 +124,6 @@
     <dependency>
       <groupId>org.apache.geronimo.specs</groupId>
       <artifactId>geronimo-jacc_1.1_spec</artifactId>
-      <optional>true</optional>
-    </dependency>
-    <dependency>
-      <groupId>commons-pool</groupId>
-      <artifactId>commons-pool</artifactId>
       <optional>true</optional>
     </dependency>
     <dependency>
