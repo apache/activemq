@@ -84,7 +84,7 @@
     <xstream-version>1.4.1</xstream-version>
     <xbean-version>3.7</xbean-version>
     <velocity-version>1.6.2</velocity-version>
-    <maven-bundle-plugin-version>2.1.0</maven-bundle-plugin-version>
+    <maven-bundle-plugin-version>2.3.5</maven-bundle-plugin-version>
     <maven-surefire-plugin-version>2.5</maven-surefire-plugin-version>
     <commons-net-version>2.0</commons-net-version>
     <ftpserver-version>1.0.0</ftpserver-version>
