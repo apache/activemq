@@ -155,6 +155,7 @@ public class RegionBroker extends EmptyBroker {
     }
 
     @Override
+    @SuppressWarnings("rawtypes")
     public Broker getAdaptor(Class type) {
         if (type.isInstance(this)) {
             return this;
@@ -957,7 +958,7 @@ public class RegionBroker extends EmptyBroker {
     protected void purgeInactiveDestinations() {
         inactiveDestinationsPurgeLock.writeLock().lock();
         try {
-            List<BaseDestination> list = new ArrayList<BaseDestination>();
+            List<Destination> list = new ArrayList<Destination>();
             Map<ActiveMQDestination, Destination> map = getDestinationMap();
             if (isAllowTempAutoCreationOnSend()) {
                 map.putAll(tempQueueRegion.getDestinationMap());
@@ -966,28 +967,26 @@ public class RegionBroker extends EmptyBroker {
             long maxPurgedDests = this.brokerService.getMaxPurgedDestinationsPerSweep();
             long timeStamp = System.currentTimeMillis();
             for (Destination d : map.values()) {
-                if (d instanceof BaseDestination) {
-                    BaseDestination bd = (BaseDestination) d;
-                    bd.markForGC(timeStamp);
-                    if (bd.canGC()) {
-                        list.add(bd);
-
-                        if (maxPurgedDests > 0 && list.size() == maxPurgedDests) {
-                            break;
-                        }
+                d.markForGC(timeStamp);
+                if (d.canGC()) {
+                    list.add(d);
+                    if (maxPurgedDests > 0 && list.size() == maxPurgedDests) {
+                        break;
                     }
                 }
             }
 
-            if (list.isEmpty() == false) {
-
+            if (!list.isEmpty()) {
                 ConnectionContext context = BrokerSupport.getConnectionContext(this);
                 context.setBroker(this);
 
-                for (BaseDestination dest : list) {
-                    dest.getLog().info(
-                            dest.getName() + " Inactive for longer than " + dest.getInactiveTimoutBeforeGC()
-                                    + " ms - removing ...");
+                for (Destination dest : list) {
+                    Logger log = LOG;
+                    if (dest instanceof BaseDestination) {
+                        log = ((BaseDestination) dest).getLog();
+                    }
+                    log.info(dest.getName() + " Inactive for longer than " +
+                             dest.getInactiveTimoutBeforeGC() + " ms - removing ...");
                     try {
                         getRoot().removeDestination(context, dest.getActiveMQDestination(), isAllowTempAutoCreationOnSend() ? 1 : 0);
                     } catch (Exception e) {

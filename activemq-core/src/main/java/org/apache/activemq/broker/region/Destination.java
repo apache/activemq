@@ -54,6 +54,12 @@ public interface Destination extends Service, Task {
 
     void acknowledge(ConnectionContext context, Subscription sub, final MessageAck ack, final MessageReference node) throws IOException;
 
+    long getInactiveTimoutBeforeGC();
+
+    void markForGC(long timeStamp);
+
+    boolean canGC();
+
     void gc();
 
     ActiveMQDestination getActiveMQDestination();
@@ -77,9 +83,9 @@ public interface Destination extends Service, Task {
     boolean isProducerFlowControl();
 
     void setProducerFlowControl(boolean value);
-    
+
     boolean isAlwaysRetroactive();
-    
+
     void setAlwaysRetroactive(boolean value);
 
     /**
@@ -208,7 +214,7 @@ public interface Destination extends Service, Task {
      * @param context
      * @param usage
      */
-    void isFull(ConnectionContext context, Usage usage);
+    void isFull(ConnectionContext context, Usage<?> usage);
 
     List<Subscription> getConsumers();
 

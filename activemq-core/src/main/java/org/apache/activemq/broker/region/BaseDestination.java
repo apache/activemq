@@ -17,7 +17,6 @@
 package org.apache.activemq.broker.region;
 
 import java.io.IOException;
-import java.util.Collection;
 import java.util.List;
 import javax.jms.ResourceAllocationException;
 import org.apache.activemq.advisory.AdvisorySupport;
@@ -148,13 +147,13 @@ public abstract class BaseDestination implements Destination {
     public void setProducerFlowControl(boolean producerFlowControl) {
         this.producerFlowControl = producerFlowControl;
     }
-    
+
     public boolean isAlwaysRetroactive() {
-    	return alwaysRetroactive;
+        return alwaysRetroactive;
     }
-    
+
     public void setAlwaysRetroactive(boolean alwaysRetroactive) {
-    	this.alwaysRetroactive = alwaysRetroactive;
+        this.alwaysRetroactive = alwaysRetroactive;
     }
 
     /**
@@ -515,7 +514,7 @@ public abstract class BaseDestination implements Destination {
      * @param context
      * @param usage
      */
-    public void isFull(ConnectionContext context, Usage usage) {
+    public void isFull(ConnectionContext context, Usage<?> usage) {
         if (advisoryWhenFull) {
             broker.isFull(context, this, usage);
         }

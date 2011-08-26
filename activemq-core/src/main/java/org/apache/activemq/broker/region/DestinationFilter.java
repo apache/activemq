@@ -69,6 +69,18 @@ public class DestinationFilter implements Destination {
         next.gc();
     }
 
+    public void markForGC(long timeStamp) {
+        next.markForGC(timeStamp);
+    }
+
+    public boolean canGC() {
+        return next.canGC();
+    }
+
+    public long getInactiveTimoutBeforeGC() {
+        return next.getInactiveTimoutBeforeGC();
+    }
+
     public ActiveMQDestination getActiveMQDestination() {
         return next.getActiveMQDestination();
     }
@@ -137,13 +149,13 @@ public class DestinationFilter implements Destination {
     public void setProducerFlowControl(boolean value) {
         next.setProducerFlowControl(value);
     }
-    
+
     public boolean isAlwaysRetroactive() {
-    	return next.isAlwaysRetroactive();
+        return next.isAlwaysRetroactive();
     }
-    
+
     public void setAlwaysRetroactive(boolean value) {
-    	next.setAlwaysRetroactive(value);
+        next.setAlwaysRetroactive(value);
     }
 
     public void setBlockedProducerWarningInterval(long blockedProducerWarningInterval) {
@@ -156,7 +168,6 @@ public class DestinationFilter implements Destination {
 
     public void addProducer(ConnectionContext context, ProducerInfo info) throws Exception {
         next.addProducer(context, info);
-
     }
 
     public void removeProducer(ConnectionContext context, ProducerInfo info) throws Exception {
@@ -239,7 +250,7 @@ public class DestinationFilter implements Destination {
         next.fastProducer(context, producerInfo);
     }
 
-    public void isFull(ConnectionContext context, Usage usage) {
+    public void isFull(ConnectionContext context, Usage<?> usage) {
         next.isFull(context, usage);
     }
 
@@ -290,4 +301,5 @@ public class DestinationFilter implements Destination {
     public SlowConsumerStrategy getSlowConsumerStrategy() {
         return next.getSlowConsumerStrategy();
     }
+
 }
