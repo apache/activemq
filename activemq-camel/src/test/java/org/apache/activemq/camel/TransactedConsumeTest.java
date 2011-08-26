@@ -16,6 +16,8 @@
  */
 package org.apache.activemq.camel;
 
+import java.io.File;
+import java.util.concurrent.atomic.AtomicLong;
 import javax.jms.Connection;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
@@ -26,6 +28,7 @@ import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTextMessage;
+import org.apache.activemq.store.amq.AMQPersistenceAdapter;
 import org.apache.activemq.util.Wait;
 import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
@@ -40,7 +43,7 @@ import org.springframework.context.support.ClassPathXmlApplicationContext;
 public class TransactedConsumeTest extends CamelSpringTestSupport {
     private static final Logger LOG = LoggerFactory.getLogger(TransactedConsumeTest.class);
     BrokerService broker = null;
-    int messageCount = 1000;
+    int messageCount = 100000;
 
     @Test
     public void testConsume() throws Exception {
@@ -53,6 +56,8 @@ public class TransactedConsumeTest extends CamelSpringTestSupport {
                 return broker.getAdminView().getTotalDequeueCount() >= messageCount;
             }
         }, 20 * 60 * 1000));
+        long duration = System.currentTimeMillis() - firstConsumed.get();
+        LOG.info("Done message consumption in " + duration + "millis");
     }
 
     private void sendJMSMessageToKickOffRoute() throws Exception {
@@ -78,12 +83,14 @@ public class TransactedConsumeTest extends CamelSpringTestSupport {
 
         PolicyMap policyMap = new PolicyMap();
         PolicyEntry defaultPolicy = new PolicyEntry();
-       // defaultPolicy.setStrictOrderDispatch(false);
         policyMap.setDefaultEntry(defaultPolicy);
         brokerService.setDestinationPolicy(policyMap);
 
         brokerService.setAdvisorySupport(false);
         brokerService.setDataDirectory("target/data");
+        AMQPersistenceAdapter amq = new AMQPersistenceAdapter();
+        amq.setDirectory(new File("target/data"));
+        brokerService.setPersistenceAdapter(amq);
         brokerService.addConnector("tcp://localhost:61616");
         return brokerService;
     }
@@ -110,13 +117,21 @@ public class TransactedConsumeTest extends CamelSpringTestSupport {
         return new ClassPathXmlApplicationContext("org/apache/activemq/camel/transactedconsume.xml");
     }
 
+    static AtomicLong firstConsumed = new AtomicLong();
+    static AtomicLong consumed = new AtomicLong();
+
     static class ConnectionLog implements Processor  {
 
         @Override
         public void process(Exchange exchange) throws Exception {
+            if (consumed.getAndIncrement() == 0) {
+                firstConsumed.set(System.currentTimeMillis());
+            }
             ActiveMQTextMessage m = (ActiveMQTextMessage) ((JmsMessage)exchange.getIn()).getJmsMessage();
-            Thread.currentThread().sleep(10);
-            LOG.info("received on " + m.getConnection().toString());
+            //Thread.currentThread().sleep(500);
+            if (consumed.get() %500 == 0) {
+                LOG.info("received on " + m.getConnection().toString());
+            }
         }
     }
 

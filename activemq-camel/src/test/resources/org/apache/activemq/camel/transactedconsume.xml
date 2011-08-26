@@ -28,12 +28,12 @@
     <context:annotation-config/>
 
     <bean id="vhfBatchListenerJMSConnectionFactory" class="org.apache.activemq.ActiveMQConnectionFactory">
-        <property name="brokerURL" value="tcp://localhost:61616?jms.prefetchPolicy.all=1"/>
+        <property name="brokerURL" value="tcp://localhost:61616?jms.prefetchPolicy.all=1000"/>
     </bean>
 
     <bean id="vhfBatchListenerPooledConnectionFactory" class="org.apache.activemq.pool.PooledConnectionFactory">
-        <property name="maxConnections" value="10"/>
-        <property name="maximumActive" value="10"/>
+        <property name="maxConnections" value="1"/>
+        <property name="maximumActive" value="1"/>
         <property name="connectionFactory" ref="vhfBatchListenerJMSConnectionFactory"/>
     </bean>
 
@@ -66,13 +66,23 @@
         <property name="configuration" ref="vhfBatchListenerJMSConfig"/>
     </bean>
 
+    <bean id="activemq2" class="org.apache.activemq.camel.component.ActiveMQComponent">
+        <property name="configuration" ref="vhfBatchListenerJMSConfig"/>
+    </bean>
+
     <camelContext xmlns="http://camel.apache.org/schema/spring">
         <route>
             <from uri="activemq:queue:scp_transacted"/>
             <!-- transacted /-->
-            <process ref="connectonLog"/>
+            <process ref="connectionLog"/>
+        </route>
+
+        <!-- marginally better through put with a second route/connection -->
+        <route>
+            <from uri="activemq2:queue:scp_transacted"/>
+            <process ref="connectionLog"/>
         </route>
     </camelContext>
 
-    <bean id="connectonLog" class="org.apache.activemq.camel.TransactedConsumeTest.ConnectionLog"/>
+    <bean id="connectionLog" class="org.apache.activemq.camel.TransactedConsumeTest.ConnectionLog"/>
 </beans>
