@@ -380,7 +380,7 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
     public void onUsageChanged(Usage usage, int oldPercentUsage, int newPercentUsage) {
         if (newPercentUsage >= getMemoryUsageHighWaterMark()) {
             synchronized (this) {
-                if (!flushRequired) {
+                if (!flushRequired && size() != 0) {
                     flushRequired =true;
                     if (!iterating) {
                         expireOldMessages();
