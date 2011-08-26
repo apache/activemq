@@ -350,6 +350,9 @@ public class PListStore extends ServiceSupport implements BrokerServiceAware, Ru
 
     public void run() {
         try {
+             if (isStopping()) {
+                return;
+             }
             final int lastJournalFileId = journal.getLastAppendLocation().getDataFileId();
             final Set<Integer> candidates = journal.getFileMap().keySet();
             LOG.trace("Full gc candidate set:" + candidates);
