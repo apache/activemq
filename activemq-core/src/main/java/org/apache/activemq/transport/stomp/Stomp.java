@@ -110,6 +110,7 @@ public interface Stomp {
             String BROWSER = "browser";
             String USERID = "JMSXUserID";
             String ORIGINAL_DESTINATION = "original-destination";
+            String PERSISTENT = "persistent";
         }
 
         public interface Subscribe {

@@ -82,6 +82,10 @@ public interface FrameTranslator {
                 headers.put(Stomp.Headers.Message.ORIGINAL_DESTINATION, ft.convertDestination(converter, message.getOriginalDestination()));
             }
 
+            if (message.isPersistent()) {
+                headers.put(Stomp.Headers.Message.PERSISTENT, Stomp.TRUE);
+            }
+
             // now lets add all the message headers
             final Map<String, Object> properties = message.getProperties();
             if (properties != null) {
