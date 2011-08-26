@@ -71,6 +71,8 @@ public abstract class ActiveMQDestination extends JNDIBaseStorable implements Da
     protected transient boolean isPattern;
     protected transient int hashValue;
     protected Map<String, String> options;
+
+    protected static UnresolvedDestinationTransformer unresolvableDestinationTransformer = new DefaultUnresolvedDestinationTransformer();
     
     public ActiveMQDestination() {
     }
@@ -127,8 +129,9 @@ public abstract class ActiveMQDestination extends JNDIBaseStorable implements Da
                 return new ActiveMQQueue(queueName);
             } else if (queueName == null && topicName != null) {
                 return new ActiveMQTopic(topicName);
+            } else {
+                return unresolvableDestinationTransformer.transform(dest);
             }
-            throw new JMSException("Could no disambiguate on queue|Topic-name totransform pollymorphic destination into a ActiveMQ destination: " + dest);
         }
         if (dest instanceof TemporaryQueue) {
             return new ActiveMQTempQueue(((TemporaryQueue)dest).getQueueName());
@@ -378,5 +381,13 @@ public abstract class ActiveMQDestination extends JNDIBaseStorable implements Da
 
     public boolean isPattern() {
         return isPattern;
+    }
+
+    public static UnresolvedDestinationTransformer getUnresolvableDestinationTransformer() {
+        return unresolvableDestinationTransformer;
+    }
+
+    public static void setUnresolvableDestinationTransformer(UnresolvedDestinationTransformer unresolvableDestinationTransformer) {
+        ActiveMQDestination.unresolvableDestinationTransformer = unresolvableDestinationTransformer;
     }
 }
