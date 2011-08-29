@@ -32,8 +32,10 @@
     </bean>
 
     <bean id="vhfBatchListenerPooledConnectionFactory" class="org.apache.activemq.pool.PooledConnectionFactory">
-        <property name="maxConnections" value="1"/>
-        <property name="maximumActive" value="1"/>
+        <!-- match maxConnections to the number of routes that share the  connection factory -->
+        <property name="maxConnections" value="2"/>
+        <!-- match maximumActive (which is active sessions) to num routes *  concurrentConsumers in the MLC -->
+        <property name="maximumActive" value="20"/>
         <property name="connectionFactory" ref="vhfBatchListenerJMSConnectionFactory"/>
     </bean>
 
@@ -51,6 +53,7 @@
     <bean id="vhfBatchListenerJMSConfig" class="org.apache.camel.component.jms.JmsConfiguration">
         <property name="connectionFactory" ref="vhfBatchListenerPooledConnectionFactory"/>
         <property name="transactionManager" ref="vhfBatchListenerJMSTransactionManager"/>
+        <property name="receiveTimeout" value="20000" />
         <property name="transacted" value="true"/>
         <property name="concurrentConsumers" value="10"/>
         <property name="cacheLevelName" value="CACHE_CONSUMER"/>
@@ -73,11 +76,10 @@
     <camelContext xmlns="http://camel.apache.org/schema/spring">
         <route>
             <from uri="activemq:queue:scp_transacted"/>
-            <!-- transacted /-->
             <process ref="connectionLog"/>
         </route>
 
-        <!-- marginally better through put with a second route/connection -->
+        <!-- better through put with a second route/connection once shared pool config matches concurrentConsumers -->
         <route>
             <from uri="activemq2:queue:scp_transacted"/>
             <process ref="connectionLog"/>
