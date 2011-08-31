@@ -463,7 +463,6 @@
             <exclude>**/QuickJournalRecoveryBrokerTest.*</exclude>
             <exclude>**/QuickJournalXARecoveryBrokerTest.*</exclude>
             <exclude>**/RendezvousDiscoverTransportTest.*</exclude>
-            <exclude>**/MissingDataFileTest.*</exclude>
 
             <!-- m2 tests failing since move from assembly  -->
             <exclude>**/QueueConsumerCloseAndReconnectTest.*</exclude>

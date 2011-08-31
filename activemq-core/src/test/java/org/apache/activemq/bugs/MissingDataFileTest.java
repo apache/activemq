@@ -28,6 +28,7 @@ import junit.framework.TestCase;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.store.amq.AMQPersistenceAdapterFactory;
+import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
 import org.apache.activemq.usage.SystemUsage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,7 +45,7 @@ public class MissingDataFileTest extends TestCase {
 
     private static final Logger LOG = LoggerFactory.getLogger(MissingDataFileTest.class);
     
-    private static int counter = 300;
+    private static int counter = 500;
 
     private static int hectorToHaloCtr;
     private static int xenaToHaloCtr;
@@ -94,12 +95,13 @@ public class MissingDataFileTest extends TestCase {
    
         SystemUsage systemUsage;
         systemUsage = new SystemUsage();
-        systemUsage.getMemoryUsage().setLimit(1024 * 1024); // Just a few messags 
+        systemUsage.getMemoryUsage().setLimit(10 * 1024 * 1024); // Just a few messags
         broker.setSystemUsage(systemUsage);
         
-        AMQPersistenceAdapterFactory factory = (AMQPersistenceAdapterFactory) broker.getPersistenceFactory();
-        factory.setMaxFileLength(2*1024); // ~4 messages
-        factory.setCleanupInterval(1000); // every few second
+        KahaDBPersistenceAdapter kahaDBPersistenceAdapter = new KahaDBPersistenceAdapter();
+        kahaDBPersistenceAdapter.setJournalMaxFileLength(16*1024);
+        kahaDBPersistenceAdapter.setCleanupInterval(500);
+        broker.setPersistenceAdapter(kahaDBPersistenceAdapter);
         
         broker.start();
         LOG.info("Starting broker..");

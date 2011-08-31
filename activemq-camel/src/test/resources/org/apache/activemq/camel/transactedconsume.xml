@@ -28,21 +28,16 @@
     <context:annotation-config/>
 
     <bean id="vhfBatchListenerJMSConnectionFactory" class="org.apache.activemq.ActiveMQConnectionFactory">
-        <property name="brokerURL" value="tcp://localhost:61616?jms.prefetchPolicy.all=1000"/>
+        <property name="brokerURL" value="tcp://localhost:61616?jms.prefetchPolicy.all=1"/>
     </bean>
 
     <bean id="vhfBatchListenerPooledConnectionFactory" class="org.apache.activemq.pool.PooledConnectionFactory">
-        <!-- match maxConnections to the number of routes that share the  connection factory -->
-        <property name="maxConnections" value="2"/>
-        <!-- match maximumActive (which is active sessions) to num routes *  concurrentConsumers in the MLC -->
-        <property name="maximumActive" value="20"/>
+        <!-- match maxConnections to the number of routes that share the connection factory -->
+        <property name="maxConnections" value="10"/>
+        <!-- match maximumActive (which is active sessions) >=  concurrentConsumers in the MLC -->
+        <property name="maximumActive" value="1"/>
         <property name="connectionFactory" ref="vhfBatchListenerJMSConnectionFactory"/>
     </bean>
-
-    <!-- bean id="vhfBatchListenerSingleConnectionFactory" class="org.springframework.jms.connection.SingleConnectionFactory">
-       <property name="reconnectOnException" value="true" />
-       <property name="targetConnectionFactory" ref="vhfBatchListenerJMSConnectionFactory" />
-   </bean -->
 
     <!-- JMS Transaction manager -->
     <bean id="vhfBatchListenerJMSTransactionManager" class="org.springframework.jms.connection.JmsTransactionManager">
@@ -53,9 +48,8 @@
     <bean id="vhfBatchListenerJMSConfig" class="org.apache.camel.component.jms.JmsConfiguration">
         <property name="connectionFactory" ref="vhfBatchListenerPooledConnectionFactory"/>
         <property name="transactionManager" ref="vhfBatchListenerJMSTransactionManager"/>
-        <property name="receiveTimeout" value="20000" />
         <property name="transacted" value="true"/>
-        <property name="concurrentConsumers" value="10"/>
+        <property name="concurrentConsumers" value="1"/>
         <property name="cacheLevelName" value="CACHE_CONSUMER"/>
     </bean>
 
@@ -72,6 +66,30 @@
     <bean id="activemq2" class="org.apache.activemq.camel.component.ActiveMQComponent">
         <property name="configuration" ref="vhfBatchListenerJMSConfig"/>
     </bean>
+    <bean id="activemq3" class="org.apache.activemq.camel.component.ActiveMQComponent">
+        <property name="configuration" ref="vhfBatchListenerJMSConfig"/>
+    </bean>
+    <bean id="activemq4" class="org.apache.activemq.camel.component.ActiveMQComponent">
+        <property name="configuration" ref="vhfBatchListenerJMSConfig"/>
+    </bean>
+    <bean id="activemq5" class="org.apache.activemq.camel.component.ActiveMQComponent">
+        <property name="configuration" ref="vhfBatchListenerJMSConfig"/>
+    </bean>
+    <bean id="activemq6" class="org.apache.activemq.camel.component.ActiveMQComponent">
+        <property name="configuration" ref="vhfBatchListenerJMSConfig"/>
+    </bean>
+    <bean id="activemq7" class="org.apache.activemq.camel.component.ActiveMQComponent">
+        <property name="configuration" ref="vhfBatchListenerJMSConfig"/>
+    </bean>
+    <bean id="activemq8" class="org.apache.activemq.camel.component.ActiveMQComponent">
+        <property name="configuration" ref="vhfBatchListenerJMSConfig"/>
+    </bean>
+    <bean id="activemq9" class="org.apache.activemq.camel.component.ActiveMQComponent">
+        <property name="configuration" ref="vhfBatchListenerJMSConfig"/>
+    </bean>
+    <bean id="activemq10" class="org.apache.activemq.camel.component.ActiveMQComponent">
+        <property name="configuration" ref="vhfBatchListenerJMSConfig"/>
+    </bean>
 
     <camelContext xmlns="http://camel.apache.org/schema/spring">
         <route>
@@ -79,11 +97,44 @@
             <process ref="connectionLog"/>
         </route>
 
-        <!-- better through put with a second route/connection once shared pool config matches concurrentConsumers -->
+        <!-- better through put with a additional route/connection once shared pool config matches concurrentConsumers -->
         <route>
             <from uri="activemq2:queue:scp_transacted"/>
             <process ref="connectionLog"/>
         </route>
+        <route>
+            <from uri="activemq3:queue:scp_transacted"/>
+            <process ref="connectionLog"/>
+        </route>
+        <route>
+            <from uri="activemq4:queue:scp_transacted"/>
+            <process ref="connectionLog"/>
+        </route>
+        <route>
+            <from uri="activemq5:queue:scp_transacted"/>
+            <process ref="connectionLog"/>
+        </route>
+        <route>
+            <from uri="activemq6:queue:scp_transacted"/>
+            <process ref="connectionLog"/>
+        </route>
+        <route>
+            <from uri="activemq7:queue:scp_transacted"/>
+            <process ref="connectionLog"/>
+        </route>
+        <route>
+            <from uri="activemq8:queue:scp_transacted"/>
+            <process ref="connectionLog"/>
+        </route>
+        <route>
+            <from uri="activemq9:queue:scp_transacted"/>
+            <process ref="connectionLog"/>
+        </route>
+        <route>
+            <from uri="activemq10:queue:scp_transacted"/>
+            <process ref="connectionLog"/>
+        </route>
+
     </camelContext>
 
     <bean id="connectionLog" class="org.apache.activemq.camel.TransactedConsumeTest.ConnectionLog"/>
