@@ -31,6 +31,7 @@ import org.apache.activemq.util.IOExceptionSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.commons.pool.ObjectPoolFactory;
+import org.apache.commons.pool.impl.GenericObjectPool;
 import org.apache.commons.pool.impl.GenericObjectPoolFactory;
 
 /**
@@ -65,6 +66,7 @@ public class PooledConnectionFactory implements ConnectionFactory, Service {
     private int maximumActive = 500;
     private int maxConnections = 1;
     private int idleTimeout = 30 * 1000;
+    private boolean blockIfSessionPoolIsFull = false;
     private AtomicBoolean stopped = new AtomicBoolean(false);
     private long expiryTimeout = 0l;
 
@@ -193,6 +195,26 @@ public class PooledConnectionFactory implements ConnectionFactory, Service {
     public void setMaximumActive(int maximumActive) {
         this.maximumActive = maximumActive;
     }
+    
+    /**
+     * Controls the behavior of the internal session pool. 
+     * By default the call to Connection.getSession() will 
+     * return a JMSException if the session pool is full.
+     * If the argument true is given, it will change the 
+     * default behavior and instead the call to getSession()
+     * will block until a session is available in the pool, which
+     * used to be the default behavior in ActiveMQ versions < 5.6.
+     * 
+     * The size of the session pool is controlled by the @see #maximumActive 
+     * property.
+     * 
+     * @param block - if true, the call to getSession() blocks if the pool
+     * is full until a session object is available. 
+     * defaults to false.
+     */
+    public void setBlockIfSessionPoolIsFull(boolean block) {
+    	this.blockIfSessionPoolIsFull = block;
+    }
 
     /**
      * @return the maxConnections
@@ -208,8 +230,21 @@ public class PooledConnectionFactory implements ConnectionFactory, Service {
         this.maxConnections = maxConnections;
     }
 
+    /**
+     * Creates an ObjectPoolFactory. Its behavior is controlled by the two
+     * properties @see #maximumActive and @see #blockIfSessionPoolIsFull.
+     * 
+     * @return the newly created but empty ObjectPoolFactory
+     */
     protected ObjectPoolFactory createPoolFactory() {
-        return new GenericObjectPoolFactory(null, maximumActive);
+     	if (blockIfSessionPoolIsFull) {
+    		return new GenericObjectPoolFactory(null, maximumActive);
+    	} else { 
+    		return new GenericObjectPoolFactory(null, 
+        		maximumActive, 
+        		GenericObjectPool.WHEN_EXHAUSTED_FAIL, 
+        		GenericObjectPool.DEFAULT_MAX_WAIT);
+    	}
     }
 
     public int getIdleTimeout() {
