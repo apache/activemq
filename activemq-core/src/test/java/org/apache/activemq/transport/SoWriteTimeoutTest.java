@@ -127,7 +127,7 @@ public class SoWriteTimeoutTest extends JmsTestSupport {
         //dumpAllThreads("blocked on write");
         
         // abort should be done after this
-        TimeUnit.SECONDS.sleep(4);
+        TimeUnit.SECONDS.sleep(10);
 
         proxy.goOn();
         
@@ -137,8 +137,8 @@ public class SoWriteTimeoutTest extends JmsTestSupport {
         
         // verify connection is dead
         try {
-            for (int i=0; i<10; i++) {
-                stompConnection.send("/queue/" + dest.getPhysicalName(), messageTextPrefix + "ReplyText" + i);
+            for (int i=0; i<100; i++) {
+                stompConnection.send("/queue/" + dest.getPhysicalName(),  "ShouldBeDeadConnectionText" + i);
             }
             fail("expected send to fail with timeout out connection");
         } catch (SocketException expected) {
