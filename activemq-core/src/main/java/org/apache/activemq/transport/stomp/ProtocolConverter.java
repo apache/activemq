@@ -538,7 +538,9 @@ public class ProtocolConverter {
         if (subscriptionId != null) {
             subscriptions.put(subscriptionId, stompSubscription);
         }
-        sendToActiveMQ(consumerInfo, createResponseHandler(command));
+
+        sendToActiveMQ(consumerInfo, null);
+        sendReceipt(command);
     }
 
     protected void onStompUnsubscribe(StompFrame command) throws ProtocolException {
@@ -837,6 +839,21 @@ public class ProtocolConverter {
 
             if (LOG.isDebugEnabled()) {
                 LOG.debug("Stomp Connect heartbeat conf RW[" + hbReadInterval + "," + hbWriteInterval + "]");
+            }
+        }
+    }
+
+    protected void sendReceipt(StompFrame command) {
+        final String receiptId = command.getHeaders().get(Stomp.Headers.RECEIPT_REQUESTED);
+        if (receiptId != null) {
+            StompFrame sc = new StompFrame();
+            sc.setAction(Stomp.Responses.RECEIPT);
+            sc.setHeaders(new HashMap<String, String>(1));
+            sc.getHeaders().put(Stomp.Headers.Response.RECEIPT_ID, receiptId);
+            try {
+                sendToStomp(sc);
+            } catch (IOException e) {
+                LOG.warn("Could not send a receipt for " + command, e);
             }
         }
     }
