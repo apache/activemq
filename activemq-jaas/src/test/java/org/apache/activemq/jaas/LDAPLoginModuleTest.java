@@ -23,6 +23,8 @@ import org.apache.directory.server.ldap.LdapServer;
 import org.apache.directory.server.annotations.CreateLdapServer;
 import org.apache.directory.server.annotations.CreateTransport;
 import org.apache.directory.server.core.annotations.ApplyLdifFiles;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -55,7 +57,22 @@ public class LDAPLoginModuleTest extends AbstractLdapTestUnit {
     
     private static final String PRINCIPAL = "uid=admin,ou=system";
     private static final String CREDENTIALS = "secret";
-    
+
+    private final String loginConfigSysPropName = "java.security.auth.login.config";
+    private String oldLoginConfig;
+    @Before
+    public void setLoginConfigSysProperty() {
+        oldLoginConfig = System.getProperty(loginConfigSysPropName, null);
+        System.setProperty(loginConfigSysPropName, "src/test/resources/login.config");
+    }
+
+    @After
+    public void resetLoginConfigSysProperty() {
+        if (oldLoginConfig != null) {
+            System.setProperty(loginConfigSysPropName, oldLoginConfig);
+        }
+    }
+
     @SuppressWarnings("unchecked")
     @Test
     public void testRunning() throws Exception {
