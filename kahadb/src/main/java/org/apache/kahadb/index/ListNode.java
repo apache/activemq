@@ -54,7 +54,6 @@ public final class ListNode<Key,Value> {
     // The next page after this one.
     private long next = ListIndex.NOT_SET;
 
-
     static final class KeyValueEntry<Key, Value> extends LinkedNode<KeyValueEntry<Key, Value>> implements Entry<Key, Value>
     {
         private final Key key;
@@ -254,7 +253,7 @@ public final class ListNode<Key,Value> {
             }
         }
 
-        @SuppressWarnings("unchecked")
+        @SuppressWarnings({ "unchecked", "rawtypes" })
         public ListNode<Key,Value> readPayload(DataInput is) throws IOException {
             ListNode<Key,Value> node = new ListNode<Key,Value>();
             node.next = is.readLong();
@@ -290,8 +289,8 @@ public final class ListNode<Key,Value> {
         try {
             getContainingList().storeNode(tx, this, false);
         } catch ( Transaction.PageOverflowIOException e ) {
-                // If we get an overflow
-                split(tx, addFirst);
+            // If we get an overflow
+            split(tx, addFirst);
         }
     }
 
@@ -384,7 +383,7 @@ public final class ListNode<Key,Value> {
     ///////////////////////////////////////////////////////////////////
     // Implementation methods
     ///////////////////////////////////////////////////////////////////
- 
+
     public long getPageId() {
         return page.getPageId();
     }

@@ -20,6 +20,7 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 
@@ -27,15 +28,15 @@ import java.util.NoSuchElementException;
  * Keeps track of a added long values. Collapses ranges of numbers using a
  * Sequence representation. Use to keep track of received message ids to find
  * out if a message is duplicate or if there are any missing messages.
- * 
+ *
  * @author chirino
  */
-public class SequenceSet extends LinkedNodeList<Sequence> {
+public class SequenceSet extends LinkedNodeList<Sequence> implements Iterable<Long> {
 
     public static class Marshaller implements org.apache.kahadb.util.Marshaller<SequenceSet> {
 
         public static final Marshaller INSTANCE = new Marshaller();
-        
+
         public SequenceSet readPayload(DataInput in) throws IOException {
             SequenceSet value = new SequenceSet();
             int count = in.readInt();
@@ -85,17 +86,16 @@ public class SequenceSet extends LinkedNodeList<Sequence> {
             return true;
         }
     }
-    
+
     public void add(Sequence value) {
         // TODO we can probably optimize this a bit
         for(long i=value.first; i<value.last+1; i++) {
             add(i);
         }
     }
-    
-    
+
     /**
-     * 
+     *
      * @param value
      *            the value to add to the list
      * @return false if the value was a duplicate.
@@ -160,7 +160,44 @@ public class SequenceSet extends LinkedNodeList<Sequence> {
         addLast(new Sequence(value));
         return true;
     }
-    
+
+    /**
+     * Removes the given value from the Sequence set, splitting a
+     * contained sequence if necessary.
+     *
+     * @param value
+     *          The value that should be removed from the SequenceSet.
+     *
+     * @return true if the value was removed from the set, false if there
+     *         was no sequence in the set that contained the given value.
+     */
+    public boolean remove(long value) {
+        Sequence sequence = getHead();
+        while (sequence != null ) {
+            if(sequence.contains(value)) {
+                if (sequence.range() == 1) {
+                    sequence.unlink();
+                    return true;
+                } else if (sequence.getFirst() == value) {
+                    sequence.setFirst(value+1);
+                    return true;
+                } else if (sequence.getLast() == value) {
+                    sequence.setLast(value-1);
+                    return true;
+                } else {
+                    sequence.linkBefore(new Sequence(sequence.first, value-1));
+                    sequence.linkAfter(new Sequence(value+1, sequence.last));
+                    sequence.unlink();
+                    return true;
+                }
+            }
+
+            sequence = sequence.getNext();
+        }
+
+        return false;
+    }
+
     /**
      * Removes and returns the first element from this list.
      *
@@ -171,12 +208,16 @@ public class SequenceSet extends LinkedNodeList<Sequence> {
         if (isEmpty()) {
             throw new NoSuchElementException();
         }
-        
+
         Sequence rc = removeFirstSequence(1);
         return rc.first;
     }
 
-
+    /**
+     * Removes and returns the last sequence from this list.
+     *
+     * @return the last sequence from this list or null if the list is empty.
+     */
     public Sequence removeLastSequence() {
         if (isEmpty()) {
             return null;
@@ -196,7 +237,7 @@ public class SequenceSet extends LinkedNodeList<Sequence> {
         if (isEmpty()) {
             return null;
         }
-        
+
         Sequence sequence = getHead();
         while (sequence != null ) {
             if (sequence.range() == count ) {
@@ -212,7 +253,6 @@ public class SequenceSet extends LinkedNodeList<Sequence> {
         }
         return null;
     }
-
 
     /**
      * @return all the id Sequences that are missing from this set that are not
@@ -266,6 +306,31 @@ public class SequenceSet extends LinkedNodeList<Sequence> {
         return rc;
     }
 
+    /**
+     * Returns true if the value given is contained within one of the
+     * sequences held in this set.
+     *
+     * @param value
+     *      The value to search for in the set.
+     *
+     * @return true if the value is contained in the set.
+     */
+    public boolean contains(long value) {
+        if (isEmpty()) {
+            return false;
+        }
+
+        Sequence sequence = getHead();
+        while (sequence != null) {
+            if (sequence.contains(value)) {
+                return true;
+            }
+            sequence = sequence.getNext();
+        }
+
+        return false;
+    }
+
     public boolean contains(int first, int last) {
         if (isEmpty()) {
             return false;
@@ -273,13 +338,20 @@ public class SequenceSet extends LinkedNodeList<Sequence> {
         Sequence sequence = getHead();
         while (sequence != null) {
             if (sequence.first <= first && first <= sequence.last ) {
-                return last <= sequence.last ;
+                return last <= sequence.last;
             }
             sequence = sequence.getNext();
         }
         return false;
     }
 
+    /**
+     * Computes the size of this Sequence by summing the values of all
+     * the contained sequences.
+     *
+     * @return the total number of values contained in this set if it
+     *         were to be iterated over like an array.
+     */
     public long rangeSize() {
         long result = 0;
         Sequence sequence = getHead();
@@ -288,6 +360,50 @@ public class SequenceSet extends LinkedNodeList<Sequence> {
             sequence = sequence.getNext();
         }
         return result;
+    }
+
+    public Iterator<Long> iterator() {
+        return new SequenceIterator();
+    }
+
+    private class SequenceIterator implements Iterator<Long> {
+
+        private Sequence currentEntry;
+        private long lastReturned;
+
+        public SequenceIterator() {
+            currentEntry = getHead();
+            lastReturned = currentEntry.first - 1;
+        }
+
+        public boolean hasNext() {
+            return currentEntry != null;
+        }
+
+        public Long next() {
+            if (currentEntry == null) {
+                throw new NoSuchElementException();
+            }
+
+            if(lastReturned < currentEntry.first) {
+                lastReturned = currentEntry.first;
+                if (currentEntry.range() == 1) {
+                    currentEntry = currentEntry.getNext();
+                }
+            } else {
+                lastReturned++;
+                if (lastReturned == currentEntry.last) {
+                    currentEntry = currentEntry.getNext();
+                }
+            }
+
+            return lastReturned;
+        }
+
+        public void remove() {
+            throw new UnsupportedOperationException();
+        }
+
     }
 
 }

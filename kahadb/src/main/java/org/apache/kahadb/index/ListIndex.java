@@ -52,6 +52,11 @@ public class ListIndex<Key,Value> implements Index<Key,Value> {
         setHeadPageId(headPageId);
     }
 
+    @SuppressWarnings("rawtypes")
+    public ListIndex(PageFile pageFile, Page page) {
+        this(pageFile, page.getPageId());
+    }
+
     synchronized public void load(Transaction tx) throws IOException {
         if (loaded.compareAndSet(false, true)) {
             LOG.debug("loading");
@@ -82,12 +87,12 @@ public class ListIndex<Key,Value> implements Index<Key,Value> {
             }
         }
     }
-    
+
     synchronized public void unload(Transaction tx) {
         if (loaded.compareAndSet(true, false)) {
-        }    
+        }
     }
-    
+
     protected ListNode<Key,Value> getHead(Transaction tx) throws IOException {
         return loadNode(tx, getHeadPageId());
     }
@@ -181,7 +186,7 @@ public class ListIndex<Key,Value> implements Index<Key,Value> {
     synchronized public Iterator<Map.Entry<Key,Value>> iterator(final Transaction tx) throws IOException {
         return getHead(tx).iterator(tx);
     }
-    
+
     synchronized public Iterator<Map.Entry<Key,Value>> iterator(final Transaction tx, long initialPosition) throws IOException {
         return getHead(tx).iterator(tx, initialPosition);
     }
@@ -223,7 +228,7 @@ public class ListIndex<Key,Value> implements Index<Key,Value> {
     public void storeNode(Transaction tx, ListNode<Key,Value> node, boolean overflow) throws IOException {
         tx.store(node.getPage(), marshaller, overflow);
     }
-        
+
     public PageFile getPageFile() {
         return pageFile;
     }
