@@ -369,11 +369,13 @@ public class SequenceSet extends LinkedNodeList<Sequence> implements Iterable<Lo
     private class SequenceIterator implements Iterator<Long> {
 
         private Sequence currentEntry;
-        private long lastReturned;
+        private long lastReturned = -1;
 
         public SequenceIterator() {
             currentEntry = getHead();
-            lastReturned = currentEntry.first - 1;
+            if (currentEntry != null) {
+                lastReturned = currentEntry.first - 1;
+            }
         }
 
         public boolean hasNext() {

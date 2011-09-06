@@ -126,4 +126,14 @@ public class SequenceSetTest {
             assertEquals(expected[index++], iterator.next().longValue());
         }
     }
+
+    @Test
+    public void testIteratorEmptySequenceSet() {
+        SequenceSet set = new SequenceSet();
+
+        Iterator<Long> iterator = set.iterator();
+        while(iterator.hasNext()) {
+            fail("Should not have any elements");
+        }
+    }
 }
