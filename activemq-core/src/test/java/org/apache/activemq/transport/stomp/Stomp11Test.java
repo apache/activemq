@@ -239,6 +239,34 @@ public class Stomp11Test extends CombinationTestSupport {
         assertTrue("Broker did close idle connection in time.", (endTime - startTime) >= 1000);
     }
 
+    public void testSendAfterMissingHeartbeat() throws Exception {
+
+        String connectFrame = "STOMP\n" + "login: system\n" +
+                              "passcode: manager\n" +
+                              "accept-version:1.1\n" +
+                              "heart-beat:1000,0\n" +
+                              "host:localhost\n" +
+                              "\n" + Stomp.NULL;
+
+        stompConnection.sendFrame(connectFrame);
+        String f = stompConnection.receiveFrame();
+        assertTrue(f.startsWith("CONNECTED"));
+        assertTrue(f.indexOf("version:1.1") >= 0);
+        assertTrue(f.indexOf("heart-beat:") >= 0);
+        assertTrue(f.indexOf("session:") >= 0);
+        LOG.debug("Broker sent: " + f);
+
+        Thread.sleep(5000);
+
+        try {
+            String message = "SEND\n" + "destination:/queue/" + getQueueName() + "\n\n" + "Hello World" + Stomp.NULL;
+            stompConnection.sendFrame(message);
+            fail("SEND frame has been accepted after missing heart beat");
+        } catch (Exception ex) {
+            System.out.println(ex.getMessage());
+        }
+    }
+
     public void testRejectInvalidHeartbeats1() throws Exception {
 
         String connectFrame = "STOMP\n" +
@@ -542,5 +570,4 @@ public class Stomp11Test extends CombinationTestSupport {
         String frame = "DISCONNECT\n" + "\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
     }
-
 }
