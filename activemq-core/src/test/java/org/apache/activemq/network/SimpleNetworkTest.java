@@ -69,7 +69,6 @@ public class SimpleNetworkTest extends org.apache.activemq.TestSupport {
                     textMsg.setText(payload);
                     remoteProducer.send(replyTo, textMsg);
                 } catch (JMSException e) {
-                    // TODO Auto-generated catch block
                     e.printStackTrace();
                 }
             }
@@ -168,8 +167,8 @@ public class SimpleNetworkTest extends org.apache.activemq.TestSupport {
         for (int i = 0; i < MESSAGE_COUNT / 2; i++) {
             assertNotNull("message count: " + i, remoteConsumer.receive(2500));
         }
-    }    
-    
+    }
+
     @Override
     protected void setUp() throws Exception {
         setAutoFail(true);

@@ -104,7 +104,6 @@ public class QueueBridgeTest extends TestCase implements MessageListener {
             textMsg.setText(payload);
             requestServerProducer.send(replyTo, textMsg);
         } catch (JMSException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
     }

@@ -38,7 +38,7 @@ import javax.jms.Session;
 import javax.jms.TextMessage;
 
 /**
- * 
+ *
  */
 public abstract class CursorSupport extends CombinationTestSupport {
 
@@ -124,7 +124,6 @@ public abstract class CursorSupport extends CombinationTestSupport {
                     // using the cursor on the broker
                     Thread.sleep(50);
                 } catch (Exception e) {
-                    // TODO Auto-generated catch block
                     e.printStackTrace();
                 }
                 consumerList.add(msg);
@@ -158,7 +157,7 @@ public abstract class CursorSupport extends CombinationTestSupport {
             assertEquals("This should be the same at pos " + i + " in the list", sent.getJMSMessageID(), consumed.getJMSMessageID());
         }
     }
-    
+
     protected Connection getConsumerConnection(ConnectionFactory fac) throws JMSException {
         Connection connection = fac.createConnection();
         connection.setClientID("testConsumer");

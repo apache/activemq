@@ -30,7 +30,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * 
+ *
  */
 public class PerfConsumer implements MessageListener {
     private static final Logger LOG = LoggerFactory.getLogger(PerfConsumer.class);
@@ -98,7 +98,6 @@ public class PerfConsumer implements MessageListener {
             }
             lastMsgId=msg.getJMSMessageID();
         } catch (JMSException e1) {
-            // TODO Auto-generated catch block
             e1.printStackTrace();
         }
         try {

@@ -21,12 +21,11 @@ import javax.jms.JMSException;
 import javax.jms.Session;
 
 /**
- * 
+ *
  */
 public class TemporaryTopicMemoryAllocationTest extends MemoryAllocationTest {
     public TemporaryTopicMemoryAllocationTest() {
         super();
-        // TODO Auto-generated constructor stub
     }
 
     protected Destination getDestination(Session session) throws JMSException {

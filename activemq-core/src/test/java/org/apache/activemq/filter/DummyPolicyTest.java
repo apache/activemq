@@ -24,7 +24,7 @@ import org.springframework.context.support.AbstractApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 /**
- * 
+ *
  */
 public class DummyPolicyTest extends SpringTestSupport {
 
@@ -37,7 +37,6 @@ public class DummyPolicyTest extends SpringTestSupport {
     }
 
     protected AbstractApplicationContext createApplicationContext() {
-        // TODO Auto-generated method stub
         return new ClassPathXmlApplicationContext("org/apache/activemq/filter/dummyPolicy.xml");
     }
 

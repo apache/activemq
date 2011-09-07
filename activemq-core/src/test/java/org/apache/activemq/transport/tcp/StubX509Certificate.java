@@ -25,7 +25,7 @@ import java.util.Date;
 import java.util.Set;
 
 public class StubX509Certificate extends X509Certificate {
-    
+
     private final Principal id;
 
     public StubX509Certificate(Principal id) {
@@ -38,129 +38,100 @@ public class StubX509Certificate extends X509Certificate {
 
     // --- Stubbed Methods ---
     public void checkValidity() {
-        // TODO Auto-generated method stub
-
     }
 
     public void checkValidity(Date arg0) {
-        // TODO Auto-generated method stub
-
     }
 
     public int getVersion() {
-        // TODO Auto-generated method stub
         return 0;
     }
 
     public BigInteger getSerialNumber() {
-        // TODO Auto-generated method stub
         return null;
     }
 
     public Principal getIssuerDN() {
-        // TODO Auto-generated method stub
         return null;
     }
 
     public Date getNotBefore() {
-        // TODO Auto-generated method stub
         return null;
     }
 
     public Date getNotAfter() {
-        // TODO Auto-generated method stub
         return null;
     }
 
     public byte[] getTBSCertificate() {
-        // TODO Auto-generated method stub
         return null;
     }
 
     public byte[] getSignature() {
-        // TODO Auto-generated method stub
         return null;
     }
 
     public String getSigAlgName() {
-        // TODO Auto-generated method stub
         return null;
     }
 
     public String getSigAlgOID() {
-        // TODO Auto-generated method stub
         return null;
     }
 
     public byte[] getSigAlgParams() {
-        // TODO Auto-generated method stub
         return null;
     }
 
     public boolean[] getIssuerUniqueID() {
-        // TODO Auto-generated method stub
         return null;
     }
 
     public boolean[] getSubjectUniqueID() {
-        // TODO Auto-generated method stub
         return null;
     }
 
     public boolean[] getKeyUsage() {
-        // TODO Auto-generated method stub
         return null;
     }
 
     public int getBasicConstraints() {
-        // TODO Auto-generated method stub
         return 0;
     }
 
     public byte[] getEncoded() {
-        // TODO Auto-generated method stub
         return null;
     }
 
     public void verify(PublicKey arg0) {
-        // TODO Auto-generated method stub
-
     }
 
     public void verify(PublicKey arg0, String arg1) {
-        // TODO Auto-generated method stub
-
     }
 
     public String toString() {
-        // TODO Auto-generated method stub
         return null;
     }
 
     public PublicKey getPublicKey() {
-        // TODO Auto-generated method stub
         return null;
     }
 
     public boolean hasUnsupportedCriticalExtension() {
-        // TODO Auto-generated method stub
         return false;
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     public Set getCriticalExtensionOIDs() {
-        // TODO Auto-generated method stub
         return null;
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     public Set getNonCriticalExtensionOIDs() {
-        // TODO Auto-generated method stub
         return null;
     }
 
     public byte[] getExtensionValue(String arg0) {
-        // TODO Auto-generated method stub
         return null;
     }
 

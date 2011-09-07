@@ -99,7 +99,6 @@ public class TopicBridgeSpringTest extends TestCase implements MessageListener {
             LOG.info("Sending response: " + textMsg);
             requestServerProducer.send(replyTo, textMsg);
         } catch (JMSException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
     }

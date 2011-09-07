@@ -32,7 +32,7 @@ import javax.jms.Session;
 import javax.jms.TemporaryQueue;
 
 /**
- * 
+ *
  */
 public class TempQueueMemoryTest extends EmbeddedBrokerTestSupport {
     protected Connection serverConnection;
@@ -46,13 +46,13 @@ public class TempQueueMemoryTest extends EmbeddedBrokerTestSupport {
     protected boolean clientTransactional = false;
     protected int numConsumers = 1;
     protected int numProducers = 1;
-    
+
 
     public void testConcurrentProducerRequestReply() throws Exception {
         numProducers = 10;
         testLoadRequestReply();
     }
-    
+
     public void testLoadRequestReply() throws Exception {
         for (int i=0; i< numConsumers; i++) {
             serverSession.createConsumer(serverDestination).setMessageListener(new MessageListener() {
@@ -66,24 +66,23 @@ public class TempQueueMemoryTest extends EmbeddedBrokerTestSupport {
                         }
                         producer.close();
                     } catch (Exception e) {
-                        // TODO Auto-generated catch block
                         e.printStackTrace();
                     }
                 }
             });
         }
-        
+
         class Producer extends Thread {
             private int numToSend;
             public Producer(int numToSend) {
                 this.numToSend = numToSend;
             }
-            public void run() {     
+            public void run() {
                 try {
-                    Session session = clientConnection.createSession(clientTransactional, 
+                    Session session = clientConnection.createSession(clientTransactional,
                             clientTransactional ? Session.SESSION_TRANSACTED : Session.AUTO_ACKNOWLEDGE);
                     MessageProducer producer = session.createProducer(serverDestination);
-               
+
                     for (int i =0; i< numToSend; i++) {
                         TemporaryQueue replyTo = session.createTemporaryQueue();
                         MessageConsumer consumer = session.createConsumer(replyTo);
@@ -105,7 +104,6 @@ public class TempQueueMemoryTest extends EmbeddedBrokerTestSupport {
                         }
                     }
                 } catch (JMSException e) {
-                    // TODO Auto-generated catch block
                     e.printStackTrace();
                 }
             }
@@ -115,27 +113,27 @@ public class TempQueueMemoryTest extends EmbeddedBrokerTestSupport {
             threads.add(new Producer(messagesToSend/numProducers));
         }
         startAndJoinThreads(threads);
-        
+
         clientSession.close();
         serverSession.close();
         clientConnection.close();
         serverConnection.close();
-        
+
         AdvisoryBroker ab = (AdvisoryBroker) broker.getBroker().getAdaptor(
                 AdvisoryBroker.class);
-              
+
         ///The server destination will be left
         assertTrue(ab.getAdvisoryDestinations().size() == 1);
-        
+
         assertTrue("should be zero but is "+ab.getAdvisoryConsumers().size(),ab.getAdvisoryConsumers().size() == 0);
         assertTrue("should be zero but is "+ab.getAdvisoryProducers().size(),ab.getAdvisoryProducers().size() == 0);
-               
+
         RegionBroker rb = (RegionBroker) broker.getBroker().getAdaptor(
                 RegionBroker.class);
-        
-               
-        //serverDestination + 
-        assertEquals(6, rb.getDestinationMap().size());          
+
+
+        //serverDestination +
+        assertEquals(6, rb.getDestinationMap().size());
     }
 
     private void startAndJoinThreads(Vector<Thread> threads) throws Exception {
@@ -159,15 +157,15 @@ public class TempQueueMemoryTest extends EmbeddedBrokerTestSupport {
     }
 
     protected void tearDown() throws Exception {
-        
+
         super.tearDown();
         serverTransactional = clientTransactional = false;
         numConsumers = numProducers = 1;
         messagesToSend = 2000;
     }
-    
+
     protected ActiveMQDestination createDestination() {
         return new ActiveMQQueue(getClass().getName());
     }
-    
+
 }
