@@ -24,9 +24,10 @@ import javax.jms.MessageProducer;
 import javax.jms.Queue;
 import javax.jms.Session;
 import javax.jms.TextMessage;
+import javax.jms.Topic;
 
 /**
- * 
+ *
  */
 public class JMSIndividualAckTest extends TestSupport {
 
@@ -100,7 +101,7 @@ public class JMSIndividualAckTest extends TestSupport {
         Message msg = consumer.receive(1000);
         assertNotNull(msg);
         msg = consumer.receive(1000);
-        assertNotNull(msg);        
+        assertNotNull(msg);
         msg = consumer.receive(1000);
         assertNotNull(msg);
         msg.acknowledge();
@@ -121,10 +122,10 @@ public class JMSIndividualAckTest extends TestSupport {
         assertNull(msg);
         session.close();
     }
-    
+
     /**
      * Tests if unacknowledged messages are being re-delivered when the consumer connects again.
-     * 
+     *
      * @throws JMSException
      */
     public void testUnAckedMessageAreNotConsumedOnSessionClose() throws JMSException {
@@ -137,20 +138,37 @@ public class JMSIndividualAckTest extends TestSupport {
         // Consume the message...
         MessageConsumer consumer = session.createConsumer(queue);
         Message msg = consumer.receive(1000);
-        assertNotNull(msg);        
+        assertNotNull(msg);
         // Don't ack the message.
-        
+
         // Reset the session.  This should cause the unacknowledged message to be re-delivered.
         session.close();
         session = connection.createSession(false, ActiveMQSession.INDIVIDUAL_ACKNOWLEDGE);
-                
+
         // Attempt to Consume the message...
         consumer = session.createConsumer(queue);
         msg = consumer.receive(2000);
-        assertNotNull(msg);        
+        assertNotNull(msg);
         msg.acknowledge();
-        
+
         session.close();
+    }
+
+    /**
+     * Tests that a durable consumer cannot be created for Individual Ack mode.
+     *
+     * @throws JMSException
+     */
+    public void testCreateDurableConsumerFails() throws JMSException {
+        connection.start();
+        Session session = connection.createSession(false, ActiveMQSession.INDIVIDUAL_ACKNOWLEDGE);
+        Topic dest = session.createTopic(getName());
+
+        try {
+            session.createDurableSubscriber(dest, getName());
+            fail("Should not be able to create duable subscriber.");
+        } catch(Exception e) {
+        }
     }
 
     protected String getQueueName() {
