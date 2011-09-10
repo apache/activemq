@@ -36,6 +36,7 @@ import javax.jms.MessageProducer;
 import javax.jms.ObjectMessage;
 import javax.jms.Session;
 import javax.jms.TextMessage;
+import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
@@ -43,6 +44,7 @@ import org.apache.activemq.CombinationTestSupport;
 import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.jmx.BrokerViewMBean;
+import org.apache.activemq.broker.jmx.QueueViewMBean;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTextMessage;
 import org.slf4j.Logger;
@@ -54,7 +56,6 @@ public class StompTest extends CombinationTestSupport {
     protected String bindAddress = "stomp://localhost:61613";
     protected String confUri = "xbean:org/apache/activemq/transport/stomp/stomp-auth-broker.xml";
     protected String jmsUri = "vm://localhost";
-
 
     private BrokerService broker;
     private StompConnection stompConnection = new StompConnection();
@@ -1398,6 +1399,8 @@ public class StompTest extends CombinationTestSupport {
         stompConnection.ack(frame5, "tx3");
         stompConnection.commit("tx3");
 
+        waitForFrameToTakeEffect();
+
         stompDisconnect();
     }
 
@@ -1464,7 +1467,6 @@ public class StompTest extends CombinationTestSupport {
         TextMessage message = (TextMessage)consumer.receive(5000);
         assertNotNull(message);
         assertEquals("system", message.getStringProperty(Stomp.Headers.Message.USERID));
-
     }
 
     public void testJMSXUserIDIsSetInStompMessage() throws Exception {
@@ -1493,9 +1495,7 @@ public class StompTest extends CombinationTestSupport {
         headers.put(Stomp.Headers.Message.SUBSCRIPTION, "Thisisnotallowed");
         headers.put(Stomp.Headers.Message.USERID, "Thisisnotallowed");
 
-
         stompConnection.connect("system", "manager");
-
 
         stompConnection.send("/queue/" + getQueueName(), "msg", null, headers);
 
@@ -1511,7 +1511,6 @@ public class StompTest extends CombinationTestSupport {
         assertNull(mess_headers.get(Stomp.Headers.Message.REDELIVERED));
         assertNull(mess_headers.get(Stomp.Headers.Message.SUBSCRIPTION));
         assertEquals("system", mess_headers.get(Stomp.Headers.Message.USERID));
-
     }
 
     public void testExpire() throws Exception {
@@ -1559,30 +1558,28 @@ public class StompTest extends CombinationTestSupport {
         assertNotNull(stompMessage);
         assertNull(stompMessage.getHeaders().get(Stomp.Headers.Message.PERSISTENT));
     }
-    
+
     public void testReceiptNewQueue() throws Exception {
-    	
+
         String frame = "CONNECT\n" + "login: system\n" + "passcode: manager\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
 
         frame = stompConnection.receiveFrame();
         assertTrue(frame.startsWith("CONNECTED"));
-        
+
         frame = "SUBSCRIBE\n" + "destination:/queue/" + getQueueName() + 1234 + "\n" + "id:8fee4b8-4e5c9f66-4703-e936-3" + "\n" + "receipt:8fee4b8-4e5c9f66-4703-e936-2" + "\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
-        
+
         StompFrame receipt = stompConnection.receive();
         assertTrue(receipt.getAction().startsWith("RECEIPT"));
         assertEquals("8fee4b8-4e5c9f66-4703-e936-2", receipt.getHeaders().get("receipt-id"));
 
-
         frame = "SEND\n destination:/queue/" + getQueueName() + 123 + "\ncontent-length:0" + " \n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
 
-
         frame = "SUBSCRIBE\n" + "destination:/queue/" + getQueueName() + 123 + "\n" + "id:8fee4b8-4e5c9f66-4703-e936-2" + "\n" + "receipt:8fee4b8-4e5c9f66-4703-e936-1" + "\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
-        
+
         receipt = stompConnection.receive();
         assertTrue(receipt.getAction().startsWith("RECEIPT"));
         assertEquals("8fee4b8-4e5c9f66-4703-e936-1", receipt.getHeaders().get("receipt-id"));
@@ -1596,6 +1593,51 @@ public class StompTest extends CombinationTestSupport {
 
         frame = "DISCONNECT\n" + "\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
+    }
+
+    public void testTransactedClientAckBrokerStats() throws Exception {
+        String frame = "CONNECT\n" + "login: system\n" + "passcode: manager\n\n" + Stomp.NULL;
+        stompConnection.sendFrame(frame);
+
+        frame = stompConnection.receiveFrame();
+        assertTrue(frame.startsWith("CONNECTED"));
+
+        sendMessage(getName());
+        sendMessage(getName());
+
+        stompConnection.begin("tx1");
+
+        frame = "SUBSCRIBE\n" + "destination:/queue/" + getQueueName() + "\n" + "ack:client\n\n" + Stomp.NULL;
+        stompConnection.sendFrame(frame);
+
+        StompFrame message = stompConnection.receive();
+        assertTrue(message.getAction().equals("MESSAGE"));
+        stompConnection.ack(message, "tx1");
+
+        message = stompConnection.receive();
+        assertTrue(message.getAction().equals("MESSAGE"));
+        stompConnection.ack(message, "tx1");
+
+        stompConnection.commit("tx1");
+
+        frame = "DISCONNECT\n" + "\n\n" + Stomp.NULL;
+        stompConnection.sendFrame(frame);
+
+        waitForFrameToTakeEffect();
+
+        QueueViewMBean queueView = getProxyToQueue(getQueueName());
+        assertEquals(2, queueView.getDispatchCount());
+        assertEquals(2, queueView.getDequeueCount());
+        assertEquals(0, queueView.getQueueSize());
+    }
+
+    private QueueViewMBean getProxyToQueue(String name) throws MalformedObjectNameException, JMSException {
+        ObjectName queueViewMBeanName = new ObjectName("org.apache.activemq"
+                + ":Type=Queue,Destination=" + name
+                + ",BrokerName=localhost");
+        QueueViewMBean proxy = (QueueViewMBean) broker.getManagementContext()
+                .newProxyInstance(queueViewMBeanName, QueueViewMBean.class, true);
+        return proxy;
     }
 
     protected void assertClients(int expected) throws Exception {

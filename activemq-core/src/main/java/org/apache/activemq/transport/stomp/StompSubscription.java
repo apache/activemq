@@ -113,7 +113,11 @@ public class StompSubscription {
             }
         }
 
-        unconsumedMessage.clear();
+        if (!unconsumedMessage.isEmpty()) {
+            MessageAck ack = new MessageAck(unconsumedMessage.getLast(), MessageAck.STANDARD_ACK_TYPE, unconsumedMessage.size());
+            protocolConverter.getStompTransport().sendToActiveMQ(ack);
+            unconsumedMessage.clear();
+        }
     }
 
     synchronized MessageAck onStompMessageAck(String messageId, TransactionId transactionId) {
@@ -129,7 +133,11 @@ public class StompSubscription {
         ack.setConsumerId(consumerInfo.getConsumerId());
 
         if (ackMode == CLIENT_ACK) {
-            ack.setAckType(MessageAck.STANDARD_ACK_TYPE);
+            if (transactionId == null) {
+                ack.setAckType(MessageAck.STANDARD_ACK_TYPE);
+            } else {
+                ack.setAckType(MessageAck.DELIVERED_ACK_TYPE);
+            }
             int count = 0;
             for (Iterator<?> iter = dispatchedMessage.entrySet().iterator(); iter.hasNext();) {
 
@@ -138,19 +146,15 @@ public class StompSubscription {
                 MessageId id = (MessageId)entry.getKey();
                 MessageDispatch msg = (MessageDispatch)entry.getValue();
 
-                if (ack.getFirstMessageId() == null) {
-                    ack.setFirstMessageId(id);
-                }
-
                 if (transactionId != null) {
                     if (!unconsumedMessage.contains(msg)) {
                         unconsumedMessage.add(msg);
+                        count++;
                     }
                 } else {
                     iter.remove();
+                    count++;
                 }
-
-                count++;
 
                 if (id.equals(msgId)) {
                     ack.setLastMessageId(id);
