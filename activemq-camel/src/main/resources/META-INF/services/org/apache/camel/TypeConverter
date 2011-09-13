@@ -15,4 +15,5 @@
 # limitations under the License.
 #
 
-org.apache.activemq.camel.converter
+org.apache.activemq.camel.converter.ActiveMQConverter
+org.apache.activemq.camel.converter.ActiveMQMessageConverter
