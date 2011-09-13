@@ -19,7 +19,6 @@ package org.apache.activemq.store.kahadb;
 import java.io.File;
 import java.io.IOException;
 import java.util.Set;
-
 import org.apache.activeio.journal.Journal;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.BrokerServiceAware;
@@ -27,11 +26,18 @@ import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
+import org.apache.activemq.command.LocalTransactionId;
 import org.apache.activemq.command.ProducerId;
+import org.apache.activemq.command.TransactionId;
+import org.apache.activemq.command.XATransactionId;
+import org.apache.activemq.protobuf.Buffer;
 import org.apache.activemq.store.MessageStore;
 import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.TopicMessageStore;
 import org.apache.activemq.store.TransactionStore;
+import org.apache.activemq.store.kahadb.data.KahaLocalTransactionId;
+import org.apache.activemq.store.kahadb.data.KahaTransactionInfo;
+import org.apache.activemq.store.kahadb.data.KahaXATransactionId;
 import org.apache.activemq.usage.SystemUsage;
 
 /**
@@ -46,6 +52,8 @@ public class KahaDBPersistenceAdapter implements PersistenceAdapter, BrokerServi
     private final KahaDBStore letter = new KahaDBStore();
 
     /**
+     * @param context
+     * @throws IOException
      * @see org.apache.activemq.store.PersistenceAdapter#beginTransaction(org.apache.activemq.broker.ConnectionContext)
      */
     public void beginTransaction(ConnectionContext context) throws IOException {
@@ -53,6 +61,8 @@ public class KahaDBPersistenceAdapter implements PersistenceAdapter, BrokerServi
     }
 
     /**
+     * @param sync
+     * @throws IOException
      * @see org.apache.activemq.store.PersistenceAdapter#checkpoint(boolean)
      */
     public void checkpoint(boolean sync) throws IOException {
@@ -60,6 +70,8 @@ public class KahaDBPersistenceAdapter implements PersistenceAdapter, BrokerServi
     }
 
     /**
+     * @param context
+     * @throws IOException
      * @see org.apache.activemq.store.PersistenceAdapter#commitTransaction(org.apache.activemq.broker.ConnectionContext)
      */
     public void commitTransaction(ConnectionContext context) throws IOException {
@@ -67,7 +79,9 @@ public class KahaDBPersistenceAdapter implements PersistenceAdapter, BrokerServi
     }
 
     /**
+     * @param destination
      * @return MessageStore
+     * @throws IOException
      * @see org.apache.activemq.store.PersistenceAdapter#createQueueMessageStore(org.apache.activemq.command.ActiveMQQueue)
      */
     public MessageStore createQueueMessageStore(ActiveMQQueue destination) throws IOException {
@@ -75,7 +89,9 @@ public class KahaDBPersistenceAdapter implements PersistenceAdapter, BrokerServi
     }
 
     /**
+     * @param destination
      * @return TopicMessageStore
+     * @throws IOException
      * @see org.apache.activemq.store.PersistenceAdapter#createTopicMessageStore(org.apache.activemq.command.ActiveMQTopic)
      */
     public TopicMessageStore createTopicMessageStore(ActiveMQTopic destination) throws IOException {
@@ -83,7 +99,8 @@ public class KahaDBPersistenceAdapter implements PersistenceAdapter, BrokerServi
     }
 
     /**
-     * @return TrandactionStore
+     * @return TransactionStore
+     * @throws IOException
      * @see org.apache.activemq.store.PersistenceAdapter#createTransactionStore()
      */
     public TransactionStore createTransactionStore() throws IOException {
@@ -91,6 +108,7 @@ public class KahaDBPersistenceAdapter implements PersistenceAdapter, BrokerServi
     }
 
     /**
+     * @throws IOException
      * @see org.apache.activemq.store.PersistenceAdapter#deleteAllMessages()
      */
     public void deleteAllMessages() throws IOException {
@@ -107,6 +125,7 @@ public class KahaDBPersistenceAdapter implements PersistenceAdapter, BrokerServi
 
     /**
      * @return lastMessageBrokerSequenceId
+     * @throws IOException
      * @see org.apache.activemq.store.PersistenceAdapter#getLastMessageBrokerSequenceId()
      */
     public long getLastMessageBrokerSequenceId() throws IOException {
@@ -118,6 +137,7 @@ public class KahaDBPersistenceAdapter implements PersistenceAdapter, BrokerServi
     }
 
     /**
+     * @param destination
      * @see org.apache.activemq.store.PersistenceAdapter#removeQueueMessageStore(org.apache.activemq.command.ActiveMQQueue)
      */
     public void removeQueueMessageStore(ActiveMQQueue destination) {
@@ -125,6 +145,7 @@ public class KahaDBPersistenceAdapter implements PersistenceAdapter, BrokerServi
     }
 
     /**
+     * @param destination
      * @see org.apache.activemq.store.PersistenceAdapter#removeTopicMessageStore(org.apache.activemq.command.ActiveMQTopic)
      */
     public void removeTopicMessageStore(ActiveMQTopic destination) {
@@ -132,6 +153,8 @@ public class KahaDBPersistenceAdapter implements PersistenceAdapter, BrokerServi
     }
 
     /**
+     * @param context
+     * @throws IOException
      * @see org.apache.activemq.store.PersistenceAdapter#rollbackTransaction(org.apache.activemq.broker.ConnectionContext)
      */
     public void rollbackTransaction(ConnectionContext context) throws IOException {
@@ -139,6 +162,7 @@ public class KahaDBPersistenceAdapter implements PersistenceAdapter, BrokerServi
     }
 
     /**
+     * @param brokerName
      * @see org.apache.activemq.store.PersistenceAdapter#setBrokerName(java.lang.String)
      */
     public void setBrokerName(String brokerName) {
@@ -146,6 +170,7 @@ public class KahaDBPersistenceAdapter implements PersistenceAdapter, BrokerServi
     }
 
     /**
+     * @param usageManager
      * @see org.apache.activemq.store.PersistenceAdapter#setUsageManager(org.apache.activemq.usage.SystemUsage)
      */
     public void setUsageManager(SystemUsage usageManager) {
@@ -161,6 +186,7 @@ public class KahaDBPersistenceAdapter implements PersistenceAdapter, BrokerServi
     }
 
     /**
+     * @throws Exception
      * @see org.apache.activemq.Service#start()
      */
     public void start() throws Exception {
@@ -168,6 +194,7 @@ public class KahaDBPersistenceAdapter implements PersistenceAdapter, BrokerServi
     }
 
     /**
+     * @throws Exception
      * @see org.apache.activemq.Service#stop()
      */
     public void stop() throws Exception {
@@ -176,7 +203,7 @@ public class KahaDBPersistenceAdapter implements PersistenceAdapter, BrokerServi
 
     /**
      * Get the journalMaxFileLength
-     *
+     * 
      * @return the journalMaxFileLength
      */
     public int getJournalMaxFileLength() {
@@ -186,6 +213,8 @@ public class KahaDBPersistenceAdapter implements PersistenceAdapter, BrokerServi
     /**
      * When set using Xbean, values of the form "20 Mb", "1024kb", and "1g" can
      * be used
+     * 
+     * @org.apache.xbean.Property propertyEditor="org.apache.activemq.util.MemoryIntPropertyEditor"
      */
     public void setJournalMaxFileLength(int journalMaxFileLength) {
         this.letter.setJournalMaxFileLength(journalMaxFileLength);
@@ -197,7 +226,7 @@ public class KahaDBPersistenceAdapter implements PersistenceAdapter, BrokerServi
     public void setMaxFailoverProducersToTrack(int maxFailoverProducersToTrack) {
         this.letter.setMaxFailoverProducersToTrack(maxFailoverProducersToTrack);
     }
-
+    
     public int getMaxFailoverProducersToTrack() {
         return this.letter.getMaxFailoverProducersToTrack();
     }
@@ -209,14 +238,14 @@ public class KahaDBPersistenceAdapter implements PersistenceAdapter, BrokerServi
     public void setFailoverProducersAuditDepth(int failoverProducersAuditDepth) {
         this.letter.setFailoverProducersAuditDepth(failoverProducersAuditDepth);
     }
-
+    
     public int getFailoverProducersAuditDepth() {
         return this.getFailoverProducersAuditDepth();
     }
-
+    
     /**
      * Get the checkpointInterval
-     *
+     * 
      * @return the checkpointInterval
      */
     public long getCheckpointInterval() {
@@ -225,8 +254,9 @@ public class KahaDBPersistenceAdapter implements PersistenceAdapter, BrokerServi
 
     /**
      * Set the checkpointInterval
-     *
-     * @param checkpointInterval the checkpointInterval to set
+     * 
+     * @param checkpointInterval
+     *            the checkpointInterval to set
      */
     public void setCheckpointInterval(long checkpointInterval) {
         this.letter.setCheckpointInterval(checkpointInterval);
@@ -234,7 +264,7 @@ public class KahaDBPersistenceAdapter implements PersistenceAdapter, BrokerServi
 
     /**
      * Get the cleanupInterval
-     *
+     * 
      * @return the cleanupInterval
      */
     public long getCleanupInterval() {
@@ -243,8 +273,9 @@ public class KahaDBPersistenceAdapter implements PersistenceAdapter, BrokerServi
 
     /**
      * Set the cleanupInterval
-     *
-     * @param cleanupInterval the cleanupInterval to set
+     * 
+     * @param cleanupInterval
+     *            the cleanupInterval to set
      */
     public void setCleanupInterval(long cleanupInterval) {
         this.letter.setCleanupInterval(cleanupInterval);
@@ -252,7 +283,7 @@ public class KahaDBPersistenceAdapter implements PersistenceAdapter, BrokerServi
 
     /**
      * Get the indexWriteBatchSize
-     *
+     * 
      * @return the indexWriteBatchSize
      */
     public int getIndexWriteBatchSize() {
@@ -262,8 +293,9 @@ public class KahaDBPersistenceAdapter implements PersistenceAdapter, BrokerServi
     /**
      * Set the indexWriteBatchSize
      * When set using Xbean, values of the form "20 Mb", "1024kb", and "1g" can be used
-     *
-     * @param indexWriteBatchSize the indexWriteBatchSize to set
+     * @org.apache.xbean.Property propertyEditor="org.apache.activemq.util.MemoryPropertyEditor"
+     * @param indexWriteBatchSize
+     *            the indexWriteBatchSize to set
      */
     public void setIndexWriteBatchSize(int indexWriteBatchSize) {
         this.letter.setIndexWriteBatchSize(indexWriteBatchSize);
@@ -271,7 +303,7 @@ public class KahaDBPersistenceAdapter implements PersistenceAdapter, BrokerServi
 
     /**
      * Get the journalMaxWriteBatchSize
-     *
+     * 
      * @return the journalMaxWriteBatchSize
      */
     public int getJournalMaxWriteBatchSize() {
@@ -280,9 +312,10 @@ public class KahaDBPersistenceAdapter implements PersistenceAdapter, BrokerServi
 
     /**
      * Set the journalMaxWriteBatchSize
-     * * When set using Xbean, values of the form "20 Mb", "1024kb", and "1g" can be used
-     *
-     * @param journalMaxWriteBatchSize the journalMaxWriteBatchSize to set
+     *  * When set using Xbean, values of the form "20 Mb", "1024kb", and "1g" can be used
+     * @org.apache.xbean.Property propertyEditor="org.apache.activemq.util.MemoryPropertyEditor"
+     * @param journalMaxWriteBatchSize
+     *            the journalMaxWriteBatchSize to set
      */
     public void setJournalMaxWriteBatchSize(int journalMaxWriteBatchSize) {
         this.letter.setJournalMaxWriteBatchSize(journalMaxWriteBatchSize);
@@ -290,7 +323,7 @@ public class KahaDBPersistenceAdapter implements PersistenceAdapter, BrokerServi
 
     /**
      * Get the enableIndexWriteAsync
-     *
+     * 
      * @return the enableIndexWriteAsync
      */
     public boolean isEnableIndexWriteAsync() {
@@ -299,8 +332,9 @@ public class KahaDBPersistenceAdapter implements PersistenceAdapter, BrokerServi
 
     /**
      * Set the enableIndexWriteAsync
-     *
-     * @param enableIndexWriteAsync the enableIndexWriteAsync to set
+     * 
+     * @param enableIndexWriteAsync
+     *            the enableIndexWriteAsync to set
      */
     public void setEnableIndexWriteAsync(boolean enableIndexWriteAsync) {
         this.letter.setEnableIndexWriteAsync(enableIndexWriteAsync);
@@ -308,7 +342,7 @@ public class KahaDBPersistenceAdapter implements PersistenceAdapter, BrokerServi
 
     /**
      * Get the directory
-     *
+     * 
      * @return the directory
      */
     public File getDirectory() {
@@ -316,6 +350,7 @@ public class KahaDBPersistenceAdapter implements PersistenceAdapter, BrokerServi
     }
 
     /**
+     * @param dir
      * @see org.apache.activemq.store.PersistenceAdapter#setDirectory(java.io.File)
      */
     public void setDirectory(File dir) {
@@ -324,7 +359,7 @@ public class KahaDBPersistenceAdapter implements PersistenceAdapter, BrokerServi
 
     /**
      * Get the enableJournalDiskSyncs
-     *
+     * 
      * @return the enableJournalDiskSyncs
      */
     public boolean isEnableJournalDiskSyncs() {
@@ -333,8 +368,9 @@ public class KahaDBPersistenceAdapter implements PersistenceAdapter, BrokerServi
 
     /**
      * Set the enableJournalDiskSyncs
-     *
-     * @param enableJournalDiskSyncs the enableJournalDiskSyncs to set
+     * 
+     * @param enableJournalDiskSyncs
+     *            the enableJournalDiskSyncs to set
      */
     public void setEnableJournalDiskSyncs(boolean enableJournalDiskSyncs) {
         this.letter.setEnableJournalDiskSyncs(enableJournalDiskSyncs);
@@ -342,7 +378,7 @@ public class KahaDBPersistenceAdapter implements PersistenceAdapter, BrokerServi
 
     /**
      * Get the indexCacheSize
-     *
+     * 
      * @return the indexCacheSize
      */
     public int getIndexCacheSize() {
@@ -352,8 +388,9 @@ public class KahaDBPersistenceAdapter implements PersistenceAdapter, BrokerServi
     /**
      * Set the indexCacheSize
      * When set using Xbean, values of the form "20 Mb", "1024kb", and "1g" can be used
-     *
-     * @param indexCacheSize the indexCacheSize to set
+     * @org.apache.xbean.Property propertyEditor="org.apache.activemq.util.MemoryPropertyEditor"
+     * @param indexCacheSize
+     *            the indexCacheSize to set
      */
     public void setIndexCacheSize(int indexCacheSize) {
         this.letter.setIndexCacheSize(indexCacheSize);
@@ -361,7 +398,7 @@ public class KahaDBPersistenceAdapter implements PersistenceAdapter, BrokerServi
 
     /**
      * Get the ignoreMissingJournalfiles
-     *
+     * 
      * @return the ignoreMissingJournalfiles
      */
     public boolean isIgnoreMissingJournalfiles() {
@@ -370,8 +407,9 @@ public class KahaDBPersistenceAdapter implements PersistenceAdapter, BrokerServi
 
     /**
      * Set the ignoreMissingJournalfiles
-     *
-     * @param ignoreMissingJournalfiles the ignoreMissingJournalfiles to set
+     * 
+     * @param ignoreMissingJournalfiles
+     *            the ignoreMissingJournalfiles to set
      */
     public void setIgnoreMissingJournalfiles(boolean ignoreMissingJournalfiles) {
         this.letter.setIgnoreMissingJournalfiles(ignoreMissingJournalfiles);
@@ -432,14 +470,14 @@ public class KahaDBPersistenceAdapter implements PersistenceAdapter, BrokerServi
     public int getMaxAsyncJobs() {
         return letter.getMaxAsyncJobs();
     }
-
     /**
-     * @param maxAsyncJobs the maxAsyncJobs to set
+     * @param maxAsyncJobs
+     *            the maxAsyncJobs to set
      */
     public void setMaxAsyncJobs(int maxAsyncJobs) {
         letter.setMaxAsyncJobs(maxAsyncJobs);
     }
-
+    
     /**
      * @return the databaseLockedWaitDelay
      */
@@ -451,7 +489,7 @@ public class KahaDBPersistenceAdapter implements PersistenceAdapter, BrokerServi
      * @param databaseLockedWaitDelay the databaseLockedWaitDelay to set
      */
     public void setDatabaseLockedWaitDelay(int databaseLockedWaitDelay) {
-        letter.setDatabaseLockedWaitDelay(databaseLockedWaitDelay);
+       letter.setDatabaseLockedWaitDelay(databaseLockedWaitDelay);
     }
 
     public boolean getForceRecoverIndex() {
@@ -462,17 +500,31 @@ public class KahaDBPersistenceAdapter implements PersistenceAdapter, BrokerServi
         letter.setForceRecoverIndex(forceRecoverIndex);
     }
 
-    public boolean isJournalPerDestination() {
-        return letter.isJournalPerDestination();
-    }
-
-    public void setJournalPerDestination(boolean journalPerDestination) {
-        letter.setJournalPerDestination(journalPerDestination);
-    }
-
-    //  for testing
     public KahaDBStore getStore() {
         return letter;
+    }
+
+    public KahaTransactionInfo createTransactionInfo(TransactionId txid) {
+        if (txid == null) {
+            return null;
+        }
+        KahaTransactionInfo rc = new KahaTransactionInfo();
+
+        if (txid.isLocalTransaction()) {
+            LocalTransactionId t = (LocalTransactionId) txid;
+            KahaLocalTransactionId kahaTxId = new KahaLocalTransactionId();
+            kahaTxId.setConnectionId(t.getConnectionId().getValue());
+            kahaTxId.setTransacitonId(t.getValue());
+            rc.setLocalTransacitonId(kahaTxId);
+        } else {
+            XATransactionId t = (XATransactionId) txid;
+            KahaXATransactionId kahaTxId = new KahaXATransactionId();
+            kahaTxId.setBranchQualifier(new Buffer(t.getBranchQualifier()));
+            kahaTxId.setGlobalTransactionId(new Buffer(t.getGlobalTransactionId()));
+            kahaTxId.setFormatId(t.getFormatId());
+            rc.setXaTransacitonId(kahaTxId);
+        }
+        return rc;
     }
 
     @Override

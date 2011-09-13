@@ -37,6 +37,8 @@ import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.command.TransactionInfo;
 import org.apache.activemq.command.XATransactionId;
 import org.apache.activemq.util.JMXSupport;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Used to simulate the recovery that occurs when a broker shuts down.
@@ -44,7 +46,7 @@ import org.apache.activemq.util.JMXSupport;
  * 
  */
 public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
-
+    protected static final Logger LOG = LoggerFactory.getLogger(XARecoveryBrokerTest.class);
     public void testPreparedJmxView() throws Exception {
 
         ActiveMQDestination destination = createDestination();
@@ -202,7 +204,7 @@ public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
         }
 
         // We should get the committed transactions.
-        for (int i = 0; i < 4; i++) {
+        for (int i = 0; i < expectedMessageCount(4, destination); i++) {
             Message m = receiveMessage(connection);
             assertNotNull(m);
         }
@@ -249,7 +251,7 @@ public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
         ConsumerInfo consumerInfo = createConsumerInfo(sessionInfo, destination);
         connection.send(consumerInfo);
 
-        for (int i = 0; i < 4; i++) {
+        for (int i = 0; i < expectedMessageCount(4, destination); i++) {
             Message m = receiveMessage(connection);
             assertNotNull(m);
         }
@@ -276,22 +278,26 @@ public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
             connection.send(message);
         }
 
-        // Setup the consumer and receive the message.
-        ConsumerInfo consumerInfo = createConsumerInfo(sessionInfo, destination);
-        connection.send(consumerInfo);
-
         // Begin the transaction.
         XATransactionId txid = createXATransaction(sessionInfo);
         connection.send(createBeginTransaction(connectionInfo, txid));
-        Message m = null;
-        for (int i = 0; i < 4; i++) {
-            m = receiveMessage(connection);
-            assertNotNull(m);
-        }
 
-        MessageAck ack = createAck(consumerInfo, m, 4, MessageAck.STANDARD_ACK_TYPE);
-        ack.setTransactionId(txid);
-        connection.send(ack);
+        ConsumerInfo consumerInfo;
+        Message m = null;
+        for (ActiveMQDestination dest : destinationList(destination)) {
+            // Setup the consumer and receive the message.
+            consumerInfo = createConsumerInfo(sessionInfo, dest);
+            connection.send(consumerInfo);
+
+            for (int i = 0; i < 4; i++) {
+                m = receiveMessage(connection);
+                assertNotNull(m);
+            }
+
+            MessageAck ack = createAck(consumerInfo, m, 4, MessageAck.STANDARD_ACK_TYPE);
+            ack.setTransactionId(txid);
+            connection.send(ack);
+        }
 
         // Commit
         connection.request(createCommitTransaction1Phase(connectionInfo, txid));
@@ -334,23 +340,27 @@ public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
             connection.send(message);
         }
 
-        // Setup the consumer and receive the message.
-        ConsumerInfo consumerInfo = createConsumerInfo(sessionInfo, destination);
-        connection.send(consumerInfo);
-
         // Begin the transaction.
         XATransactionId txid = createXATransaction(sessionInfo);
         connection.send(createBeginTransaction(connectionInfo, txid));
-        Message m = null;
-        for (int i = 0; i < 4; i++) {
-            m = receiveMessage(connection);
-            assertNotNull(m);
-        }
 
-        // one ack with last received, mimic a beforeEnd synchronization
-        MessageAck ack = createAck(consumerInfo, m, 4, MessageAck.STANDARD_ACK_TYPE);
-        ack.setTransactionId(txid);
-        connection.send(ack);
+        ConsumerInfo consumerInfo;
+        Message m = null;
+        for (ActiveMQDestination dest : destinationList(destination)) {
+            // Setup the consumer and receive the message.
+            consumerInfo = createConsumerInfo(sessionInfo, dest);
+            connection.send(consumerInfo);
+
+            for (int i = 0; i < 4; i++) {
+                m = receiveMessage(connection);
+                assertNotNull(m);
+            }
+
+            // one ack with last received, mimic a beforeEnd synchronization
+            MessageAck ack = createAck(consumerInfo, m, 4, MessageAck.STANDARD_ACK_TYPE);
+            ack.setTransactionId(txid);
+            connection.send(ack);
+        }
 
         connection.request(createPrepareTransaction(connectionInfo, txid));
 
@@ -404,23 +414,27 @@ public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
             connection.send(message);
         }
 
-        // Setup the consumer and receive the message.
-        ConsumerInfo consumerInfo = createConsumerInfo(sessionInfo, destination);
-        connection.send(consumerInfo);
-
         // Begin the transaction.
         XATransactionId txid = createXATransaction(sessionInfo);
         connection.send(createBeginTransaction(connectionInfo, txid));
-        Message message = null;
-        for (int i = 0; i < 4; i++) {
-            message = receiveMessage(connection);
-            assertNotNull(message);
-        }
 
-        // one ack with last received, mimic a beforeEnd synchronization
-        MessageAck ack = createAck(consumerInfo, message, 4, MessageAck.STANDARD_ACK_TYPE);
-        ack.setTransactionId(txid);
-        connection.send(ack);
+        ConsumerInfo consumerInfo;
+        Message message = null;
+        for (ActiveMQDestination dest : destinationList(destination)) {
+            // Setup the consumer and receive the message.
+            consumerInfo = createConsumerInfo(sessionInfo, dest);
+            connection.send(consumerInfo);
+
+            for (int i = 0; i < 4; i++) {
+                message = receiveMessage(connection);
+                assertNotNull(message);
+            }
+
+            // one ack with last received, mimic a beforeEnd synchronization
+            MessageAck ack = createAck(consumerInfo, message, 4, MessageAck.STANDARD_ACK_TYPE);
+            ack.setTransactionId(txid);
+            connection.send(ack);
+        }
 
         connection.request(createPrepareTransaction(connectionInfo, txid));
 
@@ -454,13 +468,20 @@ public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
         // Begin new transaction for redelivery
         txid = createXATransaction(sessionInfo);
         connection.send(createBeginTransaction(connectionInfo, txid));
-        for (int i = 0; i < 4; i++) {
-            message = receiveMessage(connection);
-            assertNotNull(message);
+
+        for (ActiveMQDestination dest : destinationList(destination)) {
+            // Setup the consumer and receive the message.
+            consumerInfo = createConsumerInfo(sessionInfo, dest);
+            connection.send(consumerInfo);
+
+            for (int i = 0; i < 4; i++) {
+                message = receiveMessage(connection);
+                assertNotNull(message);
+            }
+            MessageAck ack = createAck(consumerInfo, message, 4, MessageAck.STANDARD_ACK_TYPE);
+            ack.setTransactionId(txid);
+            connection.send(ack);
         }
-        ack = createAck(consumerInfo, message, 4, MessageAck.STANDARD_ACK_TYPE);
-        ack.setTransactionId(txid);
-        connection.send(ack);
 
         // Commit
         connection.request(createCommitTransaction1Phase(connectionInfo, txid));
@@ -468,6 +489,14 @@ public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
         // validate recovery complete
         dataArrayResponse = (DataArrayResponse)connection.request(recoverInfo);
         assertEquals("there are no prepared tx", 0, dataArrayResponse.getData().length);
+    }
+
+    private ActiveMQDestination[] destinationList(ActiveMQDestination dest) {
+        return dest.isComposite() ? dest.getCompositeDestinations() : new ActiveMQDestination[]{dest};
+    }
+
+    private int expectedMessageCount(int i, ActiveMQDestination destination) {
+        return i * (destination.isComposite() ? destination.getCompositeDestinations().length : 1);
     }
 
     public void testQueuePersistentUncommittedAcksLostOnRestart() throws Exception {

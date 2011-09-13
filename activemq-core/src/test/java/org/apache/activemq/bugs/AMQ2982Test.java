@@ -16,7 +16,11 @@
  */
 package org.apache.activemq.bugs;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.concurrent.CountDownLatch;
 
 import javax.jms.BytesMessage;
@@ -28,6 +32,7 @@ import javax.jms.MessageConsumer;
 import javax.jms.MessageListener;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
+
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.RedeliveryPolicy;
 import org.apache.activemq.broker.BrokerService;
@@ -37,8 +42,6 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 
 public class AMQ2982Test {
 
@@ -62,7 +65,7 @@ public class AMQ2982Test {
             // ensure save memory publishing, use the right lock
             indexLock.readLock().lock();
             try {
-                return getJournalManager().getFileMap().size();
+                return getJournal().getFileMap().size();
             } finally {
                 indexLock.readLock().unlock();
             }

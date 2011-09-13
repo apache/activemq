@@ -31,9 +31,9 @@ public class SimpleDurableTopicTest extends SimpleTopicTest {
     protected long initialConsumerDelay = 0;
     @Override
     protected void setUp() throws Exception {
-        numberOfDestinations=10;
+        numberOfDestinations=1;
         numberOfConsumers = 1;
-        numberofProducers = Integer.parseInt(System.getProperty("SimpleDurableTopicTest.numberofProducers", "1"));
+        numberofProducers = Integer.parseInt(System.getProperty("SimpleDurableTopicTest.numberofProducers", "20"), 20);
         sampleCount= Integer.parseInt(System.getProperty("SimpleDurableTopicTest.sampleCount", "1000"), 10);
         playloadSize = 1024;
         super.setUp();

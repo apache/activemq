@@ -16,6 +16,10 @@
  */
 package org.apache.activemq.bugs;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -30,6 +34,7 @@ import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
+
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.store.kahadb.KahaDBStore;
@@ -37,7 +42,6 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import static org.junit.Assert.*;
 
 public class AMQ2983Test {
 
@@ -63,7 +67,7 @@ public class AMQ2983Test {
             // ensure save memory publishing, use the right lock
             indexLock.readLock().lock();
             try {
-                return getJournalManager().getFileMap().size();
+                return getJournal().getFileMap().size();
             } finally {
                 indexLock.readLock().unlock();
             }

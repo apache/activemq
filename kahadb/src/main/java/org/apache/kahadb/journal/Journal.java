@@ -382,7 +382,7 @@ public class Journal {
         started = false;
     }
 
-    synchronized void cleanup() {
+    protected synchronized void cleanup() {
         if (accessorPool != null) {
             accessorPool.disposeUnused();
         }

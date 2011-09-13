@@ -17,7 +17,6 @@
 package org.apache.activemq.usecases;
 
 import java.util.Vector;
-
 import javax.jms.Connection;
 import javax.jms.JMSException;
 import javax.jms.Message;
@@ -73,7 +72,7 @@ public class DurableSubscriptionOfflineTest extends org.apache.activemq.TestSupp
     public static Test suite() {
         return suite(DurableSubscriptionOfflineTest.class);
     }
-
+    
     protected void setUp() throws Exception {
         exceptions.clear();
         topic = (ActiveMQTopic) createDestination();
@@ -89,9 +88,9 @@ public class DurableSubscriptionOfflineTest extends org.apache.activemq.TestSupp
     private void createBroker() throws Exception {
         createBroker(true);
     }
-
+    
     private void createBroker(boolean deleteAllMessages) throws Exception {
-        broker = BrokerFactory.createBroker("broker:(vm://" + getName(true) + ")");
+        broker = BrokerFactory.createBroker("broker:(vm://" + getName(true) +")");
         broker.setBrokerName(getName(true));
         broker.setDeleteAllMessagesOnStartup(deleteAllMessages);
         broker.getManagementContext().setCreateConnector(false);
@@ -105,14 +104,14 @@ public class DurableSubscriptionOfflineTest extends org.apache.activemq.TestSupp
             policyMap.setDefaultEntry(policy);
             broker.setDestinationPolicy(policyMap);
         }
-
+        
         setDefaultPersistenceAdapter(broker);
         if (broker.getPersistenceAdapter() instanceof JDBCPersistenceAdapter) {
             // ensure it kicks in during tests
-            ((JDBCPersistenceAdapter) broker.getPersistenceAdapter()).setCleanupPeriod(2 * 1000);
+            ((JDBCPersistenceAdapter)broker.getPersistenceAdapter()).setCleanupPeriod(2*1000);
         } else if (broker.getPersistenceAdapter() instanceof KahaDBPersistenceAdapter) {
             // have lots of journal files
-            ((KahaDBPersistenceAdapter) broker.getPersistenceAdapter()).setJournalMaxFileLength(journalMaxFileLength);
+            ((KahaDBPersistenceAdapter)broker.getPersistenceAdapter()).setJournalMaxFileLength(journalMaxFileLength);
         }
         broker.start();
     }
@@ -124,9 +123,9 @@ public class DurableSubscriptionOfflineTest extends org.apache.activemq.TestSupp
 
     public void initCombosForTestConsumeOnlyMatchedMessages() throws Exception {
         this.addCombinationValues("defaultPersistenceAdapter",
-                new Object[]{PersistenceAdapterChoice.KahaDB, PersistenceAdapterChoice.JDBC});
+                new Object[]{ PersistenceAdapterChoice.KahaDB, PersistenceAdapterChoice.JDBC});
         this.addCombinationValues("usePrioritySupport",
-                new Object[]{Boolean.TRUE, Boolean.FALSE});
+                new Object[]{ Boolean.TRUE, Boolean.FALSE});
     }
 
     public void testConsumeOnlyMatchedMessages() throws Exception {
@@ -171,110 +170,110 @@ public class DurableSubscriptionOfflineTest extends org.apache.activemq.TestSupp
         assertEquals(sent, listener.count);
     }
 
-    public void testConsumeAllMatchedMessages() throws Exception {
-        // create durable subscription
-        Connection con = createConnection();
-        Session session = con.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        session.createDurableSubscriber(topic, "SubsId", "filter = 'true'", true);
-        session.close();
-        con.close();
+     public void testConsumeAllMatchedMessages() throws Exception {
+         // create durable subscription
+         Connection con = createConnection();
+         Session session = con.createSession(false, Session.AUTO_ACKNOWLEDGE);
+         session.createDurableSubscriber(topic, "SubsId", "filter = 'true'", true);
+         session.close();
+         con.close();
 
-        // send messages
-        con = createConnection();
-        session = con.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        MessageProducer producer = session.createProducer(null);
+         // send messages
+         con = createConnection();
+         session = con.createSession(false, Session.AUTO_ACKNOWLEDGE);
+         MessageProducer producer = session.createProducer(null);
 
-        int sent = 0;
-        for (int i = 0; i < 10; i++) {
-            sent++;
-            Message message = session.createMessage();
-            message.setStringProperty("filter", "true");
-            producer.send(topic, message);
-        }
+         int sent = 0;
+         for (int i = 0; i < 10; i++) {
+             sent++;
+             Message message = session.createMessage();
+             message.setStringProperty("filter", "true");
+             producer.send(topic, message);
+         }
 
-        Thread.sleep(1 * 1000);
+         Thread.sleep(1 * 1000);
 
-        session.close();
-        con.close();
+         session.close();
+         con.close();
 
-        // consume messages
-        con = createConnection();
-        session = con.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        MessageConsumer consumer = session.createDurableSubscriber(topic, "SubsId", "filter = 'true'", true);
-        Listener listener = new Listener();
-        consumer.setMessageListener(listener);
+         // consume messages
+         con = createConnection();
+         session = con.createSession(false, Session.AUTO_ACKNOWLEDGE);
+         MessageConsumer consumer = session.createDurableSubscriber(topic, "SubsId", "filter = 'true'", true);
+         Listener listener = new Listener();
+         consumer.setMessageListener(listener);
 
-        Thread.sleep(3 * 1000);
+         Thread.sleep(3 * 1000);
 
-        session.close();
-        con.close();
+         session.close();
+         con.close();
 
-        assertEquals(sent, listener.count);
-    }
+         assertEquals(sent, listener.count);
+     }
 
-
+    
     public void initCombosForTestVerifyAllConsumedAreAcked() throws Exception {
         this.addCombinationValues("defaultPersistenceAdapter",
-                new Object[]{PersistenceAdapterChoice.KahaDB, PersistenceAdapterChoice.JDBC});
+               new Object[]{ PersistenceAdapterChoice.KahaDB, PersistenceAdapterChoice.JDBC});
         this.addCombinationValues("usePrioritySupport",
-                new Object[]{Boolean.TRUE, Boolean.FALSE});
+                new Object[]{ Boolean.TRUE, Boolean.FALSE});
     }
 
-    public void testVerifyAllConsumedAreAcked() throws Exception {
-        // create durable subscription
-        Connection con = createConnection();
-        Session session = con.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        session.createDurableSubscriber(topic, "SubsId", "filter = 'true'", true);
-        session.close();
-        con.close();
+     public void testVerifyAllConsumedAreAcked() throws Exception {
+         // create durable subscription
+         Connection con = createConnection();
+         Session session = con.createSession(false, Session.AUTO_ACKNOWLEDGE);
+         session.createDurableSubscriber(topic, "SubsId", "filter = 'true'", true);
+         session.close();
+         con.close();
 
-        // send messages
-        con = createConnection();
-        session = con.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        MessageProducer producer = session.createProducer(null);
+         // send messages
+         con = createConnection();
+         session = con.createSession(false, Session.AUTO_ACKNOWLEDGE);
+         MessageProducer producer = session.createProducer(null);
 
-        int sent = 0;
-        for (int i = 0; i < 10; i++) {
-            sent++;
-            Message message = session.createMessage();
-            message.setStringProperty("filter", "true");
-            producer.send(topic, message);
-        }
+         int sent = 0;
+         for (int i = 0; i < 10; i++) {
+             sent++;
+             Message message = session.createMessage();
+             message.setStringProperty("filter", "true");
+             producer.send(topic, message);
+         }
 
-        Thread.sleep(1 * 1000);
+         Thread.sleep(1 * 1000);
 
-        session.close();
-        con.close();
+         session.close();
+         con.close();
 
-        // consume messages
-        con = createConnection();
-        session = con.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        MessageConsumer consumer = session.createDurableSubscriber(topic, "SubsId", "filter = 'true'", true);
-        Listener listener = new Listener();
-        consumer.setMessageListener(listener);
+         // consume messages
+         con = createConnection();
+         session = con.createSession(false, Session.AUTO_ACKNOWLEDGE);
+         MessageConsumer consumer = session.createDurableSubscriber(topic, "SubsId", "filter = 'true'", true);
+         Listener listener = new Listener();
+         consumer.setMessageListener(listener);
 
-        Thread.sleep(3 * 1000);
+         Thread.sleep(3 * 1000);
 
-        session.close();
-        con.close();
+         session.close();
+         con.close();
 
-        LOG.info("Consumed: " + listener.count);
-        assertEquals(sent, listener.count);
+         LOG.info("Consumed: " + listener.count);
+         assertEquals(sent, listener.count);
 
-        // consume messages again, should not get any
-        con = createConnection();
-        session = con.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        consumer = session.createDurableSubscriber(topic, "SubsId", "filter = 'true'", true);
-        listener = new Listener();
-        consumer.setMessageListener(listener);
+         // consume messages again, should not get any
+         con = createConnection();
+         session = con.createSession(false, Session.AUTO_ACKNOWLEDGE);
+         consumer = session.createDurableSubscriber(topic, "SubsId", "filter = 'true'", true);
+         listener = new Listener();
+         consumer.setMessageListener(listener);
 
-        Thread.sleep(3 * 1000);
+         Thread.sleep(3 * 1000);
 
-        session.close();
-        con.close();
+         session.close();
+         con.close();
 
-        assertEquals(0, listener.count);
-    }
+         assertEquals(0, listener.count);
+     }
 
     public void testTwoOfflineSubscriptionCanConsume() throws Exception {
         // create durable subscription 1
@@ -445,9 +444,9 @@ public class DurableSubscriptionOfflineTest extends org.apache.activemq.TestSupp
 
     public void initCombosForTestOfflineSubscriptionCanConsumeAfterOnlineSubs() throws Exception {
         this.addCombinationValues("defaultPersistenceAdapter",
-                new Object[]{PersistenceAdapterChoice.KahaDB, PersistenceAdapterChoice.JDBC});
+                new Object[]{ PersistenceAdapterChoice.KahaDB, PersistenceAdapterChoice.JDBC});
         this.addCombinationValues("usePrioritySupport",
-                new Object[]{Boolean.TRUE, Boolean.FALSE});
+                new Object[]{ Boolean.TRUE, Boolean.FALSE});
     }
 
     public void testOfflineSubscriptionCanConsumeAfterOnlineSubs() throws Exception {
@@ -596,15 +595,14 @@ public class DurableSubscriptionOfflineTest extends org.apache.activemq.TestSupp
         con.close();
 
         assertEquals("offline consumer got all", sent, listener.count);
-    }
+    }    
 
     public void initCombosForTestMixOfOnLineAndOfflineSubsGetAllMatched() throws Exception {
         this.addCombinationValues("defaultPersistenceAdapter",
-                new Object[]{PersistenceAdapterChoice.KahaDB, PersistenceAdapterChoice.JDBC});
+                new Object[]{ PersistenceAdapterChoice.KahaDB, PersistenceAdapterChoice.JDBC});
     }
 
     private static String filter = "$a='A1' AND (($b=true AND $c=true) OR ($d='D1' OR $d='D2'))";
-
     public void testMixOfOnLineAndOfflineSubsGetAllMatched() throws Exception {
         // create offline subs 1
         Connection con = createConnection("offCli1");
@@ -752,9 +750,9 @@ public class DurableSubscriptionOfflineTest extends org.apache.activemq.TestSupp
 
     public void initCombosForTestOfflineSubscriptionWithSelectorAfterRestart() throws Exception {
         this.addCombinationValues("defaultPersistenceAdapter",
-                new Object[]{PersistenceAdapterChoice.KahaDB, PersistenceAdapterChoice.JDBC});
+                new Object[]{ PersistenceAdapterChoice.KahaDB, PersistenceAdapterChoice.JDBC});
     }
-
+    
     public void testOfflineSubscriptionWithSelectorAfterRestart() throws Exception {
         // create offline subs 1
         Connection con = createConnection("offCli1");
@@ -795,7 +793,7 @@ public class DurableSubscriptionOfflineTest extends org.apache.activemq.TestSupp
         Thread.sleep(3 * 1000);
         broker.stop();
         createBroker(false /*deleteAllMessages*/);
-
+ 
         // send more messages
         con = createConnection();
         session = con.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -842,7 +840,7 @@ public class DurableSubscriptionOfflineTest extends org.apache.activemq.TestSupp
 
     public void initCombosForTestOfflineAfterRestart() throws Exception {
         this.addCombinationValues("defaultPersistenceAdapter",
-                new Object[]{PersistenceAdapterChoice.KahaDB, PersistenceAdapterChoice.JDBC});
+                new Object[]{ PersistenceAdapterChoice.KahaDB, PersistenceAdapterChoice.JDBC});
     }
 
     public void testOfflineSubscriptionAfterRestart() throws Exception {
@@ -978,7 +976,7 @@ public class DurableSubscriptionOfflineTest extends org.apache.activemq.TestSupp
 
         int filtered = 0;
         for (int i = 0; i < 10; i++) {
-            boolean filter = (i % 2 == 0); //(int) (Math.random() * 2) >= 1;
+            boolean filter = (i %2 == 0); //(int) (Math.random() * 2) >= 1;
             if (filter)
                 filtered++;
 
@@ -1076,7 +1074,7 @@ public class DurableSubscriptionOfflineTest extends org.apache.activemq.TestSupp
         sent = 0;
         for (int i = 0; i < 2; i++) {
             Message message = session.createMessage();
-            message.setStringProperty("filter", i == 1 ? "true" : "false");
+            message.setStringProperty("filter", i==1 ? "true" : "false");
             producer.send(topic, message);
             sent++;
         }
@@ -1084,7 +1082,7 @@ public class DurableSubscriptionOfflineTest extends org.apache.activemq.TestSupp
         Thread.sleep(1 * 1000);
         session.close();
         con.close();
-
+ 
         LOG.info("cli1 again, should get 1 new ones");
         con = createConnection("cli1");
         session = con.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -1206,7 +1204,7 @@ public class DurableSubscriptionOfflineTest extends org.apache.activemq.TestSupp
         MessageProducer producer = session.createProducer(null);
 
         final int toSend = 500;
-        final String payload = new byte[40 * 1024].toString();
+        final String payload = new byte[40*1024].toString();
         int sent = 0;
         for (int i = sent; i < toSend; i++) {
             Message message = session.createTextMessage(payload);
@@ -1233,7 +1231,7 @@ public class DurableSubscriptionOfflineTest extends org.apache.activemq.TestSupp
         consumer.setMessageListener(listener);
         assertTrue("got all sent", Wait.waitFor(new Wait.Condition() {
             public boolean isSatisified() throws Exception {
-                LOG.info("Want: " + toSend + ", current: " + listener.count);
+                LOG.info("Want: " + toSend  + ", current: " + listener.count);
                 return listener.count == toSend;
             }
         }));
@@ -1243,7 +1241,7 @@ public class DurableSubscriptionOfflineTest extends org.apache.activemq.TestSupp
         destroyBroker();
         createBroker(false);
         KahaDBPersistenceAdapter pa = (KahaDBPersistenceAdapter) broker.getPersistenceAdapter();
-        assertEquals("only one journal file left after restart", 1, pa.getStore().getJournalManager().getFileMap().size());
+        assertEquals("only one journal file left after restart", 1, pa.getStore().getJournal().getFileMap().size());
     }
 
     public static class Listener implements MessageListener {
@@ -1252,23 +1250,20 @@ public class DurableSubscriptionOfflineTest extends org.apache.activemq.TestSupp
 
         Listener() {
         }
-
         Listener(String id) {
             this.id = id;
         }
-
         public void onMessage(Message message) {
             count++;
             if (id != null) {
                 try {
                     LOG.info(id + ", " + message.getJMSMessageID());
-                } catch (Exception ignored) {
-                }
+                } catch (Exception ignored) {}
             }
         }
     }
 
-    public class FilterCheckListener extends Listener {
+    public class FilterCheckListener extends Listener  {
 
         public void onMessage(Message message) {
             count++;
@@ -1278,11 +1273,13 @@ public class DurableSubscriptionOfflineTest extends org.apache.activemq.TestSupp
                 if (b != null) {
                     boolean c = message.getBooleanProperty("$c");
                     assertTrue("", c);
-                } else {
+                }
+                else {
                     String d = message.getStringProperty("$d");
                     assertTrue("", "D1".equals(d) || "D2".equals(d));
                 }
-            } catch (JMSException e) {
+            }
+            catch (JMSException e) {
                 exceptions.add(e);
             }
         }

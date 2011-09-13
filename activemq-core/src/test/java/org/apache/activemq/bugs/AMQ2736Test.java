@@ -27,6 +27,8 @@ import org.apache.activemq.store.kahadb.KahaDBStore;
 import org.apache.activemq.util.DefaultIOExceptionHandler;
 import org.junit.After;
 import org.junit.Test;
+
+
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
@@ -56,7 +58,7 @@ public class AMQ2736Test {
 
         // test hack, close the journal to ensure no further journal updates when broker stops
         // mimic kill -9 in terms of no normal shutdown sequence
-        store.getJournalManager().close();
+        store.getJournal().close();
         try {
             store.close();
         } catch (Exception expectedLotsAsJournalBorked) {
