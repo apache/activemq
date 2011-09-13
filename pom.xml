@@ -990,6 +990,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-jar-plugin</artifactId>
+          <version>${maven-jar-plugin-version}</version>
           <configuration>
             <archive>
               <index>true</index>
@@ -1073,17 +1074,12 @@
     <plugin>
       <groupId>org.apache.maven.plugins</groupId>
       <artifactId>maven-compiler-plugin</artifactId>
-          <version>${maven-compiler-plugin-version}</version>
-    </plugin>
-    <plugin>
-      <groupId>org.apache.maven.plugins</groupId>
-      <artifactId>maven-jar-plugin</artifactId>
-          <version>${maven-jar-plugin-version}</version>
+      <version>${maven-compiler-plugin-version}</version>
     </plugin>
     <plugin>
       <groupId>org.apache.maven.plugins</groupId>
       <artifactId>maven-archiver</artifactId>
-          <version>${maven-archiver-version}</version>
+      <version>${maven-archiver-version}</version>
     </plugin>
       </plugins>
     </pluginManagement>
