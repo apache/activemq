@@ -57,7 +57,7 @@ public final class ListNode<Key,Value> {
     static final class KeyValueEntry<Key, Value> extends LinkedNode<KeyValueEntry<Key, Value>> implements Entry<Key, Value>
     {
         private final Key key;
-        private final Value value;
+        private Value value;
 
         public KeyValueEntry(Key key, Value value) {
             this.key = key;
@@ -73,7 +73,9 @@ public final class ListNode<Key,Value> {
         }
 
         public Value setValue(Value value) {
-            throw new UnsupportedOperationException();
+            Value oldValue = this.value;
+            this.value = value;
+            return oldValue;
         }
 
         @Override
@@ -121,7 +123,7 @@ public final class ListNode<Key,Value> {
         }
     }
 
-    private final class ListIterator implements Iterator<Entry<Key, Value>> {
+    final class ListIterator implements Iterator<Entry<Key, Value>> {
 
         private final Transaction tx;
         private final ListIndex<Key,Value> targetList;
@@ -220,6 +222,10 @@ public final class ListNode<Key,Value> {
                 throw e;
             }
         }
+
+        ListNode<Key, Value> getCurrent() {
+            return this.currentNode;
+        }
     }
 
     /**
@@ -285,9 +291,28 @@ public final class ListNode<Key,Value> {
         return null;
     }
 
+    public void storeUpdate(Transaction tx) throws IOException {
+        try {
+            if (this.entries.size() == 1) {
+                getContainingList().storeNode(tx, this, true);
+            } else {
+                getContainingList().storeNode(tx, this, false);
+            }
+        } catch ( Transaction.PageOverflowIOException e ) {
+            split(tx, ADD_FIRST);
+        }
+    }
+
     private void store(Transaction tx, boolean addFirst) throws IOException {
         try {
-            getContainingList().storeNode(tx, this, false);
+            // When we split to a node of one element we can span multiple
+            // pages for that entry, otherwise we keep the entries on one
+            // page to avoid fragmented reads and segment the list traversal.
+            if (this.entries.size() == 1) {
+                getContainingList().storeNode(tx, this, true);
+            } else {
+                getContainingList().storeNode(tx, this, false);
+            }
         } catch ( Transaction.PageOverflowIOException e ) {
             // If we get an overflow
             split(tx, addFirst);
@@ -295,7 +320,11 @@ public final class ListNode<Key,Value> {
     }
 
     private void store(Transaction tx) throws IOException {
-        getContainingList().storeNode(tx, this, false);
+        if (this.entries.size() == 1) {
+            getContainingList().storeNode(tx, this, true);
+        } else {
+            getContainingList().storeNode(tx, this, false);
+        }
     }
 
     private void split(Transaction tx, boolean isAddFirst) throws IOException {
@@ -311,7 +340,7 @@ public final class ListNode<Key,Value> {
             getContainingList().setTailPageId(extension.getPageId());
         }
         extension.store(tx, isAddFirst);
-        store(tx);
+        store(tx, true);
     }
 
     // called after a split

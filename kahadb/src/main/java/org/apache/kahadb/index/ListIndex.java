@@ -24,6 +24,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.apache.kahadb.index.ListNode.ListIterator;
 import org.apache.kahadb.page.Page;
 import org.apache.kahadb.page.PageFile;
 import org.apache.kahadb.page.Transaction;
@@ -103,6 +104,11 @@ public class ListIndex<Key,Value> implements Index<Key,Value> {
 
     synchronized public boolean containsKey(Transaction tx, Key key) throws IOException {
         assertLoaded();
+
+        if (size.get() == 0) {
+            return false;
+        }
+
         for (Iterator<Map.Entry<Key,Value>> iterator = iterator(tx); iterator.hasNext(); ) {
             Map.Entry<Key,Value> candidate = iterator.next();
             if (key.equals(candidate.getKey())) {
@@ -112,11 +118,17 @@ public class ListIndex<Key,Value> implements Index<Key,Value> {
         return false;
     }
 
+    private ListNode<Key, Value> lastGetNodeCache = null;
+    private Map.Entry<Key, Value> lastGetEntryCache = null;
+
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     synchronized public Value get(Transaction tx, Key key) throws IOException {
         assertLoaded();
         for (Iterator<Map.Entry<Key,Value>> iterator = iterator(tx); iterator.hasNext(); ) {
             Map.Entry<Key,Value> candidate = iterator.next();
             if (key.equals(candidate.getKey())) {
+                this.lastGetNodeCache = ((ListIterator) iterator).getCurrent();
+                this.lastGetEntryCache = candidate;
                 return candidate.getValue();
             }
         }
@@ -124,10 +136,52 @@ public class ListIndex<Key,Value> implements Index<Key,Value> {
     }
 
     /**
-      * appends to the list
-     * @return null
+     * Update the value of the item with the given key in the list if ot exists, otherwise
+     * it appends the value to the end of the list.
+     *
+     * @return the old value contained in the list if one exists or null.
      */
+    @SuppressWarnings({ "rawtypes" })
     synchronized public Value put(Transaction tx, Key key, Value value) throws IOException {
+
+        Value oldValue = null;
+
+        if (lastGetNodeCache != null) {
+
+            if(lastGetEntryCache.getKey().equals(key)) {
+                oldValue = lastGetEntryCache.setValue(value);
+                lastGetEntryCache.setValue(value);
+                lastGetNodeCache.storeUpdate(tx);
+                return oldValue;
+            }
+
+            // This searches from the last location of a call to get for the element to replace
+            // all the way to the end of the ListIndex.
+            Iterator<Map.Entry<Key, Value>> iterator = lastGetNodeCache.iterator(tx);
+            while (iterator.hasNext()) {
+                Map.Entry<Key, Value> entry = iterator.next();
+                if (entry.getKey().equals(key)) {
+                    oldValue = entry.setValue(value);
+                    ((ListIterator) iterator).getCurrent().storeUpdate(tx);
+                    return oldValue;
+                }
+            }
+        }
+
+        // Not found because the cache wasn't set or its not at the end of the list so we
+        // start from the beginning and go to the cached location or the end, then we do
+        // an add if its not found.
+        Iterator<Map.Entry<Key, Value>> iterator = iterator(tx);
+        while (iterator.hasNext() && ((ListIterator) iterator).getCurrent() != lastGetNodeCache) {
+            Map.Entry<Key, Value> entry = iterator.next();
+            if (entry.getKey().equals(key)) {
+                oldValue = entry.setValue(value);
+                ((ListIterator) iterator).getCurrent().storeUpdate(tx);
+                return oldValue;
+            }
+        }
+
+        // Not found so add it last.
         return add(tx, key, value);
     }
 
@@ -145,15 +199,40 @@ public class ListIndex<Key,Value> implements Index<Key,Value> {
         return null;
     }
 
+    @SuppressWarnings("rawtypes")
     synchronized public Value remove(Transaction tx, Key key) throws IOException {
         assertLoaded();
-        for (Iterator<Map.Entry<Key,Value>> iterator = iterator(tx); iterator.hasNext(); ) {
-            Map.Entry<Key,Value> candidate = iterator.next();
-            if (key.equals(candidate.getKey())) {
-                iterator.remove();
-                return candidate.getValue();
+
+        if (size.get() == 0) {
+            return null;
+        }
+
+        if (lastGetNodeCache != null) {
+
+            // This searches from the last location of a call to get for the element to remove
+            // all the way to the end of the ListIndex.
+            Iterator<Map.Entry<Key, Value>> iterator = lastGetNodeCache.iterator(tx);
+            while (iterator.hasNext()) {
+                Map.Entry<Key, Value> entry = iterator.next();
+                if (entry.getKey().equals(key)) {
+                    iterator.remove();
+                    return entry.getValue();
+                }
             }
         }
+
+        // Not found because the cache wasn't set or its not at the end of the list so we
+        // start from the beginning and go to the cached location or the end to find the
+        // element to remove.
+        Iterator<Map.Entry<Key, Value>> iterator = iterator(tx);
+        while (iterator.hasNext() && ((ListIterator) iterator).getCurrent() != lastGetNodeCache) {
+            Map.Entry<Key, Value> entry = iterator.next();
+            if (entry.getKey().equals(key)) {
+                iterator.remove();
+                return entry.getValue();
+            }
+        }
+
         return null;
     }
 
@@ -227,6 +306,7 @@ public class ListIndex<Key,Value> implements Index<Key,Value> {
 
     public void storeNode(Transaction tx, ListNode<Key,Value> node, boolean overflow) throws IOException {
         tx.store(node.getPage(), marshaller, overflow);
+        flushCache();
     }
 
     public PageFile getPageFile() {
@@ -269,5 +349,10 @@ public class ListIndex<Key,Value> implements Index<Key,Value> {
 
     public long size() {
         return size.get();
+    }
+
+    private void flushCache() {
+        this.lastGetEntryCache = null;
+        this.lastGetNodeCache = null;
     }
 }

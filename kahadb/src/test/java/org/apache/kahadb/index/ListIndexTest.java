@@ -16,12 +16,24 @@
  */
 package org.apache.kahadb.index;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.text.NumberFormat;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.Random;
+
+import org.apache.kahadb.page.PageFile;
 import org.apache.kahadb.util.LongMarshaller;
 import org.apache.kahadb.util.StringMarshaller;
+import org.apache.kahadb.util.VariableMarshaller;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -81,6 +93,38 @@ public class ListIndexTest extends IndexTestSupport {
         tx = pf.tx();
         listIndex.clear(tx);
         assertEquals("correct size", 0, listIndex.size());
+        tx.commit();
+    }
+
+    public void testPut() throws Exception {
+        createPageFileAndIndex(100);
+
+        ListIndex<String, Long> listIndex = ((ListIndex<String, Long>) this.index);
+        this.index.load(tx);
+        tx.commit();
+
+        int count = 30;
+        tx = pf.tx();
+        doInsert(count);
+        tx.commit();
+        assertEquals("correct size", count, listIndex.size());
+
+        tx = pf.tx();
+        Long value = listIndex.get(tx, key(10));
+        assertNotNull(value);
+        listIndex.put(tx, key(10), Long.valueOf(1024));
+        tx.commit();
+
+        tx = pf.tx();
+        value = listIndex.get(tx, key(10));
+        assertEquals(1024L, value.longValue());
+        assertTrue(listIndex.size() == 30);
+        tx.commit();
+
+        tx = pf.tx();
+        value = listIndex.put(tx, key(31), Long.valueOf(2048));
+        assertNull(value);
+        assertTrue(listIndex.size() == 31);
         tx.commit();
     }
 
@@ -273,7 +317,7 @@ public class ListIndexTest extends IndexTestSupport {
         final int COUNT = 50000;
         long start = System.currentTimeMillis();
         for (int i = 0; i < COUNT; i++) {
-             listIndex.put(tx, key(i), (long) i);
+             listIndex.add(tx, key(i), (long) i);
              tx.commit();
         }
         LOG.info("Time to add " + COUNT + ": " + (System.currentTimeMillis() - start) + " mills");
@@ -295,9 +339,85 @@ public class ListIndexTest extends IndexTestSupport {
         LOG.info("Page free count: " + listIndex.getPageFile().getFreePageCount());
     }
 
+    private int getMessageSize(int min, int max) {
+        return min + (int)(Math.random() * ((max - min) + 1));
+    }
+
+    public void testLargeValueOverflow() throws Exception {
+        pf = new PageFile(directory, getClass().getName());
+        pf.setPageSize(4*1024);
+        pf.setEnablePageCaching(false);
+        pf.setWriteBatchSize(1);
+        pf.load();
+        tx = pf.tx();
+        long id = tx.allocate().getPageId();
+
+        ListIndex<Long, String> test = new ListIndex<Long, String>(pf, id);
+        test.setKeyMarshaller(LongMarshaller.INSTANCE);
+        test.setValueMarshaller(StringMarshaller.INSTANCE);
+        test.load(tx);
+        tx.commit();
+
+        final long NUM_ADDITIONS = 32L;
+
+        LinkedList<Long> expected = new LinkedList<Long>();
+
+        tx =  pf.tx();
+        for (long i = 0; i < NUM_ADDITIONS; ++i) {
+            final int stringSize = getMessageSize(1, 4096);
+            String val = new String(new byte[stringSize]);
+            expected.add(Long.valueOf(stringSize));
+            test.add(tx, i, val);
+        }
+        tx.commit();
+
+        tx =  pf.tx();
+        for (long i = 0; i < NUM_ADDITIONS; i++) {
+            String s = test.get(tx, i);
+            assertEquals("string length did not match expected", expected.get((int)i), Long.valueOf(s.length()));
+        }
+        tx.commit();
+
+        expected.clear();
+
+        tx =  pf.tx();
+        for (long i = 0; i < NUM_ADDITIONS; ++i) {
+            final int stringSize = getMessageSize(1, 4096);
+            String val = new String(new byte[stringSize]);
+            expected.add(Long.valueOf(stringSize));
+            test.addFirst(tx, i+NUM_ADDITIONS, val);
+        }
+        tx.commit();
+
+        tx =  pf.tx();
+        for (long i = 0; i < NUM_ADDITIONS; i++) {
+            String s = test.get(tx, i+NUM_ADDITIONS);
+            assertEquals("string length did not match expected", expected.get((int)i), Long.valueOf(s.length()));
+        }
+        tx.commit();
+
+        expected.clear();
+
+        tx =  pf.tx();
+        for (long i = 0; i < NUM_ADDITIONS; ++i) {
+            final int stringSize = getMessageSize(1, 4096);
+            String val = new String(new byte[stringSize]);
+            expected.add(Long.valueOf(stringSize));
+            test.put(tx, i, val);
+        }
+        tx.commit();
+
+        tx =  pf.tx();
+        for (long i = 0; i < NUM_ADDITIONS; i++) {
+            String s = test.get(tx, i);
+            assertEquals("string length did not match expected", expected.get((int)i), Long.valueOf(s.length()));
+        }
+        tx.commit();
+    }
+
     void doInsertReverse(int count) throws Exception {
         for (int i = count - 1; i >= 0; i--) {
-            ((ListIndex) index).addFirst(tx, key(i), (long) i);
+            ((ListIndex<String, Long>) index).addFirst(tx, key(i), (long) i);
             tx.commit();
         }
     }
@@ -305,5 +425,36 @@ public class ListIndexTest extends IndexTestSupport {
     @Override
     protected String key(int i) {
         return "key:" + nf.format(i);
+    }
+
+    static class HashSetStringMarshaller extends VariableMarshaller<HashSet<String>> {
+        final static HashSetStringMarshaller INSTANCE = new HashSetStringMarshaller();
+
+        public void writePayload(HashSet<String> object, DataOutput dataOut) throws IOException {
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            ObjectOutputStream oout = new ObjectOutputStream(baos);
+            oout.writeObject(object);
+            oout.flush();
+            oout.close();
+            byte[] data = baos.toByteArray();
+            dataOut.writeInt(data.length);
+            dataOut.write(data);
+        }
+
+        @SuppressWarnings("unchecked")
+        public HashSet<String> readPayload(DataInput dataIn) throws IOException {
+            int dataLen = dataIn.readInt();
+            byte[] data = new byte[dataLen];
+            dataIn.readFully(data);
+            ByteArrayInputStream bais = new ByteArrayInputStream(data);
+            ObjectInputStream oin = new ObjectInputStream(bais);
+            try {
+                return (HashSet<String>) oin.readObject();
+            } catch (ClassNotFoundException cfe) {
+                IOException ioe = new IOException("Failed to read HashSet<String>: " + cfe);
+                ioe.initCause(cfe);
+                throw ioe;
+            }
+        }
     }
 }
