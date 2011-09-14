@@ -16,6 +16,12 @@
  */
 package org.apache.activemq.tool;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+
 import java.util.Arrays;
 import java.util.Set;
 
@@ -83,7 +89,20 @@ public class JmsProducerClient extends AbstractJmsMeasurableClient {
         }
         try {
             getConnection().start();
-            LOG.info("Starting to publish " + client.getMessageSize() + " byte(s) of " + messageCount + " messages...");
+            if (client.getMsgFileName() != null) {
+            	LOG.info("Starting to publish " +
+            		messageCount + 
+            		" messages from file " + 
+            		client.getMsgFileName()
+            	);
+            } else {
+            	LOG.info("Starting to publish " +
+            		messageCount +
+            		" messages of size " +
+            		client.getMessageSize() + 
+            		" byte(s)." 
+            	);
+            }
 
             // Send one type of message only, avoiding the creation of different messages on sending
             if (!client.isCreateNewMsg()) {
@@ -158,8 +177,19 @@ public class JmsProducerClient extends AbstractJmsMeasurableClient {
 
         try {
             getConnection().start();
-            LOG.info("Starting to publish " + client.getMessageSize() + " byte(s) messages for " + duration + " ms");
-
+            if (client.getMsgFileName() != null) {
+            	LOG.info("Starting to publish messages from file " + 
+            			client.getMsgFileName() + 
+            			" for " +
+            			duration + 
+            			" ms");
+            } else {
+            	LOG.info("Starting to publish " + 
+            			client.getMessageSize() + 
+            			" byte(s) messages for " + 
+            			duration + 
+            			" ms");
+            }
             // Send one type of message only, avoiding the creation of different messages on sending
             if (!client.isCreateNewMsg()) {
                 // Create only a single message
@@ -252,7 +282,11 @@ public class JmsProducerClient extends AbstractJmsMeasurableClient {
     }
 
     public TextMessage createJmsTextMessage() throws JMSException {
-        return createJmsTextMessage(client.getMessageSize());
+    	if (client.getMsgFileName() != null) {
+    		return loadJmsMessage();
+    	} else {
+          return createJmsTextMessage(client.getMessageSize());
+    	}
     }
 
     public TextMessage createJmsTextMessage(int size) throws JMSException {
@@ -299,5 +333,39 @@ public class JmsProducerClient extends AbstractJmsMeasurableClient {
         		LOG.warn(ex.getMessage());
         	}
         }
+    }
+    
+    /**
+     * loads the message to be sent from the specified TextFile
+     */
+    protected TextMessage loadJmsMessage() throws JMSException {
+    	try {
+    		// couple of sanity checks upfront 
+    		if (client.getMsgFileName() == null) {
+    			throw new JMSException("Invalid filename specified.");
+    		}
+    		
+    		File f = new File(client.getMsgFileName());
+    		if (f.isDirectory()) {
+    			throw new JMSException("Cannot load from " + 
+    					client.getMsgFileName() + 
+    					" as it is a directory not a text file.");
+    		} 
+    		
+    		// try to load file
+    		BufferedReader br = new BufferedReader(new FileReader(f));
+    		StringBuffer payload = new StringBuffer();
+    		String tmp = null;
+    		while ((tmp = br.readLine()) != null) {
+    			payload.append(tmp);
+    		}
+    		jmsTextMessage = getSession().createTextMessage(payload.toString());
+    		return jmsTextMessage;
+    		
+    	} catch (FileNotFoundException ex) {
+    		throw new JMSException(ex.getMessage());
+    	} catch (IOException iox) {
+    		throw new JMSException(iox.getMessage());
+    	}
     }
 }

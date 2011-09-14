@@ -31,13 +31,14 @@ public class JmsProducerProperties extends JmsClientProperties {
     public static final String COUNT_BASED_SENDING = "count"; // Produce a specific count of messages
     public static final String DELIVERY_MODE_PERSISTENT     = "persistent"; // Persistent message delivery
     public static final String DELIVERY_MODE_NON_PERSISTENT = "nonpersistent"; // Non-persistent message delivery
-
+    
     protected String deliveryMode = DELIVERY_MODE_NON_PERSISTENT; // Message delivery mode
     protected int messageSize = 1024; // Send 1kb messages by default
     protected long sendCount  = 1000000; // Send a million messages by default
     protected long sendDuration = 5 * 60 * 1000; // Send for 5 mins by default
     protected String sendType = TIME_BASED_SENDING;
     protected long sendDelay = 0;  // delay in milliseconds between each producer send
+    protected String msgFileName = null; // for sending a particular msg from a file
     
     protected Map<String,Object> headerMap = null;
  
@@ -153,4 +154,15 @@ public class JmsProducerProperties extends JmsClientProperties {
     public void clearHeaders() {
     	this.headerMap.clear();
     }
+    
+    public void setMsgFileName(String file) {
+    	LOG.info("\"producer.msgFileName\" specified. " +
+    			"Will ignore setting \"producer.messageSize\".");
+    	this.msgFileName = file;
+    }
+    
+    public String getMsgFileName() {
+    	return this.msgFileName;
+    }
+    
 }
