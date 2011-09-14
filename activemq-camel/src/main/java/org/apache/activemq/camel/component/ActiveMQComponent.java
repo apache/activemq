@@ -16,6 +16,8 @@
  */
 package org.apache.activemq.camel.component;
 
+import java.net.URISyntaxException;
+import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
@@ -23,6 +25,9 @@ import org.apache.activemq.Service;
 import org.apache.camel.CamelContext;
 import org.apache.camel.component.jms.JmsComponent;
 import org.apache.camel.component.jms.JmsConfiguration;
+import org.apache.camel.util.IntrospectionSupport;
+import org.apache.camel.util.ObjectHelper;
+import org.apache.camel.util.URISupport;
 import org.springframework.jms.connection.SingleConnectionFactory;
 
 /**
@@ -128,6 +133,28 @@ public class ActiveMQComponent extends JmsComponent {
 
     protected void addSingleConnectionFactory(SingleConnectionFactory singleConnectionFactory) {
         singleConnectionFactoryList.add(singleConnectionFactory);
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    protected String convertPathToActualDestination(String path, Map<String, Object> parameters) {
+        // support ActiveMQ destination options using the destination. prefix
+        // http://activemq.apache.org/destination-options.html
+        Map options = IntrospectionSupport.extractProperties(parameters, "destination.");
+
+        String query;
+        try {
+            query = URISupport.createQueryString(options);
+        } catch (URISyntaxException e) {
+            throw ObjectHelper.wrapRuntimeCamelException(e);
+        }
+
+        // if we have destination options then append them to the destination name
+        if (ObjectHelper.isNotEmpty(query)) {
+            return path + "?" + query;
+        } else {
+            return path;
+        }
     }
 
     @Override
