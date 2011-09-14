@@ -380,6 +380,7 @@ public class StompTest extends CombinationTestSupport {
     public void testSubscriptionReceipts() throws Exception {
         final int done = 500;
         int count = 0;
+        int receiptId = 0;
 
         URI connectUri = new URI(bindAddress);
 
@@ -393,8 +394,10 @@ public class StompTest extends CombinationTestSupport {
             frame = sender.receiveFrame();
             assertTrue(frame.startsWith("CONNECTED"));
 
-            frame = "SEND\n" + "destination:/queue/" + getQueueName() + "\n\n" + "Hello World:" + count + Stomp.NULL;
+            frame = "SEND\n" + "destination:/queue/" + getQueueName()  + "\n"  + "receipt: " + (receiptId++) + "\n\n" + "Hello World:" + (count++) + Stomp.NULL;
             sender.sendFrame(frame);
+            frame = sender.receiveFrame();
+            assertTrue("" + frame, frame.startsWith("RECEIPT"));
 
             sender.disconnect();
 
@@ -407,15 +410,21 @@ public class StompTest extends CombinationTestSupport {
             frame = receiver.receiveFrame();
             assertTrue(frame.startsWith("CONNECTED"));
 
-            frame = "SUBSCRIBE\n" + "destination:/queue/" + getQueueName() + "\n"  + "receipt: " + (count++) + "\n\n" + Stomp.NULL;
+            frame = "SUBSCRIBE\n" + "destination:/queue/" + getQueueName() + "\n"  + "receipt: " +  (receiptId++)  + "\n\n" + Stomp.NULL;
             receiver.sendFrame(frame);
 
             frame = receiver.receiveFrame();
             assertTrue("" + frame, frame.startsWith("RECEIPT"));
             assertTrue("Receipt contains receipt-id", frame.indexOf(Stomp.Headers.Response.RECEIPT_ID) >= 0);
-            LOG.info("received: " + frame.substring(frame.indexOf(Stomp.Headers.Response.RECEIPT_ID)));
             frame = receiver.receiveFrame();
             assertTrue("" + frame, frame.startsWith("MESSAGE"));
+
+            // remove suscription  so we don't hang about and get next message
+            frame = "UNSUBSCRIBE\n" + "destination:/queue/" + getQueueName() + "\n"  + "receipt: " +  (receiptId++)  + "\n\n" + Stomp.NULL;
+            receiver.sendFrame(frame);
+            frame = receiver.receiveFrame();
+            assertTrue("" + frame, frame.startsWith("RECEIPT"));
+
             receiver.disconnect();
         } while (count < done);
 
