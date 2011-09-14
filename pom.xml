@@ -93,7 +93,7 @@
     <activemq-protobuf-version>1.1</activemq-protobuf-version>
     <opensymphony-version>2.4.2</opensymphony-version>
     <zookeeper-version>3.0.0</zookeeper-version>
-    <org.osgi.core-version>4.3.0</org.osgi.core-version>
+    <org.osgi.core-version>4.1.0</org.osgi.core-version>
     <woodstox-core-asl-version>4.0.8</woodstox-core-asl-version>
     <stax2-api-version>3.0.2</stax2-api-version>
     <site-repo-url>scpexe://people.apache.org/www/activemq.apache.org/maven/</site-repo-url>
