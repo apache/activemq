@@ -48,4 +48,9 @@ public class DefaultUnresolvedDestinationTransformer implements UnresolvedDestin
             throw new JMSException("Unresolvable destination: "  + e.getMessage() + ": " + dest);
         }
     }
+
+    @Override
+    public ActiveMQDestination transform(String dest) throws JMSException {
+        return new ActiveMQQueue(dest);
+    }
 }

@@ -187,6 +187,15 @@ public class LegacyFrameTranslator implements FrameTranslator {
         } else if (name.startsWith("/temp-topic/")) {
             return converter.createTempTopic(name);
         } else {
+            try {
+                ActiveMQDestination fallback = ActiveMQDestination.getUnresolvableDestinationTransformer().transform(name);
+                if (fallback != null) {
+                    return fallback;
+                }
+            } catch (JMSException e) {
+                 throw new ProtocolException("Illegal destination name: [" + name + "] -- ActiveMQ STOMP destinations "
+                                        + "must begin with one of: /queue/ /topic/ /temp-queue/ /temp-topic/", false, e);
+            }
             throw new ProtocolException("Illegal destination name: [" + name + "] -- ActiveMQ STOMP destinations "
                                         + "must begin with one of: /queue/ /topic/ /temp-queue/ /temp-topic/");
         }

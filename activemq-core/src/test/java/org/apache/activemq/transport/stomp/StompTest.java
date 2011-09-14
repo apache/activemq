@@ -1529,6 +1529,22 @@ public class StompTest extends CombinationTestSupport {
         assertEquals(stompMessage.getHeaders().get(Stomp.Headers.Message.ORIGINAL_DESTINATION), "/queue/" + getQueueName());
     }
 
+    public void testDefaultJMSReplyToDest() throws Exception {
+        stompConnection.connect("system", "manager");
+
+        HashMap<String, String> headers = new HashMap<String, String>();
+        long timestamp = System.currentTimeMillis();
+        headers.put(Stomp.Headers.Send.REPLY_TO, "JustAString");
+        headers.put(Stomp.Headers.Send.PERSISTENT, "true");
+
+        stompConnection.send("/queue/" + getQueueName(), "msg-with-reply-to", null, headers);
+
+        stompConnection.subscribe("/queue/" + getQueueName());
+        StompFrame stompMessage = stompConnection.receive(1000);
+        assertNotNull(stompMessage);
+        assertEquals(""  + stompMessage, stompMessage.getHeaders().get(Stomp.Headers.Send.REPLY_TO), "/queue/" + "JustAString");
+    }
+
     public void testPersistent() throws Exception {
         stompConnection.connect("system", "manager");
 

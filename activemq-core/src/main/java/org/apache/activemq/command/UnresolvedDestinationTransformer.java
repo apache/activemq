@@ -22,5 +22,5 @@ import javax.jms.JMSException;
 public interface UnresolvedDestinationTransformer {
 
     public ActiveMQDestination transform(Destination dest) throws JMSException;
-
+    public ActiveMQDestination transform(String dest) throws JMSException;
 }
