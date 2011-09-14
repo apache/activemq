@@ -113,6 +113,7 @@ public class StompTest extends CombinationTestSupport {
                 + "}}";
         }
         broker = BrokerFactory.createBroker(new URI(confUri));
+        broker.setDeleteAllMessagesOnStartup(true);
         broker.start();
         broker.waitUntilStarted();
 
@@ -373,6 +374,51 @@ public class StompTest extends CombinationTestSupport {
 
         frame = "DISCONNECT\n" + "\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
+    }
+
+
+    public void testSubscriptionReceipts() throws Exception {
+        final int done = 500;
+        int count = 0;
+
+        URI connectUri = new URI(bindAddress);
+
+        do {
+
+            StompConnection sender = new StompConnection();
+            sender.open(createSocket(connectUri));
+            String frame = "CONNECT\n" + "login: system\n" + "passcode: manager\n\n" + Stomp.NULL;
+            sender.sendFrame(frame);
+
+            frame = sender.receiveFrame();
+            assertTrue(frame.startsWith("CONNECTED"));
+
+            frame = "SEND\n" + "destination:/queue/" + getQueueName() + "\n\n" + "Hello World:" + count + Stomp.NULL;
+            sender.sendFrame(frame);
+
+            sender.disconnect();
+
+            StompConnection receiver = new StompConnection();
+            receiver.open(createSocket(connectUri));
+
+            frame = "CONNECT\n" + "login: system\n" + "passcode: manager\n\n" + Stomp.NULL;
+            receiver.sendFrame(frame);
+
+            frame = receiver.receiveFrame();
+            assertTrue(frame.startsWith("CONNECTED"));
+
+            frame = "SUBSCRIBE\n" + "destination:/queue/" + getQueueName() + "\n"  + "receipt: " + (count++) + "\n\n" + Stomp.NULL;
+            receiver.sendFrame(frame);
+
+            frame = receiver.receiveFrame();
+            assertTrue("" + frame, frame.startsWith("RECEIPT"));
+            assertTrue("Receipt contains receipt-id", frame.indexOf(Stomp.Headers.Response.RECEIPT_ID) >= 0);
+            LOG.info("received: " + frame.substring(frame.indexOf(Stomp.Headers.Response.RECEIPT_ID)));
+            frame = receiver.receiveFrame();
+            assertTrue("" + frame, frame.startsWith("MESSAGE"));
+            receiver.disconnect();
+        } while (count < done);
+
     }
 
     public void testSubscribeWithAutoAck() throws Exception {

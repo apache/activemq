@@ -539,8 +539,9 @@ public class ProtocolConverter {
             subscriptions.put(subscriptionId, stompSubscription);
         }
 
-        sendToActiveMQ(consumerInfo, null);
+        // dispatch can beat the receipt so send it early
         sendReceipt(command);
+        sendToActiveMQ(consumerInfo, null);
     }
 
     protected void onStompUnsubscribe(StompFrame command) throws ProtocolException {
