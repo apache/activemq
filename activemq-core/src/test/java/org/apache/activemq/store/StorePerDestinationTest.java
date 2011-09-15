@@ -49,7 +49,7 @@ import static org.junit.Assert.assertTrue;
 public class StorePerDestinationTest  {
     static final Logger LOG = LoggerFactory.getLogger(StorePerDestinationTest.class);
     final static int maxFileLength = 1024*100;
-    final static int numToSend = 10000;
+    final static int numToSend = 5000;
     final Vector<Throwable> exceptions = new Vector<Throwable>();
     BrokerService brokerService;
 
@@ -213,7 +213,7 @@ public class StorePerDestinationTest  {
         });
 
         executorService.shutdown();
-        assertTrue("consumers executor finished on time", executorService.awaitTermination(60, TimeUnit.SECONDS));
+        assertTrue("consumers executor finished on time", executorService.awaitTermination(5*60, TimeUnit.SECONDS));
         final SystemUsage usage = brokerService.getSystemUsage();
         assertTrue("Store is not hogged", Wait.waitFor(new Wait.Condition() {
 
