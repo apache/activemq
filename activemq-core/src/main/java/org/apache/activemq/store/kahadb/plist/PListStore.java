@@ -266,7 +266,6 @@ public class PListStore extends ServiceSupport implements BrokerServiceAware, Ru
     protected synchronized void intialize() throws Exception {
         if (isStarted()) {
             if (this.initialized == false) {
-                this.initialized = true;
                 if (this.directory == null) {
                     this.directory = new File(IOHelper.getDefaultDataDirectory() + File.pathSeparator + "delayedDB");
                 }
@@ -312,6 +311,7 @@ public class PListStore extends ServiceSupport implements BrokerServiceAware, Ru
                     }
                     scheduler.executePeriodically(this, cleanupInterval);
                 }
+                this.initialized = true;
                 LOG.info(this + " initialized");
             }
         }
