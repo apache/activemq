@@ -23,8 +23,8 @@ import java.io.UTFDataFormatException;
 
 /**
  * Optimized ByteArrayInputStream that can be used more than once
- * 
- * 
+ *
+ *
  */
 public final class DataByteArrayInputStream extends InputStream implements DataInput {
     private byte[] buf;
@@ -32,9 +32,11 @@ public final class DataByteArrayInputStream extends InputStream implements DataI
     private int offset;
     private int length;
 
+    private byte[] work;
+
     /**
      * Creates a <code>StoreByteArrayInputStream</code>.
-     * 
+     *
      * @param buf the input buffer.
      */
     public DataByteArrayInputStream(byte buf[]) {
@@ -42,11 +44,12 @@ public final class DataByteArrayInputStream extends InputStream implements DataI
         this.pos = 0;
         this.offset = 0;
         this.length = buf.length;
+        this.work = new byte[8];
     }
 
     /**
      * Creates a <code>StoreByteArrayInputStream</code>.
-     * 
+     *
      * @param sequence the input buffer.
      */
     public DataByteArrayInputStream(ByteSequence sequence) {
@@ -54,6 +57,7 @@ public final class DataByteArrayInputStream extends InputStream implements DataI
         this.offset = sequence.getOffset();
         this.pos =  this.offset;
         this.length = sequence.length;
+        this.work = new byte[8];
     }
 
     /**
@@ -81,7 +85,7 @@ public final class DataByteArrayInputStream extends InputStream implements DataI
     /**
      * reset the <code>StoreByteArrayInputStream</code> to use an new byte
      * array
-     * 
+     *
      * @param newBuff
      */
     public void restart(byte[] newBuff) {
@@ -98,7 +102,7 @@ public final class DataByteArrayInputStream extends InputStream implements DataI
     /**
      * reset the <code>StoreByteArrayInputStream</code> to use an new
      * ByteSequence
-     * 
+     *
      * @param sequence
      */
     public void restart(ByteSequence sequence) {
@@ -109,7 +113,7 @@ public final class DataByteArrayInputStream extends InputStream implements DataI
 
     /**
      * re-start the input stream - reusing the current buffer
-     * 
+     *
      * @param size
      */
     public void restart(int size) {
@@ -127,7 +131,7 @@ public final class DataByteArrayInputStream extends InputStream implements DataI
      * stream has been reached, the value <code>-1</code> is returned.
      * <p>
      * This <code>read</code> method cannot block.
-     * 
+     *
      * @return the next byte of data, or <code>-1</code> if the end of the
      *         stream has been reached.
      */
@@ -138,7 +142,7 @@ public final class DataByteArrayInputStream extends InputStream implements DataI
     /**
      * Reads up to <code>len</code> bytes of data into an array of bytes from
      * this input stream.
-     * 
+     *
      * @param b the buffer into which the data is read.
      * @param off the start offset of the data.
      * @param len the maximum number of bytes read.
@@ -204,34 +208,35 @@ public final class DataByteArrayInputStream extends InputStream implements DataI
     }
 
     public short readShort() {
-        int ch1 = read();
-        int ch2 = read();
-        return (short)((ch1 << 8) + (ch2 << 0));
+        this.read(work, 0, 2);
+        return (short) (((work[0] & 0xff) << 8) | (work[1] & 0xff));
     }
 
     public int readUnsignedShort() {
-        int ch1 = read();
-        int ch2 = read();
-        return (ch1 << 8) + (ch2 << 0);
+        this.read(work, 0, 2);
+        return (int) (((work[0] & 0xff) << 8) | (work[1] & 0xff));
     }
 
     public char readChar() {
-        int ch1 = read();
-        int ch2 = read();
-        return (char)((ch1 << 8) + (ch2 << 0));
+        this.read(work, 0, 2);
+        return (char) (((work[0] & 0xff) << 8) | (work[1] & 0xff));
     }
 
     public int readInt() {
-        int ch1 = read();
-        int ch2 = read();
-        int ch3 = read();
-        int ch4 = read();
-        return (ch1 << 24) + (ch2 << 16) + (ch3 << 8) + (ch4 << 0);
+        this.read(work, 0, 4);
+        return ((work[0] & 0xff) << 24) | ((work[1] & 0xff) << 16) |
+               ((work[2] & 0xff) << 8) | (work[3] & 0xff);
     }
 
     public long readLong() {
-        long rc = ((long)buf[pos++] << 56) + ((long)(buf[pos++] & 255) << 48) + ((long)(buf[pos++] & 255) << 40) + ((long)(buf[pos++] & 255) << 32);
-        return rc + ((long)(buf[pos++] & 255) << 24) + ((buf[pos++] & 255) << 16) + ((buf[pos++] & 255) << 8) + ((buf[pos++] & 255) << 0);
+        this.read(work, 0, 8);
+
+        int i1 = ((work[0] & 0xff) << 24) | ((work[1] & 0xff) << 16) |
+            ((work[2] & 0xff) << 8) | (work[3] & 0xff);
+        int i2 = ((work[4] & 0xff) << 24) | ((work[5] & 0xff) << 16) |
+            ((work[6] & 0xff) << 8) | (work[7] & 0xff);
+
+        return ((i1 & 0xffffffffL) << 32) | (i2 & 0xffffffffL);
     }
 
     public float readFloat() throws IOException {
@@ -262,59 +267,32 @@ public final class DataByteArrayInputStream extends InputStream implements DataI
 
     public String readUTF() throws IOException {
         int length = readUnsignedShort();
+        int endPos = pos + length;
+        int count = 0, a;
         char[] characters = new char[length];
-        int c;
-        int c2;
-        int c3;
-        int count = 0;
-        int total = pos + length;
-        while (pos < total) {
-            c = (int)buf[pos] & 0xff;
-            if (c > 127) {
-                break;
-            }
-            pos++;
-            characters[count++] = (char)c;
-        }
-        while (pos < total) {
-            c = (int)buf[pos] & 0xff;
-            switch (c >> 4) {
-            case 0:
-            case 1:
-            case 2:
-            case 3:
-            case 4:
-            case 5:
-            case 6:
-            case 7:
-                pos++;
-                characters[count++] = (char)c;
-                break;
-            case 12:
-            case 13:
-                pos += 2;
-                if (pos > length) {
+        while (pos < endPos) {
+            if ((characters[count] = (char) buf[pos++]) < '\u0080')
+                count++;
+            else if (((a = characters[count]) & 0xE0) == 0xC0) {
+                if (pos >= endPos) {
                     throw new UTFDataFormatException("bad string");
                 }
-                c2 = (int)buf[pos - 1];
-                if ((c2 & 0xC0) != 0x80) {
+                int b = buf[pos++];
+                if ((b & 0xC0) != 0x80) {
                     throw new UTFDataFormatException("bad string");
                 }
-                characters[count++] = (char)(((c & 0x1F) << 6) | (c2 & 0x3F));
-                break;
-            case 14:
-                pos += 3;
-                if (pos > length) {
+                characters[count++] = (char) (((a & 0x1F) << 6) | (b & 0x3F));
+            } else if ((a & 0xf0) == 0xe0) {
+                if (pos + 1 >= endPos) {
                     throw new UTFDataFormatException("bad string");
                 }
-                c2 = (int)buf[pos - 2];
-                c3 = (int)buf[pos - 1];
-                if (((c2 & 0xC0) != 0x80) || ((c3 & 0xC0) != 0x80)) {
+                int b = buf[pos++];
+                int c = buf[pos++];
+                if (((b & 0xC0) != 0x80) || ((c & 0xC0) != 0x80)) {
                     throw new UTFDataFormatException("bad string");
                 }
-                characters[count++] = (char)(((c & 0x0F) << 12) | ((c2 & 0x3F) << 6) | ((c3 & 0x3F) << 0));
-                break;
-            default:
+                characters[count++] = (char) (((a & 0x0F) << 12) | ((b & 0x3F) << 6) | (c & 0x3F));
+            } else {
                 throw new UTFDataFormatException("bad string");
             }
         }

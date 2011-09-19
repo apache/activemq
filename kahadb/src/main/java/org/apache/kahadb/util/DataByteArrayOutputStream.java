@@ -21,20 +21,22 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.UTFDataFormatException;
 
+import org.apache.kahadb.page.PageFile;
+
 /**
  * Optimized ByteArrayOutputStream
- * 
- * 
+ *
+ *
  */
 public class DataByteArrayOutputStream extends OutputStream implements DataOutput {
-    private static final int DEFAULT_SIZE = 2048;
+    private static final int DEFAULT_SIZE = PageFile.DEFAULT_PAGE_SIZE;
     protected byte buf[];
     protected int pos;
 
     /**
      * Creates a new byte array output stream, with a buffer capacity of the
      * specified size, in bytes.
-     * 
+     *
      * @param size the initial size.
      * @exception IllegalArgumentException if size is negative.
      */
@@ -54,7 +56,7 @@ public class DataByteArrayOutputStream extends OutputStream implements DataOutpu
 
     /**
      * start using a fresh byte array
-     * 
+     *
      * @param size
      */
     public void restart(int size) {
@@ -71,7 +73,7 @@ public class DataByteArrayOutputStream extends OutputStream implements DataOutpu
 
     /**
      * Get a ByteSequence from the stream
-     * 
+     *
      * @return the byte sequence
      */
     public ByteSequence toByteSequence() {
@@ -80,9 +82,9 @@ public class DataByteArrayOutputStream extends OutputStream implements DataOutpu
 
     /**
      * Writes the specified byte to this byte array output stream.
-     * 
+     *
      * @param b the byte to be written.
-     * @throws IOException 
+     * @throws IOException
      */
     public void write(int b) throws IOException {
         int newcount = pos + 1;
@@ -95,11 +97,11 @@ public class DataByteArrayOutputStream extends OutputStream implements DataOutpu
     /**
      * Writes <code>len</code> bytes from the specified byte array starting at
      * offset <code>off</code> to this byte array output stream.
-     * 
+     *
      * @param b the data.
      * @param off the start offset in the data.
      * @param len the number of bytes to write.
-     * @throws IOException 
+     * @throws IOException
      */
     public void write(byte b[], int off, int len) throws IOException {
         if (len == 0) {
@@ -128,9 +130,9 @@ public class DataByteArrayOutputStream extends OutputStream implements DataOutpu
 
     /**
      * Set the current position for writing
-     * 
+     *
      * @param offset
-     * @throws IOException 
+     * @throws IOException
      */
     public void position(int offset) throws IOException {
         ensureEnoughBuffer(offset);
@@ -233,26 +235,18 @@ public class DataByteArrayOutputStream extends OutputStream implements DataOutpu
         }
         ensureEnoughBuffer(pos + encodedsize + 2);
         writeShort(encodedsize);
-        int i = 0;
-        for (i = 0; i < strlen; i++) {
-            c = str.charAt(i);
-            if (!((c >= 0x0001) && (c <= 0x007F))) {
-                break;
-            }
-            buf[pos++] = (byte)c;
-        }
-        for (; i < strlen; i++) {
-            c = str.charAt(i);
-            if ((c >= 0x0001) && (c <= 0x007F)) {
-                buf[pos++] = (byte)c;
-            } else if (c > 0x07FF) {
-                buf[pos++] = (byte)(0xE0 | ((c >> 12) & 0x0F));
-                buf[pos++] = (byte)(0x80 | ((c >> 6) & 0x3F));
-                buf[pos++] = (byte)(0x80 | ((c >> 0) & 0x3F));
+        for (int i = 0; i < strlen; i++) {
+            int charValue = str.charAt(i);
+            if (charValue > 0 && charValue <= 127) {
+                buf[pos++] = (byte) charValue;
+            } else if (charValue <= 2047) {
+                buf[pos++] = (byte) (0xc0 | (0x1f & (charValue >> 6)));
+                buf[pos++] = (byte) (0x80 | (0x3f & charValue));
             } else {
-                buf[pos++] = (byte)(0xC0 | ((c >> 6) & 0x1F));
-                buf[pos++] = (byte)(0x80 | ((c >> 0) & 0x3F));
-            }
+                buf[pos++] = (byte) (0xe0 | (0x0f & (charValue >> 12)));
+                buf[pos++] = (byte) (0x80 | (0x3f & (charValue >> 6)));
+                buf[pos++] = (byte) (0x80 | (0x3f & charValue));
+             }
         }
         onWrite();
     }
@@ -264,10 +258,10 @@ public class DataByteArrayOutputStream extends OutputStream implements DataOutpu
             buf = newbuf;
         }
     }
-    
+
     /**
-     * This method is called after each write to the buffer.  This should allow subclasses 
-     * to take some action based on the writes, for example flushing data to an external system based on size. 
+     * This method is called after each write to the buffer.  This should allow subclasses
+     * to take some action based on the writes, for example flushing data to an external system based on size.
      */
     protected void onWrite() throws IOException {
     }

@@ -28,6 +28,7 @@ import org.apache.kahadb.util.StringMarshaller;
 
 import junit.framework.TestCase;
 
+@SuppressWarnings("rawtypes")
 public class PageFileTest extends TestCase {
 
     public void testCRUD() throws IOException {
