@@ -180,6 +180,7 @@ public class PListTest {
         store.setCleanupInterval(400);
         store.setDirectory(directory);
         store.setJournalMaxFileLength(1024*5);
+        store.setLazyInit(false);
         store.start();
 
         final ByteSequence payload = new ByteSequence(new byte[1024*2]);

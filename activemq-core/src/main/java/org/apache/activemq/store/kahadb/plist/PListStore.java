@@ -65,6 +65,7 @@ public class PListStore extends ServiceSupport implements BrokerServiceAware, Ru
     private int journalMaxWriteBatchSize = Journal.DEFAULT_MAX_WRITE_BATCH_SIZE;
     private boolean enableIndexWriteAsync = false;
     private boolean initialized = false;
+    private boolean lazyInit = true;
     // private int indexWriteBatchSize = PageFile.DEFAULT_WRITE_BATCH_SIZE;
     MetaData metaData = new MetaData(this);
     final MetaDataMarshaller metaDataMarshaller = new MetaDataMarshaller(this);
@@ -319,6 +320,9 @@ public class PListStore extends ServiceSupport implements BrokerServiceAware, Ru
 
     @Override
     protected synchronized void doStart() throws Exception {
+        if (!lazyInit) {
+            intialize();
+        }
         LOG.info(this + " started");
     }
 
@@ -462,6 +466,14 @@ public class PListStore extends ServiceSupport implements BrokerServiceAware, Ru
 
     public void setCleanupInterval(long cleanupInterval) {
         this.cleanupInterval = cleanupInterval;
+    }
+
+    public boolean isLazyInit() {
+        return lazyInit;
+    }
+
+    public void setLazyInit(boolean lazyInit) {
+        this.lazyInit = lazyInit;
     }
 
     @Override
