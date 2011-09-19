@@ -254,6 +254,7 @@ public class StompWireFormat implements WireFormat {
                     stream.write(val);
                 }
             }
+            result =  new String(stream.toByteArray(), "UTF-8");
         }
 
         return result;
