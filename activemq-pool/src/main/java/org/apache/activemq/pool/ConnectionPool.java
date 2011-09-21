@@ -18,9 +18,8 @@
 package org.apache.activemq.pool;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.jms.JMSException;
@@ -32,13 +31,13 @@ import org.apache.commons.pool.ObjectPoolFactory;
 
 /**
  * Holds a real JMS connection along with the session pools associated with it.
- * 
- * 
+ *
+ *
  */
 public class ConnectionPool {
 
     private ActiveMQConnection connection;
-    private Map<SessionKey, SessionPool> cache;
+    private ConcurrentHashMap<SessionKey, SessionPool> cache;
     private AtomicBoolean started = new AtomicBoolean(false);
     private int referenceCount;
     private ObjectPoolFactory poolFactory;
@@ -50,7 +49,7 @@ public class ConnectionPool {
     private long expiryTimeout = 0l;
 
     public ConnectionPool(ActiveMQConnection connection, ObjectPoolFactory poolFactory) {
-        this(connection, new HashMap<SessionKey, SessionPool>(), poolFactory);
+        this(connection, new ConcurrentHashMap<SessionKey, SessionPool>(), poolFactory);
         // Add a transport Listener so that we can notice if this connection
         // should be expired due to
         // a connection failure.
@@ -69,7 +68,7 @@ public class ConnectionPool {
 
             public void transportResumed() {
             }
-        });       
+        });
         //
         // make sure that we set the hasFailed flag, in case the transport already failed
         // prior to the addition of our new TransportListener
@@ -79,7 +78,7 @@ public class ConnectionPool {
         }
     }
 
-    public ConnectionPool(ActiveMQConnection connection, Map<SessionKey, SessionPool> cache, ObjectPoolFactory poolFactory) {
+    public ConnectionPool(ActiveMQConnection connection, ConcurrentHashMap<SessionKey, SessionPool> cache, ObjectPoolFactory poolFactory) {
         this.connection = connection;
         this.cache = cache;
         this.poolFactory = poolFactory;
@@ -87,12 +86,12 @@ public class ConnectionPool {
 
     public void start() throws JMSException {
         if (started.compareAndSet(false, true)) {
-        	try {
-        		connection.start();
-        	} catch (JMSException e) {
-        		started.set(false);
-        		throw(e);
-        	}
+            try {
+                connection.start();
+            } catch (JMSException e) {
+                started.set(false);
+                throw(e);
+            }
         }
     }
 
@@ -102,10 +101,21 @@ public class ConnectionPool {
 
     public Session createSession(boolean transacted, int ackMode) throws JMSException {
         SessionKey key = new SessionKey(transacted, ackMode);
-        SessionPool pool = cache.get(key);
+        SessionPool pool = null;
+        pool = cache.get(key);
         if (pool == null) {
-            pool = createSessionPool(key);
-            cache.put(key, pool);
+            SessionPool newPool = createSessionPool(key);
+            SessionPool prevPool = cache.putIfAbsent(key, newPool);
+            if (prevPool != null && prevPool != newPool) {
+                // newPool was not the first one to be associated with this
+                // key... close created session pool
+                try {
+                    newPool.close();
+                } catch (Exception e) {
+                    throw new JMSException(e.getMessage());
+                }
+            }
+            pool = cache.get(key); // this will return a non-null value...
         }
         PooledSession session = pool.borrowSession();
         return session;
@@ -144,8 +154,8 @@ public class ConnectionPool {
         lastUsed = System.currentTimeMillis();
         if (referenceCount == 0) {
             expiredCheck();
-            
-            // only clean up temp destinations when all users 
+
+            // only clean up temp destinations when all users
             // of this connection have called close
             if (getConnection() != null) {
                 getConnection().cleanUpTempDestinations();
@@ -166,7 +176,7 @@ public class ConnectionPool {
             }
             return true;
         }
-        if (hasFailed 
+        if (hasFailed
                 || (idleTimeout > 0 && System.currentTimeMillis() > lastUsed + idleTimeout)
                 || expiryTimeout > 0 && System.currentTimeMillis() > firstUsed + expiryTimeout) {
             hasExpired = true;
@@ -193,7 +203,7 @@ public class ConnectionPool {
     public void setExpiryTimeout(long expiryTimeout) {
         this.expiryTimeout  = expiryTimeout;
     }
-    
+
     public long getExpiryTimeout() {
         return expiryTimeout;
     }
