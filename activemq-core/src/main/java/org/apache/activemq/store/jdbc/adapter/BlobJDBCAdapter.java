@@ -26,6 +26,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import javax.jms.JMSException;
+import javax.sql.rowset.serial.SerialBlob;
 
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.MessageId;
@@ -58,7 +59,6 @@ public class BlobJDBCAdapter extends DefaultJDBCAdapter {
         ResultSet rs = null;
         cleanupExclusiveLock.readLock().lock();
         try {
-
             // Add the Blob record.
             s = c.getConnection().prepareStatement(statements.getAddMessageStatement());
             s.setLong(1, sequence);
@@ -67,7 +67,6 @@ public class BlobJDBCAdapter extends DefaultJDBCAdapter {
             s.setString(4, destination.getQualifiedName());
             s.setLong(5, expiration);
             s.setLong(6, priority);
-            s.setString(7, " ");
 
             if (s.executeUpdate() != 1) {
                 throw new IOException("Failed to add broker message: " + messageID + " in container.");
@@ -75,7 +74,8 @@ public class BlobJDBCAdapter extends DefaultJDBCAdapter {
             s.close();
 
             // Select the blob record so that we can update it.
-            s = c.getConnection().prepareStatement(statements.getFindMessageByIdStatement());
+            s = c.getConnection().prepareStatement(statements.getFindMessageByIdStatement(),
+            		ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_UPDATABLE);
             s.setLong(1, sequence);
             rs = s.executeQuery();
             if (!rs.next()) {
@@ -84,15 +84,10 @@ public class BlobJDBCAdapter extends DefaultJDBCAdapter {
 
             // Update the blob
             Blob blob = rs.getBlob(1);
-            OutputStream stream = blob.setBinaryStream(data.length);
-            stream.write(data);
-            stream.close();
-            s.close();
-
-            // Update the row with the updated blob
-            s = c.getConnection().prepareStatement(statements.getUpdateMessageStatement());
-            s.setBlob(1, blob);
-            s.setLong(2, sequence);
+            blob.truncate(0);
+            blob.setBytes(1, data);
+            rs.updateBlob(1, blob);
+            rs.updateRow();             // Update the row with the updated blob
 
         } finally {
             cleanupExclusiveLock.readLock().unlock();
