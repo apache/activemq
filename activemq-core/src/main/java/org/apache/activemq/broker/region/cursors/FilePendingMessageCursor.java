@@ -24,6 +24,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.Destination;
+import org.apache.activemq.broker.region.IndirectMessageReference;
 import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.broker.region.QueueMessageReference;
 import org.apache.activemq.command.Message;
@@ -233,7 +234,7 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
                 throw new RuntimeException(e);
             }
         } else {
-            discard(node);
+            discardExpiredMessage(node);
         }
         //message expired
         return true;
@@ -279,7 +280,7 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
                 throw new RuntimeException(e);
             }
         } else {
-            discard(node);
+            discardExpiredMessage(node);
         }
     }
 
@@ -410,7 +411,8 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
             while (!tmpList.isEmpty()) {
                 MessageReference node = tmpList.removeFirst();
                 if (node.isExpired()) {
-                    discard(node);
+                    node.decrementReferenceCount();
+                    discardExpiredMessage(node);
                 } else {
                     memoryList.add(node);
                 }
@@ -463,14 +465,15 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
         return diskList;
     }
 
-    protected void discard(MessageReference message) {
-        message.decrementReferenceCount();
+    private void discardExpiredMessage(MessageReference reference) {
         if (LOG.isDebugEnabled()) {
-            LOG.debug("Discarding message " + message);
+            LOG.debug("Discarding expired message " + reference);
         }
-        ConnectionContext ctx = new ConnectionContext(new NonCachedMessageEvaluationContext());
-        ctx.setBroker(broker);
-        broker.getRoot().sendToDeadLetterQueue(ctx, message, null);
+        if (broker.isExpired(reference)) {
+            ConnectionContext context = new ConnectionContext(new NonCachedMessageEvaluationContext());
+            context.setBroker(broker);
+            reference.getRegionDestination().messageExpired(context, null, new IndirectMessageReference(reference.getMessage()));
+        }
     }
 
     protected ByteSequence getByteSequence(Message message) throws IOException {

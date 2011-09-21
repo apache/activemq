@@ -21,6 +21,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
 import javax.jms.Connection;
+import javax.jms.DeliveryMode;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageListener;
@@ -72,14 +73,18 @@ public class ExpiredMessagesWithNoConsumerTest extends CombinationTestSupport {
     }
 
     protected void createBrokerWithMemoryLimit() throws Exception {
-        doCreateBroker(true);
+        createBrokerWithMemoryLimit(800);
+    }
+
+    protected void createBrokerWithMemoryLimit(int expireMessagesPeriod) throws Exception {
+        doCreateBroker(true, expireMessagesPeriod);
     }
 
     protected void createBroker() throws Exception {
-        doCreateBroker(false);
+        doCreateBroker(false, 800);
     }
 
-    private void doCreateBroker(boolean memoryLimit) throws Exception {
+    private void doCreateBroker(boolean memoryLimit, int expireMessagesPeriod) throws Exception {
         broker = new BrokerService();
         broker.setBrokerName("localhost");
         broker.setUseJmx(true);
@@ -89,7 +94,7 @@ public class ExpiredMessagesWithNoConsumerTest extends CombinationTestSupport {
         PolicyMap policyMap = new PolicyMap();
         PolicyEntry defaultEntry = new PolicyEntry();
         defaultEntry.setOptimizedDispatch(optimizedDispatch);
-        defaultEntry.setExpireMessagesPeriod(800);
+        defaultEntry.setExpireMessagesPeriod(expireMessagesPeriod);
         defaultEntry.setMaxExpirePageSize(800);
 
         defaultEntry.setPendingQueuePolicy(pendingQueuePolicy);
@@ -108,6 +113,78 @@ public class ExpiredMessagesWithNoConsumerTest extends CombinationTestSupport {
 
         connectionUri = broker.getTransportConnectors().get(0).getPublishableConnectString();
     }
+
+    public void testExpiredNonPersistentMessagesWithNoConsumer() throws Exception {
+
+        createBrokerWithMemoryLimit(2000);
+
+        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(connectionUri);
+        connection = factory.createConnection();
+        session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        producer = session.createProducer(destination);
+        producer.setTimeToLive(1000);
+        producer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
+        connection.start();
+        final long sendCount = 2000;
+
+        final Thread producingThread = new Thread("Producing Thread") {
+            public void run() {
+                try {
+                    int i = 0;
+                    long tStamp = System.currentTimeMillis();
+                    while (i++ < sendCount) {
+                        producer.send(session.createTextMessage("test"));
+                        if (i%100 == 0) {
+                            LOG.info("sent: " + i + " @ " + ((System.currentTimeMillis() - tStamp) / 100)  + "m/ms");
+                            tStamp = System.currentTimeMillis() ;
+                        }
+
+                        if (135 == i) {
+                            // allow pending messages to expire, before usage limit kicks in  to flush them
+                            TimeUnit.SECONDS.sleep(5);
+                        }
+                    }
+                } catch (Throwable ex) {
+                    ex.printStackTrace();
+                }
+            }
+        };
+
+        producingThread.start();
+
+        assertTrue("producer failed to complete within allocated time", Wait.waitFor(new Wait.Condition() {
+            public boolean isSatisified() throws Exception {
+                producingThread.join(TimeUnit.SECONDS.toMillis(3000));
+                return !producingThread.isAlive();
+            }
+        }));
+
+        TimeUnit.SECONDS.sleep(5);
+        final DestinationViewMBean view = createView(destination);
+        Wait.waitFor(new Wait.Condition() {
+            public boolean isSatisified() throws Exception {
+                try {
+                LOG.info("enqueue=" + view.getEnqueueCount() + ", dequeue=" + view.getDequeueCount()
+                        + ", inflight=" + view.getInFlightCount() + ", expired= " + view.getExpiredCount()
+                        + ", size= " + view.getQueueSize());
+                return view.getDequeueCount() != 0
+                        && view.getDequeueCount() == view.getExpiredCount()
+                        && view.getDequeueCount() == view.getEnqueueCount()
+                        && view.getQueueSize() == 0;
+                } catch (Exception ignored) {
+                    LOG.info(ignored.toString());
+                }
+                return false;
+            }
+        }, Wait.MAX_WAIT_MILLIS * 10);
+        LOG.info("enqueue=" + view.getEnqueueCount() + ", dequeue=" + view.getDequeueCount()
+                + ", inflight=" + view.getInFlightCount() + ", expired= " + view.getExpiredCount()
+                + ", size= " + view.getQueueSize());
+
+        assertEquals("memory usage doesn't go to duck egg", 0, view.getMemoryPercentUsage());
+        assertEquals("0 queue", 0, view.getQueueSize());
+    }
+
 
     public void initCombosForTestExpiredMessagesWithNoConsumer() {
         addCombinationValues("optimizedDispatch", new Object[] {Boolean.TRUE, Boolean.FALSE});
