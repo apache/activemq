@@ -112,4 +112,20 @@ public class InactivityMonitor extends AbstractInactivityMonitor {
 
         return configured;
     }
+
+    public boolean isIgnoreAllWireFormatInfo() {
+        return ignoreAllWireFormatInfo;
+    }
+
+    public void setIgnoreAllWireFormatInfo(boolean ignoreAllWireFormatInfo) {
+        this.ignoreAllWireFormatInfo = ignoreAllWireFormatInfo;
+    }
+
+    public boolean isIgnoreRemoteWireFormat() {
+        return ignoreRemoteWireFormat;
+    }
+
+    public void setIgnoreRemoteWireFormat(boolean ignoreRemoteWireFormat) {
+        this.ignoreRemoteWireFormat = ignoreRemoteWireFormat;
+    }
 }
