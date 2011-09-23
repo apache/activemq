@@ -21,26 +21,26 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 /**
- * 
+ *
  */
 public final class Scheduler {
 
-    
 
-	public static final Timer CLOCK_DAEMON = new Timer("KahaDB Scheduler", true);
+
+    public static final Timer CLOCK_DAEMON = new Timer("KahaDB Scheduler", true);
     private static final HashMap<Runnable, TimerTask> TIMER_TASKS = new HashMap<Runnable, TimerTask>();
 
     private Scheduler() {
     }
 
     public static synchronized void executePeriodically(final Runnable task, long period) {
-    	TimerTask timerTask = new SchedulerTimerTask(task);
-        CLOCK_DAEMON.scheduleAtFixedRate(timerTask, period, period);
+        TimerTask timerTask = new SchedulerTimerTask(task);
+        CLOCK_DAEMON.schedule(timerTask, period, period);
         TIMER_TASKS.put(task, timerTask);
     }
 
     public static synchronized void cancel(Runnable task) {
-    	TimerTask ticket = TIMER_TASKS.remove(task);
+        TimerTask ticket = TIMER_TASKS.remove(task);
         if (ticket != null) {
             ticket.cancel();
             CLOCK_DAEMON.purge();//remove cancelled TimerTasks
@@ -48,10 +48,10 @@ public final class Scheduler {
     }
 
     public static void executeAfterDelay(final Runnable task, long redeliveryDelay) {
-    	TimerTask timerTask = new SchedulerTimerTask(task);
+        TimerTask timerTask = new SchedulerTimerTask(task);
         CLOCK_DAEMON.schedule(timerTask, redeliveryDelay);
     }
-    
+
     public static void shutdown() {
         CLOCK_DAEMON.cancel();
     }
