@@ -22,21 +22,22 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Defines the prefetch message policies for different types of consumers
- * 
+ *
  * @org.apache.xbean.XBean element="prefetchPolicy"
- * 
+ *
  */
+@SuppressWarnings("serial")
 public class ActiveMQPrefetchPolicy extends Object implements Serializable {
-    public static final int MAX_PREFETCH_SIZE = Short.MAX_VALUE - 1;
+    public static final int MAX_PREFETCH_SIZE = Short.MAX_VALUE;
     public static final int DEFAULT_QUEUE_PREFETCH = 1000;
     public static final int DEFAULT_QUEUE_BROWSER_PREFETCH = 500;
     public static final int DEFAULT_DURABLE_TOPIC_PREFETCH = 100;
     public static final int DEFAULT_OPTIMIZE_DURABLE_TOPIC_PREFETCH=1000;
     public static final int DEFAULT_INPUT_STREAM_PREFETCH=100;
     public static final int DEFAULT_TOPIC_PREFETCH = MAX_PREFETCH_SIZE;
-    
+
     private static final Logger LOG = LoggerFactory.getLogger(ActiveMQPrefetchPolicy.class);
-    
+
     private int queuePrefetch;
     private int queueBrowserPrefetch;
     private int topicPrefetch;
@@ -164,7 +165,7 @@ public class ActiveMQPrefetchPolicy extends Object implements Serializable {
     public void setInputStreamPrefetch(int inputStreamPrefetch) {
         this.inputStreamPrefetch = getMaxPrefetchLimit(inputStreamPrefetch);
     }
-    
+
     public boolean equals(Object object){
         if (object instanceof ActiveMQPrefetchPolicy){
             ActiveMQPrefetchPolicy other = (ActiveMQPrefetchPolicy) object;
