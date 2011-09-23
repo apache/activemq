@@ -23,25 +23,25 @@ import org.apache.activemq.util.ServiceStopper;
 import org.apache.activemq.util.ServiceSupport;
 
 /**
- * 
+ *
  */
-public final class Scheduler extends ServiceSupport { 
+public final class Scheduler extends ServiceSupport {
     private final String name;
-	private Timer timer;
+    private Timer timer;
     private final HashMap<Runnable, TimerTask> timerTasks = new HashMap<Runnable, TimerTask>();
-    
+
     public Scheduler (String name) {
         this.name = name;
     }
-        
+
     public void executePeriodically(final Runnable task, long period) {
-    	TimerTask timerTask = new SchedulerTimerTask(task);
-        timer.scheduleAtFixedRate(timerTask, period, period);
+        TimerTask timerTask = new SchedulerTimerTask(task);
+        timer.schedule(timerTask, period, period);
         timerTasks.put(task, timerTask);
     }
 
     /*
-     * execute on rough schedual based on termination of last execution. There is no
+     * execute on rough schedule based on termination of last execution. There is no
      * compensation (two runs in quick succession) for delays
      */
     public synchronized void schedualPeriodically(final Runnable task, long period) {
@@ -49,9 +49,9 @@ public final class Scheduler extends ServiceSupport {
         timer.schedule(timerTask, period, period);
         timerTasks.put(task, timerTask);
     }
-    
+
     public synchronized void cancel(Runnable task) {
-    	TimerTask ticket = timerTasks.remove(task);
+        TimerTask ticket = timerTasks.remove(task);
         if (ticket != null) {
             ticket.cancel();
             timer.purge();//remove cancelled TimerTasks
@@ -59,10 +59,10 @@ public final class Scheduler extends ServiceSupport {
     }
 
     public synchronized void executeAfterDelay(final Runnable task, long redeliveryDelay) {
-    	TimerTask timerTask = new SchedulerTimerTask(task);
+        TimerTask timerTask = new SchedulerTimerTask(task);
         timer.schedule(timerTask, redeliveryDelay);
     }
-    
+
     public void shutdown() {
         timer.cancel();
     }
@@ -70,7 +70,7 @@ public final class Scheduler extends ServiceSupport {
     @Override
     protected synchronized void doStart() throws Exception {
         this.timer = new Timer(name, true);
-        
+
     }
 
     @Override
@@ -78,7 +78,7 @@ public final class Scheduler extends ServiceSupport {
        if (this.timer != null) {
            this.timer.cancel();
        }
-        
+
     }
 
     public String getName() {
