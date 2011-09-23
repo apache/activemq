@@ -42,6 +42,7 @@ import org.slf4j.LoggerFactory;
  */
 public class StompTransportFilter extends TransportFilter implements StompTransport {
     private static final Logger LOG = LoggerFactory.getLogger(StompTransportFilter.class);
+    private static final Logger TRACE = LoggerFactory.getLogger(StompTransportFilter.class.getPackage().getName() + ".StompIO");
     private final ProtocolConverter protocolConverter;
     private StompInactivityMonitor monitor;
     private StompWireFormat wireFormat;
@@ -69,7 +70,7 @@ public class StompTransportFilter extends TransportFilter implements StompTransp
     public void onCommand(Object command) {
         try {
             if (trace) {
-                LOG.trace("Received: \n" + command);
+                TRACE.trace("Received: \n" + command);
             }
 
             protocolConverter.onStompCommand((StompFrame)command);
@@ -89,7 +90,7 @@ public class StompTransportFilter extends TransportFilter implements StompTransp
 
     public void sendToStomp(StompFrame command) throws IOException {
         if (trace) {
-            LOG.trace("Sending: \n" + command);
+            TRACE.trace("Sending: \n" + command);
         }
         Transport n = next;
         if (n!=null) {
