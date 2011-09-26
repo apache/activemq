@@ -80,7 +80,7 @@ public class JaasAuthenticationBroker extends BrokerFilter {
                     context.setSecurityContext(s);
                     securityContexts.add(s);
                 } catch (Exception e) {
-                    throw (SecurityException)new SecurityException("User name or password is invalid.")
+                    throw (SecurityException)new SecurityException("User name [" + info.getUserName() + "] or password is invalid.")
                         .initCause(e);
                 }
             } finally {

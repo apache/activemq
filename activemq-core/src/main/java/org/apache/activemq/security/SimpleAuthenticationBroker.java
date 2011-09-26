@@ -78,7 +78,7 @@ public class SimpleAuthenticationBroker extends BrokerFilter {
                 String pw = (String) userPasswords.get(info.getUserName());
                 if (pw == null || !pw.equals(info.getPassword())) {
                     throw new SecurityException(
-                            "User name or password is invalid.");
+                            "User name [" + info.getUserName() + "] or password is invalid.");
                 }
 
                 final Set groups = (Set) userGroups.get(info.getUserName());
