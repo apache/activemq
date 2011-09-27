@@ -42,7 +42,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * An {@link AuthorizationMap} which uses LDAP
- * 
+ *
  * @org.apache.xbean.XBean
  * @author ngcutura
  */
@@ -115,25 +115,25 @@ public class LDAPAuthorizationMap implements AuthorizationMap {
         writeAttribute = "uniqueMember";
     }
 
-    public LDAPAuthorizationMap(Map options) {
-        initialContextFactory = (String)options.get(INITIAL_CONTEXT_FACTORY);
-        connectionURL = (String)options.get(CONNECTION_URL);
-        connectionUsername = (String)options.get(CONNECTION_USERNAME);
-        connectionPassword = (String)options.get(CONNECTION_PASSWORD);
-        connectionProtocol = (String)options.get(CONNECTION_PROTOCOL);
-        authentication = (String)options.get(AUTHENTICATION);
+    public LDAPAuthorizationMap(Map<String,String> options) {
+        initialContextFactory = options.get(INITIAL_CONTEXT_FACTORY);
+        connectionURL = options.get(CONNECTION_URL);
+        connectionUsername = options.get(CONNECTION_USERNAME);
+        connectionPassword = options.get(CONNECTION_PASSWORD);
+        connectionProtocol = options.get(CONNECTION_PROTOCOL);
+        authentication = options.get(AUTHENTICATION);
 
-        adminBase = (String)options.get(ADMIN_BASE);
-        adminAttribute = (String)options.get(ADMIN_ATTRIBUTE);
-        readBase = (String)options.get(READ_BASE);
-        readAttribute = (String)options.get(READ_ATTRIBUTE);
-        writeBase = (String)options.get(WRITE_BASE);
-        writeAttribute = (String)options.get(WRITE_ATTRIBUTE);
+        adminBase = options.get(ADMIN_BASE);
+        adminAttribute = options.get(ADMIN_ATTRIBUTE);
+        readBase = options.get(READ_BASE);
+        readAttribute = options.get(READ_ATTRIBUTE);
+        writeBase = options.get(WRITE_BASE);
+        writeAttribute = options.get(WRITE_ATTRIBUTE);
 
-        String topicSearchMatching = (String)options.get(TOPIC_SEARCH_MATCHING);
-        String topicSearchSubtree = (String)options.get(TOPIC_SEARCH_SUBTREE);
-        String queueSearchMatching = (String)options.get(QUEUE_SEARCH_MATCHING);
-        String queueSearchSubtree = (String)options.get(QUEUE_SEARCH_SUBTREE);
+        String topicSearchMatching = options.get(TOPIC_SEARCH_MATCHING);
+        String topicSearchSubtree = options.get(TOPIC_SEARCH_SUBTREE);
+        String queueSearchMatching = options.get(QUEUE_SEARCH_MATCHING);
+        String queueSearchSubtree = options.get(QUEUE_SEARCH_SUBTREE);
         topicSearchMatchingFormat = new MessageFormat(topicSearchMatching);
         queueSearchMatchingFormat = new MessageFormat(queueSearchMatching);
         topicSearchSubtreeBool = Boolean.valueOf(topicSearchSubtree).booleanValue();
@@ -413,7 +413,7 @@ public class LDAPAuthorizationMap implements AuthorizationMap {
         try {
             Set<GroupPrincipal> roles = new HashSet<GroupPrincipal>();
             Set<String> acls = new HashSet<String>();
-            NamingEnumeration results = context.search(destinationBase, roleBase, constraints);
+            NamingEnumeration<?> results = context.search(destinationBase, roleBase, constraints);
             while (results.hasMore()) {
                 SearchResult result = (SearchResult)results.next();
                 Attributes attrs = result.getAttributes();
@@ -445,7 +445,7 @@ public class LDAPAuthorizationMap implements AuthorizationMap {
         if (attr == null) {
             return values;
         }
-        NamingEnumeration e = attr.getAll();
+        NamingEnumeration<?> e = attr.getAll();
         while (e.hasMore()) {
             String value = (String)e.next();
             values.add(value);

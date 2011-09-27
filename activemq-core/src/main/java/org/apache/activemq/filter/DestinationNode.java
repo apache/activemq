@@ -25,21 +25,21 @@ import java.util.Set;
  * 
  */
 public interface DestinationNode {
-    void appendMatchingValues(Set answer, String[] paths, int startIndex);
+    void appendMatchingValues(Set<DestinationNode> answer, String[] paths, int startIndex);
 
-    void appendMatchingWildcards(Set answer, String[] paths, int startIndex);
+    void appendMatchingWildcards(Set<DestinationNode> answer, String[] paths, int startIndex);
 
-    void appendDescendantValues(Set answer);
+    void appendDescendantValues(Set<DestinationNode> answer);
 
-    Collection getDesendentValues();
+    Collection<DestinationNode> getDesendentValues();
 
     DestinationNode getChild(String path);
 
-    Collection getValues();
+    Collection<DestinationNode> getValues();
 
-    Collection getChildren();
+    Collection<DestinationNode> getChildren();
 
-    Collection removeDesendentValues();
+    Collection<DestinationNode> removeDesendentValues();
 
-    Collection removeValues();
+    Collection<DestinationNode> removeValues();
 }

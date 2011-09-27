@@ -19,6 +19,7 @@ package org.apache.activemq.security;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
+import org.apache.activemq.filter.DestinationMapEntry;
 import org.apache.activemq.jaas.GroupPrincipal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,7 +32,6 @@ import javax.naming.NamingException;
 import javax.naming.directory.*;
 import javax.naming.event.*;
 import java.util.*;
-
 
 /**
  * A {@link DefaultAuthorizationMap} implementation which uses LDAP to initialize and update
@@ -97,10 +97,9 @@ public class CachedLDAPAuthorizationMap extends DefaultAuthorizationMap implemen
         return context;
     }
 
-
     HashMap<ActiveMQDestination, AuthorizationEntry> entries = new HashMap<ActiveMQDestination, AuthorizationEntry>();
 
-
+    @SuppressWarnings("rawtypes")
     public void query() throws Exception {
         try {
             context = open();
@@ -111,14 +110,14 @@ public class CachedLDAPAuthorizationMap extends DefaultAuthorizationMap implemen
         final SearchControls constraints = new SearchControls();
         constraints.setSearchScope(SearchControls.SUBTREE_SCOPE);
 
-        NamingEnumeration results = context.search("ou=Destination,ou=ActiveMQ," + baseDn, "(|(cn=admin)(cn=write)(cn=read))", constraints);
+        NamingEnumeration<?> results = context.search("ou=Destination,ou=ActiveMQ," + baseDn, "(|(cn=admin)(cn=write)(cn=read))", constraints);
         while (results.hasMore()) {
             SearchResult result = (SearchResult) results.next();
             AuthorizationEntry entry = getEntry(result.getNameInNamespace());
             applyACL(entry, result);
         }
 
-        setEntries(new ArrayList(entries.values()));
+        setEntries(new ArrayList<DestinationMapEntry>(entries.values()));
         updated();
     }
 
@@ -175,8 +174,8 @@ public class CachedLDAPAuthorizationMap extends DefaultAuthorizationMap implemen
         // find members
         Attribute cn = result.getAttributes().get("cn");
         Attribute member = result.getAttributes().get("member");
-        NamingEnumeration memberEnum = member.getAll();
-        HashSet members = new HashSet();
+        NamingEnumeration<?> memberEnum = member.getAll();
+        HashSet<Object> members = new HashSet<Object>();
         while (memberEnum.hasMoreElements()) {
             String elem = (String) memberEnum.nextElement();
             members.add(new GroupPrincipal(elem.replaceAll("cn=", "")));
@@ -229,7 +228,6 @@ public class CachedLDAPAuthorizationMap extends DefaultAuthorizationMap implemen
     public void objectAdded(NamingEvent namingEvent) {
         LOG.debug("Adding object: " + namingEvent.getNewBinding());
         SearchResult result = (SearchResult)namingEvent.getNewBinding();
-        String cn = null;
         if (!isPriviledge(result)) return;
         AuthorizationEntry entry = getEntry(result.getName());
         if (entry != null) {
@@ -253,11 +251,11 @@ public class CachedLDAPAuthorizationMap extends DefaultAuthorizationMap implemen
         String[] cns = result.getName().split(",");
         if (!isPriviledge(result)) return;
         if (cns[0].equalsIgnoreCase("cn=admin")) {
-            entry.setAdminACLs(new HashSet());
+            entry.setAdminACLs(new HashSet<Object>());
         } else if (cns[0].equalsIgnoreCase("cn=write")) {
-            entry.setWriteACLs(new HashSet());
+            entry.setWriteACLs(new HashSet<Object>());
         } else if (cns[0].equalsIgnoreCase("cn=read")) {
-            entry.setReadACLs(new HashSet());
+            entry.setReadACLs(new HashSet<Object>());
         } else {
             LOG.warn("Policy not removed! Unknown privilege " + result.getName());
         }

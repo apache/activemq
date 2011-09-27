@@ -22,11 +22,12 @@ import java.util.Set;
 
 import junit.framework.TestCase;
 import org.apache.activemq.command.ActiveMQQueue;
+import org.apache.activemq.filter.DestinationMapEntry;
 import org.apache.activemq.jaas.GroupPrincipal;
 
 /**
- * 
- * 
+ *
+ *
  */
 public class AuthorizationMapTest extends TestCase {
     static final GroupPrincipal GUESTS = new GroupPrincipal("guests");
@@ -37,7 +38,7 @@ public class AuthorizationMapTest extends TestCase {
     public void testAuthorizationMap() {
         AuthorizationMap map = createAuthorizationMap();
 
-        Set readACLs = map.getReadACLs(new ActiveMQQueue("USERS.FOO.BAR"));
+        Set<?> readACLs = map.getReadACLs(new ActiveMQQueue("USERS.FOO.BAR"));
         assertEquals("set size: " + readACLs, 2, readACLs.size());
         assertTrue("Contains users group", readACLs.contains(ADMINS));
         assertTrue("Contains users group", readACLs.contains(USERS));
@@ -47,21 +48,22 @@ public class AuthorizationMapTest extends TestCase {
     public void testAuthorizationMapWithTempDest() {
         AuthorizationMap map = createAuthorizationMapWithTempDest();
 
-        Set readACLs = map.getReadACLs(new ActiveMQQueue("USERS.FOO.BAR"));
+        Set<?> readACLs = map.getReadACLs(new ActiveMQQueue("USERS.FOO.BAR"));
         assertEquals("set size: " + readACLs, 2, readACLs.size());
         assertTrue("Contains users group", readACLs.contains(ADMINS));
         assertTrue("Contains users group", readACLs.contains(USERS));
 
-        Set tempAdminACLs = map.getTempDestinationAdminACLs();
+        Set<?> tempAdminACLs = map.getTempDestinationAdminACLs();
         assertEquals("set size: " + tempAdminACLs, 1, tempAdminACLs.size());
         assertTrue("Contains users group", tempAdminACLs.contains(TEMP_DESTINATION_ADMINS));
 
     }
 
+    @SuppressWarnings("rawtypes")
     protected AuthorizationMap createAuthorizationMap() {
         DefaultAuthorizationMap answer = new DefaultAuthorizationMap();
 
-        List<AuthorizationEntry> entries = new ArrayList<AuthorizationEntry>();
+        List<DestinationMapEntry> entries = new ArrayList<DestinationMapEntry>();
 
         AuthorizationEntry entry = new AuthorizationEntry();
         entry.setGroupClass("org.apache.activemq.jaas.GroupPrincipal");
@@ -88,10 +90,11 @@ public class AuthorizationMapTest extends TestCase {
         return answer;
     }
 
+    @SuppressWarnings("rawtypes")
     protected AuthorizationMap createAuthorizationMapWithTempDest() {
         DefaultAuthorizationMap answer = new DefaultAuthorizationMap();
 
-        List<AuthorizationEntry> entries = new ArrayList<AuthorizationEntry>();
+        List<DestinationMapEntry> entries = new ArrayList<DestinationMapEntry>();
 
         AuthorizationEntry entry = new AuthorizationEntry();
         entry.setQueue(">");

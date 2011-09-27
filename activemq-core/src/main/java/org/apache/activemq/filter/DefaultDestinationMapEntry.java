@@ -18,19 +18,20 @@ package org.apache.activemq.filter;
 
 /**
  * A default entry in a DestinationMap which holds a single value.
- * 
+ *
  * @org.apache.xbean.XBean element="destinationEntry"
- * 
- * 
+ *
+ *
  */
+@SuppressWarnings("rawtypes")
 public class DefaultDestinationMapEntry extends DestinationMapEntry {
-    private Object value;
+    private DestinationMapEntry value;
 
-    public Object getValue() {
+    public DestinationMapEntry getValue() {
         return value;
     }
 
-    public void setValue(Object value) {
+    public void setValue(DestinationMapEntry value) {
         this.value = value;
     }
 

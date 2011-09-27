@@ -19,7 +19,6 @@ package org.apache.activemq.security;
 
 import java.security.Principal;
 import java.security.cert.X509Certificate;
-import java.util.Iterator;
 
 import javax.security.auth.Subject;
 import javax.security.auth.callback.CallbackHandler;
@@ -89,10 +88,9 @@ public class JaasCertificateAuthenticationBroker extends BrokerFilter {
 
                     String dnName = "";
 
-                    for (Iterator iter = subject.getPrincipals().iterator(); iter.hasNext();) {
-                        Principal nextPrincipal = (Principal)iter.next();
-                        if (nextPrincipal instanceof UserPrincipal) {
-                            dnName = ((UserPrincipal)nextPrincipal).getName();
+                    for (Principal principal : subject.getPrincipals()) {
+                        if (principal instanceof UserPrincipal) {
+                            dnName = ((UserPrincipal)principal).getName();
                             break;
                         }
                     }

@@ -23,15 +23,16 @@ import java.util.Set;
 
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.filter.DestinationMap;
+import org.apache.activemq.filter.DestinationMapEntry;
 
 /**
  * Represents a destination based configuration of policies so that individual
  * destinations or wildcard hierarchies of destinations can be configured using
  * different policies. Each entry in the map represents the authorization ACLs
  * for each operation.
- * 
+ *
  * @org.apache.xbean.XBean element="authorizationMap"
- * 
+ *
  */
 public class DefaultAuthorizationMap extends DestinationMap implements AuthorizationMap {
 
@@ -42,7 +43,8 @@ public class DefaultAuthorizationMap extends DestinationMap implements Authoriza
     public DefaultAuthorizationMap() {
     }
 
-    public DefaultAuthorizationMap(List authorizationEntries) {
+    @SuppressWarnings("rawtypes")
+    public DefaultAuthorizationMap(List<DestinationMapEntry> authorizationEntries) {
         setAuthorizationEntries(authorizationEntries);
 
     }
@@ -124,10 +126,11 @@ public class DefaultAuthorizationMap extends DestinationMap implements Authoriza
 
     /**
      * Sets the individual entries on the authorization map
-     * 
+     *
      * @org.apache.xbean.ElementType class="org.apache.activemq.security.AuthorizationEntry"
      */
-    public void setAuthorizationEntries(List entries) {
+    @SuppressWarnings("rawtypes")
+    public void setAuthorizationEntries(List<DestinationMapEntry> entries) {
         super.setEntries(entries);
     }
 
@@ -139,10 +142,12 @@ public class DefaultAuthorizationMap extends DestinationMap implements Authoriza
         this.defaultEntry = defaultEntry;
     }
 
-    protected Class<AuthorizationEntry> getEntryClass() {
+    @SuppressWarnings("rawtypes")
+    protected Class<? extends DestinationMapEntry> getEntryClass() {
         return AuthorizationEntry.class;
     }
 
+    @SuppressWarnings("unchecked")
     protected Set<AuthorizationEntry> getAllEntries(ActiveMQDestination destination) {
         Set<AuthorizationEntry> entries = get(destination);
         if (defaultEntry != null) {

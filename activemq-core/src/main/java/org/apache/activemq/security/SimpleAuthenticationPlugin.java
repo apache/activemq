@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.security;
 
+import java.security.Principal;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -30,17 +31,17 @@ import org.apache.activemq.jaas.GroupPrincipal;
 
 /**
  * A simple authentication plugin
- * 
+ *
  * @org.apache.xbean.XBean element="simpleAuthenticationPlugin"
  *                         description="Provides a simple authentication plugin
  *                         configured with a map of user-passwords and a map of
  *                         user-groups or a list of authentication users"
- * 
- * 
+ *
+ *
  */
 public class SimpleAuthenticationPlugin implements BrokerPlugin {
     private Map<String, String> userPasswords;
-    private Map<String, Set<GroupPrincipal>> userGroups;
+    private Map<String, Set<Principal>> userGroups;
     private static final String DEFAULT_ANONYMOUS_USER = "anonymous";
     private static final String DEFAULT_ANONYMOUS_GROUP = "anonymous";
     private String anonymousUser = DEFAULT_ANONYMOUS_USER;
@@ -50,7 +51,7 @@ public class SimpleAuthenticationPlugin implements BrokerPlugin {
     public SimpleAuthenticationPlugin() {
     }
 
-    public SimpleAuthenticationPlugin(List users) {
+    public SimpleAuthenticationPlugin(List<?> users) {
         setUsers(users);
     }
 
@@ -62,22 +63,22 @@ public class SimpleAuthenticationPlugin implements BrokerPlugin {
         return broker;
     }
 
-    public Map<String, Set<GroupPrincipal>> getUserGroups() {
+    public Map<String, Set<Principal>> getUserGroups() {
         return userGroups;
     }
 
     /**
      * Sets individual users for authentication
-     * 
+     *
      * @org.apache.xbean.ElementType class="org.apache.activemq.security.AuthenticationUser"
      */
-    public void setUsers(List users) {
+    public void setUsers(List<?> users) {
         userPasswords = new HashMap<String, String>();
-        userGroups = new HashMap<String, Set<GroupPrincipal>>();
-        for (Iterator it = users.iterator(); it.hasNext();) {
+        userGroups = new HashMap<String, Set<Principal>>();
+        for (Iterator<?> it = users.iterator(); it.hasNext();) {
             AuthenticationUser user = (AuthenticationUser)it.next();
             userPasswords.put(user.getUsername(), user.getPassword());
-            Set<GroupPrincipal> groups = new HashSet<GroupPrincipal>();
+            Set<Principal> groups = new HashSet<Principal>();
             StringTokenizer iter = new StringTokenizer(user.getGroups(), ",");
             while (iter.hasMoreTokens()) {
                 String name = iter.nextToken().trim();
@@ -86,8 +87,8 @@ public class SimpleAuthenticationPlugin implements BrokerPlugin {
             userGroups.put(user.getUsername(), groups);
         }
     }
-    
-    
+
+
     public void setAnonymousAccessAllowed(boolean anonymousAccessAllowed) {
         this.anonymousAccessAllowed = anonymousAccessAllowed;
     }
@@ -104,7 +105,7 @@ public class SimpleAuthenticationPlugin implements BrokerPlugin {
      * Sets the groups a user is in. The key is the user name and the value is a
      * Set of groups
      */
-    public void setUserGroups(Map<String, Set<GroupPrincipal>> userGroups) {
+    public void setUserGroups(Map<String, Set<Principal>> userGroups) {
         this.userGroups = userGroups;
     }
 

@@ -21,7 +21,7 @@ package org.apache.activemq.filter;
  * 
  * 
  */
-public class DummyPolicyEntry extends DestinationMapEntry {
+public class DummyPolicyEntry extends DestinationMapEntry<String> {
 
     private String description;
 
@@ -33,7 +33,7 @@ public class DummyPolicyEntry extends DestinationMapEntry {
         this.description = description;
     }
 
-    public Object getValue() {
+    public Comparable<String> getValue() {
         return description;
     }
 

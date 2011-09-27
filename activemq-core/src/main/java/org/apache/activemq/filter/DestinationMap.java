@@ -17,7 +17,6 @@
 package org.apache.activemq.filter;
 
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.SortedSet;
@@ -35,8 +34,8 @@ import org.apache.activemq.command.ActiveMQDestination;
  * pretty fast. <br>
  * Looking up of a value could return a single value or a List of matching
  * values if a wildcard or composite destination is used.
- * 
- * 
+ *
+ *
  */
 public class DestinationMap {
     protected static final String ANY_DESCENDENT = DestinationFilter.ANY_DESCENDENT;
@@ -52,11 +51,12 @@ public class DestinationMap {
      * destinations this is typically a List of one single value, for wildcards
      * or composite destinations this will typically be a List of matching
      * values.
-     * 
+     *
      * @param key the destination to lookup
      * @return a List of matching values or an empty list if there are no
      *         matching values.
      */
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     public synchronized Set get(ActiveMQDestination key) {
         if (key.isComposite()) {
             ActiveMQDestination[] destinations = key.getCompositeDestinations();
@@ -136,10 +136,10 @@ public class DestinationMap {
      * A helper method to allow the destination map to be populated from a
      * dependency injection framework such as Spring
      */
-    protected void setEntries(List entries) {
-        for (Iterator iter = entries.iterator(); iter.hasNext();) {
-            Object element = (Object)iter.next();
-            Class type = getEntryClass();
+    @SuppressWarnings({ "rawtypes" })
+    protected void setEntries(List<DestinationMapEntry>  entries) {
+        for (Object element : entries) {
+            Class<? extends DestinationMapEntry> type = getEntryClass();
             if (type.isInstance(element)) {
                 DestinationMapEntry entry = (DestinationMapEntry)element;
                 put(entry.getDestination(), entry.getValue());
@@ -155,10 +155,12 @@ public class DestinationMap {
      * restrict the type of allowed entries to make a type safe destination map
      * for custom policies.
      */
-    protected Class getEntryClass() {
+    @SuppressWarnings({ "rawtypes" })
+    protected Class<? extends DestinationMapEntry> getEntryClass() {
         return DestinationMapEntry.class;
     }
 
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     protected Set findWildcardMatches(ActiveMQDestination key) {
         String[] paths = key.getDestinationPaths();
         Set answer = new HashSet();
@@ -170,6 +172,7 @@ public class DestinationMap {
      * @param key
      * @return
      */
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     public Set removeAll(ActiveMQDestination key) {
         Set rc = new HashSet();
         if (key.isComposite()) {
@@ -188,10 +191,11 @@ public class DestinationMap {
      * Returns the value which matches the given destination or null if there is
      * no matching value. If there are multiple values, the results are sorted
      * and the last item (the biggest) is returned.
-     * 
+     *
      * @param destination the destination to find the value for
      * @return the largest matching value or null if no value matches
      */
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     public Object chooseValue(ActiveMQDestination destination) {
         Set set = get(destination);
         if (set == null || set.isEmpty()) {

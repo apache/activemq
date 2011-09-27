@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.security;
 
+import java.security.Principal;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -26,8 +27,8 @@ import org.apache.activemq.command.ActiveMQDestination;
 
 /**
  * Used to cache up authorizations so that subsequent requests are faster.
- * 
- * 
+ *
+ *
  */
 public abstract class SecurityContext {
 
@@ -37,9 +38,8 @@ public abstract class SecurityContext {
             return true;
         }
 
-        @SuppressWarnings("unchecked")
-        public Set<?> getPrincipals() {
-            return Collections.EMPTY_SET;
+        public Set<Principal> getPrincipals() {
+            return Collections.emptySet();
         }
     };
 
@@ -53,20 +53,20 @@ public abstract class SecurityContext {
     }
 
     public boolean isInOneOf(Set<?> allowedPrincipals) {
-    	Iterator allowedIter = allowedPrincipals.iterator();
-    	HashSet<?> userPrincipals = new HashSet<Object>(getPrincipals());
-    	while (allowedIter.hasNext()) {
-    		Iterator userIter = userPrincipals.iterator();
-    		Object allowedPrincipal = allowedIter.next(); 
-    		while (userIter.hasNext()) {
-    			if (allowedPrincipal.equals(userIter.next()))
-    				return true;
-    		}
-    	}
-    	return false;
+        Iterator<?> allowedIter = allowedPrincipals.iterator();
+        HashSet<?> userPrincipals = new HashSet<Object>(getPrincipals());
+        while (allowedIter.hasNext()) {
+            Iterator<?> userIter = userPrincipals.iterator();
+            Object allowedPrincipal = allowedIter.next();
+            while (userIter.hasNext()) {
+                if (allowedPrincipal.equals(userIter.next()))
+                    return true;
+            }
+        }
+        return false;
     }
 
-    public abstract Set<?> getPrincipals();
+    public abstract Set<Principal> getPrincipals();
 
     public String getUserName() {
         return userName;

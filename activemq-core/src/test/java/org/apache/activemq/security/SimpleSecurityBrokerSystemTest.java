@@ -17,9 +17,12 @@
 package org.apache.activemq.security;
 
 import java.net.URL;
+import java.security.Principal;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 import junit.framework.Test;
 import org.apache.activemq.CombinationTestSupport;
@@ -28,7 +31,6 @@ import org.apache.activemq.broker.BrokerPlugin;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
-import org.apache.activemq.command.MessageSendTest;
 import org.apache.activemq.filter.DestinationMap;
 import org.apache.activemq.jaas.GroupPrincipal;
 import org.slf4j.Logger;
@@ -37,8 +39,8 @@ import org.slf4j.LoggerFactory;
 /**
  * Tests that the broker allows/fails access to destinations based on the
  * security policy installed on the broker.
- * 
- * 
+ *
+ *
  */
 public class SimpleSecurityBrokerSystemTest extends SecurityTestSupport {
 
@@ -113,10 +115,10 @@ public class SimpleSecurityBrokerSystemTest extends SecurityTestSupport {
             u.put("user", "password");
             u.put("guest", "password");
 
-            HashMap<String, HashSet<Object>> groups = new HashMap<String, HashSet<Object>>();
-            groups.put("system", new HashSet<Object>(Arrays.asList(new Object[] {ADMINS, USERS})));
-            groups.put("user", new HashSet<Object>(Arrays.asList(new Object[] {USERS})));
-            groups.put("guest", new HashSet<Object>(Arrays.asList(new Object[] {GUESTS})));
+            Map<String, Set<Principal>> groups = new HashMap<String, Set<Principal>>();
+            groups.put("system", new HashSet<Principal>(Arrays.asList(new Principal[] {ADMINS, USERS})));
+            groups.put("user", new HashSet<Principal>(Arrays.asList(new Principal[] {USERS})));
+            groups.put("guest", new HashSet<Principal>(Arrays.asList(new Principal[] {GUESTS})));
 
             return new SimpleAuthenticationBroker(broker, u, groups);
         }

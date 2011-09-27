@@ -20,6 +20,7 @@ import java.util.List;
 
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.filter.DestinationMap;
+import org.apache.activemq.filter.DestinationMapEntry;
 
 /**
  * Represents a destination based configuration of policies so that individual
@@ -59,7 +60,7 @@ public class PolicyMap extends DestinationMap {
         this.defaultEntry = defaultEntry;
     }
 
-    protected Class getEntryClass() {
+    protected Class<? extends DestinationMapEntry> getEntryClass() {
         return PolicyEntry.class;
     }
 }

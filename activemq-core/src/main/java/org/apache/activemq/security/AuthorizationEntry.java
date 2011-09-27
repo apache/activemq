@@ -29,10 +29,11 @@ import org.apache.activemq.filter.DestinationMapEntry;
  * Represents an entry in a {@link DefaultAuthorizationMap} for assigning
  * different operations (read, write, admin) of user roles to a specific
  * destination or a hierarchical wildcard area of destinations.
- * 
+ *
  * @org.apache.xbean.XBean
- * 
+ *
  */
+@SuppressWarnings("rawtypes")
 public class AuthorizationEntry extends DestinationMapEntry {
 
     private Set<Object> readACLs = emptySet();
@@ -109,21 +110,18 @@ public class AuthorizationEntry extends DestinationMapEntry {
         Set<Object> answer = new HashSet<Object>();
         StringTokenizer iter = new StringTokenizer(roles, ",");
         while (iter.hasMoreTokens()) {
-            String name = iter.nextToken().trim();
-            Class[] paramClass = new Class[1];
-            paramClass[0] = String.class;
 
-            Object[] param = new Object[1];
-            param[0] = name;
+            String name = iter.nextToken().trim();
+            Object[] param = new Object[]{name};
 
             try {
-                Class cls = Class.forName(groupClass);
+                Class<?> cls = Class.forName(groupClass);
 
-                Constructor[] constructors = cls.getConstructors();
+                Constructor<?>[] constructors = cls.getConstructors();
                 int i;
                 for (i = 0; i < constructors.length; i++) {
-                    Class[] paramTypes = constructors[i].getParameterTypes();
-                    if (paramTypes.length != 0 && paramTypes[0].equals(paramClass[0])) {
+                    Class<?>[] paramTypes = constructors[i].getParameterTypes();
+                    if (paramTypes.length != 0 && paramTypes[0].equals(String.class)) {
                         break;
                     }
                 }
@@ -135,8 +133,8 @@ public class AuthorizationEntry extends DestinationMapEntry {
                     Method[] methods = cls.getMethods();
                     i = 0;
                     for (i = 0; i < methods.length; i++) {
-                        Class[] paramTypes = methods[i].getParameterTypes();
-                        if (paramTypes.length != 0 && methods[i].getName().equals("setName") && paramTypes[0].equals(paramClass[0])) {
+                        Class<?>[] paramTypes = methods[i].getParameterTypes();
+                        if (paramTypes.length != 0 && methods[i].getName().equals("setName") && paramTypes[0].equals(String.class)) {
                             break;
                         }
                     }

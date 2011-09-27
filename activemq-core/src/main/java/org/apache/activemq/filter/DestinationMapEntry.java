@@ -27,13 +27,13 @@ import org.apache.activemq.command.*;
  * 
  * @org.apache.xbean.XBean
  */
-public abstract class DestinationMapEntry implements Comparable {
+public abstract class DestinationMapEntry<T> implements Comparable<T> {
 
     private ActiveMQDestination destination;
 
     public int compareTo(Object that) {
         if (that instanceof DestinationMapEntry) {
-            DestinationMapEntry thatEntry = (DestinationMapEntry)that;
+            DestinationMapEntry<?> thatEntry = (DestinationMapEntry<?>)that;
             return ActiveMQDestination.compare(destination, thatEntry.destination);
         } else if (that == null) {
             return 1;
@@ -84,7 +84,7 @@ public abstract class DestinationMapEntry implements Comparable {
         }
     }
 
-    public Object getValue() {
+    public Comparable<T> getValue() {
         return this;
     }
 }

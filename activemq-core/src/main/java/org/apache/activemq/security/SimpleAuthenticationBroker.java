@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.security;
 
+import java.security.Principal;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
@@ -30,24 +31,24 @@ import org.apache.activemq.jaas.GroupPrincipal;
 
 /**
  * Handles authenticating a users against a simple user name/password map.
- * 
- * 
+ *
+ *
  */
 public class SimpleAuthenticationBroker extends BrokerFilter {
 
     private boolean anonymousAccessAllowed = false;
     private String anonymousUser;
     private String anonymousGroup;
-    private final Map userPasswords;
-    private final Map userGroups;
+    private final Map<String,String> userPasswords;
+    private final Map<String,Set<Principal>> userGroups;
     private final CopyOnWriteArrayList<SecurityContext> securityContexts = new CopyOnWriteArrayList<SecurityContext>();
 
-    public SimpleAuthenticationBroker(Broker next, Map userPasswords, Map userGroups) {
+    public SimpleAuthenticationBroker(Broker next, Map<String,String> userPasswords, Map<String,Set<Principal>> userGroups) {
         super(next);
         this.userPasswords = userPasswords;
         this.userGroups = userGroups;
     }
-    
+
     public void setAnonymousAccessAllowed(boolean anonymousAccessAllowed) {
         this.anonymousAccessAllowed = anonymousAccessAllowed;
     }
@@ -62,28 +63,28 @@ public class SimpleAuthenticationBroker extends BrokerFilter {
 
     public void addConnection(ConnectionContext context, ConnectionInfo info) throws Exception {
 
-    	SecurityContext s = context.getSecurityContext();
+        SecurityContext s = context.getSecurityContext();
         if (s == null) {
             // Check the username and password.
             if (anonymousAccessAllowed && info.getUserName() == null && info.getPassword() == null) {
                 info.setUserName(anonymousUser);
                 s = new SecurityContext(info.getUserName()) {
-                    public Set getPrincipals() {
-                        Set groups = new HashSet();
+                    public Set<Principal> getPrincipals() {
+                        Set<Principal> groups = new HashSet<Principal>();
                         groups.add(new GroupPrincipal(anonymousGroup));
                         return groups;
                     }
                 };
             } else {
-                String pw = (String) userPasswords.get(info.getUserName());
+                String pw = userPasswords.get(info.getUserName());
                 if (pw == null || !pw.equals(info.getPassword())) {
                     throw new SecurityException(
                             "User name [" + info.getUserName() + "] or password is invalid.");
                 }
 
-                final Set groups = (Set) userGroups.get(info.getUserName());
+                final Set<Principal> groups = userGroups.get(info.getUserName());
                 s = new SecurityContext(info.getUserName()) {
-                    public Set<?> getPrincipals() {
+                    public Set<Principal> getPrincipals() {
                         return groups;
                     }
                 };

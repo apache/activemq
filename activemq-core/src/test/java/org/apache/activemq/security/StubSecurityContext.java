@@ -17,6 +17,7 @@
 
 package org.apache.activemq.security;
 
+import java.security.Principal;
 import java.util.Set;
 
 public class StubSecurityContext extends SecurityContext {
@@ -24,7 +25,7 @@ public class StubSecurityContext extends SecurityContext {
         super("");
     }
 
-    public Set<?> getPrincipals() {
+    public Set<Principal> getPrincipals() {
         return null;
     }
 }
