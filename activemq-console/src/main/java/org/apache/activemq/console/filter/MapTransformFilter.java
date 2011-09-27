@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.console.filter;
 
+import java.lang.reflect.Array;
 import java.lang.reflect.Method;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -331,10 +332,32 @@ public class MapTransformFilter extends ResultTransformFilter {
         return props;
     }
 
-    protected String getDisplayString(Object obj) {
-        if (obj != null && obj.getClass().isArray()) {
-            obj = Arrays.asList((Object[]) obj);
-        }
+	@SuppressWarnings("unchecked")
+	protected String getDisplayString(Object obj) {
+		if (null == obj)
+			return "null";
+		
+		if (obj != null && obj.getClass().isArray()) {
+			Class type = obj.getClass().getComponentType();
+			if (!type.isPrimitive()) {
+				obj = Arrays.asList((Object[]) obj);
+			} else {
+				// for primitives, we can't use Arrays.toString(), so we have to roll something similar.
+				int len = Array.getLength(obj);
+				if (0 == len)
+					return "[]";
+				StringBuilder bldr = new StringBuilder();
+				bldr.append("[");
+				for (int i = 0; i <= len; i++) {
+					bldr.append(Array.get(obj, i));
+					if (i + 1 >= len)
+						return bldr.append("]").toString();
+					bldr.append(",");
+				}
+			}
+
+		}
+        
         return obj.toString();
     }
 }
