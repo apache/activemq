@@ -58,7 +58,7 @@ public class FailoverTransportFactory extends TransportFactory {
      * @throws IOException
      */
     public Transport createTransport(CompositeData compositData) throws IOException {
-        Map options = compositData.getParameters();
+        Map<String, String> options = compositData.getParameters();
         FailoverTransport transport = createTransport(options);
         if (!options.isEmpty()) {
             throw new IllegalArgumentException("Invalid connect parameters: " + options);
@@ -67,7 +67,7 @@ public class FailoverTransportFactory extends TransportFactory {
         return transport;
     }
 
-    public FailoverTransport createTransport(Map parameters) throws IOException {
+    public FailoverTransport createTransport(Map<String, String> parameters) throws IOException {
         FailoverTransport transport = new FailoverTransport();
         IntrospectionSupport.setProperties(transport, parameters);
         return transport;

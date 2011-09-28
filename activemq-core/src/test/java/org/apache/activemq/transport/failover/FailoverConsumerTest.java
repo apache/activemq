@@ -36,7 +36,6 @@ public class FailoverConsumerTest extends NetworkTestSupport {
     public static final int MSG_COUNT = 100;
     private static final Logger LOG = LoggerFactory.getLogger(FailoverConsumerTest.class);
 
-
     public void testPublisherFailsOver() throws Exception {
         // Uncomment this if you want to use remote broker created by
         // NetworkTestSupport.
@@ -72,7 +71,7 @@ public class FailoverConsumerTest extends NetworkTestSupport {
         // though).
         // So we must use external broker ant restart it manually.
         LOG.info("You should restart remote broker now and press enter!");
-        System.in.read();
+        //System.in.read();
         // Thread.sleep(20000);
         restartRemoteBroker();
         msg.acknowledge();
@@ -114,6 +113,6 @@ public class FailoverConsumerTest extends NetworkTestSupport {
     }
 
     protected String getRemoteURI() {
-        return "tcp://localhost:55555";
+        return "tcp://localhost:61616";
     }
 }
