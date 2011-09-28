@@ -23,7 +23,6 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
-import javax.xml.bind.annotation.XmlAnyAttribute;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.BrokerServiceAware;
 import org.apache.activemq.broker.ConnectionContext;
@@ -96,6 +95,7 @@ public class MultiKahaDBPersistenceAdapter extends DestinationMap implements Per
      *
      * @org.apache.xbean.ElementType class="org.apache.activemq.store.kahadb.FilteredKahaDBPersistenceAdapter"
      */
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     public void setFilteredPersistenceAdapters(List entries) {
         for (Object entry : entries) {
             FilteredKahaDBPersistenceAdapter filteredAdapter = (FilteredKahaDBPersistenceAdapter) entry;
@@ -237,7 +237,7 @@ public class MultiKahaDBPersistenceAdapter extends DestinationMap implements Per
     }
 
     @Override
-    public void setDirectory(File dir) {
+    public void setDirectory(File directory) {
         this.directory = directory;
     }
 
