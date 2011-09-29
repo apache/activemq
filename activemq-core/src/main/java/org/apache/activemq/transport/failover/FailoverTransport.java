@@ -455,14 +455,6 @@ public class FailoverTransport implements CompositeTransport {
         this.maxCacheSize = maxCacheSize;
     }
 
-    /**
-     * @return Returns true if the command is one sent when a connection is
-     *         being closed.
-     */
-    private boolean isShutdownCommand(Command command) {
-        return (command != null && (command.isShutdownInfo() || command instanceof RemoveInfo));
-    }
-
     public void oneway(Object o) throws IOException {
 
         Command command = (Command) o;
@@ -471,22 +463,22 @@ public class FailoverTransport implements CompositeTransport {
 
             synchronized (reconnectMutex) {
 
-                if (isShutdownCommand(command) && connectedTransport.get() == null) {
+                if (command != null && connectedTransport.get() == null) {
                     if (command.isShutdownInfo()) {
-                        // Skipping send of ShutdownInfo command when not
-                        // connected.
+                        // Skipping send of ShutdownInfo command when not connected.
                         return;
-                    }
-                    if (command instanceof RemoveInfo || command.isMessageAck()) {
-                        // Simulate response to RemoveInfo command or ack (as it
-                        // will be stale)
+                    } else if (command instanceof RemoveInfo || command.isMessageAck()) {
+                        // Simulate response to RemoveInfo command or MessageAck (as it will be stale)
                         stateTracker.track(command);
-                        Response response = new Response();
-                        response.setCorrelationId(command.getCommandId());
-                        myTransportListener.onCommand(response);
+                    	if (command.isResponseRequired()) {
+	                        Response response = new Response();
+	                        response.setCorrelationId(command.getCommandId());
+	                        myTransportListener.onCommand(response);
+                    	}
                         return;
                     }
                 }
+
                 // Keep trying until the message is sent.
                 for (int i = 0; !disposed; i++) {
                     try {
