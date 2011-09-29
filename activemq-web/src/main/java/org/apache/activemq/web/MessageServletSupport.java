@@ -41,19 +41,20 @@ import org.slf4j.LoggerFactory;
  * A useful base class for any JMS related servlet; there are various ways to
  * map JMS operations to web requests so we put most of the common behaviour in
  * a reusable base class. This servlet can be configured with the following init
- * paramters
+ * parameters
  * <dl>
  * <dt>topic</dt>
- * <dd>Set to 'true' if the servle should default to using topics rather than
+ * <dd>Set to 'true' if the servlet should default to using topics rather than
  * channels</dd>
  * <dt>destination</dt>
  * <dd>The default destination to use if one is not specifiied</dd>
  * <dt></dt>
  * <dd></dd>
  * </dl>
- * 
- * 
+ *
+ *
  */
+@SuppressWarnings("serial")
 public abstract class MessageServletSupport extends HttpServlet {
 
     private static final transient Logger LOG = LoggerFactory.getLogger(MessageServletSupport.class);
@@ -106,6 +107,7 @@ public abstract class MessageServletSupport extends HttpServlet {
         }
     }
 
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     protected void appendParametersToMessage(HttpServletRequest request, TextMessage message) throws JMSException {
         Map parameterMap = request.getParameterMap();
         if (parameterMap == null) {
@@ -185,7 +187,7 @@ public abstract class MessageServletSupport extends HttpServlet {
             return true;
         }
         return false;
-    }    
+    }
 
     protected Destination asDestination(Object value) {
         if (value instanceof Destination) {
@@ -338,7 +340,8 @@ public abstract class MessageServletSupport extends HttpServlet {
      */
     protected String getPostedMessageBody(HttpServletRequest request) throws IOException {
         String answer = request.getParameter(bodyParameter);
-        if (answer == null && "text/xml".equals(request.getContentType())) {
+        String contentType = request.getContentType();
+        if (answer == null && contentType != null && contentType.toLowerCase().startsWith("text/xml")) {
             // lets read the message body instead
             BufferedReader reader = request.getReader();
             StringBuffer buffer = new StringBuffer();
@@ -354,8 +357,8 @@ public abstract class MessageServletSupport extends HttpServlet {
         }
         return answer;
     }
-    
+
     protected String getSelector(HttpServletRequest request) throws IOException {
-    	return request.getHeader(WebClient.selectorName);
+        return request.getHeader(WebClient.selectorName);
     }
 }
