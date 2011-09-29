@@ -140,6 +140,7 @@ public class FailoverTransactionTest extends TestSupport {
                 new Object[]{PersistenceAdapterChoice.KahaDB, PersistenceAdapterChoice.AMQ, PersistenceAdapterChoice.JDBC});
     }
 
+    @SuppressWarnings("unchecked")
     public void testFailoverCommitReplyLost() throws Exception {
 
         broker = createBroker(true);
@@ -234,15 +235,15 @@ public class FailoverTransactionTest extends TestSupport {
         connection.close();
     }
 
-
     public void initCombosForTestFailoverSendReplyLost() {
         addCombinationValues("defaultPersistenceAdapter",
-                new Object[]{PersistenceAdapterChoice.KahaDB,
-                        PersistenceAdapterChoice.JDBC
-                        // not implemented for AMQ store
-                });
+            new Object[]{PersistenceAdapterChoice.KahaDB,
+                    PersistenceAdapterChoice.JDBC
+                    // not implemented for AMQ store
+            });
     }
 
+    @SuppressWarnings("unchecked")
     public void testFailoverSendReplyLost() throws Exception {
 
         broker = createBroker(true);
@@ -341,15 +342,15 @@ public class FailoverTransactionTest extends TestSupport {
         connection.close();
     }
 
-
     public void initCombosForTestFailoverConnectionSendReplyLost() {
         addCombinationValues("defaultPersistenceAdapter",
-                new Object[]{PersistenceAdapterChoice.KahaDB,
-                        PersistenceAdapterChoice.JDBC
-                        // last producer message id store feature not implemented for AMQ store
-                });
+            new Object[]{PersistenceAdapterChoice.KahaDB,
+                    PersistenceAdapterChoice.JDBC
+                    // last producer message id store feature not implemented for AMQ store
+            });
     }
 
+    @SuppressWarnings("unchecked")
     public void testFailoverConnectionSendReplyLost() throws Exception {
 
         broker = createBroker(true);
@@ -579,6 +580,7 @@ public class FailoverTransactionTest extends TestSupport {
         }
     }
 
+    @SuppressWarnings("unchecked")
     public void doTestFailoverConsumerAckLost(final int pauseSeconds) throws Exception {
         broker = createBroker(true);
         setDefaultPersistenceAdapter(broker);
@@ -681,7 +683,6 @@ public class FailoverTransactionTest extends TestSupport {
             }
         });
 
-
         // will be stopped by the plugin
         broker.waitUntilStopped();
         broker = createBroker(false, url);
@@ -776,7 +777,6 @@ public class FailoverTransactionTest extends TestSupport {
         connection.close();
     }
 
-
     public void testWaitForMissingRedeliveries() throws Exception {
         LOG.info("testWaitForMissingRedeliveries()");
         broker = createBroker(true);
@@ -824,7 +824,6 @@ public class FailoverTransactionTest extends TestSupport {
         assertNull("should not get committed message", consumer.receive(5000));
         connection.close();
     }
-
 
     public void testPoisonOnDeliveryWhilePending() throws Exception {
         LOG.info("testPoisonOnDeliveryWhilePending()");

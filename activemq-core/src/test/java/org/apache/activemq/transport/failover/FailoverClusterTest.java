@@ -32,7 +32,6 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.network.NetworkConnector;
 
-
 public class FailoverClusterTest extends TestCase {
 
     private static final int NUMBER = 10;
@@ -44,7 +43,6 @@ public class FailoverClusterTest extends TestCase {
     private String clientUrl;
 
     private final List<ActiveMQConnection> connections = new ArrayList<ActiveMQConnection>();
-
 
     public void testClusterConnectedAfterClients() throws Exception {
         createClients();
@@ -72,7 +70,6 @@ public class FailoverClusterTest extends TestCase {
         }
         assertTrue(set.size() > 1);
     }
-
 
     public void testClusterConnectedBeforeClients() throws Exception {
 
@@ -151,6 +148,7 @@ public class FailoverClusterTest extends TestCase {
         answer.setUseShutdownHook(false);
     }
 
+    @SuppressWarnings("unused")
     protected void createClients() throws Exception {
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(clientUrl);
         for (int i = 0; i < NUMBER; i++) {

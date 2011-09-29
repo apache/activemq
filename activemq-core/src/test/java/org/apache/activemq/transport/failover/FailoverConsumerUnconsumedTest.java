@@ -95,6 +95,7 @@ public class FailoverConsumerUnconsumedTest {
         doTestFailoverConsumerDups(false);
     }
 
+    @SuppressWarnings("unchecked")
     public void doTestFailoverConsumerDups(final boolean watchTopicAdvisories) throws Exception {
 
         final int maxConsumers = 4;

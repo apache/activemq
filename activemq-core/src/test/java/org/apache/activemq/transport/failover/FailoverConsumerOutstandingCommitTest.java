@@ -100,6 +100,7 @@ public class FailoverConsumerOutstandingCommitTest {
         doTestFailoverConsumerDups(true);
     }
 
+    @SuppressWarnings("unchecked")
     public void doTestFailoverConsumerDups(final boolean watchTopicAdvisories) throws Exception {
 
         broker = createBroker(true);
@@ -137,7 +138,6 @@ public class FailoverConsumerOutstandingCommitTest {
         final Queue destination = producerSession.createQueue(QUEUE_NAME + "?consumer.prefetchSize=" + prefetch);
 
         final Session consumerSession = connection.createSession(true, Session.AUTO_ACKNOWLEDGE);
-
 
         final CountDownLatch commitDoneLatch = new CountDownLatch(1);
         final CountDownLatch messagesReceived = new CountDownLatch(2);
@@ -196,6 +196,7 @@ public class FailoverConsumerOutstandingCommitTest {
         doTestFailoverConsumerOutstandingSendTx(true);
     }
 
+    @SuppressWarnings("unchecked")
     public void doTestFailoverConsumerOutstandingSendTx(final boolean doActualBrokerCommit) throws Exception {
         final boolean watchTopicAdvisories = true;
         broker = createBroker(true);
@@ -239,7 +240,6 @@ public class FailoverConsumerOutstandingCommitTest {
 
         final Queue signalDestination = producerSession.createQueue(QUEUE_NAME + ".signal"
                 + "?consumer.prefetchSize=" + prefetch);
-
 
         final Session consumerSession = connection.createSession(true, Session.SESSION_TRANSACTED);
 
@@ -294,7 +294,6 @@ public class FailoverConsumerOutstandingCommitTest {
         assertEquals("get message 0 second", MESSAGE_TEXT + "0", receivedMessages.get(1).getText());
         assertTrue("another message was received", messagesReceived.await(20, TimeUnit.SECONDS));
         assertEquals("get message 1 eventually", MESSAGE_TEXT + "1", receivedMessages.get(2).getText());
-
 
         connection.close();
     }

@@ -37,7 +37,6 @@ import org.apache.activemq.network.NetworkTestSupport;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportFactory;
 import org.apache.activemq.transport.TransportListener;
-import org.apache.activemq.transport.multicast.MulticastTransportTest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -143,6 +142,7 @@ public class FailoverTransportBrokerTest extends NetworkTestSupport {
                 //To change body of implemented methods use File | Settings | File Templates.
             }
         };
+        @SuppressWarnings("unused")
         StubConnection c = createFailoverConnection(listener);
         int count = 0;
         while(count++ < 20 && info[0] == null) {
@@ -160,6 +160,7 @@ public class FailoverTransportBrokerTest extends NetworkTestSupport {
         return "tcp://localhost:0?wireFormat.tcpNoDelayEnabled=true";
     }
 
+    @SuppressWarnings("unchecked")
     protected StubConnection createFailoverConnection(TransportListener listener) throws Exception {
         URI failoverURI = new URI("failover://" + connector.getServer().getConnectURI() + "," + remoteConnector.getServer().getConnectURI() + "");
         Transport transport = TransportFactory.connect(failoverURI);

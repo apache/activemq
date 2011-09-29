@@ -79,6 +79,7 @@ public class FailoverPrefetchZeroTest {
         return broker;
     }
 
+    @SuppressWarnings("unchecked")
     @Test
     public void testPrefetchZeroConsumerThroughRestart() throws Exception {
         broker = createBroker(true);
