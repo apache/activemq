@@ -45,7 +45,7 @@ public class RedeliveryRestartTest extends BrokerRestartTestSupport {
     public void testValidateRedeliveryFlagAfterRestart() throws Exception {
 
         ConnectionFactory connectionFactory =
-                new ActiveMQConnectionFactory("failover:(" + broker.getTransportConnectors().get(0).getPublishableConnectString() + ")?jms.immediateAck=true");
+                new ActiveMQConnectionFactory("failover:(" + broker.getTransportConnectors().get(0).getPublishableConnectString() + ")?jms.transactedIndividualAck=true");
         ActiveMQConnection connection = (ActiveMQConnection) connectionFactory.createConnection();
         connection.start();
 
@@ -96,7 +96,7 @@ public class RedeliveryRestartTest extends BrokerRestartTestSupport {
 
     public void testValidateRedeliveryFlagAfterRecovery() throws Exception {
         ConnectionFactory connectionFactory =
-                new ActiveMQConnectionFactory(broker.getTransportConnectors().get(0).getPublishableConnectString() + "?jms.immediateAck=true");
+                new ActiveMQConnectionFactory(broker.getTransportConnectors().get(0).getPublishableConnectString() + "?jms.transactedIndividualAck=true");
         ActiveMQConnection connection = (ActiveMQConnection) connectionFactory.createConnection();
         connection.start();
 
@@ -122,7 +122,7 @@ public class RedeliveryRestartTest extends BrokerRestartTestSupport {
         broker.start();
 
         connectionFactory =
-                new ActiveMQConnectionFactory(broker.getTransportConnectors().get(0).getPublishableConnectString() + "?jms.immediateAck=true");
+                new ActiveMQConnectionFactory(broker.getTransportConnectors().get(0).getPublishableConnectString() + "?jms.transactedIndividualAck=true");
         connection = (ActiveMQConnection) connectionFactory.createConnection();
         connection.start();
 

@@ -32,7 +32,7 @@ public class FailoverRedeliveryTransactionTest extends FailoverTransactionTest {
     @Override
     public void configureConnectionFactory(ActiveMQConnectionFactory factory) {
         super.configureConnectionFactory(factory);
-        factory.setImmediateAck(true);
+        factory.setTransactedIndividualAck(true);
     }
 
     @Override
