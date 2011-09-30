@@ -193,6 +193,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     private long consumerFailoverRedeliveryWaitPeriod;
     private final Scheduler scheduler;
     private boolean messagePrioritySupported=true;
+    private boolean transactedIndividualAck = false;
 
     /**
      * Construct an <code>ActiveMQConnection</code>
@@ -2397,6 +2398,15 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
      */
     public void setCheckForDuplicates(boolean checkForDuplicates) {
         this.checkForDuplicates = checkForDuplicates;
+    }
+
+
+    public boolean isTransactedIndividualAck() {
+        return transactedIndividualAck;
+    }
+
+    public void setTransactedIndividualAck(boolean transactedIndividualAck) {
+        this.transactedIndividualAck = transactedIndividualAck;
     }
 
     /**

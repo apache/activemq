@@ -223,32 +223,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                             node.getRegionDestination().getDestinationStatistics().getInflight().decrement();
                             removeList.add(node);
                         } else {
-                            // setup a Synchronization to remove nodes from the
-                            // dispatched list.
-                            context.getTransaction().addSynchronization(
-                                    new Synchronization() {
-
-                                        @Override
-                                        public void afterCommit()
-                                                throws Exception {
-                                            synchronized(dispatchLock) {
-                                                dequeueCounter++;
-                                                dispatched.remove(node);
-                                                node.getRegionDestination().getDestinationStatistics().getInflight().decrement();
-                                            }
-                                        }
-
-                                        @Override
-                                        public void afterRollback() throws Exception {
-                                            synchronized(dispatchLock) {
-                                                if (isSlave()) {
-                                                    node.getRegionDestination().getDestinationStatistics().getInflight().decrement();
-                                                } else {
-                                                    // poisionAck will decrement - otherwise still inflight on client
-                                                }
-                                            }
-                                        }
-                                    });
+                            registerRemoveSync(context, node);
                         }
                         index++;
                         acknowledge(context, ack, node);
@@ -281,13 +256,17 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                 for (final MessageReference node : dispatched) {
                     MessageId messageId = node.getMessageId();
                     if (ack.getLastMessageId().equals(messageId)) {
-                        // this should never be within a transaction
-                        dequeueCounter++;
-                        node.getRegionDestination().getDestinationStatistics().getInflight().decrement();
-                        destination = node.getRegionDestination();
-                        acknowledge(context, ack, node);
-                        dispatched.remove(node);
+                        // Don't remove the nodes until we are committed - immediateAck option
+                        if (!context.isInTransaction()) {
+                            dequeueCounter++;
+                            node.getRegionDestination().getDestinationStatistics().getInflight().decrement();
+                            dispatched.remove(node);
+                        } else {
+                            registerRemoveSync(context, node);
+                        }
                         prefetchExtension = Math.max(0, prefetchExtension - 1);
+                        acknowledge(context, ack, node);
+                        destination = node.getRegionDestination();
                         callDispatchMatched = true;
                         break;
                     }
@@ -404,6 +383,35 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                         + ack);
             }
         }
+    }
+
+    private void registerRemoveSync(ConnectionContext context, final MessageReference node) {
+        // setup a Synchronization to remove nodes from the
+        // dispatched list.
+        context.getTransaction().addSynchronization(
+                new Synchronization() {
+
+                    @Override
+                    public void afterCommit()
+                            throws Exception {
+                        synchronized(dispatchLock) {
+                            dequeueCounter++;
+                            dispatched.remove(node);
+                            node.getRegionDestination().getDestinationStatistics().getInflight().decrement();
+                        }
+                    }
+
+                    @Override
+                    public void afterRollback() throws Exception {
+                        synchronized(dispatchLock) {
+                            if (isSlave()) {
+                                node.getRegionDestination().getDestinationStatistics().getInflight().decrement();
+                            } else {
+                                // poisionAck will decrement - otherwise still inflight on client
+                            }
+                        }
+                    }
+                });
     }
 
     /**

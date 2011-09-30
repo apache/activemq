@@ -407,7 +407,7 @@ public class KahaDBTransactionStore implements TransactionStore {
                         return message;
                     }
                     @Override
-                    public Future run(ConnectionContext ctx) throws IOException {
+                    public Future<Object> run(ConnectionContext ctx) throws IOException {
                         return destination.asyncAddTopicMessage(ctx, message);
                     }
 
@@ -454,7 +454,7 @@ public class KahaDBTransactionStore implements TransactionStore {
 
         if (ack.isInTransaction()) {
             if (ack.getTransactionId().isXATransaction() || theStore.isConcurrentStoreAndDispatchTransactions()==false) {
-                destination.removeAsyncMessage(context, ack);
+                destination.removeMessage(context, ack);
             } else {
                 Tx tx = getTx(ack.getTransactionId());
                 tx.add(new RemoveMessageCommand(context) {

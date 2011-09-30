@@ -593,17 +593,20 @@ public class BrokerService implements Service {
             tempDataStore.stop();
             tempDataStore = null;
         }
-        stopper.stop(persistenceAdapter);
-        persistenceAdapter = null;
-        slave = true;
-        if (isUseJmx()) {
-            stopper.stop(getManagementContext());
-            managementContext = null;
+        try {
+            stopper.stop(persistenceAdapter);
+            persistenceAdapter = null;
+            slave = true;
+            if (isUseJmx()) {
+                stopper.stop(getManagementContext());
+                managementContext = null;
+            }
+            // Clear SelectorParser cache to free memory
+            SelectorParser.clearCache();
+        } finally {
+            stopped.set(true);
+            stoppedLatch.countDown();
         }
-        // Clear SelectorParser cache to free memory
-        SelectorParser.clearCache();
-        stopped.set(true);
-        stoppedLatch.countDown();
         if (masterConnectorURI == null) {
             // master start has not finished yet
             if (slaveStartSignal.getCount() == 1) {

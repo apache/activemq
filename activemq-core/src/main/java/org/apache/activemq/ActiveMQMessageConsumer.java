@@ -152,6 +152,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
     private long optimizeAckTimestamp = System.currentTimeMillis();
     private long optimizeAcknowledgeTimeOut = 0;
     private long failoverRedeliveryWaitPeriod = 0;
+    private boolean transactedIndividualAck = false;
 
     /**
      * Create a MessageConsumer
@@ -249,6 +250,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
         }
         this.info.setOptimizedAcknowledge(this.optimizeAcknowledge);
         this.failoverRedeliveryWaitPeriod = session.connection.getConsumerFailoverRedeliveryWaitPeriod();
+        this.transactedIndividualAck = session.connection.isTransactedIndividualAck();
         if (messageListener != null) {
             setMessageListener(messageListener);
         }
@@ -678,7 +680,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
             synchronized (unconsumedMessages.getMutex()) {
                 if (inProgressClearRequiredFlag) {
                     if (LOG.isDebugEnabled()) {
-                        LOG.debug(getConsumerId() + " clearing dispatched list (" + unconsumedMessages.size() + ") on transport interrupt");
+                        LOG.debug(getConsumerId() + " clearing unconsumed list (" + unconsumedMessages.size() + ") on transport interrupt");
                     }
                     // ensure unconsumed are rolledback up front as they may get redelivered to another consumer
                     List<MessageDispatch> list = unconsumedMessages.removeAll();
@@ -833,11 +835,24 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                 deliveredMessages.addFirst(md);
             }
             if (session.getTransacted()) {
-                ackLater(md, MessageAck.DELIVERED_ACK_TYPE);
+                if (transactedIndividualAck) {
+                    immediateIndividualTransactedAck(md);
+                } else {
+                    ackLater(md, MessageAck.DELIVERED_ACK_TYPE);
+                }
             }
         }
     }
-    
+
+    private void immediateIndividualTransactedAck(MessageDispatch md) throws JMSException {
+        // acks accumulate on the broker pending transaction completion to indicate
+        // delivery status
+        registerSync();
+        MessageAck ack = new MessageAck(md, MessageAck.INDIVIDUAL_ACK_TYPE, 1);
+        ack.setTransactionId(session.getTransactionContext().getTransactionId());
+        session.sendAck(ack);
+    }
+
     private void afterMessageIsConsumed(MessageDispatch md, boolean messageExpired) throws JMSException {
         if (unconsumedMessages.isClosed()) {
             return;
@@ -919,29 +934,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
         // Don't acknowledge now, but we may need to let the broker know the
         // consumer got the message to expand the pre-fetch window
         if (session.getTransacted()) {
-            session.doStartTransaction();
-            if (!synchronizationRegistered) {
-                synchronizationRegistered = true;
-                session.getTransactionContext().addSynchronization(new Synchronization() {
-                    @Override
-                    public void beforeEnd() throws Exception {
-                        acknowledge();
-                        synchronizationRegistered = false;
-                    }
-
-                    @Override
-                    public void afterCommit() throws Exception {
-                        commit();
-                        synchronizationRegistered = false;
-                    }
-
-                    @Override
-                    public void afterRollback() throws Exception {
-                        rollback();
-                        synchronizationRegistered = false;
-                    }
-                });
-            }
+            registerSync();
         }
 
         deliveredCounter++;
@@ -973,6 +966,40 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
             pendingAck=null;
             deliveredCounter = 0;
             additionalWindowSize = 0;
+        }
+    }
+
+    private void registerSync() throws JMSException {
+        session.doStartTransaction();
+        if (!synchronizationRegistered) {
+            synchronizationRegistered = true;
+            session.getTransactionContext().addSynchronization(new Synchronization() {
+                @Override
+                public void beforeEnd() throws Exception {
+                    if (transactedIndividualAck) {
+                        clearDispatchList();
+                        waitForRedeliveries();
+                        synchronized(deliveredMessages) {
+                            rollbackOnFailedRecoveryRedelivery();
+                        }
+                    } else {
+                        acknowledge();
+                    }
+                    synchronizationRegistered = false;
+                }
+
+                @Override
+                public void afterCommit() throws Exception {
+                    commit();
+                    synchronizationRegistered = false;
+                }
+
+                @Override
+                public void afterRollback() throws Exception {
+                    rollback();
+                    synchronizationRegistered = false;
+                }
+            });
         }
     }
 
@@ -1284,7 +1311,11 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                                 poisonAck.setFirstMessageId(md.getMessage().getMessageId());
                                 session.sendAck(poisonAck);
                             } else {
-                                ackLater(md, MessageAck.DELIVERED_ACK_TYPE);
+                                if (transactedIndividualAck) {
+                                    immediateIndividualTransactedAck(md);
+                                } else {
+                                    ackLater(md, MessageAck.DELIVERED_ACK_TYPE);
+                                }
                             }
                         }
                     }

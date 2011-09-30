@@ -119,6 +119,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     private boolean checkForDuplicates = true;
     private ClientInternalExceptionListener clientInternalExceptionListener;
     private boolean messagePrioritySupported = true;
+    private boolean transactedIndividualAck = false;
 
     // /////////////////////////////////////////////
     //
@@ -325,6 +326,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
         connection.setConsumerFailoverRedeliveryWaitPeriod(getConsumerFailoverRedeliveryWaitPeriod());
         connection.setCheckForDuplicates(isCheckForDuplicates());
         connection.setMessagePrioritySupported(isMessagePrioritySupported());
+        connection.setTransactedIndividualAck(isTransactedIndividualAck());
         if (transportListener != null) {
             connection.addTransportListener(transportListener);
         }
@@ -707,6 +709,8 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
         props.setProperty("auditMaximumProducerNumber", Integer.toString(getAuditMaximumProducerNumber()));
         props.setProperty("checkForDuplicates", Boolean.toString(isCheckForDuplicates()));
         props.setProperty("messagePrioritySupported", Boolean.toString(isMessagePrioritySupported()));
+        props.setProperty("transactedIndividualAck", Boolean.toString(isTransactedIndividualAck()));
+
     }
 
     public boolean isUseCompression() {
@@ -1019,4 +1023,18 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     public void setCheckForDuplicates(boolean checkForDuplicates) {
         this.checkForDuplicates = checkForDuplicates;
     }
+
+    public boolean isTransactedIndividualAck() {
+         return transactedIndividualAck;
+     }
+
+     /**
+      * when true, submit individual transacted acks immediately rather than with transaction completion.
+      * This allows the acks to represent delivery status which can be persisted on rollback
+      * Used in conjunction with org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter#setRewriteOnRedelivery(boolean)  true
+      */
+     public void setTransactedIndividualAck(boolean transactedIndividualAck) {
+         this.transactedIndividualAck = transactedIndividualAck;
+     }
+
 }

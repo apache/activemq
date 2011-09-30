@@ -63,6 +63,7 @@ import org.apache.activemq.usage.MemoryUsage;
 import org.apache.activemq.usage.SystemUsage;
 import org.apache.activemq.util.ServiceStopper;
 import org.apache.activemq.wireformat.WireFormat;
+import org.apache.kahadb.util.ByteSequence;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.kahadb.journal.Location;
@@ -244,6 +245,57 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
         super.doStop(stopper);
     }
 
+    void incrementRedeliveryAndReWrite(final String key, final KahaDestination destination) throws IOException {
+        Location location;
+        this.indexLock.writeLock().lock();
+        try {
+              location = findMessageLocation(key, destination);
+        } finally {
+            this.indexLock.writeLock().unlock();
+        }
+
+        if (location != null) {
+            KahaAddMessageCommand addMessage = (KahaAddMessageCommand) load(location);
+            Message message = (Message) wireFormat.unmarshal(new DataInputStream(addMessage.getMessage().newInput()));
+
+            message.incrementRedeliveryCounter();
+            if (LOG.isTraceEnabled()) {
+                LOG.trace("rewriting: " + key + " with deliveryCount: " + message.getRedeliveryCounter());
+            }
+            org.apache.activemq.util.ByteSequence packet = wireFormat.marshal(message);
+            addMessage.setMessage(new Buffer(packet.getData(), packet.getOffset(), packet.getLength()));
+
+            final Location rewriteLocation = journal.write(toByteSequence(addMessage), true);
+
+            this.indexLock.writeLock().lock();
+            try {
+                pageFile.tx().execute(new Transaction.Closure<IOException>() {
+                    public void execute(Transaction tx) throws IOException {
+                        StoredDestination sd = getStoredDestination(destination, tx);
+                        Long sequence = sd.messageIdIndex.get(tx, key);
+                        MessageKeys keys = sd.orderIndex.get(tx, sequence);
+                        sd.orderIndex.put(tx, sd.orderIndex.lastGetPriority(), sequence, new MessageKeys(keys.messageId, rewriteLocation));
+                    }
+                });
+            } finally {
+                this.indexLock.writeLock().unlock();
+            }
+        }
+    }
+
+    private Location findMessageLocation(final String key, final KahaDestination destination) throws IOException {
+        return pageFile.tx().execute(new Transaction.CallableClosure<Location, IOException>() {
+            public Location execute(Transaction tx) throws IOException {
+                StoredDestination sd = getStoredDestination(destination, tx);
+                Long sequence = sd.messageIdIndex.get(tx, key);
+                if (sequence == null) {
+                    return null;
+                }
+                return sd.orderIndex.get(tx, sequence).location;
+            }
+        });
+    }
+
     protected StoreQueueTask removeQueueTask(KahaDBMessageStore store, MessageId id) {
         StoreQueueTask task = null;
         synchronized (store.asyncTaskMap) {
@@ -390,16 +442,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
             Location location;
             indexLock.readLock().lock();
             try {
-                location = pageFile.tx().execute(new Transaction.CallableClosure<Location, IOException>() {
-                    public Location execute(Transaction tx) throws IOException {
-                        StoredDestination sd = getStoredDestination(dest, tx);
-                        Long sequence = sd.messageIdIndex.get(tx, key);
-                        if (sequence == null) {
-                            return null;
-                        }
-                        return sd.orderIndex.get(tx, sequence).location;
-                    }
-                });
+                location = findMessageLocation(key, dest);
             }finally {
                 indexLock.readLock().unlock();
             }

@@ -500,6 +500,18 @@ public class KahaDBPersistenceAdapter implements PersistenceAdapter, BrokerServi
         letter.setForceRecoverIndex(forceRecoverIndex);
     }
 
+    /**
+     * When true, persist the redelivery status such that the message redelivery flag can survive a broker failure
+     * used with org.apache.activemq.ActiveMQConnectionFactory#setTransactedIndividualAck(boolean)  true
+     */
+    public void setRewriteOnRedelivery(boolean rewriteOnRedelivery) {
+        letter.setRewriteOnRedelivery(rewriteOnRedelivery);
+    }
+
+    public boolean isRewriteOnRedelivery() {
+        return letter.isRewriteOnRedelivery();
+    }
+
     public KahaDBStore getStore() {
         return letter;
     }

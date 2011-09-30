@@ -17,6 +17,7 @@
 package org.apache.activemq.transport.failover;
 
 import junit.framework.Test;
+import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.AutoFailTestSupport;
 import org.apache.activemq.TestSupport;
@@ -114,9 +115,14 @@ public class FailoverTransactionTest extends TestSupport {
         return broker;
     }
 
+    public void configureConnectionFactory(ActiveMQConnectionFactory factory) {
+        // nothing to do
+    }
+
     public void testFailoverProducerCloseBeforeTransaction() throws Exception {
         startCleanBroker();
         ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory("failover:(" + url + ")");
+        configureConnectionFactory(cf);
         Connection connection = cf.createConnection();
         connection.start();
         Session session = connection.createSession(true, Session.AUTO_ACKNOWLEDGE);
@@ -170,6 +176,7 @@ public class FailoverTransactionTest extends TestSupport {
         broker.start();
 
         ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory("failover:(" + url + ")");
+        configureConnectionFactory(cf);
         Connection connection = cf.createConnection();
         connection.start();
         final Session session = connection.createSession(true, Session.AUTO_ACKNOWLEDGE);
@@ -222,6 +229,7 @@ public class FailoverTransactionTest extends TestSupport {
 
         // after restart, ensure no dangling messages
         cf = new ActiveMQConnectionFactory("failover:(" + url + ")");
+        configureConnectionFactory(cf);
         connection = cf.createConnection();
         connection.start();
         Session session2 = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -274,6 +282,7 @@ public class FailoverTransactionTest extends TestSupport {
         broker.start();
 
         ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory("failover:(" + url + ")?jms.watchTopicAdvisories=false");
+        configureConnectionFactory(cf);
         Connection connection = cf.createConnection();
         connection.start();
         final Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -329,6 +338,7 @@ public class FailoverTransactionTest extends TestSupport {
 
         // after restart, ensure no dangling messages
         cf = new ActiveMQConnectionFactory("failover:(" + url + ")");
+        configureConnectionFactory(cf);
         connection = cf.createConnection();
         connection.start();
         Session session2 = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -400,6 +410,7 @@ public class FailoverTransactionTest extends TestSupport {
         proxy.open();
 
         ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory("failover:(" + proxy.getUrl().toASCIIString() + ")?jms.watchTopicAdvisories=false");
+        configureConnectionFactory(cf);
         Connection connection = cf.createConnection();
         connection.start();
         final Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -450,6 +461,7 @@ public class FailoverTransactionTest extends TestSupport {
 
         // after restart, ensure no dangling messages
         cf = new ActiveMQConnectionFactory("failover:(" + url + ")");
+        configureConnectionFactory(cf);
         connection = cf.createConnection();
         connection.start();
         Session session2 = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -466,6 +478,7 @@ public class FailoverTransactionTest extends TestSupport {
     public void testFailoverProducerCloseBeforeTransactionFailWhenDisabled() throws Exception {
         startCleanBroker();
         ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory("failover:(" + url + ")?trackTransactionProducers=false");
+        configureConnectionFactory(cf);
         Connection connection = cf.createConnection();
         connection.start();
         Session session = connection.createSession(true, Session.AUTO_ACKNOWLEDGE);
@@ -489,6 +502,7 @@ public class FailoverTransactionTest extends TestSupport {
     public void testFailoverMultipleProducerCloseBeforeTransaction() throws Exception {
         startCleanBroker();
         ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory("failover:(" + url + ")");
+        configureConnectionFactory(cf);
         Connection connection = cf.createConnection();
         connection.start();
         Session session = connection.createSession(true, Session.AUTO_ACKNOWLEDGE);
@@ -521,6 +535,7 @@ public class FailoverTransactionTest extends TestSupport {
     public void testFailoverWithConnectionConsumer() throws Exception {
         startCleanBroker();
         ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory("failover:(" + url + ")");
+        configureConnectionFactory(cf);
         Connection connection = cf.createConnection();
         connection.start();
 
@@ -573,6 +588,7 @@ public class FailoverTransactionTest extends TestSupport {
         // as failure depends on hash order of state tracker recovery, do a few times
         for (int i = 0; i < 3; i++) {
             try {
+                LOG.info("Iteration: " + i);
                 doTestFailoverConsumerAckLost(i);
             } finally {
                 stopBroker();
@@ -612,6 +628,7 @@ public class FailoverTransactionTest extends TestSupport {
 
         Vector<Connection> connections = new Vector<Connection>();
         ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory("failover:(" + url + ")");
+        configureConnectionFactory(cf);
         Connection connection = cf.createConnection();
         connection.start();
         connections.add(connection);
@@ -728,6 +745,7 @@ public class FailoverTransactionTest extends TestSupport {
 
         // after restart, ensure no dangling messages
         cf = new ActiveMQConnectionFactory("failover:(" + url + ")");
+        configureConnectionFactory(cf);
         connection = cf.createConnection();
         connection.start();
         Session sweeperSession = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -745,6 +763,7 @@ public class FailoverTransactionTest extends TestSupport {
         broker = createBroker(true);
         broker.start();
         ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory("failover:(" + url + ")");
+        configureConnectionFactory(cf);
         Connection connection = cf.createConnection();
         connection.start();
         final Session producerSession = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -782,6 +801,7 @@ public class FailoverTransactionTest extends TestSupport {
         broker = createBroker(true);
         broker.start();
         ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory("failover:(" + url + ")?jms.consumerFailoverRedeliveryWaitPeriod=30000");
+        configureConnectionFactory(cf);
         Connection connection = cf.createConnection();
         connection.start();
         final Session producerSession = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -830,6 +850,7 @@ public class FailoverTransactionTest extends TestSupport {
         broker = createBroker(true);
         broker.start();
         ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory("failover:(" + url + ")?jms.consumerFailoverRedeliveryWaitPeriod=10000");
+        configureConnectionFactory(cf);
         Connection connection = cf.createConnection();
         connection.start();
         final Session producerSession = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);

@@ -94,7 +94,7 @@ import org.apache.kahadb.util.VariableMarshaller;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class MessageDatabase extends ServiceSupport implements BrokerServiceAware {
+public abstract class MessageDatabase extends ServiceSupport implements BrokerServiceAware {
 
     protected BrokerService brokerService;
 
@@ -224,6 +224,7 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
     private int databaseLockedWaitDelay = DEFAULT_DATABASE_LOCKED_WAIT_DELAY;
     protected boolean forceRecoverIndex = false;
     private final Object checkpointThreadLock = new Object();
+    private boolean rewriteOnRedelivery = false;
 
     public MessageDatabase() {
     }
@@ -400,24 +401,27 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
 
     public void close() throws IOException, InterruptedException {
         if( opened.compareAndSet(true, false)) {
-            this.indexLock.writeLock().lock();
             try {
-                pageFile.tx().execute(new Transaction.Closure<IOException>() {
-                    public void execute(Transaction tx) throws IOException {
-                        checkpointUpdate(tx, true);
-                    }
-                });
-                pageFile.unload();
-                metadata = new Metadata();
+                this.indexLock.writeLock().lock();
+                try {
+                    pageFile.tx().execute(new Transaction.Closure<IOException>() {
+                        public void execute(Transaction tx) throws IOException {
+                            checkpointUpdate(tx, true);
+                        }
+                    });
+                    pageFile.unload();
+                    metadata = new Metadata();
+                } finally {
+                    this.indexLock.writeLock().unlock();
+                }
+                journal.close();
+                synchronized (checkpointThreadLock) {
+                    checkpointThread.join();
+                }
             } finally {
-                this.indexLock.writeLock().unlock();
+                lockFile.unlock();
+                lockFile=null;
             }
-            journal.close();
-            synchronized (checkpointThreadLock) {
-                checkpointThread.join();
-            }
-            lockFile.unlock();
-            lockFile=null;
         }
     }
 
@@ -804,6 +808,14 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
         return store(data, false, null,null);
     }
 
+    public ByteSequence toByteSequence(JournalCommand<?> data) throws IOException {
+        int size = data.serializedSizeFramed();
+        DataByteArrayOutputStream os = new DataByteArrayOutputStream(size + 1);
+        os.writeByte(data.type().getNumber());
+        data.writeFramed(os);
+        return os.toByteSequence();
+    }
+
     /**
      * All updated are are funneled through this method. The updates are converted
      * to a JournalMessage which is logged to the journal and then the data from
@@ -815,13 +827,9 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
             before.run();
         }
         try {
-            int size = data.serializedSizeFramed();
-            DataByteArrayOutputStream os = new DataByteArrayOutputStream(size + 1);
-            os.writeByte(data.type().getNumber());
-            data.writeFramed(os);
-
+            ByteSequence sequence = toByteSequence(data);
             long start = System.currentTimeMillis();
-            Location location = journal.write(os.toByteSequence(), sync);
+            Location location = journal.write(sequence, sync);
             long start2 = System.currentTimeMillis();
             process(data, location, after);
             long end = System.currentTimeMillis();
@@ -1079,15 +1087,34 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
         }
     }
 
-    protected void process(KahaRollbackCommand command, Location location) {
+    protected void process(KahaRollbackCommand command, Location location)  throws IOException {
         TransactionId key = TransactionIdConversion.convert(command.getTransactionInfo());
+        List<Operation> updates = null;
         synchronized (inflightTransactions) {
-            List<Operation> tx = inflightTransactions.remove(key);
-            if (tx == null) {
-                preparedTransactions.remove(key);
+            updates = inflightTransactions.remove(key);
+            if (updates == null) {
+                updates = preparedTransactions.remove(key);
+            }
+        }
+        if (isRewriteOnRedelivery()) {
+            persistRedeliveryCount(updates);
+        }
+    }
+
+    private void persistRedeliveryCount(List<Operation> updates)  throws IOException {
+        if (updates != null) {
+            for (Operation operation : updates) {
+                operation.getCommand().visit(new Visitor() {
+                    @Override
+                    public void visit(KahaRemoveMessageCommand command) throws IOException {
+                        incrementRedeliveryAndReWrite(command.getMessageId(), command.getDestination());
+                    }
+                });
             }
         }
     }
+
+   abstract void incrementRedeliveryAndReWrite(String key, KahaDestination destination) throws IOException;
 
     // /////////////////////////////////////////////////////////////////
     // These methods do the actual index updates.
@@ -1981,10 +2008,12 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
         return TransactionIdConversion.convert(transactionInfo);
     }
 
-    abstract class Operation {
+    abstract class Operation <T extends JournalCommand<T>> {
+        final T command;
         final Location location;
 
-        public Operation(Location location) {
+        public Operation(T command, Location location) {
+            this.command = command;
             this.location = location;
         }
 
@@ -1992,15 +2021,17 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
             return location;
         }
 
+        public T getCommand() {
+            return command;
+        }
+
         abstract public void execute(Transaction tx) throws IOException;
     }
 
-    class AddOpperation extends Operation {
-        final KahaAddMessageCommand command;
+    class AddOpperation extends Operation<KahaAddMessageCommand> {
 
         public AddOpperation(KahaAddMessageCommand command, Location location) {
-            super(location);
-            this.command = command;
+            super(command, location);
         }
 
         @Override
@@ -2008,26 +2039,17 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
             upadateIndex(tx, command, location);
         }
 
-        public KahaAddMessageCommand getCommand() {
-            return command;
-        }
     }
 
-    class RemoveOpperation extends Operation {
-        final KahaRemoveMessageCommand command;
+    class RemoveOpperation extends Operation<KahaRemoveMessageCommand> {
 
         public RemoveOpperation(KahaRemoveMessageCommand command, Location location) {
-            super(location);
-            this.command = command;
+            super(command, location);
         }
 
         @Override
         public void execute(Transaction tx) throws IOException {
             updateIndex(tx, command, location);
-        }
-
-        public KahaRemoveMessageCommand getCommand() {
-            return command;
         }
     }
 
@@ -2245,6 +2267,14 @@ public class MessageDatabase extends ServiceSupport implements BrokerServiceAwar
      */
     public void setDatabaseLockedWaitDelay(int databaseLockedWaitDelay) {
         this.databaseLockedWaitDelay = databaseLockedWaitDelay;
+    }
+
+    public boolean isRewriteOnRedelivery() {
+        return rewriteOnRedelivery;
+    }
+
+    public void setRewriteOnRedelivery(boolean rewriteOnRedelivery) {
+        this.rewriteOnRedelivery = rewriteOnRedelivery;
     }
 
     // /////////////////////////////////////////////////////////////////

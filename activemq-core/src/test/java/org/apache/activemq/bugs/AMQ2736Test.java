@@ -63,7 +63,6 @@ public class AMQ2736Test {
             store.close();
         } catch (Exception expectedLotsAsJournalBorked) {
         }
-        store.getLockFile().unlock();
 
         broker.stop();
         broker.waitUntilStopped();
