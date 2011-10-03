@@ -34,6 +34,7 @@ public class ConnectionExpiryEvictsFromPoolTest extends TestSupport {
 
     protected void setUp() throws Exception {
         broker = new BrokerService();
+        broker.setUseJmx(false);
         broker.setPersistent(false);
         TransportConnector connector = broker.addConnector("tcp://localhost:0");
         broker.start();
@@ -46,32 +47,32 @@ public class ConnectionExpiryEvictsFromPoolTest extends TestSupport {
         pooledFactory.setIdleTimeout(10);
         PooledConnection connection = (PooledConnection) pooledFactory.createConnection();
         ActiveMQConnection amq1 = connection.getConnection();
-        
+
         connection.close();
         // let it idle timeout
         TimeUnit.SECONDS.sleep(1);
-        
+
         PooledConnection connection2 = (PooledConnection) pooledFactory.createConnection();
         ActiveMQConnection amq2 = connection2.getConnection();
         assertTrue("not equal", !amq1.equals(amq2));
     }
-    
-    
+
+
     public void testEvictionOfExpired() throws Exception {
         pooledFactory.setExpiryTimeout(10);
         Connection connection = pooledFactory.createConnection();
         ActiveMQConnection amq1 = ((PooledConnection) connection).getConnection();
-        
+
         // let it expire while in use
         TimeUnit.SECONDS.sleep(1);
         connection.close();
-        
+
         Connection connection2 = pooledFactory.createConnection();
         ActiveMQConnection amq2 = ((PooledConnection) connection2).getConnection();
         assertTrue("not equal", !amq1.equals(amq2));
     }
-    
-    
+
+
     protected void tearDown() throws Exception {
         broker.stop();
     }

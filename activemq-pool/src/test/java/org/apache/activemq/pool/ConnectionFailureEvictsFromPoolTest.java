@@ -44,6 +44,7 @@ public class ConnectionFailureEvictsFromPoolTest extends TestSupport {
 
     protected void setUp() throws Exception {
         broker = new BrokerService();
+        broker.setUseJmx(false);
         broker.setPersistent(false);
         TransportConnector connector = broker.addConnector("tcp://localhost:0");
         broker.start();
@@ -68,7 +69,7 @@ public class ConnectionFailureEvictsFromPoolTest extends TestSupport {
             public void transportResumed() {
             }
         });
-        
+
         sendMessage(connection);
         LOG.info("sent one message worked fine");
         createConnectionFailure(connection);
