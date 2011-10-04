@@ -44,7 +44,7 @@ import java.util.Hashtable;
 import static org.junit.Assert.assertTrue;
 
 @RunWith ( FrameworkRunner.class )
-@CreateLdapServer(transports = {@CreateTransport(protocol = "LDAP")})
+@CreateLdapServer(transports = {@CreateTransport(protocol = "LDAP", port=1024)})
 @ApplyLdifFiles(
    "test.ldif"
 )
