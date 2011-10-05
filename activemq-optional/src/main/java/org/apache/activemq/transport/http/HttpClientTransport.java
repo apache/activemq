@@ -24,18 +24,25 @@ import java.net.URI;
 import org.apache.activemq.command.ShutdownInfo;
 import org.apache.activemq.transport.FutureResponse;
 import org.apache.activemq.transport.util.TextWireFormat;
-import org.apache.activemq.util.ByteArrayInputStream;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.IdGenerator;
 import org.apache.activemq.util.ServiceStopper;
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.HttpMethod;
-import org.apache.commons.httpclient.HttpStatus;
-import org.apache.commons.httpclient.methods.GetMethod;
-import org.apache.commons.httpclient.methods.HeadMethod;
-import org.apache.commons.httpclient.methods.InputStreamRequestEntity;
-import org.apache.commons.httpclient.methods.PostMethod;
-import org.apache.commons.httpclient.params.HttpClientParams;
+import org.apache.http.HttpHost;
+import org.apache.http.HttpResponse;
+import org.apache.http.HttpStatus;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.ResponseHandler;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpHead;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.conn.params.ConnRoutePNames;
+import org.apache.http.entity.ByteArrayEntity;
+import org.apache.http.impl.client.BasicResponseHandler;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.message.AbstractHttpMessage;
+import org.apache.http.params.HttpConnectionParams;
+import org.apache.http.params.HttpParams;
+import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,8 +50,6 @@ import org.slf4j.LoggerFactory;
  * A HTTP {@link org.apache.activemq.transport.TransportChannel} which uses the
  * <a href="http://jakarta.apache.org/commons/httpclient/">commons-httpclient</a>
  * library
- * 
- * 
  */
 public class HttpClientTransport extends HttpTransportSupport {
 
@@ -57,11 +62,11 @@ public class HttpClientTransport extends HttpTransportSupport {
 
     private final String clientID = CLIENT_ID_GENERATOR.generateId();
     private boolean trace;
-    private GetMethod httpMethod;
+    private HttpGet httpMethod;
     private volatile int receiveCounter;
 
     private int soTimeout = MAX_CLIENT_TIMEOUT;
-    
+
     public HttpClientTransport(TextWireFormat wireFormat, URI remoteUrl) {
         super(wireFormat, remoteUrl);
     }
@@ -75,35 +80,37 @@ public class HttpClientTransport extends HttpTransportSupport {
         if (isStopped()) {
             throw new IOException("stopped.");
         }
-        PostMethod httpMethod = new PostMethod(getRemoteUrl().toString());
+        HttpPost httpMethod = new HttpPost(getRemoteUrl().toString());
         configureMethod(httpMethod);
         String data = getTextWireFormat().marshalText(command);
         byte[] bytes = data.getBytes("UTF-8");
-        InputStreamRequestEntity entity = new InputStreamRequestEntity(new ByteArrayInputStream(bytes));
-        httpMethod.setRequestEntity(entity);
+        ByteArrayEntity entity = new ByteArrayEntity(bytes);
+        httpMethod.setEntity(entity);
 
+        HttpClient client = null;
+        HttpResponse answer = null;
         try {
-
-            HttpClient client = getSendHttpClient();
-            HttpClientParams params = new HttpClientParams();
-            params.setSoTimeout(soTimeout);
-            client.setParams(params);
-            int answer = client.executeMethod(httpMethod);
-            if (answer != HttpStatus.SC_OK) {
+            client = getSendHttpClient();
+            HttpParams params = client.getParams();
+            HttpConnectionParams.setSoTimeout(params, soTimeout);
+            answer = client.execute(httpMethod);
+            int status = answer.getStatusLine().getStatusCode();
+            if (status != HttpStatus.SC_OK) {
                 throw new IOException("Failed to post command: " + command + " as response was: " + answer);
             }
             if (command instanceof ShutdownInfo) {
-            	try {
-            		stop();
-            	} catch (Exception e) {
-            		LOG.warn("Error trying to stop HTTP client: "+ e, e);
-            	}
+                try {
+                    stop();
+                } catch (Exception e) {
+                    LOG.warn("Error trying to stop HTTP client: "+ e, e);
+                }
             }
         } catch (IOException e) {
             throw IOExceptionSupport.create("Could not post command: " + command + " due to: " + e, e);
         } finally {
-            httpMethod.getResponseBody();
-            httpMethod.releaseConnection();
+            if (answer != null) {
+                EntityUtils.consume(answer.getEntity());
+            }
         }
     }
 
@@ -119,13 +126,15 @@ public class HttpClientTransport extends HttpTransportSupport {
 
         while (!isStopped() && !isStopping()) {
 
-            httpMethod = new GetMethod(remoteUrl.toString());
+            httpMethod = new HttpGet(remoteUrl.toString());
             configureMethod(httpMethod);
+            HttpResponse answer = null;
 
             try {
-                int answer = httpClient.executeMethod(httpMethod);
-                if (answer != HttpStatus.SC_OK) {
-                    if (answer == HttpStatus.SC_REQUEST_TIMEOUT) {
+                answer = httpClient.execute(httpMethod);
+                int status = answer.getStatusLine().getStatusCode();
+                if (status != HttpStatus.SC_OK) {
+                    if (status == HttpStatus.SC_REQUEST_TIMEOUT) {
                         LOG.debug("GET timed out");
                         try {
                             Thread.sleep(1000);
@@ -139,19 +148,25 @@ public class HttpClientTransport extends HttpTransportSupport {
                     }
                 } else {
                     receiveCounter++;
-                    DataInputStream stream = new DataInputStream(httpMethod.getResponseBodyAsStream());
+                    DataInputStream stream = new DataInputStream(answer.getEntity().getContent());
                     Object command = (Object)getTextWireFormat().unmarshal(stream);
                     if (command == null) {
                         LOG.debug("Received null command from url: " + remoteUrl);
                     } else {
                         doConsume(command);
                     }
+                    stream.close();
                 }
             } catch (IOException e) {
                 onException(IOExceptionSupport.create("Failed to perform GET on: " + remoteUrl + " Reason: " + e.getMessage(), e));
                 break;
             } finally {
-                httpMethod.releaseConnection();
+                if (answer != null) {
+                    try {
+                        EntityUtils.consume(answer.getEntity());
+                    } catch (IOException e) {
+                    }
+                }
             }
         }
     }
@@ -188,12 +203,13 @@ public class HttpClientTransport extends HttpTransportSupport {
         HttpClient httpClient = getReceiveHttpClient();
         URI remoteUrl = getRemoteUrl();
 
-        HeadMethod httpMethod = new HeadMethod(remoteUrl.toString());
+        HttpHead httpMethod = new HttpHead(remoteUrl.toString());
         configureMethod(httpMethod);
-
-        int answer = httpClient.executeMethod(httpMethod);
-        if (answer != HttpStatus.SC_OK) {
-            throw new IOException("Failed to perform GET on: " + remoteUrl + " as response was: " + answer);
+        ResponseHandler<String> handler = new BasicResponseHandler();
+        try {
+            httpClient.execute(httpMethod, handler);
+        } catch(Exception e) {
+            throw new IOException("Failed to perform GET on: " + remoteUrl + " as response was: " + e.getMessage());
         }
 
         super.doStart();
@@ -206,15 +222,16 @@ public class HttpClientTransport extends HttpTransportSupport {
     }
 
     protected HttpClient createHttpClient() {
-        HttpClient client = new HttpClient();
+        HttpClient client = new DefaultHttpClient();
         if (getProxyHost() != null) {
-            client.getHostConfiguration().setProxy(getProxyHost(), getProxyPort());
+            HttpHost proxy = new HttpHost(getProxyHost(), getProxyPort());
+            client.getParams().setParameter(ConnRoutePNames.DEFAULT_PROXY, proxy);
         }
         return client;
     }
 
-    protected void configureMethod(HttpMethod method) {
-        method.setRequestHeader("clientID", clientID);
+    protected void configureMethod(AbstractHttpMessage method) {
+        method.setHeader("clientID", clientID);
     }
 
     public boolean isTrace() {

@@ -6,9 +6,9 @@
   The ASF licenses this file to You under the Apache License, Version 2.0
   (the "License"); you may not use this file except in compliance with
   the License.  You may obtain a copy of the License at
-  
+
   http://www.apache.org/licenses/LICENSE-2.0
-  
+
   Unless required by applicable law or agreed to in writing, software
   distributed under the License is distributed on an "AS IS" BASIS,
   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,7 +16,7 @@
   limitations under the License.
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-  
+
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
@@ -44,7 +44,7 @@
      </releases>
    </repository>
   </repositories>
-  
+
 
   <dependencies>
     <!-- activemq -->
@@ -60,12 +60,12 @@
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>activeio-core</artifactId>
-    </dependency>    
+    </dependency>
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>activemq-console</artifactId>
     </dependency>
-        
+
     <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring-core</artifactId>
@@ -80,7 +80,7 @@
       <groupId>aopalliance</groupId>
       <artifactId>aopalliance</artifactId>
     </dependency>
-    
+
     <dependency>
       <groupId>com.thoughtworks.xstream</groupId>
       <artifactId>xstream</artifactId>
@@ -89,7 +89,7 @@
       <groupId>xpp3</groupId>
       <artifactId>xpp3</artifactId>
     </dependency>
-    
+
     <dependency>
       <groupId>org.eclipse.jetty.aggregate</groupId>
       <artifactId>jetty-all-server</artifactId>
@@ -104,22 +104,23 @@
         <artifactId>jetty-websocket</artifactId>
         <version>${jetty-version}</version>
     </dependency>
-    
+
     <dependency>
       <groupId>axis</groupId>
       <artifactId>axis</artifactId>
     </dependency>
 
     <dependency>
-      <groupId>commons-httpclient</groupId>
-      <artifactId>commons-httpclient</artifactId>
+      <groupId>org.apache.httpcomponents</groupId>
+      <artifactId>httpclient</artifactId>
+      <version>${httpclient-version}</version>
     </dependency>
-    
+
     <dependency>
       <groupId>commons-pool</groupId>
       <artifactId>commons-pool</artifactId>
     </dependency>
-    
+
     <dependency>
       <groupId>commons-collections</groupId>
       <artifactId>commons-collections</artifactId>
@@ -152,8 +153,8 @@
       <groupId>xmlbeans</groupId>
       <artifactId>xbean_xpath</artifactId>
       <optional>true</optional>
-    </dependency>    
-    
+    </dependency>
+
     <dependency>
       <groupId>xalan</groupId>
       <artifactId>xalan</artifactId>
@@ -172,21 +173,21 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-    	<groupId>org.springframework.ws</groupId>
-    	<artifactId>spring-oxm-tiger</artifactId>
-    	<optional>true</optional>
+        <groupId>org.springframework.ws</groupId>
+        <artifactId>spring-oxm-tiger</artifactId>
+        <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>org.apache.xbean</groupId>
       <artifactId>xbean-spring</artifactId>
       <scope>test</scope>
-    </dependency>    
+    </dependency>
     <dependency>
       <groupId>org.codehaus.jettison</groupId>
       <artifactId>jettison</artifactId>
       <scope>test</scope>
-    </dependency>  
-    
+    </dependency>
+
     <dependency>
       <groupId>org.apache.velocity</groupId>
       <artifactId>velocity</artifactId>
@@ -199,8 +200,8 @@
       <groupId>net.sf.josql</groupId>
       <artifactId>gentlyweb-utils</artifactId>
     </dependency>
-    
-         
+
+
   </dependencies>
 
   <build>

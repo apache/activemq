@@ -6,9 +6,9 @@
   The ASF licenses this file to You under the Apache License, Version 2.0
   (the "License"); you may not use this file except in compliance with
   the License.  You may obtain a copy of the License at
-  
+
   http://www.apache.org/licenses/LICENSE-2.0
-  
+
   Unless required by applicable law or agreed to in writing, software
   distributed under the License is distributed on an "AS IS" BASIS,
   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,7 +16,7 @@
   limitations under the License.
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-  
+
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
@@ -38,9 +38,9 @@
       <url>http://download.java.net/maven/2</url>
     </repository>
   </repositories>
-  
+
   <dependencies>
-    
+
     <!-- activemq -->
     <dependency>
       <groupId>${project.groupId}</groupId>
@@ -95,7 +95,7 @@
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>activemq-spring</artifactId>
-    </dependency>    
+    </dependency>
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>activemq-web-demo</artifactId>
@@ -120,7 +120,7 @@
       <groupId>${project.groupId}</groupId>
       <artifactId>kahadb</artifactId>
     </dependency>
-    
+
     <!-- camel -->
     <dependency>
       <groupId>org.apache.camel</groupId>
@@ -146,8 +146,8 @@
 
     <!-- commons -->
     <dependency>
-      <groupId>commons-httpclient</groupId>
-      <artifactId>commons-httpclient</artifactId>
+      <groupId>org.apache.httpcomponents</groupId>
+      <artifactId>httpclient</artifactId>
     </dependency>
     <dependency>
       <groupId>commons-beanutils</groupId>
@@ -163,7 +163,7 @@
       <artifactId>commons-pool</artifactId>
       <optional>true</optional>
     </dependency>
-    
+
     <dependency>
       <groupId>activesoap</groupId>
       <artifactId>jaxp-api</artifactId>
@@ -185,7 +185,7 @@
       <groupId>log4j</groupId>
       <artifactId>log4j</artifactId>
     </dependency>
-    
+
     <dependency>
       <groupId>org.apache.geronimo.specs</groupId>
       <artifactId>geronimo-jms_1.1_spec</artifactId>
@@ -222,7 +222,7 @@
     <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring-aop</artifactId>
-    </dependency>      
+    </dependency>
     <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring-jms</artifactId>
@@ -247,7 +247,7 @@
     <dependency>
       <groupId>org.codehaus.jettison</groupId>
       <artifactId>jettison</artifactId>
-    </dependency>  
+    </dependency>
 
     <dependency>
       <groupId>org.eclipse.jetty.aggregate</groupId>
@@ -268,7 +268,7 @@
       <artifactId>derbynet</artifactId>
       <optional>true</optional>
     </dependency>
-    
+
     <!-- copied dependencies from activemq-web-console -->
     <!-- enable commons-logging when inside jetty6:run -->
     <dependency>
@@ -309,7 +309,7 @@
       <artifactId>junit</artifactId>
       <scope>test</scope>
     </dependency>
-    
+
     <!-- dependencies specific to this module -->
     <dependency>
       <groupId>jrms</groupId>
@@ -326,11 +326,11 @@
       <artifactId>xmlParserAPIs</artifactId>
       <version>2.6.2</version>
     </dependency>
-    
+
   </dependencies>
 
   <build>
-    
+
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -379,7 +379,7 @@
             </goals>
             <configuration>
               <descriptors>
-                 <descriptor>src/main/descriptors/unix-bin.xml</descriptor>  
+                 <descriptor>src/main/descriptors/unix-bin.xml</descriptor>
               </descriptors>
               <!--<finalName>${pom.artifactId}-${project.version}</finalName>-->
               <!--<appendAssemblyId>false</appendAssemblyId>-->
@@ -393,7 +393,7 @@
             </goals>
             <configuration>
               <descriptors>
-                 <descriptor>src/main/descriptors/windows-bin.xml</descriptor>  
+                 <descriptor>src/main/descriptors/windows-bin.xml</descriptor>
               </descriptors>
               <!--<finalName>${pom.artifactId}-${project.version}</finalName>-->
               <!--<appendAssemblyId>false</appendAssemblyId>-->
@@ -422,15 +422,15 @@
             </goals>
             <configuration>
               <outputDirectory>target/conf</outputDirectory>
-              <resources> 
+              <resources>
                 <resource>
                   <directory>src/release/conf</directory>
                 </resource>
                 <resource>
                   <directory>src/sample-conf</directory>
                 </resource>
-              </resources> 
-            </configuration>            
+              </resources>
+            </configuration>
           </execution>
         </executions>
       </plugin>

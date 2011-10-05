@@ -31,39 +31,42 @@ import org.apache.activemq.command.DiscoveryEvent;
 import org.apache.activemq.transport.discovery.DiscoveryAgent;
 import org.apache.activemq.transport.discovery.DiscoveryListener;
 import org.apache.activemq.util.IntrospectionSupport;
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.methods.DeleteMethod;
-import org.apache.commons.httpclient.methods.GetMethod;
-import org.apache.commons.httpclient.methods.PutMethod;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.ResponseHandler;
+import org.apache.http.client.methods.HttpDelete;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPut;
+import org.apache.http.impl.client.BasicResponseHandler;
+import org.apache.http.impl.client.DefaultHttpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class HTTPDiscoveryAgent implements DiscoveryAgent {
-    
+
     private static final Logger LOG = LoggerFactory.getLogger(HTTPDiscoveryAgent.class);
-    
+
     private String registryURL = "http://localhost:8080/discovery-registry/default";
-    private HttpClient httpClient = new HttpClient();
-    private AtomicBoolean running=new AtomicBoolean();
+    private HttpClient httpClient = new DefaultHttpClient();
+    private AtomicBoolean running = new AtomicBoolean();
     private final AtomicReference<DiscoveryListener> discoveryListener = new AtomicReference<DiscoveryListener>();
     private final HashSet<String> registeredServices = new HashSet<String>();
-    private final HashMap<String, SimpleDiscoveryEvent> discoveredServices = new HashMap<String, SimpleDiscoveryEvent>();    
-    private Thread thread;   
-    private long updateInterval = 1000*10;
+    private final HashMap<String, SimpleDiscoveryEvent> discoveredServices = new HashMap<String, SimpleDiscoveryEvent>();
+    private Thread thread;
+    private long updateInterval = 1000 * 10;
+    @SuppressWarnings("unused")
     private String brokerName;
-    private boolean startEmbeddRegistry=false;
+    private boolean startEmbeddRegistry = false;
     private Service jetty;
-    private AtomicInteger startCounter=new AtomicInteger(0);
+    private AtomicInteger startCounter = new AtomicInteger(0);
 
-    
     private long initialReconnectDelay = 1000;
     private long maxReconnectDelay = 1000 * 30;
     private long backOffMultiplier = 2;
-    private boolean useExponentialBackOff=true;    
+    private boolean useExponentialBackOff = true;
     private int maxReconnectAttempts;
     private final Object sleepMutex = new Object();
     private long minConnectTime = 5000;
-    
+
     class SimpleDiscoveryEvent extends DiscoveryEvent {
 
         private int connectFailures;
@@ -75,16 +78,14 @@ public class HTTPDiscoveryAgent implements DiscoveryAgent {
         public SimpleDiscoveryEvent(String service) {
             super(service);
         }
-
     }
 
-    
     public String getGroup() {
         return null;
     }
 
     public void registerService(String service) throws IOException {
-        synchronized(registeredServices) {
+        synchronized (registeredServices) {
             registeredServices.add(service);
         }
         doRegister(service);
@@ -93,127 +94,120 @@ public class HTTPDiscoveryAgent implements DiscoveryAgent {
     synchronized private void doRegister(String service) {
         String url = registryURL;
         try {
-            PutMethod method = new PutMethod(url);
-//            method.setParams(createParams());
-            method.setRequestHeader("service", service);
-            int responseCode = httpClient.executeMethod(method);
-            LOG.debug("PUT to "+url+" got a "+responseCode);
+            HttpPut method = new HttpPut(url);
+            method.addHeader("service", service);
+            ResponseHandler<String> handler = new BasicResponseHandler();
+            String responseBody = httpClient.execute(method, handler);
+            LOG.debug("PUT to " + url + " got a " + responseBody);
         } catch (Exception e) {
-            LOG.debug("PUT to "+url+" failed with: "+e);
-        }
-    }
-    
-    synchronized private void doUnRegister(String service) {
-        String url = registryURL;
-        try {
-            DeleteMethod method = new DeleteMethod(url);
-//            method.setParams(createParams());
-            method.setRequestHeader("service", service);
-            int responseCode = httpClient.executeMethod(method);
-            LOG.debug("DELETE to "+url+" got a "+responseCode);
-        } catch (Exception e) {
-            LOG.debug("DELETE to "+url+" failed with: "+e);
+            LOG.debug("PUT to " + url + " failed with: " + e);
         }
     }
 
-//    private HttpMethodParams createParams() {
-//        HttpMethodParams params = new HttpMethodParams();
-//        params.setParameter(HttpMethodParams.RETRY_HANDLER, new DefaultHttpMethodRetryHandler(0,false));
-//        return params;
-//    }
-    
-    synchronized private Set<String> doLookup(long freshness) {
-        String url = registryURL+"?freshness="+freshness;
+    @SuppressWarnings("unused")
+    synchronized private void doUnRegister(String service) {
+        String url = registryURL;
         try {
-            GetMethod method = new GetMethod(url);
-//            method.setParams(createParams());
-            int responseCode = httpClient.executeMethod(method);
-            LOG.debug("GET to "+url+" got a "+responseCode);
-            if( responseCode == 200 ) {
-                Set<String> rc = new HashSet<String>();
-                Scanner scanner = new Scanner(method.getResponseBodyAsStream());
-                while( scanner.hasNextLine() ) {
-                    String service = scanner.nextLine();
-                    if( service.trim().length() != 0 ) {
-                        rc.add(service);
-                    }
-                }
-                return rc;
-            } else {
-                LOG.debug("GET to "+url+" failed with response code: "+responseCode);
-                return null;
-            }
+            HttpDelete method = new HttpDelete(url);
+            method.addHeader("service", service);
+            ResponseHandler<String> handler = new BasicResponseHandler();
+            String responseBody = httpClient.execute(method, handler);
+            LOG.debug("DELETE to " + url + " got a " + responseBody);
         } catch (Exception e) {
-            LOG.debug("GET to "+url+" failed with: "+e);
+            LOG.debug("DELETE to " + url + " failed with: " + e);
+        }
+    }
+
+    synchronized private Set<String> doLookup(long freshness) {
+        String url = registryURL + "?freshness=" + freshness;
+        try {
+            HttpGet method = new HttpGet(url);
+            ResponseHandler<String> handler = new BasicResponseHandler();
+            String response = httpClient.execute(method, handler);
+            LOG.debug("GET to " + url + " got a " + response);
+            Set<String> rc = new HashSet<String>();
+            Scanner scanner = new Scanner(response);
+            while (scanner.hasNextLine()) {
+                String service = scanner.nextLine();
+                if (service.trim().length() != 0) {
+                    rc.add(service);
+                }
+            }
+            return rc;
+        } catch (Exception e) {
+            LOG.debug("GET to " + url + " failed with: " + e);
             return null;
         }
     }
 
     public void serviceFailed(DiscoveryEvent devent) throws IOException {
 
-        final SimpleDiscoveryEvent event = (SimpleDiscoveryEvent)devent;
+        final SimpleDiscoveryEvent event = (SimpleDiscoveryEvent) devent;
         if (event.failed.compareAndSet(false, true)) {
-        	discoveryListener.get().onServiceRemove(event);
-        	if(!event.removed.get()) {
-	        	// Setup a thread to re-raise the event...
-	            Thread thread = new Thread() {
-	                public void run() {
-	
-	                    // We detect a failed connection attempt because the service
-	                    // fails right away.
-	                    if (event.connectTime + minConnectTime > System.currentTimeMillis()) {
-	                        LOG.debug("Failure occured soon after the discovery event was generated.  It will be clasified as a connection failure: "+event);
-	
-	                        event.connectFailures++;
-	
-	                        if (maxReconnectAttempts > 0 && event.connectFailures >= maxReconnectAttempts) {
-	                            LOG.debug("Reconnect attempts exceeded "+maxReconnectAttempts+" tries.  Reconnecting has been disabled.");
-	                            return;
-	                        }
-	
-	                        synchronized (sleepMutex) {
-	                            try {
-	                                if (!running.get() || event.removed.get()) {
-	                                    return;
-	                                }
-	                                LOG.debug("Waiting "+event.reconnectDelay+" ms before attepting to reconnect.");
-	                                sleepMutex.wait(event.reconnectDelay);
-	                            } catch (InterruptedException ie) {
-	                                Thread.currentThread().interrupt();
-	                                return;
-	                            }
-	                        }
-	
-	                        if (!useExponentialBackOff) {
-	                            event.reconnectDelay = initialReconnectDelay;
-	                        } else {
-	                            // Exponential increment of reconnect delay.
-	                            event.reconnectDelay *= backOffMultiplier;
-	                            if (event.reconnectDelay > maxReconnectDelay) {
-	                                event.reconnectDelay = maxReconnectDelay;
-	                            }
-	                        }
-	
-	                    } else {
-	                        event.connectFailures = 0;
-	                        event.reconnectDelay = initialReconnectDelay;
-	                    }
-	
-	                    if (!running.get() || event.removed.get()) {
-	                        return;
-	                    }
-	
-	                    event.connectTime = System.currentTimeMillis();
-	                    event.failed.set(false);
-	                    discoveryListener.get().onServiceAdd(event);
-	                }
-	            };
-	            thread.setDaemon(true);
-	            thread.start();
-        	}
+            discoveryListener.get().onServiceRemove(event);
+            if (!event.removed.get()) {
+                // Setup a thread to re-raise the event...
+                Thread thread = new Thread() {
+                    public void run() {
+
+                        // We detect a failed connection attempt because the
+                        // service
+                        // fails right away.
+                        if (event.connectTime + minConnectTime > System.currentTimeMillis()) {
+                            LOG.debug("Failure occured soon after the discovery event was generated.  " +
+                                      "It will be clasified as a connection failure: " + event);
+
+                            event.connectFailures++;
+
+                            if (maxReconnectAttempts > 0 && event.connectFailures >= maxReconnectAttempts) {
+                                LOG.debug("Reconnect attempts exceeded " + maxReconnectAttempts +
+                                          " tries.  Reconnecting has been disabled.");
+                                return;
+                            }
+
+                            synchronized (sleepMutex) {
+                                try {
+                                    if (!running.get() || event.removed.get()) {
+                                        return;
+                                    }
+                                    LOG.debug("Waiting " + event.reconnectDelay +
+                                              " ms before attepting to reconnect.");
+                                    sleepMutex.wait(event.reconnectDelay);
+                                } catch (InterruptedException ie) {
+                                    Thread.currentThread().interrupt();
+                                    return;
+                                }
+                            }
+
+                            if (!useExponentialBackOff) {
+                                event.reconnectDelay = initialReconnectDelay;
+                            } else {
+                                // Exponential increment of reconnect delay.
+                                event.reconnectDelay *= backOffMultiplier;
+                                if (event.reconnectDelay > maxReconnectDelay) {
+                                    event.reconnectDelay = maxReconnectDelay;
+                                }
+                            }
+
+                        } else {
+                            event.connectFailures = 0;
+                            event.reconnectDelay = initialReconnectDelay;
+                        }
+
+                        if (!running.get() || event.removed.get()) {
+                            return;
+                        }
+
+                        event.connectTime = System.currentTimeMillis();
+                        event.failed.set(false);
+                        discoveryListener.get().onServiceAdd(event);
+                    }
+                };
+                thread.setDaemon(true);
+                thread.start();
+            }
         }
     }
-
 
     public void setBrokerName(String brokerName) {
         this.brokerName = brokerName;
@@ -227,20 +221,20 @@ public class HTTPDiscoveryAgent implements DiscoveryAgent {
     }
 
     public void start() throws Exception {
-        if( startCounter.addAndGet(1)==1 ) {
-            if( startEmbeddRegistry ) {
+        if (startCounter.addAndGet(1) == 1) {
+            if (startEmbeddRegistry) {
                 jetty = createEmbeddedJettyServer();
-                Map props = new HashMap();
+                Map<String, Object> props = new HashMap<String, Object>();
                 props.put("agent", this);
                 IntrospectionSupport.setProperties(jetty, props);
                 jetty.start();
             }
-            
+
             running.set(true);
             thread = new Thread("HTTPDiscovery Agent") {
                 @Override
                 public void run() {
-                    while(running.get()) {
+                    while (running.get()) {
                         try {
                             update();
                             Thread.sleep(updateInterval);
@@ -256,51 +250,52 @@ public class HTTPDiscoveryAgent implements DiscoveryAgent {
     }
 
     /**
-     * Create the EmbeddedJettyServer instance via reflection so that we can avoid a hard runtime dependency on 
-     * jetty.
-     * 
+     * Create the EmbeddedJettyServer instance via reflection so that we can
+     * avoid a hard runtime dependency on jetty.
+     *
      * @return
      * @throws Exception
      */
-    private Service createEmbeddedJettyServer()  throws Exception {
-        Class clazz = HTTPDiscoveryAgent.class.getClassLoader().loadClass("org.apache.activemq.transport.discovery.http.EmbeddedJettyServer");
-        return (Service)clazz.newInstance();
+    private Service createEmbeddedJettyServer() throws Exception {
+        Class<?> clazz = HTTPDiscoveryAgent.class.getClassLoader().loadClass("org.apache.activemq.transport.discovery.http.EmbeddedJettyServer");
+        return (Service) clazz.newInstance();
     }
 
     private void update() {
         // Register all our services...
-        synchronized(registeredServices) {
+        synchronized (registeredServices) {
             for (String service : registeredServices) {
                 doRegister(service);
             }
         }
-        
+
         // Find new registered services...
         DiscoveryListener discoveryListener = this.discoveryListener.get();
-        if(discoveryListener!=null) {
-            Set<String> activeServices = doLookup(updateInterval*3);
-            // If there is error talking the the central server, then activeServices == null
-            if( activeServices !=null ) {
-                synchronized(discoveredServices) {
-                    
+        if (discoveryListener != null) {
+            Set<String> activeServices = doLookup(updateInterval * 3);
+            // If there is error talking the the central server, then
+            // activeServices == null
+            if (activeServices != null) {
+                synchronized (discoveredServices) {
+
                     HashSet<String> removedServices = new HashSet<String>(discoveredServices.keySet());
                     removedServices.removeAll(activeServices);
-                    
+
                     HashSet<String> addedServices = new HashSet<String>(activeServices);
                     addedServices.removeAll(discoveredServices.keySet());
                     addedServices.removeAll(removedServices);
-                    
+
                     for (String service : addedServices) {
                         SimpleDiscoveryEvent e = new SimpleDiscoveryEvent(service);
                         discoveredServices.put(service, e);
                         discoveryListener.onServiceAdd(e);
                     }
-                    
+
                     for (String service : removedServices) {
-                    	SimpleDiscoveryEvent e = discoveredServices.remove(service);
-                    	if( e !=null ) {
-                    		e.removed.set(true);
-                    	}
+                        SimpleDiscoveryEvent e = discoveredServices.remove(service);
+                        if (e != null) {
+                            e.removed.set(true);
+                        }
                         discoveryListener.onServiceRemove(e);
                     }
                 }
@@ -309,13 +304,13 @@ public class HTTPDiscoveryAgent implements DiscoveryAgent {
     }
 
     public void stop() throws Exception {
-        if( startCounter.decrementAndGet()==0 ) {
+        if (startCounter.decrementAndGet() == 0) {
             running.set(false);
-            if( thread!=null ) {
-                thread.join(updateInterval*3);
-                thread=null;
+            if (thread != null) {
+                thread.join(updateInterval * 3);
+                thread = null;
             }
-            if( jetty!=null ) {
+            if (jetty != null) {
                 jetty.stop();
                 jetty = null;
             }
@@ -345,5 +340,4 @@ public class HTTPDiscoveryAgent implements DiscoveryAgent {
     public void setStartEmbeddRegistry(boolean startEmbeddRegistry) {
         this.startEmbeddRegistry = startEmbeddRegistry;
     }
-
 }
