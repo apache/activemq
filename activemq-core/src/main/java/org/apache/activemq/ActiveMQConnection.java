@@ -2425,7 +2425,13 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
         while(entries.hasNext()) {
             ConcurrentHashMap.Entry<ActiveMQTempDestination, ActiveMQTempDestination> entry = entries.next();
             try {
-                this.deleteTempDestination(entry.getValue());
+                // Only delete this temp destination if it was created from this connection. The connection used
+                // for the advisory consumer may also have a reference to this temp destination. 
+                ActiveMQTempDestination dest = entry.getValue();                             
+                String thisConnectionId = (info.getConnectionId() == null) ? "" : info.getConnectionId().toString();
+                if (dest.getConnectionId() != null && dest.getConnectionId().equals(thisConnectionId)) {
+                    this.deleteTempDestination(entry.getValue());
+                }
             } catch (Exception ex) {
                 // the temp dest is in use so it can not be deleted.
                 // it is ok to leave it to connection tear down phase
