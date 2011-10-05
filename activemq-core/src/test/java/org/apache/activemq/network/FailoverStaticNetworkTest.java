@@ -18,11 +18,14 @@ package org.apache.activemq.network;
 
 import java.net.URI;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.Vector;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import javax.jms.Connection;
@@ -30,6 +33,7 @@ import javax.jms.ConnectionFactory;
 import javax.jms.JMSException;
 import javax.jms.MessageConsumer;
 import javax.jms.Session;
+import javax.management.ObjectName;
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.TrustManager;
 
@@ -66,7 +70,7 @@ public class FailoverStaticNetworkTest {
     protected BrokerService createBroker(String scheme, String listenPort, String[] networkToPorts,
                                          HashMap<String, String> networkProps) throws Exception {
         BrokerService broker = new BrokerService();
-        broker.setUseJmx(false);
+        //broker.setUseJmx(false);
         broker.getManagementContext().setCreateConnector(false);
         broker.setSslContext(sslContext);
         broker.setDeleteAllMessagesOnStartup(true);
@@ -155,6 +159,10 @@ public class FailoverStaticNetworkTest {
         brokerB.start();
         doTestNetworkSendReceive();
 
+        // check mbean
+        Set<String> bridgeNames = getNetworkBridgeMBeanName(brokerB);
+        assertEquals("only one bridgeName: " + bridgeNames, 1, bridgeNames.size());
+
         LOG.info("stopping brokerA");
         brokerA.stop();
         brokerA.waitUntilStopped();
@@ -164,6 +172,21 @@ public class FailoverStaticNetworkTest {
         brokerA.start();
 
         doTestNetworkSendReceive();
+
+        Set<String> otherBridgeNames = getNetworkBridgeMBeanName(brokerB);
+        assertEquals("only one bridgeName: " + otherBridgeNames, 1, otherBridgeNames.size());
+
+        assertTrue("there was an addition", bridgeNames.addAll(otherBridgeNames));
+    }
+
+    private Set<String> getNetworkBridgeMBeanName(BrokerService brokerB) throws Exception {
+        Set<String> names = new HashSet<String>();
+        for (ObjectName objectName : brokerB.getManagementContext().queryNames(null, null)) {
+            if ("NetworkBridge".equals(objectName.getKeyProperty("Type"))) {
+                names.add(objectName.getKeyProperty("Name"));
+            }
+        }
+        return names;
     }
 
     @Test

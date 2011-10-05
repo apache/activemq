@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.network;
 
+import javax.management.ObjectName;
 import org.apache.activemq.Service;
 
 
@@ -56,4 +57,8 @@ public interface NetworkBridge extends Service {
     long getEnqueueCounter();
 
     long getDequeueCounter();
+
+    void setMbeanObjectName(ObjectName objectName);
+
+    ObjectName getMbeanObjectName();
 }

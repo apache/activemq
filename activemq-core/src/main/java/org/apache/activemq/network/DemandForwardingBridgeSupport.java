@@ -26,6 +26,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
+import javax.management.ObjectName;
 import org.apache.activemq.Service;
 import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.broker.BrokerService;
@@ -131,6 +132,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
     private final AtomicBoolean started = new AtomicBoolean();
     private TransportConnection duplexInitiatingConnection;
     private BrokerService brokerService = null;
+    private ObjectName mbeanObjectName;
 
     public DemandForwardingBridgeSupport(NetworkBridgeConfiguration configuration, Transport localBroker, Transport remoteBroker) {
         this.configuration = configuration;
@@ -1288,5 +1290,13 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
 
     public void setBrokerService(BrokerService brokerService) {
         this.brokerService = brokerService;
+    }
+
+    public void setMbeanObjectName(ObjectName objectName) {
+        this.mbeanObjectName = objectName;
+    }
+
+    public ObjectName getMbeanObjectName() {
+        return mbeanObjectName;
     }
 }
