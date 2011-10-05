@@ -38,7 +38,7 @@ public class JmsSimpleRequestReplyTest extends CamelTestSupport {
     protected String componentName = "activemq";
 
     @Test
-    public void testRequestReply2Messages() throws Exception {
+    public void testRequestReply() throws Exception {
         MockEndpoint result = getMockEndpoint("mock:result");
         result.expectedMessageCount(1);
 
