@@ -26,6 +26,7 @@ import javax.management.ObjectInstance;
 import javax.management.ObjectName;
 
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.jmx.AnnotatedMBean;
 import org.apache.activemq.broker.jmx.ManagementContext;
 import org.apache.activemq.transport.discovery.multicast.MulticastDiscoveryAgentFactory;
 import org.apache.activemq.util.SocketProxy;
@@ -51,7 +52,7 @@ import org.junit.runner.RunWith;
 public class DiscoveryNetworkReconnectTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(DiscoveryNetworkReconnectTest.class);
-    final int maxReconnects = 5;
+    final int maxReconnects = 2;
     final String groupName = "GroupID-" + "DiscoveryNetworkReconnectTest";
     final String discoveryAddress = "multicast://default?group=" + groupName + "&initialReconnectDelay=1000";
     final Semaphore mbeanRegistered = new Semaphore(0);
@@ -72,6 +73,7 @@ public class DiscoveryNetworkReconnectTest {
         public boolean matches(Object arg0) {
             ObjectName other = (ObjectName) arg0;
             ObjectName mine = (ObjectName) name;
+            LOG.info("Match: " + mine + " vs: " + other);
             return other.getKeyProperty("Type").equals(mine.getKeyProperty("Type")) &&
                 other.getKeyProperty("NetworkConnectorName").equals(mine.getKeyProperty("NetworkConnectorName"));
         }
@@ -121,7 +123,7 @@ public class DiscoveryNetworkReconnectTest {
                                 public Object invoke(Invocation invocation) throws Throwable {
                                     LOG.info("Mbean Registered: " + invocation.getParameter(0));
                                     mbeanRegistered.release();
-                                    return new ObjectInstance((ObjectName)invocation.getParameter(0), "dscription");
+                                    return new ObjectInstance((ObjectName)invocation.getParameter(1), "dscription");
                                 }
                             });
             atLeast(maxReconnects - 1).of (managementContext).unregisterMBean(with(new NetworkBridgeObjectNameMatcher<ObjectName>(
