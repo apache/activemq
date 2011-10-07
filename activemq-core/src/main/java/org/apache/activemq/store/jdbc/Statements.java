@@ -356,7 +356,7 @@ public class Statements {
 
     public String getFindAllDestinationsStatement() {
         if (findAllDestinationsStatement == null) {
-            findAllDestinationsStatement = "SELECT DISTINCT CONTAINER FROM " + getFullAckTableName();
+            findAllDestinationsStatement = "SELECT DISTINCT CONTAINER FROM " + getFullMessageTableName();
         }
         return findAllDestinationsStatement;
     }
