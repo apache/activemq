@@ -1,4 +1,4 @@
-#!/bin/sh 
+#!/bin/sh
 # ------------------------------------------------------------------------
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
@@ -6,9 +6,9 @@
 # The ASF licenses this file to You under the Apache License, Version 2.0
 # (the "License"); you may not use this file except in compliance with
 # the License.  You may obtain a copy of the License at
-# 
+#
 # http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,8 +17,8 @@
 # ------------------------------------------------------------------------
 #
 # This script controls standalone Apache ActiveMQ service processes.
-# To ensure compatibility to macosx and cygwin we do not utilize 
-# lsb standard infrastructure for controlling daemons like 
+# To ensure compatibility to macosx and cygwin we do not utilize
+# lsb standard infrastructure for controlling daemons like
 # "start-stop-daemon".
 #
 # See also http://activemq.apache.org/activemq-command-line-tools-reference.html
@@ -36,7 +36,7 @@ COMMANDLINE_ARGS="$@"
 
 # For using instances
 if ( basename $0 | grep "activemq-instance-" > /dev/null);then
-   INST="$(basename $0|sed 's/^activemq-instance-//;s/\.sh$//')"
+   INST="`basename $0|sed 's/^activemq-instance-//;s/\.sh$//'`"
    ACTIVEMQ_CONFIGS="/etc/default/activemq-instance-${INST} $HOME/.activemqrc-instance-${INST}"
    echo "INFO: Using alternative activemq configuration files: $ACCTIVEMQ_CONFIGS"
 fi
@@ -44,7 +44,7 @@ fi
 ## START:DEFAULTCONFIG
 # ------------------------------------------------------------------------
 # Configuration file for running Apache Active MQ as standalone provider
-# 
+#
 # This file overwrites the predefined settings of the sysv init-script
 #
 # Active MQ installation dir
@@ -103,11 +103,11 @@ fi
 
 # Location of the pidfile
 if [ -z "$ACTIVEMQ_PIDFILE" ]; then
-  ACTIVEMQ_PIDFILE="$ACTIVEMQ_DATA_DIR/activemq-$(hostname).pid"
+  ACTIVEMQ_PIDFILE="$ACTIVEMQ_DATA_DIR/activemq-`hostname`.pid"
 fi
 
 # Location of the java installation
-# Specify the location of your java installation using JAVA_HOME, or specify the 
+# Specify the location of your java installation using JAVA_HOME, or specify the
 # path to the "java" binary using JAVACMD
 # (set JAVACMD to "auto" for automatic detection)
 #JAVA_HOME=""
@@ -130,7 +130,7 @@ fi
 # fact that IBM's jvm does not support VirtualMachine.attach(PID).
 # JMX access is needed for quering a running activemq instance to gain data or to
 # trigger management operations.
-# 
+#
 # Example for ${ACTIVEMQ_CONFIG_DIR}/jmx.access:
 # ---
 # # The "monitorRole" role has readonly access.
@@ -172,7 +172,7 @@ ACTIVEMQ_SSL_OPTS="$SSL_OPTS"
 # Uncomment to enable remote debugging
 #ACTIVEMQ_DEBUG_OPTS="-Xdebug -Xnoagent -Djava.compiler=NONE -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=5005"
 
-# ActiveMQ tries to shutdown the broker by jmx, 
+# ActiveMQ tries to shutdown the broker by jmx,
 # after a specified number of seconds send SIGKILL
 ACTIVEMQ_KILL_MAXSECONDS=30
 
@@ -237,8 +237,11 @@ if [ "$1" = "setup" ];then
       fi
    done < $0
    ) > $2
+
+   setCurrentUser
+
    echo "INFO: It's recommend to limit access to '$2' to the priviledged user"
-   echo "INFO: (recommended: chown `whoami`:nogroup '$2'; chmod 600 '$2')"
+   echo "INFO: (recommended: chown '$CUSER':nogroup '$2'; chmod 600 '$2')"
    exit $?
 fi
 
@@ -249,7 +252,7 @@ OSTYPE="unknown"
 
 case "`uname`" in
   CYGWIN*) OSTYPE="cygwin" ;;
-  Darwin*) 
+  Darwin*)
            OSTYPE="darwin"
            if [ -z "$JAVA_HOME" ] && [ "$JAVACMD" = "auto" ];then
              JAVA_HOME=/System/Library/Frameworks/JavaVM.framework/Home
@@ -324,6 +327,16 @@ fi
 # ------------------------------------------------------------------------
 # HELPER FUNCTIONS
 
+
+setCurrentUser(){
+   CUSER=`whoami 2>/dev/null`
+
+   # Solaris fix
+   if [ ! $? -eq 0 ]; then
+      CUSER=`/usr/ucb/whoami 2>/dev/null`
+   fi
+}
+
 # Start the ActiveMQ JAR
 #
 #
@@ -339,22 +352,18 @@ fi
 invokeJar(){
    PIDFILE="$1"
    RET="1"
-   CUSER="$(whoami 2>/dev/null)"
-
-   # Solaris fix
-   if [ ! $? -eq 0 ]; then
-      CUSER="$(/usr/ucb/whoami)"
-   fi
 
    if [ ! -f "${ACTIVEMQ_HOME}/bin/run.jar" ];then
     echo "ERROR: '${ACTIVEMQ_HOME}/bin/run.jar' does not exist"
     exit 1
    fi
-  
+
+   setCurrentUser
+
    if ( [ -z "$ACTIVEMQ_USER" ] || [ "$ACTIVEMQ_USER" = "$CUSER" ] );then
       DOIT_PREFIX="sh -c "
       DOIT_POSTFIX=";"
-   elif [ "$(id -u)" = "0" ];then
+   elif [ "`id -u`" = "0" ];then
       DOIT_PREFIX="su -c "
       DOIT_POSTFIX=" - $ACTIVEMQ_USER"
       echo "INFO: changing to user '$ACTIVEMQ_USER' to invoke java"
@@ -366,7 +375,7 @@ invokeJar(){
               -Dactivemq.home=\"${ACTIVEMQ_HOME}\" \
               -Dactivemq.base=\"${ACTIVEMQ_BASE}\" \
               $ACTIVEMQ_CYGWIN \
-              -jar \"${ACTIVEMQ_HOME}/bin/run.jar\" $COMMANDLINE_ARGS >/dev/null 2>&1 & 
+              -jar \"${ACTIVEMQ_HOME}/bin/run.jar\" $COMMANDLINE_ARGS >/dev/null 2>&1 &
               RET=\"\$?\"; APID=\"\$!\";
               echo \$APID > $PIDFILE;
               echo \"INFO: pidfile created : '$PIDFILE' (pid '\$APID')\";exit \$RET" $DOIT_POSTFIX
@@ -379,7 +388,7 @@ invokeJar(){
               -Dactivemq.base=\"${ACTIVEMQ_BASE}\" \
               $ACTIVEMQ_CYGWIN \
               -jar \"${ACTIVEMQ_HOME}/bin/run.jar\" $COMMANDLINE_ARGS --pid $PID &
-              RET=\"\$?\"; APID=\"\$!\"; 
+              RET=\"\$?\"; APID=\"\$!\";
               echo \$APID > $ACTIVEMQ_DATA_DIR/stop.pid; exit \$RET" $DOIT_POSTFIX
       RET="$?"
    else
@@ -406,7 +415,7 @@ invokeJar(){
 
 checkRunning(){
     if [ -f "$ACTIVEMQ_PIDFILE" ]; then
-       if  [ -z "$(cat $ACTIVEMQ_PIDFILE)" ];then
+       if  [ -z "`cat $ACTIVEMQ_PIDFILE`" ];then
         echo "ERROR: Pidfile '$ACTIVEMQ_PIDFILE' exists but contains no pid"
         return 2
        fi
@@ -425,11 +434,12 @@ checkRunning(){
 checkStopRunning(){
     PID=$ACTIVEMQ_DATA_DIR/stop.pid
     if [ -f "$PID" ]; then
-       if  [ -z "$(cat $PID)" ];then
+       if  [ -z "`cat $PID`" ];then
         echo "ERROR: Pidfile '$PID' exists but contains no pid"
         return 2
        fi
-       RET=`ps -p $(cat $PID)|grep java`
+       THEPID=`cat $PID`
+       RET=`ps -p $THEPID|grep java`
        if [ -n "$RET" ];then
          return 0;
        else
@@ -466,7 +476,7 @@ invoke_status(){
 #
 # Note: This function uses globally defined variables
 # - $ACTIVEMQ_PIDFILE      : the name of the pid file
-# - $ACTIVEMQ_OPTS         : Additional options 
+# - $ACTIVEMQ_OPTS         : Additional options
 # - $ACTIVEMQ_SUNJMX_START : options for JMX settings
 # - $ACTIVEMQ_SSL_OPTS     : options for SSL encryption
 
@@ -481,7 +491,7 @@ invoke_start(){
 
     echo "INFO: Starting - inspect logfiles specified in logging.properties and log4j.properties to get details"
     invokeJar $ACTIVEMQ_PIDFILE
-    exit "$?" 
+    exit "$?"
 }
 
 # Start ActiveMQ in foreground (for debugging)
@@ -491,7 +501,7 @@ invoke_start(){
 #
 # Note: This function uses globally defined variables
 # - $ACTIVEMQ_PIDFILE      : the name of the pid file
-# - $ACTIVEMQ_OPTS         : Additional options 
+# - $ACTIVEMQ_OPTS         : Additional options
 # - $ACTIVEMQ_SUNJMX_START : options for JMX settings
 # - $ACTIVEMQ_SSL_OPTS     : options for SSL encryption
 
@@ -503,10 +513,10 @@ invoke_console(){
 
     ACTIVEMQ_OPTS="$ACTIVEMQ_OPTS $ACTIVEMQ_SUNJMX_START $ACTIVEMQ_SSL_OPTS"
 
-    COMMANDLINE_ARGS="start $(echo $COMMANDLINE_ARGS|sed 's,^console,,')"
+    COMMANDLINE_ARGS="start `echo $COMMANDLINE_ARGS|sed 's,^console,,'`"
     echo "INFO: Starting in foreground, this is just for debugging purposes (stop process by pressing CTRL+C)"
     invokeJar
-    exit "$?" 
+    exit "$?"
 }
 
 # Stop ActiveMQ
@@ -516,7 +526,7 @@ invoke_console(){
 #
 # Note: This function uses globally defined variables
 # - $ACTIVEMQ_PIDFILE         : the name of the pid file
-# - $ACTIVEMQ_KILL_MAXSECONDS : the number of seconds to wait for termination of broker after sending 
+# - $ACTIVEMQ_KILL_MAXSECONDS : the number of seconds to wait for termination of broker after sending
 #                              shutdown signal by jmx interface
 
 invoke_stop(){
@@ -531,15 +541,15 @@ invoke_stop(){
        FOUND="0"
        i=1
        while [ $i != $ACTIVEMQ_KILL_MAXSECONDS ]; do
-        
+
          if [ ! checkStopRunning ];then
             if [ ! checkRunning ]; then
                echo " FINISHED"
-               FOUND="1"              
+               FOUND="1"
             fi
             break
          fi
-        
+
          if (checkRunning);then
             sleep 1
             printf  "."
@@ -584,11 +594,11 @@ invoke_task(){
     if ( checkRunning );then
       if [ "$1" = "browse" ] && [ -n "$ACTIVEMQ_QUEUEMANAGERURL" ];then
          ACTIVEMQ_OPTS="$ACTIVEMQ_OPTS $ACTIVEMQ_SSL_OPTS"
-         COMMANDLINE_ARGS="$1 $ACTIVEMQ_QUEUEMANAGERURL $(echo $COMMANDLINE_ARGS|sed 's,^browse,,')"
+         COMMANDLINE_ARGS="$1 $ACTIVEMQ_QUEUEMANAGERURL `echo $COMMANDLINE_ARGS|sed 's,^browse,,'`"
       elif [ "$1" = "query" ]  && [ -n "$ACTIVEMQ_QUEUEMANAGERURL" ];then
          ACTIVEMQ_OPTS="$ACTIVEMQ_OPTS $ACTIVEMQ_SSL_OPTS"
-         COMMANDLINE_ARGS="$1 $ACTIVEMQ_SUNJMX_CONTROL $(echo $COMMANDLINE_ARGS|sed 's,^query,,')"
-      else 
+         COMMANDLINE_ARGS="$1 $ACTIVEMQ_SUNJMX_CONTROL `echo $COMMANDLINE_ARGS|sed 's,^query,,'`"
+      else
          ACTIVEMQ_OPTS="$ACTIVEMQ_OPTS $ACTIVEMQ_SSL_OPTS"
          COMMANDLINE_ARGS="$COMMANDLINE_ARGS $ACTIVEMQ_SUNJMX_CONTROL"
       fi
@@ -616,7 +626,7 @@ Configuration of this script:
     To use additional configurations for running multiple instances on the same operating system
     rename or symlink script to a name matching to activemq-instance-<INSTANCENAME>.
     This changes the configuration location to /etc/default/activemq-instance-<INSTANCENAME> and
-    \$HOME/.activemqrc-instance-<INSTANCENAME>. Configuration files in /etc have higher precedence. 
+    \$HOME/.activemqrc-instance-<INSTANCENAME>. Configuration files in /etc have higher precedence.
 EOF
   exit $RET
 }
@@ -630,7 +640,7 @@ if [ -z "$1" ];then
 fi
 
 case "$1" in
-  status)    
+  status)
       invoke_status
     ;;
   restart)
@@ -641,13 +651,13 @@ case "$1" in
     $0 start
     $0 status
     ;;
-  start)    
+  start)
     invoke_start
     ;;
   console)
     invoke_console
     ;;
-  stop)    
+  stop)
     invoke_stop
     ;;
   *)
