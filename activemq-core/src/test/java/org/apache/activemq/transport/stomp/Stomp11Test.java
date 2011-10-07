@@ -23,6 +23,7 @@ import java.net.SocketTimeoutException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
+import java.util.concurrent.TimeUnit;
 
 import javax.jms.Connection;
 import javax.jms.MessageConsumer;
@@ -274,7 +275,7 @@ public class Stomp11Test extends CombinationTestSupport {
         assertTrue(f.indexOf("session:") >= 0);
         LOG.debug("Broker sent: " + f);
 
-        Thread.sleep(5000);
+        Thread.sleep(TimeUnit.SECONDS.toMillis(10));
 
         try {
             String message = "SEND\n" + "destination:/queue/" + getQueueName() + "\n\n" + "Hello World" + Stomp.NULL;
@@ -372,7 +373,7 @@ public class Stomp11Test extends CombinationTestSupport {
                 "id:12345\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
 
-        Thread.sleep(2000);
+        Thread.sleep(4000);
 
         stompConnection.sendFrame(message);
 
