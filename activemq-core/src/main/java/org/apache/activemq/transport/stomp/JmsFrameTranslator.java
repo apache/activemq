@@ -40,6 +40,7 @@ import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
 import com.thoughtworks.xstream.io.json.JettisonMappedXmlDriver;
 import com.thoughtworks.xstream.io.xml.PrettyPrintWriter;
 import com.thoughtworks.xstream.io.xml.XppReader;
+import com.thoughtworks.xstream.io.xml.xppdom.XppFactory;
 
 /**
  * Frame translator implementation that uses XStream to convert messages to and
@@ -67,7 +68,7 @@ public class JmsFrameTranslator extends LegacyFrameTranslator implements
                 String text = new String(command.getContent(), "UTF-8");
                 switch (Stomp.Transformations.getValue(transformation)) {
                 case JMS_OBJECT_XML:
-                    in = new XppReader(new StringReader(text));
+                    in = new XppReader(new StringReader(text), XppFactory.createDefaultParser());
                     msg = createObjectMessage(in);
                     break;
                 case JMS_OBJECT_JSON:
@@ -75,7 +76,7 @@ public class JmsFrameTranslator extends LegacyFrameTranslator implements
                     msg = createObjectMessage(in);
                     break;
                 case JMS_MAP_XML:
-                    in = new XppReader(new StringReader(text));
+                    in = new XppReader(new StringReader(text), XppFactory.createDefaultParser());
                     msg = createMapMessage(in);
                     break;
                 case JMS_MAP_JSON:

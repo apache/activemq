@@ -75,7 +75,7 @@ public class StompSubscription {
             }
         } else if (ackMode == AUTO_ACK) {
             MessageAck ack = new MessageAck(md, MessageAck.STANDARD_ACK_TYPE, 1);
-            protocolConverter.getStompTransport().sendToActiveMQ(ack);
+            protocolConverter.getStompTransport().asyncSendToActiveMQ(ack);
         }
 
         boolean ignoreTransformation = false;

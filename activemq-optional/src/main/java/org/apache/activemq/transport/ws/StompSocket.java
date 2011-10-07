@@ -101,4 +101,9 @@ class StompSocket extends TransportSupport implements WebSocket, StompTransport 
     public StompWireFormat getWireFormat() {
         return this.wireFormat;
     }
+
+    @Override
+    public void asyncSendToActiveMQ(Command command) {
+        doConsume(command);
+    }
 }
