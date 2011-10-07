@@ -1246,7 +1246,7 @@
             <link>http://jakarta.apache.org/commons/collections/apidocs-COLLECTIONS_3_0/</link>
             <link>http://jakarta.apache.org/commons/dbcp/apidocs/</link>
             <link>http://jakarta.apache.org/commons/fileupload/apidocs/</link>
-            <link>http://jakarta.apache.org/commons/httpclient/apidocs/</link>
+            <link>http://hc.apache.org/httpcomponents-client-ga/httpclient/apidocs/</link>
             <link>http://jakarta.apache.org/commons/logging/apidocs/</link>
             <link>http://jakarta.apache.org/commons/pool/apidocs/</link>
             <link>http://junit.sourceforge.net/javadoc/</link>
