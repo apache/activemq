@@ -20,6 +20,7 @@ package org.apache.activemq.pool;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.jms.JMSException;
@@ -38,6 +39,7 @@ public class ConnectionPool {
 
     private ActiveMQConnection connection;
     private ConcurrentHashMap<SessionKey, SessionPool> cache;
+    private ConcurrentLinkedQueue<PooledSession> loanedSessions = new ConcurrentLinkedQueue<PooledSession>();
     private AtomicBoolean started = new AtomicBoolean(false);
     private int referenceCount;
     private ObjectPoolFactory poolFactory;
@@ -118,6 +120,7 @@ public class ConnectionPool {
             pool = cache.get(key); // this will return a non-null value...
         }
         PooledSession session = pool.borrowSession();
+        this.loanedSessions.add(session);
         return session;
     }
 
@@ -154,6 +157,14 @@ public class ConnectionPool {
         lastUsed = System.currentTimeMillis();
         if (referenceCount == 0) {
             expiredCheck();
+
+            for (PooledSession session : this.loanedSessions) {
+                try {
+                    session.close();
+                } catch (Exception e) {
+                }
+            }
+            this.loanedSessions.clear();
 
             // only clean up temp destinations when all users
             // of this connection have called close
@@ -208,4 +219,11 @@ public class ConnectionPool {
         return expiryTimeout;
     }
 
+    void onSessionReturned(PooledSession session) {
+        this.loanedSessions.remove(session);
+    }
+
+    void onSessionInvalidated(PooledSession session) {
+        this.loanedSessions.remove(session);
+    }
 }

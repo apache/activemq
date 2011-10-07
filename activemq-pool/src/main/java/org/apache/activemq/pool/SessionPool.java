@@ -27,8 +27,8 @@ import org.apache.commons.pool.PoolableObjectFactory;
 
 /**
  * Represents the session pool for a given JMS connection.
- * 
- * 
+ *
+ *
  */
 public class SessionPool implements PoolableObjectFactory {
     private ConnectionPool connectionPool;
@@ -64,20 +64,21 @@ public class SessionPool implements PoolableObjectFactory {
         // lets check if we are already closed
         getConnection();
         try {
+            connectionPool.onSessionReturned(session);
             getSessionPool().returnObject(session);
         } catch (Exception e) {
             throw JMSExceptionSupport.create("Failed to return session to pool: " + e, e);
         }
     }
-    
+
     public void invalidateSession(PooledSession session) throws JMSException {
         try {
+            connectionPool.onSessionInvalidated(session);
             getSessionPool().invalidateObject(session);
         } catch (Exception e) {
             throw JMSExceptionSupport.create("Failed to invalidate session: " + e, e);
         }
     }
-         
 
     // PoolableObjectFactory methods
     // -------------------------------------------------------------------------
