@@ -222,9 +222,10 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
 
     
     public final synchronized void remove(MessageReference node) {
-        size--;
-        setCacheEnabled(false);
-        batchList.remove(node);
+        if (batchList.remove(node) != null) {
+            size--;
+            setCacheEnabled(false);
+        }
     }
     
     

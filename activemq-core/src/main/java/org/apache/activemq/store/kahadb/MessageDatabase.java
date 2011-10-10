@@ -1197,6 +1197,8 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                 }
                 // The following method handles deleting un-referenced messages.
                 removeAckLocation(tx, sd, subscriptionKey, sequence);
+            } else if (LOG.isDebugEnabled()) {
+                LOG.debug("no message sequence exists for id: " + command.getMessageId() + " and sub: " + command.getSubscriptionKey());
             }
 
         }
@@ -1900,7 +1902,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
      * @param tx
      * @param sd
      * @param subscriptionKey
-     * @param sequenceId
+     * @param messageSequence
      * @throws IOException
      */
     private void removeAckLocation(Transaction tx, StoredDestination sd, String subscriptionKey, Long messageSequence) throws IOException {

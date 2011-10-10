@@ -61,13 +61,15 @@ public class PrioritizedPendingList implements PendingList {
         return new PrioritizedPendingListIterator();
     }
 
-    public void remove(MessageReference message) {
+    public PendingNode remove(MessageReference message) {
+        PendingNode node = null;
         if (message != null) {
-            PendingNode node = this.map.remove(message.getMessageId());
+            node = this.map.remove(message.getMessageId());
             if (node != null) {
                 node.getList().removeNode(node);
             }
         }
+        return node;
     }
 
     public int size() {

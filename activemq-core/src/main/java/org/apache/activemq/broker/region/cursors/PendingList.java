@@ -25,7 +25,7 @@ public interface PendingList {
     public void clear();
     public PendingNode addMessageFirst(MessageReference message);
     public PendingNode addMessageLast(MessageReference message);
-    public void remove(MessageReference message);
+    public PendingNode remove(MessageReference message);
     public int size();
     public Iterator<MessageReference> iterator();
 }

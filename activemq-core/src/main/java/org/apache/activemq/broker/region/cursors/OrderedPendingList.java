@@ -89,11 +89,13 @@ public class OrderedPendingList implements PendingList {
         };
     }
 
-    public void remove(MessageReference message) {
+    public PendingNode remove(MessageReference message) {
+        PendingNode node = null;
         if (message != null) {
-            PendingNode node = this.map.remove(message.getMessageId());
+            node = this.map.remove(message.getMessageId());
             removeNode(node);
         }
+        return node;
     }
 
     public int size() {

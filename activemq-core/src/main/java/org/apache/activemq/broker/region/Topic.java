@@ -20,11 +20,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.Future;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.ConnectionContext;
@@ -66,7 +64,7 @@ public class Topic extends BaseDestination implements Task {
     protected static final Logger LOG = LoggerFactory.getLogger(Topic.class);
     private final TopicMessageStore topicStore;
     protected final CopyOnWriteArrayList<Subscription> consumers = new CopyOnWriteArrayList<Subscription>();
-    protected final Valve dispatchValve = new Valve(true);
+    private final Valve dispatchValve = new Valve(true);
     private DispatchPolicy dispatchPolicy = new SimpleDispatchPolicy();
     private SubscriptionRecoveryPolicy subscriptionRecoveryPolicy;
     private final ConcurrentHashMap<SubscriptionKey, DurableTopicSubscription> durableSubcribers = new ConcurrentHashMap<SubscriptionKey, DurableTopicSubscription>();
@@ -541,15 +539,11 @@ public class Topic extends BaseDestination implements Task {
     private void doBrowse(final List<Message> browseList, final int max) {
         try {
             if (topicStore != null) {
-                final ConnectionContext connectionContext = createConnectionContext();
+                final List<Message> toExpire = new ArrayList<Message>();
                 topicStore.recover(new MessageRecoveryListener() {
                     public boolean recoverMessage(Message message) throws Exception {
                         if (message.isExpired()) {
-                            for (DurableTopicSubscription sub : durableSubcribers.values()) {
-                                if (!sub.isActive()) {
-                                    messageExpired(connectionContext, sub, message);
-                                }
-                            }
+                            toExpire.add(message);
                         }
                         browseList.add(message);
                         return true;
@@ -567,6 +561,14 @@ public class Topic extends BaseDestination implements Task {
                         return false;
                     }
                 });
+                final ConnectionContext connectionContext = createConnectionContext();
+                for (Message message : toExpire) {
+                    for (DurableTopicSubscription sub : durableSubcribers.values()) {
+                        if (!sub.isActive()) {
+                            messageExpired(connectionContext, sub, message);
+                        }
+                    }
+                }
                 Message[] msgs = subscriptionRecoveryPolicy.browse(getActiveMQDestination());
                 if (msgs != null) {
                     for (int i = 0; i < msgs.length && browseList.size() < max; i++) {
