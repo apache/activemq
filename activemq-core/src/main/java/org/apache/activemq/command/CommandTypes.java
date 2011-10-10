@@ -24,7 +24,7 @@ package org.apache.activemq.command;
 public interface CommandTypes {
 
     // What is the latest version of the openwire protocol
-    byte PROTOCOL_VERSION = 8;
+    byte PROTOCOL_VERSION = 9;
 
     // What is the latest version of the openwire protocol used in the stores
     byte PROTOCOL_STORE_VERSION = 6;
