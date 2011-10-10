@@ -1148,7 +1148,6 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                 // store a DUP
                 // message. Bad BOY! Don't do it, and log a warning.
                 LOG.warn("Duplicate message add attempt rejected. Destination: " + command.getDestination().getName() + ", Message id: " + command.getMessageId());
-                // TODO: consider just rolling back the tx.
                 sd.messageIdIndex.put(tx, command.getMessageId(), previous);
                 sd.locationIndex.remove(tx, location);
             }
@@ -1159,7 +1158,6 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
             // indexes would
             // be wrong..
             //
-            // TODO: consider just rolling back the tx.
             sd.locationIndex.put(tx, location, previous);
         }
         // record this id in any event, initial send or recovery
@@ -1178,7 +1176,11 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                 if (keys != null) {
                     sd.locationIndex.remove(tx, keys.location);
                     recordAckMessageReferenceLocation(ackLocation, keys.location);
+                }  else if (LOG.isDebugEnabled()) {
+                    LOG.debug("message not found in order index: " + sequenceId  + " for: " + command.getMessageId());
                 }
+            } else if (LOG.isDebugEnabled()) {
+                LOG.debug("message not found in sequence id index: " + command.getMessageId());
             }
         } else {
             // In the topic case we need remove the message once it's been acked

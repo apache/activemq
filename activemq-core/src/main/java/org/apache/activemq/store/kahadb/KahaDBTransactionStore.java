@@ -454,7 +454,7 @@ public class KahaDBTransactionStore implements TransactionStore {
 
         if (ack.isInTransaction()) {
             if (ack.getTransactionId().isXATransaction() || theStore.isConcurrentStoreAndDispatchTransactions()==false) {
-                destination.removeMessage(context, ack);
+                destination.removeAsyncMessage(context, ack);
             } else {
                 Tx tx = getTx(ack.getTransactionId());
                 tx.add(new RemoveMessageCommand(context) {
