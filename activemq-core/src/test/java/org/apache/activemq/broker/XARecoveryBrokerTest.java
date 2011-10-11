@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.broker;
 
+import java.util.concurrent.TimeUnit;
 import javax.jms.JMSException;
 import javax.management.InstanceNotFoundException;
 import javax.management.MalformedObjectNameException;
@@ -205,7 +206,7 @@ public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
 
         // We should get the committed transactions.
         for (int i = 0; i < expectedMessageCount(4, destination); i++) {
-            Message m = receiveMessage(connection);
+            Message m = receiveMessage(connection, TimeUnit.SECONDS.toMillis(10));
             assertNotNull(m);
         }
 
