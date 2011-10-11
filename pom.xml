@@ -47,7 +47,6 @@
     <axion-version>1.0-M3-dev</axion-version>
     <axis-version>1.4.2</axis-version>
     <camel-version>2.8.1</camel-version>
-    <camel-web-version>2.4.0</camel-web-version>
     <cglib-version>2.0</cglib-version>
     <openjpa-version>1.2.0</openjpa-version>
     <commons-beanutils-version>1.8.3</commons-beanutils-version>
@@ -463,12 +462,6 @@
         <groupId>org.apache.camel</groupId>
         <artifactId>camel-test</artifactId>
         <version>${camel-version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.camel</groupId>
-        <artifactId>camel-web</artifactId>
-        <version>${camel-web-version}</version>
-        <type>war</type>
       </dependency>
 
       <dependency>
@@ -1182,7 +1175,6 @@
             <!-- activemq-xmpp schemas -->
             <exclude>**/resources/*.xsd</exclude>
             <!-- web, web-console, web-demo files -->
-            <exclude>**/webapps/camel/js/dojo/dojo.js</exclude>
             <exclude>**/webapp/js/dojo.js</exclude>
             <exclude>**/webapp/js/jquery-*.js</exclude>
             <exclude>**/webapp/js/prototype.js</exclude>

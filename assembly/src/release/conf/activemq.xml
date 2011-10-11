@@ -127,7 +127,6 @@
 
     <!-- 
         Enable web consoles, REST and Ajax APIs and demos
-        It also includes Camel (with its web console), see ${ACTIVEMQ_HOME}/conf/camel.xml for more info
         
         Take a look at ${ACTIVEMQ_HOME}/conf/jetty.xml for more details 
     -->
