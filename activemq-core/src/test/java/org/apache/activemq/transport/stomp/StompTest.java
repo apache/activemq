@@ -1588,7 +1588,6 @@ public class StompTest extends CombinationTestSupport {
         stompConnection.connect("system", "manager");
 
         HashMap<String, String> headers = new HashMap<String, String>();
-        long timestamp = System.currentTimeMillis();
         headers.put(Stomp.Headers.Send.REPLY_TO, "JustAString");
         headers.put(Stomp.Headers.Send.PERSISTENT, "true");
 

@@ -115,7 +115,7 @@ public class StompSubscription {
 
         if (!unconsumedMessage.isEmpty()) {
             MessageAck ack = new MessageAck(unconsumedMessage.getLast(), MessageAck.STANDARD_ACK_TYPE, unconsumedMessage.size());
-            protocolConverter.getStompTransport().sendToActiveMQ(ack);
+            protocolConverter.getStompTransport().asyncSendToActiveMQ(ack);
             unconsumedMessage.clear();
         }
     }
