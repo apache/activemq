@@ -94,46 +94,6 @@
     </dependencySet>
 
     <dependencySet>
-      <outputDirectory>/webapps/camel</outputDirectory>
-      <unpack>true</unpack>
-      <unpackOptions>
-        <excludes>
-          <exclude>**/applicationContext.xml</exclude>
-          <!-- ignore jars already in distro -->
-          <exclude>**/act*.jar</exclude>
-          <exclude>**/ant*.jar</exclude>
-          <exclude>**/aop*.jar</exclude>
-<!--
-          <exclude>**/asm*.jar</exclude>
--->
-          <exclude>**/camel-*.jar</exclude>
-          <exclude>**/commons*.jar</exclude>
-          <exclude>**/groovy*.jar</exclude>
-          <exclude>**/jackson*.jar</exclude>
-          <exclude>**/jaxb*.jar</exclude>
-          <exclude>**/jdom*.jar</exclude>
-          <exclude>**/jettison*.jar</exclude>
-          <exclude>**/jruby*.jar</exclude>
-          <exclude>**/jstl*.jar</exclude>
-          <exclude>**/rome*.jar</exclude>
-          <exclude>**/sitemesh*.jar</exclude>
-          <exclude>**/slf4j-*.jar</exclude>
-          <exclude>**/spring-*.jar</exclude>
-          <exclude>**/standard*.jar</exclude>
-          <exclude>**/stax*.jar</exclude>
-          <!-- exclude unused javascript  -->
-          <exclude>**/bespin/</exclude>
-          <exclude>**/dijit/</exclude>
-          <exclude>**/dojo/</exclude>
-          <exclude>**/dojox/</exclude>
-        </excludes>
-      </unpackOptions>
-      <includes>
-        <include>org.apache.camel:camel-web:war</include>
-      </includes>
-    </dependencySet>
-    
-    <dependencySet>
       <outputDirectory>/</outputDirectory>
       <unpack>false</unpack>
       <scope>runtime</scope>

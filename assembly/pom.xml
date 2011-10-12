@@ -30,15 +30,6 @@
   <name>ActiveMQ :: Assembly</name>
   <description>Puts together the ActiveMQ distribution</description>
 
-  <repositories>
-    <!-- for camel-web's jersey dependencies -->
-    <repository>
-      <id>java.net.maven2</id>
-      <name>java.net Maven 2 Repo</name>
-      <url>http://download.java.net/maven/2</url>
-    </repository>
-  </repositories>
-  
   <dependencies>
     
     <!-- activemq -->
@@ -133,11 +124,6 @@
     <dependency>
       <groupId>org.apache.camel</groupId>
       <artifactId>camel-jetty</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.camel</groupId>
-      <artifactId>camel-web</artifactId>
-      <type>war</type>
     </dependency>
     <dependency>
       <groupId>org.apache.camel</groupId>

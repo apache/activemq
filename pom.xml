@@ -435,12 +435,6 @@
         <artifactId>camel-jms</artifactId>
         <version>${camel-version}</version>
       </dependency>
-      <dependency>
-        <groupId>org.apache.camel</groupId>
-        <artifactId>camel-web</artifactId>
-        <version>${camel-version}</version>
-        <type>war</type>
-      </dependency>
 
       <dependency>
         <groupId>org.osgi</groupId>
@@ -1173,7 +1167,6 @@
             <!-- activemq-xmpp schemas -->
             <exclude>**/resources/*.xsd</exclude>
             <!-- web, web-console, web-demo files -->
-            <exclude>**/webapps/camel/js/dojo/dojo.js</exclude>
             <exclude>**/webapp/js/dojo.js</exclude>
             <exclude>**/webapp/js/jquery-*.js</exclude>
             <exclude>**/webapp/js/prototype.js</exclude>

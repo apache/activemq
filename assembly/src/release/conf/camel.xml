@@ -25,11 +25,6 @@
     
     e.g. <import resource="camel.xml"/>
     
-    Note: this configuration is already included in a default configuration via Camel Web Console.
-    See ${ACTIVEMQ_HOME}/conf/jetty.xml for more info on how to disable it, in case you want to do so.
-    Also check ${ACTIVEMQ_HOME}/webapps/camel/WEB-INF/application-context.xml to see how this config is included in Camel Web Console
-    
-    
 -->
 <beans
    xmlns="http://www.springframework.org/schema/beans"  
