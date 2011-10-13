@@ -29,8 +29,6 @@ public interface StompTransport {
 
     public void sendToActiveMQ(Command command);
 
-    public void asyncSendToActiveMQ(Command command);
-
     public void sendToStomp(StompFrame command) throws IOException;
 
     public X509Certificate[] getPeerCertificates();

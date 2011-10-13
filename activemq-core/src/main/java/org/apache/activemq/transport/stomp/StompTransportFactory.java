@@ -16,11 +16,13 @@
  */
 package org.apache.activemq.transport.stomp;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.activemq.broker.BrokerContext;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.BrokerServiceAware;
+import org.apache.activemq.transport.MutexTransport;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.tcp.TcpTransportFactory;
 import org.apache.activemq.util.IntrospectionSupport;
@@ -28,8 +30,6 @@ import org.apache.activemq.wireformat.WireFormat;
 
 /**
  * A <a href="http://stomp.codehaus.org/">STOMP</a> transport factory
- *
- *
  */
 public class StompTransportFactory extends TcpTransportFactory implements BrokerServiceAware {
 
@@ -48,6 +48,19 @@ public class StompTransportFactory extends TcpTransportFactory implements Broker
 
     public void setBrokerService(BrokerService brokerService) {
         this.brokerContext = brokerService.getBrokerContext();
+    }
+
+    @SuppressWarnings("rawtypes")
+    @Override
+    public Transport serverConfigure(Transport transport, WireFormat format, HashMap options) throws Exception {
+        transport = super.serverConfigure(transport, format, options);
+
+        MutexTransport mutex = transport.narrow(MutexTransport.class);
+        if (mutex != null) {
+            mutex.setSyncOnCommand(true);
+        }
+
+        return transport;
     }
 
     @Override

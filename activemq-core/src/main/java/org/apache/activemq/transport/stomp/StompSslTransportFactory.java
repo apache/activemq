@@ -16,11 +16,13 @@
  */
 package org.apache.activemq.transport.stomp;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.activemq.broker.BrokerContext;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.BrokerServiceAware;
+import org.apache.activemq.transport.MutexTransport;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.tcp.SslTransportFactory;
 import org.apache.activemq.util.IntrospectionSupport;
@@ -44,6 +46,19 @@ public class StompSslTransportFactory extends SslTransportFactory implements Bro
         transport = new StompTransportFilter(transport, format, brokerContext);
         IntrospectionSupport.setProperties(transport, options);
         return super.compositeConfigure(transport, format, options);
+    }
+
+    @SuppressWarnings("rawtypes")
+    @Override
+    public Transport serverConfigure(Transport transport, WireFormat format, HashMap options) throws Exception {
+        transport = super.serverConfigure(transport, format, options);
+
+        MutexTransport mutex = transport.narrow(MutexTransport.class);
+        if (mutex != null) {
+            mutex.setSyncOnCommand(true);
+        }
+
+        return transport;
     }
 
     public void setBrokerService(BrokerService brokerService) {

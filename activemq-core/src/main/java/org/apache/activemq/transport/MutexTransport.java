@@ -17,44 +17,90 @@
 package org.apache.activemq.transport;
 
 import java.io.IOException;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
- * 
+ * Thread safe Transport Filter that serializes calls to and from the Transport Stack.
  */
 public class MutexTransport extends TransportFilter {
 
-    private final Object writeMutex = new Object();
+    private final ReentrantLock wreiteLock = new ReentrantLock();
+    private boolean syncOnCommand;
 
     public MutexTransport(Transport next) {
         super(next);
+        this.syncOnCommand = false;
     }
 
+    public MutexTransport(Transport next, boolean syncOnCommand) {
+        super(next);
+        this.syncOnCommand = syncOnCommand;
+    }
+
+    @Override
+    public void onCommand(Object command) {
+        if (syncOnCommand) {
+            wreiteLock.lock();
+            try {
+                transportListener.onCommand(command);
+            } finally {
+                wreiteLock.unlock();
+            }
+        } else {
+            transportListener.onCommand(command);
+        }
+    }
+
+    @Override
     public FutureResponse asyncRequest(Object command, ResponseCallback responseCallback) throws IOException {
-        synchronized (writeMutex) {
+        wreiteLock.lock();
+        try {
             return next.asyncRequest(command, null);
+        } finally {
+            wreiteLock.unlock();
         }
     }
 
+    @Override
     public void oneway(Object command) throws IOException {
-        synchronized (writeMutex) {
+        wreiteLock.lock();
+        try {
             next.oneway(command);
+        } finally {
+            wreiteLock.unlock();
         }
     }
 
+    @Override
     public Object request(Object command) throws IOException {
-        synchronized (writeMutex) {
+        wreiteLock.lock();
+        try {
             return next.request(command);
+        } finally {
+            wreiteLock.unlock();
         }
     }
 
+    @Override
     public Object request(Object command, int timeout) throws IOException {
-        synchronized (writeMutex) {
+        wreiteLock.lock();
+        try {
             return next.request(command, timeout);
+        } finally {
+            wreiteLock.unlock();
         }
     }
 
+    @Override
     public String toString() {
         return next.toString();
     }
 
+    public boolean isSyncOnCommand() {
+        return syncOnCommand;
+    }
+
+    public void setSyncOnCommand(boolean syncOnCommand) {
+        this.syncOnCommand = syncOnCommand;
+    }
 }

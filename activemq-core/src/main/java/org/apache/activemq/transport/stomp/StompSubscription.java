@@ -75,7 +75,7 @@ public class StompSubscription {
             }
         } else if (ackMode == AUTO_ACK) {
             MessageAck ack = new MessageAck(md, MessageAck.STANDARD_ACK_TYPE, 1);
-            protocolConverter.getStompTransport().asyncSendToActiveMQ(ack);
+            protocolConverter.getStompTransport().sendToActiveMQ(ack);
         }
 
         boolean ignoreTransformation = false;
@@ -115,7 +115,7 @@ public class StompSubscription {
 
         if (!unconsumedMessage.isEmpty()) {
             MessageAck ack = new MessageAck(unconsumedMessage.getLast(), MessageAck.STANDARD_ACK_TYPE, unconsumedMessage.size());
-            protocolConverter.getStompTransport().asyncSendToActiveMQ(ack);
+            protocolConverter.getStompTransport().sendToActiveMQ(ack);
             unconsumedMessage.clear();
         }
     }

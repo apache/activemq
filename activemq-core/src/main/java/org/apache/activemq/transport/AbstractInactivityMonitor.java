@@ -24,6 +24,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.apache.activemq.command.KeepAliveInfo;
 import org.apache.activemq.command.WireFormatInfo;
@@ -55,6 +56,8 @@ public abstract class AbstractInactivityMonitor extends TransportFilter {
     private final AtomicBoolean commandReceived = new AtomicBoolean(true);
     private final AtomicBoolean inReceive = new AtomicBoolean(false);
     private final AtomicInteger lastReceiveCounter = new AtomicInteger(0);
+
+    private final ReentrantReadWriteLock sendLock = new ReentrantReadWriteLock();
 
     private SchedulerTimerTask writeCheckerTask;
     private SchedulerTimerTask readCheckerTask;
@@ -140,11 +143,17 @@ public abstract class AbstractInactivityMonitor extends TransportFilter {
                 public void run() {
                     if (monitorStarted.get()) {
                         try {
-                            KeepAliveInfo info = new KeepAliveInfo();
-                            info.setResponseRequired(keepAliveResponseRequired);
-                            oneway(info);
+                            // If we can't get the lock it means another write beat us into the
+                            // send and we don't need to heart beat now.
+                            if (sendLock.writeLock().tryLock()) {
+                                KeepAliveInfo info = new KeepAliveInfo();
+                                info.setResponseRequired(keepAliveResponseRequired);
+                                doOnewaySend(info);
+                            }
                         } catch (IOException e) {
                             onException(e);
+                        } finally {
+                            sendLock.writeLock().unlock();
                         }
                     }
                 };
@@ -175,7 +184,6 @@ public abstract class AbstractInactivityMonitor extends TransportFilter {
                 public void run() {
                     onException(new InactivityIOException("Channel was inactive for too (>" + readCheckTime + ") long: "+next.getRemoteAddress()));
                 };
-
             });
         } else {
             if (LOG.isTraceEnabled()) {
@@ -195,11 +203,14 @@ public abstract class AbstractInactivityMonitor extends TransportFilter {
             if (command.getClass() == KeepAliveInfo.class) {
                 KeepAliveInfo info = (KeepAliveInfo) command;
                 if (info.isResponseRequired()) {
+                    sendLock.readLock().lock();
                     try {
                         info.setResponseRequired(false);
                         oneway(info);
                     } catch (IOException e) {
                         onException(e);
+                    } finally {
+                        sendLock.readLock().unlock();
                     }
                 }
             } else {
@@ -212,39 +223,41 @@ public abstract class AbstractInactivityMonitor extends TransportFilter {
                         }
                     }
                 }
-                synchronized (readChecker) {
-                    transportListener.onCommand(command);
-                }
+
+                transportListener.onCommand(command);
             }
         } finally {
-
             inReceive.set(false);
         }
     }
 
     public void oneway(Object o) throws IOException {
-        // Disable inactivity monitoring while processing a command.
-        // synchronize this method - its not synchronized
-        // further down the transport stack and gets called by more
-        // than one thread  by this class
-        synchronized(inSend) {
-            inSend.set(true);
-            try {
+        // To prevent the inactivity monitor from sending a message while we
+        // are performing a send we take a read lock.  The inactivity monitor
+        // sends its Heart-beat commands under a write lock.  This means that
+        // the MutexTransport is still responsible for synchronizing sends
+        this.sendLock.readLock().lock();
+        inSend.set(true);
+        try {
+            doOnewaySend(o);
+        } finally {
+            commandSent.set(true);
+            inSend.set(false);
+            this.sendLock.readLock().unlock();
+        }
+    }
 
-                if( failed.get() ) {
-                    throw new InactivityIOException("Cannot send, channel has already failed: "+next.getRemoteAddress());
-                }
-                if (o.getClass() == WireFormatInfo.class) {
-                    synchronized (this) {
-                        processOutboundWireFormatInfo((WireFormatInfo) o);
-                    }
-                }
-                next.oneway(o);
-            } finally {
-                commandSent.set(true);
-                inSend.set(false);
+    // Must be called under lock, either read or write on sendLock.
+    private void doOnewaySend(Object command) throws IOException {
+        if( failed.get() ) {
+            throw new InactivityIOException("Cannot send, channel has already failed: "+next.getRemoteAddress());
+        }
+        if (command.getClass() == WireFormatInfo.class) {
+            synchronized (this) {
+                processOutboundWireFormatInfo((WireFormatInfo) command);
             }
         }
+        next.oneway(command);
     }
 
     public void onException(IOException error) {

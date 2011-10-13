@@ -22,8 +22,10 @@ import java.net.SocketTimeoutException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -1715,6 +1717,67 @@ public class StompTest extends CombinationTestSupport {
         int actual = clients.length;
 
         assertEquals("Number of clients", expected, actual);
+    }
+
+    public void testDisconnectDoesNotDeadlockBroker() throws Exception {
+        for (int i = 0; i < 20; ++i) {
+            doTestConnectionLeak();
+        }
+    }
+
+    private void doTestConnectionLeak() throws Exception {
+        stompConnect();
+
+        String frame = "CONNECT\n" + "login: system\n" + "passcode: manager\n\n" + Stomp.NULL;
+        stompConnection.sendFrame(frame);
+
+        frame = stompConnection.receiveFrame();
+        assertTrue(frame.startsWith("CONNECTED"));
+
+        boolean gotMessage = false;
+        boolean gotReceipt = false;
+
+        char[] payload = new char[1024];
+        Arrays.fill(payload, 'A');
+
+        String test = "SEND\n" +
+                "x-type:DEV-3485\n"  +
+                "x-uuid:" + UUID.randomUUID() + "\n"  +
+                "persistent:true\n"  +
+                "receipt:" + UUID.randomUUID() + "\n" +
+                "destination:/queue/test.DEV-3485" +
+                "\n\n" +
+                new String(payload) + Stomp.NULL;
+
+        frame = "SUBSCRIBE\n" + "destination:/queue/test.DEV-3485\n" + "ack:auto\n\n" + Stomp.NULL;
+        stompConnection.sendFrame(frame);
+
+        waitForFrameToTakeEffect();
+
+        stompConnection.sendFrame(test);
+
+        // We only want one of them, to trigger the shutdown and potentially
+        // see a deadlock.
+        while (!gotMessage && !gotReceipt) {
+            frame = stompConnection.receiveFrame();
+
+            LOG.debug("Received the frame: " + frame);
+
+            if (frame.startsWith("RECEIPT")) {
+                gotReceipt = true;
+            } else if(frame.startsWith("MESSAGE")) {
+                gotMessage = true;
+            } else {
+                fail("Received a frame that we were not expecting.");
+            }
+        }
+
+        frame = "DISCONNECT\n" + "\n\n" + Stomp.NULL;
+        stompConnection.sendFrame(frame);
+
+        waitForFrameToTakeEffect();
+
+        stompConnection.close();
     }
 
     protected void waitForFrameToTakeEffect() throws InterruptedException {

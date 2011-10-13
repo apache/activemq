@@ -21,6 +21,7 @@ import java.net.Socket;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
+import java.util.HashMap;
 import java.util.Map;
 
 import javax.net.ServerSocketFactory;
@@ -29,6 +30,7 @@ import javax.net.SocketFactory;
 import org.apache.activemq.broker.BrokerContext;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.BrokerServiceAware;
+import org.apache.activemq.transport.MutexTransport;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.nio.NIOTransportFactory;
 import org.apache.activemq.transport.tcp.TcpTransport;
@@ -59,6 +61,19 @@ public class StompNIOTransportFactory extends NIOTransportFactory implements Bro
 
     protected TcpTransport createTcpTransport(WireFormat wf, SocketFactory socketFactory, URI location, URI localLocation) throws UnknownHostException, IOException {
         return new StompNIOTransport(wf, socketFactory, location, localLocation);
+    }
+
+    @SuppressWarnings("rawtypes")
+    @Override
+    public Transport serverConfigure(Transport transport, WireFormat format, HashMap options) throws Exception {
+        transport = super.serverConfigure(transport, format, options);
+
+        MutexTransport mutex = transport.narrow(MutexTransport.class);
+        if (mutex != null) {
+            mutex.setSyncOnCommand(true);
+        }
+
+        return transport;
     }
 
     @SuppressWarnings("rawtypes")

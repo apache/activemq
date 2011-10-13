@@ -166,16 +166,7 @@ public class ProtocolConverter {
             command.setResponseRequired(true);
             resposeHandlers.put(Integer.valueOf(command.getCommandId()), handler);
         }
-        stompTransport.asyncSendToActiveMQ(command);
-    }
-
-    protected void asyncSendToActiveMQ(Command command, ResponseHandler handler) {
-        command.setCommandId(generateCommandId());
-        if (handler != null) {
-            command.setResponseRequired(true);
-            resposeHandlers.put(Integer.valueOf(command.getCommandId()), handler);
-        }
-        stompTransport.asyncSendToActiveMQ(command);
+        stompTransport.sendToActiveMQ(command);
     }
 
     protected void sendToStomp(StompFrame command) throws IOException {
@@ -301,7 +292,7 @@ public class ProtocolConverter {
         }
 
         message.onSend();
-        asyncSendToActiveMQ(message, createResponseHandler(command));
+        sendToActiveMQ(message, createResponseHandler(command));
     }
 
     protected void onStompNack(StompFrame command) throws ProtocolException {
@@ -338,7 +329,7 @@ public class ProtocolConverter {
             if (sub != null) {
                 MessageAck ack = sub.onStompMessageNack(messageId, activemqTx);
                 if (ack != null) {
-                    asyncSendToActiveMQ(ack, createResponseHandler(command));
+                    sendToActiveMQ(ack, createResponseHandler(command));
                 } else {
                     throw new ProtocolException("Unexpected NACK received for message-id [" + messageId + "]");
                 }
@@ -377,7 +368,7 @@ public class ProtocolConverter {
             if (sub != null) {
                 MessageAck ack = sub.onStompMessageAck(messageId, activemqTx);
                 if (ack != null) {
-                    asyncSendToActiveMQ(ack, createResponseHandler(command));
+                    sendToActiveMQ(ack, createResponseHandler(command));
                     acked = true;
                 }
             }
@@ -391,7 +382,7 @@ public class ProtocolConverter {
             for (StompSubscription sub : subscriptionsByConsumerId.values()) {
                 MessageAck ack = sub.onStompMessageAck(messageId, activemqTx);
                 if (ack != null) {
-                    asyncSendToActiveMQ(ack, createResponseHandler(command));
+                    sendToActiveMQ(ack, createResponseHandler(command));
                     acked = true;
                     break;
                 }
@@ -426,7 +417,7 @@ public class ProtocolConverter {
         tx.setTransactionId(activemqTx);
         tx.setType(TransactionInfo.BEGIN);
 
-        asyncSendToActiveMQ(tx, createResponseHandler(command));
+        sendToActiveMQ(tx, createResponseHandler(command));
     }
 
     protected void onStompCommit(StompFrame command) throws ProtocolException {
@@ -453,7 +444,7 @@ public class ProtocolConverter {
         tx.setTransactionId(activemqTx);
         tx.setType(TransactionInfo.COMMIT_ONE_PHASE);
 
-        asyncSendToActiveMQ(tx, createResponseHandler(command));
+        sendToActiveMQ(tx, createResponseHandler(command));
     }
 
     protected void onStompAbort(StompFrame command) throws ProtocolException {
@@ -482,7 +473,7 @@ public class ProtocolConverter {
         tx.setTransactionId(activemqTx);
         tx.setType(TransactionInfo.ROLLBACK);
 
-        asyncSendToActiveMQ(tx, createResponseHandler(command));
+        sendToActiveMQ(tx, createResponseHandler(command));
     }
 
     protected void onStompSubscribe(StompFrame command) throws ProtocolException {
@@ -550,7 +541,7 @@ public class ProtocolConverter {
 
         // dispatch can beat the receipt so send it early
         sendReceipt(command);
-        asyncSendToActiveMQ(consumerInfo, null);
+        sendToActiveMQ(consumerInfo, null);
     }
 
     protected void onStompUnsubscribe(StompFrame command) throws ProtocolException {
@@ -579,7 +570,7 @@ public class ProtocolConverter {
             info.setClientId(durable);
             info.setSubscriptionName(durable);
             info.setConnectionId(connectionId);
-            asyncSendToActiveMQ(info, createResponseHandler(command));
+            sendToActiveMQ(info, createResponseHandler(command));
             return;
         }
 
@@ -587,7 +578,7 @@ public class ProtocolConverter {
 
             StompSubscription sub = this.subscriptions.remove(subscriptionId);
             if (sub != null) {
-                asyncSendToActiveMQ(sub.getConsumerInfo().createRemoveCommand(), createResponseHandler(command));
+                sendToActiveMQ(sub.getConsumerInfo().createRemoveCommand(), createResponseHandler(command));
                 return;
             }
 
@@ -598,7 +589,7 @@ public class ProtocolConverter {
             for (Iterator<StompSubscription> iter = subscriptionsByConsumerId.values().iterator(); iter.hasNext();) {
                 StompSubscription sub = iter.next();
                 if (destination != null && destination.equals(sub.getDestination())) {
-                    asyncSendToActiveMQ(sub.getConsumerInfo().createRemoveCommand(), createResponseHandler(command));
+                    sendToActiveMQ(sub.getConsumerInfo().createRemoveCommand(), createResponseHandler(command));
                     iter.remove();
                     return;
                 }
@@ -721,8 +712,8 @@ public class ProtocolConverter {
 
     protected void onStompDisconnect(StompFrame command) throws ProtocolException {
         checkConnected();
-        asyncSendToActiveMQ(connectionInfo.createRemoveCommand(), createResponseHandler(command));
-        asyncSendToActiveMQ(new ShutdownInfo(), createResponseHandler(command));
+        sendToActiveMQ(connectionInfo.createRemoveCommand(), createResponseHandler(command));
+        sendToActiveMQ(new ShutdownInfo(), createResponseHandler(command));
         connected.set(false);
     }
 
@@ -787,7 +778,7 @@ public class ProtocolConverter {
         ActiveMQDestination rc = tempDestinations.get(name);
         if( rc == null ) {
             rc = new ActiveMQTempQueue(connectionId, tempDestinationGenerator.getNextSequenceId());
-            asyncSendToActiveMQ(new DestinationInfo(connectionId, DestinationInfo.ADD_OPERATION_TYPE, rc), null);
+            sendToActiveMQ(new DestinationInfo(connectionId, DestinationInfo.ADD_OPERATION_TYPE, rc), null);
             tempDestinations.put(name, rc);
         }
         return rc;
@@ -797,7 +788,7 @@ public class ProtocolConverter {
         ActiveMQDestination rc = tempDestinations.get(name);
         if( rc == null ) {
             rc = new ActiveMQTempTopic(connectionId, tempDestinationGenerator.getNextSequenceId());
-            asyncSendToActiveMQ(new DestinationInfo(connectionId, DestinationInfo.ADD_OPERATION_TYPE, rc), null);
+            sendToActiveMQ(new DestinationInfo(connectionId, DestinationInfo.ADD_OPERATION_TYPE, rc), null);
             tempDestinations.put(name, rc);
             tempDestinationAmqToStompMap.put(rc.getQualifiedName(), name);
         }

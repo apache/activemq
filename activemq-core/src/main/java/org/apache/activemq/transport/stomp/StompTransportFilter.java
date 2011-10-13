@@ -18,15 +18,11 @@ package org.apache.activemq.transport.stomp;
 
 import java.io.IOException;
 import java.security.cert.X509Certificate;
-import java.util.concurrent.ConcurrentLinkedQueue;
 
 import javax.jms.JMSException;
 
 import org.apache.activemq.broker.BrokerContext;
 import org.apache.activemq.command.Command;
-import org.apache.activemq.thread.DefaultThreadPools;
-import org.apache.activemq.thread.Task;
-import org.apache.activemq.thread.TaskRunner;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportFilter;
 import org.apache.activemq.transport.TransportListener;
@@ -50,56 +46,16 @@ public class StompTransportFilter extends TransportFilter implements StompTransp
     private final ProtocolConverter protocolConverter;
     private StompInactivityMonitor monitor;
     private StompWireFormat wireFormat;
-    private final TaskRunner asyncSendTask;
-    private final ConcurrentLinkedQueue<Command> asyncCommands = new ConcurrentLinkedQueue<Command>();
 
     private boolean trace;
-    private int maxAsyncBatchSize = 25;
 
     public StompTransportFilter(Transport next, WireFormat wireFormat, BrokerContext brokerContext) {
         super(next);
         this.protocolConverter = new ProtocolConverter(this, brokerContext);
 
-        asyncSendTask = DefaultThreadPools.getDefaultTaskRunnerFactory().createTaskRunner(new Task() {
-            public boolean iterate() {
-                int iterations = 0;
-                TransportListener listener = transportListener;
-                if (listener != null) {
-                    while (iterations++ < maxAsyncBatchSize && !asyncCommands.isEmpty()) {
-                        Command command = asyncCommands.poll();
-                        if (command != null) {
-                            listener.onCommand(command);
-                        }
-                    }
-                }
-                return !asyncCommands.isEmpty();
-            }
-
-        }, "ActiveMQ StompTransport Async Worker: " + System.identityHashCode(this));
-
         if (wireFormat instanceof StompWireFormat) {
             this.wireFormat = (StompWireFormat) wireFormat;
         }
-    }
-
-    public void stop() throws Exception {
-        asyncSendTask.shutdown();
-
-        TransportListener listener = transportListener;
-        if (listener != null) {
-            Command commands[] = new Command[0];
-            asyncCommands.toArray(commands);
-            asyncCommands.clear();
-            for(Command command : commands) {
-                try {
-                    listener.onCommand(command);
-                } catch(Exception e) {
-                    break;
-                }
-            }
-        }
-
-        super.stop();
     }
 
     public void oneway(Object o) throws IOException {
@@ -129,15 +85,6 @@ public class StompTransportFilter extends TransportFilter implements StompTransp
         TransportListener l = transportListener;
         if (l != null) {
             l.onCommand(command);
-        }
-    }
-
-    public void asyncSendToActiveMQ(Command command) {
-        asyncCommands.offer(command);
-        try {
-            asyncSendTask.wakeup();
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
         }
     }
 
@@ -182,13 +129,5 @@ public class StompTransportFilter extends TransportFilter implements StompTransp
     @Override
     public StompWireFormat getWireFormat() {
         return this.wireFormat;
-    }
-
-    public int getMaxAsyncBatchSize() {
-        return maxAsyncBatchSize;
-    }
-
-    public void setMaxAsyncBatchSize(int maxAsyncBatchSize) {
-        this.maxAsyncBatchSize = maxAsyncBatchSize;
     }
 }
