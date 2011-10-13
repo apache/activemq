@@ -116,7 +116,6 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
     protected CountDownLatch localStartedLatch = new CountDownLatch(1);
     protected CountDownLatch remoteBrokerNameKnownLatch = new CountDownLatch(1);
     protected CountDownLatch localBrokerIdKnownLatch = new CountDownLatch(1);
-    protected final AtomicBoolean remoteInterupted = new AtomicBoolean(false);
     protected final AtomicBoolean lastConnectSucceeded = new AtomicBoolean(false);
     protected NetworkBridgeConfiguration configuration;
     protected NetworkBridgeFilterFactory filterFactory;
@@ -163,7 +162,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                     serviceLocalException(error);
                 }
             });
-            remoteBroker.setTransportListener(new TransportListener() {
+            remoteBroker.setTransportListener(new DefaultTransportListener() {
 
                 public void onCommand(Object o) {
                     Command command = (Command) o;
@@ -174,55 +173,6 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                     serviceRemoteException(error);
                 }
 
-                public void transportInterupted() {
-                    // clear any subscriptions - to try and prevent the bridge
-                    // from stalling the broker
-                    if (remoteInterupted.compareAndSet(false, true)) {
-                        LOG.info("Outbound transport to " + remoteBrokerName + " interrupted.");
-                        if (localBridgeStarted.get()) {
-                            clearDownSubscriptions();
-                            synchronized (DemandForwardingBridgeSupport.this) {
-                                try {
-                                    localBroker.oneway(localConnectionInfo.createRemoveCommand());
-                                } catch (TransportDisposedIOException td) {
-                                    LOG.debug("local broker is now disposed", td);
-                                } catch (IOException e) {
-                                    LOG.warn("Caught exception from local start", e);
-                                }
-                            }
-                        }
-                        localBridgeStarted.set(false);
-                        remoteBridgeStarted.set(false);
-                        startedLatch = new CountDownLatch(2);
-                        localStartedLatch = new CountDownLatch(1);
-                    }
-                }
-
-                public void transportResumed() {
-                    if (remoteInterupted.compareAndSet(true, false)) {
-                        // We want to slow down false connects so that we don't
-                        // get in a busy loop.
-                        // False connects can occurr if you using SSH tunnels.
-                        if (!lastConnectSucceeded.get()) {
-                            try {
-                                LOG.debug("Previous connection was never fully established. Sleeping for second to avoid busy loop.");
-                                Thread.sleep(1000);
-                            } catch (InterruptedException e) {
-                                Thread.currentThread().interrupt();
-                            }
-                        }
-                        lastConnectSucceeded.set(false);
-                        try {
-                            startLocalBridge();
-                            remoteBridgeStarted.set(true);
-                            startedLatch.countDown();
-                            LOG.info("Outbound transport to " + remoteBrokerName + " resumed");
-                        } catch (Throwable e) {
-                            LOG.error("Caught exception  from local start in resume transport", e);
-                            serviceLocalException(e);
-                        }
-                    }
-                }
             });
 
             localBroker.start();
@@ -260,7 +210,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
         asyncTaskRunner.execute(new Runnable() {
             public void run() {
                 final String originalName = Thread.currentThread().getName();
-                Thread.currentThread().setName("StartRemotelBridge: localBroker=" + localBroker);
+                Thread.currentThread().setName("StartRemoteBridge: remoteBroker=" + remoteBroker);
                 try {
                     startRemoteBridge();
                 } catch (Exception e) {
@@ -782,14 +732,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                     serviceLocalBrokerInfo(command);
                 } else if (command.isShutdownInfo()) {
                     LOG.info(configuration.getBrokerName() + " Shutting down");
-                    // Don't shut down the whole connector if the remote side
-                    // was interrupted.
-                    // the local transport is just shutting down temporarily
-                    // until the remote side
-                    // is restored.
-                    if (!remoteInterupted.get()) {
-                        stop();
-                    }
+                    stop();
                 } else if (command.getClass() == ConnectionError.class) {
                     ConnectionError ce = (ConnectionError) command;
                     serviceLocalException(ce.getException());

@@ -90,9 +90,11 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
                 return;
             }
             // Should we try to connect to that URI?
-            if( bridges.containsKey(uri) ) {
-                LOG.debug("Discovery agent generated a duplicate onServiceAdd event for: "+uri );
-                return;
+            synchronized (bridges) {
+                if( bridges.containsKey(uri) ) {
+                    LOG.debug("Discovery agent generated a duplicate onServiceAdd event for: "+uri );
+                    return;
+                }
             }
             if ( localURI.equals(uri) || (connectionFilter != null && !connectionFilter.connectTo(uri))) {
                 LOG.debug("not connecting loopback: " + uri);
@@ -132,7 +134,9 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
             NetworkBridge bridge = createBridge(localTransport, remoteTransport, event);
             try {
                 bridge.start();
-                bridges.put(uri, bridge);
+                synchronized (bridges) {
+                    bridges.put(uri, bridge);
+                }
             } catch (Exception e) {
                 ServiceSupport.dispose(localTransport);
                 ServiceSupport.dispose(remoteTransport);
@@ -158,12 +162,13 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
                 return;
             }
 
-            NetworkBridge bridge = bridges.remove(uri);
-            if (bridge == null) {
-                return;
+            NetworkBridge bridge;
+            synchronized (bridges) {
+                bridge = bridges.remove(uri);
             }
-
-            ServiceSupport.dispose(bridge);
+            if (bridge != null) {
+                ServiceSupport.dispose(bridge);
+            }
         }
     }
 

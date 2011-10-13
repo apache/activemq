@@ -54,7 +54,7 @@ public class DiscoveryUriTest extends EmbeddedBrokerTestSupport {
 
     public void testFailedConnect() throws Exception {
         try {
-            ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("discovery:(multicast://default?group=test1)?reconnectDelay=1000&maxReconnectAttempts=3&useExponentialBackOff=false");
+            ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("discovery:(multicast://default?group=test1)?reconnectDelay=1000&startupMaxReconnectAttempts=3&useExponentialBackOff=false");
             Connection conn = factory.createConnection();
             conn.start();
         } catch (Exception e) {

@@ -67,6 +67,7 @@ public class FailoverTransport implements CompositeTransport {
 
     private static final Logger LOG = LoggerFactory.getLogger(FailoverTransport.class);
     private static final int DEFAULT_INITIAL_RECONNECT_DELAY = 10;
+    private static final int INFINITE = -1;
     private TransportListener transportListener;
     private boolean disposed;
     private boolean connected;
@@ -89,11 +90,11 @@ public class FailoverTransport implements CompositeTransport {
     private long initialReconnectDelay = DEFAULT_INITIAL_RECONNECT_DELAY;
     private long maxReconnectDelay = 1000 * 30;
     private double backOffMultiplier = 2d;
-    private long timeout = -1;
+    private long timeout = INFINITE;
     private boolean useExponentialBackOff = true;
     private boolean randomize = true;
-    private int maxReconnectAttempts;
-    private int startupMaxReconnectAttempts;
+    private int maxReconnectAttempts = INFINITE;
+    private int startupMaxReconnectAttempts = INFINITE;
     private int connectFailures;
     private long reconnectDelay = DEFAULT_INITIAL_RECONNECT_DELAY;
     private Exception connectionFailure;
@@ -107,8 +108,6 @@ public class FailoverTransport implements CompositeTransport {
     private int maxCacheSize = 128 * 1024;
     private final TransportListener disposedListener = new DefaultTransportListener() {
     };
-    //private boolean connectionInterruptProcessingComplete;
-
     private final TransportListener myTransportListener = createTransportListener();
     private boolean updateURIsSupported = true;
     private boolean reconnectSupported = true;
@@ -222,12 +221,12 @@ public class FailoverTransport implements CompositeTransport {
 
             boolean reconnectOk = false;
             synchronized (reconnectMutex) {
-                if (started) {
-                    LOG.warn("Transport (" + transport.getRemoteAddress() + ") failed to " + connectedTransportURI
-                            + " , attempting to automatically reconnect due to: " + e);
-                    LOG.debug("Transport failed with the following exception:", e);
+                if (canReconnect()) {
                     reconnectOk = true;
                 }
+                LOG.warn("Transport (" + transport.getRemoteAddress() + ") failed, reason:  " + e
+                        + (reconnectOk ? "," : ", not")  +" attempting to automatically reconnect");
+
                 initialized = false;
                 failedConnectTransportURI = connectedTransportURI;
                 connectedTransportURI = null;
@@ -240,9 +239,15 @@ public class FailoverTransport implements CompositeTransport {
 
                 if (reconnectOk) {
                     reconnectTask.wakeup();
+                } else {
+                    propagateFailureToExceptionListener(e);
                 }
             }
         }
+    }
+
+    private boolean canReconnect() {
+        return started && 0 != calculateReconnectAttemptLimit();
     }
 
     public final void handleConnectionControl(ConnectionControl control) {
@@ -292,7 +297,9 @@ public class FailoverTransport implements CompositeTransport {
 
     public void start() throws Exception {
         synchronized (reconnectMutex) {
-            LOG.debug("Started.");
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Started " + this);
+            }
             if (started) {
                 return;
             }
@@ -311,7 +318,9 @@ public class FailoverTransport implements CompositeTransport {
     public void stop() throws Exception {
         Transport transportToStop = null;
         synchronized (reconnectMutex) {
-            LOG.debug("Stopped.");
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Stopped " + this);
+            }
             if (!started) {
                 return;
             }
@@ -825,9 +834,7 @@ public class FailoverTransport implements CompositeTransport {
                         doRebalance = false;
                     }
 
-                    if (!useExponentialBackOff || reconnectDelay == DEFAULT_INITIAL_RECONNECT_DELAY) {
-                        reconnectDelay = initialReconnectDelay;
-                    }
+                    resetReconnectDelay();
 
                     Transport transport = null;
                     URI uri = null;
@@ -845,7 +852,9 @@ public class FailoverTransport implements CompositeTransport {
                     // for the first time, or we were disposed for some reason.
                     if (transport == null && !firstConnection && (reconnectDelay > 0) && !disposed) {
                         synchronized (sleepMutex) {
-                            LOG.debug("Waiting " + reconnectDelay + " ms before attempting connection. ");
+                            if (LOG.isDebugEnabled()) {
+                                LOG.debug("Waiting " + reconnectDelay + " ms before attempting connection. ");
+                            }
                             try {
                                 sleepMutex.wait(reconnectDelay);
                             } catch (InterruptedException e) {
@@ -868,16 +877,18 @@ public class FailoverTransport implements CompositeTransport {
                             }
 
                             if (LOG.isDebugEnabled()) {
-                                LOG.debug("Attempting connect to: " + uri);
+                                LOG.debug("Attempting  " + connectFailures + "th  connect to: " + uri);
                             }
                             transport.setTransportListener(myTransportListener);
                             transport.start();
 
-                            if (started) {
+                            if (started &&  !firstConnection) {
                                 restoreTransport(transport);
                             }
 
-                            LOG.debug("Connection established");
+                             if (LOG.isDebugEnabled()) {
+                                LOG.debug("Connection established");
+                             }
                             reconnectDelay = initialReconnectDelay;
                             connectedTransportURI = uri;
                             connectedTransport.set(transport);
@@ -899,7 +910,9 @@ public class FailoverTransport implements CompositeTransport {
                             if (transportListener != null) {
                                 transportListener.transportResumed();
                             } else {
-                                LOG.debug("transport resumed by transport listener not set");
+                                if (LOG.isDebugEnabled()) {
+                                    LOG.debug("transport resumed by transport listener not set");
+                                }
                             }
 
                             if (firstConnection) {
@@ -934,19 +947,10 @@ public class FailoverTransport implements CompositeTransport {
                 }
             }
 
-            int reconnectAttempts = 0;
-            if (firstConnection) {
-                if (this.startupMaxReconnectAttempts != 0) {
-                    reconnectAttempts = this.startupMaxReconnectAttempts;
-                }
-            }
+            int reconnectLimit = calculateReconnectAttemptLimit();
 
-            if (reconnectAttempts == 0) {
-                reconnectAttempts = this.maxReconnectAttempts;
-            }
-
-            if (reconnectAttempts > 0 && ++connectFailures >= reconnectAttempts) {
-                LOG.error("Failed to connect to transport after: " + connectFailures + " attempt(s)");
+            if (reconnectLimit != INFINITE && ++connectFailures >= reconnectLimit) {
+                LOG.error("Failed to connect to " + uris + " after: " + connectFailures + " attempt(s)");
                 connectionFailure = failure;
 
                 // Make sure on initial startup, that the transportListener has been
@@ -960,14 +964,7 @@ public class FailoverTransport implements CompositeTransport {
                     }
                 }
 
-                if (transportListener != null) {
-                    if (connectionFailure instanceof IOException) {
-                        transportListener.onException((IOException) connectionFailure);
-                    } else {
-                        transportListener.onException(IOExceptionSupport.create(connectionFailure));
-                    }
-                }
-                reconnectMutex.notifyAll();
+                propagateFailureToExceptionListener(connectionFailure);
                 return false;
             }
         }
@@ -976,7 +973,9 @@ public class FailoverTransport implements CompositeTransport {
 
             if (reconnectDelay > 0) {
                 synchronized (sleepMutex) {
-                    LOG.debug("Waiting " + reconnectDelay + " ms before attempting connection. ");
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug("Waiting " + reconnectDelay + " ms before attempting connection");
+                    }
                     try {
                         sleepMutex.wait(reconnectDelay);
                     } catch (InterruptedException e) {
@@ -995,6 +994,34 @@ public class FailoverTransport implements CompositeTransport {
         }
 
         return !disposed;
+    }
+
+    private void resetReconnectDelay() {
+        if (!useExponentialBackOff || reconnectDelay == DEFAULT_INITIAL_RECONNECT_DELAY) {
+            reconnectDelay = initialReconnectDelay;
+        }
+    }
+
+    /*
+      * called with reconnectMutex held
+     */
+    private void propagateFailureToExceptionListener(Exception exception) {
+        if (transportListener != null) {
+            if (exception instanceof IOException) {
+                transportListener.onException((IOException)exception);
+            } else {
+                transportListener.onException(IOExceptionSupport.create(exception));
+            }
+        }
+        reconnectMutex.notifyAll();
+    }
+
+    private int calculateReconnectAttemptLimit() {
+        int maxReconnectValue = this.maxReconnectAttempts;
+        if (firstConnection && this.startupMaxReconnectAttempts != INFINITE) {
+            maxReconnectValue = this.startupMaxReconnectAttempts;
+        }
+        return maxReconnectValue;
     }
 
     final boolean buildBackups() {

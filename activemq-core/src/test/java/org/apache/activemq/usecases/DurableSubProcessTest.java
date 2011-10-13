@@ -320,7 +320,7 @@ public class DurableSubProcessTest extends org.apache.activemq.TestSupport  {
                 "jms.alwaysSyncSend=true&jms.dispatchAsync=true&" +
                 "jms.producerWindowSize=20971520&" +
                 "jms.copyMessageOnSend=false&" +
-                "initialReconnectDelay=100&maxReconnectDelay=30000&maxReconnectAttempts=0&" +
+                "initialReconnectDelay=100&maxReconnectDelay=30000&" +
                 "useExponentialBackOff=true";
         final ConnectionFactory cf = new ActiveMQConnectionFactory(url);
 
