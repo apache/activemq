@@ -33,6 +33,8 @@ import org.apache.activemq.management.StatsCapable;
 import org.apache.activemq.management.StatsImpl;
 import org.apache.activemq.usage.MemoryUsage;
 import org.apache.activemq.util.IntrospectionSupport;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A client uses a <CODE>MessageProducer</CODE> object to send messages to a
@@ -60,13 +62,15 @@ import org.apache.activemq.util.IntrospectionSupport;
  * <P>
  * A JMS provider should do its best to expire messages accurately; however, the
  * JMS API does not define the accuracy provided.
- * 
- * 
+ *
+ *
  * @see javax.jms.TopicPublisher
  * @see javax.jms.QueueSender
  * @see javax.jms.Session#createProducer
  */
 public class ActiveMQMessageProducer extends ActiveMQMessageProducerSupport implements StatsCapable, Disposable {
+
+    private static final Logger LOG = LoggerFactory.getLogger(ActiveMQMessageProducer.class);
 
     protected ProducerInfo info;
     protected boolean closed;
@@ -81,10 +85,21 @@ public class ActiveMQMessageProducer extends ActiveMQMessageProducerSupport impl
         super(session);
         this.info = new ProducerInfo(producerId);
         this.info.setWindowSize(session.connection.getProducerWindowSize());
+        // Allows the options on the destination to configure the producerInfo
         if (destination != null && destination.getOptions() != null) {
             Map<String, String> options = new HashMap<String, String>(destination.getOptions());
             IntrospectionSupport.setProperties(this.info, options, "producer.");
+            if (options.size() > 0) {
+                String msg = "There are " + options.size()
+                    + " producer options that couldn't be set on the producer."
+                    + " Check the options are spelled correctly."
+                    + " Unknown parameters=[" + options + "]."
+                    + " This producer cannot be started.";
+                LOG.warn(msg);
+                throw new ConfigurationException(msg);
+            }
         }
+
         this.info.setDestination(destination);
 
         // Enable producer window flow control if protocol > 3 and the window
@@ -118,7 +133,7 @@ public class ActiveMQMessageProducer extends ActiveMQMessageProducerSupport impl
 
     /**
      * Gets the destination associated with this <CODE>MessageProducer</CODE>.
-     * 
+     *
      * @return this producer's <CODE>Destination/ <CODE>
      * @throws JMSException if the JMS provider fails to close the producer due to
      *                      some internal error.
@@ -137,7 +152,7 @@ public class ActiveMQMessageProducer extends ActiveMQMessageProducerSupport impl
      * outside the Java virtual machine, clients should close them when they are
      * not needed. Relying on garbage collection to eventually reclaim these
      * resources may not be timely enough.
-     * 
+     *
      * @throws JMSException if the JMS provider fails to close the producer due
      *                 to some internal error.
      */
@@ -160,7 +175,7 @@ public class ActiveMQMessageProducer extends ActiveMQMessageProducerSupport impl
 
     /**
      * Check if the instance of this producer has been closed.
-     * 
+     *
      * @throws IllegalStateException
      */
     @Override
@@ -177,7 +192,7 @@ public class ActiveMQMessageProducer extends ActiveMQMessageProducerSupport impl
      * Typically, a message producer is assigned a destination at creation time;
      * however, the JMS API also supports unidentified message producers, which
      * require that the destination be supplied every time a message is sent.
-     * 
+     *
      * @param destination the destination to send this message to
      * @param message the message to send
      * @param deliveryMode the delivery mode to use

@@ -16,6 +16,8 @@
  */
 package org.apache.activemq.camel.component;
 
+import java.util.concurrent.TimeUnit;
+
 import org.apache.camel.CamelContext;
 import org.apache.camel.builder.RouteBuilder;
 
@@ -28,7 +30,7 @@ import org.springframework.jms.connection.JmsTransactionManager;
 import static org.apache.activemq.camel.component.ActiveMQComponent.activeMQComponent;
 
 /**
- * 
+ *
  */
 public class ActiveMQRouteTest extends CamelTestSupport {
     protected MockEndpoint resultEndpoint;
@@ -65,6 +67,36 @@ public class ActiveMQRouteTest extends CamelTestSupport {
         // END SNIPPET: example
 
         return camelContext;
+    }
+
+    @Test
+    public void testInvalidDestinationOptionOnConsumer() throws Exception {
+        getMockEndpoint("mock:result").expectedMessageCount(0);
+        assertMockEndpointsSatisfied(1, TimeUnit.SECONDS);
+        try {
+            new RouteBuilder() {
+                public void configure() throws Exception {
+                    from("activemq:queue:foo?destination.consumer.exclusive=true&destination.consumer.unknown=foo")
+                        .to("mock:result");
+                }
+            };
+        } catch (Exception e) {
+            fail("Should not have accepted bad destination options.");
+        }
+    }
+
+    @Test
+    public void testInvalidDestinationOptionOnProducer() throws Exception {
+        try {
+            new RouteBuilder() {
+                public void configure() throws Exception {
+                    from("activemq:queue:foo")
+                        .to("activemq:queue:bar?destination.producer.exclusive=true");
+                }
+            };
+        } catch (Exception e) {
+            fail("Should not have accepted bad destination options.");
+        }
     }
 
     protected RouteBuilder createRouteBuilder() throws Exception {
