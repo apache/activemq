@@ -23,14 +23,16 @@ import org.apache.activemq.transport.util.TextWireFormat;
 
 /**
  * A useful base class for HTTP Transport implementations.
- * 
- * 
+ *
+ *
  */
 public abstract class HttpTransportSupport extends TransportThreadSupport {
     private TextWireFormat textWireFormat;
     private URI remoteUrl;
     private String proxyHost;
     private int proxyPort = 8080;
+    private String proxyUser;
+    private String proxyPassword;
 
     public HttpTransportSupport(TextWireFormat textWireFormat, URI remoteUrl) {
         this.textWireFormat = textWireFormat;
@@ -73,5 +75,21 @@ public abstract class HttpTransportSupport extends TransportThreadSupport {
 
     public void setProxyPort(int proxyPort) {
         this.proxyPort = proxyPort;
+    }
+
+    public String getProxyUser() {
+       return proxyUser;
+    }
+
+    public void setProxyUser(String proxyUser) {
+       this.proxyUser = proxyUser;
+    }
+
+    public String getProxyPassword() {
+       return proxyPassword;
+    }
+
+    public void setProxyPassword(String proxyPassword) {
+       this.proxyPassword = proxyPassword;
     }
 }

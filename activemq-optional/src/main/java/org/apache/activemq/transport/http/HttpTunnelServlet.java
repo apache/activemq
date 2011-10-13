@@ -46,8 +46,6 @@ import org.slf4j.LoggerFactory;
  * A servlet which handles server side HTTP transport, delegating to the
  * ActiveMQ broker. This servlet is designed for being embedded inside an
  * ActiveMQ Broker using an embedded Jetty or Tomcat instance.
- *
- *
  */
 public class HttpTunnelServlet extends HttpServlet {
     private static final long serialVersionUID = -3826714430767484333L;
@@ -58,8 +56,9 @@ public class HttpTunnelServlet extends HttpServlet {
     private TextWireFormat wireFormat;
     private ConcurrentMap<String, BlockingQueueTransport> clients = new ConcurrentHashMap<String, BlockingQueueTransport>();
     private final long requestTimeout = 30000L;
-    private HashMap transportOptions;
+    private HashMap<String, Object> transportOptions;
 
+    @SuppressWarnings("unchecked")
     @Override
     public void init() throws ServletException {
         super.init();
@@ -71,7 +70,7 @@ public class HttpTunnelServlet extends HttpServlet {
         if (transportFactory == null) {
             throw new ServletException("No such attribute 'transportFactory' available in the ServletContext");
         }
-        transportOptions = (HashMap)getServletContext().getAttribute("transportOptions");
+        transportOptions = (HashMap<String, Object>)getServletContext().getAttribute("transportOptions");
         wireFormat = (TextWireFormat)getServletContext().getAttribute("wireFormat");
         if (wireFormat == null) {
             wireFormat = createWireFormat();
@@ -210,7 +209,7 @@ public class HttpTunnelServlet extends HttpServlet {
         Transport transport = answer;
         try {
             // Preserve the transportOptions for future use by making a copy before applying (they are removed when applied).
-            HashMap options = new HashMap(transportOptions);
+            HashMap<String, Object> options = new HashMap<String, Object>(transportOptions);
             transport = transportFactory.serverConfigure(answer, null, options);
         } catch (Exception e) {
             throw IOExceptionSupport.create(e);

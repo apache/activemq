@@ -30,6 +30,8 @@ import org.apache.activemq.util.ServiceStopper;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.methods.HttpGet;
@@ -222,10 +224,16 @@ public class HttpClientTransport extends HttpTransportSupport {
     }
 
     protected HttpClient createHttpClient() {
-        HttpClient client = new DefaultHttpClient();
+        DefaultHttpClient client = new DefaultHttpClient();
         if (getProxyHost() != null) {
             HttpHost proxy = new HttpHost(getProxyHost(), getProxyPort());
             client.getParams().setParameter(ConnRoutePNames.DEFAULT_PROXY, proxy);
+
+            if(getProxyUser() != null && getProxyPassword() != null) {
+                client.getCredentialsProvider().setCredentials(
+                    new AuthScope(getProxyHost(), getProxyPort()),
+                    new UsernamePasswordCredentials(getProxyUser(), getProxyPassword()));
+            }
         }
         return client;
     }

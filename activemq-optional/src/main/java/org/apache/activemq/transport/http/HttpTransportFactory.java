@@ -23,8 +23,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.activemq.transport.InactivityMonitor;
-import org.apache.activemq.transport.MutexTransport;
-import org.apache.activemq.transport.ThreadNameFilter;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportFactory;
 import org.apache.activemq.transport.TransportLoggerFactory;
@@ -40,10 +38,9 @@ import org.slf4j.LoggerFactory;
 
 /**
  * @author David Martin Clavo david(dot)martin(dot)clavo(at)gmail.com (logging improvement modifications)
- * 
  */
 public class HttpTransportFactory extends TransportFactory {
-    
+
     private static final Logger LOG = LoggerFactory.getLogger(HttpTransportFactory.class);
 
     public TransportServer doBind(URI location) throws IOException {
@@ -75,10 +72,12 @@ public class HttpTransportFactory extends TransportFactory {
         return new HttpClientTransport(textWireFormat, location);
     }
 
+    @SuppressWarnings("rawtypes")
     public Transport serverConfigure(Transport transport, WireFormat format, HashMap options) throws Exception {
         return compositeConfigure(transport, format, options);
     }
 
+    @SuppressWarnings("rawtypes")
     public Transport compositeConfigure(Transport transport, WireFormat format, Map options) {
         transport = super.compositeConfigure(transport, format, options);
         HttpClientTransport httpTransport = (HttpClientTransport)transport.narrow(HttpClientTransport.class);
