@@ -774,20 +774,14 @@ public class ProtocolConverter {
         return stompTransport;
     }
 
-    public ActiveMQDestination createTempQueue(String name) {
+    public ActiveMQDestination createTempDestination(String name, boolean topic) {
         ActiveMQDestination rc = tempDestinations.get(name);
         if( rc == null ) {
-            rc = new ActiveMQTempQueue(connectionId, tempDestinationGenerator.getNextSequenceId());
-            sendToActiveMQ(new DestinationInfo(connectionId, DestinationInfo.ADD_OPERATION_TYPE, rc), null);
-            tempDestinations.put(name, rc);
-        }
-        return rc;
-    }
-
-    public ActiveMQDestination createTempTopic(String name) {
-        ActiveMQDestination rc = tempDestinations.get(name);
-        if( rc == null ) {
-            rc = new ActiveMQTempTopic(connectionId, tempDestinationGenerator.getNextSequenceId());
+            if (topic) {
+                rc = new ActiveMQTempTopic(connectionId, tempDestinationGenerator.getNextSequenceId());
+            } else {
+                rc = new ActiveMQTempQueue(connectionId, tempDestinationGenerator.getNextSequenceId());
+            }
             sendToActiveMQ(new DestinationInfo(connectionId, DestinationInfo.ADD_OPERATION_TYPE, rc), null);
             tempDestinations.put(name, rc);
             tempDestinationAmqToStompMap.put(rc.getQualifiedName(), name);

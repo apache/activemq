@@ -183,9 +183,9 @@ public class LegacyFrameTranslator implements FrameTranslator {
             String tName = name.substring("/remote-temp-topic/".length(), name.length());
             return ActiveMQDestination.createDestination(tName, ActiveMQDestination.TEMP_TOPIC_TYPE);
         } else if (name.startsWith("/temp-queue/")) {
-            return converter.createTempQueue(name);
+            return converter.createTempDestination(name, false);
         } else if (name.startsWith("/temp-topic/")) {
-            return converter.createTempTopic(name);
+            return converter.createTempDestination(name, true);
         } else {
             try {
                 ActiveMQDestination fallback = ActiveMQDestination.getUnresolvableDestinationTransformer().transform(name);
