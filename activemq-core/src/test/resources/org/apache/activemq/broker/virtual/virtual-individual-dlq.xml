@@ -1,0 +1,80 @@
+<!--
+    Licensed to the Apache Software Foundation (ASF) under one or more
+    contributor license agreements.  See the NOTICE file distributed with
+    this work for additional information regarding copyright ownership.
+    The ASF licenses this file to You under the Apache License, Version 2.0
+    (the "License"); you may not use this file except in compliance with
+    the License.  You may obtain a copy of the License at
+   
+    http://www.apache.org/licenses/LICENSE-2.0
+   
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+-->
+<!-- START SNIPPET: example -->
+<beans
+  xmlns="http://www.springframework.org/schema/beans"
+  xmlns:amq="http://activemq.apache.org/schema/core"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.0.xsd
+  http://activemq.apache.org/schema/core http://activemq.apache.org/schema/core/activemq-core.xsd">
+
+    
+
+    <!-- 
+        The <broker> element is used to configure the ActiveMQ broker. 
+    -->
+    <broker xmlns="http://activemq.apache.org/schema/core" brokerName="bcBroker">
+ 
+        <destinationInterceptors>
+      <virtualDestinationInterceptor>
+         <virtualDestinations>
+            <virtualTopic name="VirtualTopic.>" prefix="Consumer.*." />
+         </virtualDestinations>
+      </virtualDestinationInterceptor>
+   </destinationInterceptors>
+              
+   <destinationPolicy>
+      <policyMap>
+         <policyEntries>
+            <policyEntry queue=">" memoryLimit="128 mb" >
+               <deadLetterStrategy>
+                  <bean xmlns="http://www.springframework.org/schema/beans"
+                        class="org.apache.activemq.broker.region.policy.IndividualDeadLetterStrategy">
+                     <property name="useQueueForQueueMessages" value="true"></property>
+                     <property name="processNonPersistent" value="true"></property>
+                     <property name="processExpired" value="false"></property>
+                     <property name="enableAudit" value="false"></property>
+                     
+                  </bean>
+               </deadLetterStrategy>
+            </policyEntry>
+            <policyEntry topic=">" memoryLimit="128 mb" >
+               <deadLetterStrategy>
+                  <bean xmlns="http://www.springframework.org/schema/beans"
+                        class="org.apache.activemq.broker.region.policy.IndividualDeadLetterStrategy">
+                     <property name="useQueueForQueueMessages" value="true"></property>
+                     <property name="processNonPersistent" value="true"></property>
+                     <property name="processExpired" value="false"></property>
+                     <property name="enableAudit" value="false"></property>
+          
+                  </bean>
+               </deadLetterStrategy>
+             </policyEntry>
+         </policyEntries>
+      </policyMap>
+   </destinationPolicy>
+       
+        <managementContext>
+            <managementContext createConnector="false"/>
+        </managementContext>
+
+    </broker>
+
+    
+    
+</beans>
+<!-- END SNIPPET: example -->

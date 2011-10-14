@@ -26,9 +26,9 @@ import org.apache.activemq.command.Message;
 /**
  * A {@link DeadLetterStrategy} where each destination has its own individual
  * DLQ using the subject naming hierarchy.
- * 
+ *
  * @org.apache.xbean.XBean
- * 
+ *
  */
 public class IndividualDeadLetterStrategy extends AbstractDeadLetterStrategy {
 
@@ -38,8 +38,7 @@ public class IndividualDeadLetterStrategy extends AbstractDeadLetterStrategy {
     private boolean useQueueForTopicMessages = true;
     private boolean destinationPerDurableSubscriber;
 
-    public ActiveMQDestination getDeadLetterQueueFor(Message message,
-                                                     Subscription subscription) {
+    public ActiveMQDestination getDeadLetterQueueFor(Message message, Subscription subscription) {
         if (message.getDestination().isQueue()) {
             return createDestination(message, queuePrefix, useQueueForQueueMessages, subscription);
         } else {
@@ -116,7 +115,17 @@ public class IndividualDeadLetterStrategy extends AbstractDeadLetterStrategy {
                                                     String prefix,
                                                     boolean useQueue,
                                                     Subscription subscription ) {
-        String name = prefix + message.getDestination().getPhysicalName();
+        String name = null;
+
+        if (message.getRegionDestination() != null
+                && message.getRegionDestination().getActiveMQDestination() != null
+                && message.getRegionDestination().getActiveMQDestination().getPhysicalName() != null
+                && !message.getRegionDestination().getActiveMQDestination().getPhysicalName().isEmpty()){
+            name = prefix + message.getRegionDestination().getActiveMQDestination().getPhysicalName();
+        } else {
+            name = prefix + message.getDestination().getPhysicalName();
+        }
+
         if (destinationPerDurableSubscriber && subscription instanceof DurableTopicSubscription) {
             name += "." + ((DurableTopicSubscription)subscription).getSubscriptionKey();
         }
@@ -126,5 +135,4 @@ public class IndividualDeadLetterStrategy extends AbstractDeadLetterStrategy {
             return new ActiveMQTopic(name);
         }
     }
-
 }
