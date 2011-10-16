@@ -223,7 +223,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
 
         // Allows the options on the destination to configure the consumerInfo
         if (dest.getOptions() != null) {
-            Map<String, Object> options = IntrospectionSupport.extractProperties(dest.getOptions(), "producer.");
+            Map<String, Object> options = IntrospectionSupport.extractProperties(dest.getOptions(), "consumer.");
             IntrospectionSupport.setProperties(this.info, options);
             if (options.size() > 0) {
                 String msg = "There are " + options.size()
