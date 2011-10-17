@@ -87,7 +87,8 @@ public class ActiveMQMessageProducer extends ActiveMQMessageProducerSupport impl
         this.info.setWindowSize(session.connection.getProducerWindowSize());
         // Allows the options on the destination to configure the producerInfo
         if (destination != null && destination.getOptions() != null) {
-            Map<String, Object> options = IntrospectionSupport.extractProperties(destination.getOptions(), "producer.");
+            Map<String, Object> options = IntrospectionSupport.extractProperties(
+                new HashMap<String, Object>(destination.getOptions()), "producer.");
             IntrospectionSupport.setProperties(this.info, options);
             if (options.size() > 0) {
                 String msg = "There are " + options.size()
