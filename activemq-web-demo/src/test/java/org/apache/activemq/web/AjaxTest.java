@@ -18,9 +18,7 @@ package org.apache.activemq.web;
 
 import org.apache.activemq.transport.stomp.StompConnection;
 import org.apache.activemq.transport.stomp.StompFrame;
-import org.apache.activemq.transport.stomp.Stomp;
 
-import java.lang.Thread;
 import java.net.SocketTimeoutException;
 
 import org.slf4j.Logger;
@@ -31,12 +29,10 @@ import java.util.*;
 import org.eclipse.jetty.io.Buffer;
 import org.eclipse.jetty.client.ContentExchange;
 import org.eclipse.jetty.client.HttpClient;
-import org.eclipse.jetty.http.HttpFields;
 import org.eclipse.jetty.io.ByteArrayBuffer;
 
 import javax.jms.MessageProducer;
 import javax.jms.Message;
-import javax.jms.TextMessage;
 
 public class AjaxTest extends JettyTestSupport {
     private static final Logger LOG = LoggerFactory.getLogger(AjaxTest.class);
@@ -533,5 +529,4 @@ public class AjaxTest extends JettyTestSupport {
         assertContains( "<response id='handlerB' destination='topic://topicB' >B2</response>\n", fullResponse );
         assertResponseCount( 4, fullResponse );
      }
-
 }

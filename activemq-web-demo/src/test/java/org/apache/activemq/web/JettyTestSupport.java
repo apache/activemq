@@ -54,8 +54,8 @@ public class JettyTestSupport extends TestCase {
         broker = new BrokerService();
         broker.setPersistent(false);
         broker.setUseJmx(true);
-        tcpUri = broker.addConnector("tcp://localhost:61616").getConnectUri();
-        stompUri = broker.addConnector("stomp://localhost:61613").getConnectUri();
+        tcpUri = new URI(broker.addConnector("tcp://localhost:0").getPublishableConnectString());
+        stompUri = new URI(broker.addConnector("stomp://localhost:0").getPublishableConnectString());
         broker.start();
         broker.waitUntilStarted();
 

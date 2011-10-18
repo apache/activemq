@@ -27,8 +27,8 @@ import org.eclipse.jetty.webapp.WebAppContext;
 /**
  * A simple bootstrap class for starting Jetty in your IDE using the local web
  * application.
- * 
- * 
+ *
+ *
  */
 public final class JettyServer {
 
@@ -46,8 +46,8 @@ public final class JettyServer {
         BrokerService broker = new BrokerService();
         broker.setPersistent(false);
         broker.setUseJmx(true);
-        broker.addConnector("tcp://localhost:61616");
-        broker.addConnector("stomp://localhost:61613");
+        broker.addConnector("tcp://localhost:0");
+        broker.addConnector("stomp://localhost:0");
         broker.start();
 
         // lets publish some messages so that there is some stuff to browse
