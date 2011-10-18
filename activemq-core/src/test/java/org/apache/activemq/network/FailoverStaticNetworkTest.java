@@ -278,7 +278,6 @@ public class FailoverStaticNetworkTest {
         brokerC.start();
         assertTrue("all props applied a second time", networkConnectorProps.isEmpty());
 
-        //Thread.sleep(4000);
         doTestNetworkSendReceive(brokerC, brokerB);
         doTestNetworkSendReceive(brokerB, brokerC);
 
@@ -321,8 +320,20 @@ public class FailoverStaticNetworkTest {
 
     @Test
     public void testRepeatedSendReceiveWithMasterSlaveAlternate() throws Exception {
+        doTestRepeatedSendReceiveWithMasterSlaveAlternate(null);
+    }
 
-        brokerB = createBroker("tcp", "62617", new String[]{"61610","61611"});
+    @Test
+    public void testRepeatedSendReceiveWithMasterSlaveAlternateDuplex() throws Exception {
+        HashMap<String, String> networkConnectorProps = new HashMap<String, String>();
+        networkConnectorProps.put("duplex", "true");
+
+        doTestRepeatedSendReceiveWithMasterSlaveAlternate(networkConnectorProps);
+    }
+
+    public void doTestRepeatedSendReceiveWithMasterSlaveAlternate(HashMap<String, String> networkConnectorProps) throws Exception {
+
+        brokerB = createBroker("tcp", "62617", new String[]{"61610","61611"}, networkConnectorProps);
         brokerB.start();
 
         final AtomicBoolean done = new AtomicBoolean(false);
@@ -380,7 +391,7 @@ public class FailoverStaticNetworkTest {
             }
         });
 
-        for (int i=0; i<10; i++) {
+        for (int i=0; i<4; i++) {
             BrokerService currentMaster =  (i%2 == 0 ? brokerA : brokerA1);
             LOG.info("iteration: " + i + ", using: " + currentMaster.getBrokerObjectName().getKeyProperty("BrokerName"));
             currentMaster.waitUntilStarted();
@@ -392,7 +403,7 @@ public class FailoverStaticNetworkTest {
             currentMaster.waitUntilStopped();
         }
 
-        done.set(false);
+        done.set(true);
         LOG.info("all done");
         executorService.shutdownNow();
     }

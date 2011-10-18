@@ -96,10 +96,16 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
                     return;
                 }
             }
-            if ( localURI.equals(uri) || (connectionFilter != null && !connectionFilter.connectTo(uri))) {
+            if (localURI.equals(uri)) {
                 LOG.debug("not connecting loopback: " + uri);
                 return;
             }
+
+            if (connectionFilter != null && !connectionFilter.connectTo(uri)) {
+                LOG.debug("connectionFilter disallows connection to: " + uri);
+                return;
+            }
+
             URI connectUri = uri;
             try {
                 connectUri = URISupport.applyParameters(connectUri, parameters, DISCOVERED_OPTION_PREFIX);

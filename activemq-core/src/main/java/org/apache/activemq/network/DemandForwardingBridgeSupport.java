@@ -36,7 +36,6 @@ import org.apache.activemq.broker.region.AbstractRegion;
 import org.apache.activemq.broker.region.DurableTopicSubscription;
 import org.apache.activemq.broker.region.RegionBroker;
 import org.apache.activemq.broker.region.Subscription;
-import org.apache.activemq.broker.region.TopicSubscription;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQMessage;
@@ -74,7 +73,6 @@ import org.apache.activemq.transport.ResponseCallback;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportDisposedIOException;
 import org.apache.activemq.transport.TransportFilter;
-import org.apache.activemq.transport.TransportListener;
 import org.apache.activemq.transport.tcp.SslTransport;
 import org.apache.activemq.util.*;
 import org.slf4j.Logger;
@@ -114,11 +112,13 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
     protected final BrokerId localBrokerPath[] = new BrokerId[] { null };
     protected CountDownLatch startedLatch = new CountDownLatch(2);
     protected CountDownLatch localStartedLatch = new CountDownLatch(1);
-    protected CountDownLatch remoteBrokerNameKnownLatch = new CountDownLatch(1);
-    protected CountDownLatch localBrokerIdKnownLatch = new CountDownLatch(1);
     protected final AtomicBoolean lastConnectSucceeded = new AtomicBoolean(false);
     protected NetworkBridgeConfiguration configuration;
     protected NetworkBridgeFilterFactory filterFactory;
+
+    protected final BrokerId remoteBrokerPath[] = new BrokerId[] {null};
+    protected Object brokerInfoMutex = new Object();
+    protected BrokerId remoteBrokerId;
 
     final AtomicLong enqueueCounter = new AtomicLong();
     final AtomicLong dequeueCounter = new AtomicLong();
@@ -222,14 +222,12 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
         });
     }
 
-    protected void startLocalBridge() throws Throwable {
+    private void startLocalBridge() throws Throwable {
         if (localBridgeStarted.compareAndSet(false, true)) {
             synchronized (this) {
                 if (LOG.isTraceEnabled()) {
                     LOG.trace(configuration.getBrokerName() + " starting local Bridge, localBroker=" + localBroker);
                 }
-                remoteBrokerNameKnownLatch.await();
-
                 if (!disposed.get()) {
                     localConnectionInfo = new ConnectionInfo();
                     localConnectionInfo.setConnectionId(new ConnectionId(idGenerator.generateId()));
@@ -277,7 +275,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
     protected void startRemoteBridge() throws Exception {
         if (remoteBridgeStarted.compareAndSet(false, true)) {
             if (LOG.isTraceEnabled()) {
-                LOG.trace(configuration.getBrokerName() + " starting remote Bridge, localBroker=" + localBroker);
+                LOG.trace(configuration.getBrokerName() + " starting remote Bridge, remoteBroker=" + remoteBroker);
             }
             synchronized (this) {
                 if (!isCreatedByDuplex()) {
@@ -291,7 +289,6 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                     IntrospectionSupport.getProperties(configuration, props, null);
                     String str = MarshallingSupport.propertiesToString(props);
                     brokerInfo.setNetworkProperties(str);
-                    localBrokerIdKnownLatch.await();
                     brokerInfo.setBrokerId(this.localBrokerId);
                     remoteBroker.oneway(brokerInfo);
                 }
@@ -322,9 +319,6 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                 demandConsumerInfo.setPrefetchSize(configuration.getPrefetchSize());
                 remoteBroker.oneway(demandConsumerInfo);
                 startedLatch.countDown();
-                if (!disposed.get()) {
-                    triggerLocalStartBridge();
-                }
             }
         }
     }
@@ -372,7 +366,6 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
             brokerService.getBroker().removeBroker(null, remoteBrokerInfo);
             brokerService.getBroker().networkBridgeStopped(remoteBrokerInfo);
             LOG.info(configuration.getBrokerName() + " bridge to " + remoteBrokerName + " stopped");
-            remoteBrokerNameKnownLatch.countDown();
         }
     }
 
@@ -1161,7 +1154,6 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
 
     protected void waitStarted() throws InterruptedException {
         startedLatch.await();
-        localBrokerIdKnownLatch.await();
     }
 
     protected void clearDownSubscriptions() {
@@ -1184,13 +1176,47 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
          return filterFactory.create(info, getRemoteBrokerPath(), configuration.getNetworkTTL() );
     }
 
-    protected abstract void serviceLocalBrokerInfo(Command command) throws InterruptedException;
+    protected void serviceLocalBrokerInfo(Command command) throws InterruptedException {
+        synchronized (brokerInfoMutex) {
+            if (remoteBrokerId != null) {
+                if (remoteBrokerId.equals(localBrokerId)) {
+                    if (LOG.isTraceEnabled()) {
+                        LOG.trace(configuration.getBrokerName() + " disconnecting local loop back connection for: " + remoteBrokerName + ", with id:" + remoteBrokerId);
+                    }
+                    waitStarted();
+                    ServiceSupport.dispose(this);
+                }
+            }
+        }
+    }
 
-    protected abstract void addRemoteBrokerToBrokerPath(ConsumerInfo info) throws IOException;
+    protected void addRemoteBrokerToBrokerPath(ConsumerInfo info) throws IOException {
+        info.setBrokerPath(appendToBrokerPath(info.getBrokerPath(), getRemoteBrokerPath()));
+    }
 
-    protected abstract void serviceRemoteBrokerInfo(Command command) throws IOException;
+    protected void serviceRemoteBrokerInfo(Command command) throws IOException {
+        synchronized (brokerInfoMutex) {
+            BrokerInfo remoteBrokerInfo = (BrokerInfo)command;
+            remoteBrokerId = remoteBrokerInfo.getBrokerId();
+            remoteBrokerPath[0] = remoteBrokerId;
+            remoteBrokerName = remoteBrokerInfo.getBrokerName();
+            if (localBrokerId != null) {
+                if (localBrokerId.equals(remoteBrokerId)) {
+                    if (LOG.isTraceEnabled()) {
+                        LOG.trace(configuration.getBrokerName() + " disconnecting remote loop back connection for: " + remoteBrokerName + ", with id:" + remoteBrokerId);
+                    }
+                    ServiceSupport.dispose(this);
+                }
+            }
+            if (!disposed.get()) {
+                triggerLocalStartBridge();
+            }
+        }
+    }
 
-    protected abstract BrokerId[] getRemoteBrokerPath();
+    protected  BrokerId[] getRemoteBrokerPath() {
+        return remoteBrokerPath;
+    }
 
     public void setNetworkBridgeListener(NetworkBridgeListener listener) {
         this.networkBridgeListener = listener;
@@ -1233,6 +1259,8 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
 
     public void setBrokerService(BrokerService brokerService) {
         this.brokerService = brokerService;
+        this.localBrokerId = brokerService.getRegionBroker().getBrokerId();
+        localBrokerPath[0] = localBrokerId;
     }
 
     public void setMbeanObjectName(ObjectName objectName) {

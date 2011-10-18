@@ -16,15 +16,7 @@
  */
 package org.apache.activemq.network;
 
-import java.io.IOException;
-
-import org.apache.activemq.command.BrokerId;
-import org.apache.activemq.command.BrokerInfo;
-import org.apache.activemq.command.Command;
-import org.apache.activemq.command.ConsumerInfo;
-import org.apache.activemq.command.NetworkBridgeFilter;
 import org.apache.activemq.transport.Transport;
-import org.apache.activemq.util.ServiceSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,58 +30,8 @@ import org.slf4j.LoggerFactory;
 public class DemandForwardingBridge extends DemandForwardingBridgeSupport {
     private static final Logger LOG = LoggerFactory.getLogger(DemandForwardingBridge.class);
 
-    protected final BrokerId remoteBrokerPath[] = new BrokerId[] {null};
-    protected Object brokerInfoMutex = new Object();
-    protected BrokerId remoteBrokerId;
-
     public DemandForwardingBridge(NetworkBridgeConfiguration configuration, Transport localBroker,
                                   Transport remoteBroker) {
         super(configuration, localBroker, remoteBroker);
-    }
-
-    protected void serviceRemoteBrokerInfo(Command command) throws IOException {
-        synchronized (brokerInfoMutex) {
-            BrokerInfo remoteBrokerInfo = (BrokerInfo)command;
-            remoteBrokerId = remoteBrokerInfo.getBrokerId();
-            remoteBrokerPath[0] = remoteBrokerId;
-            remoteBrokerName = remoteBrokerInfo.getBrokerName();
-            if (localBrokerId != null) {
-                if (localBrokerId.equals(remoteBrokerId)) {
-                    if (LOG.isTraceEnabled()) {
-                        LOG.trace(configuration.getBrokerName() + " disconnecting remote loop back connection: " + remoteBrokerName);
-                    }
-                    ServiceSupport.dispose(this);
-                }
-            }
-            if (LOG.isTraceEnabled()) {
-                LOG.trace("counting down remoteBrokerNameKnownLatch with: " + command);
-            }
-            remoteBrokerNameKnownLatch.countDown();
-        }
-    }
-
-    protected void addRemoteBrokerToBrokerPath(ConsumerInfo info) {
-        info.setBrokerPath(appendToBrokerPath(info.getBrokerPath(), getRemoteBrokerPath()));
-    }
-
-    protected void serviceLocalBrokerInfo(Command command) throws InterruptedException {
-        synchronized (brokerInfoMutex) {
-            localBrokerId = ((BrokerInfo)command).getBrokerId();
-            localBrokerPath[0] = localBrokerId;
-            localBrokerIdKnownLatch.countDown();
-            if (remoteBrokerId != null) {
-                if (remoteBrokerId.equals(localBrokerId)) {
-                    if (LOG.isTraceEnabled()) {
-                        LOG.trace(configuration.getBrokerName() + " disconnecting local loop back connection.");
-                    }
-                    waitStarted();
-                    ServiceSupport.dispose(this);
-                }
-            }
-        }
-    }
-
-    protected BrokerId[] getRemoteBrokerPath() {
-        return remoteBrokerPath;
     }
 }
