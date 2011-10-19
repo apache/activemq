@@ -189,19 +189,19 @@ public class TwoBrokerVirtualDestDinamicallyIncludedDestTest extends JmsMultiple
         nc1.setDecreaseNetworkConsumerPriority(decreaseNetworkConsumerPriority);
         nc1.setSuppressDuplicateQueueSubscriptions(suppressDuplicateQueueSubscriptions);
         nc1.addStaticallyIncludedDestination(ActiveMQDestination.createDestination("global.>", ActiveMQDestination.TOPIC_TYPE));
-        nc1.addExcludedDestination(ActiveMQDestination.createDestination("Consumer.*.global.>", ActiveMQDestination.QUEUE_TYPE));
+        //nc1.addExcludedDestination(ActiveMQDestination.createDestination("Consumer.*.global.>", ActiveMQDestination.QUEUE_TYPE));
         nc1.addDynamicallyIncludedDestination(ActiveMQDestination.createDestination("global.>", ActiveMQDestination.QUEUE_TYPE));
         nc1.addDynamicallyIncludedDestination(ActiveMQDestination.createDestination("global.>", ActiveMQDestination.TOPIC_TYPE));
-        //nc1.addDynamicallyIncludedDestination(ActiveMQDestination.createDestination("Consumer.*.global.>", ActiveMQDestination.QUEUE_TYPE));
+        nc1.addDynamicallyIncludedDestination(ActiveMQDestination.createDestination("Consumer.*.global.>", ActiveMQDestination.QUEUE_TYPE));
 
         NetworkConnector nc2 = bridgeBrokers("BrokerB", "BrokerA", dynamicOnly, networkTTL, conduit);
         nc2.setDecreaseNetworkConsumerPriority(decreaseNetworkConsumerPriority);
         nc2.setSuppressDuplicateQueueSubscriptions(suppressDuplicateQueueSubscriptions);
         nc2.addStaticallyIncludedDestination(ActiveMQDestination.createDestination("global.>", ActiveMQDestination.TOPIC_TYPE));
-        nc2.addExcludedDestination(ActiveMQDestination.createDestination("Consumer.*.global.>", ActiveMQDestination.QUEUE_TYPE));
+        //nc2.addExcludedDestination(ActiveMQDestination.createDestination("Consumer.*.global.>", ActiveMQDestination.QUEUE_TYPE));
         nc2.addDynamicallyIncludedDestination(ActiveMQDestination.createDestination("global.>", ActiveMQDestination.QUEUE_TYPE));
         nc2.addDynamicallyIncludedDestination(ActiveMQDestination.createDestination("global.>", ActiveMQDestination.TOPIC_TYPE));
-        //nc2.addDynamicallyIncludedDestination(ActiveMQDestination.createDestination("Consumer.*.global.>", ActiveMQDestination.QUEUE_TYPE));
+        nc2.addDynamicallyIncludedDestination(ActiveMQDestination.createDestination("Consumer.*.global.>", ActiveMQDestination.QUEUE_TYPE));
     }
 
     private BrokerService createAndConfigureBroker(URI uri) throws Exception {
@@ -211,7 +211,9 @@ public class TwoBrokerVirtualDestDinamicallyIncludedDestTest extends JmsMultiple
 
         // make all topics virtual and consumers use the default prefix
         VirtualDestinationInterceptor virtualDestinationInterceptor = new VirtualDestinationInterceptor();
-        virtualDestinationInterceptor.setVirtualDestinations(new VirtualDestination[]{new VirtualTopic()});
+        VirtualTopic vTopic = new VirtualTopic();
+        vTopic.setLocal(true);
+        virtualDestinationInterceptor.setVirtualDestinations(new VirtualDestination[]{vTopic});
         DestinationInterceptor[] destinationInterceptors = new DestinationInterceptor[]{virtualDestinationInterceptor};
         broker.setDestinationInterceptors(destinationInterceptors);
         return broker;

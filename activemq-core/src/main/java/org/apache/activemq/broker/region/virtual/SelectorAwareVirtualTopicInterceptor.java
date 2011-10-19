@@ -16,10 +16,6 @@
  */
 package org.apache.activemq.broker.region.virtual;
 
-import java.io.IOException;
-import java.util.List;
-import java.util.Set;
-
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ProducerBrokerExchange;
 import org.apache.activemq.broker.region.Destination;
@@ -29,10 +25,14 @@ import org.apache.activemq.command.Message;
 import org.apache.activemq.filter.MessageEvaluationContext;
 import org.apache.activemq.filter.NonCachedMessageEvaluationContext;
 
+import java.io.IOException;
+import java.util.List;
+import java.util.Set;
+
 public class SelectorAwareVirtualTopicInterceptor extends VirtualTopicInterceptor {
 
-    public SelectorAwareVirtualTopicInterceptor(Destination next, String prefix, String postfix) {
-        super(next, prefix, postfix);
+    public SelectorAwareVirtualTopicInterceptor(Destination next, String prefix, String postfix, boolean local) {
+        super(next, prefix, postfix, local);
     }
 
     /**

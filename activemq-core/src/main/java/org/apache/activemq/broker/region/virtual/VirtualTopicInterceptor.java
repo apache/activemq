@@ -33,15 +33,17 @@ public class VirtualTopicInterceptor extends DestinationFilter {
 
     private String prefix;
     private String postfix;
+    private boolean local;
 
-    public VirtualTopicInterceptor(Destination next, String prefix, String postfix) {
+    public VirtualTopicInterceptor(Destination next, String prefix, String postfix, boolean local) {
         super(next);
         this.prefix = prefix;
         this.postfix = postfix;
+        this.local = local;
     }
 
     public void send(ProducerBrokerExchange context, Message message) throws Exception {
-        if (!message.isAdvisory()) {
+        if (!message.isAdvisory() && !(local && message.getBrokerPath() != null)) {
             ActiveMQDestination queueConsumers = getQueueConsumersWildcard(message.getDestination());
             send(context, message, queueConsumers);
         }

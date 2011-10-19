@@ -40,6 +40,7 @@ public class VirtualTopic implements VirtualDestination {
     private String postfix = "";
     private String name = ">";
     private boolean selectorAware = false;
+    private boolean local = false;
 
 
     public ActiveMQDestination getVirtualDestination() {
@@ -47,8 +48,8 @@ public class VirtualTopic implements VirtualDestination {
     }
 
     public Destination intercept(Destination destination) {
-        return selectorAware ? new SelectorAwareVirtualTopicInterceptor(destination, getPrefix(), getPostfix()) : 
-            new VirtualTopicInterceptor(destination, getPrefix(), getPostfix());
+        return selectorAware ? new SelectorAwareVirtualTopicInterceptor(destination, getPrefix(), getPostfix(), isLocal()) :
+            new VirtualTopicInterceptor(destination, getPrefix(), getPostfix(), isLocal());
     }
     
 
@@ -110,5 +111,13 @@ public class VirtualTopic implements VirtualDestination {
     
     public boolean isSelectorAware() {
         return selectorAware;
+    }
+
+    public boolean isLocal() {
+        return local;
+    }
+
+    public void setLocal(boolean local) {
+        this.local = local;
     }
 }
