@@ -172,9 +172,6 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
             synchronized (bridges) {
                 bridge = bridges.remove(uri);
             }
-            if (bridge != null) {
-                ServiceSupport.dispose(bridge);
-            }
         }
     }
 

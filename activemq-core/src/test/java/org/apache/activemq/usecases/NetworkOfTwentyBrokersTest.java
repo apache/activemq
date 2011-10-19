@@ -27,6 +27,7 @@ import org.apache.activemq.broker.region.RegionBroker;
 import org.apache.activemq.command.BrokerInfo;
 import org.apache.activemq.network.NetworkConnector;
 import org.apache.activemq.util.ThreadTracker;
+import org.apache.activemq.util.Wait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -178,9 +179,16 @@ public class NetworkOfTwentyBrokersTest extends JmsMultipleBrokersTestSupport {
     }
 
 
-    private void verifyPeerBrokerInfo(BrokerItem brokerItem, final int max) {
-        BrokerService broker = brokerItem.broker;
-        RegionBroker regionBroker = (RegionBroker) broker.getRegionBroker();
+    private void verifyPeerBrokerInfo(BrokerItem brokerItem, final int max) throws Exception {
+        final BrokerService broker = brokerItem.broker;
+        final RegionBroker regionBroker = (RegionBroker) broker.getRegionBroker();
+        Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                LOG.info("verify infos " + broker.getBrokerName() + ", len: " + regionBroker.getPeerBrokerInfos().length);
+                return max == regionBroker.getPeerBrokerInfos().length;
+            }
+         });
         LOG.info("verify infos " + broker.getBrokerName() + ", len: " + regionBroker.getPeerBrokerInfos().length);
         for (BrokerInfo info : regionBroker.getPeerBrokerInfos()) {
             LOG.info(info.getBrokerName());
@@ -188,7 +196,7 @@ public class NetworkOfTwentyBrokersTest extends JmsMultipleBrokersTestSupport {
         assertEquals(broker.getBrokerName(), max, regionBroker.getPeerBrokerInfos().length);
     }
 
-    private void verifyPeerBrokerInfos(final int max) {
+    private void verifyPeerBrokerInfos(final int max) throws Exception {
         Collection<BrokerItem> brokerList = brokers.values();
         for (Iterator<BrokerItem> i = brokerList.iterator(); i.hasNext();) {
             verifyPeerBrokerInfo(i.next(), max);
