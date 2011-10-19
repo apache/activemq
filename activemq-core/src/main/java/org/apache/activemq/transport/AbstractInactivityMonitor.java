@@ -153,7 +153,9 @@ public abstract class AbstractInactivityMonitor extends TransportFilter {
                         } catch (IOException e) {
                             onException(e);
                         } finally {
-                            sendLock.writeLock().unlock();
+                             if (sendLock.writeLock().isHeldByCurrentThread()) {
+                                sendLock.writeLock().unlock();
+                             }
                         }
                     }
                 };
