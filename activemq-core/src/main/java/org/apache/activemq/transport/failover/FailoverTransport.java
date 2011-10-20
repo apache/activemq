@@ -124,6 +124,9 @@ public class FailoverTransport implements CompositeTransport {
         reconnectTask = DefaultThreadPools.getDefaultTaskRunnerFactory().createTaskRunner(new Task() {
             public boolean iterate() {
                 boolean result = false;
+                if (!started) {
+                    return result;
+                }
                 boolean buildBackup = true;
                 synchronized (backupMutex) {
                     if ((connectedTransport.get() == null || doRebalance) && !disposed) {
