@@ -22,6 +22,7 @@ import java.io.DataOutput;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.Reader;
+
 import org.apache.activemq.util.ByteArrayInputStream;
 import org.apache.activemq.util.ByteArrayOutputStream;
 import org.apache.activemq.util.ByteSequence;
@@ -29,16 +30,16 @@ import org.apache.activemq.wireformat.WireFormat;
 
 /**
  * Adds the extra methods available to text based wire format implementations
- * 
- * 
+ *
+ *
  */
 public abstract class TextWireFormat implements WireFormat {
 
-    public abstract Object unmarshalText(String text);
+    public abstract Object unmarshalText(String text) throws IOException;
 
-    public abstract Object unmarshalText(Reader reader);
+    public abstract Object unmarshalText(Reader reader) throws IOException;
 
-    public abstract String marshalText(Object command);
+    public abstract String marshalText(Object command) throws IOException;
 
     public void marshal(Object command, DataOutput out) throws IOException {
         String text = marshalText(command);

@@ -63,76 +63,19 @@ public class HttpSendCompressedMessagesTest {
 
     private static final String destinationName = "HttpCompressionTopic";
 
-    private void sendTextMessage(boolean compressed) throws Exception {
-
-        StringBuilder builder = new StringBuilder();
-        for(int i = 0; i < 10; ++i) {
-            builder.append(UUID.randomUUID().toString());
-        }
-
-        ActiveMQConnection connection = (ActiveMQConnection) tcpConnectionFactory.createConnection();
-        connection.setUseCompression(compressed);
-        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        Topic destination = session.createTopic(destinationName);
-        MessageProducer producer = session.createProducer(destination);
-        producer.send(session.createTextMessage(builder.toString()));
-    }
-
-    private void sendBytesMessage(boolean compressed) throws Exception {
-
-        StringBuilder builder = new StringBuilder();
-        for(int i = 0; i < 10; ++i) {
-            builder.append(UUID.randomUUID().toString());
-        }
-
-        ActiveMQConnection connection = (ActiveMQConnection) tcpConnectionFactory.createConnection();
-        connection.setUseCompression(compressed);
-        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        Topic destination = session.createTopic(destinationName);
-        MessageProducer producer = session.createProducer(destination);
-        BytesMessage message = session.createBytesMessage();
-        message.writeUTF(builder.toString());
-        producer.send(message);
-    }
-
-    private void sendStreamMessage(boolean compressed) throws Exception {
-
-        StringBuilder builder = new StringBuilder();
-        for(int i = 0; i < 10; ++i) {
-            builder.append(UUID.randomUUID().toString());
-        }
-
-        ActiveMQConnection connection = (ActiveMQConnection) tcpConnectionFactory.createConnection();
-        connection.setUseCompression(compressed);
-        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        Topic destination = session.createTopic(destinationName);
-        MessageProducer producer = session.createProducer(destination);
-        StreamMessage message = session.createStreamMessage();
-        message.writeString(builder.toString());
-        producer.send(message);
-    }
-
-    private void sendMapMessage(boolean compressed) throws Exception {
-
-        StringBuilder builder = new StringBuilder();
-        for(int i = 0; i < 10; ++i) {
-            builder.append(UUID.randomUUID().toString());
-        }
-
-        ActiveMQConnection connection = (ActiveMQConnection) tcpConnectionFactory.createConnection();
-        connection.setUseCompression(compressed);
-        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        Topic destination = session.createTopic(destinationName);
-        MessageProducer producer = session.createProducer(destination);
-        MapMessage message = session.createMapMessage();
-        message.setString("content", builder.toString());
-        producer.send(message);
+    @Test
+    public void testTextMessageCompressionFromTcp() throws Exception {
+        sendTextMessage(true);
+        doTestTextMessageCompression();
     }
 
     @Test
-    public void testTextMessageCompression() throws Exception {
-        sendTextMessage(true);
+    public void testTextMessageCompressionFromHttp() throws Exception {
+        sendTextMessage(httpConnectionFactory, true);
+        doTestTextMessageCompression();
+    }
 
+    private void doTestTextMessageCompression() throws Exception {
         ActiveMQTextMessage tcpMessage = (ActiveMQTextMessage) tcpConsumer.receive(TimeUnit.SECONDS.toMillis(3));
         ActiveMQTextMessage httpMessage = (ActiveMQTextMessage) httpConsumer.receive(TimeUnit.SECONDS.toMillis(3));
 
@@ -168,9 +111,18 @@ public class HttpSendCompressedMessagesTest {
     }
 
     @Test
-    public void testBytesMessageCompression() throws Exception {
+    public void testBytesMessageCompressionFromTcp() throws Exception {
         sendBytesMessage(true);
+        doTestBytesMessageCompression();
+    }
 
+    @Test
+    public void testBytesMessageCompressionFromHttp() throws Exception {
+        sendBytesMessage(httpConnectionFactory, true);
+        doTestBytesMessageCompression();
+    }
+
+    private void doTestBytesMessageCompression() throws Exception {
         ActiveMQBytesMessage tcpMessage = (ActiveMQBytesMessage) tcpConsumer.receive(TimeUnit.SECONDS.toMillis(3));
         ActiveMQBytesMessage httpMessage = (ActiveMQBytesMessage) httpConsumer.receive(TimeUnit.SECONDS.toMillis(3));
 
@@ -206,9 +158,18 @@ public class HttpSendCompressedMessagesTest {
     }
 
     @Test
-    public void testStreamMessageCompression() throws Exception {
+    public void testStreamMessageCompressionFromTcp() throws Exception {
         sendStreamMessage(true);
+        doTestStreamMessageCompression();
+    }
 
+    @Test
+    public void testStreamMessageCompressionFromHttp() throws Exception {
+        sendStreamMessage(httpConnectionFactory, true);
+        doTestStreamMessageCompression();
+    }
+
+    private void doTestStreamMessageCompression() throws Exception {
         ActiveMQStreamMessage tcpMessage = (ActiveMQStreamMessage) tcpConsumer.receive(TimeUnit.SECONDS.toMillis(3));
         ActiveMQStreamMessage httpMessage = (ActiveMQStreamMessage) httpConsumer.receive(TimeUnit.SECONDS.toMillis(3));
 
@@ -244,9 +205,18 @@ public class HttpSendCompressedMessagesTest {
     }
 
     @Test
-    public void testMapMessageCompression() throws Exception {
+    public void testMapMessageCompressionFromTcp() throws Exception {
         sendMapMessage(true);
+        doTestMapMessageCompression();
+    }
 
+    @Test
+    public void testMapMessageCompressionFromHttp() throws Exception {
+        sendMapMessage(httpConnectionFactory, true);
+        doTestMapMessageCompression();
+    }
+
+    private void doTestMapMessageCompression() throws Exception {
         ActiveMQMapMessage tcpMessage = (ActiveMQMapMessage) tcpConsumer.receive(TimeUnit.SECONDS.toMillis(3));
         ActiveMQMapMessage httpMessage = (ActiveMQMapMessage) httpConsumer.receive(TimeUnit.SECONDS.toMillis(3));
 
@@ -316,5 +286,87 @@ public class HttpSendCompressedMessagesTest {
             broker.stop();
             broker.waitUntilStopped();
         }
+    }
+
+    private void sendTextMessage(boolean compressed) throws Exception {
+        sendTextMessage(tcpConnectionFactory, compressed);
+    }
+
+    private void sendTextMessage(ActiveMQConnectionFactory factory, boolean compressed) throws Exception {
+
+        StringBuilder builder = new StringBuilder();
+        for(int i = 0; i < 10; ++i) {
+            builder.append(UUID.randomUUID().toString());
+        }
+
+        ActiveMQConnection connection = (ActiveMQConnection) factory.createConnection();
+        connection.setUseCompression(compressed);
+        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        Topic destination = session.createTopic(destinationName);
+        MessageProducer producer = session.createProducer(destination);
+        producer.send(session.createTextMessage(builder.toString()));
+    }
+
+    private void sendBytesMessage(boolean compressed) throws Exception {
+        sendBytesMessage(tcpConnectionFactory, compressed);
+    }
+
+    private void sendBytesMessage(ActiveMQConnectionFactory factory, boolean compressed) throws Exception {
+
+        StringBuilder builder = new StringBuilder();
+        for(int i = 0; i < 10; ++i) {
+            builder.append(UUID.randomUUID().toString());
+        }
+
+        ActiveMQConnection connection = (ActiveMQConnection) factory.createConnection();
+        connection.setUseCompression(compressed);
+        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        Topic destination = session.createTopic(destinationName);
+        MessageProducer producer = session.createProducer(destination);
+        BytesMessage message = session.createBytesMessage();
+        message.writeUTF(builder.toString());
+        producer.send(message);
+    }
+
+    private void sendStreamMessage(boolean compressed) throws Exception {
+        sendStreamMessage(tcpConnectionFactory, compressed);
+    }
+
+    private void sendStreamMessage(ActiveMQConnectionFactory factory, boolean compressed) throws Exception {
+
+        StringBuilder builder = new StringBuilder();
+        for(int i = 0; i < 10; ++i) {
+            builder.append(UUID.randomUUID().toString());
+        }
+
+        ActiveMQConnection connection = (ActiveMQConnection) factory.createConnection();
+        connection.setUseCompression(compressed);
+        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        Topic destination = session.createTopic(destinationName);
+        MessageProducer producer = session.createProducer(destination);
+        StreamMessage message = session.createStreamMessage();
+        message.writeString(builder.toString());
+        producer.send(message);
+    }
+
+    private void sendMapMessage(boolean compressed) throws Exception {
+        sendMapMessage(tcpConnectionFactory, compressed);
+    }
+
+    private void sendMapMessage(ActiveMQConnectionFactory factory, boolean compressed) throws Exception {
+
+        StringBuilder builder = new StringBuilder();
+        for(int i = 0; i < 10; ++i) {
+            builder.append(UUID.randomUUID().toString());
+        }
+
+        ActiveMQConnection connection = (ActiveMQConnection) factory.createConnection();
+        connection.setUseCompression(compressed);
+        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        Topic destination = session.createTopic(destinationName);
+        MessageProducer producer = session.createProducer(destination);
+        MapMessage message = session.createMapMessage();
+        message.setString("content", builder.toString());
+        producer.send(message);
     }
 }

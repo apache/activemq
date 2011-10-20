@@ -16,11 +16,14 @@
  */
 package org.apache.activemq.transport.xstream;
 
+import java.io.IOException;
 import java.io.Reader;
 
 import com.thoughtworks.xstream.XStream;
 
 import org.apache.activemq.command.Command;
+import org.apache.activemq.command.MarshallAware;
+import org.apache.activemq.command.MessageDispatch;
 import org.apache.activemq.transport.util.TextWireFormat;
 import org.apache.activemq.wireformat.WireFormat;
 
@@ -28,8 +31,8 @@ import org.apache.activemq.wireformat.WireFormat;
  * A {@link WireFormat} implementation which uses the <a
  * href="http://xstream.codehaus.org/>XStream</a> library to marshall commands
  * onto the wire
- * 
- * 
+ *
+ *
  */
 public class XStreamWireFormat extends TextWireFormat {
     private XStream xStream;
@@ -55,13 +58,22 @@ public class XStreamWireFormat extends TextWireFormat {
         return (Command)getXStream().fromXML(reader);
     }
 
-    public String marshalText(Object command) {
+    public String marshalText(Object command) throws IOException {
+        if (command instanceof MarshallAware) {
+            ((MarshallAware)command).beforeMarshall(this);
+        } else if(command instanceof MessageDispatch) {
+            MessageDispatch dispatch = (MessageDispatch) command;
+            if (dispatch != null && dispatch.getMessage() != null) {
+                dispatch.getMessage().beforeMarshall(this);
+            }
+        }
+
         return getXStream().toXML(command);
     }
 
     /**
      * Can this wireformat process packets of this version
-     * 
+     *
      * @param version the version number to test
      * @return true if can accept the version
      */
