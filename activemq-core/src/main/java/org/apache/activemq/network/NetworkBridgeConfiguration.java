@@ -25,7 +25,6 @@ import org.apache.activemq.command.ActiveMQDestination;
  * 
  */
 public class NetworkBridgeConfiguration {
-
     private boolean conduitSubscriptions = true;
     private boolean dynamicOnly;
     private boolean dispatchAsync = true;
@@ -48,6 +47,7 @@ public class NetworkBridgeConfiguration {
     private boolean suppressDuplicateQueueSubscriptions = false;
     private boolean suppressDuplicateTopicSubscriptions = true;
 
+    private boolean alwaysSyncSend = false;
 
     /**
      * @return the conduitSubscriptions
@@ -298,5 +298,22 @@ public class NetworkBridgeConfiguration {
      */
     public void setBrokerURL(String brokerURL) {
         this.brokerURL = brokerURL;
+    }
+
+    public boolean isAlwaysSyncSend() {
+        return alwaysSyncSend;
+    }
+
+    /**
+     * @param alwaysSyncSend  when true, both persistent and non persistent
+     * messages will be sent using a request. When false, non persistent messages
+     * are acked once the oneway send succeeds, which can potentially lead to
+     * message loss.
+     * Using an async request, allows multiple outstanding requests. This ensures
+     * that a bridge need not block all sending when the remote broker needs to
+     * flow control a single destination.
+     */
+    public void setAlwaysSyncSend(boolean alwaysSyncSend) {
+        this.alwaysSyncSend = alwaysSyncSend;
     }
 }

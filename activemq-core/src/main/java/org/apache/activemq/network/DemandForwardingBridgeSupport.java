@@ -673,7 +673,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                             LOG.debug("bridging (" + configuration.getBrokerName() + " -> " + remoteBrokerName + ") " + message.getMessageId() + ", consumer: " + md.getConsumerId() + ", destination " + message.getDestination() + ", brokerPath: " + Arrays.toString(message.getBrokerPath()) + ", message: " + message);
                         }
 
-                        if (!message.isResponseRequired()) {
+                        if (!configuration.isAlwaysSyncSend() && !message.isPersistent()) {
 
                             // If the message was originally sent using async
                             // send, we will preserve that QOS
