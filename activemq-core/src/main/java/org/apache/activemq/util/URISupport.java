@@ -24,12 +24,11 @@ import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
 /**
- * 
+ * Utility class that provides methods for parsing URI's
  */
 public class URISupport {
 
@@ -105,7 +104,7 @@ public class URISupport {
         try {
             uri = uri.substring(uri.lastIndexOf("?") + 1); // get only the relevant part of the query
             Map<String, String> rc = new HashMap<String, String>();
-            if (uri != null) {
+            if (uri != null && !uri.isEmpty()) {
                 String[] parameters = uri.split("&");
                 for (int i = 0; i < parameters.length; i++) {
                     int p = parameters[i].indexOf("=");
@@ -134,7 +133,7 @@ public class URISupport {
             if (parameters.isEmpty()) {
                 parameters = emptyMap();
             }
-            
+
             return parameters;
         }
     }
@@ -159,7 +158,7 @@ public class URISupport {
         }
         return uri;
     }
-    
+
     @SuppressWarnings("unchecked")
     private static Map<String, String> emptyMap() {
         return Collections.EMPTY_MAP;
@@ -181,7 +180,7 @@ public class URISupport {
         int questionMark = schemeSpecificPart.lastIndexOf("?");
         // make sure question mark is not within parentheses
         if (questionMark < schemeSpecificPart.lastIndexOf(")")) {
-        	questionMark = -1;
+            questionMark = -1;
         }
         if (questionMark > 0) {
             schemeSpecificPart = schemeSpecificPart.substring(0, questionMark);
@@ -197,14 +196,14 @@ public class URISupport {
         CompositeData rc = new CompositeData();
         rc.scheme = uri.getScheme();
         String ssp = stripPrefix(uri.getRawSchemeSpecificPart().trim(), "//").trim();
-        
+
 
         parseComposite(uri, rc, ssp);
 
         rc.fragment = uri.getFragment();
         return rc;
     }
-    
+
     public static boolean isCompositeURI(URI uri) {
         if (uri.getQuery() != null) {
             return false;
@@ -322,18 +321,17 @@ public class URISupport {
         return new URI(stripPrefix(uri.getSchemeSpecificPart().trim(), "//"));
     }
 
-    public static String createQueryString(Map options) throws URISyntaxException {
+    public static String createQueryString(Map<String, String> options) throws URISyntaxException {
         try {
             if (options.size() > 0) {
                 StringBuffer rc = new StringBuffer();
                 boolean first = true;
-                for (Iterator iter = options.keySet().iterator(); iter.hasNext();) {
+                for (String key : options.keySet()) {
                     if (first) {
                         first = false;
                     } else {
                         rc.append("&");
                     }
-                    String key = (String)iter.next();
                     String value = (String)options.get(key);
                     rc.append(URLEncoder.encode(key, "UTF-8"));
                     rc.append("=");
@@ -350,10 +348,10 @@ public class URISupport {
 
     /**
      * Creates a URI from the original URI and the remaining paramaters
-     * 
+     *
      * @throws URISyntaxException
      */
-    public static URI createRemainingURI(URI originalURI, Map params) throws URISyntaxException {
+    public static URI createRemainingURI(URI originalURI, Map<String, String> params) throws URISyntaxException {
         String s = createQueryString(params);
         if (s.length() == 0) {
             s = null;

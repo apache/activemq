@@ -52,8 +52,8 @@ import org.apache.activemq.util.URISupport.CompositeData;
  * Connections. <p/> This class also implements QueueConnectionFactory and
  * TopicConnectionFactory. You can use this connection to create both
  * QueueConnections and TopicConnections.
- * 
- * 
+ *
+ *
  * @see javax.jms.ConnectionFactory
  */
 public class ActiveMQConnectionFactory extends JNDIBaseStorable implements ConnectionFactory, QueueConnectionFactory, TopicConnectionFactory, StatsCapable, Cloneable {
@@ -237,7 +237,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     /**
      * Creates a Transport based on this object's connection settings. Separated
      * from createActiveMQConnection to allow for subclasses to override.
-     * 
+     *
      * @return The newly created Transport.
      * @throws JMSException If unable to create trasnport.
      * @author sepandm@gmail.com
@@ -331,7 +331,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
             connection.addTransportListener(transportListener);
         }
         if (exceptionListener != null) {
-        	connection.setExceptionListener(exceptionListener);
+            connection.setExceptionListener(exceptionListener);
         }
         if (clientInternalExceptionListener != null) {
             connection.setClientInternalExceptionListener(clientInternalExceptionListener);
@@ -363,8 +363,18 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
             // It might be a standard URI or...
             try {
 
-                Map map = URISupport.parseQuery(this.brokerURL.getQuery());
-                if (buildFromMap(IntrospectionSupport.extractProperties(map, "jms."))) {
+                Map<String,String> map = URISupport.parseQuery(this.brokerURL.getQuery());
+                Map<String,Object> jmsOptionsMap = IntrospectionSupport.extractProperties(map, "jms.");
+                if (buildFromMap(jmsOptionsMap)) {
+                    if (!jmsOptionsMap.isEmpty()) {
+                        String msg = "There are " + jmsOptionsMap.size()
+                            + " jms options that couldn't be set on the ConnectionFactory."
+                            + " Check the options are spelled correctly."
+                            + " Unknown parameters=[" + jmsOptionsMap + "]."
+                            + " This connection factory cannot be started.";
+                        throw new IllegalArgumentException(msg);
+                    }
+
                     this.brokerURL = URISupport.createRemainingURI(this.brokerURL, map);
                 }
 
@@ -376,7 +386,17 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
             // It might be a composite URI.
             try {
                 CompositeData data = URISupport.parseComposite(this.brokerURL);
-                if (buildFromMap(IntrospectionSupport.extractProperties(data.getParameters(), "jms."))) {
+                Map<String,Object> jmsOptionsMap = IntrospectionSupport.extractProperties(data.getParameters(), "jms.");
+                if (buildFromMap(jmsOptionsMap)) {
+                    if (!jmsOptionsMap.isEmpty()) {
+                        String msg = "There are " + jmsOptionsMap.size()
+                            + " jms options that couldn't be set on the ConnectionFactory."
+                            + " Check the options are spelled correctly."
+                            + " Unknown parameters=[" + jmsOptionsMap + "]."
+                            + " This connection factory cannot be started.";
+                        throw new IllegalArgumentException(msg);
+                    }
+
                     this.brokerURL = data.toURI();
                 }
             } catch (URISyntaxException e) {
@@ -503,7 +523,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
 
     /**
      * Set true if always require messages to be sync sent
-     * 
+     *
      * @param alwaysSyncSend
      */
     public void setAlwaysSyncSend(boolean alwaysSyncSend) {
@@ -542,7 +562,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
      * Enables or disables whether or not queue consumers should be exclusive or
      * not for example to preserve ordering when not using <a
      * href="http://activemq.apache.org/message-groups.html">Message Groups</a>
-     * 
+     *
      * @param exclusiveConsumer
      */
     public void setExclusiveConsumer(boolean exclusiveConsumer) {
@@ -564,7 +584,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     public MessageTransformer getTransformer() {
         return transformer;
     }
-    
+
     /**
      * @return the sendTimeout
      */
@@ -578,7 +598,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     public void setSendTimeout(int sendTimeout) {
         this.sendTimeout = sendTimeout;
     }
-    
+
     /**
      * @return the sendAcksAsync
      */
@@ -592,7 +612,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     public void setSendAcksAsync(boolean sendAcksAsync) {
         this.sendAcksAsync = sendAcksAsync;
     }
-    
+
     /**
      * @return the messagePrioritySupported
      */
@@ -617,6 +637,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
         this.transformer = transformer;
     }
 
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     @Override
     public void buildFromProperties(Properties properties) {
 
@@ -751,7 +772,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
      * minimize context switches which boost performance. However sometimes its
      * better to go slower to ensure that a single blocked consumer socket does
      * not block delivery to other consumers.
-     * 
+     *
      * @param asyncDispatch If true then consumers created on this connection
      *                will default to having their messages dispatched
      *                asynchronously. The default value is false.
@@ -841,7 +862,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     /**
      * Sets the prefix used by autogenerated JMS Client ID values which are used
      * if the JMS client does not explicitly specify on.
-     * 
+     *
      * @param clientIDPrefix
      */
     public void setClientIDPrefix(String clientIDPrefix) {
@@ -941,12 +962,12 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     public void setTransportListener(TransportListener transportListener) {
         this.transportListener = transportListener;
     }
-    
-    
+
+
     public ExceptionListener getExceptionListener() {
         return exceptionListener;
     }
-    
+
     /**
      * Allows an {@link ExceptionListener} to be configured on the ConnectionFactory so that when this factory
      * is used by frameworks which don't expose the Connection such as Spring JmsTemplate, you can register
@@ -957,37 +978,37 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
      * created by this factory
      */
     public void setExceptionListener(ExceptionListener exceptionListener) {
-    	this.exceptionListener = exceptionListener;
+        this.exceptionListener = exceptionListener;
     }
 
-	public int getAuditDepth() {
-		return auditDepth;
-	}
+    public int getAuditDepth() {
+        return auditDepth;
+    }
 
-	public void setAuditDepth(int auditDepth) {
-		this.auditDepth = auditDepth;
-	}
+    public void setAuditDepth(int auditDepth) {
+        this.auditDepth = auditDepth;
+    }
 
-	public int getAuditMaximumProducerNumber() {
-		return auditMaximumProducerNumber;
-	}
+    public int getAuditMaximumProducerNumber() {
+        return auditMaximumProducerNumber;
+    }
 
-	public void setAuditMaximumProducerNumber(int auditMaximumProducerNumber) {
-		this.auditMaximumProducerNumber = auditMaximumProducerNumber;
-	}
+    public void setAuditMaximumProducerNumber(int auditMaximumProducerNumber) {
+        this.auditMaximumProducerNumber = auditMaximumProducerNumber;
+    }
 
     public void setUseDedicatedTaskRunner(boolean useDedicatedTaskRunner) {
         this.useDedicatedTaskRunner = useDedicatedTaskRunner;
     }
-    
+
     public boolean isUseDedicatedTaskRunner() {
         return useDedicatedTaskRunner;
     }
-    
+
     public void setConsumerFailoverRedeliveryWaitPeriod(long consumerFailoverRedeliveryWaitPeriod) {
         this.consumerFailoverRedeliveryWaitPeriod = consumerFailoverRedeliveryWaitPeriod;
     }
-    
+
     public long getConsumerFailoverRedeliveryWaitPeriod() {
         return consumerFailoverRedeliveryWaitPeriod;
     }
@@ -995,7 +1016,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     public ClientInternalExceptionListener getClientInternalExceptionListener() {
         return clientInternalExceptionListener;
     }
-    
+
     /**
      * Allows an {@link ClientInternalExceptionListener} to be configured on the ConnectionFactory so that when this factory
      * is used by frameworks which don't expose the Connection such as Spring JmsTemplate, you can register

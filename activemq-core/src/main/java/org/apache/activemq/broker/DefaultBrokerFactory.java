@@ -28,8 +28,8 @@ import org.apache.activemq.util.URISupport.CompositeData;
  * Simple BrokerFactorySPI which using the brokerURI to extract the
  * configuration parameters for the broker service. This directly configures the
  * pojo model so there is no dependency on spring for configuration.
- * 
- * 
+ *
+ *
  */
 public class DefaultBrokerFactory implements BrokerFactoryHandler {
 
@@ -40,6 +40,15 @@ public class DefaultBrokerFactory implements BrokerFactoryHandler {
 
         BrokerService brokerService = new BrokerService();
         IntrospectionSupport.setProperties(brokerService, params);
+        if (!params.isEmpty()) {
+            String msg = "There are " + params.size()
+                + " Broker options that couldn't be set on the BrokerService."
+                + " Check the options are spelled correctly."
+                + " Unknown parameters=[" + params + "]."
+                + " This BrokerService cannot be started.";
+            throw new IllegalArgumentException(msg);
+        }
+
         if (compositeData.getPath() != null) {
             brokerService.setBrokerName(compositeData.getPath());
         }
