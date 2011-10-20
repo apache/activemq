@@ -19,13 +19,13 @@ vadoc style sheet */
 /* Define colors, fonts and other style attributes here to override the defaults  */
 
 /* Page background color */
-body { 	font-family: Arial;
+body { 	font-family: Arial, serif;
 	background-color: white;
 	font-size: 8px;
  }
 
 td { 	
-	font-family: Arial;
+	font-family: Arial, serif;
 	font-size: 10pt;
  }
 /* Table colors */
@@ -34,9 +34,9 @@ td {
 .TableRowColor         { background: #FFFFFF }
 
 /* Font used in left-hand frame lists */
-.FrameTitleFont   { font-size: normal; font-family: Arial,Helvetica,sans-serif; font-size:12pt; line-height: normal; }
-.FrameHeadingFont { font-size: normal; font-family: Arial,Helvetica,sans-serif; font-size:10pt; line-height: normal;}
-.FrameItemFont    { font-size: normal; font-family: Arial,Helvetica,sans-serif; font-size:8pt; line-height: normal;}
+.FrameTitleFont   { font-family: Arial,Helvetica,sans-serif; font-size:12pt; line-height: normal; }
+.FrameHeadingFont { font-family: Arial,Helvetica,sans-serif; font-size:10pt; line-height: normal;}
+.FrameItemFont    { font-family: Arial,Helvetica,sans-serif; font-size:8pt; line-height: normal;}
 
 /* Example of smaller, sans-serif font in frames */
 /* .FrameItemFont  { font-size: 10pt; font-family: Helvetica, Arial, sans-serif } */
@@ -93,7 +93,7 @@ TD, TH, SPAN {
 }
 
 BLOCKQUOTE {
-    margin-right: 0px;
+    margin-right: 0;
 }
 
 /*H1, H2, H3, H4, H5, H6    {
@@ -117,12 +117,10 @@ font-size: 90%;
 }
 
 PRE {
-font-size: 90%;
-    padding: 5px;
-    border-style: solid;
-    border-width: 1px;
-    border-color: #CCCCCC;
-    background-color: #F4F4F4;
+  font-size: 90%;
+  padding: 5px;
+  border: 1px solid #CCCCCC;
+  background-color: #F4F4F4;
 }
 
 UL, OL, LI {
@@ -133,14 +131,14 @@ HR  {
     width: 100%;
     height: 1px;
     background-color: #CCCCCC;
-    border-width: 0px;
-    padding: 0px;
+    border-width: 0;
+    padding: 0;
     color: #CCCCCC;
 }
 
 .variablelist { 
-    padding-top: 10; 
-    padding-bottom:10; 
+    padding-top: 10px;
+    padding-bottom: 10px; 
     margin:0;
 }
 
@@ -159,7 +157,7 @@ body center {
 }
 
 table, td, th {
-	border: 0px;
+	border: 0;
 }
 
 th {
@@ -179,6 +177,6 @@ dl dd {
 
 p {
 	padding-left: 5px;
-	padding-top: 0px;
-	padding-bottom: 0px;
+	padding-top: 0;
+	padding-bottom: 0;
 }
