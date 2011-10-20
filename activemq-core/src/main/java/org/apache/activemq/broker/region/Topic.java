@@ -298,7 +298,7 @@ public class Topic extends BaseDestination implements Task {
                                     + " See http://activemq.apache.org/producer-flow-control.html for more info");
                 }
 
-                if (systemUsage.isSendFailIfNoSpace()) {
+                if (!context.isNetworkConnection() && systemUsage.isSendFailIfNoSpace()) {
                     throw new javax.jms.ResourceAllocationException("Usage Manager memory limit ("
                             + memoryUsage.getLimit() + ") reached. Rejecting send for producer (" + message.getProducerId()
                             + ") to prevent flooding " + getActiveMQDestination().getQualifiedName() + "."
@@ -427,7 +427,7 @@ public class Topic extends BaseDestination implements Task {
                         + systemUsage.getStoreUsage().getLimit() + ". Stopping producer (" + message.getProducerId()
                         + ") to prevent flooding " + getActiveMQDestination().getQualifiedName() + "."
                         + " See http://activemq.apache.org/producer-flow-control.html for more info";
-                if (systemUsage.isSendFailIfNoSpace()) {
+                if (!context.isNetworkConnection() && systemUsage.isSendFailIfNoSpace()) {
                     throw new javax.jms.ResourceAllocationException(logMessage);
                 }
 

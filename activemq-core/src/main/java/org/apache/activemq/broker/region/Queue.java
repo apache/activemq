@@ -555,7 +555,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                                     + " See http://activemq.apache.org/producer-flow-control.html for more info");
                 }
 
-                if (systemUsage.isSendFailIfNoSpace()) {
+                if (!context.isNetworkConnection() && systemUsage.isSendFailIfNoSpace()) {
                     throw new ResourceAllocationException("Usage Manager Memory Limit reached. Stopping producer ("
                             + message.getProducerId() + ") to prevent flooding "
                             + getActiveMQDestination().getQualifiedName() + "."
@@ -613,7 +613,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                             }
                         });
 
-                        if (systemUsage.getSendFailIfNoSpaceAfterTimeout() != 0) {
+                        if (!context.isNetworkConnection() && systemUsage.getSendFailIfNoSpaceAfterTimeout() != 0) {
                             flowControlTimeoutMessages.add(new TimeoutMessage(message, context, systemUsage
                                     .getSendFailIfNoSpaceAfterTimeout()));
                         }
