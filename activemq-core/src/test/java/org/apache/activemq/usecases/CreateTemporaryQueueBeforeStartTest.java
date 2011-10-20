@@ -22,8 +22,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import javax.jms.Connection;
 import javax.jms.Queue;
 import javax.jms.QueueConnection;
-import javax.jms.QueueReceiver;
-import javax.jms.QueueSender;
 import javax.jms.QueueSession;
 import javax.jms.Session;
 import javax.jms.Topic;
@@ -34,10 +32,11 @@ import org.apache.activemq.broker.BrokerService;
 
 /**
  * @author Peter Henning
- * 
+ *
  */
 public class CreateTemporaryQueueBeforeStartTest extends TestCase {
-    protected String bindAddress = "tcp://localhost:61621";
+    private final String bindAddress = "tcp://localhost:0";
+    private String connectionUri;
     private Connection connection;
     private BrokerService broker = new BrokerService();
 
@@ -51,7 +50,7 @@ public class CreateTemporaryQueueBeforeStartTest extends TestCase {
     }
 
     public void testTryToReproduceNullPointerBug() throws Exception {
-        String url = bindAddress;
+        String url = connectionUri;
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(url);
         QueueConnection queueConnection = factory.createQueueConnection();
         this.connection = queueConnection;
@@ -109,13 +108,16 @@ public class CreateTemporaryQueueBeforeStartTest extends TestCase {
     }
 
     protected ActiveMQConnectionFactory createConnectionFactory() throws Exception {
-        return new ActiveMQConnectionFactory(bindAddress);
+        return new ActiveMQConnectionFactory(connectionUri);
     }
 
     protected void setUp() throws Exception {
+        broker.setUseJmx(false);
         broker.setPersistent(false);
-        broker.addConnector(bindAddress);
+        connectionUri = broker.addConnector(bindAddress).getPublishableConnectString();
         broker.start();
+        broker.waitUntilStarted();
+
         super.setUp();
     }
 
