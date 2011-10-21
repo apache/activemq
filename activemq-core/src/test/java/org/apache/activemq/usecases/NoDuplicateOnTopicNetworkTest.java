@@ -41,11 +41,15 @@ import junit.framework.Test;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.CombinationTestSupport;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.region.Destination;
+import org.apache.activemq.broker.region.RegionBroker;
+import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.broker.region.policy.DispatchPolicy;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.broker.region.policy.PriorityNetworkDispatchPolicy;
 import org.apache.activemq.broker.region.policy.SimpleDispatchPolicy;
+import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.network.NetworkConnector;
 import org.apache.activemq.util.Wait;
@@ -61,6 +65,7 @@ public class NoDuplicateOnTopicNetworkTest extends CombinationTestSupport {
     private static final String BROKER_2 = "tcp://localhost:61636";
     private static final String BROKER_3 = "tcp://localhost:61646";
     private final static String TOPIC_NAME = "broadcast";
+    private static byte BASE_PRIORITY = -20;
     private BrokerService broker1;
     private BrokerService broker2;
     private BrokerService broker3;
@@ -128,7 +133,8 @@ public class NoDuplicateOnTopicNetworkTest extends CombinationTestSupport {
         networkConnector.setDynamicOnly(dynamicOnly);
         networkConnector.setNetworkTTL(ttl);
         networkConnector.setSuppressDuplicateTopicSubscriptions(suppressDuplicateTopicSubs);
-
+        networkConnector.setConsumerPriorityBase(BASE_PRIORITY);
+        networkConnector.addStaticallyIncludedDestination(new ActiveMQTopic("BeStaticallyIncluded"));
         
         PolicyMap policyMap = new PolicyMap();
         PolicyEntry policy = new PolicyEntry();
@@ -196,7 +202,31 @@ public class NoDuplicateOnTopicNetworkTest extends CombinationTestSupport {
         
         // ensure subscription has percolated though the network
         Thread.sleep(2000);
-        
+
+        // verify network consumer priority
+        final RegionBroker regionBroker = (RegionBroker)broker1.getRegionBroker();
+        assertTrue("Found network destination with priority as expected", Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                Map<ActiveMQDestination, Destination> destinationMap = regionBroker.getTopicRegion().getDestinationMap();
+                LOG.info("destinations: " + destinationMap.keySet());
+                boolean found = false;
+                for (Destination destination : destinationMap.values()) {
+                    List<Subscription> subscriptions = destination.getConsumers();
+                    LOG.info(destination + " subscriptions: " + subscriptions);
+                    for (Subscription subscription : subscriptions) {
+                        if (subscription.getConsumerInfo().isNetworkSubscription()) {
+                            LOG.info("subscription: " + subscription + ", priority: " + subscription.getConsumerInfo().getPriority());
+                            assertTrue("priority is < our base: " + subscription.getConsumerInfo().getPriority(),
+                                    subscription.getConsumerInfo().getPriority() <= BASE_PRIORITY);
+                            found = true;
+                        }
+                    }
+                }
+                return found;
+            }
+        }));
+
         producerThread.start();
         LOG.info("Started Producer");
         producerThread.join();

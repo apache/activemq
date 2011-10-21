@@ -18,6 +18,7 @@ package org.apache.activemq.network;
 
 import java.util.List;
 import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.command.ConsumerInfo;
 
 /**
  * Configuration for a NetworkBridge
@@ -29,6 +30,7 @@ public class NetworkBridgeConfiguration {
     private boolean dynamicOnly;
     private boolean dispatchAsync = true;
     private boolean decreaseNetworkConsumerPriority;
+    private int consumerPriorityBase = ConsumerInfo.NETWORK_CONSUMER_PRIORITY;
     private boolean duplex;
     private boolean bridgeTempDestinations = true;
     private int prefetchSize = 1000;
@@ -315,5 +317,18 @@ public class NetworkBridgeConfiguration {
      */
     public void setAlwaysSyncSend(boolean alwaysSyncSend) {
         this.alwaysSyncSend = alwaysSyncSend;
+    }
+
+    public int getConsumerPriorityBase() {
+        return consumerPriorityBase;
+    }
+
+    /**
+     * @param consumerPriorityBase , default -5. Sets the starting priority
+     * for consumers. This base value will be decremented by the length of the
+     * broker path when decreaseNetworkConsumerPriority is set.
+     */
+    public void setConsumerPriorityBase(int consumerPriorityBase) {
+        this.consumerPriorityBase = consumerPriorityBase;
     }
 }

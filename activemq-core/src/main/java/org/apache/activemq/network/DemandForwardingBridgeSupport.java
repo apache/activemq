@@ -1074,7 +1074,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
         }
 
         if (configuration.isDecreaseNetworkConsumerPriority()) {
-            byte priority = ConsumerInfo.NETWORK_CONSUMER_PRIORITY;
+            byte priority = (byte) configuration.getConsumerPriorityBase();
             if (info.getBrokerPath() != null && info.getBrokerPath().length > 1) {
                 // The longer the path to the consumer, the less it's consumer priority.
                 priority -= info.getBrokerPath().length + 1;
@@ -1101,9 +1101,6 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
             result = createDemandSubscription(info);
         } catch (IOException e) {
             LOG.error("Failed to create DemandSubscription ", e);
-        }
-        if (result != null) {
-            result.getLocalInfo().setPriority(ConsumerInfo.NETWORK_CONSUMER_PRIORITY);
         }
         return result;
     }
