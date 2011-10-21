@@ -100,7 +100,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
 
     public static final String PROPERTY_LOG_SLOW_ACCESS_TIME = "org.apache.activemq.store.kahadb.LOG_SLOW_ACCESS_TIME";
     public static final int LOG_SLOW_ACCESS_TIME = Integer.parseInt(System.getProperty(PROPERTY_LOG_SLOW_ACCESS_TIME, "0"));
-
+    public static final File DEFAULT_DIRECTORY = new File("KahaDB");
     protected static final Buffer UNMATCHED;
     static {
         UNMATCHED = new Buffer(new byte[]{});
@@ -202,7 +202,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
     protected boolean failIfDatabaseIsLocked;
 
     protected boolean deleteAllMessages;
-    protected File directory = new File("KahaDB");
+    protected File directory = DEFAULT_DIRECTORY;
     protected Thread checkpointThread;
     protected boolean enableJournalDiskSyncs=true;
     protected boolean archiveDataLogs;

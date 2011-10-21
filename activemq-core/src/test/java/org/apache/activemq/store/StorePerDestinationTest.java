@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.store;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Vector;
@@ -173,6 +174,32 @@ public class StorePerDestinationTest  {
 
         assertEquals("expect to get the recovered message", haveOutcome ? 2 : 0, receiveMessages(false, "SlowQ,FastQ", 2));
         assertEquals("all transactions are complete", 0, brokerService.getBroker().getPreparedTransactions(null).length);
+    }
+
+    @Test
+    public void testDirectoryDefault() throws Exception {
+        MultiKahaDBPersistenceAdapter multiKahaDBPersistenceAdapter = new MultiKahaDBPersistenceAdapter();
+        ArrayList<FilteredKahaDBPersistenceAdapter> adapters = new ArrayList<FilteredKahaDBPersistenceAdapter>();
+
+        FilteredKahaDBPersistenceAdapter otherFilteredKahaDBPersistenceAdapter =
+                new FilteredKahaDBPersistenceAdapter();
+        KahaDBPersistenceAdapter otherStore = createStore(false);
+        File someOtherDisk = new File("target" + File.separator + "someOtherDisk");
+        otherStore.setDirectory(someOtherDisk);
+        otherFilteredKahaDBPersistenceAdapter.setPersistenceAdapter(otherStore);
+        otherFilteredKahaDBPersistenceAdapter.setDestination(new ActiveMQQueue("Other"));
+        adapters.add(otherFilteredKahaDBPersistenceAdapter);
+
+        FilteredKahaDBPersistenceAdapter filteredKahaDBPersistenceAdapterDefault =
+                new FilteredKahaDBPersistenceAdapter();
+        KahaDBPersistenceAdapter storeDefault = createStore(false);
+        filteredKahaDBPersistenceAdapterDefault.setPersistenceAdapter(storeDefault);
+        adapters.add(filteredKahaDBPersistenceAdapterDefault);
+
+        multiKahaDBPersistenceAdapter.setFilteredPersistenceAdapters(adapters);
+
+        assertEquals(multiKahaDBPersistenceAdapter.getDirectory(), storeDefault.getDirectory().getParentFile());
+        assertEquals(someOtherDisk, otherStore.getDirectory());
     }
 
     @Test

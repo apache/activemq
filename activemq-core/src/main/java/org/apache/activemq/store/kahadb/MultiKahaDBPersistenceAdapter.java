@@ -103,7 +103,9 @@ public class MultiKahaDBPersistenceAdapter extends DestinationMap implements Per
             if (filteredAdapter.getDestination() == null) {
                 filteredAdapter.setDestination(matchAll);
             }
-            adapter.setDirectory(new File(getDirectory(), nameFromDestinationFilter(filteredAdapter.getDestination())));
+            if (MessageDatabase.DEFAULT_DIRECTORY.equals(adapter.getDirectory())) {
+                adapter.setDirectory(new File(getDirectory(), nameFromDestinationFilter(filteredAdapter.getDestination())));
+            }
 
             // need a per store factory that will put the store in the branch qualifier to disiambiguate xid mbeans
             adapter.getStore().setTransactionIdTransformer(transactionIdTransformer);
