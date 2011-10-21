@@ -17,7 +17,6 @@
 package org.apache.activemq.transport.failover;
 
 import junit.framework.Test;
-import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.AutoFailTestSupport;
 import org.apache.activemq.TestSupport;
@@ -576,12 +575,12 @@ public class FailoverTransactionTest extends TestSupport {
 
         session.commit();
         for (int i = 0; i < count - 1; i++) {
-            assertNotNull("we got all the message: " + count, consumer.receive(20000));
+            assertNotNull("Failed to get message: " + count, consumer.receive(20000));
         }
         session.commit();
         connection.close();
 
-        assertTrue("connectionconsumer got a message", connectionConsumerGotOne.await(10, TimeUnit.SECONDS));
+        assertTrue("connectionconsumer did not get a message", connectionConsumerGotOne.await(10, TimeUnit.SECONDS));
     }
 
     public void testFailoverConsumerAckLost() throws Exception {
