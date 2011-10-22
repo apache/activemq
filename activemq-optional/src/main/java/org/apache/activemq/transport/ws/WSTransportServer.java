@@ -26,8 +26,8 @@ import org.apache.activemq.util.ServiceStopper;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.bio.SocketConnector;
-import org.eclipse.jetty.server.handler.ContextHandler;
 import org.eclipse.jetty.server.session.SessionHandler;
+import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.servlet.ServletMapping;
@@ -37,11 +37,11 @@ import org.eclipse.jetty.servlet.ServletMapping;
  *
  */
 public class WSTransportServer extends TransportServerSupport {
-    
+
     private URI bindAddress;
     private Server server;
     private Connector connector;
-    
+
     public WSTransportServer(URI location) {
         super(location);
         this.bindAddress = location;
@@ -57,8 +57,8 @@ public class WSTransportServer extends TransportServerSupport {
         server.setConnectors(new Connector[] {
                 connector
         });
-        
-        ContextHandler contextHandler = new ContextHandler();
+
+        ServletContextHandler contextHandler = new ServletContextHandler();
         contextHandler.setContextPath("/");
         contextHandler.setServer(server);
         server.setHandler(contextHandler);
@@ -68,7 +68,7 @@ public class WSTransportServer extends TransportServerSupport {
 
         ServletHandler servletHandler = new ServletHandler();
         sessionHandler.setHandler(servletHandler);
-        
+
         ServletHolder holder = new ServletHolder();
         holder.setName("WSStomp");
         holder.setClassName(StompServlet.class.getName());
@@ -84,7 +84,7 @@ public class WSTransportServer extends TransportServerSupport {
         });
 
         contextHandler.setAttribute("acceptListener", getAcceptListener());
-        
+
         server.start();
     }
 

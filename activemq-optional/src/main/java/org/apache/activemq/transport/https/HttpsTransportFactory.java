@@ -33,15 +33,13 @@ import org.apache.activemq.wireformat.WireFormat;
 
 /**
  * Factory of HTTPS based transports
- * 
- * 
  */
 public class HttpsTransportFactory extends HttpTransportFactory {
-    
+
     public TransportServer doBind(String brokerId, URI location) throws IOException {
         return doBind(location);
     }
-    
+
     public TransportServer doBind(URI location) throws IOException {
         try {
             Map<String, String> options = new HashMap<String, String>(URISupport.parseParameters(location));
@@ -52,7 +50,7 @@ public class HttpsTransportFactory extends HttpTransportFactory {
         } catch (URISyntaxException e) {
             throw IOExceptionSupport.create(e);
         }
-        
+
     }
 
     protected Transport createTransport(URI location, WireFormat wf) throws MalformedURLException {

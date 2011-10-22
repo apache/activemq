@@ -32,40 +32,40 @@ public class HttpsTransportServer extends HttpTransportServer {
     private String protocol;
     private String auth;
 
-	 public HttpsTransportServer(URI uri, HttpsTransportFactory factory) {
+     public HttpsTransportServer(URI uri, HttpsTransportFactory factory) {
         super(uri, factory);
     }
 
     public void doStart() throws Exception {
-    	Krb5AndCertsSslSocketConnector sslConnector = new Krb5AndCertsSslSocketConnector();
-    	
-    	if(auth != null){
-        	sslConnector.setMode(auth);
+        Krb5AndCertsSslSocketConnector sslConnector = new Krb5AndCertsSslSocketConnector();
+
+        if(auth != null){
+            sslConnector.setMode(auth);
         }
-    	
-        sslConnector.setKeystore(keyStore);
-        sslConnector.setPassword(keyStorePassword);
+
+        sslConnector.getSslContextFactory().setKeyStore(keyStore);
+        sslConnector.getSslContextFactory().setKeyStorePassword(keyStorePassword);
         // if the keyPassword hasn't been set, default it to the
         // key store password
         if (keyPassword == null) {
-            sslConnector.setKeyPassword(keyStorePassword);
+            sslConnector.getSslContextFactory().setKeyStorePassword(keyStorePassword);
         }
         if (keyStoreType != null) {
-            sslConnector.setKeystoreType(keyStoreType);
+            sslConnector.getSslContextFactory().setKeyStoreType(keyStoreType);
         }
         if (secureRandomCertficateAlgorithm != null) {
-            sslConnector.setSecureRandomAlgorithm(secureRandomCertficateAlgorithm);
+            sslConnector.getSslContextFactory().setSecureRandomAlgorithm(secureRandomCertficateAlgorithm);
         }
         if (keyCertificateAlgorithm != null) {
-            sslConnector.setSslKeyManagerFactoryAlgorithm(keyCertificateAlgorithm);
+            sslConnector.getSslContextFactory().setSslKeyManagerFactoryAlgorithm(keyCertificateAlgorithm);
         }
         if (trustCertificateAlgorithm != null) {
-            sslConnector.setSslTrustManagerFactoryAlgorithm(trustCertificateAlgorithm);
+            sslConnector.getSslContextFactory().setTrustManagerFactoryAlgorithm(trustCertificateAlgorithm);
         }
         if (protocol != null) {
-            sslConnector.setProtocol(protocol);
+            sslConnector.getSslContextFactory().setProtocol(protocol);
         }
-        
+
         setConnector(sslConnector);
 
         super.doStart();
@@ -139,17 +139,17 @@ public class HttpsTransportServer extends HttpTransportServer {
     }
 
     /**
-	 * @return the auth
-	 */
-	public String getAuth() {
-		return auth;
-	}
+     * @return the auth
+     */
+    public String getAuth() {
+        return auth;
+    }
 
-	/**
-	 * @param auth the auth to set
-	 */
-	public void setAuth(String auth) {
-		this.auth = auth;
-	}
+    /**
+     * @param auth the auth to set
+     */
+    public void setAuth(String auth) {
+        this.auth = auth;
+    }
 
 }

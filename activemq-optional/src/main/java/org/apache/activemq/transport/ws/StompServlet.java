@@ -28,16 +28,13 @@ import org.eclipse.jetty.websocket.WebSocket;
 import org.eclipse.jetty.websocket.WebSocketServlet;
 
 /**
- * 
  * Handle connection upgrade requests and creates web sockets
- *
  */
 public class StompServlet extends WebSocketServlet {
-
     private static final long serialVersionUID = -4716657876092884139L;
-    
+
     private TransportAcceptListener listener;
-    
+
     public void init() throws ServletException {
         super.init();
         listener = (TransportAcceptListener)getServletContext().getAttribute("acceptListener");
@@ -46,15 +43,15 @@ public class StompServlet extends WebSocketServlet {
         }
     }
 
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) 
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
         throws ServletException ,IOException  {
         getServletContext().getNamedDispatcher("default").forward(request,response);
     }
-    
-    protected WebSocket doWebSocketConnect(HttpServletRequest request, String protocol) {
+
+    @Override
+    public WebSocket doWebSocketConnect(HttpServletRequest request, String protocol) {
         StompSocket socket = new StompSocket();
         listener.onAccept(socket);
         return socket;
     }
-    
 }

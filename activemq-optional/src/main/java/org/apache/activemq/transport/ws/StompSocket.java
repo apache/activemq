@@ -32,22 +32,24 @@ import org.apache.activemq.util.ServiceStopper;
 import org.eclipse.jetty.websocket.WebSocket;
 
 /**
- *
  * Implements web socket and mediates between servlet and the broker
- *
  */
-class StompSocket extends TransportSupport implements WebSocket, StompTransport {
-    Outbound outbound;
+class StompSocket extends TransportSupport implements WebSocket.OnTextMessage, StompTransport {
+    Connection outbound;
     ProtocolConverter protocolConverter = new ProtocolConverter(this, null);
     StompWireFormat wireFormat = new StompWireFormat();
 
-    public void onConnect(Outbound outbound) {
-        this.outbound=outbound;
+    @Override
+    public void onOpen(Connection connection) {
+        this.outbound = connection;
     }
 
-    public void onMessage(byte frame, byte[] data,int offset, int length) {}
+    @Override
+    public void onClose(int closeCode, String message) {
+    }
 
-    public void onMessage(byte frame, String data) {
+    @Override
+    public void onMessage(String data) {
         try {
             protocolConverter.onStompCommand((StompFrame)wireFormat.unmarshal(new ByteSequence(data.getBytes("UTF-8"))));
         } catch (Exception e) {
@@ -55,23 +57,25 @@ class StompSocket extends TransportSupport implements WebSocket, StompTransport 
         }
     }
 
-    public void onDisconnect() {
-    }
-
+    @Override
     protected void doStart() throws Exception {
     }
 
+    @Override
     protected void doStop(ServiceStopper stopper) throws Exception {
     }
 
+    @Override
     public int getReceiveCounter() {
         return 0;
     }
 
+    @Override
     public String getRemoteAddress() {
         return "StompSocket_" + this.hashCode();
     }
 
+    @Override
     public void oneway(Object command) throws IOException {
         try {
             protocolConverter.onActiveMQCommand((Command)command);
@@ -80,16 +84,19 @@ class StompSocket extends TransportSupport implements WebSocket, StompTransport 
         }
     }
 
+    @Override
     public X509Certificate[] getPeerCertificates() {
         return null;
     }
 
+    @Override
     public void sendToActiveMQ(Command command) {
         doConsume(command);
     }
 
+    @Override
     public void sendToStomp(StompFrame command) throws IOException {
-        outbound.sendMessage(WebSocket.SENTINEL_FRAME, command.format());
+        outbound.sendMessage(command.format());
     }
 
     @Override

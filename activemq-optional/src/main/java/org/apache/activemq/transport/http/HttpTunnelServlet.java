@@ -96,15 +96,11 @@ public class HttpTunnelServlet extends HttpServlet {
             packet = (Command)transportChannel.getQueue().poll(requestTimeout, TimeUnit.MILLISECONDS);
 
             DataOutputStream stream = new DataOutputStream(response.getOutputStream());
-            // while( packet !=null ) {
             wireFormat.marshal(packet, stream);
             count++;
-            // packet = (Command) transportChannel.getQueue().poll(0,
-            // TimeUnit.MILLISECONDS);
-            // }
-
         } catch (InterruptedException ignore) {
         }
+
         if (count == 0) {
             response.setStatus(HttpServletResponse.SC_REQUEST_TIMEOUT);
         }
@@ -137,7 +133,6 @@ public class HttpTunnelServlet extends HttpServlet {
     }
 
     private boolean canProcessWireFormatVersion(int version) {
-        // TODO:
         return true;
     }
 

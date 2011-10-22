@@ -96,5 +96,4 @@ public class HttpTransportFactory extends TransportFactory {
 
         return transport;
     }
-
 }
