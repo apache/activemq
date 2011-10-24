@@ -22,6 +22,8 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.util.ConsumerThread;
 import org.apache.activemq.util.ProducerThread;
 
+import java.util.concurrent.TimeUnit;
+
 import javax.jms.Connection;
 import javax.jms.Session;
 import java.net.URI;
@@ -33,9 +35,7 @@ public class ProxyFailoverTest extends TestCase {
 
     @Override
     protected void setUp() throws Exception {
-
         startRemoteBroker(true);
-
         proxyBroker = new BrokerService();
         ProxyConnector connector = new ProxyConnector();
         connector.setBind(new URI("tcp://localhost:51618"));
@@ -46,14 +46,12 @@ public class ProxyFailoverTest extends TestCase {
         proxyBroker.setUseJmx(false);
         proxyBroker.start();
         proxyBroker.waitUntilStarted();
-
     }
 
     @Override
     protected void tearDown() throws Exception {
         proxyBroker.stop();
         proxyBroker.waitUntilStopped();
-
         remoteBroker.stop();
         remoteBroker.waitUntilStopped();
     }
@@ -67,8 +65,6 @@ public class ProxyFailoverTest extends TestCase {
         producer.setSleep(10);
         producer.start();
 
-
-        //ActiveMQConnectionFactory consumerFactory = new ActiveMQConnectionFactory("tcp://localhost:51618?wireFormat.cacheEnabled=false");
         ActiveMQConnectionFactory consumerFactory = new ActiveMQConnectionFactory("tcp://localhost:51618");
         Connection consumerConnection = consumerFactory.createConnection();
         consumerConnection.start();
@@ -76,7 +72,7 @@ public class ProxyFailoverTest extends TestCase {
         ConsumerThread consumer = new ConsumerThread(consumerSession, consumerSession.createQueue("ProxyTest"));
         consumer.start();
 
-        Thread.sleep(10*1000);
+        TimeUnit.SECONDS.sleep(15);
 
         remoteBroker.stop();
         remoteBroker.waitUntilStopped();
@@ -86,7 +82,6 @@ public class ProxyFailoverTest extends TestCase {
         consumer.join();
 
         assertEquals(1000, consumer.getReceived());
-
     }
 
     protected void startRemoteBroker(boolean delete) throws Exception {
