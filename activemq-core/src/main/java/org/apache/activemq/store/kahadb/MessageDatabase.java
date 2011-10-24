@@ -855,7 +855,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                 }
             }
 
-            if (checkpointThread == null || !checkpointThread.isAlive()) {
+            if (checkpointThread != null && !checkpointThread.isAlive()) {
                 startCheckpoint();
             }
             return location;
