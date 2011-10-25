@@ -44,6 +44,12 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * This test covers the Message Compression feature of the ActiveMQConnectionFactory.setUseCompression
+ * and has no relation to Http transport level compression.  The Messages are compressed using the
+ * deflate algorithm by the ActiveMQ layer before marshalled to XML so only the Message body will
+ * be compressed.
+ */
 public class HttpSendCompressedMessagesTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(HttpSendCompressedMessagesTest.class);

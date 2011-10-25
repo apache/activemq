@@ -20,22 +20,30 @@ import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InterruptedIOException;
 import java.net.URI;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
 import org.apache.activemq.command.ShutdownInfo;
 import org.apache.activemq.transport.FutureResponse;
 import org.apache.activemq.transport.util.TextWireFormat;
+import org.apache.activemq.util.ByteArrayOutputStream;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.IdGenerator;
 import org.apache.activemq.util.ServiceStopper;
+import org.apache.http.Header;
 import org.apache.http.HttpHost;
+import org.apache.http.HttpRequest;
+import org.apache.http.HttpRequestInterceptor;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.HttpResponseException;
 import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpHead;
+import org.apache.http.client.methods.HttpOptions;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.conn.params.ConnRoutePNames;
 import org.apache.http.entity.ByteArrayEntity;
@@ -45,6 +53,7 @@ import org.apache.http.impl.conn.tsccm.ThreadSafeClientConnManager;
 import org.apache.http.message.AbstractHttpMessage;
 import org.apache.http.params.HttpConnectionParams;
 import org.apache.http.params.HttpParams;
+import org.apache.http.protocol.HttpContext;
 import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -70,6 +79,10 @@ public class HttpClientTransport extends HttpTransportSupport {
 
     private int soTimeout = MAX_CLIENT_TIMEOUT;
 
+    private boolean useCompression = false;
+    private boolean canSendCompressed = false;
+    private int minSendAsCompressedSize = 0;
+
     public HttpClientTransport(TextWireFormat wireFormat, URI remoteUrl) {
         super(wireFormat, remoteUrl);
     }
@@ -87,6 +100,17 @@ public class HttpClientTransport extends HttpTransportSupport {
         configureMethod(httpMethod);
         String data = getTextWireFormat().marshalText(command);
         byte[] bytes = data.getBytes("UTF-8");
+        if (useCompression && canSendCompressed && bytes.length > minSendAsCompressedSize) {
+            ByteArrayOutputStream bytesOut = new ByteArrayOutputStream();
+            GZIPOutputStream stream = new GZIPOutputStream(bytesOut);
+            stream.write(bytes);
+            stream.close();
+            httpMethod.addHeader("Content-Type", "application/x-gzip");
+            if (LOG.isTraceEnabled()) {
+                LOG.trace("Sending compressed, size = " + bytes.length + ", compressed size = " + bytesOut.size());
+            }
+            bytes = bytesOut.toByteArray();
+        }
         ByteArrayEntity entity = new ByteArrayEntity(bytes);
         httpMethod.setEntity(entity);
 
@@ -121,9 +145,20 @@ public class HttpClientTransport extends HttpTransportSupport {
         return null;
     }
 
+    private DataInputStream createDataInputStream(HttpResponse answer) throws IOException {
+        Header encoding = answer.getEntity().getContentEncoding();
+        if (encoding != null && "gzip".equalsIgnoreCase(encoding.getValue())) {
+            return new DataInputStream(new GZIPInputStream(answer.getEntity().getContent()));
+        } else {
+            return new DataInputStream(answer.getEntity().getContent());
+        }
+    }
+
     public void run() {
 
-        LOG.trace("HTTP GET consumer thread starting: " + this);
+        if (LOG.isTraceEnabled()) {
+            LOG.trace("HTTP GET consumer thread starting: " + this);
+        }
         HttpClient httpClient = getReceiveHttpClient();
         URI remoteUrl = getRemoteUrl();
 
@@ -151,7 +186,7 @@ public class HttpClientTransport extends HttpTransportSupport {
                     }
                 } else {
                     receiveCounter++;
-                    DataInputStream stream = new DataInputStream(answer.getEntity().getContent());
+                    DataInputStream stream = createDataInputStream(answer);
                     Object command = (Object)getTextWireFormat().unmarshal(stream);
                     if (command == null) {
                         LOG.debug("Received null command from url: " + remoteUrl);
@@ -202,15 +237,40 @@ public class HttpClientTransport extends HttpTransportSupport {
     // -------------------------------------------------------------------------
     protected void doStart() throws Exception {
 
-        LOG.trace("HTTP GET consumer thread starting: " + this);
+        if (LOG.isTraceEnabled()) {
+            LOG.trace("HTTP GET consumer thread starting: " + this);
+        }
         HttpClient httpClient = getReceiveHttpClient();
         URI remoteUrl = getRemoteUrl();
 
         HttpHead httpMethod = new HttpHead(remoteUrl.toString());
         configureMethod(httpMethod);
-        ResponseHandler<String> handler = new BasicResponseHandler();
+
+        // Request the options from the server so we can find out if the broker we are
+        // talking to supports GZip compressed content.  If so and useCompression is on
+        // then we can compress our POST data, otherwise we must send it uncompressed to
+        // ensure backwards compatibility.
+        HttpOptions optionsMethod = new HttpOptions(remoteUrl.toString());
+        ResponseHandler<String> handler = new BasicResponseHandler() {
+            @Override
+            public String handleResponse(HttpResponse response) throws HttpResponseException, IOException {
+
+                for(Header header : response.getAllHeaders()) {
+                    if (header.getName().equals("Accepts-Encoding") && header.getValue().contains("gzip")) {
+                        LOG.info("Broker Servlet supports GZip compression.");
+                        canSendCompressed = true;
+                        break;
+                    }
+                }
+
+                return super.handleResponse(response);
+            }
+        };
+
+
         try {
-            httpClient.execute(httpMethod, handler);
+            httpClient.execute(httpMethod, new BasicResponseHandler());
+            httpClient.execute(optionsMethod, handler);
         } catch(Exception e) {
             throw new IOException("Failed to perform GET on: " + remoteUrl + " as response was: " + e.getMessage());
         }
@@ -226,6 +286,15 @@ public class HttpClientTransport extends HttpTransportSupport {
 
     protected HttpClient createHttpClient() {
         DefaultHttpClient client = new DefaultHttpClient(new ThreadSafeClientConnManager());
+        if (useCompression) {
+            client.addRequestInterceptor( new HttpRequestInterceptor() {
+                @Override
+                public void process(HttpRequest request, HttpContext context) {
+                    // We expect to received a compression response that we un-gzip
+                    request.addHeader("Accept-Encoding", "gzip");
+                }
+            });
+        }
         if (getProxyHost() != null) {
             HttpHost proxy = new HttpHost(getProxyHost(), getProxyPort());
             client.getParams().setParameter(ConnRoutePNames.DEFAULT_PROXY, proxy);
@@ -262,4 +331,30 @@ public class HttpClientTransport extends HttpTransportSupport {
     public void setSoTimeout(int soTimeout) {
         this.soTimeout = soTimeout;
     }
+
+    public void setUseCompression(boolean useCompression) {
+        this.useCompression = useCompression;
+    }
+
+    public boolean isUseCompression() {
+        return this.useCompression;
+    }
+
+    public int getMinSendAsCompressedSize() {
+        return minSendAsCompressedSize;
+    }
+
+    /**
+     * Sets the minimum size that must be exceeded on a send before compression is used if
+     * the useCompression option is specified.  For very small payloads compression can be
+     * inefficient compared to the transmission size savings.
+     *
+     * Default value is 0.
+     *
+     * @param minSendAsCompressedSize
+     */
+    public void setMinSendAsCompressedSize(int minSendAsCompressedSize) {
+        this.minSendAsCompressedSize = minSendAsCompressedSize;
+    }
+
 }

@@ -26,6 +26,7 @@ import org.apache.activemq.transport.xstream.XStreamWireFormat;
 import org.apache.activemq.util.ServiceStopper;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.handler.GzipHandler;
 import org.eclipse.jetty.server.nio.SelectChannelConnector;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 
@@ -88,6 +89,10 @@ public class HttpTransportServer extends TransportServerSupport {
         contextHandler.setAttribute("wireFormat", getWireFormat());
         contextHandler.setAttribute("transportFactory", transportFactory);
         contextHandler.setAttribute("transportOptions", transportOptions);
+
+        GzipHandler gzipHandler = new GzipHandler();
+        contextHandler.setHandler(gzipHandler);
+
         server.start();
     }
 

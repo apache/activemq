@@ -19,14 +19,16 @@ package org.apache.activemq.transport.http;
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
+import java.util.zip.GZIPInputStream;
+
 import javax.servlet.ServletException;
-import javax.servlet.ServletInputStream;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -78,6 +80,12 @@ public class HttpTunnelServlet extends HttpServlet {
     }
 
     @Override
+    protected void doOptions(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        response.addHeader("Accepts-Encoding", "gzip");
+        super.doOptions(request, response);
+    }
+
+    @Override
     protected void doHead(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         createTransportChannel(request, response);
     }
@@ -107,12 +115,16 @@ public class HttpTunnelServlet extends HttpServlet {
     }
 
     @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException,
-            IOException {
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+
+        InputStream stream = request.getInputStream();
+        String contentType = request.getContentType();
+        if (contentType != null && contentType.equals("application/x-gzip")) {
+            stream = new GZIPInputStream(stream);
+        }
 
         // Read the command directly from the reader, assuming UTF8 encoding
-        ServletInputStream sis = request.getInputStream();
-        Command command = (Command) wireFormat.unmarshalText(new InputStreamReader(sis, "UTF-8"));
+        Command command = (Command) wireFormat.unmarshalText(new InputStreamReader(stream, "UTF-8"));
 
         if (command instanceof WireFormatInfo) {
             WireFormatInfo info = (WireFormatInfo) command;
