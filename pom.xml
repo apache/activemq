@@ -97,6 +97,11 @@
     <woodstox-core-asl-version>4.0.8</woodstox-core-asl-version>
     <stax2-api-version>3.0.2</stax2-api-version>
     <site-repo-url>scpexe://people.apache.org/www/activemq.apache.org/maven/</site-repo-url>
+    <source-version>1.6</source-version>
+    <target-version>1.6</target-version>
+    <javase-javadoc-url>http://download.oracle.com/javase/6/docs/api/</javase-javadoc-url>
+    <javaee-javadoc-url>http://download.oracle.com/javaee/6/api/</javaee-javadoc-url>
+    <slf4j-javadoc-url>http://www.slf4j.org/apidocs/</slf4j-javadoc-url>
     <!-- Maven Plugin Version for this Project -->
     <maven-bundle-plugin-version>2.3.5</maven-bundle-plugin-version>
     <maven-surefire-plugin-version>2.9</maven-surefire-plugin-version>
@@ -1082,8 +1087,8 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
         <configuration>
-          <source>1.6</source>
-          <target>1.6</target>
+          <source>${source-version}</source>
+          <target>${target-version}</target>
           <optimize>true</optimize>
           <debug>true</debug>
           <showDeprecation>true</showDeprecation>
@@ -1233,13 +1238,13 @@
         <version>${maven-javadoc-plugin-version}</version>
         <configuration>
           <links>
-            <link>http://java.sun.com/j2se/1.5.0/docs/api/</link>
-            <link>http://java.sun.com/javaee/5/docs/api/</link>
+            <link>${javase-javadoc-url}</link>
+            <link>${javaee-javadoc-url}</link>
             <link>http://jakarta.apache.org/commons/collections/apidocs-COLLECTIONS_3_0/</link>
             <link>http://jakarta.apache.org/commons/dbcp/apidocs/</link>
             <link>http://jakarta.apache.org/commons/fileupload/apidocs/</link>
             <link>http://hc.apache.org/httpcomponents-client-ga/httpclient/apidocs/</link>
-            <link>http://jakarta.apache.org/commons/logging/apidocs/</link>
+            <link>${slf4j-javadoc-url}</link>
             <link>http://jakarta.apache.org/commons/pool/apidocs/</link>
             <link>http://junit.sourceforge.net/javadoc/</link>
             <link>http://logging.apache.org/log4j/docs/api/</link>
