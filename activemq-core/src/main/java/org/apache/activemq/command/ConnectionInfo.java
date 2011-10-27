@@ -37,8 +37,8 @@ public class ConnectionInfo extends BaseCommand {
     protected boolean manageable;
     protected boolean clientMaster = true;
     protected boolean faultTolerant = false;
+    protected boolean failoverReconnect;
     protected transient Object transportContext;
-    private boolean failoverReconnect;
 
     public ConnectionInfo() {
     }

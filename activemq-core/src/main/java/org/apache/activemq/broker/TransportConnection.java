@@ -678,7 +678,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
             }
         }
         registerConnectionState(info.getConnectionId(), state);
-        LOG.debug("Setting up new connection id: " + info.getConnectionId() + ", address: " + getRemoteAddress());
+        LOG.debug("Setting up new connection id: " + info.getConnectionId() + ", address: " + getRemoteAddress() + ", info: " + info);
         this.faultTolerantConnection=info.isFaultTolerant();
         // Setup the context.
         String clientId = info.getClientId();

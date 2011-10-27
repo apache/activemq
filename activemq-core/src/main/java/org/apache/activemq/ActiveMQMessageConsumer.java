@@ -1294,10 +1294,9 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                         }
                     } else {
                         if (!session.isTransacted()) {
-                            if (LOG.isDebugEnabled()) {
-                                LOG.debug(getConsumerId() + " ignoring (auto acking) duplicate: " + md.getMessage());
-                            }
-                            MessageAck ack = new MessageAck(md, MessageAck.STANDARD_ACK_TYPE, 1);
+                            LOG.warn("Duplicate dispatch on connection: " + session.getConnection().getConnectionInfo().getConnectionId()
+                                    + " to consumer: "  + getConsumerId() + ", ignoring (auto acking) duplicate: " + md);
+                            MessageAck ack = new MessageAck(md, MessageAck.INDIVIDUAL_ACK_TYPE, 1);
                             session.sendAck(ack);
                         } else {
                             if (LOG.isDebugEnabled()) {
@@ -1314,11 +1313,13 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                                 }
                             }
                             if (needsPoisonAck) {
-                                LOG.warn("acking duplicate delivery as poison, redelivery must be pending to another"
-                                        + " consumer on this connection, failoverRedeliveryWaitPeriod="
-                                        + failoverRedeliveryWaitPeriod + ". Message: " + md);
                                 MessageAck poisonAck = new MessageAck(md, MessageAck.POSION_ACK_TYPE, 1);
                                 poisonAck.setFirstMessageId(md.getMessage().getMessageId());
+                                poisonAck.setPoisonCause(new JMSException("Duplicate dispatch with transacted redeliver pending on another consumer, connection: "
+                                        + session.getConnection().getConnectionInfo().getConnectionId()));
+                                LOG.warn("acking duplicate delivery as poison, redelivery must be pending to another"
+                                        + " consumer on this connection, failoverRedeliveryWaitPeriod="
+                                        + failoverRedeliveryWaitPeriod + ". Message: " + md + ", poisonAck: " + poisonAck);
                                 session.sendAck(poisonAck);
                             } else {
                                 if (transactedIndividualAck) {
