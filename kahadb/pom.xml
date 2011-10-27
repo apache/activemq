@@ -77,6 +77,7 @@
         <executions>
           <execution>
             <configuration>
+              <strictXsdOrder>false</strictXsdOrder>
               <namespace>http://activemq.apache.org/schema/kahadb</namespace>
             </configuration>
             <goals>

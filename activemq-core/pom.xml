@@ -613,6 +613,7 @@
           <execution>
           <phase>process-classes</phase>
             <configuration>
+              <strictXsdOrder>false</strictXsdOrder>
               <namespace>http://activemq.apache.org/schema/core</namespace>
               <schema>${basedir}/target/classes/activemq.xsd</schema>
               <outputDir>${basedir}/target/classes</outputDir>

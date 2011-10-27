@@ -90,6 +90,7 @@
         <executions>
           <execution>
             <configuration>
+              <strictXsdOrder>false</strictXsdOrder>
               <namespace>http://activemq.apache.org/schema/ra</namespace>
             </configuration>
             <goals>
