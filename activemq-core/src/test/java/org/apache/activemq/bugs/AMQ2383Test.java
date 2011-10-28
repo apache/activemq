@@ -57,8 +57,6 @@ public class AMQ2383Test {
 
         assertEquals(sentMsg, receivedMsg);
 
-        Thread.sleep(10000);
-
         producerConnection.close();
         consumerConnection.close();
     }

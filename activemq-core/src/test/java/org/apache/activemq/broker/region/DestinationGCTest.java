@@ -22,6 +22,8 @@ import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
+import org.apache.activemq.util.Wait;
+import org.apache.activemq.util.Wait.Condition;
 
 public class DestinationGCTest extends EmbeddedBrokerTestSupport {
 
@@ -44,8 +46,12 @@ public class DestinationGCTest extends EmbeddedBrokerTestSupport {
 
     public void testDestinationGc() throws Exception {
         assertEquals(1, broker.getAdminView().getQueues().length);
-        Thread.sleep(7000);
-        assertEquals(0, broker.getAdminView().getQueues().length);
+        assertTrue("After GC runs the Queue should be empty.", Wait.waitFor(new Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                return broker.getAdminView().getQueues().length == 0;
+            }
+        }));
     }
 
     public void testDestinationGcLimit() throws Exception {
@@ -59,7 +65,11 @@ public class DestinationGCTest extends EmbeddedBrokerTestSupport {
         Thread.sleep(7000);
         int queues = broker.getAdminView().getQueues().length;
         assertTrue(queues > 0 && queues < 5);
-        Thread.sleep(10000);
-        assertEquals(0, broker.getAdminView().getQueues().length);
+        assertTrue("After GC runs the Queue should be empty.", Wait.waitFor(new Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                return broker.getAdminView().getQueues().length == 0;
+            }
+        }));
     }
 }
