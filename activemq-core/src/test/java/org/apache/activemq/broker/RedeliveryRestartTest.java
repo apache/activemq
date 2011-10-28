@@ -39,6 +39,7 @@ public class RedeliveryRestartTest extends BrokerRestartTestSupport {
         super.configureBroker(broker);
         KahaDBPersistenceAdapter kahaDBPersistenceAdapter = (KahaDBPersistenceAdapter) broker.getPersistenceAdapter();
         kahaDBPersistenceAdapter.setRewriteOnRedelivery(true);
+        kahaDBPersistenceAdapter.setCleanupInterval(500);
         broker.addConnector("tcp://0.0.0.0:0");
     }
 
