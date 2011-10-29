@@ -16,9 +16,7 @@
  */
 package org.apache.activemq.bugs;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
@@ -33,66 +31,68 @@ import org.junit.Test;
 
 public class AMQ3529Test {
 
-	private ConnectionFactory connectionFactory;
-	private Connection connection;
-	private Session session;
-	private BrokerService broker;
-	private String connectionUri;
+    private ConnectionFactory connectionFactory;
+    private Connection connection;
+    private Session session;
+    private BrokerService broker;
+    private String connectionUri;
 
-	@Before
-	public void startBroker() throws Exception {
-		broker = new BrokerService();
-		broker.setDeleteAllMessagesOnStartup(true);
-		broker.setPersistent(false);
-		broker.setUseJmx(false);
-		broker.addConnector("tcp://0.0.0.0:0");
-		broker.start();
-		broker.waitUntilStarted();
+    @Before
+    public void startBroker() throws Exception {
+        broker = new BrokerService();
+        broker.setDeleteAllMessagesOnStartup(true);
+        broker.setPersistent(false);
+        broker.setUseJmx(false);
+        broker.addConnector("tcp://0.0.0.0:0");
+        broker.start();
+        broker.waitUntilStarted();
 
-		connectionUri = broker.getTransportConnectors().get(0).getPublishableConnectString();
+        connectionUri = broker.getTransportConnectors().get(0).getPublishableConnectString();
 
-		connectionFactory = new ActiveMQConnectionFactory(connectionUri);
-	}
+        connectionFactory = new ActiveMQConnectionFactory(connectionUri);
+    }
 
-	@After
-	public void stopBroker() throws Exception {
-		broker.stop();
-		broker.waitUntilStopped();
-	}
+    @After
+    public void stopBroker() throws Exception {
+        broker.stop();
+        broker.waitUntilStopped();
+    }
 
-	@Test(timeout = 60000)
-	public void testInterruptionAffects() throws Exception {
-		ThreadGroup tg = new ThreadGroup("tg");
+    @Test(timeout = 60000)
+    public void testInterruptionAffects() throws Exception {
+        ThreadGroup tg = new ThreadGroup("tg");
 
-		assertEquals(0, tg.activeCount());
+        assertEquals(0, tg.activeCount());
 
-		Thread client = new Thread(tg, "client") {
+        Thread client = new Thread(tg, "client") {
 
-			@Override
-			public void run() {
-				try {
-					connection = connectionFactory.createConnection();
-					session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-					assertNotNull(session);
-				} catch (JMSException e) {
-					fail(e.getMessage());
-				}
-				// next line is the nature of the test, if I remove this line, everything works OK
-				Thread.currentThread().interrupt();
-				try {
-					connection.close();
-				} catch (JMSException e) {
-				}
-			}
-		};
-		client.start();
-		client.join();
-		Thread.sleep(2000);
-		Thread[] remainThreads = new Thread[tg.activeCount()];
-		tg.enumerate(remainThreads);
-		for (Thread t : remainThreads) {
-			if (t.isAlive() && !t.isDaemon())
-				fail("Remaining thread: " + t.toString());
-		}
-	}
+            @Override
+            public void run() {
+                try {
+                    connection = connectionFactory.createConnection();
+                    session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+                    assertNotNull(session);
+                } catch (JMSException e) {
+                    fail(e.getMessage());
+                }
+                // next line is the nature of the test, if I remove this line, everything works OK
+                Thread.currentThread().interrupt();
+                try {
+                    connection.close();
+                } catch (JMSException e) {
+                }
+
+                assertTrue(Thread.currentThread().isInterrupted());
+            }
+        };
+        client.start();
+        client.join();
+        Thread.sleep(2000);
+        Thread[] remainThreads = new Thread[tg.activeCount()];
+        tg.enumerate(remainThreads);
+        for (Thread t : remainThreads) {
+            if (t.isAlive() && !t.isDaemon())
+                fail("Remaining thread: " + t.toString());
+        }
+    }
 }
