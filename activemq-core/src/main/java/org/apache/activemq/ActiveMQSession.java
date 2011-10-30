@@ -637,10 +637,14 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
     }
 
     private void doClose() throws JMSException {
+        boolean interrupted = Thread.interrupted();
         dispose();
         RemoveInfo removeCommand = info.createRemoveCommand();
         removeCommand.setLastDeliveredSequenceId(lastDeliveredSequenceId);
         connection.asyncSendPacket(removeCommand);
+        if (interrupted) {
+            Thread.currentThread().interrupt();
+        }
     }
 
     void clearMessagesInProgress() {
@@ -1963,7 +1967,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
         this.blobTransferPolicy = blobTransferPolicy;
     }
 
-    public List getUnconsumedMessages() {
+    public List<MessageDispatch> getUnconsumedMessages() {
         return executor.getUnconsumedMessages();
     }
 

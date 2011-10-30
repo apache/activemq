@@ -30,8 +30,7 @@ import org.slf4j.LoggerFactory;
 /**
  * A utility class used by the Session for dispatching messages asynchronously
  * to consumers
- * 
- * 
+ *
  * @see javax.jms.Session
  */
 public class ActiveMQSessionExecutor implements Task {
@@ -125,9 +124,7 @@ public class ActiveMQSessionExecutor implements Task {
     }
 
     void dispatch(MessageDispatch message) {
-
         // TODO - we should use a Map for this indexed by consumerId
-
         for (ActiveMQMessageConsumer consumer : this.session.consumers) {
             ConsumerId consumerId = message.getConsumerId();
             if (consumerId.equals(consumer.getConsumerId())) {
@@ -207,8 +204,7 @@ public class ActiveMQSessionExecutor implements Task {
         }
     }
 
-    List getUnconsumedMessages() {
+    List<MessageDispatch> getUnconsumedMessages() {
         return messageQueue.removeAll();
     }
-
 }
