@@ -23,21 +23,27 @@ import java.io.ObjectStreamClass;
 import java.lang.reflect.Proxy;
 import java.util.HashMap;
 
+@SuppressWarnings("rawtypes")
 public class ClassLoadingAwareObjectInputStream extends ObjectInputStream {
 
-    private static final ClassLoader FALLBACK_CLASS_LOADER = ClassLoadingAwareObjectInputStream.class.getClassLoader();
-    /** <p>Maps primitive type names to corresponding class objects.</p> */
+    private static final ClassLoader FALLBACK_CLASS_LOADER =
+        ClassLoadingAwareObjectInputStream.class.getClassLoader();
+
+    /**
+     * Maps primitive type names to corresponding class objects.
+     */
     private static final HashMap<String, Class> primClasses = new HashMap<String, Class>(8, 1.0F);
+
     public ClassLoadingAwareObjectInputStream(InputStream in) throws IOException {
         super(in);
     }
 
-    protected Class resolveClass(ObjectStreamClass classDesc) throws IOException, ClassNotFoundException {
+    protected Class<?> resolveClass(ObjectStreamClass classDesc) throws IOException, ClassNotFoundException {
         ClassLoader cl = Thread.currentThread().getContextClassLoader();
         return load(classDesc.getName(), cl);
     }
 
-    protected Class resolveProxyClass(String[] interfaces) throws IOException, ClassNotFoundException {
+    protected Class<?> resolveProxyClass(String[] interfaces) throws IOException, ClassNotFoundException {
         ClassLoader cl = Thread.currentThread().getContextClassLoader();
         Class[] cinterfaces = new Class[interfaces.length];
         for (int i = 0; i < interfaces.length; i++) {
@@ -45,18 +51,22 @@ public class ClassLoadingAwareObjectInputStream extends ObjectInputStream {
         }
 
         try {
-            return Proxy.getProxyClass(cinterfaces[0].getClassLoader(), cinterfaces);
+            return Proxy.getProxyClass(cl, cinterfaces);
         } catch (IllegalArgumentException e) {
+            try {
+                return Proxy.getProxyClass(FALLBACK_CLASS_LOADER, cinterfaces);
+            } catch (IllegalArgumentException e1) {
+            }
+
             throw new ClassNotFoundException(null, e);
         }
     }
 
-    private Class load(String className, ClassLoader cl)
-            throws ClassNotFoundException {
+    private Class<?> load(String className, ClassLoader cl) throws ClassNotFoundException {
         try {
             return Class.forName(className, false, cl);
         } catch (ClassNotFoundException e) {
-            final Class clazz = (Class) primClasses.get(className);
+            final Class<?> clazz = (Class<?>) primClasses.get(className);
             if (clazz != null) {
                 return clazz;
             } else {
@@ -64,9 +74,7 @@ public class ClassLoadingAwareObjectInputStream extends ObjectInputStream {
             }
         }
     }
-    
-    
-    
+
     static {
         primClasses.put("boolean", boolean.class);
         primClasses.put("byte", byte.class);
@@ -78,5 +86,4 @@ public class ClassLoadingAwareObjectInputStream extends ObjectInputStream {
         primClasses.put("double", double.class);
         primClasses.put("void", void.class);
     }
-
 }
