@@ -153,6 +153,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
     private long optimizeAcknowledgeTimeOut = 0;
     private long failoverRedeliveryWaitPeriod = 0;
     private boolean transactedIndividualAck = false;
+    private boolean nonBlockingRedelivery = false;
 
     /**
      * Create a MessageConsumer
@@ -260,7 +261,8 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
         }
         this.info.setOptimizedAcknowledge(this.optimizeAcknowledge);
         this.failoverRedeliveryWaitPeriod = session.connection.getConsumerFailoverRedeliveryWaitPeriod();
-        this.transactedIndividualAck = session.connection.isTransactedIndividualAck();
+        this.nonBlockingRedelivery = session.connection.isNonBlockingRedelivery();
+        this.transactedIndividualAck = session.connection.isTransactedIndividualAck() || this.nonBlockingRedelivery;
         if (messageListener != null) {
             setMessageListener(messageListener);
         }
@@ -579,7 +581,6 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
         checkMessageListener();
         if (timeout == 0) {
             return this.receive();
-
         }
 
         sendPullCommand(timeout);
@@ -1184,30 +1185,52 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                     }
 
                     // stop the delivery of messages.
-                    unconsumedMessages.stop();
+                    if (nonBlockingRedelivery) {
+                        if (!unconsumedMessages.isClosed()) {
 
-                    for (Iterator<MessageDispatch> iter = deliveredMessages.iterator(); iter.hasNext();) {
-                        MessageDispatch md = iter.next();
-                        unconsumedMessages.enqueueFirst(md);
-                    }
+                            final LinkedList<MessageDispatch> pendingRedeliveries =
+                                new LinkedList<MessageDispatch>(deliveredMessages);
 
-                    if (redeliveryDelay > 0 && !unconsumedMessages.isClosed()) {
-                        // Start up the delivery again a little later.
-                        scheduler.executeAfterDelay(new Runnable() {
-                            public void run() {
-                                try {
-                                    if (started.get()) {
-                                        start();
+                            // Start up the delivery again a little later.
+                            scheduler.executeAfterDelay(new Runnable() {
+                                public void run() {
+                                    try {
+                                        if (!unconsumedMessages.isClosed()) {
+                                            for(MessageDispatch dispatch : pendingRedeliveries) {
+                                                session.dispatch(dispatch);
+                                            }
+                                        }
+                                    } catch (Exception e) {
+                                        session.connection.onAsyncException(e);
                                     }
-                                } catch (JMSException e) {
-                                    session.connection.onAsyncException(e);
                                 }
-                            }
-                        }, redeliveryDelay);
-                    } else {
-                        start();
-                    }
+                            }, redeliveryDelay);
+                        }
 
+                    } else {
+                        unconsumedMessages.stop();
+
+                        for (MessageDispatch md : deliveredMessages) {
+                            unconsumedMessages.enqueueFirst(md);
+                        }
+
+                        if (redeliveryDelay > 0 && !unconsumedMessages.isClosed()) {
+                            // Start up the delivery again a little later.
+                            scheduler.executeAfterDelay(new Runnable() {
+                                public void run() {
+                                    try {
+                                        if (started.get()) {
+                                            start();
+                                        }
+                                    } catch (JMSException e) {
+                                        session.connection.onAsyncException(e);
+                                    }
+                                }
+                            }, redeliveryDelay);
+                        } else {
+                            start();
+                        }
+                    }
                 }
                 deliveredCounter -= deliveredMessages.size();
                 deliveredMessages.clear();
@@ -1248,6 +1271,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
             }
         }
     }
+
     /*
      * called with deliveredMessages locked
      */

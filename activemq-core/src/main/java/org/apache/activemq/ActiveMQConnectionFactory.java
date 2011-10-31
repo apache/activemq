@@ -120,6 +120,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     private ClientInternalExceptionListener clientInternalExceptionListener;
     private boolean messagePrioritySupported = true;
     private boolean transactedIndividualAck = false;
+    private boolean nonBlockingRedelivery = false;
 
     // /////////////////////////////////////////////
     //
@@ -327,6 +328,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
         connection.setCheckForDuplicates(isCheckForDuplicates());
         connection.setMessagePrioritySupported(isMessagePrioritySupported());
         connection.setTransactedIndividualAck(isTransactedIndividualAck());
+        connection.setNonBlockingRedelivery(isNonBlockingRedelivery());
         if (transportListener != null) {
             connection.addTransportListener(transportListener);
         }
@@ -731,7 +733,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
         props.setProperty("checkForDuplicates", Boolean.toString(isCheckForDuplicates()));
         props.setProperty("messagePrioritySupported", Boolean.toString(isMessagePrioritySupported()));
         props.setProperty("transactedIndividualAck", Boolean.toString(isTransactedIndividualAck()));
-
+        props.setProperty("nonBlockingRedelivery", Boolean.toString(isNonBlockingRedelivery()));
     }
 
     public boolean isUseCompression() {
@@ -1056,6 +1058,20 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
       */
      public void setTransactedIndividualAck(boolean transactedIndividualAck) {
          this.transactedIndividualAck = transactedIndividualAck;
+     }
+
+
+     public boolean isNonBlockingRedelivery() {
+         return nonBlockingRedelivery;
+     }
+
+     /**
+      * When true a MessageConsumer will not stop Message delivery before re-delivering Messages
+      * from a rolled back transaction.  This implies that message order will not be preserved and
+      * also will result in the TransactedIndividualAck option to be enabled.
+      */
+     public void setNonBlockingRedelivery(boolean nonBlockingRedelivery) {
+         this.nonBlockingRedelivery = nonBlockingRedelivery;
      }
 
 }

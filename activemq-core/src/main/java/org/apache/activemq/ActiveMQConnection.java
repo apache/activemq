@@ -191,8 +191,9 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     protected volatile CountDownLatch transportInterruptionProcessingComplete;
     private long consumerFailoverRedeliveryWaitPeriod;
     private final Scheduler scheduler;
-    private boolean messagePrioritySupported=true;
+    private boolean messagePrioritySupported = true;
     private boolean transactedIndividualAck = false;
+    private boolean nonBlockingRedelivery = false;
 
     /**
      * Construct an <code>ActiveMQConnection</code>
@@ -2415,6 +2416,14 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
 
     public void setTransactedIndividualAck(boolean transactedIndividualAck) {
         this.transactedIndividualAck = transactedIndividualAck;
+    }
+
+    public boolean isNonBlockingRedelivery() {
+        return nonBlockingRedelivery;
+    }
+
+    public void setNonBlockingRedelivery(boolean nonBlockingRedelivery) {
+        this.nonBlockingRedelivery = nonBlockingRedelivery;
     }
 
     /**
