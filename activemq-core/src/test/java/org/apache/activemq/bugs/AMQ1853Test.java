@@ -42,6 +42,8 @@ import org.apache.activemq.ActiveMQSession;
 import org.apache.activemq.RedeliveryPolicy;
 import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.util.Wait;
+import org.apache.activemq.util.Wait.Condition;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -75,6 +77,7 @@ public class AMQ1853Test {
     public void setUp() throws Exception {
         broker = BrokerFactory.createBroker(new URI("broker:()/localhost?persistent=false"));
         broker.setUseJmx(false);
+        broker.setDeleteAllMessagesOnStartup(true);
         broker.start();
         broker.waitUntilStarted();
     }
@@ -115,9 +118,15 @@ public class AMQ1853Test {
             producerAllFail.getLatch().await();
 
             LOG.info("producer successful, count = " + producerAllFail.getLatch().getCount());
-
-            assertTrue("message list size =  " + messageList.size(), totalNumberMessages == messageList.size());
             LOG.info("final message list size =  " + messageList.size());
+
+            assertTrue("message list size =  " + messageList.size() + " exptected:" + totalNumberMessages,
+                Wait.waitFor(new Condition() {
+                    @Override
+                    public boolean isSatisified() throws Exception {
+                        return totalNumberMessages == messageList.size();
+                    }
+                }));
 
             consumerAllFail.getLatch().await();
 
@@ -126,8 +135,8 @@ public class AMQ1853Test {
             Iterator<String> keys = messageList.keySet().iterator();
             for (AtomicInteger counter : messageList.values()) {
                 String message = keys.next();
-                assertTrue("for message " + message + " counter =  " + counter.get(), counter.get() == maxRedeliveries + 1);
                 LOG.info("final count for message " + message + " counter =  " + counter.get());
+                assertTrue("for message " + message + " counter =  " + counter.get(), counter.get() == maxRedeliveries + 1);
             }
 
             assertFalse(consumerAllFail.messageReceiptIsOrdered());
