@@ -28,29 +28,32 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.JmsTestSupport;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQQueue;
+import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
 import org.apache.activemq.util.SocketProxy;
 import org.apache.activemq.util.URISupport;
+import org.apache.activemq.util.Wait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class SoWriteTimeoutClientTest extends JmsTestSupport {
     private static final Logger LOG = LoggerFactory.getLogger(SoWriteTimeoutClientTest.class);
 
-    public String brokerTransportScheme = "tcp";
-
     protected BrokerService createBroker() throws Exception {
         BrokerService broker =  new BrokerService();
-        broker.addConnector(brokerTransportScheme + "://localhost:0?wireFormat.maxInactivityDuration=0");
+        broker.setDeleteAllMessagesOnStartup(true);
+        KahaDBPersistenceAdapter adapter = new KahaDBPersistenceAdapter();
+        adapter.setConcurrentStoreAndDispatchQueues(false);
+        broker.setPersistenceAdapter(adapter);
+        broker.addConnector("tcp://localhost:0?wireFormat.maxInactivityDuration=0");
         return broker;
     }
 
-    public void x_testSendWithClientWriteTimeout() throws Exception {
+    public void testSendWithClientWriteTimeout() throws Exception {
         final ActiveMQQueue dest = new ActiveMQQueue("testClientWriteTimeout");
         messageTextPrefix = initMessagePrefix(80*1024);
 
         URI tcpBrokerUri = URISupport.removeQuery(broker.getTransportConnectors().get(0).getConnectUri());
         LOG.info("consuming using uri: " + tcpBrokerUri);
-
 
          ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(tcpBrokerUri);
         Connection c = factory.createConnection();
@@ -62,7 +65,7 @@ public class SoWriteTimeoutClientTest extends JmsTestSupport {
         proxy.setTarget(tcpBrokerUri);
         proxy.open();
 
-        ActiveMQConnectionFactory pFactory = new ActiveMQConnectionFactory("failover:(" + proxy.getUrl() + "?soWriteTimeout=500)?jms.useAsyncSend=true");
+        ActiveMQConnectionFactory pFactory = new ActiveMQConnectionFactory("failover:(" + proxy.getUrl() + "?soWriteTimeout=4000&sleep=500)?jms.useAsyncSend=true&trackMessages=true&maxCacheSize=6638400");
         final Connection pc = pFactory.createConnection();
         pc.start();
         proxy.pause();
@@ -81,11 +84,20 @@ public class SoWriteTimeoutClientTest extends JmsTestSupport {
         });
 
         // wait for timeout and reconnect
-        TimeUnit.SECONDS.sleep(20);
+        TimeUnit.SECONDS.sleep(8);
         proxy.goOn();
         for (int i=0; i<messageCount; i++) {
             assertNotNull("Got message " + i  + " after reconnect", consumer.receive(5000));
         }
+
+        assertTrue("no pending messages when done", Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+
+                LOG.info("current total message count: " + broker.getAdminView().getTotalMessageCount());
+                return broker.getAdminView().getTotalMessageCount() == 0;
+            }
+        }));
     }
 
     private String initMessagePrefix(int i) {

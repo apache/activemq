@@ -138,7 +138,9 @@ public class ProducerBrokerExchange {
                         + messageSend.getMessageId().getProducerSequenceId() + "] less than last stored: "  + lastSendSequenceNumber);
             }
         }
-        lastSendSequenceNumber.set(messageSend.getMessageId().getProducerSequenceId());
+        if (canDispatch) {
+            lastSendSequenceNumber.set(messageSend.getMessageId().getProducerSequenceId());
+        }
         return canDispatch;
     }
 

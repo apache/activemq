@@ -80,6 +80,9 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
                 } else if (eldest.getValue() instanceof MessagePull) {
                     currentCacheSize -= MESSAGE_PULL_SIZE;
                 }
+                if (LOG.isTraceEnabled()) {
+                    LOG.trace("removing tracked message: " + eldest.getKey());
+                }
             }
             return result;
         }
@@ -167,7 +170,7 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
         //now flush messages
         for (Command msg:messageCache.values()) {
             if (LOG.isDebugEnabled()) {
-                LOG.debug("command: " + msg.getCommandId());
+                LOG.debug("command: " + (msg.isMessage() ? ((Message) msg).getMessageId() : msg));
             }
             transport.oneway(msg);
         }

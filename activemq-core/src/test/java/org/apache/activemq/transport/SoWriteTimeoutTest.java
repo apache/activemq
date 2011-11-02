@@ -16,6 +16,15 @@
  */
 package org.apache.activemq.transport;
 
+import java.net.Socket;
+import java.net.SocketException;
+import java.net.URI;
+import java.util.concurrent.TimeUnit;
+import javax.jms.Connection;
+import javax.jms.Destination;
+import javax.jms.JMSException;
+import javax.jms.MessageConsumer;
+import javax.jms.Session;
 import junit.framework.Test;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.JmsTestSupport;
@@ -29,27 +38,20 @@ import org.apache.activemq.util.URISupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.jms.*;
-import java.net.Socket;
-import java.net.SocketException;
-import java.net.URI;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
-
 public class SoWriteTimeoutTest extends JmsTestSupport {
     private static final Logger LOG = LoggerFactory.getLogger(SoWriteTimeoutTest.class);
 
     final int receiveBufferSize = 16*1024;
-    public String brokerTransportScheme = "tcp";
+    public String brokerTransportScheme = "nio";
 
     protected BrokerService createBroker() throws Exception {
         BrokerService broker = super.createBroker();
         broker.setPersistent(true);
+        broker.setDeleteAllMessagesOnStartup(true);
         KahaDBPersistenceAdapter adapter = new KahaDBPersistenceAdapter();
         adapter.setConcurrentStoreAndDispatchQueues(false);
         broker.setPersistenceAdapter(adapter);
-        broker.addConnector(brokerTransportScheme + "://localhost:0?wireFormat.maxInactivityDuration=0");
+        broker.addConnector(brokerTransportScheme + "://localhost:0?wireFormat.maxInactivityDuration=0&transport.soWriteTimeout=1000&transport.sleep=1000");
         if ("nio".equals(brokerTransportScheme)) {
             broker.addConnector("stomp+" + brokerTransportScheme + "://localhost:0?transport.soWriteTimeout=1000&transport.sleep=1000&socketBufferSize=" + receiveBufferSize + "&trace=true");
         }
@@ -146,51 +148,6 @@ public class SoWriteTimeoutTest extends JmsTestSupport {
         } catch (SocketException expected) {
             LOG.info("got exception on send after timeout: " + expected);
         }
-    }
-
-    public void testClientWriteTimeout() throws Exception {
-        final ActiveMQQueue dest = new ActiveMQQueue("testClientWriteTimeout");
-        messageTextPrefix = initMessagePrefix(80*1024);
-
-        URI tcpBrokerUri = URISupport.removeQuery(broker.getTransportConnectors().get(0).getConnectUri());
-        LOG.info("consuming using uri: " + tcpBrokerUri);
-
-
-         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(tcpBrokerUri);
-        Connection c = factory.createConnection();
-        c.start();
-        Session session = c.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        MessageConsumer consumer = session.createConsumer(dest);
-
-        SocketProxy proxy = new SocketProxy();
-        proxy.setTarget(tcpBrokerUri);
-        proxy.open();
-
-        ActiveMQConnectionFactory pFactory = new ActiveMQConnectionFactory("failover:(" + proxy.getUrl() + "?soWriteTimeout=500)?jms.useAsyncSend=true&trackMessages=true");
-        final Connection pc = pFactory.createConnection();
-        pc.start();
-        proxy.pause();
-
-        final int messageCount = 20;
-        ExecutorService executorService = Executors.newCachedThreadPool();
-        executorService.execute(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    sendMessages(pc, dest, messageCount);
-                } catch (Exception ignored) {
-                    ignored.printStackTrace();
-                }
-            }
-        });
-
-        // wait for timeout and reconnect
-        TimeUnit.SECONDS.sleep(7);
-        proxy.goOn();
-        for (int i=0; i<messageCount; i++) {
-            assertNotNull("Got message after reconnect", consumer.receive(5000));
-        }
-        //broker.getAdminView().get
     }
 
     private String initMessagePrefix(int i) {
