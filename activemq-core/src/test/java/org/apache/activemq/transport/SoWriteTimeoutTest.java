@@ -169,7 +169,6 @@ public class SoWriteTimeoutTest extends JmsTestSupport {
         ActiveMQConnectionFactory pFactory = new ActiveMQConnectionFactory("failover:(" + proxy.getUrl() + "?soWriteTimeout=500)?jms.useAsyncSend=true&trackMessages=true");
         final Connection pc = pFactory.createConnection();
         pc.start();
-        System.out.println("Pausing proxy");
         proxy.pause();
 
         final int messageCount = 20;
@@ -178,9 +177,7 @@ public class SoWriteTimeoutTest extends JmsTestSupport {
             @Override
             public void run() {
                 try {
-                    System.out.println("sending messages");
                     sendMessages(pc, dest, messageCount);
-                    System.out.println("messages sent");
                 } catch (Exception ignored) {
                     ignored.printStackTrace();
                 }
@@ -189,7 +186,6 @@ public class SoWriteTimeoutTest extends JmsTestSupport {
 
         // wait for timeout and reconnect
         TimeUnit.SECONDS.sleep(7);
-        System.out.println("go on");
         proxy.goOn();
         for (int i=0; i<messageCount; i++) {
             assertNotNull("Got message after reconnect", consumer.receive(5000));
