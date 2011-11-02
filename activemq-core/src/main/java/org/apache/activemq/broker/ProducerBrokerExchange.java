@@ -23,6 +23,8 @@ import org.apache.activemq.state.ProducerState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.concurrent.atomic.AtomicLong;
+
 /**
  * Holds internal state in the broker for a MessageProducer
  * 
@@ -36,7 +38,7 @@ public class ProducerBrokerExchange {
     private Region region;
     private ProducerState producerState;
     private boolean mutable = true;
-    private long lastSendSequenceNumber = -1;
+    private AtomicLong lastSendSequenceNumber = new AtomicLong(-1);
     
     public ProducerBrokerExchange() {
     }
@@ -129,18 +131,19 @@ public class ProducerBrokerExchange {
      */
     public boolean canDispatch(Message messageSend) {
         boolean canDispatch = true;
-        if (lastSendSequenceNumber > 0) {
-            if (messageSend.getMessageId().getProducerSequenceId() <= lastSendSequenceNumber) {
+        if (lastSendSequenceNumber.get() > 0) {
+            if (messageSend.getMessageId().getProducerSequenceId() <= lastSendSequenceNumber.get()) {
                 canDispatch = false;
-                LOG.debug("suppressing duplicate message send [" + messageSend.getMessageId() + "] with producerSequenceId [" 
+                LOG.debug("suppressing duplicate message send [" + messageSend.getMessageId() + "] with producerSequenceId ["
                         + messageSend.getMessageId().getProducerSequenceId() + "] less than last stored: "  + lastSendSequenceNumber);
             }
         }
+        lastSendSequenceNumber.set(messageSend.getMessageId().getProducerSequenceId());
         return canDispatch;
     }
 
     public void setLastStoredSequenceId(long l) {
-        lastSendSequenceNumber = l;
+        lastSendSequenceNumber.set(l);
         LOG.debug("last stored sequence id set: " + l);
     }
 }
