@@ -1313,7 +1313,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
                 result = new ProducerBrokerExchange();
                 TransportConnectionState state = lookupConnectionState(id);
                 context = state.getContext();
-                if (context.isReconnect()) {
+                if (context.isReconnect() && !context.isNetworkConnection()) {
                     result.setLastStoredSequenceId(broker.getBrokerService().getPersistenceAdapter().getLastProducerSequenceId(id));
                 }
                 result.setConnectionContext(context);

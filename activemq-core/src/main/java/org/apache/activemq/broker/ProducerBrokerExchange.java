@@ -39,6 +39,7 @@ public class ProducerBrokerExchange {
     private ProducerState producerState;
     private boolean mutable = true;
     private AtomicLong lastSendSequenceNumber = new AtomicLong(-1);
+    private boolean auditProducerSequenceIds;
     
     public ProducerBrokerExchange() {
     }
@@ -131,20 +132,23 @@ public class ProducerBrokerExchange {
      */
     public boolean canDispatch(Message messageSend) {
         boolean canDispatch = true;
-        if (lastSendSequenceNumber.get() > 0) {
+        if (auditProducerSequenceIds) {
             if (messageSend.getMessageId().getProducerSequenceId() <= lastSendSequenceNumber.get()) {
                 canDispatch = false;
                 LOG.debug("suppressing duplicate message send [" + messageSend.getMessageId() + "] with producerSequenceId ["
                         + messageSend.getMessageId().getProducerSequenceId() + "] less than last stored: "  + lastSendSequenceNumber);
             }
-        }
-        if (canDispatch) {
-            lastSendSequenceNumber.set(messageSend.getMessageId().getProducerSequenceId());
+
+            if (canDispatch) {
+                // track current so we can suppress duplicates later in the stream
+                lastSendSequenceNumber.set(messageSend.getMessageId().getProducerSequenceId());
+            }
         }
         return canDispatch;
     }
 
     public void setLastStoredSequenceId(long l) {
+        auditProducerSequenceIds = true;
         lastSendSequenceNumber.set(l);
         LOG.debug("last stored sequence id set: " + l);
     }
