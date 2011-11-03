@@ -71,6 +71,7 @@ public class TransportConnector implements Connector, BrokerServiceAware {
     private boolean rebalanceClusterClients;
     private boolean updateClusterClientsOnRemove = false;
     private String updateClusterFilter;
+    private boolean auditNetworkProducers = true;
 
     public TransportConnector() {
     }
@@ -556,5 +557,13 @@ public class TransportConnector implements Connector, BrokerServiceAware {
 
     public int connectionCount() {
         return connections.size();
+    }
+
+    public boolean isAuditNetworkProducers() {
+        return auditNetworkProducers;
+    }
+
+    public void setAuditNetworkProducers(boolean auditNetworkProducers) {
+        this.auditNetworkProducers = auditNetworkProducers;
     }
 }

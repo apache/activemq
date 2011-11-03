@@ -19,10 +19,12 @@ package org.apache.activemq.broker;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.Region;
 import org.apache.activemq.command.Message;
+import org.apache.activemq.command.MessageId;
 import org.apache.activemq.state.ProducerState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
@@ -40,7 +42,9 @@ public class ProducerBrokerExchange {
     private boolean mutable = true;
     private AtomicLong lastSendSequenceNumber = new AtomicLong(-1);
     private boolean auditProducerSequenceIds;
-    
+    private boolean isNetworkProducer;
+    private BrokerService brokerService;
+
     public ProducerBrokerExchange() {
     }
 
@@ -132,23 +136,43 @@ public class ProducerBrokerExchange {
      */
     public boolean canDispatch(Message messageSend) {
         boolean canDispatch = true;
-        if (auditProducerSequenceIds) {
-            if (messageSend.getMessageId().getProducerSequenceId() <= lastSendSequenceNumber.get()) {
+        if (auditProducerSequenceIds && messageSend.isPersistent()) {
+            final long producerSequenceId = messageSend.getMessageId().getProducerSequenceId();
+            if (isNetworkProducer) {
+                //  messages are multiplexed on this producer so we need to query the persistenceAdapter
+                long lastStoredForMessageProducer = getStoredSequenceIdForMessage(messageSend.getMessageId());
+                if (producerSequenceId <= lastStoredForMessageProducer) {
+                    canDispatch = false;
+                    LOG.debug("suppressing duplicate message send from network producer [" + messageSend.getMessageId() + "] with producerSequenceId ["
+                            + producerSequenceId + "] less than last stored: "  + lastStoredForMessageProducer);
+                }
+            } else if (producerSequenceId <= lastSendSequenceNumber.get()) {
                 canDispatch = false;
                 LOG.debug("suppressing duplicate message send [" + messageSend.getMessageId() + "] with producerSequenceId ["
-                        + messageSend.getMessageId().getProducerSequenceId() + "] less than last stored: "  + lastSendSequenceNumber);
-            }
-
-            if (canDispatch) {
+                        + producerSequenceId + "] less than last stored: "  + lastSendSequenceNumber);
+            } else {
                 // track current so we can suppress duplicates later in the stream
-                lastSendSequenceNumber.set(messageSend.getMessageId().getProducerSequenceId());
+                lastSendSequenceNumber.set(producerSequenceId);
             }
         }
         return canDispatch;
     }
 
+    private long getStoredSequenceIdForMessage(MessageId messageId) {
+        try {
+            return brokerService.getPersistenceAdapter().getLastProducerSequenceId(messageId.getProducerId());
+       } catch (IOException ignored) {
+            LOG.debug("Failed to determine last producer sequence id for: " +messageId, ignored);
+        }
+        return -1;
+    }
+
     public void setLastStoredSequenceId(long l) {
         auditProducerSequenceIds = true;
+        if (connectionContext.isNetworkConnection()) {
+            brokerService = connectionContext.getBroker().getBrokerService();
+            isNetworkProducer = true;
+        }
         lastSendSequenceNumber.set(l);
         LOG.debug("last stored sequence id set: " + l);
     }

@@ -19,6 +19,10 @@ package org.apache.activemq.usecases;
 import java.net.URI;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.jms.Connection;
 import javax.jms.Destination;
@@ -29,11 +33,15 @@ import javax.jms.Session;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.ActiveMQPrefetchPolicy;
 import org.apache.activemq.JmsMultipleBrokersTestSupport;
+import org.apache.activemq.broker.BrokerPlugin;
+import org.apache.activemq.broker.BrokerPluginSupport;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.ProducerBrokerExchange;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.network.ConditionalNetworkBridgeFilterFactory;
 import org.apache.activemq.network.NetworkConnector;
+import org.apache.activemq.util.Wait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -357,6 +365,76 @@ public class TwoBrokerQueueClientsReconnectTest extends JmsMultipleBrokersTestSu
         assertEquals("Client for " + broker2 + " should have received 50% of the messages.", (int)(MESSAGE_COUNT * 0.50), msgsClient2);
     }
 
+    public void testDuplicateSend() throws Exception {
+        broker1 = "BrokerA";
+        broker2 = "BrokerB";
+
+        bridgeBrokers(broker1, broker2);
+
+        final AtomicBoolean first = new AtomicBoolean();
+        final CountDownLatch gotMessageLatch = new CountDownLatch(1);
+
+        BrokerService brokerService = brokers.get(broker2).broker;
+        brokerService.setPersistent(true);
+        brokerService.setDeleteAllMessagesOnStartup(true);
+        brokerService.setPlugins(new BrokerPlugin[]{
+                new BrokerPluginSupport() {
+                    @Override
+                    public void send(final ProducerBrokerExchange producerExchange,
+                                     org.apache.activemq.command.Message messageSend)
+                            throws Exception {
+                        super.send(producerExchange, messageSend);
+                        if (first.compareAndSet(false, true)) {
+                            producerExchange.getConnectionContext().setDontSendReponse(true);
+                            Executors.newSingleThreadExecutor().execute(new Runnable() {
+                                public void run() {
+                                    try {
+                                        LOG.info("Waiting for recepit");
+                                        assertTrue("message received on time", gotMessageLatch.await(60, TimeUnit.SECONDS));
+                                        LOG.info("Stopping connection post send and receive and multiple producers");
+                                        producerExchange.getConnectionContext().getConnection().stop();
+                                    } catch (Exception e) {
+                                        e.printStackTrace();
+                                    }
+                                }
+                            });
+                        }
+                    }
+                }
+        });
+
+        // Run brokers
+        startAllBrokers();
+
+        // Create queue
+        Destination dest = createDestination("TEST.FOO", false);
+
+        MessageConsumer client2 = createConsumer(broker2, dest);
+
+        sendMessages("BrokerA", dest, 1);
+
+        assertEquals("Client got message", 1, receiveExactMessages(client2, 1));
+        client2.close();
+        gotMessageLatch.countDown();
+
+        // message still pending on broker1
+        assertEquals("messages message still there", 1, brokers.get(broker1).broker.getAdminView().getTotalMessageCount());
+
+        client2 = createConsumer(broker2, dest);
+
+        LOG.info("Let the second client receive the rest of the messages");
+        assertEquals("no duplicate message", 0, receiveAllMessages(client2));
+        assertEquals("no duplicate message", 0, receiveAllMessages(client2));
+
+        assertEquals("no messages enqueued", 0, brokers.get(broker2).broker.getAdminView().getTotalMessageCount());
+        assertTrue("no messages enqueued on origin", Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                return 0 == brokers.get(broker1).broker.getAdminView().getTotalMessageCount();
+            }
+        }));
+    }
+
     protected int receiveExactMessages(MessageConsumer consumer, int msgCount) throws Exception {
         Message msg;
         int i;
@@ -410,8 +488,8 @@ public class TwoBrokerQueueClientsReconnectTest extends JmsMultipleBrokersTestSu
     public void setUp() throws Exception {
         super.setAutoFail(true);
         super.setUp();
-        createBroker(new URI("broker:(tcp://localhost:61616)/BrokerA?persistent=false&useJmx=false"));
-        createBroker(new URI("broker:(tcp://localhost:61617)/BrokerB?persistent=false&useJmx=false"));
+        createBroker(new URI("broker:(tcp://localhost:61616)/BrokerA?persistent=false&useJmx=true"));
+        createBroker(new URI("broker:(tcp://localhost:61617)/BrokerB?persistent=false&useJmx=true"));
 
         // Configure broker connection factory
         ActiveMQConnectionFactory factoryA;
