@@ -28,6 +28,7 @@
   <artifactId>activemq-optional</artifactId>
   <packaging>jar</packaging>
   <name>ActiveMQ :: Optional</name>
+  <description>Optional ActiveMQ features</description>
 
 
   <repositories>
@@ -206,7 +207,44 @@
 
   <build>
     <plugins>
-
+        <plugin>
+            <artifactId>maven-jar-plugin</artifactId>
+            <configuration>
+                <archive>
+                    <manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>
+                </archive>
+            </configuration>
+        </plugin>
+       <plugin>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>maven-bundle-plugin</artifactId>
+        <configuration>
+            <instructions>
+                <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
+                <Fragment-Host>org.apache.activemq.activemq-core</Fragment-Host>
+                <Export-Package>
+                    org.apache.activemq.transport.http*;version=${project.version};-noimport:=;-split-package:=merge-last,
+                    org.apache.activemq.transport.https*;version=${project.version};-noimport:=;-split-package:=merge-last
+                </Export-Package>
+                <Import-Package>
+                    org.eclipse.jetty*;version="[7.0,8.0)";resolution:=optional,
+                    !org.apache.activemq.transport.ws*;version=${project.version};,
+                    !org.apache.activemq.transport.xstream;version=${project.version};,
+                    !org.apache.activemq.transport.util;version=${project.version};,
+                    org.apache.activemq*;version=${project.version};resolution:=optional
+                </Import-Package>
+            </instructions>
+        </configuration>
+           <executions>
+               <execution>
+                   <id>bundle-manifest</id>
+                   <phase>process-classes</phase>
+                   <goals>
+                       <goal>manifest</goal>
+                   </goals>
+               </execution>
+           </executions>
+       </plugin>
       <!-- Configure which tests are included/excuded -->
       <plugin>
         <artifactId>maven-surefire-plugin</artifactId>

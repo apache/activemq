@@ -16,9 +16,6 @@
  */
 package org.apache.activemq.transport.http;
 
-import java.net.InetSocketAddress;
-import java.net.URI;
-
 import org.apache.activemq.command.BrokerInfo;
 import org.apache.activemq.transport.TransportServerSupport;
 import org.apache.activemq.transport.util.TextWireFormat;
@@ -29,6 +26,10 @@ import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.GzipHandler;
 import org.eclipse.jetty.server.nio.SelectChannelConnector;
 import org.eclipse.jetty.servlet.ServletContextHandler;
+import org.eclipse.jetty.servlet.ServletHolder;
+
+import java.net.InetSocketAddress;
+import java.net.URI;
 
 public class HttpTransportServer extends TransportServerSupport {
 
@@ -83,7 +84,9 @@ public class HttpTransportServer extends TransportServerSupport {
         ServletContextHandler contextHandler =
             new ServletContextHandler(server, "/", ServletContextHandler.NO_SECURITY);
 
-        contextHandler.addServlet(HttpTunnelServlet.class, "/");
+        ServletHolder holder = new ServletHolder();
+        holder.setServlet(new HttpTunnelServlet());
+        contextHandler.addServlet(holder, "/");
 
         contextHandler.setAttribute("acceptListener", getAcceptListener());
         contextHandler.setAttribute("wireFormat", getWireFormat());

@@ -30,6 +30,7 @@
         <bundle dependency="true">mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.oro/2.0.8_3</bundle>
         <bundle dependency="true">mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.velocity/1.7_1</bundle>
         <bundle dependency="true">mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.jasypt/1.6_1</bundle>
+        <bundle dependency="true">mvn:org.apache.servicemix.specs/org.apache.servicemix.specs.stax-api-1.0/1.9.0</bundle>
         <bundle dependency="true">mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.xpp3/${xpp3-bundle-version}</bundle>
         <bundle dependency="true">mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.joda-time/${jodatime-bundle-version}</bundle>
         <bundle dependency="true">mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.jdom/${jdom-bundle-version}</bundle>
@@ -57,6 +58,12 @@
         <bundle dependency="true">mvn:org.apache.commons/commons-jexl/2.0.1</bundle>
         <bundle dependency="true">mvn:org.apache.xbean/xbean-blueprint/${xbean-version}</bundle> 
         <bundle>mvn:org.apache.activemq/activemq-blueprint/${activemq-version}</bundle> 
+    </feature>
+
+    <feature name="activemq-optional" version="${activemq-version}" resolver="(obr)">
+        <feature version="${activemq-version}">activemq-blueprint</feature>
+        <feature varesion="[7.0,8.0)">jetty</feature>
+        <bundle>mvn:org.apache.activemq/activemq-optional/${activemq-version}</bundle>
     </feature>
 
     <!-- do "features:install war" before installing this one  -->

@@ -16,16 +16,15 @@
  */
 package org.apache.activemq.transport.xstream;
 
-import java.io.IOException;
-import java.io.Reader;
-
 import com.thoughtworks.xstream.XStream;
-
 import org.apache.activemq.command.Command;
 import org.apache.activemq.command.MarshallAware;
 import org.apache.activemq.command.MessageDispatch;
 import org.apache.activemq.transport.util.TextWireFormat;
 import org.apache.activemq.wireformat.WireFormat;
+
+import java.io.IOException;
+import java.io.Reader;
 
 /**
  * A {@link WireFormat} implementation which uses the <a
@@ -93,6 +92,8 @@ public class XStreamWireFormat extends TextWireFormat {
     public XStream getXStream() {
         if (xStream == null) {
             xStream = createXStream();
+            // make it work in OSGi env
+            xStream.setClassLoader(getClass().getClassLoader());
         }
         return xStream;
     }
