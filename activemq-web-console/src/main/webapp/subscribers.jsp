@@ -103,7 +103,10 @@
 <td>${row.enqueueCounter}</td>
 <td>${row.dequeueCounter}</td>
 <td>
-    <a href="deleteSubscriber.action?clientId=${row.clientId}&subscriberName=${row.subscriptionName}&secret=<c:out value='${sessionScope["secret"]}'/>">Delete</a>
+    <a href="<c:url value="deleteSubscriber.action">
+                    <c:param name="clientId" value="${row.clientId}"/>
+                    <c:param name="subscriberName" value="${row.subscriptionName}"/>
+                    <c:param name="secret" value='${sessionScope["secret"]}'/></c:url>">Delete</a>
 </td>
 </tr>
 </c:forEach>
@@ -144,7 +147,10 @@
 <td>${row.enqueueCounter}</td>
 <td>${row.dequeueCounter}</td>
 <td>
-    <a href="deleteSubscriber.action?clientId=${row.clientId}&subscriberName=${row.subscriptionName}&secret=<c:out value='${sessionScope["secret"]}'/>">Delete</a>
+    <a href="<c:url value="deleteSubscriber.action">
+                    <c:param name="clientId" value="${row.clientId}"/>
+                    <c:param name="subscriberName" value="${row.subscriptionName}"/>
+                    <c:param name="secret" value='${sessionScope["secret"]}'/></c:url>">Delete</a>
 </td>
 </tr>
 </c:forEach>

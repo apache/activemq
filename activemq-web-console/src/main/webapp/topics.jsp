@@ -47,13 +47,20 @@
 <tbody>
 <c:forEach items="${requestContext.brokerQuery.topics}" var="row">
 <tr>
-<td><a href="send.jsp?JMSDestination=<c:out value="${row.name}" />&JMSDestinationType=topic"><form:tooltip text="${row.name}" length="50"/></a></td>
+<td><a href="<c:url value="send.jsp">
+                        <c:param name="JMSDestination" value="${row.name}" />
+                        <c:param name="JMSDestinationType" value="topic"/></c:url>"><form:tooltip text="${row.name}" length="50"/></a></td>
 <td>${row.consumerCount}</td>
 <td>${row.enqueueCount}</td>
 <td>${row.dequeueCount}</td>
 <td>
-    <a href="send.jsp?JMSDestination=<c:out value="${row.name}" />&JMSDestinationType=topic">Send To</a>
-    <a href="deleteDestination.action?JMSDestination=<c:out value="${row.name}" />&JMSDestinationType=topic&secret=<c:out value='${sessionScope["secret"]}'/>">Delete</a>
+    <a href="<c:url value="send.jsp">
+                        <c:param name="JMSDestination" value="${row.name}" />
+                        <c:param name="JMSDestinationType" value="topic"/></c:url>">Send To</a>
+    <a href="<c:url value="deleteDestination.action">
+                   <c:param name="JMSDestination" value="${row.name}" />
+                   <c:param name="JMSDestinationType" value="topic"/>
+                   <c:param name="secret" value='${sessionScope["secret"]}'/></c:url>">Delete</a>
 </td>
 </tr>
 </c:forEach>

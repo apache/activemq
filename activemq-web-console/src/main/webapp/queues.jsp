@@ -51,21 +51,32 @@
 <c:forEach items="${requestContext.brokerQuery.queues}" var="row">
 
 <tr>
-<td><a href="browse.jsp?JMSDestination=<c:out value="${row.name}" />"><form:tooltip text="${row.name}" length="50"/></a></td>
+<td><a href="<c:url value="browse.jsp">
+                        <c:param name="JMSDestination" value="${row.name}" /></c:url>"><form:tooltip text="${row.name}" length="50"/></a></td>
 <td>${row.queueSize}</td>
 <td>${row.consumerCount}</td>
 <td>${row.enqueueCount}</td>
 <td>${row.dequeueCount}</td>
 <td>
-    <a href="browse.jsp?JMSDestination=<c:out value="${row.name}" />">Browse</a>
-	<a href="queueConsumers.jsp?JMSDestination=<c:out value="${row.name}" />">Active Consumers</a><br/>
-    <a href="queueBrowse/<c:out value="${row.name}" />?view=rss&feedType=atom_1.0" title="Atom 1.0"><img src="images/feed_atom.png"/></a>
-    <a href="queueBrowse/<c:out value="${row.name}" />?view=rss&feedType=rss_2.0" title="RSS 2.0"><img src="images/feed_rss.png"/></a>
+    <a href="<c:url value="browse.jsp">
+                   <c:param name="JMSDestination" value="${row.name}" /></c:url>">Browse</a>
+	<a href="<c:url value="queueConsumers.jsp">
+	                <c:param name="JMSDestination" value="${row.name}" /></c:url>">Active Consumers</a><br/>
+    <a href="queueBrowse/<form:escape text="${row.name}" />?view=rss&feedType=atom_1.0" title="Atom 1.0"><img src="images/feed_atom.png"/></a>
+    <a href="queueBrowse/<form:escape text="${row.name}" />?view=rss&feedType=rss_2.0" title="RSS 2.0"><img src="images/feed_rss.png"/></a>
 </td>
 <td>
-    <a href="send.jsp?JMSDestination=<c:out value="${row.name}" />&JMSDestinationType=queue">Send To</a>
-    <a href="purgeDestination.action?JMSDestination=<c:out value="${row.name}" />&JMSDestinationType=queue&secret=<c:out value='${sessionScope["secret"]}'/>">Purge</a>
-    <a href="deleteDestination.action?JMSDestination=<c:out value="${row.name}" />&JMSDestinationType=queue&secret=<c:out value='${sessionScope["secret"]}'/>">Delete</a>
+    <a href="<c:url value="send.jsp">
+                    <c:param name="JMSDestination" value="${row.name}" />
+                    <c:param name="JMSDestinationType" value="queue"/></c:url>">Send To</a>
+    <a href="<c:url value="purgeDestination.action">
+                    <c:param name="JMSDestination" value="${row.name}" />
+                    <c:param name="JMSDestinationType" value="queue"   />
+                    <c:param name="secret" value='${sessionScope["secret"]}'/></c:url>">Purge</a>
+    <a href="<c:url value="deleteDestination.action">
+                    <c:param name="JMSDestination" value="${row.name}" />
+                    <c:param name="JMSDestinationType" value="queue"   />
+                    <c:param name="secret" value='${sessionScope["secret"]}'/></c:url>">Delete</a>
 </td>
 </tr>
 </c:forEach>
