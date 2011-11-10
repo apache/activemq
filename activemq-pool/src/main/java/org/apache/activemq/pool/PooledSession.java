@@ -296,6 +296,18 @@ public class PooledSession implements Session, TopicSession, QueueSession, XASes
         return new PooledTopicPublisher(getTopicPublisher(), topic);
     }
 
+    /**
+     * Callback invoked when the consumer is closed.
+     * <p/>
+     * This is used to keep track of an explicit closed consumer created by this session,
+     * by which we know do not need to keep track of the consumer, as its already closed.
+     *
+     * @param consumer the consumer which is being closed
+     */
+    protected void onConsumerClose(MessageConsumer consumer) {
+        consumers.remove(consumer);
+    }
+
     public ActiveMQSession getInternalSession() throws AlreadyClosedException {
         if (session == null) {
             throw new AlreadyClosedException("The session has already been closed");
@@ -331,7 +343,10 @@ public class PooledSession implements Session, TopicSession, QueueSession, XASes
 
     private MessageConsumer addConsumer(MessageConsumer consumer) {
         consumers.add(consumer);
-        return consumer;
+        // must wrap in PooledMessageConsumer to ensure the onConsumerClose method is invoked
+        // when the returned consumer is closed, to avoid memory leak in this session class
+        // in case many consumers is created
+        return new PooledMessageConsumer(this, consumer);
     }
 
     private TopicSubscriber addTopicSubscriber(TopicSubscriber subscriber) {
@@ -344,11 +359,11 @@ public class PooledSession implements Session, TopicSession, QueueSession, XASes
         return receiver;
     }
 
-    public String toString() {
-        return "PooledSession { " + session + " }";
-    }
-
     public void setIsXa(boolean isXa) {
         this.isXa = isXa;
+    }
+
+    public String toString() {
+        return "PooledSession { " + session + " }";
     }
 }
