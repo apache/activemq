@@ -127,7 +127,7 @@ public abstract class MessageServletSupport extends HttpServlet {
             message.setJMSReplyTo(replyTo);
         }
         String type = (String)asString(parameters.remove("JMSType"));
-        if (correlationID != null) {
+        if (type != null) {
             message.setJMSType(type);
         }
 
