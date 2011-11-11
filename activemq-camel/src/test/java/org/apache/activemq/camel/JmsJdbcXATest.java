@@ -33,7 +33,6 @@ import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.util.Wait;
 import org.apache.camel.test.junit4.CamelSpringTestSupport;
 import org.apache.commons.dbcp.BasicDataSource;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,8 +42,6 @@ import org.springframework.context.support.ClassPathXmlApplicationContext;
 /**
  *  shows broker 'once only delivery' and recovery with XA
  */
-@Ignore("When upgrade to the Camel 2.8.0, this test will be hang due to camel-jdbc autoCommit issue CAMEL-4272."
-        + "We should remove this Ignore annotation when upgrade Camel version again")
 public class JmsJdbcXATest extends CamelSpringTestSupport {
     private static final Logger LOG = LoggerFactory.getLogger(JmsJdbcXATest.class);
     BrokerService broker = null;
