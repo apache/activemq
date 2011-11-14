@@ -487,6 +487,9 @@ public class ManagementContext implements Service {
         return createConnector;
     }
 
+    /**
+     * @org.apache.xbean.Property propertyEditor="org.apache.activemq.util.BooleanEditor"
+     */
     public void setCreateConnector(boolean createConnector) {
         this.createConnector = createConnector;
     }
