@@ -18,6 +18,7 @@
 package org.apache.activemq.store;
 
 import javax.jms.Connection;
+import javax.jms.DeliveryMode;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
@@ -53,6 +54,7 @@ abstract public class MessagePriorityTest extends CombinationTestSupport {
     protected Session sess;
     
     public boolean useCache = true;
+    public int deliveryMode = Message.DEFAULT_DELIVERY_MODE;
     public boolean dispatchAsync = true;
     public boolean prioritizeMessages = true;
     public boolean immediatePriorityDispatch = true;
@@ -150,6 +152,7 @@ abstract public class MessagePriorityTest extends CombinationTestSupport {
             try {
                 MessageProducer producer = sess.createProducer(dest);
                 producer.setPriority(priority);
+                producer.setDeliveryMode(deliveryMode);
                 for (int i = 0; i < messageCount; i++) {
                     producer.send(sess.createTextMessage("message priority: " + priority));
                 }
@@ -170,6 +173,7 @@ abstract public class MessagePriorityTest extends CombinationTestSupport {
     
     public void initCombosForTestQueues() {
         addCombinationValues("useCache", new Object[] {new Boolean(true), new Boolean(false)});
+        addCombinationValues("deliveryMode", new Object[] {new Integer(DeliveryMode.NON_PERSISTENT), new Integer(DeliveryMode.PERSISTENT)});
     }
     
     public void testQueues() throws Exception {

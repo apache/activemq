@@ -53,7 +53,7 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
     protected Broker broker;
     private final PListStore store;
     private final String name;
-    private LinkedList<MessageReference> memoryList = new LinkedList<MessageReference>();
+    private PendingList memoryList;
     private PList diskList;
     private Iterator<MessageReference> iter;
     private Destination regionDestination;
@@ -68,6 +68,11 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
      */
     public FilePendingMessageCursor(Broker broker, String name, boolean prioritizedMessages) {
         super(prioritizedMessages);
+        if (this.prioritizedMessages) {
+            this.memoryList = new PrioritizedPendingList();
+        } else {
+            this.memoryList = new OrderedPendingList();
+        }
         this.broker = broker;
         // the store can be null if the BrokerService has persistence
         // turned off
@@ -204,7 +209,7 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
                 regionDestination = node.getMessage().getRegionDestination();
                 if (isDiskListEmpty()) {
                     if (hasSpace() || this.store == null) {
-                        memoryList.add(node);
+                        memoryList.addMessageLast(node);
                         node.incrementReferenceCount();
                         setCacheEnabled(true);
                         return true;
@@ -214,7 +219,7 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
                     if (isDiskListEmpty()) {
                         expireOldMessages();
                         if (hasSpace()) {
-                            memoryList.add(node);
+                            memoryList.addMessageLast(node);
                             node.incrementReferenceCount();
                             return true;
                         } else {
@@ -252,7 +257,7 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
                 regionDestination = node.getMessage().getRegionDestination();
                 if (isDiskListEmpty()) {
                     if (hasSpace()) {
-                        memoryList.addFirst(node);
+                        memoryList.addMessageFirst(node);
                         node.incrementReferenceCount();
                         setCacheEnabled(true);
                         return;
@@ -262,7 +267,7 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
                     if (isDiskListEmpty()) {
                         expireOldMessages();
                         if (hasSpace()) {
-                            memoryList.addFirst(node);
+                            memoryList.addMessageFirst(node);
                             node.incrementReferenceCount();
                             return;
                         } else {
@@ -325,7 +330,7 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
      */
     @Override
     public synchronized void remove(MessageReference node) {
-        if (memoryList.remove(node)) {
+        if (memoryList.remove(node) != null) {
             node.decrementReferenceCount();
         }
         if (!isDiskListEmpty()) {
@@ -406,19 +411,15 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
 
     protected synchronized void expireOldMessages() {
         if (!memoryList.isEmpty()) {
-            LinkedList<MessageReference> tmpList = new LinkedList<MessageReference>(this.memoryList);
-            this.memoryList = new LinkedList<MessageReference>();
-            while (!tmpList.isEmpty()) {
-                MessageReference node = tmpList.removeFirst();
+            for (Iterator<MessageReference> iterator = memoryList.iterator(); iterator.hasNext();) {
+                MessageReference node = iterator.next();
                 if (node.isExpired()) {
                     node.decrementReferenceCount();
                     discardExpiredMessage(node);
-                } else {
-                    memoryList.add(node);
+                    iterator.remove();
                 }
             }
         }
-
     }
 
     protected synchronized void flushToDisk() {
@@ -428,8 +429,8 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
                 start = System.currentTimeMillis();
                 LOG.trace("" + name + ", flushToDisk() mem list size: " +memoryList.size()  + " " +  (systemUsage != null ? systemUsage.getMemoryUsage() : "") );
              }
-            while (!memoryList.isEmpty()) {
-                MessageReference node = memoryList.removeFirst();
+            for (Iterator<MessageReference> iterator = memoryList.iterator(); iterator.hasNext();) {
+                MessageReference node = iterator.next();
                 node.decrementReferenceCount();
                 ByteSequence bs;
                 try {
