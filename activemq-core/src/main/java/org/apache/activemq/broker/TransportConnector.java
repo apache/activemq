@@ -280,7 +280,6 @@ public class TransportConnector implements Connector, BrokerServiceAware {
         }
         if (server != null) {
             ss.stop(server);
-            server = null;
         }
         if (this.statusDector != null) {
             this.statusDector.stop();
@@ -290,6 +289,7 @@ public class TransportConnector implements Connector, BrokerServiceAware {
             TransportConnection c = iter.next();
             ss.stop(c);
         }
+        server = null;
         ss.throwFirstException();
         LOG.info("Connector " + getName() + " Stopped");
     }

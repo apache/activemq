@@ -106,9 +106,9 @@ public class JaasDualAuthenticationBroker extends BrokerFilter {
     public void removeConnection(ConnectionContext context, ConnectionInfo info, Throwable error) throws Exception {
         boolean isSSL;
         Connector connector = context.getConnector();
-        if (connector instanceof ManagedTransportConnector) {
-            ManagedTransportConnector managedTransportConnector = (ManagedTransportConnector) connector;
-            isSSL = (managedTransportConnector.getServer() instanceof SslTransportServer);
+        if (connector instanceof TransportConnector) {
+            TransportConnector transportConnector = (TransportConnector) connector;
+            isSSL = (transportConnector.getServer() instanceof SslTransportServer);
         } else {
             isSSL = false;
         }
