@@ -116,6 +116,18 @@ public class DestinationPathSeparatorBroker extends BrokerPluginSupport {
         super.removeDestinationInfo(context, info);    
     }
 
+    @Override
+    public void processConsumerControl(ConsumerBrokerExchange consumerExchange, ConsumerControl control) {
+        control.setDestination(convertDestination(control.getDestination()));
+        super.processConsumerControl(consumerExchange, control);
+    }
+
+    @Override
+    public Response messagePull(ConnectionContext context, MessagePull pull) throws Exception {
+        pull.setDestination(convertDestination(pull.getDestination()));
+        return super.messagePull(context, pull);
+    }
+
     public void setPathSeparator(String pathSeparator) {
         this.pathSeparator = pathSeparator;
     }
