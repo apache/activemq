@@ -68,6 +68,10 @@ public class FailoverRedeliveryTransactionTest extends FailoverTransactionTest {
     }
 
     @Override
+    public void testFailoverCommitReplyLostWithDestinationPathSeparator() throws Exception {
+    }
+
+    @Override
     public void initCombosForTestFailoverSendReplyLost() {
     }
 
