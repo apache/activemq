@@ -335,7 +335,15 @@ public class AMQ1853Test {
                     bMessageReceiptIsOrdered = previousMessageId.trim().equals(message.getJMSMessageID());
                 }
 
-                AtomicInteger counter = messageList.get(message.getJMSMessageID());
+                final String jmsMessageId = message.getJMSMessageID();
+                assertTrue("Did not find expected ", Wait.waitFor(new Wait.Condition() {
+                    @Override
+                    public boolean isSatisified() throws Exception {
+                        return messageList.containsKey(jmsMessageId);
+                    }
+                }));
+
+                AtomicInteger counter = messageList.get(jmsMessageId);
                 counter.incrementAndGet();
 
                 LOG.info("Consumer for destination (" + destinationName + ")\n" + message.getJMSMessageID() + " = currentMessageId\n"
@@ -351,7 +359,7 @@ public class AMQ1853Test {
                     session.rollback(); // rolls back all the consumed messages on the session to
                 }
 
-            } catch (JMSException ex) {
+            } catch (Exception ex) {
                 ex.printStackTrace();
                 LOG.error("Error reading JMS Message from destination " + destinationName + ".");
             }
