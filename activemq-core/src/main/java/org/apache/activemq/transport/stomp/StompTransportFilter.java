@@ -130,4 +130,13 @@ public class StompTransportFilter extends TransportFilter implements StompTransp
     public StompWireFormat getWireFormat() {
         return this.wireFormat;
     }
+
+    public String getDefaultHeartBeat() {
+        return protocolConverter != null ? protocolConverter.getDefaultHeartBeat() : null;
+    }
+
+    public void setDefaultHeartBeat(String defaultHeartBeat) {
+        protocolConverter.setDefaultHeartBeat(defaultHeartBeat);
+    }
+
 }

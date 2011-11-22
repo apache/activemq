@@ -82,10 +82,6 @@ public class ProtocolConverter {
     private static final String BROKER_VERSION;
     private static final StompFrame ping = new StompFrame(Stomp.Commands.KEEPALIVE);
 
-    private static final long DEFAULT_OUTBOUND_HEARTBEAT = 100;
-    private static final long DEFAULT_INBOUND_HEARTBEAT = 1000;
-    private static final long DEFAULT_INITIAL_HEARTBEAT_DELAY = 1000;
-
     static {
         InputStream in = null;
         String version = "5.6.0";
@@ -123,8 +119,9 @@ public class ProtocolConverter {
     private final FactoryFinder FRAME_TRANSLATOR_FINDER = new FactoryFinder("META-INF/services/org/apache/activemq/transport/frametranslator/");
     private final BrokerContext brokerContext;
     private String version = "1.0";
-    private long hbReadInterval = DEFAULT_INBOUND_HEARTBEAT;
-    private long hbWriteInterval = DEFAULT_OUTBOUND_HEARTBEAT;
+    private long hbReadInterval;
+    private long hbWriteInterval;
+    private String defaultHeartBeat = Stomp.DEFAULT_HEART_BEAT;
 
     public ProtocolConverter(StompTransport stompTransport, BrokerContext brokerContext) {
         this.stompTransport = stompTransport;
@@ -620,7 +617,7 @@ public class ProtocolConverter {
             accepts = Stomp.DEFAULT_VERSION;
         }
         if (heartBeat == null) {
-            heartBeat = Stomp.DEFAULT_HEART_BEAT;
+            heartBeat = defaultHeartBeat;
         }
 
         HashSet<String> acceptsVersions = new HashSet<String>(Arrays.asList(accepts.split(Stomp.COMMA)));
@@ -793,28 +790,27 @@ public class ProtocolConverter {
         return tempDestinationAmqToStompMap.get(destination.getQualifiedName());
     }
 
+    public String getDefaultHeartBeat() {
+        return defaultHeartBeat;
+    }
+
+    public void setDefaultHeartBeat(String defaultHeartBeat) {
+        this.defaultHeartBeat = defaultHeartBeat;
+    }
+
     protected void configureInactivityMonitor(String heartBeatConfig) throws ProtocolException {
 
         String[] keepAliveOpts = heartBeatConfig.split(Stomp.COMMA);
 
         if (keepAliveOpts == null || keepAliveOpts.length != 2) {
-            throw new ProtocolException("Invlid heart-beat header:" + heartBeatConfig, true);
+            throw new ProtocolException("Invalid heart-beat header:" + heartBeatConfig, true);
         } else {
 
             try {
                 hbReadInterval = Long.parseLong(keepAliveOpts[0]);
                 hbWriteInterval = Long.parseLong(keepAliveOpts[1]);
             } catch(NumberFormatException e) {
-                throw new ProtocolException("Invlid heart-beat header:" + heartBeatConfig, true);
-            }
-
-            if (hbReadInterval > 0) {
-                hbReadInterval = Math.max(DEFAULT_INBOUND_HEARTBEAT, hbReadInterval);
-                hbReadInterval += Math.min(hbReadInterval, 5000);
-            }
-
-            if (hbWriteInterval > 0) {
-                hbWriteInterval = Math.max(DEFAULT_OUTBOUND_HEARTBEAT, hbWriteInterval);
+                throw new ProtocolException("Invalid heart-beat header:" + heartBeatConfig, true);
             }
 
             try {
@@ -822,7 +818,7 @@ public class ProtocolConverter {
                 StompInactivityMonitor monitor = this.stompTransport.getInactivityMonitor();
 
                 monitor.setReadCheckTime(hbReadInterval);
-                monitor.setInitialDelayTime(DEFAULT_INITIAL_HEARTBEAT_DELAY);
+                monitor.setInitialDelayTime(Math.min(hbReadInterval, hbWriteInterval));
                 monitor.setWriteCheckTime(hbWriteInterval);
 
                 monitor.startMonitoring();

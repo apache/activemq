@@ -136,4 +136,43 @@ public class ConnectTest {
         socket.close();
         assertTrue("no exceptions", exceptions.isEmpty());
     }
+
+    @Test
+    public void testInactivityMonitor() throws Exception {
+
+        brokerService.addConnector("stomp://0.0.0.0:0?transport.defaultHeartBeat=5000,0&transport.useKeepAlive=false");
+        brokerService.start();
+
+        Thread t1 = new Thread() {
+            StompConnection connection = new StompConnection();
+
+            public void run() {
+                try {
+                    connection.open("localhost",  brokerService.getTransportConnectors().get(0).getConnectUri().getPort());
+                    connection.connect("system", "manager");
+                } catch (Exception ex) {
+                    LOG.error("unexpected exception on connect/disconnect", ex);
+                    exceptions.add(ex);
+                }
+            }
+        };
+
+        t1.run();
+
+        assertTrue("one connection", Wait.waitFor(new Wait.Condition() {
+                 @Override
+                 public boolean isSatisified() throws Exception {
+                     return 1 == brokerService.getTransportConnectors().get(0).connectionCount();
+                 }
+             }));
+
+        // and it should be closed due to inactivity
+        assertTrue("no dangling connections", Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                return 0 == brokerService.getTransportConnectors().get(0).connectionCount();
+            }
+        }));
+        assertTrue("no exceptions", exceptions.isEmpty());
+    }
 }

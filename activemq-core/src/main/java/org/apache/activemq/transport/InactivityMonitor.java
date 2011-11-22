@@ -71,10 +71,14 @@ public class InactivityMonitor extends AbstractInactivityMonitor {
         long readCheckTime = getReadCheckTime();
 
         if (readCheckTime > 0) {
-            setWriteCheckTime(readCheckTime>3 ? readCheckTime/3 : readCheckTime);
+            setWriteCheckTime(writeCheckValueFromReadCheck(readCheckTime));
         }
 
         super.startMonitorThreads();
+    }
+
+    private long writeCheckValueFromReadCheck(long readCheckTime) {
+        return readCheckTime>3 ? readCheckTime/3 : readCheckTime;
     }
 
     @Override
@@ -89,7 +93,7 @@ public class InactivityMonitor extends AbstractInactivityMonitor {
                 }
 
                 long readCheckTime = Math.min(localWireFormatInfo.getMaxInactivityDuration(), remoteWireFormatInfo.getMaxInactivityDuration());
-                long writeCheckTime = readCheckTime>3 ? readCheckTime/3 : readCheckTime;
+                long writeCheckTime = writeCheckValueFromReadCheck(readCheckTime);
 
                 setReadCheckTime(readCheckTime);
                 setInitialDelayTime(Math.min(localWireFormatInfo.getMaxInactivityDurationInitalDelay(), remoteWireFormatInfo.getMaxInactivityDurationInitalDelay()));
@@ -101,7 +105,7 @@ public class InactivityMonitor extends AbstractInactivityMonitor {
                 }
 
                 long readCheckTime = localWireFormatInfo.getMaxInactivityDuration();
-                long writeCheckTime = readCheckTime>3 ? readCheckTime/3 : readCheckTime;
+                long writeCheckTime = writeCheckValueFromReadCheck(readCheckTime);
 
                 setReadCheckTime(readCheckTime);
                 setInitialDelayTime(localWireFormatInfo.getMaxInactivityDurationInitalDelay());
