@@ -16,9 +16,11 @@
  */
 package org.apache.activemq.network;
 
-import java.util.List;
+import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ConsumerInfo;
+
+import java.util.List;
 
 /**
  * Configuration for a NetworkBridge
@@ -39,7 +41,7 @@ public class NetworkBridgeConfiguration {
     private String brokerURL = "";
     private String userName;
     private String password;
-    private String destinationFilter = ">";
+    private String destinationFilter = null;
     private String name = "NC";
     
     private List<ActiveMQDestination> excludedDestinations;
@@ -211,7 +213,33 @@ public class NetworkBridgeConfiguration {
      * @return the destinationFilter
      */
     public String getDestinationFilter() {
-        return this.destinationFilter;
+        if (this.destinationFilter == null) {
+            if (dynamicallyIncludedDestinations != null && !dynamicallyIncludedDestinations.isEmpty()) {
+                StringBuffer filter = new StringBuffer();
+                String delimiter = "";
+                for (ActiveMQDestination destination : dynamicallyIncludedDestinations) {
+                    if (!destination.isTemporary()) {
+                        filter.append(delimiter);
+                        filter.append(AdvisorySupport.CONSUMER_ADVISORY_TOPIC_PREFIX);
+                        filter.append(destination.getDestinationTypeAsString());
+                        filter.append(".");
+                        filter.append(destination.getPhysicalName());
+                        delimiter = ",";
+                    }
+                }
+                return filter.toString();
+            }   else {
+                return AdvisorySupport.CONSUMER_ADVISORY_TOPIC_PREFIX + ">";
+            }
+        }   else {
+            // prepend consumer advisory prefix
+            // to keep backward compatibility
+            if (!this.destinationFilter.startsWith(AdvisorySupport.CONSUMER_ADVISORY_TOPIC_PREFIX)) {
+                 return AdvisorySupport.CONSUMER_ADVISORY_TOPIC_PREFIX + this.destinationFilter;
+            } else {
+                return this.destinationFilter;
+            }
+        }
     }
 
     /**
