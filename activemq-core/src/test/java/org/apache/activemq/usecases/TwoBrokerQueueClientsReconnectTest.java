@@ -369,6 +369,9 @@ public class TwoBrokerQueueClientsReconnectTest extends JmsMultipleBrokersTestSu
         broker1 = "BrokerA";
         broker2 = "BrokerB";
 
+        // enable producer audit for the network connector, off by default b/c of interference with composite
+        // dests and virtual topics
+        brokers.get(broker2).broker.getTransportConnectors().get(0).setAuditNetworkProducers(true);
         bridgeBrokers(broker1, broker2);
 
         final AtomicBoolean first = new AtomicBoolean();
@@ -405,6 +408,8 @@ public class TwoBrokerQueueClientsReconnectTest extends JmsMultipleBrokersTestSu
 
         // Run brokers
         startAllBrokers();
+
+        waitForBridgeFormation();
 
         // Create queue
         Destination dest = createDestination("TEST.FOO", false);

@@ -143,13 +143,17 @@ public class ProducerBrokerExchange {
                 long lastStoredForMessageProducer = getStoredSequenceIdForMessage(messageSend.getMessageId());
                 if (producerSequenceId <= lastStoredForMessageProducer) {
                     canDispatch = false;
-                    LOG.debug("suppressing duplicate message send from network producer [" + messageSend.getMessageId() + "] with producerSequenceId ["
-                            + producerSequenceId + "] less than last stored: "  + lastStoredForMessageProducer);
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug("suppressing duplicate message send  [" + (LOG.isTraceEnabled() ? messageSend : messageSend.getMessageId()) + "] from network producer with producerSequenceId ["
+                                + producerSequenceId + "] less than last stored: "  + lastStoredForMessageProducer);
+                    }
                 }
             } else if (producerSequenceId <= lastSendSequenceNumber.get()) {
                 canDispatch = false;
-                LOG.debug("suppressing duplicate message send [" + messageSend.getMessageId() + "] with producerSequenceId ["
-                        + producerSequenceId + "] less than last stored: "  + lastSendSequenceNumber);
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("suppressing duplicate message send [" + (LOG.isTraceEnabled() ? messageSend : messageSend.getMessageId()) + "] with producerSequenceId ["
+                            + producerSequenceId + "] less than last stored: "  + lastSendSequenceNumber);
+                }
             } else {
                 // track current so we can suppress duplicates later in the stream
                 lastSendSequenceNumber.set(producerSequenceId);

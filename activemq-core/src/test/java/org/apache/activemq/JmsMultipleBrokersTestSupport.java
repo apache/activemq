@@ -177,7 +177,7 @@ public class JmsMultipleBrokersTestSupport extends CombinationTestSupport {
                     int activeCount = 0;
                     for (NetworkBridge bridge : broker.getNetworkConnectors().get(bridgeIndex).activeBridges()) {
                         if (bridge.getRemoteBrokerName() != null) {
-                            LOG.info("found bridge to " + bridge.getRemoteBrokerName() + " on broker :" + broker.getBrokerName());
+                            LOG.info("found bridge[" + bridge + "] to " + bridge.getRemoteBrokerName() + " on broker :" + broker.getBrokerName());
                             activeCount++;
                         }
                     }

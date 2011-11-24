@@ -25,11 +25,13 @@ import javax.jms.MessageConsumer;
 import javax.jms.QueueBrowser;
 
 import org.apache.activemq.JmsMultipleBrokersTestSupport;
+import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.region.QueueSubscription;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQTextMessage;
 import org.apache.activemq.network.NetworkConnector;
 import org.apache.activemq.util.MessageIdList;
+import org.apache.activemq.util.Wait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.ClassPathResource;
@@ -97,18 +99,20 @@ public class BrowseOverNetworkTest extends JmsMultipleBrokersTestSupport {
         String broker;
         Destination dest;
         int totalCount;
+        final int expect;
         QueueBrowser browser = null;
         MessageConsumer consumer = null;
         boolean consume = false;
 
-        public Browser(String broker, Destination dest) {
+        public Browser(String broker, Destination dest, int expect) {
             this.broker = broker;
             this.dest = dest;
+            this.expect = expect;
         }
 
         public void run() {
             int retries = 0;
-            while (retries++ < 5) {
+            while (retries++ < 20 && totalCount != expect) {
                 try {
                     QueueBrowser browser = createBrowser(broker, dest);
                     int count  = browseMessages(browser, broker);
@@ -172,19 +176,39 @@ public class BrowseOverNetworkTest extends JmsMultipleBrokersTestSupport {
         brokers.get("broker-2A").broker.waitUntilStarted();
         brokers.get("broker-3A").broker.waitUntilStarted();
 
+         for (BrokerItem brokerItem : brokers.values()) {
+            final BrokerService broker = brokerItem.broker;
+            waitForBridgeFormation(broker, 1, 0);
+            waitForBridgeFormation(broker, 1, 1);
+            waitForBridgeFormation(broker, 1, 2);
+            waitForBridgeFormation(broker, 1, 3);
+            waitForBridgeFormation(broker, 1, 4);
+         }
+
         Destination composite = createDestination("PROD.FUSESOURCE.3.A,PROD.FUSESOURCE.3.B", false);
 
-        Browser browser1 = new Browser("broker-3A", composite);
+        final Browser browser1 = new Browser("broker-3A", composite, MESSAGE_COUNT);
         browser1.start();
 
-        Thread.sleep(1000);
-
-        Browser browser2 = new Browser("broker-3B", composite);
+        final Browser browser2 = new Browser("broker-3B", composite, MESSAGE_COUNT);
         browser2.start();
 
-        Thread.sleep(1000);
-
+        LOG.info("Sending messages to broker-1A");
         sendMessages("broker-1A", composite, MESSAGE_COUNT);
+        LOG.info("Message sent to broker-1A");
+
+        Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                return browser1.getTotalCount() == MESSAGE_COUNT;
+            }
+        });
+        Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                return browser2.getTotalCount() == MESSAGE_COUNT;
+            }
+        });
 
         browser1.join();
         browser2.join();

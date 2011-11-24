@@ -71,7 +71,7 @@ public class TransportConnector implements Connector, BrokerServiceAware {
     private boolean rebalanceClusterClients;
     private boolean updateClusterClientsOnRemove = false;
     private String updateClusterFilter;
-    private boolean auditNetworkProducers = true;
+    private boolean auditNetworkProducers = false;
 
     public TransportConnector() {
     }
@@ -117,6 +117,7 @@ public class TransportConnector implements Connector, BrokerServiceAware {
         rc.setRebalanceClusterClients(isRebalanceClusterClients());
         rc.setUpdateClusterFilter(getUpdateClusterFilter());
         rc.setUpdateClusterClientsOnRemove(isUpdateClusterClientsOnRemove());
+        rc.setAuditNetworkProducers(isAuditNetworkProducers());
         return rc;
     }
 
@@ -563,6 +564,11 @@ public class TransportConnector implements Connector, BrokerServiceAware {
         return auditNetworkProducers;
     }
 
+    /**
+     * Enable a producer audit on network connections, Traps the case of a missing send reply and resend.
+     * Note: does not work with conduit=false, networked composite destinations or networked virtual topics
+     * @param auditNetworkProducers
+     */
     public void setAuditNetworkProducers(boolean auditNetworkProducers) {
         this.auditNetworkProducers = auditNetworkProducers;
     }
