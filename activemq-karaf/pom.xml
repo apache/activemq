@@ -37,14 +37,87 @@
     <dom4j-bundle-version>1.6.1_2</dom4j-bundle-version>
     <xstream-bundle-version>1.3_3</xstream-bundle-version>
     <servicemix.specs.version>1.8.0</servicemix.specs.version>
+    <pax-exam-version>1.2.4</pax-exam-version>
   </properties>
 
     <dependencies>
+     <dependency>
+          <groupId>org.ops4j.pax.logging</groupId>
+          <artifactId>pax-logging-api</artifactId>
+          <version>1.6.2</version>
+     </dependency>
+     <dependency>
+          <groupId>org.ops4j.pax.logging</groupId>
+          <artifactId>pax-logging-service</artifactId>
+          <version>1.6.2</version>
+     </dependency>
+
+      <!-- Pax-Exam dependencies -->
+      <dependency>
+        <groupId>org.ops4j.pax.exam</groupId>
+        <artifactId>pax-exam</artifactId>
+        <version>${pax-exam-version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.ops4j.pax.exam</groupId>
+        <artifactId>pax-exam-junit</artifactId>
+        <version>${pax-exam-version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.ops4j.pax.exam</groupId>
+        <artifactId>pax-exam-container-default</artifactId>
+        <version>${pax-exam-version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.ops4j.pax.exam</groupId>
+        <artifactId>pax-exam-junit-extender-impl</artifactId>
+        <version>${pax-exam-version}</version>
+      </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+      <version>${slf4j-version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-log4j12</artifactId>
+      <version>${slf4j-version}</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.felix</groupId>
+      <artifactId>org.apache.felix.framework</artifactId>
+      <version>1.0.0</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.felix</groupId>
+      <artifactId>org.apache.felix.bundlerepository</artifactId>
+      <version>1.2.1</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.karaf.tooling</groupId>
+      <artifactId>org.apache.karaf.tooling.testing</artifactId>
+      <version>${karaf-version}</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.karaf.features</groupId>
+      <artifactId>org.apache.karaf.features.command</artifactId>
+      <version>${karaf-version}</version>
+      <scope>test</scope>
+    </dependency>
+
       <dependency>
         <groupId>org.apache.karaf.shell</groupId>
         <artifactId>org.apache.karaf.shell.console</artifactId>
         <version>${karaf-version}</version>
       </dependency>
+
       <dependency>
           <groupId>org.osgi</groupId>
           <artifactId>org.osgi.core</artifactId>
@@ -70,6 +143,17 @@
             <groupId>org.apache.activemq</groupId>
             <artifactId>activemq-pool</artifactId>
         </dependency>
+
+    <!-- used for testing -->
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+
+
+
 
     </dependencies>
 
@@ -136,7 +220,16 @@
                 <_versionpolicy>[$(version;==;$(@)),$(version;+;$(@)))</_versionpolicy>
             </instructions>
         </configuration>
-      </plugin>       
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <excludes>
+            <exclude>**/KarafIntegrationTest.*</exclude>
+          </excludes>
+        </configuration>
+      </plugin>
     </plugins>
   </build>
 
