@@ -57,7 +57,7 @@ public class AMQ2413Test extends CombinationTestSupport implements MessageListen
     private ActiveMQConnectionFactory factory;
 
     private static final int HANG_THRESHOLD = 60;
-    private static final int SEND_COUNT = 10000;
+    private static final int SEND_COUNT = 1000;
     private static final int RECEIVER_THINK_TIME = 1;
     private static final int CONSUMER_COUNT = 1;
     private static final int PRODUCER_COUNT = 50;
