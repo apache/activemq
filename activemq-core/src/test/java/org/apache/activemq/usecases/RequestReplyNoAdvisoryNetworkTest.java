@@ -259,6 +259,7 @@ public class RequestReplyNoAdvisoryNetworkTest extends JmsMultipleBrokersTestSup
         broker.setAdvisorySupport(false);
         broker.setPersistent(false);
         broker.setUseJmx(false);
+        broker.setSchedulePeriodForDestinationPurge(1000);
 
         PolicyMap map = new PolicyMap();
         PolicyEntry tempReplyQPolicy = new PolicyEntry();

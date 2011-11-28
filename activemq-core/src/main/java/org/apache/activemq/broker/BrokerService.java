@@ -195,7 +195,7 @@ public class BrokerService implements Service {
     private Scheduler scheduler;
     private ThreadPoolExecutor executor;
     private boolean slave = true;
-    private int schedulePeriodForDestinationPurge=5000;
+    private int schedulePeriodForDestinationPurge= 0;
     private int maxPurgedDestinationsPerSweep = 0;
     private BrokerContext brokerContext;
     private boolean networkConnectorStartAsync = false;
