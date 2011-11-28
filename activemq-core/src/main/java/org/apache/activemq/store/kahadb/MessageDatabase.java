@@ -1061,6 +1061,10 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
             }
         }
         if (inflightTx == null) {
+            if (after != null) {
+                // since we don't push this after and we may find another, lets run it now
+                after.run();
+            }
             return;
         }
 
