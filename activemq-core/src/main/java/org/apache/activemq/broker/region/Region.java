@@ -67,9 +67,7 @@ public interface Region extends Service {
     void removeDestination(ConnectionContext context, ActiveMQDestination destination, long timeout) throws Exception;
 
     /**
-     * Returns a copy of the current destinations available in the region
-     * 
-     * @return a copy of the regions currently active at the time of the call with the key the destination and the value the Destination.
+     * Returns a reference to the concurrent hash map that holds known destinations, do not modify
      */
     Map<ActiveMQDestination, Destination> getDestinationMap();
     

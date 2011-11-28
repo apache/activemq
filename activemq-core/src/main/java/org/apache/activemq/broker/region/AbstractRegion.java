@@ -254,7 +254,7 @@ public abstract class AbstractRegion implements Region {
     public Map<ActiveMQDestination, Destination> getDestinationMap() {
         destinationsLock.readLock().lock();
         try{
-            return new HashMap<ActiveMQDestination, Destination>(destinations);
+            return destinations;
         } finally {
             destinationsLock.readLock().unlock();
         }

@@ -133,7 +133,7 @@ public class RegionBroker extends EmptyBroker {
 
     @Override
     public Map<ActiveMQDestination, Destination> getDestinationMap() {
-        Map<ActiveMQDestination, Destination> answer = getQueueRegion().getDestinationMap();
+        Map<ActiveMQDestination, Destination> answer = new HashMap<ActiveMQDestination, Destination>(getQueueRegion().getDestinationMap());
         answer.putAll(getTopicRegion().getDestinationMap());
         return answer;
     }
