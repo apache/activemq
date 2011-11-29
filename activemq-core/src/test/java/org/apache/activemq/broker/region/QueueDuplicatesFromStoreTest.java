@@ -71,7 +71,7 @@ public class QueueDuplicatesFromStoreTest extends TestCase {
     final int ackWindow = 50;
     final int ackBatchSize = 50;
     final int fullWindow = 200;
-    protected int count = 20000;
+    protected int count = 5000;
 
     public void setUp() throws Exception {
         brokerService = createBroker();
