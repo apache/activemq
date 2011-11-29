@@ -19,7 +19,6 @@ package org.apache.activemq.store.jdbc.adapter;
 import java.sql.Blob;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-
 import org.apache.activemq.store.jdbc.Statements;
 
 /**
@@ -30,17 +29,44 @@ import org.apache.activemq.store.jdbc.Statements;
  * implementation of methods to account for differences
  * in JDBC Driver implementations.
  * <p/>
+ * The JDBCAdapter inserts and extracts BLOB data using the
+ * getBytes()/setBytes() operations.
+ * <p/>
+ * The databases/JDBC drivers that use this adapter are:
+ * <ul>
+ * <li></li>
+ * </ul>
  *
- * @org.apache.xbean.XBean element="oracleJDBCAdapter"
+ * @org.apache.xbean.XBean element="oracleBlobJDBCAdapter"
  *
  * 
  */
-public class OracleJDBCAdapter extends DefaultJDBCAdapter {
+public class OracleBlobJDBCAdapter extends BlobJDBCAdapter {
 
     @Override
     public void setStatements(Statements statements) {
         statements.setLongDataType("NUMBER");
         statements.setSequenceDataType("NUMBER");
+
+        String addMessageStatement = "INSERT INTO "
+            + statements.getFullMessageTableName()
+            + "(ID, MSGID_PROD, MSGID_SEQ, CONTAINER, EXPIRATION, PRIORITY, MSG) VALUES (?, ?, ?, ?, ?, ?, empty_blob())";
+        statements.setAddMessageStatement(addMessageStatement);
+
+        String findMessageByIdStatement = "SELECT MSG FROM " +
+        	statements.getFullMessageTableName() + " WHERE ID=? FOR UPDATE";
+        statements.setFindMessageByIdStatement(findMessageByIdStatement);
+
         super.setStatements(statements);
+    }
+
+    @Override
+    protected byte[] getBinaryData(ResultSet rs, int index) throws SQLException {
+        // Get as a BLOB
+        Blob aBlob = rs.getBlob(index);
+        if (aBlob == null) {
+            return null;
+        }
+        return aBlob.getBytes(1, (int) aBlob.length());
     }
 }
