@@ -310,6 +310,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
         connection.setAlwaysSyncSend(isAlwaysSyncSend());
         connection.setAlwaysSessionAsync(isAlwaysSessionAsync());
         connection.setOptimizeAcknowledge(isOptimizeAcknowledge());
+        connection.setOptimizeAcknowledgeTimeOut(getOptimizeAcknowledgeTimeOut());
         connection.setUseRetroactiveConsumer(isUseRetroactiveConsumer());
         connection.setExclusiveConsumer(isExclusiveConsumer());
         connection.setRedeliveryPolicy(getRedeliveryPolicy());
@@ -835,7 +836,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
      * The max time in milliseconds between optimized ack batches
      * @param optimizeAcknowledgeTimeOut
      */
-    public void setOptimizeAcknowledgeTimeOut(int optimizeAcknowledgeTimeOut) {
+    public void setOptimizeAcknowledgeTimeOut(long optimizeAcknowledgeTimeOut) {
         this.optimizeAcknowledgeTimeOut =  optimizeAcknowledgeTimeOut;
     }
 

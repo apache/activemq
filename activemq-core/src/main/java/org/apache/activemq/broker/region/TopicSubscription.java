@@ -192,7 +192,7 @@ public class TopicSubscription extends AbstractSubscription {
             duplicate = audit.isDuplicate(node);
             if (LOG.isDebugEnabled()) {
                 if (duplicate) {
-                    LOG.debug("ignoring duplicate add: " + node.getMessageId());
+                    LOG.debug(this + ", ignoring duplicate add: " + node.getMessageId());
                 }
             }
         }
@@ -537,7 +537,7 @@ public class TopicSubscription extends AbstractSubscription {
             destination.getDestinationStatistics().getDequeues().increment();
         }
         if (LOG.isDebugEnabled()) {
-            LOG.debug("Discarding message " + message);
+            LOG.debug(this + ", discarding message " + message);
         }
         Destination dest = message.getRegionDestination();
         if (dest != null) {

@@ -1635,7 +1635,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
      * The max time in milliseconds between optimized ack batches
      * @param optimizeAcknowledgeTimeOut
      */
-    public void setOptimizeAcknowledgeTimeOut(int optimizeAcknowledgeTimeOut) {
+    public void setOptimizeAcknowledgeTimeOut(long optimizeAcknowledgeTimeOut) {
         this.optimizeAcknowledgeTimeOut =  optimizeAcknowledgeTimeOut;
     }
 
