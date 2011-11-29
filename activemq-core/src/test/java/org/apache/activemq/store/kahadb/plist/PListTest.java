@@ -187,7 +187,7 @@ public class PListTest {
 
 
         final Vector<Throwable> exceptions = new Vector<Throwable>();
-        final int iterations = 5000;
+        final int iterations = 1000;
         final int numLists = 10;
 
         final PList[] lists = new PList[numLists];
@@ -268,12 +268,11 @@ public class PListTest {
         IOHelper.deleteChildren(directory);
         store = new PListStore();
         store.setDirectory(directory);
-        //store.setJournalMaxFileLength(1024*5);
         store.start();
 
 
         final int numThreads = 20;
-        final int iterations = 2000;
+        final int iterations = 1000;
         executor = Executors.newFixedThreadPool(100);
         for (int i=0; i<numThreads; i++) {
             new Job(i, PListTest.TaskType.ADD, iterations).run();
@@ -322,7 +321,7 @@ public class PListTest {
         store.setCleanupInterval(5000);
         store.start();
 
-        final int iterations = 5000;
+        final int iterations = 500;
         final int numLists = 10;
 
         // prime the store
@@ -402,8 +401,8 @@ public class PListTest {
         store.setDirectory(directory);
         store.start();
 
-        final int iterations = 5000;
-        final int numLists = 50;
+        final int iterations = 500;
+        final int numLists = 10;
 
         LOG.info("create");
         for (int i=0; i<numLists;i++) {
@@ -418,7 +417,7 @@ public class PListTest {
         LOG.info("parallel add and remove");
         executor = Executors.newFixedThreadPool(400);
         final int numProducer = 5;
-        final int numConsumer = 50;
+        final int numConsumer = 10;
         for (int i=0; i<numLists; i++) {
             for (int j=0; j<numProducer; j++) {
                 executor.execute(new Job(i, PListTest.TaskType.ADD, iterations*2));
