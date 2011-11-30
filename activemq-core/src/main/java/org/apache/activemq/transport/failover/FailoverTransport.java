@@ -952,7 +952,8 @@ public class FailoverTransport implements CompositeTransport {
 
             int reconnectLimit = calculateReconnectAttemptLimit();
 
-            if (reconnectLimit != INFINITE && ++connectFailures >= reconnectLimit) {
+            connectFailures++;
+            if (reconnectLimit != INFINITE && connectFailures >= reconnectLimit) {
                 LOG.error("Failed to connect to " + uris + " after: " + connectFailures + " attempt(s)");
                 connectionFailure = failure;
 
@@ -1156,6 +1157,10 @@ public class FailoverTransport implements CompositeTransport {
             return 0;
         }
         return transport.getReceiveCounter();
+    }
+
+    public int getConnectFailures() {
+        return connectFailures;
     }
 
     public void connectionInterruptProcessingComplete(ConnectionId connectionId) {

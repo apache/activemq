@@ -28,6 +28,7 @@ import org.apache.activemq.state.ConnectionStateTracker;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportFactory;
 import org.apache.activemq.transport.TransportListener;
+import org.apache.activemq.util.Wait;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -41,6 +42,7 @@ public class FailoverTransportTest {
 
 	@Before
 	public void setUp() throws Exception {
+        commandsReceived = 0;
 	}
 
 	@After
@@ -50,7 +52,40 @@ public class FailoverTransportTest {
         }
     }
 
-	@Test(timeout=30000)
+    @Test(timeout = 30000)
+    public void testReconnectUnlimited() throws Exception {
+
+        Transport transport = TransportFactory.connect(
+                new URI("failover://(tcp://0.0.0.0:61616)?useExponentialBackOff=false&reconnectDelay=0&initialReconnectDelay=0"));
+
+        transport.setTransportListener(new TransportListener() {
+
+            public void onCommand(Object command) {
+                commandsReceived++;
+            }
+
+            public void onException(IOException error) {
+            }
+
+            public void transportInterupted() {
+            }
+
+            public void transportResumed() {
+            }
+        });
+        transport.start();
+
+        this.failoverTransport = transport.narrow(FailoverTransport.class);
+
+        assertTrue("no implicit limit of 1000", Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                return failoverTransport.getConnectFailures() > 1002;
+            }
+        }));
+    }
+
+    @Test(timeout=30000)
 	public void testCommandsIgnoredWhenOffline() throws Exception {
 		this.transport = createTransport();
 
