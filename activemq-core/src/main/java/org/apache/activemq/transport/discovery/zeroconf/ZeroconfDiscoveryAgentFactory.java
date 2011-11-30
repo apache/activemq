@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.activemq.transport.discovery.rendezvous;
+package org.apache.activemq.transport.discovery.zeroconf;
 
 import java.io.IOException;
 import java.net.URI;
@@ -26,12 +26,12 @@ import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.util.URISupport;
 
-public class RendezvousDiscoveryAgentFactory extends DiscoveryAgentFactory {
+public class ZeroconfDiscoveryAgentFactory extends DiscoveryAgentFactory {
 
     protected DiscoveryAgent doCreateDiscoveryAgent(URI uri) throws IOException {
         try {
             Map options = URISupport.parseParameters(uri);
-            RendezvousDiscoveryAgent rc = new RendezvousDiscoveryAgent();
+            ZeroconfDiscoveryAgent rc = new ZeroconfDiscoveryAgent();
             rc.setGroup(uri.getHost());
             IntrospectionSupport.setProperties(rc, options);
             return rc;

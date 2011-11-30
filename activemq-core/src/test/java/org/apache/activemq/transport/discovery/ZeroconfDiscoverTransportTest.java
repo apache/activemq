@@ -20,10 +20,10 @@ package org.apache.activemq.transport.discovery;
  *
  * 
  */
-public class RendezvousDiscoverTransportTest extends DiscoveryTransportBrokerTest {
+public class ZeroconfDiscoverTransportTest extends DiscoveryTransportBrokerTest {
 
     protected String getDiscoveryUri() {
-        return "rendezvous://cheese";
+        return "zeroconf://cheese";
     }
 
 }

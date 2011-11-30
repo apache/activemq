@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.activemq.transport.discovery.rendezvous;
+package org.apache.activemq.transport.discovery.zeroconf;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -43,8 +43,8 @@ import org.slf4j.LoggerFactory;
  * 
  * 
  */
-public class RendezvousDiscoveryAgent implements DiscoveryAgent, ServiceListener {
-    private static final Logger LOG = LoggerFactory.getLogger(RendezvousDiscoveryAgent.class);
+public class ZeroconfDiscoveryAgent implements DiscoveryAgent, ServiceListener {
+    private static final Logger LOG = LoggerFactory.getLogger(ZeroconfDiscoveryAgent.class);
 
     private static final String TYPE_SUFFIX = "ActiveMQ-4.";
 
