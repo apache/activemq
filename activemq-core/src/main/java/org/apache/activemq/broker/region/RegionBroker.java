@@ -514,7 +514,6 @@ public class RegionBroker extends EmptyBroker {
     public void send(ProducerBrokerExchange producerExchange, Message message) throws Exception {
         message.setBrokerInTime(System.currentTimeMillis());
         if (producerExchange.isMutable() || producerExchange.getRegion() == null
-                || (producerExchange.getRegion() != null && producerExchange.getRegion().getDestinationMap().get(message.getDestination()) == null)
                 || (producerExchange.getRegionDestination() != null && producerExchange.getRegionDestination().isDisposed())) {
             ActiveMQDestination destination = message.getDestination();
             // ensure the destination is registered with the RegionBroker
