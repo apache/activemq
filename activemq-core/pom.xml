@@ -33,6 +33,7 @@
   <properties>
     <activemq.osgi.import.pkg>
       com.thoughtworks.xstream*;resolution:=optional,
+      org.xmlpull*;resolution:=optional,
       javax.xml.stream*;resolution:=optional,
       javax.annotation*;resolution:=optional,
       javax.transaction*;resolution:=optional,
