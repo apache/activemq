@@ -56,10 +56,14 @@ public class IdGenerator {
                 Thread.sleep(100);
                 ss.close();
             } catch (Exception ioe) {
-                LOG.warn("could not generate unique stub", ioe);
+                LOG.warn("could not generate unique stub by using DNS and binding to local port", ioe);
             }
-        } else {
+        }
+        // fallback
+        if (hostName == null) {
             hostName = "localhost";
+        }
+        if (stub.length() == 0) {
             stub = "-1-" + System.currentTimeMillis() + "-";
         }
         UNIQUE_STUB = stub;
