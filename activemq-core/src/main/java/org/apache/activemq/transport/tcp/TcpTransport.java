@@ -208,7 +208,7 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
             onException(e);
         } catch (Throwable e){
             stoppedLatch.get().countDown();
-            IOException ioe=new IOException("Unexpected error occured");
+            IOException ioe=new IOException("Unexpected error occured: " + e);
             ioe.initCause(e);
             onException(ioe);
         }finally {
