@@ -177,7 +177,7 @@ public class LoadBalanceTest {
                 }
             });
 
-            waitForBridgeFormation(10000);
+            waitForBridgeFormation();
             startProducer.countDown();
 
             pool.shutdown();
@@ -291,7 +291,7 @@ public class LoadBalanceTest {
         });
         
         // give network a chance to build, needs advisories
-        waitForBridgeFormation(10000);
+        waitForBridgeFormation();
         startProducer.countDown();
         
         pool.shutdown();
@@ -321,16 +321,24 @@ public class LoadBalanceTest {
 
     // need to ensure broker bridge is alive before starting the consumer
     // peeking at the internals will give us this info
-    private void waitForBridgeFormation(long delay) throws Exception {
-        long done = System.currentTimeMillis() + delay;
+    private void waitForBridgeFormation() throws Exception {
+        long done = System.currentTimeMillis() + 30000;
         while (done > System.currentTimeMillis()) {
-            BrokerService broker = BrokerRegistry.getInstance().lookup("two");
-            if (broker != null && !broker.getNetworkConnectors().isEmpty()) {
-                 if (!broker.getNetworkConnectors().get(0).activeBridges().isEmpty()) {
-                     return;
-                 }
+            if (hasBridge("one") && hasBridge("two")) {
+                return;
             }
             Thread.sleep(1000);
         }
+    }
+
+    private boolean hasBridge(String name) {
+        boolean result = false;
+        BrokerService broker = BrokerRegistry.getInstance().lookup(name);
+            if (broker != null && !broker.getNetworkConnectors().isEmpty()) {
+                 if (!broker.getNetworkConnectors().get(0).activeBridges().isEmpty()) {
+                    result = true;
+                 }
+            }
+        return result;
     }
 }
