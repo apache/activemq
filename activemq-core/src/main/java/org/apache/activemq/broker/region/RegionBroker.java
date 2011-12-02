@@ -330,8 +330,10 @@ public class RegionBroker extends EmptyBroker {
                 topicRegion.removeDestination(context, destination, timeout);
                 break;
             case ActiveMQDestination.TEMP_QUEUE_TYPE:
+                tempQueueRegion.removeDestination(context, destination, timeout);
                 break;
             case ActiveMQDestination.TEMP_TOPIC_TYPE:
+                tempTopicRegion.removeDestination(context, destination, timeout);
                 break;
             default:
                 throw createUnknownDestinationTypeException(destination);
