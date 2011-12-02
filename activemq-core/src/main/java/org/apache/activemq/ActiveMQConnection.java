@@ -1307,6 +1307,11 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
                         }catch(Throwable e) {
                             LOG.error("Caught an exception trying to create a JMSException for " +er.getException(),e);
                         }
+                        //dispose of transport
+                        Transport t = this.transport;
+                        if (null != t){
+                            ServiceSupport.dispose(t);
+                        }
                         if(jmsEx !=null) {
                             throw jmsEx;
                         }
@@ -1513,6 +1518,12 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
         clientIDSet = false;
 
         started.set(false);
+    }
+
+    public void finalize() throws Throwable{
+        if (scheduler != null){
+            scheduler.stop();
+        }
     }
 
     /**
@@ -2229,9 +2240,16 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     protected void onControlCommand(ControlCommand command) {
         String text = command.getCommand();
         if (text != null) {
-            if (text.equals("shutdown")) {
+            if ("shutdown".equals(text)) {
                 LOG.info("JVM told to shutdown");
                 System.exit(0);
+            }
+            if (false && "close".equals(text)){
+                LOG.error("Broker " + getBrokerInfo() + "shutdown connection");
+                try {
+                    close();
+                } catch (JMSException e) {
+                }
             }
         }
     }
