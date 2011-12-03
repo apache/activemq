@@ -1307,13 +1307,15 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
                         }catch(Throwable e) {
                             LOG.error("Caught an exception trying to create a JMSException for " +er.getException(),e);
                         }
-                        //dispose of transport
-                        Transport t = this.transport;
-                        if (null != t){
-                            ServiceSupport.dispose(t);
-                        }
-                        if(jmsEx !=null) {
-                            throw jmsEx;
+                        //dispose of transport for security exceptions
+                        if (er.getException() instanceof SecurityException){
+                            Transport t = this.transport;
+                            if (null != t){
+                                ServiceSupport.dispose(t);
+                            }
+                            if(jmsEx !=null) {
+                                throw jmsEx;
+                            }
                         }
                     }
                 }
@@ -1521,8 +1523,9 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     }
 
     public void finalize() throws Throwable{
-        if (scheduler != null){
-            scheduler.stop();
+        Scheduler s = this.scheduler;
+        if (s != null){
+            s.stop();
         }
     }
 
@@ -2473,5 +2476,4 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
             }
         }
     }
-
 }
