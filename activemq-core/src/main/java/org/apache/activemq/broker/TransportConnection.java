@@ -290,8 +290,10 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
             if (responseRequired) {
 
                 response = new ExceptionResponse(e);
-                //still need to close this down - incase the peer of this transport doesn't play nice
-                delayedStop(2000);
+                if(e instanceof java.lang.SecurityException){
+                  //still need to close this down - incase the peer of this transport doesn't play nice
+                  delayedStop(2000, "Failed with SecurityException: " + e.getLocalizedMessage());
+                }
             } else {
                 serviceException(e);
             }
@@ -909,7 +911,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         }
     }
 
-    public void delayedStop(final int waitTime) {
+    public void delayedStop(final int waitTime, final String reason) {
         if (waitTime > 0) {
             try {
                 DefaultThreadPools.getDefaultTaskRunnerFactory().execute(new Runnable() {
@@ -917,6 +919,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
                         try {
                             Thread.sleep(waitTime);
                             stopAsync();
+                            LOG.info("Stopping " + transport.getRemoteAddress() + " because " + reason);
                         } catch (InterruptedException e) {
                         }
                     }
