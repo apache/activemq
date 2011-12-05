@@ -16,35 +16,24 @@
  */
 package org.apache.activemq.console.command;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.nio.ByteBuffer;
-import java.nio.channels.FileChannel;
-import java.util.List;
+import org.w3c.dom.Attr;
+import org.w3c.dom.Element;
+import org.xml.sax.SAXException;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.Result;
-import javax.xml.transform.Source;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.*;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
-
-import org.w3c.dom.Attr;
-import org.w3c.dom.Element;
-import org.xml.sax.SAXException;
+import java.io.*;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
+import java.util.List;
 
 public class CreateCommand extends AbstractCommand {
 
@@ -66,17 +55,6 @@ public class CreateCommand extends AbstractCommand {
     protected final String BROKER_NAME_REGEX = "[$][{]brokerName[}]"; // use to replace broker name property holders
 
     protected String amqConf = "conf/activemq.xml"; // default conf if no conf is specified via --amqconf
-
-    // default files to copy from activemq home to the new broker instance
-    protected String[][] fileCopyMap = {
-        { "conf/log4j.properties", "conf/log4j.properties" },
-        { "conf/broker.ks", "conf/broker.ks" },
-        { "conf/broker.ts", "conf/broker.ts" },
-        { "conf/camel.xml", "conf/camel.xml" },
-        { "conf/jetty.xml", "conf/jetty.xml" },
-        { "conf/jetty-realm.properties", "conf/jetty-realm.properties" },
-        { "conf/credentials.properties", "conf/credentials.properties" }
-    };
 
     // default files to create 
     protected String[][] fileWriteMap = {
@@ -117,7 +95,7 @@ public class CreateCommand extends AbstractCommand {
             createSubDirs(targetAmqBase, BASE_SUB_DIRS);
             writeFileMapping(targetAmqBase, fileWriteMap);
             copyActivemqConf(amqHome, targetAmqBase, amqConf);
-            copyFileMapping(amqHome, targetAmqBase, fileCopyMap);
+            copyConfDirectory(new File(amqHome, "conf"), new File(targetAmqBase, "conf"));
         }
     }
 
@@ -160,15 +138,6 @@ public class CreateCommand extends AbstractCommand {
         }
     }
 
-    protected void copyFileMapping(File srcBase, File targetBase, String[][] fileMapping) throws IOException {
-        for (String[] fileMap : fileMapping) {
-            File src = new File(srcBase, fileMap[0]);
-            File dest = new File(targetBase, resolveParam(BROKER_NAME_REGEX, brokerName, fileMap[1]));
-            context.print("Copying from: " + src.getCanonicalPath() + "\n          to: " + dest.getCanonicalPath());
-            copyFile(src, dest);
-        }
-    }
-
     protected void copyActivemqConf(File srcBase, File targetBase, String activemqConf) throws IOException, ParserConfigurationException, SAXException, TransformerException, XPathExpressionException {
         File src = new File(srcBase, activemqConf);
 
@@ -201,7 +170,7 @@ public class CreateCommand extends AbstractCommand {
             data = resolveParam("[$][{]activemq.home[}]", amqHome.getCanonicalPath().replaceAll("[\\\\]", "/"), data);
             data = resolveParam("[$][{]activemq.base[}]", targetAmqBase.getCanonicalPath().replaceAll("[\\\\]", "/"), data);
         } else if (typeName.equals("unixActivemq")) {
-            data = unixActivemqData;
+            data = getUnixActivemqData();
             data = resolveParam("[$][{]activemq.home[}]", amqHome.getCanonicalPath().replaceAll("[\\\\]", "/"), data);
             data = resolveParam("[$][{]activemq.base[}]", targetAmqBase.getCanonicalPath().replaceAll("[\\\\]", "/"), data);
         } else {
@@ -217,9 +186,9 @@ public class CreateCommand extends AbstractCommand {
         destinationChannel.close();
 
         // Set file permissions available for Java 6.0 only
-//        dest.setExecutable(true);
-//        dest.setReadable(true);
-//        dest.setWritable(true);
+        dest.setExecutable(true);
+        dest.setReadable(true);
+        dest.setWritable(true);
     }
 
     // utlity method to write an xml source to file
@@ -241,6 +210,23 @@ public class CreateCommand extends AbstractCommand {
         sourceChannel.transferTo(0, sourceChannel.size(), destinationChannel);
         sourceChannel.close();
         destinationChannel.close();
+    }
+
+    private void copyConfDirectory(File from, File dest) throws IOException {
+        if (from.isDirectory()) {
+            String files[] = from.list();
+
+            for (String file : files) {
+                File srcFile = new File(from, file);
+                if (srcFile.isFile() && !srcFile.getName().equals("activemq.xml")) {
+                    File destFile = new File(dest, file);
+                    context.print("Copying from: " + srcFile.getCanonicalPath() + "\n          to: " + destFile.getCanonicalPath());
+                    copyFile(srcFile, destFile);
+                }
+            }
+        } else {
+            throw new IOException(from + " is not a directory");
+        }
     }
 
     // replace a property place holder (paramName) with the paramValue
@@ -265,29 +251,34 @@ public class CreateCommand extends AbstractCommand {
             + "%ACTIVEMQ_HOME%/bin/activemq %PARAM%";
 
 
-    // Embedded unix script data
-    private static final String unixActivemqData = "## Figure out the ACTIVEMQ_BASE from the directory this script was run from\n"
-        + "PRG=\"$0\"\n"
-        + "progname=`basename \"$0\"`\n"
-        + "saveddir=`pwd`\n"
-        + "# need this for relative symlinks\n"
-        + "dirname_prg=`dirname \"$PRG\"`\n"
-        + "cd \"$dirname_prg\"\n"
-        + "while [ -h \"$PRG\" ] ; do\n"
-        + "  ls=`ls -ld \"$PRG\"`\n"
-        + "  link=`expr \"$ls\" : '.*-> \\(.*\\)$'`\n"
-        + "  if expr \"$link\" : '.*/.*' > /dev/null; then\n"
-        + "    PRG=\"$link\"\n"
-        + "  else\n"
-        + "    PRG=`dirname \"$PRG\"`\"/$link\"\n"
-        + "  fi\n"
-        + "done\n"
-        + "ACTIVEMQ_BASE=`dirname \"$PRG\"`/..\n"
-        + "cd \"$saveddir\"\n"
-        + "\n"
-        + "ACTIVEMQ_BASE=`cd \"$ACTIVEMQ_BASE\" && pwd`\n\n"
-        + "export ACTIVEMQ_HOME=${activemq.home}\n"
-        + "export ACTIVEMQ_BASE=$ACTIVEMQ_BASE\n\n"
-        + "${ACTIVEMQ_HOME}/bin/activemq \"$*\"";
+   private String getUnixActivemqData() {
+       StringBuffer res = new StringBuffer();
+       res.append("## Figure out the ACTIVEMQ_BASE from the directory this script was run from\n");
+       res.append("PRG=\"$0\"\n");
+       res.append("progname=`basename \"$0\"`\n");
+       res.append("saveddir=`pwd`\n");
+       res.append("# need this for relative symlinks\n");
+       res.append("dirname_prg=`dirname \"$PRG\"`\n");
+       res.append("cd \"$dirname_prg\"\n");
+       res.append("while [ -h \"$PRG\" ] ; do\n");
+       res.append("  ls=`ls -ld \"$PRG\"`\n");
+       res.append("  link=`expr \"$ls\" : '.*-> \\(.*\\)$'`\n");
+       res.append("  if expr \"$link\" : '.*/.*' > /dev/null; then\n");
+       res.append("    PRG=\"$link\"\n");
+       res.append("  else\n");
+       res.append("    PRG=`dirname \"$PRG\"`\"/$link\"\n");
+       res.append("  fi\n");
+       res.append("done\n");
+       res.append("ACTIVEMQ_BASE=`dirname \"$PRG\"`/..\n");
+       res.append("cd \"$saveddir\"\n\n");
+       res.append("ACTIVEMQ_BASE=`cd \"$ACTIVEMQ_BASE\" && pwd`\n\n");
+       res.append("## Add system properties for this instance here (if needed), e.g\n");
+       res.append("#export ACTIVEMQ_OPTS_MEMORY=\"-Xms256M -Xmx1G\"\n");
+       res.append("#export ACTIVEMQ_OPTS=\"$ACTIVEMQ_OPTS_MEMORY -Dorg.apache.activemq.UseDedicatedTaskRunner=true -Djava.util.logging.config.file=logging.properties\"\n\n");
+       res.append("export ACTIVEMQ_HOME=${activemq.home}\n");
+       res.append("export ACTIVEMQ_BASE=$ACTIVEMQ_BASE\n\n");
+       res.append("${ACTIVEMQ_HOME}/bin/activemq \"$*\"");
+       return res.toString();
+   }
 
 }
