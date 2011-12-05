@@ -59,8 +59,8 @@ public final class OpenWireFormat implements WireFormat {
     private short nextMarshallCacheIndex;
     private short nextMarshallCacheEvictionIndex;
     private Map<DataStructure, Short> marshallCacheMap = new HashMap<DataStructure, Short>();
-    private DataStructure marshallCache[] = new DataStructure[MARSHAL_CACHE_SIZE];
-    private DataStructure unmarshallCache[] = new DataStructure[MARSHAL_CACHE_SIZE];
+    private DataStructure marshallCache[] = null;
+    private DataStructure unmarshallCache[] = null;
     private DataByteArrayOutputStream bytesOut = new DataByteArrayOutputStream();
     private DataByteArrayInputStream bytesIn = new DataByteArrayInputStream();
     private WireFormatInfo preferedWireFormatInfo;
@@ -572,6 +572,10 @@ public final class OpenWireFormat implements WireFormat {
     }
 
     public void setCacheEnabled(boolean cacheEnabled) {
+        if(cacheEnabled){
+            marshallCache = new DataStructure[MARSHAL_CACHE_SIZE];
+            unmarshallCache = new DataStructure[MARSHAL_CACHE_SIZE];
+        }
         this.cacheEnabled = cacheEnabled;
     }
 
