@@ -439,6 +439,20 @@ public class BrokerService implements Service {
         return started.get();
     }
 
+    /**
+     * Forces a start of the broker. 
+     * By default a BrokerService instance that was 
+     * previously stopped using BrokerService.stop() cannot be restarted
+     * using BrokerService.start(). 
+     * This method enforces a restart. 
+     * It is not recommended to force a restart of the broker and will not work
+     * for most but some very trivial broker configurations. 
+     * For restarting a broker instance we recommend to first call stop() on
+     * the old instance and then recreate a new BrokerService instance.
+     * 
+     * @param force - if true enforces a restart.
+     * @throws Exception
+     */
     public void start(boolean force) throws Exception {
         forceStart = force;
         stopped.set(false);
