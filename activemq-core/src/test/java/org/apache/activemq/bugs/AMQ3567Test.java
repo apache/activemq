@@ -22,6 +22,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileReader;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.jms.Connection;
 import javax.jms.Destination;
@@ -35,10 +36,12 @@ import javax.jms.Session;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.util.DefaultTestAppender;
 import org.apache.log4j.Layout;
 import org.apache.log4j.Level;
 import org.apache.log4j.PatternLayout;
 import org.apache.log4j.WriterAppender;
+import org.apache.log4j.spi.LoggingEvent;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -74,12 +77,24 @@ public class AMQ3567Test {
     @Test
     public void runTest() throws Exception {
         produceSingleMessage();
-        File file = File.createTempFile("whatever", null);
-        FileOutputStream fos = new FileOutputStream(file);
         org.apache.log4j.Logger log4jLogger = org.apache.log4j.Logger.getLogger("org.apache.activemq.util.ServiceSupport");
-        Layout layout = new PatternLayout("%d | %-5p | %c - %m%n");
-        WriterAppender appender = new WriterAppender(layout, fos);
-        log4jLogger.addAppender(appender);
+        final AtomicBoolean failed = new AtomicBoolean(false);
+
+        log4jLogger.addAppender(new DefaultTestAppender() {
+            @Override
+            public void doAppend(LoggingEvent event) {
+                if (event.getThrowableInformation() != null) {
+                    if (event.getThrowableInformation().getThrowable() instanceof InterruptedException) {
+                        InterruptedException ie = (InterruptedException)event.getThrowableInformation().getThrowable();
+                        if (ie.getMessage().startsWith("Could not stop service:")) {
+                            logger.info("Received an interrupted exception : ", ie);
+                            failed.set(true);
+                        }
+                    }
+                }
+            }
+        });
+        
         Level level = log4jLogger.getLevel();
         log4jLogger.setLevel(Level.DEBUG);
 
@@ -88,27 +103,12 @@ public class AMQ3567Test {
         try {
             stopConsumer();
             stopBroker();
-            log4jLogger.removeAppender(appender);
-            fos.close();
-            read = new BufferedReader(new FileReader(file));
-            String line;
-
-            while ((line = read.readLine()) != null) {
-                if (line.indexOf("InterruptedException") > -1) {
-                    if (line.indexOf("Could not stop service:") > -1) {
-                        logger.info("Received an interrupted exception {}", line);
-                        fail("An Interrupt exception was generated");
-                    }
-                }
+            if (failed.get()) {
+                fail("An Interrupt exception was generated");
             }
 
         } finally {
             log4jLogger.setLevel(level);
-
-            if (read != null)
-                read.close();
-
-            file.deleteOnExit();
         }
     }
 

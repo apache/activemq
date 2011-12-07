@@ -24,6 +24,7 @@ import junit.framework.TestCase;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.TransportConnection;
 import org.apache.activemq.transport.TransportDisposedIOException;
+import org.apache.activemq.util.DefaultTestAppender;
 import org.apache.log4j.Appender;
 import org.apache.log4j.Layout;
 import org.apache.log4j.Level;
@@ -35,21 +36,9 @@ import org.apache.log4j.spi.LoggingEvent;
 public class AMQ2902Test extends TestCase {
     final AtomicBoolean gotExceptionInLog = new AtomicBoolean(Boolean.FALSE);
     final AtomicBoolean failedToFindMDC = new AtomicBoolean(Boolean.FALSE);
-
-    Appender appender = new Appender() {
-        public void addFilter(Filter newFilter) {
-        }
-
-        public Filter getFilter() {
-            return null;
-        }
-
-        public void clearFilters() {
-        }
-
-        public void close() {
-        }
-
+    
+    Appender appender = new DefaultTestAppender() {
+        @Override
         public void doAppend(LoggingEvent event) {
             if (event.getThrowableInformation() != null
                     && event.getThrowableInformation().getThrowable() instanceof TransportDisposedIOException) {
@@ -59,31 +48,6 @@ public class AMQ2902Test extends TestCase {
                 failedToFindMDC.set(Boolean.TRUE);
             }
             return;
-        }
-
-        public String getName() {
-            return "AMQ2902TestAppender";
-        }
-
-        public void setErrorHandler(ErrorHandler errorHandler) {
-        }
-
-        public ErrorHandler getErrorHandler() {
-            return null;
-        }
-
-        public void setLayout(Layout layout) {
-        }
-
-        public Layout getLayout() {
-            return null;
-        }
-
-        public void setName(String name) {
-        }
-
-        public boolean requiresLayout() {
-            return false;
         }
     };
 
