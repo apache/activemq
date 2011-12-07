@@ -59,9 +59,11 @@ public class LastImageSubscriptionRecoveryPolicy implements SubscriptionRecovery
 
     public Message[] browse(ActiveMQDestination destination) throws Exception {
         List<Message> result = new ArrayList<Message>();
-        DestinationFilter filter = DestinationFilter.parseFilter(destination);
-        if (filter.matches(lastImage.getMessage().getDestination())) {
-            result.add(lastImage.getMessage());
+        if (lastImage != null) {
+            DestinationFilter filter = DestinationFilter.parseFilter(destination);
+            if (filter.matches(lastImage.getMessage().getDestination())) {
+                result.add(lastImage.getMessage());
+            }
         }
         return result.toArray(new Message[result.size()]);
     }
