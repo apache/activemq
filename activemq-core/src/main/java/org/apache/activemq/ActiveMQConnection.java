@@ -1303,8 +1303,8 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
                         }
                         JMSException jmsEx = null;
                         try {
-                         jmsEx = JMSExceptionSupport.create(er.getException());
-                        }catch(Throwable e) {
+                            jmsEx = JMSExceptionSupport.create(er.getException());
+                        } catch(Throwable e) {
                             LOG.error("Caught an exception trying to create a JMSException for " +er.getException(),e);
                         }
                         //dispose of transport for security exceptions
@@ -1313,9 +1313,9 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
                             if (null != t){
                                 ServiceSupport.dispose(t);
                             }
-                            if(jmsEx !=null) {
-                                throw jmsEx;
-                            }
+                        }
+                        if (jmsEx !=null) {
+                            throw jmsEx;
                         }
                     }
                 }
