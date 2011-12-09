@@ -41,6 +41,7 @@ import org.apache.log4j.Layout;
 import org.apache.log4j.Level;
 import org.apache.log4j.PatternLayout;
 import org.apache.log4j.WriterAppender;
+import org.apache.log4j.Appender;
 import org.apache.log4j.spi.LoggingEvent;
 import org.junit.Before;
 import org.junit.Test;
@@ -80,7 +81,7 @@ public class AMQ3567Test {
         org.apache.log4j.Logger log4jLogger = org.apache.log4j.Logger.getLogger("org.apache.activemq.util.ServiceSupport");
         final AtomicBoolean failed = new AtomicBoolean(false);
 
-        log4jLogger.addAppender(new DefaultTestAppender() {
+        Appender appender = new DefaultTestAppender() {
             @Override
             public void doAppend(LoggingEvent event) {
                 if (event.getThrowableInformation() != null) {
@@ -93,7 +94,8 @@ public class AMQ3567Test {
                     }
                 }
             }
-        });
+        };
+        log4jLogger.addAppender(appender);
         
         Level level = log4jLogger.getLevel();
         log4jLogger.setLevel(Level.DEBUG);
@@ -109,6 +111,7 @@ public class AMQ3567Test {
 
         } finally {
             log4jLogger.setLevel(level);
+            log4jLogger.removeAppender(appender);
         }
     }
 
