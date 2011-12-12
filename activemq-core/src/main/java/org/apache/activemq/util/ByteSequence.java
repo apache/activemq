@@ -23,6 +23,9 @@ public class ByteSequence {
     public int offset;
     public int length;
 
+    public ByteSequence() {
+    }
+
     public ByteSequence(byte data[]) {
         this.data = data;
         this.offset = 0;
