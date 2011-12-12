@@ -87,11 +87,11 @@ public class JmsMultipleBrokersTestSupport extends CombinationTestSupport {
         return bridgeBrokers(localBrokerName, remoteBrokerName, false, 1, true);
     }
 
-    protected void bridgeBrokers(String localBrokerName, String remoteBrokerName, boolean dynamicOnly) throws Exception {
+    protected NetworkConnector bridgeBrokers(String localBrokerName, String remoteBrokerName, boolean dynamicOnly) throws Exception {
         BrokerService localBroker = brokers.get(localBrokerName).broker;
         BrokerService remoteBroker = brokers.get(remoteBrokerName).broker;
 
-        bridgeBrokers(localBroker, remoteBroker, dynamicOnly, 1, true, false);
+        return bridgeBrokers(localBroker, remoteBroker, dynamicOnly, 1, true, false);
     }
 
     protected NetworkConnector bridgeBrokers(String localBrokerName, String remoteBrokerName, boolean dynamicOnly, int networkTTL, boolean conduit) throws Exception {

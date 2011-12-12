@@ -52,6 +52,7 @@ public class NetworkBridgeConfiguration {
     private boolean suppressDuplicateTopicSubscriptions = true;
 
     private boolean alwaysSyncSend = false;
+    private boolean staticBridge = false;
 
     /**
      * @return the conduitSubscriptions
@@ -358,5 +359,13 @@ public class NetworkBridgeConfiguration {
      */
     public void setConsumerPriorityBase(int consumerPriorityBase) {
         this.consumerPriorityBase = consumerPriorityBase;
+    }
+
+    public boolean isStaticBridge() {
+        return staticBridge;
+    }
+
+    public void setStaticBridge(boolean staticBridge) {
+        this.staticBridge = staticBridge;
     }
 }

@@ -282,15 +282,17 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                 remoteBroker.oneway(producerInfo);
                 // Listen to consumer advisory messages on the remote broker to
                 // determine demand.
-                demandConsumerInfo = new ConsumerInfo(remoteSessionInfo, 1);
-                demandConsumerInfo.setDispatchAsync(configuration.isDispatchAsync());
-                String advisoryTopic = configuration.getDestinationFilter();
-                if (configuration.isBridgeTempDestinations()) {
-                    advisoryTopic += "," + AdvisorySupport.TEMP_DESTINATION_COMPOSITE_ADVISORY_TOPIC;
+                if (!configuration.isStaticBridge()) {
+                    demandConsumerInfo = new ConsumerInfo(remoteSessionInfo, 1);
+                    demandConsumerInfo.setDispatchAsync(configuration.isDispatchAsync());
+                    String advisoryTopic = configuration.getDestinationFilter();
+                    if (configuration.isBridgeTempDestinations()) {
+                        advisoryTopic += "," + AdvisorySupport.TEMP_DESTINATION_COMPOSITE_ADVISORY_TOPIC;
+                    }
+                    demandConsumerInfo.setDestination(new ActiveMQTopic(advisoryTopic));
+                    demandConsumerInfo.setPrefetchSize(configuration.getPrefetchSize());
+                    remoteBroker.oneway(demandConsumerInfo);
                 }
-                demandConsumerInfo.setDestination(new ActiveMQTopic(advisoryTopic));
-                demandConsumerInfo.setPrefetchSize(configuration.getPrefetchSize());
-                remoteBroker.oneway(demandConsumerInfo);
                 startedLatch.countDown();
             }
         }
