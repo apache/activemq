@@ -28,6 +28,7 @@ import org.apache.activemq.command.WireFormatInfo;
 import org.apache.activemq.filter.MessageEvaluationContext;
 import org.apache.activemq.security.MessageAuthorizationPolicy;
 import org.apache.activemq.security.SecurityContext;
+import org.apache.activemq.state.ConnectionState;
 import org.apache.activemq.transaction.Transaction;
 
 /**
@@ -58,6 +59,7 @@ public class ConnectionContext {
     private final MessageEvaluationContext messageEvaluationContext;
     private boolean dontSendReponse;
     private boolean clientMaster = true;
+    private ConnectionState connectionState;
 
     public ConnectionContext() {
     	this.messageEvaluationContext = new MessageEvaluationContext();
@@ -320,4 +322,11 @@ public class ConnectionContext {
         this.faultTolerant = faultTolerant;
     }
 
+    public void setConnectionState(ConnectionState connectionState) {
+        this.connectionState = connectionState;
+    }
+
+    public ConnectionState getConnectionState() {
+        return this.connectionState;
+    }
 }

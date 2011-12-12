@@ -125,7 +125,9 @@ public abstract class AbstractRegion implements Region {
 
     public Destination addDestination(ConnectionContext context, ActiveMQDestination destination,
             boolean createIfTemporary) throws Exception {
-        LOG.debug(broker.getBrokerName() + " adding destination: " + destination);
+        if (LOG.isDebugEnabled()) {
+            LOG.debug(broker.getBrokerName() + " adding destination: " + destination);
+        }
 
         destinationsLock.writeLock().lock();
         try {
@@ -142,18 +144,6 @@ public abstract class AbstractRegion implements Region {
                     destinations.put(destination, dest);
                     destinationMap.put(destination, dest);
                     addSubscriptionsForDestination(context, dest);
-                    if (destination.isTemporary()) {
-                        // need to associate with the connection so it can get removed
-                        if (context.getConnection() instanceof TransportConnection) {
-                            TransportConnection transportConnection = (TransportConnection) context.getConnection();
-                            DestinationInfo info = new DestinationInfo(context.getConnectionId(),
-                                    DestinationInfo.ADD_OPERATION_TYPE,
-                                    destination);
-                            transportConnection.processAddDestination(info);
-                            LOG.debug("assigning ownership of auto created temp : " + destination + " to connection:"
-                                    + context.getConnectionId());
-                        }
-                    }
                 }
                 if (dest == null) {
                     throw new JMSException("The destination " + destination + " does not exist.");
@@ -207,7 +197,9 @@ public abstract class AbstractRegion implements Region {
             // dropping the subscription.
         }
 
-        LOG.debug("Removing destination: " + destination);
+        if (LOG.isDebugEnabled()) {
+            LOG.debug(broker.getBrokerName() + " removing destination: " + destination);
+        }
 
         destinationsLock.writeLock().lock();
         try {
@@ -229,7 +221,9 @@ public abstract class AbstractRegion implements Region {
                 }
 
             } else {
-                LOG.debug("Destination doesn't exist: " + dest);
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("Destination doesn't exist: " + dest);
+                }
             }
         } finally {
             destinationsLock.writeLock().unlock();
@@ -262,8 +256,10 @@ public abstract class AbstractRegion implements Region {
 
     @SuppressWarnings("unchecked")
     public Subscription addConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
-        LOG.debug(broker.getBrokerName() + " adding consumer: " + info.getConsumerId() + " for destination: "
-                + info.getDestination());
+        if (LOG.isDebugEnabled()) {
+            LOG.debug(broker.getBrokerName() + " adding consumer: " + info.getConsumerId() + " for destination: "
+                    + info.getDestination());
+        }
         ActiveMQDestination destination = info.getDestination();
         if (destination != null && !destination.isPattern() && !destination.isComposite()) {
             // lets auto-create the destination
@@ -362,8 +358,10 @@ public abstract class AbstractRegion implements Region {
 
     @SuppressWarnings("unchecked")
     public void removeConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
-        LOG.debug(broker.getBrokerName() + " removing consumer: " + info.getConsumerId() + " for destination: "
-                + info.getDestination());
+        if (LOG.isDebugEnabled()) {
+            LOG.debug(broker.getBrokerName() + " removing consumer: " + info.getConsumerId() + " for destination: "
+                    + info.getDestination());
+        }
 
         Subscription sub = subscriptions.remove(info.getConsumerId());
         // The sub could be removed elsewhere - see ConnectionSplitBroker
@@ -418,7 +416,9 @@ public abstract class AbstractRegion implements Region {
                     LOG.warn("Ack for non existent subscription, ack:" + ack);
                     throw new IllegalArgumentException("The subscription does not exist: " + ack.getConsumerId());
                 } else {
-                    LOG.debug("Ack for non existent subscription in recovery, ack:" + ack);
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug("Ack for non existent subscription in recovery, ack:" + ack);
+                    }
                     return;
                 }
             }

@@ -183,6 +183,8 @@ public class AdvisoryBroker extends BrokerFilter {
         super.removeDestination(context, destination, timeout);
         DestinationInfo info = destinations.remove(destination);
         if (info != null) {
+            // ensure we don't modify (and loose/overwrite) an in-flight add advisory, so duplicate
+            info = info.copy();
             info.setDestination(destination);
             info.setOperationType(DestinationInfo.REMOVE_OPERATION_TYPE);
             ActiveMQTopic topic = AdvisorySupport.getDestinationAdvisoryTopic(destination);
@@ -204,6 +206,8 @@ public class AdvisoryBroker extends BrokerFilter {
         super.removeDestinationInfo(context, destInfo);   
         DestinationInfo info = destinations.remove(destInfo.getDestination());
         if (info != null) {
+            // ensure we don't modify (and loose/overwrite) an in-flight add advisory, so duplicate
+            info = info.copy();
             info.setDestination(destInfo.getDestination());
             info.setOperationType(DestinationInfo.REMOVE_OPERATION_TYPE);
             ActiveMQTopic topic = AdvisorySupport.getDestinationAdvisoryTopic(destInfo.getDestination());
@@ -214,7 +218,6 @@ public class AdvisoryBroker extends BrokerFilter {
             }
             try {
                 next.removeDestination(context, AdvisorySupport.getProducerAdvisoryTopic(info.getDestination()), -1);
-            
             } catch (Exception expectedIfDestinationDidNotExistYet) {
             }
         }

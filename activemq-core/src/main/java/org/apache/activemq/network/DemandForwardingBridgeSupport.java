@@ -553,7 +553,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
             }
             destInfo.setBrokerPath(appendToBrokerPath(destInfo.getBrokerPath(), getRemoteBrokerPath()));
             if (LOG.isTraceEnabled()) {
-                LOG.trace("bridging destination control command: " + destInfo);
+                LOG.trace(configuration.getBrokerName() +" bridging destination control command: " + destInfo);
             }
             localBroker.oneway(destInfo);
         } else if (data.getClass() == RemoveInfo.class) {

@@ -126,4 +126,13 @@ public class DestinationInfo extends BaseCommand {
         throw new IOException("Unknown operation type: " + getOperationType());
     }
 
+    public DestinationInfo copy() {
+        DestinationInfo result = new DestinationInfo();
+        super.copy(result);
+        result.connectionId = connectionId;
+        result.destination = destination;
+        result.operationType = operationType;
+        result.brokerPath = brokerPath;
+        return result;
+    }
 }

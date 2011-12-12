@@ -37,6 +37,7 @@ import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.ConsumerBrokerExchange;
 import org.apache.activemq.broker.EmptyBroker;
 import org.apache.activemq.broker.ProducerBrokerExchange;
+import org.apache.activemq.broker.TransportConnection;
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.broker.region.policy.DeadLetterStrategy;
 import org.apache.activemq.broker.region.policy.PolicyMap;
@@ -373,9 +374,22 @@ public class RegionBroker extends EmptyBroker {
         if (destination != null) {
             inactiveDestinationsPurgeLock.readLock().lock();
             try {
-                // This seems to cause the destination to be added but without
-                // advisories firing...
-                context.getBroker().addDestination(context, destination, true);
+                if (!destinations.containsKey(destination)) {
+                    // This seems to cause the destination to be added but without
+                    // advisories firing...
+                    context.getBroker().addDestination(context, destination, true);
+                    // associate it with the connection so that it can get deleted
+                    if (destination.isTemporary() && context.getConnectionState() != null) {
+                        DestinationInfo destinationInfo = new DestinationInfo(context.getConnectionId(),
+                                DestinationInfo.ADD_OPERATION_TYPE,
+                                destination);
+                        context.getConnectionState().addTempDestination(destinationInfo);
+                        if (LOG.isDebugEnabled()) {
+                            LOG.debug("assigning ownership of auto created temp : " + destination + " to connection:"
+                                    + context.getConnectionId());
+                        }
+                    }
+                }
                 switch (destination.getDestinationType()) {
                 case ActiveMQDestination.QUEUE_TYPE:
                     queueRegion.addProducer(context, info);

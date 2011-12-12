@@ -668,6 +668,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         context.setWireFormatInfo(wireFormatInfo);
         context.setReconnect(info.isFailoverReconnect());
         this.manageable = info.isManageable();
+        context.setConnectionState(state);
         state.setContext(context);
         state.setConnection(this);
         if (info.getClientIp() == null) {
