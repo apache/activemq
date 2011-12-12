@@ -1227,6 +1227,10 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
         return configuration.isDuplex() || createdByDuplex;
     }
 
+    public ConcurrentHashMap<ConsumerId, DemandSubscription> getLocalSubscriptionMap() {
+        return subscriptionMapByRemoteId;
+    }
+
     public void setBrokerService(BrokerService brokerService) {
         this.brokerService = brokerService;
         this.localBrokerId = brokerService.getRegionBroker().getBrokerId();

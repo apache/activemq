@@ -77,6 +77,9 @@ public class DemandSubscription {
         return remoteSubsIds.isEmpty();
     }
 
+    public int size() {
+        return remoteSubsIds.size();
+    }
     /**
      * @return Returns the localInfo.
      */
