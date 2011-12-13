@@ -16,20 +16,11 @@
  */
 package org.apache.activemq.store.kahadb;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.Set;
 import org.apache.activeio.journal.Journal;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.BrokerServiceAware;
 import org.apache.activemq.broker.ConnectionContext;
-import org.apache.activemq.command.ActiveMQDestination;
-import org.apache.activemq.command.ActiveMQQueue;
-import org.apache.activemq.command.ActiveMQTopic;
-import org.apache.activemq.command.LocalTransactionId;
-import org.apache.activemq.command.ProducerId;
-import org.apache.activemq.command.TransactionId;
-import org.apache.activemq.command.XATransactionId;
+import org.apache.activemq.command.*;
 import org.apache.activemq.protobuf.Buffer;
 import org.apache.activemq.store.MessageStore;
 import org.apache.activemq.store.PersistenceAdapter;
@@ -39,6 +30,10 @@ import org.apache.activemq.store.kahadb.data.KahaLocalTransactionId;
 import org.apache.activemq.store.kahadb.data.KahaTransactionInfo;
 import org.apache.activemq.store.kahadb.data.KahaXATransactionId;
 import org.apache.activemq.usage.SystemUsage;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.Set;
 
 /**
  * An implementation of {@link PersistenceAdapter} designed for use with a
@@ -498,6 +493,14 @@ public class KahaDBPersistenceAdapter implements PersistenceAdapter, BrokerServi
 
     public void setForceRecoverIndex(boolean forceRecoverIndex) {
         letter.setForceRecoverIndex(forceRecoverIndex);
+    }
+
+    public boolean isArchiveCorruptedIndex() {
+        return letter.isArchiveCorruptedIndex();
+    }
+
+    public void setArchiveCorruptedIndex(boolean archiveCorruptedIndex) {
+        letter.setArchiveCorruptedIndex(archiveCorruptedIndex);
     }
 
     /**

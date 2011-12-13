@@ -16,24 +16,15 @@
  */
 package org.apache.activemq.store.kahadb;
 
-import java.io.File;
-import java.net.URI;
-import java.util.ArrayList;
-
 import junit.framework.Test;
-
-import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.RecoveryBrokerTest;
 import org.apache.activemq.broker.StubConnection;
-import org.apache.activemq.command.ActiveMQDestination;
-import org.apache.activemq.command.ActiveMQQueue;
-import org.apache.activemq.command.ConnectionInfo;
-import org.apache.activemq.command.ConsumerInfo;
-import org.apache.activemq.command.Message;
-import org.apache.activemq.command.MessageAck;
-import org.apache.activemq.command.ProducerInfo;
-import org.apache.activemq.command.SessionInfo;
+import org.apache.activemq.command.*;
+
+import java.io.File;
+import java.io.RandomAccessFile;
+import java.util.ArrayList;
 
 
 /**
@@ -53,8 +44,20 @@ public class KahaDBStoreRecoveryBrokerTest extends RecoveryBrokerTest {
     }
     
     protected BrokerService createRestartedBroker() throws Exception {
+
+        // corrupting index
+        File index = new File("target/activemq-data/kahadb/db.data");
+        index.delete();
+        RandomAccessFile raf = new RandomAccessFile(index, "rw");
+        raf.seek(index.length());
+        raf.writeBytes("corrupt");
+        raf.close();
+
+        // starting broker
         BrokerService broker = new BrokerService();
         KahaDBStore kaha = new KahaDBStore();
+        // uncomment if you want to test archiving
+        //kaha.setArchiveCorruptedIndex(true);
         kaha.setDirectory(new File("target/activemq-data/kahadb"));
         broker.setPersistenceAdapter(kaha);
         return broker;

@@ -16,16 +16,13 @@
  */
 package org.apache.kahadb.page;
 
+import org.apache.kahadb.util.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InterruptedIOException;
-import java.io.RandomAccessFile;
+import java.io.*;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.concurrent.CountDownLatch;
@@ -33,16 +30,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.zip.Adler32;
 import java.util.zip.Checksum;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.apache.kahadb.util.DataByteArrayOutputStream;
-import org.apache.kahadb.util.IOExceptionSupport;
-import org.apache.kahadb.util.IOHelper;
-import org.apache.kahadb.util.IntrospectionSupport;
-import org.apache.kahadb.util.LRUCache;
-import org.apache.kahadb.util.Sequence;
-import org.apache.kahadb.util.SequenceSet;
 
 /**
  * A PageFile provides you random access to fixed sized disk pages. This object is not thread safe and therefore access to it should 
@@ -310,6 +297,16 @@ public class PageFile {
         delete(getFreeFile());
         delete(getRecoveryFile());
     }
+    
+    public void archive() throws IOException {
+        if( loaded.get() ) {
+            throw new IllegalStateException("Cannot delete page file data when the page file is loaded");
+        }
+        long timestamp = System.currentTimeMillis();
+        archive(getMainPageFile(), String.valueOf(timestamp));
+        archive(getFreeFile(), String.valueOf(timestamp));
+        archive(getRecoveryFile(), String.valueOf(timestamp));
+    }
 
     /**
      * @param file
@@ -319,6 +316,15 @@ public class PageFile {
         if( file.exists() ) {
             if( !file.delete() ) {
                 throw new IOException("Could not delete: "+file.getPath());
+            }
+        }
+    }
+    
+    private void archive(File file, String suffix) throws IOException {
+        if( file.exists() ) {
+            File archive = new File(file.getPath() + "-" + suffix);
+            if( !file.renameTo(archive) ) {
+                throw new IOException("Could not archive: " + file.getPath() + " to " + file.getPath());
             }
         }
     }
