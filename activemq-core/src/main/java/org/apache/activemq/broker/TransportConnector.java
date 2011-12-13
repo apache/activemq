@@ -45,7 +45,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * @org.apache.xbean.XBean
- * 
+ *
  */
 public class TransportConnector implements Connector, BrokerServiceAware {
 
@@ -130,7 +130,7 @@ public class TransportConnector implements Connector, BrokerServiceAware {
     }
 
     /**
-     * 
+     *
      * @deprecated use the {@link #setBrokerService(BrokerService)} method
      *             instead.
      */
@@ -168,7 +168,7 @@ public class TransportConnector implements Connector, BrokerServiceAware {
      * {@link TransportServer} configured via the
      * {@link #setServer(TransportServer)} method. This value is used to lazy
      * create a {@link TransportServer} instance
-     * 
+     *
      * @param uri
      */
     public void setUri(URI uri) {
@@ -218,8 +218,9 @@ public class TransportConnector implements Connector, BrokerServiceAware {
                                 Connection connection = createConnection(transport);
                                 connection.start();
                             } catch (Exception e) {
+                                String remoteHost = transport.getRemoteAddress();
                                 ServiceSupport.dispose(transport);
-                                onAcceptError(e);
+                                onAcceptError(e, remoteHost);
                             }
                         }
                     });
@@ -526,7 +527,7 @@ public class TransportConnector implements Connector, BrokerServiceAware {
     public void setRebalanceClusterClients(boolean rebalanceClusterClients) {
         this.rebalanceClusterClients = rebalanceClusterClients;
     }
- 
+
     /**
      * @return the updateClusterClientsOnRemove
      */
@@ -540,7 +541,7 @@ public class TransportConnector implements Connector, BrokerServiceAware {
     public void setUpdateClusterClientsOnRemove(boolean updateClusterClientsOnRemove) {
         this.updateClusterClientsOnRemove = updateClusterClientsOnRemove;
     }
-    
+
     /**
      * @return the updateClusterFilter
      */

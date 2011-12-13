@@ -196,9 +196,9 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         if (!stopping.get()) {
             transportException.set(e);
             if (TRANSPORTLOG.isDebugEnabled()) {
-                TRANSPORTLOG.debug("Transport failed: " + e, e);
+                TRANSPORTLOG.debug(this + " failed: " + e, e);
             } else if (TRANSPORTLOG.isWarnEnabled() && !expected(e)) {
-                TRANSPORTLOG.warn("Transport failed: " + e);
+                TRANSPORTLOG.warn(this + " failed: " + e);
             }
             stopAsync();
         }
@@ -1256,7 +1256,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         return null;
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     private HashMap<String, String> createMap(Properties properties) {
         return new HashMap(properties);
     }
