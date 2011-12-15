@@ -59,7 +59,10 @@ public final class AdvisorySupport {
     public static final String MSG_PROPERTY_MESSAGE_ID = "orignalMessageId";
     public static final String MSG_PROPERTY_CONSUMER_COUNT = "consumerCount";
     public static final String MSG_PROPERTY_DISCARDED_COUNT = "discardedCount";
-    
+
+    public static final ActiveMQTopic ALL_DESTINATIONS_COMPOSITE_ADVISORY_TOPIC = new ActiveMQTopic(
+            TOPIC_ADVISORY_TOPIC.getPhysicalName() + "," + QUEUE_ADVISORY_TOPIC.getPhysicalName() + "," +
+            TEMP_QUEUE_ADVISORY_TOPIC.getPhysicalName() + "," + TEMP_TOPIC_ADVISORY_TOPIC.getPhysicalName());
     public static final ActiveMQTopic TEMP_DESTINATION_COMPOSITE_ADVISORY_TOPIC = new ActiveMQTopic(
             TEMP_QUEUE_ADVISORY_TOPIC.getPhysicalName() + "," + TEMP_TOPIC_ADVISORY_TOPIC.getPhysicalName());
     private static final ActiveMQTopic AGENT_TOPIC_DESTINATION = new ActiveMQTopic(AGENT_TOPIC);
@@ -187,7 +190,7 @@ public final class AdvisorySupport {
                 + destination.getPhysicalName();
         return new ActiveMQTopic(name);
     }
-    
+
     public static ActiveMQTopic getMessageDLQdAdvisoryTopic(ActiveMQDestination destination) {
         String name = MESSAGE_DLQ_TOPIC_PREFIX + destination.getDestinationTypeAsString() + "."
                 + destination.getPhysicalName();
@@ -237,6 +240,20 @@ public final class AdvisorySupport {
 
     public static boolean isDestinationAdvisoryTopic(Destination destination) throws JMSException {
         return isDestinationAdvisoryTopic(ActiveMQMessageTransformation.transformDestination(destination));
+    }
+
+    public static boolean isTempDestinationAdvisoryTopic(ActiveMQDestination destination) {
+        if (destination.isComposite()) {
+            ActiveMQDestination[] compositeDestinations = destination.getCompositeDestinations();
+            for (int i = 0; i < compositeDestinations.length; i++) {
+                if (!isTempDestinationAdvisoryTopic(compositeDestinations[i])) {
+                    return false;
+                }
+            }
+            return true;
+        } else {
+            return destination.equals(TEMP_QUEUE_ADVISORY_TOPIC) || destination.equals(TEMP_TOPIC_ADVISORY_TOPIC);
+        }
     }
 
     public static boolean isDestinationAdvisoryTopic(ActiveMQDestination destination) {
