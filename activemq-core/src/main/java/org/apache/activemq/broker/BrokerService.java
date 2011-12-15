@@ -2224,7 +2224,7 @@ public class BrokerService implements Service {
         if (ioExceptionHandler != null) {
             ioExceptionHandler.handle(exception);
          } else {
-            LOG.info("Ignoring IO exception, " + exception, exception);
+            LOG.info("No IOExceptionHandler registered, ignoring IO exception, " + exception, exception);
          }
     }
 

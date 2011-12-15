@@ -17,7 +17,6 @@
 package org.apache.activemq.broker.region;
 
 import java.io.IOException;
-import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -25,6 +24,7 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -231,6 +231,79 @@ public class Queue extends BaseDestination implements Task, UsageListener {
         }
     }
 
+    class BatchMessageRecoveryListener implements MessageRecoveryListener {
+        final LinkedList<Message> toExpire = new LinkedList<Message>();
+        final double totalMessageCount;
+        int recoveredAccumulator = 0;
+        int currentBatchCount;
+
+        BatchMessageRecoveryListener(int totalMessageCount) {
+            this.totalMessageCount = totalMessageCount;
+            currentBatchCount = recoveredAccumulator;
+        }
+
+        public boolean recoverMessage(Message message) {
+            recoveredAccumulator++;
+            if (LOG.isInfoEnabled() && (recoveredAccumulator % 10000) == 0) {
+                LOG.info("cursor for " + getActiveMQDestination().getQualifiedName() + " has recovered "
+                        + recoveredAccumulator + " messages. " +
+                        (int) (recoveredAccumulator * 100 / totalMessageCount) + "% complete");
+            }
+            // Message could have expired while it was being
+            // loaded..
+            if (message.isExpired() && broker.isExpired(message)) {
+                toExpire.add(message);
+                return true;
+            }
+            if (hasSpace()) {
+                message.setRegionDestination(Queue.this);
+                messagesLock.writeLock().lock();
+                try {
+                    try {
+                        messages.addMessageLast(message);
+                    } catch (Exception e) {
+                        LOG.error("Failed to add message to cursor", e);
+                    }
+                } finally {
+                    messagesLock.writeLock().unlock();
+                }
+                destinationStatistics.getMessages().increment();
+                return true;
+            }
+            return false;
+        }
+
+        public boolean recoverMessageReference(MessageId messageReference) throws Exception {
+            throw new RuntimeException("Should not be called.");
+        }
+
+        public boolean hasSpace() {
+            return true;
+        }
+
+        public boolean isDuplicate(MessageId id) {
+            return false;
+        }
+
+        public void reset() {
+            currentBatchCount = recoveredAccumulator;
+        }
+
+        public void processExpired() {
+            for (Message message: toExpire) {
+                messageExpired(createConnectionContext(), createMessageReference(message));
+                // drop message will decrement so counter
+                // balance here
+                destinationStatistics.getMessages().increment();
+            }
+            toExpire.clear();
+        }
+
+        public boolean done() {
+            return currentBatchCount == recoveredAccumulator;
+        }
+    }
+
     @Override
     public void initialize() throws Exception {
         if (this.messages == null) {
@@ -263,60 +336,15 @@ public class Queue extends BaseDestination implements Task, UsageListener {
             messages.setMaxProducersToAudit(getMaxProducersToAudit());
             messages.setUseCache(isUseCache());
             messages.setMemoryUsageHighWaterMark(getCursorMemoryHighWaterMark());
+            final int messageCount = store.getMessageCount();
             if (messages.isRecoveryRequired()) {
-                store.recover(new MessageRecoveryListener() {
-                    double totalMessageCount = store.getMessageCount();
-                    int recoveredMessageCount = 0;
-
-                    public boolean recoverMessage(Message message) {
-                        // Message could have expired while it was being
-                        // loaded..
-                        if ((++recoveredMessageCount % 50000) == 0) {
-                            LOG.info("cursor for " + getActiveMQDestination().getQualifiedName() + " has recovered "
-                                    + recoveredMessageCount + " messages. " +
-                                    (int)(recoveredMessageCount*100/totalMessageCount) + "% complete");
-                        }
-                        if (message.isExpired()) {
-                            if (broker.isExpired(message)) {
-                                messageExpired(createConnectionContext(), createMessageReference(message));
-                                // drop message will decrement so counter
-                                // balance here
-                                destinationStatistics.getMessages().increment();
-                            }
-                            return true;
-                        }
-                        if (hasSpace()) {
-                            message.setRegionDestination(Queue.this);
-                            messagesLock.writeLock().lock();
-                            try{
-                                try {
-                                    messages.addMessageLast(message);
-                                } catch (Exception e) {
-                                    LOG.error("Failed to add message to cursor", e);
-                                }
-                            }finally {
-                                messagesLock.writeLock().unlock();
-                            }
-                            destinationStatistics.getMessages().increment();
-                            return true;
-                        }
-                        return false;
-                    }
-
-                    public boolean recoverMessageReference(MessageId messageReference) throws Exception {
-                        throw new RuntimeException("Should not be called.");
-                    }
-
-                    public boolean hasSpace() {
-                        return true;
-                    }
-
-                    public boolean isDuplicate(MessageId id) {
-                        return false;
-                    }
-                });
+                BatchMessageRecoveryListener listener = new BatchMessageRecoveryListener(messageCount);
+                do {
+                   listener.reset();
+                   store.recoverNextMessages(getMaxPageSize(), listener);
+                   listener.processExpired();
+               } while (!listener.done());
             } else {
-                int messageCount = store.getMessageCount();
                 destinationStatistics.getMessages().setCount(messageCount);
             }
         }

@@ -470,6 +470,9 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                     process(message, recoveryPosition, lastIndoubtPosition);
                     redoCounter++;
                     recoveryPosition = journal.getNextLocation(recoveryPosition);
+                     if (LOG.isInfoEnabled() && redoCounter % 100000 == 0) {
+                         LOG.info("@" + recoveryPosition +  ", "  + redoCounter + " entries recovered ..");
+                     }
                 }
                 if (LOG.isInfoEnabled()) {
                     long end = System.currentTimeMillis();
