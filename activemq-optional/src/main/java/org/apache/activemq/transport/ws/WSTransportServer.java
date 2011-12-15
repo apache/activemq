@@ -17,20 +17,17 @@
 
 package org.apache.activemq.transport.ws;
 
-import java.net.InetSocketAddress;
-import java.net.URI;
-
 import org.apache.activemq.command.BrokerInfo;
 import org.apache.activemq.transport.TransportServerSupport;
 import org.apache.activemq.util.ServiceStopper;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.server.bio.SocketConnector;
-import org.eclipse.jetty.server.session.SessionHandler;
+import org.eclipse.jetty.server.nio.SelectChannelConnector;
 import org.eclipse.jetty.servlet.ServletContextHandler;
-import org.eclipse.jetty.servlet.ServletHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
-import org.eclipse.jetty.servlet.ServletMapping;
+
+import java.net.InetSocketAddress;
+import java.net.URI;
 
 /**
  * Creates a web server and registers web socket server
@@ -50,38 +47,19 @@ public class WSTransportServer extends TransportServerSupport {
     protected void doStart() throws Exception {
         server = new Server();
         if (connector == null) {
-            connector = new SocketConnector();
+            connector = new SelectChannelConnector();
         }
         connector.setHost(bindAddress.getHost());
         connector.setPort(bindAddress.getPort());
-        server.setConnectors(new Connector[] {
-                connector
-        });
+        connector.setServer(server);
+        server.addConnector(connector);
 
-        ServletContextHandler contextHandler = new ServletContextHandler();
-        contextHandler.setContextPath("/");
-        contextHandler.setServer(server);
-        server.setHandler(contextHandler);
-
-        SessionHandler sessionHandler = new SessionHandler();
-        contextHandler.setHandler(sessionHandler);
-
-        ServletHandler servletHandler = new ServletHandler();
-        sessionHandler.setHandler(servletHandler);
+        ServletContextHandler contextHandler =
+                new ServletContextHandler(server, "/", ServletContextHandler.NO_SECURITY);
 
         ServletHolder holder = new ServletHolder();
-        holder.setName("WSStomp");
-        holder.setClassName(StompServlet.class.getName());
-        servletHandler.setServlets(new ServletHolder[] {
-            holder
-        });
-
-        ServletMapping mapping = new ServletMapping();
-        mapping.setServletName("WSStomp");
-        mapping.setPathSpec("/*");
-        servletHandler.setServletMappings(new ServletMapping[] {
-            mapping
-        });
+        holder.setServlet(new StompServlet());
+        contextHandler.addServlet(holder, "/");
 
         contextHandler.setAttribute("acceptListener", getAcceptListener());
 
