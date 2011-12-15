@@ -16,16 +16,15 @@
  */
 package org.apache.activemq.command;
 
-import java.io.IOException;
-import java.util.Arrays;
-
-import javax.jms.JMSException;
-
 import org.apache.activemq.filter.BooleanExpression;
 import org.apache.activemq.filter.MessageEvaluationContext;
 import org.apache.activemq.util.JMSExceptionSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.jms.JMSException;
+import java.io.IOException;
+import java.util.Arrays;
 
 /**
  * @openwire:marshaller code="91"
@@ -106,6 +105,7 @@ public class NetworkBridgeFilter implements DataStructure, BooleanExpression {
                 LOG.trace("ConsumerInfo advisory all ready routed once through target broker ("
                         + networkBrokerId + "), path: "
                         + Arrays.toString(info.getBrokerPath()) + " - ignoring: " + message);
+                return false;
             }
         }
         return true;
