@@ -57,12 +57,31 @@ public class TestPurgeCommand extends TestCase {
 
 	protected static final int MESSAGE_COUNT = 10;
 	protected static final String PROPERTY_NAME = "XTestProperty";
-	protected static final String PROPERTY_VALUE = "1";
+	protected static final String PROPERTY_VALUE = "1:1";
+	
+	// check for existence of property
 	protected static final String MSG_SEL_WITH_PROPERTY = PROPERTY_NAME
 			+ " is not null";
 
+	// check for non-existence of property
 	protected static final String MSG_SEL_WITHOUT_PROPERTY = PROPERTY_NAME
 			+ " is null";
+	
+	// complex message selector query using XTestProperty and JMSPriority
+	protected static final String MSG_SEL_COMPLEX = PROPERTY_NAME + "='" + 
+			"1:1" + "',JMSPriority>3";
+	
+	// complex message selector query using XTestProperty AND JMSPriority 
+	// but in SQL-92 syntax 
+	protected static final String MSG_SEL_COMPLEX_SQL_AND = "(" + PROPERTY_NAME + "='" + 
+			"1:1" + "') AND (JMSPriority>3)";
+
+	// complex message selector query using XTestProperty OR JMSPriority 
+	// but in SQL-92 syntax	
+	protected static final String MSG_SEL_COMPLEX_SQL_OR = "(" + PROPERTY_NAME + "='" + 
+			"1:1" + "') OR (JMSPriority>3)";
+	
+	
 	protected static final String QUEUE_NAME = "org.apache.activemq.network.jms.QueueBridgeTest";
 
 	protected AbstractApplicationContext context;
@@ -234,7 +253,7 @@ public class TestPurgeCommand extends TestCase {
 		}
 	}
 
-	public void testPurgeCommand() throws Exception {
+	public void testPurgeCommandSimpleSelector() throws Exception {
 		try {
 			PurgeCommand purgeCommand = new PurgeCommand();
 			CommandContext context = new CommandContext();
@@ -258,4 +277,192 @@ public class TestPurgeCommand extends TestCase {
 			purgeAllMessages();
 		}
 	}
+	
+	public void testPurgeCommandComplexSelector() throws Exception {
+		try {
+			PurgeCommand purgeCommand = new PurgeCommand();
+			CommandContext context = new CommandContext();
+
+			context.setFormatter(new CommandShellOutputFormatter(System.out));
+
+			purgeCommand.setCommandContext(context);
+			purgeCommand.setJmxUseLocal(true);
+
+			List<String> tokens = new ArrayList<String>();
+			tokens.add("--msgsel");
+			tokens.add(MSG_SEL_COMPLEX);
+			
+			addMessages();
+			validateCounts(MESSAGE_COUNT, MESSAGE_COUNT, MESSAGE_COUNT * 2);
+
+			purgeCommand.execute(tokens);
+
+			QueueBrowser withPropertyBrowser = requestServerSession.createBrowser(
+					theQueue, MSG_SEL_COMPLEX);
+			QueueBrowser allBrowser = requestServerSession.createBrowser(theQueue);
+
+			int withCount = getMessageCount(withPropertyBrowser, "withProperty ");
+			int allCount = getMessageCount(allBrowser, "allMessages ");
+
+			withPropertyBrowser.close();
+			allBrowser.close();
+			
+			assertEquals("Expected withCount to be " + "0" + " was "
+					+ withCount, 0, withCount);
+			assertEquals("Expected allCount to be " + MESSAGE_COUNT + " was "
+					+ allCount, MESSAGE_COUNT, allCount);
+			LOG.info("withCount = " + withCount + "\n allCount = " + 
+					allCount + "\n  = " + "\n");
+		} finally {
+			purgeAllMessages();
+		}
+	}
+	
+	public void testPurgeCommandComplexSQLSelector_AND() throws Exception {
+		try {
+			
+			String one = "ID:mac.fritz.box:1213242.3231.1:1:1:100";
+			String two = "\\*:100";
+			try {
+			if (one.matches(two)) 
+				LOG.info("String matches.");
+			else 
+				LOG.info("string does not match.");
+			} catch (Exception ex) {
+				LOG.error(ex.getMessage());
+			}
+			
+			PurgeCommand purgeCommand = new PurgeCommand();
+			CommandContext context = new CommandContext();
+
+			context.setFormatter(new CommandShellOutputFormatter(System.out));
+
+			purgeCommand.setCommandContext(context);
+			purgeCommand.setJmxUseLocal(true);
+
+			List<String> tokens = new ArrayList<String>();
+			tokens.add("--msgsel");
+			tokens.add(MSG_SEL_COMPLEX_SQL_AND);
+			
+			addMessages();
+			validateCounts(MESSAGE_COUNT, MESSAGE_COUNT, MESSAGE_COUNT * 2);
+
+			purgeCommand.execute(tokens);
+
+			QueueBrowser withPropertyBrowser = requestServerSession.createBrowser(
+					theQueue, MSG_SEL_COMPLEX_SQL_AND);
+			QueueBrowser allBrowser = requestServerSession.createBrowser(theQueue);
+
+			int withCount = getMessageCount(withPropertyBrowser, "withProperty ");
+			int allCount = getMessageCount(allBrowser, "allMessages ");
+
+			withPropertyBrowser.close();
+			allBrowser.close();
+			
+			assertEquals("Expected withCount to be " + "0" + " was "
+					+ withCount, 0, withCount);
+			assertEquals("Expected allCount to be " + MESSAGE_COUNT + " was "
+					+ allCount, MESSAGE_COUNT, allCount);
+			LOG.info("withCount = " + withCount + "\n allCount = " + 
+					allCount + "\n  = " + "\n");
+		} finally {
+			purgeAllMessages();
+		}
+	}
+	
+	public void testPurgeCommandComplexSQLSelector_OR() throws Exception {
+		try {
+			PurgeCommand purgeCommand = new PurgeCommand();
+			CommandContext context = new CommandContext();
+
+			context.setFormatter(new CommandShellOutputFormatter(System.out));
+
+			purgeCommand.setCommandContext(context);
+			purgeCommand.setJmxUseLocal(true);
+
+			List<String> tokens = new ArrayList<String>();
+			tokens.add("--msgsel");
+			tokens.add(MSG_SEL_COMPLEX_SQL_OR);
+			
+			addMessages();
+			validateCounts(MESSAGE_COUNT, MESSAGE_COUNT, MESSAGE_COUNT * 2);
+
+			purgeCommand.execute(tokens);
+
+			QueueBrowser withPropertyBrowser = requestServerSession.createBrowser(
+					theQueue, MSG_SEL_COMPLEX_SQL_OR);
+			QueueBrowser allBrowser = requestServerSession.createBrowser(theQueue);
+
+			int withCount = getMessageCount(withPropertyBrowser, "withProperty ");
+			int allCount = getMessageCount(allBrowser, "allMessages ");
+
+			withPropertyBrowser.close();
+			allBrowser.close();
+			
+			assertEquals("Expected withCount to be 0 but was "
+					+ withCount, 0, withCount);
+			assertEquals("Expected allCount to be 0 but was "
+					+ allCount, 0, allCount);
+			LOG.info("withCount = " + withCount + "\n allCount = " + 
+					allCount + "\n  = " + "\n");
+		} finally {
+			purgeAllMessages();
+		}
+	}
+	
+	public void testDummy() throws Exception {
+		try {
+			
+			String one = "ID:mac.fritz.box:1213242.3231.1:1:1:100";
+			String two = "ID*:100";
+			try {
+			if (one.matches(two)) 
+				LOG.info("String matches.");
+			else 
+				LOG.info("string does not match.");
+			} catch (Exception ex) {
+				LOG.error(ex.getMessage());
+			}
+			
+			PurgeCommand purgeCommand = new PurgeCommand();
+			CommandContext context = new CommandContext();
+
+			context.setFormatter(new CommandShellOutputFormatter(System.out));
+
+			purgeCommand.setCommandContext(context);
+			purgeCommand.setJmxUseLocal(true);
+
+			List<String> tokens = new ArrayList<String>();
+			tokens.add("--msgsel");
+			tokens.add("(XTestProperty LIKE '1:*') AND (JMSPriority>3)");
+			
+			addMessages();
+			
+			purgeCommand.execute(tokens);
+
+			/*
+			QueueBrowser withPropertyBrowser = requestServerSession.createBrowser(
+					theQueue, MSG_SEL_COMPLEX_SQL_AND);
+			QueueBrowser allBrowser = requestServerSession.createBrowser(theQueue);
+
+			int withCount = getMessageCount(withPropertyBrowser, "withProperty ");
+			int allCount = getMessageCount(allBrowser, "allMessages ");
+
+			withPropertyBrowser.close();
+			allBrowser.close();
+			
+			assertEquals("Expected withCount to be " + "0" + " was "
+					+ withCount, 0, withCount);
+			assertEquals("Expected allCount to be " + MESSAGE_COUNT + " was "
+					+ allCount, MESSAGE_COUNT, allCount);
+			LOG.info("withCount = " + withCount + "\n allCount = " + 
+					allCount + "\n  = " + "\n");
+			*/
+		} finally {
+			purgeAllMessages();
+		}
+	}
+	
+	
+	
 }

@@ -16,11 +16,14 @@
  */
 package org.apache.activemq.console.command;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.StringTokenizer;
 
+import javax.jms.Destination;
+import javax.jms.Message;
 import javax.management.MBeanServerConnection;
 import javax.management.MBeanServerInvocationHandler;
 import javax.management.ObjectInstance;
@@ -29,6 +32,8 @@ import javax.management.openmbean.CompositeData;
 import javax.management.remote.JMXConnector;
 
 import org.apache.activemq.broker.jmx.QueueViewMBean;
+import org.apache.activemq.command.ActiveMQQueue;
+import org.apache.activemq.console.util.AmqMessagesUtil;
 import org.apache.activemq.console.util.JmxMBeansUtil;
 
 public class PurgeCommand extends AbstractJmxCommand {
@@ -52,12 +57,14 @@ public class PurgeCommand extends AbstractJmxCommand {
         "    Main purge FOO.BAR", 
         "        - Delete all the messages in queue FOO.BAR",
 
-        "    Main purge --msgsel JMSMessageID='*:10',JMSPriority>5 FOO.*", 
+        "    Main purge --msgsel \"JMSMessageID='*:10',JMSPriority>5\" FOO.*", 
         "        - Delete all the messages in the destinations that matches FOO.* and has a JMSMessageID in",
         "          the header field that matches the wildcard *:10, and has a JMSPriority field > 5 in the",
-        "          queue FOO.BAR",
+        "          queue FOO.BAR.",
+        "          SLQ92 syntax is also supported.",
         "        * To use wildcard queries, the field must be a string and the query enclosed in ''",
-        "",
+        "          Use double quotes \"\" around the entire message selector string.",
+        ""
     };
 
     private final List<String> queryAddObjects = new ArrayList<String>(10);
@@ -86,13 +93,36 @@ public class PurgeCommand extends AbstractJmxCommand {
                     if (queryAddObjects.isEmpty()) {
                         purgeQueue(queueName);
                     } else {
-                        QueueViewMBean proxy = (QueueViewMBean) MBeanServerInvocationHandler.newProxyInstance(createJmxConnection(), queueName, QueueViewMBean.class, true);
+                        
+                    	QueueViewMBean proxy = (QueueViewMBean) MBeanServerInvocationHandler.
+                    			newProxyInstance(createJmxConnection(), 
+                    					queueName, 
+                    					QueueViewMBean.class, 
+                    					true);
                         int removed = 0;
-                        for (String remove : queryAddObjects) {
-                            removed = proxy.removeMatchingMessages(remove);
-                            context.printInfo("Removed: " + removed
-                                    + " messages for msgsel" + remove);
+                        
+                        // AMQ-3404: We support two syntaxes for the message 
+                        // selector query:
+                        // 1) AMQ specific: 
+                        //    "JMSPriority>2,MyHeader='Foo'"
+                        //
+                        // 2) SQL-92 syntax:
+                        //    "(JMSPriority>2) AND (MyHeader='Foo')"
+                        //
+                        // If syntax style 1) is used, the comma separated
+                        // criterias are broken into List<String> elements. 
+                        // We then need to construct the SQL-92 query out of 
+                        // this list.
+                        
+                        String sqlQuery = null;
+                        if (queryAddObjects.size() > 1) {
+                        	 sqlQuery = convertToSQL92(queryAddObjects);
+                        } else {
+                        	sqlQuery = queryAddObjects.get(0);
                         }
+                        removed = proxy.removeMatchingMessages(sqlQuery);
+                        context.printInfo("Removed: " + removed
+                                + " messages for message selector " + sqlQuery.toString());
                     }
                 }
             }
@@ -101,7 +131,8 @@ public class PurgeCommand extends AbstractJmxCommand {
             throw new Exception(e);
         }
     }
-
+    
+    
     /**
      * Purge all the messages in the queue
      * 
@@ -155,6 +186,34 @@ public class PurgeCommand extends AbstractJmxCommand {
             super.handleOption(token, tokens);
         }
     }
+    
+    /**
+     * Converts the message selector as provided on command line
+     * argument to activem-admin into an SQL-92 conform string. 
+     * E.g.
+     *   "JMSMessageID='*:10',JMSPriority>5"
+     * gets converted into 
+     *   "(JMSMessageID='%:10') AND (JMSPriority>5)"
+     * 
+     * @param tokens - List of message selector query parameters 
+     * @return SQL-92 string of that query. 
+     */
+    public String convertToSQL92(List<String> tokens) {
+    	String selector = "";
+
+        // Convert to message selector
+        for (Iterator i = tokens.iterator(); i.hasNext(); ) {
+            selector = selector + "(" + i.next().toString() + ") AND ";
+        }
+
+        // Remove last AND and replace '*' with '%'
+        if (!selector.equals("")) {
+            selector = selector.substring(0, selector.length() - 5);
+            selector = selector.replace('*', '%');
+        }
+        return selector;
+    }
+    
 
     /**
      * Print the help messages for the browse command

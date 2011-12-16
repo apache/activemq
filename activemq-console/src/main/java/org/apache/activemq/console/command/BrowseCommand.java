@@ -65,10 +65,12 @@ public class BrowseCommand extends AbstractJmxCommand {
         "    Main browse -Vheader --view custom:MyField queue:FOO.BAR",
         "        - Print the message header and the custom field 'MyField' of all messages in the queue FOO.BAR",
         "",
-        "    Main browse --msgsel JMSMessageID='*:10',JMSPriority>5 FOO.BAR", 
+        "    Main browse --msgsel \"JMSMessageID='*:10',JMSPriority>5\" FOO.BAR", 
         "        - Print all the message fields that has a JMSMessageID in the header field that matches the",
-        "          wildcard *:10, and has a JMSPriority field > 5 in the queue FOO.BAR", 
+        "          wildcard *:10, and has a JMSPriority field > 5 in the queue FOO.BAR.", 
+        "          SLQ92 syntax is also supported.",
         "        * To use wildcard queries, the field must be a string and the query enclosed in ''", 
+        "          Use double quotes \"\" around the entire message selector string.",
         ""
     };
 

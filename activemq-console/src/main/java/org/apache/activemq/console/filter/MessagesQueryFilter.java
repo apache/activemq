@@ -77,7 +77,7 @@ public class MessagesQueryFilter extends AbstractQueryFilter {
      * @throws Exception
      */
     protected List queryMessages(String selector) throws Exception {
-        CompositeData[] messages = (CompositeData[]) jmxConnection.invoke(destName, "browse", new Object[] {}, new String[] {});
+    	CompositeData[] messages = (CompositeData[]) jmxConnection.invoke(destName, "browse", new Object[] {selector}, new String[] {});
         return Arrays.asList(messages);
     }
 
