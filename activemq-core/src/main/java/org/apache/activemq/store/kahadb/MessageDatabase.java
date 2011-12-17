@@ -16,6 +16,15 @@
  */
 package org.apache.activemq.store.kahadb;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.*;
+import java.util.*;
+import java.util.Map.Entry;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+
 import org.apache.activemq.ActiveMQMessageAuditNoSync;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.BrokerServiceAware;
@@ -40,15 +49,6 @@ import org.apache.kahadb.page.Transaction;
 import org.apache.kahadb.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.*;
-import java.util.*;
-import java.util.Map.Entry;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public abstract class MessageDatabase extends ServiceSupport implements BrokerServiceAware {
 
@@ -182,6 +182,8 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
     private final Object checkpointThreadLock = new Object();
     private boolean rewriteOnRedelivery = false;
     private boolean archiveCorruptedIndex = false;
+    private boolean useIndexLFRUEviction = false;
+    private float indexLFUEvictionFactor = 0.2f;
 
     public MessageDatabase() {
     }
@@ -2054,6 +2056,8 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         index.setEnableWriteThread(isEnableIndexWriteAsync());
         index.setWriteBatchSize(getIndexWriteBatchSize());
         index.setPageCacheSize(indexCacheSize);
+        index.setUseLFRUEviction(isUseIndexLFRUEviction());
+        index.setLFUEvictionFactor(getIndexLFUEvictionFactor());
         return index;
     }
 
@@ -2275,6 +2279,22 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
 
     public void setArchiveCorruptedIndex(boolean archiveCorruptedIndex) {
         this.archiveCorruptedIndex = archiveCorruptedIndex;
+    }
+
+    public float getIndexLFUEvictionFactor() {
+        return indexLFUEvictionFactor;
+    }
+
+    public void setIndexLFUEvictionFactor(float indexLFUEvictionFactor) {
+        this.indexLFUEvictionFactor = indexLFUEvictionFactor;
+    }
+
+    public boolean isUseIndexLFRUEviction() {
+        return useIndexLFRUEviction;
+    }
+
+    public void setUseIndexLFRUEviction(boolean useIndexLFRUEviction) {
+        this.useIndexLFRUEviction = useIndexLFRUEviction;
     }
 
     // /////////////////////////////////////////////////////////////////
