@@ -1798,8 +1798,14 @@ public class StompTest extends CombinationTestSupport {
         // Send a Message with the ReplyTo value set.
         HashMap<String, String> properties = new HashMap<String, String>();
         properties.put(Stomp.Headers.Send.REPLY_TO, tempDest);
+        properties.put(Stomp.Headers.RECEIPT_REQUESTED, "send-1");
         LOG.info(String.format("Sending request message: SEND with %s=%s", Stomp.Headers.Send.REPLY_TO, tempDest));
         stompConnection.send(dest, "REQUEST", null, properties);
+
+        frame = stompConnection.receiveFrame();
+        assertTrue("Receipt Frame: " + frame, frame.trim().startsWith("RECEIPT"));
+        assertTrue("Receipt contains correct receipt-id " + frame, frame.indexOf(Stomp.Headers.Response.RECEIPT_ID) >= 0);
+
 
         // The subscription should receive a response with the ReplyTo property set.
         StompFrame received = responder.receive();
