@@ -16,15 +16,14 @@
  */
 package org.apache.activemq.transport.stomp;
 
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
+import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.command.ActiveMQMessage;
 
 import javax.jms.Destination;
 import javax.jms.JMSException;
-
-import org.apache.activemq.command.ActiveMQDestination;
-import org.apache.activemq.command.ActiveMQMessage;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Implementations of this interface are used to map back and forth from Stomp
@@ -39,7 +38,7 @@ public interface FrameTranslator {
 
     String convertDestination(ProtocolConverter converter, Destination d);
 
-    ActiveMQDestination convertDestination(ProtocolConverter converter, String name) throws ProtocolException;
+    ActiveMQDestination convertDestination(ProtocolConverter converter, String name, boolean forceFallback) throws ProtocolException;
 
     /**
      * Helper class which holds commonly needed functions used when implementing
@@ -98,7 +97,7 @@ public interface FrameTranslator {
         public static void copyStandardHeadersFromFrameToMessage(ProtocolConverter converter, StompFrame command, ActiveMQMessage msg, FrameTranslator ft) throws ProtocolException, JMSException {
             final Map<String, String> headers = new HashMap<String, String>(command.getHeaders());
             final String destination = headers.remove(Stomp.Headers.Send.DESTINATION);
-            msg.setDestination(ft.convertDestination(converter, destination));
+            msg.setDestination(ft.convertDestination(converter, destination, true));
 
             // the standard JMS headers
             msg.setJMSCorrelationID(headers.remove(Stomp.Headers.Send.CORRELATION_ID));
@@ -122,7 +121,12 @@ public interface FrameTranslator {
 
             o = headers.remove(Stomp.Headers.Send.REPLY_TO);
             if (o != null) {
-                msg.setJMSReplyTo(ft.convertDestination(converter, (String)o));
+                try {
+                    ActiveMQDestination dest = ft.convertDestination(converter, (String)o, false);
+                    msg.setJMSReplyTo(dest);
+                } catch (ProtocolException pe) {
+                    msg.setStringProperty("reply-to", (String)o);
+                }
             }
 
             o = headers.remove(Stomp.Headers.Send.PERSISTENT);

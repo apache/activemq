@@ -16,25 +16,19 @@
  */
 package org.apache.activemq.transport.stomp;
 
+import com.thoughtworks.xstream.XStream;
+import com.thoughtworks.xstream.io.json.JsonHierarchicalStreamDriver;
+import org.apache.activemq.advisory.AdvisorySupport;
+import org.apache.activemq.command.*;
+import org.apache.activemq.util.ByteArrayOutputStream;
+import org.apache.activemq.util.ByteSequence;
+
+import javax.jms.Destination;
+import javax.jms.JMSException;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-
-import javax.jms.Destination;
-import javax.jms.JMSException;
-
-import org.apache.activemq.advisory.AdvisorySupport;
-import org.apache.activemq.command.ActiveMQBytesMessage;
-import org.apache.activemq.command.ActiveMQDestination;
-import org.apache.activemq.command.ActiveMQMessage;
-import org.apache.activemq.command.ActiveMQTextMessage;
-import org.apache.activemq.command.DataStructure;
-import org.apache.activemq.util.ByteArrayOutputStream;
-import org.apache.activemq.util.ByteSequence;
-
-import com.thoughtworks.xstream.XStream;
-import com.thoughtworks.xstream.io.json.JsonHierarchicalStreamDriver;
 
 /**
  * Implements ActiveMQ 4.0 translations
@@ -167,7 +161,7 @@ public class LegacyFrameTranslator implements FrameTranslator {
         return buffer.toString();
     }
 
-    public ActiveMQDestination convertDestination(ProtocolConverter converter, String name) throws ProtocolException {
+    public ActiveMQDestination convertDestination(ProtocolConverter converter, String name, boolean forceFallback) throws ProtocolException {
         if (name == null) {
             return null;
         } else if (name.startsWith("/queue/")) {
@@ -187,14 +181,16 @@ public class LegacyFrameTranslator implements FrameTranslator {
         } else if (name.startsWith("/temp-topic/")) {
             return converter.createTempDestination(name, true);
         } else {
-            try {
-                ActiveMQDestination fallback = ActiveMQDestination.getUnresolvableDestinationTransformer().transform(name);
-                if (fallback != null) {
-                    return fallback;
+            if (forceFallback) {
+                try {
+                    ActiveMQDestination fallback = ActiveMQDestination.getUnresolvableDestinationTransformer().transform(name);
+                    if (fallback != null) {
+                        return fallback;
+                    }
+                } catch (JMSException e) {
+                    throw new ProtocolException("Illegal destination name: [" + name + "] -- ActiveMQ STOMP destinations "
+                            + "must begin with one of: /queue/ /topic/ /temp-queue/ /temp-topic/", false, e);
                 }
-            } catch (JMSException e) {
-                 throw new ProtocolException("Illegal destination name: [" + name + "] -- ActiveMQ STOMP destinations "
-                                        + "must begin with one of: /queue/ /topic/ /temp-queue/ /temp-topic/", false, e);
             }
             throw new ProtocolException("Illegal destination name: [" + name + "] -- ActiveMQ STOMP destinations "
                                         + "must begin with one of: /queue/ /topic/ /temp-queue/ /temp-topic/");
