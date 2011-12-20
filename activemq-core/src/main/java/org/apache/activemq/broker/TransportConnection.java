@@ -139,6 +139,14 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         this.transport.setTransportListener(new DefaultTransportListener() {
             @Override
             public void onCommand(Object o) {
+
+                if (pendingStop) {
+                    if (LOG.isTraceEnabled()) {
+                        LOG.trace("Ignoring Command due to pending stop: " + o);
+                    }
+                    return;
+                }
+
                 serviceLock.readLock().lock();
                 try {
                     if (!(o instanceof Command)) {
@@ -267,7 +275,11 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
                 SERVICELOG.warn("Async error occurred: " + e, e);
                 ConnectionError ce = new ConnectionError();
                 ce.setException(e);
-                dispatchAsync(ce);
+                if (pendingStop) {
+                    dispatchSync(ce);
+                } else {
+                    dispatchAsync(ce);
+                }
             } finally {
                 inServiceException = false;
             }
@@ -287,13 +299,13 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
                         + " command: " + command + ", exception: " + e, e);
             }
 
-            if (responseRequired) {
+            if(e instanceof java.lang.SecurityException){
+                // still need to close this down - in case the peer of this transport doesn't play nice
+                delayedStop(2000, "Failed with SecurityException: " + e.getLocalizedMessage());
+            }
 
+            if (responseRequired) {
                 response = new ExceptionResponse(e);
-                if(e instanceof java.lang.SecurityException){
-                  //still need to close this down - incase the peer of this transport doesn't play nice
-                  delayedStop(2000, "Failed with SecurityException: " + e.getLocalizedMessage());
-                }
             } else {
                 serviceException(e);
             }
@@ -482,6 +494,10 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         SessionId sessionId = info.getProducerId().getParentId();
         ConnectionId connectionId = sessionId.getParentId();
         TransportConnectionState cs = lookupConnectionState(connectionId);
+        if (cs == null) {
+            throw new IllegalStateException("Cannot add a producer to a connection that had not been registered: "
+                    + connectionId);
+        }
         SessionState ss = cs.getSessionState(sessionId);
         if (ss == null) {
             throw new IllegalStateException("Cannot add a producer to a session that had not been registered: "
@@ -521,6 +537,10 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         SessionId sessionId = info.getConsumerId().getParentId();
         ConnectionId connectionId = sessionId.getParentId();
         TransportConnectionState cs = lookupConnectionState(connectionId);
+        if (cs == null) {
+            throw new IllegalStateException("Cannot add a consumer to a connection that had not been registered: "
+                    + connectionId);
+        }
         SessionState ss = cs.getSessionState(sessionId);
         if (ss == null) {
             throw new IllegalStateException(broker.getBrokerName()
@@ -593,16 +613,14 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         // this down.
         session.shutdown();
         // Cascade the connection stop to the consumers and producers.
-        for (Iterator iter = session.getConsumerIds().iterator(); iter.hasNext(); ) {
-            ConsumerId consumerId = (ConsumerId) iter.next();
+        for (ConsumerId consumerId : session.getConsumerIds()) {
             try {
                 processRemoveConsumer(consumerId, lastDeliveredSequenceId);
             } catch (Throwable e) {
                 LOG.warn("Failed to remove consumer: " + consumerId + ". Reason: " + e, e);
             }
         }
-        for (Iterator iter = session.getProducerIds().iterator(); iter.hasNext(); ) {
-            ProducerId producerId = (ProducerId) iter.next();
+        for (ProducerId producerId : session.getProducerIds()) {
             try {
                 processRemoveProducer(producerId);
             } catch (Throwable e) {
@@ -709,8 +727,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
             // are shutting down.
             cs.shutdown();
             // Cascade the connection stop to the sessions.
-            for (Iterator iter = cs.getSessionIds().iterator(); iter.hasNext(); ) {
-                SessionId sessionId = (SessionId) iter.next();
+            for (SessionId sessionId : cs.getSessionIds()) {
                 try {
                     processRemoveSession(sessionId, lastDeliveredSequenceId);
                 } catch (Throwable e) {
@@ -718,8 +735,8 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
                 }
             }
             // Cascade the connection stop to temp destinations.
-            for (Iterator iter = cs.getTempDestinations().iterator(); iter.hasNext(); ) {
-                DestinationInfo di = (DestinationInfo) iter.next();
+            for (Iterator<DestinationInfo> iter = cs.getTempDestinations().iterator(); iter.hasNext(); ) {
+                DestinationInfo di = iter.next();
                 try {
                     broker.removeDestination(cs.getContext(), di.getDestination(), 0);
                 } catch (Throwable e) {
@@ -913,6 +930,9 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
 
     public void delayedStop(final int waitTime, final String reason) {
         if (waitTime > 0) {
+            synchronized (this) {
+                pendingStop = true;
+            }
             try {
                 DefaultThreadPools.getDefaultTaskRunnerFactory().execute(new Runnable() {
                     public void run() {

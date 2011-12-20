@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+http://activemq.org/config/1.0 http://activemq.apache.org/snapshot-schema/activemq-core-5.0-SNAPSHOT.xsd"
+-->
+
+
+<beans 
+  xmlns="http://www.springframework.org/schema/beans"
+  xmlns:amq="http://activemq.apache.org/schema/core"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.0.xsd
+  http://activemq.apache.org/schema/core http://activemq.apache.org/schema/core/activemq-core.xsd">
+
+  <broker xmlns="http://activemq.apache.org/schema/core" brokerName="broker1" id="broker1" useJmx="false" persistent="false">
+
+    <plugins>
+      <jaasCertificateAuthenticationPlugin configuration="CertLogin"/>
+
+      <authorizationPlugin>
+        <map>
+          <authorizationMap>
+            <authorizationEntries>
+              <authorizationEntry queue=">" read="admins" write="admins" admin="admins" />
+              <amq:authorizationEntry queue="USERS.>" read="users" write="users" admin="users" />
+              <amq:authorizationEntry queue="GUEST.>" read="guests" write="guests,users" admin="guests,users" />
+              <authorizationEntry topic=">" read="admins" write="admins" admin="admins" />
+              <authorizationEntry topic="USERS.>" read="users" write="users" admin="users" />
+              <authorizationEntry topic="GUEST.>" read="guests" write="guests,users" admin="guests,users" />
+
+              <authorizationEntry topic="ActiveMQ.Advisory.>" read="guests,users" write="guests,users" admin="guests,users"/>
+            </authorizationEntries>
+            <tempDestinationAuthorizationEntry>  
+              <tempDestinationAuthorizationEntry read="tempDestinationAdmins" write="tempDestinationAdmins" admin="tempDestinationAdmins"/> 
+            </tempDestinationAuthorizationEntry>  
+          </authorizationMap>
+        </map>
+      </authorizationPlugin>
+    </plugins>
+
+    <sslContext>
+      <sslContext
+        keyStore="file:./src/test/resources/org/apache/activemq/bugs/amq3625/keys/broker2.ks"   keyStorePassword="password"
+        trustStore="file:./src/test/resources/org/apache/activemq/bugs/amq3625/keys/client2.ks" trustStorePassword="password"/>
+    </sslContext>
+
+    <transportConnectors>
+      <transportConnector name="openwire" uri="ssl://0.0.0.0:0?needClientAuth=true" />
+    </transportConnectors>
+
+  </broker>
+
+</beans>
