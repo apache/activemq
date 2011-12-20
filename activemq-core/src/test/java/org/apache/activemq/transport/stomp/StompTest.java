@@ -1590,7 +1590,7 @@ public class StompTest extends CombinationTestSupport {
         stompConnection.subscribe("/queue/" + getQueueName());
         StompFrame stompMessage = stompConnection.receive(1000);
         assertNotNull(stompMessage);
-        assertEquals(""  + stompMessage, stompMessage.getHeaders().get(Stomp.Headers.Send.REPLY_TO), "/queue/" + "JustAString");
+        assertEquals(""  + stompMessage, stompMessage.getHeaders().get(Stomp.Headers.Send.REPLY_TO), "JustAString");
     }
 
     public void testPersistent() throws Exception {
