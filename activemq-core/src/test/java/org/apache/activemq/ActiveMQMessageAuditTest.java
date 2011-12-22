@@ -28,18 +28,21 @@ import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.command.ProducerId;
 import org.apache.activemq.util.IdGenerator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * ActiveMQMessageAuditTest
- * 
- * 
+ *
+ *
  */
 public class ActiveMQMessageAuditTest extends TestCase {
 
+    static final Logger LOG = LoggerFactory.getLogger(ActiveMQMessageAuditTest.class);
 
     /**
      * Constructor for ActiveMQMessageAuditTest.
-     * 
+     *
      * @param name
      */
     public ActiveMQMessageAuditTest(String name) {
@@ -100,7 +103,7 @@ public class ActiveMQMessageAuditTest extends TestCase {
             assertTrue("duplicate msg:" + msg, audit.isDuplicate(msg));
         }
     }
-    
+
     public void testIsInOrderString() {
         int count = 10000;
         ActiveMQMessageAudit audit = new ActiveMQMessageAudit();
@@ -116,7 +119,7 @@ public class ActiveMQMessageAuditTest extends TestCase {
             if (i > 1 && i%2 != 0) {
                 list.add(id);
             }
-          
+
         }
         for (String id : list) {
             assertFalse(audit.isInOrder(id));
@@ -128,18 +131,17 @@ public class ActiveMQMessageAuditTest extends TestCase {
         ActiveMQMessageAuditNoSync audit = new ActiveMQMessageAuditNoSync();
 
         byte[] bytes =  serialize(audit);
-        System.out.println(bytes.length);
+        LOG.debug("Length: " + bytes.length);
         audit = recover(bytes);
 
         List<MessageReference> list = new ArrayList<MessageReference>();
-
 
         for (int j = 0; j < 1000; j++) {
             ProducerId pid = new ProducerId();
             pid.setConnectionId("test");
             pid.setSessionId(0);
             pid.setValue(j);
-            System.out.println("producer " + j);
+            LOG.debug("producer " + j);
 
             for (int i = 0; i < 1000; i++) {
                 MessageId id = new MessageId();
@@ -152,7 +154,7 @@ public class ActiveMQMessageAuditTest extends TestCase {
 
                 if (i % 100 == 0) {
                     bytes = serialize(audit);
-                    System.out.println(bytes.length);
+                    LOG.debug("Length: " + bytes.length);
                     audit = recover(bytes);
                 }
 
@@ -162,13 +164,11 @@ public class ActiveMQMessageAuditTest extends TestCase {
                     }
                     list.clear();
                     bytes = serialize(audit);
-                    System.out.println(bytes.length);
+                    LOG.debug("Length: " + bytes.length);
                     audit = recover(bytes);
                 }
-
             }
         }
-
     }
 
     protected byte[] serialize(ActiveMQMessageAuditNoSync audit) throws Exception {
