@@ -33,7 +33,7 @@ public class DataFile extends LinkedNode<DataFile> implements Comparable<DataFil
 
     protected final File file;
     protected final Integer dataFileId;
-    protected int length;
+    protected volatile int length;
     protected final SequenceSet corruptedBlocks = new SequenceSet();
 
     DataFile(File file, int number, int preferedSize) {

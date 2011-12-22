@@ -1039,7 +1039,9 @@ public class PageFile {
         }
 
         Checksum checksum = new Adler32();
-        recoveryFile.seek(RECOVERY_FILE_HEADER_SIZE);
+        if (enableRecoveryFile) {
+            recoveryFile.seek(RECOVERY_FILE_HEADER_SIZE);
+        }
         for (PageWrite w : batch) {
             if (enableRecoveryFile) {
                 try {
@@ -1078,7 +1080,9 @@ public class PageFile {
 
             if (enableDiskSyncs) {
                 // Sync to make sure recovery buffer writes land on disk..
-                recoveryFile.getFD().sync();
+                if (enableRecoveryFile) {
+                    recoveryFile.getFD().sync();
+                }
                 writeFile.getFD().sync();
             }
         } finally {

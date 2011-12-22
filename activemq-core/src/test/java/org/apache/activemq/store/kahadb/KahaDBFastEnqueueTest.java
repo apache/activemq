@@ -35,6 +35,7 @@ import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ConnectionControl;
 import org.junit.After;
 import org.junit.Ignore;
+import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,7 +52,7 @@ public class KahaDBFastEnqueueTest {
     private boolean useBytesMessage= true;
     private final int parallelProducer = 2;
     private Vector<Exception> exceptions = new Vector<Exception>();
-    final long toSend = 500000;
+    final long toSend = 1000;//500000;
 
     @Ignore("not ready yet, exploring getting broker disk bound")
     public void testPublishNoConsumer() throws Exception {
@@ -91,8 +92,8 @@ public class KahaDBFastEnqueueTest {
         System.out.println("Journal writes %:    " + kahaDBPersistenceAdapter.getStore().getJournal().length() / (double)totalSent * 100 + "%");
         //System.out.println("Index writes %:       " + kahaDBPersistenceAdapter.getStore().getPageFile().totalWritten / (double)totalSent * 100 + "%");
 
-        //restartBroker(0);
-        //consumeMessages(toSend);
+        restartBroker(0);
+        consumeMessages(toSend);
     }
 
     private void consumeMessages(long count) throws Exception {
@@ -158,11 +159,13 @@ public class KahaDBFastEnqueueTest {
         kahaDBPersistenceAdapter.setCheckpointInterval(20 * 60 * 1000);
 
         // optimise for disk best batch rate
-        //kahaDBPersistenceAdapter.setJournalMaxWriteBatchSize(128*1024); //4mb default
-        kahaDBPersistenceAdapter.setJournalMaxFileLength(1024*1024*1024); // 32mb default
+        kahaDBPersistenceAdapter.setJournalMaxWriteBatchSize(24*1024*1024); //4mb default
+        kahaDBPersistenceAdapter.setJournalMaxFileLength(128*1024*1024); // 32mb default
         // keep index in memory
         kahaDBPersistenceAdapter.setIndexCacheSize(500000);
         kahaDBPersistenceAdapter.setIndexWriteBatchSize(500000);
+        kahaDBPersistenceAdapter.setEnableIndexRecoveryFile(false);
+        kahaDBPersistenceAdapter.setEnableIndexDiskSyncs(false);
 
         broker.setUseJmx(false);
         broker.addConnector("tcp://0.0.0.0:0");

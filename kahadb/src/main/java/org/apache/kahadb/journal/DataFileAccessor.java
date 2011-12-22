@@ -20,8 +20,6 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.util.Map;
 
-import org.apache.kahadb.journal.DataFileAppender.WriteCommand;
-import org.apache.kahadb.journal.DataFileAppender.WriteKey;
 import org.apache.kahadb.util.ByteSequence;
 
 /**
@@ -33,7 +31,7 @@ import org.apache.kahadb.util.ByteSequence;
 final class DataFileAccessor {
 
     private final DataFile dataFile;
-    private final Map<WriteKey, WriteCommand> inflightWrites;
+    private final Map<Journal.WriteKey, Journal.WriteCommand> inflightWrites;
     private final RandomAccessFile file;
     private boolean disposed;
 
@@ -71,7 +69,7 @@ final class DataFileAccessor {
             throw new IOException("Invalid location: " + location);
         }
 
-        WriteCommand asyncWrite = (WriteCommand)inflightWrites.get(new WriteKey(location));
+        Journal.WriteCommand asyncWrite = (Journal.WriteCommand)inflightWrites.get(new Journal.WriteKey(location));
         if (asyncWrite != null) {
             return asyncWrite.data;
         }
@@ -106,7 +104,7 @@ final class DataFileAccessor {
     }
 
     public void readLocationDetails(Location location) throws IOException {
-        WriteCommand asyncWrite = (WriteCommand)inflightWrites.get(new WriteKey(location));
+        Journal.WriteCommand asyncWrite = (Journal.WriteCommand)inflightWrites.get(new Journal.WriteKey(location));
         if (asyncWrite != null) {
             location.setSize(asyncWrite.location.getSize());
             location.setType(asyncWrite.location.getType());

@@ -36,10 +36,9 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.zip.Adler32;
 import java.util.zip.Checksum;
+import org.apache.kahadb.util.LinkedNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.kahadb.journal.DataFileAppender.WriteCommand;
-import org.apache.kahadb.journal.DataFileAppender.WriteKey;
 import org.apache.kahadb.util.ByteSequence;
 import org.apache.kahadb.util.DataByteArrayInputStream;
 import org.apache.kahadb.util.DataByteArrayOutputStream;
@@ -53,6 +52,8 @@ import org.apache.kahadb.util.Sequence;
  * 
  */
 public class Journal {
+    public static final String CALLER_BUFFER_APPENDER = "org.apache.kahadb.journal.CALLER_BUFFER_APPENDER";
+    public static final boolean callerBufferAppender = Boolean.parseBoolean(System.getProperty(CALLER_BUFFER_APPENDER, "false"));
 
     private static final int MAX_BATCH_SIZE = 32*1024*1024;
 
@@ -103,7 +104,7 @@ public class Journal {
     protected int preferedFileLength = DEFAULT_MAX_FILE_LENGTH - PREFERED_DIFF;
     protected int writeBatchSize = DEFAULT_MAX_WRITE_BATCH_SIZE;
     
-    protected DataFileAppender appender;
+    protected FileAppender appender;
     protected DataFileAccessorPool accessorPool;
 
     protected Map<Integer, DataFile> fileMap = new HashMap<Integer, DataFile>();
@@ -130,7 +131,7 @@ public class Journal {
         started = true;
         preferedFileLength = Math.max(PREFERED_DIFF, getMaxFileLength() - PREFERED_DIFF);
 
-        appender = new DataFileAppender(this);
+        appender = callerBufferAppender ? new CallerBufferingDataFileAppender(this) : new DataFileAppender(this);
 
         File[] files = directory.listFiles(new FilenameFilter() {
             public boolean accept(File dir, String n) {
@@ -750,5 +751,51 @@ public class Journal {
 
     public void setSizeAccumulator(AtomicLong storeSizeAccumulator) {
        this.totalLength = storeSizeAccumulator;
+    }
+
+    public static class WriteCommand extends LinkedNode<WriteCommand> {
+        public final Location location;
+        public final ByteSequence data;
+        final boolean sync;
+        public final Runnable onComplete;
+
+        public WriteCommand(Location location, ByteSequence data, boolean sync) {
+            this.location = location;
+            this.data = data;
+            this.sync = sync;
+            this.onComplete = null;
+        }
+
+        public WriteCommand(Location location, ByteSequence data, Runnable onComplete) {
+            this.location = location;
+            this.data = data;
+            this.onComplete = onComplete;
+            this.sync = false;
+        }
+    }
+
+    public static class WriteKey {
+        private final int file;
+        private final long offset;
+        private final int hash;
+
+        public WriteKey(Location item) {
+            file = item.getDataFileId();
+            offset = item.getOffset();
+            // TODO: see if we can build a better hash
+            hash = (int)(file ^ offset);
+        }
+
+        public int hashCode() {
+            return hash;
+        }
+
+        public boolean equals(Object obj) {
+            if (obj instanceof WriteKey) {
+                WriteKey di = (WriteKey)obj;
+                return di.file == file && di.offset == offset;
+            }
+            return false;
+        }
     }
 }

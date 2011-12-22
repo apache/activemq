@@ -537,6 +537,30 @@ public class KahaDBPersistenceAdapter implements PersistenceAdapter, BrokerServi
         letter.setUseIndexLFRUEviction(useIndexLFRUEviction);
     }
 
+    public void setEnableIndexDiskSyncs(boolean diskSyncs) {
+        letter.setEnableIndexDiskSyncs(diskSyncs);
+    }
+
+    public boolean isEnableIndexDiskSyncs() {
+        return letter.isEnableIndexDiskSyncs();
+    }
+
+    public void setEnableIndexRecoveryFile(boolean enable) {
+        letter.setEnableIndexRecoveryFile(enable);
+    }
+
+    public boolean  isEnableIndexRecoveryFile() {
+        return letter.isEnableIndexRecoveryFile();
+    }
+
+    public void setEnableIndexPageCaching(boolean enable) {
+        letter.setEnableIndexPageCaching(enable);
+    }
+
+    public boolean isEnableIndexPageCaching() {
+        return isEnableIndexPageCaching();
+    }
+
     public KahaDBStore getStore() {
         return letter;
     }

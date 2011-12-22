@@ -184,6 +184,9 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
     private boolean archiveCorruptedIndex = false;
     private boolean useIndexLFRUEviction = false;
     private float indexLFUEvictionFactor = 0.2f;
+    private boolean enableIndexDiskSyncs = true;
+    private boolean enableIndexRecoveryFile = true;
+    private boolean enableIndexPageCaching = true;
 
     public MessageDatabase() {
     }
@@ -2058,6 +2061,9 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         index.setPageCacheSize(indexCacheSize);
         index.setUseLFRUEviction(isUseIndexLFRUEviction());
         index.setLFUEvictionFactor(getIndexLFUEvictionFactor());
+        index.setEnableDiskSyncs(isEnableIndexDiskSyncs());
+        index.setEnableRecoveryFile(isEnableIndexRecoveryFile());
+        index.setEnablePageCaching(isEnableIndexPageCaching());
         return index;
     }
 
@@ -2295,6 +2301,30 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
 
     public void setUseIndexLFRUEviction(boolean useIndexLFRUEviction) {
         this.useIndexLFRUEviction = useIndexLFRUEviction;
+    }
+
+    public void setEnableIndexDiskSyncs(boolean enableIndexDiskSyncs) {
+        this.enableIndexDiskSyncs = enableIndexDiskSyncs;
+    }
+
+    public void setEnableIndexRecoveryFile(boolean enableIndexRecoveryFile) {
+        this.enableIndexRecoveryFile = enableIndexRecoveryFile;
+    }
+
+    public void setEnableIndexPageCaching(boolean enableIndexPageCaching) {
+        this.enableIndexPageCaching = enableIndexPageCaching;
+    }
+
+    public boolean isEnableIndexDiskSyncs() {
+        return enableIndexDiskSyncs;
+    }
+
+    public boolean isEnableIndexRecoveryFile() {
+        return enableIndexRecoveryFile;
+    }
+
+    public boolean isEnableIndexPageCaching() {
+        return enableIndexPageCaching;
     }
 
     // /////////////////////////////////////////////////////////////////
