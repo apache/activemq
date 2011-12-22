@@ -17,23 +17,27 @@
 package org.apache.activemq.broker.region.cursors;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+
 import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.command.MessageId;
 
 public class PrioritizedPendingList implements PendingList {
-    static final Integer MAX_PRIORITY = 10;
+
+    private static final Integer MAX_PRIORITY = 10;
     private final OrderedPendingList[] lists = new OrderedPendingList[MAX_PRIORITY];
-    final Map<MessageId, PendingNode> map = new HashMap<MessageId, PendingNode>();
+    private final Map<MessageId, PendingNode> map = new HashMap<MessageId, PendingNode>();
 
     public PrioritizedPendingList() {
         for (int i = 0; i < MAX_PRIORITY; i++) {
             this.lists[i] = new OrderedPendingList();
         }
     }
+
     public PendingNode addMessageFirst(MessageReference message) {
         PendingNode node = getList(message).addMessageFirst(message);
         this.map.put(message.getMessageId(), node);
@@ -124,9 +128,32 @@ public class PrioritizedPendingList implements PendingList {
                 map.remove(node.getMessage().getMessageId());
                 node.getList().removeNode(node);
             }
+        }
+    }
 
+    @Override
+    public boolean contains(MessageReference message) {
+        if (map.values().contains(message)) {
+            return true;
         }
 
+        return false;
+    }
+
+    @Override
+    public Collection<MessageReference> values() {
+        List<MessageReference> messageReferences = new ArrayList<MessageReference>();
+        for (PendingNode pendingNode : map.values()) {
+            messageReferences.add(pendingNode.getMessage());
+        }
+        return messageReferences;
+    }
+
+    @Override
+    public void addAll(PendingList pendingList) {
+        for(MessageReference messageReference : pendingList) {
+            addMessageLast(messageReference);
+        }
     }
 
 }

@@ -40,13 +40,18 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+
 import javax.jms.InvalidSelectorException;
 import javax.jms.JMSException;
 import javax.jms.ResourceAllocationException;
+
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.ProducerBrokerExchange;
+import org.apache.activemq.broker.region.cursors.OrderedPendingList;
+import org.apache.activemq.broker.region.cursors.PendingList;
 import org.apache.activemq.broker.region.cursors.PendingMessageCursor;
+import org.apache.activemq.broker.region.cursors.PrioritizedPendingList;
 import org.apache.activemq.broker.region.cursors.StoreQueueCursor;
 import org.apache.activemq.broker.region.cursors.VMPendingMessageCursor;
 import org.apache.activemq.broker.region.group.MessageGroupHashBucketFactory;
@@ -92,8 +97,8 @@ public class Queue extends BaseDestination implements Task, UsageListener {
     // Messages that are paged in but have not yet been targeted at a
     // subscription
     private final ReentrantReadWriteLock pagedInPendingDispatchLock = new ReentrantReadWriteLock();
-    private List<QueueMessageReference> pagedInPendingDispatch = new ArrayList<QueueMessageReference>(100);
-    private List<QueueMessageReference> redeliveredWaitingDispatch = new ArrayList<QueueMessageReference>();
+    protected PendingList pagedInPendingDispatch = new OrderedPendingList();
+    protected PendingList redeliveredWaitingDispatch = new OrderedPendingList();
     private MessageGroupMap messageGroupOwners;
     private DispatchPolicy dispatchPolicy = new RoundRobinDispatchPolicy();
     private MessageGroupMapFactory messageGroupMapFactory = new MessageGroupHashBucketFactory();
@@ -123,9 +128,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
         }
     };
 
-    private final Object iteratingMutex = new Object() {
-    };
-
+    private final Object iteratingMutex = new Object();
 
     class TimeoutMessage implements Delayed {
 
@@ -305,7 +308,21 @@ public class Queue extends BaseDestination implements Task, UsageListener {
     }
 
     @Override
+    public void setPrioritizedMessages(boolean prioritizedMessages) {
+        super.setPrioritizedMessages(prioritizedMessages);
+
+        if (prioritizedMessages && this.pagedInPendingDispatch instanceof OrderedPendingList) {
+            pagedInPendingDispatch = new PrioritizedPendingList();
+            redeliveredWaitingDispatch = new PrioritizedPendingList();
+        } else if(pagedInPendingDispatch instanceof PrioritizedPendingList) {
+            pagedInPendingDispatch = new OrderedPendingList();
+            redeliveredWaitingDispatch = new OrderedPendingList();
+        }
+    }
+
+    @Override
     public void initialize() throws Exception {
+
         if (this.messages == null) {
             if (destination.isTemporary() || broker == null || store == null) {
                 this.messages = new VMPendingMessageCursor(isPrioritizedMessages());
@@ -313,6 +330,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                 this.messages = new StoreQueueCursor(broker, this);
             }
         }
+
         // If a VMPendingMessageCursor don't use the default Producer System
         // Usage
         // since it turns into a shared blocking queue which can lead to a
@@ -529,10 +547,10 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                             }
                         }
                     }
-                    redeliveredWaitingDispatch.add(qmr);
+                    redeliveredWaitingDispatch.addMessageLast(qmr);
                 }
                 if (!redeliveredWaitingDispatch.isEmpty()) {
-                    doDispatch(new ArrayList<QueueMessageReference>());
+                    doDispatch(new OrderedPendingList());
                 }
             }finally {
                 consumersLock.writeLock().unlock();
@@ -994,7 +1012,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
 
             pagedInPendingDispatchLock.writeLock().lock();
             try {
-                addAll(pagedInPendingDispatch, browseList, max, toExpire);
+                addAll(pagedInPendingDispatch.values(), browseList, max, toExpire);
                 for (MessageReference ref : toExpire) {
                     pagedInPendingDispatch.remove(ref);
                     if (broker.isExpired(ref)) {
@@ -1066,10 +1084,10 @@ public class Queue extends BaseDestination implements Task, UsageListener {
         }
     }
 
-    private void addAll(Collection<QueueMessageReference> refs, List<Message> l, int maxBrowsePageSize,
+    private void addAll(Collection<? extends MessageReference> refs, List<Message> l, int maxBrowsePageSize,
             List<MessageReference> toExpire) throws Exception {
-        for (Iterator<QueueMessageReference> i = refs.iterator(); i.hasNext() && l.size() < getMaxBrowsePageSize();) {
-            QueueMessageReference ref = i.next();
+        for (Iterator<? extends MessageReference> i = refs.iterator(); i.hasNext() && l.size() < getMaxBrowsePageSize();) {
+            QueueMessageReference ref = (QueueMessageReference) i.next();
             if (ref.isExpired()) {
                 toExpire.add(ref);
             } else if (l.contains(ref.getMessage()) == false) {
@@ -1675,15 +1693,16 @@ public class Queue extends BaseDestination implements Task, UsageListener {
     }
 
     private void doPageIn(boolean force) throws Exception {
-        List<QueueMessageReference> newlyPaged = doPageInForDispatch(force);
+        PendingList newlyPaged = doPageInForDispatch(force);
         pagedInPendingDispatchLock.writeLock().lock();
         try {
             if (pagedInPendingDispatch.isEmpty()) {
                 pagedInPendingDispatch.addAll(newlyPaged);
+
             } else {
-                for (QueueMessageReference qmr : newlyPaged) {
+                for (MessageReference qmr : newlyPaged) {
                     if (!pagedInPendingDispatch.contains(qmr)) {
-                        pagedInPendingDispatch.add(qmr);
+                        pagedInPendingDispatch.addMessageLast(qmr);
                     }
                 }
             }
@@ -1692,9 +1711,9 @@ public class Queue extends BaseDestination implements Task, UsageListener {
         }
     }
 
-    private List<QueueMessageReference> doPageInForDispatch(boolean force) throws Exception {
+    private PendingList doPageInForDispatch(boolean force) throws Exception {
         List<QueueMessageReference> result = null;
-        List<QueueMessageReference> resultList = null;
+        PendingList resultList = null;
 
         int toPageIn = Math.min(getMaxPageSize(), messages.size());
         if (LOG.isDebugEnabled()) {
@@ -1750,11 +1769,15 @@ public class Queue extends BaseDestination implements Task, UsageListener {
             // dispatch attempts
             pagedInMessagesLock.writeLock().lock();
             try {
-                resultList = new ArrayList<QueueMessageReference>(result.size());
+                if(isPrioritizedMessages()) {
+                    resultList = new PrioritizedPendingList();
+                } else {
+                    resultList = new OrderedPendingList();
+                }
                 for (QueueMessageReference ref : result) {
                     if (!pagedInMessages.containsKey(ref.getMessageId())) {
                         pagedInMessages.put(ref.getMessageId(), ref);
-                        resultList.add(ref);
+                        resultList.addMessageLast(ref);
                     } else {
                         ref.decrementReferenceCount();
                     }
@@ -1764,13 +1787,13 @@ public class Queue extends BaseDestination implements Task, UsageListener {
             }
         } else {
             // Avoid return null list, if condition is not validated
-            resultList = new ArrayList<QueueMessageReference>();
+            resultList = new OrderedPendingList();
         }
 
         return resultList;
     }
 
-    private void doDispatch(List<QueueMessageReference> list) throws Exception {
+    private void doDispatch(PendingList list) throws Exception {
         boolean doWakeUp = false;
 
         pagedInPendingDispatchLock.writeLock().lock();
@@ -1792,9 +1815,9 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                 if (pagedInPendingDispatch.isEmpty()) {
                     pagedInPendingDispatch.addAll(doActualDispatch(list));
                 } else {
-                    for (QueueMessageReference qmr : list) {
+                    for (MessageReference qmr : list) {
                         if (!pagedInPendingDispatch.contains(qmr)) {
-                            pagedInPendingDispatch.add(qmr);
+                            pagedInPendingDispatch.addMessageLast(qmr);
                         }
                     }
                     doWakeUp = true;
@@ -1814,9 +1837,10 @@ public class Queue extends BaseDestination implements Task, UsageListener {
      * @return list of messages that could get dispatched to consumers if they
      *         were not full.
      */
-    private List<QueueMessageReference> doActualDispatch(List<QueueMessageReference> list) throws Exception {
+    private PendingList doActualDispatch(PendingList list) throws Exception {
         List<Subscription> consumers;
         consumersLock.writeLock().lock();
+
         try {
             if (this.consumers.isEmpty() || isSlave()) {
                 // slave dispatch happens in processDispatchNotification
@@ -1827,10 +1851,18 @@ public class Queue extends BaseDestination implements Task, UsageListener {
             consumersLock.writeLock().unlock();
         }
 
-        List<QueueMessageReference> rc = new ArrayList<QueueMessageReference>(list.size());
+        PendingList rc;
+        if(isPrioritizedMessages()) {
+            rc = new PrioritizedPendingList();
+        } else {
+            rc = new OrderedPendingList();
+        }
+
         Set<Subscription> fullConsumers = new HashSet<Subscription>(this.consumers.size());
 
-        for (MessageReference node : list) {
+        for (Iterator<MessageReference> iterator = list.iterator(); iterator.hasNext();) {
+
+            MessageReference node = (MessageReference) iterator.next();
             Subscription target = null;
             int interestCount = 0;
             for (Subscription s : consumers) {
@@ -1863,7 +1895,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
             if ((target == null && interestCount > 0) || consumers.size() == 0) {
                 // This means all subs were full or that there are no
                 // consumers...
-                rc.add((QueueMessageReference) node);
+                rc.addMessageLast((QueueMessageReference) node);
             }
 
             // If it got dispatched, rotate the consumer list to get round robin
@@ -1886,7 +1918,6 @@ public class Queue extends BaseDestination implements Task, UsageListener {
     }
 
     protected boolean assignMessageGroup(Subscription subscription, QueueMessageReference node) throws Exception {
-        //QueueMessageReference node = (QueueMessageReference) m;
         boolean result = true;
         // Keep message groups together.
         String groupId = node.getGroupID();
@@ -2002,9 +2033,9 @@ public class Queue extends BaseDestination implements Task, UsageListener {
 
         pagedInPendingDispatchLock.writeLock().lock();
         try {
-            for (QueueMessageReference ref : pagedInPendingDispatch) {
+            for (MessageReference ref : pagedInPendingDispatch) {
                 if (messageId.equals(ref.getMessageId())) {
-                    message = ref;
+                    message = (QueueMessageReference)ref;
                     pagedInPendingDispatch.remove(ref);
                     break;
                 }

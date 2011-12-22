@@ -17,6 +17,7 @@
 package org.apache.activemq.broker.region.cursors;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -25,9 +26,10 @@ import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.command.MessageId;
 
 public class OrderedPendingList implements PendingList {
-    PendingNode root = null;
-    PendingNode tail = null;
-    final Map<MessageId, PendingNode> map = new HashMap<MessageId, PendingNode>();
+
+    private PendingNode root = null;
+    private PendingNode tail = null;
+    private final Map<MessageId, PendingNode> map = new HashMap<MessageId, PendingNode>();
 
     public PendingNode addMessageFirst(MessageReference message) {
         PendingNode node = new PendingNode(this, message);
@@ -130,4 +132,28 @@ public class OrderedPendingList implements PendingList {
         return "OrderedPendingList(" + System.identityHashCode(this) + ")";
     }
 
+    @Override
+    public boolean contains(MessageReference message) {
+        if(map.values().contains(message)) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    @Override
+    public Collection<MessageReference> values() {
+        List<MessageReference> messageReferences = new ArrayList<MessageReference>();
+        for(PendingNode pendingNode : map.values()) {
+            messageReferences.add(pendingNode.getMessage());
+        }
+        return messageReferences;
+    }
+
+    @Override
+    public void addAll(PendingList pendingList) {
+        for(MessageReference messageReference : pendingList) {
+            addMessageLast(messageReference);
+        }
+    }
 }
