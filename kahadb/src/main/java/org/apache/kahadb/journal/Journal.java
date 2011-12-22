@@ -316,7 +316,10 @@ public class Journal {
 	void addToTotalLength(int size) {
 		totalLength.addAndGet(size);
 	}
-    
+
+    public long length() {
+        return totalLength.get();
+    }
     
     synchronized DataFile getCurrentWriteFile() throws IOException {
         if (dataFiles.isEmpty()) {
