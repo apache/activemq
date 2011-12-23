@@ -57,10 +57,10 @@ class CallerBufferingDataFileAppender implements FileAppender {
             new DataByteArrayOutputStream(maxWriteBatchSize),
             new DataByteArrayOutputStream(maxWriteBatchSize)
     };
-    AtomicInteger writeBatchInstanceCount = new AtomicInteger();
+    volatile byte flip = 0x1;
     public class WriteBatch {
 
-        DataByteArrayOutputStream buff = cachedBuffers[writeBatchInstanceCount.getAndIncrement()%2];
+        DataByteArrayOutputStream buff = cachedBuffers[flip ^= 1];
         public final DataFile dataFile;
 
         public final LinkedNodeList<Journal.WriteCommand> writes = new LinkedNodeList<Journal.WriteCommand>();
