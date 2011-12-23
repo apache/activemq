@@ -90,15 +90,36 @@ if [ -z "$ACTIVEMQ_BASE" ] ; then
 fi
 
 # Active MQ configuration directory
-ACTIVEMQ_CONFIG_DIR="$ACTIVEMQ_BASE/conf"
+if [ -z "$ACTIVEMQ_CONFIG_DIR" ] ; then
+    ACTIVEMQ_CONFIG_DIR="$ACTIVEMQ_BASE/conf"
+fi
+
+# Configure a user with non root priviledges, if no user is specified do not change user
+if [ -z "$ACTIVEMQ_USER" ] ; then
+    ACTIVEMQ_USER=""
+fi
 
 # Active MQ configuration directory
 if [ -z "$ACTIVEMQ_DATA_DIR" ]; then
   ACTIVEMQ_DATA_DIR="$ACTIVEMQ_BASE/data"
 fi
 
+setCurrentUser(){
+   CUSER=`whoami 2>/dev/null`
+
+   # Solaris fix
+   if [ ! $? -eq 0 ]; then
+      CUSER=`/usr/ucb/whoami 2>/dev/null`
+   fi
+}
+
 if [ ! -d "$ACTIVEMQ_DATA_DIR" ]; then
-    mkdir $ACTIVEMQ_DATA_DIR
+   setCurrentUser
+   if ( [ -z "$ACTIVEMQ_USER" ] || [ "$ACTIVEMQ_USER" = "$CUSER" ] );then
+        mkdir $ACTIVEMQ_DATA_DIR
+   elif [ "`id -u`" = "0" ];then
+      su -c "mkdir $ACTIVEMQ_DATA_DIR" - $ACTIVEMQ_USER;
+   fi
 fi
 
 # Location of the pidfile
@@ -112,9 +133,6 @@ fi
 # (set JAVACMD to "auto" for automatic detection)
 #JAVA_HOME=""
 JAVACMD="auto"
-
-# Configure a user with non root priviledges, if no user is specified do not change user
-ACTIVEMQ_USER=""
 
 # Set jvm memory configuration
 if [ -z "$ACTIVEMQ_OPTS_MEMORY" ] ; then
@@ -161,7 +179,9 @@ ACTIVEMQ_SUNJMX_START="$ACTIVEMQ_SUNJMX_START -Dcom.sun.management.jmxremote"
 ACTIVEMQ_SUNJMX_CONTROL=""
 
 # Specify the queue manager URL for using "browse" option of sysv initscript
-ACTIVEMQ_QUEUEMANAGERURL="--amqurl tcp://localhost:61616"
+if [ -z "$ACTIVEMQ_QUEUEMANAGERURL" ]; then
+    ACTIVEMQ_QUEUEMANAGERURL="--amqurl tcp://localhost:61616"
+fi
 
 # Set additional JSE arguments
 ACTIVEMQ_SSL_OPTS="$SSL_OPTS"
@@ -174,7 +194,9 @@ ACTIVEMQ_SSL_OPTS="$SSL_OPTS"
 
 # ActiveMQ tries to shutdown the broker by jmx,
 # after a specified number of seconds send SIGKILL
-ACTIVEMQ_KILL_MAXSECONDS=30
+if [ -z "$ACTIVEMQ_KILL_MAXSECONDS" ]; then
+    ACTIVEMQ_KILL_MAXSECONDS=30
+fi
 
 ## END:DEFAULTCONFIG
 
@@ -321,21 +343,6 @@ ACTIVEMQ_CLASSPATH="${ACTIVEMQ_CONFIG_DIR};${ACTIVEMQ_CLASSPATH}"
 if [ "${ACTIVEMQ_BASE}" != "${ACTIVEMQ_HOME}" ]; then
     ACTIVEMQ_CLASSPATH="${ACTIVEMQ_BASE}/conf;${ACTIVEMQ_CLASSPATH}"
 fi
-
-
-
-# ------------------------------------------------------------------------
-# HELPER FUNCTIONS
-
-
-setCurrentUser(){
-   CUSER=`whoami 2>/dev/null`
-
-   # Solaris fix
-   if [ ! $? -eq 0 ]; then
-      CUSER=`/usr/ucb/whoami 2>/dev/null`
-   fi
-}
 
 # Start the ActiveMQ JAR
 #
