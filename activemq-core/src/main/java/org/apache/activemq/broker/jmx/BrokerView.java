@@ -38,12 +38,14 @@ import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.RemoveSubscriptionInfo;
 import org.apache.activemq.network.NetworkConnector;
 import org.apache.activemq.util.BrokerSupport;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
  */
 public class BrokerView implements BrokerViewMBean {
-
+    private static final Logger LOG = LoggerFactory.getLogger(BrokerView.class);
     ManagedRegionBroker broker;
     private final BrokerService brokerService;
     private final AtomicInteger sessionIdCounter = new AtomicInteger(0);
@@ -76,6 +78,11 @@ public class BrokerView implements BrokerViewMBean {
 
     public void gc() throws Exception {
         brokerService.getBroker().gc();
+        try {
+            brokerService.getPersistenceAdapter().checkpoint(true);
+        } catch (IOException e) {
+            LOG.error("Failed to checkpoint persistence adapter on gc request, reason:" + e, e);
+        }
     }
 
     public void start() throws Exception {

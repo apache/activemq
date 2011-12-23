@@ -33,7 +33,11 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ConnectionControl;
+import org.apache.activemq.kaha.impl.async.DataFileAppenderTest;
+import org.apache.kahadb.journal.FileAppender;
+import org.apache.kahadb.journal.Journal;
 import org.junit.After;
+import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -52,14 +56,14 @@ public class KahaDBFastEnqueueTest {
     private boolean useBytesMessage= true;
     private final int parallelProducer = 20;
     private Vector<Exception> exceptions = new Vector<Exception>();
-    final long toSend = 500000;
+    long toSend = 10000;
 
-    @Ignore("too slow, exploring getting broker disk bound")
     // use with:
     // -Xmx4g -Dorg.apache.kahadb.journal.appender.WRITE_STAT_WINDOW=10000 -Dorg.apache.kahadb.journal.CALLER_BUFFER_APPENDER=true
+    @Test
     public void testPublishNoConsumer() throws Exception {
 
-        startBroker(true);
+        startBroker(true, 10);
 
         final AtomicLong sharedCount = new AtomicLong(toSend);
         long start = System.currentTimeMillis();
@@ -82,19 +86,57 @@ public class KahaDBFastEnqueueTest {
         assertTrue("No exceptions: " + exceptions, exceptions.isEmpty());
         long totalSent  = toSend * payloadString.length();
 
-        //System.out.println("Pre shutdown: Index totalWritten:       " + kahaDBPersistenceAdapter.getStore().getPageFile().totalWritten);
+        double duration =  System.currentTimeMillis() - start;
+        stopBroker();
+        LOG.info("Duration:                " + duration + "ms");
+        LOG.info("Rate:                       " + (toSend * 1000/duration) + "m/s");
+        LOG.info("Total send:             " + totalSent);
+        LOG.info("Total journal write: " + kahaDBPersistenceAdapter.getStore().getJournal().length());
+        LOG.info("Journal writes %:    " + kahaDBPersistenceAdapter.getStore().getJournal().length() / (double)totalSent * 100 + "%");
+
+        restartBroker(0, 1200000);
+        consumeMessages(toSend);
+    }
+
+    @Test
+    public void testPublishNoConsumerNoCheckpoint() throws Exception {
+
+        toSend = 100;
+        startBroker(true, 0);
+
+        final AtomicLong sharedCount = new AtomicLong(toSend);
+        long start = System.currentTimeMillis();
+        ExecutorService executorService = Executors.newCachedThreadPool();
+        for (int i=0; i< parallelProducer; i++) {
+            executorService.execute(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        publishMessages(sharedCount, 0);
+                    } catch (Exception e) {
+                        exceptions.add(e);
+                    }
+                }
+            });
+        }
+        executorService.shutdown();
+        executorService.awaitTermination(30, TimeUnit.MINUTES);
+        assertTrue("Producers done in time", executorService.isTerminated());
+        assertTrue("No exceptions: " + exceptions, exceptions.isEmpty());
+        long totalSent  = toSend * payloadString.length();
+
+        broker.getAdminView().gc();
+
 
         double duration =  System.currentTimeMillis() - start;
         stopBroker();
-        System.out.println("Duration:                " + duration + "ms");
-        System.out.println("Rate:                       " + (toSend * 1000/duration) + "m/s");
-        System.out.println("Total send:             " + totalSent);
-        System.out.println("Total journal write: " + kahaDBPersistenceAdapter.getStore().getJournal().length());
-        //System.out.println("Total index write:   " + kahaDBPersistenceAdapter.getStore().getPageFile().totalWritten);
-        System.out.println("Journal writes %:    " + kahaDBPersistenceAdapter.getStore().getJournal().length() / (double)totalSent * 100 + "%");
-        //System.out.println("Index writes %:       " + kahaDBPersistenceAdapter.getStore().getPageFile().totalWritten / (double)totalSent * 100 + "%");
+        LOG.info("Duration:                " + duration + "ms");
+        LOG.info("Rate:                       " + (toSend * 1000/duration) + "m/s");
+        LOG.info("Total send:             " + totalSent);
+        LOG.info("Total journal write: " + kahaDBPersistenceAdapter.getStore().getJournal().length());
+        LOG.info("Journal writes %:    " + kahaDBPersistenceAdapter.getStore().getJournal().length() / (double)totalSent * 100 + "%");
 
-        restartBroker(0);
+        restartBroker(0, 0);
         consumeMessages(toSend);
     }
 
@@ -110,10 +152,16 @@ public class KahaDBFastEnqueueTest {
         assertNull("none left over", consumer.receive(2000));
     }
 
-    private void restartBroker(int restartDelay) throws Exception {
+    private void restartBroker(int restartDelay, int checkpoint) throws Exception {
         stopBroker();
         TimeUnit.MILLISECONDS.sleep(restartDelay);
-        startBroker(false);
+        startBroker(false, checkpoint);
+    }
+
+    @Before
+    public void setProps() {
+        System.setProperty(Journal.CALLER_BUFFER_APPENDER, Boolean.toString(true));
+        System.setProperty(FileAppender.PROPERTY_LOG_WRITE_STAT_WINDOW, "10000");
     }
 
     @After
@@ -122,6 +170,8 @@ public class KahaDBFastEnqueueTest {
             broker.stop();
             broker.waitUntilStopped();
         }
+        System.clearProperty(Journal.CALLER_BUFFER_APPENDER);
+        System.clearProperty(FileAppender.PROPERTY_LOG_WRITE_STAT_WINDOW);
     }
 
     final double sampleRate = 100000;
@@ -153,14 +203,14 @@ public class KahaDBFastEnqueueTest {
         connection.close();
     }
 
-    public void startBroker(boolean deleteAllMessages) throws Exception {
+    public void startBroker(boolean deleteAllMessages, int checkPointPeriod) throws Exception {
         broker = new BrokerService();
         broker.setDeleteAllMessagesOnStartup(deleteAllMessages);
         kahaDBPersistenceAdapter = (KahaDBPersistenceAdapter)broker.getPersistenceAdapter();
         kahaDBPersistenceAdapter.setEnableJournalDiskSyncs(false);
         // defer checkpoints which require a sync
-        kahaDBPersistenceAdapter.setCleanupInterval(20 * 60 * 1000);
-        kahaDBPersistenceAdapter.setCheckpointInterval(20 * 60 * 1000);
+        kahaDBPersistenceAdapter.setCleanupInterval(checkPointPeriod);
+        kahaDBPersistenceAdapter.setCheckpointInterval(checkPointPeriod);
 
         // optimise for disk best batch rate
         kahaDBPersistenceAdapter.setJournalMaxWriteBatchSize(24*1024*1024); //4mb default
@@ -171,7 +221,6 @@ public class KahaDBFastEnqueueTest {
         kahaDBPersistenceAdapter.setEnableIndexRecoveryFile(false);
         kahaDBPersistenceAdapter.setEnableIndexDiskSyncs(false);
 
-        broker.setUseJmx(false);
         broker.addConnector("tcp://0.0.0.0:0");
         broker.start();
 
@@ -179,6 +228,7 @@ public class KahaDBFastEnqueueTest {
         connectionFactory = new ActiveMQConnectionFactory(broker.getTransportConnectors().get(0).getConnectUri() + options);
     }
 
+    @Test
     public void testRollover() throws Exception {
         byte flip = 0x1;
         for (long i=0; i<Short.MAX_VALUE; i++) {

@@ -980,7 +980,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
     }
 
     public void checkpoint(boolean sync) throws IOException {
-        super.checkpointCleanup(false);
+        super.checkpointCleanup(sync);
     }
 
     // /////////////////////////////////////////////////////////////////

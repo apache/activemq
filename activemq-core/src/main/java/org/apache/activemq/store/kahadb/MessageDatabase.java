@@ -67,7 +67,6 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
     static final int CLOSED_STATE = 1;
     static final int OPEN_STATE = 2;
     static final long NOT_ACKED = -1;
-    static final long UNMATCHED_SEQ = -2;
 
     static final int VERSION = 4;
 
@@ -247,6 +246,10 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
     }
 
     private void startCheckpoint() {
+        if (checkpointInterval == 0 &&  cleanupInterval == 0) {
+            LOG.info("periodic checkpoint/cleanup disabled, will ocurr on clean shutdown/restart");
+            return;
+        }
         synchronized (checkpointThreadLock) {
             boolean start = false;
             if (checkpointThread == null) {
@@ -264,15 +267,15 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                             long lastCheckpoint = System.currentTimeMillis();
                             // Sleep for a short time so we can periodically check
                             // to see if we need to exit this thread.
-                            long sleepTime = Math.min(checkpointInterval, 500);
+                            long sleepTime = Math.min(checkpointInterval > 0 ? checkpointInterval : cleanupInterval, 500);
                             while (opened.get()) {
                                 Thread.sleep(sleepTime);
                                 long now = System.currentTimeMillis();
-                                if( now - lastCleanup >= cleanupInterval ) {
+                                if( cleanupInterval > 0 && (now - lastCleanup >= cleanupInterval) ) {
                                     checkpointCleanup(true);
                                     lastCleanup = now;
                                     lastCheckpoint = now;
-                                } else if( now - lastCheckpoint >= checkpointInterval ) {
+                                } else if( checkpointInterval > 0 && (now - lastCheckpoint >= checkpointInterval )) {
                                     checkpointCleanup(false);
                                     lastCheckpoint = now;
                                 }
@@ -392,7 +395,9 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                 }
                 journal.close();
                 synchronized (checkpointThreadLock) {
-                    checkpointThread.join();
+                    if (checkpointThread != null) {
+                        checkpointThread.join();
+                    }
                 }
             } finally {
                 lockFile.unlock();
@@ -781,13 +786,6 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         }
     }
 
-    // /////////////////////////////////////////////////////////////////
-    // Methods call by the broker to update and query the store.
-    // /////////////////////////////////////////////////////////////////
-    public Location store(JournalCommand<?> data) throws IOException {
-        return store(data, false, null,null);
-    }
-
     public ByteSequence toByteSequence(JournalCommand<?> data) throws IOException {
         int size = data.serializedSizeFramed();
         DataByteArrayOutputStream os = new DataByteArrayOutputStream(size + 1);
@@ -796,20 +794,35 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         return os.toByteSequence();
     }
 
+    // /////////////////////////////////////////////////////////////////
+    // Methods call by the broker to update and query the store.
+    // /////////////////////////////////////////////////////////////////
+    public Location store(JournalCommand<?> data) throws IOException {
+        return store(data, false, null,null);
+    }
+
+    public Location store(JournalCommand<?> data, Runnable onJournalStoreComplete) throws IOException {
+        return store(data, false, null,null, onJournalStoreComplete);
+    }
+
+    public Location store(JournalCommand<?> data, boolean sync, Runnable before,Runnable after) throws IOException {
+        return store(data, sync, before, after, null);
+    }
+
     /**
      * All updated are are funneled through this method. The updates are converted
      * to a JournalMessage which is logged to the journal and then the data from
      * the JournalMessage is used to update the index just like it would be done
      * during a recovery process.
      */
-    public Location store(JournalCommand<?> data, boolean sync, Runnable before,Runnable after) throws IOException {
+    public Location store(JournalCommand<?> data, boolean sync, Runnable before,Runnable after, Runnable onJournalStoreComplete) throws IOException {
         if (before != null) {
             before.run();
         }
         try {
             ByteSequence sequence = toByteSequence(data);
             long start = System.currentTimeMillis();
-            Location location = journal.write(sequence, sync);
+            Location location = onJournalStoreComplete == null ? journal.write(sequence, sync) :  journal.write(sequence, onJournalStoreComplete) ;
             long start2 = System.currentTimeMillis();
             process(data, location, after);
             long end = System.currentTimeMillis();
@@ -1408,13 +1421,25 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         LOG.debug("Checkpoint done.");
     }
 
+    final Runnable nullCompletionCallback = new Runnable() {
+        @Override
+        public void run() {
+        }
+    };
     private Location checkpointProducerAudit() throws IOException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         ObjectOutputStream oout = new ObjectOutputStream(baos);
         oout.writeObject(metadata.producerSequenceIdTracker);
         oout.flush();
         oout.close();
-        return store(new KahaProducerAuditCommand().setAudit(new Buffer(baos.toByteArray())), true, null, null);
+        // using completion callback allows a disk sync to be avoided when enableJournalDiskSyncs = false
+        Location location = store(new KahaProducerAuditCommand().setAudit(new Buffer(baos.toByteArray())), nullCompletionCallback);
+        try {
+            location.getLatch().await();
+        } catch (InterruptedException e) {
+            throw new InterruptedIOException(e.toString());
+        }
+        return location;
     }
 
     public HashSet<Integer> getJournalFilesBeingReplicated() {
@@ -2076,6 +2101,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         manager.setWriteBatchSize(getJournalMaxWriteBatchSize());
         manager.setArchiveDataLogs(isArchiveDataLogs());
         manager.setSizeAccumulator(storeSize);
+        manager.setEnableAsyncDiskSync(isEnableJournalDiskSyncs());
         if (getDirectoryArchive() != null) {
             IOHelper.mkdirs(getDirectoryArchive());
             manager.setDirectoryArchive(getDirectoryArchive());

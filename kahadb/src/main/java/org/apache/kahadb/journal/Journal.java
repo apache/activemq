@@ -118,6 +118,7 @@ public class Journal {
 	private ReplicationTarget replicationTarget;
     protected boolean checksum;
     protected boolean checkForCorruptionOnStartup;
+    protected boolean enableAsyncDiskSync = true;
     private Timer timer;
    
 
@@ -751,6 +752,14 @@ public class Journal {
 
     public void setSizeAccumulator(AtomicLong storeSizeAccumulator) {
        this.totalLength = storeSizeAccumulator;
+    }
+
+    public void setEnableAsyncDiskSync(boolean val) {
+        this.enableAsyncDiskSync = val;
+    }
+
+    public boolean isEnableAsyncDiskSync() {
+        return enableAsyncDiskSync;
     }
 
     public static class WriteCommand extends LinkedNode<WriteCommand> {
