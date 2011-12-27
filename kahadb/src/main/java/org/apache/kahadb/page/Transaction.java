@@ -16,11 +16,13 @@
  */
 package org.apache.kahadb.page;
 
-import java.io.*;
-import java.util.*;
-
 import org.apache.kahadb.page.PageFile.PageWrite;
 import org.apache.kahadb.util.*;
+
+import java.io.*;
+import java.util.Iterator;
+import java.util.NoSuchElementException;
+import java.util.TreeMap;
 
 /**
  * The class used to read/update a PageFile object.  Using a transaction allows you to
@@ -700,9 +702,12 @@ public class Transaction implements Iterable<Page> {
     @SuppressWarnings("unchecked")
     private void write(final Page page, byte[] data) throws IOException {
         Long key = page.getPageId();
-        size += data.length;
+
+        // how much pages we have for this transaction
+        size = writes.size() * pageFile.getPageSize();
 
         PageWrite write;
+        
         if (size > maxTransactionSize) {
             if (tmpFile == null) {
                 tmpFile = new RandomAccessFile(getTempFile(), "rw");
