@@ -35,4 +35,4 @@ public class InsertionCountList<T> extends AbstractList<T> {
     public T get(int index) {
         return null;
     }
-};
+}
