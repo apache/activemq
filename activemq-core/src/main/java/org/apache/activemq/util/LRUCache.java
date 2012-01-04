@@ -80,6 +80,14 @@ public class LRUCache<K, V> extends LinkedHashMap<K, V> {
     }
 
     protected boolean removeEldestEntry(Map.Entry<K,V> eldest) {
-        return size() > maxCacheSize;
+        if( size() > maxCacheSize ) {
+            onCacheEviction(eldest);
+            return true;
+        }
+        return false;
     }
+
+    protected void onCacheEviction(Map.Entry<K,V> eldest) {
+    }
+
 }
