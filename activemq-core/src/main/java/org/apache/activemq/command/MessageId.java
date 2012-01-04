@@ -16,6 +16,8 @@
  */
 package org.apache.activemq.command;
 
+import java.util.concurrent.atomic.AtomicReference;
+
 /**
  * @openwire:marshaller code="110"
  * 
@@ -30,6 +32,9 @@ public class MessageId implements DataStructure, Comparable<MessageId> {
 
     private transient String key;
     private transient int hashCode;
+
+    private transient AtomicReference<Object> dataLocator = new AtomicReference<Object>();
+    private transient Object entryLocator;
 
     public MessageId() {
         this.producerId = new ProducerId();
@@ -147,11 +152,12 @@ public class MessageId implements DataStructure, Comparable<MessageId> {
         MessageId copy = new MessageId(producerId, producerSequenceId);
         copy.key = key;
         copy.brokerSequenceId = brokerSequenceId;
+        copy.dataLocator = dataLocator;
         return copy;
     }
 
     /**
-     * @param o
+     * @param
      * @return
      * @see java.lang.Comparable#compareTo(java.lang.Object)
      */
@@ -161,5 +167,29 @@ public class MessageId implements DataStructure, Comparable<MessageId> {
             result = this.toString().compareTo(other.toString());
         }
         return result;
+    }
+
+    /**
+     * @return a locator which aids a message store in loading a message faster.  Only used
+     * by the message stores.
+     */
+    public Object getDataLocator() {
+        return dataLocator.get();
+    }
+
+    /**
+     * Sets a locator which aids a message store in loading a message faster.  Only used
+     * by the message stores.
+     */
+    public void setDataLocator(Object value) {
+        this.dataLocator.set(value);
+    }
+
+    public Object getEntryLocator() {
+        return entryLocator;
+    }
+
+    public void setEntryLocator(Object entryLocator) {
+        this.entryLocator = entryLocator;
     }
 }
