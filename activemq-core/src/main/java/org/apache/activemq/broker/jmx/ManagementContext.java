@@ -64,6 +64,7 @@ public class ManagementContext implements Service {
     private JMXConnectorServer connectorServer;
     private ObjectName namingServiceObjectName;
     private Registry registry;
+    private ServerSocket registrySocket;
     private final List<ObjectName> registeredMBeanNames = new CopyOnWriteArrayList<ObjectName>();
     private boolean allowRemoteAddressInMBeanNames = true;
 
@@ -146,6 +147,13 @@ public class ManagementContext implements Service {
                 }
             }
             beanServer = null;
+            if(registrySocket!=null) {
+                try {
+                    registrySocket.close();
+                } catch (IOException e) {
+                }
+                registrySocket = null;
+            }
         }
     }
 
@@ -419,12 +427,13 @@ public class ManagementContext implements Service {
                 registry = LocateRegistry.createRegistry(connectorPort, null, new RMIServerSocketFactory() {
                     public ServerSocket createServerSocket(int port)
                             throws IOException {
-                        ServerSocket result = new ServerSocket(port);
-                        result.setReuseAddress(true);
-                        return result;
+                        registrySocket = new ServerSocket(port);
+                        registrySocket.setReuseAddress(true);
+                        return registrySocket;
                     }});
             }
             namingServiceObjectName = ObjectName.getInstance("naming:type=rmiregistry");
+
             // Do not use the createMBean as the mx4j jar may not be in the
             // same class loader than the server
             Class cl = Class.forName("mx4j.tools.naming.NamingService");
