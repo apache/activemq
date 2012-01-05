@@ -729,6 +729,39 @@ public class StompTest extends CombinationTestSupport {
         assertTrue(message.getJMSRedelivered());
     }
 
+    public void testSubscribeWithClientAckAndContentLength() throws Exception {
+
+        String frame = "CONNECT\n" + "login: system\n" + "passcode: manager\n\n" + Stomp.NULL;
+        stompConnection.sendFrame(frame);
+
+        frame = stompConnection.receiveFrame();
+        assertTrue(frame.startsWith("CONNECTED"));
+
+        frame = "SUBSCRIBE\n" + "destination:/queue/" + getQueueName() + "\n" + "ack:client\n\n" + Stomp.NULL;
+
+        stompConnection.sendFrame(frame);
+        sendMessage(getName());
+        StompFrame msg = stompConnection.receive();
+
+
+        assertTrue(msg.getAction().equals("MESSAGE"));
+        
+        HashMap<String, String> ackHeaders = new HashMap<String, String>();
+        ackHeaders.put("message-id", msg.getHeaders().get("message-id"));
+        ackHeaders.put("content-length", "8511");
+
+        StompFrame ack = new StompFrame("ACK", ackHeaders);
+        stompConnection.sendFrame(ack.format());
+
+
+        stompDisconnect();
+
+        // message should not be received since it was acknowledged
+        MessageConsumer consumer = session.createConsumer(queue);
+        TextMessage message = (TextMessage)consumer.receive(500);
+        assertNull(message);
+    }
+
     public void testUnsubscribe() throws Exception {
 
         String frame = "CONNECT\n" + "login: system\n" + "passcode: manager\n\n" + Stomp.NULL;

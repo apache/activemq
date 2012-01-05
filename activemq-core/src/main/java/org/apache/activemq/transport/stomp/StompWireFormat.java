@@ -16,20 +16,14 @@
  */
 package org.apache.activemq.transport.stomp;
 
-import java.io.DataInput;
-import java.io.DataInputStream;
-import java.io.DataOutput;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.PushbackInputStream;
-import java.util.HashMap;
-import java.util.Map;
-
 import org.apache.activemq.util.ByteArrayInputStream;
 import org.apache.activemq.util.ByteArrayOutputStream;
 import org.apache.activemq.util.ByteSequence;
 import org.apache.activemq.wireformat.WireFormat;
+
+import java.io.*;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Implements marshalling and unmarsalling the <a
@@ -103,7 +97,7 @@ public class StompWireFormat implements WireFormat {
             // Read in the data part.
             byte[] data = NO_DATA;
             String contentLength = headers.get(Stomp.Headers.CONTENT_LENGTH);
-            if (contentLength != null) {
+            if ((action.equals(Stomp.Commands.SEND) || action.equals(Stomp.Responses.MESSAGE)) && contentLength != null) {
 
                 // Bless the client, he's telling us how much data to read in.
                 int length = parseContentLength(contentLength);
