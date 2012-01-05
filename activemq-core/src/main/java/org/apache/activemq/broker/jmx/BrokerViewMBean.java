@@ -45,8 +45,8 @@ public interface BrokerViewMBean extends Service {
     String getBrokerVersion();
 
     /**
-     * The Broker will fush it's caches so that the garbage collector can
-     * recalaim more memory.
+     * The Broker will flush it's caches so that the garbage collector can
+     * reclaim more memory.
      *
      * @throws Exception
      */
