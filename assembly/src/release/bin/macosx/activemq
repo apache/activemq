@@ -7,9 +7,9 @@
 # The ASF licenses this file to You under the Apache License, Version 2.0
 # (the "License"); you may not use this file except in compliance with
 # the License.  You may obtain a copy of the License at
-# 
+#
 # http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -49,7 +49,7 @@ PIDDIR="."
 
 # The following two lines are used by the chkconfig command. Change as is
 #  appropriate for your application.  They should remain commented.
-# chkconfig: 2345 20 80
+# chkconfig: 2345 80 20
 # description: @app.long.name@
 
 # Do not modify anything beyond this point
@@ -243,7 +243,7 @@ else
         fi
     fi
 fi
- 
+
 # Build the nice clause
 if [ "X$PRIORITY" = "X" ]
 then
@@ -286,7 +286,7 @@ checkUser() {
                 exit 1
             fi
         fi
-    
+
         if [ "`$IDEXE -u -n`" = "$RUN_AS_USER" ]
         then
             # Already running as the configured user.  Avoid password prompts by not calling su.
@@ -303,7 +303,7 @@ checkUser() {
         then
             if [ "X$2" != "X" ]
             then
-                # Resolve the primary group 
+                # Resolve the primary group
                 RUN_AS_GROUP=`groups $RUN_AS_USER | awk '{print $3}' | tail -1`
                 if [ "X$RUN_AS_GROUP" = "X" ]
                 then
@@ -387,7 +387,7 @@ console() {
         exit 1
     fi
 }
- 
+
 start() {
     echo "Starting $APP_LONG_NAME..."
     getpid
@@ -400,7 +400,7 @@ start() {
         exit 1
     fi
 }
- 
+
 stopit() {
     echo "Stopping $APP_LONG_NAME..."
     getpid
