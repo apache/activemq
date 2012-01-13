@@ -51,7 +51,8 @@ import org.slf4j.LoggerFactory;
         if (ignoreNoSpaceErrors) {
             Throwable cause = exception;
             while (cause != null && cause instanceof IOException) {
-                if (cause.getMessage().contains(noSpaceMessage)) {
+                String message = cause.getMessage();
+                if (message != null && message.contains(noSpaceMessage)) {
                     LOG.info("Ignoring no space left exception, " + exception, exception);
                     return;
                 }
@@ -62,7 +63,8 @@ import org.slf4j.LoggerFactory;
         if (ignoreSQLExceptions) {
             Throwable cause = exception;
             while (cause != null) {
-                if (cause instanceof SQLException && cause.getMessage().contains(sqlExceptionMessage)) {
+                String message = cause.getMessage();
+                if (cause instanceof SQLException && message.contains(sqlExceptionMessage)) {
                     LOG.info("Ignoring SQLException, " + exception, cause);
                     return;
                 }
