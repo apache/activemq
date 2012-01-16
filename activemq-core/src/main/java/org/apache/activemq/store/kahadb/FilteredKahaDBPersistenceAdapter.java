@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.store.kahadb;
 
+import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.filter.DestinationMapEntry;
 
 /**
@@ -24,6 +25,16 @@ import org.apache.activemq.filter.DestinationMapEntry;
  */
 public class FilteredKahaDBPersistenceAdapter extends DestinationMapEntry {
     private KahaDBPersistenceAdapter persistenceAdapter;
+    private boolean perDestination;
+
+    public FilteredKahaDBPersistenceAdapter() {
+        super();
+    }
+
+    public FilteredKahaDBPersistenceAdapter(ActiveMQDestination destination, KahaDBPersistenceAdapter adapter) {
+        setDestination(destination);
+        persistenceAdapter  = adapter;
+    }
 
     public KahaDBPersistenceAdapter getPersistenceAdapter() {
         return persistenceAdapter;
@@ -36,5 +47,13 @@ public class FilteredKahaDBPersistenceAdapter extends DestinationMapEntry {
     @Override
     public void afterPropertiesSet() throws Exception {
         // ok to have no destination, we default it
+    }
+
+    public boolean isPerDestination() {
+        return perDestination;
+    }
+
+    public void setPerDestination(boolean perDestination) {
+        this.perDestination = perDestination;
     }
 }

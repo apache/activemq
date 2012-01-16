@@ -241,7 +241,7 @@ public class KahaDBPersistenceAdapter implements PersistenceAdapter, BrokerServi
     }
     
     public int getFailoverProducersAuditDepth() {
-        return this.getFailoverProducersAuditDepth();
+        return this.letter.getFailoverProducersAuditDepth();
     }
     
     /**
@@ -558,7 +558,7 @@ public class KahaDBPersistenceAdapter implements PersistenceAdapter, BrokerServi
     }
 
     public boolean isEnableIndexPageCaching() {
-        return isEnableIndexPageCaching();
+        return letter.isEnableIndexPageCaching();
     }
 
     public KahaDBStore getStore() {
