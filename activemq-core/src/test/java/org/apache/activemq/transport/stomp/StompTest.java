@@ -745,7 +745,7 @@ public class StompTest extends CombinationTestSupport {
 
 
         assertTrue(msg.getAction().equals("MESSAGE"));
-        
+
         HashMap<String, String> ackHeaders = new HashMap<String, String>();
         ackHeaders.put("message-id", msg.getHeaders().get("message-id"));
         ackHeaders.put("content-length", "8511");
@@ -753,6 +753,11 @@ public class StompTest extends CombinationTestSupport {
         StompFrame ack = new StompFrame("ACK", ackHeaders);
         stompConnection.sendFrame(ack.format());
 
+        // Need some time for the Ack to get processed.
+        waitForFrameToTakeEffect();
+
+        frame = "DISCONNECT\n" + "\n\n" + Stomp.NULL;
+        stompConnection.sendFrame(frame);
 
         stompDisconnect();
 
@@ -1727,9 +1732,9 @@ public class StompTest extends CombinationTestSupport {
         assertEquals(2, queueView.getDequeueCount());
         assertEquals(0, queueView.getQueueSize());
     }
-    
+
     public void testReplytoModification() throws Exception {
-    	String replyto = "some destination";
+        String replyto = "some destination";
         String frame = "CONNECT\n" + "login: system\n" + "passcode: manager\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
 
@@ -1738,7 +1743,7 @@ public class StompTest extends CombinationTestSupport {
 
         frame = "SUBSCRIBE\n" + "destination:/queue/" + getQueueName() + "\n" + "ack:auto\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
-        
+
         frame = "SEND\n" + "destination:/queue/" + getQueueName() + "\n" + "reply-to:" + replyto + "\n\nhello world" + Stomp.NULL;
         stompConnection.sendFrame(frame);
 
