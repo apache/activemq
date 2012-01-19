@@ -136,7 +136,7 @@ JAVACMD="auto"
 
 # Set jvm memory configuration
 if [ -z "$ACTIVEMQ_OPTS_MEMORY" ] ; then
-    ACTIVEMQ_OPTS_MEMORY="-Xms256M -Xmx1G"
+    ACTIVEMQ_OPTS_MEMORY="-Xms1G -Xmx1G"
 fi
 
 # Uncomment to enable audit logging
@@ -233,7 +233,7 @@ if [ "$CONFIG_LOAD" != "yes" ];then
 fi
 
 if [ -z "$ACTIVEMQ_OPTS" ] ; then
-    ACTIVEMQ_OPTS="$ACTIVEMQ_OPTS_MEMORY -Dorg.apache.activemq.UseDedicatedTaskRunner=true -Djava.util.logging.config.file=logging.properties"
+    ACTIVEMQ_OPTS="$ACTIVEMQ_OPTS_MEMORY -Djava.util.logging.config.file=logging.properties"
 fi
 
 # create configuration if requested
