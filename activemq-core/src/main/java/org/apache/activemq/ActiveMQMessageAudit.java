@@ -77,7 +77,7 @@ public class ActiveMQMessageAudit extends ActiveMQMessageAuditNoSync {
     @Override
     public boolean isInOrder(final MessageId id) {
         synchronized (this) {
-            return isInOrder(id);
+            return super.isInOrder(id);
         }
     }
 }
