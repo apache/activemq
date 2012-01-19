@@ -197,10 +197,6 @@ public final class AdvisorySupport {
         return new ActiveMQTopic(name);
     }
 
-    public static ActiveMQTopic getMasterBrokerAdvisoryTopic(Destination destination) throws JMSException {
-        return getMasterBrokerAdvisoryTopic(ActiveMQMessageTransformation.transformDestination(destination));
-    }
-
     public static ActiveMQTopic getMasterBrokerAdvisoryTopic() {
         return new ActiveMQTopic(MASTER_BROKER_TOPIC_PREFIX);
     }
