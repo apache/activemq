@@ -16,20 +16,6 @@
  */
 package org.apache.activemq.transport.stomp;
 
-import java.io.DataInputStream;
-import java.io.IOException;
-import java.net.Socket;
-import java.net.SocketTimeoutException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.UnknownHostException;
-import java.util.concurrent.TimeUnit;
-
-import javax.jms.Connection;
-import javax.jms.MessageConsumer;
-import javax.jms.MessageProducer;
-import javax.jms.Session;
-import javax.jms.TextMessage;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.CombinationTestSupport;
 import org.apache.activemq.broker.BrokerFactory;
@@ -38,6 +24,12 @@ import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTextMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.jms.*;
+import java.io.DataInputStream;
+import java.io.IOException;
+import java.net.*;
+import java.util.concurrent.TimeUnit;
 
 public class Stomp11Test extends CombinationTestSupport {
 
@@ -645,6 +637,62 @@ public class Stomp11Test extends CombinationTestSupport {
         final String expectedEncoded = "\\\\value\\c";
         final String headerVal = frame.substring(start, start + expectedEncoded.length());
         assertEquals("" + frame, expectedEncoded, headerVal);
+
+        frame = "DISCONNECT\n" + "\n\n" + Stomp.NULL;
+        stompConnection.sendFrame(frame);
+    }
+
+    public void testNackMessage() throws Exception {
+
+        String connectFrame = "STOMP\n" +
+                "login: system\n" +
+                "passcode: manager\n" +
+                "accept-version:1.1\n" +
+                "host:localhost\n" +
+                "\n" + Stomp.NULL;
+        stompConnection.sendFrame(connectFrame);
+
+        String f = stompConnection.receiveFrame();
+        LOG.debug("Broker sent: " + f);
+
+        assertTrue(f.startsWith("CONNECTED"));
+
+        String message = "SEND\n" + "destination:/queue/" + getQueueName() + "\npersistent:true\n\n" + "Hello World" + Stomp.NULL;
+
+        stompConnection.sendFrame(message);
+
+        String frame = "SUBSCRIBE\n" + "destination:/queue/" + getQueueName() + "\n" +
+                "id:12345\n" + "ack:client\n\n" + Stomp.NULL;
+        stompConnection.sendFrame(frame);
+
+        StompFrame received = stompConnection.receive();
+        assertTrue(received.getAction().equals("MESSAGE"));
+
+        // nack it
+        frame = "NACK\n" + "subscription:12345\n" + "message-id:" +
+                received.getHeaders().get("message-id") + "\n\n" + Stomp.NULL;
+        stompConnection.sendFrame(frame);
+
+        frame = "UNSUBSCRIBE\n" + "destination:/queue/" + getQueueName() + "\n" +
+                "id:12345\n\n" + Stomp.NULL;
+        stompConnection.sendFrame(frame);
+
+        //consume it from dlq
+
+        frame = "SUBSCRIBE\n" + "destination:/queue/ActiveMQ.DLQ\n" +
+                "id:12345\n" + "ack:client\n\n" + Stomp.NULL;
+        stompConnection.sendFrame(frame);
+        StompFrame receivedDLQ = stompConnection.receive(200);
+        assertEquals(receivedDLQ.getHeaders().get("message-id"), received.getHeaders().get("message-id"));
+
+        frame = "ACK\n" + "subscription:12345\n" + "message-id:" +
+                received.getHeaders().get("message-id") + "\n\n" + Stomp.NULL;
+        stompConnection.sendFrame(frame);
+
+        frame = "UNSUBSCRIBE\n" + "destination:/queue/ActiveMQ.DLQ\n" +
+                "id:12345\n\n" + Stomp.NULL;
+        stompConnection.sendFrame(frame);
+
 
         frame = "DISCONNECT\n" + "\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);

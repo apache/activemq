@@ -16,23 +16,15 @@
  */
 package org.apache.activemq.transport.stomp;
 
+import org.apache.activemq.command.*;
+
+import javax.jms.JMSException;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Map.Entry;
-
-import javax.jms.JMSException;
-
-import org.apache.activemq.command.ActiveMQBytesMessage;
-import org.apache.activemq.command.ActiveMQDestination;
-import org.apache.activemq.command.ActiveMQMessage;
-import org.apache.activemq.command.ConsumerInfo;
-import org.apache.activemq.command.MessageAck;
-import org.apache.activemq.command.MessageDispatch;
-import org.apache.activemq.command.MessageId;
-import org.apache.activemq.command.TransactionId;
 
 /**
  * Keeps track of the STOMP subscription so that acking is correctly done.
@@ -197,7 +189,7 @@ public class StompSubscription {
         }
         dispatchedMessage.remove(msgId);
 
-        return null;
+        return ack;
     }
 
     public String getAckMode() {

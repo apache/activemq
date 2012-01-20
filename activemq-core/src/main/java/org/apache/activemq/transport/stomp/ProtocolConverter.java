@@ -256,7 +256,7 @@ public class ProtocolConverter {
 
         checkConnected();
 
-        if (this.version.equals(Stomp.V1_1)) {
+        if (this.version.equals(Stomp.V1_0)) {
             throw new ProtocolException("NACK received but connection is in v1.0 mode.");
         }
 
