@@ -23,6 +23,7 @@ import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
+import java.util.NoSuchElementException;
 import java.util.concurrent.atomic.AtomicInteger;
 import javax.management.ObjectName;
 
@@ -65,11 +66,11 @@ public class BrokerView implements BrokerViewMBean {
     }
 
     public String getBrokerId() {
-        return broker.getBrokerId().toString();
+        return safeGetBroker().getBrokerId().toString();
     }
 
     public String getBrokerName() {
-        return broker.getBrokerName();
+        return safeGetBroker().getBrokerName();
     }
 
     public String getBrokerVersion() {
@@ -98,29 +99,28 @@ public class BrokerView implements BrokerViewMBean {
         brokerService.stopGracefully(connectorName, queueName, timeout, pollInterval);
     }
 
-
     public long getTotalEnqueueCount() {
-        return broker.getDestinationStatistics().getEnqueues().getCount();
+        return safeGetBroker().getDestinationStatistics().getEnqueues().getCount();
     }
 
     public long getTotalDequeueCount() {
-        return broker.getDestinationStatistics().getDequeues().getCount();
+        return safeGetBroker().getDestinationStatistics().getDequeues().getCount();
     }
 
     public long getTotalConsumerCount() {
-        return broker.getDestinationStatistics().getConsumers().getCount();
+        return safeGetBroker().getDestinationStatistics().getConsumers().getCount();
     }
 
     public long getTotalProducerCount() {
-        return broker.getDestinationStatistics().getProducers().getCount();
+        return safeGetBroker().getDestinationStatistics().getProducers().getCount();
     }
 
     public long getTotalMessageCount() {
-        return broker.getDestinationStatistics().getMessages().getCount();
+        return safeGetBroker().getDestinationStatistics().getMessages().getCount();
     }
 
     public long getTotalMessagesCached() {
-        return broker.getDestinationStatistics().getMessagesCached().getCount();
+        return safeGetBroker().getDestinationStatistics().getMessagesCached().getCount();
     }
 
     public int getMemoryPercentUsage() {
@@ -143,7 +143,6 @@ public class BrokerView implements BrokerViewMBean {
         return brokerService.getSystemUsage().getStoreUsage().getPercentUsage();
     }
 
-
     public long getTempLimit() {
        return brokerService.getSystemUsage().getTempUsage().getLimit();
     }
@@ -160,21 +159,20 @@ public class BrokerView implements BrokerViewMBean {
         brokerService.getSystemUsage().getTempUsage().setLimit(limit);
     }
 
-
     public void resetStatistics() {
-        broker.getDestinationStatistics().reset();
+        safeGetBroker().getDestinationStatistics().reset();
     }
 
     public void enableStatistics() {
-        broker.getDestinationStatistics().setEnabled(true);
+        safeGetBroker().getDestinationStatistics().setEnabled(true);
     }
 
     public void disableStatistics() {
-        broker.getDestinationStatistics().setEnabled(false);
+        safeGetBroker().getDestinationStatistics().setEnabled(false);
     }
 
     public boolean isStatisticsEnabled() {
-        return broker.getDestinationStatistics().isEnabled();
+        return safeGetBroker().getDestinationStatistics().isEnabled();
     }
 
     public boolean isPersistent() {
@@ -190,111 +188,121 @@ public class BrokerView implements BrokerViewMBean {
     }
 
     public ObjectName[] getTopics() {
-        return broker.getTopics();
+        return safeGetBroker().getTopics();
     }
 
     public ObjectName[] getQueues() {
-        return broker.getQueues();
+        return safeGetBroker().getQueues();
     }
 
     public ObjectName[] getTemporaryTopics() {
-        return broker.getTemporaryTopics();
+        return safeGetBroker().getTemporaryTopics();
     }
 
     public ObjectName[] getTemporaryQueues() {
-        return broker.getTemporaryQueues();
+        return safeGetBroker().getTemporaryQueues();
     }
 
     public ObjectName[] getTopicSubscribers() {
-        return broker.getTopicSubscribers();
+        return safeGetBroker().getTopicSubscribers();
     }
 
     public ObjectName[] getDurableTopicSubscribers() {
-        return broker.getDurableTopicSubscribers();
+        return safeGetBroker().getDurableTopicSubscribers();
     }
 
     public ObjectName[] getQueueSubscribers() {
-        return broker.getQueueSubscribers();
+        return safeGetBroker().getQueueSubscribers();
     }
 
     public ObjectName[] getTemporaryTopicSubscribers() {
-        return broker.getTemporaryTopicSubscribers();
+        return safeGetBroker().getTemporaryTopicSubscribers();
     }
 
     public ObjectName[] getTemporaryQueueSubscribers() {
-        return broker.getTemporaryQueueSubscribers();
+        return safeGetBroker().getTemporaryQueueSubscribers();
     }
 
     public ObjectName[] getInactiveDurableTopicSubscribers() {
-        return broker.getInactiveDurableTopicSubscribers();
+        return safeGetBroker().getInactiveDurableTopicSubscribers();
     }
 
     public ObjectName[] getTopicProducers() {
-        return broker.getTopicProducers();
+        return safeGetBroker().getTopicProducers();
     }
 
     public ObjectName[] getQueueProducers() {
-        return broker.getQueueProducers();
+        return safeGetBroker().getQueueProducers();
     }
 
     public ObjectName[] getTemporaryTopicProducers() {
-        return broker.getTemporaryTopicProducers();
+        return safeGetBroker().getTemporaryTopicProducers();
     }
 
     public ObjectName[] getTemporaryQueueProducers() {
-        return broker.getTemporaryQueueProducers();
+        return safeGetBroker().getTemporaryQueueProducers();
     }
 
     public ObjectName[] getDynamicDestinationProducers() {
-        return broker.getDynamicDestinationProducers();
+        return safeGetBroker().getDynamicDestinationProducers();
     }
 
     public String addConnector(String discoveryAddress) throws Exception {
         TransportConnector connector = brokerService.addConnector(discoveryAddress);
+        if (connector == null) {
+            throw new NoSuchElementException("Not connector matched the given name: " + discoveryAddress);
+        }
         connector.start();
         return connector.getName();
     }
 
     public String addNetworkConnector(String discoveryAddress) throws Exception {
         NetworkConnector connector = brokerService.addNetworkConnector(discoveryAddress);
+        if (connector == null) {
+            throw new NoSuchElementException("Not connector matched the given name: " + discoveryAddress);
+        }
         connector.start();
         return connector.getName();
     }
 
     public boolean removeConnector(String connectorName) throws Exception {
         TransportConnector connector = brokerService.getConnectorByName(connectorName);
+        if (connector == null) {
+            throw new NoSuchElementException("Not connector matched the given name: " + connectorName);
+        }
         connector.stop();
         return brokerService.removeConnector(connector);
     }
 
     public boolean removeNetworkConnector(String connectorName) throws Exception {
         NetworkConnector connector = brokerService.getNetworkConnectorByName(connectorName);
+        if (connector == null) {
+            throw new NoSuchElementException("Not connector matched the given name: " + connectorName);
+        }
         connector.stop();
         return brokerService.removeNetworkConnector(connector);
     }
 
     public void addTopic(String name) throws Exception {
-        broker.getContextBroker().addDestination(BrokerSupport.getConnectionContext(broker.getContextBroker()), new ActiveMQTopic(name),true);
+        safeGetBroker().getContextBroker().addDestination(BrokerSupport.getConnectionContext(safeGetBroker().getContextBroker()), new ActiveMQTopic(name),true);
     }
 
     public void addQueue(String name) throws Exception {
-        broker.getContextBroker().addDestination(BrokerSupport.getConnectionContext(broker.getContextBroker()), new ActiveMQQueue(name),true);
+        safeGetBroker().getContextBroker().addDestination(BrokerSupport.getConnectionContext(safeGetBroker().getContextBroker()), new ActiveMQQueue(name),true);
     }
 
     public void removeTopic(String name) throws Exception {
-        broker.getContextBroker().removeDestination(BrokerSupport.getConnectionContext(broker.getContextBroker()), new ActiveMQTopic(name),
-                                 1000);
+        safeGetBroker().getContextBroker().removeDestination(BrokerSupport.getConnectionContext(safeGetBroker().getContextBroker()), new ActiveMQTopic(name), 1000);
     }
 
     public void removeQueue(String name) throws Exception {
-        broker.getContextBroker().removeDestination(BrokerSupport.getConnectionContext(broker.getContextBroker()), new ActiveMQQueue(name),
-                                 1000);
+        safeGetBroker().getContextBroker().removeDestination(BrokerSupport.getConnectionContext(safeGetBroker().getContextBroker()), new ActiveMQQueue(name), 1000);
     }
 
     public ObjectName createDurableSubscriber(String clientId, String subscriberName, String topicName,
                                               String selector) throws Exception {
         ConnectionContext context = new ConnectionContext();
-        context.setBroker(broker);
+        context.setBroker(safeGetBroker());
         context.setClientId(clientId);
         ConsumerInfo info = new ConsumerInfo();
         ConsumerId consumerId = new ConsumerId();
@@ -305,8 +313,8 @@ public class BrokerView implements BrokerViewMBean {
         info.setDestination(new ActiveMQTopic(topicName));
         info.setSubscriptionName(subscriberName);
         info.setSelector(selector);
-        Subscription subscription = broker.addConsumer(context, info);
-        broker.removeConsumer(context, info);
+        Subscription subscription = safeGetBroker().addConsumer(context, info);
+        safeGetBroker().removeConsumer(context, info);
         if (subscription != null) {
             return subscription.getObjectName();
         }
@@ -318,9 +326,9 @@ public class BrokerView implements BrokerViewMBean {
         info.setClientId(clientId);
         info.setSubscriptionName(subscriberName);
         ConnectionContext context = new ConnectionContext();
-        context.setBroker(broker);
+        context.setBroker(safeGetBroker());
         context.setClientId(clientId);
-        broker.removeSubscription(context, info);
+        safeGetBroker().removeSubscription(context, info);
     }
 
     //  doc comment inherited from BrokerViewMBean
@@ -355,7 +363,6 @@ public class BrokerView implements BrokerViewMBean {
             throw e.getTargetException();
         }
     }
-
 
     public String getOpenWireURL() {
         String answer = brokerService.getTransportConnectorURIsAsMap().get("tcp");
@@ -397,5 +404,13 @@ public class BrokerView implements BrokerViewMBean {
 
     public void setJMSJobScheduler(ObjectName name) {
         this.jmsJobScheduler=name;
+    }
+
+    private ManagedRegionBroker safeGetBroker() {
+        if (broker == null) {
+            throw new IllegalStateException("Broker is not yet started.");
+        }
+
+        return broker;
     }
 }
