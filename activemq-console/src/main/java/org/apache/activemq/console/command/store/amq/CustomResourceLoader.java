@@ -41,6 +41,10 @@ public class CustomResourceLoader extends ResourceLoader {
     public void init( ExtendedProperties configuration)
     {
     	fileResourceLoader.init(configuration);
+    	
+    	// AMQ-3665: Turn on template caching as otherwise the journal reader 
+    	// could run out of memory on large journal files
+    	this.setCachingOn(true); 
     }
     
     /**
