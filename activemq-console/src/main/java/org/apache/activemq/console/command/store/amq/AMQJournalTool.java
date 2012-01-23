@@ -88,6 +88,30 @@ public class AMQJournalTool {
 		consumerTool.execute();
 	}
 
+	/**
+	 * Creates a new VelocityContext that is pre-populated with the JVMs
+	 * system properties. 
+	 * 
+	 * @return - the VelocityContext that got created.
+	 */
+	protected VelocityContext createVelocityContext() {
+		VelocityContext ctx = new VelocityContext();
+		List keys = Arrays.asList(ctx.getKeys());
+
+		for (Iterator iterator = System.getProperties().entrySet()
+				.iterator(); iterator.hasNext();) {
+			Map.Entry kv = (Map.Entry) iterator.next();
+			String name = (String) kv.getKey();
+			String value = (String) kv.getValue();
+
+			if (!keys.contains(name)) {
+				ctx.put(name, value);
+			}
+		}
+		return ctx;
+	}
+	
+	
 	public void execute() throws Exception {
 
 		if( help ) {
@@ -120,26 +144,12 @@ public class AMQJournalTool {
 			}
 		}
 		
-		
-		context = new VelocityContext();
-		List keys = Arrays.asList(context.getKeys());
-
-		for (Iterator iterator = System.getProperties().entrySet()
-				.iterator(); iterator.hasNext();) {
-			Map.Entry kv = (Map.Entry) iterator.next();
-			String name = (String) kv.getKey();
-			String value = (String) kv.getValue();
-
-			if (!keys.contains(name)) {
-				context.put(name, value);
-			}
-		}
+		context = createVelocityContext();
 		
 		velocity = new VelocityEngine();
 		velocity.setProperty(Velocity.RESOURCE_LOADER, "all");
 		velocity.setProperty("all.resource.loader.class", CustomResourceLoader.class.getName());
 		velocity.init();
-
 
 		resources.put("message", messageFormat);
 		resources.put("topicAck", topicAckFormat);
@@ -147,7 +157,7 @@ public class AMQJournalTool {
 		resources.put("transaction", transactionFormat);
 		resources.put("trace", traceFormat);
 		resources.put("unknown", unknownFormat);
-
+		
 		Query query = null;
 		if (where != null) {
 			query = new Query();
@@ -171,7 +181,7 @@ public class AMQJournalTool {
 				entry.setQuery(query);
 				process(entry);
 
-				curr = manager.getNextLocation(curr);
+				curr = manager.getNextLocation(curr);		
 			}
 		} finally {
 			manager.close();
@@ -189,7 +199,6 @@ public class AMQJournalTool {
 
 	private void process(Entry entry) throws Exception {
 
-		Location location = entry.getLocation();
 		DataStructure record = entry.getRecord();
 
 		switch (record.getDataStructureType()) {
