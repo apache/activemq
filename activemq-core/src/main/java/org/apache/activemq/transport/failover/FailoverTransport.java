@@ -1175,21 +1175,36 @@ public class FailoverTransport implements CompositeTransport {
 
     private boolean contains(URI newURI) {
         boolean result = false;
-        try {
-            for (URI uri : uris) {
-                if (newURI.getPort() == uri.getPort()) {
-                    InetAddress newAddr = InetAddress.getByName(newURI.getHost());
-                    InetAddress addr = InetAddress.getByName(uri.getHost());
-                    if (addr.equals(newAddr)) {
+        for (URI uri : uris) {
+            if (newURI.getPort() == uri.getPort()) {
+                InetAddress newAddr = null;
+                InetAddress addr = null;
+                try {
+                    newAddr = InetAddress.getByName(newURI.getHost());
+                    addr = InetAddress.getByName(uri.getHost());
+                } catch(IOException e) {
+
+                    if (newAddr == null) {
+                        LOG.error("Failed to Lookup INetAddress for URI[ " + newURI + " ] : " + e);
+                    } else {
+                        LOG.error("Failed to Lookup INetAddress for URI[ " + uri + " ] : " + e);
+                    }
+
+                    if (newURI.getHost().equalsIgnoreCase(uri.getHost())) {
                         result = true;
                         break;
+                    } else {
+                        continue;
                     }
                 }
+
+                if (addr.equals(newAddr)) {
+                    result = true;
+                    break;
+                }
             }
-        } catch (IOException e) {
-            result = true;
-            LOG.error("Failed to verify URI " + newURI + " already known: " + e);
         }
+
         return result;
     }
 
