@@ -195,7 +195,7 @@ public class TopicRegion extends AbstractRegion {
             destinationsLock.readLock().unlock();
         }
 
-        if (subscriptions.get(sub.getConsumerInfo()) != null) {
+        if (subscriptions.get(sub.getConsumerInfo().getConsumerId()) != null) {
             super.removeConsumer(context, sub.getConsumerInfo());
         } else {
             // try destroying inactive subscriptions
