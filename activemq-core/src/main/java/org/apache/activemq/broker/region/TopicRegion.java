@@ -172,12 +172,14 @@ public class TopicRegion extends AbstractRegion {
     @Override
     public void removeSubscription(ConnectionContext context, RemoveSubscriptionInfo info) throws Exception {
         SubscriptionKey key = new SubscriptionKey(info.getClientId(), info.getSubscriptionName());
-        DurableTopicSubscription sub = durableSubscriptions.remove(key);
+        DurableTopicSubscription sub = durableSubscriptions.get(key);
         if (sub == null) {
             throw new InvalidDestinationException("No durable subscription exists for: " + info.getSubscriptionName());
         }
         if (sub.isActive()) {
             throw new JMSException("Durable consumer is in use");
+        } else {
+            durableSubscriptions.get(key);
         }
 
         destinationsLock.readLock().lock();
