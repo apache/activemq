@@ -440,16 +440,16 @@ public class BrokerService implements Service {
     }
 
     /**
-     * Forces a start of the broker. 
-     * By default a BrokerService instance that was 
+     * Forces a start of the broker.
+     * By default a BrokerService instance that was
      * previously stopped using BrokerService.stop() cannot be restarted
-     * using BrokerService.start(). 
-     * This method enforces a restart. 
+     * using BrokerService.start().
+     * This method enforces a restart.
      * It is not recommended to force a restart of the broker and will not work
-     * for most but some very trivial broker configurations. 
+     * for most but some very trivial broker configurations.
      * For restarting a broker instance we recommend to first call stop() on
      * the old instance and then recreate a new BrokerService instance.
-     * 
+     *
      * @param force - if true enforces a restart.
      * @throws Exception
      */
@@ -1673,34 +1673,45 @@ public class BrokerService implements Service {
             }
         }
     }
-    
+
     protected void checkSystemUsageLimits() throws IOException {
         SystemUsage usage = getSystemUsage();
         long memLimit = usage.getMemoryUsage().getLimit();
         long jvmLimit = Runtime.getRuntime().maxMemory();
-        if (memLimit > jvmLimit){
-            LOG.error("Memory Usage for the Broker (" + memLimit/(1024*1024) + " mb) is more than the maximum available for the JVM: " + jvmLimit/(1024*1024) + " mb" );
+        if (memLimit > jvmLimit) {
+            LOG.error("Memory Usage for the Broker (" + memLimit / (1024 * 1024) +
+                      " mb) is more than the maximum available for the JVM: " +
+                      jvmLimit / (1024 * 1024) + " mb");
         }
-        if (getPersistenceAdapter() != null){
+        if (getPersistenceAdapter() != null) {
             File dir = getPersistenceAdapter().getDirectory();
-            if (dir != null){
+            if (dir != null) {
                 long storeLimit = usage.getStoreUsage().getLimit();
                 long dirFreeSpace = dir.getFreeSpace();
-                if (storeLimit > dirFreeSpace){
-                    LOG.warn("Store limit is " + storeLimit/(1024*1024) + " mb, whilst the data directory: " + dir.getAbsolutePath() + " only has " + dirFreeSpace/(1024*1024) + " mb of free space");
+                if (storeLimit > dirFreeSpace) {
+                    LOG.warn("Store limit is " + storeLimit / (1024 * 1024) +
+                             " mb, whilst the data directory: " + dir.getAbsolutePath() +
+                             " only has " + dirFreeSpace / (1024 * 1024) + " mb of free space");
                 }
             }
         }
         File tmpDir = getTmpDataDirectory();
-        if (tmpDir != null){
+        if (tmpDir != null) {
+
             String tmpDirPath = tmpDir.getAbsolutePath();
+            if (!tmpDir.isAbsolute()) {
+                tmpDir = new File(tmpDirPath);
+            }
+
             long storeLimit = usage.getTempUsage().getLimit();
-            while (tmpDir != null && tmpDir.isDirectory()== false){
+            while (tmpDir != null && tmpDir.isDirectory() == false) {
                 tmpDir = tmpDir.getParentFile();
             }
             long dirFreeSpace = tmpDir.getUsableSpace();
-            if (storeLimit > dirFreeSpace){
-                LOG.error("Temporary Store limit is " + storeLimit/(1024*1024) + " mb, whilst the temporary data directory: " + tmpDirPath + " only has " + dirFreeSpace/(1024*1024) + " mb of free space");
+            if (storeLimit > dirFreeSpace) {
+                LOG.error("Temporary Store limit is " + storeLimit / (1024 * 1024) +
+                          " mb, whilst the temporary data directory: " + tmpDirPath +
+                          " only has " + dirFreeSpace / (1024 * 1024) + " mb of free space");
             }
         }
     }
