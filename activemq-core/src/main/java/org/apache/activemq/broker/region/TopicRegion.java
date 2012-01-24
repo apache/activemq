@@ -179,7 +179,7 @@ public class TopicRegion extends AbstractRegion {
         if (sub.isActive()) {
             throw new JMSException("Durable consumer is in use");
         } else {
-            durableSubscriptions.get(key);
+            durableSubscriptions.remove(key);
         }
 
         destinationsLock.readLock().lock();
