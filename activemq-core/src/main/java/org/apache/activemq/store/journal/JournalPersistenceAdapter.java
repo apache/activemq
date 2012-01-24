@@ -115,6 +115,7 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
     private final Runnable periodicCheckpointTask = createPeriodicCheckpointTask();
 
     private TaskRunnerFactory taskRunnerFactory;
+    private File directory;
 
     public JournalPersistenceAdapter() {        
     }
@@ -730,6 +731,11 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
     }
 
     public void setDirectory(File dir) {
+        this.directory=dir;
+    }
+    
+    public File getDirectory(){
+        return directory;
     }
     
     public long size(){

@@ -189,6 +189,10 @@ public class MemoryPersistenceAdapter implements PersistenceAdapter {
 
     public void setDirectory(File dir) {
     }
+    
+    public File getDirectory(){
+        return null;
+    }
 
     public void checkpoint(boolean sync) throws IOException {
     }

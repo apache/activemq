@@ -499,6 +499,7 @@ public class BrokerService implements Service {
             if (isUseJmx()) {
                 startManagementContext();
             }
+
             getPersistenceAdapter().setUsageManager(getProducerSystemUsage());
             getPersistenceAdapter().setBrokerName(getBrokerName());
             LOG.info("Using Persistence Adapter: " + getPersistenceAdapter());
@@ -546,6 +547,7 @@ public class BrokerService implements Service {
             }
             LOG.info("ActiveMQ JMS Message Broker (" + getBrokerName() + ", " + brokerId + ") started");
             getBroker().brokerServiceStarted();
+            checkSystemUsageLimits();
             startedLatch.countDown();
         } catch (Exception e) {
             LOG.error("Failed to start ActiveMQ JMS Message Broker (" + getBrokerName() + ", " + brokerId + "). Reason: " + e, e);
@@ -918,9 +920,9 @@ public class BrokerService implements Service {
                 systemUsage.getMemoryUsage().setLimit(1024 * 1024 * 64); // Default
                                                                          // 64
                                                                          // Meg
-                systemUsage.getTempUsage().setLimit(1024L * 1024 * 1024 * 100); // 10
+                systemUsage.getTempUsage().setLimit(1024L * 1024 * 1000 * 50); // 50
                                                                                 // Gb
-                systemUsage.getStoreUsage().setLimit(1024L * 1024 * 1024 * 100); // 100
+                systemUsage.getStoreUsage().setLimit(1024L * 1024 * 1000 * 100); // 100
                                                                                  // GB
                 addService(this.systemUsage);
             }
@@ -1668,6 +1670,37 @@ public class BrokerService implements Service {
                         "Cannot specify masterConnectorURI when a masterConnector is already registered via the services property");
             } else {
                 addService(new MasterConnector(masterConnectorURI));
+            }
+        }
+    }
+    
+    protected void checkSystemUsageLimits() throws IOException {
+        SystemUsage usage = getSystemUsage();
+        long memLimit = usage.getMemoryUsage().getLimit();
+        long jvmLimit = Runtime.getRuntime().maxMemory();
+        if (memLimit > jvmLimit){
+            LOG.error("Memory Usage for the Broker (" + memLimit/(1024*1024) + " mb) is more than the maximum available for the JVM: " + jvmLimit/(1024*1024) + " mb" );
+        }
+        if (getPersistenceAdapter() != null){
+            File dir = getPersistenceAdapter().getDirectory();
+            if (dir != null){
+                long storeLimit = usage.getStoreUsage().getLimit();
+                long dirFreeSpace = dir.getFreeSpace();
+                if (storeLimit > dirFreeSpace){
+                    LOG.warn("Store limit is " + storeLimit/(1024*1024) + " mb, whilst the data directory: " + dir.getAbsolutePath() + " only has " + dirFreeSpace/(1024*1024) + " mb of free space");
+                }
+            }
+        }
+        File tmpDir = getTmpDataDirectory();
+        if (tmpDir != null){
+            String tmpDirPath = tmpDir.getAbsolutePath();
+            long storeLimit = usage.getTempUsage().getLimit();
+            while (tmpDir != null && tmpDir.isDirectory()== false){
+                tmpDir = tmpDir.getParentFile();
+            }
+            long dirFreeSpace = tmpDir.getUsableSpace();
+            if (storeLimit > dirFreeSpace){
+                LOG.error("Temporary Store limit is " + storeLimit/(1024*1024) + " mb, whilst the temporary data directory: " + tmpDirPath + " only has " + dirFreeSpace/(1024*1024) + " mb of free space");
             }
         }
     }

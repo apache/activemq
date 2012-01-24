@@ -22,7 +22,6 @@ import java.util.Set;
 
 import org.apache.activemq.Service;
 import org.apache.activemq.broker.ConnectionContext;
-import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
@@ -144,6 +143,11 @@ public interface PersistenceAdapter extends Service {
      * @param dir
      */
     void setDirectory(File dir);
+
+    /**
+     * @return the directory used by the persistence adaptor
+     */
+    File getDirectory();
     
     /**
      * checkpoint any

@@ -62,7 +62,9 @@ public class JournalPersistenceAdapterFactory extends DataSourceSupport implemen
         if (!useJournal) {
             return jdbcPersistenceAdapter;
         }
-        return new JournalPersistenceAdapter(getJournal(), jdbcPersistenceAdapter, getTaskRunnerFactory());
+        JournalPersistenceAdapter result =  new JournalPersistenceAdapter(getJournal(), jdbcPersistenceAdapter, getTaskRunnerFactory());
+        result.setDirectory(getDataDirectoryFile());
+        return result;
 
     }
 

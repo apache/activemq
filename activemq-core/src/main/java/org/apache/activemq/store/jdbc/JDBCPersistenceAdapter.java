@@ -92,6 +92,7 @@ public class JDBCPersistenceAdapter extends DataSourceSupport implements Persist
     private boolean createTablesOnStartup = true;
     private DataSource lockDataSource;
     private int transactionIsolation;
+    private File directory;
     
     protected int maxProducersToAudit=1024;
     protected int maxAuditDepth=1000;
@@ -638,6 +639,14 @@ public class JDBCPersistenceAdapter extends DataSourceSupport implements Persist
     }
 
     public void setDirectory(File dir) {
+        this.directory=dir;
+    }
+    
+    public File getDirectory(){
+        if (this.directory==null && brokerService != null){
+            this.directory=brokerService.getBrokerDataDirectory();
+        }
+        return this.directory;
     }
 
     // interesting bit here is proof that DB is ok
