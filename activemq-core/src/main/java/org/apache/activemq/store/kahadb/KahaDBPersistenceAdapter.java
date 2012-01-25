@@ -16,11 +16,6 @@
  */
 package org.apache.activemq.store.kahadb;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.Set;
-
-import org.apache.activeio.journal.Journal;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.BrokerServiceAware;
 import org.apache.activemq.broker.ConnectionContext;
@@ -41,10 +36,13 @@ import org.apache.activemq.store.kahadb.data.KahaTransactionInfo;
 import org.apache.activemq.store.kahadb.data.KahaXATransactionId;
 import org.apache.activemq.usage.SystemUsage;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.Set;
+
 /**
- * An implementation of {@link PersistenceAdapter} designed for use with a
- * {@link Journal} and then check pointing asynchronously on a timeout with some
- * other long term persistent storage.
+ * An implementation of {@link PersistenceAdapter} designed for use with
+ * KahaDB - Embedded Lightweight Non-Relational Database
  * 
  * @org.apache.xbean.XBean element="kahaDB"
  * 
