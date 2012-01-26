@@ -16,15 +16,13 @@
  */
 package org.apache.activemq.karaf.commands;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-
+import org.apache.activemq.console.CommandContext;
 import org.apache.activemq.console.command.Command;
 import org.apache.activemq.console.formatter.CommandShellOutputFormatter;
-import org.apache.activemq.console.CommandContext;
-import org.apache.karaf.shell.console.OsgiCommandSupport;
 import org.apache.felix.gogo.commands.Argument;
+import org.apache.karaf.shell.console.OsgiCommandSupport;
+
+import java.util.ArrayList;
 
 /**
  * @version $Rev: 960482 $ $Date: 2010-07-05 10:28:33 +0200 (Mon, 05 Jul 2010) $
@@ -34,7 +32,7 @@ public class ActiveMQCommandSupport extends OsgiCommandSupport {
     private Command command;
 
     @Argument(index=0, multiValued=true, required=true)
-    private Collection<String> arguments;
+    private ArrayList<String> arguments = new ArrayList<String>();
 
     protected Object doExecute() throws Exception {
         CommandContext context2 = new CommandContext();
@@ -43,7 +41,8 @@ public class ActiveMQCommandSupport extends OsgiCommandSupport {
 
         try {
             currentCommand.setCommandContext(context2);
-            currentCommand.execute(arguments != null ? new ArrayList<String>(arguments) : new ArrayList<String>());
+            arguments.add("--jmxlocal");
+            currentCommand.execute(arguments);
             return null;
         } catch (Throwable e) {
             Throwable cur = e;
