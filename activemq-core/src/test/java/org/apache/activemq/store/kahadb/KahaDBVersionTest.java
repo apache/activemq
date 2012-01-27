@@ -38,6 +38,7 @@ public class KahaDBVersionTest extends TestCase {
     static final Logger LOG = LoggerFactory.getLogger(KahaDBVersionTest.class);
     final static File VERSION_1_DB= new File("src/test/resources/org/apache/activemq/store/kahadb/KahaDBVersion1");
     final static File VERSION_2_DB= new File("src/test/resources/org/apache/activemq/store/kahadb/KahaDBVersion2");
+    final static File VERSION_3_DB= new File("src/test/resources/org/apache/activemq/store/kahadb/KahaDBVersion3");
 
     BrokerService broker = null;
 
@@ -100,6 +101,10 @@ public class KahaDBVersionTest extends TestCase {
 
     public void testVersion2Conversion() throws Exception{
           doConvertRestartCycle(VERSION_2_DB);
+    }
+
+    public void testVersion3Conversion() throws Exception{
+          doConvertRestartCycle(VERSION_3_DB);
     }
 
     public void doConvertRestartCycle(File existingStore) throws Exception {

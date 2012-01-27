@@ -1572,7 +1572,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
 
     protected class StoredDestinationMarshaller extends VariableMarshaller<StoredDestination> {
 
-        public StoredDestination readPayload(DataInput dataIn) throws IOException {
+        public StoredDestination readPayload(final DataInput dataIn) throws IOException {
             final StoredDestination value = new StoredDestination();
             value.orderIndex.defaultPriorityIndex = new BTreeIndex<Long, MessageKeys>(pageFile, dataIn.readLong());
             value.locationIndex = new BTreeIndex<Location, Long>(pageFile, dataIn.readLong());
@@ -1581,14 +1581,14 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
             if (dataIn.readBoolean()) {
                 value.subscriptions = new BTreeIndex<String, KahaSubscriptionCommand>(pageFile, dataIn.readLong());
                 value.subscriptionAcks = new BTreeIndex<String, LastAck>(pageFile, dataIn.readLong());
-                if (metadata.version >= VERSION) {
+                if (metadata.version >= 4) {
                     value.ackPositions = new ListIndex<String, SequenceSet>(pageFile, dataIn.readLong());
                 } else {
                     // upgrade
                     pageFile.tx().execute(new Transaction.Closure<IOException>() {
                         public void execute(Transaction tx) throws IOException {
                             BTreeIndex<Long, HashSet<String>> oldAckPositions =
-                                new BTreeIndex<Long, HashSet<String>>(pageFile, tx.allocate());
+                                new BTreeIndex<Long, HashSet<String>>(pageFile, dataIn.readLong());
                             oldAckPositions.setKeyMarshaller(LongMarshaller.INSTANCE);
                             oldAckPositions.setValueMarshaller(HashSetStringMarshaller.INSTANCE);
                             oldAckPositions.load(tx);
