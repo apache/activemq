@@ -226,12 +226,20 @@ public class VMTransport implements Transport, Task {
 
     public void setTransportListener(TransportListener commandListener) {
         try {
-            try {
-                enqueueValve.turnOff();
+            // enqueue can block on blocking queue, preventing turnOff
+            // so avoid in that case: https://issues.apache.org/jira/browse/AMQ-3684
+            if (async && getMessageQueue().remainingCapacity() == 0) {
+                // enqueue blocked or will be
                 this.transportListener = commandListener;
                 wakeup();
-            } finally {
-                enqueueValve.turnOn();
+            } else {
+                try {
+                    enqueueValve.turnOff();
+                    this.transportListener = commandListener;
+                    wakeup();
+                } finally {
+                    enqueueValve.turnOn();
+                }
             }
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
