@@ -16,14 +16,6 @@
  */
 package org.apache.activemq.broker;
 
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.Iterator;
-import java.util.StringTokenizer;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.regex.Pattern;
-import javax.management.ObjectName;
 import org.apache.activemq.broker.jmx.ManagedTransportConnector;
 import org.apache.activemq.broker.jmx.ManagementContext;
 import org.apache.activemq.broker.region.ConnectorStatistics;
@@ -42,6 +34,15 @@ import org.apache.activemq.util.ServiceStopper;
 import org.apache.activemq.util.ServiceSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.management.ObjectName;
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.Iterator;
+import java.util.StringTokenizer;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.regex.Pattern;
 
 /**
  * @org.apache.xbean.XBean
@@ -208,7 +209,7 @@ public class TransportConnector implements Connector, BrokerServiceAware {
         brokerInfo.setBrokerId(broker.getBrokerId());
         brokerInfo.setPeerBrokerInfos(broker.getPeerBrokerInfos());
         brokerInfo.setFaultTolerantConfiguration(broker.isFaultTolerantConfiguration());
-        brokerInfo.setBrokerURL(getServer().getConnectURI().toString());
+        brokerInfo.setBrokerURL(getPublishableConnectString(getServer().getConnectURI()));
         getServer().setAcceptListener(new TransportAcceptListener() {
             public void onAccept(final Transport transport) {
                 try {
@@ -256,10 +257,13 @@ public class TransportConnector implements Connector, BrokerServiceAware {
 
         LOG.info("Connector " + getName() + " Started");
     }
-
+    
     public String getPublishableConnectString() throws Exception {
+        return getPublishableConnectString(getConnectUri());
+    }
+
+    public String getPublishableConnectString(URI theConnectURI) throws Exception {
         String publishableConnectString = null;
-        URI theConnectURI = getConnectUri();
         if (theConnectURI != null) {
             publishableConnectString = theConnectURI.toString();
             // strip off server side query parameters which may not be compatible to
