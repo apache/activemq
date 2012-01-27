@@ -300,8 +300,11 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
             getJournal().start();
             try {
                 loadPageFile();
-            } catch (IOException ioe) {
-                LOG.warn("Index corrupted, trying to recover ...", ioe);
+            } catch (Throwable t) {
+                LOG.warn("Index corrupted. Recovering the index through journal replay. Cause:" + t);
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("Index load failure", t);
+                }
                 // try to recover index
                 try {
                     pageFile.unload();
@@ -311,6 +314,8 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                 } else {
                     pageFile.delete();
                 }
+                metadata = new Metadata();
+                pageFile = null;
                 loadPageFile();
             }
             startCheckpoint();
@@ -383,11 +388,13 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
             try {
                 this.indexLock.writeLock().lock();
                 try {
-                    pageFile.tx().execute(new Transaction.Closure<IOException>() {
-                        public void execute(Transaction tx) throws IOException {
-                            checkpointUpdate(tx, true);
-                        }
-                    });
+                    if (metadata.page != null) {
+                        pageFile.tx().execute(new Transaction.Closure<IOException>() {
+                            public void execute(Transaction tx) throws IOException {
+                                checkpointUpdate(tx, true);
+                            }
+                        });
+                    }
                     pageFile.unload();
                     metadata = new Metadata();
                 } finally {
@@ -413,11 +420,13 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                 metadata.state = CLOSED_STATE;
                 metadata.firstInProgressTransactionLocation = getFirstInProgressTxLocation();
 
-                pageFile.tx().execute(new Transaction.Closure<IOException>() {
-                    public void execute(Transaction tx) throws IOException {
-                        tx.store(metadata.page, metadataMarshaller, true);
-                    }
-                });
+                if (metadata.page != null) {
+                    pageFile.tx().execute(new Transaction.Closure<IOException>() {
+                        public void execute(Transaction tx) throws IOException {
+                            tx.store(metadata.page, metadataMarshaller, true);
+                        }
+                    });
+                }
             }
         } finally {
             this.indexLock.writeLock().unlock();

@@ -21,6 +21,7 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.RecoveryBrokerTest;
 import org.apache.activemq.broker.StubConnection;
 import org.apache.activemq.command.*;
+import org.apache.kahadb.page.PageFile;
 
 import java.io.File;
 import java.io.RandomAccessFile;
@@ -33,6 +34,9 @@ import java.util.ArrayList;
  * 
  */
 public class KahaDBStoreRecoveryBrokerTest extends RecoveryBrokerTest {
+
+    enum CorruptionType { None, FailToLoad, LoadInvalid, LoadCorrupt };
+    public CorruptionType  failTest = CorruptionType.None;
 
     protected BrokerService createBroker() throws Exception {
         BrokerService broker = new BrokerService();
@@ -47,10 +51,27 @@ public class KahaDBStoreRecoveryBrokerTest extends RecoveryBrokerTest {
 
         // corrupting index
         File index = new File("target/activemq-data/kahadb/db.data");
-        index.delete();
         RandomAccessFile raf = new RandomAccessFile(index, "rw");
-        raf.seek(index.length());
-        raf.writeBytes("corrupt");
+        switch (failTest) {
+            case FailToLoad:
+                index.delete();
+                raf = new RandomAccessFile(index, "rw");
+                raf.seek(index.length());
+                raf.writeBytes("corrupt");
+                break;
+            case LoadInvalid:
+                // page size 0
+                raf.seek(0);
+                raf.writeBytes("corrupt and cannot load metadata");
+                break;
+            case LoadCorrupt:
+                // loadable but invalid metadata
+                // location of order index low priority index for first destination...
+                raf.seek(8*1024 + 57);
+                raf.writeLong(Integer.MAX_VALUE-10);
+                break;
+            default:
+        }
         raf.close();
 
         // starting broker
@@ -71,7 +92,10 @@ public class KahaDBStoreRecoveryBrokerTest extends RecoveryBrokerTest {
         junit.textui.TestRunner.run(suite());
     }
 
-    
+    public void initCombosForTestLargeQueuePersistentMessagesNotLostOnRestart() {
+        this.addCombinationValues("failTest", new CorruptionType[]{CorruptionType.FailToLoad, CorruptionType.LoadInvalid, CorruptionType.LoadCorrupt} );
+    }
+
     public void testLargeQueuePersistentMessagesNotLostOnRestart() throws Exception {
 
         ActiveMQDestination destination = new ActiveMQQueue("TEST");

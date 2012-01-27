@@ -588,6 +588,10 @@ public class BrokerService implements Service {
 
         LOG.info("ActiveMQ Message Broker (" + getBrokerName() + ", " + brokerId + ") is shutting down");
         removeShutdownHook();
+        if (this.scheduler != null) {
+            this.scheduler.stop();
+            this.scheduler = null;
+        }
         ServiceStopper stopper = new ServiceStopper();
         if (services != null) {
             for (Service service : services) {
@@ -644,10 +648,6 @@ public class BrokerService implements Service {
         if (this.taskRunnerFactory != null) {
             this.taskRunnerFactory.shutdown();
             this.taskRunnerFactory = null;
-        }
-        if (this.scheduler != null) {
-            this.scheduler.stop();
-            this.scheduler = null;
         }
         if (this.executor != null) {
             this.executor.shutdownNow();
