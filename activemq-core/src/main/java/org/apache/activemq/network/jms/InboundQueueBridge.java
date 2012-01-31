@@ -17,11 +17,12 @@
 package org.apache.activemq.network.jms;
 
 /**
- * Create an Inbound Queue Bridge
- * 
+ * Create an Inbound Queue Bridge.  By default this class uses the sname name for
+ * both the inbound and outbound queue.  This behavior can be overridden however
+ * by using the setter methods to configure both the inbound and outboud queue names
+ * separately.
+ *
  * @org.apache.xbean.XBean
- * 
- * 
  */
 public class InboundQueueBridge extends QueueBridge {
 
@@ -29,8 +30,8 @@ public class InboundQueueBridge extends QueueBridge {
     String localQueueName;
 
     /**
-     * Constructor that takes a foriegn destination as an argument
-     * 
+     * Constructor that takes a foreign destination as an argument
+     *
      * @param inboundQueueName
      */
     public InboundQueueBridge(String inboundQueueName) {
@@ -39,7 +40,7 @@ public class InboundQueueBridge extends QueueBridge {
     }
 
     /**
-     * Default Contructor
+     * Default Constructor
      */
     public InboundQueueBridge() {
     }
@@ -52,6 +53,10 @@ public class InboundQueueBridge extends QueueBridge {
     }
 
     /**
+     * Sets the queue name used for the inbound queue, if the outbound queue
+     * name has not been set, then this method uses the same name to configure
+     * the outbound queue name.
+     *
      * @param inboundQueueName The inboundQueueName to set.
      */
     public void setInboundQueueName(String inboundQueueName) {
@@ -74,5 +79,4 @@ public class InboundQueueBridge extends QueueBridge {
     public void setLocalQueueName(String localQueueName) {
         this.localQueueName = localQueueName;
     }
-
 }

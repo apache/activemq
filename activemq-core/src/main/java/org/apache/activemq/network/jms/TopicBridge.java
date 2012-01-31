@@ -17,7 +17,6 @@
 package org.apache.activemq.network.jms;
 
 import javax.jms.Connection;
-import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
@@ -30,8 +29,8 @@ import javax.jms.TopicSession;
 
 /**
  * A Destination bridge is used to bridge between to different JMS systems
- * 
- * 
+ *
+ *
  */
 class TopicBridge extends DestinationBridge {
     protected Topic consumerTopic;
@@ -56,6 +55,7 @@ class TopicBridge extends DestinationBridge {
 
     protected MessageConsumer createConsumer() throws JMSException {
         // set up the consumer
+        if (consumerConnection == null) return null;
         consumerSession = consumerConnection.createTopicSession(false, Session.CLIENT_ACKNOWLEDGE);
         MessageConsumer consumer = null;
         if (consumerName != null && consumerName.length() > 0) {
@@ -72,20 +72,29 @@ class TopicBridge extends DestinationBridge {
                 consumer = consumerSession.createSubscriber(consumerTopic);
             }
         }
+
+        consumer.setMessageListener(this);
+
         return consumer;
     }
 
     protected synchronized MessageProducer createProducer() throws JMSException {
+        if (producerConnection == null) return null;
         producerSession = producerConnection.createTopicSession(false, Session.AUTO_ACKNOWLEDGE);
         producer = producerSession.createPublisher(null);
         return producer;
     }
 
     protected synchronized void sendMessage(Message message) throws JMSException {
-        if (producer == null) {
-            createProducer();
+        if (producer == null && createProducer() == null) {
+            throw new JMSException("Producer for remote queue not available.");
         }
-        producer.publish(producerTopic, message);
+        try {
+            producer.publish(producerTopic, message);
+        } catch (JMSException e) {
+            producer = null;
+            throw e;
+        }
     }
 
     /**
@@ -100,6 +109,13 @@ class TopicBridge extends DestinationBridge {
      */
     public void setConsumerConnection(TopicConnection consumerConnection) {
         this.consumerConnection = consumerConnection;
+        if (started.get()) {
+            try {
+                createConsumer();
+            } catch(Exception e) {
+                jmsConnector.handleConnectionFailure(getConnnectionForConsumer());
+            }
+        }
     }
 
     /**

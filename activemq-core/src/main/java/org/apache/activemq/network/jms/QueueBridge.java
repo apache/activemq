@@ -28,9 +28,7 @@ import javax.jms.QueueSession;
 import javax.jms.Session;
 
 /**
- * A Destination bridge is used to bridge between to different JMS systems
- * 
- * 
+ * A Destination bridge is used to bridge Queues between to different JMS systems
  */
 class QueueBridge extends DestinationBridge {
     protected Queue consumerQueue;
@@ -55,6 +53,7 @@ class QueueBridge extends DestinationBridge {
 
     protected MessageConsumer createConsumer() throws JMSException {
         // set up the consumer
+        if (consumerConnection == null) return null;
         consumerSession = consumerConnection.createQueueSession(false, Session.CLIENT_ACKNOWLEDGE);
         MessageConsumer consumer = null;
 
@@ -64,20 +63,28 @@ class QueueBridge extends DestinationBridge {
             consumer = consumerSession.createReceiver(consumerQueue);
         }
 
+        consumer.setMessageListener(this);
+
         return consumer;
     }
 
     protected synchronized MessageProducer createProducer() throws JMSException {
+        if (producerConnection == null) return null;
         producerSession = producerConnection.createQueueSession(false, Session.AUTO_ACKNOWLEDGE);
         producer = producerSession.createSender(null);
         return producer;
     }
 
     protected synchronized void sendMessage(Message message) throws JMSException {
-        if (producer == null) {
-            createProducer();
+        if (producer == null && createProducer() == null) {
+            throw new JMSException("Producer for remote queue not available.");
         }
-        producer.send(producerQueue, message);
+        try {
+            producer.send(producerQueue, message);
+        } catch (JMSException e) {
+            producer = null;
+            throw e;
+        }
     }
 
     /**
@@ -92,6 +99,13 @@ class QueueBridge extends DestinationBridge {
      */
     public void setConsumerConnection(QueueConnection consumerConnection) {
         this.consumerConnection = consumerConnection;
+        if (started.get()) {
+            try {
+                createConsumer();
+            } catch(Exception e) {
+                jmsConnector.handleConnectionFailure(getConnnectionForConsumer());
+            }
+        }
     }
 
     /**
@@ -157,5 +171,4 @@ class QueueBridge extends DestinationBridge {
     protected Connection getConnectionForProducer() {
         return getProducerConnection();
     }
-
 }

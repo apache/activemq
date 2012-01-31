@@ -23,18 +23,17 @@ import javax.jms.Message;
 
 /**
  * Converts Message from one JMS to another
- * 
+ *
  * @org.apache.xbean.XBean
- * 
- * 
  */
 public class SimpleJmsMessageConvertor implements JmsMesageConvertor {
 
     /**
      * Convert a foreign JMS Message to a native ActiveMQ Message - Inbound or
-     * visa-versa outbound
-     * 
+     * visa-versa outbound.
+     *
      * @param message
+     *      The target message to convert to a native ActiveMQ message
      * @return the converted message
      * @throws JMSException
      */
@@ -42,6 +41,19 @@ public class SimpleJmsMessageConvertor implements JmsMesageConvertor {
         return message;
     }
 
+    /**
+     * Convert a foreign JMS Message to a native ActiveMQ Message - Inbound or
+     * visa-versa outbound.  If the replyTo Destination instance is not null
+     * then the Message is configured with the given replyTo value.
+     *
+     * @param message
+     *      The target message to convert to a native ActiveMQ message
+     * @param replyTo
+     *      The replyTo Destination to set on the converted Message.
+     *
+     * @return the converted message
+     * @throws JMSException
+     */
     public Message convert(Message message, Destination replyTo) throws JMSException {
         Message msg = convert(message);
         if (replyTo != null) {
@@ -55,5 +67,4 @@ public class SimpleJmsMessageConvertor implements JmsMesageConvertor {
     public void setConnection(Connection connection) {
         // do nothing
     }
-
 }

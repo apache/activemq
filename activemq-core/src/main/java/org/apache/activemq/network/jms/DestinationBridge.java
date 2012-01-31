@@ -24,24 +24,22 @@ import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageListener;
 import javax.jms.MessageProducer;
-import javax.naming.NamingException;
 import org.apache.activemq.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * A Destination bridge is used to bridge between to different JMS systems
- * 
- * 
  */
 public abstract class DestinationBridge implements Service, MessageListener {
+
     private static final Logger LOG = LoggerFactory.getLogger(DestinationBridge.class);
+
     protected MessageConsumer consumer;
     protected AtomicBoolean started = new AtomicBoolean(false);
     protected JmsMesageConvertor jmsMessageConvertor;
     protected boolean doHandleReplyTo = true;
     protected JmsConnector jmsConnector;
-    private int maximumRetries = 10;
 
     /**
      * @return Returns the consumer.
@@ -78,26 +76,13 @@ public abstract class DestinationBridge implements Service, MessageListener {
         this.jmsMessageConvertor = jmsMessageConvertor;
     }
 
-    public int getMaximumRetries() {
-        return maximumRetries;
-    }
-
-    /**
-     * Sets the maximum number of retries if a send fails before closing the
-     * bridge
-     */
-    public void setMaximumRetries(int maximumRetries) {
-        this.maximumRetries = maximumRetries;
-    }
-
     protected Destination processReplyToDestination(Destination destination) {
         return jmsConnector.createReplyToBridge(destination, getConnnectionForConsumer(), getConnectionForProducer());
     }
 
     public void start() throws Exception {
         if (started.compareAndSet(false, true)) {
-            MessageConsumer consumer = createConsumer();
-            consumer.setMessageListener(this);
+            createConsumer();
             createProducer();
         }
     }
@@ -107,37 +92,60 @@ public abstract class DestinationBridge implements Service, MessageListener {
     }
 
     public void onMessage(Message message) {
+
         int attempt = 0;
-        while (started.get() && message != null) {
-           
+        final int maxRetries = jmsConnector.getReconnectionPolicy().getMaxSendRetries();
+
+        while (started.get() && message != null && ++attempt <= maxRetries) {
+
             try {
+
                 if (attempt > 0) {
-                    restartProducer();
+                    try {
+                        Thread.sleep(jmsConnector.getReconnectionPolicy().getNextDelay(attempt));
+                    } catch(InterruptedException e) {
+                        break;
+                    }
                 }
+
                 Message converted;
-                if (doHandleReplyTo) {
-                    Destination replyTo = message.getJMSReplyTo();
-                    if (replyTo != null) {
-                        converted = jmsMessageConvertor.convert(message, processReplyToDestination(replyTo));
+                if (jmsMessageConvertor != null) {
+                    if (doHandleReplyTo) {
+                        Destination replyTo = message.getJMSReplyTo();
+                        if (replyTo != null) {
+                            converted = jmsMessageConvertor.convert(message, processReplyToDestination(replyTo));
+                        } else {
+                            converted = jmsMessageConvertor.convert(message);
+                        }
                     } else {
+                        message.setJMSReplyTo(null);
                         converted = jmsMessageConvertor.convert(message);
                     }
                 } else {
-                    message.setJMSReplyTo(null);
-                    converted = jmsMessageConvertor.convert(message);
+                    // The Producer side is not up or not yet configured, retry.
+                    continue;
                 }
-                sendMessage(converted);
-                message.acknowledge();
+
+                try {
+                    sendMessage(converted);
+                } catch(Exception e) {
+                    jmsConnector.handleConnectionFailure(getConnectionForProducer());
+                    continue;
+                }
+
+                try {
+                    message.acknowledge();
+                } catch(Exception e) {
+                    jmsConnector.handleConnectionFailure(getConnnectionForConsumer());
+                    continue;
+                }
+
+                // if we got here then it made it out and was ack'd
                 return;
+
             } catch (Exception e) {
-                LOG.error("failed to forward message on attempt: " + (++attempt) + " reason: " + e + " message: " + message, e);
-                if (maximumRetries > 0 && attempt >= maximumRetries) {
-                    try {
-                        stop();
-                    } catch (Exception e1) {
-                        LOG.warn("Failed to stop cleanly", e1);
-                    }
-                }
+                LOG.info("failed to forward message on attempt: " + attempt +
+                         " reason: " + e + " message: " + message, e);
             }
         }
     }
@@ -166,15 +174,4 @@ public abstract class DestinationBridge implements Service, MessageListener {
 
     protected abstract Connection getConnectionForProducer();
 
-    protected void restartProducer() throws JMSException, NamingException {
-        try {
-            //don't reconnect immediately
-            Thread.sleep(1000);
-            getConnectionForProducer().close();
-        } catch (Exception e) {
-            LOG.debug("Ignoring failure to close producer connection: " + e, e);
-        }
-        jmsConnector.restartProducerConnection();
-        createProducer();
-    }
 }

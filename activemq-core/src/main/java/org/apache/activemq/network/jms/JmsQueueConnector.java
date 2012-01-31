@@ -18,6 +18,7 @@ package org.apache.activemq.network.jms;
 
 import javax.jms.Connection;
 import javax.jms.Destination;
+import javax.jms.ExceptionListener;
 import javax.jms.JMSException;
 import javax.jms.Queue;
 import javax.jms.QueueConnection;
@@ -31,10 +32,8 @@ import org.slf4j.LoggerFactory;
 
 /**
  * A Bridge to other JMS Queue providers
- * 
+ *
  * @org.apache.xbean.XBean
- * 
- * 
  */
 public class JmsQueueConnector extends JmsConnector {
     private static final Logger LOG = LoggerFactory.getLogger(JmsQueueConnector.class);
@@ -42,27 +41,8 @@ public class JmsQueueConnector extends JmsConnector {
     private String localConnectionFactoryName;
     private QueueConnectionFactory outboundQueueConnectionFactory;
     private QueueConnectionFactory localQueueConnectionFactory;
-    private QueueConnection outboundQueueConnection;
-    private QueueConnection localQueueConnection;
     private InboundQueueBridge[] inboundQueueBridges;
     private OutboundQueueBridge[] outboundQueueBridges;
-
-    public boolean init() {
-        boolean result = super.init();
-        if (result) {
-            try {
-                initializeForeignQueueConnection();
-                initializeLocalQueueConnection();
-                initializeInboundJmsMessageConvertor();
-                initializeOutboundJmsMessageConvertor();
-                initializeInboundQueueBridges();
-                initializeOutboundQueueBridges();
-            } catch (Exception e) {
-                LOG.error("Failed to initialize the JMSConnector", e);
-            }
-        }
-        return result;
-    }
 
     /**
      * @return Returns the inboundQueueBridges.
@@ -147,28 +127,28 @@ public class JmsQueueConnector extends JmsConnector {
      * @return Returns the localQueueConnection.
      */
     public QueueConnection getLocalQueueConnection() {
-        return localQueueConnection;
+        return (QueueConnection) localConnection.get();
     }
 
     /**
      * @param localQueueConnection The localQueueConnection to set.
      */
     public void setLocalQueueConnection(QueueConnection localQueueConnection) {
-        this.localQueueConnection = localQueueConnection;
+        this.localConnection.set(localQueueConnection);
     }
 
     /**
      * @return Returns the outboundQueueConnection.
      */
     public QueueConnection getOutboundQueueConnection() {
-        return outboundQueueConnection;
+        return (QueueConnection) foreignConnection.get();
     }
 
     /**
      * @param outboundQueueConnection The outboundQueueConnection to set.
      */
     public void setOutboundQueueConnection(QueueConnection foreignQueueConnection) {
-        this.outboundQueueConnection = foreignQueueConnection;
+        this.foreignConnection.set(foreignQueueConnection);
     }
 
     /**
@@ -179,27 +159,12 @@ public class JmsQueueConnector extends JmsConnector {
         this.outboundQueueConnectionFactory = foreignQueueConnectionFactory;
     }
 
-    public void restartProducerConnection() throws NamingException, JMSException {
-        outboundQueueConnection = null;
-        initializeForeignQueueConnection();
+    @Override
+    protected void initializeForeignConnection() throws NamingException, JMSException {
 
-        // the outboundQueueConnection was reestablished - publish the new connection to the bridges
-        if (inboundQueueBridges != null) {
-        	for (int i = 0; i < inboundQueueBridges.length; i++) {
-        		InboundQueueBridge bridge = inboundQueueBridges[i];
-        		bridge.setConsumerConnection(outboundQueueConnection);
-        	}
-        }
-        if (outboundQueueBridges != null) {
-        	for (int i = 0; i < outboundQueueBridges.length; i++) {
-        		OutboundQueueBridge bridge = outboundQueueBridges[i];
-        		bridge.setProducerConnection(outboundQueueConnection);
-        	}
-        }
-    }
+        final QueueConnection newConnection;
 
-    protected void initializeForeignQueueConnection() throws NamingException, JMSException {
-        if (outboundQueueConnection == null) {
+        if (foreignConnection.get() == null) {
             // get the connection factories
             if (outboundQueueConnectionFactory == null) {
                 // look it up from JNDI
@@ -207,31 +172,57 @@ public class JmsQueueConnector extends JmsConnector {
                     outboundQueueConnectionFactory = (QueueConnectionFactory)jndiOutboundTemplate
                         .lookup(outboundQueueConnectionFactoryName, QueueConnectionFactory.class);
                     if (outboundUsername != null) {
-                        outboundQueueConnection = outboundQueueConnectionFactory
+                        newConnection = outboundQueueConnectionFactory
                             .createQueueConnection(outboundUsername, outboundPassword);
                     } else {
-                        outboundQueueConnection = outboundQueueConnectionFactory.createQueueConnection();
+                        newConnection = outboundQueueConnectionFactory.createQueueConnection();
                     }
                 } else {
                     throw new JMSException("Cannot create foreignConnection - no information");
                 }
             } else {
                 if (outboundUsername != null) {
-                    outboundQueueConnection = outboundQueueConnectionFactory
+                    newConnection = outboundQueueConnectionFactory
                         .createQueueConnection(outboundUsername, outboundPassword);
                 } else {
-                    outboundQueueConnection = outboundQueueConnectionFactory.createQueueConnection();
+                    newConnection = outboundQueueConnectionFactory.createQueueConnection();
                 }
             }
+        } else {
+            // Clear if for now in case something goes wrong during the init.
+            newConnection = (QueueConnection) foreignConnection.getAndSet(null);
         }
-        if (localClientId != null && localClientId.length() > 0) {
-            outboundQueueConnection.setClientID(getOutboundClientId());
+
+        if (outboundClientId != null && outboundClientId.length() > 0) {
+            newConnection.setClientID(getOutboundClientId());
         }
-        outboundQueueConnection.start();
+        newConnection.start();
+
+        outboundMessageConvertor.setConnection(newConnection);
+
+        // Configure the bridges with the new Outbound connection.
+        initializeInboundDestinationBridgesOutboundSide(newConnection);
+        initializeOutboundDestinationBridgesOutboundSide(newConnection);
+
+        // Register for any async error notifications now so we can reset in the
+        // case where there's not a lot of activity and a connection drops.
+        newConnection.setExceptionListener(new ExceptionListener() {
+            @Override
+            public void onException(JMSException exception) {
+                handleConnectionFailure(newConnection);
+            }
+        });
+
+        // At this point all looks good, so this our current connection now.
+        foreignConnection.set(newConnection);
     }
 
-    protected void initializeLocalQueueConnection() throws NamingException, JMSException {
-        if (localQueueConnection == null) {
+    @Override
+    protected void initializeLocalConnection() throws NamingException, JMSException {
+
+        final QueueConnection newConnection;
+
+        if (localConnection.get() == null) {
             // get the connection factories
             if (localQueueConnectionFactory == null) {
                 if (embeddedConnectionFactory == null) {
@@ -240,83 +231,100 @@ public class JmsQueueConnector extends JmsConnector {
                         localQueueConnectionFactory = (QueueConnectionFactory)jndiLocalTemplate
                             .lookup(localConnectionFactoryName, QueueConnectionFactory.class);
                         if (localUsername != null) {
-                            localQueueConnection = localQueueConnectionFactory
+                            newConnection = localQueueConnectionFactory
                                 .createQueueConnection(localUsername, localPassword);
                         } else {
-                            localQueueConnection = localQueueConnectionFactory.createQueueConnection();
+                            newConnection = localQueueConnectionFactory.createQueueConnection();
                         }
                     } else {
                         throw new JMSException("Cannot create localConnection - no information");
                     }
                 } else {
-                    localQueueConnection = embeddedConnectionFactory.createQueueConnection();
+                    newConnection = embeddedConnectionFactory.createQueueConnection();
                 }
             } else {
                 if (localUsername != null) {
-                    localQueueConnection = localQueueConnectionFactory.createQueueConnection(localUsername,
-                                                                                             localPassword);
+                    newConnection = localQueueConnectionFactory.
+                            createQueueConnection(localUsername, localPassword);
                 } else {
-                    localQueueConnection = localQueueConnectionFactory.createQueueConnection();
+                    newConnection = localQueueConnectionFactory.createQueueConnection();
                 }
             }
+
+        } else {
+            // Clear if for now in case something goes wrong during the init.
+            newConnection = (QueueConnection) localConnection.getAndSet(null);
         }
+
         if (localClientId != null && localClientId.length() > 0) {
-            localQueueConnection.setClientID(getLocalClientId());
+            newConnection.setClientID(getLocalClientId());
         }
-        localQueueConnection.start();
+        newConnection.start();
+
+        inboundMessageConvertor.setConnection(newConnection);
+
+        // Configure the bridges with the new Local connection.
+        initializeInboundDestinationBridgesLocalSide(newConnection);
+        initializeOutboundDestinationBridgesLocalSide(newConnection);
+
+        // Register for any async error notifications now so we can reset in the
+        // case where there's not a lot of activity and a connection drops.
+        newConnection.setExceptionListener(new ExceptionListener() {
+            @Override
+            public void onException(JMSException exception) {
+                handleConnectionFailure(newConnection);
+            }
+        });
+
+        // At this point all looks good, so this our current connection now.
+        localConnection.set(newConnection);
     }
 
-    protected void initializeInboundJmsMessageConvertor() {
-        inboundMessageConvertor.setConnection(localQueueConnection);
-    }
-
-    protected void initializeOutboundJmsMessageConvertor() {
-        outboundMessageConvertor.setConnection(outboundQueueConnection);
-    }
-
-    protected void initializeInboundQueueBridges() throws JMSException {
+    protected void initializeInboundDestinationBridgesOutboundSide(QueueConnection connection) throws JMSException {
         if (inboundQueueBridges != null) {
-            QueueSession outboundSession = outboundQueueConnection
-                .createQueueSession(false, Session.AUTO_ACKNOWLEDGE);
-            QueueSession localSession = localQueueConnection.createQueueSession(false,
-                                                                                Session.AUTO_ACKNOWLEDGE);
-            for (int i = 0; i < inboundQueueBridges.length; i++) {
-                InboundQueueBridge bridge = inboundQueueBridges[i];
-                String localQueueName = bridge.getLocalQueueName();
-                Queue activemqQueue = createActiveMQQueue(localSession, localQueueName);
+            QueueSession outboundSession = connection.createQueueSession(false, Session.AUTO_ACKNOWLEDGE);
+
+            for (InboundQueueBridge bridge : inboundQueueBridges) {
                 String queueName = bridge.getInboundQueueName();
                 Queue foreignQueue = createForeignQueue(outboundSession, queueName);
+                bridge.setConsumer(null);
                 bridge.setConsumerQueue(foreignQueue);
+                bridge.setConsumerConnection(connection);
+                bridge.setJmsConnector(this);
+                addInboundBridge(bridge);
+            }
+            outboundSession.close();
+        }
+    }
+
+    protected void initializeInboundDestinationBridgesLocalSide(QueueConnection connection) throws JMSException {
+        if (inboundQueueBridges != null) {
+            QueueSession localSession = connection.createQueueSession(false,Session.AUTO_ACKNOWLEDGE);
+
+            for (InboundQueueBridge bridge : inboundQueueBridges) {
+                String localQueueName = bridge.getLocalQueueName();
+                Queue activemqQueue = createActiveMQQueue(localSession, localQueueName);
                 bridge.setProducerQueue(activemqQueue);
-                bridge.setProducerConnection(localQueueConnection);
-                bridge.setConsumerConnection(outboundQueueConnection);
+                bridge.setProducerConnection(connection);
                 if (bridge.getJmsMessageConvertor() == null) {
                     bridge.setJmsMessageConvertor(getInboundMessageConvertor());
                 }
                 bridge.setJmsConnector(this);
                 addInboundBridge(bridge);
             }
-            outboundSession.close();
             localSession.close();
         }
     }
 
-    protected void initializeOutboundQueueBridges() throws JMSException {
+    protected void initializeOutboundDestinationBridgesOutboundSide(QueueConnection connection) throws JMSException {
         if (outboundQueueBridges != null) {
-            QueueSession outboundSession = outboundQueueConnection
-                .createQueueSession(false, Session.AUTO_ACKNOWLEDGE);
-            QueueSession localSession = localQueueConnection.createQueueSession(false,
-                                                                                Session.AUTO_ACKNOWLEDGE);
-            for (int i = 0; i < outboundQueueBridges.length; i++) {
-                OutboundQueueBridge bridge = outboundQueueBridges[i];
-                String localQueueName = bridge.getLocalQueueName();
-                Queue activemqQueue = createActiveMQQueue(localSession, localQueueName);
+            QueueSession outboundSession = connection.createQueueSession(false, Session.AUTO_ACKNOWLEDGE);
+
+            for (OutboundQueueBridge bridge : outboundQueueBridges) {
                 String queueName = bridge.getOutboundQueueName();
                 Queue foreignQueue = createForeignQueue(outboundSession, queueName);
-                bridge.setConsumerQueue(activemqQueue);
                 bridge.setProducerQueue(foreignQueue);
-                bridge.setProducerConnection(outboundQueueConnection);
-                bridge.setConsumerConnection(localQueueConnection);
+                bridge.setProducerConnection(connection);
                 if (bridge.getJmsMessageConvertor() == null) {
                     bridge.setJmsMessageConvertor(getOutboundMessageConvertor());
                 }
@@ -324,6 +332,23 @@ public class JmsQueueConnector extends JmsConnector {
                 addOutboundBridge(bridge);
             }
             outboundSession.close();
+        }
+    }
+
+    protected void initializeOutboundDestinationBridgesLocalSide(QueueConnection connection) throws JMSException {
+        if (outboundQueueBridges != null) {
+            QueueSession localSession =
+                    connection.createQueueSession(false, Session.AUTO_ACKNOWLEDGE);
+
+            for (OutboundQueueBridge bridge : outboundQueueBridges) {
+                String localQueueName = bridge.getLocalQueueName();
+                Queue activemqQueue = createActiveMQQueue(localSession, localQueueName);
+                bridge.setConsumer(null);
+                bridge.setConsumerQueue(activemqQueue);
+                bridge.setConsumerConnection(connection);
+                bridge.setJmsConnector(this);
+                addOutboundBridge(bridge);
+            }
             localSession.close();
         }
     }
@@ -331,7 +356,7 @@ public class JmsQueueConnector extends JmsConnector {
     protected Destination createReplyToBridge(Destination destination, Connection replyToProducerConnection,
                                               Connection replyToConsumerConnection) {
         Queue replyToProducerQueue = (Queue)destination;
-        boolean isInbound = replyToProducerConnection.equals(localQueueConnection);
+        boolean isInbound = replyToProducerConnection.equals(localConnection.get());
 
         if (isInbound) {
             InboundQueueBridge bridge = (InboundQueueBridge)replyToBridges.get(replyToProducerQueue);

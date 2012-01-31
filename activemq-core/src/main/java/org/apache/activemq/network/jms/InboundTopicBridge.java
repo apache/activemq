@@ -17,11 +17,12 @@
 package org.apache.activemq.network.jms;
 
 /**
- * Create an Inbound Topic Bridge
- * 
+ * Create an Inbound Topic Bridge.  By default this class uses the topic name for
+ * both the inbound and outbound topic.  This behavior can be overridden however
+ * by using the setter methods to configure both the inbound and outboud topic names
+ * separately.
+ *
  * @org.apache.xbean.XBean
- * 
- * 
  */
 public class InboundTopicBridge extends TopicBridge {
 
@@ -29,8 +30,8 @@ public class InboundTopicBridge extends TopicBridge {
     String localTopicName;
 
     /**
-     * Constructor that takes a foriegn destination as an argument
-     * 
+     * Constructor that takes a foreign destination as an argument
+     *
      * @param inboundTopicName
      */
     public InboundTopicBridge(String inboundTopicName) {
@@ -39,7 +40,7 @@ public class InboundTopicBridge extends TopicBridge {
     }
 
     /**
-     * Default Contructor
+     * Default Constructor
      */
     public InboundTopicBridge() {
     }
@@ -52,6 +53,10 @@ public class InboundTopicBridge extends TopicBridge {
     }
 
     /**
+     * Sets the topic name used for the inbound topic, if the outbound topic
+     * name has not been set, then this method uses the same name to configure
+     * the outbound topic name.
+     *
      * @param inboundTopicName
      */
     public void setInboundTopicName(String inboundTopicName) {
@@ -74,5 +79,4 @@ public class InboundTopicBridge extends TopicBridge {
     public void setLocalTopicName(String localTopicName) {
         this.localTopicName = localTopicName;
     }
-
 }
