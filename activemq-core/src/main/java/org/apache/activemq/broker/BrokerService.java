@@ -1722,6 +1722,14 @@ public class BrokerService implements Service {
                           " mb, whilst the temporary data directory: " + tmpDirPath +
                           " only has " + dirFreeSpace / (1024 * 1024) + " mb of free space");
             }
+
+            long maxJournalFileSize = usage.getTempUsage().getStore().getJournalMaxFileLength();
+            if (storeLimit < maxJournalFileSize) {
+                LOG.error("Temporary Store limit is " + storeLimit / (1024 * 1024) +
+                          " mb, whilst the max journal file size for the temporary store is: " +
+                          maxJournalFileSize / (1024 * 1024) + " mb, " +
+                          "the temp store will not accept any data when used.");
+            }
         }
     }
 
