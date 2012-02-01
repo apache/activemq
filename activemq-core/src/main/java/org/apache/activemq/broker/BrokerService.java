@@ -41,6 +41,7 @@ import javax.annotation.PreDestroy;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 
+import org.apache.activeio.journal.Journal;
 import org.apache.activemq.ActiveMQConnectionMetaData;
 import org.apache.activemq.ConfigurationException;
 import org.apache.activemq.Service;
@@ -1723,7 +1724,14 @@ public class BrokerService implements Service {
                           " only has " + dirFreeSpace / (1024 * 1024) + " mb of free space");
             }
 
-            long maxJournalFileSize = usage.getTempUsage().getStore().getJournalMaxFileLength();
+            long maxJournalFileSize;
+            
+            if (usage.getTempUsage().getStore() != null) {
+            	maxJournalFileSize = usage.getTempUsage().getStore().getJournalMaxFileLength();
+            } else {
+            	maxJournalFileSize = org.apache.kahadb.journal.Journal.DEFAULT_MAX_FILE_LENGTH;
+            }
+            
             if (storeLimit < maxJournalFileSize) {
                 LOG.error("Temporary Store limit is " + storeLimit / (1024 * 1024) +
                           " mb, whilst the max journal file size for the temporary store is: " +
