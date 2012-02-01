@@ -16,26 +16,6 @@
  */
 package org.apache.activemq.transport.failover;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.InterruptedIOException;
-import java.net.InetAddress;
-import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.StringTokenizer;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.atomic.AtomicReference;
-
 import org.apache.activemq.broker.SslContext;
 import org.apache.activemq.command.Command;
 import org.apache.activemq.command.ConnectionControl;
@@ -58,6 +38,25 @@ import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.ServiceSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.InterruptedIOException;
+import java.net.InetAddress;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.StringTokenizer;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * A Transport that is made reliable by being able to fail over to another
@@ -241,6 +240,7 @@ public class FailoverTransport implements CompositeTransport {
                 }
 
                 if (reconnectOk) {
+                    updated.remove(failedConnectTransportURI);
                     reconnectTask.wakeup();
                 } else {
                     propagateFailureToExceptionListener(e);
@@ -670,6 +670,7 @@ public class FailoverTransport implements CompositeTransport {
 
     private List<URI> getConnectList() {
         ArrayList<URI> l = new ArrayList<URI>(uris);
+        l.addAll(updated);
         boolean removed = false;
         if (failedConnectTransportURI != null) {
             removed = l.remove(failedConnectTransportURI);
@@ -806,7 +807,6 @@ public class FailoverTransport implements CompositeTransport {
             if (disposed || connectionFailure != null) {
                 reconnectMutex.notifyAll();
             }
-
             if ((connectedTransport.get() != null && !doRebalance) || disposed || connectionFailure != null) {
                 return false;
             } else {
@@ -845,7 +845,12 @@ public class FailoverTransport implements CompositeTransport {
                     // If we have a backup already waiting lets try it.
                     synchronized (backupMutex) {
                         if (backup && !backups.isEmpty()) {
-                            BackupTransport bt = backups.remove(0);
+                            ArrayList<BackupTransport> l = new ArrayList(backups);
+                            if (randomize) {
+                                Collections.shuffle(l);
+                            }
+                            BackupTransport bt = l.remove(0);
+                            backups.remove(bt);
                             transport = bt.getTransport();
                             uri = bt.getUri();
                         }
@@ -1098,26 +1103,18 @@ public class FailoverTransport implements CompositeTransport {
     public void updateURIs(boolean rebalance, URI[] updatedURIs) throws IOException {
         if (isUpdateURIsSupported()) {
             List<URI> copy = new ArrayList<URI>(this.updated);
-            List<URI> add = new ArrayList<URI>();
+            updated.clear();
             if (updatedURIs != null && updatedURIs.length > 0) {
-                Set<URI> set = new HashSet<URI>();
                 for (URI uri : updatedURIs) {
-                    if (uri != null) {
-                        set.add(uri);
-                    }
-                }
-                for (URI uri : set) {
-                    if (copy.remove(uri) == false) {
-                        add.add(uri);
+                    if (uri != null && !uris.contains(uri)) {
+                        updated.add(uri);
                     }
                 }
                 synchronized (reconnectMutex) {
-                    this.updated.clear();
-                    this.updated.addAll(add);
-                    for (URI uri : copy) {
-                        this.uris.remove(uri);
+                    if (!(copy.isEmpty() && updated.isEmpty()) && !copy.equals(updated)) {
+                        buildBackups();
+                        reconnect(rebalance);
                     }
-                    add(rebalance, add.toArray(new URI[add.size()]));
                 }
             }
         }

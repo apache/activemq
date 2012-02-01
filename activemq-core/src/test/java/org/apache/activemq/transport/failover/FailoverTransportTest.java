@@ -16,9 +16,6 @@
  */
 package org.apache.activemq.transport.failover;
 
-import java.io.IOException;
-import java.net.URI;
-
 import org.apache.activemq.command.ConnectionId;
 import org.apache.activemq.command.ConnectionInfo;
 import org.apache.activemq.command.MessageAck;
@@ -32,6 +29,10 @@ import org.apache.activemq.util.Wait;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+
+import java.io.IOException;
+import java.net.URI;
+
 import static org.junit.Assert.*;
 
 public class FailoverTransportTest {
@@ -99,7 +100,6 @@ public class FailoverTransportTest {
 
 		// Track a connection
 		tracker.track(connection);
-
 		try {
 			this.transport.oneway(new RemoveInfo(new ConnectionId("1")));
 		} catch(Exception e) {
@@ -128,7 +128,7 @@ public class FailoverTransportTest {
 
     protected Transport createTransport() throws Exception {
     	Transport transport = TransportFactory.connect(
-    			new URI("failover://(tcp://doesNotExist:1234)"));
+    			new URI("failover://(tcp://localhost:1234)"));
         transport.setTransportListener(new TransportListener() {
 
             public void onCommand(Object command) {

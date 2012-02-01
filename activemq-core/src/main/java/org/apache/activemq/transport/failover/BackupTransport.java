@@ -18,10 +18,11 @@
 
 package org.apache.activemq.transport.failover;
 
-import java.io.IOException;
-import java.net.URI;
 import org.apache.activemq.transport.DefaultTransportListener;
 import org.apache.activemq.transport.Transport;
+
+import java.io.IOException;
+import java.net.URI;
 
 class BackupTransport extends DefaultTransportListener{
 	private final FailoverTransport failoverTransport;
@@ -76,4 +77,9 @@ class BackupTransport extends DefaultTransportListener{
 		}
 		return false;
 	}
+
+    @Override
+    public String toString() {
+        return "Backup transport: " + uri;
+    }
 }

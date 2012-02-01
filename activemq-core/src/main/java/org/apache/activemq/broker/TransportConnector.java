@@ -209,7 +209,7 @@ public class TransportConnector implements Connector, BrokerServiceAware {
         brokerInfo.setBrokerId(broker.getBrokerId());
         brokerInfo.setPeerBrokerInfos(broker.getPeerBrokerInfos());
         brokerInfo.setFaultTolerantConfiguration(broker.isFaultTolerantConfiguration());
-        brokerInfo.setBrokerURL(getPublishableConnectString(getServer().getConnectURI()));
+        brokerInfo.setBrokerURL(broker.getBrokerService().getDefaultSocketURIString());
         getServer().setAcceptListener(new TransportAcceptListener() {
             public void onAccept(final Transport transport) {
                 try {
@@ -402,28 +402,29 @@ public class TransportConnector implements Connector, BrokerServiceAware {
         boolean rebalance = isRebalanceClusterClients();
         String connectedBrokers = "";
         String self = "";
+        String separator = "";
 
         if (isUpdateClusterClients()) {
             if (brokerService.getDefaultSocketURIString() != null) {
                 self += brokerService.getDefaultSocketURIString();
-                self += ",";
             }
             if (rebalance == false) {
                 connectedBrokers += self;
+                separator = ",";
             }
             if (this.broker.getPeerBrokerInfos() != null) {
                 for (BrokerInfo info : this.broker.getPeerBrokerInfos()) {
                     if (isMatchesClusterFilter(info.getBrokerName())) {
+                        connectedBrokers += separator;
                         connectedBrokers += info.getBrokerURL();
-                        connectedBrokers += ",";
+                        separator = ",";
                     }
                 }
             }
             if (rebalance) {
-                connectedBrokers += self;
+                connectedBrokers += separator + self;
             }
         }
-
         ConnectionControl control = new ConnectionControl();
         control.setConnectedBrokers(connectedBrokers);
         control.setRebalanceConnection(rebalance);

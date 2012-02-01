@@ -1358,7 +1358,7 @@ public class BrokerService implements Service {
     public String getDefaultSocketURIString() {
 
             if (started.get()) {
-                if (this.defaultSocketURIString ==null) {
+                if (this.defaultSocketURIString == null) {
                     for (TransportConnector tc:this.transportConnectors) {
                         String result = null;
                         try {
@@ -1367,10 +1367,19 @@ public class BrokerService implements Service {
                           LOG.warn("Failed to get the ConnectURI for "+tc,e);
                         }
                         if (result != null) {
-                            this.defaultSocketURIString =result;
-                            break;
+                            // find first publishable uri
+                            if (tc.isUpdateClusterClients() || tc.isRebalanceClusterClients()) {
+                                this.defaultSocketURIString = result;
+                                break;
+                            } else {
+                            // or use the first defined
+                                if (this.defaultSocketURIString == null) {
+                                    this.defaultSocketURIString = result;
+                                }
+                            }
                         }
                     }
+
                 }
                 return this.defaultSocketURIString;
             }
