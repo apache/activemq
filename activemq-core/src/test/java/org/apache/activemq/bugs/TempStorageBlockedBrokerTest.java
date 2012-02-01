@@ -59,11 +59,13 @@ public class TempStorageBlockedBrokerTest extends TestSupport {
 
     Destination destination = new ActiveMQTopic("FooTwo");
 
+    private String connectionUri;
+
     public void testRunProducerWithHungConsumer() throws Exception {
 
         final long origTempUsage = broker.getSystemUsage().getTempUsage().getUsage();
 
-        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("tcp://localhost:61618");
+        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(connectionUri);
         // ensure messages are spooled to disk for this consumer
         ActiveMQPrefetchPolicy prefetch = new ActiveMQPrefetchPolicy();
         prefetch.setTopicPrefetch(10);
@@ -107,7 +109,7 @@ public class TempStorageBlockedBrokerTest extends TestSupport {
         producingThread.start();
 
         assertTrue("producer has sent 10 in a reasonable time", producerHasSentTenMessages.await(30, TimeUnit.SECONDS));
-        
+
         int count = 0;
 
         Message m = null;
@@ -169,7 +171,7 @@ public class TempStorageBlockedBrokerTest extends TestSupport {
         broker.getSystemUsage().setSendFailIfNoSpace(true);
         destination = new ActiveMQQueue("Foo");
 
-        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("tcp://localhost:61618");
+        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(connectionUri);
         final ActiveMQConnection producerConnection = (ActiveMQConnection) factory.createConnection();
         // so we can easily catch the ResourceAllocationException on send
         producerConnection.setAlwaysSyncSend(true);
@@ -247,8 +249,10 @@ public class TempStorageBlockedBrokerTest extends TestSupport {
         broker.setDestinationPolicy(policyMap);
         broker.setSystemUsage(sysUsage);
 
-        broker.addConnector("tcp://localhost:61618").setName("Default");
+        broker.addConnector("tcp://localhost:0").setName("Default");
         broker.start();
+
+        connectionUri = broker.getTransportConnectors().get(0).getPublishableConnectString();
     }
 
     @Override
