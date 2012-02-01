@@ -114,6 +114,7 @@ public class JmsMultipleBrokersTestSupport extends CombinationTestSupport {
                 uri = "static:(failover:(" + remoteURI + "))";
             }
             NetworkConnector connector = new DiscoveryNetworkConnector(new URI(uri));
+            connector.setName("to-" + remoteBroker.getBrokerName());
             connector.setDynamicOnly(dynamicOnly);
             connector.setNetworkTTL(networkTTL);
             connector.setConduitSubscriptions(conduit);

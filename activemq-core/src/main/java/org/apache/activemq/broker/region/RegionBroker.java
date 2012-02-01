@@ -288,10 +288,16 @@ public class RegionBroker extends EmptyBroker {
     }
 
     @Override
-    public Destination addDestination(ConnectionContext context, ActiveMQDestination destination,boolean create) throws Exception {
+    public Destination addDestination(ConnectionContext context, ActiveMQDestination destination, boolean createIfTemp) throws Exception {
 
         Destination answer;
 
+        answer = destinations.get(destination);
+        if (answer != null) {
+            return answer;
+        }
+
+     synchronized (destinations) {
         answer = destinations.get(destination);
         if (answer != null) {
             return answer;
@@ -305,10 +311,10 @@ public class RegionBroker extends EmptyBroker {
             answer = topicRegion.addDestination(context, destination,true);
             break;
         case ActiveMQDestination.TEMP_QUEUE_TYPE:
-            answer = tempQueueRegion.addDestination(context, destination,create);
+            answer = tempQueueRegion.addDestination(context, destination, createIfTemp);
             break;
         case ActiveMQDestination.TEMP_TOPIC_TYPE:
-            answer = tempTopicRegion.addDestination(context, destination,create);
+            answer = tempTopicRegion.addDestination(context, destination, createIfTemp);
             break;
         default:
             throw createUnknownDestinationTypeException(destination);
@@ -316,6 +322,7 @@ public class RegionBroker extends EmptyBroker {
 
         destinations.put(destination, answer);
         return answer;
+     }
 
     }
 
@@ -374,22 +381,9 @@ public class RegionBroker extends EmptyBroker {
         if (destination != null) {
             inactiveDestinationsPurgeLock.readLock().lock();
             try {
-                if (!destinations.containsKey(destination)) {
-                    // This seems to cause the destination to be added but without
-                    // advisories firing...
-                    context.getBroker().addDestination(context, destination, true);
-                    // associate it with the connection so that it can get deleted
-                    if (destination.isTemporary() && context.getConnectionState() != null) {
-                        DestinationInfo destinationInfo = new DestinationInfo(context.getConnectionId(),
-                                DestinationInfo.ADD_OPERATION_TYPE,
-                                destination);
-                        context.getConnectionState().addTempDestination(destinationInfo);
-                        if (LOG.isDebugEnabled()) {
-                            LOG.debug("assigning ownership of auto created temp : " + destination + " to connection:"
-                                    + context.getConnectionId());
-                        }
-                    }
-                }
+                // This seems to cause the destination to be added but without
+                // advisories firing...
+                context.getBroker().addDestination(context, destination, isAllowTempAutoCreationOnSend());
                 switch (destination.getDestinationType()) {
                 case ActiveMQDestination.QUEUE_TYPE:
                     queueRegion.addProducer(context, info);

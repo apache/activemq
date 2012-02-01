@@ -86,6 +86,13 @@ public class MessageAck extends BaseCommand {
         this.messageCount = messageCount;
     }
 
+    public MessageAck(Message message, byte ackType, int messageCount) {
+        this.ackType = ackType;
+        this.destination = message.getDestination();
+        this.lastMessageId = message.getMessageId();
+        this.messageCount = messageCount;
+    }
+
     public void copy(MessageAck copy) {
         super.copy(copy);
         copy.firstMessageId = firstMessageId;

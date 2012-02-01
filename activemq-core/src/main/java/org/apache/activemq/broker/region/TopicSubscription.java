@@ -101,6 +101,7 @@ public class TopicSubscription extends AbstractSubscription {
         } else {
             //we are slow
             if(!isSlowConsumer()) {
+                LOG.warn(toString() + ": has reached its prefetch limit without an ack, it appears to be slow");
                 setSlowConsumer(true);
                 for (Destination dest: destinations) {
                     dest.slowConsumer(getContext(), this);

@@ -36,11 +36,21 @@ import java.net.URI;
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
 import javax.jms.Destination;
+import javax.jms.MessageProducer;
 import javax.jms.Session;
+import javax.jms.TemporaryQueue;
 import javax.management.ObjectName;
+import junit.framework.Test;
+import org.apache.activemq.ActiveMQConnection;
+import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.ActiveMQMessageConsumer;
 import org.apache.activemq.JmsMultipleBrokersTestSupport;
+import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.broker.jmx.DestinationViewMBean;
 import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.command.ActiveMQQueue;
+import org.apache.activemq.network.NetworkConnector;
 import org.apache.activemq.util.Wait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,6 +70,9 @@ public class TwoBrokerTempQueueAdvisoryTest extends JmsMultipleBrokersTestSuppor
 
     public void testTemporaryQueueAdvisory() throws Exception {
     	LOG.info("Running testTemporaryQueueAdvisory()");
+
+        bridgeBrokers("BrokerA", "BrokerB");
+        bridgeBrokers("BrokerB", "BrokerA");
 
     	startAllBrokers();
         waitForBridgeFormation();
@@ -93,6 +106,68 @@ public class TwoBrokerTempQueueAdvisoryTest extends JmsMultipleBrokersTestSuppor
         }));
     }
 
+    public boolean useDuplex = true;
+    public void initCombosForTestSendToRemovedTemp() {
+        addCombinationValues("useDuplex", new Boolean[]{Boolean.FALSE, Boolean.TRUE});
+    }
+
+    public void testSendToRemovedTemp() throws Exception {
+
+        ActiveMQQueue requestReplyDest = new ActiveMQQueue("RequestReply");
+
+        NetworkConnector nc = bridgeBrokers("BrokerA", "BrokerB");
+        if (useDuplex) {
+            nc.setDuplex(true);
+        } else {
+            bridgeBrokers("BrokerB", "BrokerA");
+        }
+
+        // destination advisory can loose the race with message dispatch, so we need to allow replies on network broker
+        // to work in the absence of an advisory, the destination will be cleaned up in the normal
+        // way
+        if (!useDuplex) {
+            brokers.get("BrokerB").broker.setAllowTempAutoCreationOnSend(true);
+        }
+
+        TransportConnector forClient = brokers.get("BrokerA").broker.addConnector("tcp://localhost:0");
+        startAllBrokers();
+        waitForBridgeFormation();
+        waitForMinTopicRegionConsumerCount("BrokerB", 1);
+        waitForMinTopicRegionConsumerCount("BrokerA", 1);
+
+        ConnectionFactory factory = new ActiveMQConnectionFactory(forClient.getConnectUri());
+        ActiveMQConnection conn = (ActiveMQConnection) factory.createConnection();
+        conn.setWatchTopicAdvisories(false);
+        conn.start();
+        Session session = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
+
+        ConnectionFactory replyFactory = getConnectionFactory("BrokerB");
+        for (int i = 0; i < 500; i++) {
+            TemporaryQueue tempDest = session.createTemporaryQueue();
+            MessageProducer producer = session.createProducer(requestReplyDest);
+            javax.jms.Message message = session.createTextMessage("req-" + i);
+            message.setJMSReplyTo(tempDest);
+
+            ActiveMQMessageConsumer consumer = (ActiveMQMessageConsumer) session.createConsumer(tempDest);
+            producer.send(message);
+
+            ActiveMQConnection replyConnection = (ActiveMQConnection) replyFactory.createConnection();
+            replyConnection.setWatchTopicAdvisories(false);
+            replyConnection.start();
+            Session replySession = replyConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+            ActiveMQMessageConsumer replyConsumer = (ActiveMQMessageConsumer) replySession.createConsumer(requestReplyDest);
+            javax.jms.Message msg = replyConsumer.receive(10000);
+            assertNotNull("request message not null: " + i, msg);
+            MessageProducer replyProducer = replySession.createProducer(msg.getJMSReplyTo());
+            replyProducer.send(session.createTextMessage("reply-" + i));
+            replyConnection.close();
+
+            javax.jms.Message reply = consumer.receive(10000);
+            assertNotNull("reply message : " + i + ", to: " + tempDest + ", by consumer:" + consumer.getConsumerId(), reply);
+            consumer.close();
+            tempDest.delete();
+        }
+    }
 
     protected DestinationViewMBean createView(String broker, String destination, byte type) throws Exception {
         String domain = "org.apache.activemq";
@@ -113,8 +188,9 @@ public class TwoBrokerTempQueueAdvisoryTest extends JmsMultipleBrokersTestSuppor
         String options = new String("?persistent=false");
         createBroker(new URI("broker:(tcp://localhost:0)/BrokerA" + options));
         createBroker(new URI("broker:(tcp://localhost:0)/BrokerB" + options));
+    }
 
-        bridgeBrokers("BrokerA", "BrokerB");
-        bridgeBrokers("BrokerB", "BrokerA");
+    public static Test suite() {
+        return suite(TwoBrokerTempQueueAdvisoryTest.class);
     }
 }

@@ -70,11 +70,12 @@ public class RequestReplyNoAdvisoryNetworkTest extends JmsMultipleBrokersTestSup
                 " http://activemq.apache.org/schema/core" +
                 " http://activemq.apache.org/schema/core/activemq-core.xsd\">" +
                 "  <broker xmlns=\"http://activemq.apache.org/schema/core\" id=\"broker\"" +
+                "    allowTempAutoCreationOnSend=\"true\" schedulePeriodForDestinationPurge=\"1000\"" +
                 "    brokerName=\"%HOST%\" persistent=\"false\" advisorySupport=\"false\" useJmx=\"false\" >" +
                 "   <destinationPolicy>" +
                 "    <policyMap>" +
                 "     <policyEntries>" +
-                "      <policyEntry optimizedDispatch=\"true\">"+
+                "      <policyEntry optimizedDispatch=\"true\"  gcInactiveDestinations=\"true\" gcWithNetworkConsumers=\"true\" inactiveTimoutBeforeGC=\"1000\">"+
                 "       <destination>"+
                 "        <tempQueue physicalName=\"" + replyQWildcard.getPhysicalName() + "\"/>" +
                 "       </destination>" +
@@ -260,13 +261,14 @@ public class RequestReplyNoAdvisoryNetworkTest extends JmsMultipleBrokersTestSup
         broker.setPersistent(false);
         broker.setUseJmx(false);
         broker.setSchedulePeriodForDestinationPurge(1000);
+        broker.setAllowTempAutoCreationOnSend(true);
 
         PolicyMap map = new PolicyMap();
         PolicyEntry tempReplyQPolicy = new PolicyEntry();
         tempReplyQPolicy.setOptimizedDispatch(true);
         tempReplyQPolicy.setGcInactiveDestinations(true);
         tempReplyQPolicy.setGcWithNetworkConsumers(true);
-        tempReplyQPolicy.setInactiveTimoutBeforeGC(10*1000);
+        tempReplyQPolicy.setInactiveTimoutBeforeGC(1000);
         map.put(replyQWildcard, tempReplyQPolicy);
         broker.setDestinationPolicy(map);
 

@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.network;
 
+import javax.jms.JMSException;
 import org.apache.activemq.Service;
 import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.broker.BrokerService;
@@ -368,11 +369,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                     waitStarted();
                     MessageDispatch md = (MessageDispatch) command;
                     serviceRemoteConsumerAdvisory(md.getMessage().getDataStructure());
-                    demandConsumerDispatched++;
-                    if (demandConsumerDispatched > (demandConsumerInfo.getPrefetchSize() * .75)) {
-                        remoteBroker.oneway(new MessageAck(md, MessageAck.STANDARD_ACK_TYPE, demandConsumerDispatched));
-                        demandConsumerDispatched = 0;
-                    }
+                    ackAdvisory(md.getMessage());
                 } else if (command.isBrokerInfo()) {
                     lastConnectSucceeded.set(true);
                     remoteBrokerInfo = (BrokerInfo) command;
@@ -411,6 +408,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                             if (AdvisorySupport.isConsumerAdvisoryTopic(message.getDestination())
                                 || AdvisorySupport.isDestinationAdvisoryTopic(message.getDestination())) {
                                 serviceRemoteConsumerAdvisory(message.getDataStructure());
+                                ackAdvisory(message);
                             } else {
                                 if (!isPermissableDestination(message.getDestination(), true)) {
                                     return;
@@ -430,6 +428,16 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                             case SessionInfo.DATA_STRUCTURE_TYPE:
                             case ProducerInfo.DATA_STRUCTURE_TYPE:
                                 localBroker.oneway(command);
+                                break;
+                            case MessageAck.DATA_STRUCTURE_TYPE:
+                                MessageAck ack = (MessageAck) command;
+                                DemandSubscription localSub = subscriptionMapByRemoteId.get(ack.getConsumerId());
+                                if (localSub != null) {
+                                    ack.setConsumerId(localSub.getLocalInfo().getConsumerId());
+                                    localBroker.oneway(ack);
+                                } else {
+                                    LOG.warn("Matching local subscription not found for ack: " + ack);
+                                }
                                 break;
                             case ConsumerInfo.DATA_STRUCTURE_TYPE:
                                 localStartedLatch.await();
@@ -480,6 +488,16 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
         }
     }
 
+    private void ackAdvisory(Message message) throws IOException {
+        demandConsumerDispatched++;
+        if (demandConsumerDispatched > (demandConsumerInfo.getPrefetchSize() * .75)) {
+            MessageAck ack = new MessageAck(message, MessageAck.STANDARD_ACK_TYPE, demandConsumerDispatched);
+            ack.setConsumerId(demandConsumerInfo.getConsumerId());
+            remoteBroker.oneway(ack);
+            demandConsumerDispatched = 0;
+        }
+    }
+
     private void serviceRemoteConsumerAdvisory(DataStructure data) throws IOException {
         final int networkTTL = configuration.getNetworkTTL();
         if (data.getClass() == ConsumerInfo.class) {
@@ -520,7 +538,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
             synchronized (brokerService.getVmConnectorURI()) {
                 if (addConsumerInfo(info)) {
                     if (LOG.isDebugEnabled()) {
-                        LOG.debug(configuration.getBrokerName() + " bridging sub on " + localBroker + " from " + remoteBrokerName + " : " + info);
+                        LOG.debug(configuration.getBrokerName() + " bridged sub on " + localBroker + " from " + remoteBrokerName + " : " + info);
                     }
                 } else {
                     if (LOG.isDebugEnabled()) {
@@ -555,7 +573,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
             }
             destInfo.setBrokerPath(appendToBrokerPath(destInfo.getBrokerPath(), getRemoteBrokerPath()));
             if (LOG.isTraceEnabled()) {
-                LOG.trace(configuration.getBrokerName() +" bridging destination control command: " + destInfo);
+                LOG.trace(configuration.getBrokerName() + " bridging " + (destInfo.isAddOperation() ? "add" : "remove") + " destination on " + localBroker + " from " + remoteBrokerName + ", destination: " + destInfo);
             }
             localBroker.oneway(destInfo);
         } else if (data.getClass() == RemoveInfo.class) {

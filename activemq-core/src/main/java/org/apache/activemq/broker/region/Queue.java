@@ -65,6 +65,7 @@ import org.apache.activemq.filter.BooleanExpression;
 import org.apache.activemq.filter.MessageEvaluationContext;
 import org.apache.activemq.filter.NonCachedMessageEvaluationContext;
 import org.apache.activemq.selector.SelectorParser;
+import org.apache.activemq.state.ProducerState;
 import org.apache.activemq.store.MessageRecoveryListener;
 import org.apache.activemq.store.MessageStore;
 import org.apache.activemq.thread.Task;
@@ -574,6 +575,11 @@ public class Queue extends BaseDestination implements Task, UsageListener {
         // There is delay between the client sending it and it arriving at the
         // destination.. it may have expired.
         message.setRegionDestination(this);
+        ProducerState state = producerExchange.getProducerState();
+        if (state == null) {
+            LOG.warn("Send failed for: " + message + ",  missing producer state for: " + producerExchange);
+            throw new JMSException("Cannot send message to " + getActiveMQDestination() + " with invalid (null) producer state");
+        }
         final ProducerInfo producerInfo = producerExchange.getProducerState().getInfo();
         final boolean sendProducerAck = !message.isResponseRequired() && producerInfo.getWindowSize() > 0
                 && !context.isInRecoveryMode();
@@ -1664,8 +1670,8 @@ public class Queue extends BaseDestination implements Task, UsageListener {
         }finally {
             consumersLock.readLock().unlock();
         }
-        if (LOG.isTraceEnabled()) {
-            LOG.trace("Message " + msg.getMessageId() + " sent to " + this.destination);
+        if (LOG.isDebugEnabled()) {
+            LOG.debug(broker.getBrokerName() + " Message " + msg.getMessageId() + " sent to " + this.destination);
         }
         wakeup();
     }

@@ -125,15 +125,15 @@ public abstract class AbstractRegion implements Region {
 
     public Destination addDestination(ConnectionContext context, ActiveMQDestination destination,
             boolean createIfTemporary) throws Exception {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug(broker.getBrokerName() + " adding destination: " + destination);
-        }
 
         destinationsLock.writeLock().lock();
         try {
             Destination dest = destinations.get(destination);
             if (dest == null) {
                 if (destination.isTemporary() == false || createIfTemporary) {
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug(broker.getBrokerName() + " adding destination: " + destination);
+                    }
                     dest = createDestination(context, destination);
                     // intercept if there is a valid interceptor defined
                     DestinationInterceptor destinationInterceptor = broker.getDestinationInterceptor();
@@ -222,7 +222,7 @@ public abstract class AbstractRegion implements Region {
 
             } else {
                 if (LOG.isDebugEnabled()) {
-                    LOG.debug("Destination doesn't exist: " + dest);
+                    LOG.debug("Cannot remove a destination that doesn't exist: " + destination);
                 }
             }
         } finally {
