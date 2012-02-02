@@ -17,7 +17,7 @@
 
 -->
 
-<features name="activemq-${activemq-version}">
+<features name="activemq-${activemq-version}" xmlns="http://karaf.apache.org/xmlns/features/v1.0.0">
     <feature name="activemq" version="${activemq-version}" resolver="(obr)">
         <bundle dependency="true">mvn:org.apache.geronimo.specs/geronimo-annotation_1.0_spec/1.1.1</bundle>
         <bundle dependency="true">mvn:org.apache.geronimo.specs/geronimo-jta_1.1_spec/1.1.1</bundle> 
@@ -62,7 +62,7 @@
 
     <feature name="activemq-optional" version="${activemq-version}" resolver="(obr)">
         <feature version="${activemq-version}">activemq-blueprint</feature>
-        <feature varesion="[7.0,8.0)">jetty</feature>
+        <feature version="[7.0,8.0)">jetty</feature>
         <bundle>mvn:org.apache.activemq/activemq-optional/${activemq-version}</bundle>
     </feature>
 
