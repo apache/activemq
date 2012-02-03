@@ -334,6 +334,45 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         assertEquals("dest has no memory usage", 0, queue.getMemoryPercentUsage());
     }
 
+    public void testCreateDestinationWithSpacesAtEnds() throws Exception {
+        ObjectName brokerName = assertRegisteredObjectName(domain + ":Type=Broker,BrokerName=localhost");
+        BrokerViewMBean broker = (BrokerViewMBean)MBeanServerInvocationHandler.newProxyInstance(mbeanServer, brokerName, BrokerViewMBean.class, true);
+
+        assertTrue("broker is not a slave", !broker.isSlave());
+        // create 2 topics
+        broker.addTopic(getDestinationString() + "1 ");
+        broker.addTopic(" " + getDestinationString() + "2");
+        broker.addTopic(" " + getDestinationString() + "3 ");
+
+        assertNotRegisteredObjectName(domain + ":Type=Topic,BrokerName=localhost,Destination=" + getDestinationString() + "1 ");
+        assertNotRegisteredObjectName(domain + ":Type=Topic,BrokerName=localhost,Destination= " + getDestinationString() + "2");
+        assertNotRegisteredObjectName(domain + ":Type=Topic,BrokerName=localhost,Destination= " + getDestinationString() + "3 ");
+
+        ObjectName topicObjName1 = assertRegisteredObjectName(domain + ":Type=Topic,BrokerName=localhost,Destination=" + getDestinationString() + "1");
+        ObjectName topicObjName2 = assertRegisteredObjectName(domain + ":Type=Topic,BrokerName=localhost,Destination=" + getDestinationString() + "2");
+        ObjectName topicObjName3 = assertRegisteredObjectName(domain + ":Type=Topic,BrokerName=localhost,Destination=" + getDestinationString() + "3");
+
+        TopicViewMBean topic1 = (TopicViewMBean)MBeanServerInvocationHandler.newProxyInstance(mbeanServer, topicObjName1, TopicViewMBean.class, true);
+        TopicViewMBean topic2 = (TopicViewMBean)MBeanServerInvocationHandler.newProxyInstance(mbeanServer, topicObjName2, TopicViewMBean.class, true);
+        TopicViewMBean topic3 = (TopicViewMBean)MBeanServerInvocationHandler.newProxyInstance(mbeanServer, topicObjName3, TopicViewMBean.class, true);
+
+        assertEquals("topic1 Durable subscriber count", 0, topic1.getConsumerCount());
+        assertEquals("topic2 Durable subscriber count", 0, topic2.getConsumerCount());
+        assertEquals("topic3 Durable subscriber count", 0, topic3.getConsumerCount());
+
+        String topicName = getDestinationString();
+        String selector = null;
+
+        // create 1 subscriber for each topic
+        broker.createDurableSubscriber(clientID, "topic1.subscriber1", topicName + "1", selector);
+        broker.createDurableSubscriber(clientID, "topic2.subscriber1", topicName + "2", selector);
+        broker.createDurableSubscriber(clientID, "topic3.subscriber1", topicName + "3", selector);
+
+        assertEquals("topic1 Durable subscriber count", 1, topic1.getConsumerCount());
+        assertEquals("topic2 Durable subscriber count", 1, topic2.getConsumerCount());
+        assertEquals("topic3 Durable subscriber count", 1, topic3.getConsumerCount());
+    }
+
     @SuppressWarnings("rawtypes")
     protected void assertSendViaMBean() throws Exception {
         String queueName = getDestinationString() + ".SendMBBean";
@@ -414,7 +453,6 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         Object value = cdata.get(name);
         assertEquals("Message " + messageIndex + " CData field: " + name, expected, value);
     }
-
 
     protected void assertQueueBrowseWorks() throws Exception {
         Integer mbeancnt = mbeanServer.getMBeanCount();
@@ -626,6 +664,16 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
             echo("Bean Registered: " + objectName);
         } else {
             fail("Could not find MBean!: " + objectName);
+        }
+        return objectName;
+    }
+
+    protected ObjectName assertNotRegisteredObjectName(String name) throws MalformedObjectNameException, NullPointerException {
+        ObjectName objectName = new ObjectName(name);
+        if (mbeanServer.isRegistered(objectName)) {
+            fail("Found the MBean!: " + objectName);
+        } else {
+            echo("Bean not registered Registered: " + objectName);
         }
         return objectName;
     }

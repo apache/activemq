@@ -42,9 +42,9 @@ import org.apache.activemq.util.URISupport;
 
 /**
  * @openwire:marshaller
- * 
+ *
  */
-public abstract class ActiveMQDestination extends JNDIBaseStorable implements DataStructure, Destination, Externalizable, Comparable {
+public abstract class ActiveMQDestination extends JNDIBaseStorable implements DataStructure, Destination, Externalizable, Comparable<Object> {
 
     public static final String PATH_SEPERATOR = ".";
     public static final char COMPOSITE_SEPERATOR = ',';
@@ -73,7 +73,7 @@ public abstract class ActiveMQDestination extends JNDIBaseStorable implements Da
     protected Map<String, String> options;
 
     protected static UnresolvedDestinationTransformer unresolvableDestinationTransformer = new DefaultUnresolvedDestinationTransformer();
-    
+
     public ActiveMQDestination() {
     }
 
@@ -121,7 +121,7 @@ public abstract class ActiveMQDestination extends JNDIBaseStorable implements Da
         if (dest instanceof ActiveMQDestination) {
             return (ActiveMQDestination)dest;
         }
-        
+
         if (dest instanceof Queue && dest instanceof Topic) {
             String queueName = ((Queue) dest).getQueueName();
             String topicName = ((Topic) dest).getTopicName();
@@ -165,6 +165,7 @@ public abstract class ActiveMQDestination extends JNDIBaseStorable implements Da
         }
     }
 
+    @Override
     public int compareTo(Object that) {
         if (that instanceof ActiveMQDestination) {
             return compare(this, (ActiveMQDestination)that);
@@ -221,6 +222,7 @@ public abstract class ActiveMQDestination extends JNDIBaseStorable implements Da
     }
 
     public void setPhysicalName(String physicalName) {
+        physicalName = physicalName.trim();
         final int len = physicalName.length();
         // options offset
         int p = -1;
