@@ -30,6 +30,7 @@ public class JDBCNetworkBrokerDetachTest extends NetworkBrokerDetachTest {
         jdbc.setDataSource(dataSource);
         jdbc.deleteAllMessages();
         broker.setPersistenceAdapter(jdbc);
+        broker.setUseVirtualTopics(false);
     }
 	
 }

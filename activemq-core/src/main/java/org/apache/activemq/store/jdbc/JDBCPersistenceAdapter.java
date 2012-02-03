@@ -112,7 +112,6 @@ public class JDBCPersistenceAdapter extends DataSourceSupport implements Persist
     }
 
     public Set<ActiveMQDestination> getDestinations() {
-        // Get a connection and insert the message into the DB.
         TransactionContext c = null;
         try {
             c = getTransactionContext();

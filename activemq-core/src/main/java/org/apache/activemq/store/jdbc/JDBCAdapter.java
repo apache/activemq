@@ -97,4 +97,6 @@ public interface JDBCAdapter {
     public int getMaxRows();
 
     public void setMaxRows(int maxRows);
+
+    void doRecordDestination(TransactionContext c, ActiveMQDestination destination) throws SQLException, IOException;
 }

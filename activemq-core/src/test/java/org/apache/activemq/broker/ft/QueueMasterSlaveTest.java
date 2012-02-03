@@ -21,9 +21,13 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
+import javax.jms.MessageConsumer;
+import javax.jms.TextMessage;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.JmsTopicSendReceiveWithTwoConnectionsTest;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.command.ActiveMQQueue;
+import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.xbean.BrokerFactoryBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -107,5 +111,22 @@ public class QueueMasterSlaveTest extends JmsTopicSendReceiveWithTwoConnectionsT
         broker.start();
         slave.set(broker);
         slaveStarted.countDown();
+    }
+
+    public void testVirtualTopicFailover() throws Exception {
+
+        MessageConsumer qConsumer = createConsumer(session, new ActiveMQQueue("Consumer.A.VirtualTopic.TA1"));
+        assertNull("No message there yet", qConsumer.receive(1000));
+        qConsumer.close();
+        master.stop();
+        assertTrue("slave started", slaveStarted.await(10, TimeUnit.SECONDS));
+
+        final String text = "ForUWhenSlaveKicksIn";
+        producer.send(new ActiveMQTopic("VirtualTopic.TA1"), session.createTextMessage(text));
+
+        qConsumer = createConsumer(session, new ActiveMQQueue("Consumer.A.VirtualTopic.TA1"));
+        javax.jms.Message message = qConsumer.receive(4000);
+        assertNotNull("Get message after failover", message);
+        assertEquals("correct message", text, ((TextMessage)message).getText());
     }
 }

@@ -17,8 +17,11 @@
 package org.apache.activemq.store.jdbc.adapter;
 
 import java.io.IOException;
+import java.io.PrintStream;
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
@@ -771,6 +774,9 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
             rs = s.executeQuery();
             if (rs.next()) {
                 result = rs.getLong(1);
+                if (result == 0 && rs.wasNull()) {
+                    result = -1;
+                }
             }
         } finally {
             cleanupExclusiveLock.readLock().unlock();
@@ -848,7 +854,30 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
 
     public void setMaxRows(int maxRows) {
         this.maxRows = maxRows;
-    }    
+    }
+
+    @Override
+    public void doRecordDestination(TransactionContext c, ActiveMQDestination destination) throws SQLException, IOException {
+        PreparedStatement s = null;
+        cleanupExclusiveLock.readLock().lock();
+        try {
+            s = c.getConnection().prepareStatement(this.statements.getCreateDurableSubStatement());
+            s.setString(1, destination.getQualifiedName());
+            s.setString(2, destination.getQualifiedName());
+            s.setString(3, destination.getQualifiedName());
+            s.setString(4, null);
+            s.setLong(5, 0);
+            s.setString(6, destination.getQualifiedName());
+            s.setLong(7, 11);  // entry out of priority range
+
+            if (s.executeUpdate() != 1) {
+                throw new IOException("Could not create ack record for destination: " + destination);
+            }
+        } finally {
+            cleanupExclusiveLock.readLock().unlock();
+            close(s);
+        }
+    }
 
     /**
      * @param c

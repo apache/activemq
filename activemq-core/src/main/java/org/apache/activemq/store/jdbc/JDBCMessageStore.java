@@ -68,14 +68,33 @@ public class JDBCMessageStore extends AbstractMessageStore {
 
     protected ActiveMQMessageAudit audit;
     
-    public JDBCMessageStore(JDBCPersistenceAdapter persistenceAdapter, JDBCAdapter adapter, WireFormat wireFormat, ActiveMQDestination destination, ActiveMQMessageAudit audit) {
+    public JDBCMessageStore(JDBCPersistenceAdapter persistenceAdapter, JDBCAdapter adapter, WireFormat wireFormat, ActiveMQDestination destination, ActiveMQMessageAudit audit) throws IOException {
         super(destination);
         this.persistenceAdapter = persistenceAdapter;
         this.adapter = adapter;
         this.wireFormat = wireFormat;
         this.audit = audit;
+
+        if (destination.isQueue() && persistenceAdapter.getBrokerService().shouldRecordVirtualDestination(destination)) {
+            recordDestinationCreation(destination);
+        }
     }
-    
+
+    private void recordDestinationCreation(ActiveMQDestination destination) throws IOException {
+        TransactionContext c = persistenceAdapter.getTransactionContext();
+        try {
+            c = persistenceAdapter.getTransactionContext();
+            if (adapter.doGetLastAckedDurableSubscriberMessageId(c, destination, destination.getQualifiedName(), destination.getQualifiedName()) < 0) {
+                adapter.doRecordDestination(c, destination);
+            }
+        } catch (SQLException e) {
+            JDBCPersistenceAdapter.log("JDBC Failure: ", e);
+            throw IOExceptionSupport.create("Failed to record destination: " + destination + ". Reason: " + e, e);
+        } finally {
+            c.close();
+        }
+    }
+
     public void addMessage(ConnectionContext context, Message message) throws IOException {
         MessageId messageId = message.getMessageId();
         if (audit != null && audit.isDuplicate(message)) {

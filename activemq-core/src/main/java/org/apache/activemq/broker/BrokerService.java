@@ -23,6 +23,7 @@ import java.net.URISyntaxException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -74,7 +75,9 @@ import org.apache.activemq.broker.region.virtual.VirtualDestinationInterceptor;
 import org.apache.activemq.broker.region.virtual.VirtualTopic;
 import org.apache.activemq.broker.scheduler.SchedulerBroker;
 import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.BrokerId;
+import org.apache.activemq.filter.DestinationFilter;
 import org.apache.activemq.network.ConnectionFilter;
 import org.apache.activemq.network.DiscoveryNetworkConnector;
 import org.apache.activemq.network.NetworkConnector;
@@ -204,6 +207,7 @@ public class BrokerService implements Service {
 
     private int offlineDurableSubscriberTimeout = -1;
     private int offlineDurableSubscriberTaskSchedule = 300000;
+    private DestinationFilter virtualConsumerDestinationFilter;
 
     static {
         String localHostName = "localhost";
@@ -2130,6 +2134,9 @@ public class BrokerService implements Service {
                 getBroker().addDestination(adminConnectionContext, destination,true);
             }
         }
+        if (isUseVirtualTopics()) {
+            startVirtualConsumerDestinations();
+        }
     }
 
     /**
@@ -2297,26 +2304,38 @@ public class BrokerService implements Service {
          }
     }
 
-    /**
-     * Starts all destiantions in persistence store. This includes all inactive
-     * destinations
-     */
-    protected void startDestinationsInPersistenceStore(Broker broker) throws Exception {
-        Set destinations = destinationFactory.getDestinations();
-        if (destinations != null) {
-            Iterator iter = destinations.iterator();
-            ConnectionContext adminConnectionContext = broker.getAdminConnectionContext();
-            if (adminConnectionContext == null) {
-                ConnectionContext context = new ConnectionContext();
-                context.setBroker(broker);
-                adminConnectionContext = context;
-                broker.setAdminConnectionContext(adminConnectionContext);
-            }
-            while (iter.hasNext()) {
-                ActiveMQDestination destination = (ActiveMQDestination) iter.next();
-                broker.addDestination(adminConnectionContext, destination,false);
+    protected void startVirtualConsumerDestinations() throws Exception {
+        ConnectionContext adminConnectionContext = getAdminConnectionContext();
+        Set<ActiveMQDestination> destinations = destinationFactory.getDestinations();
+        DestinationFilter filter = getVirtualTopicConsumerDestinationFilter();
+        if (!destinations.isEmpty()) {
+            for (ActiveMQDestination destination : destinations) {
+                if (filter.matches(destination) == true) {
+                    broker.addDestination(adminConnectionContext, destination, false);
+                }
             }
         }
+    }
+
+    private DestinationFilter getVirtualTopicConsumerDestinationFilter() {
+        // created at startup, so no sync needed
+        if (virtualConsumerDestinationFilter == null) {
+            Set <ActiveMQQueue> consumerDestinations = new HashSet<ActiveMQQueue>();
+            for (DestinationInterceptor interceptor : destinationInterceptors) {
+                if (interceptor instanceof VirtualDestinationInterceptor) {
+                    VirtualDestinationInterceptor virtualDestinationInterceptor = (VirtualDestinationInterceptor) interceptor;
+                    for (VirtualDestination virtualDestination: virtualDestinationInterceptor.getVirtualDestinations()) {
+                        if (virtualDestination instanceof VirtualTopic) {
+                            consumerDestinations.add(new ActiveMQQueue(((VirtualTopic) virtualDestination).getPrefix() + DestinationFilter.ANY_DESCENDENT));
+                        }
+                    }
+                }
+            }
+            ActiveMQQueue filter = new ActiveMQQueue();
+            filter.setCompositeDestinations(consumerDestinations.toArray(new ActiveMQDestination[]{}));
+            virtualConsumerDestinationFilter = DestinationFilter.parseFilter(filter);
+        }
+        return virtualConsumerDestinationFilter;
     }
 
     protected synchronized ThreadPoolExecutor getExecutor() {
@@ -2567,5 +2586,10 @@ public class BrokerService implements Service {
 
     public void setOfflineDurableSubscriberTaskSchedule(int offlineDurableSubscriberTaskSchedule) {
         this.offlineDurableSubscriberTaskSchedule = offlineDurableSubscriberTaskSchedule;
+    }
+
+    public boolean shouldRecordVirtualDestination(ActiveMQDestination destination) {
+        return isUseVirtualTopics() && destination.isQueue() &&
+                getVirtualTopicConsumerDestinationFilter().matches(destination);
     }
 }

@@ -60,7 +60,7 @@ public class JDBCTopicMessageStore extends JDBCMessageStore implements TopicMess
     };
 
 
-    public JDBCTopicMessageStore(JDBCPersistenceAdapter persistenceAdapter, JDBCAdapter adapter, WireFormat wireFormat, ActiveMQTopic topic, ActiveMQMessageAudit audit) {
+    public JDBCTopicMessageStore(JDBCPersistenceAdapter persistenceAdapter, JDBCAdapter adapter, WireFormat wireFormat, ActiveMQTopic topic, ActiveMQMessageAudit audit) throws IOException {
         super(persistenceAdapter, adapter, wireFormat, topic, audit);
     }
 
