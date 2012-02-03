@@ -62,7 +62,7 @@ public class TempStorageConfigBrokerTest {
     private long messageReceiveTimeout = 10000L;
     private Destination destination = new ActiveMQTopic("FooTwo");
 
-    @Test
+    @Test(timeout=360000)
     public void testFillTempAndConsumeWithBadTempStoreConfig() throws Exception {
 
         createBrokerWithInvalidTempStoreConfig();
@@ -94,27 +94,9 @@ public class TempStorageConfigBrokerTest {
             assertTrue("Should not be able to send 100 messages: ", messagesSent.get() < 100);
             LOG.info("Got resource exception : " + ex + ", after sent: " + messagesSent.get());
         }
-
-        // consume all sent
-        Connection consumerConnection = factory.createConnection();
-        consumerConnection.start();
-
-        Session consumerSession = consumerConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        MessageConsumer consumer = consumerSession.createConsumer(destination);
-
-        while (consumer.receive(messageReceiveTimeout) != null) {
-            messagesConsumed.incrementAndGet();
-            if (messagesConsumed.get() % 1000 == 0) {
-                LOG.info("received Message " + messagesConsumed.get());
-                LOG.info("Temp Store Usage " + broker.getSystemUsage().getTempUsage().getUsage());
-            }
-        }
-
-        assertEquals("Incorrect number of Messages Consumed: " + messagesConsumed.get(), messagesConsumed.get(),
-                messagesSent.get());
     }
 
-    @Test
+    @Test(timeout=360000)
     public void testFillTempAndConsumeWithGoodTempStoreConfig() throws Exception {
 
         createBrokerWithValidTempStoreConfig();
@@ -143,7 +125,8 @@ public class TempStorageConfigBrokerTest {
                 }
             }
         } catch (ResourceAllocationException ex) {
-            assertTrue("Should be able to send at least 1000 messages: ", messagesSent.get() > 1000);
+            assertTrue("Should be able to send at least 200 messages but was: " + messagesSent.get(),
+                       messagesSent.get() > 200);
             LOG.info("Got resource exception : " + ex + ", after sent: " + messagesSent.get());
         }
 
@@ -177,8 +160,8 @@ public class TempStorageConfigBrokerTest {
 
         broker.getSystemUsage().setSendFailIfNoSpace(true);
         broker.getSystemUsage().getMemoryUsage().setLimit(1048576);
-        broker.getSystemUsage().getTempUsage().setLimit(10*1048576);
-        broker.getSystemUsage().getTempUsage().getStore().setJournalMaxFileLength(10*1048576);
+        broker.getSystemUsage().getTempUsage().setLimit(2*1048576);
+        broker.getSystemUsage().getTempUsage().getStore().setJournalMaxFileLength(2*1048576);
         broker.getSystemUsage().getStoreUsage().setLimit(20*1048576);
 
         PolicyEntry defaultPolicy = new PolicyEntry();
@@ -206,8 +189,8 @@ public class TempStorageConfigBrokerTest {
 
         broker.getSystemUsage().setSendFailIfNoSpace(true);
         broker.getSystemUsage().getMemoryUsage().setLimit(1048576);
-        broker.getSystemUsage().getTempUsage().setLimit(10*1048576);
-        broker.getSystemUsage().getStoreUsage().setLimit(20*1048576);
+        broker.getSystemUsage().getTempUsage().setLimit(2*1048576);
+        broker.getSystemUsage().getStoreUsage().setLimit(2*1048576);
 
         PolicyEntry defaultPolicy = new PolicyEntry();
         defaultPolicy.setProducerFlowControl(false);
