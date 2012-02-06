@@ -115,6 +115,11 @@ public class FailoverTransport implements CompositeTransport {
     private String updateURIsURL = null;
     private boolean rebalanceUpdateURIs = true;
     private boolean doRebalance = false;
+    private boolean connectedToPriority = false;
+
+    private boolean priorityBackup = false;
+    private ArrayList<URI> priorityList = new ArrayList<URI>();
+    private boolean priorityBackupAvailable = false;
 
     public FailoverTransport() throws InterruptedIOException {
         brokerSslContext = SslContext.getCurrentSslContext();
@@ -128,13 +133,22 @@ public class FailoverTransport implements CompositeTransport {
                 }
                 boolean buildBackup = true;
                 synchronized (backupMutex) {
-                    if ((connectedTransport.get() == null || doRebalance) && !disposed) {
+                    if ((connectedTransport.get() == null || doRebalance || priorityBackupAvailable) && !disposed) {
                         result = doReconnect();
                         buildBackup = false;
+                        connectedToPriority = isPriority(connectedTransportURI);
                     }
                 }
                 if (buildBackup) {
                     buildBackups();
+                    if (priorityBackup && !connectedToPriority) {
+                        try {
+                            doDelay();
+                            reconnectTask.wakeup();
+                        } catch (InterruptedException e) {
+                            LOG.debug("Reconnect task has been interrupted.", e);
+                        }
+                    }
                 } else {
                     // build backups on the next iteration
                     buildBackup = true;
@@ -469,6 +483,27 @@ public class FailoverTransport implements CompositeTransport {
 
     public void setMaxCacheSize(int maxCacheSize) {
         this.maxCacheSize = maxCacheSize;
+    }
+
+    public boolean isPriorityBackup() {
+        return priorityBackup;
+    }
+
+    public void setPriorityBackup(boolean priorityBackup) {
+        this.priorityBackup = priorityBackup;
+    }
+
+    public void setPriorityURIs(String priorityURIs) {
+        StringTokenizer tokenizer = new StringTokenizer(priorityURIs, ",");
+        while (tokenizer.hasMoreTokens()) {
+            String str = tokenizer.nextToken();
+            try {
+                URI uri = new URI(str);
+                priorityList.add(uri);
+            } catch (Exception e) {
+                LOG.error("Failed to parse broker address: " + str, e);
+            }
+        }
     }
 
     public void oneway(Object o) throws IOException {
@@ -807,7 +842,7 @@ public class FailoverTransport implements CompositeTransport {
             if (disposed || connectionFailure != null) {
                 reconnectMutex.notifyAll();
             }
-            if ((connectedTransport.get() != null && !doRebalance) || disposed || connectionFailure != null) {
+            if ((connectedTransport.get() != null && !doRebalance && !priorityBackupAvailable) || disposed || connectionFailure != null) {
                 return false;
             } else {
                 List<URI> connectList = getConnectList();
@@ -844,7 +879,7 @@ public class FailoverTransport implements CompositeTransport {
 
                     // If we have a backup already waiting lets try it.
                     synchronized (backupMutex) {
-                        if (backup && !backups.isEmpty()) {
+                        if ((priorityBackup || backup) && !backups.isEmpty()) {
                             ArrayList<BackupTransport> l = new ArrayList(backups);
                             if (randomize) {
                                 Collections.shuffle(l);
@@ -853,6 +888,13 @@ public class FailoverTransport implements CompositeTransport {
                             backups.remove(bt);
                             transport = bt.getTransport();
                             uri = bt.getUri();
+                            if (priorityBackup && priorityBackupAvailable) {
+                                Transport old = this.connectedTransport.getAndSet(null);
+                                if (transport != null) {
+                                    disposeTransport(old);
+                                }
+                                priorityBackupAvailable = false;
+                            }
                         }
                     }
 
@@ -979,30 +1021,33 @@ public class FailoverTransport implements CompositeTransport {
         }
 
         if (!disposed) {
+            doDelay();
+        }
 
-            if (reconnectDelay > 0) {
-                synchronized (sleepMutex) {
-                    if (LOG.isDebugEnabled()) {
-                        LOG.debug("Waiting " + reconnectDelay + " ms before attempting connection");
-                    }
-                    try {
-                        sleepMutex.wait(reconnectDelay);
-                    } catch (InterruptedException e) {
-                        Thread.currentThread().interrupt();
-                    }
+        return !disposed;
+    }
+
+    private void doDelay() {
+        if (reconnectDelay > 0) {
+            synchronized (sleepMutex) {
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("Waiting " + reconnectDelay + " ms before attempting connection");
                 }
-            }
-
-            if (useExponentialBackOff) {
-                // Exponential increment of reconnect delay.
-                reconnectDelay *= backOffMultiplier;
-                if (reconnectDelay > maxReconnectDelay) {
-                    reconnectDelay = maxReconnectDelay;
+                try {
+                    sleepMutex.wait(reconnectDelay);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
                 }
             }
         }
 
-        return !disposed;
+        if (useExponentialBackOff) {
+            // Exponential increment of reconnect delay.
+            reconnectDelay *= backOffMultiplier;
+            if (reconnectDelay > maxReconnectDelay) {
+                reconnectDelay = maxReconnectDelay;
+            }
+        }
     }
 
     private void resetReconnectDelay() {
@@ -1035,8 +1080,14 @@ public class FailoverTransport implements CompositeTransport {
 
     final boolean buildBackups() {
         synchronized (backupMutex) {
-            if (!disposed && backup && backups.size() < backupPoolSize) {
+            if (!disposed && (backup || priorityBackup) && backups.size() < backupPoolSize) {
+                ArrayList<URI> backupList = new ArrayList<URI>(priorityList);
                 List<URI> connectList = getConnectList();
+                for (URI uri: connectList) {
+                    if (!backupList.contains(uri)) {
+                        backupList.add(uri);
+                    }
+                }
                 // removed disposed backups
                 List<BackupTransport> disposedList = new ArrayList<BackupTransport>();
                 for (BackupTransport bt : backups) {
@@ -1046,7 +1097,7 @@ public class FailoverTransport implements CompositeTransport {
                 }
                 backups.removeAll(disposedList);
                 disposedList.clear();
-                for (Iterator<URI> iter = connectList.iterator(); iter.hasNext() && backups.size() < backupPoolSize; ) {
+                for (Iterator<URI> iter = backupList.iterator(); iter.hasNext() && backups.size() < backupPoolSize; ) {
                     URI uri = iter.next();
                     if (connectedTransportURI != null && !connectedTransportURI.equals(uri)) {
                         try {
@@ -1059,6 +1110,9 @@ public class FailoverTransport implements CompositeTransport {
                                 t.start();
                                 bt.setTransport(t);
                                 backups.add(bt);
+                                if (priorityBackup && isPriority(uri)) {
+                                   priorityBackupAvailable = true;
+                                }
                             }
                         } catch (Exception e) {
                             LOG.debug("Failed to build backup ", e);
@@ -1070,6 +1124,13 @@ public class FailoverTransport implements CompositeTransport {
             }
         }
         return false;
+    }
+    
+    protected boolean isPriority(URI uri) {
+        if (!priorityList.isEmpty()) {
+            return priorityList.contains(uri);
+        }
+        return uris.indexOf(uri) == 0;
     }
 
     public boolean isDisposed() {

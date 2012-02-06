@@ -65,12 +65,24 @@ public class FailoverClusterTestSupport extends TestCase {
                 set.size() == 3);
     }
 
+    protected void assertAllConnectedTo(String url) throws Exception {
+        for (ActiveMQConnection c : connections) {
+            assertEquals(c.getTransportChannel().getRemoteAddress(), url);
+        }
+    }    
+
     protected void addBroker(String name, BrokerService brokerService) {
         brokers.put(name, brokerService);
     }
 
     protected BrokerService getBroker(String name) {
         return brokers.get(name);
+    }
+    
+    protected void stopBroker(String name) throws Exception {
+        BrokerService broker = brokers.remove(name);
+        broker.stop();
+        broker.waitUntilStopped();
     }
 
     protected BrokerService removeBroker(String name) {
@@ -126,11 +138,14 @@ public class FailoverClusterTestSupport extends TestCase {
         }
     }
 
-    @SuppressWarnings("unused")
     protected void createClients() throws Exception {
+        createClients(NUMBER_OF_CLIENTS);
+    }
+    
+    protected void createClients(int num) throws Exception {
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(
                 clientUrl);
-        for (int i = 0; i < NUMBER_OF_CLIENTS; i++) {
+        for (int i = 0; i < num; i++) {
             ActiveMQConnection c = (ActiveMQConnection) factory
                     .createConnection();
             c.start();
