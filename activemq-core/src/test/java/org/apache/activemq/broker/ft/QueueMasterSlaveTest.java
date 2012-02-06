@@ -115,7 +115,7 @@ public class QueueMasterSlaveTest extends JmsTopicSendReceiveWithTwoConnectionsT
 
     public void testVirtualTopicFailover() throws Exception {
 
-        MessageConsumer qConsumer = createConsumer(session, new ActiveMQQueue("Consumer.A.VirtualTopic.TA1"));
+        MessageConsumer qConsumer = session.createConsumer(new ActiveMQQueue("Consumer.A.VirtualTopic.TA1"));
         assertNull("No message there yet", qConsumer.receive(1000));
         qConsumer.close();
         master.stop();
@@ -124,7 +124,7 @@ public class QueueMasterSlaveTest extends JmsTopicSendReceiveWithTwoConnectionsT
         final String text = "ForUWhenSlaveKicksIn";
         producer.send(new ActiveMQTopic("VirtualTopic.TA1"), session.createTextMessage(text));
 
-        qConsumer = createConsumer(session, new ActiveMQQueue("Consumer.A.VirtualTopic.TA1"));
+        qConsumer = session.createConsumer(new ActiveMQQueue("Consumer.A.VirtualTopic.TA1"));
         javax.jms.Message message = qConsumer.receive(4000);
         assertNotNull("Get message after failover", message);
         assertEquals("correct message", text, ((TextMessage)message).getText());
