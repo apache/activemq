@@ -55,7 +55,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
     protected BrokerService brokerService;
 
     public static final String PROPERTY_LOG_SLOW_ACCESS_TIME = "org.apache.activemq.store.kahadb.LOG_SLOW_ACCESS_TIME";
-    public static final int LOG_SLOW_ACCESS_TIME = Integer.parseInt(System.getProperty(PROPERTY_LOG_SLOW_ACCESS_TIME, "0"));
+    public static final int LOG_SLOW_ACCESS_TIME = Integer.getInteger(PROPERTY_LOG_SLOW_ACCESS_TIME, 0);
     public static final File DEFAULT_DIRECTORY = new File("KahaDB");
     protected static final Buffer UNMATCHED;
     static {

@@ -60,10 +60,10 @@ public class PageFile {
     private static final String FREE_FILE_SUFFIX = ".free";
 
     // 4k Default page size.
-    public static final int DEFAULT_PAGE_SIZE = Integer.parseInt(System.getProperty("defaultPageSize", "" + 1024 * 4));
-    public static final int DEFAULT_WRITE_BATCH_SIZE = Integer.parseInt(System.getProperty("defaultWriteBatchSize", "" + 1000));
-    public static final int DEFAULT_PAGE_CACHE_SIZE = Integer.parseInt(System.getProperty("defaultPageCacheSize", "" + 100));
-    ;
+    public static final int DEFAULT_PAGE_SIZE = Integer.getInteger("defaultPageSize", 1024*4);
+    public static final int DEFAULT_WRITE_BATCH_SIZE = Integer.getInteger("defaultWriteBatchSize", 1000);
+    public static final int DEFAULT_PAGE_CACHE_SIZE = Integer.getInteger("defaultPageCacheSize", 100);;
+
     private static final int RECOVERY_FILE_HEADER_SIZE = 1024 * 4;
     private static final int PAGE_FILE_HEADER_SIZE = 1024 * 4;
 
@@ -87,14 +87,14 @@ public class PageFile {
 
     // The minimum number of space allocated to the recovery file in number of pages.
     private int recoveryFileMinPageCount = 1000;
-    // The max size that we let the recovery file grow to.. ma exceed the max, but the file will get resize 
+    // The max size that we let the recovery file grow to.. ma exceed the max, but the file will get resize
     // to this max size as soon as  possible.
     private int recoveryFileMaxPageCount = 10000;
     // The number of pages in the current recovery buffer
     private int recoveryPageCount;
 
     private AtomicBoolean loaded = new AtomicBoolean();
-    // The number of pages we are aiming to write every time we 
+    // The number of pages we are aiming to write every time we
     // write to disk.
     int writeBatchSize = DEFAULT_WRITE_BATCH_SIZE;
 
@@ -113,7 +113,7 @@ public class PageFile {
     // Will writes be done in an async thread?
     private boolean enabledWriteThread = false;
 
-    // These are used if enableAsyncWrites==true 
+    // These are used if enableAsyncWrites==true
     private AtomicBoolean stopWriter = new AtomicBoolean();
     private Thread writerThread;
     private CountDownLatch checkpointLatch;
@@ -127,7 +127,7 @@ public class PageFile {
 
     private AtomicLong nextTxid = new AtomicLong();
 
-    // Persistent settings stored in the page file. 
+    // Persistent settings stored in the page file.
     private MetaData metaData;
 
     private ArrayList<File> tmpFilesForRemoval = new ArrayList<File>();
@@ -198,13 +198,11 @@ public class PageFile {
         void begin() {
             if (currentLocation != -1) {
                 diskBoundLocation = currentLocation;
-                currentLocation = -1;
-                current = null;
             } else {
                 diskBound = current;
-                current = null;
-                currentLocation = -1;
             }
+            current = null;
+            currentLocation = -1;
         }
 
         /**
@@ -219,7 +217,6 @@ public class PageFile {
         boolean isDone() {
             return diskBound == null && diskBoundLocation == -1 && current == null && currentLocation == -1;
         }
-
     }
 
     /**
@@ -336,10 +333,8 @@ public class PageFile {
      * @throws IOException
      */
     private void delete(File file) throws IOException {
-        if (file.exists()) {
-            if (!file.delete()) {
-                throw new IOException("Could not delete: " + file.getPath());
-            }
+        if (file.exists() && !file.delete()) {
+            throw new IOException("Could not delete: " + file.getPath());
         }
     }
 
@@ -407,13 +402,12 @@ public class PageFile {
 
                 // Scan all to find the free pages.
                 freeList = new SequenceSet();
-                for (Iterator i = tx().iterator(true); i.hasNext(); ) {
-                    Page page = (Page) i.next();
+                for (Iterator<Page> i = tx().iterator(true); i.hasNext(); ) {
+                    Page page = i.next();
                     if (page.getType() == Page.PAGE_FREE_TYPE) {
                         freeList.add(page.getPageId());
                     }
                 }
-
             }
 
             metaData.setCleanShutdown(false);
@@ -427,7 +421,7 @@ public class PageFile {
             startWriter();
 
         } else {
-            throw new IllegalStateException("Cannot load the page file when it is allready loaded.");
+            throw new IllegalStateException("Cannot load the page file when it is already loaded.");
         }
     }
 
@@ -516,7 +510,9 @@ public class PageFile {
         try {
             checkpointLatch.await();
         } catch (InterruptedException e) {
-            throw new InterruptedIOException();
+            InterruptedIOException ioe = new InterruptedIOException();
+            ioe.initCause(e);
+            throw ioe;
         }
     }
 
@@ -597,7 +593,7 @@ public class PageFile {
         ByteArrayOutputStream os = new ByteArrayOutputStream(PAGE_FILE_HEADER_SIZE);
         p.store(os, "");
         if (os.size() > PAGE_FILE_HEADER_SIZE / 2) {
-            throw new IOException("Configuation is to larger than: " + PAGE_FILE_HEADER_SIZE / 2);
+            throw new IOException("Configuation is larger than: " + PAGE_FILE_HEADER_SIZE / 2);
         }
         // Fill the rest with space...
         byte[] filler = new byte[(PAGE_FILE_HEADER_SIZE / 2) - os.size()];
@@ -632,7 +628,7 @@ public class PageFile {
     }
 
     ///////////////////////////////////////////////////////////////////
-    // Property Accessors 
+    // Property Accessors
     ///////////////////////////////////////////////////////////////////
 
     /**
@@ -773,7 +769,6 @@ public class PageFile {
     }
 
     public void setWriteBatchSize(int writeBatchSize) {
-        assertNotLoaded();
         this.writeBatchSize = writeBatchSize;
     }
 
@@ -833,9 +828,14 @@ public class PageFile {
 
             Page<T> first = null;
             int c = count;
-            while (c > 0) {
-                Page<T> page = new Page<T>(nextFreePageId.getAndIncrement());
-                page.makeFree(getNextWriteTransactionId());
+
+            // Perform the id's only once....
+            long pageId = nextFreePageId.getAndAdd(count);
+            long writeTxnId = nextTxid.getAndAdd(count);
+
+            while (c-- > 0) {
+                Page<T> page = new Page<T>(pageId++);
+                page.makeFree(writeTxnId++);
 
                 if (first == null) {
                     first = page;
@@ -847,7 +847,6 @@ public class PageFile {
                 write(page, out.getData());
 
                 // LOG.debug("allocate writing: "+page.getPageId());
-                c--;
             }
 
             return first;
@@ -985,9 +984,6 @@ public class PageFile {
     // Internal Double write implementation follows...
     ///////////////////////////////////////////////////////////////////
 
-    /**
-     *
-     */
     private void pollWrites() {
         try {
             while (!stopWriter.get()) {
@@ -1007,7 +1003,7 @@ public class PageFile {
                 writeBatch();
             }
         } catch (Throwable e) {
-            e.printStackTrace();
+            LOG.info("An exception was raised while performing poll writes", e);
         } finally {
             releaseCheckpointWaiter();
         }
@@ -1165,7 +1161,7 @@ public class PageFile {
                 batch.put(offset, data);
             }
         } catch (Exception e) {
-            // If an error occurred it was cause the redo buffer was not full written out correctly.. so don't redo it. 
+            // If an error occurred it was cause the redo buffer was not full written out correctly.. so don't redo it.
             // as the pages should still be consistent.
             LOG.debug("Redo buffer was not fully intact: ", e);
             return nextTxId;

@@ -43,9 +43,7 @@ public abstract class IndexTestSupport extends TestCase {
     protected void setUp() throws Exception {
         super.setUp();
         directory = new File(IOHelper.getDefaultDataDirectory());
-        IOHelper.mkdirs(directory);
-        IOHelper.deleteChildren(directory);
-        
+        IOHelper.delete(directory);
     }
 
     protected void tearDown() throws Exception {
@@ -54,7 +52,7 @@ public abstract class IndexTestSupport extends TestCase {
             pf.delete();
         }
     }
-    
+
     protected void createPageFileAndIndex(int pageSize) throws Exception {
         pf = new PageFile(directory, getClass().getName());
         pf.setPageSize(pageSize);

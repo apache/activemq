@@ -39,6 +39,8 @@ public class Transaction implements Iterable<Page> {
      * and it's data is larger than what would fit into a single page.
      */
     public class PageOverflowIOException extends IOException {
+        private static final long serialVersionUID = 1L;
+
         public PageOverflowIOException(String message) {
             super(message);
         }
@@ -49,6 +51,8 @@ public class Transaction implements Iterable<Page> {
      * with an invalid page id.
      */
     public class InvalidPageIOException extends IOException {
+        private static final long serialVersionUID = 1L;
+
         private final long page;
 
         public InvalidPageIOException(String message, long page) {
@@ -92,7 +96,7 @@ public class Transaction implements Iterable<Page> {
     // List of pages freed in this transaction
     private final SequenceSet freeList = new SequenceSet();
 
-    private long maxTransactionSize = Long.parseLong(System.getProperty("maxKahaDBTxSize", "" + 10485760));
+    private long maxTransactionSize = Long.getLong("maxKahaDBTxSize", 10485760L);
 
     private long size = 0;
 
@@ -178,12 +182,14 @@ public class Transaction implements Iterable<Page> {
     public <T> void free(Page<T> page, int count) throws IOException {
         pageFile.assertLoaded();
         long offsetPage = page.getPageId();
-        for (int i = 0; i < count; i++) {
+        while (count-- > 0) {
             if (page == null) {
-                page = load(offsetPage + i, null);
+                page = load(offsetPage, null);
             }
             free(page);
             page = null;
+            // Increment the offsetPage value since using it depends on the current count.
+            offsetPage++;
         }
     }
 
@@ -318,7 +324,6 @@ public class Transaction implements Iterable<Page> {
 
             }
 
-            @SuppressWarnings("unchecked")
             @Override
             public void close() throws IOException {
                 super.close();
@@ -551,7 +556,6 @@ public class Transaction implements Iterable<Page> {
      * @throws IllegalStateException
      *         if the PageFile is not loaded
      */
-    @SuppressWarnings("unchecked")
     public Iterator<Page> iterator() {
         return (Iterator<Page>)iterator(false);
     }
@@ -569,6 +573,7 @@ public class Transaction implements Iterable<Page> {
         pageFile.assertLoaded();
 
         return new Iterator<Page>() {
+
             long nextId;
             Page nextPage;
             Page lastPage;
@@ -699,7 +704,6 @@ public class Transaction implements Iterable<Page> {
     /**
      * Queues up a page write that should get done when commit() gets called.
      */
-    @SuppressWarnings("unchecked")
     private void write(final Page page, byte[] data) throws IOException {
         Long key = page.getPageId();
 
@@ -707,7 +711,7 @@ public class Transaction implements Iterable<Page> {
         size = writes.size() * pageFile.getPageSize();
 
         PageWrite write;
-        
+
         if (size > maxTransactionSize) {
             if (tmpFile == null) {
                 tmpFile = new RandomAccessFile(getTempFile(), "rw");
@@ -796,5 +800,4 @@ public class Transaction implements Iterable<Page> {
             }
         }
     }
-
 }

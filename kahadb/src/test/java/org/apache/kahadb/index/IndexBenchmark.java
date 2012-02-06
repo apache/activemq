@@ -49,16 +49,15 @@ public abstract class IndexBenchmark extends TestCase {
 
     public void setUp() throws Exception {
         ROOT_DIR = new File(IOHelper.getDefaultDataDirectory());
-        IOHelper.mkdirs(ROOT_DIR);
-        IOHelper.deleteChildren(ROOT_DIR);
-        
+        IOHelper.delete(ROOT_DIR);
+
         pf = new PageFile(ROOT_DIR, getClass().getName());
         pf.load();
     }
 
     protected void tearDown() throws Exception {
         Transaction tx = pf.tx();
-        for (Index i : indexes.values()) {
+        for (Index<?, ?> i : indexes.values()) {
             try {
                 i.unload(tx);
             } catch (Throwable ignore) {
@@ -99,7 +98,7 @@ public abstract class IndexBenchmark extends TestCase {
             try {
 
                 Transaction tx = pf.tx();
-                
+
                 Index<String,Long> index = openIndex(name);
                 long counter = 0;
                 while (!shutdown.get()) {
@@ -109,7 +108,7 @@ public abstract class IndexBenchmark extends TestCase {
                     index.put(tx, key, c);
                     tx.commit();
                     Thread.yield(); // This avoids consumer starvation..
-                    
+
                     onProduced(counter++);
                 }
 
@@ -121,7 +120,7 @@ public abstract class IndexBenchmark extends TestCase {
         public void onProduced(long counter) {
         }
     }
-    
+
     protected String key(long c) {
         return "a-long-message-id-like-key-" + c;
     }
@@ -150,7 +149,7 @@ public abstract class IndexBenchmark extends TestCase {
                 while (!shutdown.get()) {
                     long c = counter;
                     String key = key(c);
-                    
+
                     Long record = index.get(tx, key);
                     if (record != null) {
                         if( index.remove(tx, key) == null ) {

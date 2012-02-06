@@ -19,19 +19,9 @@ package org.apache.kahadb.page;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-
-import org.apache.kahadb.util.ByteSequence;
-import org.apache.kahadb.util.DataByteArrayInputStream;
-import org.apache.kahadb.util.DataByteArrayOutputStream;
-import org.apache.kahadb.util.Marshaller;
 
 /**
  * A Page within a file.
- * 
- * 
  */
 public class Page<T> {
 
@@ -48,7 +38,7 @@ public class Page<T> {
     long txId;
     // A field reserved to hold checksums..  Not in use (yet)
     int checksum;
-    
+
     // Points to the next page in the chunk stream
     long next;
     T data;
@@ -60,18 +50,17 @@ public class Page<T> {
         this.pageId=pageId;
     }
 
-    public void copy(Page<T> other) {
+    public Page<T> copy(Page<T> other) {
         this.pageId = other.pageId;
         this.txId = other.txId;
         this.type = other.type;
         this.next = other.next;
         this.data = other.data;
+        return this;
     }
 
     Page<T> copy() {
-        Page<T> rc = new Page<T>();
-        rc.copy(this);
-        return rc;
+        return new Page<T>().copy(this);
     }
 
     void makeFree(long txId) {
@@ -80,13 +69,13 @@ public class Page<T> {
         this.data = null;
         this.next = 0;
     }
-    
+
     public void makePagePart(long next, long txId) {
         this.type = Page.PAGE_PART_TYPE;
         this.next = next;
         this.txId = txId;
     }
-    
+
     public void makePageEnd(long size, long txId) {
         this.type = Page.PAGE_END_TYPE;
         this.next = size;
@@ -142,6 +131,4 @@ public class Page<T> {
     public void setChecksum(int checksum) {
         this.checksum = checksum;
     }
-
-
 }

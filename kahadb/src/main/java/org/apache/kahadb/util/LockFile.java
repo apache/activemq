@@ -25,19 +25,19 @@ import java.util.Date;
 
 /**
  * Used to lock a File.
- * 
+ *
  * @author chirino
  */
 public class LockFile {
-    
-    private static final boolean DISABLE_FILE_LOCK = "true".equals(System.getProperty("java.nio.channels.FileLock.broken", "false"));
+
+    private static final boolean DISABLE_FILE_LOCK = Boolean.getBoolean("java.nio.channels.FileLock.broken");
     final private File file;
-    
+
     private FileLock lock;
     private RandomAccessFile readFile;
     private int lockCounter;
     private final boolean deleteOnUnlock;
-    
+
     public LockFile(File file, boolean deleteOnUnlock) {
         this.file = file;
         this.deleteOnUnlock = deleteOnUnlock;
@@ -54,7 +54,7 @@ public class LockFile {
         if( lockCounter>0 ) {
             return;
         }
-        
+
         IOHelper.mkdirs(file.getParentFile());
         if (System.getProperty(getVmLockKey()) != null) {
             throw new IOException("File '" + file + "' could not be locked as lock is already held for this jvm.");
@@ -80,7 +80,7 @@ public class LockFile {
                 }
                 throw new IOException("File '" + file + "' could not be locked.");
             }
-              
+
         }
     }
 
@@ -90,12 +90,12 @@ public class LockFile {
         if (DISABLE_FILE_LOCK) {
             return;
         }
-        
+
         lockCounter--;
         if( lockCounter!=0 ) {
             return;
         }
-        
+
         // release the lock..
         if (lock != null) {
             try {
@@ -106,7 +106,7 @@ public class LockFile {
             lock = null;
         }
         closeReadFile();
-        
+
         if( deleteOnUnlock ) {
             file.delete();
         }
@@ -125,7 +125,7 @@ public class LockFile {
             }
             readFile = null;
         }
-        
+
     }
 
 }

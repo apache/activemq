@@ -23,13 +23,14 @@ import java.util.concurrent.TimeUnit;
 import junit.framework.TestCase;
 import org.apache.kahadb.journal.Journal;
 import org.apache.kahadb.util.ByteSequence;
+import org.apache.kahadb.util.IOHelper;
 
 public class JournalTest extends TestCase {
     protected static final int DEFAULT_MAX_BATCH_SIZE = 1024 * 1024 * 4;
 
     Journal dataManager;
     File dir;
-    
+
     @Override
     public void setUp() throws Exception {
         dir = new File("target/tests/DataFileAppenderTest");
@@ -39,27 +40,15 @@ public class JournalTest extends TestCase {
         configure(dataManager);
         dataManager.start();
     }
-    
+
     protected void configure(Journal dataManager) {
     }
 
     @Override
     public void tearDown() throws Exception {
         dataManager.close();
-        deleteFilesInDirectory(dir);
-        dir.delete();
+        IOHelper.delete(dir);
     }
-
-    private void deleteFilesInDirectory(File directory) {
-        File[] files = directory.listFiles();
-        for (int i=0; i<files.length; i++) {
-            File f = files[i];
-            if (f.isDirectory()) {
-                deleteFilesInDirectory(f);
-            }   
-            f.delete();
-        }  
-    }  
 
     public void testBatchWriteCallbackCompleteAfterTimeout() throws Exception {
         final int iterations = 10;
@@ -68,7 +57,7 @@ public class JournalTest extends TestCase {
         for (int i=0; i < iterations; i++) {
             dataManager.write(data, new Runnable() {
                 public void run() {
-                    latch.countDown();                 
+                    latch.countDown();
                 }
             });
         }
@@ -84,7 +73,7 @@ public class JournalTest extends TestCase {
         for (int i=0; i<iterations; i++) {
             dataManager.write(data, new Runnable() {
                 public void run() {
-                    latch.countDown();                 
+                    latch.countDown();
                 }
             });
         }
@@ -92,7 +81,7 @@ public class JournalTest extends TestCase {
         assertTrue("queued data is written", dataManager.getInflightWrites().isEmpty());
         assertEquals("none written", 0, latch.getCount());
     }
-    
+
     public void testBatchWriteCompleteAfterClose() throws Exception {
         ByteSequence data = new ByteSequence("DATA".getBytes());
         final int iterations = 10;
@@ -102,27 +91,27 @@ public class JournalTest extends TestCase {
         dataManager.close();
         assertTrue("queued data is written:" + dataManager.getInflightWrites().size(), dataManager.getInflightWrites().isEmpty());
     }
-    
+
     public void testBatchWriteToMaxMessageSize() throws Exception {
         final int iterations = 4;
         final CountDownLatch latch = new CountDownLatch(iterations);
         Runnable done = new Runnable() {
             public void run() {
-                latch.countDown();                 
+                latch.countDown();
             }
         };
         int messageSize = DEFAULT_MAX_BATCH_SIZE / iterations;
         byte[] message = new byte[messageSize];
         ByteSequence data = new ByteSequence(message);
-        
+
         for (int i=0; i< iterations; i++) {
             dataManager.write(data, done);
         }
-        
+
         // write may take some time
         assertTrue("all callbacks complete", latch.await(10, TimeUnit.SECONDS));
     }
-    
+
     public void testNoBatchWriteWithSync() throws Exception {
         ByteSequence data = new ByteSequence("DATA".getBytes());
         final int iterations = 10;

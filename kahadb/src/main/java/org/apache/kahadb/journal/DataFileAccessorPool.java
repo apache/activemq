@@ -25,7 +25,7 @@ import java.util.Map;
 
 /**
  * Used to pool DataFileAccessors.
- * 
+ *
  * @author chirino
  */
 public class DataFileAccessorPool {
@@ -95,8 +95,7 @@ public class DataFileAccessorPool {
     }
 
     synchronized void clearUsedMark() {
-        for (Iterator<Pool> iter = pools.values().iterator(); iter.hasNext();) {
-            Pool pool = iter.next();
+        for (Pool pool : pools.values()) {
             pool.clearUsedMark();
         }
     }
@@ -153,8 +152,7 @@ public class DataFileAccessorPool {
             return;
         }
         closed = true;
-        for (Iterator<Pool> iter = pools.values().iterator(); iter.hasNext();) {
-            Pool pool = iter.next();
+        for (Pool pool : pools.values()) {
             pool.dispose();
         }
         pools.clear();
