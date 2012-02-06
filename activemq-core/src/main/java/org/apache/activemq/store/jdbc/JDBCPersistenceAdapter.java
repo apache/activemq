@@ -201,11 +201,29 @@ public class JDBCPersistenceAdapter extends DataSourceSupport implements Persist
 
     /**
      * Cleanup method to remove any state associated with the given destination
-     * No state retained.... nothing to do
-     *
      * @param destination Destination to forget
      */
     public void removeQueueMessageStore(ActiveMQQueue destination) {
+        if (destination.isQueue() && getBrokerService().shouldRecordVirtualDestination(destination)) {
+            try {
+                removeConsumerDestination(destination);
+            } catch (IOException ioe) {
+                LOG.error("Failed to remove consumer destination: " + destination, ioe);
+            }
+        }
+    }
+
+    private void removeConsumerDestination(ActiveMQQueue destination) throws IOException {
+        TransactionContext c = getTransactionContext();
+        try {
+            String id = destination.getQualifiedName();
+            getAdapter().doDeleteSubscription(c, destination, id, id);
+        } catch (SQLException e) {
+            JDBCPersistenceAdapter.log("JDBC Failure: ", e);
+            throw IOExceptionSupport.create("Failed to remove consumer destination: " + destination, e);
+        } finally {
+            c.close();
+        }
     }
 
     /**

@@ -97,4 +97,11 @@ abstract public class PersistenceAdapterTestSupport extends TestCase {
 
     }
 
+    public void testAddRemoveConsumerDest() throws Exception {
+        ActiveMQQueue consumerQ = new ActiveMQQueue("Consumer.A.VirtualTopicTest");
+        MessageStore ms = pa.createQueueMessageStore(consumerQ);
+        pa.removeQueueMessageStore(consumerQ);
+        assertFalse(pa.getDestinations().contains(consumerQ));
+    }
+
 }
