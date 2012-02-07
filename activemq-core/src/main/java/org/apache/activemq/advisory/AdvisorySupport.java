@@ -16,6 +16,8 @@
  */
 package org.apache.activemq.advisory;
 
+import java.util.ArrayList;
+
 import javax.jms.Destination;
 import javax.jms.JMSException;
 import org.apache.activemq.ActiveMQMessageTransformation;
@@ -74,6 +76,28 @@ public final class AdvisorySupport {
         return CONNECTION_ADVISORY_TOPIC;
     }
 
+    public static ActiveMQTopic[] getAllDestinationAdvisoryTopics(Destination destination) throws JMSException {
+        return getAllDestinationAdvisoryTopics(ActiveMQMessageTransformation.transformDestination(destination));
+    }
+
+    public static ActiveMQTopic[] getAllDestinationAdvisoryTopics(ActiveMQDestination destination) throws JMSException {
+        ArrayList<ActiveMQTopic> result = new ArrayList<ActiveMQTopic>();
+
+        result.add(getConsumerAdvisoryTopic(destination));
+        result.add(getProducerAdvisoryTopic(destination));
+        result.add(getExpiredMessageTopic(destination));
+        result.add(getNoConsumersAdvisoryTopic(destination));
+        result.add(getSlowConsumerAdvisoryTopic(destination));
+        result.add(getFastProducerAdvisoryTopic(destination));
+        result.add(getMessageDiscardedAdvisoryTopic(destination));
+        result.add(getMessageDeliveredAdvisoryTopic(destination));
+        result.add(getMessageConsumedAdvisoryTopic(destination));
+        result.add(getMessageDLQdAdvisoryTopic(destination));
+        result.add(getFullAdvisoryTopic(destination));
+
+        return result.toArray(new ActiveMQTopic[0]);
+    }
+
     public static ActiveMQTopic getConsumerAdvisoryTopic(Destination destination) throws JMSException {
         return getConsumerAdvisoryTopic(ActiveMQMessageTransformation.transformDestination(destination));
     }
@@ -121,6 +145,17 @@ public final class AdvisorySupport {
     public static ActiveMQTopic getExpiredQueueMessageAdvisoryTopic(ActiveMQDestination destination) {
         String name = EXPIRED_QUEUE_MESSAGES_TOPIC_PREFIX + destination.getPhysicalName();
         return new ActiveMQTopic(name);
+    }
+
+    public static ActiveMQTopic getNoConsumersAdvisoryTopic(Destination destination) throws JMSException {
+        return getExpiredMessageTopic(ActiveMQMessageTransformation.transformDestination(destination));
+    }
+
+    public static ActiveMQTopic getNoConsumersAdvisoryTopic(ActiveMQDestination destination) {
+        if (destination.isQueue()) {
+            return getNoQueueConsumersAdvisoryTopic(destination);
+        }
+        return getNoTopicConsumersAdvisoryTopic(destination);
     }
 
     public static ActiveMQTopic getNoTopicConsumersAdvisoryTopic(Destination destination) throws JMSException {

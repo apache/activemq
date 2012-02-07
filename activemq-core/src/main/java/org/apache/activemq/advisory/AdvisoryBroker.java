@@ -40,8 +40,6 @@ import org.slf4j.LoggerFactory;
 /**
  * This broker filter handles tracking the state of the broker for purposes of
  * publishing advisory messages to advisory consumers.
- *
- *
  */
 public class AdvisoryBroker extends BrokerFilter {
 
@@ -197,16 +195,14 @@ public class AdvisoryBroker extends BrokerFilter {
             info.setOperationType(DestinationInfo.REMOVE_OPERATION_TYPE);
             ActiveMQTopic topic = AdvisorySupport.getDestinationAdvisoryTopic(destination);
             fireAdvisory(context, topic, info);
-            try {
-                next.removeDestination(context, AdvisorySupport.getConsumerAdvisoryTopic(info.getDestination()), -1);
-            } catch (Exception expectedIfDestinationDidNotExistYet) {
-            }
-            try {
-                next.removeDestination(context, AdvisorySupport.getProducerAdvisoryTopic(info.getDestination()), -1);
-            } catch (Exception expectedIfDestinationDidNotExistYet) {
+            ActiveMQTopic[] advisoryDestinations = AdvisorySupport.getAllDestinationAdvisoryTopics(destination);
+            for(ActiveMQTopic advisoryDestination : advisoryDestinations) {
+                try {
+                    next.removeDestination(context, advisoryDestination, -1);
+                } catch (Exception expectedIfDestinationDidNotExistYet) {
+                }
             }
         }
-
     }
 
     @Override
@@ -220,16 +216,14 @@ public class AdvisoryBroker extends BrokerFilter {
             info.setOperationType(DestinationInfo.REMOVE_OPERATION_TYPE);
             ActiveMQTopic topic = AdvisorySupport.getDestinationAdvisoryTopic(destInfo.getDestination());
             fireAdvisory(context, topic, info);
-            try {
-                next.removeDestination(context, AdvisorySupport.getConsumerAdvisoryTopic(info.getDestination()), -1);
-            } catch (Exception expectedIfDestinationDidNotExistYet) {
-            }
-            try {
-                next.removeDestination(context, AdvisorySupport.getProducerAdvisoryTopic(info.getDestination()), -1);
-            } catch (Exception expectedIfDestinationDidNotExistYet) {
+            ActiveMQTopic[] advisoryDestinations = AdvisorySupport.getAllDestinationAdvisoryTopics(destInfo.getDestination());
+            for(ActiveMQTopic advisoryDestination : advisoryDestinations) {
+                try {
+                    next.removeDestination(context, advisoryDestination, -1);
+                } catch (Exception expectedIfDestinationDidNotExistYet) {
+                }
             }
         }
-
     }
 
     @Override
