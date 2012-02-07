@@ -705,7 +705,11 @@ public class FailoverTransport implements CompositeTransport {
 
     private List<URI> getConnectList() {
         ArrayList<URI> l = new ArrayList<URI>(uris);
-        l.addAll(updated);
+        for (URI uri : updated) {
+            if (!l.contains(uri)) {
+                l.add(uri);
+            }
+        }
         boolean removed = false;
         if (failedConnectTransportURI != null) {
             removed = l.remove(failedConnectTransportURI);
@@ -1167,13 +1171,13 @@ public class FailoverTransport implements CompositeTransport {
             updated.clear();
             if (updatedURIs != null && updatedURIs.length > 0) {
                 for (URI uri : updatedURIs) {
-                    if (uri != null && !uris.contains(uri)) {
+                    if (uri != null && !updated.contains(uri)) {
                         updated.add(uri);
                     }
                 }
-                synchronized (reconnectMutex) {
-                    if (!(copy.isEmpty() && updated.isEmpty()) && !copy.equals(updated)) {
-                        buildBackups();
+                if (!(copy.isEmpty() && updated.isEmpty()) && !copy.equals(updated)) {
+                    buildBackups();
+                    synchronized (reconnectMutex) {
                         reconnect(rebalance);
                     }
                 }

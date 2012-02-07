@@ -72,6 +72,7 @@ public class FailoverComplexClusterTest extends FailoverClusterTestSupport {
         Thread.sleep(2000);
         setClientUrl("failover://(" + BROKER_A_CLIENT_TC_ADDRESS + "," + BROKER_B_CLIENT_TC_ADDRESS + ")");
         createClients();
+        Thread.sleep(2000);
 
         runTests(false);
     }
@@ -84,8 +85,35 @@ public class FailoverComplexClusterTest extends FailoverClusterTestSupport {
 
         setClientUrl("failover://(" + BROKER_A_CLIENT_TC_ADDRESS + "," + BROKER_B_CLIENT_TC_ADDRESS + ")");
         createClients();
+        Thread.sleep(2000);
 
         runTests(true);
+    }
+
+    public void testOriginalBrokerRestart() throws Exception {
+        initSingleTcBroker("", null);
+
+        Thread.sleep(2000);
+
+        setClientUrl("failover://(" + BROKER_A_CLIENT_TC_ADDRESS + "," + BROKER_B_CLIENT_TC_ADDRESS + ")");
+        createClients();
+        Thread.sleep(2000);
+
+        assertClientsConnectedToThreeBrokers();
+
+        getBroker(BROKER_A_NAME).stop();
+        getBroker(BROKER_A_NAME).waitUntilStopped();
+        removeBroker(BROKER_A_NAME);
+
+        Thread.sleep(5000);
+
+        assertClientsConnectedToTwoBrokers();
+
+        createBrokerA(false, "", null);
+        getBroker(BROKER_A_NAME).waitUntilStarted();
+        Thread.sleep(5000);
+
+        assertClientsConnectedToThreeBrokers();
     }
 
 
