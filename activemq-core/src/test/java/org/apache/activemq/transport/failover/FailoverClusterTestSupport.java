@@ -50,7 +50,9 @@ public class FailoverClusterTestSupport extends TestCase {
     protected void assertClientsConnectedToTwoBrokers() {
         Set<String> set = new HashSet<String>();
         for (ActiveMQConnection c : connections) {
-            set.add(c.getTransportChannel().getRemoteAddress());
+            if (c.getTransportChannel().getRemoteAddress() != null) {
+                set.add(c.getTransportChannel().getRemoteAddress());
+            }
         }
         assertTrue("Only 2 connections should be found: " + set,
                 set.size() == 2);
@@ -59,17 +61,46 @@ public class FailoverClusterTestSupport extends TestCase {
     protected void assertClientsConnectedToThreeBrokers() {
         Set<String> set = new HashSet<String>();
         for (ActiveMQConnection c : connections) {
-            set.add(c.getTransportChannel().getRemoteAddress());
+            if (c.getTransportChannel().getRemoteAddress() != null) {
+                set.add(c.getTransportChannel().getRemoteAddress());
+            }
         }
         assertTrue("Only 3 connections should be found: " + set,
                 set.size() == 3);
     }
-
+    
+    protected void assertClientsConnectionsEvenlyDistributed(double minimumPercentage) {
+    	Map<String, Double> clientConnectionCounts = new HashMap<String, Double>();
+        int total = 0;
+        for (ActiveMQConnection c : connections) {
+        	String key = c.getTransportChannel().getRemoteAddress();
+            if (key != null) {
+                total++;
+                if (clientConnectionCounts.containsKey(key)) {
+                    double count = clientConnectionCounts.get(key);
+                    count += 1.0;
+                    clientConnectionCounts.put(key, count);
+                } else {
+                    clientConnectionCounts.put(key, 1.0);
+                }
+            }
+        }
+        Set<String> keys = clientConnectionCounts.keySet();
+        for(String key: keys){
+        	double count = (double)clientConnectionCounts.get(key);
+        	double percentage = count / (double)total;
+            logger.info(count + " of " + total + " connections for " + key + " = " + percentage);
+        	assertTrue("Connections distribution expected to be >= than " + minimumPercentage
+                    + ".  Actuall distribution was " + percentage + " for connection " + key,
+                    percentage >= minimumPercentage);
+        }
+    }
+    
     protected void assertAllConnectedTo(String url) throws Exception {
         for (ActiveMQConnection c : connections) {
             assertEquals(c.getTransportChannel().getRemoteAddress(), url);
         }
-    }    
+    } 
 
     protected void addBroker(String name, BrokerService brokerService) {
         brokers.put(name, brokerService);
@@ -92,6 +123,7 @@ public class FailoverClusterTestSupport extends TestCase {
     protected void destroyBrokerCluster() throws JMSException, Exception {
         for (BrokerService b : brokers.values()) {
             b.stop();
+            b.waitUntilStopped();
         }
         brokers.clear();
     }
@@ -142,10 +174,11 @@ public class FailoverClusterTestSupport extends TestCase {
         createClients(NUMBER_OF_CLIENTS);
     }
     
-    protected void createClients(int num) throws Exception {
+    @SuppressWarnings("unused")
+	protected void createClients(int numOfClients) throws Exception {
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(
                 clientUrl);
-        for (int i = 0; i < num; i++) {
+        for (int i = 0; i < numOfClients; i++) {
             ActiveMQConnection c = (ActiveMQConnection) factory
                     .createConnection();
             c.start();

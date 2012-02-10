@@ -50,6 +50,7 @@ import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -704,12 +705,16 @@ public class FailoverTransport implements CompositeTransport {
     }
 
     private List<URI> getConnectList() {
-        ArrayList<URI> l = new ArrayList<URI>(uris);
-        for (URI uri : updated) {
-            if (!l.contains(uri)) {
-                l.add(uri);
-            }
+        if (!updated.isEmpty()) {
+            if (failedConnectTransportURI != null) {
+                boolean removed = updated.remove(failedConnectTransportURI);
+                if (removed) {
+                    updated.add(failedConnectTransportURI);
+                }
+            }            
+            return updated;
         }
+        ArrayList<URI> l = new ArrayList<URI>(uris);
         boolean removed = false;
         if (failedConnectTransportURI != null) {
             removed = l.remove(failedConnectTransportURI);
@@ -1167,7 +1172,7 @@ public class FailoverTransport implements CompositeTransport {
 
     public void updateURIs(boolean rebalance, URI[] updatedURIs) throws IOException {
         if (isUpdateURIsSupported()) {
-            List<URI> copy = new ArrayList<URI>(this.updated);
+            HashSet<URI> copy = new HashSet<URI>(this.updated);
             updated.clear();
             if (updatedURIs != null && updatedURIs.length > 0) {
                 for (URI uri : updatedURIs) {
@@ -1175,7 +1180,7 @@ public class FailoverTransport implements CompositeTransport {
                         updated.add(uri);
                     }
                 }
-                if (!(copy.isEmpty() && updated.isEmpty()) && !copy.equals(updated)) {
+                if (!(copy.isEmpty() && updated.isEmpty()) && !copy.equals(new HashSet(updated))) {
                     buildBackups();
                     synchronized (reconnectMutex) {
                         reconnect(rebalance);

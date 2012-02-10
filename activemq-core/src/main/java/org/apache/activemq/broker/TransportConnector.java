@@ -39,7 +39,10 @@ import javax.management.ObjectName;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
+import java.util.Random;
 import java.util.StringTokenizer;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.regex.Pattern;
@@ -73,6 +76,8 @@ public class TransportConnector implements Connector, BrokerServiceAware {
     private boolean updateClusterClientsOnRemove = false;
     private String updateClusterFilter;
     private boolean auditNetworkProducers = false;
+
+    Random rnd = new Random(System.currentTimeMillis());
 
     public TransportConnector() {
     }
@@ -401,29 +406,24 @@ public class TransportConnector implements Connector, BrokerServiceAware {
     protected ConnectionControl getConnectionControl() {
         boolean rebalance = isRebalanceClusterClients();
         String connectedBrokers = "";
-        String self = "";
         String separator = "";
 
         if (isUpdateClusterClients()) {
-            if (brokerService.getDefaultSocketURIString() != null) {
-                self += brokerService.getDefaultSocketURIString();
-            }
-            if (rebalance == false) {
-                connectedBrokers += self;
-                separator = ",";
-            }
-            if (this.broker.getPeerBrokerInfos() != null) {
-                for (BrokerInfo info : this.broker.getPeerBrokerInfos()) {
-                    if (isMatchesClusterFilter(info.getBrokerName())) {
-                        connectedBrokers += separator;
-                        connectedBrokers += info.getBrokerURL();
-                        separator = ",";
-                    }
+            ArrayList<String> uris = new ArrayList<String>();
+            uris.add(brokerService.getDefaultSocketURIString());
+            for (BrokerInfo info: broker.getPeerBrokerInfos()) {
+                if (isMatchesClusterFilter(info.getBrokerName())) {
+                    uris.add(info.getBrokerURL());
                 }
             }
             if (rebalance) {
-                connectedBrokers += separator + self;
+                Collections.shuffle(uris, rnd);
             }
+            for (String uri: uris) {
+                connectedBrokers += separator + uri;
+                separator = ",";
+            }
+            
         }
         ConnectionControl control = new ConnectionControl();
         control.setConnectedBrokers(connectedBrokers);
@@ -437,6 +437,9 @@ public class TransportConnector implements Connector, BrokerServiceAware {
             ConnectionControl control = getConnectionControl();
             for (Connection c : this.connections) {
                 c.updateClient(control);
+                if (isRebalanceClusterClients()) {
+                    control = getConnectionControl();
+                }
             }
         }
     }
