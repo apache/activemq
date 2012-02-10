@@ -583,7 +583,7 @@ public class ProtocolConverter {
         HashSet<String> acceptsVersions = new HashSet<String>(Arrays.asList(accepts.split(Stomp.COMMA)));
         acceptsVersions.retainAll(Arrays.asList(Stomp.SUPPORTED_PROTOCOL_VERSIONS));
         if (acceptsVersions.isEmpty()) {
-            throw new ProtocolException("Invlid Protocol version, supported versions are: " +
+            throw new ProtocolException("Invalid Protocol version[" + accepts +"], supported versions are: " +
                                         Arrays.toString(Stomp.SUPPORTED_PROTOCOL_VERSIONS), true);
         } else {
             this.version = Collections.max(acceptsVersions);

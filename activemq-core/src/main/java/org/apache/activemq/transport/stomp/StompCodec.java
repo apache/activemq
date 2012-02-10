@@ -58,7 +58,7 @@ public class StompCodec {
                        action = ((StompWireFormat)transport.getWireFormat()).parseAction(data);
                        headers = ((StompWireFormat)transport.getWireFormat()).parseHeaders(data);
                        String contentLengthHeader = headers.get(Stomp.Headers.CONTENT_LENGTH);
-                       if (contentLengthHeader != null) {
+                       if ((action.equals(Stomp.Commands.SEND) || action.equals(Stomp.Responses.MESSAGE)) && contentLengthHeader != null) {
                            contentLength = ((StompWireFormat)transport.getWireFormat()).parseContentLength(contentLengthHeader);
                        } else {
                            contentLength = -1;

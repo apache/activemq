@@ -205,6 +205,8 @@ public class StompFrame implements Command {
                 buffer.append(Arrays.toString(getContent()));
             }
         }
+        // terminate the frame
+        buffer.append('\u0000');
         return buffer.toString();
     }
 }
