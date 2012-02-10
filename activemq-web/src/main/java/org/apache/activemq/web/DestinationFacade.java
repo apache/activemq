@@ -24,7 +24,7 @@ import org.apache.activemq.command.ActiveMQDestination;
 import org.springframework.web.servlet.ModelAndView;
 
 /**
- * 
+ *
  */
 public class DestinationFacade {
 
@@ -108,16 +108,16 @@ public class DestinationFacade {
     }
 
     protected String getValidDestination() {
-        if (jmsDestination == null) {
+        if (jmsDestination == null || jmsDestination.isEmpty()) {
             throw new IllegalArgumentException("No JMSDestination parameter specified");
         }
         return jmsDestination;
     }
-    
+
     protected QueueViewMBean getQueueView() throws Exception {
         String name = getPhysicalDestinationName();
         return getBrokerFacade().getQueue(name);
-    }    
+    }
 
     protected ModelAndView redirectToRequest(HttpServletRequest request) {
         String view = "redirect:" + request.getRequestURI();
@@ -131,8 +131,8 @@ public class DestinationFacade {
     protected String getPhysicalDestinationName() {
         return createDestination().getPhysicalName();
     }
-    
+
     public String[] getSupportedHttpMethods() {
-    	return new String[]{"GET", "POST"};
+        return new String[]{"GET", "POST"};
     }
 }
