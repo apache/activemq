@@ -48,15 +48,17 @@ public class VMTransport implements Transport, Task {
     protected final URI location;
     protected final long id;
     protected LinkedBlockingQueue<Object> messageQueue = new LinkedBlockingQueue<Object>(this.asyncQueueDepth);
-    private TaskRunner taskRunner = DefaultThreadPools.getDefaultTaskRunnerFactory().createTaskRunner(this, "VMTransport: " + toString());
 
-    private volatile int receiveCounter;
-
-    // Managed Sate access protected by locks.
     protected final AtomicBoolean stopping = new AtomicBoolean();
     protected final AtomicBoolean started = new AtomicBoolean();
     protected final AtomicBoolean starting = new AtomicBoolean();
     protected final AtomicBoolean disposed = new AtomicBoolean();
+
+    // thread can be eager, so initialisation needs to be last  so that partial state is not visible
+    protected TaskRunner taskRunner = DefaultThreadPools.getDefaultTaskRunnerFactory().createTaskRunner(this, "VMTransport: " + toString());
+
+    private volatile int receiveCounter;
+
 
     public VMTransport(URI location) {
         this.location = location;
