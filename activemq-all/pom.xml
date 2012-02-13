@@ -84,6 +84,7 @@
                   <include>org.apache.geronimo.specs:geronimo-j2ee-management_1.1_spec</include>
                   <include>org.apache.geronimo.specs:geronimo-annotation_1.0_spec</include>
                   <include>org.slf4j:slf4j-api</include>
+                  <include>org.slf4j:slf4j-log4j12</include>
                 </includes>
               </artifactSet>
 
