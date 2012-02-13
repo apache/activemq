@@ -19,9 +19,11 @@ package org.apache.activemq.transport.vm;
 import java.io.IOException;
 import java.io.InterruptedIOException;
 import java.net.URI;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
+
 import org.apache.activemq.command.ShutdownInfo;
 import org.apache.activemq.thread.DefaultThreadPools;
 import org.apache.activemq.thread.Task;
@@ -32,6 +34,8 @@ import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportDisposedIOException;
 import org.apache.activemq.transport.TransportListener;
 
+import edu.emory.mathcs.backport.java.util.concurrent.TimeUnit;
+
 /**
  * A Transport implementation that uses direct method invocations.
  */
@@ -39,6 +43,8 @@ public class VMTransport implements Transport, Task {
 
     private static final Object DISCONNECT = new Object();
     private static final AtomicLong NEXT_ID = new AtomicLong(0);
+
+    // Transport Configuration
     protected VMTransport peer;
     protected TransportListener transportListener;
     protected boolean marshal;
@@ -47,18 +53,16 @@ public class VMTransport implements Transport, Task {
     protected int asyncQueueDepth = 2000;
     protected final URI location;
     protected final long id;
-    protected LinkedBlockingQueue<Object> messageQueue = new LinkedBlockingQueue<Object>(this.asyncQueueDepth);
 
-    protected final AtomicBoolean stopping = new AtomicBoolean();
+    // Implementation
+    private LinkedBlockingQueue<Object> messageQueue;
+    private TaskRunner taskRunner;
+
+    // Transport State
     protected final AtomicBoolean started = new AtomicBoolean();
-    protected final AtomicBoolean starting = new AtomicBoolean();
     protected final AtomicBoolean disposed = new AtomicBoolean();
 
-    // thread can be eager, so initialisation needs to be last  so that partial state is not visible
-    protected TaskRunner taskRunner = DefaultThreadPools.getDefaultTaskRunnerFactory().createTaskRunner(this, "VMTransport: " + toString());
-
     private volatile int receiveCounter;
-
 
     public VMTransport(URI location) {
         this.location = location;
@@ -70,106 +74,138 @@ public class VMTransport implements Transport, Task {
     }
 
     public void oneway(Object command) throws IOException {
+
         if (disposed.get()) {
             throw new TransportDisposedIOException("Transport disposed.");
         }
+
         if (peer == null) {
             throw new IOException("Peer not connected.");
         }
 
-        TransportListener transportListener = null;
         try {
-            if (peer.disposed.get() || peer.stopping.get()) {
+
+            if (peer.disposed.get()) {
                 throw new TransportDisposedIOException("Peer (" + peer.toString() + ") disposed.");
             }
 
-            if (peer.started.get()) {
-                if (peer.async) {
-                    peer.messageQueue.put(command);
-                    peer.wakeup();
-                } else {
-                    transportListener = peer.transportListener;
-                }
-            } else {
-                peer.messageQueue.put(command);
-                synchronized (peer.starting) {
-                    if (peer.started.get() && !peer.messageQueue.isEmpty()) {
-                        // we missed the pending dispatch during start
-                        if (peer.async) {
-                            peer.wakeup();
-                        } else {
-                            transportListener = peer.transportListener;
-                        }
-                    }
-                }
+            if (peer.async || !peer.started.get()) {
+                peer.getMessageQueue().put(command);
+                peer.wakeup();
+                return;
             }
+
         } catch (InterruptedException e) {
             InterruptedIOException iioe = new InterruptedIOException(e.getMessage());
             iioe.initCause(e);
             throw iioe;
         }
-        dispatch(peer, transportListener, command);
+
+        dispatch(peer, peer.messageQueue, command);
     }
 
-    public void dispatch(VMTransport transport, TransportListener transportListener, Object command) {
+    public void dispatch(VMTransport transport, BlockingQueue<Object> pending, Object command) {
+        TransportListener transportListener = transport.getTransportListener();
         if (transportListener != null) {
-            if (command == DISCONNECT) {
-                transportListener.onException(
-                        new TransportDisposedIOException("Peer (" + peer.toString() + ") disposed."));
-            } else {
-                transport.receiveCounter++;
-                transportListener.onCommand(command);
+            synchronized (started) {
+
+                // Ensure that no additional commands entered the queue in the small time window
+                // before the start method locks the dispatch lock and the oneway method was in
+                // an put operation.
+                while(pending != null && !pending.isEmpty() && !transport.isDisposed()) {
+                    doDispatch(transport, transportListener, pending.poll());
+                }
+
+                // We are now in sync mode and won't enqueue any more commands to the target
+                // transport so lets clean up its resources.
+                transport.messageQueue = null;
+
+                // Don't dispatch if either end was disposed already.
+                if (command != null && !this.disposed.get() && !transport.isDisposed()) {
+                    doDispatch(transport, transportListener, command);
+                }
             }
+        }
+    }
+
+    public void doDispatch(VMTransport transport, TransportListener transportListener, Object command) {
+        if (command == DISCONNECT) {
+            transportListener.onException(new TransportDisposedIOException("Peer (" + peer.toString() + ") disposed."));
+        } else {
+            transport.receiveCounter++;
+            transportListener.onCommand(command);
         }
     }
 
     public void start() throws Exception {
 
-        if (starting.compareAndSet(false, true)) {
+        if (transportListener == null) {
+            throw new IOException("TransportListener not set.");
+        }
 
-            if (transportListener == null) {
-                throw new IOException("TransportListener not set.");
-            }
-
-            // ensure there is no missed dispatch during start, sync with oneway
-            synchronized (peer.starting) {
-                Object command;
-                while ((command = messageQueue.poll()) != null && !stopping.get()) {
-                    dispatch(this, transportListener, command);
-                }
-
-                if (!disposed.get()) {
-
-                    started.set(true);
-
-                    if (async) {
-                        taskRunner.wakeup();
-                    } else {
-                        messageQueue.clear();
-                        messageQueue = null;
-                        taskRunner.shutdown();
-                        taskRunner = null;
+        // If we are not in async mode we lock the dispatch lock here and then start to
+        // prevent any sync dispatches from occurring until we dispatch the pending messages
+        // to maintain delivery order.  When async this happens automatically so just set
+        // started and wakeup the task runner.
+        if (!async) {
+            synchronized (started) {
+                if (started.compareAndSet(false, true)) {
+                    LinkedBlockingQueue<Object> mq = getMessageQueue();
+                    Object command;
+                    while ((command = mq.poll()) != null && !disposed.get() ) {
+                        receiveCounter++;
+                        doDispatch(this, transportListener, command);
                     }
                 }
+            }
+        } else {
+            if (started.compareAndSet(false, true)) {
+                wakeup();
             }
         }
     }
 
     public void stop() throws Exception {
+        // Only need to do this once, all future oneway calls will now
+        // fail as will any asnyc jobs in the task runner.
         if (disposed.compareAndSet(false, true)) {
-            stopping.set(true);
-            // let the peer know that we are disconnecting..
+
+            TaskRunner tr = taskRunner;
+            LinkedBlockingQueue<Object> mq = this.messageQueue;
+
+            taskRunner = null;
+            messageQueue = null;
+
+            if (mq != null) {
+                mq.clear();
+            }
+
+            // Allow pending deliveries to finish up, but don't wait
+            // forever in case of an stalled onCommand.
+            if (tr != null) {
+                try {
+                    tr.shutdown(TimeUnit.SECONDS.toMillis(1));
+                } catch(Exception e) {
+                }
+            }
+
+            // let the peer know that we are disconnecting after attempting
+            // to cleanly shutdown the async tasks so that this is the last
+            // command it see's.
             try {
                 peer.transportListener.onCommand(new ShutdownInfo());
             } catch (Exception ignore) {
             }
+        }
+    }
 
-            if (messageQueue != null) {
-                messageQueue.clear();
-            }
-            if (taskRunner != null) {
-                taskRunner.shutdown(1000);
-                taskRunner = null;
+    protected void wakeup() {
+        if (async && started.get()) {
+            try {
+                getTaskRunner().wakeup();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            } catch (TransportDisposedIOException e) {
             }
         }
     }
@@ -179,26 +215,75 @@ public class VMTransport implements Transport, Task {
      */
     public boolean iterate() {
 
-        if (disposed.get() || stopping.get()) {
+        final TransportListener tl = transportListener;
+
+        LinkedBlockingQueue<Object> mq;
+        try {
+            mq = getMessageQueue();
+        } catch (TransportDisposedIOException e) {
             return false;
         }
 
-        LinkedBlockingQueue<Object> mq = messageQueue;
         Object command = mq.poll();
-        if (command != null) {
-            if (command == DISCONNECT) {
-                transportListener.onException(new TransportDisposedIOException("Peer (" + peer.toString() + ") disposed."));
+        if (command != null && !disposed.get()) {
+            if( command == DISCONNECT ) {
+                tl.onException(new TransportDisposedIOException("Peer (" + peer.toString() + ") disposed."));
             } else {
-                transportListener.onCommand(command);
+                tl.onCommand(command);
             }
-            return !mq.isEmpty();
+            return !mq.isEmpty() && !disposed.get();
         } else {
+            if(disposed.get()) {
+                mq.clear();
+            }
             return false;
         }
     }
 
     public void setTransportListener(TransportListener commandListener) {
         this.transportListener = commandListener;
+    }
+
+    public void setMessageQueue(LinkedBlockingQueue<Object> asyncQueue) {
+        synchronized (this) {
+            if (messageQueue == null) {
+                messageQueue = asyncQueue;
+            }
+        }
+    }
+
+    public LinkedBlockingQueue<Object> getMessageQueue() throws TransportDisposedIOException {
+        LinkedBlockingQueue<Object> result = messageQueue;
+        if (result == null) {
+            synchronized (this) {
+                result = messageQueue;
+                if (result == null) {
+                    if (disposed.get()) {
+                        throw new TransportDisposedIOException("The Transport has been disposed");
+                    }
+
+                    messageQueue = result = new LinkedBlockingQueue<Object>(this.asyncQueueDepth);
+                }
+            }
+        }
+        return result;
+    }
+
+    protected TaskRunner getTaskRunner() throws TransportDisposedIOException {
+        TaskRunner result = taskRunner;
+        if (result == null) {
+            synchronized (this) {
+                result = taskRunner;
+                if (result == null) {
+                    if (disposed.get()) {
+                        throw new TransportDisposedIOException("The Transport has been disposed");
+                    }
+
+                    taskRunner = result = DefaultThreadPools.getDefaultTaskRunnerFactory().createTaskRunner(this, "VMTransport: " + toString());
+                }
+            }
+        }
+        return result;
     }
 
     public FutureResponse asyncRequest(Object command, ResponseCallback responseCallback) throws IOException {
@@ -280,16 +365,6 @@ public class VMTransport implements Transport, Task {
         this.asyncQueueDepth = asyncQueueDepth;
     }
 
-    protected void wakeup() {
-        if (async) {
-            try {
-                taskRunner.wakeup();
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
-        }
-    }
-
     public boolean isFaultTolerant() {
         return false;
     }
@@ -299,11 +374,11 @@ public class VMTransport implements Transport, Task {
     }
 
     public boolean isConnected() {
-        return started.get();
+        return !disposed.get();
     }
 
     public void reconnect(URI uri) throws IOException {
-        throw new IOException("reconnection Not supported by this transport.");
+        throw new IOException("Transport reconnect is not supported");
     }
 
     public boolean isReconnectSupported() {
@@ -314,8 +389,8 @@ public class VMTransport implements Transport, Task {
         return false;
     }
 
-    public void updateURIs(boolean reblance, URI[] uris) throws IOException {
-        throw new IOException("Not supported");
+    public void updateURIs(boolean reblance,URI[] uris) throws IOException {
+        throw new IOException("URI update feature not supported");
     }
 
     public int getReceiveCounter() {

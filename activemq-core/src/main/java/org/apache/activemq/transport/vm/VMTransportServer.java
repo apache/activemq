@@ -75,13 +75,12 @@ public class VMTransportServer implements TransportServer {
         connectionCount.incrementAndGet();
         VMTransport client = new VMTransport(location) {
             public void stop() throws Exception {
-            	if (stopping.compareAndSet(false, true) && !disposed.get()) {
-					super.stop();
-					if (connectionCount.decrementAndGet() == 0
-							&& disposeOnDisconnect) {
-						VMTransportServer.this.stop();
-					}
-				}
+                if (!disposed.get()) {
+                    super.stop();
+                    if (connectionCount.decrementAndGet() == 0 && disposeOnDisconnect) {
+                        VMTransportServer.this.stop();
+                    }
+                }
             };
         };
 
@@ -94,7 +93,7 @@ public class VMTransportServer implements TransportServer {
 
     /**
      * Configure transport
-     * 
+     *
      * @param transport
      * @return the Transport
      */
@@ -106,7 +105,7 @@ public class VMTransportServer implements TransportServer {
 
     /**
      * Set the Transport accept listener for new Connections
-     * 
+     *
      * @param acceptListener
      */
     public synchronized void setAcceptListener(TransportAcceptListener acceptListener) {
@@ -134,7 +133,7 @@ public class VMTransportServer implements TransportServer {
     public InetSocketAddress getSocketAddress() {
         return null;
     }
-    
+
     public int getConnectionCount() {
         return connectionCount.intValue();
     }
