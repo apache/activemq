@@ -53,6 +53,10 @@
       <groupId>org.apache.geronimo.specs</groupId>
       <artifactId>geronimo-annotation_1.0_spec</artifactId>
     </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-log4j12</artifactId>
+    </dependency>
   </dependencies>
 
   <build>
@@ -85,6 +89,7 @@
                   <include>org.apache.geronimo.specs:geronimo-annotation_1.0_spec</include>
                   <include>org.slf4j:slf4j-api</include>
                   <include>org.slf4j:slf4j-log4j12</include>
+                  <include>log4j:log4j</include>
                 </includes>
               </artifactSet>
 
