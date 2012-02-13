@@ -74,11 +74,11 @@ public class StompSubscriptionRemoveTest extends TestCase {
 
         stompConnection.open(new Socket("localhost", stompPort));
 
-        String connectFrame = "CONNECT\n" + "login: brianm\n" + "passcode: wombats\n" + "\n";
+        String connectFrame = "CONNECT\n" + "login: brianm\n" + "passcode: wombats\n\n" + Stomp.NULL;
         stompConnection.sendFrame(connectFrame);
 
         stompConnection.receiveFrame();
-        String frame = "SUBSCRIBE\n" + "destination:/queue/" + getDestinationName() + "\n" + "ack:client\n\n";
+        String frame = "SUBSCRIBE\n" + "destination:/queue/" + getDestinationName() + "\n" + "ack:client\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
 
         int messagesCount = 0;
@@ -88,7 +88,7 @@ public class StompSubscriptionRemoveTest extends TestCase {
             LOG.debug("Received: " + receiveFrame);
             assertEquals("Unexpected frame received", COMMAND_MESSAGE, getCommand(receiveFrame));
             String messageId = getHeaderValue(receiveFrame, HEADER_MESSAGE_ID);
-            String ackmessage = "ACK\n" + HEADER_MESSAGE_ID + ":" + messageId + "\n\n";
+            String ackmessage = "ACK\n" + HEADER_MESSAGE_ID + ":" + messageId + "\n\n"+ Stomp.NULL;
             stompConnection.sendFrame(ackmessage);
             // Thread.sleep(1000);
             ++messagesCount;
@@ -101,12 +101,12 @@ public class StompSubscriptionRemoveTest extends TestCase {
 
         stompConnection.open(new Socket("localhost", stompPort));
 
-        connectFrame = "CONNECT\n" + "login: brianm\n" + "passcode: wombats\n" + "\n";
+        connectFrame = "CONNECT\n" + "login: brianm\n" + "passcode: wombats\n\n" + Stomp.NULL;
         stompConnection.sendFrame(connectFrame);
 
         stompConnection.receiveFrame();
 
-        frame = "SUBSCRIBE\n" + "destination:/queue/" + getDestinationName() + "\n" + "ack:client\n\n";
+        frame = "SUBSCRIBE\n" + "destination:/queue/" + getDestinationName() + "\n" + "ack:client\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
         try {
             while (count != 2000) {
@@ -114,7 +114,7 @@ public class StompSubscriptionRemoveTest extends TestCase {
                 LOG.debug("Received: " + receiveFrame);
                 assertEquals("Unexpected frame received", COMMAND_MESSAGE, getCommand(receiveFrame));
                 String messageId = getHeaderValue(receiveFrame, HEADER_MESSAGE_ID);
-                String ackmessage = "ACK\n" + HEADER_MESSAGE_ID + ":" + messageId.trim() + "\n\n";
+                String ackmessage = "ACK\n" + HEADER_MESSAGE_ID + ":" + messageId.trim() + "\n\n" + Stomp.NULL;
                 stompConnection.sendFrame(ackmessage);
                 // Thread.sleep(1000);
                 ++messagesCount;
