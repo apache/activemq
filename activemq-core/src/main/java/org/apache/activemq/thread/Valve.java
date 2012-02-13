@@ -19,9 +19,10 @@ package org.apache.activemq.thread;
 /**
  * A Valve is a synchronization object used enable or disable the "flow" of
  * concurrent processing.
- * 
- * 
+ *
+ * @deprecated
  */
+@Deprecated
 public final class Valve {
 
     private final Object mutex = new Object();
@@ -35,7 +36,7 @@ public final class Valve {
 
     /**
      * Turns the valve on. This method blocks until the valve is off.
-     * 
+     *
      * @throws InterruptedException if wait is interrupted
      */
     public void turnOn() throws InterruptedException {
@@ -57,7 +58,7 @@ public final class Valve {
     /**
      * Turns the valve off. This method blocks until the valve is on and the
      * valve is not in use.
-     * 
+     *
      * @throws InterruptedException if wait is interrupted
      */
     public void turnOff() throws InterruptedException {
@@ -81,7 +82,7 @@ public final class Valve {
     /**
      * Increments the use counter of the valve. This method blocks if the valve
      * is off, or is being turned off.
-     * 
+     *
      * @throws InterruptedException  if wait is interrupted
      */
     public void increment() throws InterruptedException {
