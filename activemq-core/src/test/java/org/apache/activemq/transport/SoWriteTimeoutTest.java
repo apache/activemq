@@ -155,6 +155,12 @@ public class SoWriteTimeoutTest extends JmsTestSupport {
         return new String(content);
     }
 
+    @Override
+    protected void setUp() throws Exception {
+        setAutoFail(true);
+        super.setUp();
+    }
+
     public static Test suite() {
         return suite(SoWriteTimeoutTest.class);
     }
