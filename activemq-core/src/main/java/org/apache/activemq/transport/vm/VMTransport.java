@@ -21,6 +21,7 @@ import java.io.InterruptedIOException;
 import java.net.URI;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -33,8 +34,6 @@ import org.apache.activemq.transport.ResponseCallback;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportDisposedIOException;
 import org.apache.activemq.transport.TransportListener;
-
-import edu.emory.mathcs.backport.java.util.concurrent.TimeUnit;
 
 /**
  * A Transport implementation that uses direct method invocations.
