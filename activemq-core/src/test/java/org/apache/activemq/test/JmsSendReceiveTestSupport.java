@@ -110,6 +110,13 @@ public abstract class JmsSendReceiveTestSupport extends org.apache.activemq.Test
         Thread.sleep(1000);
         messages.clear();
 
+        sendMessages();
+
+        assertMessagesAreReceived();
+        LOG.info("" + data.length + " messages(s) received, closing down connections");
+    }
+
+    protected void sendMessages() throws Exception {
         for (int i = 0; i < data.length; i++) {
             Message message = createMessage(i);
             configureMessage(message);
@@ -118,11 +125,8 @@ public abstract class JmsSendReceiveTestSupport extends org.apache.activemq.Test
             }
             sendMessage(i, message);
         }
-
-        assertMessagesAreReceived();
-        LOG.info("" + data.length + " messages(s) received, closing down connections");
     }
-    
+
     protected void sendMessage(int index, Message message) throws Exception {
     	producer.send(producerDestination, message);
     }

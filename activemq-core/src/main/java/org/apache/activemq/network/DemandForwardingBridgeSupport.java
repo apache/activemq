@@ -611,6 +611,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                 LOG.debug(configuration.getBrokerName() + " remove local subscription for remote " + sub.getRemoteInfo().getConsumerId());
             }
             subscriptionMapByLocalId.remove(sub.getLocalInfo().getConsumerId());
+            subscriptionMapByRemoteId.remove(sub.getRemoteInfo().getConsumerId());
 
             // continue removal in separate thread to free up this thread for outstanding responses
             asyncTaskRunner.execute(new Runnable() {
