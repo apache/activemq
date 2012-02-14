@@ -16,6 +16,19 @@
  */
 package org.apache.activemq.broker;
 
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.Random;
+import java.util.StringTokenizer;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.regex.Pattern;
+
+import javax.management.ObjectName;
+
 import org.apache.activemq.broker.jmx.ManagedTransportConnector;
 import org.apache.activemq.broker.jmx.ManagementContext;
 import org.apache.activemq.broker.region.ConnectorStatistics;
@@ -34,18 +47,6 @@ import org.apache.activemq.util.ServiceStopper;
 import org.apache.activemq.util.ServiceSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.management.ObjectName;
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.Random;
-import java.util.StringTokenizer;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.regex.Pattern;
 
 /**
  * @org.apache.xbean.XBean
@@ -262,7 +263,7 @@ public class TransportConnector implements Connector, BrokerServiceAware {
 
         LOG.info("Connector " + getName() + " Started");
     }
-    
+
     public String getPublishableConnectString() throws Exception {
         return getPublishableConnectString(getConnectUri());
     }
@@ -413,7 +414,9 @@ public class TransportConnector implements Connector, BrokerServiceAware {
             uris.add(brokerService.getDefaultSocketURIString());
             for (BrokerInfo info: broker.getPeerBrokerInfos()) {
                 if (isMatchesClusterFilter(info.getBrokerName())) {
-                    uris.add(info.getBrokerURL());
+                    if (info.getBrokerURL() != null) {
+                        uris.add(info.getBrokerURL());
+                    }
                 }
             }
             if (rebalance) {
@@ -423,7 +426,7 @@ public class TransportConnector implements Connector, BrokerServiceAware {
                 connectedBrokers += separator + uri;
                 separator = ",";
             }
-            
+
         }
         ConnectionControl control = new ConnectionControl();
         control.setConnectedBrokers(connectedBrokers);

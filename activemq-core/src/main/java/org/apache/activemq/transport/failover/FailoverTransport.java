@@ -16,6 +16,26 @@
  */
 package org.apache.activemq.transport.failover;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.InterruptedIOException;
+import java.net.InetAddress;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.StringTokenizer;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicReference;
+
 import org.apache.activemq.broker.SslContext;
 import org.apache.activemq.command.Command;
 import org.apache.activemq.command.ConnectionControl;
@@ -38,26 +58,6 @@ import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.ServiceSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.InterruptedIOException;
-import java.net.InetAddress;
-import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.StringTokenizer;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * A Transport that is made reliable by being able to fail over to another
@@ -711,7 +711,7 @@ public class FailoverTransport implements CompositeTransport {
                 if (removed) {
                     updated.add(failedConnectTransportURI);
                 }
-            }            
+            }
             return updated;
         }
         ArrayList<URI> l = new ArrayList<URI>(uris);
@@ -889,7 +889,7 @@ public class FailoverTransport implements CompositeTransport {
                     // If we have a backup already waiting lets try it.
                     synchronized (backupMutex) {
                         if ((priorityBackup || backup) && !backups.isEmpty()) {
-                            ArrayList<BackupTransport> l = new ArrayList(backups);
+                            ArrayList<BackupTransport> l = new ArrayList<BackupTransport>(backups);
                             if (randomize) {
                                 Collections.shuffle(l);
                             }
@@ -1134,7 +1134,7 @@ public class FailoverTransport implements CompositeTransport {
         }
         return false;
     }
-    
+
     protected boolean isPriority(URI uri) {
         if (!priorityList.isEmpty()) {
             return priorityList.contains(uri);
@@ -1180,7 +1180,7 @@ public class FailoverTransport implements CompositeTransport {
                         updated.add(uri);
                     }
                 }
-                if (!(copy.isEmpty() && updated.isEmpty()) && !copy.equals(new HashSet(updated))) {
+                if (!(copy.isEmpty() && updated.isEmpty()) && !copy.equals(new HashSet<URI>(updated))) {
                     buildBackups();
                     synchronized (reconnectMutex) {
                         reconnect(rebalance);
