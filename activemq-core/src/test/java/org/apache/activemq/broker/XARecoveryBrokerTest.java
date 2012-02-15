@@ -519,21 +519,25 @@ public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
             connection.send(message);
         }
 
-        // Setup the consumer and receive the message.
-        ConsumerInfo consumerInfo = createConsumerInfo(sessionInfo, destination);
-        connection.send(consumerInfo);
-
         // Begin the transaction.
         XATransactionId txid = createXATransaction(sessionInfo);
         connection.send(createBeginTransaction(connectionInfo, txid));
-        Message m = null;
-        for (int i = 0; i < 4; i++) {
-            m = receiveMessage(connection);
-            assertNotNull(m);
+
+        Message message = null;
+        for (ActiveMQDestination dest : destinationList(destination)) {
+            // Setup the consumer and receive the message.
+            ConsumerInfo consumerInfo = createConsumerInfo(sessionInfo, dest);
+            connection.send(consumerInfo);
+
+            for (int i = 0; i < 4; i++) {
+                message = receiveMessage(connection);
+                assertNotNull(message);
+            }
+            MessageAck ack = createAck(consumerInfo, message, 4, MessageAck.STANDARD_ACK_TYPE);
+            ack.setTransactionId(txid);
+            connection.send(ack);
         }
-        MessageAck ack = createAck(consumerInfo, m, 4, MessageAck.STANDARD_ACK_TYPE);
-        ack.setTransactionId(txid);
-        connection.send(ack);
+
         // Don't commit
 
         // restart the broker.
@@ -545,13 +549,16 @@ public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
         sessionInfo = createSessionInfo(connectionInfo);
         connection.send(connectionInfo);
         connection.send(sessionInfo);
-        consumerInfo = createConsumerInfo(sessionInfo, destination);
-        connection.send(consumerInfo);
 
-        // All messages should be re-delivered.
-        for (int i = 0; i < 4; i++) {
-            m = receiveMessage(connection);
-            assertNotNull(m);
+        for (ActiveMQDestination dest : destinationList(destination)) {
+            // Setup the consumer and receive the message.
+            ConsumerInfo consumerInfo = createConsumerInfo(sessionInfo, dest);
+            connection.send(consumerInfo);
+
+            for (int i = 0; i < 4; i++) {
+                message = receiveMessage(connection);
+                assertNotNull(message);
+            }
         }
 
         assertNoMessagesLeft(connection);
