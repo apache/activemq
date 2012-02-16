@@ -126,10 +126,11 @@ public class StompNIOTransport extends TcpTransport {
 
     protected void doStop(ServiceStopper stopper) throws Exception {
         try {
-            selection.close();
-        } catch (Exception e) {
-            e.printStackTrace();
+            if (selection != null) {
+                selection.close();
+            }
+        } finally {
+            super.doStop(stopper);
         }
-        super.doStop(stopper);
     }
 }
