@@ -68,7 +68,7 @@ public class AMQ2149Test extends AutoFailTestSupport {
     final int NUM_SENDERS_AND_RECEIVERS = 10;
     final Object brokerLock = new Object();
     
-    private static final long DEFAULT_BROKER_STOP_PERIOD = 20 * 1000;
+    private static final long DEFAULT_BROKER_STOP_PERIOD = 10 * 1000;
     private static final long DEFAULT_NUM_TO_SEND = 1400;
     
     long brokerStopPeriod = DEFAULT_BROKER_STOP_PERIOD;
@@ -77,7 +77,7 @@ public class AMQ2149Test extends AutoFailTestSupport {
     String brokerURL = DEFAULT_BROKER_URL;
     
     int numBrokerRestarts = 0;
-    final static int MAX_BROKER_RESTARTS = 5;
+    final static int MAX_BROKER_RESTARTS = 3;
     BrokerService broker;
     Vector<Throwable> exceptions = new Vector<Throwable>();
 
