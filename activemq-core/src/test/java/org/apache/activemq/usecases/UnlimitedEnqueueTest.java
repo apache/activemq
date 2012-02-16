@@ -37,14 +37,21 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.region.policy.FilePendingQueueMessageStoragePolicy;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
+import org.apache.activemq.util.Wait;
 import org.junit.Before;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import static org.junit.Assert.assertTrue;
 
 public class UnlimitedEnqueueTest  {
 
+    private static final Logger LOG = LoggerFactory.getLogger(UnlimitedEnqueueTest.class);
     BrokerService brokerService = null;
     final long numMessages = 50000;
     final long numThreads = 10;
+    final int payLoadSize = 100*1024;
 
     @Test
     public void testEnqueueIsOnlyLimitedByDisk() throws Exception {
@@ -52,9 +59,15 @@ public class UnlimitedEnqueueTest  {
         for (int i=0; i<numThreads; i++) {
             executor.execute(new Producer(numMessages/numThreads));
         }
-        
-        executor.shutdown();
-        executor.awaitTermination(30*60, TimeUnit.SECONDS);
+
+        assertTrue("Temp Store is filling ", Wait.waitFor(new Wait.Condition(){
+            @Override
+            public boolean isSatisified() throws Exception {
+                LOG.info("Temp Usage,  " + brokerService.getSystemUsage().getTempUsage() + ", full=" + brokerService.getSystemUsage().getTempUsage().isFull() + ", % usage: " + brokerService.getSystemUsage().getTempUsage().getPercentUsage());
+                return brokerService.getSystemUsage().getTempUsage().getPercentUsage() > 1;
+            }
+        }, TimeUnit.MINUTES.toMillis(4)));
+        executor.shutdownNow();
     }
     
     @Before
@@ -65,6 +78,8 @@ public class UnlimitedEnqueueTest  {
         
         // optional, reduce the usage limit so that spooling will occur faster
         brokerService.getSystemUsage().getMemoryUsage().setLimit(10 * 1024 * 1024);
+        brokerService.getSystemUsage().getTempUsage().setLimit(numMessages * payLoadSize * 2);
+
         PolicyMap policyMap = new PolicyMap();
         List<PolicyEntry> entries = new ArrayList<PolicyEntry>();
         PolicyEntry policy = new PolicyEntry();
@@ -99,13 +114,13 @@ public class UnlimitedEnqueueTest  {
             try {
                 Connection conn = factory.createConnection();
                 conn.start();
+                byte[] bytes = new byte[payLoadSize];
                 for (int i = 0; i < numberOfMessages; i++) {
                     Session session = conn.createSession(false,Session.AUTO_ACKNOWLEDGE);
                     Destination destination = session.createQueue("test-queue");
                     MessageProducer producer = session.createProducer(destination);
                     producer.setDeliveryMode(DeliveryMode.PERSISTENT);
                     BytesMessage message = session.createBytesMessage();
-                    byte[] bytes = new byte[1024*10];
                     message.writeBytes(bytes);
                     try {
                         producer.send(message);
@@ -115,7 +130,7 @@ public class UnlimitedEnqueueTest  {
                     session.close();
                 }
             } catch (JMSException e) {
-                throw new RuntimeException(e);
+                // expect interrupted exception on shutdownNow
             }
         }
     }
