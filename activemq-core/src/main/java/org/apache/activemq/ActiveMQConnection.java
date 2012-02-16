@@ -33,6 +33,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+
 import javax.jms.Connection;
 import javax.jms.ConnectionConsumer;
 import javax.jms.ConnectionMetaData;
@@ -51,6 +52,7 @@ import javax.jms.Topic;
 import javax.jms.TopicConnection;
 import javax.jms.TopicSession;
 import javax.jms.XAConnection;
+
 import org.apache.activemq.advisory.DestinationSource;
 import org.apache.activemq.blob.BlobTransferPolicy;
 import org.apache.activemq.command.ActiveMQDestination;
@@ -190,7 +192,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     private boolean useDedicatedTaskRunner;
     protected volatile CountDownLatch transportInterruptionProcessingComplete;
     private long consumerFailoverRedeliveryWaitPeriod;
-    private final Scheduler scheduler;
+    private Scheduler scheduler;
     private boolean messagePrioritySupported = true;
     private boolean transactedIndividualAck = false;
     private boolean nonBlockingRedelivery = false;
@@ -230,8 +232,6 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
         this.factoryStats.addConnection(this);
         this.timeCreated = System.currentTimeMillis();
         this.connectionAudit.setCheckForDuplicates(transport.isFaultTolerant());
-        this.scheduler = new Scheduler("ActiveMQConnection["+uniqueId+"] Scheduler");
-        this.scheduler.start();
     }
 
     protected void setUserName(String userName) {
@@ -622,9 +622,11 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
                         advisoryConsumer.dispose();
                         advisoryConsumer = null;
                     }
-                    if (this.scheduler != null) {
+
+                    Scheduler scheduler = this.scheduler;
+                    if (scheduler != null) {
                         try {
-                            this.scheduler.stop();
+                            scheduler.stop();
                         } catch (Exception e) {
                             JMSException ex =  JMSExceptionSupport.create(e);
                             throw ex;
@@ -2408,8 +2410,23 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
         return consumerFailoverRedeliveryWaitPeriod;
     }
 
-    protected Scheduler getScheduler() {
-        return this.scheduler;
+    protected Scheduler getScheduler() throws JMSException {
+        Scheduler result = scheduler;
+        if (result == null) {
+            synchronized (this) {
+                result = scheduler;
+                if (result == null) {
+                    checkClosed();
+                    try {
+                        result = scheduler = new Scheduler("ActiveMQConnection["+info.getConnectionId().getValue()+"] Scheduler");
+                        scheduler.start();
+                    } catch(Exception e) {
+                        throw JMSExceptionSupport.create(e);
+                    }
+                }
+            }
+        }
+        return result;
     }
 
     protected ThreadPoolExecutor getExecutor() {

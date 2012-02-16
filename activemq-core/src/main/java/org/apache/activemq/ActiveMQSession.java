@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicBoolean;
+
 import javax.jms.BytesMessage;
 import javax.jms.Destination;
 import javax.jms.IllegalStateException;
@@ -53,6 +54,7 @@ import javax.jms.TopicPublisher;
 import javax.jms.TopicSession;
 import javax.jms.TopicSubscriber;
 import javax.jms.TransactionRolledBackException;
+
 import org.apache.activemq.blob.BlobDownloader;
 import org.apache.activemq.blob.BlobTransferPolicy;
 import org.apache.activemq.blob.BlobUploader;
@@ -198,7 +200,6 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
     }
 
     private static final Logger LOG = LoggerFactory.getLogger(ActiveMQSession.class);
-    private final Scheduler scheduler;
     private final ThreadPoolExecutor connectionExecutor;
 
     protected int acknowledgementMode;
@@ -251,7 +252,6 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
         this.connection.asyncSendPacket(info);
         setTransformer(connection.getTransformer());
         setBlobTransferPolicy(connection.getBlobTransferPolicy());
-        this.scheduler=connection.getScheduler();
         this.connectionExecutor=connection.getExecutor();
         this.executor = new ActiveMQSessionExecutor(this);
         connection.addSession(this);
@@ -659,10 +659,14 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
         //
         for (final ActiveMQMessageConsumer consumer : consumers) {
             consumer.inProgressClearRequired();
-            scheduler.executeAfterDelay(new Runnable() {
-                public void run() {
-                    consumer.clearMessagesInProgress();
-                }}, 0l);
+            try {
+                connection.getScheduler().executeAfterDelay(new Runnable() {
+                    public void run() {
+                        consumer.clearMessagesInProgress();
+                    }}, 0l);
+            } catch (JMSException e) {
+                connection.onClientInternalException(e);
+            }
         }
     }
 
@@ -892,7 +896,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
                                 for (int i = 0; i < redeliveryCounter; i++) {
                                     redeliveryDelay = redeliveryPolicy.getNextRedeliveryDelay(redeliveryDelay);
                                 }
-                                scheduler.executeAfterDelay(new Runnable() {
+                                connection.getScheduler().executeAfterDelay(new Runnable() {
 
                                     public void run() {
                                         ((ActiveMQDispatcher)md.getConsumer()).dispatch(md);
@@ -2051,8 +2055,8 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
         }
     }
 
-    protected Scheduler getScheduler() {
-        return this.scheduler;
+    protected Scheduler getScheduler() throws JMSException {
+        return this.connection.getScheduler();
     }
 
     protected ThreadPoolExecutor getConnectionExecutor() {

@@ -29,6 +29,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
+
 import javax.jms.IllegalStateException;
 import javax.jms.InvalidDestinationException;
 import javax.jms.JMSException;
@@ -36,6 +37,7 @@ import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageListener;
 import javax.jms.TransactionRolledBackException;
+
 import org.apache.activemq.blob.BlobDownloader;
 import org.apache.activemq.command.ActiveMQBlobMessage;
 import org.apache.activemq.command.ActiveMQDestination;
@@ -54,7 +56,6 @@ import org.apache.activemq.management.JMSConsumerStatsImpl;
 import org.apache.activemq.management.StatsCapable;
 import org.apache.activemq.management.StatsImpl;
 import org.apache.activemq.selector.SelectorParser;
-import org.apache.activemq.thread.Scheduler;
 import org.apache.activemq.transaction.Synchronization;
 import org.apache.activemq.util.Callback;
 import org.apache.activemq.util.IntrospectionSupport;
@@ -109,7 +110,6 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
     }
 
     private static final Logger LOG = LoggerFactory.getLogger(ActiveMQMessageConsumer.class);
-    protected final Scheduler scheduler;
     protected final ActiveMQSession session;
     protected final ConsumerInfo info;
 
@@ -207,7 +207,6 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
         }
 
         this.session = session;
-        this.scheduler = session.getScheduler();
         this.redeliveryPolicy = session.connection.getRedeliveryPolicy();
         setTransformer(session.getTransformer());
 
@@ -1192,7 +1191,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                                 new LinkedList<MessageDispatch>(deliveredMessages);
 
                             // Start up the delivery again a little later.
-                            scheduler.executeAfterDelay(new Runnable() {
+                            session.getScheduler().executeAfterDelay(new Runnable() {
                                 public void run() {
                                     try {
                                         if (!unconsumedMessages.isClosed()) {
@@ -1216,7 +1215,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
 
                         if (redeliveryDelay > 0 && !unconsumedMessages.isClosed()) {
                             // Start up the delivery again a little later.
-                            scheduler.executeAfterDelay(new Runnable() {
+                            session.getScheduler().executeAfterDelay(new Runnable() {
                                 public void run() {
                                     try {
                                         if (started.get()) {
