@@ -72,11 +72,11 @@ public class AmqBrowseCommand extends AbstractAmqCommand {
         "          wildcard *:10, and has a JMSPriority field > 5 in the queue FOO.BAR",
         "        * To use wildcard queries, the field must be a string and the query enclosed in ''",
         "",
-        "    Main browse --amqurl tcp://localhost:61616 --user someUser --pass somePass FOO.BAR",
+        "    Main browse --amqurl tcp://localhost:61616 --user someUser --password somePass FOO.BAR",
         "        - Print the message header, custom message header, and message body of all messages in the",
         "          queue FOO.BAR, using someUser as the user name, and somePass as the password",
         "",
-        "    Main browse --amqurl tcp://localhost:61616 --user someUser --pass somePass --factory org.apache.activemq.ActiveMQConnectionFactory --passwordFactory org.apache.activemq.AMQPasswordFactory FOO.BAR",
+        "    Main browse --amqurl tcp://localhost:61616 --user someUser --password somePass --factory org.apache.activemq.ActiveMQConnectionFactory --passwordFactory org.apache.activemq.AMQPasswordFactory FOO.BAR",
         "        - Print the message header, custom message header, and message body of all messages in the",
         "          queue FOO.BAR, using someUser as the user name, org.apache.activemq.AMQFactorySubClass to create JMS connections,",
         "          and org.apache.activemq.console.command.DefaultPasswordFactory to turn somePass into the password to be used.",
@@ -91,7 +91,7 @@ public class AmqBrowseCommand extends AbstractAmqCommand {
     /**
      * Execute the browse command, which allows you to browse the messages in a
      * given JMS destination
-     * 
+     *
      * @param tokens - command arguments
      * @throws Exception
      */
@@ -148,7 +148,7 @@ public class AmqBrowseCommand extends AbstractAmqCommand {
 
     /**
      * Handle the --msgsel, --xmsgsel, --view, -V options.
-     * 
+     *
      * @param token - option token to handle
      * @param tokens - succeeding command arguments
      * @throws Exception
@@ -172,8 +172,7 @@ public class AmqBrowseCommand extends AbstractAmqCommand {
         } else if (token.startsWith("--xmsgsel")) {
             // If token is a substractive message selector option
 
-            // If no message selector is specified, or next token is a new
-            // option
+            // If no message selector is specified, or next token is a new option
             if (tokens.isEmpty() || ((String)tokens.get(0)).startsWith("-")) {
                 context.printException(new IllegalArgumentException("Message selector not specified"));
                 return;
