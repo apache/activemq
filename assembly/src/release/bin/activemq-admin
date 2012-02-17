@@ -6,9 +6,9 @@
 # The ASF licenses this file to You under the Apache License, Version 2.0
 # (the "License"); you may not use this file except in compliance with
 # the License.  You may obtain a copy of the License at
-# 
+#
 # http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -116,10 +116,22 @@ if [ -z "$ACTIVEMQ_BASE" ] ; then
   ACTIVEMQ_BASE="$ACTIVEMQ_HOME"
 fi
 
+# Active MQ configuration directory
+if [ -z "$ACTIVEMQ_CONF" ] ; then
+  ACTIVEMQ_CONF="$ACTIVEMQ_BASE/conf"
+fi
+
+# Active MQ data directory
+if [ -z "$ACTIVEMQ_DATA" ] ; then
+  ACTIVEMQ_DATA="$ACTIVEMQ_BASE/data"
+fi
+
 # For Cygwin, switch paths to Windows format before running java
 if $cygwin; then
   ACTIVEMQ_HOME=`cygpath --windows "$ACTIVEMQ_HOME"`
   ACTIVEMQ_BASE=`cygpath --windows "$ACTIVEMQ_BASE"`
+  ACTIVEMQ_CONF=`cygpath --windows "$ACTIVEMQ_CONF"`
+  ACTIVEMQ_DATA=`cygpath --windows "$ACTIVEMQ_DATA"`
   ACTIVEMQ_CLASSPATH=`cygpath --path --windows "$ACTIVEMQ_CLASSPATH"`
   JAVA_HOME=`cygpath --windows "$JAVA_HOME"`
   CLASSPATH=`cygpath --path --windows "$CLASSPATH"`
@@ -127,7 +139,7 @@ if $cygwin; then
 fi
 
 # Set default classpath
-ACTIVEMQ_CLASSPATH="${ACTIVEMQ_BASE}/conf;"$ACTIVEMQ_CLASSPATH
+ACTIVEMQ_CLASSPATH="${ACTIVEMQ_CONF};"$ACTIVEMQ_CLASSPATH
 
 if [ ""$1 = "start" ] ; then
     if [ -z "$ACTIVEMQ_OPTS" ] ; then
@@ -149,7 +161,7 @@ fi
 #ACTIVEMQ_DEBUG_OPTS="-Xdebug -Xnoagent -Djava.compiler=NONE -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=5005"
 
 if [ -n "$CYGHOME" ]; then
-    exec "$JAVACMD" $ACTIVEMQ_OPTS $ACTIVEMQ_DEBUG_OPTS -Dactivemq.classpath="${ACTIVEMQ_CLASSPATH}" -Dactivemq.home="${ACTIVEMQ_HOME}" -Dactivemq.base="${ACTIVEMQ_BASE}" -Dcygwin.user.home="$CYGHOME" -jar "${ACTIVEMQ_HOME}/bin/run.jar" $@
+    exec "$JAVACMD" $ACTIVEMQ_OPTS $ACTIVEMQ_DEBUG_OPTS -Dactivemq.classpath="${ACTIVEMQ_CLASSPATH}" -Dactivemq.home="${ACTIVEMQ_HOME}" -Dactivemq.base="${ACTIVEMQ_BASE}" -Dactivemq.conf="${ACTIVEMQ_CONF}" -Dactivemq.data="${ACTIVEMQ_DATA}" -Dcygwin.user.home="$CYGHOME" -jar "${ACTIVEMQ_HOME}/bin/run.jar" $@
 else
-    exec "$JAVACMD" $ACTIVEMQ_OPTS $ACTIVEMQ_DEBUG_OPTS -Dactivemq.classpath="${ACTIVEMQ_CLASSPATH}" -Dactivemq.home="${ACTIVEMQ_HOME}" -Dactivemq.base="${ACTIVEMQ_BASE}" -jar "${ACTIVEMQ_HOME}/bin/run.jar" $@
+    exec "$JAVACMD" $ACTIVEMQ_OPTS $ACTIVEMQ_DEBUG_OPTS -Dactivemq.classpath="${ACTIVEMQ_CLASSPATH}" -Dactivemq.home="${ACTIVEMQ_HOME}" -Dactivemq.base="${ACTIVEMQ_BASE}" -Dactivemq.conf="${ACTIVEMQ_CONF}" -Dactivemq.data="${ACTIVEMQ_DATA}" -jar "${ACTIVEMQ_HOME}/bin/run.jar" $@
 fi

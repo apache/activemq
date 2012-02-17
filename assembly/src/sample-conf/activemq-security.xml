@@ -50,7 +50,7 @@
     
   <bean id="propertyConfigurer" class="org.jasypt.spring.properties.EncryptablePropertyPlaceholderConfigurer"> 
       <constructor-arg ref="configurationEncryptor" /> 
-      <property name="location" value="file:${activemq.base}/conf/credentials-enc.properties"/> 
+      <property name="location" value="file:${activemq.conf}/credentials-enc.properties"/> 
   </bean> 
   
   <!--     

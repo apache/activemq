@@ -90,8 +90,14 @@ if [ -z "$ACTIVEMQ_BASE" ] ; then
 fi
 
 # Active MQ configuration directory
-if [ -z "$ACTIVEMQ_CONFIG_DIR" ] ; then
-    ACTIVEMQ_CONFIG_DIR="$ACTIVEMQ_BASE/conf"
+if [ -z "$ACTIVEMQ_CONF" ] ; then
+    # Preserve old configuration setting functionality.
+    if [ -z "$ACTIVEMQ_CONFIG_DIR" ] ; then
+        ACTIVEMQ_CONF="$ACTIVEMQ_BASE/conf"
+        ACTIVEMQ_CONF_DIR="ACTIVEMQ_DATA"
+    else
+        ACTIVEMQ_CONF="$ACTIVEMQ_CONFIG_DIR"
+    fi
 fi
 
 # Configure a user with non root priviledges, if no user is specified do not change user
@@ -99,9 +105,15 @@ if [ -z "$ACTIVEMQ_USER" ] ; then
     ACTIVEMQ_USER=""
 fi
 
-# Active MQ configuration directory
-if [ -z "$ACTIVEMQ_DATA_DIR" ]; then
-  ACTIVEMQ_DATA_DIR="$ACTIVEMQ_BASE/data"
+# Active MQ data directory
+if [ -z "$ACTIVEMQ_DATA" ] ; then
+    # Preserve old configuration setting functionality.
+    if [ -z "$ACTIVEMQ_DATA_DIR" ] ; then
+        ACTIVEMQ_DATA="$ACTIVEMQ_BASE/data"
+        ACTIVEMQ_DATA_DIR="ACTIVEMQ_DATA"
+    else
+        ACTIVEMQ_DATA="$ACTIVEMQ_DATA_DIR"
+    fi
 fi
 
 setCurrentUser(){
@@ -381,6 +393,8 @@ invokeJar(){
               -Dactivemq.classpath=\"${ACTIVEMQ_CLASSPATH}\" \
               -Dactivemq.home=\"${ACTIVEMQ_HOME}\" \
               -Dactivemq.base=\"${ACTIVEMQ_BASE}\" \
+              -Dactivemq.conf=\"${ACTIVEMQ_CONF}\" \
+              -Dactivemq.data=\"${ACTIVEMQ_DATA}\" \
               $ACTIVEMQ_CYGWIN \
               -jar \"${ACTIVEMQ_HOME}/bin/run.jar\" $COMMANDLINE_ARGS >/dev/null 2>&1 &
               RET=\"\$?\"; APID=\"\$!\";
@@ -393,6 +407,8 @@ invokeJar(){
               -Dactivemq.classpath=\"${ACTIVEMQ_CLASSPATH}\" \
               -Dactivemq.home=\"${ACTIVEMQ_HOME}\" \
               -Dactivemq.base=\"${ACTIVEMQ_BASE}\" \
+              -Dactivemq.conf=\"${ACTIVEMQ_CONF}\" \
+              -Dactivemq.data=\"${ACTIVEMQ_DATA}\" \
               $ACTIVEMQ_CYGWIN \
               -jar \"${ACTIVEMQ_HOME}/bin/run.jar\" $COMMANDLINE_ARGS --pid $PID &
               RET=\"\$?\"; APID=\"\$!\";
@@ -403,6 +419,8 @@ invokeJar(){
               -Dactivemq.classpath=\"${ACTIVEMQ_CLASSPATH}\" \
               -Dactivemq.home=\"${ACTIVEMQ_HOME}\" \
               -Dactivemq.base=\"${ACTIVEMQ_BASE}\" \
+              -Dactivemq.conf=\"${ACTIVEMQ_CONF}\" \
+              -Dactivemq.data=\"${ACTIVEMQ_DATA}\" \
               $ACTIVEMQ_CYGWIN \
               -jar \"${ACTIVEMQ_HOME}/bin/run.jar\" $COMMANDLINE_ARGS" $DOIT_POSTFIX
       RET="$?"

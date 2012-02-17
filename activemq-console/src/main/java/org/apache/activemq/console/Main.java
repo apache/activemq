@@ -40,8 +40,6 @@ import java.util.StringTokenizer;
 /**
  * Main class that can bootstrap an ActiveMQ broker console. Handles command
  * line argument parsing to set up and run broker tasks.
- * 
- * 
  */
 public class Main {
 
@@ -62,10 +60,10 @@ public class Main {
         // Parse for extension directory option
         app.parseExtensions(tokens);
 
-		// lets add the conf directory first, to find the log4j.properties just in case its not 
-		// in the activemq.classpath system property or some jar incorrectly includes one
-		File confDir = new File(app.getActiveMQBase(), "conf");
-		app.addClassPath(confDir);
+        // lets add the conf directory first, to find the log4j.properties just in case its not
+        // in the activemq.classpath system property or some jar incorrectly includes one
+        File confDir = app.getActiveMQConfig();
+        app.addClassPath(confDir);
 
         // Add the following to the classpath:
         //
@@ -96,7 +94,6 @@ public class Main {
             }
             app.addExtensionDirectory(new File(homeLibDir, "optional"));
             app.addExtensionDirectory(new File(homeLibDir, "web"));
-
         }
 
         // Add any custom classpath specified from the system property
@@ -125,7 +122,7 @@ public class Main {
 
     /**
      * Print out what's in the classloader tree being used.
-     * 
+     *
      * @param cl
      * @return depth
      */
@@ -219,17 +216,17 @@ public class Main {
         System.out.println("Java Runtime: " + buffer.toString());
 
         buffer = new StringBuilder();
-        buffer.append("current="); 
-        buffer.append(Runtime.getRuntime().totalMemory()/1024L); 
-        buffer.append("k  free="); 
-        buffer.append(Runtime.getRuntime().freeMemory()/1024L); 
-        buffer.append("k  max="); 
-        buffer.append(Runtime.getRuntime().maxMemory()/1024L); 
+        buffer.append("current=");
+        buffer.append(Runtime.getRuntime().totalMemory()/1024L);
+        buffer.append("k  free=");
+        buffer.append(Runtime.getRuntime().freeMemory()/1024L);
+        buffer.append("k  max=");
+        buffer.append(Runtime.getRuntime().maxMemory()/1024L);
         buffer.append("k");
         System.out.println("  Heap sizes: " + buffer.toString());
 
-        List jvmArgs = ManagementFactory.getRuntimeMXBean().getInputArguments();
-        buffer = new StringBuilder(); 
+        List<?> jvmArgs = ManagementFactory.getRuntimeMXBean().getInputArguments();
+        buffer = new StringBuilder();
         for (Object arg : jvmArgs) {
             buffer.append(" ").append(arg);
         }
@@ -237,14 +234,16 @@ public class Main {
 
         System.out.println("ACTIVEMQ_HOME: " + getActiveMQHome());
         System.out.println("ACTIVEMQ_BASE: " + getActiveMQBase());
+        System.out.println("ACTIVEMQ_CONFIG: " + getActiveMQConfig());
+        System.out.println("ACTIVEMQ_DATA: " + getActiveMQDataDir());
 
         ClassLoader cl = getClassLoader();
-		Thread.currentThread().setContextClassLoader(cl);
+        Thread.currentThread().setContextClassLoader(cl);
 
         // Use reflection to run the task.
         try {
             String[] args = tokens.toArray(new String[tokens.size()]);
-            Class task = cl.loadClass(TASK_DEFAULT_CLASS);
+            Class<?> task = cl.loadClass(TASK_DEFAULT_CLASS);
             Method runTask = task.getMethod("main", new Class[] {
                 String[].class, InputStream.class, PrintStream.class
             });
@@ -277,7 +276,7 @@ public class Main {
      * The extension directory feature will not work if the broker factory is
      * already in the classpath since we have to load him from a child
      * ClassLoader we build for it to work correctly.
-     * 
+     *
      * @return true, if extension dir can be used. false otherwise.
      */
     public boolean canUseExtdir() {
@@ -299,8 +298,6 @@ public class Main {
 
                 for (Iterator<File> iter = activeMQClassPath.iterator(); iter.hasNext();) {
                     File dir = iter.next();
-                    // try{ System.out.println("Adding to classpath: " +
-                    // dir.getCanonicalPath()); }catch(Exception e){}
                     urls.add(dir.toURI().toURL());
                 }
 
@@ -310,25 +307,16 @@ public class Main {
                         File[] files = dir.listFiles();
                         if (files != null) {
 
-                            // Sort the jars so that classpath built is
-                            // consistently
-                            // in the same order. Also allows us to use jar
-                            // names to control
-                            // classpath order.
-                            Arrays.sort(files, new Comparator() {
-                                public int compare(Object o1, Object o2) {
-                                    File f1 = (File)o1;
-                                    File f2 = (File)o2;
+                            // Sort the jars so that classpath built is consistently in the same
+                            // order. Also allows us to use jar names to control classpath order.
+                            Arrays.sort(files, new Comparator<File>() {
+                                public int compare(File f1, File f2) {
                                     return f1.getName().compareTo(f2.getName());
                                 }
                             });
 
                             for (int j = 0; j < files.length; j++) {
                                 if (files[j].getName().endsWith(".zip") || files[j].getName().endsWith(".jar")) {
-                                    // try{ System.out.println("Adding to
-                                    // classpath: " +
-                                    // files[j].getCanonicalPath());
-                                    // }catch(Exception e){}
                                     urls.add(files[j].toURI().toURL());
                                 }
                             }
@@ -392,5 +380,27 @@ public class Main {
         }
 
         return activeMQBase;
+    }
+
+    public File getActiveMQConfig() {
+        File activeMQConfig = null;
+
+        if (System.getProperty("activemq.conf") != null) {
+            activeMQConfig = new File(System.getProperty("activemq.conf"));
+        } else {
+            activeMQConfig = new File(getActiveMQBase() + "/conf");
+        }
+        return activeMQConfig;
+    }
+
+    public File getActiveMQDataDir() {
+        File activeMQDataDir = null;
+
+        if (System.getProperty("activemq.data") != null) {
+            activeMQDataDir = new File(System.getProperty("activemq.data"));
+        } else {
+            activeMQDataDir = new File(getActiveMQBase() + "/data");
+        }
+        return activeMQDataDir;
     }
 }

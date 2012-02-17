@@ -5,9 +5,9 @@
     The ASF licenses this file to You under the Apache License, Version 2.0
     (the "License"); you may not use this file except in compliance with
     the License.  You may obtain a copy of the License at
-   
+
     http://www.apache.org/licenses/LICENSE-2.0
-   
+
     Unless required by applicable law or agreed to in writing, software
     distributed under the License is distributed on an "AS IS" BASIS,
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -25,26 +25,26 @@
     <!-- Allows us to use system properties as variables in this configuration file -->
     <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
         <property name="locations">
-            <value>file:${activemq.base}/conf/credentials.properties</value>
-        </property>      
+            <value>file:${activemq.conf}/credentials.properties</value>
+        </property>
     </bean>
 
-    <!-- 
-        The <broker> element is used to configure the ActiveMQ broker. 
+    <!--
+        The <broker> element is used to configure the ActiveMQ broker.
     -->
-    <broker xmlns="http://activemq.apache.org/schema/core" brokerName="localhost" dataDirectory="${activemq.base}/data">
- 
+    <broker xmlns="http://activemq.apache.org/schema/core" brokerName="localhost" dataDirectory="${activemq.data}">
+
         <!--
-			For better performances use VM cursor and small memory limit.
-			For more information, see:
-            
+            For better performances use VM cursor and small memory limit.
+            For more information, see:
+
             http://activemq.apache.org/message-cursors.html
-            
+
             Also, if your producer is "hanging", it's probably due to producer flow control.
             For more information, see:
             http://activemq.apache.org/producer-flow-control.html
         -->
-              
+
         <destinationPolicy>
             <policyMap>
               <policyEntries>
@@ -56,9 +56,9 @@
                 <policyEntry queue=">" producerFlowControl="true" memoryLimit="1mb">
                   <!-- Use VM cursor for better latency
                        For more information, see:
-                       
+
                        http://activemq.apache.org/message-cursors.html
-                       
+
                   <pendingQueuePolicy>
                     <vmQueueCursor/>
                   </pendingQueuePolicy>
@@ -66,38 +66,38 @@
                 </policyEntry>
               </policyEntries>
             </policyMap>
-        </destinationPolicy> 
- 
-        
-        <!-- 
-            The managementContext is used to configure how ActiveMQ is exposed in 
-            JMX. By default, ActiveMQ uses the MBean server that is started by 
-            the JVM. For more information, see: 
-            
-            http://activemq.apache.org/jmx.html 
+        </destinationPolicy>
+
+
+        <!--
+            The managementContext is used to configure how ActiveMQ is exposed in
+            JMX. By default, ActiveMQ uses the MBean server that is started by
+            the JVM. For more information, see:
+
+            http://activemq.apache.org/jmx.html
         -->
         <managementContext>
             <managementContext createConnector="false"/>
         </managementContext>
 
-        <!-- 
+        <!--
             Configure message persistence for the broker. The default persistence
-            mechanism is the KahaDB store (identified by the kahaDB tag). 
-            For more information, see: 
-            
-            http://activemq.apache.org/persistence.html 
+            mechanism is the KahaDB store (identified by the kahaDB tag).
+            For more information, see:
+
+            http://activemq.apache.org/persistence.html
         -->
         <persistenceAdapter>
-            <kahaDB directory="${activemq.base}/data/kahadb"/>
+            <kahaDB directory="${activemq.data}/kahadb"/>
         </persistenceAdapter>
-        
-        
+
+
           <!--
-            The systemUsage controls the maximum amount of space the broker will 
+            The systemUsage controls the maximum amount of space the broker will
             use before slowing down producers. For more information, see:
-            
+
             http://activemq.apache.org/producer-flow-control.html
-             
+
         <systemUsage>
             <systemUsage>
                 <memoryUsage>
@@ -111,13 +111,13 @@
                 </tempUsage>
             </systemUsage>
         </systemUsage>
-		-->
-		  
-        <!-- 
+        -->
+
+        <!--
             The transport connectors expose ActiveMQ over a given protocol to
-            clients and other brokers. For more information, see: 
-            
-            http://activemq.apache.org/configuring-transports.html 
+            clients and other brokers. For more information, see:
+
+            http://activemq.apache.org/configuring-transports.html
         -->
         <transportConnectors>
             <transportConnector name="openwire" uri="tcp://0.0.0.0:61616"/>
@@ -125,12 +125,12 @@
 
     </broker>
 
-    <!-- 
+    <!--
         Enable web consoles, REST and Ajax APIs and demos
-        
-        Take a look at ${ACTIVEMQ_HOME}/conf/jetty.xml for more details 
+
+        Take a look at ${ACTIVEMQ_HOME}/conf/jetty.xml for more details
     -->
     <import resource="jetty.xml"/>
-    
+
 </beans>
 <!-- END SNIPPET: example -->
