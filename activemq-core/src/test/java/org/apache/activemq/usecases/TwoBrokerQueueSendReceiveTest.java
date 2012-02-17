@@ -42,7 +42,8 @@ public class TwoBrokerQueueSendReceiveTest  extends TwoBrokerTopicSendReceiveTes
             onMessage(consumer.receive(10000));
             consumer.close();
         }
-        this.assertMessagesAreReceived();
+        waitForMessagesToBeDelivered();
+        assertEquals("Got all messages", data.length, messages.size());
 
         BrokerService broker = (BrokerService) brokers.get("receiver");
         final DemandForwardingBridgeSupport bridge = (DemandForwardingBridgeSupport) broker.getNetworkConnectors().get(0).activeBridges().toArray()[0];
