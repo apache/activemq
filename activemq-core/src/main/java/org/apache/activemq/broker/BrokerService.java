@@ -42,7 +42,6 @@ import javax.annotation.PreDestroy;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 
-import org.apache.activeio.journal.Journal;
 import org.apache.activemq.ActiveMQConnectionMetaData;
 import org.apache.activemq.ConfigurationException;
 import org.apache.activemq.Service;
@@ -87,6 +86,7 @@ import org.apache.activemq.security.MessageAuthorizationPolicy;
 import org.apache.activemq.selector.SelectorParser;
 import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.PersistenceAdapterFactory;
+import org.apache.activemq.store.amq.AMQPersistenceAdapter;
 import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
 import org.apache.activemq.store.kahadb.plist.PListStore;
 import org.apache.activemq.store.memory.MemoryPersistenceAdapter;
@@ -96,7 +96,15 @@ import org.apache.activemq.transport.TransportFactory;
 import org.apache.activemq.transport.TransportServer;
 import org.apache.activemq.transport.vm.VMTransportFactory;
 import org.apache.activemq.usage.SystemUsage;
-import org.apache.activemq.util.*;
+import org.apache.activemq.util.BrokerSupport;
+import org.apache.activemq.util.DefaultIOExceptionHandler;
+import org.apache.activemq.util.IOExceptionHandler;
+import org.apache.activemq.util.IOExceptionSupport;
+import org.apache.activemq.util.IOHelper;
+import org.apache.activemq.util.InetAddressUtil;
+import org.apache.activemq.util.JMXSupport;
+import org.apache.activemq.util.ServiceStopper;
+import org.apache.activemq.util.URISupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -1692,13 +1700,16 @@ public class BrokerService implements Service {
         SystemUsage usage = getSystemUsage();
         long memLimit = usage.getMemoryUsage().getLimit();
         long jvmLimit = Runtime.getRuntime().maxMemory();
+
         if (memLimit > jvmLimit) {
             LOG.error("Memory Usage for the Broker (" + memLimit / (1024 * 1024) +
                       " mb) is more than the maximum available for the JVM: " +
                       jvmLimit / (1024 * 1024) + " mb");
         }
+
         if (getPersistenceAdapter() != null) {
-            File dir = getPersistenceAdapter().getDirectory();
+            PersistenceAdapter adapter = getPersistenceAdapter();
+            File dir = adapter.getDirectory();
             if (dir != null) {
                 long storeLimit = usage.getStoreUsage().getLimit();
                 long dirFreeSpace = dir.getFreeSpace();
@@ -1708,7 +1719,26 @@ public class BrokerService implements Service {
                              " only has " + dirFreeSpace / (1024 * 1024) + " mb of free space");
                 }
             }
+
+            long maxJournalFileSize = 0;
+            long storeLimit = usage.getStoreUsage().getLimit();
+
+            if (adapter instanceof KahaDBPersistenceAdapter) {
+                KahaDBPersistenceAdapter kahaDB = (KahaDBPersistenceAdapter) adapter;
+                maxJournalFileSize = kahaDB.getJournalMaxFileLength();
+            } else if (adapter instanceof AMQPersistenceAdapter) {
+                AMQPersistenceAdapter amqAdapter = (AMQPersistenceAdapter) adapter;
+                maxJournalFileSize = amqAdapter.getMaxFileLength();
+            }
+
+            if (storeLimit < maxJournalFileSize) {
+                LOG.error("Store limit is " + storeLimit / (1024 * 1024) +
+                          " mb, whilst the max journal file size for the store is: " +
+                          maxJournalFileSize / (1024 * 1024) + " mb, " +
+                          "the store will not accept any data when used.");
+            }
         }
+
         File tmpDir = getTmpDataDirectory();
         if (tmpDir != null) {
 
@@ -1729,13 +1759,13 @@ public class BrokerService implements Service {
             }
 
             long maxJournalFileSize;
-            
+
             if (usage.getTempUsage().getStore() != null) {
-            	maxJournalFileSize = usage.getTempUsage().getStore().getJournalMaxFileLength();
+                maxJournalFileSize = usage.getTempUsage().getStore().getJournalMaxFileLength();
             } else {
-            	maxJournalFileSize = org.apache.kahadb.journal.Journal.DEFAULT_MAX_FILE_LENGTH;
+                maxJournalFileSize = org.apache.kahadb.journal.Journal.DEFAULT_MAX_FILE_LENGTH;
             }
-            
+
             if (storeLimit < maxJournalFileSize) {
                 LOG.error("Temporary Store limit is " + storeLimit / (1024 * 1024) +
                           " mb, whilst the max journal file size for the temporary store is: " +
