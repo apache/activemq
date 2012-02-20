@@ -178,7 +178,7 @@ public class StompWireFormat implements WireFormat {
         HashMap<String, String> headers = new HashMap<String, String>(25);
         while (true) {
             ByteSequence line = readHeaderLine(in, MAX_HEADER_LENGTH, "The maximum header length was exceeded");
-            if (line != null && line.length > 0) {
+            if (line != null && line.length > 1) {
 
                 if (headers.size() > MAX_HEADERS) {
                     throw new ProtocolException("The maximum number of headers was exceeded", true);

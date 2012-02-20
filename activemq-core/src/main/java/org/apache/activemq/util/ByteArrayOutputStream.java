@@ -52,7 +52,7 @@ public class ByteArrayOutputStream extends OutputStream {
     
     /**
      * Ensures the the buffer has at least the minimumCapacity specified. 
-     * @param i
+     * @param minimumCapacity
      */
     private void checkCapacity(int minimumCapacity) {
         if (minimumCapacity > buffer.length) {
@@ -78,5 +78,19 @@ public class ByteArrayOutputStream extends OutputStream {
     
     public int size() {
         return size;
+    }
+
+    public boolean endsWith(final byte[] array) {
+        int i = 0;
+        int start = size - array.length;
+        if (start < 0) {
+            return false;
+        }
+        while (start < size) {
+            if (buffer[start++] != array[i++]) {
+                return false;
+            }
+        }
+        return true;
     }
 }
