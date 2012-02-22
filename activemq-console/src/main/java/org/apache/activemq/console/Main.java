@@ -241,7 +241,7 @@ public class Main {
 
         System.out.println("ACTIVEMQ_HOME: " + getActiveMQHome());
         System.out.println("ACTIVEMQ_BASE: " + getActiveMQBase());
-        System.out.println("ACTIVEMQ_CONFIG: " + getActiveMQConfig());
+        System.out.println("ACTIVEMQ_CONF: " + getActiveMQConfig());
         System.out.println("ACTIVEMQ_DATA: " + getActiveMQDataDir());
 
         ClassLoader cl = getClassLoader();

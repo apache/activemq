@@ -91,7 +91,13 @@ fi
 
 # Active MQ configuration directory
 if [ -z "$ACTIVEMQ_CONF" ] ; then
-    ACTIVEMQ_CONF="$ACTIVEMQ_BASE/conf"
+
+    # For backwards compat with old variables we let ACTIVEMQ_CONFIG_DIR set ACTIVEMQ_CONF
+    if [ -z "$ACTIVEMQ_CONFIG_DIR" ] ; then
+        ACTIVEMQ_CONF="$ACTIVEMQ_BASE/conf"
+    else
+        ACTIVEMQ_CONF="$ACTIVEMQ_CONFIG_DIR"
+    fi
 fi
 
 # Configure a user with non root priviledges, if no user is specified do not change user
@@ -101,7 +107,13 @@ fi
 
 # Active MQ data directory
 if [ -z "$ACTIVEMQ_DATA" ] ; then
-    ACTIVEMQ_DATA="$ACTIVEMQ_BASE/data"
+
+    # For backwards compat with old variables we let ACTIVEMQ_DATA_DIR set ACTIVEMQ_DATA
+    if [ -z "$ACTIVEMQ_DATA_DIR" ] ; then
+        ACTIVEMQ_DATA="$ACTIVEMQ_BASE/data"
+    else
+        ACTIVEMQ_DATA="$ACTIVEMQ_DATA_DIR"
+    fi
 fi
 
 if [ -z "$ACTIVEMQ_TMP" ] ; then
