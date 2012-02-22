@@ -53,6 +53,13 @@ public class Main {
     private Set<File> activeMQClassPath = new HashSet<File>(5);
 
     public static void main(String[] args) {
+
+        // Create the tmpdir if it does not exist yet..
+        File tmpdir = new File(System.getProperty("java.io.tmpdir"));
+        if(!tmpdir.exists()) {
+            tmpdir.mkdirs();
+        }
+
         Main app = new Main();
 
         // Convert arguments to collection for easier management

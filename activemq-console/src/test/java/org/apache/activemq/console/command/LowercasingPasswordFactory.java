@@ -6,4 +6,4 @@ public class LowercasingPasswordFactory implements PasswordFactory {
 		return password.toLowerCase();
 	}
 
-};
+}

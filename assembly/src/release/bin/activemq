@@ -104,6 +104,10 @@ if [ -z "$ACTIVEMQ_DATA" ] ; then
     ACTIVEMQ_DATA="$ACTIVEMQ_BASE/data"
 fi
 
+if [ -z "$ACTIVEMQ_TMP" ] ; then
+  ACTIVEMQ_TMP="$ACTIVEMQ_BASE/tmp"
+fi
+
 setCurrentUser(){
    CUSER=`whoami 2>/dev/null`
 
@@ -334,6 +338,7 @@ if [ "$OSTYPE" = "cygwin" ];then
   JAVA_HOME=`cygpath --windows "$JAVA_HOME"`
   CLASSPATH=`cygpath --path --windows "$CLASSPATH"`
   CYGHOME=`cygpath --windows "$HOME"`
+  ACTIVEMQ_TMP=`cygpath --windows "$ACTIVEMQ_TMP"`
   if [ -n "$CYGHOME" ]; then
       ACTIVEMQ_CYGWIN="-Dcygwin.user.home=\"$CYGHOME\""
   fi
@@ -382,6 +387,7 @@ invokeJar(){
               -Dactivemq.base=\"${ACTIVEMQ_BASE}\" \
               -Dactivemq.conf=\"${ACTIVEMQ_CONF}\" \
               -Dactivemq.data=\"${ACTIVEMQ_DATA}\" \
+              -Djava.io.tmpdir=\"${ACTIVEMQ_TMP}\" \
               $ACTIVEMQ_CYGWIN \
               -jar \"${ACTIVEMQ_HOME}/bin/run.jar\" $COMMANDLINE_ARGS >/dev/null 2>&1 &
               RET=\"\$?\"; APID=\"\$!\";
@@ -396,6 +402,7 @@ invokeJar(){
               -Dactivemq.base=\"${ACTIVEMQ_BASE}\" \
               -Dactivemq.conf=\"${ACTIVEMQ_CONF}\" \
               -Dactivemq.data=\"${ACTIVEMQ_DATA}\" \
+              -Djava.io.tmpdir=\"${ACTIVEMQ_TMP}\" \
               $ACTIVEMQ_CYGWIN \
               -jar \"${ACTIVEMQ_HOME}/bin/run.jar\" $COMMANDLINE_ARGS --pid $PID &
               RET=\"\$?\"; APID=\"\$!\";
@@ -408,6 +415,7 @@ invokeJar(){
               -Dactivemq.base=\"${ACTIVEMQ_BASE}\" \
               -Dactivemq.conf=\"${ACTIVEMQ_CONF}\" \
               -Dactivemq.data=\"${ACTIVEMQ_DATA}\" \
+              -Djava.io.tmpdir=\"${ACTIVEMQ_TMP}\" \
               $ACTIVEMQ_CYGWIN \
               -jar \"${ACTIVEMQ_HOME}/bin/run.jar\" $COMMANDLINE_ARGS" $DOIT_POSTFIX
       RET="$?"

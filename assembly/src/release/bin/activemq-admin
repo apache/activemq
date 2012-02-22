@@ -116,6 +116,10 @@ if [ -z "$ACTIVEMQ_BASE" ] ; then
   ACTIVEMQ_BASE="$ACTIVEMQ_HOME"
 fi
 
+if [ -z "$ACTIVEMQ_TMP" ] ; then
+  ACTIVEMQ_TMP="$ACTIVEMQ_BASE/tmp"
+fi
+
 # Active MQ configuration directory
 if [ -z "$ACTIVEMQ_CONF" ] ; then
   ACTIVEMQ_CONF="$ACTIVEMQ_BASE/conf"
@@ -132,6 +136,7 @@ if $cygwin; then
   ACTIVEMQ_BASE=`cygpath --windows "$ACTIVEMQ_BASE"`
   ACTIVEMQ_CONF=`cygpath --windows "$ACTIVEMQ_CONF"`
   ACTIVEMQ_DATA=`cygpath --windows "$ACTIVEMQ_DATA"`
+  ACTIVEMQ_TMP=`cygpath --windows "$ACTIVEMQ_TMP"`
   ACTIVEMQ_CLASSPATH=`cygpath --path --windows "$ACTIVEMQ_CLASSPATH"`
   JAVA_HOME=`cygpath --windows "$JAVA_HOME"`
   CLASSPATH=`cygpath --path --windows "$CLASSPATH"`
@@ -161,7 +166,7 @@ fi
 #ACTIVEMQ_DEBUG_OPTS="-Xdebug -Xnoagent -Djava.compiler=NONE -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=5005"
 
 if [ -n "$CYGHOME" ]; then
-    exec "$JAVACMD" $ACTIVEMQ_OPTS $ACTIVEMQ_DEBUG_OPTS -Dactivemq.classpath="${ACTIVEMQ_CLASSPATH}" -Dactivemq.home="${ACTIVEMQ_HOME}" -Dactivemq.base="${ACTIVEMQ_BASE}" -Dactivemq.conf="${ACTIVEMQ_CONF}" -Dactivemq.data="${ACTIVEMQ_DATA}" -Dcygwin.user.home="$CYGHOME" -jar "${ACTIVEMQ_HOME}/bin/run.jar" $@
+    exec "$JAVACMD" $ACTIVEMQ_OPTS $ACTIVEMQ_DEBUG_OPTS -Dactivemq.classpath="${ACTIVEMQ_CLASSPATH}" -Dactivemq.home="${ACTIVEMQ_HOME}" -Dactivemq.base="${ACTIVEMQ_BASE}" -Dactivemq.conf="${ACTIVEMQ_CONF}" -Dactivemq.data="${ACTIVEMQ_DATA}" -Djava.io.tmpdir="${ACTIVEMQ_TMP}" -Dcygwin.user.home="$CYGHOME" -jar "${ACTIVEMQ_HOME}/bin/run.jar" $@
 else
-    exec "$JAVACMD" $ACTIVEMQ_OPTS $ACTIVEMQ_DEBUG_OPTS -Dactivemq.classpath="${ACTIVEMQ_CLASSPATH}" -Dactivemq.home="${ACTIVEMQ_HOME}" -Dactivemq.base="${ACTIVEMQ_BASE}" -Dactivemq.conf="${ACTIVEMQ_CONF}" -Dactivemq.data="${ACTIVEMQ_DATA}" -jar "${ACTIVEMQ_HOME}/bin/run.jar" $@
+    exec "$JAVACMD" $ACTIVEMQ_OPTS $ACTIVEMQ_DEBUG_OPTS -Dactivemq.classpath="${ACTIVEMQ_CLASSPATH}" -Dactivemq.home="${ACTIVEMQ_HOME}" -Dactivemq.base="${ACTIVEMQ_BASE}" -Dactivemq.conf="${ACTIVEMQ_CONF}" -Dactivemq.data="${ACTIVEMQ_DATA}" -Djava.io.tmpdir="${ACTIVEMQ_TMP}" -jar "${ACTIVEMQ_HOME}/bin/run.jar" $@
 fi
