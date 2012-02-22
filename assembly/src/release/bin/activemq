@@ -91,13 +91,7 @@ fi
 
 # Active MQ configuration directory
 if [ -z "$ACTIVEMQ_CONF" ] ; then
-    # Preserve old configuration setting functionality.
-    if [ -z "$ACTIVEMQ_CONFIG_DIR" ] ; then
-        ACTIVEMQ_CONF="$ACTIVEMQ_BASE/conf"
-        ACTIVEMQ_CONF_DIR="ACTIVEMQ_DATA"
-    else
-        ACTIVEMQ_CONF="$ACTIVEMQ_CONFIG_DIR"
-    fi
+    ACTIVEMQ_CONF="$ACTIVEMQ_BASE/conf"
 fi
 
 # Configure a user with non root priviledges, if no user is specified do not change user
@@ -107,13 +101,7 @@ fi
 
 # Active MQ data directory
 if [ -z "$ACTIVEMQ_DATA" ] ; then
-    # Preserve old configuration setting functionality.
-    if [ -z "$ACTIVEMQ_DATA_DIR" ] ; then
-        ACTIVEMQ_DATA="$ACTIVEMQ_BASE/data"
-        ACTIVEMQ_DATA_DIR="ACTIVEMQ_DATA"
-    else
-        ACTIVEMQ_DATA="$ACTIVEMQ_DATA_DIR"
-    fi
+    ACTIVEMQ_DATA="$ACTIVEMQ_BASE/data"
 fi
 
 setCurrentUser(){
@@ -125,18 +113,18 @@ setCurrentUser(){
    fi
 }
 
-if [ ! -d "$ACTIVEMQ_DATA_DIR" ]; then
+if [ ! -d "$ACTIVEMQ_DATA" ]; then
    setCurrentUser
    if ( [ -z "$ACTIVEMQ_USER" ] || [ "$ACTIVEMQ_USER" = "$CUSER" ] );then
-        mkdir $ACTIVEMQ_DATA_DIR
+        mkdir $ACTIVEMQ_DATA
    elif [ "`id -u`" = "0" ];then
-      su -c "mkdir $ACTIVEMQ_DATA_DIR" - $ACTIVEMQ_USER;
+      su -c "mkdir $ACTIVEMQ_DATA" - $ACTIVEMQ_USER;
    fi
 fi
 
 # Location of the pidfile
 if [ -z "$ACTIVEMQ_PIDFILE" ]; then
-  ACTIVEMQ_PIDFILE="$ACTIVEMQ_DATA_DIR/activemq-`hostname`.pid"
+  ACTIVEMQ_PIDFILE="$ACTIVEMQ_DATA/activemq-`hostname`.pid"
 fi
 
 # Location of the java installation
@@ -161,7 +149,7 @@ fi
 # JMX access is needed for quering a running activemq instance to gain data or to
 # trigger management operations.
 #
-# Example for ${ACTIVEMQ_CONFIG_DIR}/jmx.access:
+# Example for ${ACTIVEMQ_CONF}/jmx.access:
 # ---
 # # The "monitorRole" role has readonly access.
 # # The "controlRole" role has readwrite access.
@@ -169,7 +157,7 @@ fi
 # controlRole readwrite
 # ---
 #
-# Example for ${ACTIVEMQ_CONFIG_DIR}/jmx.password:
+# Example for ${ACTIVEMQ_CONF}/jmx.password:
 # ---
 # # The "monitorRole" role has password "abc123".
 # # # The "controlRole" role has password "abcd1234".
@@ -178,8 +166,8 @@ fi
 # ---
 #
 # ACTIVEMQ_SUNJMX_START="-Dcom.sun.management.jmxremote.port=11099 "
-# ACTIVEMQ_SUNJMX_START="$ACTIVEMQ_SUNJMX_START -Dcom.sun.management.jmxremote.password.file=${ACTIVEMQ_CONFIG_DIR}/jmx.password"
-# ACTIVEMQ_SUNJMX_START="$ACTIVEMQ_SUNJMX_START -Dcom.sun.management.jmxremote.access.file=${ACTIVEMQ_CONFIG_DIR}/jmx.access"
+# ACTIVEMQ_SUNJMX_START="$ACTIVEMQ_SUNJMX_START -Dcom.sun.management.jmxremote.password.file=${ACTIVEMQ_CONF}/jmx.password"
+# ACTIVEMQ_SUNJMX_START="$ACTIVEMQ_SUNJMX_START -Dcom.sun.management.jmxremote.access.file=${ACTIVEMQ_CONF}/jmx.access"
 # ACTIVEMQ_SUNJMX_START="$ACTIVEMQ_SUNJMX_START -Dcom.sun.management.jmxremote.ssl=false"
 ACTIVEMQ_SUNJMX_START="$ACTIVEMQ_SUNJMX_START -Dcom.sun.management.jmxremote"
 
@@ -340,6 +328,8 @@ fi
 if [ "$OSTYPE" = "cygwin" ];then
   ACTIVEMQ_HOME=`cygpath --windows "$ACTIVEMQ_HOME"`
   ACTIVEMQ_BASE=`cygpath --windows "$ACTIVEMQ_BASE"`
+  ACTIVEMQ_CONF=`cygpath --windows "$ACTIVEMQ_CONF"`
+  ACTIVEMQ_DATA=`cygpath --windows "$ACTIVEMQ_DATA"`
   ACTIVEMQ_CLASSPATH=`cygpath --path --windows "$ACTIVEMQ_CLASSPATH"`
   JAVA_HOME=`cygpath --windows "$JAVA_HOME"`
   CLASSPATH=`cygpath --path --windows "$CLASSPATH"`
@@ -351,10 +341,7 @@ fi
 
 # Set default classpath
 # Add instance conf dir before AMQ install conf dir to pick up instance-specific classpath entries first
-ACTIVEMQ_CLASSPATH="${ACTIVEMQ_CONFIG_DIR};${ACTIVEMQ_CLASSPATH}"
-if [ "${ACTIVEMQ_BASE}" != "${ACTIVEMQ_HOME}" ]; then
-    ACTIVEMQ_CLASSPATH="${ACTIVEMQ_BASE}/conf;${ACTIVEMQ_CLASSPATH}"
-fi
+ACTIVEMQ_CLASSPATH="${ACTIVEMQ_CONF};${ACTIVEMQ_CLASSPATH}"
 
 # Start the ActiveMQ JAR
 #
@@ -412,7 +399,7 @@ invokeJar(){
               $ACTIVEMQ_CYGWIN \
               -jar \"${ACTIVEMQ_HOME}/bin/run.jar\" $COMMANDLINE_ARGS --pid $PID &
               RET=\"\$?\"; APID=\"\$!\";
-              echo \$APID > $ACTIVEMQ_DATA_DIR/stop.pid; exit \$RET" $DOIT_POSTFIX
+              echo \$APID > $ACTIVEMQ_DATA/stop.pid; exit \$RET" $DOIT_POSTFIX
       RET="$?"
    else
       $DOIT_PREFIX "$JAVACMD $ACTIVEMQ_OPTS $ACTIVEMQ_DEBUG_OPTS \
@@ -457,7 +444,7 @@ checkRunning(){
 }
 
 checkStopRunning(){
-    PID=$ACTIVEMQ_DATA_DIR/stop.pid
+    PID=$ACTIVEMQ_DATA/stop.pid
     if [ -f "$PID" ]; then
        if  [ -z "`cat $PID`" ];then
         echo "ERROR: Pidfile '$PID' exists but contains no pid"
@@ -600,7 +587,7 @@ invoke_stop(){
        exit 0
     fi
     rm -f $ACTIVEMQ_PIDFILE >/dev/null 2>&1
-    rm -f $ACTIVEMQ_DATA_DIR/stop.pid >/dev/null 2>&1
+    rm -f $ACTIVEMQ_DATA/stop.pid >/dev/null 2>&1
     exit $RET
 }
 
