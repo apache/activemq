@@ -16,23 +16,23 @@
  */
 package org.apache.activemq.web;
 
+import java.net.SocketTimeoutException;
+import java.util.HashMap;
+import java.util.concurrent.TimeUnit;
+
+import javax.jms.Message;
+import javax.jms.MessageProducer;
+
+import org.apache.activemq.transport.stomp.Stomp;
 import org.apache.activemq.transport.stomp.StompConnection;
 import org.apache.activemq.transport.stomp.StompFrame;
-
-import java.net.SocketTimeoutException;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.apache.commons.lang.StringUtils;
-
-import java.util.*;
-import org.eclipse.jetty.io.Buffer;
 import org.eclipse.jetty.client.ContentExchange;
 import org.eclipse.jetty.client.HttpClient;
+import org.eclipse.jetty.io.Buffer;
 import org.eclipse.jetty.io.ByteArrayBuffer;
-
-import javax.jms.MessageProducer;
-import javax.jms.Message;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class AjaxTest extends JettyTestSupport {
     private static final Logger LOG = LoggerFactory.getLogger(AjaxTest.class);
@@ -271,6 +271,13 @@ public class AjaxTest extends JettyTestSupport {
         connection.send( "/queue/test", "message3", (String)null, headers );
         connection.send( "/queue/test", "message4", (String)null, headers );
         connection.send( "/queue/test", "message5", (String)null, headers );
+        String frame = "DISCONNECT\n" + "\n\n" + Stomp.NULL;
+        connection.sendFrame(frame);
+
+        // Need to let the transport have enough time to dispatch the incoming messages from
+        // the socket before we break the connection.
+        TimeUnit.SECONDS.sleep(5);
+
         connection.disconnect();
 
         // wait for poll to finish
