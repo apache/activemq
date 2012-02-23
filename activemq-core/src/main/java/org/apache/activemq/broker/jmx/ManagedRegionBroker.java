@@ -346,11 +346,10 @@ public class ManagedRegionBroker extends RegionBroker {
 
     protected void unregisterDestination(ObjectName key) throws Exception {
 
-        DestinationView view = null;
-        removeAndRemember(topics, key, view);
-        removeAndRemember(queues, key, view);
-        removeAndRemember(temporaryQueues, key, view);
-        removeAndRemember(temporaryTopics, key, view);
+        DestinationView view = removeAndRemember(topics, key, null);
+        view = removeAndRemember(queues, key, view);
+        view = removeAndRemember(temporaryQueues, key, view);
+        view = removeAndRemember(temporaryTopics, key, view);
         if (registeredMBeans.remove(key)) {
             try {
                 managementContext.unregisterMBean(key);
@@ -417,11 +416,12 @@ public class ManagedRegionBroker extends RegionBroker {
         }
     }
 
-    private void removeAndRemember(Map<ObjectName, DestinationView> map, ObjectName key, DestinationView view) {
+    private DestinationView removeAndRemember(Map<ObjectName, DestinationView> map, ObjectName key, DestinationView view) {
         DestinationView candidate = map.remove(key);
         if (candidate != null && view == null) {
             view = candidate;
         }
+        return candidate != null ? candidate : view;
     }
 
     protected void registerSubscription(ObjectName key, ConsumerInfo info, SubscriptionKey subscriptionKey, SubscriptionView view) throws Exception {

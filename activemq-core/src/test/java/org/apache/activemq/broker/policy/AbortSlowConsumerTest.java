@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.broker.policy;
 
+import javax.management.InstanceNotFoundException;
 import junit.framework.Test;
 import org.apache.activemq.JmsMultipleClientsTestSupport;
 import org.apache.activemq.broker.BrokerService;
@@ -37,6 +38,7 @@ import javax.jms.Session;
 import javax.management.ObjectName;
 import javax.management.openmbean.CompositeData;
 import javax.management.openmbean.TabularData;
+import java.lang.reflect.UndeclaredThrowableException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map.Entry;
@@ -172,6 +174,17 @@ public class AbortSlowConsumerTest extends JmsMultipleClientsTestSupport impleme
 
         slowOnes = abortPolicy.getSlowConsumers();
         assertEquals("no slow consumers left", 0, slowOnes.size());
+
+        // verify mbean gone with destination
+        broker.getAdminView().removeTopic(amqDest.getPhysicalName());
+
+        try {
+            abortPolicy.getSlowConsumers();
+            fail("expect not found post destination removal");
+        } catch(UndeclaredThrowableException expected) {
+            assertTrue("correct exception: " + expected.getCause(),
+                    expected.getCause() instanceof InstanceNotFoundException);
+        }
 
     }
 
