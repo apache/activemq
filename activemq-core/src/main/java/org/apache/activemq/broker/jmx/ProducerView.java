@@ -23,13 +23,15 @@ public class ProducerView implements ProducerViewMBean {
 
     protected final ProducerInfo info;
     protected final String clientId;
+    protected final String userName;
     protected final ManagedRegionBroker broker;
 
     protected ActiveMQDestination lastUsedDestination;
 
-    public ProducerView(ProducerInfo info, String clientId, ManagedRegionBroker broker) {
+    public ProducerView(ProducerInfo info, String clientId, String userName, ManagedRegionBroker broker) {
         this.info = info;
         this.clientId = clientId;
+        this.userName = userName;
         this.broker = broker;
     }
 
@@ -140,5 +142,10 @@ public class ProducerView implements ProducerViewMBean {
      */
     void setLastUsedDestinationName(ActiveMQDestination destinationName) {
         this.lastUsedDestination = destinationName;
+    }
+
+    @Override
+    public String getUserName() {
+        return userName;
     }
 }

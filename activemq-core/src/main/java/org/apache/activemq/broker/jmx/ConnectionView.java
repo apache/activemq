@@ -21,6 +21,7 @@ import org.apache.activemq.broker.Connection;
 public class ConnectionView implements ConnectionViewMBean {
 
     private final Connection connection;
+    private String userName;
 
     public ConnectionView(Connection connection) {
         this.connection = connection;
@@ -81,4 +82,12 @@ public class ConnectionView implements ConnectionViewMBean {
         return connection.getConnectionId();
     }
 
+    @Override
+    public String getUserName() {
+        return userName;
+    }
+
+    public void setUserName(String userName) {
+        this.userName = userName;
+    }
 }

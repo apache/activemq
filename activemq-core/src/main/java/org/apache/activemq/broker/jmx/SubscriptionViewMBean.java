@@ -19,7 +19,7 @@ package org.apache.activemq.broker.jmx;
 import javax.jms.InvalidSelectorException;
 
 /**
- * 
+ *
  */
 public interface SubscriptionViewMBean {
 
@@ -100,9 +100,9 @@ public interface SubscriptionViewMBean {
      */
     @MBeanInfo("Number of messages dispatched awaiting acknowledgement.")
     int getDispatchedQueueSize();
-    
+
     /**
-     * The same as the number of messages dispatched - 
+     * The same as the number of messages dispatched -
      * making it explicit
      * @return
      */
@@ -205,4 +205,12 @@ public interface SubscriptionViewMBean {
     @MBeanInfo("Returns true if the subscription is slow")
     boolean isSlowConsumer();
 
+    /**
+     * Returns the User Name used to authorize creation of this Subscription.
+     * This value can be null if display of user name information is disabled.
+     *
+     * @return the name of the user that created this Subscription
+     */
+    @MBeanInfo("User Name used to authorize creation of this Subscription")
+    String getUserName();
 }

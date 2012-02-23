@@ -20,13 +20,13 @@ import org.apache.activemq.broker.region.DurableTopicSubscription;
 import org.apache.activemq.broker.region.TopicSubscription;
 
 /**
- * 
- * 
+ *
+ *
  */
 public class TopicSubscriptionView extends SubscriptionView implements TopicSubscriptionViewMBean {
 
-    public TopicSubscriptionView(String clientId, TopicSubscription subs) {
-        super(clientId, subs);
+    public TopicSubscriptionView(String clientId, String userName, TopicSubscription subs) {
+        super(clientId, userName, subs);
     }
 
     protected TopicSubscription getTopicSubscription() {
@@ -50,7 +50,7 @@ public class TopicSubscriptionView extends SubscriptionView implements TopicSubs
     }
 
     /**
-     * 
+     *
      */
     public void setMaximumPendingQueueSize(int max) {
         TopicSubscription topicSubscription = getTopicSubscription();
@@ -68,6 +68,6 @@ public class TopicSubscriptionView extends SubscriptionView implements TopicSubs
         }
     }
 
-    
+
 
 }

@@ -16,6 +16,11 @@
  */
 package org.apache.activemq.broker.jmx;
 
+import java.io.IOException;
+import java.util.Hashtable;
+
+import javax.management.ObjectName;
+
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.TransportConnection;
 import org.apache.activemq.broker.TransportConnector;
@@ -27,14 +32,9 @@ import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.JMXSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import java.io.IOException;
-import java.util.Hashtable;
-import javax.management.ObjectName;
 
 /**
  * A managed transport connection
- * 
- * 
  */
 public class ManagedTransportConnection extends TransportConnection {
     private static final Logger LOG = LoggerFactory.getLogger(ManagedTransportConnection.class);
@@ -46,6 +46,8 @@ public class ManagedTransportConnection extends TransportConnection {
     private ObjectName byClientIdName;
     private ObjectName byAddressName;
 
+    private final boolean populateUserName;
+
     public ManagedTransportConnection(TransportConnector connector, Transport transport, Broker broker,
                                       TaskRunnerFactory factory, ManagementContext context, ObjectName connectorName)
         throws IOException {
@@ -53,6 +55,7 @@ public class ManagedTransportConnection extends TransportConnection {
         this.managementContext = context;
         this.connectorName = connectorName;
         this.mbean = new ConnectionView(this);
+        this.populateUserName = broker.getBrokerService().isPopulateUserNameInMBeans();
         if (managementContext.isAllowRemoteAddressInMBeanNames()) {
             byAddressName = createByAddressObjectName("address", transport.getRemoteAddress());
             registerMBean(byAddressName);
@@ -76,6 +79,9 @@ public class ManagedTransportConnection extends TransportConnection {
     public Response processAddConnection(ConnectionInfo info) throws Exception {
         Response answer = super.processAddConnection(info);
         String clientId = info.getClientId();
+        if (populateUserName) {
+            ((ConnectionView) mbean).setUserName(info.getUserName());
+        }
         if (clientId != null) {
             if (byClientIdName == null) {
                 byClientIdName = createByClientIdObjectName(clientId);
@@ -110,7 +116,7 @@ public class ManagedTransportConnection extends TransportConnection {
     }
 
     protected ObjectName createByAddressObjectName(String type, String value) throws IOException {
-        Hashtable map = connectorName.getKeyPropertyList();
+        Hashtable<String, String> map = connectorName.getKeyPropertyList();
         try {
             return new ObjectName(connectorName.getDomain() + ":" + "BrokerName="
                                   + JMXSupport.encodeObjectNamePart((String)map.get("BrokerName")) + ","
@@ -124,7 +130,7 @@ public class ManagedTransportConnection extends TransportConnection {
     }
 
     protected ObjectName createByClientIdObjectName(String value) throws IOException {
-        Hashtable map = connectorName.getKeyPropertyList();
+        Hashtable<String, String> map = connectorName.getKeyPropertyList();
         try {
             return new ObjectName(connectorName.getDomain() + ":" + "BrokerName="
                                   + JMXSupport.encodeObjectNamePart((String)map.get("BrokerName")) + ","

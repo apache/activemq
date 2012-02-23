@@ -26,7 +26,7 @@ import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.command.RemoveSubscriptionInfo;
 
 /**
- * 
+ *
  */
 public class DurableSubscriptionView extends SubscriptionView implements DurableSubscriptionViewMBean {
 
@@ -36,12 +36,12 @@ public class DurableSubscriptionView extends SubscriptionView implements Durable
 
     /**
      * Constructor
-     * 
+     *
      * @param clientId
      * @param sub
      */
-    public DurableSubscriptionView(ManagedRegionBroker broker, String clientId, Subscription sub) {
-        super(clientId, sub);
+    public DurableSubscriptionView(ManagedRegionBroker broker, String clientId, String userName, Subscription sub) {
+        super(clientId, userName, sub);
         this.broker = broker;
         this.durableSub=(DurableTopicSubscription) sub;
         if (sub != null) {
@@ -58,7 +58,7 @@ public class DurableSubscriptionView extends SubscriptionView implements Durable
 
     /**
      * Browse messages for this durable subscriber
-     * 
+     *
      * @return messages
      * @throws OpenDataException
      */
@@ -68,7 +68,7 @@ public class DurableSubscriptionView extends SubscriptionView implements Durable
 
     /**
      * Browse messages for this durable subscriber
-     * 
+     *
      * @return messages
      * @throws OpenDataException
      */
@@ -94,7 +94,7 @@ public class DurableSubscriptionView extends SubscriptionView implements Durable
         return "ActiveDurableSubscriptionView: " + getClientId() + ":" + getSubscriptionName();
     }
 
-    
+
     public int cursorSize() {
         if (durableSub != null && durableSub.getPending() != null) {
             return durableSub.getPending().size();
@@ -102,7 +102,7 @@ public class DurableSubscriptionView extends SubscriptionView implements Durable
         return 0;
     }
 
-   
+
     public boolean doesCursorHaveMessagesBuffered() {
         if (durableSub != null && durableSub.getPending() != null) {
             return durableSub.getPending().hasMessagesBufferedToDeliver();
@@ -110,7 +110,7 @@ public class DurableSubscriptionView extends SubscriptionView implements Durable
         return false;
     }
 
-   
+
     public boolean doesCursorHaveSpace() {
         if (durableSub != null && durableSub.getPending() != null) {
             return durableSub.getPending().hasSpace();
@@ -128,7 +128,7 @@ public class DurableSubscriptionView extends SubscriptionView implements Durable
         return 0;
     }
 
-    
+
     public int getCursorPercentUsage() {
         if (durableSub != null && durableSub.getPending() != null && durableSub.getPending().getSystemUsage()!=null) {
             return durableSub.getPending().getSystemUsage().getMemoryUsage().getPercentUsage();
@@ -147,6 +147,6 @@ public class DurableSubscriptionView extends SubscriptionView implements Durable
     public boolean isActive() {
         return durableSub.isActive();
     }
-    
-    
+
+
 }

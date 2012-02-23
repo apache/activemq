@@ -22,6 +22,7 @@ import java.net.URI;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 import javax.jms.BytesMessage;
 import javax.jms.Connection;
@@ -31,6 +32,7 @@ import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
+import javax.jms.Topic;
 import javax.management.MBeanServer;
 import javax.management.MBeanServerInvocationHandler;
 import javax.management.MalformedObjectNameException;
@@ -60,8 +62,6 @@ import org.slf4j.LoggerFactory;
  * A test case of the various MBeans in ActiveMQ. If you want to look at the
  * various MBeans after the test has been run then run this test case as a
  * command line application.
- *
- *
  */
 public class MBeanTest extends EmbeddedBrokerTestSupport {
     private static final Logger LOG = LoggerFactory.getLogger(MBeanTest.class);
@@ -211,7 +211,6 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         connection = connectionFactory.createConnection();
         useConnection(connection);
 
-
         ObjectName queueViewMBeanName = assertRegisteredObjectName(domain + ":Type=Queue,Destination=" + getDestinationString() + ",BrokerName=localhost");
         QueueViewMBean queue = (QueueViewMBean)MBeanServerInvocationHandler.newProxyInstance(mbeanServer, queueViewMBeanName, QueueViewMBean.class, true);
 
@@ -230,7 +229,6 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         }
         consumer.close();
         session.close();
-
 
         // now lets get the dead letter queue
         Thread.sleep(1000);
@@ -259,7 +257,6 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         int dlqMemUsage = dlq.getMemoryPercentUsage();
         assertTrue("dlq has some memory usage", dlqMemUsage > 0);
         assertEquals("dest has no memory usage", 0, queue.getMemoryPercentUsage());
-
 
         echo("About to retry " + messageCount + " messages");
 
@@ -895,6 +892,89 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         }
 
         assertTrue("dest has some memory usage", queue.getMemoryPercentUsage() > 0);
+    }
+
+    public void testUserNamePopulated() throws Exception {
+        doTestUserNameInMBeans(true);
+    }
+
+    public void testUserNameNotPopulated() throws Exception {
+        doTestUserNameInMBeans(false);
+    }
+
+    @SuppressWarnings("unused")
+    private void doTestUserNameInMBeans(boolean expect) throws Exception {
+        broker.setPopulateUserNameInMBeans(expect);
+
+        connection = connectionFactory.createConnection("admin", "admin");
+        connection.setClientID("MBeanTest");
+        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        Destination queue = session.createQueue(getDestinationString() + ".Queue");
+        Topic topic = session.createTopic(getDestinationString() + ".Topic");
+        MessageProducer producer = session.createProducer(queue);
+        MessageConsumer queueConsumer = session.createConsumer(queue);
+        MessageConsumer topicConsumer = session.createConsumer(topic);
+        MessageConsumer durable = session.createDurableSubscriber(topic, "Durable");
+
+        ObjectName brokerName = assertRegisteredObjectName(domain + ":Type=Broker,BrokerName=localhost");
+        BrokerViewMBean broker = (BrokerViewMBean)MBeanServerInvocationHandler.newProxyInstance(mbeanServer, brokerName, BrokerViewMBean.class, true);
+
+        Thread.sleep(100);
+
+        assertTrue(broker.getQueueProducers().length == 1);
+        assertTrue(broker.getTopicSubscribers().length == 2);
+        assertTrue(broker.getQueueSubscribers().length == 1);
+
+        ObjectName producerName = broker.getQueueProducers()[0];
+        ProducerViewMBean producerView = (ProducerViewMBean)MBeanServerInvocationHandler.newProxyInstance(mbeanServer, producerName, ProducerViewMBean.class, true);
+        assertNotNull(producerView);
+
+        if (expect) {
+            assertEquals("admin", producerView.getUserName());
+        } else {
+            assertNull(producerView.getUserName());
+        }
+
+        for (ObjectName name : broker.getTopicSubscribers()) {
+            SubscriptionViewMBean subscriberView = (SubscriptionViewMBean)MBeanServerInvocationHandler.newProxyInstance(mbeanServer, name, SubscriptionViewMBean.class, true);
+            if (expect) {
+                assertEquals("admin", subscriberView.getUserName());
+            } else {
+                assertNull(subscriberView.getUserName());
+            }
+        }
+
+        for (ObjectName name : broker.getQueueSubscribers()) {
+            SubscriptionViewMBean subscriberView = (SubscriptionViewMBean)MBeanServerInvocationHandler.newProxyInstance(mbeanServer, name, SubscriptionViewMBean.class, true);
+            if (expect) {
+                assertEquals("admin", subscriberView.getUserName());
+            } else {
+                assertNull(subscriberView.getUserName());
+            }
+        }
+
+        Set<ObjectName> names = mbeanServer.queryNames(null, null);
+        boolean found = false;
+        for (ObjectName name : names) {
+            if (name.toString().startsWith(domain + ":BrokerName=localhost,Type=Connection,ConnectorName=tcp") &&
+                name.toString().endsWith("Connection=MBeanTest")) {
+
+                ConnectionViewMBean connectionView =
+                    (ConnectionViewMBean)MBeanServerInvocationHandler.newProxyInstance(mbeanServer, name, ConnectionViewMBean.class, true);
+                assertNotNull(connectionView);
+
+                if (expect) {
+                    assertEquals("admin", connectionView.getUserName());
+                } else {
+                    assertNull(connectionView.getUserName());
+                }
+
+                found = true;
+                break;
+            }
+        }
+
+        assertTrue("Should find the connection's ManagedTransportConnection", found);
     }
 
     public void testBrowseBytesMessages() throws Exception {

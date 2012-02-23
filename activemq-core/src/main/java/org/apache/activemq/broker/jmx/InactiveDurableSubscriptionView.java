@@ -27,21 +27,22 @@ import org.apache.activemq.command.RemoveSubscriptionInfo;
 import org.apache.activemq.command.SubscriptionInfo;
 
 /**
- * 
- * 
+ *
+ *
  */
 public class InactiveDurableSubscriptionView extends DurableSubscriptionView implements DurableSubscriptionViewMBean {
     protected SubscriptionInfo subscriptionInfo;
 
     /**
      * Constructor
-     * 
+     *
      * @param broker
      * @param clientId
+     * @param userName
      * @param subInfo
      */
     public InactiveDurableSubscriptionView(ManagedRegionBroker broker, String clientId, SubscriptionInfo subInfo, Subscription subscription) {
-        super(broker,clientId, subscription);
+        super(broker, clientId, null, subscription);
         this.broker = broker;
         this.subscriptionInfo = subInfo;
     }
@@ -104,7 +105,7 @@ public class InactiveDurableSubscriptionView extends DurableSubscriptionView imp
 
     /**
      * Browse messages for this durable subscriber
-     * 
+     *
      * @return messages
      * @throws OpenDataException
      */
@@ -114,7 +115,7 @@ public class InactiveDurableSubscriptionView extends DurableSubscriptionView imp
 
     /**
      * Browse messages for this durable subscriber
-     * 
+     *
      * @return messages
      * @throws OpenDataException
      */

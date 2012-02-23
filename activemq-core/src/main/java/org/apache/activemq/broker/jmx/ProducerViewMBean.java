@@ -77,4 +77,13 @@ public interface ProducerViewMBean {
      */
     @MBeanInfo("Is the producer configured for Async Dispatch")
     boolean isDispatchAsync();
+
+    /**
+     * Returns the User Name used to authorize creation of this Producer.
+     * This value can be null if display of user name information is disabled.
+     *
+     * @return the name of the user that created this Producer
+     */
+    @MBeanInfo("User Name used to authorize creation of this Producer")
+    String getUserName();
 }

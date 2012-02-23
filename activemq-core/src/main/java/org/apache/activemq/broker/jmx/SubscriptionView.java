@@ -20,27 +20,29 @@ import javax.jms.InvalidSelectorException;
 
 import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.command.ActiveMQDestination;
-import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
+import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.filter.DestinationFilter;
 
 /**
- * 
+ *
  */
 public class SubscriptionView implements SubscriptionViewMBean {
 
     protected final Subscription subscription;
     protected final String clientId;
+    protected final String userName;
 
     /**
      * Constructor
-     * 
+     *
      * @param subs
      */
-    public SubscriptionView(String clientId, Subscription subs) {
+    public SubscriptionView(String clientId, String userName, Subscription subs) {
         this.clientId = clientId;
         this.subscription = subs;
+        this.userName = userName;
     }
 
     /**
@@ -236,7 +238,7 @@ public class SubscriptionView implements SubscriptionViewMBean {
     public int getDispatchedQueueSize() {
         return subscription != null ? subscription.getDispatchedQueueSize() : 0;
     }
-    
+
     public int getMessageCountAwaitingAcknowledge() {
         return getDispatchedQueueSize();
     }
@@ -308,5 +310,10 @@ public class SubscriptionView implements SubscriptionViewMBean {
     @Override
     public boolean isSlowConsumer() {
         return subscription.isSlowConsumer();
+    }
+
+    @Override
+    public String getUserName() {
+        return userName;
     }
 }

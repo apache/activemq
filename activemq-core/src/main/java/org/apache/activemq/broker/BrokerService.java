@@ -129,6 +129,7 @@ public class BrokerService implements Service {
     private boolean persistent = true;
     private boolean populateJMSXUserID;
     private boolean useAuthenticatedPrincipalForJMSXUserID;
+    private boolean populateUserNameInMBeans;
 
     private boolean useShutdownHook = true;
     private boolean useLoggingForShutdownErrors;
@@ -2576,6 +2577,24 @@ public class BrokerService implements Service {
 
     public void setUseAuthenticatedPrincipalForJMSXUserID(boolean useAuthenticatedPrincipalForJMSXUserID) {
         this.useAuthenticatedPrincipalForJMSXUserID = useAuthenticatedPrincipalForJMSXUserID;
+    }
+
+    /**
+     * Should MBeans that support showing the Authenticated User Name information have this
+     * value filled in or not.
+     *
+     * @return true if user names should be exposed in MBeans
+     */
+    public boolean isPopulateUserNameInMBeans() {
+        return this.populateUserNameInMBeans;
+    }
+
+    /**
+     * Sets whether Authenticated User Name information is shown in MBeans that support this field.
+     * @param true if MBeans should expose user name information.
+     */
+    public void setPopulateUserNameInMBeans(boolean value) {
+        this.populateUserNameInMBeans = value;
     }
 
     public boolean isNetworkConnectorStartAsync() {

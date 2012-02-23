@@ -23,11 +23,12 @@ import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.ThreadPoolExecutor;
+
 import javax.management.InstanceNotFoundException;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
@@ -38,6 +39,7 @@ import javax.management.openmbean.OpenDataException;
 import javax.management.openmbean.TabularData;
 import javax.management.openmbean.TabularDataSupport;
 import javax.management.openmbean.TabularType;
+
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.ConnectionContext;
@@ -199,13 +201,14 @@ public class ManagedRegionBroker extends RegionBroker {
                 info.setSelector(sub.getSelector());
                 addInactiveSubscription(key, info, sub);
             } else {
+                String userName = brokerService.isPopulateUserNameInMBeans() ? context.getUserName() : null;
                 if (sub.getConsumerInfo().isDurable()) {
-                    view = new DurableSubscriptionView(this, context.getClientId(), sub);
+                    view = new DurableSubscriptionView(this, context.getClientId(), userName, sub);
                 } else {
                     if (sub instanceof TopicSubscription) {
-                        view = new TopicSubscriptionView(context.getClientId(), (TopicSubscription) sub);
+                        view = new TopicSubscriptionView(context.getClientId(), userName, (TopicSubscription) sub);
                     } else {
-                        view = new SubscriptionView(context.getClientId(), sub);
+                        view = new SubscriptionView(context.getClientId(), userName, sub);
                     }
                 }
                 registerSubscription(objectName, sub.getConsumerInfo(), key, view);
@@ -219,7 +222,7 @@ public class ManagedRegionBroker extends RegionBroker {
     }
 
     public static String getSubscriptionObjectName(ConsumerInfo info, String connectionClientId, ObjectName brokerJmxObjectName) {
-        Hashtable map = brokerJmxObjectName.getKeyPropertyList();
+        Hashtable<String, String> map = brokerJmxObjectName.getKeyPropertyList();
         String brokerDomain = brokerJmxObjectName.getDomain();
         String objectNameStr = brokerDomain + ":" + "BrokerName=" + map.get("BrokerName") + ",Type=Subscription,";
         String destinationType = "destinationType=" + info.getDestination().getDestinationTypeAsString();
@@ -272,7 +275,8 @@ public class ManagedRegionBroker extends RegionBroker {
         super.addProducer(context, info);
         String connectionClientId = context.getClientId();
         ObjectName objectName = createObjectName(info, connectionClientId);
-        ProducerView view = new ProducerView(info, connectionClientId, this);
+        String userName = brokerService.isPopulateUserNameInMBeans() ? context.getUserName() : null;
+        ProducerView view = new ProducerView(info, connectionClientId, userName, this);
         registerProducer(objectName, info.getDestination(), view);
     }
 
@@ -491,10 +495,9 @@ public class ManagedRegionBroker extends RegionBroker {
 
     protected void buildExistingSubscriptions() throws Exception {
         Map<SubscriptionKey, SubscriptionInfo> subscriptions = new HashMap<SubscriptionKey, SubscriptionInfo>();
-        Set destinations = destinationFactory.getDestinations();
+        Set<ActiveMQDestination> destinations = destinationFactory.getDestinations();
         if (destinations != null) {
-            for (Iterator iter = destinations.iterator(); iter.hasNext();) {
-                ActiveMQDestination dest = (ActiveMQDestination)iter.next();
+            for (ActiveMQDestination dest : destinations) {
                 if (dest.isTopic()) {
                     SubscriptionInfo[] infos = destinationFactory.getAllDurableSubscriptions((ActiveMQTopic)dest);
                     if (infos != null) {
@@ -510,11 +513,9 @@ public class ManagedRegionBroker extends RegionBroker {
                 }
             }
         }
-        for (Iterator i = subscriptions.entrySet().iterator(); i.hasNext();) {
-            Map.Entry entry = (Entry)i.next();
-            SubscriptionKey key = (SubscriptionKey)entry.getKey();
-            SubscriptionInfo info = (SubscriptionInfo)entry.getValue();
-            addInactiveSubscription(key, info, null);
+
+        for (Map.Entry<SubscriptionKey, SubscriptionInfo> entry : subscriptions.entrySet()) {
+            addInactiveSubscription(entry.getKey(), entry.getValue(), null);
         }
     }
 
@@ -693,7 +694,7 @@ public class ManagedRegionBroker extends RegionBroker {
 
     protected ObjectName createObjectName(ActiveMQDestination destName) throws MalformedObjectNameException {
         // Build the object name for the destination
-        Hashtable map = brokerObjectName.getKeyPropertyList();
+        Hashtable<String, String> map = brokerObjectName.getKeyPropertyList();
         ObjectName objectName = new ObjectName(brokerObjectName.getDomain() + ":" + "BrokerName=" + map.get("BrokerName") + "," + "Type="
                                                + JMXSupport.encodeObjectNamePart(destName.getDestinationTypeAsString()) + "," + "Destination="
                                                + JMXSupport.encodeObjectNamePart(destName.getPhysicalName()));
@@ -702,7 +703,7 @@ public class ManagedRegionBroker extends RegionBroker {
 
     protected ObjectName createObjectName(ProducerInfo producerInfo, String connectionClientId) throws MalformedObjectNameException {
         // Build the object name for the producer info
-        Hashtable map = brokerObjectName.getKeyPropertyList();
+        Hashtable<String, String> map = brokerObjectName.getKeyPropertyList();
 
         String destinationType = "destinationType=";
         String destinationName = "destinationName=";
@@ -743,7 +744,7 @@ public class ManagedRegionBroker extends RegionBroker {
     }
 
     protected ObjectName createObjectName(XATransaction transaction) throws MalformedObjectNameException {
-        Hashtable map = brokerObjectName.getKeyPropertyList();
+        Hashtable<String, String> map = brokerObjectName.getKeyPropertyList();
         ObjectName objectName = new ObjectName(brokerObjectName.getDomain() + ":" + "BrokerName=" + map.get("BrokerName")
                                                + "," + "Type=RecoveredXaTransaction"
                                                + "," + "Xid="
@@ -782,7 +783,7 @@ public class ManagedRegionBroker extends RegionBroker {
     }
 
     private ObjectName createObjectName(AbortSlowConsumerStrategy strategy) throws MalformedObjectNameException{
-        Hashtable map = brokerObjectName.getKeyPropertyList();
+        Hashtable<String, String> map = brokerObjectName.getKeyPropertyList();
         ObjectName objectName = new ObjectName(brokerObjectName.getDomain() + ":" + "BrokerName=" + map.get("BrokerName") + ","
                             + "Type=SlowConsumerStrategy," + "InstanceName=" + JMXSupport.encodeObjectNamePart(strategy.getName()));
         return objectName;
