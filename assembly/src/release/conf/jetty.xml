@@ -25,7 +25,7 @@
         <property name="config" value="${activemq.conf}/jetty-realm.properties" />
     </bean>
 
-    <bean id="securityConstraint" class="org.eclipse.jetty.http.security.Constraint">
+    <bean id="securityConstraint" class="org.eclipse.jetty.util.security.Constraint">
         <property name="name" value="BASIC" />
         <property name="roles" value="admin" />
         <property name="authenticate" value="false" />
