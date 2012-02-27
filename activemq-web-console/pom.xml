@@ -37,6 +37,7 @@
         <artifactId>maven-war-plugin</artifactId>
         <version>2.1.1</version>
         <configuration>
+          <outputFileNameMapping>@{artifactId}@-@{baseVersion}@@{dashClassifier?}@.@{extension}@</outputFileNameMapping>
           <packagingExcludes>
             WEB-INF/lib/jetty*.jar,
             WEB-INF/lib/servlet*.jar
