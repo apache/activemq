@@ -16,19 +16,25 @@
  */
 package org.apache.activemq.transport.stomp;
 
-import com.thoughtworks.xstream.XStream;
-import com.thoughtworks.xstream.io.json.JsonHierarchicalStreamDriver;
-import org.apache.activemq.advisory.AdvisorySupport;
-import org.apache.activemq.command.*;
-import org.apache.activemq.util.ByteArrayOutputStream;
-import org.apache.activemq.util.ByteSequence;
-
-import javax.jms.Destination;
-import javax.jms.JMSException;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+
+import javax.jms.Destination;
+import javax.jms.JMSException;
+
+import org.apache.activemq.advisory.AdvisorySupport;
+import org.apache.activemq.command.ActiveMQBytesMessage;
+import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.command.ActiveMQMessage;
+import org.apache.activemq.command.ActiveMQTextMessage;
+import org.apache.activemq.command.DataStructure;
+import org.apache.activemq.util.ByteArrayOutputStream;
+import org.apache.activemq.util.ByteSequence;
+
+import com.thoughtworks.xstream.XStream;
+import com.thoughtworks.xstream.io.json.JsonHierarchicalStreamDriver;
 
 /**
  * Implements ActiveMQ 4.0 translations
@@ -107,7 +113,10 @@ public class LegacyFrameTranslator implements FrameTranslator {
                 }
             } else {
                 ActiveMQTextMessage msg = (ActiveMQTextMessage)message.copy();
-                command.setContent(msg.getText().getBytes("UTF-8"));
+                String messageText = msg.getText();
+                if (messageText != null) {
+                    command.setContent(msg.getText().getBytes("UTF-8"));
+                }
             }
 
         } else if (message.getDataStructureType() == ActiveMQBytesMessage.DATA_STRUCTURE_TYPE) {

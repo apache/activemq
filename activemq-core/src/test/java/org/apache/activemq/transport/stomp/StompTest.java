@@ -16,6 +16,32 @@
  */
 package org.apache.activemq.transport.stomp;
 
+import java.io.IOException;
+import java.net.Socket;
+import java.net.SocketTimeoutException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.UnknownHostException;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import javax.jms.BytesMessage;
+import javax.jms.Connection;
+import javax.jms.JMSException;
+import javax.jms.MapMessage;
+import javax.jms.MessageConsumer;
+import javax.jms.MessageProducer;
+import javax.jms.ObjectMessage;
+import javax.jms.Session;
+import javax.jms.TextMessage;
+import javax.management.MalformedObjectNameException;
+import javax.management.ObjectName;
+
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.CombinationTestSupport;
 import org.apache.activemq.broker.BrokerFactory;
@@ -27,19 +53,6 @@ import org.apache.activemq.command.ActiveMQTextMessage;
 import org.apache.activemq.util.Wait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.jms.*;
-import javax.management.MalformedObjectNameException;
-import javax.management.ObjectName;
-import java.io.IOException;
-import java.net.*;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
-import java.util.concurrent.TimeUnit;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class StompTest extends CombinationTestSupport {
     private static final Logger LOG = LoggerFactory.getLogger(StompTest.class);
@@ -1763,6 +1776,24 @@ public class StompTest extends CombinationTestSupport {
 
         doTestActiveMQReplyToTempDestination("topic");
         doTestActiveMQReplyToTempDestination("queue");
+    }
+
+    public void testSendNullBodyTextMessage() throws Exception {
+        String frame = "CONNECT\n" + "login: system\n" + "passcode: manager\n\n" + Stomp.NULL;
+        stompConnection.sendFrame(frame);
+
+        frame = stompConnection.receiveFrame();
+        assertTrue(frame.startsWith("CONNECTED"));
+
+        frame = "SUBSCRIBE\n" + "destination:/queue/" + getQueueName() + "\n" + "ack:auto\n\n" + Stomp.NULL;
+        stompConnection.sendFrame(frame);
+
+        sendMessage(null);
+        frame = stompConnection.receiveFrame();
+        assertNotNull("Message not received", frame);
+
+        frame = "DISCONNECT\n" + "\n\n" + Stomp.NULL;
+        stompConnection.sendFrame(frame);
     }
 
     private void doTestActiveMQReplyToTempDestination(String type) throws Exception {
