@@ -20,9 +20,9 @@
 <features name="activemq-${activemq-version}" xmlns="http://karaf.apache.org/xmlns/features/v1.0.0">
     <feature name="activemq" version="${activemq-version}" resolver="(obr)">
         <bundle dependency="true">mvn:org.apache.geronimo.specs/geronimo-annotation_1.0_spec/1.1.1</bundle>
-        <bundle dependency="true">mvn:org.apache.geronimo.specs/geronimo-jta_1.1_spec/1.1.1</bundle> 
-        <bundle dependency="true">mvn:org.apache.geronimo.specs/geronimo-jms_1.1_spec/1.1.1</bundle> 
-        <bundle dependency="true">mvn:org.apache.geronimo.specs/geronimo-j2ee-management_1.1_spec/1.0.1</bundle> 
+        <bundle dependency="true">mvn:org.apache.geronimo.specs/geronimo-jta_1.1_spec/1.1.1</bundle>
+        <bundle dependency="true">mvn:org.apache.geronimo.specs/geronimo-jms_1.1_spec/1.1.1</bundle>
+        <bundle dependency="true">mvn:org.apache.geronimo.specs/geronimo-j2ee-management_1.1_spec/1.0.1</bundle>
         <bundle dependency="true">mvn:commons-pool/commons-pool/${commons-pool-version}</bundle>
         <bundle dependency="true">mvn:commons-collections/commons-collections/${commons-collections-version}</bundle>
         <bundle dependency="true">mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.commons-lang/2.4_4</bundle>
@@ -36,28 +36,29 @@
         <bundle dependency="true">mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.jdom/${jdom-bundle-version}</bundle>
         <bundle dependency="true">mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.dom4j/${dom4j-bundle-version}</bundle>
         <bundle dependency="true">mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.xstream/${xstream-bundle-version}</bundle>
-        <bundle>mvn:org.apache.activemq/activemq-core/${activemq-version}</bundle> 
-        <bundle>mvn:org.apache.activemq/kahadb/${activemq-version}</bundle> 
+        <bundle dependency="true">mvn:org.apache.aries.transaction/org.apache.aries.transaction.manager/${aries-version}</bundle>
+        <bundle>mvn:org.apache.activemq/activemq-core/${activemq-version}</bundle>
+        <bundle>mvn:org.apache.activemq/kahadb/${activemq-version}</bundle>
         <bundle>mvn:org.apache.activemq/activemq-console/${activemq-version}</bundle>
-        <bundle>mvn:org.apache.activemq/activemq-ra/${activemq-version}</bundle> 
+        <bundle>mvn:org.apache.activemq/activemq-ra/${activemq-version}</bundle>
         <bundle>mvn:org.apache.activemq/activemq-pool/${activemq-version}</bundle>
-        <bundle>mvn:org.apache.activemq/activemq-karaf/${activemq-version}</bundle> 
+        <bundle>mvn:org.apache.activemq/activemq-karaf/${activemq-version}</bundle>
         <bundle>mvn:org.apache.aries.transaction/org.apache.aries.transaction.manager/${aries-version}</bundle>
     </feature>
 
     <feature name="activemq-spring" version="${activemq-version}" resolver="(obr)">
-        <feature version="[1,2)">spring-dm</feature> 
-        <feature version="${activemq-version}">activemq</feature> 
-        <bundle dependency="true">mvn:org.apache.xbean/xbean-spring/${xbean-version}</bundle> 
-        <bundle>mvn:org.apache.activemq/activemq-spring/${activemq-version}</bundle> 
+        <feature version="[1,2)">spring-dm</feature>
+        <feature version="${activemq-version}">activemq</feature>
+        <bundle dependency="true">mvn:org.apache.xbean/xbean-spring/${xbean-version}</bundle>
+        <bundle>mvn:org.apache.activemq/activemq-spring/${activemq-version}</bundle>
     </feature>
 
     <feature name="activemq-blueprint" version="${activemq-version}" resolver="(obr)">
-        <feature version="${activemq-version}">activemq</feature> 
+        <feature version="${activemq-version}">activemq</feature>
         <bundle dependency="true">mvn:org.apache.servicemix.specs/org.apache.servicemix.specs.scripting-api-1.0/${servicemix.specs.version}</bundle>
         <bundle dependency="true">mvn:org.apache.commons/commons-jexl/2.0.1</bundle>
-        <bundle dependency="true">mvn:org.apache.xbean/xbean-blueprint/${xbean-version}</bundle> 
-        <bundle>mvn:org.apache.activemq/activemq-blueprint/${activemq-version}</bundle> 
+        <bundle dependency="true">mvn:org.apache.xbean/xbean-blueprint/${xbean-version}</bundle>
+        <bundle>mvn:org.apache.activemq/activemq-blueprint/${activemq-version}</bundle>
     </feature>
 
     <feature name="activemq-optional" version="${activemq-version}" resolver="(obr)">
