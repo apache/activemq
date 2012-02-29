@@ -67,10 +67,15 @@
         <bundle>mvn:org.apache.activemq/activemq-optional/${activemq-version}</bundle>
     </feature>
 
-    <!-- do "features:install war" before installing this one  -->
+    <feature name="activemq-camel" version="${activemq-version}" resolver="(obr)">
+        <feature version="${activemq-version}">activemq</feature>
+        <feature version="${camel-version}">camel-jms</feature>
+        <bundle>mvn:org.apache.activemq/activemq-camel/${activemq-version}</bundle>
+    </feature>
+
     <feature name="activemq-web-console" version="${activemq-version}" resolver="(obr)">
       <feature version="[2,3)">war</feature>
-      <bundle>mvn:org.apache.activemq/activemq-web-console/${activemq-version}/war?Webapp-Context=activemq-web-console</bundle>
+      <bundle>mvn:org.apache.activemq/activemq-web-console/${activemq-version}/war</bundle>
     </feature>
 </features>
 
