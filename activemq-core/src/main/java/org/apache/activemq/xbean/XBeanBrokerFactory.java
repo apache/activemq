@@ -32,6 +32,7 @@ import org.slf4j.LoggerFactory;
 import org.apache.xbean.spring.context.ResourceXmlApplicationContext;
 import org.apache.xbean.spring.context.impl.URIEditor;
 import org.springframework.beans.BeansException;
+import org.springframework.beans.FatalBeanException;
 import org.springframework.beans.factory.xml.XmlBeanDefinitionReader;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -103,11 +104,16 @@ public class XBeanBrokerFactory implements BrokerFactoryHandler {
     protected ApplicationContext createApplicationContext(String uri) throws MalformedURLException {
         Resource resource = Utils.resourceFromString(uri);
         LOG.debug("Using " + resource + " from " + uri);
-        return new ResourceXmlApplicationContext(resource) {
-            @Override
-            protected void initBeanDefinitionReader(XmlBeanDefinitionReader reader) {
-                reader.setValidating(isValidate());
-            }
-        };
+        try {
+            return new ResourceXmlApplicationContext(resource) {
+                @Override
+                protected void initBeanDefinitionReader(XmlBeanDefinitionReader reader) {
+                    reader.setValidating(isValidate());
+                }
+            };
+        } catch (FatalBeanException errorToLog) {
+            LOG.error("Failed to load: " + resource + ", reason: " + errorToLog.getLocalizedMessage(), errorToLog);
+            throw errorToLog;
+        }
     }
 }
