@@ -94,7 +94,7 @@ public class ActiveMQEndpointWorker {
                 //
             }
 
-            public synchronized void run() {
+            public void run() {
                 currentReconnectDelay = INITIAL_RECONNECT_DELAY;
                 MessageActivationSpec activationSpec = endpointActivationKey.getActivationSpec();
                 if ( LOG.isInfoEnabled() ) {
