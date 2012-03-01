@@ -35,6 +35,7 @@ import javax.naming.directory.SearchResult;
 
 import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.filter.DestinationMap;
 import org.apache.activemq.jaas.GroupPrincipal;
 import org.apache.activemq.jaas.LDAPLoginModule;
 import org.slf4j.Logger;
@@ -362,9 +363,12 @@ public class LDAPAuthorizationMap implements AuthorizationMap {
 
     protected Set<GroupPrincipal> getCompositeACLs(ActiveMQDestination destination, String roleBase, String roleAttribute) {
         ActiveMQDestination[] dests = destination.getCompositeDestinations();
-        Set<GroupPrincipal> acls = new HashSet<GroupPrincipal>();
+        Set<GroupPrincipal> acls = null;
         for (ActiveMQDestination dest : dests) {
-            acls.addAll(getACLs(dest, roleBase, roleAttribute));
+            acls = DestinationMap.union(acls, getACLs(dest, roleBase, roleAttribute));
+            if (acls == null || acls.isEmpty()) {
+                break;
+            }
         }
         return acls;
     }

@@ -17,6 +17,7 @@
 package org.apache.activemq.filter;
 
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.SortedSet;
@@ -230,4 +231,23 @@ public class DestinationMap {
         topicRootNode = new DestinationMapNode(null);
         tempTopicRootNode = new DestinationMapNode(null);
     }
+
+    public static Set union(Set existing, Set candidates) {
+        if ( candidates != null ) {
+            if (existing != null) {
+                for (Iterator<Object> iterator = existing.iterator(); iterator.hasNext();) {
+                    Object toMatch = iterator.next();
+                    if (!candidates.contains(toMatch)) {
+                        iterator.remove();
+                    }
+                }
+            } else {
+                existing = candidates;
+            }
+        } else if ( existing != null ) {
+            existing.clear();
+        }
+        return existing;
+    }
+
 }

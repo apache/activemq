@@ -153,23 +153,6 @@ public class DefaultAuthorizationMap extends DestinationMap implements Authoriza
         return findWildcardMatches(key);
     }
 
-    private Set union(Set existing, Set candidates) {
-        if ( candidates != null ) {
-            if (existing != null) {
-                for (Iterator<Object> iterator = existing.iterator(); iterator.hasNext();) {
-                    Object toMatch = iterator.next();
-                    if (!candidates.contains(toMatch)) {
-                        iterator.remove();
-                    }
-                }
-            } else {
-                existing = candidates;
-            }
-        } else if ( existing != null ) {
-            existing.clear();
-        }
-        return existing;
-    }
 
     /**
      * Sets the individual entries on the authorization map

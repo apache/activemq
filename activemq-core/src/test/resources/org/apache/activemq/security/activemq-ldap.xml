@@ -27,6 +27,10 @@
 
   <broker useJmx="false"  xmlns="http://activemq.apache.org/schema/core" persistent="false">
 
+      <destinations>
+         <queue physicalName="ADMIN.FOO" />
+      </destinations>
+
       <plugins>
 		<simpleAuthenticationPlugin>
 			<users>
