@@ -302,4 +302,12 @@ public class DestinationFilter implements Destination {
         return next.getSlowConsumerStrategy();
     }
 
+    public boolean isDoOptimzeMessageStorage() {
+        return next.isDoOptimzeMessageStorage();
+    }
+
+    public void setDoOptimzeMessageStorage(boolean doOptimzeMessageStorage) {
+        next.setDoOptimzeMessageStorage(doOptimzeMessageStorage);
+    }
+
 }

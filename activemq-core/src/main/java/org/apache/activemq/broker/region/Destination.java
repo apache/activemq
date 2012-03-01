@@ -230,4 +230,7 @@ public interface Destination extends Service, Task {
     boolean isPrioritizedMessages();
 
     SlowConsumerStrategy getSlowConsumerStrategy();
+
+    boolean isDoOptimzeMessageStorage();
+    void setDoOptimzeMessageStorage(boolean doOptimzeMessageStorage);
 }

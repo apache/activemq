@@ -428,7 +428,7 @@ public class Topic extends BaseDestination implements Task {
 
                 waitForSpace(context, systemUsage.getStoreUsage(), getStoreUsageHighWaterMark(), logMessage);
             }
-            result = topicStore.asyncAddTopicMessage(context, message);
+            result = topicStore.asyncAddTopicMessage(context, message,isOptimizeStorage());
         }
 
         message.incrementReferenceCount();
@@ -687,5 +687,32 @@ public class Topic extends BaseDestination implements Task {
     @Override
     protected Logger getLog() {
         return LOG;
+    }
+
+    protected boolean isOptimizeStorage(){
+        boolean result = false;
+
+        if (isDoOptimzeMessageStorage() && durableSubcribers.isEmpty()==false){
+                result = true;
+                for (DurableTopicSubscription s : durableSubcribers.values()) {
+                    if (s.isActive()== false){
+                        result = false;
+                        break;
+                    }
+                    if (s.getPrefetchSize()==0){
+                        result = false;
+                        break;
+                    }
+                    if (s.isSlowConsumer()){
+                        result = false;
+                        break;
+                    }
+                    if (s.getInFlightUsage() > 10){
+                        result = false;
+                        break;
+                    }
+                }
+        }
+        return result;
     }
 }

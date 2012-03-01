@@ -45,6 +45,10 @@ public class ProxyTopicMessageStore implements TopicMessageStore {
         delegate.addMessage(context, message);
     }
 
+    public void addMessage(ConnectionContext context, Message message, boolean canOptimizeHint) throws IOException {
+       delegate.addMessage(context,message,canOptimizeHint);
+    }
+
     public Message getMessage(MessageId identity) throws IOException {
         return delegate.getMessage(identity);
     }
@@ -146,8 +150,16 @@ public class ProxyTopicMessageStore implements TopicMessageStore {
         return delegate.asyncAddTopicMessage(context, message);
      }
 
+    public Future<Object> asyncAddTopicMessage(ConnectionContext context, Message message, boolean canOptimizeHint) throws IOException {
+        return delegate.asyncAddTopicMessage(context,message,canOptimizeHint);
+    }
+
     public Future<Object> asyncAddQueueMessage(ConnectionContext context, Message message) throws IOException {
         return delegate.asyncAddQueueMessage(context, message);
+    }
+
+    public Future<Object> asyncAddQueueMessage(ConnectionContext context, Message message, boolean canOptimizeHint) throws IOException {
+        return delegate.asyncAddQueueMessage(context,message,canOptimizeHint);
     }
 
     public void removeAsyncMessage(ConnectionContext context, MessageAck ack) throws IOException {

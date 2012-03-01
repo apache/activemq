@@ -96,6 +96,7 @@ public class PolicyEntry extends DestinationMapEntry {
     private long inactiveTimoutBeforeGC = BaseDestination.DEFAULT_INACTIVE_TIMEOUT_BEFORE_GC;
     private boolean reduceMemoryFootprint;
     private NetworkBridgeFilterFactory networkBridgeFilterFactory;
+    private boolean doOptimzeMessageStorage = true;
 
 
     public void configure(Broker broker,Queue queue) {
@@ -171,6 +172,7 @@ public class PolicyEntry extends DestinationMapEntry {
         destination.setGcWithNetworkConsumers(isGcWithNetworkConsumers());
         destination.setInactiveTimoutBeforeGC(getInactiveTimoutBeforeGC());
         destination.setReduceMemoryFootprint(isReduceMemoryFootprint());
+        destination.setDoOptimzeMessageStorage(isDoOptimzeMessageStorage());
     }
 
     public void configure(Broker broker, SystemUsage memoryManager, TopicSubscription subscription) {
@@ -831,5 +833,13 @@ public class PolicyEntry extends DestinationMapEntry {
 
     public NetworkBridgeFilterFactory getNetworkBridgeFilterFactory() {
         return networkBridgeFilterFactory;
+    }
+
+    public boolean isDoOptimzeMessageStorage() {
+        return doOptimzeMessageStorage;
+    }
+
+    public void setDoOptimzeMessageStorage(boolean doOptimzeMessageStorage) {
+        this.doOptimzeMessageStorage = doOptimzeMessageStorage;
     }
 }

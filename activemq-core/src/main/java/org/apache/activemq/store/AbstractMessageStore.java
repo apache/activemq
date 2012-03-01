@@ -73,12 +73,28 @@ abstract public class AbstractMessageStore implements MessageStore {
         return this.prioritizedMessages;
     }
 
+
+    public void addMessage(final ConnectionContext context, final Message message,final boolean canOptimizeHint) throws IOException{
+        addMessage(context,message);
+    }
+
+
     public Future<Object> asyncAddQueueMessage(final ConnectionContext context, final Message message) throws IOException {
         addMessage(context, message);
         return FUTURE;
     }
 
+    public Future<Object> asyncAddQueueMessage(final ConnectionContext context, final Message message,final boolean canOptimizeHint) throws IOException {
+        addMessage(context, message,canOptimizeHint);
+        return FUTURE;
+    }
+
        
+    public Future<Object> asyncAddTopicMessage(final ConnectionContext context, final Message message,final boolean canOptimizeHint) throws IOException {
+        addMessage(context, message,canOptimizeHint);
+        return FUTURE;
+    }
+
     public Future<Object> asyncAddTopicMessage(final ConnectionContext context, final Message message) throws IOException {
         addMessage(context, message);
         return FUTURE;

@@ -721,7 +721,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
             if (store != null && message.isPersistent()) {
                 message.getMessageId().setBrokerSequenceId(getDestinationSequenceId());
                 if (messages.isCacheEnabled()) {
-                    result = store.asyncAddQueueMessage(context, message);
+                    result = store.asyncAddQueueMessage(context, message, isOptimizeStorage());
                 } else {
                     store.addMessage(context, message);
                 }
@@ -2136,5 +2136,34 @@ public class Queue extends BaseDestination implements Task, UsageListener {
     @Override
     protected Logger getLog() {
         return LOG;
+    }
+
+    protected boolean isOptimizeStorage(){
+        boolean result = false;
+        if (isDoOptimzeMessageStorage()){
+            consumersLock.readLock().lock();
+            try{
+                if (consumers.isEmpty()==false){
+                    result = true;
+                    for (Subscription s : consumers) {
+                        if (s.getPrefetchSize()==0){
+                            result = false;
+                            break;
+                        }
+                        if (s.isSlowConsumer()){
+                            result = false;
+                            break;
+                        }
+                        if (s.getInFlightUsage() > 10){
+                            result = false;
+                            break;
+                        }
+                    }
+                }
+            }finally {
+                consumersLock.readLock().unlock();
+            }
+        }
+        return result;
     }
 }
