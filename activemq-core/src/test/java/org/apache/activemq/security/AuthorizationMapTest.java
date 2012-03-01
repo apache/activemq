@@ -45,6 +45,14 @@ public class AuthorizationMapTest extends TestCase {
 
     }
 
+    public void testCompositeDoesNotBypassAuthorizationMap() {
+        AuthorizationMap map = createAuthorizationMap();
+
+        Set<?> readACLs = map.getReadACLs(new ActiveMQQueue("USERS.FOO.BAR,DENIED"));
+        assertEquals("set size: " + readACLs, 1, readACLs.size());
+        assertTrue("Contains users group", readACLs.contains(ADMINS));
+    }
+
     public void testAuthorizationMapWithTempDest() {
         AuthorizationMap map = createAuthorizationMapWithTempDest();
 

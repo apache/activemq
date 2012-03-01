@@ -124,6 +124,53 @@ public class DefaultAuthorizationMap extends DestinationMap implements Authoriza
         return answer;
     }
 
+
+    /**
+     * Looks up the value(s) matching the given Destination key. For simple
+     * destinations this is typically a List of one single value, for wildcards
+     * or composite destinations this will typically be a Union of matching
+     * values.
+     *
+     * @param key the destination to lookup
+     * @return a Union of matching values or an empty list if there are no
+     *         matching values.
+     */
+    @Override
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    public synchronized Set get(ActiveMQDestination key) {
+        if (key.isComposite()) {
+            ActiveMQDestination[] destinations = key.getCompositeDestinations();
+            Set answer = null;
+            for (int i = 0; i < destinations.length; i++) {
+                ActiveMQDestination childDestination = destinations[i];
+                answer = union(answer, get(childDestination));
+                if (answer == null  || answer.isEmpty()) {
+                    break;
+                }
+            }
+            return answer;
+        }
+        return findWildcardMatches(key);
+    }
+
+    private Set union(Set existing, Set candidates) {
+        if ( candidates != null ) {
+            if (existing != null) {
+                for (Iterator<Object> iterator = existing.iterator(); iterator.hasNext();) {
+                    Object toMatch = iterator.next();
+                    if (!candidates.contains(toMatch)) {
+                        iterator.remove();
+                    }
+                }
+            } else {
+                existing = candidates;
+            }
+        } else if ( existing != null ) {
+            existing.clear();
+        }
+        return existing;
+    }
+
     /**
      * Sets the individual entries on the authorization map
      *

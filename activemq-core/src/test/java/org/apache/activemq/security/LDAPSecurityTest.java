@@ -34,6 +34,7 @@ import org.junit.runner.RunWith;
 import javax.jms.*;
 
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
 
 
 @RunWith( FrameworkRunner.class )
@@ -74,6 +75,38 @@ public class LDAPSecurityTest extends AbstractLdapTestUnit {
         producer.send(sess.createTextMessage("test"));
         Message msg = consumer.receive(1000);
         assertNotNull(msg);
+    }
+
+    @Test
+    public void testSendDenied() throws Exception {
+        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("tcp://localhost:61616");
+        Connection conn = factory.createQueueConnection("jdoe", "sunflower");
+        Session sess = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        conn.start();
+        Queue queue = sess.createQueue("ADMIN.FOO");
+
+        MessageProducer producer = sess.createProducer(queue);
+        try {
+            producer.send(sess.createTextMessage("test"));
+            fail("expect auth exception");
+        } catch (JMSException expected) {
+        }
+    }
+
+    @Test
+    public void testCompositeSendDenied() throws Exception {
+        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("tcp://localhost:61616");
+        Connection conn = factory.createQueueConnection("jdoe", "sunflower");
+        Session sess = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        conn.start();
+        Queue queue = sess.createQueue("TEST.FOO,ADMIN.FOO");
+
+        MessageProducer producer = sess.createProducer(queue);
+        try {
+            producer.send(sess.createTextMessage("test"));
+            fail("expect auth exception");
+        } catch (JMSException expected) {
+        }
     }
 
     @Test

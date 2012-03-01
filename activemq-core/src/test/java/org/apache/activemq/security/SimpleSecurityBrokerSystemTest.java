@@ -73,7 +73,7 @@ public class SimpleSecurityBrokerSystemTest extends SecurityTestSupport {
     }
 
     public static AuthorizationMap createAuthorizationMap() {
-        DestinationMap readAccess = new DestinationMap();
+        DestinationMap readAccess = new DefaultAuthorizationMap();
         readAccess.put(new ActiveMQQueue(">"), ADMINS);
         readAccess.put(new ActiveMQQueue("USERS.>"), USERS);
         readAccess.put(new ActiveMQQueue("GUEST.>"), GUESTS);
@@ -81,7 +81,7 @@ public class SimpleSecurityBrokerSystemTest extends SecurityTestSupport {
         readAccess.put(new ActiveMQTopic("USERS.>"), USERS);
         readAccess.put(new ActiveMQTopic("GUEST.>"), GUESTS);
 
-        DestinationMap writeAccess = new DestinationMap();
+        DestinationMap writeAccess = new DefaultAuthorizationMap();
         writeAccess.put(new ActiveMQQueue(">"), ADMINS);
         writeAccess.put(new ActiveMQQueue("USERS.>"), USERS);
         writeAccess.put(new ActiveMQQueue("GUEST.>"), USERS);
@@ -96,7 +96,7 @@ public class SimpleSecurityBrokerSystemTest extends SecurityTestSupport {
         writeAccess.put(new ActiveMQTopic("ActiveMQ.Advisory.>"), GUESTS);
         writeAccess.put(new ActiveMQTopic("ActiveMQ.Advisory.>"), USERS);
 
-        DestinationMap adminAccess = new DestinationMap();
+        DestinationMap adminAccess = new DefaultAuthorizationMap();
         adminAccess.put(new ActiveMQTopic(">"), ADMINS);
         adminAccess.put(new ActiveMQTopic(">"), USERS);
         adminAccess.put(new ActiveMQTopic(">"), GUESTS);
