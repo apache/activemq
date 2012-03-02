@@ -254,9 +254,10 @@ public class PListTest {
         executor.execute(new B());
 
         executor.shutdown();
-        executor.awaitTermination(30, TimeUnit.SECONDS);
+        boolean finishedInTime = executor.awaitTermination(30, TimeUnit.SECONDS);
 
         assertTrue("no exceptions", exceptions.isEmpty());
+        assertTrue("finished ok", finishedInTime);
     }
 
 
@@ -287,7 +288,8 @@ public class PListTest {
         }
 
         executor.shutdown();
-        executor.awaitTermination(60*5, TimeUnit.SECONDS);
+        boolean finishedInTime = executor.awaitTermination(60*5, TimeUnit.SECONDS);
+        assertTrue("finished ok", finishedInTime);
     }
 
     @Test
@@ -369,8 +371,9 @@ public class PListTest {
 
         executor.shutdown();
         LOG.info("wait for parallel work to complete");
-        executor.awaitTermination(60*5, TimeUnit.SECONDS);
+        boolean finishedInTime = executor.awaitTermination(60*5, TimeUnit.SECONDS);
         assertTrue("no exceptions", exceptions.isEmpty());
+        assertTrue("finished ok", finishedInTime);
     }
 
     // for non determinant issues, increasing this may help diagnose
@@ -434,8 +437,8 @@ public class PListTest {
         executor.shutdown();
         LOG.info("wait for parallel work to complete");
         boolean shutdown = executor.awaitTermination(60*60, TimeUnit.SECONDS);
+        assertTrue("no exceptions: " + exceptions, exceptions.isEmpty());
         assertTrue("test did not  timeout ", shutdown);
-        assertTrue("no exceptions", exceptions.isEmpty());
     }
 
     enum TaskType {CREATE, DELETE, ADD, REMOVE, ITERATE, ITERATE_REMOVE}
@@ -570,6 +573,9 @@ public class PListTest {
 
     @After
     public void tearDown() throws Exception {
+        if (executor != null) {
+            executor.shutdownNow();
+        }
         store.stop();
         exceptions.clear();
     }
