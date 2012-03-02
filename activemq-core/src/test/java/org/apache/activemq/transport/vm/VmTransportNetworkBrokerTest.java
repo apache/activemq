@@ -17,6 +17,9 @@
 package org.apache.activemq.transport.vm;
 
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -29,8 +32,13 @@ import org.apache.activemq.bugs.embedded.ThreadExplorer;
 import org.apache.activemq.network.NetworkConnector;
 import org.apache.activemq.thread.DefaultThreadPools;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 
 public class VmTransportNetworkBrokerTest extends TestCase {
+
+	private static final Logger LOG = LoggerFactory.getLogger(VmTransportNetworkBrokerTest.class);
 
     private static final String VM_BROKER_URI = 
         "vm://localhost?create=false";
@@ -42,6 +50,8 @@ public class VmTransportNetworkBrokerTest extends TestCase {
 
         // with VMConnection and simple discovery network connector
         int originalThreadCount = Thread.activeCount();
+        LOG.debug(ThreadExplorer.show("threads at beginning"));
+        
         BrokerService broker = new BrokerService();
         broker.setDedicatedTaskRunner(true);
         broker.setPersistent(false);
@@ -69,7 +79,6 @@ public class VmTransportNetworkBrokerTest extends TestCase {
         broker.waitUntilStopped();
 
         // testNoDanglingThreadsAfterStop with tcp transport
-
         broker = new BrokerService();
         broker.setSchedulerSupport(true);
         broker.setDedicatedTaskRunner(true);
@@ -89,10 +98,63 @@ public class VmTransportNetworkBrokerTest extends TestCase {
 
         // let it settle
         TimeUnit.SECONDS.sleep(5);        
-        
-        int threadCountAfterStop = Thread.activeCount();
-        assertTrue("Threads are leaking: " + ThreadExplorer.show("active after stop") + ". originalThreadCount=" + originalThreadCount + " threadCountAfterStop=" + threadCountAfterStop,
-                threadCountAfterStop == originalThreadCount);
 
+        // get final threads but filter out any daemon threads that the JVM may have created.
+        Thread[] threads = filterDaemonThreads(ThreadExplorer.listThreads());
+        int threadCountAfterStop = threads.length;
+        
+        if (LOG.isDebugEnabled()) {
+        	LOG.debug(ThreadExplorer.show("active after stop"));
+        	LOG.debug("originalThreadCount=" + originalThreadCount + " threadCountAfterStop=" + threadCountAfterStop); 
+        }
+        
+        assertTrue("Threads are leaking: " + 
+        		ThreadExplorer.show("active after stop") + 
+        		". originalThreadCount=" + 
+        		originalThreadCount + 
+        		" threadCountAfterStop=" + 
+        		threadCountAfterStop,
+            threadCountAfterStop == originalThreadCount);
+    }
+    
+    
+    /**
+     * Filters any daemon threads from the thread list.
+     * 
+     * Thread counts before and after the test should ideally be equal. 
+     * However there is no guarantee that the JVM does not create any 
+     * additional threads itself.
+     * E.g. on Mac OSX there is a JVM internal thread called
+     * "Poller SunPKCS11-Darwin" created after the test go started and 
+     * under the main thread group.
+     * When debugging tests in Eclipse another so called "Reader" thread 
+     * is created by Eclipse.
+     * So we cannot assume that the JVM does not create additional threads
+     * during the test. However for the time being we assume that any such 
+     * additionally created threads are daemon threads.
+     *   
+     * @param threads - the array of threads to parse
+     * @return a new array with any daemon threads removed
+     */
+    public Thread[] filterDaemonThreads(Thread[] threads) throws Exception {
+    
+    	List<Thread> threadList = new ArrayList<Thread>(Arrays.asList(threads));
+    	
+    	// Can't use an Iterator as it would raise a 
+    	// ConcurrentModificationException when trying to remove an element
+    	// from the list, so using standard walk through
+    	for (int i = 0 ; i < threadList.size(); i++) {
+    		
+    		Thread thread = threadList.get(i);
+    		LOG.debug("Inspecting thread " + thread.getName());
+    		if (thread.isDaemon()) {
+    			LOG.debug("Removing deamon thread.");
+    			threadList.remove(thread);
+    			Thread.sleep(100);
+    	
+    		}
+    	}
+    	LOG.debug("Converting list back to Array");
+    	return threadList.toArray(new Thread[0]);
     }
 }
