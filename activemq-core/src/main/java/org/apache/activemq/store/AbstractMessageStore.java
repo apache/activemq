@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 import java.util.concurrent.FutureTask;
+
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.Message;
@@ -35,75 +36,87 @@ abstract public class AbstractMessageStore implements MessageStore {
     public AbstractMessageStore(ActiveMQDestination destination) {
         this.destination = destination;
     }
-    
+
+    @Override
     public void dispose(ConnectionContext context) {
     }
 
+    @Override
     public void start() throws Exception {
     }
 
+    @Override
     public void stop() throws Exception {
     }
 
+    @Override
     public ActiveMQDestination getDestination() {
         return destination;
     }
 
+    @Override
     public void setMemoryUsage(MemoryUsage memoryUsage) {
     }
 
+    @Override
     public void setBatch(MessageId messageId) throws IOException, Exception {
     }
 
     /**
      * flag to indicate if the store is empty
-     * 
+     *
      * @return true if the message count is 0
      * @throws Exception
      */
+    @Override
     public boolean isEmpty() throws Exception {
         return getMessageCount() == 0;
     }
-    
+
+    @Override
     public void setPrioritizedMessages(boolean prioritizedMessages) {
         this.prioritizedMessages = prioritizedMessages;
-    }    
+    }
 
+    @Override
     public boolean isPrioritizedMessages() {
         return this.prioritizedMessages;
     }
 
-
-    public void addMessage(final ConnectionContext context, final Message message,final boolean canOptimizeHint) throws IOException{
-        addMessage(context,message);
+    @Override
+    public void addMessage(final ConnectionContext context, final Message message, final boolean canOptimizeHint) throws IOException{
+        addMessage(context, message);
     }
 
-
+    @Override
     public Future<Object> asyncAddQueueMessage(final ConnectionContext context, final Message message) throws IOException {
         addMessage(context, message);
         return FUTURE;
     }
 
+    @Override
     public Future<Object> asyncAddQueueMessage(final ConnectionContext context, final Message message,final boolean canOptimizeHint) throws IOException {
-        addMessage(context, message,canOptimizeHint);
+        addMessage(context, message, canOptimizeHint);
         return FUTURE;
     }
 
-       
+    @Override
     public Future<Object> asyncAddTopicMessage(final ConnectionContext context, final Message message,final boolean canOptimizeHint) throws IOException {
-        addMessage(context, message,canOptimizeHint);
+        addMessage(context, message, canOptimizeHint);
         return FUTURE;
     }
 
+    @Override
     public Future<Object> asyncAddTopicMessage(final ConnectionContext context, final Message message) throws IOException {
         addMessage(context, message);
         return FUTURE;
     }
 
+    @Override
     public void removeAsyncMessage(ConnectionContext context, MessageAck ack) throws IOException {
         removeMessage(context, ack);
     }
-    
+
     static class CallableImplementation implements Callable<Object> {
         public Object call() throws Exception {
             return null;

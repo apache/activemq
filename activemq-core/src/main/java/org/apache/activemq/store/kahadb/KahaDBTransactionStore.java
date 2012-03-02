@@ -26,6 +26,7 @@ import java.util.concurrent.CancellationException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
@@ -55,8 +56,8 @@ import org.slf4j.LoggerFactory;
 /**
  * Provides a TransactionStore implementation that can create transaction aware
  * MessageStore objects from non transaction aware MessageStore objects.
- * 
- * 
+ *
+ *
  */
 public class KahaDBTransactionStore implements TransactionStore {
     static final Logger LOG = LoggerFactory.getLogger(KahaDBTransactionStore.class);
@@ -119,7 +120,7 @@ public class KahaDBTransactionStore implements TransactionStore {
                 cmd.run();
                 results.add(cmd.run());
             }
-            
+
             return results;
         }
     }
@@ -157,7 +158,17 @@ public class KahaDBTransactionStore implements TransactionStore {
             }
 
             @Override
+            public void addMessage(ConnectionContext context, final Message send, boolean canOptimize) throws IOException {
+                KahaDBTransactionStore.this.addMessage(context, getDelegate(), send);
+            }
+
+            @Override
             public Future<Object> asyncAddQueueMessage(ConnectionContext context, Message message) throws IOException {
+                return KahaDBTransactionStore.this.asyncAddQueueMessage(context, getDelegate(), message);
+            }
+
+            @Override
+            public Future<Object> asyncAddQueueMessage(ConnectionContext context, Message message, boolean canOptimize) throws IOException {
                 return KahaDBTransactionStore.this.asyncAddQueueMessage(context, getDelegate(), message);
             }
 
@@ -181,7 +192,17 @@ public class KahaDBTransactionStore implements TransactionStore {
             }
 
             @Override
+            public void addMessage(ConnectionContext context, final Message send, boolean canOptimize) throws IOException {
+                KahaDBTransactionStore.this.addMessage(context, getDelegate(), send);
+            }
+
+            @Override
             public Future<Object> asyncAddTopicMessage(ConnectionContext context, Message message) throws IOException {
+                return KahaDBTransactionStore.this.asyncAddTopicMessage(context, getDelegate(), message);
+            }
+
+            @Override
+            public Future<Object> asyncAddTopicMessage(ConnectionContext context, Message message, boolean canOptimize) throws IOException {
                 return KahaDBTransactionStore.this.asyncAddTopicMessage(context, getDelegate(), message);
             }
 

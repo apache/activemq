@@ -18,6 +18,7 @@ package org.apache.activemq.store;
 
 import java.io.IOException;
 import java.util.concurrent.Future;
+
 import org.apache.activemq.Service;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQDestination;
@@ -28,14 +29,14 @@ import org.apache.activemq.usage.MemoryUsage;
 
 /**
  * Represents a message store which is used by the persistent implementations
- * 
- * 
+ *
+ *
  */
 public interface MessageStore extends Service {
 
     /**
      * Adds a message to the message store
-     * 
+     *
      * @param context context
      * @param message
      * @throws IOException
@@ -50,15 +51,15 @@ public interface MessageStore extends Service {
      * @param canOptimizeHint - give a hint to the store that the message may be consumed before it hits the disk
      * @throws IOException
      */
-    void addMessage(ConnectionContext context, Message message,boolean canOptimizeHint) throws IOException;
-    
+    void addMessage(ConnectionContext context, Message message, boolean canOptimizeHint) throws IOException;
+
     /**
      * Adds a message to the message store
-     * 
+     *
      * @param context context
      * @param message
      * @return a Future to track when this is complete
-     * @throws IOException 
+     * @throws IOException
      * @throws IOException
      */
     Future<Object> asyncAddQueueMessage(ConnectionContext context, Message message) throws IOException;
@@ -73,20 +74,20 @@ public interface MessageStore extends Service {
      * @throws IOException
      * @throws IOException
      */
-    Future<Object> asyncAddQueueMessage(ConnectionContext context, Message message,boolean canOptimizeHint) throws IOException;
-    
+    Future<Object> asyncAddQueueMessage(ConnectionContext context, Message message, boolean canOptimizeHint) throws IOException;
+
     /**
      * Adds a message to the message store
-     * 
+     *
      * @param context context
      * @param message
      * @return a Future to track when this is complete
-     * @throws IOException 
+     * @throws IOException
      * @throws IOException
      */
     Future<Object> asyncAddTopicMessage(ConnectionContext context, Message message) throws IOException;
 
-/**
+    /**
      * Adds a message to the message store
      *
      * @param context context
@@ -96,14 +97,13 @@ public interface MessageStore extends Service {
      * @throws IOException
      * @throws IOException
      */
-    Future<Object> asyncAddTopicMessage(ConnectionContext context, Message message,boolean canOptimizeHint) throws IOException;
-
+    Future<Object> asyncAddTopicMessage(ConnectionContext context, Message message, boolean canOptimizeHint) throws IOException;
 
     /**
      * Looks up a message using either the String messageID or the
      * messageNumber. Implementations are encouraged to fill in the missing key
      * if its easy to do so.
-     * 
+     *
      * @param identity which contains either the messageID or the messageNumber
      * @return the message or null if it does not exist
      * @throws IOException
@@ -112,7 +112,7 @@ public interface MessageStore extends Service {
 
     /**
      * Removes a message from the message store.
-     * 
+     *
      * @param context
      * @param ack the ack request that cause the message to be removed. It
      *                conatins the identity which contains the messageID of the
@@ -120,12 +120,12 @@ public interface MessageStore extends Service {
      * @throws IOException
      */
     void removeMessage(ConnectionContext context, MessageAck ack) throws IOException;
-    
+
     void removeAsyncMessage(ConnectionContext context, MessageAck ack) throws IOException;
 
     /**
      * Removes all the messages from the message store.
-     * 
+     *
      * @param context
      * @throws IOException
      */
@@ -133,7 +133,7 @@ public interface MessageStore extends Service {
 
     /**
      * Recover any messages to be delivered.
-     * 
+     *
      * @param container
      * @throws Exception
      */
@@ -141,7 +141,7 @@ public interface MessageStore extends Service {
 
     /**
      * The destination that the message store is holding messages for.
-     * 
+     *
      * @return the destination
      */
     ActiveMQDestination getDestination();
@@ -155,13 +155,13 @@ public interface MessageStore extends Service {
     /**
      * @return the number of messages ready to deliver
      * @throws IOException
-     * 
+     *
      */
     int getMessageCount() throws IOException;
 
     /**
      * A hint to the Store to reset any batching state for the Destination
-     * 
+     *
      */
     void resetBatching();
 
@@ -172,27 +172,27 @@ public interface MessageStore extends Service {
     /**
      * allow caching cursors to set the current batch offset when cache is exhausted
      * @param messageId
-     * @throws Exception 
+     * @throws Exception
      */
     void setBatch(MessageId messageId) throws Exception;
-    
+
     /**
      * flag to indicate if the store is empty
      * @return true if the message count is 0
-     * @throws Exception 
+     * @throws Exception
      */
     boolean isEmpty() throws Exception;
-    
+
     /**
      * A hint to the store to try recover messages according to priority
      * @param prioritizedMessages
      */
     public void setPrioritizedMessages(boolean prioritizedMessages);
-    
+
     /**
-     * 
+     *
      * @return true if store is trying to recover messages according to priority
      */
     public boolean isPrioritizedMessages();
-    
+
 }

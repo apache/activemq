@@ -24,6 +24,7 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
+
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.Message;
@@ -71,7 +72,17 @@ public class MultiKahaDBTransactionStore implements TransactionStore {
             }
 
             @Override
+            public void addMessage(ConnectionContext context, final Message send, boolean canOptimizeHint) throws IOException {
+                MultiKahaDBTransactionStore.this.addMessage(transactionStore, context, getDelegate(), send);
+            }
+
+            @Override
             public Future<Object> asyncAddQueueMessage(ConnectionContext context, Message message) throws IOException {
+                return MultiKahaDBTransactionStore.this.asyncAddQueueMessage(transactionStore, context, getDelegate(), message);
+            }
+
+            @Override
+            public Future<Object> asyncAddQueueMessage(ConnectionContext context, Message message, boolean canOptimizeHint) throws IOException {
                 return MultiKahaDBTransactionStore.this.asyncAddQueueMessage(transactionStore, context, getDelegate(), message);
             }
 
@@ -90,8 +101,18 @@ public class MultiKahaDBTransactionStore implements TransactionStore {
     public TopicMessageStore proxy(final TransactionStore transactionStore, final TopicMessageStore messageStore) {
         return new ProxyTopicMessageStore(messageStore) {
             @Override
+            public void addMessage(ConnectionContext context, final Message send, boolean canOptimizeHint) throws IOException {
+                MultiKahaDBTransactionStore.this.addMessage(transactionStore, context, getDelegate(), send);
+            }
+
+            @Override
             public void addMessage(ConnectionContext context, final Message send) throws IOException {
                 MultiKahaDBTransactionStore.this.addMessage(transactionStore, context, getDelegate(), send);
+            }
+
+            @Override
+            public Future<Object> asyncAddTopicMessage(ConnectionContext context, Message message, boolean canOptimizeHint) throws IOException {
+                return MultiKahaDBTransactionStore.this.asyncAddTopicMessage(transactionStore, context, getDelegate(), message);
             }
 
             @Override

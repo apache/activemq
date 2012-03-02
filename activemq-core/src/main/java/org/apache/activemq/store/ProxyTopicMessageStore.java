@@ -18,6 +18,7 @@ package org.apache.activemq.store;
 
 import java.io.IOException;
 import java.util.concurrent.Future;
+
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.Message;
@@ -41,135 +42,165 @@ public class ProxyTopicMessageStore implements TopicMessageStore {
         return delegate;
     }
 
+    @Override
     public void addMessage(ConnectionContext context, Message message) throws IOException {
         delegate.addMessage(context, message);
     }
 
+    @Override
     public void addMessage(ConnectionContext context, Message message, boolean canOptimizeHint) throws IOException {
-       delegate.addMessage(context,message,canOptimizeHint);
+       delegate.addMessage(context, message, canOptimizeHint);
     }
 
+    @Override
     public Message getMessage(MessageId identity) throws IOException {
         return delegate.getMessage(identity);
     }
 
+    @Override
     public void recover(MessageRecoveryListener listener) throws Exception {
         delegate.recover(listener);
     }
 
+    @Override
     public void removeAllMessages(ConnectionContext context) throws IOException {
         delegate.removeAllMessages(context);
     }
 
+    @Override
     public void removeMessage(ConnectionContext context, MessageAck ack) throws IOException {
         delegate.removeMessage(context, ack);
     }
 
+    @Override
     public void start() throws Exception {
         delegate.start();
     }
 
+    @Override
     public void stop() throws Exception {
         delegate.stop();
     }
 
+    @Override
     public SubscriptionInfo lookupSubscription(String clientId, String subscriptionName) throws IOException {
         return delegate.lookupSubscription(clientId, subscriptionName);
     }
 
+    @Override
     public void acknowledge(ConnectionContext context, String clientId, String subscriptionName,
                             MessageId messageId, MessageAck ack) throws IOException {
         delegate.acknowledge(context, clientId, subscriptionName, messageId, ack);
     }
 
+    @Override
     public void addSubsciption(SubscriptionInfo subscriptionInfo, boolean retroactive) throws IOException {
         delegate.addSubsciption(subscriptionInfo, retroactive);
     }
 
+    @Override
     public void deleteSubscription(String clientId, String subscriptionName) throws IOException {
         delegate.deleteSubscription(clientId, subscriptionName);
     }
 
+    @Override
     public void recoverSubscription(String clientId, String subscriptionName, MessageRecoveryListener listener)
         throws Exception {
         delegate.recoverSubscription(clientId, subscriptionName, listener);
     }
 
+    @Override
     public void recoverNextMessages(String clientId, String subscriptionName, int maxReturned,
                                     MessageRecoveryListener listener) throws Exception {
         delegate.recoverNextMessages(clientId, subscriptionName, maxReturned, listener);
     }
 
+    @Override
     public void resetBatching(String clientId, String subscriptionName) {
         delegate.resetBatching(clientId, subscriptionName);
     }
 
+    @Override
     public ActiveMQDestination getDestination() {
         return delegate.getDestination();
     }
 
+    @Override
     public SubscriptionInfo[] getAllSubscriptions() throws IOException {
         return delegate.getAllSubscriptions();
     }
 
+    @Override
     public void setMemoryUsage(MemoryUsage memoryUsage) {
         delegate.setMemoryUsage(memoryUsage);
     }
 
+    @Override
     public int getMessageCount(String clientId, String subscriberName) throws IOException {
         return delegate.getMessageCount(clientId, subscriberName);
     }
 
+    @Override
     public int getMessageCount() throws IOException {
         return delegate.getMessageCount();
     }
 
+    @Override
     public void recoverNextMessages(int maxReturned, MessageRecoveryListener listener) throws Exception {
         delegate.recoverNextMessages(maxReturned, listener);
-
     }
 
+    @Override
     public void dispose(ConnectionContext context) {
         delegate.dispose(context);
     }
 
+    @Override
     public void resetBatching() {
         delegate.resetBatching();
-
     }
 
+    @Override
     public void setBatch(MessageId messageId) throws Exception {
         delegate.setBatch(messageId);
     }
-    
+
+    @Override
     public boolean isEmpty() throws Exception {
         return delegate.isEmpty();
      }
 
+    @Override
     public Future<Object> asyncAddTopicMessage(ConnectionContext context, Message message) throws IOException {
         return delegate.asyncAddTopicMessage(context, message);
      }
 
+    @Override
     public Future<Object> asyncAddTopicMessage(ConnectionContext context, Message message, boolean canOptimizeHint) throws IOException {
-        return delegate.asyncAddTopicMessage(context,message,canOptimizeHint);
+        return delegate.asyncAddTopicMessage(context,message, canOptimizeHint);
     }
 
+    @Override
     public Future<Object> asyncAddQueueMessage(ConnectionContext context, Message message) throws IOException {
         return delegate.asyncAddQueueMessage(context, message);
     }
 
+    @Override
     public Future<Object> asyncAddQueueMessage(ConnectionContext context, Message message, boolean canOptimizeHint) throws IOException {
-        return delegate.asyncAddQueueMessage(context,message,canOptimizeHint);
+        return delegate.asyncAddQueueMessage(context,message, canOptimizeHint);
     }
 
+    @Override
     public void removeAsyncMessage(ConnectionContext context, MessageAck ack) throws IOException {
         delegate.removeAsyncMessage(context, ack);
     }
 
+    @Override
     public void setPrioritizedMessages(boolean prioritizedMessages) {
         delegate.setPrioritizedMessages(prioritizedMessages);
     }
-    
+
+    @Override
     public boolean isPrioritizedMessages() {
         return delegate.isPrioritizedMessages();
     }

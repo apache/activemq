@@ -21,7 +21,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
-import javax.transaction.xa.XAException;
+
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
@@ -40,8 +40,8 @@ import org.apache.activemq.store.TransactionStore;
 /**
  * Provides a TransactionStore implementation that can create transaction aware
  * MessageStore objects from non transaction aware MessageStore objects.
- * 
- * 
+ *
+ *
  */
 public class MemoryTransactionStore implements TransactionStore {
 
@@ -91,7 +91,7 @@ public class MemoryTransactionStore implements TransactionStore {
             ConnectionContext ctx = new ConnectionContext();
             persistenceAdapter.beginTransaction(ctx);
             try {
-                
+
                 // Do all the message adds.
                 for (Iterator<AddMessageCommand> iter = messages.iterator(); iter.hasNext();) {
                     AddMessageCommand cmd = iter.next();
@@ -102,7 +102,7 @@ public class MemoryTransactionStore implements TransactionStore {
                     RemoveMessageCommand cmd = iter.next();
                     cmd.run(ctx);
                 }
-                
+
             } catch ( IOException e ) {
                 persistenceAdapter.rollbackTransaction(ctx);
                 throw e;
@@ -110,7 +110,7 @@ public class MemoryTransactionStore implements TransactionStore {
             persistenceAdapter.commitTransaction(ctx);
         }
     }
-    
+
     public interface AddMessageCommand {
         Message getMessage();
 
@@ -122,7 +122,7 @@ public class MemoryTransactionStore implements TransactionStore {
 
         void run(ConnectionContext context) throws IOException;
     }
-    
+
     public MemoryTransactionStore(PersistenceAdapter persistenceAdapter) {
         this.persistenceAdapter=persistenceAdapter;
     }
@@ -135,19 +135,30 @@ public class MemoryTransactionStore implements TransactionStore {
             }
 
             @Override
+            public void addMessage(ConnectionContext context, final Message send, boolean canOptimize) throws IOException {
+                MemoryTransactionStore.this.addMessage(getDelegate(), send);
+            }
+
+            @Override
             public Future<Object> asyncAddQueueMessage(ConnectionContext context, Message message) throws IOException {
                 MemoryTransactionStore.this.addMessage(getDelegate(), message);
                 return AbstractMessageStore.FUTURE;
              }
-             
+
+            @Override
+            public Future<Object> asyncAddQueueMessage(ConnectionContext context, Message message, boolean canoptimize) throws IOException {
+                MemoryTransactionStore.this.addMessage(getDelegate(), message);
+                return AbstractMessageStore.FUTURE;
+             }
+
             @Override
             public void removeMessage(ConnectionContext context, final MessageAck ack) throws IOException {
                 MemoryTransactionStore.this.removeMessage(getDelegate(), ack);
             }
-             
+
             @Override
             public void removeAsyncMessage(ConnectionContext context, MessageAck ack) throws IOException {
-                MemoryTransactionStore.this.removeMessage(getDelegate(), ack);       
+                MemoryTransactionStore.this.removeMessage(getDelegate(), ack);
             }
         };
     }
@@ -160,7 +171,18 @@ public class MemoryTransactionStore implements TransactionStore {
             }
 
             @Override
+            public void addMessage(ConnectionContext context, final Message send, boolean canOptimize) throws IOException {
+                MemoryTransactionStore.this.addMessage(getDelegate(), send);
+            }
+
+            @Override
             public Future<Object> asyncAddTopicMessage(ConnectionContext context, Message message) throws IOException {
+                MemoryTransactionStore.this.addMessage(getDelegate(), message);
+                return AbstractMessageStore.FUTURE;
+             }
+
+            @Override
+            public Future<Object> asyncAddTopicMessage(ConnectionContext context, Message message, boolean canOptimize) throws IOException {
                 MemoryTransactionStore.this.addMessage(getDelegate(), message);
                 return AbstractMessageStore.FUTURE;
              }
@@ -169,10 +191,10 @@ public class MemoryTransactionStore implements TransactionStore {
             public void removeMessage(ConnectionContext context, final MessageAck ack) throws IOException {
                 MemoryTransactionStore.this.removeMessage(getDelegate(), ack);
             }
-            
+
             @Override
             public void removeAsyncMessage(ConnectionContext context, MessageAck ack) throws IOException {
-                MemoryTransactionStore.this.removeMessage(getDelegate(), ack);       
+                MemoryTransactionStore.this.removeMessage(getDelegate(), ack);
             }
 
             @Override
@@ -285,7 +307,7 @@ public class MemoryTransactionStore implements TransactionStore {
             destination.addMessage(null, message);
         }
     }
-    
+
     /**
      * @param ack
      * @throws IOException

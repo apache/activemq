@@ -21,7 +21,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
-import javax.transaction.xa.XAException;
+
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.BrokerServiceAware;
 import org.apache.activemq.broker.ConnectionContext;
@@ -43,16 +43,16 @@ import org.slf4j.LoggerFactory;
 /**
  * Provides a TransactionStore implementation that can create transaction aware
  * MessageStore objects from non transaction aware MessageStore objects.
- * 
- * 
+ *
+ *
  */
-public class KahaTransactionStore implements TransactionStore, BrokerServiceAware {	
+public class KahaTransactionStore implements TransactionStore, BrokerServiceAware {
     private static final Logger LOG = LoggerFactory.getLogger(KahaTransactionStore.class);
-	
+
     private final Map transactions = new ConcurrentHashMap();
     private final Map prepared;
     private final KahaPersistenceAdapter adaptor;
-    
+
     private BrokerService brokerService;
 
     KahaTransactionStore(KahaPersistenceAdapter adaptor, Map preparedMap) {
@@ -64,6 +64,11 @@ public class KahaTransactionStore implements TransactionStore, BrokerServiceAwar
         return new ProxyMessageStore(messageStore) {
             @Override
             public void addMessage(ConnectionContext context, final Message send) throws IOException {
+                KahaTransactionStore.this.addMessage(getDelegate(), send);
+            }
+
+            @Override
+            public void addMessage(ConnectionContext context, final Message send, boolean canOptimize) throws IOException {
                 KahaTransactionStore.this.addMessage(getDelegate(), send);
             }
 
@@ -150,19 +155,19 @@ public class KahaTransactionStore implements TransactionStore, BrokerServiceAwar
      * @throws IOException
      */
     void addMessage(final MessageStore destination, final Message message) throws IOException {
-    	try {
-    		if (message.isInTransaction()) {
-    			KahaTransaction tx = getOrCreateTx(message.getTransactionId());
-    			tx.add((KahaMessageStore)destination, message);
-    		} else {
-    			destination.addMessage(null, message);
-    		}
-    	} catch (RuntimeStoreException rse) {
+        try {
+            if (message.isInTransaction()) {
+                KahaTransaction tx = getOrCreateTx(message.getTransactionId());
+                tx.add((KahaMessageStore)destination, message);
+            } else {
+                destination.addMessage(null, message);
+            }
+        } catch (RuntimeStoreException rse) {
             if (rse.getCause() instanceof IOException) {
                 brokerService.handleIOException((IOException)rse.getCause());
             }
             throw rse;
-    	}
+        }
     }
 
     /**
@@ -170,19 +175,19 @@ public class KahaTransactionStore implements TransactionStore, BrokerServiceAwar
      * @throws IOException
      */
     final void removeMessage(final MessageStore destination, final MessageAck ack) throws IOException {
-    	try {
-    		if (ack.isInTransaction()) {
-    			KahaTransaction tx = getOrCreateTx(ack.getTransactionId());
-    			tx.add((KahaMessageStore)destination, ack);
-    		} else {
-    			destination.removeMessage(null, ack);
-    		}
-    	} catch (RuntimeStoreException rse) {
+        try {
+            if (ack.isInTransaction()) {
+                KahaTransaction tx = getOrCreateTx(ack.getTransactionId());
+                tx.add((KahaMessageStore)destination, ack);
+            } else {
+                destination.removeMessage(null, ack);
+            }
+        } catch (RuntimeStoreException rse) {
             if (rse.getCause() instanceof IOException) {
                 brokerService.handleIOException((IOException)rse.getCause());
             }
             throw rse;
-    	}
+        }
     }
 
     final void acknowledge(final TopicMessageStore destination, String clientId,
@@ -233,7 +238,7 @@ public class KahaTransactionStore implements TransactionStore, BrokerServiceAwar
         return adaptor.retrieveMessageStore(id);
     }
 
-	public void setBrokerService(BrokerService brokerService) {
-		this.brokerService = brokerService;
-	}
+    public void setBrokerService(BrokerService brokerService) {
+        this.brokerService = brokerService;
+    }
 }
