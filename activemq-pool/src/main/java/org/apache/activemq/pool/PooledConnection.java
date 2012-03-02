@@ -118,7 +118,14 @@ public class PooledConnection implements TopicConnection, QueueConnection, Enhan
     }
 
     public void setClientID(String clientID) throws JMSException {
-        getConnection().setClientID(clientID);
+    	
+    	// ignore repeated calls to setClientID() with the same client id
+    	// this could happen when a JMS component such as Spring that uses a 
+    	// PooledConnectionFactory shuts down and reinitializes.
+    	//
+        if (this.getConnection().getClientID() == null || !this.getClientID().equals(clientID)) {
+        	getConnection().setClientID(clientID);
+        }
     }
 
     public ConnectionConsumer createConnectionConsumer(Queue queue, String selector,
