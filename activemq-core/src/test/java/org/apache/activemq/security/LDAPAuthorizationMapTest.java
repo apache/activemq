@@ -141,10 +141,7 @@ public class LDAPAuthorizationMapTest extends AbstractLdapTestUnit {
     public void testComposite() {
        ActiveMQDestination q1 = new ActiveMQQueue("queue1,topic://topic1");
        Set aclsq1 = authMap.getWriteACLs(q1);
-       assertEquals(3, aclsq1.size());
-       assertTrue(aclsq1.contains(new GroupPrincipal("role1")));
-       assertTrue(aclsq1.contains(new GroupPrincipal("role2")));
-       assertTrue(aclsq1.contains(new GroupPrincipal("role3")));
+       assertEquals(0, aclsq1.size());
     }
 
     @Test
