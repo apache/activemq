@@ -39,6 +39,7 @@ import org.apache.activemq.broker.region.policy.StorePendingDurableSubscriberMes
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
+import org.apache.activemq.util.Wait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -119,16 +120,26 @@ abstract public class MessagePriorityTest extends CombinationTestSupport {
     }
     
     public void testStoreConfigured() throws Exception {
-        Queue queue = sess.createQueue("TEST");
-        Topic topic = sess.createTopic("TEST");
+        final Queue queue = sess.createQueue("TEST");
+        final Topic topic = sess.createTopic("TEST");
         
         MessageProducer queueProducer = sess.createProducer(queue);
         MessageProducer topicProducer = sess.createProducer(topic);
-        
-        
-        Thread.sleep(500); // get it all propagated
-        
+
+        Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                return broker.getRegionBroker().getDestinationMap().get(queue) != null;
+            }
+        });
         assertTrue(broker.getRegionBroker().getDestinationMap().get(queue).getMessageStore().isPrioritizedMessages());
+
+        Wait.waitFor(new Wait.Condition(){
+            @Override
+            public boolean isSatisified() throws Exception {
+                return broker.getRegionBroker().getDestinationMap().get(topic) != null;
+            }
+        });
         assertTrue(broker.getRegionBroker().getDestinationMap().get(topic).getMessageStore().isPrioritizedMessages());
         
         queueProducer.close();
