@@ -964,7 +964,10 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
             // so that in progress operations can notice and unblock.
             List<TransportConnectionState> connectionStates = listConnectionStates();
             for (TransportConnectionState cs : connectionStates) {
-                cs.getContext().getStopping().set(true);
+                ConnectionContext connectionContext = cs.getContext();
+                if (connectionContext != null) {
+                    connectionContext.getStopping().set(true);
+                }
             }
             try {
                 DefaultThreadPools.getDefaultTaskRunnerFactory().execute(new Runnable() {

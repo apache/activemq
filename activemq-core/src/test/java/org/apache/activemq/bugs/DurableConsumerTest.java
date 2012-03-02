@@ -172,8 +172,9 @@ public class DurableConsumerTest extends CombinationTestSupport{
         
         Thread publisherThread = new Thread(new MessagePublisher());
         publisherThread.start();
-        final List<SimpleTopicSubscriber> list = new ArrayList<SimpleTopicSubscriber>();
-        for (int i = 0; i < 100; i++) {
+        final int numSubs = 100;
+        final List<SimpleTopicSubscriber> list = new ArrayList<SimpleTopicSubscriber>(numSubs);
+        for (int i = 0; i < numSubs; i++) {
             
             final int id = i;
             Thread thread = new Thread(new Runnable(){
@@ -185,8 +186,14 @@ public class DurableConsumerTest extends CombinationTestSupport{
             thread.start();
             
         }
-        
-        Thread.sleep(5000);
+
+        Wait.waitFor(new Wait.Condition(){
+            @Override
+            public boolean isSatisified() throws Exception {
+                return numSubs == list.size();
+            }
+        });
+
         broker.stop();
         broker = createBroker(false);
         configurePersistence(broker);
@@ -195,7 +202,7 @@ public class DurableConsumerTest extends CombinationTestSupport{
         for (SimpleTopicSubscriber s:list) {
             s.closeConnection();
         }
-        assertEquals(0, exceptions.size());
+        assertTrue("no exceptions: " + exceptions, exceptions.isEmpty());
     }
     
     // makes heavy use of threads and can demonstrate https://issues.apache.org/activemq/browse/AMQ-2028
