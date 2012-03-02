@@ -23,15 +23,18 @@ import javax.jms.Session;
 import org.apache.activemq.broker.BrokerRegistry;
 import org.apache.activemq.broker.region.RegionBroker;
 import org.apache.activemq.util.Wait;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class OptimizedAckTest extends TestSupport {
-
+    private static final Logger LOG = LoggerFactory.getLogger(OptimizedAckTest.class);
     private ActiveMQConnection connection;
 
     protected void setUp() throws Exception {
         super.setUp();
         connection = (ActiveMQConnection) createConnection();
         connection.setOptimizeAcknowledge(true);
+        connection.setOptimizeAcknowledgeTimeOut(0);
         ActiveMQPrefetchPolicy prefetchPolicy = new ActiveMQPrefetchPolicy();
         prefetchPolicy.setAll(10);
         connection.setPrefetchPolicy(prefetchPolicy);
@@ -43,16 +46,25 @@ public class OptimizedAckTest extends TestSupport {
     }
 
      public void testReceivedMessageStillInflight() throws Exception {
-        connection.start();
-        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        Queue queue = session.createQueue("test");
-        MessageProducer producer = session.createProducer(queue);
-        for (int i=0; i<10; i++) {
-            producer.send(session.createTextMessage("Hello" + i));
-        }
+         connection.start();
+         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+         Queue queue = session.createQueue("test");
+         MessageProducer producer = session.createProducer(queue);
+         for (int i = 0; i < 10; i++) {
+             producer.send(session.createTextMessage("Hello" + i));
+         }
 
-        final RegionBroker regionBroker = (RegionBroker) BrokerRegistry.getInstance().findFirst().getRegionBroker();
-        MessageConsumer consumer = session.createConsumer(queue);
+         final RegionBroker regionBroker = (RegionBroker) BrokerRegistry.getInstance().findFirst().getRegionBroker();
+         MessageConsumer consumer = session.createConsumer(queue);
+
+         assertTrue("prefetch full", Wait.waitFor(new Wait.Condition() {
+             @Override
+             public boolean isSatisified() throws Exception {
+                 LOG.info("inflight count: " + regionBroker.getDestinationStatistics().getInflight().getCount());
+                 return 10 == regionBroker.getDestinationStatistics().getInflight().getCount();
+             }
+         }));
+
          for (int i=0; i<10; i++) {
             javax.jms.Message msg = consumer.receive(4000);
             assertNotNull(msg);
@@ -62,6 +74,7 @@ public class OptimizedAckTest extends TestSupport {
                  assertTrue("most are acked but 3 remain", Wait.waitFor(new Wait.Condition(){
                      @Override
                      public boolean isSatisified() throws Exception {
+                         LOG.info("inflight count: " + regionBroker.getDestinationStatistics().getInflight().getCount());
                          return 3 == regionBroker.getDestinationStatistics().getInflight().getCount();
                      }
                  }));
@@ -71,17 +84,25 @@ public class OptimizedAckTest extends TestSupport {
 
 
      public void testVerySlowReceivedMessageStillInflight() throws Exception {
-        connection.start();
-        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        connection.setOptimizeAcknowledgeTimeOut(0);
-        Queue queue = session.createQueue("test");
-        MessageProducer producer = session.createProducer(queue);
-        for (int i=0; i<10; i++) {
-            producer.send(session.createTextMessage("Hello" + i));
-        }
+         connection.start();
+         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+         Queue queue = session.createQueue("test");
+         MessageProducer producer = session.createProducer(queue);
+         for (int i = 0; i < 10; i++) {
+             producer.send(session.createTextMessage("Hello" + i));
+         }
 
-        final RegionBroker regionBroker = (RegionBroker) BrokerRegistry.getInstance().findFirst().getRegionBroker();
-        MessageConsumer consumer = session.createConsumer(queue);
+         final RegionBroker regionBroker = (RegionBroker) BrokerRegistry.getInstance().findFirst().getRegionBroker();
+         MessageConsumer consumer = session.createConsumer(queue);
+
+         assertTrue("prefetch full", Wait.waitFor(new Wait.Condition() {
+             @Override
+             public boolean isSatisified() throws Exception {
+                 LOG.info("inflight count: " + regionBroker.getDestinationStatistics().getInflight().getCount());
+                 return 10 == regionBroker.getDestinationStatistics().getInflight().getCount();
+             }
+         }));
+
          for (int i=0; i<10; i++) {
              Thread.sleep(400);
             javax.jms.Message msg = consumer.receive(4000);
