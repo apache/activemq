@@ -17,6 +17,7 @@
 package org.apache.activemq.broker.jmx;
 
 import javax.jms.InvalidSelectorException;
+import javax.management.ObjectName;
 
 /**
  *
@@ -213,4 +214,14 @@ public interface SubscriptionViewMBean {
      */
     @MBeanInfo("User Name used to authorize creation of this Subscription")
     String getUserName();
+
+    /**
+     * Returns the ObjectName of the Connection that created this Subscription.
+     * This value can be null if for instance this is an off-line durable subscription.
+     *
+     * @return the name of the Connection that created this Subscription.
+     */
+    @MBeanInfo("ObjectName of the Connection that created this Subscription")
+    ObjectName getConnection();
+
 }

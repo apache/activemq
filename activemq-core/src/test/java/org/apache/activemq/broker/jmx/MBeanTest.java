@@ -894,6 +894,37 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         assertTrue("dest has some memory usage", queue.getMemoryPercentUsage() > 0);
     }
 
+    public void testSubscriptionViewToConnectionMBean() throws Exception {
+
+        connection = connectionFactory.createConnection("admin", "admin");
+        connection.setClientID("MBeanTest");
+        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        Destination queue = session.createQueue(getDestinationString() + ".Queue");
+        @SuppressWarnings("unused")
+        MessageConsumer queueConsumer = session.createConsumer(queue);
+
+        ObjectName brokerName = assertRegisteredObjectName(domain + ":Type=Broker,BrokerName=localhost");
+        BrokerViewMBean broker = (BrokerViewMBean)MBeanServerInvocationHandler.newProxyInstance(mbeanServer, brokerName, BrokerViewMBean.class, true);
+
+        Thread.sleep(100);
+
+        assertTrue(broker.getQueueSubscribers().length == 1);
+
+        ObjectName subscriptionName = broker.getQueueSubscribers()[0];
+
+        SubscriptionViewMBean subscriberView =
+            (SubscriptionViewMBean)MBeanServerInvocationHandler.newProxyInstance(
+                    mbeanServer, subscriptionName, SubscriptionViewMBean.class, true);
+        assertNotNull(subscriberView);
+
+        ObjectName connectionName = subscriberView.getConnection();
+        assertNotNull(connectionName);
+        ConnectionViewMBean connectionView =
+            (ConnectionViewMBean)MBeanServerInvocationHandler.newProxyInstance(
+                    mbeanServer, connectionName, ConnectionViewMBean.class, true);
+        assertNotNull(connectionView);
+    }
+
     public void testUserNamePopulated() throws Exception {
         doTestUserNameInMBeans(true);
     }
