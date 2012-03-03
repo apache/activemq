@@ -16,21 +16,36 @@
  */
 package org.apache.activemq.broker.jmx;
 
+import java.io.IOException;
+import java.util.Set;
+
+import javax.management.ObjectName;
+
 import org.apache.activemq.broker.Connection;
+import org.apache.activemq.util.IOExceptionSupport;
+import org.apache.activemq.util.JMXSupport;
 
 public class ConnectionView implements ConnectionViewMBean {
 
     private final Connection connection;
+    private final ManagementContext managementContext;
     private String userName;
 
     public ConnectionView(Connection connection) {
-        this.connection = connection;
+        this(connection, null);
     }
 
+    public ConnectionView(Connection connection, ManagementContext managementContext) {
+        this.connection = connection;
+        this.managementContext = managementContext;
+    }
+
+    @Override
     public void start() throws Exception {
         connection.start();
     }
 
+    @Override
     public void stop() throws Exception {
         connection.stop();
     }
@@ -38,6 +53,7 @@ public class ConnectionView implements ConnectionViewMBean {
     /**
      * @return true if the Connection is slow
      */
+    @Override
     public boolean isSlow() {
         return connection.isSlow();
     }
@@ -45,6 +61,7 @@ public class ConnectionView implements ConnectionViewMBean {
     /**
      * @return if after being marked, the Connection is still writing
      */
+    @Override
     public boolean isBlocked() {
         return connection.isBlocked();
     }
@@ -52,6 +69,7 @@ public class ConnectionView implements ConnectionViewMBean {
     /**
      * @return true if the Connection is connected
      */
+    @Override
     public boolean isConnected() {
         return connection.isConnected();
     }
@@ -59,10 +77,12 @@ public class ConnectionView implements ConnectionViewMBean {
     /**
      * @return true if the Connection is active
      */
+    @Override
     public boolean isActive() {
         return connection.isActive();
     }
 
+    @Override
     public int getDispatchQueueSize() {
         return connection.getDispatchQueueSize();
     }
@@ -70,10 +90,12 @@ public class ConnectionView implements ConnectionViewMBean {
     /**
      * Resets the statistics
      */
+    @Override
     public void resetStatistics() {
         connection.getStatistics().reset();
     }
 
+    @Override
     public String getRemoteAddress() {
         return connection.getRemoteAddress();
     }
@@ -89,5 +111,63 @@ public class ConnectionView implements ConnectionViewMBean {
 
     public void setUserName(String userName) {
         this.userName = userName;
+    }
+
+    @Override
+    public ObjectName[] getConsumers() {
+        ObjectName[] result = null;
+
+        if (connection != null && managementContext != null) {
+
+            try {
+                ObjectName query = createConsumerQueury(connection.getConnectionId());
+                Set<ObjectName> names = managementContext.queryNames(query, null);
+                result = names.toArray(new ObjectName[0]);
+            } catch (Exception e) {
+            }
+        }
+
+        return result;
+    }
+
+    @Override
+    public ObjectName[] getProducers() {
+        ObjectName[] result = null;
+
+        if (connection != null && managementContext != null) {
+
+            try {
+                ObjectName query = createProducerQueury(connection.getConnectionId());
+                Set<ObjectName> names = managementContext.queryNames(query, null);
+                result = names.toArray(new ObjectName[0]);
+            } catch (Exception e) {
+            }
+        }
+
+        return result;
+    }
+
+    private ObjectName createConsumerQueury(String clientId) throws IOException {
+        try {
+            return new ObjectName(managementContext.getJmxDomainName() + ":" + "BrokerName=*,"
+                                  + "Type=Subscription,persistentMode=*,"
+                                  + "destinationType=*,destinationName=*,"
+                                  + "clientId=" + JMXSupport.encodeObjectNamePart(clientId) + ","
+                                  + "consumerId=*");
+        } catch (Throwable e) {
+            throw IOExceptionSupport.create(e);
+        }
+    }
+
+    private ObjectName createProducerQueury(String clientId) throws IOException {
+        try {
+            return new ObjectName(managementContext.getJmxDomainName() + ":" + "BrokerName=*,"
+                                  + "Type=Producer,"
+                                  + "destinationType=*,destinationName=*,"
+                                  + "clientId=" + JMXSupport.encodeObjectNamePart(clientId) + ","
+                                  + "producerId=*");
+        } catch (Throwable e) {
+            throw IOExceptionSupport.create(e);
+        }
     }
 }

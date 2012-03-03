@@ -900,8 +900,8 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         connection.setClientID("MBeanTest");
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         Destination queue = session.createQueue(getDestinationString() + ".Queue");
-        @SuppressWarnings("unused")
         MessageConsumer queueConsumer = session.createConsumer(queue);
+        MessageProducer producer = session.createProducer(queue);
 
         ObjectName brokerName = assertRegisteredObjectName(domain + ":Type=Broker,BrokerName=localhost");
         BrokerViewMBean broker = (BrokerViewMBean)MBeanServerInvocationHandler.newProxyInstance(mbeanServer, brokerName, BrokerViewMBean.class, true);
@@ -911,6 +911,7 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         assertTrue(broker.getQueueSubscribers().length == 1);
 
         ObjectName subscriptionName = broker.getQueueSubscribers()[0];
+        LOG.info("Looking for Subscription: " + subscriptionName);
 
         SubscriptionViewMBean subscriberView =
             (SubscriptionViewMBean)MBeanServerInvocationHandler.newProxyInstance(
@@ -918,11 +919,37 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         assertNotNull(subscriberView);
 
         ObjectName connectionName = subscriberView.getConnection();
+        LOG.info("Looking for Connection: " + connectionName);
         assertNotNull(connectionName);
         ConnectionViewMBean connectionView =
             (ConnectionViewMBean)MBeanServerInvocationHandler.newProxyInstance(
                     mbeanServer, connectionName, ConnectionViewMBean.class, true);
         assertNotNull(connectionView);
+
+        // Our consumer plus one advisory consumer.
+        assertEquals(2, connectionView.getConsumers().length);
+
+        // Check that the subscription view we found earlier is in this list.
+        boolean found = false;
+        for (ObjectName name : connectionView.getConsumers()) {
+            if (name.equals(subscriptionName)) {
+                found = true;
+            }
+        }
+        assertTrue("We should have found: " + subscriptionName, found);
+
+        // Our producer and no others.
+        assertEquals(1, connectionView.getProducers().length);
+
+        // Bean should detect the updates.
+        queueConsumer.close();
+        producer.close();
+
+        Thread.sleep(200);
+
+        // Only an advisory consumers now.
+        assertEquals(1, connectionView.getConsumers().length);
+        assertEquals(0, connectionView.getProducers().length);
     }
 
     public void testUserNamePopulated() throws Exception {

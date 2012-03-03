@@ -54,7 +54,7 @@ public class ManagedTransportConnection extends TransportConnection {
         super(connector, transport, broker, factory);
         this.managementContext = context;
         this.connectorName = connectorName;
-        this.mbean = new ConnectionView(this);
+        this.mbean = new ConnectionView(this, managementContext);
         this.populateUserName = broker.getBrokerService().isPopulateUserNameInMBeans();
         if (managementContext.isAllowRemoteAddressInMBeanNames()) {
             byAddressName = createByAddressObjectName("address", transport.getRemoteAddress());

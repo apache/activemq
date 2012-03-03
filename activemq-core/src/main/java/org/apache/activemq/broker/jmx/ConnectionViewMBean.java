@@ -16,6 +16,8 @@
  */
 package org.apache.activemq.broker.jmx;
 
+import javax.management.ObjectName;
+
 import org.apache.activemq.Service;
 
 public interface ConnectionViewMBean extends Service {
@@ -72,4 +74,21 @@ public interface ConnectionViewMBean extends Service {
      */
     @MBeanInfo("User Name used to authorize creation of this connection")
     String getUserName();
+
+    /**
+     * Returns the ObjectNames of all the Consumers created by this Connection.
+     *
+     * @return the ObjectNames of all Consumers created by this Connection.
+     */
+    @MBeanInfo("The ObjectNames of all Consumers created by this Connection")
+    ObjectName[] getConsumers();
+
+    /**
+     * Returns the ObjectNames of all the Producers created by this Connection.
+     *
+     * @return the ObjectNames of all Producers created by this Connection.
+     */
+    @MBeanInfo("The ObjectNames of all Producers created by this Connection")
+    ObjectName[] getProducers();
+
 }
