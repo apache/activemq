@@ -778,7 +778,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
      *
      * @param asyncDispatch If true then consumers created on this connection
      *                will default to having their messages dispatched
-     *                asynchronously. The default value is false.
+     *                asynchronously. The default value is true.
      */
     public void setDispatchAsync(boolean asyncDispatch) {
         this.dispatchAsync = asyncDispatch;
