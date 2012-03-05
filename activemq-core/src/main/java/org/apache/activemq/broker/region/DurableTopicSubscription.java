@@ -61,7 +61,7 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
         this.pending.setMemoryUsageHighWaterMark(getCursorMemoryHighWaterMark());
         this.keepDurableSubsActive = keepDurableSubsActive;
         subscriptionKey = new SubscriptionKey(context.getClientId(), info.getSubscriptionName());
-        
+
     }
 
     public final boolean isActive() {
@@ -178,7 +178,7 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
                 topic.getDestinationStatistics().getInflight().subtract(dispatched.size());
             }
         }
-        
+
         for (final MessageReference node : dispatched) {
             // Mark the dispatched messages as redelivered for next time.
             Integer count = redeliveredMessages.get(node.getMessageId());
@@ -212,10 +212,10 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
                 }
             }
         }
-        prefetchExtension = 0;
+        prefetchExtension.set(0);
     }
 
-    
+
     protected MessageDispatch createMessageDispatch(MessageReference node, Message message) {
         MessageDispatch md = super.createMessageDispatch(node, message);
         if (node != QueueMessageReference.NULL_MESSAGE) {
@@ -243,7 +243,7 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
     public void removePending(MessageReference node) throws IOException {
         pending.remove(node);
     }
-    
+
     protected void doAddRecoveredMessage(MessageReference message) throws Exception {
         synchronized(pending) {
             pending.addRecoveredMessage(message);
@@ -272,10 +272,9 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
         node.decrementReferenceCount();
     }
 
-    
     public synchronized String toString() {
         return "DurableTopicSubscription-" + getSubscriptionKey() + ", id=" + info.getConsumerId() + ", active=" + isActive() + ", destinations=" + durableDestinations.size() + ", total=" + enqueueCounter + ", pending="
-               + getPendingQueueSize() + ", dispatched=" + dispatchCounter + ", inflight=" + dispatched.size() + ", prefetchExtension=" + this.prefetchExtension;
+               + getPendingQueueSize() + ", dispatched=" + dispatchCounter + ", inflight=" + dispatched.size() + ", prefetchExtension=" + getPrefetchExtension();
     }
 
     public SubscriptionKey getSubscriptionKey() {
@@ -301,8 +300,7 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
             }
         }
         synchronized(dispatched) {
-            for (Iterator iter = dispatched.iterator(); iter.hasNext();) {
-                MessageReference node = (MessageReference) iter.next();
+            for (MessageReference node : dispatched) {
                 node.decrementReferenceCount();
             }
             dispatched.clear();
@@ -319,7 +317,7 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
             }
         }
     }
-    
+
     protected boolean isDropped(MessageReference node) {
        return false;
     }
