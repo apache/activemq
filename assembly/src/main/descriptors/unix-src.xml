@@ -40,6 +40,9 @@
         <include>**/*.bin</include>
         <include>**/*.jnilib</include>
         <include>**/*.cert</include>
+        <include>**/db*.log</include>
+        <include>**/db*.data</include>
+        <include>**/db*.redo</include>
         <include>assembly/src/release/bin/*/wrapper</include>
       </includes>
       <excludes>
