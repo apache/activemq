@@ -18,6 +18,8 @@ package org.apache.activemq.transport.xmpp;
 
 import junit.framework.TestCase;
 import junit.textui.TestRunner;
+
+import org.apache.activemq.util.Wait;
 import org.jivesoftware.smack.Chat;
 import org.jivesoftware.smack.ChatManager;
 import org.jivesoftware.smack.ChatManagerListener;
@@ -30,11 +32,12 @@ import org.jivesoftware.smack.filter.PacketFilter;
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.packet.Packet;
 import org.jivesoftware.smackx.muc.MultiUserChat;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-/**
- * 
- */
 public class XmppTest extends TestCase {
+
+    private static final Logger LOG = LoggerFactory.getLogger(XmppTest.class);
 
     protected static boolean block;
 
@@ -55,23 +58,23 @@ public class XmppTest extends TestCase {
         try {
             // SmackConfiguration.setPacketReplyTimeout(1000);
             XMPPConnection con = new XMPPConnection(config);
-            con.connect(); 
+            con.connect();
             con.login("amq-user", "amq-pwd");
             ChatManager chatManager = con.getChatManager();
             Chat chat = chatManager.createChat("test@localhost", new MessageListener() {
                 public void processMessage(Chat chat, Message message) {
-                    System.out.println("Got XMPP message from chat " + chat.getParticipant() + " message - " + message.getBody());
+                    LOG.info("Got XMPP message from chat " + chat.getParticipant() + " message - " + message.getBody());
                 }
             });
             for (int i = 0; i < 10; i++) {
-                System.out.println("Sending message: " + i);
+                LOG.info("Sending message: " + i);
                 chat.sendMessage("Hello from Message: " + i);
             }
-            System.out.println("Sent all messages!");
+            LOG.info("Sent all messages!");
             con.disconnect();
         } catch (XMPPException e) {
             if (block) {
-                System.out.println("Caught: " + e);
+                LOG.info("Caught: " + e);
                 e.printStackTrace();
             } else {
                 throw e;
@@ -79,13 +82,11 @@ public class XmppTest extends TestCase {
         }
         if (block) {
             Thread.sleep(20000);
-            System.out.println("Press any key to quit!: ");
+            LOG.info("Press any key to quit!: ");
             System.in.read();
         }
-        System.out.println("Done!");
+        LOG.info("Done!");
     }
-
-
 
     public void testChat() throws Exception {
         ConnectionConfiguration config = new ConnectionConfiguration("localhost", 61222);
@@ -112,7 +113,6 @@ public class XmppTest extends TestCase {
             }
         });
 
-
         XMPPConnection producerCon = new XMPPConnection(config);
         producerCon.connect();
         producerCon.login("producer", "producer");
@@ -121,6 +121,7 @@ public class XmppTest extends TestCase {
                 return true;
             }
         });
+
         producerCon.addPacketWriterListener(new XmppLogger("PRODUCER OUTBOUND"), new PacketFilter() {
             public boolean accept(Packet packet) {
                 return true;
@@ -129,28 +130,31 @@ public class XmppTest extends TestCase {
 
         Chat chat = producerCon.getChatManager().createChat("consumer", new MessageListener() {
             public void processMessage(Chat chat, Message message) {
-                System.out.println("Got XMPP message from chat " + chat.getParticipant() + " message - " + message.getBody());
+                LOG.info("Got XMPP message from chat " + chat.getParticipant() + " message - " + message.getBody());
             }
         });
 
         for (int i = 0; i < 10; i++) {
-            System.out.println("Sending message: " + i);
+            LOG.info("Sending message: " + i);
             Message message = new Message("consumer");
             message.setType(Message.Type.chat);
             message.setBody("Hello from producer, message # " + i);
             chat.sendMessage(message);
         }
-        System.out.println("Sent all messages!");
+        LOG.info("Sent all messages!");
 
-        Thread.sleep(sleepTime);
-        System.out.println("Consumer received - " + listener.getMessageCount());
-        assertEquals(10, listener.getMessageCount());
+        assertTrue("Consumer received - " + listener.getMessageCount(), Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                return listener.getMessageCount() == 10;
+            }
+        }));
+
+        LOG.info("Consumer received - " + listener.getMessageCount());
     }
 
-
-
     public void testMultiUserChat() throws Exception {
-        System.out.println("\n\n\n\n\n\n");
+        LOG.info("\n\n\n\n\n\n");
         ConnectionConfiguration config = new ConnectionConfiguration("localhost", 61222);
         //config.setDebuggerEnabled(true);
         //
@@ -160,7 +164,7 @@ public class XmppTest extends TestCase {
         MultiUserChat consumerMuc = new MultiUserChat(consumerCon, "muc-test");
         consumerMuc.join("consumer");
 
-        ConsumerMUCMessageListener listener = new ConsumerMUCMessageListener();
+        final ConsumerMUCMessageListener listener = new ConsumerMUCMessageListener();
         consumerMuc.addMessageListener(listener);
 
         XMPPConnection producerCon = new XMPPConnection(config);
@@ -170,16 +174,21 @@ public class XmppTest extends TestCase {
         producerMuc.join("producer");
 
         for (int i = 0; i < 10; i++) {
-            System.out.println("Sending message: " + i);
+            LOG.info("Sending message: " + i);
             Message message = producerMuc.createMessage();
             message.setBody("Hello from producer, message # " + i);
             producerMuc.sendMessage(message);
         }
-        System.out.println("Sent all messages!");
+        LOG.info("Sent all messages!");
 
-        Thread.sleep(sleepTime);
-        System.out.println("Consumer received - " + listener.getMessageCount());
-        assertEquals(10, listener.getMessageCount());
+        assertTrue("Consumer received - " + listener.getMessageCount(), Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                return listener.getMessageCount() == 10;
+            }
+        }));
+
+        LOG.info("Consumer received - " + listener.getMessageCount());
     }
 
     public void addLoggingListeners(String name, XMPPConnection connection) {
@@ -196,7 +205,7 @@ public class XmppTest extends TestCase {
     }
 
     public void testTwoConnections() throws Exception {
-        System.out.println("\n\n\n\n\n\n");
+        LOG.info("\n\n\n\n\n\n");
         ConnectionConfiguration config = new ConnectionConfiguration("localhost", 61222);
         //config.setDebuggerEnabled(true);
 
@@ -212,10 +221,10 @@ public class XmppTest extends TestCase {
                 chat.addMessageListener(listener1);
             }
         });
-        
+
         //now create the producer
         XMPPConnection producerCon = new XMPPConnection(config);
-        System.out.println("Connecting producer and consumer");
+        LOG.info("Connecting producer and consumer");
         producerCon.connect();
         addLoggingListeners("PRODUCER", producerCon);
         producerCon.login("producer", "producer");
@@ -223,20 +232,20 @@ public class XmppTest extends TestCase {
         //create the chat and send some messages
         Chat chat = producerCon.getChatManager().createChat("consumer", new MessageListener() {
             public void processMessage(Chat chat, Message message) {
-                System.out.println("Got XMPP message from chat " + chat.getParticipant() + " message - " + message.getBody());
+                LOG.info("Got XMPP message from chat " + chat.getParticipant() + " message - " + message.getBody());
             }
         });
-        
+
         for (int i = 0; i < 10; i++) {
-            System.out.println("Sending message: " + i);
+            LOG.info("Sending message: " + i);
             Message message = new Message("consumer");
             message.setType(Message.Type.chat);
             message.setBody("Hello from producer, message # " + i);
             chat.sendMessage(message);
         }
-       
+
         //make sure the consumer has time to receive all the messages...
-        Thread.sleep(sleepTime); 
+        Thread.sleep(sleepTime);
 
         //create an identical 2nd consumer
         XMPPConnection lastguyCon = new XMPPConnection(config);
@@ -251,19 +260,28 @@ public class XmppTest extends TestCase {
         });
 
         for (int i = 0; i < 10; i++) {
-            System.out.println("Sending message: " + i);
+            LOG.info("Sending message: " + i);
             Message message = new Message("consumer");
             message.setType(Message.Type.chat);
             message.setBody("Hello from producer, message # " + i);
             chat.sendMessage(message);
         }
 
-        System.out.println("Sent all messages!");
-        Thread.sleep(sleepTime);
-        System.out.println("Consumer received - " + listener1.getMessageCount());
-        assertEquals(20, listener1.getMessageCount());
-        System.out.println("Consumer received - " + listener2.getMessageCount());
-        assertEquals(10, listener2.getMessageCount());
+        LOG.info("Sent all messages!");
+
+        assertTrue("Consumer received - " + listener1.getMessageCount(), Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                return listener1.getMessageCount() == 20;
+            }
+        }));
+
+        assertTrue("Consumer received - " + listener2.getMessageCount(), Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                return listener2.getMessageCount() == 10;
+            }
+        }));
     }
 
     class XmppLogger implements PacketListener {
@@ -275,7 +293,7 @@ public class XmppTest extends TestCase {
         }
 
         public void processPacket(Packet packet) {
-            System.out.println(direction + " : " + packet.toXML());
+            LOG.info(direction + " : " + packet.toXML());
         }
     }
 
@@ -284,7 +302,7 @@ public class XmppTest extends TestCase {
 
         public void processPacket(Packet packet) {
             if ( packet instanceof Message) {
-                System.out.println("Received message number : " + (messageCount++));
+                LOG.info("Received message number : " + (messageCount++));
             }
         }
         public int getMessageCount() {
@@ -296,7 +314,7 @@ public class XmppTest extends TestCase {
         private int messageCount=0;
 
         public void processMessage(Chat chat, Message message) {
-            System.out.println("Received message number : " + (messageCount++));
+            LOG.info("Received message number : " + (messageCount++));
         }
 
         public int getMessageCount() {
