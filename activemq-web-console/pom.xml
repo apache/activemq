@@ -128,7 +128,7 @@
 				javax.management.remote,
 				javax.naming,
 				org.w3c.dom,
-				javax.servlet,
+				javax.servlet*,
 				javax.servlet.jsp,
 				javax.servlet.jsp.tagext,
 				javax.servlet.jsp.el,
@@ -137,7 +137,9 @@
 				javax.net,
 				org.apache.commons.logging;version="[1.1,2)";resolution:=optional,
 				org.slf4j;version="[1.5,2)";resolution:=optional,
+                		org.slf4j.spi;version="[1.5,2)";resolution:=optional,
 				org.apache.log4j;version="[1.2.14,2)";resolution:=optional,
+           			org.apache.log4j.spi;version="[1.2.14,2)";resolution:=optional,
 			</Import-Package>
           </instructions>
         </configuration>
