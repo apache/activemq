@@ -612,6 +612,13 @@ public class FailoverTransport implements CompositeTransport {
                                 // Rethrow the exception so it will handled by
                                 // the outer catch
                                 throw e;
+                            } else {
+                                // Handle the error but allow the method to return since the
+                                // tracked commands are replayed on reconnect.
+                                if (LOG.isDebugEnabled()) {
+                                    LOG.debug("Send oneway attempt: " + i + " failed for command:" + command);
+                                }
+                                handleTransportFailure(e);
                             }
                         }
 
