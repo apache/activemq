@@ -209,6 +209,36 @@ public class ActiveMQMessageProducer extends ActiveMQMessageProducerSupport impl
      * @since 1.1
      */
     public void send(Destination destination, Message message, int deliveryMode, int priority, long timeToLive) throws JMSException {
+        this.send(destination, message, deliveryMode, priority, timeToLive, null);
+    }
+
+    public void send(Message message, AsyncCallback onComplete) throws JMSException {
+        this.send(this.getDestination(),
+                  message,
+                  this.defaultDeliveryMode,
+                  this.defaultPriority,
+                  this.defaultTimeToLive, onComplete);
+    }
+
+    public void send(Destination destination, Message message, AsyncCallback onComplete) throws JMSException {
+        this.send(destination,
+                  message,
+                  this.defaultDeliveryMode,
+                  this.defaultPriority,
+                  this.defaultTimeToLive,
+                  onComplete);
+    }
+
+    public void send(Message message, int deliveryMode, int priority, long timeToLive, AsyncCallback onComplete) throws JMSException {
+        this.send(this.getDestination(),
+                  message,
+                  deliveryMode,
+                  priority,
+                  timeToLive,
+                  onComplete);
+    }
+
+    public void send(Destination destination, Message message, int deliveryMode, int priority, long timeToLive, AsyncCallback onComplete) throws JMSException {
         checkClosed();
         if (destination == null) {
             if (info.getDestination() == null) {
@@ -244,7 +274,7 @@ public class ActiveMQMessageProducer extends ActiveMQMessageProducerSupport impl
             }
         }
 
-        this.session.send(this, dest, message, deliveryMode, priority, timeToLive, producerWindow,sendTimeout);
+        this.session.send(this, dest, message, deliveryMode, priority, timeToLive, producerWindow, sendTimeout, onComplete);
 
         stats.onMessage();
     }

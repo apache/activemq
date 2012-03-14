@@ -1702,6 +1702,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
     /**
      * Sends the message for dispatch by the broker.
      *
+     *
      * @param producer - message producer.
      * @param destination - message destination.
      * @param message - message to be sent.
@@ -1709,10 +1710,11 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      * @param priority - message priority.
      * @param timeToLive - message expiration.
      * @param producerWindow
+     * @param onComplete
      * @throws JMSException
      */
     protected void send(ActiveMQMessageProducer producer, ActiveMQDestination destination, Message message, int deliveryMode, int priority, long timeToLive,
-                        MemoryUsage producerWindow, int sendTimeout) throws JMSException {
+                        MemoryUsage producerWindow, int sendTimeout, AsyncCallback onComplete) throws JMSException {
 
         checkClosed();
         if (destination.isTemporary() && connection.isDeleted(destination)) {
@@ -1763,7 +1765,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
             if (LOG.isTraceEnabled()) {
                 LOG.trace(getSessionId() + " sending message: " + msg);
             }
-            if (sendTimeout <= 0 && !msg.isResponseRequired() && !connection.isAlwaysSyncSend() && (!msg.isPersistent() || connection.isUseAsyncSend() || txid != null)) {
+            if (onComplete==null && sendTimeout <= 0 && !msg.isResponseRequired() && !connection.isAlwaysSyncSend() && (!msg.isPersistent() || connection.isUseAsyncSend() || txid != null)) {
                 this.connection.asyncSendPacket(msg);
                 if (producerWindow != null) {
                     // Since we defer lots of the marshaling till we hit the
@@ -1777,10 +1779,10 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
                     producerWindow.increaseUsage(size);
                 }
             } else {
-                if (sendTimeout > 0) {
+                if (sendTimeout > 0 && onComplete==null) {
                     this.connection.syncSendPacket(msg,sendTimeout);
                 }else {
-                    this.connection.syncSendPacket(msg);
+                    this.connection.syncSendPacket(msg, onComplete);
                 }
             }
 

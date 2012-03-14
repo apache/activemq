@@ -24,13 +24,7 @@ import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -91,6 +85,8 @@ import org.apache.activemq.management.StatsImpl;
 import org.apache.activemq.state.CommandVisitorAdapter;
 import org.apache.activemq.thread.Scheduler;
 import org.apache.activemq.thread.TaskRunnerFactory;
+import org.apache.activemq.transport.FutureResponse;
+import org.apache.activemq.transport.ResponseCallback;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportListener;
 import org.apache.activemq.transport.failover.FailoverTransport;
@@ -1288,6 +1284,63 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
      * @return
      * @throws JMSException
      */
+    public void syncSendPacket(Command command, final AsyncCallback onComplete) throws JMSException {
+        if(onComplete==null) {
+            syncSendPacket(command);
+        } else {
+            if (isClosed()) {
+                throw new ConnectionClosedException();
+            }
+            try {
+                this.transport.asyncRequest(command, new ResponseCallback() {
+                    @Override
+                    public void onCompletion(FutureResponse resp) {
+                        Response response;
+                        Throwable exception = null;
+                        try {
+                            response = resp.getResult();
+                            if (response.isException()) {
+                                ExceptionResponse er = (ExceptionResponse)response;
+                                exception = er.getException();
+                            }
+                        } catch (Exception e) {
+                            exception = e;
+                        }
+                        if(exception!=null) {
+                            if ( exception instanceof JMSException) {
+                                onComplete.onException((JMSException) exception);
+                            } else {
+                                if (isClosed()||closing.get()) {
+                                    LOG.debug("Received an exception but connection is closing");
+                                }
+                                JMSException jmsEx = null;
+                                try {
+                                    jmsEx = JMSExceptionSupport.create(exception);
+                                } catch(Throwable e) {
+                                    LOG.error("Caught an exception trying to create a JMSException for " +exception,e);
+                                }
+                                //dispose of transport for security exceptions
+                                if (exception instanceof SecurityException){
+                                    Transport t = transport;
+                                    if (null != t){
+                                        ServiceSupport.dispose(t);
+                                    }
+                                }
+                                if (jmsEx !=null) {
+                                    onComplete.onException(jmsEx);
+                                }
+                            }
+                        } else {
+                            onComplete.onSuccess();
+                        }
+                    }
+                });
+            } catch (IOException e) {
+                throw JMSExceptionSupport.create(e);
+            }
+        }
+    }
+
     public Response syncSendPacket(Command command) throws JMSException {
         if (isClosed()) {
             throw new ConnectionClosedException();
