@@ -155,6 +155,7 @@ public class ListIndex<Key,Value> implements Index<Key,Value> {
                 oldValue = lastGetEntryCache.setValue(value);
                 lastGetEntryCache.setValue(value);
                 lastGetNodeCache.storeUpdate(tx);
+                flushCache();
                 return oldValue;
             }
 
@@ -166,6 +167,7 @@ public class ListIndex<Key,Value> implements Index<Key,Value> {
                 if (entry.getKey().equals(key)) {
                     oldValue = entry.setValue(value);
                     ((ListIterator) iterator).getCurrent().storeUpdate(tx);
+                    flushCache();
                     return oldValue;
                 }
             }
@@ -182,11 +184,14 @@ public class ListIndex<Key,Value> implements Index<Key,Value> {
             if (entry.getKey().equals(key)) {
                 oldValue = entry.setValue(value);
                 ((ListIterator) iterator).getCurrent().storeUpdate(tx);
+                flushCache();
                 return oldValue;
             }
         }
 
         // Not found so add it last.
+        flushCache();
+
         return add(tx, key, value);
     }
 
@@ -194,6 +199,7 @@ public class ListIndex<Key,Value> implements Index<Key,Value> {
         assertLoaded();
         getTail(tx).put(tx, key, value);
         size.incrementAndGet();
+        flushCache();
         return null;
     }
 
@@ -201,6 +207,7 @@ public class ListIndex<Key,Value> implements Index<Key,Value> {
         assertLoaded();
         getHead(tx).addFirst(tx, key, value);
         size.incrementAndGet();
+        flushCache();
         return null;
     }
 
