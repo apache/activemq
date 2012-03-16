@@ -99,12 +99,14 @@ public class TopicSubscription extends AbstractSubscription {
             dispatch(node);
             setSlowConsumer(false);
         } else {
-            //we are slow
-            if(!isSlowConsumer()) {
-                LOG.warn(toString() + ": has reached its prefetch limit without an ack, it appears to be slow");
-                setSlowConsumer(true);
-                for (Destination dest: destinations) {
-                    dest.slowConsumer(getContext(), this);
+            if ( info.getPrefetchSize() > 1 && matched.size() > info.getPrefetchSize() ) {
+                //we are slow
+                if(!isSlowConsumer()) {
+                    LOG.warn(toString() + ": has twice its prefetch limit pending, without an ack; it appears to be slow");
+                    setSlowConsumer(true);
+                    for (Destination dest: destinations) {
+                        dest.slowConsumer(getContext(), this);
+                    }
                 }
             }
             if (maximumPendingMessages != 0) {
