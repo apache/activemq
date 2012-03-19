@@ -92,6 +92,10 @@
       <artifactId>activemq-protobuf</artifactId>
       <optional>false</optional>
     </dependency>
+		<dependency>
+      <groupId>org.fusesource.fuse-extra</groupId>
+      <artifactId>fusemq-leveldb</artifactId>
+    </dependency>
 
     <!-- =============================== -->
     <!-- Optional Dependencies           -->
@@ -172,6 +176,7 @@
       <optional>true</optional>
     </dependency>
 
+    
     <!-- =============================== -->
     <!-- Testing Dependencies            -->
     <!-- =============================== -->
