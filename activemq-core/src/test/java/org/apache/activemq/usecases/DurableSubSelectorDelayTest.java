@@ -49,6 +49,7 @@ public class DurableSubSelectorDelayTest {
 
     private BrokerService broker;
     private ActiveMQTopic topic;
+    private String connectionUri;
 
     @Test
     public void testProcess() throws Exception {
@@ -67,12 +68,7 @@ public class DurableSubSelectorDelayTest {
         msgProducer.join();
 
         for (int j = 0; j < subscribers.length; j++) {
-
             LOG.info("Unsubscribing subscriber " + subscribers[j]);
-
-            // broker.getAdminView().destroyDurableSubscriber(clientID,
-            // Client.SUBSCRIPTION_NAME);
-
             subscribers[j].unsubscribe();
         }
 
@@ -169,9 +165,7 @@ public class DurableSubSelectorDelayTest {
      */
     private final class DurableSubscriber {
 
-        String url = "tcp://localhost:61656";
-
-        final ConnectionFactory cf = new ActiveMQConnectionFactory(url);
+        final ConnectionFactory cf = new ActiveMQConnectionFactory(connectionUri);
 
         private final String subName ;
 
@@ -194,13 +188,10 @@ public class DurableSubSelectorDelayTest {
             Connection con = openConnection();
 
             Session sess = con.createSession(false, Session.AUTO_ACKNOWLEDGE);
+            MessageConsumer consumer = sess.createDurableSubscriber(topic, subName, selector, false);
 
-
-            MessageConsumer consumer = sess.createDurableSubscriber(topic,
-                    subName, selector, false);
-
-            //MessageConsumer consumer = sess.createDurableSubscriber(topic,SUBSCRIPTION_NAME);
             try {
+
                 do {
                     long max = end - System.currentTimeMillis();
 
@@ -209,14 +200,16 @@ public class DurableSubSelectorDelayTest {
                     }
 
                     Message message = consumer.receive(max);
-                    if (message == null)
+                    if (message == null) {
                         continue;
+                    }
 
                     LOG.info("Received Trans[id="
                             + message.getIntProperty("TRANS") + ", count="
                             + transCount + "] in " + this + ".");
 
                 } while (true);
+
             } finally {
                 sess.close();
                 con.close();
@@ -281,7 +274,7 @@ public class DurableSubSelectorDelayTest {
             kahadb.setJournalMaxFileLength(  500 * 1024);
             broker.setPersistenceAdapter(kahadb);
 
-        broker.addConnector("tcp://localhost:61656");
+        connectionUri = broker.addConnector("tcp://localhost:0").getPublishableConnectString();
 
         broker.getSystemUsage().getMemoryUsage().setLimit(256 * 1024 * 1024);
         broker.getSystemUsage().getTempUsage().setLimit(256 * 1024 * 1024);
