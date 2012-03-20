@@ -19,7 +19,13 @@ package org.apache.activemq.web;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import javax.jms.Destination;
 import javax.jms.JMSException;
@@ -34,10 +40,10 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 import org.apache.activemq.MessageAvailableConsumer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.eclipse.jetty.continuation.Continuation;
 import org.eclipse.jetty.continuation.ContinuationSupport;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A servlet for sending and receiving messages to/from JMS destinations using
@@ -436,8 +442,9 @@ public class MessageListenerServlet extends MessageServletSupport {
         }
         String sessionKey = session.getId() + '-' + clientId;
 
-        AjaxWebClient client = ajaxWebClients.get( sessionKey );
+        AjaxWebClient client = null;
         synchronized (ajaxWebClients) {
+            client = ajaxWebClients.get( sessionKey );
             // create a new AjaxWebClient if one does not already exist for this sessionKey.
             if( client == null ) {
                 if (LOG.isDebugEnabled()) {
