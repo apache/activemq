@@ -1333,6 +1333,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
             if (sd.subscriptions.isEmpty(tx)) {
                 sd.messageIdIndex.clear(tx);
                 sd.locationIndex.clear(tx);
+                sd.orderIndex.clear(tx);
             }
         }
     }
@@ -2539,6 +2540,14 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                     nextMessageId = lastEntry.getKey() + 1;
                 }
             }
+        }
+
+        void clear(Transaction tx) throws IOException {
+            this.remove(tx);
+            this.resetCursorPosition();
+            this.allocate(tx);
+            this.load(tx);
+            this.configureLast(tx);
         }
 
         void remove(Transaction tx) throws IOException {
