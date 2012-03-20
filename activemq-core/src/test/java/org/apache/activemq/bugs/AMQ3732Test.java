@@ -41,7 +41,7 @@ import org.slf4j.LoggerFactory;
 
 public class AMQ3732Test {
 
-    private static Logger LOG = LoggerFactory.getLogger(AMQ3529Test.class);
+    private static Logger LOG = LoggerFactory.getLogger(AMQ3732Test.class);
 
     private ActiveMQConnectionFactory connectionFactory;
     private Connection connection;
