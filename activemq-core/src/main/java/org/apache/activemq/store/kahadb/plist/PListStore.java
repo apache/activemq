@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.BrokerServiceAware;
 import org.apache.activemq.thread.Scheduler;
@@ -189,6 +190,10 @@ public class PListStore extends ServiceSupport implements BrokerServiceAware, Ru
         public void writePayload(PList list, DataOutput dataOut) throws IOException {
             list.write(dataOut);
         }
+    }
+
+    public Journal getJournal() {
+        return this.journal;
     }
 
     public File getDirectory() {
@@ -354,9 +359,9 @@ public class PListStore extends ServiceSupport implements BrokerServiceAware, Ru
 
     public void run() {
         try {
-             if (isStopping()) {
+            if (isStopping()) {
                 return;
-             }
+            }
             final int lastJournalFileId = journal.getLastAppendLocation().getDataFileId();
             final Set<Integer> candidates = journal.getFileMap().keySet();
             LOG.trace("Full gc candidate set:" + candidates);
@@ -370,7 +375,7 @@ public class PListStore extends ServiceSupport implements BrokerServiceAware, Ru
                 List<PList> plists = null;
                 synchronized (indexLock) {
                     synchronized (this) {
-                        plists = new ArrayList(persistentLists.values());
+                        plists = new ArrayList<PList>(persistentLists.values());
                     }
                 }
                 for (PList list : plists) {
@@ -481,5 +486,4 @@ public class PListStore extends ServiceSupport implements BrokerServiceAware, Ru
         String path = getDirectory() != null ? getDirectory().getAbsolutePath() : "DIRECTORY_NOT_SET";
         return "PListStore:[" + path + " ]";
     }
-
 }

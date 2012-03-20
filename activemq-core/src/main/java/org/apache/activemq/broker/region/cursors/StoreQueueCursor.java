@@ -26,8 +26,6 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Store based Cursor for Queues
- * 
- * 
  */
 public class StoreQueueCursor extends AbstractPendingMessageCursor {
 
@@ -42,7 +40,7 @@ public class StoreQueueCursor extends AbstractPendingMessageCursor {
 
     /**
      * Construct
-     * @param broker 
+     * @param broker
      * @param queue
      */
     public StoreQueueCursor(Broker broker,Queue queue) {
@@ -78,6 +76,7 @@ public class StoreQueueCursor extends AbstractPendingMessageCursor {
     public synchronized void stop() throws Exception {
         started = false;
         if (nonPersistent != null) {
+            nonPersistent.clear();
             nonPersistent.stop();
             nonPersistent.gc();
         }
@@ -101,7 +100,7 @@ public class StoreQueueCursor extends AbstractPendingMessageCursor {
             }
         }
     }
-    
+
     public synchronized void addMessageFirst(MessageReference node) throws Exception {
         if (node != null) {
             Message msg = node.getMessage();
@@ -155,9 +154,9 @@ public class StoreQueueCursor extends AbstractPendingMessageCursor {
     public synchronized void reset() {
         nonPersistent.reset();
         persistent.reset();
-        pendingCount = persistent.size() + nonPersistent.size();        
+        pendingCount = persistent.size() + nonPersistent.size();
     }
-    
+
     public void release() {
         nonPersistent.release();
         persistent.release();
@@ -179,7 +178,7 @@ public class StoreQueueCursor extends AbstractPendingMessageCursor {
     /**
      * Informs the Broker if the subscription needs to intervention to recover
      * it's state e.g. DurableTopicSubscriber may do
-     * 
+     *
      * @see org.apache.activemq.broker.region.cursors.PendingMessageCursor
      * @return true if recovery required
      */
@@ -208,8 +207,8 @@ public class StoreQueueCursor extends AbstractPendingMessageCursor {
         }
         super.setMaxBatchSize(maxBatchSize);
     }
-    
-    
+
+
     public void setMaxProducersToAudit(int maxProducersToAudit) {
         super.setMaxProducersToAudit(maxProducersToAudit);
         if (persistent != null) {
@@ -229,7 +228,7 @@ public class StoreQueueCursor extends AbstractPendingMessageCursor {
             nonPersistent.setMaxAuditDepth(maxAuditDepth);
         }
     }
-    
+
     public void setEnableAudit(boolean enableAudit) {
         super.setEnableAudit(enableAudit);
         if (persistent != null) {
@@ -239,7 +238,7 @@ public class StoreQueueCursor extends AbstractPendingMessageCursor {
             nonPersistent.setEnableAudit(enableAudit);
         }
     }
-    
+
     @Override
     public void setUseCache(boolean useCache) {
         super.setUseCache(useCache);
@@ -250,7 +249,7 @@ public class StoreQueueCursor extends AbstractPendingMessageCursor {
             nonPersistent.setUseCache(useCache);
         }
     }
-    
+
     @Override
     public void setMemoryUsageHighWaterMark(int memoryUsageHighWaterMark) {
         super.setMemoryUsageHighWaterMark(memoryUsageHighWaterMark);
