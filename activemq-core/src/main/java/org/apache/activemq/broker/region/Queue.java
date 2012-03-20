@@ -2164,7 +2164,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                             result = false;
                             break;
                         }
-                        if (s.getInFlightUsage() > 10){
+                        if (s.getInFlightUsage() > getOptimizeMessageStoreInFlightLimit()){
                             result = false;
                             break;
                         }

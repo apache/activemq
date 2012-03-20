@@ -707,7 +707,7 @@ public class Topic extends BaseDestination implements Task {
                         result = false;
                         break;
                     }
-                    if (s.getInFlightUsage() > 10){
+                    if (s.getInFlightUsage() > getOptimizeMessageStoreInFlightLimit()){
                         result = false;
                         break;
                     }

@@ -97,6 +97,10 @@ public class PolicyEntry extends DestinationMapEntry {
     private boolean reduceMemoryFootprint;
     private NetworkBridgeFilterFactory networkBridgeFilterFactory;
     private boolean doOptimzeMessageStorage = true;
+    /*
+     * percentage of in-flight messages above which optimize message store is disabled
+     */
+    private int optimizeMessageStoreInFlightLimit = 10;
 
 
     public void configure(Broker broker,Queue queue) {
@@ -173,6 +177,8 @@ public class PolicyEntry extends DestinationMapEntry {
         destination.setInactiveTimoutBeforeGC(getInactiveTimoutBeforeGC());
         destination.setReduceMemoryFootprint(isReduceMemoryFootprint());
         destination.setDoOptimzeMessageStorage(isDoOptimzeMessageStorage());
+        destination.setOptimizeMessageStoreInFlightLimit(getOptimizeMessageStoreInFlightLimit());
+
     }
 
     public void configure(Broker broker, SystemUsage memoryManager, TopicSubscription subscription) {
@@ -841,5 +847,13 @@ public class PolicyEntry extends DestinationMapEntry {
 
     public void setDoOptimzeMessageStorage(boolean doOptimzeMessageStorage) {
         this.doOptimzeMessageStorage = doOptimzeMessageStorage;
+    }
+
+    public int getOptimizeMessageStoreInFlightLimit() {
+        return optimizeMessageStoreInFlightLimit;
+    }
+
+    public void setOptimizeMessageStoreInFlightLimit(int optimizeMessageStoreInFlightLimit) {
+        this.optimizeMessageStoreInFlightLimit = optimizeMessageStoreInFlightLimit;
     }
 }
