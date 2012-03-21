@@ -31,6 +31,8 @@ import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -2371,13 +2373,35 @@ public class BrokerService implements Service {
 
     protected synchronized ThreadPoolExecutor getExecutor() {
         if (this.executor == null) {
-        this.executor = new ThreadPoolExecutor(1, 10, 30, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>(), new ThreadFactory() {
-            public Thread newThread(Runnable runnable) {
-                Thread thread = new Thread(runnable, "Usage Async Task");
-                thread.setDaemon(true);
-                return thread;
-            }
-        });
+            this.executor = new ThreadPoolExecutor(1, 10, 60, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>(), new ThreadFactory() {
+
+                private long i = 0;
+
+                @Override
+                public Thread newThread(Runnable runnable) {
+                    this.i++;
+                    Thread thread = new Thread(runnable, "BrokerService.worker." + this.i);
+                    thread.setDaemon(true);
+                    thread.setUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
+                        @Override
+                        public void uncaughtException(final Thread t, final Throwable e) {
+                            LOG.error("Error in thread '{}'", t.getName(), e);
+                        }
+                    });
+                    return thread;
+                }
+            }, new RejectedExecutionHandler() {
+                @Override
+                public void rejectedExecution(final Runnable r, final ThreadPoolExecutor executor) {
+                    try {
+                        executor.getQueue().offer(r, 60, TimeUnit.SECONDS);
+                    } catch (InterruptedException e) {
+                        throw new RejectedExecutionException("Interrupted waiting for BrokerService.worker");
+                    }
+
+                    throw new RejectedExecutionException("Timed Out while attempting to enqueue Task.");
+                }
+            });
         }
         return this.executor;
     }

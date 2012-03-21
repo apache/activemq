@@ -48,9 +48,9 @@ public class TaskRunnerFactory implements Executor {
     public TaskRunnerFactory() {
         this("ActiveMQ Task", Thread.NORM_PRIORITY, true, 1000);
     }
-    
+
     private TaskRunnerFactory(String name, int priority, boolean daemon, int maxIterationsPerRun) {
-    	this(name,priority,daemon,maxIterationsPerRun,false);
+        this(name,priority,daemon,maxIterationsPerRun,false);
     }
 
     public TaskRunnerFactory(String name, int priority, boolean daemon, int maxIterationsPerRun, boolean dedicatedTaskRunner) {
@@ -92,7 +92,7 @@ public class TaskRunnerFactory implements Executor {
     public void execute(Runnable runnable) {
         execute(runnable, "ActiveMQ Task");
     }
-    
+
     public void execute(Runnable runnable, String name) {
         init();
         if (executor != null) {
@@ -103,7 +103,7 @@ public class TaskRunnerFactory implements Executor {
     }
 
     protected ExecutorService createDefaultExecutor() {
-        ThreadPoolExecutor rc = new ThreadPoolExecutor(0, Integer.MAX_VALUE, 10, TimeUnit.SECONDS, new SynchronousQueue<Runnable>(), new ThreadFactory() {
+        ThreadPoolExecutor rc = new ThreadPoolExecutor(0, Integer.MAX_VALUE, 30, TimeUnit.SECONDS, new SynchronousQueue<Runnable>(), new ThreadFactory() {
             public Thread newThread(Runnable runnable) {
                 Thread thread = new Thread(runnable, name + "-" + id.incrementAndGet());
                 thread.setDaemon(daemon);
@@ -111,7 +111,6 @@ public class TaskRunnerFactory implements Executor {
                 return thread;
             }
         });
-        // rc.allowCoreThreadTimeOut(true);
         return rc;
     }
 

@@ -29,11 +29,9 @@ import java.util.concurrent.TimeUnit;
 /**
  * The SelectorManager will manage one Selector and the thread that checks the
  * selector.
- * 
+ *
  * We may need to consider running more than one thread to check the selector if
  * servicing the selector takes too long.
- * 
- * @version $Rev: 46019 $ $Date: 2004-09-14 05:56:06 -0400 (Tue, 14 Sep 2004) $
  */
 public final class SelectorManager {
 
@@ -43,27 +41,30 @@ public final class SelectorManager {
     private Executor channelExecutor = selectorExecutor;
     private LinkedList<SelectorWorker> freeWorkers = new LinkedList<SelectorWorker>();
     private int maxChannelsPerWorker = 1024;
-    
+
     protected ExecutorService createDefaultExecutor() {
-        ThreadPoolExecutor rc = new ThreadPoolExecutor(0, Integer.MAX_VALUE, 10, TimeUnit.MILLISECONDS, new SynchronousQueue<Runnable>(), new ThreadFactory() {
+        ThreadPoolExecutor rc = new ThreadPoolExecutor(0, Integer.MAX_VALUE, 10, TimeUnit.SECONDS, new SynchronousQueue<Runnable>(), new ThreadFactory() {
+
+            private long i = 0;
+
             public Thread newThread(Runnable runnable) {
-                return new Thread(runnable, "ActiveMQ NIO Worker");
+                this.i++;
+                final Thread t = new Thread(runnable, "ActiveMQ NIO Worker " + this.i);
+                return t;
             }
         });
-        // rc.allowCoreThreadTimeOut(true);
+
         return rc;
     }
-    
+
     public static SelectorManager getInstance() {
         return SINGLETON;
     }
 
     public interface Listener {
         void onSelect(SelectorSelection selector);
-
         void onError(SelectorSelection selection, Throwable error);
     }
-
 
     public synchronized SelectorSelection register(SocketChannel socketChannel, Listener listener)
         throws IOException {
@@ -78,7 +79,6 @@ public final class SelectorManager {
                     worker.retain();
                     selection = new SelectorSelection(worker, socketChannel, listener);
                 }
-                
             } else {
                 // Worker starts /w retain count of 1
                 SelectorWorker worker = new SelectorWorker(this);
@@ -86,7 +86,7 @@ public final class SelectorManager {
                 selection = new SelectorSelection(worker, socketChannel, listener);
             }
         }
-        
+
         return selection;
     }
 
@@ -125,5 +125,4 @@ public final class SelectorManager {
     public void setSelectorExecutor(Executor selectorExecutor) {
         this.selectorExecutor = selectorExecutor;
     }
-
 }
