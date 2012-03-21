@@ -214,6 +214,13 @@
         <enabled>false</enabled>
       </releases>
     </repository>
+    <repository>
+      <id>fusesource-snapshots</id>
+      <url>http://repo.fusesource.com/nexus/content/groups/public-snapshots</url>
+      <releases><enabled>false</enabled></releases>
+      <snapshots><enabled>true</enabled></snapshots>
+    </repository>
+
   </repositories>
 
   <!-- This is only here since the activemq-protobuf plugin has not been released yet -->
