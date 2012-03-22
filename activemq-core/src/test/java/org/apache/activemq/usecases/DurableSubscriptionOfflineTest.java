@@ -33,6 +33,8 @@ import org.apache.activemq.broker.jmx.DurableSubscriptionViewMBean;
 import org.apache.activemq.broker.jmx.TopicViewMBean;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
+import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.store.jdbc.JDBCPersistenceAdapter;
 import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
@@ -1242,6 +1244,52 @@ public class DurableSubscriptionOfflineTest extends org.apache.activemq.TestSupp
         createBroker(false);
         KahaDBPersistenceAdapter pa = (KahaDBPersistenceAdapter) broker.getPersistenceAdapter();
         assertEquals("only one journal file left after restart", 1, pa.getStore().getJournal().getFileMap().size());
+    }
+
+    // https://issues.apache.org/jira/browse/AMQ-3768
+    public void testPageReuse() throws Exception {
+        Connection con = null;
+        Session session = null;
+
+        final int numConsumers = 115;
+        for (int i=0; i<=numConsumers;i++) {
+            con = createConnection("cli" + i);
+            session = con.createSession(false, Session.AUTO_ACKNOWLEDGE);
+            session.createDurableSubscriber(topic, "SubsId", null, true);
+            session.close();
+            con.close();
+        }
+
+
+        // populate ack locations
+        con = createConnection();
+        session = con.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        MessageProducer producer = session.createProducer(null);
+        Message message = session.createTextMessage(new byte[10].toString());
+        producer.send(topic, message);
+        con.close();
+
+        // we have a split, remove all but the last so that
+        // the head pageid changes in the acklocations listindex
+        for (int i=0; i<=numConsumers -1; i++) {
+            con = createConnection("cli" + i);
+            session = con.createSession(false, Session.AUTO_ACKNOWLEDGE);
+            session.unsubscribe("SubsId");
+            session.close();
+            con.close();
+        }
+
+        destroyBroker();
+        createBroker(false);
+
+        // create a bunch more subs to reuse the freed page and get us in a knot
+        for (int i=1; i<=numConsumers;i++) {
+            con = createConnection("cli" + i);
+            session = con.createSession(false, Session.AUTO_ACKNOWLEDGE);
+            session.createDurableSubscriber(topic, "SubsId", filter, true);
+            session.close();
+            con.close();
+        }
     }
 
     public static class Listener implements MessageListener {

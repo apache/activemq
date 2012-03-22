@@ -198,10 +198,22 @@ public final class ListNode<Key,Value> {
                     if (currentNode.isHead() && currentNode.isTail()) {
                         // store empty list
                     } else if (currentNode.isHead()) {
-                        // new head
+                        // merge next node into existing headNode
+                        // as we don't want to change our headPageId b/c
+                        // that is our identity
+                        ListNode<Key,Value> headNode = currentNode;
+                        nextEntry = getFromNextNode(); // will move currentNode
+
+                        if (currentNode.isTail()) {
+                            targetList.setTailPageId(headNode.getPageId());
+                        }
+                        // copy next/currentNode into head
+                        headNode.setEntries(currentNode.entries);
+                        headNode.setNext(currentNode.getNext());
+                        headNode.store(tx);
                         toRemoveNode = currentNode;
-                        nextEntry = getFromNextNode();
-                        targetList.setHeadPageId(currentNode.getPageId());
+                        currentNode = headNode;
+
                     } else if (currentNode.isTail()) {
                         toRemoveNode = currentNode;
                         previousNode.setNext(ListIndex.NOT_SET);
@@ -262,7 +274,7 @@ public final class ListNode<Key,Value> {
         @SuppressWarnings({ "unchecked", "rawtypes" })
         public ListNode<Key,Value> readPayload(DataInput is) throws IOException {
             ListNode<Key,Value> node = new ListNode<Key,Value>();
-            node.next = is.readLong();
+            node.setNext(is.readLong());
             final short size = is.readShort();
             for (short i = 0; i < size; i++) {
                 node.entries.addLast(

@@ -304,14 +304,10 @@ public class ListIndex<Key,Value> implements Index<Key,Value> {
 
     ListNode<Key,Value> loadNode(Transaction tx, long pageId) throws IOException {
         Page<ListNode<Key,Value>> page = tx.load(pageId, marshaller);
-        try {
-            ListNode<Key, Value> node = page.get();
-            node.setPage(page);
-            node.setContainingList(this);
-            return node;
-        } catch (ClassCastException e) {
-            throw e;
-        }
+        ListNode<Key, Value> node = page.get();
+        node.setPage(page);
+        node.setContainingList(this);
+        return node;
     }
 
     ListNode<Key,Value> createNode(Page<ListNode<Key,Value>> page) throws IOException {
