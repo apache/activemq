@@ -145,6 +145,9 @@ public class FailoverTransport implements CompositeTransport {
                     if (priorityBackup && !connectedToPriority) {
                         try {
                             doDelay();
+                            if (reconnectTask == null) {
+                                return true;
+                            }
                             reconnectTask.wakeup();
                         } catch (InterruptedException e) {
                             LOG.debug("Reconnect task has been interrupted.", e);
@@ -154,6 +157,9 @@ public class FailoverTransport implements CompositeTransport {
                     // build backups on the next iteration
                     buildBackup = true;
                     try {
+                        if (reconnectTask == null) {
+                            return true;
+                        }
                         reconnectTask.wakeup();
                     } catch (InterruptedException e) {
                         LOG.debug("Reconnect task has been interrupted.", e);
