@@ -23,6 +23,11 @@ import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.util.Wait;
 import org.apache.activemq.xbean.BrokerFactoryBean;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.support.AbstractApplicationContext;
@@ -34,7 +39,12 @@ import java.net.URI;
 import java.util.Arrays;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class SimpleNetworkTest extends org.apache.activemq.TestSupport {
+
+import static junit.framework.Assert.assertNotNull;
+import static junit.framework.Assert.assertNull;
+import static junit.framework.Assert.assertTrue;
+
+public class SimpleNetworkTest {
 
     protected static final int MESSAGE_COUNT = 10;
     private static final Logger LOG = LoggerFactory.getLogger(SimpleNetworkTest.class);
@@ -50,6 +60,7 @@ public class SimpleNetworkTest extends org.apache.activemq.TestSupport {
     protected ActiveMQTopic excluded;
     protected String consumerName = "durableSubs";
 
+    @Test
     public void testRequestReply() throws Exception {
         final MessageProducer remoteProducer = remoteSession.createProducer(null);
         MessageConsumer remoteConsumer = remoteSession.createConsumer(included);
@@ -80,6 +91,7 @@ public class SimpleNetworkTest extends org.apache.activemq.TestSupport {
         }
     }
 
+    @Test
     public void testFiltering() throws Exception {
         MessageConsumer includedConsumer = remoteSession.createConsumer(included);
         MessageConsumer excludedConsumer = remoteSession.createConsumer(excluded);
@@ -94,6 +106,7 @@ public class SimpleNetworkTest extends org.apache.activemq.TestSupport {
         assertNotNull(includedConsumer.receive(1000));
     }
 
+    @Test
     public void testConduitBridge() throws Exception {
         MessageConsumer consumer1 = remoteSession.createConsumer(included);
         MessageConsumer consumer2 = remoteSession.createConsumer(included);
@@ -137,13 +150,14 @@ public class SimpleNetworkTest extends org.apache.activemq.TestSupport {
         }));
     }
 
+    @Test
     public void testDurableStoreAndForward() throws Exception {
         // create a remote durable consumer
         MessageConsumer remoteConsumer = remoteSession.createDurableSubscriber(included, consumerName);
         Thread.sleep(1000);
         // now close everything down and restart
         doTearDown();
-        doSetUp();
+        doSetUp(false);
         MessageProducer producer = localSession.createProducer(included);
         for (int i = 0; i < MESSAGE_COUNT; i++) {
             Message test = localSession.createTextMessage("test-" + i);
@@ -152,56 +166,59 @@ public class SimpleNetworkTest extends org.apache.activemq.TestSupport {
         Thread.sleep(1000);
         // close everything down and restart
         doTearDown();
-        doSetUp();
+        doSetUp(false);
         remoteConsumer = remoteSession.createDurableSubscriber(included, consumerName);
         for (int i = 0; i < MESSAGE_COUNT; i++) {
             assertNotNull("message count: " + i, remoteConsumer.receive(2500));
         }
     }
 
+    @Ignore("This seems like a simple use case, but it is problematic to consume an existing topic store, " +
+            "it requires a connection per durable to match that connectionId")
     public void testDurableStoreAndForwardReconnect() throws Exception {
         // create a local durable consumer
         MessageConsumer localConsumer = localSession.createDurableSubscriber(included, consumerName);
-        Thread.sleep(1000);
+        Thread.sleep(5000);
         // now close everything down and restart
         doTearDown();
-        doSetUp();
+        doSetUp(false);
         // send messages
         MessageProducer producer = localSession.createProducer(included);
         for (int i = 0; i < MESSAGE_COUNT; i++) {
             Message test = localSession.createTextMessage("test-" + i);
             producer.send(test);
         }
-        Thread.sleep(1000);
+        Thread.sleep(5000);
         // consume some messages locally
         localConsumer = localSession.createDurableSubscriber(included, consumerName);
+        LOG.info("Consume from local consumer: " + localConsumer);
         for (int i = 0; i < MESSAGE_COUNT / 2; i++) {
             assertNotNull("message count: " + i, localConsumer.receive(2500));
         }
-        Thread.sleep(1000);
+        Thread.sleep(5000);
         // close everything down and restart
         doTearDown();
-        doSetUp();
+        doSetUp(false);
+        Thread.sleep(5000);
+
+        LOG.info("Consume from remote");
         // consume the rest remotely
         MessageConsumer remoteConsumer = remoteSession.createDurableSubscriber(included, consumerName);
+        LOG.info("Remote consumer: " + remoteConsumer);
+        Thread.sleep(5000);
         for (int i = 0; i < MESSAGE_COUNT / 2; i++) {
-            assertNotNull("message count: " + i, remoteConsumer.receive(2500));
+            assertNotNull("message count: " + i, remoteConsumer.receive(10000));
         }
     }
 
-    @Override
-    protected void setUp() throws Exception {
-        setAutoFail(true);
-        super.setUp();
-        doSetUp();
+    @Before
+    public void setUp() throws Exception {
+        doSetUp(true);
     }
 
-    @Override
-    protected void tearDown() throws Exception {
-        localBroker.deleteAllMessages();
-        remoteBroker.deleteAllMessages();
+    @After
+    public void tearDown() throws Exception {
         doTearDown();
-        super.tearDown();
     }
 
     protected void doTearDown() throws Exception {
@@ -211,11 +228,13 @@ public class SimpleNetworkTest extends org.apache.activemq.TestSupport {
         remoteBroker.stop();
     }
 
-    protected void doSetUp() throws Exception {
+    protected void doSetUp(boolean deleteAllMessages) throws Exception {
         remoteBroker = createRemoteBroker();
+        remoteBroker.setDeleteAllMessagesOnStartup(deleteAllMessages);
         remoteBroker.start();
         remoteBroker.waitUntilStarted();
         localBroker = createLocalBroker();
+        localBroker.setDeleteAllMessagesOnStartup(deleteAllMessages);
         localBroker.start();
         localBroker.waitUntilStarted();
         URI localURI = localBroker.getVmConnectorURI();
@@ -223,12 +242,12 @@ public class SimpleNetworkTest extends org.apache.activemq.TestSupport {
         fac.setAlwaysSyncSend(true);
         fac.setDispatchAsync(false);
         localConnection = fac.createConnection();
-        localConnection.setClientID("local");
+        localConnection.setClientID("clientId");
         localConnection.start();
         URI remoteURI = remoteBroker.getVmConnectorURI();
         fac = new ActiveMQConnectionFactory(remoteURI);
         remoteConnection = fac.createConnection();
-        remoteConnection.setClientID("remote");
+        remoteConnection.setClientID("clientId");
         remoteConnection.start();
         included = new ActiveMQTopic("include.test.bar");
         excluded = new ActiveMQTopic("exclude.test.bar");

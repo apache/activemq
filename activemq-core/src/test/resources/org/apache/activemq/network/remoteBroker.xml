@@ -24,7 +24,7 @@
 
   <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer"/>
 
-  <broker brokerName="remoteBroker" useJmx="false" persistent="true" useShutdownHook="false" monitorConnectionSplits="true" xmlns="http://activemq.apache.org/schema/core">
+  <broker brokerName="remoteBroker" start="false" useJmx="false" persistent="true" useShutdownHook="false" monitorConnectionSplits="false" xmlns="http://activemq.apache.org/schema/core">
     <networkConnectors>
       <networkConnector uri="static:(tcp://localhost:61616)" />
       </networkConnectors>

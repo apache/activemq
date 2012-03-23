@@ -95,8 +95,8 @@ public class NetworkFailoverTest extends TestCase {
             ((FailoverTransport) ((TransportFilter) ((TransportFilter) 
                     ((ActiveMQConnection) localConnection)
                     .getTransport()).getNext()).getNext())
-                    .handleTransportFailure(new IOException());
-            TextMessage result = (TextMessage)requestConsumer.receive();
+                    .handleTransportFailure(new IOException("Forcing failover from test"));
+            TextMessage result = (TextMessage)requestConsumer.receive(10000);
             assertNotNull(result);
             
             LOG.info(result.getText());
@@ -107,12 +107,10 @@ public class NetworkFailoverTest extends TestCase {
 
     protected void setUp() throws Exception {
         super.setUp();
-        doSetUp();
+        doSetUp(true);
     }
 
     protected void tearDown() throws Exception {
-        localBroker.deleteAllMessages();
-        remoteBroker.deleteAllMessages();
         doTearDown();
         super.tearDown();
     }
@@ -124,20 +122,22 @@ public class NetworkFailoverTest extends TestCase {
         remoteBroker.stop();
     }
 
-    protected void doSetUp() throws Exception {
+    protected void doSetUp(boolean deleteAllMessages) throws Exception {
         
         remoteBroker = createRemoteBroker();
+        remoteBroker.setDeleteAllMessagesOnStartup(deleteAllMessages);
         remoteBroker.start();
         localBroker = createLocalBroker();
+        localBroker.setDeleteAllMessagesOnStartup(deleteAllMessages);
         localBroker.start();
         String localURI = "tcp://localhost:61616";
         String remoteURI = "tcp://localhost:61617";
-        ActiveMQConnectionFactory fac = new ActiveMQConnectionFactory("failover:("+localURI+","+remoteURI+"?trackMessages=true)?randomize=false&backup=true");
+        ActiveMQConnectionFactory fac = new ActiveMQConnectionFactory("failover:("+localURI+","+remoteURI+")?randomize=false&backup=true&trackMessages=true");
         //ActiveMQConnectionFactory fac = new ActiveMQConnectionFactory(localURI);
         localConnection = fac.createConnection();
         localConnection.setClientID("local");
         localConnection.start();
-        fac = new ActiveMQConnectionFactory("failover:("+remoteURI + ","+localURI+")?randomize=false&backup=true");
+        fac = new ActiveMQConnectionFactory("failover:("+remoteURI + ","+localURI+")?randomize=false&backup=true&trackMessages=true");
         fac.setWatchTopicAdvisories(false);
         remoteConnection = fac.createConnection();
         remoteConnection.setClientID("remote");
