@@ -1207,6 +1207,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                 LOG.warn("Duplicate message add attempt rejected. Destination: " + command.getDestination().getName() + ", Message id: " + command.getMessageId());
                 sd.messageIdIndex.put(tx, command.getMessageId(), previous);
                 sd.locationIndex.remove(tx, location);
+                rollbackStatsOnDuplicate(command.getDestination());
             }
         } else {
             // restore the previous value.. Looks like this was a redo of a
@@ -1221,6 +1222,8 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         metadata.producerSequenceIdTracker.isDuplicate(command.getMessageId());
         metadata.lastUpdate = location;
     }
+
+    abstract void rollbackStatsOnDuplicate(KahaDestination commandDestination);
 
     void updateIndex(Transaction tx, KahaRemoveMessageCommand command, Location ackLocation) throws IOException {
         StoredDestination sd = getStoredDestination(command.getDestination(), tx);

@@ -32,6 +32,8 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.activemq.broker.ConnectionContext;
+import org.apache.activemq.broker.region.Destination;
+import org.apache.activemq.broker.region.RegionBroker;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTempQueue;
@@ -280,6 +282,16 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
             } finally {
                 this.indexLock.writeLock().unlock();
             }
+        }
+    }
+
+    @Override
+    void rollbackStatsOnDuplicate(KahaDestination commandDestination) {
+        RegionBroker regionBroker = (RegionBroker) brokerService.getRegionBroker();
+        Set<Destination> destinationSet = regionBroker.getDestinations(convert(commandDestination));
+        for (Destination destination : destinationSet) {
+            destination.getDestinationStatistics().getMessages().decrement();
+            destination.getDestinationStatistics().getEnqueues().decrement();
         }
     }
 
@@ -1037,7 +1049,14 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
         }
         int type = Integer.parseInt(dest.substring(0, p));
         String name = dest.substring(p + 1);
+        return convert(type, name);
+    }
 
+    private ActiveMQDestination convert(KahaDestination commandDestination) {
+        return convert(commandDestination.getType().getNumber(), commandDestination.getName());
+    }
+
+    private ActiveMQDestination convert(int type, String name) {
         switch (KahaDestination.DestinationType.valueOf(type)) {
         case QUEUE:
             return new ActiveMQQueue(name);
