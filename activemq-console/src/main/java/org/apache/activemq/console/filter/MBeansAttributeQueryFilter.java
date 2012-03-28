@@ -16,13 +16,6 @@
  */
 package org.apache.activemq.console.filter;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
-
 import javax.management.Attribute;
 import javax.management.AttributeList;
 import javax.management.InstanceNotFoundException;
@@ -32,9 +25,12 @@ import javax.management.MBeanServerConnection;
 import javax.management.ObjectInstance;
 import javax.management.ObjectName;
 import javax.management.ReflectionException;
-import javax.management.remote.JMXConnector;
-import javax.management.remote.JMXConnectorFactory;
-import javax.management.remote.JMXServiceURL;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
 
 public class MBeansAttributeQueryFilter extends AbstractQueryFilter {
     public static final String KEY_OBJECT_NAME_ATTRIBUTE = "Attribute:ObjectName:";
@@ -85,9 +81,17 @@ public class MBeansAttributeQueryFilter extends AbstractQueryFilter {
         for (Iterator i = result.iterator(); i.hasNext();) {
             Object mbean = i.next();
             if (mbean instanceof ObjectInstance) {
-                mbeansCollection.add(getMBeanAttributes(((ObjectInstance)mbean).getObjectName(), attribView));
+                try {
+                    mbeansCollection.add(getMBeanAttributes(((ObjectInstance)mbean).getObjectName(), attribView));
+                } catch (InstanceNotFoundException ignore) {
+                    // mbean could have been deleted in the meantime
+                }
             } else if (mbean instanceof ObjectName) {
-                mbeansCollection.add(getMBeanAttributes((ObjectName)mbean, attribView));
+                try {
+                    mbeansCollection.add(getMBeanAttributes((ObjectName)mbean, attribView));
+                } catch (InstanceNotFoundException ignore) {
+                    // mbean could have been deleted in the meantime
+                }
             } else {
                 throw new NoSuchMethodException("Cannot get the mbean attributes for class: " + mbean.getClass().getName());
             }
