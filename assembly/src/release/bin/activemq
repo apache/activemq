@@ -414,7 +414,6 @@ invokeJar(){
               -Dactivemq.base=\"${ACTIVEMQ_BASE}\" \
               -Dactivemq.conf=\"${ACTIVEMQ_CONF}\" \
               -Dactivemq.data=\"${ACTIVEMQ_DATA}\" \
-              -Djava.io.tmpdir=\"${ACTIVEMQ_TMP}\" \
               $ACTIVEMQ_CYGWIN \
               -jar \"${ACTIVEMQ_HOME}/bin/run.jar\" $COMMANDLINE_ARGS --pid $PID &
               RET=\"\$?\"; APID=\"\$!\";
@@ -427,7 +426,6 @@ invokeJar(){
               -Dactivemq.base=\"${ACTIVEMQ_BASE}\" \
               -Dactivemq.conf=\"${ACTIVEMQ_CONF}\" \
               -Dactivemq.data=\"${ACTIVEMQ_DATA}\" \
-              -Djava.io.tmpdir=\"${ACTIVEMQ_TMP}\" \
               $ACTIVEMQ_CYGWIN \
               -jar \"${ACTIVEMQ_HOME}/bin/run.jar\" $COMMANDLINE_ARGS" $DOIT_POSTFIX
       RET="$?"
