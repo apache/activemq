@@ -1914,8 +1914,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
     // on a new message add, all existing subs are interested in this message
     private void addAckLocationForNewMessage(Transaction tx, StoredDestination sd, Long messageSequence) throws IOException {
         for(String subscriptionKey : sd.subscriptionCache) {
-            SequenceSet sequences = null;
-            sequences = sd.ackPositions.get(tx, subscriptionKey);
+            SequenceSet sequences = sd.ackPositions.get(tx, subscriptionKey);
             if (sequences == null) {
                 sequences = new SequenceSet();
                 sequences.add(new Sequence(messageSequence, messageSequence + 1));
@@ -1945,19 +1944,16 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
             ArrayList<Long> unreferenced = new ArrayList<Long>();
 
             for(Long sequenceId : sequences) {
-                long references = 0;
-                Long count = sd.messageReferences.get(sequenceId);
-                if (count != null) {
-                    references = count.longValue() - 1;
-                } else {
-                    continue;
-                }
+                Long references = sd.messageReferences.get(sequenceId);
+                if (references != null) {
+                    references = references.longValue() - 1;
 
-                if (references > 0) {
-                    sd.messageReferences.put(sequenceId, Long.valueOf(references));
-                } else {
-                    sd.messageReferences.remove(sequenceId);
-                    unreferenced.add(sequenceId);
+                    if (references.longValue() > 0) {
+                        sd.messageReferences.put(sequenceId, references);
+                    } else {
+                        sd.messageReferences.remove(sequenceId);
+                        unreferenced.add(sequenceId);
+                    }
                 }
             }
 
