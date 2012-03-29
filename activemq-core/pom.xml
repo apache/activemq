@@ -510,6 +510,8 @@
             <exclude>**/BrokerNetworkWithStuckMessagesTest.*</exclude>
             <exclude>**/DoSTest.*</exclude>
 
+            <exclude>**/mqtt/*</exclude>
+
           </excludes>
         </configuration>
       </plugin>
