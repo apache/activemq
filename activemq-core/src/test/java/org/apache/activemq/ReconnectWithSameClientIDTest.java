@@ -16,12 +16,17 @@
  */
 package org.apache.activemq;
 
+import java.util.concurrent.atomic.AtomicBoolean;
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
 import javax.jms.InvalidClientIDException;
 import javax.jms.JMSException;
 import javax.jms.Session;
 
+import junit.framework.Test;
+import org.apache.activemq.util.DefaultTestAppender;
+import org.apache.log4j.Appender;
+import org.apache.log4j.spi.LoggingEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,33 +36,64 @@ public class ReconnectWithSameClientIDTest extends EmbeddedBrokerTestSupport {
     protected Connection connection;
     protected boolean transacted;
     protected int authMode = Session.AUTO_ACKNOWLEDGE;
+    public boolean useFailover = false;
+
+    public static Test suite() {
+        return suite(ReconnectWithSameClientIDTest.class);
+    }
+
+    public void initCombosForTestReconnectMultipleTimesWithSameClientID() {
+        addCombinationValues("useFailover", new Object[]{Boolean.FALSE, Boolean.TRUE});
+    }
 
     public void testReconnectMultipleTimesWithSameClientID() throws Exception {
-        connection = connectionFactory.createConnection();
-        useConnection(connection);
 
-        // now lets create another which should fail
-        for (int i = 1; i < 11; i++) {
-            Connection connection2 = connectionFactory.createConnection();
-            try {
-                useConnection(connection2);
-                fail("Should have thrown InvalidClientIDException on attempt" + i);
-            } catch (InvalidClientIDException e) {
-                connection2.close();
-                LOG.info("Caught expected: " + e);
+        org.apache.log4j.Logger log4jLogger =
+                org.apache.log4j.Logger.getLogger(org.apache.activemq.broker.jmx.ManagedTransportConnection.class);
+        final AtomicBoolean failed = new AtomicBoolean(false);
+
+        Appender appender = new DefaultTestAppender() {
+            @Override
+            public void doAppend(LoggingEvent event) {
+                if (event.getMessage().toString().startsWith("Failed to register MBean")) {
+                    LOG.info("received unexpected log message: " + event.getMessage());
+                    failed.set(true);
+                }
             }
-        }
+        };
+        log4jLogger.addAppender(appender);
+        try {
+            connection = connectionFactory.createConnection();
+            useConnection(connection);
 
-        // now lets try closing the original connection and creating a new
-        // connection with the same ID
-        connection.close();
-        connection = connectionFactory.createConnection();
-        useConnection(connection);
+            // now lets create another which should fail
+            for (int i = 1; i < 11; i++) {
+                Connection connection2 = connectionFactory.createConnection();
+                try {
+                    useConnection(connection2);
+                    fail("Should have thrown InvalidClientIDException on attempt" + i);
+                } catch (InvalidClientIDException e) {
+                    LOG.info("Caught expected: " + e);
+                } finally {
+                    connection2.close();
+                }
+            }
+
+            // now lets try closing the original connection and creating a new
+            // connection with the same ID
+            connection.close();
+            connection = connectionFactory.createConnection();
+            useConnection(connection);
+        } finally {
+            log4jLogger.removeAppender(appender);
+        }
+        assertFalse("failed on unexpected log event", failed.get());
     }
 
     @Override
     protected ConnectionFactory createConnectionFactory() throws Exception {
-        return new ActiveMQConnectionFactory(broker.getTransportConnectors().get(0).getPublishableConnectString());
+        return new ActiveMQConnectionFactory((useFailover ? "failover:" : "") +
+                broker.getTransportConnectors().get(0).getPublishableConnectString());
     }
 
     protected void setUp() throws Exception {

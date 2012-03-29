@@ -236,17 +236,8 @@ public class RegionBroker extends EmptyBroker {
         synchronized (clientIdSet) {
             ConnectionContext oldContext = clientIdSet.get(clientId);
             if (oldContext != null) {
-                if (context.isFaultTolerant() || context.isNetworkConnection()){
-                    //remove the old connection
-                    try{
-                        removeConnection(oldContext, info, new Exception("remove stale client"));
-                    }catch(Exception e){
-                        LOG.warn("Failed to remove stale connection ",e);
-                    }
-                }else{
                 throw new InvalidClientIDException("Broker: " + getBrokerName() + " - Client: " + clientId + " already connected from "
                                                    + oldContext.getConnection().getRemoteAddress());
-                }
             } else {
                 clientIdSet.put(clientId, context);
             }

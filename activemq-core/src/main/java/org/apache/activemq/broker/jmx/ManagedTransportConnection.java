@@ -62,18 +62,17 @@ public class ManagedTransportConnection extends TransportConnection {
         }
     }
 
-    public void doStop() throws Exception {
-        if (isStarting()) {
-            setPendingStop(true);
-            return;
+    @Override
+    public void stopAsync() {
+        if (!isStopping()) {
+            synchronized (this) {
+                unregisterMBean(byClientIdName);
+                unregisterMBean(byAddressName);
+                byClientIdName = null;
+                byAddressName = null;
+            }
         }
-        synchronized (this) {
-            unregisterMBean(byClientIdName);
-            unregisterMBean(byAddressName);
-            byClientIdName = null;
-            byAddressName = null;
-        }
-        super.doStop();
+        super.stopAsync();
     }
 
     public Response processAddConnection(ConnectionInfo info) throws Exception {

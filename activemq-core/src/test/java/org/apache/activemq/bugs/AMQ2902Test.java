@@ -26,14 +26,14 @@ import org.apache.activemq.broker.TransportConnection;
 import org.apache.activemq.transport.TransportDisposedIOException;
 import org.apache.activemq.util.DefaultTestAppender;
 import org.apache.log4j.Appender;
-import org.apache.log4j.Layout;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
-import org.apache.log4j.spi.ErrorHandler;
-import org.apache.log4j.spi.Filter;
 import org.apache.log4j.spi.LoggingEvent;
+import org.slf4j.LoggerFactory;
 
 public class AMQ2902Test extends TestCase {
+    private static final org.slf4j.Logger LOG = LoggerFactory.getLogger(AMQ2580Test.class);
+
     final AtomicBoolean gotExceptionInLog = new AtomicBoolean(Boolean.FALSE);
     final AtomicBoolean failedToFindMDC = new AtomicBoolean(Boolean.FALSE);
     
@@ -42,6 +42,7 @@ public class AMQ2902Test extends TestCase {
         public void doAppend(LoggingEvent event) {
             if (event.getThrowableInformation() != null
                     && event.getThrowableInformation().getThrowable() instanceof TransportDisposedIOException) {
+                LOG.error("got event: " + event + ", ex:" + event.getThrowableInformation().getThrowable(), event.getThrowableInformation().getThrowable());
                 gotExceptionInLog.set(Boolean.TRUE);
             }
             if (event.getMDC("activemq.broker") == null) {

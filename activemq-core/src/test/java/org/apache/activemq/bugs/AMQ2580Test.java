@@ -48,7 +48,6 @@ public class AMQ2580Test extends TestSupport {
     private Session session;
     private MessageProducer producer;
     private ConnectionFactory connectionFactory;
-    private TopicConnection topicConnection;
     private BrokerService service;
 
     public static Test suite() {
@@ -195,8 +194,8 @@ public class AMQ2580Test extends TestSupport {
     }
 
     private void initTopic() throws JMSException {
-        topicConnection = (TopicConnection) connectionFactory.createConnection();
-        TopicSession topicSession = topicConnection.createTopicSession(false, Session.AUTO_ACKNOWLEDGE);
+        initConnection();
+        TopicSession topicSession = connection.createTopicSession(false, Session.AUTO_ACKNOWLEDGE);
         topic = topicSession.createTopic(TOPIC_NAME);
     }
 }
