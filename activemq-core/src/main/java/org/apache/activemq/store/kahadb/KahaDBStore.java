@@ -287,11 +287,15 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
 
     @Override
     void rollbackStatsOnDuplicate(KahaDestination commandDestination) {
-        RegionBroker regionBroker = (RegionBroker) brokerService.getRegionBroker();
-        Set<Destination> destinationSet = regionBroker.getDestinations(convert(commandDestination));
-        for (Destination destination : destinationSet) {
-            destination.getDestinationStatistics().getMessages().decrement();
-            destination.getDestinationStatistics().getEnqueues().decrement();
+        if (brokerService != null) {
+            RegionBroker regionBroker = (RegionBroker) brokerService.getRegionBroker();
+            if (regionBroker != null) {
+                Set<Destination> destinationSet = regionBroker.getDestinations(convert(commandDestination));
+                for (Destination destination : destinationSet) {
+                    destination.getDestinationStatistics().getMessages().decrement();
+                    destination.getDestinationStatistics().getEnqueues().decrement();
+                }
+            }
         }
     }
 
