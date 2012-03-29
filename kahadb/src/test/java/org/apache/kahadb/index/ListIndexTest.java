@@ -452,11 +452,8 @@ public class ListIndexTest extends IndexTestSupport {
         LOG.info("Loading up the ListIndex with "+NUM_ITERATIONS+" entires and sparsely populating the sequences.");
 
         for (int i = 0; i < NUM_ITERATIONS; ++i) {
-            tx =  pf.tx();
             test.add(tx, String.valueOf(expectedListEntries++), new SequenceSet());
-            tx.commit();
 
-            tx =  pf.tx();
             for (int j = 0; j < expectedListEntries; j++) {
 
                 SequenceSet sequenceSet = test.get(tx, String.valueOf(j));
@@ -474,16 +471,13 @@ public class ListIndexTest extends IndexTestSupport {
                     test.put(tx, String.valueOf(j), sequenceSet);
                 }
             }
-            tx.commit();
         }
 
         LOG.info("Checking if Index has the expected number of entries.");
 
         for (int i = 0; i < NUM_ITERATIONS; ++i) {
-            tx =  pf.tx();
             assertTrue("List should contain Key["+i+"]",test.containsKey(tx, String.valueOf(i)));
             assertNotNull("List contents of Key["+i+"] should not be null", test.get(tx, String.valueOf(i)));
-            tx.commit();
         }
 
         LOG.info("Index has the expected number of entries.");
@@ -491,13 +485,11 @@ public class ListIndexTest extends IndexTestSupport {
         assertEquals(expectedListEntries, test.size());
 
         for (int i = 0; i < NUM_ITERATIONS; ++i) {
-            LOG.info("Size of ListIndex before removal of entry ["+i+"] is: " + test.size());
-            tx =  pf.tx();
+            LOG.debug("Size of ListIndex before removal of entry ["+i+"] is: " + test.size());
 
-//            assertTrue("List should contain Key["+i+"]",test.containsKey(tx, String.valueOf(i)));
+            assertTrue("List should contain Key["+i+"]",test.containsKey(tx, String.valueOf(i)));
             assertNotNull("List contents of Key["+i+"] should not be null", test.remove(tx, String.valueOf(i)));
-            tx.commit();
-            LOG.info("Size of ListIndex after removal of entry ["+i+"] is: " + test.size());
+            LOG.debug("Size of ListIndex after removal of entry ["+i+"] is: " + test.size());
 
             assertEquals(expectedListEntries - (i + 1), test.size());
         }

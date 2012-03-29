@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.Map.Entry;
 import java.util.NoSuchElementException;
+
 import org.apache.kahadb.page.Page;
 import org.apache.kahadb.page.Transaction;
 import org.apache.kahadb.util.LinkedNode;
@@ -325,6 +326,11 @@ public final class ListNode<Key,Value> {
             } else {
                 getContainingList().storeNode(tx, this, false);
             }
+
+            if (this.next == -1) {
+                getContainingList().setTailPageId(getPageId());
+            }
+
         } catch ( Transaction.PageOverflowIOException e ) {
             // If we get an overflow
             split(tx, addFirst);
@@ -343,15 +349,16 @@ public final class ListNode<Key,Value> {
         ListNode<Key, Value> extension = getContainingList().createNode(tx);
         if (isAddFirst) {
             // head keeps the first entry, insert extension with the rest
-            extension.setNext(this.getNext());
-            this.setNext(extension.getPageId());
             extension.setEntries(entries.getHead().splitAfter());
-        }  else {
+            extension.setNext(this.getNext());
+            extension.store(tx, isAddFirst);
             this.setNext(extension.getPageId());
+        }  else {
             extension.setEntries(entries.getTail().getPrevious().splitAfter());
+            extension.store(tx, isAddFirst);
             getContainingList().setTailPageId(extension.getPageId());
+            this.setNext(extension.getPageId());
         }
-        extension.store(tx, isAddFirst);
         store(tx, true);
     }
 
