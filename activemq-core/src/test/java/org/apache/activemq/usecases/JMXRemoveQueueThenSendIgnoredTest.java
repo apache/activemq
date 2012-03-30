@@ -82,7 +82,7 @@ public class JMXRemoveQueueThenSendIgnoredTest {
         MessageConsumer firstConsumer = registerConsumer();
         produceMessage();
         Message message = firstConsumer.receive(5000);
-        LOG.debug("Received message " + message);
+        LOG.info("Received message " + message);
 
         assertEquals(1, numberOfMessages());
         firstConsumer.close();
@@ -106,7 +106,7 @@ public class JMXRemoveQueueThenSendIgnoredTest {
         MessageConsumer firstConsumer = registerConsumer();
         produceMessage();
         Message message = firstConsumer.receive(5000);
-        LOG.debug("Received message " + message);
+        LOG.info("Received message " + message);
 
         assertEquals(1, numberOfMessages());
         firstConsumer.close();
@@ -131,14 +131,11 @@ public class JMXRemoveQueueThenSendIgnoredTest {
     }
 
     private int numberOfMessages() throws Exception {
-        JMXConnector jmxConnector = JMXConnectorFactory.connect(new JMXServiceURL("service:jmx:rmi:///jndi/rmi://localhost:1099/jmxrmi"));
-        MBeanServerConnection mbeanServerConnection = jmxConnector.getMBeanServerConnection();
         ObjectName queueViewMBeanName = new ObjectName(
             domain + ":Type=Queue,Destination=myqueue,BrokerName=dev");
-        QueueViewMBean queue = (QueueViewMBean)MBeanServerInvocationHandler.newProxyInstance(
-                mbeanServerConnection, queueViewMBeanName, QueueViewMBean.class, true);
+        QueueViewMBean queue = (QueueViewMBean)
+                brokerService.getManagementContext().newProxyInstance(queueViewMBeanName, QueueViewMBean.class, true);
         long size = queue.getQueueSize();
-        jmxConnector.close();
         return (int)size;
     }
 
