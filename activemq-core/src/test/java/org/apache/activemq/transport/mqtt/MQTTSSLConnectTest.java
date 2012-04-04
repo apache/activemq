@@ -16,8 +16,15 @@
  */
 package org.apache.activemq.transport.mqtt;
 
+import java.security.SecureRandom;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
 import java.util.Vector;
 
+import javax.net.ssl.KeyManager;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
 import org.apache.activemq.broker.BrokerService;
 import org.fusesource.mqtt.client.BlockingConnection;
 import org.fusesource.mqtt.client.MQTT;
@@ -28,13 +35,20 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
-public class MQTTConnectTest {
-    private static final Logger LOG = LoggerFactory.getLogger(MQTTConnectTest.class);
+public class MQTTSSLConnectTest {
+    private static final Logger LOG = LoggerFactory.getLogger(MQTTSSLConnectTest.class);
     BrokerService brokerService;
     Vector<Throwable> exceptions = new Vector<Throwable>();
 
     @Before
     public void startBroker() throws Exception {
+        System.setProperty("javax.net.ssl.trustStore", "src/test/resources/client.keystore");
+        System.setProperty("javax.net.ssl.trustStorePassword", "password");
+        System.setProperty("javax.net.ssl.trustStoreType", "jks");
+        System.setProperty("javax.net.ssl.keyStore", "src/test/resources/server.keystore");
+        System.setProperty("javax.net.ssl.keyStorePassword", "password");
+        System.setProperty("javax.net.ssl.keyStoreType", "jks");
+
         exceptions.clear();
         brokerService = new BrokerService();
         brokerService.setPersistent(false);
@@ -51,10 +65,13 @@ public class MQTTConnectTest {
     @Test
     public void testConnect() throws Exception {
 
-        brokerService.addConnector("mqtt://localhost:1883");
+        brokerService.addConnector("mqtt+ssl://localhost:8883");
         brokerService.start();
         MQTT mqtt = new MQTT();
-        mqtt.setHost("localhost", 1883);
+        mqtt.setHost("ssl://localhost:8883");
+        SSLContext ctx = SSLContext.getInstance("TLS");
+        ctx.init(new KeyManager[0], new TrustManager[]{new DefaultTrustManager()}, new SecureRandom());
+        mqtt.setSslContext(ctx);
         BlockingConnection connection = mqtt.blockingConnection();
 
         connection.connect();
@@ -63,4 +80,16 @@ public class MQTTConnectTest {
     }
 
 
+    private static class DefaultTrustManager implements X509TrustManager {
+
+        public void checkClientTrusted(X509Certificate[] x509Certificates, String s) throws CertificateException {
+        }
+
+        public void checkServerTrusted(X509Certificate[] x509Certificates, String s) throws CertificateException {
+        }
+
+        public X509Certificate[] getAcceptedIssuers() {
+            return new X509Certificate[0];
+        }
+    }
 }

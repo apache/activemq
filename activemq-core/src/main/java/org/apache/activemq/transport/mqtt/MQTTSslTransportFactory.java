@@ -24,14 +24,14 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.BrokerServiceAware;
 import org.apache.activemq.transport.MutexTransport;
 import org.apache.activemq.transport.Transport;
-import org.apache.activemq.transport.tcp.TcpTransportFactory;
+import org.apache.activemq.transport.tcp.SslTransportFactory;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.wireformat.WireFormat;
 
 /**
- * A <a href="http://mqtt.org/">MQTT</a> transport factory
+ * A <a href="http://mqtt.org/">MQTT</a> over SSL transport factory
  */
-public class MQTTTransportFactory extends TcpTransportFactory implements BrokerServiceAware {
+public class MQTTSslTransportFactory extends SslTransportFactory implements BrokerServiceAware {
 
     private BrokerContext brokerContext = null;
 
@@ -40,14 +40,11 @@ public class MQTTTransportFactory extends TcpTransportFactory implements BrokerS
     }
 
     @SuppressWarnings("rawtypes")
+
     public Transport compositeConfigure(Transport transport, WireFormat format, Map options) {
         transport = new MQTTTransportFilter(transport, format, brokerContext);
         IntrospectionSupport.setProperties(transport, options);
         return super.compositeConfigure(transport, format, options);
-    }
-
-    public void setBrokerService(BrokerService brokerService) {
-        this.brokerContext = brokerService.getBrokerContext();
     }
 
     @SuppressWarnings("rawtypes")
@@ -63,7 +60,10 @@ public class MQTTTransportFactory extends TcpTransportFactory implements BrokerS
         return transport;
     }
 
-    @Override
+    public void setBrokerService(BrokerService brokerService) {
+        this.brokerContext = brokerService.getBrokerContext();
+    }
+
     protected Transport createInactivityMonitor(Transport transport, WireFormat format) {
         MQTTInactivityMonitor monitor = new MQTTInactivityMonitor(transport, format);
 
@@ -72,4 +72,5 @@ public class MQTTTransportFactory extends TcpTransportFactory implements BrokerS
 
         return monitor;
     }
+
 }

@@ -16,69 +16,39 @@
  */
 package org.apache.activemq.transport.mqtt;
 
-import java.io.IOException;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
-
-import javax.jms.JMSException;
 import org.apache.activemq.command.ActiveMQDestination;
-import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageDispatch;
-import org.apache.activemq.command.MessageId;
-import org.fusesource.mqtt.codec.MQTTFrame;
+import org.fusesource.mqtt.client.QoS;
 
 /**
- * Keeps track of the STOMP subscription so that acking is correctly done.
+ * Keeps track of the MQTT client subscription so that acking is correctly done.
  */
-public class MQTTSubscription {
+class MQTTSubscription {
+    private final MQTTProtocolConverter protocolConverter;
 
+    private final ConsumerInfo consumerInfo;
+    private ActiveMQDestination destination;
+    private final QoS qos;
 
-    protected final MQTTProtocolConverter protocolConverter;
-    protected final String subscriptionId;
-    protected final ConsumerInfo consumerInfo;
-
-    protected final LinkedHashMap<MessageId, MessageDispatch> dispatchedMessage = new LinkedHashMap<MessageId, MessageDispatch>();
-    protected final LinkedList<MessageDispatch> unconsumedMessage = new LinkedList<MessageDispatch>();
-
-    protected ActiveMQDestination destination;
-    protected String transformation;
-
-    public MQTTSubscription(MQTTProtocolConverter protocolConverter, String subscriptionId, ConsumerInfo consumerInfo, String transformation) {
+    public MQTTSubscription(MQTTProtocolConverter protocolConverter, QoS qos, ConsumerInfo consumerInfo) {
         this.protocolConverter = protocolConverter;
-        this.subscriptionId = subscriptionId;
         this.consumerInfo = consumerInfo;
-        this.transformation = transformation;
+        this.qos = qos;
     }
 
-    void onMessageDispatch(MessageDispatch md) throws IOException, JMSException {
-        ActiveMQMessage message = (ActiveMQMessage) md.getMessage();
-        /*
-        if (ackMode == CLIENT_ACK) {
-            synchronized (this) {
-                dispatchedMessage.put(message.getMessageId(), md);
+    MessageAck createMessageAck(MessageDispatch md) {
+
+        switch (qos) {
+            case AT_MOST_ONCE: {
+                return null;
             }
-        } else if (ackMode == INDIVIDUAL_ACK) {
-            synchronized (this) {
-                dispatchedMessage.put(message.getMessageId(), md);
-            }
-        } else if (ackMode == AUTO_ACK) {
-            MessageAck ack = new MessageAck(md, MessageAck.STANDARD_ACK_TYPE, 1);
-            protocolConverter.getStompTransport().sendToActiveMQ(ack);
+
         }
-        */
-        MessageAck ack = new MessageAck(md, MessageAck.STANDARD_ACK_TYPE, 1);
-        protocolConverter.getMQTTTransport().sendToActiveMQ(ack);
-
-        MQTTFrame command = protocolConverter.convertMessage(message);
-        protocolConverter.getMQTTTransport().sendToMQTT(command);
+        return new MessageAck(md, MessageAck.STANDARD_ACK_TYPE, 1);
     }
 
-
-    public String getSubscriptionId() {
-        return subscriptionId;
-    }
 
     public void setDestination(ActiveMQDestination destination) {
         this.destination = destination;

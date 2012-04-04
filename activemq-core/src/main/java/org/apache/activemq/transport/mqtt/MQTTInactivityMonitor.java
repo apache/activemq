@@ -61,10 +61,8 @@ public class MQTTInactivityMonitor extends TransportFilter {
 
     private long readCheckTime = DEFAULT_CHECK_TIME_MILLS;
     private long initialDelayTime = DEFAULT_CHECK_TIME_MILLS;
-    private boolean useKeepAlive = true;
     private boolean keepAliveResponseRequired;
 
-    protected WireFormat wireFormat;
 
     private final Runnable readChecker = new Runnable() {
         long lastRunTime;
@@ -99,7 +97,6 @@ public class MQTTInactivityMonitor extends TransportFilter {
 
     public MQTTInactivityMonitor(Transport next, WireFormat wireFormat) {
         super(next);
-        this.wireFormat = wireFormat;
     }
 
     public void start() throws Exception {
@@ -198,9 +195,6 @@ public class MQTTInactivityMonitor extends TransportFilter {
         }
     }
 
-    public void setUseKeepAlive(boolean val) {
-        useKeepAlive = val;
-    }
 
     public long getReadCheckTime() {
         return readCheckTime;
@@ -231,7 +225,7 @@ public class MQTTInactivityMonitor extends TransportFilter {
         return this.monitorStarted.get();
     }
 
-    protected synchronized void startMonitorThread() throws IOException {
+    synchronized void startMonitorThread() {
         if (monitorStarted.get()) {
             return;
         }
@@ -258,7 +252,7 @@ public class MQTTInactivityMonitor extends TransportFilter {
     }
 
 
-    protected synchronized void stopMonitorThread() {
+    synchronized void stopMonitorThread() {
         if (monitorStarted.compareAndSet(true, false)) {
             if (readCheckerTask != null) {
                 readCheckerTask.cancel();

@@ -36,9 +36,7 @@ import org.slf4j.LoggerFactory;
  * The StompTransportFilter normally sits on top of a TcpTransport that has been
  * configured with the StompWireFormat and is used to convert STOMP commands to
  * ActiveMQ commands. All of the conversion work is done by delegating to the
- * MQTTProtocolConverter.
- *
- * @author <a href="http://hiramchirino.com">chirino</a>
+ * MQTTProtocolConverter
  */
 public class MQTTTransportFilter extends TransportFilter implements MQTTTransport {
     private static final Logger LOG = LoggerFactory.getLogger(MQTTTransportFilter.class);
@@ -62,7 +60,7 @@ public class MQTTTransportFilter extends TransportFilter implements MQTTTranspor
         try {
             final Command command = (Command) o;
             protocolConverter.onActiveMQCommand(command);
-        } catch (JMSException e) {
+        } catch (Exception e) {
             throw IOExceptionSupport.create(e);
         }
     }
