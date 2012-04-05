@@ -16,23 +16,9 @@
  */
 package org.apache.activemq.broker.scheduler;
 
-import java.io.DataInput;
-import java.io.DataOutput;
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.Map.Entry;
 import org.apache.activemq.util.IOHelper;
 import org.apache.activemq.util.ServiceStopper;
 import org.apache.activemq.util.ServiceSupport;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.apache.kahadb.index.BTreeIndex;
 import org.apache.kahadb.journal.Journal;
 import org.apache.kahadb.journal.Location;
@@ -44,6 +30,21 @@ import org.apache.kahadb.util.IntegerMarshaller;
 import org.apache.kahadb.util.LockFile;
 import org.apache.kahadb.util.StringMarshaller;
 import org.apache.kahadb.util.VariableMarshaller;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 
 public class JobSchedulerStore extends ServiceSupport {
     static final Logger LOG = LoggerFactory.getLogger(JobSchedulerStore.class);
@@ -235,6 +236,7 @@ public class JobSchedulerStore extends ServiceSupport {
         this.journal.setWriteBatchSize(getJournalMaxWriteBatchSize());
         this.journal.start();
         this.pageFile = new PageFile(directory, "scheduleDB");
+        this.pageFile.setWriteBatchSize(1);
         this.pageFile.load();
 
         this.pageFile.tx().execute(new Transaction.Closure<IOException>() {
