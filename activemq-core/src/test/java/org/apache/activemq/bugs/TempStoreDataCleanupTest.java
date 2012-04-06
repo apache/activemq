@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.bugs;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
@@ -113,6 +114,9 @@ public class TempStoreDataCleanupTest {
     @Test
     public void testIt() throws Exception {
 
+        int startPercentage = broker.getAdminView().getMemoryPercentUsage();
+        LOG.info("MemoryUseage at test start = " + startPercentage);
+
         for (int i = 0; i < 2; i++) {
             LOG.info("Started the test iteration: " + i + " using queueName = " + queueName);
             queueName = QUEUE_NAME + i;
@@ -142,6 +146,8 @@ public class TempStoreDataCleanupTest {
             TimeUnit.SECONDS.sleep(2);
         }
 
+        LOG.info("MemoryUseage before awaiting temp store cleanup = " + broker.getAdminView().getMemoryPercentUsage());
+
         final PListStore pa = broker.getTempDataStore();
         assertTrue("only one journal file should be left: " + pa.getJournal().getFileMap().size(),
             Wait.waitFor(new Wait.Condition() {
@@ -152,6 +158,11 @@ public class TempStoreDataCleanupTest {
                 }
             }, TimeUnit.MINUTES.toMillis(3))
         );
+
+        int endPercentage = broker.getAdminView().getMemoryPercentUsage();
+        LOG.info("MemoryUseage at test end = " + endPercentage);
+
+        assertEquals(startPercentage, endPercentage);
     }
 
     public void destroyQueue() {
