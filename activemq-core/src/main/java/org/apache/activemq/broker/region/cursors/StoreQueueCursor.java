@@ -76,9 +76,10 @@ public class StoreQueueCursor extends AbstractPendingMessageCursor {
     public synchronized void stop() throws Exception {
         started = false;
         if (nonPersistent != null) {
-            nonPersistent.clear();
-            nonPersistent.stop();
-            nonPersistent.gc();
+//            nonPersistent.clear();
+//            nonPersistent.stop();
+//            nonPersistent.gc();
+          nonPersistent.destroy();
         }
         persistent.stop();
         persistent.gc();
