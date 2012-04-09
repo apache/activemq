@@ -952,6 +952,49 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         assertEquals(0, connectionView.getProducers().length);
     }
 
+    public void testCreateAndUnsubscribeDurableSubscriptions() throws Exception {
+
+        connection = connectionFactory.createConnection("admin", "admin");
+        connection.setClientID("MBeanTest");
+
+        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        String topicName = getDestinationString() + ".DurableTopic";
+        Topic topic = session.createTopic(topicName);
+
+        ObjectName brokerName = assertRegisteredObjectName(domain + ":Type=Broker,BrokerName=localhost");
+        echo("Create QueueView MBean...");
+        BrokerViewMBean broker = (BrokerViewMBean)MBeanServerInvocationHandler.newProxyInstance(mbeanServer, brokerName, BrokerViewMBean.class, true);
+
+        assertEquals("Durable subscriber count", 0, broker.getDurableTopicSubscribers().length);
+        assertEquals("Durable subscriber count", 0, broker.getInactiveDurableTopicSubscribers().length);
+
+        MessageConsumer durableConsumer1 = session.createDurableSubscriber(topic, "subscription1");
+        MessageConsumer durableConsumer2 = session.createDurableSubscriber(topic, "subscription2");
+
+        Thread.sleep(100);
+
+        assertEquals("Durable subscriber count", 2, broker.getDurableTopicSubscribers().length);
+        assertEquals("Durable subscriber count", 0, broker.getInactiveDurableTopicSubscribers().length);
+
+        durableConsumer1.close();
+        durableConsumer2.close();
+
+        Thread.sleep(100);
+
+        assertEquals("Durable subscriber count", 0, broker.getDurableTopicSubscribers().length);
+        assertEquals("Durable subscriber count", 2, broker.getInactiveDurableTopicSubscribers().length);
+
+        session.unsubscribe("subscription1");
+
+        Thread.sleep(100);
+
+        assertEquals("Inactive Durable subscriber count", 1, broker.getInactiveDurableTopicSubscribers().length);
+
+        session.unsubscribe("subscription2");
+
+        assertEquals("Inactive Durable subscriber count", 0, broker.getInactiveDurableTopicSubscribers().length);
+    }
+
     public void testUserNamePopulated() throws Exception {
         doTestUserNameInMBeans(true);
     }
