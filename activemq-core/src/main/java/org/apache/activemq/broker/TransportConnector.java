@@ -16,19 +16,6 @@
  */
 package org.apache.activemq.broker;
 
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.Random;
-import java.util.StringTokenizer;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.regex.Pattern;
-
-import javax.management.ObjectName;
-
 import org.apache.activemq.broker.jmx.ManagedTransportConnector;
 import org.apache.activemq.broker.jmx.ManagementContext;
 import org.apache.activemq.broker.region.ConnectorStatistics;
@@ -47,6 +34,16 @@ import org.apache.activemq.util.ServiceStopper;
 import org.apache.activemq.util.ServiceSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.management.ObjectName;
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.StringTokenizer;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.regex.Pattern;
 
 /**
  * @org.apache.xbean.XBean
@@ -78,7 +75,7 @@ public class TransportConnector implements Connector, BrokerServiceAware {
     private String updateClusterFilter;
     private boolean auditNetworkProducers = false;
 
-    Random rnd = new Random(System.currentTimeMillis());
+    LinkedList<String> peerBrokers = new LinkedList<String>();
 
     public TransportConnector() {
     }
@@ -410,23 +407,17 @@ public class TransportConnector implements Connector, BrokerServiceAware {
         String separator = "";
 
         if (isUpdateClusterClients()) {
-            ArrayList<String> uris = new ArrayList<String>();
-            uris.add(brokerService.getDefaultSocketURIString());
-            for (BrokerInfo info: broker.getPeerBrokerInfos()) {
-                if (isMatchesClusterFilter(info.getBrokerName())) {
-                    if (info.getBrokerURL() != null) {
-                        uris.add(info.getBrokerURL());
-                    }
+            synchronized (peerBrokers) {
+                for (String uri : getPeerBrokers()) {
+                    connectedBrokers += separator + uri;
+                    separator = ",";
+                }
+
+                if (rebalance) {
+                    String shuffle = getPeerBrokers().removeFirst();
+                    getPeerBrokers().addLast(shuffle);
                 }
             }
-            if (rebalance) {
-                Collections.shuffle(uris, rnd);
-            }
-            for (String uri: uris) {
-                connectedBrokers += separator + uri;
-                separator = ",";
-            }
-
         }
         ConnectionControl control = new ConnectionControl();
         control.setConnectedBrokers(connectedBrokers);
@@ -434,8 +425,32 @@ public class TransportConnector implements Connector, BrokerServiceAware {
         return control;
 
     }
+    
+    public void addPeerBroker(BrokerInfo info) {
+        if (isMatchesClusterFilter(info.getBrokerName())) {
+            synchronized (peerBrokers) {
+                getPeerBrokers().addLast(info.getBrokerURL());
+            }
+        }
+    }
+    
+    public void removePeerBroker(BrokerInfo info) {
+        synchronized (peerBrokers) {
+            getPeerBrokers().remove(info.getBrokerURL());
+        }
+    }
+
+    public LinkedList<String> getPeerBrokers() {
+        synchronized (peerBrokers) {
+            if (peerBrokers.isEmpty()) {
+                peerBrokers.add(brokerService.getDefaultSocketURIString());
+            }
+            return peerBrokers;
+        }
+    }
 
     public void updateClientClusterInfo() {
+
         if (isRebalanceClusterClients() || isUpdateClusterClients()) {
             ConnectionControl control = getConnectionControl();
             for (Connection c : this.connections) {

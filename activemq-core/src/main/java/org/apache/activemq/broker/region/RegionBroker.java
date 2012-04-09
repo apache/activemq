@@ -16,20 +16,6 @@
  */
 package org.apache.activemq.broker.region;
 
-import java.io.IOException;
-import java.net.URI;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
-import javax.jms.InvalidClientIDException;
-import javax.jms.JMSException;
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.Connection;
@@ -37,27 +23,10 @@ import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.ConsumerBrokerExchange;
 import org.apache.activemq.broker.EmptyBroker;
 import org.apache.activemq.broker.ProducerBrokerExchange;
-import org.apache.activemq.broker.TransportConnection;
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.broker.region.policy.DeadLetterStrategy;
 import org.apache.activemq.broker.region.policy.PolicyMap;
-import org.apache.activemq.command.ActiveMQDestination;
-import org.apache.activemq.command.BrokerId;
-import org.apache.activemq.command.BrokerInfo;
-import org.apache.activemq.command.ConnectionId;
-import org.apache.activemq.command.ConnectionInfo;
-import org.apache.activemq.command.ConsumerControl;
-import org.apache.activemq.command.ConsumerInfo;
-import org.apache.activemq.command.DestinationInfo;
-import org.apache.activemq.command.Message;
-import org.apache.activemq.command.MessageAck;
-import org.apache.activemq.command.MessageDispatch;
-import org.apache.activemq.command.MessageDispatchNotification;
-import org.apache.activemq.command.MessagePull;
-import org.apache.activemq.command.ProducerInfo;
-import org.apache.activemq.command.RemoveSubscriptionInfo;
-import org.apache.activemq.command.Response;
-import org.apache.activemq.command.TransactionId;
+import org.apache.activemq.command.*;
 import org.apache.activemq.state.ConnectionState;
 import org.apache.activemq.store.kahadb.plist.PListStore;
 import org.apache.activemq.thread.Scheduler;
@@ -70,6 +39,21 @@ import org.apache.activemq.util.LongSequenceGenerator;
 import org.apache.activemq.util.ServiceStopper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.jms.InvalidClientIDException;
+import javax.jms.JMSException;
+import java.io.IOException;
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * Routes Broker operations to the correct messaging regions for processing.
@@ -649,7 +633,7 @@ public class RegionBroker extends EmptyBroker {
         if (LOG.isDebugEnabled()) {
             LOG.debug(getBrokerName() + " addBroker:" + info.getBrokerName() + " brokerInfo size : " + brokerInfos.size());
         }
-        addBrokerInClusterUpdate();
+        addBrokerInClusterUpdate(info);
     }
 
     @Override
@@ -662,7 +646,7 @@ public class RegionBroker extends EmptyBroker {
             if (LOG.isDebugEnabled()) {
                 LOG.debug(getBrokerName() + " removeBroker:" + info.getBrokerName() + " brokerInfo size : " + brokerInfos.size());
             }
-            removeBrokerInClusterUpdate();
+            removeBrokerInClusterUpdate(info);
         }
     }
 
@@ -913,19 +897,21 @@ public class RegionBroker extends EmptyBroker {
         }
     }
 
-    protected void addBrokerInClusterUpdate() {
+    protected void addBrokerInClusterUpdate(BrokerInfo info) {
         List<TransportConnector> connectors = this.brokerService.getTransportConnectors();
         for (TransportConnector connector : connectors) {
             if (connector.isUpdateClusterClients()) {
+                connector.addPeerBroker(info);
                 connector.updateClientClusterInfo();
             }
         }
     }
 
-    protected void removeBrokerInClusterUpdate() {
+    protected void removeBrokerInClusterUpdate(BrokerInfo info) {
         List<TransportConnector> connectors = this.brokerService.getTransportConnectors();
         for (TransportConnector connector : connectors) {
             if (connector.isUpdateClusterClients() && connector.isUpdateClusterClientsOnRemove()) {
+                connector.removePeerBroker(info);
                 connector.updateClientClusterInfo();
             }
         }

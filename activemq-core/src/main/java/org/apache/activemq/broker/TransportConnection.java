@@ -712,6 +712,9 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
             // send ConnectionCommand
             ConnectionControl command = this.connector.getConnectionControl();
             command.setFaultTolerant(broker.isFaultTolerantConfiguration());
+            if (info.isFailoverReconnect()) {
+                command.setRebalanceConnection(false);
+            }
             dispatchAsync(command);
         }
         return null;
