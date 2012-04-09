@@ -70,7 +70,7 @@ public class OnePrefetchAsyncConsumerTest extends EmbeddedBrokerTestSupport {
         long done = System.currentTimeMillis() + getMaxTestTime();
         synchronized (testMutex) {
            while (!testMutex.testCompleted && System.currentTimeMillis() < done) {
-              testMutex.wait();
+              testMutex.wait(TimeUnit.SECONDS.toMillis(5));
            }
         }
 
