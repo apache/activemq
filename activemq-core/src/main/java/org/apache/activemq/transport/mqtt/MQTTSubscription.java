@@ -16,11 +16,17 @@
  */
 package org.apache.activemq.transport.mqtt;
 
+import java.io.IOException;
+import java.util.zip.DataFormatException;
+
+import javax.jms.JMSException;
 import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageDispatch;
 import org.fusesource.mqtt.client.QoS;
+import org.fusesource.mqtt.codec.PUBLISH;
 
 /**
  * Keeps track of the MQTT client subscription so that acking is correctly done.
@@ -39,16 +45,20 @@ class MQTTSubscription {
     }
 
     MessageAck createMessageAck(MessageDispatch md) {
-
-        switch (qos) {
-            case AT_MOST_ONCE: {
-                return null;
-            }
-
-        }
         return new MessageAck(md, MessageAck.STANDARD_ACK_TYPE, 1);
     }
 
+    PUBLISH createPublish(ActiveMQMessage message) throws DataFormatException, IOException, JMSException {
+        PUBLISH publish = protocolConverter.convertMessage(message);
+        if (publish.qos().ordinal() > this.qos.ordinal()) {
+            publish.qos(this.qos);
+        }
+        return publish;
+    }
+
+    public boolean expectAck() {
+        return qos != QoS.AT_MOST_ONCE;
+    }
 
     public void setDestination(ActiveMQDestination destination) {
         this.destination = destination;

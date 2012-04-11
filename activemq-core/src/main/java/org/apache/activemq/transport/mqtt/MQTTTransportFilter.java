@@ -33,8 +33,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The StompTransportFilter normally sits on top of a TcpTransport that has been
- * configured with the StompWireFormat and is used to convert STOMP commands to
+ * The MQTTTransportFilter normally sits on top of a TcpTransport that has been
+ * configured with the StompWireFormat and is used to convert MQTT commands to
  * ActiveMQ commands. All of the conversion work is done by delegating to the
  * MQTTProtocolConverter
  */
@@ -73,7 +73,7 @@ public class MQTTTransportFilter extends TransportFilter implements MQTTTranspor
 
             protocolConverter.onMQTTCommand((MQTTFrame) command);
         } catch (IOException e) {
-            onException(e);
+            handleException(e);
         } catch (JMSException e) {
             onException(IOExceptionSupport.create(e));
         }
@@ -127,6 +127,11 @@ public class MQTTTransportFilter extends TransportFilter implements MQTTTranspor
     @Override
     public MQTTWireFormat getWireFormat() {
         return this.wireFormat;
+    }
+
+    public void handleException(IOException e) {
+        protocolConverter.onTransportError();
+        super.onException(e);
     }
 
 

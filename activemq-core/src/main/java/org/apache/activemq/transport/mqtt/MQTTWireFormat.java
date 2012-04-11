@@ -36,7 +36,7 @@ import org.fusesource.mqtt.codec.MQTTFrame;
 public class MQTTWireFormat implements WireFormat {
 
 
-    private static final int MAX_MESSAGE_LENGTH = 1024 * 1024 * 256;
+    static final int MAX_MESSAGE_LENGTH = 1024 * 1024 * 256;
 
     private boolean encodingEnabled = false;
     private int version = 1;
@@ -79,8 +79,7 @@ public class MQTTWireFormat implements WireFormat {
     public Object unmarshal(DataInput dataIn) throws IOException {
         byte header = dataIn.readByte();
 
-        byte digit = 0;
-
+        byte digit;
         int multiplier = 1;
         int length = 0;
         do {
@@ -89,6 +88,7 @@ public class MQTTWireFormat implements WireFormat {
             multiplier <<= 7;
         }
         while ((digit & 0x80) != 0);
+
         if (length >= 0) {
             if (length > MAX_MESSAGE_LENGTH) {
                 throw new IOException("The maximum message length was exceeded");

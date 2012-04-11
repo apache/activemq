@@ -62,6 +62,7 @@ public class MQTTInactivityMonitor extends TransportFilter {
     private long readCheckTime = DEFAULT_CHECK_TIME_MILLS;
     private long initialDelayTime = DEFAULT_CHECK_TIME_MILLS;
     private boolean keepAliveResponseRequired;
+    private MQTTProtocolConverter protocolConverter;
 
 
     private final Runnable readChecker = new Runnable() {
@@ -125,6 +126,9 @@ public class MQTTInactivityMonitor extends TransportFilter {
             }
             ASYNC_TASKS.execute(new Runnable() {
                 public void run() {
+                    if (protocolConverter != null) {
+                        protocolConverter.onTransportError();
+                    }
                     onException(new InactivityIOException("Channel was inactive for too (>" + readCheckTime + ") long: " + next.getRemoteAddress()));
                 }
 
@@ -223,6 +227,14 @@ public class MQTTInactivityMonitor extends TransportFilter {
 
     public boolean isMonitorStarted() {
         return this.monitorStarted.get();
+    }
+
+    public void setProtocolConverter(MQTTProtocolConverter protocolConverter) {
+        this.protocolConverter = protocolConverter;
+    }
+
+    public MQTTProtocolConverter getProtocolConverter() {
+        return protocolConverter;
     }
 
     synchronized void startMonitorThread() {

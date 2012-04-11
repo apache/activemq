@@ -28,7 +28,6 @@ import javax.jms.JMSException;
 import javax.jms.Message;
 import org.apache.activemq.broker.BrokerContext;
 import org.apache.activemq.command.*;
-import org.apache.activemq.transport.stomp.ProtocolException;
 import org.apache.activemq.util.ByteArrayOutputStream;
 import org.apache.activemq.util.ByteSequence;
 import org.apache.activemq.util.IOExceptionSupport;
@@ -56,16 +55,14 @@ class MQTTProtocolConverter {
     private final ProducerId producerId = new ProducerId(sessionId, 1);
     private final LongSequenceGenerator messageIdGenerator = new LongSequenceGenerator();
     private final LongSequenceGenerator consumerIdGenerator = new LongSequenceGenerator();
-    private final LongSequenceGenerator tempDestinationGenerator = new LongSequenceGenerator();
 
     private final ConcurrentHashMap<Integer, ResponseHandler> resposeHandlers = new ConcurrentHashMap<Integer, ResponseHandler>();
     private final ConcurrentHashMap<ConsumerId, MQTTSubscription> subscriptionsByConsumerId = new ConcurrentHashMap<ConsumerId, MQTTSubscription>();
     private final ConcurrentHashMap<UTF8Buffer, MQTTSubscription> mqttSubscriptionByTopic = new ConcurrentHashMap<UTF8Buffer, MQTTSubscription>();
-    private final ConcurrentHashMap<String, ActiveMQDestination> tempDestinations = new ConcurrentHashMap<String, ActiveMQDestination>();
-    private final ConcurrentHashMap<String, String> tempDestinationAmqToStompMap = new ConcurrentHashMap<String, String>();
     private final Map<UTF8Buffer, ActiveMQTopic> activeMQTopicMap = new LRUCache<UTF8Buffer, ActiveMQTopic>();
     private final Map<Destination, UTF8Buffer> mqttTopicMap = new LRUCache<Destination, UTF8Buffer>();
     private final Map<Short, MessageAck> consumerAcks = new LRUCache<Short, MessageAck>();
+    private final Map<Short, PUBREC> publisherRecs = new LRUCache<Short, PUBREC>();
     private final MQTTTransport mqttTransport;
 
     private final Object commnadIdMutex = new Object();
@@ -143,6 +140,18 @@ class MQTTProtocolConverter {
                 onMQTTPubAck(new PUBACK().decode(frame));
                 break;
             }
+            case PUBREC.TYPE: {
+                onMQTTPubRec(new PUBREC().decode(frame));
+                break;
+            }
+            case PUBREL.TYPE: {
+                onMQTTPubRel(new PUBREL().decode(frame));
+                break;
+            }
+            case PUBCOMP.TYPE: {
+                onMQTTPubComp(new PUBCOMP().decode(frame));
+                break;
+            }
             default:
                 handleException(new MQTTProtocolException("Unknown MQTTFrame type: " + frame.messageType(), true), frame);
         }
@@ -150,10 +159,10 @@ class MQTTProtocolConverter {
     }
 
 
-    void onMQTTConnect(final CONNECT connect) throws ProtocolException {
+    void onMQTTConnect(final CONNECT connect) throws MQTTProtocolException {
 
         if (connected.get()) {
-            throw new ProtocolException("All ready connected.");
+            throw new MQTTProtocolException("All ready connected.");
         }
         this.connect = connect;
 
@@ -268,7 +277,7 @@ class MQTTProtocolConverter {
             consumerInfo.setSubscriptionName(connect.clientId().toString());
         }
 
-        MQTTSubscription mqttSubscription = new MQTTSubscription(this, command.qos(), consumerInfo);
+        MQTTSubscription mqttSubscription = new MQTTSubscription(this, topic.qos(), consumerInfo);
 
 
         subscriptionsByConsumerId.put(id, mqttSubscription);
@@ -327,13 +336,16 @@ class MQTTProtocolConverter {
             MQTTSubscription sub = subscriptionsByConsumerId.get(md.getConsumerId());
             if (sub != null) {
                 MessageAck ack = sub.createMessageAck(md);
-                PUBLISH publish = convertMessage((ActiveMQMessage) md.getMessage());
-                if (ack != null) {
+                PUBLISH publish = sub.createPublish((ActiveMQMessage) md.getMessage());
+                if (ack != null && sub.expectAck()) {
                     synchronized (consumerAcks) {
                         consumerAcks.put(publish.messageId(), ack);
                     }
                 }
                 getMQTTTransport().sendToMQTT(publish.encode());
+                if (ack != null && !sub.expectAck()) {
+                    getMQTTTransport().sendToActiveMQ(ack);
+                }
             }
         } else if (command.getDataStructureType() == ConnectionError.DATA_STRUCTURE_TYPE) {
             // Pass down any unexpected async errors. Should this close the connection?
@@ -356,7 +368,38 @@ class MQTTProtocolConverter {
 
     void onMQTTPubAck(PUBACK command) {
         short messageId = command.messageId();
-        MessageAck ack = null;
+        MessageAck ack;
+        synchronized (consumerAcks) {
+            ack = consumerAcks.remove(messageId);
+        }
+        if (ack != null) {
+            getMQTTTransport().sendToActiveMQ(ack);
+        }
+    }
+
+    void onMQTTPubRec(PUBREC commnand) {
+        //from a subscriber - send a PUBREL in response
+        PUBREL pubrel = new PUBREL();
+        pubrel.messageId(commnand.messageId());
+        sendToMQTT(pubrel.encode());
+    }
+
+    void onMQTTPubRel(PUBREL command) {
+        PUBREC ack;
+        synchronized (publisherRecs) {
+            ack = publisherRecs.remove(command.messageId());
+        }
+        if (ack == null) {
+            LOG.warn("Unknown PUBREL: " + command.messageId() + " received");
+        }
+        PUBCOMP pubcomp = new PUBCOMP();
+        pubcomp.messageId(command.messageId());
+        sendToMQTT(pubcomp.encode());
+    }
+
+    void onMQTTPubComp(PUBCOMP command) {
+        short messageId = command.messageId();
+        MessageAck ack;
         synchronized (consumerAcks) {
             ack = consumerAcks.remove(messageId);
         }
@@ -461,19 +504,24 @@ class MQTTProtocolConverter {
         return mqttTransport;
     }
 
-    public ActiveMQDestination createTempDestination(String name, boolean topic) {
-        ActiveMQDestination rc = tempDestinations.get(name);
-        if (rc == null) {
-            if (topic) {
-                rc = new ActiveMQTempTopic(connectionId, tempDestinationGenerator.getNextSequenceId());
-            } else {
-                rc = new ActiveMQTempQueue(connectionId, tempDestinationGenerator.getNextSequenceId());
+    public void onTransportError() {
+        if (connect != null) {
+            if (connect.willTopic() != null && connect.willMessage() != null) {
+                try {
+                    PUBLISH publish = new PUBLISH();
+                    publish.topicName(connect.willTopic());
+                    publish.qos(connect.willQos());
+                    publish.payload(connect.willMessage());
+                    ActiveMQMessage message = convertMessage(publish);
+                    message.setProducerId(producerId);
+                    message.onSend();
+                    sendToActiveMQ(message, null);
+                } catch (Exception e) {
+                    LOG.warn("Failed to publish Will Message " + connect.willMessage());
+                }
+
             }
-            sendToActiveMQ(new DestinationInfo(connectionId, DestinationInfo.ADD_OPERATION_TYPE, rc), null);
-            tempDestinations.put(name, rc);
-            tempDestinationAmqToStompMap.put(rc.getQualifiedName(), name);
         }
-        return rc;
     }
 
 
@@ -482,7 +530,7 @@ class MQTTProtocolConverter {
 
             int heartBeatMS = heartBeat * 1000;
             MQTTInactivityMonitor monitor = getMQTTTransport().getInactivityMonitor();
-
+            monitor.setProtocolConverter(this);
             monitor.setReadCheckTime(heartBeatMS);
             monitor.setInitialDelayTime(heartBeatMS);
             monitor.startMonitorThread();
@@ -555,8 +603,11 @@ class MQTTProtocolConverter {
                             if (response.isException()) {
                                 LOG.warn("Failed to send MQTT Publish: ", command, ((ExceptionResponse) response).getException());
                             } else {
-                                PUBACK ack = new PUBACK();
+                                PUBREC ack = new PUBREC();
                                 ack.messageId(command.messageId());
+                                synchronized (publisherRecs) {
+                                    publisherRecs.put(command.messageId(), ack);
+                                }
                                 converter.getMQTTTransport().sendToMQTT(ack.encode());
                             }
                         }
@@ -565,27 +616,6 @@ class MQTTProtocolConverter {
                     break;
             }
         }
-        /*
-        final String receiptId = command.getHeaders().get(Stomp.Headers.RECEIPT_REQUESTED);
-        if (receiptId != null) {
-            return new ResponseHandler() {
-                public void onResponse(ProtocolConverter converter, Response response) throws IOException {
-                    if (response.isException()) {
-                        // Generally a command can fail.. but that does not invalidate the connection.
-                        // We report back the failure but we don't close the connection.
-                        Throwable exception = ((ExceptionResponse)response).getException();
-                        handleException(exception, command);
-                    } else {
-                        StompFrame sc = new StompFrame();
-                        sc.setAction(Stomp.Responses.RECEIPT);
-                        sc.setHeaders(new HashMap<String, String>(1));
-                        sc.getHeaders().put(Stomp.Headers.Response.RECEIPT_ID, receiptId);
-                        stompTransport.sendToStomp(sc);
-                    }
-                }
-            };
-        }
-        */
         return null;
     }
 
