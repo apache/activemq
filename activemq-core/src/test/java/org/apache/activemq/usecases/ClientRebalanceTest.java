@@ -16,11 +16,6 @@
  */
 package org.apache.activemq.usecases;
 
-import org.apache.activemq.ActiveMQConnectionFactory;
-import org.apache.activemq.JmsMultipleBrokersTestSupport;
-import org.apache.log4j.Logger;
-import org.springframework.core.io.ClassPathResource;
-
 import javax.jms.Connection;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
@@ -28,10 +23,20 @@ import javax.jms.MessageProducer;
 import javax.jms.Queue;
 import javax.jms.Session;
 
+import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.JmsMultipleBrokersTestSupport;
+import org.apache.log4j.Logger;
+import org.springframework.core.io.ClassPathResource;
+
 public class ClientRebalanceTest extends JmsMultipleBrokersTestSupport {
     private static final Logger LOG = Logger.getLogger(ClientRebalanceTest.class);
     private static final String QUEUE_NAME = "Test.ClientRebalanceTest";
-    
+
+    protected void setUp() throws Exception {
+        setAutoFail(true);
+        super.setUp();
+    }
+
     public void testRebalance() throws Exception {
         createBroker(new ClassPathResource("org/apache/activemq/usecases/rebalance-broker1.xml"));
         createBroker(new ClassPathResource("org/apache/activemq/usecases/rebalance-broker2.xml"));
@@ -40,9 +45,8 @@ public class ClientRebalanceTest extends JmsMultipleBrokersTestSupport {
 
         brokers.get("b1").broker.waitUntilStarted();
 
-
         LOG.info("Starting connection");
-        
+
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("failover:(tcp://localhost:61616,tcp://localhost:61617)?randomize=false");
         Connection conn = factory.createConnection();
         conn.start();
@@ -55,20 +59,17 @@ public class ClientRebalanceTest extends JmsMultipleBrokersTestSupport {
         Message msg = consumer.receive(2000);
         assertNotNull(msg);
 
-
         // introduce third broker
         createBroker(new ClassPathResource("org/apache/activemq/usecases/rebalance-broker3.xml"));
         brokers.get("b3").broker.waitUntilStarted();
-        
-        Thread.sleep(1000);
 
+        Thread.sleep(1000);
 
         LOG.info("Stopping broker 1");
 
-
         brokers.get("b1").broker.stop();
         brokers.get("b1").broker.waitUntilStopped();
-        
+
         Thread.sleep(1000);
         // should reconnect to some of the remaining brokers
         producer.send(message);
@@ -85,5 +86,4 @@ public class ClientRebalanceTest extends JmsMultipleBrokersTestSupport {
         msg = consumer.receive(2000);
         assertNotNull(msg);
     }
-    
 }
