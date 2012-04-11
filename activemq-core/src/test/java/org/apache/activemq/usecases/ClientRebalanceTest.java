@@ -37,6 +37,7 @@ public class ClientRebalanceTest extends JmsMultipleBrokersTestSupport {
         super.setUp();
     }
 
+
     public void testRebalance() throws Exception {
         createBroker(new ClassPathResource("org/apache/activemq/usecases/rebalance-broker1.xml"));
         createBroker(new ClassPathResource("org/apache/activemq/usecases/rebalance-broker2.xml"));
@@ -62,15 +63,15 @@ public class ClientRebalanceTest extends JmsMultipleBrokersTestSupport {
         // introduce third broker
         createBroker(new ClassPathResource("org/apache/activemq/usecases/rebalance-broker3.xml"));
         brokers.get("b3").broker.waitUntilStarted();
-
-        Thread.sleep(1000);
+        
+        Thread.sleep(3000);
 
         LOG.info("Stopping broker 1");
 
         brokers.get("b1").broker.stop();
         brokers.get("b1").broker.waitUntilStopped();
-
-        Thread.sleep(1000);
+        
+        Thread.sleep(3000);
         // should reconnect to some of the remaining brokers
         producer.send(message);
         msg = consumer.receive(2000);
