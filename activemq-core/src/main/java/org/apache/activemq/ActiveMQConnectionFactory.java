@@ -24,6 +24,7 @@ import java.util.Properties;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadFactory;
+
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
 import javax.jms.ExceptionListener;
@@ -33,6 +34,7 @@ import javax.jms.QueueConnectionFactory;
 import javax.jms.TopicConnection;
 import javax.jms.TopicConnectionFactory;
 import javax.naming.Context;
+
 import org.apache.activemq.blob.BlobTransferPolicy;
 import org.apache.activemq.jndi.JNDIBaseStorable;
 import org.apache.activemq.management.JMSStatsImpl;
@@ -220,9 +222,11 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
         return createActiveMQConnection(userName, password);
     }
 
+    /**
+     * @returns the StatsImpl associated with this ConnectionFactory.
+     */
     public StatsImpl getStats() {
-        // TODO
-        return null;
+        return this.factoryStats;
     }
 
     // /////////////////////////////////////////////
