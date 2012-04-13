@@ -121,7 +121,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
     protected CountDownLatch localStartedLatch = new CountDownLatch(1);
     protected final AtomicBoolean lastConnectSucceeded = new AtomicBoolean(false);
     protected NetworkBridgeConfiguration configuration;
-    protected NetworkBridgeFilterFactory filterFactory;
+    protected final NetworkBridgeFilterFactory defaultFilterFactory = new DefaultNetworkBridgeFilterFactory();
 
     protected final BrokerId remoteBrokerPath[] = new BrokerId[] {null};
     protected Object brokerInfoMutex = new Object();
@@ -1188,18 +1188,14 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
     }
 
     protected NetworkBridgeFilter createNetworkBridgeFilter(ConsumerInfo info) throws IOException {
-        if (filterFactory == null)  {
-            if (brokerService != null && brokerService.getDestinationPolicy() != null) {
-                PolicyEntry entry = brokerService.getDestinationPolicy().getEntryFor(info.getDestination());
-                if (entry != null) {
-                    filterFactory = entry.getNetworkBridgeFilterFactory();
-                }
-            }
-            if (filterFactory == null) {
-                filterFactory = new DefaultNetworkBridgeFilterFactory();
+        NetworkBridgeFilterFactory filterFactory = defaultFilterFactory;
+        if (brokerService != null && brokerService.getDestinationPolicy() != null) {
+            PolicyEntry entry = brokerService.getDestinationPolicy().getEntryFor(info.getDestination());
+            if (entry != null && entry.getNetworkBridgeFilterFactory() != null) {
+                filterFactory = entry.getNetworkBridgeFilterFactory();
             }
         }
-         return filterFactory.create(info, getRemoteBrokerPath(), configuration.getNetworkTTL() );
+        return filterFactory.create(info, getRemoteBrokerPath(), configuration.getNetworkTTL());
     }
 
     protected void serviceLocalBrokerInfo(Command command) throws InterruptedException {
