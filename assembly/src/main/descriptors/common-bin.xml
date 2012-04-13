@@ -131,6 +131,7 @@
       <outputDirectory>/lib/optional</outputDirectory>
       <unpack>false</unpack>
       <scope>runtime</scope>
+      <useTransitiveFiltering>true</useTransitiveFiltering>
       <includes>
         <include>${pom.groupId}:activemq-optional</include>
         <include>${pom.groupId}:activemq-pool</include>
@@ -167,6 +168,8 @@
         <include>org.apache.velocity:velocity</include>
         <include>net.sf.josql:josql</include>
         <include>org.jasypt:jasypt</include>
+        <!-- leveldb -->
+        <include>org.fusesource.fuse-extra:fusemq-leveldb</include>
       </includes>
     </dependencySet>
     <dependencySet>

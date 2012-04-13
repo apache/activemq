@@ -149,7 +149,10 @@
       <artifactId>commons-pool</artifactId>
       <optional>true</optional>
     </dependency>
-
+    <dependency>
+	    <groupId>org.fusesource.fuse-extra</groupId>
+	    <artifactId>fusemq-leveldb</artifactId>
+	  </dependency>
     <dependency>
       <groupId>activesoap</groupId>
       <artifactId>jaxp-api</artifactId>
