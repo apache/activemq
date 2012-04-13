@@ -16,7 +16,12 @@
  */
 package org.apache.activemq.usecases;
 
+import java.util.Random;
+import java.util.HashSet;
 import java.util.Vector;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import javax.jms.Connection;
 import javax.jms.JMSException;
 import javax.jms.Message;
@@ -33,9 +38,8 @@ import org.apache.activemq.broker.jmx.DurableSubscriptionViewMBean;
 import org.apache.activemq.broker.jmx.TopicViewMBean;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
-import org.apache.activemq.command.ActiveMQDestination;
-import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
+import org.apache.activemq.command.MessageId;
 import org.apache.activemq.store.jdbc.JDBCPersistenceAdapter;
 import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
 import org.apache.activemq.util.Wait;
@@ -51,7 +55,7 @@ public class DurableSubscriptionOfflineTest extends org.apache.activemq.TestSupp
     public boolean keepDurableSubsActive = true;
     private BrokerService broker;
     private ActiveMQTopic topic;
-    private Vector<Exception> exceptions = new Vector<Exception>();
+    private Vector<Throwable> exceptions = new Vector<Throwable>();
 
     protected ActiveMQConnectionFactory createConnectionFactory() throws Exception {
         ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory("vm://" + getName(true));
@@ -962,6 +966,95 @@ public class DurableSubscriptionOfflineTest extends org.apache.activemq.TestSupp
         assertEquals("offline consumer got all", sent, listener.count);
     }
 
+    public void testNoDuplicateOnConcurrentSendTranCommitAndActivate() throws Exception {
+        final int messageCount = 1000;
+        Connection con = null;
+        Session session = null;
+        final int numConsumers = 10;
+        for (int i = 0; i <= numConsumers; i++) {
+            con = createConnection("cli" + i);
+            session = con.createSession(false, Session.AUTO_ACKNOWLEDGE);
+            session.createDurableSubscriber(topic, "SubsId", null, true);
+            session.close();
+            con.close();
+        }
+
+        class CheckForDupsClient implements Runnable {
+            HashSet<Long> ids = new HashSet<Long>();
+            final int id;
+
+            public CheckForDupsClient(int id) {
+                this.id = id;
+            }
+
+            @Override
+            public void run() {
+                try {
+                    Connection con = createConnection("cli" + id);
+                    Session session = con.createSession(false, Session.AUTO_ACKNOWLEDGE);
+                    for (int j=0;j<2;j++) {
+                        MessageConsumer consumer = session.createDurableSubscriber(topic, "SubsId", null, true);
+                        for (int i = 0; i < messageCount/2; i++) {
+                            Message message = consumer.receive(4000);
+                            assertNotNull(message);
+                            long producerSequenceId = new MessageId(message.getJMSMessageID()).getProducerSequenceId();
+                            assertTrue("ID=" + id + " not a duplicate: " + producerSequenceId, ids.add(producerSequenceId));
+                        }
+                        consumer.close();
+                    }
+
+                    // verify no duplicates left
+                    MessageConsumer consumer = session.createDurableSubscriber(topic, "SubsId", null, true);
+                    Message message = consumer.receive(4000);
+                    if (message != null) {
+                        long producerSequenceId = new MessageId(message.getJMSMessageID()).getProducerSequenceId();
+                        assertTrue("ID=" + id + " not a duplicate: " + producerSequenceId, ids.add(producerSequenceId));
+                    }
+                    assertNull(message);
+
+
+                    session.close();
+                    con.close();
+                } catch (Throwable e) {
+                    e.printStackTrace();
+                    exceptions.add(e);
+                }
+            }
+        }
+
+
+        final String payLoad = new String(new byte[1000]);
+        con = createConnection();
+        final Session sendSession = con.createSession(true, Session.SESSION_TRANSACTED);
+        MessageProducer producer = sendSession.createProducer(topic);
+        for (int i = 0; i < messageCount; i++) {
+            producer.send(sendSession.createTextMessage(payLoad));
+        }
+
+        ExecutorService executorService = Executors.newCachedThreadPool();
+
+        // concurrent commit and activate
+        executorService.execute(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    sendSession.commit();
+                } catch (JMSException e) {
+                    e.printStackTrace();
+                    exceptions.add(e);
+                }
+            }
+        });
+        for (int i = 0; i < numConsumers; i++) {
+            executorService.execute(new CheckForDupsClient(i));
+        }
+
+        executorService.shutdown();
+        executorService.awaitTermination(5, TimeUnit.MINUTES);
+        con.close();
+
+        assertTrue("no exceptions: " + exceptions, exceptions.isEmpty());
+    }
 
     public void testUnmatchedSubUnsubscribeDeletesAll() throws Exception {
         // create offline subs 1
@@ -1290,6 +1383,120 @@ public class DurableSubscriptionOfflineTest extends org.apache.activemq.TestSupp
             session.close();
             con.close();
         }
+    }
+
+
+    public void testRedeliveryFlag() throws Exception {
+
+        Connection con;
+        Session session;
+        final int numClients = 2;
+        for (int i=0; i<numClients; i++) {
+            con = createConnection("cliId" + i);
+            session = con.createSession(false, Session.CLIENT_ACKNOWLEDGE);
+            session.createDurableSubscriber(topic, "SubsId", "filter = 'true'", true);
+            session.close();
+            con.close();
+        }
+
+        final Random random = new Random();
+
+        // send messages
+        con = createConnection();
+        session = con.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        MessageProducer producer = session.createProducer(null);
+
+        final int count = 1000;
+        for (int i = 0; i < count; i++) {
+            Message message = session.createMessage();
+            message.setStringProperty("filter", "true");
+            producer.send(topic, message);
+        }
+        session.close();
+        con.close();
+
+        class Client implements Runnable {
+            Connection con;
+            Session session;
+            String clientId;
+            Client(String id) {
+                this.clientId = id;
+            }
+
+            @Override
+            public void run() {
+                MessageConsumer consumer = null;
+                Message message = null;
+
+                try {
+                    for (int i = -1; i < random.nextInt(10); i++) {
+                        // go online and take none
+                        con = createConnection(clientId);
+                        session = con.createSession(false, Session.CLIENT_ACKNOWLEDGE);
+                        consumer = session.createDurableSubscriber(topic, "SubsId", "filter = 'true'", true);
+                        session.close();
+                        con.close();
+                    }
+
+                    // consume 1
+                    con = createConnection(clientId);
+                    session = con.createSession(false, Session.CLIENT_ACKNOWLEDGE);
+                    consumer = session.createDurableSubscriber(topic, "SubsId", "filter = 'true'", true);
+                    message = consumer.receive(4000);
+                    assertNotNull("got message", message);
+                    // it is not reliable as it depends on broker dispatch rather than client receipt
+                    // and delivered ack
+                    //  assertFalse("not redelivered", message.getJMSRedelivered());
+                    message.acknowledge();
+                    session.close();
+                    con.close();
+
+                    // peek all
+                    for (int j = 0; j < random.nextInt(10); j++) {
+                        con = createConnection(clientId);
+                        session = con.createSession(false, Session.CLIENT_ACKNOWLEDGE);
+                        consumer = session.createDurableSubscriber(topic, "SubsId", "filter = 'true'", true);
+
+                        for (int i = 0; i < count - 1; i++) {
+                            assertNotNull("got message", consumer.receive(4000));
+                        }
+                        // no ack
+                        session.close();
+                        con.close();
+                    }
+
+
+                    // consume remaining
+                    con = createConnection(clientId);
+                    session = con.createSession(false, Session.CLIENT_ACKNOWLEDGE);
+                    consumer = session.createDurableSubscriber(topic, "SubsId", "filter = 'true'", true);
+
+                    for (int i = 0; i < count - 1; i++) {
+                        message = consumer.receive(4000);
+                        assertNotNull("got message", message);
+                        assertTrue("is redelivered", message.getJMSRedelivered());
+                    }
+                    message.acknowledge();
+                    session.close();
+                    con.close();
+
+                    con = createConnection(clientId);
+                    session = con.createSession(false, Session.CLIENT_ACKNOWLEDGE);
+                    consumer = session.createDurableSubscriber(topic, "SubsId", "filter = 'true'", true);
+                    assertNull("no message left", consumer.receive(2000));
+                } catch (Throwable throwable) {
+                    throwable.printStackTrace();
+                    exceptions.add(throwable);
+                }
+            }
+        }
+        ExecutorService executorService = Executors.newCachedThreadPool();
+        for (int i=0; i<numClients; i++) {
+            executorService.execute(new Client("cliId" + i));
+        }
+        executorService.shutdown();
+        executorService.awaitTermination(10, TimeUnit.MINUTES);
+        assertTrue("No exceptions", exceptions.isEmpty());
     }
 
     public static class Listener implements MessageListener {

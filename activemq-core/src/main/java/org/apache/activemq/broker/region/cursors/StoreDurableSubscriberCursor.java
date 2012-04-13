@@ -93,16 +93,15 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
         if (isStarted()) {
             if (subscription.isKeepDurableSubsActive()) {
                 super.gc();
-                super.getMessageAudit().clear();
                 for (PendingMessageCursor tsp : storePrefetches) {
                     tsp.gc();
-                    tsp.getMessageAudit().clear();
                 }
             } else {
                 super.stop();
                 for (PendingMessageCursor tsp : storePrefetches) {
                     tsp.stop();
                 }
+                getMessageAudit().clear();
             }
         }
     }

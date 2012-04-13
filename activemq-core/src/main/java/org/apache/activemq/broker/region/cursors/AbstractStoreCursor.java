@@ -243,6 +243,7 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
         batchList.clear();
         clearIterator(false);
         batchResetNeeded = true;
+        // wonder do we need to determine size here, it may change before restart
         resetSize();
         setCacheEnabled(false);
     }

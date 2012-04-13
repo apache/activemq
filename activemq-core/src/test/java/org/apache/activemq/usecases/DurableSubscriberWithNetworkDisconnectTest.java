@@ -214,7 +214,7 @@ public class DurableSubscriberWithNetworkDisconnectTest extends JmsMultipleBroke
             }
 
              if (failover) {
-                options += "?maxReconnectAttempts=1)";
+                options += "?maxReconnectAttempts=0)";
              }
 
             options += "?useExponentialBackOff=" + exponentialBackOff;

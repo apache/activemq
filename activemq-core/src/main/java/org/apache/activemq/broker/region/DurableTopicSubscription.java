@@ -163,7 +163,7 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
     }
 
     public void deactivate(boolean keepDurableSubsActive) throws Exception {
-        LOG.debug("Deactivating " + this);
+        LOG.debug("Deactivating keepActive=" + keepDurableSubsActive + ", " + this);
         active.set(false);
         offlineTimestamp.set(System.currentTimeMillis());
         this.usageManager.getMemoryUsage().removeUsageListener(this);
@@ -187,9 +187,10 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
             } else {
                 redeliveredMessages.put(node.getMessageId(), Integer.valueOf(1));
             }
-            if (keepDurableSubsActive&& pending.isTransient()) {
+            if (keepDurableSubsActive && pending.isTransient()) {
                 synchronized (pending) {
                     pending.addMessageFirst(node);
+                    pending.rollback(node.getMessageId());
                 }
             } else {
                 node.decrementReferenceCount();

@@ -32,12 +32,15 @@ import java.util.Map;
 import java.util.Random;
 
 import org.apache.kahadb.page.PageFile;
+import org.apache.kahadb.page.Transaction;
 import org.apache.kahadb.util.LongMarshaller;
 import org.apache.kahadb.util.StringMarshaller;
 import org.apache.kahadb.util.VariableMarshaller;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class BTreeIndexTest extends IndexTestSupport {
-
+    private static final Logger LOG = LoggerFactory.getLogger(BTreeIndexTest.class);
     private NumberFormat nf;
 
     @Override
@@ -127,7 +130,7 @@ public class BTreeIndexTest extends IndexTestSupport {
     }
 
     public void testIteration() throws Exception {
-        createPageFileAndIndex(100);
+        createPageFileAndIndex(500);
         BTreeIndex<String,Long> index = ((BTreeIndex<String,Long>)this.index);
         this.index.load(tx);
         tx.commit();
@@ -139,6 +142,8 @@ public class BTreeIndexTest extends IndexTestSupport {
         tx.commit();
         this.index.load(tx);
         tx.commit();
+
+        exerciseAnotherIndex(tx);
 
         // BTree should iterate it in sorted order.
         int counter=0;
@@ -189,18 +194,77 @@ public class BTreeIndexTest extends IndexTestSupport {
         createPageFileAndIndex(100);
         BTreeIndex<String,Long> index = ((BTreeIndex<String,Long>)this.index);
         this.index.load(tx);
+
+        long id = tx.allocate().getPageId();
         tx.commit();
 
-        final int count = 4000;
-        doInsert(count);
+        BTreeIndex<String, String> sindex = new BTreeIndex<String,String>(pf, id);
+        sindex.setKeyMarshaller(StringMarshaller.INSTANCE);
+        sindex.setValueMarshaller(StringMarshaller.INSTANCE);
+        sindex.load(tx);
+
+        tx.commit();
+
+        final int count = 5000;
+
+        String payload = new String(new byte[2]);
+        for (int i = 0; i < count; i++) {
+            index.put(tx, key(i), (long)i);
+            sindex.put(tx, key(i), String.valueOf(i) + payload);
+            tx.commit();
+        }
+
 
         Random rand = new Random(System.currentTimeMillis());
         int i = 0, prev = 0;
-        while (!index.isEmpty(tx)) {
+        while (!index.isEmpty(tx) || !sindex.isEmpty(tx)) {
             prev = i;
             i = rand.nextInt(count);
             try {
                 index.remove(tx, key(i));
+                sindex.remove(tx, key(i));
+            } catch (Exception e) {
+                e.printStackTrace();
+                fail("unexpected exception on " + i + ", prev: " + prev + ", ex: " + e);
+            }
+        }
+    }
+
+    public void testRandomAddRemove() throws Exception {
+
+        createPageFileAndIndex(1024);
+        BTreeIndex<String,Long> index = ((BTreeIndex<String,Long>)this.index);
+        this.index.load(tx);
+
+        long id = tx.allocate().getPageId();
+        tx.commit();
+
+        BTreeIndex<String, String> sindex = new BTreeIndex<String,String>(pf, id);
+        sindex.setKeyMarshaller(StringMarshaller.INSTANCE);
+        sindex.setValueMarshaller(StringMarshaller.INSTANCE);
+        sindex.load(tx);
+
+        tx.commit();
+
+        Random rand = new Random(System.currentTimeMillis());
+        final int count = 50000;
+
+        String payload = new String(new byte[200]);
+        for (int i = 0; i < count; i++) {
+            int insertIndex = rand.nextInt(count);
+            index.put(tx, key(insertIndex), (long)insertIndex);
+            sindex.put(tx, key(insertIndex), String.valueOf(insertIndex) + payload);
+            tx.commit();
+        }
+
+
+        int i = 0, prev = 0;
+        while (!index.isEmpty(tx) || !sindex.isEmpty(tx)) {
+            prev = i;
+            i = rand.nextInt(count);
+            try {
+                index.remove(tx, key(i));
+                sindex.remove(tx, key(i));
             } catch (Exception e) {
                 e.printStackTrace();
                 fail("unexpected exception on " + i + ", prev: " + prev + ", ex: " + e);
@@ -219,13 +283,46 @@ public class BTreeIndexTest extends IndexTestSupport {
 
         index.remove(tx, key(3697));
         index.remove(tx, key(1566));
+
+        tx.commit();
+        index.clear(tx);
+        tx.commit();
+
+        doInsert(count);
+
+        Iterator<Map.Entry<String, Long>> iterator = index.iterator(tx, key(1345));
+        while (iterator.hasNext()) {
+            Map.Entry<String, Long> val = iterator.next();
+        }
+
+        doRemoveBackwards(666);
+        Map.Entry<String, Long> first = index.getFirst(tx);
+        assertEquals(first.getValue(), Long.valueOf(666L));
+
+        for (int i=0; i<2000; i++) {
+            Map.Entry<String, Long> last = index.getLast(tx);
+            index.remove(tx, last.getKey());
+            tx.commit();
+        }
+
+        exerciseAnotherIndex(tx);
+
+        iterator = index.iterator(tx, key(100));
+        while (iterator.hasNext()) {
+            Map.Entry<String, Long> val = iterator.next();
+        }
+
+        Map.Entry<String, Long> last = index.getLast(tx);
+        assertEquals(last.getValue(), Long.valueOf(1999L));
+        index.clear(tx);
+        assertNull(index.getLast(tx));
     }
 
     public void testLargeValue() throws Exception {
         //System.setProperty("maxKahaDBTxSize", "" + (1024*1024*1024));
         pf = new PageFile(directory, getClass().getName());
         pf.setPageSize(4*1024);
-        pf.setEnablePageCaching(false);
+        //pf.setEnablePageCaching(false);
         pf.load();
         tx = pf.tx();
         long id = tx.allocate().getPageId();
@@ -262,6 +359,7 @@ public class BTreeIndexTest extends IndexTestSupport {
         tx.commit();
         tx =  pf.tx();
         for (long i=0; i<numMessages; i++) {
+            assertTrue(test.containsKey(tx, i));
             test.get(tx, i);
         }
         tx.commit();
@@ -270,7 +368,6 @@ public class BTreeIndexTest extends IndexTestSupport {
     public void testLargeValueOverflow() throws Exception {
         pf = new PageFile(directory, getClass().getName());
         pf.setPageSize(4*1024);
-        pf.setEnablePageCaching(false);
         pf.setWriteBatchSize(1);
         pf.load();
         tx = pf.tx();
@@ -292,12 +389,104 @@ public class BTreeIndexTest extends IndexTestSupport {
         }
         tx.commit();
 
+        exerciseAnotherIndex(tx);
+
         tx =  pf.tx();
         for (long i=0; i<numMessages; i++) {
+            assertTrue(test.containsKey(tx, i));
             String s = test.get(tx, i);
             assertEquals("len is as expected", stringSize, s.length());
         }
         tx.commit();
+    }
+
+    public void exerciseAnotherIndex(Transaction tx) throws Exception {
+        long id = tx.allocate().getPageId();
+
+        ListIndex<String, String> test = new ListIndex<String, String>(pf, id);
+        test.setKeyMarshaller(StringMarshaller.INSTANCE);
+        test.setValueMarshaller(StringMarshaller.INSTANCE);
+        test.load(tx);
+        tx.commit();
+
+        final int count = 10000;
+
+        String payload = new String(new byte[1]);
+        for (int i = 0; i < count; i++) {
+            test.put(tx, key(i), String.valueOf(i) + payload);
+        }
+        tx.commit();
+
+        test.clear(tx);
+        tx.commit();
+    }
+
+    public void testListIndexConsistancyOverTime() throws Exception {
+
+        final int NUM_ITERATIONS = 50;
+
+        pf = new PageFile(directory, getClass().getName());
+        pf.setPageSize(4*1024);
+        //pf.setEnablePageCaching(false);
+        pf.setWriteBatchSize(1);
+        pf.load();
+        tx = pf.tx();
+        long id = tx.allocate().getPageId();
+
+        ListIndex<String, String> test = new ListIndex<String, String>(pf, id);
+        test.setKeyMarshaller(StringMarshaller.INSTANCE);
+        test.setValueMarshaller(StringMarshaller.INSTANCE);
+        test.load(tx);
+        tx.commit();
+
+        int expectedListEntries = 0;
+        int nextSequenceId = 0;
+
+        LOG.info("Loading up the ListIndex with "+NUM_ITERATIONS+" entires and sparsely populating the sequences.");
+
+        for (int i = 0; i < NUM_ITERATIONS; ++i) {
+            test.add(tx, String.valueOf(expectedListEntries++), new String("AA"));
+
+            for (int j = 0; j < expectedListEntries; j++) {
+
+                String sequenceSet = test.get(tx, String.valueOf(j));
+
+                int startSequenceId = nextSequenceId;
+                for (int ix = 0; ix < NUM_ITERATIONS; ix++) {
+                    sequenceSet.concat(String.valueOf(nextSequenceId++));
+                    test.put(tx, String.valueOf(j), sequenceSet);
+                }
+
+                sequenceSet = test.get(tx, String.valueOf(j));
+
+                for (int ix = 0; ix < NUM_ITERATIONS - 1; ix++) {
+                    //sequenceSet.remove(startSequenceId++);
+                    test.put(tx, String.valueOf(j), String.valueOf(j));
+                }
+            }
+        }
+
+        exerciseAnotherIndex(tx);
+        LOG.info("Checking if Index has the expected number of entries.");
+
+        for (int i = 0; i < NUM_ITERATIONS; ++i) {
+            assertTrue("List should contain Key["+i+"]",test.containsKey(tx, String.valueOf(i)));
+            assertNotNull("List contents of Key["+i+"] should not be null", test.get(tx, String.valueOf(i)));
+        }
+
+        LOG.info("Index has the expected number of entries.");
+
+        assertEquals(expectedListEntries, test.size());
+
+        for (int i = 0; i < NUM_ITERATIONS; ++i) {
+            LOG.debug("Size of ListIndex before removal of entry ["+i+"] is: " + test.size());
+
+            assertTrue("List should contain Key["+i+"]",test.containsKey(tx, String.valueOf(i)));
+            assertNotNull("List contents of Key["+i+"] should not be null", test.remove(tx, String.valueOf(i)));
+            LOG.debug("Size of ListIndex after removal of entry ["+i+"] is: " + test.size());
+
+            assertEquals(expectedListEntries - (i + 1), test.size());
+        }
     }
 
     void doInsertReverse(int count) throws Exception {
