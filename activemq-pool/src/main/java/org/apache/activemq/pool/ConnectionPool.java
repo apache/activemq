@@ -53,8 +53,7 @@ public class ConnectionPool {
     public ConnectionPool(ActiveMQConnection connection, ObjectPoolFactory poolFactory) {
         this(connection, new ConcurrentHashMap<SessionKey, SessionPool>(), poolFactory);
         // Add a transport Listener so that we can notice if this connection
-        // should be expired due to
-        // a connection failure.
+        // should be expired due to a connection failure.
         connection.addTransportListener(new TransportListener() {
             public void onCommand(Object command) {
             }
@@ -71,10 +70,9 @@ public class ConnectionPool {
             public void transportResumed() {
             }
         });
-        //
+
         // make sure that we set the hasFailed flag, in case the transport already failed
         // prior to the addition of our new TransportListener
-        //
         if(connection.isTransportFailed()) {
             hasFailed = true;
         }

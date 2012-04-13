@@ -34,6 +34,7 @@ import javax.jms.QueueBrowser;
 import javax.jms.QueueReceiver;
 import javax.jms.QueueSender;
 import javax.jms.QueueSession;
+import javax.jms.Session;
 import javax.jms.StreamMessage;
 import javax.jms.TemporaryQueue;
 import javax.jms.TemporaryTopic;
@@ -43,7 +44,6 @@ import javax.jms.TopicPublisher;
 import javax.jms.TopicSession;
 import javax.jms.TopicSubscriber;
 import javax.jms.XASession;
-import javax.jms.Session;
 import javax.transaction.xa.XAResource;
 
 import org.apache.activemq.ActiveMQMessageProducer;
@@ -54,9 +54,6 @@ import org.apache.activemq.AlreadyClosedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- *
- */
 public class PooledSession implements Session, TopicSession, QueueSession, XASession {
     private static final transient Logger LOG = LoggerFactory.getLogger(PooledSession.class);
 
@@ -70,12 +67,18 @@ public class PooledSession implements Session, TopicSession, QueueSession, XASes
 
     private final CopyOnWriteArrayList<MessageConsumer> consumers = new CopyOnWriteArrayList<MessageConsumer>();
     private final CopyOnWriteArrayList<QueueBrowser> browsers = new CopyOnWriteArrayList<QueueBrowser>();
+    private final CopyOnWriteArrayList<PooledSessionEventListener> tempDestEventListeners =
+        new CopyOnWriteArrayList<PooledSessionEventListener>();
     private boolean isXa;
 
     public PooledSession(ActiveMQSession aSession, SessionPool sessionPool) {
         this.session = aSession;
         this.sessionPool = sessionPool;
         this.transactional = session.isTransacted();
+    }
+
+    public void addTempDestEventListener(PooledSessionEventListener listener) {
+        this.tempDestEventListeners.add(listener);
     }
 
     protected boolean isIgnoreClose() {
@@ -121,6 +124,7 @@ public class PooledSession implements Session, TopicSession, QueueSession, XASes
                 consumers.clear();
                 browsers.clear();
             }
+
             if (invalidate) {
                 // lets close the session and not put the session back into
                 // the pool
@@ -172,11 +176,29 @@ public class PooledSession implements Session, TopicSession, QueueSession, XASes
     }
 
     public TemporaryQueue createTemporaryQueue() throws JMSException {
-        return getInternalSession().createTemporaryQueue();
+        TemporaryQueue result;
+
+        result = getInternalSession().createTemporaryQueue();
+
+        // Notify all of the listeners of the created temporary Queue.
+        for (PooledSessionEventListener listener : this.tempDestEventListeners) {
+            listener.onTemporaryQueueCreate(result);
+        }
+
+        return result;
     }
 
     public TemporaryTopic createTemporaryTopic() throws JMSException {
-        return getInternalSession().createTemporaryTopic();
+        TemporaryTopic result;
+
+        result = getInternalSession().createTemporaryTopic();
+
+        // Notify all of the listeners of the created temporary Topic.
+        for (PooledSessionEventListener listener : this.tempDestEventListeners) {
+            listener.onTemporaryTopicCreate(result);
+        }
+
+        return result;
     }
 
     public void unsubscribe(String s) throws JMSException {
@@ -299,10 +321,12 @@ public class PooledSession implements Session, TopicSession, QueueSession, XASes
     /**
      * Callback invoked when the consumer is closed.
      * <p/>
-     * This is used to keep track of an explicit closed consumer created by this session,
-     * by which we know do not need to keep track of the consumer, as its already closed.
+     * This is used to keep track of an explicit closed consumer created by this
+     * session, by which we know do not need to keep track of the consumer, as
+     * its already closed.
      *
-     * @param consumer the consumer which is being closed
+     * @param consumer
+     *            the consumer which is being closed
      */
     protected void onConsumerClose(MessageConsumer consumer) {
         consumers.remove(consumer);
@@ -343,8 +367,10 @@ public class PooledSession implements Session, TopicSession, QueueSession, XASes
 
     private MessageConsumer addConsumer(MessageConsumer consumer) {
         consumers.add(consumer);
-        // must wrap in PooledMessageConsumer to ensure the onConsumerClose method is invoked
-        // when the returned consumer is closed, to avoid memory leak in this session class
+        // must wrap in PooledMessageConsumer to ensure the onConsumerClose
+        // method is invoked
+        // when the returned consumer is closed, to avoid memory leak in this
+        // session class
         // in case many consumers is created
         return new PooledMessageConsumer(this, consumer);
     }
