@@ -162,6 +162,7 @@ public class DurableSubscriptionSelectorTest extends org.apache.activemq.TestSup
 
     @Override
     protected void setUp() throws Exception {
+        setAutoFail(true);
         super.setUp();
 
         startBroker(true);
