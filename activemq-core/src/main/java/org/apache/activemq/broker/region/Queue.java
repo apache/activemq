@@ -364,7 +364,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
             messages.setUseCache(isUseCache());
             messages.setMemoryUsageHighWaterMark(getCursorMemoryHighWaterMark());
             final int messageCount = store.getMessageCount();
-            if (messages.isRecoveryRequired()) {
+            if (messageCount > 0 && messages.isRecoveryRequired()) {
                 BatchMessageRecoveryListener listener = new BatchMessageRecoveryListener(messageCount);
                 do {
                    listener.reset();
