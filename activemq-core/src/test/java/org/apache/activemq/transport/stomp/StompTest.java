@@ -1418,7 +1418,7 @@ public class StompTest extends CombinationTestSupport {
         assertTrue(frame.startsWith("CONNECTED"));
 
         // unsubscribe
-        frame = "UNSUBSCRIBE\n" + "destination:/topic/" + getQueueName() + "\n" + "ack:auto\nactivemq.subscriptionName:test\n\n" + Stomp.NULL;
+        frame = "UNSUBSCRIBE\n" + "destination:/topic/" + getQueueName() + "\n" + "activemq.subscriptionName:test\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
         frame = "DISCONNECT\n" + "\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
@@ -1426,6 +1426,7 @@ public class StompTest extends CombinationTestSupport {
             Thread.sleep(400);
         } catch (InterruptedException e){}
         assertEquals(view.getDurableTopicSubscribers().length, 0);
+        assertEquals(view.getInactiveDurableTopicSubscribers().length, 0);
     }
 
     public void testMessageIdHeader() throws Exception {
