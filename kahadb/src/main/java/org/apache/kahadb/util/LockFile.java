@@ -51,36 +51,47 @@ public class LockFile {
             return;
         }
 
-        if( lockCounter>0 ) {
+        if (lockCounter > 0) {
             return;
         }
 
         IOHelper.mkdirs(file.getParentFile());
-        if (System.getProperty(getVmLockKey()) != null) {
-            throw new IOException("File '" + file + "' could not be locked as lock is already held for this jvm.");
+        synchronized (LockFile.class) {
+            if (System.getProperty(getVmLockKey()) != null) {
+                throw new IOException("File '" + file + "' could not be locked as lock is already held for this jvm.");
+            }
+            System.setProperty(getVmLockKey(), new Date().toString());
         }
-        if (lock == null) {
-            readFile = new RandomAccessFile(file, "rw");
-            IOException reason = null;
-            try {
-                lock = readFile.getChannel().tryLock(0, Math.max(1, readFile.getChannel().size()), false);
-            } catch (OverlappingFileLockException e) {
-                reason = IOExceptionSupport.create("File '" + file + "' could not be locked.",e);
-            } catch (IOException ioe) {
-                reason = ioe;
-            }
-            if (lock != null) {
-                lockCounter++;
-                System.setProperty(getVmLockKey(), new Date().toString());
-            } else {
-                // new read file for next attempt
-                closeReadFile();
-                if (reason != null) {
-                    throw reason;
+        try {
+            if (lock == null) {
+                readFile = new RandomAccessFile(file, "rw");
+                IOException reason = null;
+                try {
+                    lock = readFile.getChannel().tryLock(0, Math.max(1, readFile.getChannel().size()), false);
+                } catch (OverlappingFileLockException e) {
+                    reason = IOExceptionSupport.create("File '" + file + "' could not be locked.", e);
+                } catch (IOException ioe) {
+                    reason = ioe;
                 }
-                throw new IOException("File '" + file + "' could not be locked.");
-            }
+                if (lock != null) {
+                    lockCounter++;
+                    System.setProperty(getVmLockKey(), new Date().toString());
+                } else {
+                    // new read file for next attempt
+                    closeReadFile();
+                    if (reason != null) {
+                        throw reason;
+                    }
+                    throw new IOException("File '" + file + "' could not be locked.");
+                }
 
+            }
+        } finally {
+            synchronized (LockFile.class) {
+                if (lock == null) {
+                    System.getProperties().remove(getVmLockKey());
+                }
+            }
         }
     }
 
@@ -92,7 +103,7 @@ public class LockFile {
         }
 
         lockCounter--;
-        if( lockCounter!=0 ) {
+        if (lockCounter != 0) {
             return;
         }
 
@@ -107,7 +118,7 @@ public class LockFile {
         }
         closeReadFile();
 
-        if( deleteOnUnlock ) {
+        if (deleteOnUnlock) {
             file.delete();
         }
     }
