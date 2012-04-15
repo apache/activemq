@@ -16,20 +16,29 @@
  */
 package org.apache.activemq.broker.region.virtual;
 
+import java.io.IOException;
+import java.util.List;
+import java.util.Set;
+
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ProducerBrokerExchange;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.Message;
+import org.apache.activemq.filter.BooleanExpression;
 import org.apache.activemq.filter.MessageEvaluationContext;
 import org.apache.activemq.filter.NonCachedMessageEvaluationContext;
-
-import java.io.IOException;
-import java.util.List;
-import java.util.Set;
+import org.apache.activemq.plugin.SubQueueSelectorCacheBroker;
+import org.apache.activemq.selector.SelectorParser;
+import org.apache.activemq.util.LRUCache;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class SelectorAwareVirtualTopicInterceptor extends VirtualTopicInterceptor {
+    private static final Logger LOG = LoggerFactory.getLogger(SelectorAwareVirtualTopicInterceptor.class);
+    LRUCache<String,BooleanExpression> expressionCache = new LRUCache<String,BooleanExpression>();
+    private SubQueueSelectorCacheBroker selectorCachePlugin;
 
     public SelectorAwareVirtualTopicInterceptor(Destination next, String prefix, String postfix, boolean local) {
         super(next, prefix, postfix, local);
@@ -45,24 +54,81 @@ public class SelectorAwareVirtualTopicInterceptor extends VirtualTopicIntercepto
         Set<Destination> destinations = broker.getDestinations(destination);
 
         for (Destination dest : destinations) {
-            if (matchesSomeConsumer(message, dest)) {
+            if (matchesSomeConsumer(broker, message, dest)) {
                 dest.send(context, message.copy());
             }
         }
     }
-    
-    private boolean matchesSomeConsumer(Message message, Destination dest) throws IOException {
+
+    private boolean matchesSomeConsumer(final Broker broker, Message message, Destination dest) throws IOException {
         boolean matches = false;
         MessageEvaluationContext msgContext = new NonCachedMessageEvaluationContext();
         msgContext.setDestination(dest.getActiveMQDestination());
         msgContext.setMessageReference(message);
         List<Subscription> subs = dest.getConsumers();
-        for (Subscription sub: subs) {
+        for (Subscription sub : subs) {
             if (sub.matches(message, msgContext)) {
                 matches = true;
                 break;
+
+            }
+        }
+        if (matches == false && subs.size() == 0) {
+            matches = tryMatchingCachedSubs(broker, dest, msgContext);
+        }
+        return matches;
+    }
+
+    private boolean tryMatchingCachedSubs(final Broker broker, Destination dest, MessageEvaluationContext msgContext) {
+        boolean matches = false;
+        LOG.debug("No active consumer match found. Will try cache if configured...");
+
+        //retrieve the specific plugin class and lookup the selector for the destination.
+        final SubQueueSelectorCacheBroker cache = getSubQueueSelectorCacheBrokerPlugin(broker);
+
+        if (cache != null) {
+            final String selector = cache.getSelector(dest.getActiveMQDestination().getQualifiedName());
+            if (selector != null) {
+                try {
+                    final BooleanExpression expression = getExpression(selector);
+                    matches = expression.matches(msgContext);
+                } catch (Exception e) {
+                    LOG.error(e.getMessage(), e);
+                }
             }
         }
         return matches;
+    }
+
+    private BooleanExpression getExpression(String selector) throws Exception{
+        BooleanExpression result;
+        synchronized(expressionCache){
+            result = expressionCache.get(selector);
+            if (result == null){
+                result = compileSelector(selector);
+                expressionCache.put(selector,result);
+            }
+        }
+        return result;
+    }
+
+    /**
+     * @return The SubQueueSelectorCacheBroker instance or null if no such broker is available.
+     */
+    private SubQueueSelectorCacheBroker getSubQueueSelectorCacheBrokerPlugin(final Broker broker) {
+        if (selectorCachePlugin == null) {
+            selectorCachePlugin = (SubQueueSelectorCacheBroker) broker.getAdaptor(SubQueueSelectorCacheBroker.class);
+        } //if
+
+        return selectorCachePlugin;
+    }
+
+    /**
+     * Pre-compile the JMS selector.
+     *
+     * @param selectorExpression The non-null JMS selector expression.
+     */
+    private BooleanExpression compileSelector(final String selectorExpression) throws Exception {
+        return SelectorParser.parse(selectorExpression);
     }
 }

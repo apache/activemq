@@ -92,17 +92,21 @@ public class ConsumerBean extends Assert implements MessageListener {
      *
      * @param messageCount
      */
-    public void waitForMessagesToArrive(int messageCount) {
+
+    public void waitForMessagesToArrive(int messageCount){
+        waitForMessagesToArrive(messageCount,120 * 1000);
+    }
+    public void waitForMessagesToArrive(int messageCount,long maxWaitTime) {
         long maxRemainingMessageCount = Math.max(0, messageCount - messages.size());
         LOG.info("Waiting for (" + maxRemainingMessageCount + ") message(s) to arrive");
         long start = System.currentTimeMillis();
-        long maxWaitTime = start + 120 * 1000;
+        long endTime = start + maxWaitTime;
         while (maxRemainingMessageCount > 0) {
             try {
                 synchronized (messages) {
                     messages.wait(1000);
                 }
-                if (hasReceivedMessages(messageCount) || System.currentTimeMillis() > maxWaitTime) {
+                if (hasReceivedMessages(messageCount) || System.currentTimeMillis() > endTime) {
                     break;
                 }
             } catch (InterruptedException e) {
@@ -116,6 +120,15 @@ public class ConsumerBean extends Assert implements MessageListener {
 
     public void assertMessagesArrived(int total) {
         waitForMessagesToArrive(total);
+        synchronized (messages) {
+            int count = messages.size();
+
+            assertEquals("Messages received", total, count);
+        }
+    }
+
+    public void assertMessagesArrived(int total, long maxWaitTime) {
+        waitForMessagesToArrive(total,maxWaitTime);
         synchronized (messages) {
             int count = messages.size();
 

@@ -22,6 +22,7 @@ import org.apache.activemq.broker.region.DestinationFilter;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.Message;
+import org.apache.activemq.util.LRUCache;
 
 /**
  * A Destination which implements <a
@@ -34,6 +35,7 @@ public class VirtualTopicInterceptor extends DestinationFilter {
     private String prefix;
     private String postfix;
     private boolean local;
+    private LRUCache<ActiveMQDestination,ActiveMQQueue> cache = new LRUCache<ActiveMQDestination,ActiveMQQueue>();
 
     public VirtualTopicInterceptor(Destination next, String prefix, String postfix, boolean local) {
         super(next);
@@ -51,6 +53,14 @@ public class VirtualTopicInterceptor extends DestinationFilter {
     }
 
     protected ActiveMQDestination getQueueConsumersWildcard(ActiveMQDestination original) {
-        return new ActiveMQQueue(prefix + original.getPhysicalName() + postfix);
+        ActiveMQQueue queue;
+        synchronized(cache){
+            queue = cache.get(original);
+            if (queue==null){
+                queue = new ActiveMQQueue(prefix + original.getPhysicalName() + postfix);
+                cache.put(original,queue);
+            }
+        }
+        return queue;
     }
 }
