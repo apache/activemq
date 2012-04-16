@@ -30,7 +30,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
 import javax.management.ObjectName;
-
 import org.apache.activemq.Service;
 import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.broker.BrokerService;
@@ -38,35 +37,11 @@ import org.apache.activemq.broker.BrokerServiceAware;
 import org.apache.activemq.broker.TransportConnection;
 import org.apache.activemq.broker.region.AbstractRegion;
 import org.apache.activemq.broker.region.DurableTopicSubscription;
+import org.apache.activemq.broker.region.Region;
 import org.apache.activemq.broker.region.RegionBroker;
 import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
-import org.apache.activemq.command.ActiveMQDestination;
-import org.apache.activemq.command.ActiveMQMessage;
-import org.apache.activemq.command.ActiveMQTempDestination;
-import org.apache.activemq.command.ActiveMQTopic;
-import org.apache.activemq.command.BrokerId;
-import org.apache.activemq.command.BrokerInfo;
-import org.apache.activemq.command.Command;
-import org.apache.activemq.command.ConnectionError;
-import org.apache.activemq.command.ConnectionId;
-import org.apache.activemq.command.ConnectionInfo;
-import org.apache.activemq.command.ConsumerId;
-import org.apache.activemq.command.ConsumerInfo;
-import org.apache.activemq.command.DataStructure;
-import org.apache.activemq.command.DestinationInfo;
-import org.apache.activemq.command.ExceptionResponse;
-import org.apache.activemq.command.KeepAliveInfo;
-import org.apache.activemq.command.Message;
-import org.apache.activemq.command.MessageAck;
-import org.apache.activemq.command.MessageDispatch;
-import org.apache.activemq.command.NetworkBridgeFilter;
-import org.apache.activemq.command.ProducerInfo;
-import org.apache.activemq.command.RemoveInfo;
-import org.apache.activemq.command.Response;
-import org.apache.activemq.command.SessionInfo;
-import org.apache.activemq.command.ShutdownInfo;
-import org.apache.activemq.command.WireFormatInfo;
+import org.apache.activemq.command.*;
 import org.apache.activemq.filter.DestinationFilter;
 import org.apache.activemq.filter.MessageEvaluationContext;
 import org.apache.activemq.thread.DefaultThreadPools;
@@ -1011,7 +986,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
 
         List<ConsumerId> candidateConsumers = consumerInfo.getNetworkConsumerIds();
         Collection<Subscription> currentSubs =
-            getRegionSubscriptions(consumerInfo.getDestination().isTopic());
+            getRegionSubscriptions(consumerInfo.getDestination());
         for (Subscription sub : currentSubs) {
             List<ConsumerId> networkConsumers = sub.getConsumerInfo().getNetworkConsumerIds();
             if (!networkConsumers.isEmpty()) {
@@ -1079,11 +1054,37 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
         return found;
     }
 
-    private final Collection<Subscription> getRegionSubscriptions(boolean isTopic) {
-        RegionBroker region = (RegionBroker) brokerService.getRegionBroker();
-        AbstractRegion abstractRegion = (AbstractRegion)
-            (isTopic ? region.getTopicRegion() : region.getQueueRegion());
-        return abstractRegion.getSubscriptions().values();
+    private final Collection<Subscription> getRegionSubscriptions(ActiveMQDestination dest) {
+        RegionBroker region_broker = (RegionBroker) brokerService.getRegionBroker();
+        Region region;
+        Collection<Subscription> subs;
+
+        region = null;
+        switch ( dest.getDestinationType() )
+        {
+            case ActiveMQDestination.QUEUE_TYPE:
+                region = region_broker.getQueueRegion();
+                break;
+
+            case ActiveMQDestination.TOPIC_TYPE:
+                region = region_broker.getTopicRegion();
+                break;
+
+            case ActiveMQDestination.TEMP_QUEUE_TYPE:
+                region = region_broker.getTempQueueRegion();
+                break;
+
+            case ActiveMQDestination.TEMP_TOPIC_TYPE:
+                region = region_broker.getTempTopicRegion();
+                break;
+        }
+
+        if ( region instanceof AbstractRegion )
+            subs = ((AbstractRegion) region).getSubscriptions().values();
+        else
+            subs = null;
+
+        return subs;
     }
 
     protected DemandSubscription createDemandSubscription(ConsumerInfo info) throws IOException {
