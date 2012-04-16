@@ -170,6 +170,9 @@
         <include>org.jasypt:jasypt</include>
         <!-- leveldb -->
         <include>org.fusesource.fuse-extra:fusemq-leveldb</include>
+        <include>org.fusesource.hawtbuf:hawtbuf</include>
+        <!-- mqtt -->
+        <include>org.fusesource.mqtt-client:mqtt-client</include>
       </includes>
     </dependencySet>
     <dependencySet>
