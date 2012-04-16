@@ -2002,12 +2002,14 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
 
                 // Check if the message is reference by any other subscription.
                 Long count = sd.messageReferences.get(messageSequence);
+                if (count != null){
                 long references = count.longValue() - 1;
-                if (references > 0) {
-                    sd.messageReferences.put(messageSequence, Long.valueOf(references));
-                    return;
-                } else {
-                    sd.messageReferences.remove(messageSequence);
+                    if (references > 0) {
+                        sd.messageReferences.put(messageSequence, Long.valueOf(references));
+                        return;
+                    } else {
+                        sd.messageReferences.remove(messageSequence);
+                    }
                 }
 
                 // Find all the entries that need to get deleted.
