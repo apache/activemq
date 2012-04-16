@@ -47,6 +47,7 @@ public class DefaultDatabaseLocker implements DatabaseLocker {
     protected Connection connection;
     protected boolean stopping;
     protected Handler<Exception> exceptionHandler;
+    protected int queryTimeout = 10;
     
     public DefaultDatabaseLocker() {
     }
@@ -174,7 +175,9 @@ public class DefaultDatabaseLocker implements DatabaseLocker {
         try {
             lockUpdateStatement = connection.prepareStatement(statements.getLockUpdateStatement());
             lockUpdateStatement.setLong(1, System.currentTimeMillis());
-            lockUpdateStatement.setQueryTimeout(10);
+            if (queryTimeout > 0) {
+                lockUpdateStatement.setQueryTimeout(queryTimeout);
+            }
             int rows = lockUpdateStatement.executeUpdate();
             if (rows == 1) {
                 result=true;
@@ -210,4 +213,11 @@ public class DefaultDatabaseLocker implements DatabaseLocker {
         this.exceptionHandler = exceptionHandler;
     }
 
+    public int getQueryTimeout() {
+        return queryTimeout;
+    }
+
+    public void setQueryTimeout(int queryTimeout) {
+        this.queryTimeout = queryTimeout;
+    }
 }
