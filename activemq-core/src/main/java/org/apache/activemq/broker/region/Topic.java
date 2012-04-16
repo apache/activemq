@@ -137,8 +137,30 @@ public class Topic extends BaseDestination implements Task {
                 }
             }
         } else {
-            sub.add(context, this);
             DurableTopicSubscription dsub = (DurableTopicSubscription) sub;
+    		sub.add(context, this);
+    		if(dsub.isActive()) {
+	        	synchronized (consumers) {
+	        		boolean hasSubscription = false;
+	
+	        		if(consumers.size()==0) {
+	            		hasSubscription = false;
+	        		} else {
+		        		for(Subscription currentSub : consumers) {
+		        			if(currentSub.getConsumerInfo().isDurable()) {
+		        	            DurableTopicSubscription dcurrentSub = (DurableTopicSubscription) currentSub;
+		        	            if(dcurrentSub.getSubscriptionKey().equals(dsub.getSubscriptionKey())) {
+		        	            	hasSubscription = true;
+		        	            	break;
+		        	            }
+		        			}
+		        		}
+	        		}
+	        		
+	                if(!hasSubscription)
+	                	consumers.add(sub);
+	            }
+    		}
             durableSubcribers.put(dsub.getSubscriptionKey(), dsub);
         }
     }
