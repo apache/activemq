@@ -95,8 +95,8 @@
           <!--
             The systemUsage controls the maximum amount of space the broker will
             use before slowing down producers. For more information, see:
-
             http://activemq.apache.org/producer-flow-control.html
+            If using ActiveMQ embedded - the following limits could safely be used:
 
         <systemUsage>
             <systemUsage>
@@ -112,6 +112,19 @@
             </systemUsage>
         </systemUsage>
         -->
+          <systemUsage>
+            <systemUsage>
+                <memoryUsage>
+                    <memoryUsage limit="128 mb"/>
+                </memoryUsage>
+                <storeUsage>
+                    <storeUsage limit="100 gb"/>
+                </storeUsage>
+                <tempUsage>
+                    <tempUsage limit="50 gb"/>
+                </tempUsage>
+            </systemUsage>
+        </systemUsage>
 
         <!--
             The transport connectors expose ActiveMQ over a given protocol to
