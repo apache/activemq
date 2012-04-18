@@ -32,10 +32,12 @@
 
   <properties>
     <activemq.osgi.import.pkg>
+      org.apache.activemq.pool;resolution:=optional,
       javax.annotation*;resolution:=optional,
       com.thoughtworks.xstream*;resolution:=optional,
       org.apache.activeio*;resolution:=optional,
       org.apache.camel*;version="[2,3)";resolution:=optional,
+      org.apache.commons.pool*;resolution:=optional,
       org.apache.derby*;resolution:=optional,
       org.apache.tools.ant*;resolution:=optional,
       org.apache.xbean*;resolution:=optional,
@@ -70,10 +72,10 @@
       <artifactId>activemq-core</artifactId>
     </dependency>
 
-    <!-- TODO we could maybe remove this dependency and use the Spring pool implementation? -->
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>activemq-pool</artifactId>
+      <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>org.apache.geronimo.specs</groupId>
