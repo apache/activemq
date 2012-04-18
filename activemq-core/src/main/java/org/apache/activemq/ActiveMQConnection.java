@@ -211,7 +211,8 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
         executor = new ThreadPoolExecutor(1, 1, 5, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>(), new ThreadFactory() {
             public Thread newThread(Runnable r) {
                 Thread thread = new Thread(r, "ActiveMQ Connection Executor: " + transport);
-                thread.setDaemon(true);
+                //Don't make these daemon threads - see https://issues.apache.org/jira/browse/AMQ-796
+                //thread.setDaemon(true);
                 return thread;
             }
         });
