@@ -16,12 +16,13 @@
  */
 package org.apache.activemq.broker.scheduler;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
 import junit.framework.TestCase;
 import org.apache.activemq.util.IOHelper;
 import org.apache.kahadb.util.ByteSequence;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 public class JobSchedulerStoreTest extends TestCase {
 
@@ -40,9 +41,9 @@ public class JobSchedulerStoreTest extends TestCase {
         }
 		JobScheduler js = store.getJobScheduler("test");
 		int count = 0;
-		long startTime = 10000;
+		long startTime = 10 * 60 * 1000; long period = startTime;
 		for (ByteSequence job:list) {
-		    js.schedule("id:"+(count++), job,"",startTime,10000,-1);	    
+		    js.schedule("id:"+(count++), job, "", startTime, period, -1);
 		}
 		List<Job>test = js.getAllJobs();
 		assertEquals(list.size(),test.size());
