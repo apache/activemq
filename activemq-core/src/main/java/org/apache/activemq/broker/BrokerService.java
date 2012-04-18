@@ -1713,13 +1713,21 @@ public class BrokerService implements Service {
         if (getPersistenceAdapter() != null) {
             PersistenceAdapter adapter = getPersistenceAdapter();
             File dir = adapter.getDirectory();
+            String dirPath = dir.getAbsolutePath();
             if (dir != null) {
+                if (!dir.isAbsolute()) {
+                    dir = new File(dirPath);
+                }
+
+                while (dir != null && dir.isDirectory() == false) {
+                    dir = dir.getParentFile();
+                }
                 long storeLimit = usage.getStoreUsage().getLimit();
-                long dirFreeSpace = dir.getFreeSpace();
+                long dirFreeSpace = dir.getUsableSpace();
                 if (storeLimit > dirFreeSpace) {
                     LOG.warn("Store limit is " + storeLimit / (1024 * 1024) +
                              " mb, whilst the data directory: " + dir.getAbsolutePath() +
-                             " only has " + dirFreeSpace / (1024 * 1024) + " mb of free space");
+                             " only has " + dirFreeSpace / (1024 * 1024) + " mb of usable space");
                 }
             }
 
@@ -1758,7 +1766,7 @@ public class BrokerService implements Service {
             if (storeLimit > dirFreeSpace) {
                 LOG.error("Temporary Store limit is " + storeLimit / (1024 * 1024) +
                           " mb, whilst the temporary data directory: " + tmpDirPath +
-                          " only has " + dirFreeSpace / (1024 * 1024) + " mb of free space");
+                          " only has " + dirFreeSpace / (1024 * 1024) + " mb of usable space");
             }
 
             long maxJournalFileSize;
