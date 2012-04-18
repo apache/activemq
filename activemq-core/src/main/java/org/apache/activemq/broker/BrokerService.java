@@ -1713,8 +1713,9 @@ public class BrokerService implements Service {
         if (getPersistenceAdapter() != null) {
             PersistenceAdapter adapter = getPersistenceAdapter();
             File dir = adapter.getDirectory();
-            String dirPath = dir.getAbsolutePath();
+
             if (dir != null) {
+                String dirPath = dir.getAbsolutePath();
                 if (!dir.isAbsolute()) {
                     dir = new File(dirPath);
                 }
