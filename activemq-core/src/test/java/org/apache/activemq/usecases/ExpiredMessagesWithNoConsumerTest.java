@@ -16,23 +16,7 @@
  */
 package org.apache.activemq.usecases;
 
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicLong;
-
-import javax.jms.Connection;
-import javax.jms.DeliveryMode;
-import javax.jms.Message;
-import javax.jms.MessageConsumer;
-import javax.jms.MessageListener;
-import javax.jms.MessageProducer;
-import javax.jms.Session;
-import javax.jms.Topic;
-import javax.jms.TopicSubscriber;
-import javax.management.ObjectName;
-
 import junit.framework.Test;
-
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.CombinationTestSupport;
 import org.apache.activemq.broker.BrokerService;
@@ -48,6 +32,20 @@ import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.util.Wait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.jms.Connection;
+import javax.jms.DeliveryMode;
+import javax.jms.Message;
+import javax.jms.MessageConsumer;
+import javax.jms.MessageListener;
+import javax.jms.MessageProducer;
+import javax.jms.Session;
+import javax.jms.Topic;
+import javax.jms.TopicSubscriber;
+import javax.management.ObjectName;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 
 public class ExpiredMessagesWithNoConsumerTest extends CombinationTestSupport {
 
@@ -499,7 +497,7 @@ public class ExpiredMessagesWithNoConsumerTest extends CombinationTestSupport {
         connection.start();
         Topic destination = session.createTopic("test");
         producer = session.createProducer(destination);
-        final int ttl = 300;
+        final int ttl = 1000;
         producer.setTimeToLive(ttl);
 
         final long sendCount = 10;
@@ -518,7 +516,7 @@ public class ExpiredMessagesWithNoConsumerTest extends CombinationTestSupport {
         assertEquals(0, view.getExpiredCount());
         assertEquals(10, view.getEnqueueCount());
 
-        Thread.sleep(4000);
+        Thread.sleep(5000);
 
         LOG.info("expired=" + view.getExpiredCount() + " " +  view.getEnqueueCount());
         assertEquals(10, view.getExpiredCount());
