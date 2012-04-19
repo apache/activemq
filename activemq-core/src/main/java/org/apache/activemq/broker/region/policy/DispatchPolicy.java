@@ -24,7 +24,7 @@ import org.apache.activemq.filter.MessageEvaluationContext;
 
 /**
  * Abstraction to allow different dispatching policies to be plugged
- * into the region implementations.  This is used by a queue to deliver
+ * into the  topic region implementations.  This is used by a topic to deliver
  * messages to the matching subscriptions.
  * 
  * 
@@ -33,15 +33,8 @@ public interface DispatchPolicy {
     
     /**
      * Decides how to dispatch a selected message to a collection of consumers.  A safe
-     * approach is to dispatch to every subscription that matches.  Queue Subscriptions that 
-     * have not exceeded their pre-fetch limit will attempt to lock the message before 
-     * dispatching to the client.  First subscription to lock the message wins.  
-     * 
-     * Order of dispatching to the subscriptions matters since a subscription with a 
-     * large pre-fetch may take all the messages if he is always dispatched to first.  
-     * Once a message has been locked, it does not need to be dispatched to any 
-     * further subscriptions.
-     * 
+     * approach is to dispatch to every subscription that matches.
+     *
      * The list will be safe to iterate over when this method is called
      * 
      * @return true if at least one consumer was dispatched or false if there are no active subscriptions that could be dispatched
