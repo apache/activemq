@@ -1194,8 +1194,7 @@
           <excludes>
             <exclude>**/*.bin</exclude>
             <exclude>**/*.log</exclude>
-            <exclude>**/*README.txt</exclude>
-            <exclude>**/store/amq/help.txt</exclude>
+            <exclude>**/*.txt</exclude>
             <exclude>**/kahadb/**/*.data</exclude>
             <!-- activemq-xmpp schemas -->
             <exclude>**/resources/*.xsd</exclude>
@@ -1207,6 +1206,7 @@
             <exclude>**/webapp/js/common.js</exclude>
             <exclude>**/webapp/js/css.js</exclude>
             <exclude>**/webapp/js/standardista-table-sorting.js</exclude>
+            <exclude>**/*.data</exclude>
             <exclude>**/webapp/test/assets/*</exclude>
             <!-- plotkit -->
             <exclude>**/webapp/js/plotkit/**/*</exclude>
