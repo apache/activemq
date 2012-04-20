@@ -17,6 +17,7 @@
 package org.apache.activemq.usecases;
 
 import java.io.File;
+import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -91,7 +92,8 @@ public class DurableSubProcessConcurrentCommitActivateNoDuplicateTest {
     static final Vector<Throwable> exceptions = new Vector<Throwable>();
 
     // long form of test that found https://issues.apache.org/jira/browse/AMQ-3805
-    @Ignore ("short version in org.apache.activemq.usecases.DurableSubscriptionOfflineTest.testNoDuplicateOnConcurrentSendTranCommitAndActivate")
+    @Ignore ("short version in org.apache.activemq.usecases.DurableSubscriptionOfflineTest.testNoDuplicateOnConcurrentSendTranCommitAndActivate"
+     + " and org.apache.activemq.usecases.DurableSubscriptionOfflineTest.testOrderOnActivateDeactivate")
     @Test
     public void testProcess() {
         try {
@@ -125,12 +127,16 @@ public class DurableSubProcessConcurrentCommitActivateNoDuplicateTest {
         //allow the clients to unsubscribe before finishing
         clientManager.setEnd(true);
         try {
-			Thread.sleep(600000);
+			Thread.sleep(60 * 1000);
 		} catch (InterruptedException e) {
 			 exit("ProcessTest.testProcess failed.", e);
 		}
-        
-        
+
+        server.done = true;
+
+        try {
+            server.join(60*1000);
+        } catch (Exception ignored) {}
         processLock.writeLock().lock();
         assertTrue("no exceptions: " + exceptions, exceptions.isEmpty());
         LOG.info("DONE.");
@@ -177,7 +183,7 @@ public class DurableSubProcessConcurrentCommitActivateNoDuplicateTest {
         int transRover = 0;
         int messageRover = 0;
         public volatile int committingTransaction = -1;        
-
+        public boolean  done = false;
         public Server() {
             super("Server");
             setPriority(Thread.MIN_PRIORITY);
@@ -187,7 +193,7 @@ public class DurableSubProcessConcurrentCommitActivateNoDuplicateTest {
         @Override
         public void run() {
             try {
-                while (true) {
+                while (!done) {
 
                 	Thread.sleep(1000);
                 	

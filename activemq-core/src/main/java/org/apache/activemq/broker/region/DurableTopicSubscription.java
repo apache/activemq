@@ -167,40 +167,37 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
         active.set(false);
         offlineTimestamp.set(System.currentTimeMillis());
         this.usageManager.getMemoryUsage().removeUsageListener(this);
-        synchronized (pending) {
+        synchronized (pendingLock) {
             pending.stop();
-        }
-        for (Iterator<Destination> iter = durableDestinations.values().iterator(); iter.hasNext();) {
-            Topic topic = (Topic)iter.next();
-            if (!keepDurableSubsActive) {
-                topic.deactivate(context, this);
-            } else {
-                topic.getDestinationStatistics().getInflight().subtract(dispatched.size());
-            }
-        }
 
-        for (final MessageReference node : dispatched) {
-            // Mark the dispatched messages as redelivered for next time.
-            Integer count = redeliveredMessages.get(node.getMessageId());
-            if (count != null) {
-                redeliveredMessages.put(node.getMessageId(), Integer.valueOf(count.intValue() + 1));
-            } else {
-                redeliveredMessages.put(node.getMessageId(), Integer.valueOf(1));
-            }
-            if (keepDurableSubsActive && pending.isTransient()) {
-                synchronized (pending) {
-                    pending.addMessageFirst(node);
-                    pending.rollback(node.getMessageId());
+            synchronized (dispatchLock) {
+                for (Iterator<Destination> iter = durableDestinations.values().iterator(); iter.hasNext();) {
+                    Topic topic = (Topic)iter.next();
+                    if (!keepDurableSubsActive) {
+                        topic.deactivate(context, this);
+                    } else {
+                        topic.getDestinationStatistics().getInflight().subtract(dispatched.size());
+                    }
                 }
-            } else {
-                node.decrementReferenceCount();
+
+                for (final MessageReference node : dispatched) {
+                    // Mark the dispatched messages as redelivered for next time.
+                    Integer count = redeliveredMessages.get(node.getMessageId());
+                    if (count != null) {
+                        redeliveredMessages.put(node.getMessageId(), Integer.valueOf(count.intValue() + 1));
+                    } else {
+                        redeliveredMessages.put(node.getMessageId(), Integer.valueOf(1));
+                    }
+                    if (keepDurableSubsActive && pending.isTransient()) {
+                        pending.addMessageFirst(node);
+                        pending.rollback(node.getMessageId());
+                    } else {
+                        node.decrementReferenceCount();
+                    }
+                }
+                dispatched.clear();
             }
-        }
-        synchronized(dispatched) {
-            dispatched.clear();
-        }
-        if (!keepDurableSubsActive && pending.isTransient()) {
-            synchronized (pending) {
+            if (!keepDurableSubsActive && pending.isTransient()) {
                 try {
                     pending.reset();
                     while (pending.hasNext()) {
@@ -286,7 +283,7 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
      * Release any references that we are holding.
      */
     public void destroy() {
-        synchronized (pending) {
+        synchronized (pendingLock) {
             try {
 
                 pending.reset();
@@ -300,7 +297,7 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
                 pending.clear();
             }
         }
-        synchronized(dispatched) {
+        synchronized  (dispatchLock) {
             for (MessageReference node : dispatched) {
                 node.decrementReferenceCount();
             }

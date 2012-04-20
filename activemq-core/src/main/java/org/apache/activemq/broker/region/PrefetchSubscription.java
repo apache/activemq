@@ -20,7 +20,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -57,7 +56,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
     protected final Scheduler scheduler;
 
     protected PendingMessageCursor pending;
-    protected final List<MessageReference> dispatched = new CopyOnWriteArrayList<MessageReference>();
+    protected final List<MessageReference> dispatched = new ArrayList<MessageReference>();
     protected final AtomicInteger prefetchExtension = new AtomicInteger();
     protected boolean usePrefetchExtension = true;
     protected long enqueueCounter;
@@ -67,7 +66,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
     private int maxAuditDepth=2048;
     protected final SystemUsage usageManager;
     protected final Object pendingLock = new Object();
-    private final Object dispatchLock = new Object();
+    protected final Object dispatchLock = new Object();
     private final CountDownLatch okForAckAsDispatchDone = new CountDownLatch(1);
 
     public PrefetchSubscription(Broker broker, SystemUsage usageManager, ConnectionContext context, ConsumerInfo info, PendingMessageCursor cursor) throws InvalidSelectorException {
@@ -445,7 +444,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
 
     /**
      * Checks an ack versus the contents of the dispatched list.
-     *
+     *  called with dispatchLock held
      * @param ack
      * @throws JMSException if it does not match
      */
@@ -658,6 +657,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
         pending.setMaxBatchSize(numberToDispatch);
     }
 
+    // called with dispatchLock held
     protected boolean dispatch(final MessageReference node) throws IOException {
         final Message message = node.getMessage();
         if (message == null) {

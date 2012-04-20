@@ -102,6 +102,7 @@ public class DurableSubscriptionOfflineTest extends org.apache.activemq.TestSupp
         broker.getManagementContext().setCreateConnector(false);
         broker.setAdvisorySupport(false);
         broker.setKeepDurableSubsActive(keepDurableSubsActive);
+        broker.addConnector("tcp://0.0.0.0:0");
 
         if (usePrioritySupport) {
             PolicyEntry policy = new PolicyEntry();
@@ -1048,6 +1049,119 @@ public class DurableSubscriptionOfflineTest extends org.apache.activemq.TestSupp
         for (int i = 0; i < numConsumers; i++) {
             executorService.execute(new CheckForDupsClient(i));
         }
+
+        executorService.shutdown();
+        executorService.awaitTermination(5, TimeUnit.MINUTES);
+        con.close();
+
+        assertTrue("no exceptions: " + exceptions, exceptions.isEmpty());
+    }
+
+    public void testOrderOnActivateDeactivate() throws Exception {
+        for (int i=0;i<10;i++) {
+            LOG.info("Iteration: " + i);
+            doTestOrderOnActivateDeactivate();
+            broker.stop();
+            createBroker(true /*deleteAllMessages*/);
+        }
+    }
+
+    public void doTestOrderOnActivateDeactivate() throws Exception {
+        final int messageCount = 1000;
+        Connection con = null;
+        Session session = null;
+        final int numConsumers = 4;
+        for (int i = 0; i <= numConsumers; i++) {
+            con = createConnection("cli" + i);
+            session = con.createSession(false, Session.AUTO_ACKNOWLEDGE);
+            session.createDurableSubscriber(topic, "SubsId", null, true);
+            session.close();
+            con.close();
+        }
+
+        final String url = "failover:(tcp://localhost:"
+            + (broker.getTransportConnectors().get(1).getConnectUri()).getPort()
+            + "?wireFormat.maxInactivityDuration=0)?"
+            + "jms.watchTopicAdvisories=false&"
+            + "jms.alwaysSyncSend=true&jms.dispatchAsync=true&"
+            + "jms.sendAcksAsync=true&"
+            + "initialReconnectDelay=100&maxReconnectDelay=30000&"
+            + "useExponentialBackOff=true";
+        final ActiveMQConnectionFactory clientFactory = new ActiveMQConnectionFactory(url);
+
+        class CheckOrderClient implements Runnable {
+            final int id;
+            int runCount = 0;
+
+            public CheckOrderClient(int id) {
+                this.id = id;
+            }
+
+            @Override
+            public void run() {
+                try {
+                    synchronized (this) {
+                        Connection con = clientFactory.createConnection();
+                        con.setClientID("cli" + id);
+                        con.start();
+                        Session session = con.createSession(false, Session.CLIENT_ACKNOWLEDGE);
+                        MessageConsumer consumer = session.createDurableSubscriber(topic, "SubsId", null, true);
+                        int nextId = 0;
+
+                        ++runCount;
+                        int i=0;
+                        for (; i < messageCount/2; i++) {
+                            Message message = consumer.receiveNoWait();
+                            if (message == null) {
+                                break;
+                            }
+                            long producerSequenceId = new MessageId(message.getJMSMessageID()).getProducerSequenceId();
+                            assertEquals(id + " expected order: runCount: " + runCount  + " id: " + message.getJMSMessageID(), ++nextId, producerSequenceId);
+                        }
+                        LOG.info(con.getClientID() + " peeked " + i);
+                        session.close();
+                        con.close();
+                    }
+                } catch (Throwable e) {
+                    e.printStackTrace();
+                    exceptions.add(e);
+                }
+            }
+        }
+
+        Runnable producer = new Runnable() {
+            final String payLoad = new String(new byte[600]);
+
+            @Override
+            public void run() {
+                try {
+                    Connection con = createConnection();
+                    final Session sendSession = con.createSession(true, Session.SESSION_TRANSACTED);
+                    MessageProducer producer = sendSession.createProducer(topic);
+                    for (int i = 0; i < messageCount; i++) {
+                        producer.send(sendSession.createTextMessage(payLoad));
+                    }
+                    LOG.info("About to commit: " + messageCount);
+                    sendSession.commit();
+                    LOG.info("committed: " + messageCount);
+                    con.close();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    exceptions.add(e);
+                }
+            }
+        };
+
+        ExecutorService executorService = Executors.newCachedThreadPool();
+
+        // concurrent commit and activate
+        for (int i = 0; i < numConsumers; i++) {
+            final CheckOrderClient client = new CheckOrderClient(i);
+            for (int j=0; j<100; j++) {
+                executorService.execute(client);
+            }
+        }
+        executorService.execute(producer);
 
         executorService.shutdown();
         executorService.awaitTermination(5, TimeUnit.MINUTES);

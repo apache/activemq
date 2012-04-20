@@ -172,6 +172,7 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
     
     
     public final synchronized void addMessageLast(MessageReference node) throws Exception {
+        boolean disableCache = false;
         if (hasSpace()) {
             if (!isCacheEnabled() && size==0 && isStarted() && useCache) {
                 if (LOG.isTraceEnabled()) {
@@ -180,10 +181,19 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
                 setCacheEnabled(true);
             }
             if (isCacheEnabled()) {
-                recoverMessage(node.getMessage(),true);
-                lastCachedId = node.getMessageId();
+                if (recoverMessage(node.getMessage(),true)) {
+                    lastCachedId = node.getMessageId();
+                } else {
+                    // failed to recover, possible duplicate from concurrent dispatchPending,
+                    // lets not recover further in case of out of order
+                    disableCache = true;
+                }
             }
-        } else if (isCacheEnabled()) {
+        } else {
+            disableCache = true;
+        }
+
+        if (disableCache && isCacheEnabled()) {
             setCacheEnabled(false);
             // sync with store on disabling the cache
             if (lastCachedId != null) {
