@@ -16,6 +16,16 @@
  */
 package org.apache.activemq.broker;
 
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.StringTokenizer;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.regex.Pattern;
+
+import javax.management.ObjectName;
 import org.apache.activemq.broker.jmx.ManagedTransportConnector;
 import org.apache.activemq.broker.jmx.ManagementContext;
 import org.apache.activemq.broker.region.ConnectorStatistics;
@@ -34,16 +44,6 @@ import org.apache.activemq.util.ServiceStopper;
 import org.apache.activemq.util.ServiceSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.management.ObjectName;
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.StringTokenizer;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.regex.Pattern;
 
 /**
  * @org.apache.xbean.XBean
@@ -74,6 +74,8 @@ public class TransportConnector implements Connector, BrokerServiceAware {
     private boolean updateClusterClientsOnRemove = false;
     private String updateClusterFilter;
     private boolean auditNetworkProducers = false;
+    private int maximumProducersAllowedPerConnection = Integer.MAX_VALUE;
+    private int maximumConsumersAllowedPerConnection  = Integer.MAX_VALUE;
 
     LinkedList<String> peerBrokers = new LinkedList<String>();
 
@@ -122,6 +124,8 @@ public class TransportConnector implements Connector, BrokerServiceAware {
         rc.setUpdateClusterFilter(getUpdateClusterFilter());
         rc.setUpdateClusterClientsOnRemove(isUpdateClusterClientsOnRemove());
         rc.setAuditNetworkProducers(isAuditNetworkProducers());
+        rc.setMaximumConsumersAllowedPerConnection(getMaximumConsumersAllowedPerConnection());
+        rc.setMaximumProducersAllowedPerConnection(getMaximumProducersAllowedPerConnection());
         return rc;
     }
 
@@ -599,4 +603,21 @@ public class TransportConnector implements Connector, BrokerServiceAware {
     public void setAuditNetworkProducers(boolean auditNetworkProducers) {
         this.auditNetworkProducers = auditNetworkProducers;
     }
+
+    public int getMaximumProducersAllowedPerConnection() {
+        return maximumProducersAllowedPerConnection;
+    }
+
+    public void setMaximumProducersAllowedPerConnection(int maximumProducersAllowedPerConnection) {
+        this.maximumProducersAllowedPerConnection = maximumProducersAllowedPerConnection;
+    }
+
+    public int getMaximumConsumersAllowedPerConnection() {
+        return maximumConsumersAllowedPerConnection;
+    }
+
+    public void setMaximumConsumersAllowedPerConnection(int maximumConsumersAllowedPerConnection) {
+        this.maximumConsumersAllowedPerConnection = maximumConsumersAllowedPerConnection;
+    }
+
 }

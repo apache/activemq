@@ -21,11 +21,18 @@ import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
+import javax.jms.ExceptionListener;
+import javax.jms.JMSException;
+import javax.jms.MessageConsumer;
+import javax.jms.MessageProducer;
+import javax.jms.Session;
+import javax.jms.Topic;
 import javax.sql.DataSource;
-
 import junit.framework.TestCase;
-
+import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.broker.region.policy.FixedSizedSubscriptionRecoveryPolicy;
@@ -47,17 +54,17 @@ import org.apache.activemq.transport.tcp.TcpTransportServer;
 import org.apache.activemq.usage.SystemUsage;
 import org.apache.activemq.wireformat.ObjectStreamWireFormat;
 import org.apache.activemq.xbean.BrokerFactoryBean;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.apache.derby.jdbc.EmbeddedDataSource;
 import org.jmock.Expectations;
 import org.jmock.Mockery;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 
 /**
- * 
+ *
  */
 public class ConfigTest extends TestCase {
 
@@ -94,8 +101,8 @@ public class ConfigTest extends TestCase {
         recursiveDelete(journalFile);
 
         File derbyFile = new File(DERBY_ROOT + "testJournaledJDBCConfig/derbydb"); // Default
-                                                                                    // derby
-                                                                                    // name
+        // derby
+        // name
         recursiveDelete(derbyFile);
 
         BrokerService broker;
@@ -113,7 +120,7 @@ public class ConfigTest extends TestCase {
             // System.out.print("Checking persistence adapter factory
             // settings... ");
             broker.getPersistenceAdapter();
-            
+
             assertTrue(broker.getSystemUsage().getStoreUsage().getStore() instanceof JournalPersistenceAdapter);
 
             LOG.info("Success");
@@ -132,10 +139,10 @@ public class ConfigTest extends TestCase {
         // ");     
         File journalFile = new File(JOURNAL_ROOT + "testJDBCConfig/journal");
         recursiveDelete(journalFile);
-        
+
         File derbyFile = new File(DERBY_ROOT + "testJDBCConfig/derbydb"); // Default
-                                                                            // derby
-                                                                            // name
+        // derby
+        // name
         recursiveDelete(derbyFile);
 
         BrokerService broker;
@@ -146,9 +153,9 @@ public class ConfigTest extends TestCase {
             PersistenceAdapter adapter = broker.getPersistenceAdapter();
 
             assertTrue("Should have created a jdbc persistence adapter", adapter instanceof JDBCPersistenceAdapter);
-            assertEquals("JDBC Adapter Config Error (cleanupPeriod)", 60000, ((JDBCPersistenceAdapter)adapter).getCleanupPeriod());
-            assertTrue("Should have created an EmbeddedDataSource", ((JDBCPersistenceAdapter)adapter).getDataSource() instanceof EmbeddedDataSource);
-            assertTrue("Should have created a DefaultWireFormat", ((JDBCPersistenceAdapter)adapter).getWireFormat() instanceof ObjectStreamWireFormat);
+            assertEquals("JDBC Adapter Config Error (cleanupPeriod)", 60000, ((JDBCPersistenceAdapter) adapter).getCleanupPeriod());
+            assertTrue("Should have created an EmbeddedDataSource", ((JDBCPersistenceAdapter) adapter).getDataSource() instanceof EmbeddedDataSource);
+            assertTrue("Should have created a DefaultWireFormat", ((JDBCPersistenceAdapter) adapter).getWireFormat() instanceof ObjectStreamWireFormat);
 
             LOG.info("Success");
         } finally {
@@ -159,7 +166,7 @@ public class ConfigTest extends TestCase {
     }
 
     public void testJdbcLockConfigOverride() throws Exception {
-      
+
         JDBCPersistenceAdapter adapter = new JDBCPersistenceAdapter();
         Mockery context = new Mockery();
         final DataSource dataSource = context.mock(DataSource.class);
@@ -168,24 +175,27 @@ public class ConfigTest extends TestCase {
         final ResultSet result = context.mock(ResultSet.class);
         adapter.setDataSource(dataSource);
         adapter.setCreateTablesOnStartup(false);
-        
+
         context.checking(new Expectations() {{
-            allowing (dataSource).getConnection(); will (returnValue(connection));
-            allowing (connection).getMetaData(); will (returnValue(metadata));
-            allowing (connection);
-            allowing (metadata).getDriverName(); will (returnValue("Microsoft_SQL_Server_2005_jdbc_driver"));
-            allowing (result).next(); will (returnValue(true));
+            allowing(dataSource).getConnection();
+            will(returnValue(connection));
+            allowing(connection).getMetaData();
+            will(returnValue(metadata));
+            allowing(connection);
+            allowing(metadata).getDriverName();
+            will(returnValue("Microsoft_SQL_Server_2005_jdbc_driver"));
+            allowing(result).next();
+            will(returnValue(true));
         }});
-        
+
         adapter.start();
         assertTrue("has the locker override", adapter.getDatabaseLocker() instanceof TransactDatabaseLocker);
         adapter.stop();
     }
 
-    
 
     public void testJdbcLockConfigDefault() throws Exception {
-      
+
         JDBCPersistenceAdapter adapter = new JDBCPersistenceAdapter();
         Mockery context = new Mockery();
         final DataSource dataSource = context.mock(DataSource.class);
@@ -194,15 +204,19 @@ public class ConfigTest extends TestCase {
         final ResultSet result = context.mock(ResultSet.class);
         adapter.setDataSource(dataSource);
         adapter.setCreateTablesOnStartup(false);
-        
+
         context.checking(new Expectations() {{
-            allowing (dataSource).getConnection(); will (returnValue(connection));
-            allowing (connection).getMetaData(); will (returnValue(metadata));
-            allowing (connection);
-            allowing (metadata).getDriverName(); will (returnValue("Some_Unknown_driver"));
-            allowing (result).next(); will (returnValue(true));
+            allowing(dataSource).getConnection();
+            will(returnValue(connection));
+            allowing(connection).getMetaData();
+            will(returnValue(metadata));
+            allowing(connection);
+            allowing(metadata).getDriverName();
+            will(returnValue("Some_Unknown_driver"));
+            allowing(result).next();
+            will(returnValue(true));
         }});
-        
+
         adapter.start();
         assertEquals("has the default locker", adapter.getDatabaseLocker().getClass(), DefaultDatabaseLocker.class);
         adapter.stop();
@@ -245,9 +259,9 @@ public class ConfigTest extends TestCase {
             // System.out.print("Checking transport connectors... ");
             List connectors = broker.getTransportConnectors();
             assertTrue("Should have created at least 3 connectors", connectors.size() >= 3);
-            assertTrue("1st connector should be TcpTransportServer", ((TransportConnector)connectors.get(0)).getServer() instanceof TcpTransportServer);
-            assertTrue("2nd connector should be TcpTransportServer", ((TransportConnector)connectors.get(1)).getServer() instanceof TcpTransportServer);
-            assertTrue("3rd connector should be TcpTransportServer", ((TransportConnector)connectors.get(2)).getServer() instanceof TcpTransportServer);
+            assertTrue("1st connector should be TcpTransportServer", ((TransportConnector) connectors.get(0)).getServer() instanceof TcpTransportServer);
+            assertTrue("2nd connector should be TcpTransportServer", ((TransportConnector) connectors.get(1)).getServer() instanceof TcpTransportServer);
+            assertTrue("3rd connector should be TcpTransportServer", ((TransportConnector) connectors.get(2)).getServer() instanceof TcpTransportServer);
 
             // Check network connectors
             // System.out.print("Checking network connectors... ");
@@ -260,15 +274,15 @@ public class ConfigTest extends TestCase {
 
             dest = new ActiveMQTopic("Topic.SimpleDispatch");
             assertTrue("Should have a simple dispatch policy for " + dest.getTopicName(),
-                       broker.getDestinationPolicy().getEntryFor(dest).getDispatchPolicy() instanceof SimpleDispatchPolicy);
+                    broker.getDestinationPolicy().getEntryFor(dest).getDispatchPolicy() instanceof SimpleDispatchPolicy);
 
             dest = new ActiveMQTopic("Topic.RoundRobinDispatch");
             assertTrue("Should have a round robin dispatch policy for " + dest.getTopicName(),
-                       broker.getDestinationPolicy().getEntryFor(dest).getDispatchPolicy() instanceof RoundRobinDispatchPolicy);
+                    broker.getDestinationPolicy().getEntryFor(dest).getDispatchPolicy() instanceof RoundRobinDispatchPolicy);
 
             dest = new ActiveMQTopic("Topic.StrictOrderDispatch");
             assertTrue("Should have a strict order dispatch policy for " + dest.getTopicName(),
-                       broker.getDestinationPolicy().getEntryFor(dest).getDispatchPolicy() instanceof StrictOrderDispatchPolicy);
+                    broker.getDestinationPolicy().getEntryFor(dest).getDispatchPolicy() instanceof StrictOrderDispatchPolicy);
             LOG.info("Success");
 
             // Check subscription policy configuration
@@ -278,8 +292,8 @@ public class ConfigTest extends TestCase {
             dest = new ActiveMQTopic("Topic.FixedSizedSubs");
             subsPolicy = broker.getDestinationPolicy().getEntryFor(dest).getSubscriptionRecoveryPolicy();
             assertTrue("Should have a fixed sized subscription recovery policy for " + dest.getTopicName(), subsPolicy instanceof FixedSizedSubscriptionRecoveryPolicy);
-            assertEquals("FixedSizedSubsPolicy Config Error (maximumSize)", 2000000, ((FixedSizedSubscriptionRecoveryPolicy)subsPolicy).getMaximumSize());
-            assertEquals("FixedSizedSubsPolicy Config Error (useSharedBuffer)", false, ((FixedSizedSubscriptionRecoveryPolicy)subsPolicy).isUseSharedBuffer());
+            assertEquals("FixedSizedSubsPolicy Config Error (maximumSize)", 2000000, ((FixedSizedSubscriptionRecoveryPolicy) subsPolicy).getMaximumSize());
+            assertEquals("FixedSizedSubsPolicy Config Error (useSharedBuffer)", false, ((FixedSizedSubscriptionRecoveryPolicy) subsPolicy).isUseSharedBuffer());
 
             dest = new ActiveMQTopic("Topic.LastImageSubs");
             subsPolicy = broker.getDestinationPolicy().getEntryFor(dest).getSubscriptionRecoveryPolicy();
@@ -292,7 +306,7 @@ public class ConfigTest extends TestCase {
             dest = new ActiveMQTopic("Topic.TimedSubs");
             subsPolicy = broker.getDestinationPolicy().getEntryFor(dest).getSubscriptionRecoveryPolicy();
             assertTrue("Should have a timed subscription recovery policy for " + dest.getTopicName(), subsPolicy instanceof TimedSubscriptionRecoveryPolicy);
-            assertEquals("TimedSubsPolicy Config Error (recoverDuration)", 25000, ((TimedSubscriptionRecoveryPolicy)subsPolicy).getRecoverDuration());
+            assertEquals("TimedSubsPolicy Config Error (recoverDuration)", 25000, ((TimedSubscriptionRecoveryPolicy) subsPolicy).getRecoverDuration());
             LOG.info("Success");
 
             // Check usage manager
@@ -304,10 +318,10 @@ public class ConfigTest extends TestCase {
             assertEquals("SystemUsage Config Error (TempUsage.limit)", 1024 * 1024 * 100, systemUsage.getTempUsage().getLimit());
             assertEquals("SystemUsage Config Error (StoreUsage.limit)", 1024 * 1024 * 1024, systemUsage.getStoreUsage().getLimit());
             assertEquals("SystemUsage Config Error (StoreUsage.name)", "foo", systemUsage.getStoreUsage().getName());
-            
+
             assertNotNull(systemUsage.getStoreUsage().getStore());
             assertTrue(systemUsage.getStoreUsage().getStore() instanceof MemoryPersistenceAdapter);
-                        
+
             LOG.info("Success");
 
         } finally {
@@ -369,6 +383,66 @@ public class ConfigTest extends TestCase {
             assertTrue("Should have created a memory persistence adapter", adapter instanceof MemoryPersistenceAdapter);
             assertTrue("Should have not created a derby directory at " + derbyFile.getAbsolutePath(), !derbyFile.exists());
             assertTrue("Should have not created a journal directory at " + journalFile.getAbsolutePath(), !journalFile.exists());
+
+            LOG.info("Success");
+        } finally {
+            if (broker != null) {
+                broker.stop();
+            }
+        }
+
+    }
+
+    public void testConnectorConfig() throws Exception {
+        // System.out.print("Checking memory persistence adapter
+        // configuration... ");
+
+        File journalFile = new File(JOURNAL_ROOT + "testMemoryConfig");
+        recursiveDelete(journalFile);
+
+        File derbyFile = new File(DERBY_ROOT + "testMemoryConfig");
+        recursiveDelete(derbyFile);
+
+        final int MAX_PRODUCERS = 5;
+        final int MAX_CONSUMERS = 10;
+
+        BrokerService broker = createBroker(new FileSystemResource(CONF_ROOT + "connector-properties.xml"));
+        broker.start();
+        try {
+
+            assertEquals(broker.getTransportConnectorByScheme("tcp").getMaximumProducersAllowedPerConnection(), MAX_PRODUCERS);
+            assertEquals(broker.getTransportConnectorByScheme("tcp").getMaximumConsumersAllowedPerConnection(), MAX_CONSUMERS);
+
+            ActiveMQConnectionFactory activeMQConnectionFactory = new ActiveMQConnectionFactory("tcp://localhost:61631");
+            javax.jms.Connection connection = activeMQConnectionFactory.createConnection();
+            final CountDownLatch latch = new CountDownLatch(1);
+            connection.setExceptionListener(new ExceptionListener() {
+                public void onException(JMSException e) {
+                    if (e.getCause() instanceof IllegalStateException) {
+                        latch.countDown();
+                    }
+                }
+            });
+            connection.start();
+            Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+            Topic topic = session.createTopic("test.foo");
+
+            for (int i = 0; i < (MAX_PRODUCERS + 1); i++) {
+                MessageProducer messageProducer = session.createProducer(topic);
+            }
+
+            latch.await(5, TimeUnit.SECONDS);
+            if (latch.getCount() > 0) {
+                fail("Should have got an exception");
+            }
+            try {
+                for (int i = 0; i < (MAX_CONSUMERS + 1); i++) {
+                    MessageConsumer consumer = session.createConsumer(topic);
+                }
+                fail("Should have caught an exception");
+            } catch (JMSException e) {
+            }
+
 
             LOG.info("Success");
         } finally {

@@ -23,6 +23,7 @@ import javax.jms.JMSException;
 import org.apache.activemq.ActiveMQMessageTransformation;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQTopic;
+
 public final class AdvisorySupport {
     public static final String ADVISORY_TOPIC_PREFIX = "ActiveMQ.Advisory.";
     public static final ActiveMQTopic CONNECTION_ADVISORY_TOPIC = new ActiveMQTopic(ADVISORY_TOPIC_PREFIX
@@ -64,7 +65,7 @@ public final class AdvisorySupport {
 
     public static final ActiveMQTopic ALL_DESTINATIONS_COMPOSITE_ADVISORY_TOPIC = new ActiveMQTopic(
             TOPIC_ADVISORY_TOPIC.getPhysicalName() + "," + QUEUE_ADVISORY_TOPIC.getPhysicalName() + "," +
-            TEMP_QUEUE_ADVISORY_TOPIC.getPhysicalName() + "," + TEMP_TOPIC_ADVISORY_TOPIC.getPhysicalName());
+                    TEMP_QUEUE_ADVISORY_TOPIC.getPhysicalName() + "," + TEMP_TOPIC_ADVISORY_TOPIC.getPhysicalName());
     public static final ActiveMQTopic TEMP_DESTINATION_COMPOSITE_ADVISORY_TOPIC = new ActiveMQTopic(
             TEMP_QUEUE_ADVISORY_TOPIC.getPhysicalName() + "," + TEMP_TOPIC_ADVISORY_TOPIC.getPhysicalName());
     private static final ActiveMQTopic AGENT_TOPIC_DESTINATION = new ActiveMQTopic(AGENT_TOPIC);
@@ -256,16 +257,16 @@ public final class AdvisorySupport {
 
     public static ActiveMQTopic getDestinationAdvisoryTopic(ActiveMQDestination destination) {
         switch (destination.getDestinationType()) {
-        case ActiveMQDestination.QUEUE_TYPE:
-            return QUEUE_ADVISORY_TOPIC;
-        case ActiveMQDestination.TOPIC_TYPE:
-            return TOPIC_ADVISORY_TOPIC;
-        case ActiveMQDestination.TEMP_QUEUE_TYPE:
-            return TEMP_QUEUE_ADVISORY_TOPIC;
-        case ActiveMQDestination.TEMP_TOPIC_TYPE:
-            return TEMP_TOPIC_ADVISORY_TOPIC;
-        default:
-            throw new RuntimeException("Unknown destination type: " + destination.getDestinationType());
+            case ActiveMQDestination.QUEUE_TYPE:
+                return QUEUE_ADVISORY_TOPIC;
+            case ActiveMQDestination.TOPIC_TYPE:
+                return TOPIC_ADVISORY_TOPIC;
+            case ActiveMQDestination.TEMP_QUEUE_TYPE:
+                return TEMP_QUEUE_ADVISORY_TOPIC;
+            case ActiveMQDestination.TEMP_TOPIC_TYPE:
+                return TEMP_TOPIC_ADVISORY_TOPIC;
+            default:
+                throw new RuntimeException("Unknown destination type: " + destination.getDestinationType());
         }
     }
 
@@ -307,17 +308,20 @@ public final class AdvisorySupport {
     }
 
     public static boolean isAdvisoryTopic(ActiveMQDestination destination) {
-        if (destination.isComposite()) {
-            ActiveMQDestination[] compositeDestinations = destination.getCompositeDestinations();
-            for (int i = 0; i < compositeDestinations.length; i++) {
-                if (isAdvisoryTopic(compositeDestinations[i])) {
-                    return true;
+        if (destination != null) {
+            if (destination.isComposite()) {
+                ActiveMQDestination[] compositeDestinations = destination.getCompositeDestinations();
+                for (int i = 0; i < compositeDestinations.length; i++) {
+                    if (isAdvisoryTopic(compositeDestinations[i])) {
+                        return true;
+                    }
                 }
+                return false;
+            } else {
+                return destination.isTopic() && destination.getPhysicalName().startsWith(ADVISORY_TOPIC_PREFIX);
             }
-            return false;
-        } else {
-            return destination.isTopic() && destination.getPhysicalName().startsWith(ADVISORY_TOPIC_PREFIX);
         }
+        return false;
     }
 
     public static boolean isConnectionAdvisoryTopic(Destination destination) throws JMSException {

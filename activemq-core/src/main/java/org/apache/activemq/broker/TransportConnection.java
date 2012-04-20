@@ -16,6 +16,27 @@
  */
 package org.apache.activemq.broker;
 
+import java.io.EOFException;
+import java.io.IOException;
+import java.net.SocketException;
+import java.net.URI;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+
+import javax.transaction.xa.XAResource;
+import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.broker.ft.MasterBroker;
 import org.apache.activemq.broker.region.ConnectionStatistics;
 import org.apache.activemq.broker.region.RegionBroker;
@@ -48,26 +69,6 @@ import org.apache.activemq.util.URISupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
-
-import javax.transaction.xa.XAResource;
-import java.io.EOFException;
-import java.io.IOException;
-import java.net.SocketException;
-import java.net.URI;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class TransportConnection implements Connection, Task, CommandVisitor {
     private static final Logger LOG = LoggerFactory.getLogger(TransportConnection.class);
@@ -298,7 +299,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
                         + " command: " + command + ", exception: " + e, e);
             }
 
-            if(e instanceof java.lang.SecurityException){
+            if (e instanceof java.lang.SecurityException) {
                 // still need to close this down - in case the peer of this transport doesn't play nice
                 delayedStop(2000, "Failed with SecurityException: " + e.getLocalizedMessage(), e);
             }
@@ -504,12 +505,19 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         }
         // Avoid replaying dup commands
         if (!ss.getProducerIds().contains(info.getProducerId())) {
+            ActiveMQDestination destination = info.getDestination();
+            if (destination != null && !AdvisorySupport.isAdvisoryTopic(destination)) {
+                if (getProducerCount(connectionId) >= connector.getMaximumProducersAllowedPerConnection()){
+                    throw new IllegalStateException("Can't add producer on connection " + connectionId + ": at maximum limit: " + connector.getMaximumProducersAllowedPerConnection());
+                }
+            }
             broker.addProducer(cs.getContext(), info);
             try {
                 ss.addProducer(info);
             } catch (IllegalStateException e) {
                 broker.removeProducer(cs.getContext(), info);
             }
+
         }
         return null;
     }
@@ -547,6 +555,13 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         }
         // Avoid replaying dup commands
         if (!ss.getConsumerIds().contains(info.getConsumerId())) {
+            ActiveMQDestination destination = info.getDestination();
+            if (destination != null && !AdvisorySupport.isAdvisoryTopic(destination)) {
+                if (getConsumerCount(connectionId) >= connector.getMaximumConsumersAllowedPerConnection()){
+                    throw new IllegalStateException("Can't add consumer on connection " + connectionId + ": at maximum limit: " + connector.getMaximumConsumersAllowedPerConnection());
+                }
+            }
+
             broker.addConsumer(cs.getContext(), info);
             try {
                 ss.addConsumer(info);
@@ -554,6 +569,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
             } catch (IllegalStateException e) {
                 broker.removeConsumer(cs.getContext(), info);
             }
+
         }
         return null;
     }
@@ -1280,7 +1296,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         return null;
     }
 
-    @SuppressWarnings({ "unchecked", "rawtypes" })
+    @SuppressWarnings({"unchecked", "rawtypes"})
     private HashMap<String, String> createMap(Properties properties) {
         return new HashMap(properties);
     }
@@ -1475,5 +1491,33 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
 
     protected CountDownLatch getStopped() {
         return stopped;
+    }
+
+    private int getProducerCount(ConnectionId connectionId) {
+        int result = 0;
+        TransportConnectionState cs = lookupConnectionState(connectionId);
+        if (cs != null) {
+            for (SessionId sessionId : cs.getSessionIds()) {
+                SessionState sessionState = cs.getSessionState(sessionId);
+                if (sessionState != null) {
+                    result += sessionState.getProducerIds().size();
+                }
+            }
+        }
+        return result;
+    }
+
+    private int getConsumerCount(ConnectionId connectionId) {
+        int result = 0;
+        TransportConnectionState cs = lookupConnectionState(connectionId);
+        if (cs != null) {
+            for (SessionId sessionId : cs.getSessionIds()) {
+                SessionState sessionState = cs.getSessionState(sessionId);
+                if (sessionState != null) {
+                    result += sessionState.getConsumerIds().size();
+                }
+            }
+        }
+        return result;
     }
 }

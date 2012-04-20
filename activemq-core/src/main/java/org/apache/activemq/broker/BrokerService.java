@@ -1265,6 +1265,24 @@ public class BrokerService implements Service {
         }
     }
 
+    public TransportConnector getTransportConnectorByName(String name){
+        for (TransportConnector transportConnector:transportConnectors){
+           if (name.equals(transportConnector.getName())){
+               return transportConnector;
+           }
+        }
+        return null;
+    }
+
+    public TransportConnector getTransportConnectorByScheme(String scheme){
+        for (TransportConnector transportConnector:transportConnectors){
+            if (scheme.equals(transportConnector.getUri().getScheme())){
+                return transportConnector;
+            }
+        }
+        return null;
+    }
+
     public List<NetworkConnector> getNetworkConnectors() {
         return new ArrayList<NetworkConnector>(networkConnectors);
     }
