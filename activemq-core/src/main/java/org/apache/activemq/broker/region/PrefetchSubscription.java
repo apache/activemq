@@ -298,7 +298,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                         if (broker.isExpired(node)) {
                             node.getRegionDestination().messageExpired(context, this, node);
                         }
-                        dispatched.remove(node);
+                        iter.remove();
                         node.getRegionDestination().getDestinationStatistics().getInflight().decrement();
                     }
                     if (ack.getLastMessageId().equals(node.getMessageId())) {
