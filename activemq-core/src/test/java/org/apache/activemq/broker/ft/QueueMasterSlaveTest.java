@@ -23,6 +23,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import javax.jms.MessageConsumer;
 import javax.jms.TextMessage;
+
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.JmsTopicSendReceiveWithTwoConnectionsTest;
 import org.apache.activemq.broker.BrokerService;
@@ -47,6 +48,8 @@ public class QueueMasterSlaveTest extends JmsTopicSendReceiveWithTwoConnectionsT
     protected String uriString = "failover://(tcp://localhost:62001,tcp://localhost:62002)?randomize=false";
 
     protected void setUp() throws Exception {
+        setMaxTestTime(TimeUnit.MINUTES.toMillis(10));
+        setAutoFail(true);
         if (System.getProperty("basedir") == null) {
             File file = new File(".");
             System.setProperty("basedir", file.getAbsolutePath());
@@ -59,7 +62,6 @@ public class QueueMasterSlaveTest extends JmsTopicSendReceiveWithTwoConnectionsT
         // wait for thing to connect
         Thread.sleep(1000);
         super.setUp();
-
     }
 
     protected String getSlaveXml() {
@@ -72,11 +74,11 @@ public class QueueMasterSlaveTest extends JmsTopicSendReceiveWithTwoConnectionsT
 
     protected void tearDown() throws Exception {
         super.tearDown();
-        
-    	slaveStarted.await(5, TimeUnit.SECONDS);
+
+        slaveStarted.await(5, TimeUnit.SECONDS);
         BrokerService brokerService = slave.get();
         if( brokerService!=null ) {
-        	brokerService.stop();
+            brokerService.stop();
         }
         master.stop();
     }
@@ -96,16 +98,16 @@ public class QueueMasterSlaveTest extends JmsTopicSendReceiveWithTwoConnectionsT
     protected boolean isTopic() {
         return false;
     }
-    
+
     protected void createMaster() throws Exception {
-		BrokerFactoryBean brokerFactory = new BrokerFactoryBean(new ClassPathResource(getMasterXml()));
-		brokerFactory.afterPropertiesSet();
-		master = brokerFactory.getBroker();
-		master.start();
+        BrokerFactoryBean brokerFactory = new BrokerFactoryBean(new ClassPathResource(getMasterXml()));
+        brokerFactory.afterPropertiesSet();
+        master = brokerFactory.getBroker();
+        master.start();
     }
-    
+
     protected void createSlave() throws Exception {
-    	BrokerFactoryBean brokerFactory = new BrokerFactoryBean(new ClassPathResource(getSlaveXml()));
+        BrokerFactoryBean brokerFactory = new BrokerFactoryBean(new ClassPathResource(getSlaveXml()));
         brokerFactory.afterPropertiesSet();
         BrokerService broker = brokerFactory.getBroker();
         broker.start();
