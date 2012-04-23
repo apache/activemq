@@ -18,11 +18,13 @@ package org.apache.activemq.broker.scheduler;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+
 import java.io.File;
 import java.util.Calendar;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+
 import org.apache.activemq.util.IOHelper;
 import org.apache.kahadb.util.ByteSequence;
 import org.junit.After;
@@ -129,17 +131,17 @@ public class JobSchedulerTest {
     public void testRemoveLong() throws Exception {
         final int COUNT = 10;
 
-        long time = 20000;
+        long time = 60000;
         for (int i = 0; i < COUNT; i++) {
             String str = new String("test" + i);
             scheduler.schedule("id" + i, new ByteSequence(str.getBytes()), "", time, 1000, -1);
 
         }
-        int size = scheduler.getNextScheduleJobs().size();
+        int size = scheduler.getAllJobs().size();
         assertEquals(size, COUNT);
         long removeTime = scheduler.getNextScheduleTime();
         scheduler.remove(removeTime);
-        size = scheduler.getNextScheduleJobs().size();
+        size = scheduler.getAllJobs().size();
         assertEquals(0, size);
     }
 
@@ -150,16 +152,16 @@ public class JobSchedulerTest {
         long time = 20000;
         for (int i = 0; i < COUNT; i++) {
             String str = new String("test" + i);
-            scheduler.schedule("id" + i, new ByteSequence(str.getBytes()), "", time, 10, -1);
+            scheduler.schedule("id" + i, new ByteSequence(str.getBytes()), "", time, 1000, -1);
             if (i == COUNT / 2) {
-                scheduler.schedule(test, new ByteSequence(test.getBytes()), "", time, 10, -1);
+                scheduler.schedule(test, new ByteSequence(test.getBytes()), "", time, 1000, -1);
             }
         }
 
-        int size = scheduler.getNextScheduleJobs().size();
+        int size = scheduler.getAllJobs().size();
         assertEquals(size, COUNT + 1);
         scheduler.remove(test);
-        size = scheduler.getNextScheduleJobs().size();
+        size = scheduler.getAllJobs().size();
         assertEquals(size, COUNT);
     }
 
