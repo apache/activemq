@@ -22,7 +22,7 @@
   <parent>
     <groupId>org.apache.activemq</groupId>
     <artifactId>activemq-parent</artifactId>
-    <version>5.6-SNAPSHOT</version>
+    <version>5.6.0</version>
   </parent>
 
   <artifactId>activemq-core</artifactId>
@@ -570,7 +570,7 @@
             <configuration>
               <tasks>
                 <echo>Running the XSDDoc task</echo>
-                <taskdef name="xsddoc" classname="net.sf.xframe.xsddoc.Task"/>
+                <taskdef name="xsddoc" classname="net.sf.xframe.xsddoc.Task" />
                 <mkdir dir="${basedir}/target/site/xsddoc" />
                 <xsddoc file="${basedir}/target/classes/activemq.xsd" out="${basedir}/target/site/xsddoc" doctitle="Apache ActiveMQ XML Schema Reference" header="&lt;a href='http://activemq.apache.org/'&gt;Apache ActiveMQ&lt;/a&gt;" footer="Copyright 2007 (c) the &lt;a href='http://www.apache.org/'&gt;Apache Software Foundation&lt;/a&gt;" verbose="false" />
                 <!--
