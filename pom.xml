@@ -32,7 +32,7 @@
 
   <properties>
     <activemq-version>5.6-SNAPSHOT</activemq-version>
-    <activeio-version>3.2-SNAPSHOT</activeio-version>
+    <activeio-version>3.1.4</activeio-version>
     <siteId>activemq-${activemq-version}</siteId>
     <projectName>Apache ActiveMQ</projectName>
     <!-- base url for site deployment.  See distribution management for full url.  Override this in settings.xml for staging -->
