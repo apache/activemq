@@ -52,6 +52,10 @@
       org.springframework*;resolution:=optional,
       org.springframework.beans.factory.xml;resolution:=optional,
       org.w3c.dom.traversal*;resolution:=optional,
+      org.fusesource.hawtbuf*;resolution:=optional,
+      org.fusesource.mq.leveldb*;resolution:=optional,
+      org.fusesource.mqtt.client*;resolution:=optional,
+      org.fusesource.mqtt.codec*;resolution:=optional,
       *
     </activemq.osgi.import.pkg>
     <activemq.osgi.export>
