@@ -16,6 +16,21 @@
  */
 package org.apache.activemq.transport.stomp;
 
+import java.io.DataInputStream;
+import java.io.IOException;
+import java.net.Socket;
+import java.net.SocketTimeoutException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.UnknownHostException;
+import java.util.concurrent.TimeUnit;
+
+import javax.jms.Connection;
+import javax.jms.MessageConsumer;
+import javax.jms.MessageProducer;
+import javax.jms.Session;
+import javax.jms.TextMessage;
+
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.CombinationTestSupport;
 import org.apache.activemq.broker.BrokerFactory;
@@ -25,15 +40,9 @@ import org.apache.activemq.command.ActiveMQTextMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.jms.*;
-import java.io.DataInputStream;
-import java.io.IOException;
-import java.net.*;
-import java.util.concurrent.TimeUnit;
-
 public class Stomp11Test extends CombinationTestSupport {
 
-    private static final Logger LOG = LoggerFactory.getLogger(StompTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(Stomp11Test.class);
 
     protected String bindAddress = "stomp://localhost:61613";
     protected String confUri = "xbean:org/apache/activemq/transport/stomp/stomp-auth-broker.xml";
