@@ -22,6 +22,8 @@ import org.apache.activemq.broker.BrokerFilter;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.ProducerBrokerExchange;
+import org.apache.activemq.broker.jmx.BrokerViewMBean;
+import org.apache.activemq.broker.jmx.SubscriptionViewMBean;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.DestinationStatistics;
 import org.apache.activemq.broker.region.RegionBroker;
@@ -37,6 +39,9 @@ import org.apache.activemq.util.IdGenerator;
 import org.apache.activemq.util.LongSequenceGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.jms.JMSException;
+import javax.management.ObjectName;
 import java.io.File;
 import java.net.URI;
 import java.util.Set;
@@ -50,9 +55,11 @@ public class StatisticsBroker extends BrokerFilter {
     private static Logger LOG = LoggerFactory.getLogger(StatisticsBroker.class);
     static final String STATS_DESTINATION_PREFIX = "ActiveMQ.Statistics.Destination";
     static final String STATS_BROKER_PREFIX = "ActiveMQ.Statistics.Broker";
+    static final String STATS_SUBSCRIPTION_PREFIX = "ActiveMQ.Statistics.Subscription";
     private static final IdGenerator ID_GENERATOR = new IdGenerator();
     private final LongSequenceGenerator messageIdGenerator = new LongSequenceGenerator();
     protected final ProducerId advisoryProducerId = new ProducerId();
+    protected BrokerViewMBean brokerView;
 
     /**
      * 
@@ -80,6 +87,10 @@ public class StatisticsBroker extends BrokerFilter {
                     STATS_DESTINATION_PREFIX.length());
             boolean brokerStats = physicalName.regionMatches(true, 0, STATS_BROKER_PREFIX, 0, STATS_BROKER_PREFIX
                     .length());
+            boolean subStats = physicalName.regionMatches(true, 0, STATS_SUBSCRIPTION_PREFIX, 0, STATS_SUBSCRIPTION_PREFIX
+                    .length());
+            BrokerService brokerService = getBrokerService();
+            RegionBroker regionBroker = (RegionBroker) brokerService.getRegionBroker();
             if (destStats) {
                 String queueryName = physicalName.substring(STATS_DESTINATION_PREFIX.length(), physicalName.length());
                 ActiveMQDestination queryDest = ActiveMQDestination.createDestination(queueryName,msgDest.getDestinationType());
@@ -108,10 +119,11 @@ public class StatisticsBroker extends BrokerFilter {
                         sendStats(producerExchange.getConnectionContext(), statsMessage, replyTo);
                     }
                 }
+            } else if (subStats) {
+                sendSubStats(producerExchange.getConnectionContext(), getBrokerView().getQueueSubscribers(), replyTo);
+                sendSubStats(producerExchange.getConnectionContext(), getBrokerView().getTopicSubscribers(), replyTo);
             } else if (brokerStats) {
                 ActiveMQMapMessage statsMessage = new ActiveMQMapMessage();
-                BrokerService brokerService = getBrokerService();
-                RegionBroker regionBroker = (RegionBroker) brokerService.getRegionBroker();
                 SystemUsage systemUsage = brokerService.getSystemUsage();
                 DestinationStatistics stats = regionBroker.getDestinationStatistics();
                 statsMessage.setString("brokerName", regionBroker.getBrokerName());
@@ -165,6 +177,15 @@ public class StatisticsBroker extends BrokerFilter {
         }
     }
 
+    BrokerViewMBean getBrokerView() throws Exception {
+        if (this.brokerView == null) {
+            ObjectName brokerName = getBrokerService().getBrokerObjectName();
+            this.brokerView = (BrokerViewMBean) getBrokerService().getManagementContext().newProxyInstance(brokerName,
+                    BrokerViewMBean.class, true);
+        }
+        return this.brokerView;
+    }
+
     public void start() throws Exception {
         super.start();
         LOG.info("Starting StatisticsBroker");
@@ -172,6 +193,34 @@ public class StatisticsBroker extends BrokerFilter {
 
     public void stop() throws Exception {
         super.stop();
+    }
+
+    protected void sendSubStats(ConnectionContext context, ObjectName[] subscribers, ActiveMQDestination replyTo) throws Exception {
+        for (int i = 0; i < subscribers.length; i++) {
+            ObjectName name = subscribers[i];
+            SubscriptionViewMBean subscriber = (SubscriptionViewMBean)getBrokerService().getManagementContext().newProxyInstance(name, SubscriptionViewMBean.class, true);
+            ActiveMQMapMessage statsMessage = prepareSubscriptionMessage(subscriber);
+            sendStats(context, statsMessage, replyTo);
+        }
+    }
+
+    protected ActiveMQMapMessage prepareSubscriptionMessage(SubscriptionViewMBean subscriber) throws JMSException {
+        ActiveMQMapMessage statsMessage = new ActiveMQMapMessage();
+        statsMessage.setString("destinationName", subscriber.getDestinationName());
+        statsMessage.setString("clientId", subscriber.getClientId());
+        statsMessage.setString("connectionId", subscriber.getConnectionId());
+        statsMessage.setLong("sessionId", subscriber.getSessionId());
+        statsMessage.setString("selector", subscriber.getSelector());
+        statsMessage.setLong("enqueueCounter", subscriber.getEnqueueCounter());
+        statsMessage.setLong("dequeueCounter", subscriber.getDequeueCounter());
+        statsMessage.setLong("dispatchedCounter", subscriber.getDispatchedCounter());
+        statsMessage.setLong("dispatchedQueueSize", subscriber.getDispatchedQueueSize());
+        statsMessage.setInt("prefetchSize", subscriber.getPrefetchSize());
+        statsMessage.setInt("maximumPendingMessageLimit", subscriber.getMaximumPendingMessageLimit());
+        statsMessage.setBoolean("exclusive", subscriber.isExclusive());
+        statsMessage.setBoolean("retroactive", subscriber.isRetroactive());
+        statsMessage.setBoolean("slowConsumer", subscriber.isSlowConsumer());
+        return statsMessage;
     }
 
     protected void sendStats(ConnectionContext context, ActiveMQMapMessage msg, ActiveMQDestination replyTo)
