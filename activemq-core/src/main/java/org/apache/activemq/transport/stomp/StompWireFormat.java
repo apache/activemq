@@ -16,14 +16,20 @@
  */
 package org.apache.activemq.transport.stomp;
 
+import java.io.DataInput;
+import java.io.DataInputStream;
+import java.io.DataOutput;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.PushbackInputStream;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.apache.activemq.util.ByteArrayInputStream;
 import org.apache.activemq.util.ByteArrayOutputStream;
 import org.apache.activemq.util.ByteSequence;
 import org.apache.activemq.wireformat.WireFormat;
-
-import java.io.*;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Implements marshalling and unmarsalling the <a
@@ -201,7 +207,7 @@ public class StompWireFormat implements WireFormat {
 
                     ByteSequence nameSeq = stream.toByteSequence();
                     String name = new String(nameSeq.getData(), nameSeq.getOffset(), nameSeq.getLength(), "UTF-8").trim();
-                    String value = decodeHeader(headerLine).trim();
+                    String value = decodeHeader(headerLine);
                     headers.put(name, value);
                 } catch (Exception e) {
                     throw new ProtocolException("Unable to parser header line [" + line + "]", true);

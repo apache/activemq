@@ -68,7 +68,6 @@ public class Stomp11Test extends CombinationTestSupport {
         session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         queue = new ActiveMQQueue(getQueueName());
         connection.start();
-
     }
 
     private void stompConnect() throws IOException, URISyntaxException, UnknownHostException {
@@ -106,11 +105,11 @@ public class Stomp11Test extends CombinationTestSupport {
     public void testConnect() throws Exception {
 
         String connectFrame = "STOMP\n" +
-                              "login: system\n" +
-                              "passcode: manager\n" +
+                              "login:system\n" +
+                              "passcode:manager\n" +
                               "accept-version:1.1\n" +
                               "host:localhost\n" +
-                              "request-id: 1\n" +
+                              "request-id:1\n" +
                               "\n" + Stomp.NULL;
         stompConnection.sendFrame(connectFrame);
 
@@ -129,8 +128,8 @@ public class Stomp11Test extends CombinationTestSupport {
     public void testConnectWithVersionOptions() throws Exception {
 
         String connectFrame = "STOMP\n" +
-                              "login: system\n" +
-                              "passcode: manager\n" +
+                              "login:system\n" +
+                              "passcode:manager\n" +
                               "accept-version:1.0,1.1\n" +
                               "host:localhost\n" +
                               "\n" + Stomp.NULL;
@@ -150,8 +149,8 @@ public class Stomp11Test extends CombinationTestSupport {
     public void testConnectWithValidFallback() throws Exception {
 
         String connectFrame = "STOMP\n" +
-                              "login: system\n" +
-                              "passcode: manager\n" +
+                              "login:system\n" +
+                              "passcode:manager\n" +
                               "accept-version:1.0,10.1\n" +
                               "host:localhost\n" +
                               "\n" + Stomp.NULL;
@@ -171,8 +170,8 @@ public class Stomp11Test extends CombinationTestSupport {
     public void testConnectWithInvalidFallback() throws Exception {
 
         String connectFrame = "STOMP\n" +
-                              "login: system\n" +
-                              "passcode: manager\n" +
+                              "login:system\n" +
+                              "passcode:manager\n" +
                               "accept-version:9.0,10.1\n" +
                               "host:localhost\n" +
                               "\n" + Stomp.NULL;
@@ -189,8 +188,8 @@ public class Stomp11Test extends CombinationTestSupport {
     public void testHeartbeats() throws Exception {
 
         String connectFrame = "STOMP\n" +
-                              "login: system\n" +
-                              "passcode: manager\n" +
+                              "login:system\n" +
+                              "passcode:manager\n" +
                               "accept-version:1.1\n" +
                               "heart-beat:0,1000\n" +
                               "host:localhost\n" +
@@ -231,8 +230,8 @@ public class Stomp11Test extends CombinationTestSupport {
     public void testHeartbeatsDropsIdleConnection() throws Exception {
 
         String connectFrame = "STOMP\n" +
-                              "login: system\n" +
-                              "passcode: manager\n" +
+                              "login:system\n" +
+                              "passcode:manager\n" +
                               "accept-version:1.1\n" +
                               "heart-beat:1000,0\n" +
                               "host:localhost\n" +
@@ -261,8 +260,8 @@ public class Stomp11Test extends CombinationTestSupport {
 
     public void testSendAfterMissingHeartbeat() throws Exception {
 
-        String connectFrame = "STOMP\n" + "login: system\n" +
-                              "passcode: manager\n" +
+        String connectFrame = "STOMP\n" + "login:system\n" +
+                              "passcode:manager\n" +
                               "accept-version:1.1\n" +
                               "heart-beat:1000,0\n" +
                               "host:localhost\n" +
@@ -290,8 +289,8 @@ public class Stomp11Test extends CombinationTestSupport {
     public void testRejectInvalidHeartbeats1() throws Exception {
 
         String connectFrame = "STOMP\n" +
-                              "login: system\n" +
-                              "passcode: manager\n" +
+                              "login:system\n" +
+                              "passcode:manager\n" +
                               "accept-version:1.1\n" +
                               "heart-beat:0\n" +
                               "host:localhost\n" +
@@ -309,8 +308,8 @@ public class Stomp11Test extends CombinationTestSupport {
     public void testRejectInvalidHeartbeats2() throws Exception {
 
         String connectFrame = "STOMP\n" +
-                              "login: system\n" +
-                              "passcode: manager\n" +
+                              "login:system\n" +
+                              "passcode:manager\n" +
                               "accept-version:1.1\n" +
                               "heart-beat:T,0\n" +
                               "host:localhost\n" +
@@ -328,8 +327,8 @@ public class Stomp11Test extends CombinationTestSupport {
     public void testRejectInvalidHeartbeats3() throws Exception {
 
         String connectFrame = "STOMP\n" +
-                              "login: system\n" +
-                              "passcode: manager\n" +
+                              "login:system\n" +
+                              "passcode:manager\n" +
                               "accept-version:1.1\n" +
                               "heart-beat:100,10,50\n" +
                               "host:localhost\n" +
@@ -347,8 +346,8 @@ public class Stomp11Test extends CombinationTestSupport {
     public void testSubscribeAndUnsubscribe() throws Exception {
 
         String connectFrame = "STOMP\n" +
-                              "login: system\n" +
-                              "passcode: manager\n" +
+                              "login:system\n" +
+                              "passcode:manager\n" +
                               "accept-version:1.1\n" +
                               "host:localhost\n" +
                               "\n" + Stomp.NULL;
@@ -392,8 +391,8 @@ public class Stomp11Test extends CombinationTestSupport {
     public void testSubscribeWithNoId() throws Exception {
 
         String connectFrame = "STOMP\n" +
-                              "login: system\n" +
-                              "passcode: manager\n" +
+                              "login:system\n" +
+                              "passcode:manager\n" +
                               "accept-version:1.1\n" +
                               "host:localhost\n" +
                               "\n" + Stomp.NULL;
@@ -418,8 +417,8 @@ public class Stomp11Test extends CombinationTestSupport {
     public void testUnsubscribeWithNoId() throws Exception {
 
         String connectFrame = "STOMP\n" +
-                              "login: system\n" +
-                              "passcode: manager\n" +
+                              "login:system\n" +
+                              "passcode:manager\n" +
                               "accept-version:1.1\n" +
                               "host:localhost\n" +
                               "\n" + Stomp.NULL;
@@ -449,8 +448,8 @@ public class Stomp11Test extends CombinationTestSupport {
     public void testAckMessageWithId() throws Exception {
 
         String connectFrame = "STOMP\n" +
-                              "login: system\n" +
-                              "passcode: manager\n" +
+                              "login:system\n" +
+                              "passcode:manager\n" +
                               "accept-version:1.1\n" +
                               "host:localhost\n" +
                               "\n" + Stomp.NULL;
@@ -487,8 +486,8 @@ public class Stomp11Test extends CombinationTestSupport {
     public void testAckMessageWithNoId() throws Exception {
 
         String connectFrame = "STOMP\n" +
-                              "login: system\n" +
-                              "passcode: manager\n" +
+                              "login:system\n" +
+                              "passcode:manager\n" +
                               "accept-version:1.1\n" +
                               "host:localhost\n" +
                               "\n" + Stomp.NULL;
@@ -530,8 +529,8 @@ public class Stomp11Test extends CombinationTestSupport {
         final int MSG_COUNT = 10;
 
         String connectFrame = "STOMP\n" +
-                              "login: system\n" +
-                              "passcode: manager\n" +
+                              "login:system\n" +
+                              "passcode:manager\n" +
                               "accept-version:1.1\n" +
                               "host:localhost\n" +
                               "\n" + Stomp.NULL;
@@ -591,12 +590,11 @@ public class Stomp11Test extends CombinationTestSupport {
         stompConnection.sendFrame(frame);
     }
 
-
     public void testSendMessageWithStandardHeadersEncoded() throws Exception {
 
         MessageConsumer consumer = session.createConsumer(queue);
 
-        String frame = "CONNECT\n" + "login: system\n" + "passcode: manager\n" +
+        String frame = "CONNECT\n" + "login:system\n" + "passcode:manager\n" +
                 "accept-version:1.1" + "\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
 
@@ -622,10 +620,9 @@ public class Stomp11Test extends CombinationTestSupport {
         assertEquals("GroupID", "abc", amqMessage.getGroupID());
     }
 
-
     public void testSubscribeWithMessageSentWithEncodedProperties() throws Exception {
 
-        String frame = "CONNECT\n" + "login: system\n" + "passcode: manager\n" +  "accept-version:1.1" + "\n\n" + Stomp.NULL;
+        String frame = "CONNECT\n" + "login:system\n" + "passcode:manager\n" +  "accept-version:1.1" + "\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
 
         frame = stompConnection.receiveFrame();
@@ -654,8 +651,8 @@ public class Stomp11Test extends CombinationTestSupport {
     public void testNackMessage() throws Exception {
 
         String connectFrame = "STOMP\n" +
-                "login: system\n" +
-                "passcode: manager\n" +
+                "login:system\n" +
+                "passcode:manager\n" +
                 "accept-version:1.1\n" +
                 "host:localhost\n" +
                 "\n" + Stomp.NULL;
@@ -702,9 +699,49 @@ public class Stomp11Test extends CombinationTestSupport {
                 "id:12345\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
 
-
         frame = "DISCONNECT\n" + "\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
     }
 
+    public void testHeaderValuesAreNotWSTrimmed() throws Exception {
+
+        String connectFrame = "STOMP\n" +
+                              "login:system\n" +
+                              "passcode:manager\n" +
+                              "accept-version:1.1\n" +
+                              "host:localhost\n" +
+                              "\n" + Stomp.NULL;
+        stompConnection.sendFrame(connectFrame);
+
+        String f = stompConnection.receiveFrame();
+        LOG.debug("Broker sent: " + f);
+
+        assertTrue(f.startsWith("CONNECTED"));
+
+        String message = "SEND\n" + "destination:/queue/" + getQueueName() +
+                         "\ntest1: value" +
+                         "\ntest2:value " +
+                         "\ntest3: value " +
+                         "\n\n" + "Hello World" + Stomp.NULL;
+
+        stompConnection.sendFrame(message);
+
+        String frame = "SUBSCRIBE\n" + "destination:/queue/" + getQueueName() + "\n" +
+                       "id:12345\n" + "ack:auto\n\n" + Stomp.NULL;
+        stompConnection.sendFrame(frame);
+
+        StompFrame received = stompConnection.receive();
+        assertTrue(received.getAction().equals("MESSAGE"));
+
+        assertEquals(" value", received.getHeaders().get("test1"));
+        assertEquals("value ", received.getHeaders().get("test2"));
+        assertEquals(" value ", received.getHeaders().get("test3"));
+
+        frame = "UNSUBSCRIBE\n" + "destination:/queue/" + getQueueName() + "\n" +
+                "id:12345\n\n" + Stomp.NULL;
+        stompConnection.sendFrame(frame);
+
+        frame = "DISCONNECT\n" + "\n\n" + Stomp.NULL;
+        stompConnection.sendFrame(frame);
+    }
 }
