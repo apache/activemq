@@ -32,6 +32,7 @@ public class AMQ2571Test extends EmbeddedBrokerTestSupport {
     public void testTempQueueClosing() {
         try {
             ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory(this.bindAddress);
+            connectionFactory.setAlwaysSyncSend(true);
 
             // First create session that will own the TempQueue
             Connection connectionA = connectionFactory.createConnection();
@@ -56,13 +57,13 @@ public class AMQ2571Test extends EmbeddedBrokerTestSupport {
             Thread sendingThread = new Thread(new Runnable() {
                 public void run() {
                     try {
-                        for (int i = 0; i < 100000; i++) {
+                        long end = System.currentTimeMillis() + 5*60*1000;
+                        // wait for exception on send
+                        while (System.currentTimeMillis() < end) {
                             producerB.send(message);
                         }
                     } catch (JMSException e) {
-                        // We don't get this exception every time.
-                        // Not getting it means that we don't know if the
-                        // creator of the TempQueue has disconnected.
+                        e.printStackTrace();
                     }
                 }
             });
@@ -72,7 +73,7 @@ public class AMQ2571Test extends EmbeddedBrokerTestSupport {
             // Now close connection A. This will remove the TempQueue.
             connectionA.close();
             // Wait for the thread to finish.
-            sendingThread.join();
+            sendingThread.join(5*60*1000);
 
             // Sleep for a while to make sure that we should know that the
             // TempQueue is gone.
@@ -95,6 +96,7 @@ public class AMQ2571Test extends EmbeddedBrokerTestSupport {
     @Override
     protected void setUp() throws Exception {
         bindAddress = "vm://localhost";
+        setAutoFail(true);
         super.setUp();
     }
 
@@ -103,7 +105,6 @@ public class AMQ2571Test extends EmbeddedBrokerTestSupport {
         BrokerService answer = new BrokerService();
         answer.setPersistent(false);
         answer.setUseJmx(false);
-        answer.addConnector(bindAddress);
         return answer;
     }
 }

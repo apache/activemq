@@ -16,14 +16,14 @@
  */
 package org.apache.activemq.plugin;
 
+import junit.framework.TestCase;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerPlugin;
 import org.apache.activemq.broker.BrokerService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import java.net.URI;
-import java.util.Enumeration;
+
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
 import javax.jms.MapMessage;
@@ -32,7 +32,7 @@ import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
 import javax.jms.Queue;
 import javax.jms.Session;
-import junit.framework.TestCase;
+import java.net.URI;
 
 /**
  * A BrokerStatisticsPluginTest
@@ -91,6 +91,32 @@ public class BrokerStatisticsPluginTest extends TestCase{
         */
         
         
+    }
+
+    public void testSubscriptionStats() throws Exception{
+        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        Queue replyTo = session.createTemporaryQueue();
+        MessageConsumer consumer = session.createConsumer(replyTo);
+        Queue testQueue = session.createQueue("Test.Queue");
+        MessageConsumer testConsumer = session.createConsumer(testQueue);
+        MessageProducer producer = session.createProducer(null);
+        Queue query = session.createQueue(StatisticsBroker.STATS_SUBSCRIPTION_PREFIX);
+        Message msg = session.createMessage();
+
+        producer.send(testQueue,msg);
+
+        msg.setJMSReplyTo(replyTo);
+        producer.send(query,msg);
+        MapMessage reply = (MapMessage) consumer.receive();
+        assertNotNull(reply);
+        assertTrue(reply.getMapNames().hasMoreElements());
+
+        /*for (Enumeration e = reply.getMapNames();e.hasMoreElements();) {
+            String name = e.nextElement().toString();
+            System.err.println(name+"="+reply.getObject(name));
+        }*/
+
+
     }
     
     protected void setUp() throws Exception {

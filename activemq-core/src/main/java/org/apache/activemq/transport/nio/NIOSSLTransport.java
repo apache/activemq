@@ -135,7 +135,11 @@ public class NIOSSLTransport extends NIOTransport  {
             while(true) {
                 if (!plain.hasRemaining()) {
 
-                    plain.clear();
+                    if (status == SSLEngineResult.Status.OK && handshakeStatus != SSLEngineResult.HandshakeStatus.NEED_UNWRAP) {
+                        plain.clear();
+                    } else {
+                        plain.compact();
+                    }
                     int readCount = secureRead(plain);
 
 
@@ -150,7 +154,9 @@ public class NIOSSLTransport extends NIOTransport  {
                     }
                 }
 
-                processCommand(plain);
+                if (status == SSLEngineResult.Status.OK && handshakeStatus != SSLEngineResult.HandshakeStatus.NEED_UNWRAP) {
+                    processCommand(plain);
+                }
 
             }
         } catch (IOException e) {
@@ -192,7 +198,7 @@ public class NIOSSLTransport extends NIOTransport  {
 
     protected int secureRead(ByteBuffer plain) throws Exception {
 
-        if (!(inputBuffer.position() != 0 && inputBuffer.hasRemaining())) {
+        if (!(inputBuffer.position() != 0 && inputBuffer.hasRemaining()) || status == SSLEngineResult.Status.BUFFER_UNDERFLOW) {
             int bytesRead = channel.read(inputBuffer);
 
             if (bytesRead == -1) {

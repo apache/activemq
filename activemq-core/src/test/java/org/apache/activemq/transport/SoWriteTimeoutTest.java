@@ -20,12 +20,15 @@ import java.net.Socket;
 import java.net.SocketException;
 import java.net.URI;
 import java.util.concurrent.TimeUnit;
+
 import javax.jms.Connection;
 import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.MessageConsumer;
 import javax.jms.Session;
+
 import junit.framework.Test;
+
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.JmsTestSupport;
 import org.apache.activemq.broker.BrokerService;
@@ -110,7 +113,7 @@ public class SoWriteTimeoutTest extends JmsTestSupport {
         stompConnection.open(new Socket("localhost", proxy.getUrl().getPort()));
         stompConnection.getStompSocket().setTcpNoDelay(true);
 
-        String frame = "CONNECT\n" + "login: system\n" + "passcode: manager\n\n" + Stomp.NULL;
+        String frame = "CONNECT\n" + "login:system\n" + "passcode:manager\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
         frame = stompConnection.receiveFrame();
         assertTrue(frame.startsWith("CONNECTED"));

@@ -1610,7 +1610,7 @@ public class DurableSubscriptionOfflineTest extends org.apache.activemq.TestSupp
         }
         executorService.shutdown();
         executorService.awaitTermination(10, TimeUnit.MINUTES);
-        assertTrue("No exceptions", exceptions.isEmpty());
+        assertTrue("No exceptions  " + exceptions.elements(), exceptions.isEmpty());
     }
 
     public static class Listener implements MessageListener {
@@ -1649,6 +1649,7 @@ public class DurableSubscriptionOfflineTest extends org.apache.activemq.TestSupp
                 }
             }
             catch (JMSException e) {
+                e.printStackTrace();
                 exceptions.add(e);
             }
         }

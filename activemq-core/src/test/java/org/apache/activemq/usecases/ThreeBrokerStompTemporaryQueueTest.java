@@ -70,7 +70,7 @@ public class ThreeBrokerStompTemporaryQueueTest extends JmsMultipleBrokersTestSu
         stompConnection = new StompConnection();
         stompConnection.open("localhost", 61614);
         // Creating a temp queue
-        stompConnection.sendFrame("CONNECT\n" + "login: system\n" + "passcode: manager\n\n" + Stomp.NULL);
+        stompConnection.sendFrame("CONNECT\n" + "login:system\n" + "passcode:manager\n\n" + Stomp.NULL);
 
         StompFrame frame = stompConnection.receive();
         assertTrue(frame.toString().startsWith("CONNECTED"));
@@ -98,29 +98,29 @@ public class ThreeBrokerStompTemporaryQueueTest extends JmsMultipleBrokersTestSu
         assertEquals("Advisory topic should be present", 1, advisoryTopicsForTempQueues);
 
         stompConnection.disconnect();
-        
+
         Thread.sleep(1000);
-        
+
         advisoryTopicsForTempQueues = countTopicsByName("BrokerA", "ActiveMQ.Advisory.Consumer.Queue.ID");
         assertEquals("Advisory topic should have been deleted", 0, advisoryTopicsForTempQueues);
         advisoryTopicsForTempQueues = countTopicsByName("BrokerB", "ActiveMQ.Advisory.Consumer.Queue.ID");
         assertEquals("Advisory topic should have been deleted", 0, advisoryTopicsForTempQueues);
         advisoryTopicsForTempQueues = countTopicsByName("BrokerC", "ActiveMQ.Advisory.Consumer.Queue.ID");
-        assertEquals("Advisory topic should have been deleted", 0, advisoryTopicsForTempQueues);  
-        
+        assertEquals("Advisory topic should have been deleted", 0, advisoryTopicsForTempQueues);
+
 
         LOG.info("Restarting brokerA");
         BrokerItem brokerItem = brokers.remove("BrokerA");
         if (brokerItem != null) {
             brokerItem.destroy();
         }
-        
+
         BrokerService restartedBroker = createAndConfigureBroker(new URI("broker:(tcp://localhost:61616,stomp://localhost:61613)/BrokerA"));
         bridgeAndConfigureBrokers("BrokerA", "BrokerB");
         bridgeAndConfigureBrokers("BrokerA", "BrokerC");
         restartedBroker.start();
         waitForBridgeFormation();
-        
+
         Thread.sleep(3000);
 
         assertEquals("Destination", 0, brokers.get("BrokerA").broker.getAdminView().getTemporaryQueues().length);
