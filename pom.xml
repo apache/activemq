@@ -61,7 +61,7 @@
     <commons-primitives-version>1.0</commons-primitives-version>
     <commons-net-version>2.2</commons-net-version>
     <directory-version>1.5.7</directory-version>
-    <fusemq-leveldb-version>1.1</fusemq-leveldb-version>
+    <fusemq-leveldb-version>1.2</fusemq-leveldb-version>
     <geronimo-version>1.0</geronimo-version>
     <howl-version>0.1.8</howl-version>
     <hawtbuf-version>1.6</hawtbuf-version>
