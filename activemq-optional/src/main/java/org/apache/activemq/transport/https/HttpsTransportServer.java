@@ -18,7 +18,11 @@ package org.apache.activemq.transport.https;
 
 import java.net.URI;
 
+import javax.net.ssl.SSLContext;
+
+import org.apache.activemq.broker.SslContext;
 import org.apache.activemq.transport.http.HttpTransportServer;
+import org.eclipse.jetty.util.ssl.SslContextFactory;
 
 public class HttpsTransportServer extends HttpTransportServer {
 
@@ -31,41 +35,61 @@ public class HttpsTransportServer extends HttpTransportServer {
     private String keyCertificateAlgorithm;
     private String protocol;
     private String auth;
+    private SslContext context;
 
-     public HttpsTransportServer(URI uri, HttpsTransportFactory factory) {
+    public HttpsTransportServer(URI uri, HttpsTransportFactory factory, SslContext context) {
         super(uri, factory);
+        this.context = context;
     }
 
     public void doStart() throws Exception {
         Krb5AndCertsSslSocketConnector sslConnector = new Krb5AndCertsSslSocketConnector();
 
-        if(auth != null){
-            sslConnector.setMode(auth);
-        }
+        SSLContext sslContext = context == null ? null : context.getSSLContext();
+        
+		// Get a reference to the current ssl context factory...
+		SslContextFactory factory = sslConnector.getSslContextFactory();
+		
+		if (context != null) {
+			
+			// Should not be using this method since it does not use all of the values 
+			// from the passed SslContext instance.....
+			factory.setSslContext(sslContext);
+			
+		} else {
 
-        sslConnector.getSslContextFactory().setKeyStore(keyStore);
-        sslConnector.getSslContextFactory().setKeyStorePassword(keyStorePassword);
-        // if the keyPassword hasn't been set, default it to the
-        // key store password
-        if (keyPassword == null) {
-            sslConnector.getSslContextFactory().setKeyStorePassword(keyStorePassword);
-        }
-        if (keyStoreType != null) {
-            sslConnector.getSslContextFactory().setKeyStoreType(keyStoreType);
-        }
-        if (secureRandomCertficateAlgorithm != null) {
-            sslConnector.getSslContextFactory().setSecureRandomAlgorithm(secureRandomCertficateAlgorithm);
-        }
-        if (keyCertificateAlgorithm != null) {
-            sslConnector.getSslContextFactory().setSslKeyManagerFactoryAlgorithm(keyCertificateAlgorithm);
-        }
-        if (trustCertificateAlgorithm != null) {
-            sslConnector.getSslContextFactory().setTrustManagerFactoryAlgorithm(trustCertificateAlgorithm);
-        }
-        if (protocol != null) {
-            sslConnector.getSslContextFactory().setProtocol(protocol);
-        }
+			if (auth != null) {
+				sslConnector.setMode(auth);
+			}
 
+			if (keyStore != null) {
+				factory.setKeyStorePath(keyStore);
+			}
+			if (keyStorePassword != null) {
+				factory.setKeyStorePassword(keyStorePassword);
+			}
+			// if the keyPassword hasn't been set, default it to the
+			// key store password
+			if (keyPassword == null && keyStorePassword != null) {
+				factory.setKeyStorePassword(keyStorePassword);
+			}
+			if (keyStoreType != null) {
+				factory.setKeyStoreType(keyStoreType);
+			}
+			if (secureRandomCertficateAlgorithm != null) {
+				factory.setSecureRandomAlgorithm(secureRandomCertficateAlgorithm);
+			}
+			if (keyCertificateAlgorithm != null) {
+				factory.setSslKeyManagerFactoryAlgorithm(keyCertificateAlgorithm);
+			}
+			if (trustCertificateAlgorithm != null) {
+				factory.setTrustManagerFactoryAlgorithm(trustCertificateAlgorithm);
+			}
+			if (protocol != null) {
+				factory.setProtocol(protocol);
+			}
+		}
+        
         setConnector(sslConnector);
 
         super.doStart();
