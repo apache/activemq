@@ -51,6 +51,7 @@ public class SpringSslContext extends SslContext {
     private String keyStore;
     private String trustStore;
 
+    private String keyStoreKeyPassword;
     private String keyStorePassword;
     private String trustStorePassword;
 
@@ -90,7 +91,7 @@ public class SpringSslContext extends SslContext {
         }
         
         KeyManagerFactory tmf  = KeyManagerFactory.getInstance(keyStoreAlgorithm);
-        tmf.init(ks, keyStorePassword==null? null : keyStorePassword.toCharArray());
+        tmf.init(ks, keyStoreKeyPassword == null ? (keyStorePassword==null? null : keyStorePassword.toCharArray()) : keyStoreKeyPassword.toCharArray());
         return Arrays.asList(tmf.getKeyManagers());
     }
 
@@ -162,6 +163,14 @@ public class SpringSslContext extends SslContext {
 
     public void setTrustStoreAlgorithm(String trustAlgorithm) {
         this.trustStoreAlgorithm = trustAlgorithm;
+    }
+
+    public String getKeyStoreKeyPassword() {
+        return keyStoreKeyPassword;
+    }
+
+    public void setKeyStoreKeyPassword(String keyPassword) {
+        this.keyStoreKeyPassword = keyPassword;
     }
 
     public String getKeyStorePassword() {
