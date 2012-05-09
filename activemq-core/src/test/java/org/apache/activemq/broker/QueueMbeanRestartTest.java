@@ -19,7 +19,9 @@ package org.apache.activemq.broker;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.management.ObjectName;
+
 import junit.framework.Test;
+
 import org.apache.activemq.TestSupport;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.util.JMXSupport;
@@ -65,6 +67,7 @@ public class QueueMbeanRestartTest extends TestSupport {
         broker.stop();
         broker.waitUntilStopped();
         createBroker(false);
+        broker.waitUntilStarted();
     }
 
     private void verifyPresenceOfQueueMbean() throws Exception {
