@@ -1441,6 +1441,85 @@ public class StompTest extends CombinationTestSupport {
         assertNull(stompMessage.getHeaders().get("transaction"));
     }
 
+    public void testPrefetchSizeOfOneClientAck() throws Exception {
+        stompConnection.connect("system", "manager");
+
+        HashMap<String, String> headers = new HashMap<String, String>();
+        headers.put("activemq.prefetchSize", "1");
+        stompConnection.subscribe("/queue/" + getQueueName(), "client", headers);
+
+        // send messages using JMS
+        sendMessage("message 1");
+        sendMessage("message 2");
+        sendMessage("message 3");
+        sendMessage("message 4");
+        sendMessage("message 5");
+
+        StompFrame frame = stompConnection.receive();
+        assertEquals(frame.getBody(), "message 1");
+
+        try {
+            StompFrame frameNull = stompConnection.receive(500);
+            if (frameNull != null) {
+                fail("Should not have received the second message");
+            }
+        } catch (SocketTimeoutException soe) {}
+
+        stompConnection.ack(frame);
+
+        StompFrame frame1 = stompConnection.receive();
+        assertEquals(frame1.getBody(), "message 2");
+
+        try {
+            StompFrame frameNull = stompConnection.receive(500);
+            if (frameNull != null) {
+                fail("Should not have received the third message");
+            }
+        } catch (SocketTimeoutException soe) {}
+
+        stompConnection.ack(frame1);
+        StompFrame frame2 = stompConnection.receive();
+        assertEquals(frame2.getBody(), "message 3");
+
+        try {
+            StompFrame frameNull = stompConnection.receive(500);
+            if (frameNull != null) {
+                fail("Should not have received the fourth message");
+            }
+        } catch (SocketTimeoutException soe) {}
+
+        stompConnection.ack(frame2);
+        StompFrame frame3 = stompConnection.receive();
+        assertEquals(frame3.getBody(), "message 4");
+
+        try {
+            StompFrame frameNull = stompConnection.receive(500);
+            if (frameNull != null) {
+                fail("Should not have received the fifth message");
+            }
+        } catch (SocketTimeoutException soe) {}
+
+        stompConnection.ack(frame3);
+        StompFrame frame4 = stompConnection.receive();
+        assertEquals(frame4.getBody(), "message 5");
+
+        try {
+            StompFrame frameNull = stompConnection.receive(500);
+            if (frameNull != null) {
+                fail("Should not have received any more messages");
+            }
+        } catch (SocketTimeoutException soe) {}
+
+        stompConnection.ack(frame4);
+
+        try {
+            StompFrame frameNull = stompConnection.receive(500);
+            if (frameNull != null) {
+                fail("Should not have received the any more messages");
+            }
+        } catch (SocketTimeoutException soe) {}
+    }
+
     public void testPrefetchSize() throws Exception {
         stompConnection.connect("system", "manager");
 
