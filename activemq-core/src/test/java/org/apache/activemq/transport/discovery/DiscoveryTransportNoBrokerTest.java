@@ -38,6 +38,12 @@ public class DiscoveryTransportNoBrokerTest extends CombinationTestSupport {
 
     private static final Logger LOG = LoggerFactory.getLogger(DiscoveryTransportNoBrokerTest.class);
 
+    @Override
+    public void setUp() throws Exception {
+        setAutoFail(true);
+        super.setUp();
+    }
+
     public void testNoExtraThreads() throws Exception {
         BrokerService broker = new BrokerService();
         TransportConnector tcp = broker.addConnector("tcp://localhost:0?transport.closeAsync=false");
@@ -46,7 +52,7 @@ public class DiscoveryTransportNoBrokerTest extends CombinationTestSupport {
         tcp.setDiscoveryUri(discoveryUri);
         broker.start();
         broker.waitUntilStarted();
-        
+
         Vector<String> existingNames = new Vector<String>();
         Thread[] threads = getThreads();
         for (Thread t : threads) {
@@ -54,14 +60,14 @@ public class DiscoveryTransportNoBrokerTest extends CombinationTestSupport {
         }
         final int idleThreadCount = threads.length;
         LOG.info("Broker started - thread Count:" + idleThreadCount);
-        
+
        final int noConnectionToCreate = 10;
         for (int i=0; i<10;i++) {
-            ActiveMQConnectionFactory factory = 
+            ActiveMQConnectionFactory factory =
                 new ActiveMQConnectionFactory("discovery:(multicast://239.255.2.3:6155?group=" + group +")?closeAsync=false");
             LOG.info("Connecting.");
             Connection connection = factory.createConnection();
-            connection.setClientID("test");  
+            connection.setClientID("test");
             connection.close();
         }
         Thread.sleep(2000);
@@ -73,8 +79,8 @@ public class DiscoveryTransportNoBrokerTest extends CombinationTestSupport {
         }
         assertTrue("no extra threads per connection", Thread.activeCount() - idleThreadCount < noConnectionToCreate);
     }
-   
-    
+
+
     private Thread[] getThreads() {
         Thread[] threads = new Thread[Thread.activeCount()];
         Thread.enumerate(threads);
@@ -94,7 +100,7 @@ public class DiscoveryTransportNoBrokerTest extends CombinationTestSupport {
             assertTrue("reason is java.io.IOException, was: " + expected.getCause(), expected.getCause() instanceof java.io.IOException);
         }
     }
-    
+
     public void testInitialConnectDelayWithNoBroker() throws Exception {
         // the initialReconnectDelay only kicks in once a set of connect URL have
         // been returned from the discovery agent.
@@ -104,7 +110,7 @@ public class DiscoveryTransportNoBrokerTest extends CombinationTestSupport {
         long startT = System.currentTimeMillis();
         String groupId = "WillNotMatch" + startT;
         try {
-            String urlStr = "discovery:(multicast://default?group=" + groupId + 
+            String urlStr = "discovery:(multicast://default?group=" + groupId +
                 ")?useExponentialBackOff=false&maxReconnectAttempts=2&reconnectDelay=" + initialReconnectDelay;
             ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(urlStr);
             LOG.info("Connecting.");
@@ -117,20 +123,20 @@ public class DiscoveryTransportNoBrokerTest extends CombinationTestSupport {
             assertTrue("took at least initialReconnectDelay time: " + duration + " e:" + expected, duration >= initialReconnectDelay);
         }
     }
-    
+
     public void testSetDiscoveredBrokerProperties() throws Exception {
         final String extraParameterName = "connectionTimeout";
         final String extraParameterValue = "3000";
         final URI uri = new URI("discovery:(multicast://default)?initialReconnectDelay=100&"
                 + DiscoveryListener.DISCOVERED_OPTION_PREFIX + extraParameterName + "=" + extraParameterValue);
         CompositeData compositeData = URISupport.parseComposite(uri);
-        
-        StubCompositeTransport compositeTransport = new StubCompositeTransport();      
+
+        StubCompositeTransport compositeTransport = new StubCompositeTransport();
         DiscoveryTransport discoveryTransport = DiscoveryTransportFactory.createTransport(compositeTransport, compositeData, compositeData.getParameters());
-        
-        discoveryTransport.onServiceAdd(new DiscoveryEvent("tcp://localhost:61616"));        
+
+        discoveryTransport.onServiceAdd(new DiscoveryEvent("tcp://localhost:61616"));
         assertEquals("expected added URI after discovery event", compositeTransport.getTransportURIs().length, 1);
-        
+
         URI discoveredServiceURI = compositeTransport.getTransportURIs()[0];
         Map<String, String> parameters = URISupport.parseParameters(discoveredServiceURI);
         assertTrue("unable to add parameter to discovered service", parameters.containsKey(extraParameterName));
@@ -157,17 +163,17 @@ public class DiscoveryTransportNoBrokerTest extends CombinationTestSupport {
     }
 
     public void testAddRemoveDiscoveredBroker() throws Exception {
-        final URI uri = new URI("discovery:(multicast://default)?initialReconnectDelay=100&connectionTimeout=3000");        
+        final URI uri = new URI("discovery:(multicast://default)?initialReconnectDelay=100&connectionTimeout=3000");
         CompositeData compositeData = URISupport.parseComposite(uri);
-        
-        StubCompositeTransport compositeTransport = new StubCompositeTransport();      
+
+        StubCompositeTransport compositeTransport = new StubCompositeTransport();
         DiscoveryTransport discoveryTransport = DiscoveryTransportFactory.createTransport(compositeTransport, compositeData, compositeData.getParameters());
-        
+
         final String serviceName = "tcp://localhost:61616";
-        discoveryTransport.onServiceAdd(new DiscoveryEvent(serviceName));        
+        discoveryTransport.onServiceAdd(new DiscoveryEvent(serviceName));
         assertEquals("expected added URI after discovery event", 1, compositeTransport.getTransportURIs().length);
-        
-        discoveryTransport.onServiceRemove(new DiscoveryEvent(serviceName));        
+
+        discoveryTransport.onServiceRemove(new DiscoveryEvent(serviceName));
         assertEquals("expected URI removed after discovery event", 0, compositeTransport.getTransportURIs().length);
     }
 }
