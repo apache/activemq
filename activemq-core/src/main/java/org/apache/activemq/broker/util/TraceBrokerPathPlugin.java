@@ -58,6 +58,7 @@ public class TraceBrokerPathPlugin extends BrokerPluginSupport {
                     brokerStamp += "," + getBrokerName();
                 }
                 messageDispatch.getMessage().setProperty(getStampProperty(), brokerStamp);
+                messageDispatch.getMessage().setMarshalledProperties(null);
             }
         } catch (IOException ioe) {
             LOG.warn("Setting broker property failed " + ioe, ioe);
