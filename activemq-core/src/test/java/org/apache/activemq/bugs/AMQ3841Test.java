@@ -85,6 +85,10 @@ public class AMQ3841Test {
 
         prepareBrokerWithMultiStore(false);
         broker.start();
+
+        broker.getAdminView().addQueue(destinationName);
+        assertNotNull(broker.getDestination(new ActiveMQQueue(destinationName)));
+
     }
 
     protected KahaDBPersistenceAdapter createStore(boolean delete) throws IOException {
