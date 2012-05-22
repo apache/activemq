@@ -17,9 +17,13 @@
 package org.apache.activemq.transport.mqtt;
 
 import java.util.Vector;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import javax.jms.MessageConsumer;
+import javax.jms.MessageProducer;
 import javax.jms.Session;
+import javax.jms.TextMessage;
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
@@ -60,6 +64,47 @@ public class MQTTTest {
         if (brokerService != null) {
             brokerService.stop();
         }
+    }
+
+    @Test
+    public void testSendAndReceiveMQTT() throws Exception {
+        addMQTTConnector(brokerService);
+        brokerService.start();
+        MQTT mqtt = new MQTT();
+        final BlockingConnection subscribeConnection = mqtt.blockingConnection();
+        subscribeConnection.connect();
+        Topic topic = new Topic("foo/bah",QoS.AT_MOST_ONCE);
+        Topic[] topics = {topic};
+        subscribeConnection.subscribe(topics);
+        final CountDownLatch latch = new CountDownLatch(numberOfMessages);
+
+        Thread thread = new Thread(new Runnable() {
+            public void run() {
+                for (int i = 0; i < numberOfMessages; i++){
+                    try {
+                        Message message = subscribeConnection.receive();
+                        message.ack();
+                        latch.countDown();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        break;
+                    }
+
+                }
+            }
+        });
+        thread.start();
+
+        BlockingConnection publisherConnection = mqtt.blockingConnection();
+        publisherConnection.connect();
+        for (int i = 0; i < numberOfMessages; i++){
+            String payload = "Message " + i;
+            publisherConnection.publish(topic.name().toString(),payload.getBytes(),QoS.AT_LEAST_ONCE,false);
+        }
+
+        latch.await(10, TimeUnit.SECONDS);
+        assertEquals(0, latch.getCount());
+
     }
 
     @Test
@@ -172,7 +217,7 @@ public class MQTTTest {
         brokerService.start();
         MQTT mqtt = createMQTTConnection();
         BlockingConnection connection = mqtt.blockingConnection();
-        final String DESTINATION_NAME = "foo";
+        final String DESTINATION_NAME = "foo.*";
         connection.connect();
 
         ActiveMQConnection activeMQConnection = (ActiveMQConnection) new ActiveMQConnectionFactory().createConnection();
@@ -183,7 +228,7 @@ public class MQTTTest {
 
         for (int i = 0; i < numberOfMessages; i++) {
             String payload = "Test Message: " + i;
-            connection.publish("foo", payload.getBytes(), QoS.AT_LEAST_ONCE, false);
+            connection.publish("foo/bah", payload.getBytes(), QoS.AT_LEAST_ONCE, false);
             ActiveMQMessage message = (ActiveMQMessage) consumer.receive();
             ByteSequence bs = message.getContent();
             assertEquals(payload, new String(bs.data, bs.offset, bs.length));
@@ -193,6 +238,36 @@ public class MQTTTest {
         activeMQConnection.close();
         connection.disconnect();
     }
+
+    @Test
+    public void testSendJMSReceiveMQTT() throws Exception {
+        addMQTTConnector(brokerService);
+        brokerService.addConnector(ActiveMQConnectionFactory.DEFAULT_BROKER_BIND_URL);
+        brokerService.start();
+        MQTT mqtt = createMQTTConnection();
+        mqtt.setKeepAlive(Short.MAX_VALUE);
+        BlockingConnection connection = mqtt.blockingConnection();
+        connection.connect();
+
+        ActiveMQConnection activeMQConnection = (ActiveMQConnection) new ActiveMQConnectionFactory().createConnection();
+        activeMQConnection.start();
+        Session s = activeMQConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        javax.jms.Topic jmsTopic = s.createTopic("foo.far");
+        MessageProducer producer = s.createProducer(jmsTopic);
+
+        Topic[] topics = {new Topic(utf8("foo/far"), QoS.AT_MOST_ONCE)};
+        connection.subscribe(topics);
+        for (int i = 0; i < numberOfMessages; i++) {
+            String payload = "This is Test Message: " + i;
+            TextMessage sendMessage = s.createTextMessage(payload);
+            producer.send(sendMessage);
+            Message message = connection.receive();
+            message.ack();
+            assertEquals(payload, new String(message.getPayload()));
+        }
+        connection.disconnect();
+    }
+
 
     protected void addMQTTConnector(BrokerService brokerService) throws Exception {
         brokerService.addConnector("mqtt://localhost:1883");

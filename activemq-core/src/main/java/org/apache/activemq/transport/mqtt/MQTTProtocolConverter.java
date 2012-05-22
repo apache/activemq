@@ -261,8 +261,6 @@ class MQTTProtocolConverter {
 
     QoS onSubscribe(SUBSCRIBE command, Topic topic) throws MQTTProtocolException {
         ActiveMQDestination destination = new ActiveMQTopic(convertMQTTToActiveMQ(topic.name().toString()));
-
-
         if (destination == null) {
             throw new MQTTProtocolException("Invalid Destination.");
         }
@@ -458,31 +456,15 @@ class MQTTProtocolConverter {
         }
         result.topicName(topicName);
 
-        ByteSequence byteSequence = message.getContent();
-        if (message.isCompressed()) {
-            Inflater inflater = new Inflater();
-            inflater.setInput(byteSequence.data, byteSequence.offset, byteSequence.length);
-            byte[] data = new byte[4096];
-            int read;
-            ByteArrayOutputStream bytesOut = new ByteArrayOutputStream();
-            while ((read = inflater.inflate(data, 0, data.length)) != 0) {
-                bytesOut.write(data, 0, read);
-            }
-            byteSequence = bytesOut.toByteSequence();
-        }
 
         if (message.getDataStructureType() == ActiveMQTextMessage.DATA_STRUCTURE_TYPE) {
-            if (byteSequence.getLength() > 4) {
-                byte[] content = new byte[byteSequence.getLength() - 4];
-                System.arraycopy(byteSequence.data, 4, content, 0, content.length);
-                result.payload(new Buffer(content));
-            } else {
                 ActiveMQTextMessage msg = (ActiveMQTextMessage) message.copy();
+                msg.setReadOnlyBody(true);
                 String messageText = msg.getText();
                 if (messageText != null) {
-                    result.payload(new Buffer(msg.getText().getBytes("UTF-8")));
+                    result.payload(new Buffer(messageText.getBytes("UTF-8")));
                 }
-            }
+
 
         } else if (message.getDataStructureType() == ActiveMQBytesMessage.DATA_STRUCTURE_TYPE) {
 
@@ -491,8 +473,29 @@ class MQTTProtocolConverter {
             byte[] data = new byte[(int) msg.getBodyLength()];
             msg.readBytes(data);
             result.payload(new Buffer(data));
-        } else {
+        } else if (message.getDataStructureType() == ActiveMQMapMessage.DATA_STRUCTURE_TYPE){
+            ActiveMQMapMessage msg = (ActiveMQMapMessage) message.copy();
+            msg.setReadOnlyBody(true);
+            Map map = msg.getContentMap();
+            if (map != null){
+                result.payload(new Buffer(map.toString().getBytes("UTF-8")));
+            }
+        }
+
+        else {
+            ByteSequence byteSequence = message.getContent();
             if (byteSequence != null && byteSequence.getLength() > 0) {
+                if (message.isCompressed()){
+                    Inflater inflater = new Inflater();
+                    inflater.setInput(byteSequence.data,byteSequence.offset,byteSequence.length);
+                    byte[]  data = new byte[4096];
+                    int read;
+                    ByteArrayOutputStream bytesOut = new ByteArrayOutputStream();
+                    while((read = inflater.inflate(data)) != 0){
+                       bytesOut.write(data,0,read);
+                    }
+                    byteSequence = bytesOut.toByteSequence();
+                }
                 result.payload(new Buffer(byteSequence.data, byteSequence.offset, byteSequence.length));
             }
         }
@@ -620,9 +623,9 @@ class MQTTProtocolConverter {
     }
 
     private String convertMQTTToActiveMQ(String name) {
-        String result = name.replace('>', '#');
-        result = result.replace('*', '+');
-        result = result.replace('.', '/');
+        String result = name.replace('#', '>');
+        result = result.replace('+', '*');
+        result = result.replace('/', '.');
         return result;
     }
 }
