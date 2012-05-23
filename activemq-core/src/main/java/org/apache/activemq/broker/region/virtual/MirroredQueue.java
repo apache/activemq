@@ -55,6 +55,7 @@ public class MirroredQueue implements DestinationInterceptor, BrokerServiceAware
                                     message = message.copy();
                                 }
                                 message.setDestination(destination.getActiveMQDestination());
+                                message.setMemoryUsage(null); // set this to null so that it will use the queue memoryUsage instance instead of the topic.
                                 super.send(context, message);
                             }
                         };
