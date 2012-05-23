@@ -341,16 +341,20 @@ public abstract class AbstractJmxCommand extends AbstractCommand {
                context.print("Connecting to pid: " + pid);
 
                String jmxUrl = findJMXUrlByProcessId(pid);
-               // If jmx url already specified
-               if (getJmxServiceUrl() != null) {
-                   context.printException(new IllegalArgumentException("JMX URL already specified."));
-                   tokens.clear();
-               }
-               try {
-                   this.setJmxServiceUrl(new JMXServiceURL(jmxUrl));
-               } catch (MalformedURLException e) {
-                   context.printException(e);
-                   tokens.clear();
+               if (jmxUrl != null) {
+                   // If jmx url already specified
+                   if (getJmxServiceUrl() != null) {
+                       context.printException(new IllegalArgumentException("JMX URL already specified."));
+                       tokens.clear();
+                   }
+                   try {
+                       this.setJmxServiceUrl(new JMXServiceURL(jmxUrl));
+                   } catch (MalformedURLException e) {
+                       context.printException(e);
+                       tokens.clear();
+                   }
+               } else {
+                   context.printInfo("failed to resolve jmxUrl for pid:" + pid + ", using default JMX url");
                }
            }  else {
               context.printInfo("--pid option is not available for this VM, using default JMX url");
