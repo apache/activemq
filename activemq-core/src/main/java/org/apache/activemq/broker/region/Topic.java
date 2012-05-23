@@ -109,9 +109,6 @@ public class Topic extends BaseDestination implements Task {
     }
 
     public void addSubscription(ConnectionContext context, final Subscription sub) throws Exception {
-
-       super.addSubscription(context, sub);
-
         if (!sub.getConsumerInfo().isDurable()) {
 
             // Do a retroactive recovery if needed.
@@ -121,23 +118,34 @@ public class Topic extends BaseDestination implements Task {
                 // while we are recovering a subscription to avoid out of order messages.
                 dispatchLock.writeLock().lock();
                 try {
+                    boolean applyRecovery = false;
                     synchronized (consumers) {
-                        sub.add(context, this);
-                        consumers.add(sub);
+                        if (!consumers.contains(sub)){
+                            sub.add(context, this);
+                            consumers.add(sub);
+                            applyRecovery=true;
+                            super.addSubscription(context, sub);
+                        }
                     }
-                    subscriptionRecoveryPolicy.recover(context, this, sub);
+                    if (applyRecovery){
+                        subscriptionRecoveryPolicy.recover(context, this, sub);
+                    }
                 } finally {
                     dispatchLock.writeLock().unlock();
                 }
 
             } else {
                 synchronized (consumers) {
-                    sub.add(context, this);
-                    consumers.add(sub);
+                    if (!consumers.contains(sub)){
+                        sub.add(context, this);
+                        consumers.add(sub);
+                        super.addSubscription(context, sub);
+                    }
                 }
             }
         } else {
             DurableTopicSubscription dsub = (DurableTopicSubscription) sub;
+            super.addSubscription(context, sub);
     		sub.add(context, this);
     		if(dsub.isActive()) {
 	        	synchronized (consumers) {

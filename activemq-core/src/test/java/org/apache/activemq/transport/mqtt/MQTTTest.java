@@ -255,7 +255,7 @@ public class MQTTTest {
         javax.jms.Topic jmsTopic = s.createTopic("foo.far");
         MessageProducer producer = s.createProducer(jmsTopic);
 
-        Topic[] topics = {new Topic(utf8("foo/far"), QoS.AT_MOST_ONCE)};
+        Topic[] topics = {new Topic(utf8("foo/+"), QoS.AT_MOST_ONCE)};
         connection.subscribe(topics);
         for (int i = 0; i < numberOfMessages; i++) {
             String payload = "This is Test Message: " + i;
