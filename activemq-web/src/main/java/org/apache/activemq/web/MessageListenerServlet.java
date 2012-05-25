@@ -416,14 +416,18 @@ public class MessageListenerServlet extends MessageServletSupport {
         if (message instanceof TextMessage) {
             TextMessage textMsg = (TextMessage)message;
             String txt = textMsg.getText();
-            if (txt.startsWith("<?")) {
-                txt = txt.substring(txt.indexOf("?>") + 2);
+            if (txt != null) {
+                if (txt.startsWith("<?")) {
+                    txt = txt.substring(txt.indexOf("?>") + 2);
+                }
+                writer.print(txt);
             }
-            writer.print(txt);
         } else if (message instanceof ObjectMessage) {
             ObjectMessage objectMsg = (ObjectMessage)message;
             Object object = objectMsg.getObject();
-            writer.print(object.toString());
+            if (object != null) {
+                writer.print(object.toString());
+            }
         }
         writer.println("</response>");
     }
