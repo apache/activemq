@@ -104,7 +104,6 @@ public class MQTTTest {
 
         latch.await(10, TimeUnit.SECONDS);
         assertEquals(0, latch.getCount());
-
     }
 
     @Test
