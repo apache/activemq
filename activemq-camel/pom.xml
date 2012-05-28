@@ -206,6 +206,9 @@
               <value>target/</value>
             </property>
           </systemProperties>
+          <excludes>
+              <exclude>**/JmsJdbcXALoadTest.java</exclude><!-- used only for manual xa performance testing -->
+          </excludes>
         </configuration>
       </plugin>
     </plugins>

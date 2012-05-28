@@ -16,6 +16,9 @@
  */
 package org.apache.activemq.pool;
 
+import org.apache.activemq.ActiveMQConnection;
+import org.apache.commons.pool.ObjectPoolFactory;
+
 import javax.jms.JMSException;
 import javax.jms.Session;
 import javax.transaction.RollbackException;
@@ -23,9 +26,6 @@ import javax.transaction.Status;
 import javax.transaction.SystemException;
 import javax.transaction.TransactionManager;
 import javax.transaction.xa.XAResource;
-
-import org.apache.activemq.ActiveMQConnection;
-import org.apache.commons.pool.ObjectPoolFactory;
 
 /**
  * An XA-aware connection pool.  When a session is created and an xa transaction is active,
@@ -56,6 +56,8 @@ public class XaConnectionPool extends ConnectionPool {
                 transactionManager.getTransaction().registerSynchronization(new Synchronization(session));
                 incrementReferenceCount();
                 transactionManager.getTransaction().enlistResource(createXaResource(session));
+            } else {
+                session.setIgnoreClose(false);
             }
             return session;
         } catch (RollbackException e) {
@@ -89,6 +91,7 @@ public class XaConnectionPool extends ConnectionPool {
                 // This will return session to the pool.
                 session.setIgnoreClose(false);
                 session.close();
+                session.setIgnoreClose(true);
                 session.setIsXa(false);
                 decrementReferenceCount();
             } catch (JMSException e) {
