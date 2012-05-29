@@ -36,10 +36,10 @@ import org.apache.activemq.MessageAvailableConsumer;
 import org.apache.activemq.MessageAvailableListener;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQTextMessage;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.eclipse.jetty.continuation.Continuation;
 import org.eclipse.jetty.continuation.ContinuationSupport;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A servlet for sending and receiving messages to/from JMS destinations using
@@ -48,8 +48,8 @@ import org.eclipse.jetty.continuation.ContinuationSupport;
  * the servlet or as request parameters. <p/> For reading messages you can
  * specify a readTimeout parameter to determine how long the servlet should
  * block for.
- * 
- * 
+ *
+ *
  */
 public class MessageServlet extends MessageServletSupport {
 
@@ -61,7 +61,7 @@ public class MessageServlet extends MessageServletSupport {
     private long defaultReadTimeout = -1;
     private long maximumReadTimeout = 20000;
     private long requestTimeout = 1000;
-    
+
     private HashMap<String, WebClient> clients = new HashMap<String, WebClient>();
 
     public void init() throws ServletException {
@@ -76,13 +76,13 @@ public class MessageServlet extends MessageServletSupport {
         }
         name = servletConfig.getInitParameter("replyTimeout");
         if (name != null) {
-        	requestTimeout = asLong(name);
-        }        
+            requestTimeout = asLong(name);
+        }
     }
 
     /**
      * Sends a message to a destination
-     * 
+     *
      * @param request
      * @param response
      * @throws ServletException
@@ -120,24 +120,24 @@ public class MessageServlet extends MessageServletSupport {
             TextMessage message = client.getSession().createTextMessage(text);
 
             if (sync) {
-               String point = "activemq:" 
-            	   + ((ActiveMQDestination)destination).getPhysicalName().replace("//", "")
-            	   + "?requestTimeout=" + requestTimeout;
+               String point = "activemq:"
+                   + ((ActiveMQDestination)destination).getPhysicalName().replace("//", "")
+                   + "?requestTimeout=" + requestTimeout;
                try {
-            	   String body = (String)client.getProducerTemplate().requestBody(point, text);
+                   String body = (String)client.getProducerTemplate().requestBody(point, text);
                    ActiveMQTextMessage answer = new ActiveMQTextMessage();
                    answer.setText(body);
-            	   writeMessageResponse(response.getWriter(), answer);
+                   writeMessageResponse(response.getWriter(), answer);
                } catch (Exception e) {
-            	   IOException ex = new IOException();
-            	   ex.initCause(e);
-            	   throw ex;
+                   IOException ex = new IOException();
+                   ex.initCause(e);
+                   throw ex;
                }
             } else {
                 appendParametersToMessage(request, message);
                 boolean persistent = isSendPersistent(request);
                 int priority = getSendPriority(request);
-                long timeToLive = getSendTimeToLive(request);            	
+                long timeToLive = getSendTimeToLive(request);
                 client.send(destination, message, persistent, priority, timeToLive);
             }
 
@@ -167,7 +167,7 @@ public class MessageServlet extends MessageServletSupport {
 
     /**
      * Reads a message from a destination up to some specific timeout period
-     * 
+     *
      * @param request
      * @param response
      * @throws ServletException
@@ -182,7 +182,7 @@ public class MessageServlet extends MessageServletSupport {
             }
             MessageAvailableConsumer consumer = (MessageAvailableConsumer)client.getConsumer(destination, request.getHeader(WebClient.selectorName));
             Message message = null;
-            message = (Message)request.getAttribute("message"); 
+            message = (Message)request.getAttribute("message");
             if (message != null) {
                 // we're resuming continuation,
                 // so just write the message and return
@@ -197,7 +197,7 @@ public class MessageServlet extends MessageServletSupport {
 
             Continuation continuation = null;
             Listener listener = null;
-            
+
 
             // Look for any available messages
             message = consumer.receive(10);
@@ -206,7 +206,7 @@ public class MessageServlet extends MessageServletSupport {
             // no events.
             if (message == null) {
                 continuation = ContinuationSupport.getContinuation(request);
-                
+
                 if (continuation.isExpired()) {
                     response.setStatus(HttpServletResponse.SC_NO_CONTENT);
                     return;
@@ -214,7 +214,7 @@ public class MessageServlet extends MessageServletSupport {
 
                 continuation.setTimeout(timeout);
                 continuation.suspend();
-                
+
                 // Fetch the listeners
                 listener = (Listener)consumer.getAvailableListener();
                 if (listener == null) {
@@ -231,7 +231,7 @@ public class MessageServlet extends MessageServletSupport {
             throw new ServletException("Could not post JMS message: " + e, e);
         }
     }
-    
+
     protected void writeResponse(HttpServletRequest request, HttpServletResponse response, Message message) throws IOException, JMSException {
         int messages = 0;
         try {
@@ -251,7 +251,7 @@ public class MessageServlet extends MessageServletSupport {
                 if (type != null) {
                     response.setContentType(type);
                 }
-                
+
                 setResponseHeaders(response, message);
                 writeMessageResponse(writer, message);
             }
@@ -266,14 +266,18 @@ public class MessageServlet extends MessageServletSupport {
         if (message instanceof TextMessage) {
             TextMessage textMsg = (TextMessage)message;
             String txt = textMsg.getText();
-            if (txt.startsWith("<?")) {
-                txt = txt.substring(txt.indexOf("?>") + 2);
+            if (txt != null) {
+                if (txt.startsWith("<?")) {
+                    txt = txt.substring(txt.indexOf("?>") + 2);
+                }
+                writer.print(txt);
             }
-            writer.print(txt);
         } else if (message instanceof ObjectMessage) {
             ObjectMessage objectMsg = (ObjectMessage)message;
             Object object = objectMsg.getObject();
-            writer.print(object.toString());
+            if (object != null) {
+                writer.print(object.toString());
+            }
         }
     }
 
@@ -281,25 +285,25 @@ public class MessageServlet extends MessageServletSupport {
         String rico = request.getParameter("rico");
         return rico != null && rico.equals("true");
     }
-    
+
     public WebClient getWebClient(HttpServletRequest request) {
-    	String clientId = request.getParameter("clientId");
-    	if (clientId != null) {
-    		synchronized(this) {
-    			LOG.debug("Getting local client [" + clientId + "]");
-    			WebClient client = clients.get(clientId);
-    			if (client == null) {
-    				LOG.debug("Creating new client [" + clientId + "]");
-    				client = new WebClient();
-    				clients.put(clientId, client);
-    			}
-    			return client;
-    		}
-    		
-    	} else {
-    		return WebClient.getWebClient(request);
-    	}
-    }    
+        String clientId = request.getParameter("clientId");
+        if (clientId != null) {
+            synchronized(this) {
+                LOG.debug("Getting local client [" + clientId + "]");
+                WebClient client = clients.get(clientId);
+                if (client == null) {
+                    LOG.debug("Creating new client [" + clientId + "]");
+                    client = new WebClient();
+                    clients.put(clientId, client);
+                }
+                return client;
+            }
+
+        } else {
+            return WebClient.getWebClient(request);
+        }
+    }
 
     protected String getContentType(HttpServletRequest request) {
         /*
@@ -365,7 +369,7 @@ public class MessageServlet extends MessageServletSupport {
                     } catch (Exception e) {
                         LOG.error("Error receiving message " + e, e);
                     }
-                    continuation.resume();   
+                    continuation.resume();
                 }
             }
         }

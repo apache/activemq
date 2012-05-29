@@ -16,25 +16,26 @@
  */
 package org.apache.activemq.web;
 
+import java.util.Set;
+
 import javax.jms.TextMessage;
 import javax.management.ObjectName;
 
 import org.apache.commons.lang.RandomStringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.eclipse.jetty.client.ContentExchange;
 import org.eclipse.jetty.client.HttpClient;
-
-import java.util.Set;
+import org.eclipse.jetty.http.HttpStatus;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class RestTest extends JettyTestSupport {
     private static final Logger LOG = LoggerFactory.getLogger(RestTest.class);
 
-	public void testConsume() throws Exception {
-	    producer.send(session.createTextMessage("test"));
-	    LOG.info("message sent");
+    public void testConsume() throws Exception {
+        producer.send(session.createTextMessage("test"));
+        LOG.info("message sent");
 
-	    HttpClient httpClient = new HttpClient();
+        HttpClient httpClient = new HttpClient();
         httpClient.start();
         ContentExchange contentExchange = new ContentExchange();
         httpClient.setConnectorType(HttpClient.CONNECTOR_SELECT_CHANNEL);
@@ -42,9 +43,9 @@ public class RestTest extends JettyTestSupport {
         httpClient.send(contentExchange);
         contentExchange.waitForDone();
         assertEquals("test", contentExchange.getResponseContent());
-	}
+    }
 
-	public void testSubscribeFirst() throws Exception {
+    public void testSubscribeFirst() throws Exception {
         HttpClient httpClient = new HttpClient();
         httpClient.start();
         ContentExchange contentExchange = new ContentExchange();
@@ -59,18 +60,18 @@ public class RestTest extends JettyTestSupport {
 
         contentExchange.waitForDone();
         assertEquals("test", contentExchange.getResponseContent());
-	}
+    }
 
-	public void testSelector() throws Exception {
-	    TextMessage msg1 = session.createTextMessage("test1");
-	    msg1.setIntProperty("test", 1);
-	    producer.send(msg1);
-	    LOG.info("message 1 sent");
+    public void testSelector() throws Exception {
+        TextMessage msg1 = session.createTextMessage("test1");
+        msg1.setIntProperty("test", 1);
+        producer.send(msg1);
+        LOG.info("message 1 sent");
 
-	    TextMessage msg2 = session.createTextMessage("test2");
-	    msg2.setIntProperty("test", 2);
-	    producer.send(msg2);
-	    LOG.info("message 2 sent");
+        TextMessage msg2 = session.createTextMessage("test2");
+        msg2.setIntProperty("test", 2);
+        producer.send(msg2);
+        LOG.info("message 2 sent");
 
         HttpClient httpClient = new HttpClient();
         httpClient.start();
@@ -81,11 +82,11 @@ public class RestTest extends JettyTestSupport {
         httpClient.send(contentExchange);
         contentExchange.waitForDone();
         assertEquals("test2", contentExchange.getResponseContent());
-	}
+    }
 
-	// test for https://issues.apache.org/activemq/browse/AMQ-2827
-	public void testCorrelation() throws Exception {
-	    for (int i = 0; i < 200; i++) {
+    // test for https://issues.apache.org/activemq/browse/AMQ-2827
+    public void testCorrelation() throws Exception {
+        for (int i = 0; i < 200; i++) {
             String correlId = "RESTY" + RandomStringUtils.randomNumeric(10);
 
             TextMessage message = session.createTextMessage(correlId);
@@ -106,8 +107,8 @@ public class RestTest extends JettyTestSupport {
             LOG.info("Received: [" + contentExchange.getResponseStatus() + "] " + contentExchange.getResponseContent());
             assertEquals(200, contentExchange.getResponseStatus());
             assertEquals(correlId, contentExchange.getResponseContent());
-	    }
-	}
+        }
+    }
 
     public void testDisconnect() throws Exception {
 
@@ -132,5 +133,24 @@ public class RestTest extends JettyTestSupport {
         ObjectName query = new ObjectName("org.apache.activemq:BrokerName=localhost,Type=Subscription,destinationType=Queue,destinationName=test,*");
         Set<ObjectName> subs = broker.getManagementContext().queryNames(query, null);
         assertEquals("Consumers not closed", 0 , subs.size());
+    }
+
+    public void testPost() throws Exception {
+        HttpClient httpClient = new HttpClient();
+        httpClient.start();
+        ContentExchange contentExchange = new ContentExchange();
+        httpClient.setConnectorType(HttpClient.CONNECTOR_SELECT_CHANNEL);
+        contentExchange.setMethod("POST");
+        contentExchange.setURL("http://localhost:8080/message/testPost?type=queue");
+        httpClient.send(contentExchange);
+
+        contentExchange.waitForDone();
+        assertTrue("success status", HttpStatus.isSuccess(contentExchange.getResponseStatus()));
+
+        ContentExchange contentExchange2 = new ContentExchange();
+        contentExchange2.setURL("http://localhost:8080/message/testPost?readTimeout=1000&type=Queue");
+        httpClient.send(contentExchange2);
+        contentExchange2.waitForDone();
+        assertTrue("success status", HttpStatus.isSuccess(contentExchange2.getResponseStatus()));
     }
 }
