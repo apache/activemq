@@ -125,10 +125,10 @@ public class AjaxTest extends JettyTestSupport {
 
         String fullResponse = response + poll.getResponseContent();
         LOG.debug( "full response : " + fullResponse );
+        assertContains( "<response id='handler' destination='queue://test' >msg1</response>", fullResponse );
+        assertContains( "<response id='handler' destination='queue://test' >msg2</response>", fullResponse );
+        assertContains( "<response id='handler' destination='queue://test' >msg3</response>", fullResponse );
 
-        assertContains( "<response id='handler' destination='queue://test' >msg1</response>\n", fullResponse );
-        assertContains( "<response id='handler' destination='queue://test' >msg2</response>\n", fullResponse );
-        assertContains( "<response id='handler' destination='queue://test' >msg3</response>\n", fullResponse );
         assertResponseCount( 3, fullResponse );
     }
 
@@ -188,9 +188,9 @@ public class AjaxTest extends JettyTestSupport {
         String fullResponse = response + poll.getResponseContent();
         LOG.debug( "full response : " + fullResponse );
 
-        assertContains( "<response id='handler' destination='topic://test' >msg1</response>\n", fullResponse );
-        assertContains( "<response id='handler' destination='topic://test' >msg2</response>\n", fullResponse );
-        assertContains( "<response id='handler' destination='topic://test' >msg3</response>\n", fullResponse );
+        assertContains( "<response id='handler' destination='topic://test' >msg1</response>", fullResponse );
+        assertContains( "<response id='handler' destination='topic://test' >msg2</response>", fullResponse );
+        assertContains( "<response id='handler' destination='topic://test' >msg3</response>", fullResponse );
         assertResponseCount( 3, fullResponse );
     }
 
@@ -228,9 +228,9 @@ public class AjaxTest extends JettyTestSupport {
         poll.waitForDone();
         String response = poll.getResponseContent();
 
-        assertContains( "<response id='handler' destination='queue://test' >test one</response>\n", response );
-        assertContains( "<response id='handler' destination='queue://test' >test two</response>\n", response );
-        assertContains( "<response id='handler' destination='queue://test' >test three</response>\n", response );
+        assertContains( "<response id='handler' destination='queue://test' >test one</response>", response );
+        assertContains( "<response id='handler' destination='queue://test' >test two</response>", response );
+        assertContains( "<response id='handler' destination='queue://test' >test three</response>", response );
         assertResponseCount( 3, response );
     }
 
@@ -294,11 +294,11 @@ public class AjaxTest extends JettyTestSupport {
 
         String fullResponse = response + poll.getResponseContent();
 
-        assertContains( "<response id='handler' destination='queue://test' >message1</response>\n", fullResponse );
-        assertContains( "<response id='handler' destination='queue://test' >message2</response>\n", fullResponse );
-        assertContains( "<response id='handler' destination='queue://test' >message3</response>\n", fullResponse );
-        assertContains( "<response id='handler' destination='queue://test' >message4</response>\n", fullResponse );
-        assertContains( "<response id='handler' destination='queue://test' >message5</response>\n", fullResponse );
+        assertContains( "<response id='handler' destination='queue://test' >message1</response>", fullResponse );
+        assertContains( "<response id='handler' destination='queue://test' >message2</response>", fullResponse );
+        assertContains( "<response id='handler' destination='queue://test' >message3</response>", fullResponse );
+        assertContains( "<response id='handler' destination='queue://test' >message4</response>", fullResponse );
+        assertContains( "<response id='handler' destination='queue://test' >message5</response>", fullResponse );
         assertResponseCount( 5, fullResponse );
     }
 
@@ -382,10 +382,9 @@ public class AjaxTest extends JettyTestSupport {
 
         LOG.debug( poll.getResponseContent() );
 
-        String expected = "<ajax-response>\n" +
-            "<response id='handler' destination='queue://test' >test two</response>\n" +
-            "</ajax-response>\n";
-        assertEquals( "Poll response is not correct.", expected, poll.getResponseContent() );
+        String expected = "<response id='handler' destination='queue://test' >test two</response>";
+
+        assertContains( expected, poll.getResponseContent() );
 
     }
 
@@ -444,11 +443,11 @@ public class AjaxTest extends JettyTestSupport {
         poll.waitForDone();
 
         LOG.debug( "clientA response : " + poll.getResponseContent() );
-        String expected = "<ajax-response>\n" +
-            "<response id='handlerA' destination='queue://testA' >A1</response>\n" +
-            "<response id='handlerA' destination='queue://testA' >A2</response>\n" +
-            "</ajax-response>\n";
-        assertEquals( "Poll response is not correct.", expected, poll.getResponseContent() );
+        String expected1 = "<response id='handlerA' destination='queue://testA' >A1</response>";
+        String expected2 = "<response id='handlerA' destination='queue://testA' >A2</response>";
+
+        assertContains( expected1, poll.getResponseContent() );
+        assertContains( expected2, poll.getResponseContent() );
 
         // clientB polls for messages
         poll = new AjaxTestContentExchange();
@@ -459,11 +458,11 @@ public class AjaxTest extends JettyTestSupport {
         poll.waitForDone();
 
         LOG.debug( "clientB response : " + poll.getResponseContent() );
-        expected = "<ajax-response>\n" +
-            "<response id='handlerB' destination='queue://testB' >B1</response>\n" +
-            "<response id='handlerB' destination='queue://testB' >B2</response>\n" +
-            "</ajax-response>\n";
-        assertEquals( "Poll response is not correct.", expected, poll.getResponseContent() );
+        expected1 =  "<response id='handlerB' destination='queue://testB' >B1</response>";
+        expected2 = "<response id='handlerB' destination='queue://testB' >B2</response>";
+
+        assertContains( expected1, poll.getResponseContent() );
+        assertContains( expected2, poll.getResponseContent() );
     }
 
     public void testAjaxClientReceivesMessagesForMultipleTopics() throws Exception {
@@ -530,10 +529,10 @@ public class AjaxTest extends JettyTestSupport {
 
         String fullResponse = response + poll.getResponseContent();
         LOG.debug( "full response " + fullResponse );
-        assertContains( "<response id='handlerA' destination='topic://topicA' >A1</response>\n", fullResponse );
-        assertContains( "<response id='handlerB' destination='topic://topicB' >B1</response>\n", fullResponse );
-        assertContains( "<response id='handlerA' destination='topic://topicA' >A2</response>\n", fullResponse );
-        assertContains( "<response id='handlerB' destination='topic://topicB' >B2</response>\n", fullResponse );
+        assertContains( "<response id='handlerA' destination='topic://topicA' >A1</response>", fullResponse );
+        assertContains( "<response id='handlerB' destination='topic://topicB' >B1</response>", fullResponse );
+        assertContains( "<response id='handlerA' destination='topic://topicA' >A2</response>", fullResponse );
+        assertContains( "<response id='handlerB' destination='topic://topicB' >B2</response>", fullResponse );
         assertResponseCount( 4, fullResponse );
      }
 }
