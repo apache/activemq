@@ -318,8 +318,9 @@ public class MultiKahaDBPersistenceAdapter extends DestinationMap implements Per
     private void registerExistingAdapter(FilteredKahaDBPersistenceAdapter filteredAdapter, File candidate) {
         KahaDBPersistenceAdapter adapter = adapterFromTemplate(filteredAdapter.getPersistenceAdapter(), candidate.getName());
         startAdapter(adapter, candidate.getName());
-        if (adapter.getDestinations().size() != 0) {
-            registerAdapter(adapter, adapter.getDestinations().toArray(new ActiveMQDestination[]{})[0]);
+        Set<ActiveMQDestination> destinations = adapter.getDestinations();
+        if (destinations.size() != 0) {
+            registerAdapter(adapter, destinations.toArray(new ActiveMQDestination[]{})[0]);
         } else {
             stopAdapter(adapter, candidate.getName());
         }
