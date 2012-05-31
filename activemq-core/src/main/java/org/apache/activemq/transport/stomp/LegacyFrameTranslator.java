@@ -54,7 +54,6 @@ public class LegacyFrameTranslator implements FrameTranslator {
             if(intendedType.equalsIgnoreCase("text")){
                 ActiveMQTextMessage text = new ActiveMQTextMessage();
                 try {
-                    //text.setText(new String(command.getContent(), "UTF-8"));
                     ByteArrayOutputStream bytes = new ByteArrayOutputStream(command.getContent().length + 4);
                     DataOutputStream data = new DataOutputStream(bytes);
                     data.writeInt(command.getContent().length);
@@ -79,7 +78,6 @@ public class LegacyFrameTranslator implements FrameTranslator {
         } else {
             ActiveMQTextMessage text = new ActiveMQTextMessage();
             try {
-                //text.setText(new String(command.getContent(), "UTF-8"));
                 ByteArrayOutputStream bytes = new ByteArrayOutputStream(command.getContent().length + 4);
                 DataOutputStream data = new DataOutputStream(bytes);
                 data.writeInt(command.getContent().length);
@@ -173,7 +171,14 @@ public class LegacyFrameTranslator implements FrameTranslator {
     public ActiveMQDestination convertDestination(ProtocolConverter converter, String name, boolean forceFallback) throws ProtocolException {
         if (name == null) {
             return null;
-        } else if (name.startsWith("/queue/")) {
+        }
+
+        // in case of space padding by a client we trim for the initial detection, on fallback use
+        // the un-trimmed value.
+        String originalName = name;
+        name = name.trim();
+
+        if (name.startsWith("/queue/")) {
             String qName = name.substring("/queue/".length(), name.length());
             return ActiveMQDestination.createDestination(qName, ActiveMQDestination.QUEUE_TYPE);
         } else if (name.startsWith("/topic/")) {
@@ -192,16 +197,16 @@ public class LegacyFrameTranslator implements FrameTranslator {
         } else {
             if (forceFallback) {
                 try {
-                    ActiveMQDestination fallback = ActiveMQDestination.getUnresolvableDestinationTransformer().transform(name);
+                    ActiveMQDestination fallback = ActiveMQDestination.getUnresolvableDestinationTransformer().transform(originalName);
                     if (fallback != null) {
                         return fallback;
                     }
                 } catch (JMSException e) {
-                    throw new ProtocolException("Illegal destination name: [" + name + "] -- ActiveMQ STOMP destinations "
+                    throw new ProtocolException("Illegal destination name: [" + originalName + "] -- ActiveMQ STOMP destinations "
                             + "must begin with one of: /queue/ /topic/ /temp-queue/ /temp-topic/", false, e);
                 }
             }
-            throw new ProtocolException("Illegal destination name: [" + name + "] -- ActiveMQ STOMP destinations "
+            throw new ProtocolException("Illegal destination name: [" + originalName + "] -- ActiveMQ STOMP destinations "
                                         + "must begin with one of: /queue/ /topic/ /temp-queue/ /temp-topic/");
         }
     }
