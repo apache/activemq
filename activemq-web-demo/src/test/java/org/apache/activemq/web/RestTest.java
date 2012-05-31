@@ -24,6 +24,7 @@ import javax.management.ObjectName;
 import org.apache.commons.lang.RandomStringUtils;
 import org.eclipse.jetty.client.ContentExchange;
 import org.eclipse.jetty.client.HttpClient;
+import org.eclipse.jetty.http.HttpFields;
 import org.eclipse.jetty.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -152,5 +153,29 @@ public class RestTest extends JettyTestSupport {
         httpClient.send(contentExchange2);
         contentExchange2.waitForDone();
         assertTrue("success status", HttpStatus.isSuccess(contentExchange2.getResponseStatus()));
+    }
+
+    // test for https://issues.apache.org/activemq/browse/AMQ-3857
+    public void testProperties() throws Exception {
+        HttpClient httpClient = new HttpClient();
+        httpClient.start();
+        ContentExchange contentExchange = new ContentExchange();
+        httpClient.setConnectorType(HttpClient.CONNECTOR_SELECT_CHANNEL);
+        contentExchange.setMethod("POST");
+        contentExchange.setURL("http://localhost:8080/message/testPost?type=queue&property=value");
+        httpClient.send(contentExchange);
+
+        contentExchange.waitForDone();
+        assertTrue("success status", HttpStatus.isSuccess(contentExchange.getResponseStatus()));
+
+        ContentExchange contentExchange2 = new ContentExchange(true);
+        contentExchange2.setURL("http://localhost:8080/message/testPost?readTimeout=1000&type=Queue");
+        httpClient.send(contentExchange2);
+        contentExchange2.waitForDone();
+        assertTrue("success status", HttpStatus.isSuccess(contentExchange2.getResponseStatus()));
+
+        HttpFields fields = contentExchange2.getResponseFields();
+        assertNotNull("Headers Exist", fields);
+        assertEquals("header value", "value", fields.getStringField("property"));
     }
 }

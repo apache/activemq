@@ -19,6 +19,7 @@ package org.apache.activemq.web;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.Enumeration;
 import java.util.HashMap;
 
 import javax.jms.Destination;
@@ -48,8 +49,6 @@ import org.slf4j.LoggerFactory;
  * the servlet or as request parameters. <p/> For reading messages you can
  * specify a readTimeout parameter to determine how long the servlet should
  * block for.
- *
- *
  */
 public class MessageServlet extends MessageServletSupport {
 
@@ -319,9 +318,16 @@ public class MessageServlet extends MessageServletSupport {
         return null;
     }
 
+    @SuppressWarnings("rawtypes")
     protected void setResponseHeaders(HttpServletResponse response, Message message) throws JMSException {
         response.setHeader("destination", message.getJMSDestination().toString());
         response.setHeader("id", message.getJMSMessageID());
+
+        // Return JMS properties as header values.
+        for(Enumeration names = message.getPropertyNames(); names.hasMoreElements();) {
+            String name = (String) names.nextElement();
+            response.setHeader(name , message.getObjectProperty(name).toString());
+        }
     }
 
     /**
