@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+
 import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.command.MessageId;
 
@@ -38,6 +39,7 @@ public class OrderedPendingList implements PendingList {
             tail = node;
         } else {
             root.linkBefore(node);
+            root = node;
         }
         this.map.put(message.getMessageId(), node);
         return node;
@@ -134,11 +136,14 @@ public class OrderedPendingList implements PendingList {
 
     @Override
     public boolean contains(MessageReference message) {
-        if(map.values().contains(message)) {
-            return true;
-        } else {
-            return false;
+        if (message != null) {
+            for (PendingNode value : map.values()) {
+                if (value.getMessage().equals(message)) {
+                    return true;
+                }
+            }
         }
+        return false;
     }
 
     @Override
@@ -152,8 +157,10 @@ public class OrderedPendingList implements PendingList {
 
     @Override
     public void addAll(PendingList pendingList) {
-        for(MessageReference messageReference : pendingList) {
-            addMessageLast(messageReference);
+        if (pendingList != null) {
+            for(MessageReference messageReference : pendingList) {
+                addMessageLast(messageReference);
+            }
         }
     }
 }

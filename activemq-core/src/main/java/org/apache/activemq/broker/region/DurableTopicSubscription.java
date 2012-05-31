@@ -17,6 +17,7 @@
 package org.apache.activemq.broker.region;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -61,7 +62,6 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
         this.pending.setMemoryUsageHighWaterMark(getCursorMemoryHighWaterMark());
         this.keepDurableSubsActive = keepDurableSubsActive;
         subscriptionKey = new SubscriptionKey(context.getClientId(), info.getSubscriptionName());
-
     }
 
     public final boolean isActive() {
@@ -180,6 +180,10 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
                     }
                 }
 
+                // Before we add these back to pending they need to be in producer order not
+                // dispatch order so we can add them to the front of the pending list.
+                Collections.reverse(dispatched);
+
                 for (final MessageReference node : dispatched) {
                     // Mark the dispatched messages as redelivered for next time.
                     Integer count = redeliveredMessages.get(node.getMessageId());
@@ -195,6 +199,7 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
                         node.decrementReferenceCount();
                     }
                 }
+
                 dispatched.clear();
             }
             if (!keepDurableSubsActive && pending.isTransient()) {
@@ -212,7 +217,6 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
         }
         prefetchExtension.set(0);
     }
-
 
     protected MessageDispatch createMessageDispatch(MessageReference node, Message message) {
         MessageDispatch md = super.createMessageDispatch(node, message);
