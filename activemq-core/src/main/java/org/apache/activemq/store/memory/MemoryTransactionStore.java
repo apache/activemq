@@ -237,13 +237,9 @@ public class MemoryTransactionStore implements TransactionStore {
             tx = inflightTransactions.remove(txid);
         }
 
-        if (tx == null) {
-            if (postCommit != null) {
-                postCommit.run();
-            }
-            return;
+        if (tx != null) {
+            tx.commit();
         }
-        tx.commit();
         if (postCommit != null) {
             postCommit.run();
         }
