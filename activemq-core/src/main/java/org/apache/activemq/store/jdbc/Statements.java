@@ -76,6 +76,15 @@ public class Statements {
     private String deleteOldMessagesStatementWithPriority;
     private String durableSubscriberMessageCountStatementWithPriority;
     private String dropAckPKAlterStatementEnd;
+    private String updateXidFlagStatement;
+    private String findOpsPendingOutcomeStatement;
+    private String clearXidFlagStatement;
+    private String updateDurableLastAckInTxStatement;
+    private String findAcksPendingOutcomeStatement;
+    private String clearDurableLastAckInTxStatement;
+    private String updateDurableLastAckWithPriorityStatement;
+    private String updateDurableLastAckWithPriorityInTxStatement;
+    private String findXidByIdStatement;
 
     public String[] getCreateSchemaStatements() {
         if (createSchemaStatements == null) {
@@ -99,7 +108,9 @@ public class Statements {
                 "INSERT INTO " + getFullLockTableName() + "(ID) VALUES (1)", 
                 "ALTER TABLE " + getFullMessageTableName() + " ADD PRIORITY " + sequenceDataType,
                 "CREATE INDEX " + getFullMessageTableName() + "_PIDX ON " + getFullMessageTableName() + " (PRIORITY)",
+                "ALTER TABLE " + getFullMessageTableName() + " ADD XID " + binaryDataType,
                 "ALTER TABLE " + getFullAckTableName() + " ADD PRIORITY " + sequenceDataType  + " DEFAULT 5 NOT NULL",
+                "ALTER TABLE " + getFullAckTableName() + " ADD XID " + binaryDataType,
                 "ALTER TABLE " + getFullAckTableName() + " " + getDropAckPKAlterStatementEnd(),
                 "ALTER TABLE " + getFullAckTableName() + " ADD PRIMARY KEY (CONTAINER, CLIENT_ID, SUB_NAME, PRIORITY)",
             };
@@ -131,7 +142,7 @@ public class Statements {
         if (addMessageStatement == null) {
             addMessageStatement = "INSERT INTO "
                                   + getFullMessageTableName()
-                                  + "(ID, MSGID_PROD, MSGID_SEQ, CONTAINER, EXPIRATION, PRIORITY, MSG) VALUES (?, ?, ?, ?, ?, ?, ?)";
+                                  + "(ID, MSGID_PROD, MSGID_SEQ, CONTAINER, EXPIRATION, PRIORITY, MSG, XID) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
         }
         return addMessageStatement;
     }
@@ -171,7 +182,14 @@ public class Statements {
         }
         return findMessageByIdStatement;
     }
-    
+
+    public String getFindXidByIdStatement() {
+        if (findXidByIdStatement == null) {
+            findXidByIdStatement = "SELECT XID FROM " + getFullMessageTableName() + " WHERE ID=?";
+        }
+        return findXidByIdStatement;
+    }
+
     public String getFindAllMessagesStatement() {
         if (findAllMessagesStatement == null) {
             findAllMessagesStatement = "SELECT ID, MSG FROM " + getFullMessageTableName()
@@ -271,6 +289,7 @@ public class Statements {
             findDurableSubMessagesStatement = "SELECT M.ID, M.MSG FROM " + getFullMessageTableName() + " M, "
                                               + getFullAckTableName() + " D "
                                               + " WHERE D.CONTAINER=? AND D.CLIENT_ID=? AND D.SUB_NAME=?"
+                                              + " AND M.XID IS NULL"
                                               + " AND M.CONTAINER=D.CONTAINER AND M.ID > D.LAST_ACKED_ID"
                                               + " AND M.ID > ?"
                                               + " ORDER BY M.ID";
@@ -283,6 +302,7 @@ public class Statements {
             findDurableSubMessagesByPriorityStatement = "SELECT M.ID, M.MSG FROM " + getFullMessageTableName() + " M,"
                                               + " " + getFullAckTableName() + " D"
                                               + " WHERE D.CONTAINER=? AND D.CLIENT_ID=? AND D.SUB_NAME=?"
+                                              + " AND M.XID IS NULL"
                                               + " AND M.CONTAINER=D.CONTAINER"
                                               + " AND M.PRIORITY=D.PRIORITY AND M.ID > D.LAST_ACKED_ID"
                                               + " AND M.ID > ? AND M.PRIORITY = ?"
@@ -414,7 +434,7 @@ public class Statements {
     public String getDestinationMessageCountStatement() {
         if (destinationMessageCountStatement == null) {
             destinationMessageCountStatement = "SELECT COUNT(*) FROM " + getFullMessageTableName()
-                                               + " WHERE CONTAINER=?";
+                                               + " WHERE CONTAINER=? AND XID IS NULL";
         }
         return destinationMessageCountStatement;
     }
@@ -425,7 +445,7 @@ public class Statements {
     public String getFindNextMessagesStatement() {
         if (findNextMessagesStatement == null) {
             findNextMessagesStatement = "SELECT ID, MSG FROM " + getFullMessageTableName()
-                                        + " WHERE CONTAINER=? AND ID > ? ORDER BY ID";
+                                        + " WHERE CONTAINER=? AND ID > ? AND XID IS NULL ORDER BY ID";
         }
         return findNextMessagesStatement;
     }
@@ -437,6 +457,7 @@ public class Statements {
         if (findNextMessagesByPriorityStatement == null) {
             findNextMessagesByPriorityStatement = "SELECT ID, MSG FROM " + getFullMessageTableName()
                                         + " WHERE CONTAINER=?"
+                                        + " AND XID IS NULL"
                                         + " AND ((ID > ? AND PRIORITY = ?) OR PRIORITY < ?)"
                                         + " ORDER BY PRIORITY DESC, ID";
         }
@@ -478,9 +499,74 @@ public class Statements {
     public String getUpdateDurableLastAckStatement() {
         if (updateDurableLastAckStatement == null) {
             updateDurableLastAckStatement  = "UPDATE " + getFullAckTableName()
-                    + " SET LAST_ACKED_ID = ? WHERE CONTAINER=? AND CLIENT_ID=? AND SUB_NAME=?";
+                    + " SET LAST_ACKED_ID=?, XID = NULL WHERE CONTAINER=? AND CLIENT_ID=? AND SUB_NAME=?";
         }
         return  updateDurableLastAckStatement;
+    }
+
+    public String getUpdateDurableLastAckInTxStatement() {
+        if (updateDurableLastAckInTxStatement == null) {
+            updateDurableLastAckInTxStatement = "UPDATE " + getFullAckTableName()
+                    + " SET XID=? WHERE CONTAINER=? AND CLIENT_ID=? AND SUB_NAME=?";
+        }
+        return updateDurableLastAckInTxStatement;
+    }
+
+    public String getUpdateDurableLastAckWithPriorityStatement() {
+        if (updateDurableLastAckWithPriorityStatement == null) {
+            updateDurableLastAckWithPriorityStatement  = "UPDATE " + getFullAckTableName()
+                    + " SET LAST_ACKED_ID=?, XID = NULL WHERE CONTAINER=? AND CLIENT_ID=? AND SUB_NAME=? AND PRIORITY=?";
+        }
+        return  updateDurableLastAckWithPriorityStatement;
+    }
+
+    public String getUpdateDurableLastAckWithPriorityInTxStatement() {
+        if (updateDurableLastAckWithPriorityInTxStatement == null) {
+            updateDurableLastAckWithPriorityInTxStatement  = "UPDATE " + getFullAckTableName()
+                    + " SET XID=? WHERE CONTAINER=? AND CLIENT_ID=? AND SUB_NAME=? AND PRIORITY=?";
+        }
+        return  updateDurableLastAckWithPriorityInTxStatement;
+    }
+
+    public String getClearDurableLastAckInTxStatement() {
+        if (clearDurableLastAckInTxStatement == null) {
+            clearDurableLastAckInTxStatement = "UPDATE " + getFullAckTableName()
+                    + " SET XID = NULL WHERE CONTAINER=? AND CLIENT_ID=? AND SUB_NAME=? AND PRIORITY=?";
+        }
+        return clearDurableLastAckInTxStatement;
+    }
+
+    public String getFindOpsPendingOutcomeStatement() {
+        if (findOpsPendingOutcomeStatement == null) {
+            findOpsPendingOutcomeStatement = "SELECT ID, XID, MSG FROM " + getFullMessageTableName()
+                    + " WHERE XID IS NOT NULL ORDER BY ID";
+        }
+        return findOpsPendingOutcomeStatement;
+    }
+
+    public String getFindAcksPendingOutcomeStatement() {
+        if (findAcksPendingOutcomeStatement == null) {
+            findAcksPendingOutcomeStatement = "SELECT XID," +
+                    " CONTAINER, CLIENT_ID, SUB_NAME FROM " + getFullAckTableName()
+                    + " WHERE XID IS NOT NULL";
+        }
+        return findAcksPendingOutcomeStatement;
+    }
+
+    public String getUpdateXidFlagStatement() {
+        if (updateXidFlagStatement == null) {
+            updateXidFlagStatement = "UPDATE " + getFullMessageTableName()
+                    + " SET XID = ? WHERE ID = ?";
+        }
+        return updateXidFlagStatement;
+    }
+
+    public String getClearXidFlagStatement() {
+        if (clearXidFlagStatement == null) {
+            clearXidFlagStatement = "UPDATE "  + getFullMessageTableName()
+                    + " SET XID = NULL WHERE ID = ?";
+        }
+        return clearXidFlagStatement;
     }
 
     public String getFullMessageTableName() {
@@ -788,5 +874,41 @@ public class Statements {
 
     public void setUpdateDurableLastAckStatement(String updateDurableLastAckStatement) {
         this.updateDurableLastAckStatement = updateDurableLastAckStatement;
-    }    
+    }
+
+    public void setUpdateXidFlagStatement(String updateXidFlagStatement) {
+        this.updateXidFlagStatement = updateXidFlagStatement;
+    }
+
+    public void setFindOpsPendingOutcomeStatement(String findOpsPendingOutcomeStatement) {
+        this.findOpsPendingOutcomeStatement = findOpsPendingOutcomeStatement;
+    }
+
+    public void setClearXidFlagStatement(String clearXidFlagStatement) {
+        this.clearXidFlagStatement = clearXidFlagStatement;
+    }
+
+    public void setUpdateDurableLastAckInTxStatement(String updateDurableLastAckInTxStatement) {
+        this.updateDurableLastAckInTxStatement = updateDurableLastAckInTxStatement;
+    }
+
+    public void setFindAcksPendingOutcomeStatement(String findAcksPendingOutcomeStatement) {
+        this.findAcksPendingOutcomeStatement = findAcksPendingOutcomeStatement;
+    }
+
+    public void setClearDurableLastAckInTxStatement(String clearDurableLastAckInTxStatement) {
+        this.clearDurableLastAckInTxStatement = clearDurableLastAckInTxStatement;
+    }
+
+    public void setUpdateDurableLastAckWithPriorityStatement(String updateDurableLastAckWithPriorityStatement) {
+        this.updateDurableLastAckWithPriorityStatement = updateDurableLastAckWithPriorityStatement;
+    }
+
+    public void setUpdateDurableLastAckWithPriorityInTxStatement(String updateDurableLastAckWithPriorityInTxStatement) {
+        this.updateDurableLastAckWithPriorityInTxStatement = updateDurableLastAckWithPriorityInTxStatement;
+    }
+
+    public void setFindXidByIdStatement(String findXidByIdStatement) {
+        this.findXidByIdStatement = findXidByIdStatement;
+    }
 }

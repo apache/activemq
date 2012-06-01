@@ -137,42 +137,40 @@ public class TransactionBroker extends BrokerFilter {
     }
 
     private void registerSync(Destination destination, Transaction transaction, BaseCommand command) {
-        if (destination instanceof Queue) {
-            Synchronization sync = new PreparedDestinationCompletion((Queue) destination, command.isMessage());
-            // ensure one per destination in the list
-            transaction.removeSynchronization(sync);
-            transaction.addSynchronization(sync);
-        }
+        Synchronization sync = new PreparedDestinationCompletion(destination, command.isMessage());
+        // ensure one per destination in the list
+        transaction.removeSynchronization(sync);
+        transaction.addSynchronization(sync);
     }
 
     static class PreparedDestinationCompletion extends Synchronization {
-        final Queue queue;
+        final Destination destination;
         final boolean messageSend;
-        public PreparedDestinationCompletion(final Queue queue, boolean messageSend) {
-            this.queue = queue;
+        public PreparedDestinationCompletion(final Destination destination, boolean messageSend) {
+            this.destination = destination;
             // rollback relevant to acks, commit to sends
             this.messageSend = messageSend;
         }
 
         @Override
         public int hashCode() {
-            return System.identityHashCode(queue) +
+            return System.identityHashCode(destination) +
                     System.identityHashCode(Boolean.valueOf(messageSend));
         }
 
         @Override
         public boolean equals(Object other) {
             return other instanceof PreparedDestinationCompletion &&
-                    queue.equals(((PreparedDestinationCompletion) other).queue) &&
+                    destination.equals(((PreparedDestinationCompletion) other).destination) &&
                     messageSend == ((PreparedDestinationCompletion) other).messageSend;
         }
 
         @Override
         public void afterRollback() throws Exception {
             if (!messageSend) {
-                queue.clearPendingMessages();
+                destination.clearPendingMessages();
                 if (LOG.isDebugEnabled()) {
-                    LOG.debug("cleared pending from afterRollback : " + queue);
+                    LOG.debug("cleared pending from afterRollback : " + destination);
                 }
             }
         }
@@ -180,9 +178,9 @@ public class TransactionBroker extends BrokerFilter {
         @Override
         public void afterCommit() throws Exception {
             if (messageSend) {
-                queue.clearPendingMessages();
+                destination.clearPendingMessages();
                 if (LOG.isDebugEnabled()) {
-                    LOG.debug("cleared pending from afterCommit : " + queue);
+                    LOG.debug("cleared pending from afterCommit : " + destination);
                 }
             }
         }

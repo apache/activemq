@@ -18,8 +18,10 @@ package org.apache.activemq.broker.region;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -745,4 +747,47 @@ public class Topic extends BaseDestination implements Task {
         }
         return result;
     }
+
+    /**
+     * force a reread of the store - after transaction recovery completion
+     */
+    public void clearPendingMessages() {
+        dispatchLock.readLock().lock();
+        try {
+            for (DurableTopicSubscription durableTopicSubscription : durableSubcribers.values()) {
+                clearPendingAndDispatch(durableTopicSubscription);
+            }
+        } finally {
+            dispatchLock.readLock().unlock();
+        }
+    }
+
+
+    public void clearPendingMessages(SubscriptionKey subscriptionKey) {
+        dispatchLock.readLock().lock();
+        try {
+            DurableTopicSubscription durableTopicSubscription = durableSubcribers.get(subscriptionKey);
+            clearPendingAndDispatch(durableTopicSubscription);
+        } finally {
+            dispatchLock.readLock().unlock();
+        }
+    }
+
+    private void clearPendingAndDispatch(DurableTopicSubscription durableTopicSubscription) {
+        synchronized (durableTopicSubscription.pendingLock) {
+            durableTopicSubscription.pending.clear();
+            try {
+                durableTopicSubscription.dispatchPending();
+            } catch (IOException exception) {
+                LOG.warn("After clear of pending, failed to dispatch to: " +
+                        durableTopicSubscription + ", for :" + destination + ", pending: " +
+                        durableTopicSubscription.pending, exception);
+            }
+        }
+    }
+
+    public Map<SubscriptionKey, DurableTopicSubscription> getDurableTopicSubs() {
+        return durableSubcribers;
+    }
+
 }

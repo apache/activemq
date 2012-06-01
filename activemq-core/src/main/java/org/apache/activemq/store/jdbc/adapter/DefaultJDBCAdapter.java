@@ -17,11 +17,8 @@
 package org.apache.activemq.store.jdbc.adapter;
 
 import java.io.IOException;
-import java.io.PrintStream;
-import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
@@ -35,12 +32,15 @@ import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.command.ProducerId;
 import org.apache.activemq.command.SubscriptionInfo;
+import org.apache.activemq.command.XATransactionId;
 import org.apache.activemq.store.jdbc.JDBCAdapter;
 import org.apache.activemq.store.jdbc.JDBCMessageIdScanListener;
 import org.apache.activemq.store.jdbc.JDBCMessageRecoveryListener;
 import org.apache.activemq.store.jdbc.JDBCPersistenceAdapter;
+import org.apache.activemq.store.jdbc.JdbcMemoryTransactionStore;
 import org.apache.activemq.store.jdbc.Statements;
 import org.apache.activemq.store.jdbc.TransactionContext;
+import org.apache.activemq.util.DataByteArrayOutputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -201,10 +201,13 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
             close(s);
         }
     }
-    
 
+
+    /**
+     * A non null xid indicated the op is part of 2pc prepare, so ops are flagged pending outcome
+     */
     public void doAddMessage(TransactionContext c, long sequence, MessageId messageID, ActiveMQDestination destination, byte[] data,
-            long expiration, byte priority) throws SQLException, IOException {
+                             long expiration, byte priority, XATransactionId xid) throws SQLException, IOException {
         PreparedStatement s = c.getAddMessageStatement();
         cleanupExclusiveLock.readLock().lock();
         try {
@@ -221,6 +224,13 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
             s.setLong(5, expiration);
             s.setLong(6, priority);
             setBinaryData(s, 7, data);
+            if (xid != null) {
+                byte[] xidVal = xid.getEncodedXidBytes();
+                xidVal[0] = '+';
+                setBinaryData(s, 8, xidVal);
+            } else {
+                setBinaryData(s, 8, null);
+            }
             if (this.batchStatments) {
                 s.addBatch();
             } else if (s.executeUpdate() != 1) {
@@ -326,17 +336,27 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         }
     }
 
-    public void doRemoveMessage(TransactionContext c, long seq) throws SQLException, IOException {
+    /**
+     * A non null xid indicated the op is part of 2pc prepare, so ops are flagged pending outcome
+     */
+    public void doRemoveMessage(TransactionContext c, long seq, XATransactionId xid) throws SQLException, IOException {
         PreparedStatement s = c.getRemovedMessageStatement();
         cleanupExclusiveLock.readLock().lock();
         try {
             if (s == null) {
-                s = c.getConnection().prepareStatement(this.statements.getRemoveMessageStatement());
+                s = c.getConnection().prepareStatement(xid == null ?
+                        this.statements.getRemoveMessageStatement() : this.statements.getUpdateXidFlagStatement());
                 if (this.batchStatments) {
                     c.setRemovedMessageStatement(s);
                 }
             }
-            s.setLong(1, seq);
+            if (xid == null) {
+                s.setLong(1, seq);
+            } else {
+                byte[] xidVal = xid.getEncodedXidBytes();
+                setBinaryData(s, 1, xidVal);
+                s.setLong(2, seq);
+            }
             if (this.batchStatments) {
                 s.addBatch();
             } else if (s.executeUpdate() != 1) {
@@ -406,26 +426,33 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         }
     }
     
-    public void doSetLastAckWithPriority(TransactionContext c, ActiveMQDestination destination, String clientId,
-            String subscriptionName, long seq, long prio) throws SQLException, IOException {
+    public void doSetLastAckWithPriority(TransactionContext c, ActiveMQDestination destination, XATransactionId xid, String clientId,
+                                         String subscriptionName, long seq, long priority) throws SQLException, IOException {
         PreparedStatement s = c.getUpdateLastAckStatement();
         cleanupExclusiveLock.readLock().lock();
         try {
             if (s == null) {
-                s = c.getConnection().prepareStatement(this.statements.getUpdateLastPriorityAckRowOfDurableSubStatement());
+                s = c.getConnection().prepareStatement(xid == null ?
+                        this.statements.getUpdateDurableLastAckWithPriorityStatement() :
+                        this.statements.getUpdateDurableLastAckWithPriorityInTxStatement());
                 if (this.batchStatments) {
                     c.setUpdateLastAckStatement(s);
                 }
             }
-            s.setLong(1, seq);
+            if (xid != null) {
+                byte[] xidVal = encodeXid(xid, seq, priority);
+                setBinaryData(s, 1, xidVal);
+            } else {
+                s.setLong(1, seq);
+            }
             s.setString(2, destination.getQualifiedName());
             s.setString(3, clientId);
             s.setString(4, subscriptionName);
-            s.setLong(5, prio);
+            s.setLong(5, priority);
             if (this.batchStatments) {
                 s.addBatch();
             } else if (s.executeUpdate() != 1) {
-                throw new SQLException("Failed update last ack with priority: " + prio + ", for sub: " + subscriptionName);
+                throw new SQLException("Failed update last ack with priority: " + priority + ", for sub: " + subscriptionName);
             }
         } finally {
             cleanupExclusiveLock.readLock().unlock();
@@ -436,18 +463,25 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
     }
 
 
-    public void doSetLastAck(TransactionContext c, ActiveMQDestination destination, String clientId,
-                                        String subscriptionName, long seq, long priority) throws SQLException, IOException {
+    public void doSetLastAck(TransactionContext c, ActiveMQDestination destination, XATransactionId xid, String clientId,
+                             String subscriptionName, long seq, long priority) throws SQLException, IOException {
         PreparedStatement s = c.getUpdateLastAckStatement();
         cleanupExclusiveLock.readLock().lock();
         try {
             if (s == null) {
-                s = c.getConnection().prepareStatement(this.statements.getUpdateDurableLastAckStatement());
+                s = c.getConnection().prepareStatement(xid == null ?
+                        this.statements.getUpdateDurableLastAckStatement() :
+                        this.statements.getUpdateDurableLastAckInTxStatement());
                 if (this.batchStatments) {
                     c.setUpdateLastAckStatement(s);
                 }
             }
-            s.setLong(1, seq);
+            if (xid != null) {
+                byte[] xidVal = encodeXid(xid, seq, priority);
+                setBinaryData(s, 1, xidVal);
+            } else {
+                s.setLong(1, seq);
+            }
             s.setString(2, destination.getQualifiedName());
             s.setString(3, clientId);
             s.setString(4, subscriptionName);
@@ -463,6 +497,35 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
             if (!this.batchStatments) {
                 close(s);
             }            
+        }
+    }
+
+    private byte[] encodeXid(XATransactionId xid, long seq, long priority) {
+        byte[] xidVal = xid.getEncodedXidBytes();
+        // encode the update
+        DataByteArrayOutputStream outputStream = xid.getOutputStream();
+        outputStream.position(1);
+        outputStream.writeLong(seq);
+        outputStream.writeByte(Long.valueOf(priority).byteValue());
+        return xidVal;
+    }
+
+    @Override
+    public void doClearLastAck(TransactionContext c, ActiveMQDestination destination, byte priority, String clientId, String subName) throws SQLException, IOException {
+        PreparedStatement s = null;
+        cleanupExclusiveLock.readLock().lock();
+        try {
+            s = c.getConnection().prepareStatement(this.statements.getClearDurableLastAckInTxStatement());
+            s.setString(1, destination.getQualifiedName());
+            s.setString(2, clientId);
+            s.setString(3, subName);
+            s.setLong(4, priority);
+            if (s.executeUpdate() != 1) {
+                throw new IOException("Could not remove prepared transaction state from message ack for: " + clientId + ":" + subName);
+            }
+        } finally {
+            cleanupExclusiveLock.readLock().unlock();
+            close(s);
         }
     }
 
@@ -879,36 +942,61 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         }
     }
 
-    /**
-     * @param c
-     * @param destination
-     * @param clientId
-     * @param subscriberName
-     * @return
-     * @throws SQLException
-     * @throws IOException
-     */
-    public byte[] doGetNextDurableSubscriberMessageStatement(TransactionContext c, ActiveMQDestination destination,
-            String clientId, String subscriberName) throws SQLException, IOException {
+    @Override
+    public void doRecoverPreparedOps(TransactionContext c, JdbcMemoryTransactionStore jdbcMemoryTransactionStore) throws SQLException, IOException {
         PreparedStatement s = null;
         ResultSet rs = null;
         cleanupExclusiveLock.readLock().lock();
         try {
-            s = c.getConnection().prepareStatement(this.statements.getNextDurableSubscriberMessageStatement());
-            s.setString(1, destination.getQualifiedName());
-            s.setString(2, clientId);
-            s.setString(3, subscriberName);
+            s = c.getConnection().prepareStatement(this.statements.getFindOpsPendingOutcomeStatement());
             rs = s.executeQuery();
-            if (!rs.next()) {
-                return null;
+            while (rs.next()) {
+                long id = rs.getLong(1);
+                byte[] encodedXid = getBinaryData(rs, 2);
+                if (encodedXid[0] == '+') {
+                    jdbcMemoryTransactionStore.recoverAdd(id, getBinaryData(rs, 3));
+                } else {
+                    jdbcMemoryTransactionStore.recoverAck(id, encodedXid, getBinaryData(rs, 3));
+                }
             }
-            return getBinaryData(rs, 1);
+
+            close(rs);
+            close(s);
+
+            s = c.getConnection().prepareStatement(this.statements.getFindAcksPendingOutcomeStatement());
+            rs = s.executeQuery();
+            while (rs.next()) {
+                byte[] encodedXid = getBinaryData(rs, 1);
+                String destination = rs.getString(2);
+                String subName = rs.getString(3);
+                String subId = rs.getString(4);
+                jdbcMemoryTransactionStore.recoverLastAck(encodedXid,
+                        ActiveMQDestination.createDestination(destination, ActiveMQDestination.TOPIC_TYPE),
+                        subName, subId);
+            }
         } finally {
             close(rs);
             cleanupExclusiveLock.readLock().unlock();
             close(s);
         }
     }
+
+    @Override
+    public void doCommitAddOp(TransactionContext c, long sequence) throws SQLException, IOException {
+        PreparedStatement s = null;
+        cleanupExclusiveLock.readLock().lock();
+        try {
+            s = c.getConnection().prepareStatement(this.statements.getClearXidFlagStatement());
+            s.setLong(1, sequence);
+            if (s.executeUpdate() != 1) {
+                throw new IOException("Could not remove prepared transaction state from message add for sequenceId: " + sequence);
+            }
+        } finally {
+            cleanupExclusiveLock.readLock().unlock();
+            close(s);
+        }
+    }
+
 
     public int doGetMessageCount(TransactionContext c, ActiveMQDestination destination) throws SQLException,
             IOException {
@@ -978,7 +1066,28 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
             close(s);
         }
     }
-    
+
+    public long doGetLastProducerSequenceId(TransactionContext c, ProducerId id)
+            throws SQLException, IOException {
+        PreparedStatement s = null;
+        ResultSet rs = null;
+        cleanupExclusiveLock.readLock().lock();
+        try {
+            s = c.getConnection().prepareStatement(this.statements.getLastProducerSequenceIdStatement());
+            s.setString(1, id.toString());
+            rs = s.executeQuery();
+            long seq = -1;
+            if (rs.next()) {
+                seq = rs.getLong(1);
+            }
+            return seq;
+        } finally {
+            cleanupExclusiveLock.readLock().unlock();
+            close(rs);
+            close(s);
+        }
+    }
+
 /*    public void dumpTables(Connection c, String destinationName, String clientId, String
       subscriptionName) throws SQLException { 
         printQuery(c, "Select * from ACTIVEMQ_MSGS", System.out); 
@@ -1033,26 +1142,5 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
             }
         }
     }  */
-
-    public long doGetLastProducerSequenceId(TransactionContext c, ProducerId id)
-            throws SQLException, IOException {
-        PreparedStatement s = null;
-        ResultSet rs = null;
-        cleanupExclusiveLock.readLock().lock();
-        try {
-            s = c.getConnection().prepareStatement(this.statements.getLastProducerSequenceIdStatement());
-            s.setString(1, id.toString());
-            rs = s.executeQuery();
-            long seq = -1;
-            if (rs.next()) {
-                seq = rs.getLong(1);
-            }
-            return seq;
-        } finally {
-            cleanupExclusiveLock.readLock().unlock();
-            close(rs);
-            close(s);
-        }
-    }
 
 }

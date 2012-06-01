@@ -19,9 +19,11 @@ package org.apache.activemq.store.jdbc;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -48,6 +50,7 @@ public class JDBCTopicMessageStore extends JDBCMessageStore implements TopicMess
 
     private static final Logger LOG = LoggerFactory.getLogger(JDBCTopicMessageStore.class);
     private Map<String, LastRecovered> subscriberLastRecoveredMap = new ConcurrentHashMap<String, LastRecovered>();
+    private Set<String> pendingCompletion = new HashSet<String>();
 
     public static final String PROPERTY_SEQUENCE_ID_CACHE_SIZE = "org.apache.activemq.store.jdbc.SEQUENCE_ID_CACHE_SIZE";
     private static final int SEQUENCE_ID_CACHE_SIZE = Integer.parseInt(System.getProperty(
@@ -75,9 +78,9 @@ public class JDBCTopicMessageStore extends JDBCMessageStore implements TopicMess
         try {
             long[] res = getCachedStoreSequenceId(c, destination, messageId);
             if (this.isPrioritizedMessages()) {
-                adapter.doSetLastAckWithPriority(c, destination, clientId, subscriptionName, res[0], res[1]);
+                adapter.doSetLastAckWithPriority(c, destination, context != null ? context.getXid() : null, clientId, subscriptionName, res[0], res[1]);
             } else {
-                adapter.doSetLastAck(c, destination, clientId, subscriptionName, res[0], res[1]);
+                adapter.doSetLastAck(c, destination, context != null ? context.getXid() : null, clientId, subscriptionName, res[0], res[1]);
             }
             if (LOG.isTraceEnabled()) {
                 LOG.trace(clientId + ":" + subscriptionName + " ack, seq: " + res[0] + ", priority: " + res[1] + " mid:" + messageId);
@@ -90,7 +93,7 @@ public class JDBCTopicMessageStore extends JDBCMessageStore implements TopicMess
         }
     }
 
-    private long[] getCachedStoreSequenceId(TransactionContext transactionContext, ActiveMQDestination destination, MessageId messageId) throws SQLException, IOException {
+    public long[] getCachedStoreSequenceId(TransactionContext transactionContext, ActiveMQDestination destination, MessageId messageId) throws SQLException, IOException {
         long[] val = null;
         sequenceIdCacheSizeLock.readLock().lock();
         try {
@@ -254,7 +257,7 @@ public class JDBCTopicMessageStore extends JDBCMessageStore implements TopicMess
         LastRecoveredAwareListener recoveredAwareListener = new LastRecoveredAwareListener(listener, maxReturned);
         try {
             if (LOG.isTraceEnabled()) {
-                LOG.trace(key + " existing last recovered: " + lastRecovered);
+                LOG.trace(this + ", " + key + " existing last recovered: " + lastRecovered);
             }
             if (isPrioritizedMessages()) {
                 Iterator<LastRecoveredEntry> it = lastRecovered.iterator();
@@ -291,7 +294,26 @@ public class JDBCTopicMessageStore extends JDBCMessageStore implements TopicMess
     }
 
     public void resetBatching(String clientId, String subscriptionName) {
-        subscriberLastRecoveredMap.remove(getSubscriptionKey(clientId, subscriptionName));
+        String key = getSubscriptionKey(clientId, subscriptionName);
+        if (!pendingCompletion.contains(key))  {
+            subscriberLastRecoveredMap.remove(key);
+        } else {
+            LOG.trace(this +  ", skip resetBatch during pending completion for: " + key);
+        }
+    }
+
+    public void pendingCompletion(String clientId, String subscriptionName, long sequenceId, byte priority) {
+        final String key = getSubscriptionKey(clientId, subscriptionName);
+        LastRecovered recovered = new LastRecovered();
+        recovered.perPriority[isPrioritizedMessages() ? priority : javax.jms.Message.DEFAULT_PRIORITY].recovered = sequenceId;
+        subscriberLastRecoveredMap.put(key, recovered);
+        pendingCompletion.add(key);
+        LOG.trace(this + ", pending completion: " + key + ", last: " + recovered);
+    }
+
+    public void complete(String clientId, String subscriptionName) {
+        pendingCompletion.remove(getSubscriptionKey(clientId, subscriptionName));
+        LOG.trace(this + ", completion for: " + getSubscriptionKey(clientId, subscriptionName));
     }
 
     protected void onAdd(MessageId messageId, long sequenceId, byte priority) {

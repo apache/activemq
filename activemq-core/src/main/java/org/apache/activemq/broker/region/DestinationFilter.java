@@ -310,4 +310,9 @@ public class DestinationFilter implements Destination {
         next.setDoOptimzeMessageStorage(doOptimzeMessageStorage);
     }
 
+    @Override
+    public void clearPendingMessages() {
+        next.clearPendingMessages();
+    }
+
 }

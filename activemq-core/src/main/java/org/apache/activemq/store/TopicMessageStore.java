@@ -79,7 +79,7 @@ public interface TopicMessageStore extends MessageStore {
     void recoverNextMessages(String clientId, String subscriptionName, int maxReturned, MessageRecoveryListener listener) throws Exception;
 
     /**
-     * A hint to the Store to reset any batching state for a durable subsriber
+     * A hint to the Store to reset any batching state for a durable subscriber
      * 
      * @param clientId
      * @param subscriptionName

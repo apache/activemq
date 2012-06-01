@@ -18,18 +18,16 @@ package org.apache.activemq.store.jdbc.adapter;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.sql.Blob;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-import javax.jms.JMSException;
-import javax.sql.rowset.serial.SerialBlob;
-
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.MessageId;
+import org.apache.activemq.command.XATransactionId;
+import org.apache.activemq.store.jdbc.Statements;
 import org.apache.activemq.store.jdbc.TransactionContext;
 import org.apache.activemq.util.ByteArrayOutputStream;
 
@@ -53,10 +51,24 @@ import org.apache.activemq.util.ByteArrayOutputStream;
 public class BlobJDBCAdapter extends DefaultJDBCAdapter {
 
     @Override
+    public void setStatements(Statements statements) {
+
+        String addMessageStatement = "INSERT INTO "
+            + statements.getFullMessageTableName()
+            + "(ID, MSGID_PROD, MSGID_SEQ, CONTAINER, EXPIRATION, PRIORITY, MSG) VALUES (?, ?, ?, ?, ?, ?, empty_blob(), empty_blob())";
+        statements.setAddMessageStatement(addMessageStatement);
+
+        String findMessageByIdStatement = "SELECT MSG FROM " +
+        	statements.getFullMessageTableName() + " WHERE ID=? FOR UPDATE";
+        statements.setFindMessageByIdStatement(findMessageByIdStatement);
+
+        super.setStatements(statements);
+    }
+
+    @Override
     public void doAddMessage(TransactionContext c, long sequence, MessageId messageID, ActiveMQDestination destination, byte[] data,
-            long expiration, byte priority) throws SQLException, IOException {
+                             long expiration, byte priority, XATransactionId xid) throws SQLException, IOException {
         PreparedStatement s = null;
-        ResultSet rs = null;
         cleanupExclusiveLock.readLock().lock();
         try {
             // Add the Blob record.
@@ -74,12 +86,29 @@ public class BlobJDBCAdapter extends DefaultJDBCAdapter {
             s.close();
 
             // Select the blob record so that we can update it.
-            s = c.getConnection().prepareStatement(statements.getFindMessageByIdStatement(),
-            		ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_UPDATABLE);
+            updateBlob(c.getConnection(), statements.getFindMessageByIdStatement(), sequence, data);
+            if (xid != null) {
+                byte[] xidVal = xid.getEncodedXidBytes();
+                xidVal[0] = '+';
+                updateBlob(c.getConnection(), statements.getFindXidByIdStatement(), sequence, xidVal);
+            }
+
+        } finally {
+            cleanupExclusiveLock.readLock().unlock();
+            close(s);
+        }
+    }
+
+    private void updateBlob(Connection connection, String findMessageByIdStatement, long sequence, byte[] data) throws SQLException, IOException {
+        PreparedStatement s = null;
+        ResultSet rs = null;
+        try {
+            s = connection.prepareStatement(statements.getFindMessageByIdStatement(),
+                ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_UPDATABLE);
             s.setLong(1, sequence);
             rs = s.executeQuery();
             if (!rs.next()) {
-                throw new IOException("Failed select blob for message: " + messageID + " in container.");
+                throw new IOException("Failed select blob for message: " + sequence + " in container.");
             }
 
             // Update the blob
@@ -88,9 +117,7 @@ public class BlobJDBCAdapter extends DefaultJDBCAdapter {
             blob.setBytes(1, data);
             rs.updateBlob(1, blob);
             rs.updateRow();             // Update the row with the updated blob
-
         } finally {
-            cleanupExclusiveLock.readLock().unlock();
             close(rs);
             close(s);
         }

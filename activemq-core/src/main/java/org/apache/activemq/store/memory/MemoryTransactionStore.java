@@ -30,6 +30,7 @@ import org.apache.activemq.store.ProxyTopicMessageStore;
 import org.apache.activemq.store.TopicMessageStore;
 import org.apache.activemq.store.TransactionRecoveryListener;
 import org.apache.activemq.store.TransactionStore;
+import org.apache.activemq.store.jdbc.JDBCMessageStore;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -45,16 +46,16 @@ import java.util.concurrent.Future;
  */
 public class MemoryTransactionStore implements TransactionStore {
 
-    ConcurrentHashMap<Object, Tx> inflightTransactions = new ConcurrentHashMap<Object, Tx>();
-    ConcurrentHashMap<TransactionId, Tx> preparedTransactions = new ConcurrentHashMap<TransactionId, Tx>();
-    final PersistenceAdapter persistenceAdapter;
+    protected ConcurrentHashMap<Object, Tx> inflightTransactions = new ConcurrentHashMap<Object, Tx>();
+    protected ConcurrentHashMap<TransactionId, Tx> preparedTransactions = new ConcurrentHashMap<TransactionId, Tx>();
+    protected final PersistenceAdapter persistenceAdapter;
 
     private boolean doingRecover;
 
     public class Tx {
-        private final ArrayList<AddMessageCommand> messages = new ArrayList<AddMessageCommand>();
+        public ArrayList<AddMessageCommand> messages = new ArrayList<AddMessageCommand>();
 
-        private final ArrayList<RemoveMessageCommand> acks = new ArrayList<RemoveMessageCommand>();
+        public final ArrayList<RemoveMessageCommand> acks = new ArrayList<RemoveMessageCommand>();
 
         public void add(AddMessageCommand msg) {
             messages.add(msg);
@@ -114,6 +115,8 @@ public class MemoryTransactionStore implements TransactionStore {
     public interface AddMessageCommand {
         Message getMessage();
 
+        MessageStore getMessageStore();
+
         void run(ConnectionContext context) throws IOException;
     }
 
@@ -121,6 +124,8 @@ public class MemoryTransactionStore implements TransactionStore {
         MessageAck getMessageAck();
 
         void run(ConnectionContext context) throws IOException;
+
+        MessageStore getMessageStore();
     }
 
     public MemoryTransactionStore(PersistenceAdapter persistenceAdapter) {
@@ -164,7 +169,7 @@ public class MemoryTransactionStore implements TransactionStore {
     }
 
     public TopicMessageStore proxy(TopicMessageStore messageStore) {
-        return new ProxyTopicMessageStore(messageStore) {
+        ProxyTopicMessageStore proxyTopicMessageStore = new ProxyTopicMessageStore(messageStore) {
             @Override
             public void addMessage(ConnectionContext context, final Message send) throws IOException {
                 MemoryTransactionStore.this.addMessage(getDelegate(), send);
@@ -204,12 +209,17 @@ public class MemoryTransactionStore implements TransactionStore {
                         subscriptionName, messageId, ack);
             }
         };
+        onProxyTopicStore(proxyTopicMessageStore);
+        return proxyTopicMessageStore;
+    }
+
+    protected void onProxyTopicStore(ProxyTopicMessageStore proxyTopicMessageStore) {
     }
 
     /**
      * @see org.apache.activemq.store.TransactionStore#prepare(TransactionId)
      */
-    public void prepare(TransactionId txid) {
+    public void prepare(TransactionId txid) throws IOException {
         Tx tx = inflightTransactions.remove(txid);
         if (tx == null) {
             return;
@@ -222,6 +232,15 @@ public class MemoryTransactionStore implements TransactionStore {
         if (tx == null) {
             tx = new Tx();
             inflightTransactions.put(txid, tx);
+        }
+        return tx;
+    }
+
+    public Tx getPreparedTx(TransactionId txid) {
+        Tx tx = preparedTransactions.get(txid);
+        if (tx == null) {
+            tx = new Tx();
+            preparedTransactions.put(txid, tx);
         }
         return tx;
     }
@@ -248,7 +267,7 @@ public class MemoryTransactionStore implements TransactionStore {
     /**
      * @see org.apache.activemq.store.TransactionStore#rollback(TransactionId)
      */
-    public void rollback(TransactionId txid) {
+    public void rollback(TransactionId txid) throws IOException {
         preparedTransactions.remove(txid);
         inflightTransactions.remove(txid);
     }
@@ -268,10 +287,14 @@ public class MemoryTransactionStore implements TransactionStore {
                 Object txid = iter.next();
                 Tx tx = preparedTransactions.get(txid);
                 listener.recover((XATransactionId)txid, tx.getMessages(), tx.getAcks());
+                onRecovered(tx);
             }
         } finally {
             this.doingRecover = false;
         }
+    }
+
+    protected void onRecovered(Tx tx) {
     }
 
     /**
@@ -289,6 +312,11 @@ public class MemoryTransactionStore implements TransactionStore {
             tx.add(new AddMessageCommand() {
                 public Message getMessage() {
                     return message;
+                }
+
+                @Override
+                public MessageStore getMessageStore() {
+                    return destination;
                 }
 
                 public void run(ConnectionContext ctx) throws IOException {
@@ -320,13 +348,18 @@ public class MemoryTransactionStore implements TransactionStore {
                 public void run(ConnectionContext ctx) throws IOException {
                     destination.removeMessage(ctx, ack);
                 }
+
+                @Override
+                public MessageStore getMessageStore() {
+                    return destination;
+                }
             });
         } else {
             destination.removeMessage(null, ack);
         }
     }
 
-    final void acknowledge(final TopicMessageStore destination, final String clientId, final String subscriptionName,
+    public void acknowledge(final TopicMessageStore destination, final String clientId, final String subscriptionName,
                            final MessageId messageId, final MessageAck ack) throws IOException {
         if (doingRecover) {
             return;
@@ -341,6 +374,11 @@ public class MemoryTransactionStore implements TransactionStore {
 
                 public void run(ConnectionContext ctx) throws IOException {
                     destination.acknowledge(ctx, clientId, subscriptionName, messageId, ack);
+                }
+
+                @Override
+                public MessageStore getMessageStore() {
+                    return destination;
                 }
             });
         } else {

@@ -233,4 +233,6 @@ public interface Destination extends Service, Task {
 
     boolean isDoOptimzeMessageStorage();
     void setDoOptimzeMessageStorage(boolean doOptimzeMessageStorage);
+
+    public void clearPendingMessages();
 }

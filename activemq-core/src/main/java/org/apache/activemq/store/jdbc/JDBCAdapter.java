@@ -20,9 +20,11 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Set;
 import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.command.ProducerId;
 import org.apache.activemq.command.SubscriptionInfo;
+import org.apache.activemq.command.XATransactionId;
 
 /**
  * 
@@ -35,7 +37,7 @@ public interface JDBCAdapter {
 
     void doDropTables(TransactionContext c) throws SQLException, IOException;
 
-    void doAddMessage(TransactionContext c, long sequence, MessageId messageID, ActiveMQDestination destination, byte[] data, long expiration, byte priority) throws SQLException, IOException;
+    void doAddMessage(TransactionContext c, long sequence, MessageId messageID, ActiveMQDestination destination, byte[] data, long expiration, byte priority, XATransactionId xid) throws SQLException, IOException;
 
     void doAddMessageReference(TransactionContext c, long sequence, MessageId messageId, ActiveMQDestination destination, long expirationTime, String messageRef) throws SQLException, IOException;
 
@@ -45,11 +47,11 @@ public interface JDBCAdapter {
 
     String doGetMessageReference(TransactionContext c, long id) throws SQLException, IOException;
 
-    void doRemoveMessage(TransactionContext c, long seq) throws SQLException, IOException;
+    void doRemoveMessage(TransactionContext c, long seq, XATransactionId xid) throws SQLException, IOException;
 
     void doRecover(TransactionContext c, ActiveMQDestination destination, JDBCMessageRecoveryListener listener) throws Exception;
 
-    void doSetLastAck(TransactionContext c, ActiveMQDestination destination, String clientId, String subscriptionName, long seq, long prio) throws SQLException, IOException;
+    void doSetLastAck(TransactionContext c, ActiveMQDestination destination, XATransactionId xid, String clientId, String subscriptionName, long seq, long prio) throws SQLException, IOException;
 
     void doRecoverSubscription(TransactionContext c, ActiveMQDestination destination, String clientId, String subscriptionName, JDBCMessageRecoveryListener listener)
         throws Exception;
@@ -92,11 +94,17 @@ public interface JDBCAdapter {
 
     long doGetLastProducerSequenceId(TransactionContext c, ProducerId id) throws SQLException, IOException;
 
-    void doSetLastAckWithPriority(TransactionContext c, ActiveMQDestination destination, String clientId, String subscriptionName, long re, long re1) throws SQLException, IOException;
+    void doSetLastAckWithPriority(TransactionContext c, ActiveMQDestination destination, XATransactionId xid, String clientId, String subscriptionName, long re, long re1) throws SQLException, IOException;
 
     public int getMaxRows();
 
     public void setMaxRows(int maxRows);
 
     void doRecordDestination(TransactionContext c, ActiveMQDestination destination) throws SQLException, IOException;
+
+    void doRecoverPreparedOps(TransactionContext c, JdbcMemoryTransactionStore jdbcMemoryTransactionStore) throws SQLException, IOException;
+
+    void doCommitAddOp(TransactionContext c, long storeSequenceIdForMessageId) throws SQLException, IOException;
+
+    void doClearLastAck(TransactionContext c, ActiveMQDestination destination, byte priority, String subId, String subName) throws SQLException, IOException;
 }

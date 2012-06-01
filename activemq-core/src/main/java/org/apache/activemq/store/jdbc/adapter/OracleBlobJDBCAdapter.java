@@ -48,15 +48,6 @@ public class OracleBlobJDBCAdapter extends BlobJDBCAdapter {
         statements.setLongDataType("NUMBER");
         statements.setSequenceDataType("NUMBER");
 
-        String addMessageStatement = "INSERT INTO "
-            + statements.getFullMessageTableName()
-            + "(ID, MSGID_PROD, MSGID_SEQ, CONTAINER, EXPIRATION, PRIORITY, MSG) VALUES (?, ?, ?, ?, ?, ?, empty_blob())";
-        statements.setAddMessageStatement(addMessageStatement);
-
-        String findMessageByIdStatement = "SELECT MSG FROM " +
-        	statements.getFullMessageTableName() + " WHERE ID=? FOR UPDATE";
-        statements.setFindMessageByIdStatement(findMessageByIdStatement);
-
         super.setStatements(statements);
     }
 

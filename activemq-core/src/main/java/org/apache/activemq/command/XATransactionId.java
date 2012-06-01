@@ -16,10 +16,12 @@
  */
 package org.apache.activemq.command;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import javax.transaction.xa.Xid;
-import org.apache.activemq.util.HexSupport;
+import org.apache.activemq.util.DataByteArrayInputStream;
+import org.apache.activemq.util.DataByteArrayOutputStream;
 
 /**
  * @openwire:marshaller code="112"
@@ -32,6 +34,8 @@ public class XATransactionId extends TransactionId implements Xid, Comparable {
     private int formatId;
     private byte[] branchQualifier;
     private byte[] globalTransactionId;
+    private transient DataByteArrayOutputStream outputStream;
+    private transient byte[] encodedXidBytes;
 
     private transient int hash;
     private transient String transactionKey;
@@ -46,14 +50,58 @@ public class XATransactionId extends TransactionId implements Xid, Comparable {
         this.branchQualifier = xid.getBranchQualifier();
     }
 
+    public XATransactionId(byte[] encodedBytes) {
+        encodedXidBytes = encodedBytes;
+        initFromEncodedBytes();
+    }
+
     public byte getDataStructureType() {
         return DATA_STRUCTURE_TYPE;
+    }
+
+    final int XID_PREFIX_SIZE = 16;
+    //+|-,(long)lastAck,(byte)priority,(int)formatid,(short)globalLength....
+    private void initFromEncodedBytes() {
+        DataByteArrayInputStream inputStream = new DataByteArrayInputStream(encodedXidBytes);
+        inputStream.skipBytes(10);
+        formatId = inputStream.readInt();
+        int globalLength = inputStream.readShort();
+        globalTransactionId = new byte[globalLength];
+        try {
+            inputStream.read(globalTransactionId);
+            branchQualifier = new byte[inputStream.available()];
+            inputStream.read(branchQualifier);
+        } catch (IOException fatal) {
+            throw new RuntimeException(this + ", failed to decode:", fatal);
+        }
+    }
+
+    public synchronized byte[] getEncodedXidBytes() {
+        if (encodedXidBytes == null) {
+            outputStream = new DataByteArrayOutputStream(XID_PREFIX_SIZE + globalTransactionId.length + branchQualifier.length);
+            outputStream.position(10);
+            outputStream.writeInt(formatId);
+            // global length
+            outputStream.writeShort(globalTransactionId.length);
+            try {
+                outputStream.write(globalTransactionId);
+                outputStream.write(branchQualifier);
+            } catch (IOException fatal) {
+                throw new RuntimeException(this + ", failed to encode:", fatal);
+            }
+            encodedXidBytes = outputStream.getData();
+        }
+        return encodedXidBytes;
+    }
+
+    public DataByteArrayOutputStream getOutputStream() {
+        return outputStream;
     }
 
     public synchronized String getTransactionKey() {
         if (transactionKey == null) {
             StringBuffer s = new StringBuffer();
-            s.append("XID:[globalId=");
+            s.append("XID:[" + formatId + ",globalId=");
             for (int i = 0; i < globalTransactionId.length; i++) {
                 s.append(Integer.toHexString(globalTransactionId[i]));
             }

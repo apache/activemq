@@ -120,15 +120,19 @@ public class JDBCMessageStore extends AbstractMessageStore {
         // Get a connection and insert the message into the DB.
         TransactionContext c = persistenceAdapter.getTransactionContext(context);
         try {      
-            adapter.doAddMessage(c,sequenceId, messageId, destination, data, message.getExpiration(),
-                    this.isPrioritizedMessages() ? message.getPriority() : 0);
+            adapter.doAddMessage(c, sequenceId, messageId, destination, data, message.getExpiration(),
+                    this.isPrioritizedMessages() ? message.getPriority() : 0, context != null ? context.getXid() : null);
         } catch (SQLException e) {
             JDBCPersistenceAdapter.log("JDBC Failure: ", e);
             throw IOExceptionSupport.create("Failed to broker message: " + messageId + " in container: " + e, e);
         } finally {
             c.close();
         }
-        onAdd(messageId, sequenceId, message.getPriority());
+        if (context != null && context.getXid() != null) {
+            message.getMessageId().setDataLocator(sequenceId);
+        } else {
+            onAdd(messageId, sequenceId, message.getPriority());
+        }
     }
 
     protected void onAdd(MessageId messageId, long sequenceId, byte priority) {
@@ -186,18 +190,21 @@ public class JDBCMessageStore extends AbstractMessageStore {
     }
 
     public void removeMessage(ConnectionContext context, MessageAck ack) throws IOException {
-    	
-    	long seq = getStoreSequenceIdForMessageId(ack.getLastMessageId())[0];
+
+    	long seq = persistenceAdapter.getStoreSequenceIdForMessageId(ack.getLastMessageId(), destination)[0];
 
         // Get a connection and remove the message from the DB
         TransactionContext c = persistenceAdapter.getTransactionContext(context);
         try {
-            adapter.doRemoveMessage(c, seq);
+            adapter.doRemoveMessage(c, seq, context != null ? context.getXid() : null);
         } catch (SQLException e) {
             JDBCPersistenceAdapter.log("JDBC Failure: ", e);
             throw IOExceptionSupport.create("Failed to broker message: " + ack.getLastMessageId() + " in container: " + e, e);
         } finally {
             c.close();
+        }
+        if (context != null && context.getXid() != null) {
+            ack.getLastMessageId().setDataLocator(seq);
         }
     }
 
@@ -315,7 +322,7 @@ public class JDBCMessageStore extends AbstractMessageStore {
     @Override
     public void setBatch(MessageId messageId) {
         try {
-            long[] storedValues = getStoreSequenceIdForMessageId(messageId);
+            long[] storedValues = persistenceAdapter.getStoreSequenceIdForMessageId(messageId, destination);
             lastRecoveredSequenceId.set(storedValues[0]);
             lastRecoveredPriority.set(storedValues[1]);
         } catch (IOException ignoredAsAlreadyLogged) {
@@ -328,20 +335,7 @@ public class JDBCMessageStore extends AbstractMessageStore {
         }
     }
 
-    private long[] getStoreSequenceIdForMessageId(MessageId messageId) throws IOException {
-        long[] result = new long[]{-1, Byte.MAX_VALUE -1};
-        TransactionContext c = persistenceAdapter.getTransactionContext();
-        try {
-            result = adapter.getStoreSequenceId(c, destination, messageId);
-        } catch (SQLException e) {
-            JDBCPersistenceAdapter.log("JDBC Failure: ", e);
-            throw IOExceptionSupport.create("Failed to get store sequenceId for messageId: " + messageId +", on: " + destination + ". Reason: " + e, e);
-        } finally {
-            c.close();
-        }
-        return result;
-    }
-    
+
     public void setPrioritizedMessages(boolean prioritizedMessages) {
         super.setPrioritizedMessages(prioritizedMessages);
     }   

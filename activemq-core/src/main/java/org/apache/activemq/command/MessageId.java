@@ -152,7 +152,7 @@ public class MessageId implements DataStructure, Comparable<MessageId> {
         MessageId copy = new MessageId(producerId, producerSequenceId);
         copy.key = key;
         copy.brokerSequenceId = brokerSequenceId;
-        copy.dataLocator = dataLocator;
+        copy.dataLocator = new AtomicReference<Object>(dataLocator.get());
         return copy;
     }
 

@@ -25,6 +25,7 @@ import org.apache.activemq.command.ConnectionId;
 import org.apache.activemq.command.ConnectionInfo;
 import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.command.WireFormatInfo;
+import org.apache.activemq.command.XATransactionId;
 import org.apache.activemq.filter.MessageEvaluationContext;
 import org.apache.activemq.security.MessageAuthorizationPolicy;
 import org.apache.activemq.security.SecurityContext;
@@ -60,6 +61,7 @@ public class ConnectionContext {
     private boolean dontSendReponse;
     private boolean clientMaster = true;
     private ConnectionState connectionState;
+    private XATransactionId xid;
 
     public ConnectionContext() {
     	this.messageEvaluationContext = new MessageEvaluationContext();
@@ -328,5 +330,13 @@ public class ConnectionContext {
 
     public ConnectionState getConnectionState() {
         return this.connectionState;
+    }
+
+    public void setXid(XATransactionId id) {
+        this.xid = id;
+    }
+
+    public XATransactionId getXid() {
+        return xid;
     }
 }

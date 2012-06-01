@@ -23,9 +23,13 @@ import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 import junit.framework.Test;
 
+import org.apache.activemq.broker.jmx.DestinationView;
+import org.apache.activemq.broker.jmx.DestinationViewMBean;
 import org.apache.activemq.broker.jmx.RecoveredXATransactionViewMBean;
+import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
+import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.command.ConnectionInfo;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.DataArrayResponse;
@@ -37,6 +41,7 @@ import org.apache.activemq.command.SessionInfo;
 import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.command.TransactionInfo;
 import org.apache.activemq.command.XATransactionId;
+import org.apache.activemq.store.jdbc.JDBCPersistenceAdapter;
 import org.apache.activemq.util.JMXSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,6 +53,8 @@ import org.slf4j.LoggerFactory;
  */
 public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
     protected static final Logger LOG = LoggerFactory.getLogger(XARecoveryBrokerTest.class);
+    public boolean prioritySupport = false;
+
     public void testPreparedJmxView() throws Exception {
 
         ActiveMQDestination destination = createDestination();
@@ -96,6 +103,10 @@ public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
         dar = (DataArrayResponse)response;
         assertEquals(4, dar.getData().length);
 
+        // validate destination depth via jmx
+        DestinationViewMBean destinationView = getProxyToDestination(destinationList(destination)[0]);
+        assertEquals("enqueue count does not see prepared", 0, destinationView.getQueueSize());
+
         TransactionId first = (TransactionId)dar.getData()[0];
         // via jmx, force outcome
         for (int i = 0; i < 4; i++) {
@@ -129,6 +140,16 @@ public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
         RecoveredXATransactionViewMBean proxy = (RecoveredXATransactionViewMBean) broker.getManagementContext().newProxyInstance(objectName,
                 RecoveredXATransactionViewMBean.class, true);
         return proxy;
+    }
+
+    private DestinationViewMBean getProxyToDestination(ActiveMQDestination destination) throws MalformedObjectNameException, JMSException {
+
+        ObjectName objectName = new ObjectName("org.apache.activemq:Type=" + (destination.isQueue() ? "Queue" : "Topic") + ",Destination=" +
+                JMXSupport.encodeObjectNamePart(destination.getPhysicalName()) + ",BrokerName=localhost");
+        DestinationViewMBean proxy = (DestinationViewMBean) broker.getManagementContext().newProxyInstance(objectName,
+                DestinationViewMBean.class, true);
+        return proxy;
+
     }
 
     public void testPreparedTransactionRecoveredOnRestart() throws Exception {
@@ -213,6 +234,94 @@ public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
         assertNoMessagesLeft(connection);
     }
 
+    public void testTopicPreparedTransactionRecoveredOnRestart() throws Exception {
+        ActiveMQDestination destination = new ActiveMQTopic("TryTopic");
+
+        StubConnection connection = createConnection();
+        ConnectionInfo connectionInfo = createConnectionInfo();
+        connectionInfo.setClientId("durable");
+        SessionInfo sessionInfo = createSessionInfo(connectionInfo);
+        ProducerInfo producerInfo = createProducerInfo(sessionInfo);
+        connection.send(connectionInfo);
+        connection.send(sessionInfo);
+        connection.send(producerInfo);
+        ConsumerInfo consumerInfo = createConsumerInfo(sessionInfo, destination);
+        consumerInfo.setSubscriptionName("durable");
+        connection.send(consumerInfo);
+
+        // Prepare 4 message sends.
+        for (int i = 0; i < 4; i++) {
+            // Begin the transaction.
+            XATransactionId txid = createXATransaction(sessionInfo);
+            connection.send(createBeginTransaction(connectionInfo, txid));
+
+            Message message = createMessage(producerInfo, destination);
+            message.setPersistent(true);
+            message.setTransactionId(txid);
+            connection.send(message);
+
+            // Prepare
+            connection.send(createPrepareTransaction(connectionInfo, txid));
+        }
+
+        // Since prepared but not committed.. they should not get delivered.
+        assertNull(receiveMessage(connection));
+        assertNoMessagesLeft(connection);
+        connection.request(closeConnectionInfo(connectionInfo));
+
+        // restart the broker.
+        restartBroker();
+
+        // Setup the consumer and try receive the message.
+        connection = createConnection();
+        connectionInfo = createConnectionInfo();
+        connectionInfo.setClientId("durable");
+
+        sessionInfo = createSessionInfo(connectionInfo);
+        connection.send(connectionInfo);
+        connection.send(sessionInfo);
+        consumerInfo = createConsumerInfo(sessionInfo, destination);
+        consumerInfo.setSubscriptionName("durable");
+        connection.send(consumerInfo);
+
+        // Since prepared but not committed.. they should not get delivered.
+        assertNull(receiveMessage(connection));
+        assertNoMessagesLeft(connection);
+
+        Response response = connection.request(new TransactionInfo(connectionInfo.getConnectionId(), null, TransactionInfo.RECOVER));
+        assertNotNull(response);
+        DataArrayResponse dar = (DataArrayResponse) response;
+        assertEquals(4, dar.getData().length);
+
+        // ensure we can close a connection with prepared transactions
+        connection.request(closeConnectionInfo(connectionInfo));
+
+        // open again  to deliver outcome
+        connection = createConnection();
+        connectionInfo = createConnectionInfo();
+        connectionInfo.setClientId("durable");
+        sessionInfo = createSessionInfo(connectionInfo);
+        connection.send(connectionInfo);
+        connection.send(sessionInfo);
+        consumerInfo = createConsumerInfo(sessionInfo, destination);
+        consumerInfo.setSubscriptionName("durable");
+        connection.send(consumerInfo);
+
+        // Commit the prepared transactions.
+        for (int i = 0; i < dar.getData().length; i++) {
+            connection.send(createCommitTransaction2Phase(connectionInfo, (TransactionId) dar.getData()[i]));
+        }
+
+        // We should get the committed transactions.
+        for (int i = 0; i < expectedMessageCount(4, destination); i++) {
+            Message m = receiveMessage(connection, TimeUnit.SECONDS.toMillis(10));
+            assertNotNull(m);
+        }
+
+        assertNoMessagesLeft(connection);
+
+    }
+
     public void testQueuePersistentCommitedMessagesNotLostOnRestart() throws Exception {
 
         ActiveMQDestination destination = createDestination();
@@ -239,6 +348,55 @@ public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
 
         // Commit
         connection.send(createCommitTransaction1Phase(connectionInfo, txid));
+        connection.request(closeConnectionInfo(connectionInfo));
+        // restart the broker.
+        restartBroker();
+
+        // Setup the consumer and receive the message.
+        connection = createConnection();
+        connectionInfo = createConnectionInfo();
+        sessionInfo = createSessionInfo(connectionInfo);
+        connection.send(connectionInfo);
+        connection.send(sessionInfo);
+        ConsumerInfo consumerInfo = createConsumerInfo(sessionInfo, destination);
+        connection.send(consumerInfo);
+
+        for (int i = 0; i < expectedMessageCount(4, destination); i++) {
+            Message m = receiveMessage(connection);
+            assertNotNull(m);
+        }
+
+        assertNoMessagesLeft(connection);
+    }
+
+    public void testQueuePersistentCommited2PhaseMessagesNotLostOnRestart() throws Exception {
+
+        ActiveMQDestination destination = createDestination();
+
+        // Setup the producer and send the message.
+        StubConnection connection = createConnection();
+        ConnectionInfo connectionInfo = createConnectionInfo();
+        SessionInfo sessionInfo = createSessionInfo(connectionInfo);
+        ProducerInfo producerInfo = createProducerInfo(sessionInfo);
+        connection.send(connectionInfo);
+        connection.send(sessionInfo);
+        connection.send(producerInfo);
+
+        // Begin the transaction.
+        XATransactionId txid = createXATransaction(sessionInfo);
+        connection.send(createBeginTransaction(connectionInfo, txid));
+
+        for (int i = 0; i < 4; i++) {
+            Message message = createMessage(producerInfo, destination);
+            message.setPersistent(true);
+            message.setTransactionId(txid);
+            connection.send(message);
+        }
+
+        // Commit 2 phase
+        connection.request(createPrepareTransaction(connectionInfo, txid));
+        connection.send(createCommitTransaction2Phase(connectionInfo, txid));
+
         connection.request(closeConnectionInfo(connectionInfo));
         // restart the broker.
         restartBroker();
@@ -396,6 +554,90 @@ public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
         assertEquals("there are no prepared tx", 0, dataArrayResponse.getData().length);
     }
 
+    public void initCombosForTestTopicPersistentPreparedAcksNotLostOnRestart() {
+        addCombinationValues("prioritySupport", new Boolean[]{Boolean.FALSE, Boolean.TRUE});
+    }
+
+    public void testTopicPersistentPreparedAcksNotLostOnRestart() throws Exception {
+        // REVISIT for kahadb
+        if (! (broker.getPersistenceAdapter() instanceof JDBCPersistenceAdapter)) {
+            LOG.warn("only works on jdbc");
+            return;
+        }
+        ActiveMQDestination destination = new ActiveMQTopic("TryTopic");
+
+        // Setup the producer and send the message.
+        StubConnection connection = createConnection();
+        ConnectionInfo connectionInfo = createConnectionInfo();
+        connectionInfo.setClientId("durable");
+        SessionInfo sessionInfo = createSessionInfo(connectionInfo);
+        ProducerInfo producerInfo = createProducerInfo(sessionInfo);
+        connection.send(connectionInfo);
+        connection.send(sessionInfo);
+        connection.send(producerInfo);
+
+        // setup durable subs
+        ConsumerInfo consumerInfo = createConsumerInfo(sessionInfo, destination);
+        consumerInfo.setSubscriptionName("durable");
+        connection.send(consumerInfo);
+
+        for (int i = 0; i < 4; i++) {
+            Message message = createMessage(producerInfo, destination);
+            message.setPersistent(true);
+            connection.send(message);
+        }
+
+        // Begin the transaction.
+        XATransactionId txid = createXATransaction(sessionInfo);
+        connection.send(createBeginTransaction(connectionInfo, txid));
+
+        final int messageCount = expectedMessageCount(4, destination);
+        Message m = null;
+        for (int i = 0; i < messageCount; i++) {
+            m = receiveMessage(connection);
+            assertNotNull("unexpected null on: " + i, m);
+        }
+
+        // one ack with last received, mimic a beforeEnd synchronization
+        MessageAck ack = createAck(consumerInfo, m, messageCount, MessageAck.STANDARD_ACK_TYPE);
+        ack.setTransactionId(txid);
+        connection.send(ack);
+
+        connection.request(createPrepareTransaction(connectionInfo, txid));
+
+        // restart the broker.
+        restartBroker();
+
+        connection = createConnection();
+        connectionInfo = createConnectionInfo();
+        connectionInfo.setClientId("durable");
+        connection.send(connectionInfo);
+
+        // validate recovery
+        TransactionInfo recoverInfo = new TransactionInfo(connectionInfo.getConnectionId(), null, TransactionInfo.RECOVER);
+        DataArrayResponse dataArrayResponse = (DataArrayResponse)connection.request(recoverInfo);
+
+        assertEquals("there is a prepared tx", 1, dataArrayResponse.getData().length);
+        assertEquals("it matches", txid, dataArrayResponse.getData()[0]);
+
+        sessionInfo = createSessionInfo(connectionInfo);
+        connection.send(sessionInfo);
+        consumerInfo = createConsumerInfo(sessionInfo, destination);
+        consumerInfo.setSubscriptionName("durable");
+        connection.send(consumerInfo);
+
+        // no redelivery, exactly once semantics unless there is rollback
+        m = receiveMessage(connection);
+        assertNull(m);
+        assertNoMessagesLeft(connection);
+
+        connection.request(createCommitTransaction2Phase(connectionInfo, txid));
+
+        // validate recovery complete
+        dataArrayResponse = (DataArrayResponse)connection.request(recoverInfo);
+        assertEquals("there are no prepared tx", 0, dataArrayResponse.getData().length);
+    }
+
     public void testQueuePersistentPreparedAcksAvailableAfterRestartAndRollback() throws Exception {
 
         ActiveMQDestination destination = createDestination();
@@ -409,7 +651,8 @@ public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
         connection.send(sessionInfo);
         connection.send(producerInfo);
 
-        for (int i = 0; i < 4; i++) {
+        int numMessages = 4;
+        for (int i = 0; i < numMessages; i++) {
             Message message = createMessage(producerInfo, destination);
             message.setPersistent(true);
             connection.send(message);
@@ -426,13 +669,13 @@ public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
             consumerInfo = createConsumerInfo(sessionInfo, dest);
             connection.send(consumerInfo);
 
-            for (int i = 0; i < 4; i++) {
+            for (int i = 0; i < numMessages; i++) {
                 message = receiveMessage(connection);
                 assertNotNull(message);
             }
 
             // one ack with last received, mimic a beforeEnd synchronization
-            MessageAck ack = createAck(consumerInfo, message, 4, MessageAck.STANDARD_ACK_TYPE);
+            MessageAck ack = createAck(consumerInfo, message, numMessages, MessageAck.STANDARD_ACK_TYPE);
             ack.setTransactionId(txid);
             connection.send(ack);
         }
@@ -466,7 +709,7 @@ public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
         // rollback so we get redelivery
         connection.request(createRollbackTransaction(connectionInfo, txid));
 
-        // Begin new transaction for redelivery
+        LOG.info("new tx for redelivery");
         txid = createXATransaction(sessionInfo);
         connection.send(createBeginTransaction(connectionInfo, txid));
 
@@ -475,11 +718,11 @@ public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
             consumerInfo = createConsumerInfo(sessionInfo, dest);
             connection.send(consumerInfo);
 
-            for (int i = 0; i < 4; i++) {
+            for (int i = 0; i < numMessages; i++) {
                 message = receiveMessage(connection);
-                assertNotNull(message);
+                assertNotNull("unexpected null on:" + i, message);
             }
-            MessageAck ack = createAck(consumerInfo, message, 4, MessageAck.STANDARD_ACK_TYPE);
+            MessageAck ack = createAck(consumerInfo, message, numMessages, MessageAck.STANDARD_ACK_TYPE);
             ack.setTransactionId(txid);
             connection.send(ack);
         }
@@ -490,6 +733,180 @@ public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
         // validate recovery complete
         dataArrayResponse = (DataArrayResponse)connection.request(recoverInfo);
         assertEquals("there are no prepared tx", 0, dataArrayResponse.getData().length);
+    }
+
+    public void initCombosForTestTopicPersistentPreparedAcksAvailableAfterRestartAndRollback() {
+        addCombinationValues("prioritySupport", new Boolean[]{Boolean.FALSE, Boolean.TRUE});
+    }
+
+    public void testTopicPersistentPreparedAcksAvailableAfterRestartAndRollback() throws Exception {
+
+        // REVISIT for kahadb
+        if (! (broker.getPersistenceAdapter() instanceof JDBCPersistenceAdapter)) {
+            LOG.warn("only works on jdbc");
+            return;
+        }
+
+        ActiveMQDestination destination = new ActiveMQTopic("TryTopic");
+
+        // Setup the producer and send the message.
+        StubConnection connection = createConnection();
+        ConnectionInfo connectionInfo = createConnectionInfo();
+        connectionInfo.setClientId("durable");
+        SessionInfo sessionInfo = createSessionInfo(connectionInfo);
+        ProducerInfo producerInfo = createProducerInfo(sessionInfo);
+        connection.send(connectionInfo);
+        connection.send(sessionInfo);
+        connection.send(producerInfo);
+
+        // setup durable subs
+        ConsumerInfo consumerInfo = createConsumerInfo(sessionInfo, destination);
+        consumerInfo.setSubscriptionName("durable");
+        connection.send(consumerInfo);
+
+        int numMessages = 4;
+        for (int i = 0; i < numMessages; i++) {
+            Message message = createMessage(producerInfo, destination);
+            message.setPersistent(true);
+            connection.send(message);
+        }
+
+        // Begin the transaction.
+        XATransactionId txid = createXATransaction(sessionInfo);
+        connection.send(createBeginTransaction(connectionInfo, txid));
+
+        Message message = null;
+        for (int i = 0; i < numMessages; i++) {
+            message = receiveMessage(connection);
+            assertNotNull(message);
+        }
+
+        // one ack with last received, mimic a beforeEnd synchronization
+        MessageAck ack = createAck(consumerInfo, message, numMessages, MessageAck.STANDARD_ACK_TYPE);
+        ack.setTransactionId(txid);
+        connection.send(ack);
+
+        connection.request(createPrepareTransaction(connectionInfo, txid));
+
+        // restart the broker.
+        restartBroker();
+
+        connection = createConnection();
+        connectionInfo = createConnectionInfo();
+        connectionInfo.setClientId("durable");
+        connection.send(connectionInfo);
+
+        // validate recovery
+        TransactionInfo recoverInfo = new TransactionInfo(connectionInfo.getConnectionId(), null, TransactionInfo.RECOVER);
+        DataArrayResponse dataArrayResponse = (DataArrayResponse)connection.request(recoverInfo);
+
+        assertEquals("there is a prepared tx", 1, dataArrayResponse.getData().length);
+        assertEquals("it matches", txid, dataArrayResponse.getData()[0]);
+
+        sessionInfo = createSessionInfo(connectionInfo);
+        connection.send(sessionInfo);
+        consumerInfo = createConsumerInfo(sessionInfo, destination);
+        consumerInfo.setSubscriptionName("durable");
+        connection.send(consumerInfo);
+
+        // no redelivery, exactly once semantics while prepared
+        message = receiveMessage(connection);
+        assertNull(message);
+        assertNoMessagesLeft(connection);
+
+        // rollback so we get redelivery
+        connection.request(createRollbackTransaction(connectionInfo, txid));
+
+        LOG.info("new tx for redelivery");
+        txid = createXATransaction(sessionInfo);
+        connection.send(createBeginTransaction(connectionInfo, txid));
+
+        for (int i = 0; i < numMessages; i++) {
+            message = receiveMessage(connection);
+            assertNotNull("unexpected null on:" + i, message);
+        }
+        ack = createAck(consumerInfo, message, numMessages, MessageAck.STANDARD_ACK_TYPE);
+        ack.setTransactionId(txid);
+        connection.send(ack);
+
+        // Commit
+        connection.request(createCommitTransaction1Phase(connectionInfo, txid));
+
+        // validate recovery complete
+        dataArrayResponse = (DataArrayResponse)connection.request(recoverInfo);
+        assertEquals("there are no prepared tx", 0, dataArrayResponse.getData().length);
+    }
+
+    public void initCombosForTestTopicPersistentPreparedAcksAvailableAfterRollback() {
+        addCombinationValues("prioritySupport", new Boolean[]{Boolean.FALSE, Boolean.TRUE});
+    }
+
+    public void testTopicPersistentPreparedAcksAvailableAfterRollback() throws Exception {
+
+        // REVISIT for kahadb
+        if (! (broker.getPersistenceAdapter() instanceof JDBCPersistenceAdapter)) {
+            LOG.warn("only works on jdbc");
+            return;
+        }
+
+        ActiveMQDestination destination = new ActiveMQTopic("TryTopic");
+
+        // Setup the producer and send the message.
+        StubConnection connection = createConnection();
+        ConnectionInfo connectionInfo = createConnectionInfo();
+        connectionInfo.setClientId("durable");
+        SessionInfo sessionInfo = createSessionInfo(connectionInfo);
+        ProducerInfo producerInfo = createProducerInfo(sessionInfo);
+        connection.send(connectionInfo);
+        connection.send(sessionInfo);
+        connection.send(producerInfo);
+
+        // setup durable subs
+        ConsumerInfo consumerInfo = createConsumerInfo(sessionInfo, destination);
+        consumerInfo.setSubscriptionName("durable");
+        connection.send(consumerInfo);
+
+        int numMessages = 4;
+        for (int i = 0; i < numMessages; i++) {
+            Message message = createMessage(producerInfo, destination);
+            message.setPersistent(true);
+            connection.send(message);
+        }
+
+        // Begin the transaction.
+        XATransactionId txid = createXATransaction(sessionInfo);
+        connection.send(createBeginTransaction(connectionInfo, txid));
+
+        Message message = null;
+        for (int i = 0; i < numMessages; i++) {
+            message = receiveMessage(connection);
+            assertNotNull(message);
+        }
+
+        // one ack with last received, mimic a beforeEnd synchronization
+        MessageAck ack = createAck(consumerInfo, message, numMessages, MessageAck.STANDARD_ACK_TYPE);
+        ack.setTransactionId(txid);
+        connection.send(ack);
+
+        connection.request(createPrepareTransaction(connectionInfo, txid));
+
+        // rollback so we get redelivery
+        connection.request(createRollbackTransaction(connectionInfo, txid));
+
+        LOG.info("new tx for redelivery");
+        txid = createXATransaction(sessionInfo);
+        connection.send(createBeginTransaction(connectionInfo, txid));
+
+        for (int i = 0; i < numMessages; i++) {
+            message = receiveMessage(connection);
+            assertNotNull("unexpected null on:" + i, message);
+        }
+        ack = createAck(consumerInfo, message, numMessages, MessageAck.STANDARD_ACK_TYPE);
+        ack.setTransactionId(txid);
+        connection.send(ack);
+
+        // Commit
+        connection.request(createCommitTransaction1Phase(connectionInfo, txid));
     }
 
     private ActiveMQDestination[] destinationList(ActiveMQDestination dest) {
@@ -562,6 +979,13 @@ public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
         }
 
         assertNoMessagesLeft(connection);
+    }
+
+    @Override
+    protected PolicyEntry getDefaultPolicy() {
+        PolicyEntry policyEntry = super.getDefaultPolicy();
+        policyEntry.setPrioritizedMessages(prioritySupport);
+        return policyEntry;
     }
 
     public static Test suite() {

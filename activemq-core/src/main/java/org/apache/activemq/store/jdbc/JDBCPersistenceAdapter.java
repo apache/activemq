@@ -37,6 +37,7 @@ import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.command.Message;
+import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.command.ProducerId;
 import org.apache.activemq.openwire.OpenWireFormat;
@@ -237,7 +238,7 @@ public class JDBCPersistenceAdapter extends DataSourceSupport implements Persist
 
     public TransactionStore createTransactionStore() throws IOException {
         if (transactionStore == null) {
-            transactionStore = new MemoryTransactionStore(this);
+            transactionStore = new JdbcMemoryTransactionStore(this);
         }
         return this.transactionStore;
     }
@@ -768,4 +769,95 @@ public class JDBCPersistenceAdapter extends DataSourceSupport implements Persist
     public void setMaxRows(int maxRows) {
         this.maxRows = maxRows;
     }
+
+    public void recover(JdbcMemoryTransactionStore jdbcMemoryTransactionStore) throws IOException {
+        TransactionContext c = getTransactionContext();
+        try {
+            getAdapter().doRecoverPreparedOps(c, jdbcMemoryTransactionStore);
+        } catch (SQLException e) {
+            JDBCPersistenceAdapter.log("JDBC Failure: ", e);
+            throw IOExceptionSupport.create("Failed to recover from: " + jdbcMemoryTransactionStore + ". Reason: " + e,e);
+        } finally {
+            c.close();
+        }
+    }
+
+    public void commitAdd(ConnectionContext context, MessageId messageId) throws IOException {
+        TransactionContext c = getTransactionContext(context);
+        try {
+            long sequence = (Long)messageId.getDataLocator();
+            getAdapter().doCommitAddOp(c, sequence);
+        } catch (SQLException e) {
+            JDBCPersistenceAdapter.log("JDBC Failure: ", e);
+            throw IOExceptionSupport.create("Failed to commit add: " + messageId + ". Reason: " + e, e);
+        } finally {
+            c.close();
+        }
+    }
+
+    public void commitRemove(ConnectionContext context, MessageAck ack) throws IOException {
+        TransactionContext c = getTransactionContext(context);
+        try {
+            getAdapter().doRemoveMessage(c, (Long)ack.getLastMessageId().getDataLocator(), null);
+        } catch (SQLException e) {
+            JDBCPersistenceAdapter.log("JDBC Failure: ", e);
+            throw IOExceptionSupport.create("Failed to commit last ack: " + ack + ". Reason: " + e,e);
+        } finally {
+            c.close();
+        }
+    }
+
+
+    public void commitLastAck(ConnectionContext context, long xidLastAck, long priority, ActiveMQDestination destination, String subName, String clientId) throws IOException {
+        TransactionContext c = getTransactionContext(context);
+        try {
+            getAdapter().doSetLastAck(c, destination, null, clientId, subName, xidLastAck, priority);
+        } catch (SQLException e) {
+            JDBCPersistenceAdapter.log("JDBC Failure: ", e);
+            throw IOExceptionSupport.create("Failed to commit last ack with priority: " + priority + " on " + destination + " for " + subName + ":" + clientId + ". Reason: " + e,e);
+        } finally {
+            c.close();
+        }
+    }
+
+    public void rollbackLastAck(ConnectionContext context, JDBCTopicMessageStore store, MessageAck ack, String subName, String clientId) throws IOException {
+        TransactionContext c = getTransactionContext(context);
+        try {
+            byte priority = (byte) store.getCachedStoreSequenceId(c, store.getDestination(), ack.getLastMessageId())[1];
+            getAdapter().doClearLastAck(c, store.getDestination(), priority, clientId, subName);
+        } catch (SQLException e) {
+            JDBCPersistenceAdapter.log("JDBC Failure: ", e);
+            throw IOExceptionSupport.create("Failed to rollback last ack: " + ack + " on " +  store.getDestination() + " for " + subName + ":" + clientId + ". Reason: " + e,e);
+        } finally {
+            c.close();
+        }
+    }
+
+    // after recovery there is no record of the original messageId for the ack
+    public void rollbackLastAck(ConnectionContext context, byte priority, ActiveMQDestination destination, String subName, String clientId) throws IOException {
+        TransactionContext c = getTransactionContext(context);
+        try {
+            getAdapter().doClearLastAck(c, destination, priority, clientId, subName);
+        } catch (SQLException e) {
+            JDBCPersistenceAdapter.log("JDBC Failure: ", e);
+            throw IOExceptionSupport.create("Failed to rollback last ack with priority: " + priority + " on " + destination + " for " + subName + ":" + clientId + ". Reason: " + e, e);
+        } finally {
+            c.close();
+        }
+    }
+
+    long[] getStoreSequenceIdForMessageId(MessageId messageId, ActiveMQDestination destination) throws IOException {
+        long[] result = new long[]{-1, Byte.MAX_VALUE -1};
+        TransactionContext c = getTransactionContext();
+        try {
+            result = adapter.getStoreSequenceId(c, destination, messageId);
+        } catch (SQLException e) {
+            JDBCPersistenceAdapter.log("JDBC Failure: ", e);
+            throw IOExceptionSupport.create("Failed to get store sequenceId for messageId: " + messageId +", on: " + destination + ". Reason: " + e, e);
+        } finally {
+            c.close();
+        }
+        return result;
+    }
+
 }
