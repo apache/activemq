@@ -16,12 +16,6 @@
  */
 package org.apache.activemq.store.memory;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Future;
-
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
@@ -36,6 +30,12 @@ import org.apache.activemq.store.ProxyTopicMessageStore;
 import org.apache.activemq.store.TopicMessageStore;
 import org.apache.activemq.store.TransactionRecoveryListener;
 import org.apache.activemq.store.TransactionStore;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Future;
 
 /**
  * Provides a TransactionStore implementation that can create transaction aware
@@ -243,12 +243,9 @@ public class MemoryTransactionStore implements TransactionStore {
             }
             return;
         }
-        // ensure message order w.r.t to cursor and store for setBatch()
-        synchronized (this) {
-            tx.commit();
-            if (postCommit != null) {
-                postCommit.run();
-            }
+        tx.commit();
+        if (postCommit != null) {
+            postCommit.run();
         }
     }
 
