@@ -559,11 +559,6 @@ public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
     }
 
     public void testTopicPersistentPreparedAcksNotLostOnRestart() throws Exception {
-        // REVISIT for kahadb
-        if (! (broker.getPersistenceAdapter() instanceof JDBCPersistenceAdapter)) {
-            LOG.warn("only works on jdbc");
-            return;
-        }
         ActiveMQDestination destination = new ActiveMQTopic("TryTopic");
 
         // Setup the producer and send the message.
@@ -581,7 +576,8 @@ public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
         consumerInfo.setSubscriptionName("durable");
         connection.send(consumerInfo);
 
-        for (int i = 0; i < 4; i++) {
+        final int numMessages = 4;
+        for (int i = 0; i < numMessages; i++) {
             Message message = createMessage(producerInfo, destination);
             message.setPersistent(true);
             connection.send(message);
@@ -591,7 +587,7 @@ public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
         XATransactionId txid = createXATransaction(sessionInfo);
         connection.send(createBeginTransaction(connectionInfo, txid));
 
-        final int messageCount = expectedMessageCount(4, destination);
+        final int messageCount = expectedMessageCount(numMessages, destination);
         Message m = null;
         for (int i = 0; i < messageCount; i++) {
             m = receiveMessage(connection);
@@ -741,12 +737,6 @@ public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
 
     public void testTopicPersistentPreparedAcksAvailableAfterRestartAndRollback() throws Exception {
 
-        // REVISIT for kahadb
-        if (! (broker.getPersistenceAdapter() instanceof JDBCPersistenceAdapter)) {
-            LOG.warn("only works on jdbc");
-            return;
-        }
-
         ActiveMQDestination destination = new ActiveMQTopic("TryTopic");
 
         // Setup the producer and send the message.
@@ -843,12 +833,6 @@ public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
 
     public void testTopicPersistentPreparedAcksAvailableAfterRollback() throws Exception {
 
-        // REVISIT for kahadb
-        if (! (broker.getPersistenceAdapter() instanceof JDBCPersistenceAdapter)) {
-            LOG.warn("only works on jdbc");
-            return;
-        }
-
         ActiveMQDestination destination = new ActiveMQTopic("TryTopic");
 
         // Setup the producer and send the message.
@@ -893,7 +877,20 @@ public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
         // rollback so we get redelivery
         connection.request(createRollbackTransaction(connectionInfo, txid));
 
-        LOG.info("new tx for redelivery");
+        LOG.info("new consumer/tx for redelivery");
+        connection.request(closeConnectionInfo(connectionInfo));
+
+        connectionInfo = createConnectionInfo();
+        connectionInfo.setClientId("durable");
+        sessionInfo = createSessionInfo(connectionInfo);
+        connection.send(connectionInfo);
+        connection.send(sessionInfo);
+
+        // setup durable subs
+        consumerInfo = createConsumerInfo(sessionInfo, destination);
+        consumerInfo.setSubscriptionName("durable");
+        connection.send(consumerInfo);
+
         txid = createXATransaction(sessionInfo);
         connection.send(createBeginTransaction(connectionInfo, txid));
 

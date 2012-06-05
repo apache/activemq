@@ -833,21 +833,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
             throws IOException {
         messageConsumed(context, node);
         if (store != null && node.isPersistent()) {
-            // the original ack may be a ranged ack, but we are trying to delete
-            // a specific
-            // message store here so we need to convert to a non ranged ack.
-            if (ack.getMessageCount() > 0) {
-                // Dup the ack
-                MessageAck a = new MessageAck();
-                ack.copy(a);
-                ack = a;
-                // Convert to non-ranged.
-                ack.setFirstMessageId(node.getMessageId());
-                ack.setLastMessageId(node.getMessageId());
-                ack.setMessageCount(1);
-            }
-
-            store.removeAsyncMessage(context, ack);
+            store.removeAsyncMessage(context, convertToNonRangedAck(ack, node));
         }
     }
 

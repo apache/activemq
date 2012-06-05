@@ -711,6 +711,9 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
             command.setTransactionInfo(transactionIdTransformer.transform(ack.getTransactionId()));
             if (ack != null && ack.isUnmatchedAck()) {
                 command.setAck(UNMATCHED);
+            } else {
+                org.apache.activemq.util.ByteSequence packet = wireFormat.marshal(ack);
+                command.setAck(new Buffer(packet.getData(), packet.getOffset(), packet.getLength()));
             }
             store(command, false, null, null);
         }
@@ -819,6 +822,9 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
                         for (Iterator<Entry<Long, MessageKeys>> iterator = sd.orderIndex.iterator(tx); iterator
                                 .hasNext();) {
                             Entry<Long, MessageKeys> entry = iterator.next();
+                            if (ackedAndPrepared.contains(entry.getValue().messageId)) {
+                                continue;
+                            }
                             listener.recoverMessage(loadMessage(entry.getValue().location));
                         }
                         sd.orderIndex.resetCursorPosition();
@@ -858,6 +864,9 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
                         for (Iterator<Entry<Long, MessageKeys>> iterator = sd.orderIndex.iterator(tx, moc); iterator
                                 .hasNext();) {
                             entry = iterator.next();
+                            if (ackedAndPrepared.contains(entry.getValue().messageId)) {
+                                continue;
+                            }
                             if (listener.recoverMessage(loadMessage(entry.getValue().location))) {
                                 counter++;
                             }

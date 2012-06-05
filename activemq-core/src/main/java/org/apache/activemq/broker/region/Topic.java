@@ -518,7 +518,8 @@ public class Topic extends BaseDestination implements Task {
         if (topicStore != null && node.isPersistent()) {
             DurableTopicSubscription dsub = (DurableTopicSubscription) sub;
             SubscriptionKey key = dsub.getSubscriptionKey();
-            topicStore.acknowledge(context, key.getClientId(), key.getSubscriptionName(), node.getMessageId(), ack);
+            topicStore.acknowledge(context, key.getClientId(), key.getSubscriptionName(), node.getMessageId(),
+                    convertToNonRangedAck(ack, node));
         }
         messageConsumed(context, node);
     }
@@ -763,7 +764,7 @@ public class Topic extends BaseDestination implements Task {
     }
 
 
-    public void clearPendingMessages(SubscriptionKey subscriptionKey) {
+    private void clearPendingMessages(SubscriptionKey subscriptionKey) {
         dispatchLock.readLock().lock();
         try {
             DurableTopicSubscription durableTopicSubscription = durableSubcribers.get(subscriptionKey);

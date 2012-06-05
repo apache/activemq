@@ -337,12 +337,6 @@ public class JdbcMemoryTransactionStore extends MemoryTransactionStore {
                             ack,
                             subscriptionName, clientId);
                     jdbcTopicMessageStore.complete(clientId, subscriptionName);
-
-                    Map<ActiveMQDestination, Destination> destinations = ((JDBCPersistenceAdapter) persistenceAdapter).getBrokerService().getRegionBroker().getDestinationMap();
-                    Topic topic = (Topic) destinations.get(topicMessageStore.getDestination());
-                    SubscriptionKey key = new SubscriptionKey(clientId, subscriptionName);
-                    topic.getDurableTopicSubs().get(key).getPending().rollback(ack.getLastMessageId());
-                    topic.clearPendingMessages(key);
                 }
 
 

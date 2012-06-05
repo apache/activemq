@@ -29,6 +29,7 @@ import org.apache.activemq.broker.region.policy.SlowConsumerStrategy;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.command.Message;
+import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageDispatchNotification;
 import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.filter.NonCachedMessageEvaluationContext;
@@ -756,4 +757,22 @@ public abstract class BaseDestination implements Destination {
         answer.setSecurityContext(SecurityContext.BROKER_SECURITY_CONTEXT);
         return answer;
     }
+
+    protected MessageAck convertToNonRangedAck(MessageAck ack, MessageReference node) {
+        // the original ack may be a ranged ack, but we are trying to delete
+        // a specific
+        // message store here so we need to convert to a non ranged ack.
+        if (ack.getMessageCount() > 0) {
+            // Dup the ack
+            MessageAck a = new MessageAck();
+            ack.copy(a);
+            ack = a;
+            // Convert to non-ranged.
+            ack.setFirstMessageId(node.getMessageId());
+            ack.setLastMessageId(node.getMessageId());
+            ack.setMessageCount(1);
+        }
+        return ack;
+    }
+
 }
