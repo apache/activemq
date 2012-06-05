@@ -805,7 +805,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         }
     }
 
-    int priorityIterator = 0;
+    char priorityIterator = 0; // unsigned
     public void doDeleteOldMessages(TransactionContext c) throws SQLException, IOException {
         PreparedStatement s = null;
         cleanupExclusiveLock.writeLock().lock();
