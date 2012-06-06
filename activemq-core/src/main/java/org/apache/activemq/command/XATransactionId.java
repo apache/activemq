@@ -94,7 +94,7 @@ public class XATransactionId extends TransactionId implements Xid, Comparable {
         return encodedXidBytes;
     }
 
-    public DataByteArrayOutputStream getOutputStream() {
+    public DataByteArrayOutputStream internalOutputStream() {
         return outputStream;
     }
 

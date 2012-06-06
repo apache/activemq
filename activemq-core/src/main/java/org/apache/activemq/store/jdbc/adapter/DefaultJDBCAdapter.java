@@ -503,7 +503,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
     private byte[] encodeXid(XATransactionId xid, long seq, long priority) {
         byte[] xidVal = xid.getEncodedXidBytes();
         // encode the update
-        DataByteArrayOutputStream outputStream = xid.getOutputStream();
+        DataByteArrayOutputStream outputStream = xid.internalOutputStream();
         outputStream.position(1);
         outputStream.writeLong(seq);
         outputStream.writeByte(Long.valueOf(priority).byteValue());
