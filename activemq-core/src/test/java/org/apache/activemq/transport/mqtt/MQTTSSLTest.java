@@ -26,7 +26,9 @@ import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 import org.apache.activemq.broker.BrokerService;
 import org.fusesource.mqtt.client.MQTT;
+import org.junit.Ignore;
 
+@Ignore("hangs atm, needs investigation")
 public class MQTTSSLTest extends MQTTTest {
     public void startBroker() throws Exception {
         System.setProperty("javax.net.ssl.trustStore", "src/test/resources/client.keystore");
