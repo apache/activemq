@@ -51,13 +51,13 @@ ou: Group
 
 dn: cn=admins,ou=Group,ou=ActiveMQ,ou=system
 cn: admins
-member: uid=admin,ou=User,ou=ActiveMQ,ou=system
+member: uid=admin
 objectClass: groupOfNames
 objectClass: top
 
 dn: cn=users,ou=Group,ou=ActiveMQ,ou=system
 cn: users
-member: uid=jdoe,ou=User,ou=ActiveMQ,ou=system
+member: uid=jdoe
 objectClass: groupOfNames
 objectClass: top
 
@@ -121,15 +121,15 @@ objectClass: top
 dn: cn=admin,cn=TEST.FOO,ou=Queue,ou=Destination,ou=ActiveMQ,ou=system
 cn: admin
 description: Admin privilege group, members are roles
-member: cn=users,ou=Group,ou=ActiveMQ,ou=system
-member: cn=admins,ou=Group,ou=ActiveMQ,ou=system
+member: cn=admins
+member: cn=users
 objectClass: groupOfNames
 objectClass: top
 
 dn: cn=read,cn=TEST.FOO,ou=Queue,ou=Destination,ou=ActiveMQ,ou=system
 cn: read
-member: cn=users,ou=Group,ou=ActiveMQ,ou=system
-member: cn=admins,ou=Group,ou=ActiveMQ,ou=system
+member: cn=users
+member: cn=admins
 objectClass: groupOfNames
 objectClass: top
 
@@ -137,41 +137,9 @@ dn: cn=write,cn=TEST.FOO,ou=Queue,ou=Destination,ou=ActiveMQ,ou=system
 cn: write
 objectClass: groupOfNames
 objectClass: top
-member: cn=users,ou=Group,ou=ActiveMQ,ou=system
-member: cn=admins,ou=Group,ou=ActiveMQ,ou=system
+member: cn=users
+member: cn=admins
 
-## TEST.FOOBAR
-
-dn: cn=TEST.FOOBAR,ou=Queue,ou=Destination,ou=ActiveMQ,ou=system
-cn: TEST.BAR
-description: A queue
-objectClass: applicationProcess
-objectClass: top
-
-dn: cn=admin,cn=TEST.FOOBAR,ou=Queue,ou=Destination,ou=ActiveMQ,ou=system
-cn: admin
-description: Admin privilege group, members are roles
-member: cn=admins,ou=Group,ou=ActiveMQ,ou=system
-member: cn=users,ou=Group,ou=ActiveMQ,ou=system
-objectClass: groupOfNames
-objectClass: top
-
-dn: cn=read,cn=TEST.FOOBAR,ou=Queue,ou=Destination,ou=ActiveMQ,ou=system
-cn: read
-member: cn=users,ou=Group,ou=ActiveMQ,ou=system
-member: cn=admins,ou=Group,ou=ActiveMQ,ou=system
-member: uid=jdoe,ou=User,ou=ActiveMQ,ou=system
-member: cn=notthere,ou=Group,ou=ActiveMQ,ou=system
-objectClass: groupOfNames
-objectClass: top
-
-dn: cn=write,cn=TEST.FOOBAR,ou=Queue,ou=Destination,ou=ActiveMQ,ou=system
-cn: write
-objectClass: groupOfNames
-objectClass: top
-member: cn=users,ou=Group,ou=ActiveMQ,ou=system
-member: cn=admins,ou=Group,ou=ActiveMQ,ou=system
-member: uid=jdoe,ou=User,ou=ActiveMQ,ou=system
 
 ## FOO.>
 
@@ -184,15 +152,15 @@ objectClass: top
 dn: cn=admin,cn=FOO.$,ou=Queue,ou=Destination,ou=ActiveMQ,ou=system
 cn: admin
 description: Admin privilege group, members are roles
-member: cn=admins,ou=Group,ou=ActiveMQ,ou=system
-member: cn=users,ou=Group,ou=ActiveMQ,ou=system
+member: cn=admins
+member: cn=users
 objectClass: groupOfNames
 objectClass: top
 
 dn: cn=read,cn=FOO.$,ou=Queue,ou=Destination,ou=ActiveMQ,ou=system
 cn: read
-member: cn=users,ou=Group,ou=ActiveMQ,ou=system
-member: cn=admins,ou=Group,ou=ActiveMQ,ou=system
+member: cn=users
+member: cn=admins
 objectClass: groupOfNames
 objectClass: top
 
@@ -200,8 +168,9 @@ dn: cn=write,cn=FOO.$,ou=Queue,ou=Destination,ou=ActiveMQ,ou=system
 cn: write
 objectClass: groupOfNames
 objectClass: top
-member: cn=users,ou=Group,ou=ActiveMQ,ou=system
-member: cn=admins,ou=Group,ou=ActiveMQ,ou=system
+member: cn=users
+member: cn=admins
+
 
 ## BAR.*
 
@@ -214,15 +183,15 @@ objectClass: top
 dn: cn=admin,cn=BAR.*,ou=Queue,ou=Destination,ou=ActiveMQ,ou=system
 cn: admin
 description: Admin privilege group, members are roles
-member: cn=admins,ou=Group,ou=ActiveMQ,ou=system
-member: cn=users,ou=Group,ou=ActiveMQ,ou=system
+member: cn=admins
+member: cn=users
 objectClass: groupOfNames
 objectClass: top
 
 dn: cn=read,cn=BAR.*,ou=Queue,ou=Destination,ou=ActiveMQ,ou=system
 cn: read
-member: cn=users,ou=Group,ou=ActiveMQ,ou=system
-member: cn=admins,ou=Group,ou=ActiveMQ,ou=system
+member: cn=users
+member: cn=admins
 objectClass: groupOfNames
 objectClass: top
 
@@ -230,8 +199,8 @@ dn: cn=write,cn=BAR.*,ou=Queue,ou=Destination,ou=ActiveMQ,ou=system
 cn: write
 objectClass: groupOfNames
 objectClass: top
-member: cn=users,ou=Group,ou=ActiveMQ,ou=system
-member: cn=admins,ou=Group,ou=ActiveMQ,ou=system
+member: cn=users
+member: cn=admins
 
 #######################
 ## Define advisories ##
@@ -245,22 +214,22 @@ description: Advisory topics
 
 dn: cn=read,cn=ActiveMQ.Advisory.$,ou=Topic,ou=Destination,ou=ActiveMQ,ou=system
 cn: read
-member: cn=admins,ou=Group,ou=ActiveMQ,ou=system
-member: cn=users,ou=Group,ou=ActiveMQ,ou=system
+member: cn=admins
+member: cn=users
 objectClass: groupOfNames
 objectClass: top
 
 dn: cn=write,cn=ActiveMQ.Advisory.$,ou=Topic,ou=Destination,ou=ActiveMQ,ou=system
 cn: write
-member: cn=admins,ou=Group,ou=ActiveMQ,ou=system
-member: cn=users,ou=Group,ou=ActiveMQ,ou=system
+member: cn=admins
+member: cn=users
 objectClass: groupOfNames
 objectClass: top
 
 dn: cn=admin,cn=ActiveMQ.Advisory.$,ou=Topic,ou=Destination,ou=ActiveMQ,ou=system
 cn: admin
-member: cn=admins,ou=Group,ou=ActiveMQ,ou=system
-member: cn=users,ou=Group,ou=ActiveMQ,ou=system
+member: cn=admins
+member: cn=users
 objectClass: groupOfNames
 objectClass: top
 
@@ -275,21 +244,21 @@ ou: Temp
 
 dn: cn=read,ou=Temp,ou=Destination,ou=ActiveMQ,ou=system
 cn: read
-member: cn=admins,ou=Group,ou=ActiveMQ,ou=system
-member: cn=users,ou=Group,ou=ActiveMQ,ou=system
+member: cn=admins
+member: cn=users
 objectClass: groupOfNames
 objectClass: top
 
 dn: cn=write,ou=Temp,ou=Destination,ou=ActiveMQ,ou=system
 cn: write
-member: cn=admins,ou=Group,ou=ActiveMQ,ou=system
-member: cn=users,ou=Group,ou=ActiveMQ,ou=system
+member: cn=admins
+member: cn=users
 objectClass: groupOfNames
 objectClass: top
 
 dn: cn=admin,ou=Temp,ou=Destination,ou=ActiveMQ,ou=system
 cn: admin
-member: cn=admins,ou=Group,ou=ActiveMQ,ou=system
-member: cn=users,ou=Group,ou=ActiveMQ,ou=system
+member: cn=admins
+member: cn=users
 objectClass: groupOfNames
 objectClass: top

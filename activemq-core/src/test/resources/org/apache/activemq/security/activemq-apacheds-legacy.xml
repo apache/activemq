@@ -39,21 +39,10 @@
 
           <authorizationPlugin>
               <map>
-                  <cachedLDAPAuthorizationMap
-                      connectionURL="ldap://localhost:389"
-                      connectionUsername="cn=mqbroker,ou=Services,dc=activemq,dc=apache,dc=org"
-                      connectionPassword="sunflower"
-                      baseDn="dc=activemq,dc=apache,dc=org"
-                      refreshInterval="300000" />
+                <cachedLDAPAuthorizationMap connectionURL="ldap://localhost:${ldapPort}"/>
               </map>
           </authorizationPlugin>
       </plugins>
-
-
-    <transportConnectors>
-      <transportConnector uri="tcp://localhost:61616"/>
-    </transportConnectors>
-
   </broker>
 
 </beans>

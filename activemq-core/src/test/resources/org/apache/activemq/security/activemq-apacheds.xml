@@ -39,16 +39,10 @@
 
           <authorizationPlugin>
               <map>
-                    <cachedLDAPAuthorizationMap/>
+                <cachedLDAPAuthorizationMap legacyGroupMapping="false" connectionURL="ldap://localhost:${ldapPort}"/>
               </map>
           </authorizationPlugin>
       </plugins>
-
-
-    <transportConnectors>
-      <transportConnector uri="tcp://localhost:61616"/>
-    </transportConnectors>
-
   </broker>
 
 </beans>

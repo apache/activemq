@@ -19,7 +19,6 @@ package org.apache.activemq.security;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.directory.server.annotations.CreateLdapServer;
 import org.apache.directory.server.annotations.CreateTransport;
 import org.apache.directory.server.core.annotations.ApplyLdifFiles;
@@ -40,9 +39,9 @@ import static org.junit.Assert.fail;
 @RunWith( FrameworkRunner.class )
 @CreateLdapServer(transports = {@CreateTransport(protocol = "LDAP")})
 @ApplyLdifFiles(
-   "org/apache/activemq/security/activemq.ldif"
+        "org/apache/activemq/security/activemq-apacheds-legacy.ldif"
 )
-public class LDAPSecurityTest extends AbstractLdapTestUnit {
+public class CachedLDAPSecurityLegacyTest extends AbstractLdapTestUnit {
 
     public BrokerService broker;
 
@@ -52,7 +51,7 @@ public class LDAPSecurityTest extends AbstractLdapTestUnit {
     public void setup() throws Exception {
         System.setProperty("ldapPort", String.valueOf(getLdapServer().getPort()));
         
-        broker = BrokerFactory.createBroker("xbean:org/apache/activemq/security/activemq-ldap.xml");
+        broker = BrokerFactory.createBroker("xbean:org/apache/activemq/security/activemq-apacheds-legacy.xml");
         broker.start();
         broker.waitUntilStarted();
     }
@@ -65,7 +64,7 @@ public class LDAPSecurityTest extends AbstractLdapTestUnit {
 
     @Test
     public void testSendReceive() throws Exception {
-        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("tcp://localhost:61616");
+        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("vm://localhost");
         Connection conn = factory.createQueueConnection("jdoe", "sunflower");
         Session sess = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
         conn.start();
@@ -81,7 +80,7 @@ public class LDAPSecurityTest extends AbstractLdapTestUnit {
 
     @Test
     public void testSendDenied() throws Exception {
-        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("tcp://localhost:61616");
+        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("vm://localhost");
         Connection conn = factory.createQueueConnection("jdoe", "sunflower");
         Session sess = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
         conn.start();
@@ -97,7 +96,7 @@ public class LDAPSecurityTest extends AbstractLdapTestUnit {
 
     @Test
     public void testCompositeSendDenied() throws Exception {
-        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("tcp://localhost:61616");
+        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("vm://localhost");
         Connection conn = factory.createQueueConnection("jdoe", "sunflower");
         Session sess = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
         conn.start();
@@ -113,7 +112,7 @@ public class LDAPSecurityTest extends AbstractLdapTestUnit {
 
     @Test
     public void testTempDestinations() throws Exception {
-        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("tcp://localhost:61616");
+        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("vm://localhost");
         Connection conn = factory.createQueueConnection("jdoe", "sunflower");
         Session sess = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
         conn.start();
@@ -128,3 +127,5 @@ public class LDAPSecurityTest extends AbstractLdapTestUnit {
     }
 
 }
+
+

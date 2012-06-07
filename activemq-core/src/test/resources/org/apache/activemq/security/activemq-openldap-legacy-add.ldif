@@ -15,14 +15,33 @@
 ## limitations under the License.
 ## ---------------------------------------------------------------------------
 
-dn: cn=TEST.FOO,ou=Queue,ou=Destination,ou=ActiveMQ,ou=system
-changetype: delete
 
-dn: cn=admin,cn=TEST.FOO,ou=Queue,ou=Destination,ou=ActiveMQ,ou=system
-changetype: delete
+## FAILED
 
-dn: cn=read,cn=TEST.FOO,ou=Queue,ou=Destination,ou=ActiveMQ,ou=system
-changetype: delete
+dn: cn=FAILED,ou=Queue,ou=Destination,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
+cn: FAILED
+description: New queue
+objectClass: applicationProcess
+objectClass: top
 
-dn: cn=write,cn=TEST.FOO,ou=Queue,ou=Destination,ou=ActiveMQ,ou=system
-changetype: delete
+dn: cn=admin,cn=FAILED,ou=Queue,ou=Destination,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
+cn: admin
+description: Admin privilege group, members are roles
+member: cn=admins
+member: cn=users
+objectClass: groupOfNames
+objectClass: top
+
+dn: cn=read,cn=FAILED,ou=Queue,ou=Destination,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
+cn: read
+member: cn=users
+member: cn=admins
+objectClass: groupOfNames
+objectClass: top
+
+dn: cn=write,cn=FAILED,ou=Queue,ou=Destination,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
+cn: write
+objectClass: groupOfNames
+objectClass: top
+member: cn=users
+member: cn=admins

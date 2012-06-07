@@ -60,7 +60,7 @@
     <commons-pool-version>1.5.6</commons-pool-version>
     <commons-primitives-version>1.0</commons-primitives-version>
     <commons-net-version>2.2</commons-net-version>
-    <directory-version>1.5.7</directory-version>
+    <directory-version>2.0.0-M6</directory-version>
     <fusemq-leveldb-version>1.2</fusemq-leveldb-version>
     <geronimo-version>1.0</geronimo-version>
     <howl-version>0.1.8</howl-version>

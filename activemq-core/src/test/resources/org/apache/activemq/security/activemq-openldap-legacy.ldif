@@ -137,15 +137,15 @@ objectClass: top
 dn: cn=admin,cn=TEST.FOO,ou=Queue,ou=Destination,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
 cn: admin
 description: Admin privilege group, members are roles
-member: cn=admins,ou=Group,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
-member: cn=users,ou=Group,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
+member: cn=admins
+member: cn=users
 objectClass: groupOfNames
 objectClass: top
 
 dn: cn=read,cn=TEST.FOO,ou=Queue,ou=Destination,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
 cn: read
-member: cn=users,ou=Group,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
-member: cn=admins,ou=Group,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
+member: cn=users
+member: cn=admins
 objectClass: groupOfNames
 objectClass: top
 
@@ -153,41 +153,9 @@ dn: cn=write,cn=TEST.FOO,ou=Queue,ou=Destination,ou=ActiveMQ,dc=activemq,dc=apac
 cn: write
 objectClass: groupOfNames
 objectClass: top
-member: cn=users,ou=Group,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
-member: cn=admins,ou=Group,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
+member: cn=users
+member: cn=admins
 
-## TEST.FOOBAR
-
-dn: cn=TEST.FOOBAR,ou=Queue,ou=Destination,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
-cn: TEST.BAR
-description: A queue
-objectClass: applicationProcess
-objectClass: top
-
-dn: cn=admin,cn=TEST.FOOBAR,ou=Queue,ou=Destination,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
-cn: admin
-description: Admin privilege group, members are roles
-member: cn=admins,ou=Group,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
-member: cn=users,ou=Group,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
-objectClass: groupOfNames
-objectClass: top
-
-dn: cn=read,cn=TEST.FOOBAR,ou=Queue,ou=Destination,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
-cn: read
-member: cn=users,ou=Group,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
-member: cn=admins,ou=Group,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
-member: uid=jdoe,ou=User,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
-member: cn=notthere,ou=Group,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
-objectClass: groupOfNames
-objectClass: top
-
-dn: cn=write,cn=TEST.FOOBAR,ou=Queue,ou=Destination,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
-cn: write
-objectClass: groupOfNames
-objectClass: top
-member: cn=users,ou=Group,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
-member: cn=admins,ou=Group,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
-member: uid=jdoe,ou=User,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
 
 ## FOO.>
 
@@ -200,15 +168,15 @@ objectClass: top
 dn: cn=admin,cn=FOO.$,ou=Queue,ou=Destination,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
 cn: admin
 description: Admin privilege group, members are roles
-member: cn=admins,ou=Group,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
-member: cn=users,ou=Group,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
+member: cn=admins
+member: cn=users
 objectClass: groupOfNames
 objectClass: top
 
 dn: cn=read,cn=FOO.$,ou=Queue,ou=Destination,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
 cn: read
-member: cn=users,ou=Group,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
-member: cn=admins,ou=Group,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
+member: cn=users
+member: cn=admins
 objectClass: groupOfNames
 objectClass: top
 
@@ -216,8 +184,9 @@ dn: cn=write,cn=FOO.$,ou=Queue,ou=Destination,ou=ActiveMQ,dc=activemq,dc=apache,
 cn: write
 objectClass: groupOfNames
 objectClass: top
-member: cn=users,ou=Group,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
-member: cn=admins,ou=Group,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
+member: cn=users
+member: cn=admins
+
 
 ## BAR.*
 
@@ -230,15 +199,15 @@ objectClass: top
 dn: cn=admin,cn=BAR.*,ou=Queue,ou=Destination,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
 cn: admin
 description: Admin privilege group, members are roles
-member: cn=admins,ou=Group,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
-member: cn=users,ou=Group,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
+member: cn=admins
+member: cn=users
 objectClass: groupOfNames
 objectClass: top
 
 dn: cn=read,cn=BAR.*,ou=Queue,ou=Destination,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
 cn: read
-member: cn=users,ou=Group,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
-member: cn=admins,ou=Group,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
+member: cn=users
+member: cn=admins
 objectClass: groupOfNames
 objectClass: top
 
@@ -246,8 +215,8 @@ dn: cn=write,cn=BAR.*,ou=Queue,ou=Destination,ou=ActiveMQ,dc=activemq,dc=apache,
 cn: write
 objectClass: groupOfNames
 objectClass: top
-member: cn=users,ou=Group,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
-member: cn=admins,ou=Group,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
+member: cn=users
+member: cn=admins
 
 #######################
 ## Define advisories ##
@@ -261,22 +230,22 @@ description: Advisory topics
 
 dn: cn=read,cn=ActiveMQ.Advisory.$,ou=Topic,ou=Destination,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
 cn: read
-member: cn=admins,ou=Group,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
-member: cn=users,ou=Group,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
+member: cn=admins
+member: cn=users
 objectClass: groupOfNames
 objectClass: top
 
 dn: cn=write,cn=ActiveMQ.Advisory.$,ou=Topic,ou=Destination,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
 cn: write
-member: cn=admins,ou=Group,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
-member: cn=users,ou=Group,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
+member: cn=admins
+member: cn=users
 objectClass: groupOfNames
 objectClass: top
 
 dn: cn=admin,cn=ActiveMQ.Advisory.$,ou=Topic,ou=Destination,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
 cn: admin
-member: cn=admins,ou=Group,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
-member: cn=users,ou=Group,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
+member: cn=admins
+member: cn=users
 objectClass: groupOfNames
 objectClass: top
 
@@ -291,22 +260,22 @@ ou: Temp
 
 dn: cn=read,ou=Temp,ou=Destination,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
 cn: read
-member: cn=admins,ou=Group,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
-member: cn=users,ou=Group,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
+member: cn=admins
+member: cn=users
 objectClass: groupOfNames
 objectClass: top
 
 dn: cn=write,ou=Temp,ou=Destination,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
 cn: write
-member: cn=admins,ou=Group,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
-member: cn=users,ou=Group,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
+member: cn=admins
+member: cn=users
 objectClass: groupOfNames
 objectClass: top
 
 dn: cn=admin,ou=Temp,ou=Destination,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
 cn: admin
-member: cn=admins,ou=Group,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
-member: cn=users,ou=Group,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
+member: cn=admins
+member: cn=users
 objectClass: groupOfNames
 objectClass: top
 
