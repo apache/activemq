@@ -19,20 +19,9 @@ package org.apache.activemq.jaas;
 import java.io.IOException;
 import java.security.Principal;
 import java.text.MessageFormat;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Hashtable;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
-import javax.naming.AuthenticationException;
-import javax.naming.CommunicationException;
-import javax.naming.Context;
-import javax.naming.Name;
-import javax.naming.NameParser;
-import javax.naming.NamingEnumeration;
-import javax.naming.NamingException;
+import javax.naming.*;
 import javax.naming.directory.Attribute;
 import javax.naming.directory.Attributes;
 import javax.naming.directory.DirContext;
@@ -71,6 +60,8 @@ public class LDAPLoginModule implements LoginModule {
     private static final String ROLE_SEARCH_MATCHING = "roleSearchMatching";
     private static final String ROLE_SEARCH_SUBTREE = "roleSearchSubtree";
     private static final String USER_ROLE_NAME = "userRoleName";
+    private static final String EXPAND_ROLES = "expandRoles";
+    private static final String EXPAND_ROLES_MATCHING = "expandRolesMatching";
 
     private static Logger log = LoggerFactory.getLogger(LDAPLoginModule.class);
 
@@ -102,7 +93,10 @@ public class LDAPLoginModule implements LoginModule {
         		new LDAPLoginProperty (ROLE_SEARCH_MATCHING, (String)options.get(ROLE_SEARCH_MATCHING)),
         		new LDAPLoginProperty (ROLE_SEARCH_SUBTREE, (String)options.get(ROLE_SEARCH_SUBTREE)),
         		new LDAPLoginProperty (USER_ROLE_NAME, (String)options.get(USER_ROLE_NAME)),
-        		};
+                new LDAPLoginProperty (EXPAND_ROLES, (String) options.get(EXPAND_ROLES)),
+                new LDAPLoginProperty (EXPAND_ROLES_MATCHING, (String) options.get(EXPAND_ROLES_MATCHING)),
+
+        };
     }
 
     @Override
@@ -281,8 +275,10 @@ public class LDAPLoginModule implements LoginModule {
         List<String> list = currentRoles;
         MessageFormat roleSearchMatchingFormat;
         boolean roleSearchSubtreeBool;
+        boolean expandRolesBool;
         roleSearchMatchingFormat = new MessageFormat(getLDAPPropertyValue(ROLE_SEARCH_MATCHING));
         roleSearchSubtreeBool = Boolean.valueOf(getLDAPPropertyValue(ROLE_SEARCH_SUBTREE)).booleanValue();
+        expandRolesBool = Boolean.valueOf(getLDAPPropertyValue(EXPAND_ROLES)).booleanValue();
         
         if (list == null) {
             list = new ArrayList<String>();
@@ -306,17 +302,40 @@ public class LDAPLoginModule implements LoginModule {
             log.debug("  base DN: " + getLDAPPropertyValue(ROLE_BASE));
             log.debug("  filter: " + filter);
         }
+        HashSet<String> haveSeenNames = new HashSet<String>();
+        Queue<String> pendingNameExpansion = new LinkedList<String>();
         NamingEnumeration<SearchResult> results = context.search(getLDAPPropertyValue(ROLE_BASE), filter, constraints);
         while (results.hasMore()) {
             SearchResult result = results.next();
             Attributes attrs = result.getAttributes();
+            if (expandRolesBool) {
+                haveSeenNames.add(result.getNameInNamespace());
+                pendingNameExpansion.add(result.getNameInNamespace());
+            }
             if (attrs == null) {
                 continue;
             }
             list = addAttributeValues(getLDAPPropertyValue(ROLE_NAME), attrs, list);
         }
+        if (expandRolesBool) {
+            MessageFormat expandRolesMatchingFormat = new MessageFormat(getLDAPPropertyValue(EXPAND_ROLES_MATCHING));
+            while (!pendingNameExpansion.isEmpty()) {
+                String name = pendingNameExpansion.remove();
+                filter = expandRolesMatchingFormat.format(new String[]{name});
+                results = context.search(getLDAPPropertyValue(ROLE_BASE), filter, constraints);
+                while (results.hasMore()) {
+                    SearchResult result = results.next();
+                    name = result.getNameInNamespace();
+                    if (!haveSeenNames.contains(name)) {
+                        Attributes attrs = result.getAttributes();
+                        list = addAttributeValues(getLDAPPropertyValue(ROLE_NAME), attrs, list);
+                        haveSeenNames.add(name);
+                        pendingNameExpansion.add(name);
+                    }
+                }
+            }
+        }
         return list;
-
     }
 
     protected String doRFC2254Encoding(String inputString) {

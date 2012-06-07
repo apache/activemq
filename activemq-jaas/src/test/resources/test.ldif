@@ -21,3 +21,19 @@ userPassword: secret
 objectClass: account
 objectClass: simpleSecurityObject
 objectClass: top
+
+###################
+## Define groups ##
+###################
+
+dn: cn=admins,ou=system
+cn: admins
+member: uid=first,ou=system
+objectClass: groupOfNames
+objectClass: top
+
+dn: cn=users,ou=system
+cn: users
+member: cn=admins,ou=system
+objectClass: groupOfNames
+objectClass: top

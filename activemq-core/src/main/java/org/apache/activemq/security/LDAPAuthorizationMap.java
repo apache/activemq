@@ -32,6 +32,8 @@ import javax.naming.directory.DirContext;
 import javax.naming.directory.InitialDirContext;
 import javax.naming.directory.SearchControls;
 import javax.naming.directory.SearchResult;
+import javax.naming.ldap.LdapName;
+import javax.naming.ldap.Rdn;
 
 import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.command.ActiveMQDestination;
@@ -388,7 +390,7 @@ public class LDAPAuthorizationMap implements AuthorizationMap {
         String destinationBase = "";
         SearchControls constraints = new SearchControls();
         if (AdvisorySupport.isAdvisoryTopic(destination) && useAdvisorySearchBase) {
-           destinationBase = advisorySearchBase;
+            destinationBase = advisorySearchBase;
         } else {
             if ((destination.getDestinationType() & ActiveMQDestination.QUEUE_TYPE) == ActiveMQDestination.QUEUE_TYPE) {
                 destinationBase = queueSearchMatchingFormat.format(new String[]{destination.getPhysicalName()});
@@ -428,8 +430,10 @@ public class LDAPAuthorizationMap implements AuthorizationMap {
             }
             for (Iterator<String> iter = acls.iterator(); iter.hasNext();) {
                 String roleName = iter.next();
-                String[] components = roleName.split("=", 2);
-                roles.add(new GroupPrincipal(components[components.length - 1]));
+                LdapName ldapname = new LdapName(roleName);
+                Rdn rdn = ldapname.getRdn(ldapname.size() - 1);
+                LOG.debug("Found role: [" + rdn.getValue().toString() + "]");
+                roles.add(new GroupPrincipal(rdn.getValue().toString()));
             }
             return roles;
         } catch (NamingException e) {
