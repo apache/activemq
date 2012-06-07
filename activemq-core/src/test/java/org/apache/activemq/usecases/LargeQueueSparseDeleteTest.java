@@ -23,12 +23,12 @@ import javax.jms.MessageProducer;
 import javax.jms.Session;
 
 import org.apache.activemq.EmbeddedBrokerTestSupport;
-import org.apache.activemq.filter.NonCachedMessageEvaluationContext;
-import org.apache.activemq.broker.region.Queue;
 import org.apache.activemq.broker.ConnectionContext;
+import org.apache.activemq.broker.region.Queue;
+import org.apache.activemq.filter.NonCachedMessageEvaluationContext;
+import org.junit.Assert;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.junit.Assert;
 
 /**
  * This unit test creates a fixed size queue and moves the last message in the
@@ -59,7 +59,7 @@ public class LargeQueueSparseDeleteTest extends EmbeddedBrokerTestSupport {
         final int QUEUE_SIZE = 30000;
         final String MOVE_TO_DESTINATION_NAME = getDestinationString()
                 + ".dest";
-        final long TEST_TIMEOUT = 6000;
+        final long TEST_TIMEOUT = 8000;
 
         // Populate a test queue with uniquely-identifiable messages.
         Connection conn = createConnection();
@@ -108,7 +108,7 @@ public class LargeQueueSparseDeleteTest extends EmbeddedBrokerTestSupport {
         final int QUEUE_SIZE = 30000;
         final String MOVE_TO_DESTINATION_NAME = getDestinationString()
                 + ".dest";
-        final long TEST_TIMEOUT = 6000;
+        final long TEST_TIMEOUT = 8000;
 
         // Populate a test queue with uniquely-identifiable messages.
         Connection conn = createConnection();
@@ -154,7 +154,7 @@ public class LargeQueueSparseDeleteTest extends EmbeddedBrokerTestSupport {
 
     public void testRemoveMessages() throws Exception {
         final int QUEUE_SIZE = 30000;
-        final long TEST_TIMEOUT = 6000;
+        final long TEST_TIMEOUT = 8000;
 
         // Populate a test queue with uniquely-identifiable messages.
         Connection conn = createConnection();
