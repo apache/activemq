@@ -27,6 +27,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ThreadPoolExecutor;
 
 import javax.management.InstanceNotFoundException;
@@ -103,11 +104,16 @@ public class ManagedRegionBroker extends RegionBroker {
     /* This is the first broker in the broker interceptor chain. */
     private Broker contextBroker;
 
+    private final ExecutorService asyncInvokeService;
+    private final long mbeanTimeout;
+
     public ManagedRegionBroker(BrokerService brokerService, ManagementContext context, ObjectName brokerObjectName, TaskRunnerFactory taskRunnerFactory, SystemUsage memoryManager,
                                DestinationFactory destinationFactory, DestinationInterceptor destinationInterceptor,Scheduler scheduler,ThreadPoolExecutor executor) throws IOException {
         super(brokerService, taskRunnerFactory, memoryManager, destinationFactory, destinationInterceptor,scheduler,executor);
         this.managementContext = context;
         this.brokerObjectName = brokerObjectName;
+        this.mbeanTimeout = brokerService.getMbeanInvocationTimeout();
+        this.asyncInvokeService = mbeanTimeout > 0 ? executor : null;;
     }
 
     @Override
@@ -336,7 +342,7 @@ public class ManagedRegionBroker extends RegionBroker {
             }
         }
         try {
-            AnnotatedMBean.registerMBean(managementContext, view, key);
+            AsyncAnnotatedMBean.registerMBean(asyncInvokeService, mbeanTimeout, managementContext, view, key);
             registeredMBeans.add(key);
         } catch (Throwable e) {
             LOG.warn("Failed to register MBean: " + key);
@@ -392,7 +398,7 @@ public class ManagedRegionBroker extends RegionBroker {
         }
 
         try {
-            AnnotatedMBean.registerMBean(managementContext, view, key);
+            AsyncAnnotatedMBean.registerMBean(asyncInvokeService, mbeanTimeout, managementContext, view, key);
             registeredMBeans.add(key);
         } catch (Throwable e) {
             LOG.warn("Failed to register MBean: " + key);
@@ -456,7 +462,7 @@ public class ManagedRegionBroker extends RegionBroker {
         }
 
         try {
-            AnnotatedMBean.registerMBean(managementContext, view, key);
+            AsyncAnnotatedMBean.registerMBean(asyncInvokeService, mbeanTimeout, managementContext, view, key);
             registeredMBeans.add(key);
         } catch (Throwable e) {
             LOG.warn("Failed to register MBean: " + key);
@@ -535,7 +541,7 @@ public class ManagedRegionBroker extends RegionBroker {
             SubscriptionView view = new InactiveDurableSubscriptionView(this, key.getClientId(), info, subscription);
 
             try {
-                AnnotatedMBean.registerMBean(managementContext, view, objectName);
+                AsyncAnnotatedMBean.registerMBean(asyncInvokeService, mbeanTimeout, managementContext, view, objectName);
                 registeredMBeans.add(objectName);
             } catch (Throwable e) {
                 LOG.warn("Failed to register MBean: " + key);
@@ -733,7 +739,7 @@ public class ManagedRegionBroker extends RegionBroker {
             objectName = createObjectName(strategy);
             if (!registeredMBeans.contains(objectName))  {
                 AbortSlowConsumerStrategyView view = new AbortSlowConsumerStrategyView(this, strategy);
-                AnnotatedMBean.registerMBean(managementContext, view, objectName);
+                AsyncAnnotatedMBean.registerMBean(asyncInvokeService, mbeanTimeout, managementContext, view, objectName);
                 registeredMBeans.add(objectName);
             }
         } catch (Exception e) {
@@ -757,7 +763,7 @@ public class ManagedRegionBroker extends RegionBroker {
             ObjectName objectName = createObjectName(transaction);
             if (!registeredMBeans.contains(objectName))  {
                 RecoveredXATransactionView view = new RecoveredXATransactionView(this, transaction);
-                AnnotatedMBean.registerMBean(managementContext, view, objectName);
+                AsyncAnnotatedMBean.registerMBean(asyncInvokeService, mbeanTimeout, managementContext, view, objectName);
                 registeredMBeans.add(objectName);
             }
         } catch (Exception e) {

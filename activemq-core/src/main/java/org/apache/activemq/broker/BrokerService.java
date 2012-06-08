@@ -132,6 +132,7 @@ public class BrokerService implements Service {
     private boolean populateJMSXUserID;
     private boolean useAuthenticatedPrincipalForJMSXUserID;
     private boolean populateUserNameInMBeans;
+    private long mbeanInvocationTimeout = 0;
 
     private boolean useShutdownHook = true;
     private boolean useLoggingForShutdownErrors;
@@ -2646,6 +2647,27 @@ public class BrokerService implements Service {
      */
     public void setPopulateUserNameInMBeans(boolean value) {
         this.populateUserNameInMBeans = value;
+    }
+
+    /**
+     * Gets the time in Milliseconds that an invocation of an MBean method will wait before
+     * failing.  The default value is to wait forever (zero).
+     *
+     * @return timeout in milliseconds before MBean calls fail, (default is 0 or no timeout).
+     */
+    public long getMbeanInvocationTimeout() {
+        return mbeanInvocationTimeout;
+    }
+
+    /**
+     * Gets the time in Milliseconds that an invocation of an MBean method will wait before
+     * failing. The default value is to wait forever (zero).
+     *
+     * @param mbeanInvocationTimeout
+     *      timeout in milliseconds before MBean calls fail, (default is 0 or no timeout).
+     */
+    public void setMbeanInvocationTimeout(long mbeanInvocationTimeout) {
+        this.mbeanInvocationTimeout = mbeanInvocationTimeout;
     }
 
     public boolean isNetworkConnectorStartAsync() {
