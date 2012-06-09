@@ -96,7 +96,7 @@
       <artifactId>activemq-protobuf</artifactId>
       <optional>false</optional>
     </dependency>
-		<dependency>
+        <dependency>
       <groupId>org.fusesource.fuse-extra</groupId>
       <artifactId>fusemq-leveldb</artifactId>
     </dependency>
@@ -184,7 +184,7 @@
       <optional>true</optional>
     </dependency>
 
-    
+
     <!-- =============================== -->
     <!-- Testing Dependencies            -->
     <!-- =============================== -->
@@ -639,6 +639,13 @@
             </goals>
           </execution>
         </executions>
+        <dependencies>
+          <dependency>
+            <groupId>com.thoughtworks.qdox</groupId>
+            <artifactId>qdox</artifactId>
+            <version>1.12</version>
+          </dependency>
+        </dependencies>
       </plugin>
 
       <plugin>
