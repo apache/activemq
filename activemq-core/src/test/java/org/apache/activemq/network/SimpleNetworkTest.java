@@ -16,9 +16,32 @@
  */
 package org.apache.activemq.network;
 
+import static junit.framework.Assert.assertNotNull;
+import static junit.framework.Assert.assertNull;
+import static junit.framework.Assert.assertTrue;
+
+import java.net.URI;
+import java.util.Arrays;
+import java.util.concurrent.ConcurrentHashMap;
+
+import javax.jms.Connection;
+import javax.jms.DeliveryMode;
+import javax.jms.Destination;
+import javax.jms.JMSException;
+import javax.jms.Message;
+import javax.jms.MessageConsumer;
+import javax.jms.MessageListener;
+import javax.jms.MessageProducer;
+import javax.jms.Session;
+import javax.jms.TextMessage;
+import javax.jms.TopicRequestor;
+import javax.jms.TopicSession;
+
+import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.util.Wait;
@@ -27,22 +50,11 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.support.AbstractApplicationContext;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
-
-import javax.jms.*;
-import java.net.URI;
-import java.util.Arrays;
-import java.util.concurrent.ConcurrentHashMap;
-
-
-import static junit.framework.Assert.assertNotNull;
-import static junit.framework.Assert.assertNull;
-import static junit.framework.Assert.assertTrue;
 
 public class SimpleNetworkTest {
 
@@ -59,6 +71,30 @@ public class SimpleNetworkTest {
     protected ActiveMQTopic included;
     protected ActiveMQTopic excluded;
     protected String consumerName = "durableSubs";
+
+    @Test
+    public void testMessageCompression() throws Exception {
+
+        ActiveMQConnection localAmqConnection = (ActiveMQConnection) localConnection;
+        localAmqConnection.setUseCompression(true);
+
+        MessageConsumer consumer1 = remoteSession.createConsumer(included);
+        MessageProducer producer = localSession.createProducer(included);
+        producer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
+
+        waitForConsumerRegistration(localBroker, 1, included);
+
+        for (int i = 0; i < MESSAGE_COUNT; i++) {
+            Message test = localSession.createTextMessage("test-" + i);
+            producer.send(test);
+            Message msg = consumer1.receive(1000);
+            assertNotNull(msg);
+            ActiveMQMessage amqMessage = (ActiveMQMessage) msg;
+            assertTrue(amqMessage.isCompressed());
+        }
+        // ensure no more messages received
+        assertNull(consumer1.receive(1000));
+    }
 
     @Test
     public void testRequestReply() throws Exception {
