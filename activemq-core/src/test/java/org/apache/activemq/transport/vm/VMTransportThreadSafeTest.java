@@ -487,7 +487,7 @@ public class VMTransportThreadSafeTest {
             @Override
             public void run() {
                 try {
-                    Thread.sleep(500);
+                    Thread.sleep(1000);
                     remote.stop();
                 } catch (Exception e) {
                 }
@@ -498,7 +498,7 @@ public class VMTransportThreadSafeTest {
 
         t.start();
 
-        assertTrue(Wait.waitFor(new Wait.Condition() {
+        assertTrue("Remote should receive: " + expect + ", commands but got: " + remoteReceived.size(), Wait.waitFor(new Wait.Condition() {
             @Override
             public boolean isSatisified() throws Exception {
                 return remoteReceived.size() >= expect;
