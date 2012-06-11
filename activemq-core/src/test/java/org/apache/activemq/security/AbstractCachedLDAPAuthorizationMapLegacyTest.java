@@ -288,7 +288,8 @@ public abstract class AbstractCachedLDAPAuthorizationMapLegacyTest extends Abstr
     public void testRestart(boolean sync) throws Exception {
         map.query();
         if (sync) {
-            map.setRefreshInterval(1);
+            // ldap connection can be slow to close
+            map.setRefreshInterval(2000);
         }
 
         Set<?> failedACLs = map.getReadACLs(new ActiveMQQueue("FAILED"));
