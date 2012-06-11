@@ -289,7 +289,7 @@ public abstract class AbstractCachedLDAPAuthorizationMapLegacyTest extends Abstr
         map.query();
         if (sync) {
             // ldap connection can be slow to close
-            map.setRefreshInterval(2000);
+            map.setRefreshInterval(1000);
         }
 
         Set<?> failedACLs = map.getReadACLs(new ActiveMQQueue("FAILED"));
@@ -302,8 +302,10 @@ public abstract class AbstractCachedLDAPAuthorizationMapLegacyTest extends Abstr
 
         Thread.sleep(1000);
 
-        failedACLs = map.getReadACLs(new ActiveMQQueue("TEST.FOO"));
-        assertEquals("set size: " + failedACLs, 2, failedACLs.size());
+        if (!sync) {
+            failedACLs = map.getReadACLs(new ActiveMQQueue("TEST.FOO"));
+            assertEquals("set size: " + failedACLs, 2, failedACLs.size());
+        }
 
         getLdapServer().start();
 
