@@ -94,6 +94,22 @@ public class CachedLDAPAuthorizationMap extends DefaultAuthorizationMap implemen
     protected HashMap<ActiveMQDestination, AuthorizationEntry> entries = 
             new HashMap<ActiveMQDestination, AuthorizationEntry>();
 
+    protected DirContext createContext() throws NamingException {
+        Hashtable<String, String> env = new Hashtable<String, String>();
+        env.put(Context.INITIAL_CONTEXT_FACTORY, initialContextFactory);
+        if (connectionUsername != null || !"".equals(connectionUsername)) {
+            env.put(Context.SECURITY_PRINCIPAL, connectionUsername);
+        }
+        if (connectionPassword != null || !"".equals(connectionPassword)) {
+            env.put(Context.SECURITY_CREDENTIALS, connectionPassword);
+        }
+        env.put(Context.SECURITY_PROTOCOL, connectionProtocol);
+        env.put(Context.PROVIDER_URL, connectionURL);
+        env.put(Context.SECURITY_AUTHENTICATION, authentication);
+        //env.put("com.sun.jndi.ldap.connect.pool", "true");
+        return new InitialDirContext(env);
+    }
+
     /**
      * Returns the existing open context or creates a new one and registers listeners for
      * push notifications if such an update style is enabled.  This implementation should not
@@ -105,23 +121,20 @@ public class CachedLDAPAuthorizationMap extends DefaultAuthorizationMap implemen
      */
     protected DirContext open() throws NamingException {
         if (context != null) {
-            return context;
+            boolean alive = true;
+            try {
+                context.getAttributes("");
+            } catch (Exception e) {
+               LOG.info("LDAP connection failed", e);
+               alive = false;
+            }
+            if (alive) {
+                return context;
+            }
         }
 
         try {
-            Hashtable<String, String> env = new Hashtable<String, String>();
-            env.put(Context.INITIAL_CONTEXT_FACTORY, initialContextFactory);
-            if (connectionUsername != null || !"".equals(connectionUsername)) {
-                env.put(Context.SECURITY_PRINCIPAL, connectionUsername);
-            }
-            if (connectionPassword != null || !"".equals(connectionPassword)) {
-                env.put(Context.SECURITY_CREDENTIALS, connectionPassword);
-            }
-            env.put(Context.SECURITY_PROTOCOL, connectionProtocol);
-            env.put(Context.PROVIDER_URL, connectionURL);
-            env.put(Context.SECURITY_AUTHENTICATION, authentication);
-            context = new InitialDirContext(env);
-
+            context = createContext();
 
             if (refreshInterval == -1 && !refreshDisabled) {
                 eventContext = ((EventDirContext)context.lookup(""));
@@ -158,6 +171,7 @@ public class CachedLDAPAuthorizationMap extends DefaultAuthorizationMap implemen
                     eventContext.addNamingListener(tempSearchBase, getFilterForPermissionType(permissionType), constraints,
                             this.new CachedLDAPAuthorizationMapNamespaceChangeListener(DestinationType.TEMP, permissionType));
                 }
+
             }
         } catch (NamingException e) {
             context = null;
@@ -616,8 +630,15 @@ public class CachedLDAPAuthorizationMap extends DefaultAuthorizationMap implemen
      * and are the refresh interval has elapsed.
      */
     protected void checkForUpdates() {
-        if (!refreshDisabled && (refreshInterval != -1 && System.currentTimeMillis() >= lastUpdated + refreshInterval)) {
-
+        if (context == null || (!refreshDisabled && (refreshInterval != -1 && System.currentTimeMillis() >= lastUpdated + refreshInterval))) {
+            if (context == null) {
+                try {
+                    context = createContext();
+                } catch (NamingException ne) {
+                    // LDAP is down, use already cached values
+                    return;
+                }
+            }
             reset();
             setTempDestinationAuthorizationEntry(null);
             entries.clear();
@@ -688,6 +709,7 @@ public class CachedLDAPAuthorizationMap extends DefaultAuthorizationMap implemen
      * {@link AuthorizationEntry} is not setup for concurrent access.
      */
     public synchronized Set<Object> getReadACLs(ActiveMQDestination destination) {
+        checkForUpdates();
         return super.getReadACLs(destination);
     }
 
@@ -696,6 +718,7 @@ public class CachedLDAPAuthorizationMap extends DefaultAuthorizationMap implemen
      * {@link AuthorizationEntry} is not setup for concurrent access.
      */
     public synchronized Set<Object> getWriteACLs(ActiveMQDestination destination) {
+        checkForUpdates();
         return super.getWriteACLs(destination);
     }
 
@@ -850,6 +873,7 @@ public class CachedLDAPAuthorizationMap extends DefaultAuthorizationMap implemen
      * @param namingExceptionEvent the exception event
      */
     public void namingExceptionThrown(NamingExceptionEvent namingExceptionEvent) {
+        context = null;
         LOG.error("Caught unexpected exception.", namingExceptionEvent.getException());
     }
     

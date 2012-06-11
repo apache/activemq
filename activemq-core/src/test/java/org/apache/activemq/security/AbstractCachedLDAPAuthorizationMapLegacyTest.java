@@ -274,6 +274,53 @@ public abstract class AbstractCachedLDAPAuthorizationMapLegacyTest extends Abstr
         failedACLs = map.getReadACLs(new ActiveMQQueue("TEST.FOO"));
         assertEquals("set size: " + failedACLs, 1, failedACLs.size());
     }
+
+    @Test
+    public void testRestartAsync() throws Exception {
+        testRestart(false);
+    }
+
+    @Test
+    public void testRestartSync() throws Exception {
+        testRestart(true);
+    }
+
+    public void testRestart(boolean sync) throws Exception {
+        map.query();
+        if (sync) {
+            map.setRefreshInterval(1);
+        }
+
+        Set<?> failedACLs = map.getReadACLs(new ActiveMQQueue("FAILED"));
+        assertEquals("set size: " + failedACLs, 0, failedACLs.size());
+
+        failedACLs = map.getReadACLs(new ActiveMQQueue("TEST.FOO"));
+        assertEquals("set size: " + failedACLs, 2, failedACLs.size());
+
+        getLdapServer().stop();
+
+        Thread.sleep(1000);
+
+        failedACLs = map.getReadACLs(new ActiveMQQueue("TEST.FOO"));
+        assertEquals("set size: " + failedACLs, 2, failedACLs.size());
+
+        getLdapServer().start();
+
+        Thread.sleep(1000);
+
+        connection = getLdapConnection();
+
+        LdifReader reader = new LdifReader(getAddLdif());
+
+        for (LdifEntry entry : reader) {
+            connection.add(entry.getEntry());
+        }
+
+        Thread.sleep(2000);
+
+        failedACLs = map.getReadACLs(new ActiveMQQueue("FAILED"));
+        assertEquals("set size: " + failedACLs, 2, failedACLs.size());
+    }
     
     protected CachedLDAPAuthorizationMap createMap() {
         return new CachedLDAPAuthorizationMap();
