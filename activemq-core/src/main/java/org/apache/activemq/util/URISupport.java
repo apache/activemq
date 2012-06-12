@@ -219,6 +219,37 @@ public class URISupport {
         }
     }
 
+    public static int indexOfParenthesisMatch(String str, int first) throws URISyntaxException {
+        int index = -1;
+
+        if (first < 0 || first > str.length()) {
+            throw new IllegalArgumentException("Invalid position for first parenthesis: " + first);
+        }
+
+        if (str.charAt(first) != '(') {
+            throw new IllegalArgumentException("character at indicated position is not a parenthesis");
+        }
+
+        int depth = 1;
+        char[] array = str.toCharArray();
+        for (index = first + 1; index < array.length; ++index) {
+            char current = array[index];
+            if (current == '(') {
+                depth++;
+            } else if (current == ')') {
+                if (--depth == 0) {
+                    break;
+                }
+            }
+        }
+
+        if (depth != 0) {
+            throw new URISyntaxException(str, "URI did not contain a matching parenthesis.");
+        }
+
+        return index;
+    }
+
     /**
      * @param uri
      * @param rc
@@ -234,16 +265,19 @@ public class URISupport {
         }
 
         int p;
-        int intialParen = ssp.indexOf("(");
-        if (intialParen == 0) {
-            rc.host = ssp.substring(0, intialParen);
+        int initialParen = ssp.indexOf("(");
+        if (initialParen == 0) {
+
+            rc.host = ssp.substring(0, initialParen);
             p = rc.host.indexOf("/");
+
             if (p >= 0) {
                 rc.path = rc.host.substring(p);
                 rc.host = rc.host.substring(0, p);
             }
-            p = ssp.lastIndexOf(")");
-            componentString = ssp.substring(intialParen + 1, p);
+
+            p = indexOfParenthesisMatch(ssp, initialParen);
+            componentString = ssp.substring(initialParen + 1, p);
             params = ssp.substring(p + 1).trim();
 
         } else {
@@ -364,6 +398,7 @@ public class URISupport {
             .getPath(), bindAddr.getQuery(), bindAddr.getFragment());
     }
 
+
     public static boolean checkParenthesis(String str) {
         boolean result = true;
         if (str != null) {
@@ -384,11 +419,4 @@ public class URISupport {
         }
         return result;
     }
-
-    public int indexOfParenthesisMatch(String str) {
-        int result = -1;
-
-        return result;
-    }
-
 }
