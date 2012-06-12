@@ -1429,6 +1429,35 @@ public class StompTest extends CombinationTestSupport {
         assertEquals(view.getInactiveDurableTopicSubscribers().length, 0);
     }
 
+    public void testDurableSubAttemptOnQueueFails() throws Exception {
+        // get broker JMX view
+
+        String domain = "org.apache.activemq";
+        ObjectName brokerName = new ObjectName(domain + ":Type=Broker,BrokerName=localhost");
+
+        BrokerViewMBean view = (BrokerViewMBean)broker.getManagementContext().newProxyInstance(brokerName, BrokerViewMBean.class, true);
+
+        // connect
+        String frame = "CONNECT\n" + "login:system\n" + "passcode:manager\nclient-id:test\n\n" + Stomp.NULL;
+        stompConnection.sendFrame(frame);
+
+        frame = stompConnection.receiveFrame();
+        assertTrue(frame.startsWith("CONNECTED"));
+        assertEquals(view.getQueueSubscribers().length, 0);
+
+        // subscribe
+        frame = "SUBSCRIBE\n" + "destination:/queue/" + getQueueName() + "\n" + "ack:auto\nactivemq.subscriptionName:test\n\n" + Stomp.NULL;
+        stompConnection.sendFrame(frame);
+
+        frame = stompConnection.receiveFrame();
+        assertTrue(frame.startsWith("ERROR"));
+
+        assertEquals(view.getQueueSubscribers().length, 0);
+        // disconnect
+        frame = "DISCONNECT\nclient-id:test\n\n" + Stomp.NULL;
+        stompConnection.sendFrame(frame);
+    }
+
     public void testMessageIdHeader() throws Exception {
         stompConnection.connect("system", "manager");
 
