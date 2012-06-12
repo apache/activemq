@@ -16,6 +16,13 @@
  */
 package org.apache.activemq.plugin;
 
+import java.io.File;
+import java.net.URI;
+import java.util.Set;
+
+import javax.jms.JMSException;
+import javax.management.ObjectName;
+
 import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.BrokerFilter;
@@ -39,22 +46,17 @@ import org.apache.activemq.util.IdGenerator;
 import org.apache.activemq.util.LongSequenceGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.jms.JMSException;
-import javax.management.ObjectName;
-import java.io.File;
-import java.net.URI;
-import java.util.Set;
 /**
  * A StatisticsBroker You can retrieve a Map Message for a Destination - or
  * Broker containing statistics as key-value pairs The message must contain a
  * replyTo Destination - else its ignored
- * 
+ *
  */
 public class StatisticsBroker extends BrokerFilter {
     private static Logger LOG = LoggerFactory.getLogger(StatisticsBroker.class);
     static final String STATS_DESTINATION_PREFIX = "ActiveMQ.Statistics.Destination";
     static final String STATS_BROKER_PREFIX = "ActiveMQ.Statistics.Broker";
+    static final String STATS_BROKER_RESET_HEADER = "ActiveMQ.Statistics.Broker.Reset";
     static final String STATS_SUBSCRIPTION_PREFIX = "ActiveMQ.Statistics.Subscription";
     private static final IdGenerator ID_GENERATOR = new IdGenerator();
     private final LongSequenceGenerator messageIdGenerator = new LongSequenceGenerator();
@@ -62,9 +64,9 @@ public class StatisticsBroker extends BrokerFilter {
     protected BrokerViewMBean brokerView;
 
     /**
-     * 
+     *
      * Constructor
-     * 
+     *
      * @param next
      */
     public StatisticsBroker(Broker next) {
@@ -74,7 +76,7 @@ public class StatisticsBroker extends BrokerFilter {
 
     /**
      * Sets the persistence mode
-     * 
+     *
      * @see org.apache.activemq.broker.BrokerFilter#send(org.apache.activemq.broker.ProducerBrokerExchange,
      *      org.apache.activemq.command.Message)
      */
@@ -123,6 +125,11 @@ public class StatisticsBroker extends BrokerFilter {
                 sendSubStats(producerExchange.getConnectionContext(), getBrokerView().getQueueSubscribers(), replyTo);
                 sendSubStats(producerExchange.getConnectionContext(), getBrokerView().getTopicSubscribers(), replyTo);
             } else if (brokerStats) {
+
+                if (messageSend.getProperties().containsKey(STATS_BROKER_RESET_HEADER)) {
+                    getBrokerView().resetStatistics();
+                }
+
                 ActiveMQMapMessage statsMessage = new ActiveMQMapMessage();
                 SystemUsage systemUsage = brokerService.getSystemUsage();
                 DestinationStatistics stats = regionBroker.getDestinationStatistics();

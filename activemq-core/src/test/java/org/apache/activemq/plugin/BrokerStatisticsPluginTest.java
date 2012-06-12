@@ -16,13 +16,7 @@
  */
 package org.apache.activemq.plugin;
 
-import junit.framework.TestCase;
-import org.apache.activemq.ActiveMQConnectionFactory;
-import org.apache.activemq.broker.BrokerFactory;
-import org.apache.activemq.broker.BrokerPlugin;
-import org.apache.activemq.broker.BrokerService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.net.URI;
 
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
@@ -32,7 +26,15 @@ import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
 import javax.jms.Queue;
 import javax.jms.Session;
-import java.net.URI;
+
+import junit.framework.TestCase;
+
+import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.broker.BrokerFactory;
+import org.apache.activemq.broker.BrokerPlugin;
+import org.apache.activemq.broker.BrokerService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A BrokerStatisticsPluginTest
@@ -41,10 +43,10 @@ import java.net.URI;
  */
 public class BrokerStatisticsPluginTest extends TestCase{
     private static final Logger LOG = LoggerFactory.getLogger(BrokerStatisticsPluginTest.class);
-    
+
     private Connection connection;
     private BrokerService broker;
-    
+
     public void testBrokerStats() throws Exception{
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         Queue replyTo = session.createTemporaryQueue();
@@ -63,10 +65,36 @@ public class BrokerStatisticsPluginTest extends TestCase{
             System.err.println(name+"="+reply.getObject(name));
         }
         */
-        
-        
     }
-    
+
+    public void testBrokerStatsReset() throws Exception{
+        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        Queue replyTo = session.createTemporaryQueue();
+        MessageConsumer consumer = session.createConsumer(replyTo);
+        Queue testQueue = session.createQueue("Test.Queue");
+        Queue query = session.createQueue(StatisticsBroker.STATS_BROKER_PREFIX);
+        MessageProducer producer = session.createProducer(null);
+
+        producer.send(testQueue, session.createMessage());
+
+        Message msg = session.createMessage();
+        msg.setJMSReplyTo(replyTo);
+        producer.send(query, msg);
+        MapMessage reply = (MapMessage) consumer.receive(10*1000);
+        assertNotNull(reply);
+        assertTrue(reply.getMapNames().hasMoreElements());
+        assertTrue(reply.getLong("enqueueCount") >= 1);
+
+        msg = session.createMessage();
+        msg.setBooleanProperty(StatisticsBroker.STATS_BROKER_RESET_HEADER, true);
+        msg.setJMSReplyTo(replyTo);
+        producer.send(query, msg);
+        reply = (MapMessage) consumer.receive(10*1000);
+        assertNotNull(reply);
+        assertTrue(reply.getMapNames().hasMoreElements());
+        assertEquals(0, reply.getLong("enqueueCount"));
+    }
+
     public void testDestinationStats() throws Exception{
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         Queue replyTo = session.createTemporaryQueue();
@@ -75,9 +103,9 @@ public class BrokerStatisticsPluginTest extends TestCase{
         MessageProducer producer = session.createProducer(null);
         Queue query = session.createQueue(StatisticsBroker.STATS_DESTINATION_PREFIX + testQueue.getQueueName());
         Message msg = session.createMessage();
-        
+
         producer.send(testQueue,msg);
-        
+
         msg.setJMSReplyTo(replyTo);
         producer.send(query,msg);
         MapMessage reply = (MapMessage) consumer.receive();
@@ -89,10 +117,9 @@ public class BrokerStatisticsPluginTest extends TestCase{
             System.err.println(name+"="+reply.getObject(name));
         }
         */
-        
-        
     }
 
+    @SuppressWarnings("unused")
     public void testSubscriptionStats() throws Exception{
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         Queue replyTo = session.createTemporaryQueue();
@@ -115,17 +142,15 @@ public class BrokerStatisticsPluginTest extends TestCase{
             String name = e.nextElement().toString();
             System.err.println(name+"="+reply.getObject(name));
         }*/
-
-
     }
-    
+
     protected void setUp() throws Exception {
         broker = createBroker();
         ConnectionFactory factory = new ActiveMQConnectionFactory(broker.getTransportConnectorURIsAsMap().get("tcp"));
         connection = factory.createConnection();
         connection.start();
     }
-    
+
     protected void tearDown() throws Exception{
         if (this.connection != null) {
             this.connection.close();
@@ -134,9 +159,8 @@ public class BrokerStatisticsPluginTest extends TestCase{
             this.broker.stop();
         }
     }
-    
+
     protected BrokerService createBroker() throws Exception {
-        //return createBroker("org/apache/activemq/plugin/statistics-plugin-broker.xml");
         BrokerService answer = new BrokerService();
         BrokerPlugin[] plugins = new BrokerPlugin[1];
         plugins[0] = new StatisticsBrokerPlugin();
@@ -146,7 +170,7 @@ public class BrokerStatisticsPluginTest extends TestCase{
         answer.start();
         return answer;
     }
-    
+
     protected BrokerService createBroker(String uri) throws Exception {
         LOG.info("Loading broker configuration from the classpath with URI: " + uri);
         return BrokerFactory.createBroker(new URI("xbean:" + uri));
