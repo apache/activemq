@@ -24,7 +24,13 @@ import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.concurrent.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -652,14 +658,10 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
                     // As TemporaryQueue and TemporaryTopic instances are bound
                     // to a connection we should just delete them after the connection
                     // is closed to free up memory
-                    for (Iterator<ActiveMQTempDestination> i = this.activeTempDestinations.values().iterator(); i.hasNext();) {
-                        ActiveMQTempDestination c = i.next();
-                        c.delete();
-                    }
+                    cleanUpTempDestinations();
 
                     if (isConnectionInfoSentToBroker) {
-                        // If we announced ourselfs to the broker.. Try to let
-                        // the broker
+                        // If we announced ourselves to the broker.. Try to let the broker
                         // know that the connection is being shutdown.
                         RemoveInfo removeCommand = info.createRemoveCommand();
                         removeCommand.setLastDeliveredSequenceId(lastDeliveredSequenceId);
