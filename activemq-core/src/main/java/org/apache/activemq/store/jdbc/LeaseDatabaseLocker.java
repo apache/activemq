@@ -44,7 +44,7 @@ public class LeaseDatabaseLocker implements DatabaseLocker {
     protected long lockAcquireSleepInterval = DEFAULT_LOCK_ACQUIRE_SLEEP_INTERVAL;
 
     protected boolean stopping;
-    protected int maxAllowableDiffFromDBTime = 2000;
+    protected int maxAllowableDiffFromDBTime = 0;
     protected long diffFromCurrentTime = Long.MAX_VALUE;
     protected String leaseHolderId;
     protected int queryTimeout = -1;
@@ -60,7 +60,7 @@ public class LeaseDatabaseLocker implements DatabaseLocker {
     public void start() throws Exception {
         stopping = false;
 
-        LOG.info(getLeaseHolderId() + " attempting to acquire the exclusive lease to become the Master broker");
+        LOG.info(getLeaseHolderId() + " attempting to acquire exclusive lease to become the Master broker");
         String sql = statements.getLeaseObtainStatement();
         LOG.debug(getLeaseHolderId() + " locking Query is "+sql);
 
@@ -150,8 +150,12 @@ public class LeaseDatabaseLocker implements DatabaseLocker {
     }
 
     protected long initTimeDiff(Connection connection) throws SQLException {
-        if (maxAllowableDiffFromDBTime > 0 && Long.MAX_VALUE == diffFromCurrentTime) {
-            diffFromCurrentTime = determineTimeDifference(connection);
+        if (Long.MAX_VALUE == diffFromCurrentTime) {
+            if (maxAllowableDiffFromDBTime > 0) {
+                diffFromCurrentTime = determineTimeDifference(connection);
+            } else {
+                diffFromCurrentTime = 0l;
+            }
         }
         return diffFromCurrentTime;
     }
