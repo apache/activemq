@@ -19,6 +19,7 @@ package org.apache.activemq.security;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.jaas.GroupPrincipal;
+import org.apache.activemq.util.Wait;
 import org.apache.directory.ldap.client.api.LdapConnection;
 import org.apache.directory.server.core.integ.AbstractLdapTestUnit;
 import org.apache.directory.shared.ldap.model.ldif.LdifEntry;
@@ -300,16 +301,20 @@ public abstract class AbstractCachedLDAPAuthorizationMapLegacyTest extends Abstr
 
         getLdapServer().stop();
 
-        Thread.sleep(1000);
+        // wait for the context to be closed
+        // as we can't rely on ldar server isStarted()
+        Wait.waitFor(new Wait.Condition() {
+            public boolean isSatisified() throws Exception {
+                return map.context == null;
+            }
+        });
 
-        if (!sync) {
-            failedACLs = map.getReadACLs(new ActiveMQQueue("TEST.FOO"));
-            assertEquals("set size: " + failedACLs, 2, failedACLs.size());
-        }
+        failedACLs = map.getReadACLs(new ActiveMQQueue("TEST.FOO"));
+        assertEquals("set size: " + failedACLs, 2, failedACLs.size());
 
         getLdapServer().start();
 
-        Thread.sleep(1000);
+        Thread.sleep(2000);
 
         connection = getLdapConnection();
 

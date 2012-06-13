@@ -88,7 +88,7 @@ public class CachedLDAPAuthorizationMap extends DefaultAuthorizationMap implemen
 
     private static String ANY_DESCENDANT = "\\$";
 
-    private DirContext context;
+    protected DirContext context;
     private EventDirContext eventContext;
     
     protected HashMap<ActiveMQDestination, AuthorizationEntry> entries = 
@@ -106,8 +106,18 @@ public class CachedLDAPAuthorizationMap extends DefaultAuthorizationMap implemen
         env.put(Context.SECURITY_PROTOCOL, connectionProtocol);
         env.put(Context.PROVIDER_URL, connectionURL);
         env.put(Context.SECURITY_AUTHENTICATION, authentication);
-        //env.put("com.sun.jndi.ldap.connect.pool", "true");
         return new InitialDirContext(env);
+    }
+
+    protected boolean isContextAlive() {
+        boolean alive = false;
+        if (context != null) {
+            try {
+                context.getAttributes("");
+                alive = true;
+            } catch (Exception e) {}
+        }
+        return alive;
     }
 
     /**
@@ -120,17 +130,8 @@ public class CachedLDAPAuthorizationMap extends DefaultAuthorizationMap implemen
      * @throws NamingException if there is an error setting things up
      */
     protected DirContext open() throws NamingException {
-        if (context != null) {
-            boolean alive = true;
-            try {
-                context.getAttributes("");
-            } catch (Exception e) {
-               LOG.info("LDAP connection failed", e);
-               alive = false;
-            }
-            if (alive) {
-                return context;
-            }
+        if (isContextAlive()) {
+            return context;
         }
 
         try {
@@ -631,7 +632,7 @@ public class CachedLDAPAuthorizationMap extends DefaultAuthorizationMap implemen
      */
     protected void checkForUpdates() {
         if (context == null || (!refreshDisabled && (refreshInterval != -1 && System.currentTimeMillis() >= lastUpdated + refreshInterval))) {
-            if (context == null) {
+            if (!isContextAlive()) {
                 try {
                     context = createContext();
                 } catch (NamingException ne) {

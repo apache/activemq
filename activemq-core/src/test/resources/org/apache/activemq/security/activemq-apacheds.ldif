@@ -161,7 +161,6 @@ cn: read
 member: cn=users,ou=Group,ou=ActiveMQ,ou=system
 member: cn=admins,ou=Group,ou=ActiveMQ,ou=system
 member: uid=jdoe,ou=User,ou=ActiveMQ,ou=system
-member: cn=notthere,ou=Group,ou=ActiveMQ,ou=system
 objectClass: groupOfNames
 objectClass: top
 
