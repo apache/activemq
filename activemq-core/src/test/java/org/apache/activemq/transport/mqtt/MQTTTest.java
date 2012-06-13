@@ -26,6 +26,7 @@ import javax.jms.Session;
 import javax.jms.TextMessage;
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.AutoFailTestSupport;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.util.ByteSequence;
@@ -49,9 +50,11 @@ public class MQTTTest {
     protected BrokerService brokerService;
     protected Vector<Throwable> exceptions = new Vector<Throwable>();
     protected int numberOfMessages;
+    AutoFailTestSupport autoFailTestSupport = new AutoFailTestSupport() {};
 
     @Before
     public void startBroker() throws Exception {
+        autoFailTestSupport.startAutoFailThread();
         exceptions.clear();
         brokerService = new BrokerService();
         brokerService.setPersistent(false);
@@ -64,6 +67,7 @@ public class MQTTTest {
         if (brokerService != null) {
             brokerService.stop();
         }
+        autoFailTestSupport.stopAutoFailThread();
     }
 
     @Test
