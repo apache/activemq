@@ -286,12 +286,12 @@ public abstract class AbstractCachedLDAPAuthorizationMapLegacyTest extends Abstr
         testRestart(true);
     }
 
-    public void testRestart(boolean sync) throws Exception {
-        map.query();
+    public void testRestart(final boolean sync) throws Exception {
         if (sync) {
             // ldap connection can be slow to close
             map.setRefreshInterval(1000);
         }
+        map.query();
 
         Set<?> failedACLs = map.getReadACLs(new ActiveMQQueue("FAILED"));
         assertEquals("set size: " + failedACLs, 0, failedACLs.size());
@@ -305,7 +305,11 @@ public abstract class AbstractCachedLDAPAuthorizationMapLegacyTest extends Abstr
         // as we can't rely on ldar server isStarted()
         Wait.waitFor(new Wait.Condition() {
             public boolean isSatisified() throws Exception {
-                return map.context == null;
+                if (sync) {
+                    return !map.isContextAlive();
+                } else {
+                    return map.context == null;
+                }
             }
         });
 

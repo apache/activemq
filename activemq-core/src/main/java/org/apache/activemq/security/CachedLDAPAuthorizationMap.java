@@ -136,7 +136,6 @@ public class CachedLDAPAuthorizationMap extends DefaultAuthorizationMap implemen
 
         try {
             context = createContext();
-
             if (refreshInterval == -1 && !refreshDisabled) {
                 eventContext = ((EventDirContext)context.lookup(""));
                 
