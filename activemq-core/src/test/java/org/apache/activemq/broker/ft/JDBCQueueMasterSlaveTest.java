@@ -16,9 +16,18 @@
  */
 package org.apache.activemq.broker.ft;
 
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.net.URI;
+import java.sql.Connection;
+import java.sql.SQLException;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.TransportConnector;
+import org.apache.activemq.command.BrokerInfo;
 import org.apache.activemq.store.jdbc.DataSourceSupport;
 import org.apache.activemq.store.jdbc.JDBCPersistenceAdapter;
+import org.apache.activemq.transport.TransportAcceptListener;
+import org.apache.activemq.transport.TransportServer;
 import org.apache.derby.jdbc.EmbeddedDataSource;
 
 public class JDBCQueueMasterSlaveTest extends QueueMasterSlaveTest {
@@ -34,16 +43,20 @@ public class JDBCQueueMasterSlaveTest extends QueueMasterSlaveTest {
     
     protected void createMaster() throws Exception {
         master = new BrokerService();
+        master.setBrokerName("master");
         master.addConnector(MASTER_URL);
         master.setUseJmx(false);
         master.setPersistent(true);
         master.setDeleteAllMessagesOnStartup(true);
         JDBCPersistenceAdapter persistenceAdapter = new JDBCPersistenceAdapter();
         persistenceAdapter.setDataSource(getExistingDataSource());
-        persistenceAdapter.setLockKeepAlivePeriod(500);
-        persistenceAdapter.setLockAcquireSleepInterval(500);
+        configureJdbcPersistenceAdapter(persistenceAdapter);
         master.setPersistenceAdapter(persistenceAdapter);
+        configureBroker(master);
         master.start();
+    }
+
+    protected void configureBroker(BrokerService master) {
     }
 
     protected void createSlave() throws Exception {
@@ -53,7 +66,10 @@ public class JDBCQueueMasterSlaveTest extends QueueMasterSlaveTest {
             public void run() {
                 try {
                     BrokerService broker = new BrokerService();
-                    broker.addConnector(SLAVE_URL);
+                    broker.setBrokerName("slave");
+                    TransportConnector connector = new TransportConnector();
+                    connector.setUri(new URI(SLAVE_URL));
+                    broker.addConnector(connector);
                     // no need for broker.setMasterConnectorURI(masterConnectorURI)
                     // as the db lock provides the slave/master initialisation
                     broker.setUseJmx(false);
@@ -62,15 +78,23 @@ public class JDBCQueueMasterSlaveTest extends QueueMasterSlaveTest {
                     persistenceAdapter.setDataSource(getExistingDataSource());
                     persistenceAdapter.setCreateTablesOnStartup(false);
                     broker.setPersistenceAdapter(persistenceAdapter);
+                    configureJdbcPersistenceAdapter(persistenceAdapter);
+                    configureBroker(broker);
                     broker.start();
                     slave.set(broker);
                     slaveStarted.countDown();
+                } catch (IllegalStateException expectedOnShutdown) {
                 } catch (Exception e) {
                     fail("failed to start slave broker, reason:" + e);
                 }
             }
         };
         t.start();
+    }
+
+    protected void configureJdbcPersistenceAdapter(JDBCPersistenceAdapter persistenceAdapter) throws IOException {
+        persistenceAdapter.setLockKeepAlivePeriod(500);
+        persistenceAdapter.setLockAcquireSleepInterval(500);
     }
 
     protected EmbeddedDataSource getExistingDataSource() throws Exception {

@@ -37,8 +37,9 @@ public interface DatabaseLocker extends Service {
     /**
      * Used by a timer to keep alive the lock.
      * If the method returns false the broker should be terminated
+     * if an exception is thrown, the lock state cannot be determined
      */
-    boolean keepAlive();
+    boolean keepAlive() throws IOException;
 
     /**
      * set the delay interval in milliseconds between lock acquire attempts

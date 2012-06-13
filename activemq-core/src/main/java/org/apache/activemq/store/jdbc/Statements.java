@@ -85,6 +85,10 @@ public class Statements {
     private String updateDurableLastAckWithPriorityStatement;
     private String updateDurableLastAckWithPriorityInTxStatement;
     private String findXidByIdStatement;
+    private String leaseObtainStatement;
+    private String currentDateTimeStatement;
+    private String leaseUpdateStatement;
+    private String leaseOwnerStatement;
 
     public String[] getCreateSchemaStatements() {
         if (createSchemaStatements == null) {
@@ -103,9 +107,9 @@ public class Statements {
                     + " NOT NULL" + ", SELECTOR " + stringIdDataType + ", LAST_ACKED_ID " + sequenceDataType
                     + ", PRIMARY KEY ( CONTAINER, CLIENT_ID, SUB_NAME))", 
                 "CREATE TABLE " + getFullLockTableName() 
-                    + "( ID " + longDataType + " NOT NULL, TIME " + longDataType 
+                    + "( ID " + longDataType + " NOT NULL, TIME " + longDataType
                     + ", BROKER_NAME " + stringIdDataType + ", PRIMARY KEY (ID) )",
-                "INSERT INTO " + getFullLockTableName() + "(ID) VALUES (1)", 
+                "INSERT INTO " + getFullLockTableName() + "(ID) VALUES (1)",
                 "ALTER TABLE " + getFullMessageTableName() + " ADD PRIORITY " + sequenceDataType,
                 "CREATE INDEX " + getFullMessageTableName() + "_PIDX ON " + getFullMessageTableName() + " (PRIORITY)",
                 "ALTER TABLE " + getFullMessageTableName() + " ADD XID " + binaryDataType,
@@ -419,6 +423,39 @@ public class Statements {
             lockCreateStatement += " FOR UPDATE";
         }
         return lockCreateStatement;
+    }
+
+    public String getLeaseObtainStatement() {
+        if (leaseObtainStatement == null) {
+            leaseObtainStatement = "UPDATE " + getFullLockTableName()
+                    + " SET BROKER_NAME=?, TIME=?"
+                    + " WHERE (TIME IS NULL OR TIME < ?) AND ID = 1";
+        }
+        return leaseObtainStatement;
+    }
+
+    public String getCurrentDateTime() {
+        if (currentDateTimeStatement == null) {
+            currentDateTimeStatement = "SELECT CURRENT_TIMESTAMP FROM " + getFullLockTableName();
+        }
+        return currentDateTimeStatement;
+    }
+
+    public String getLeaseUpdateStatement() {
+        if (leaseUpdateStatement == null) {
+            leaseUpdateStatement = "UPDATE " + getFullLockTableName()
+                    + " SET BROKER_NAME=?, TIME=?"
+                    + " WHERE BROKER_NAME=? AND ID = 1";
+        }
+        return leaseUpdateStatement;
+    }
+
+    public String getLeaseOwnerStatement() {
+        if (leaseOwnerStatement == null) {
+            leaseOwnerStatement = "SELECT BROKER_NAME, TIME FROM " + getFullLockTableName()
+                    + " WHERE ID = 1";
+        }
+        return leaseOwnerStatement;
     }
 
     public String getLockUpdateStatement() {
@@ -910,5 +947,21 @@ public class Statements {
 
     public void setFindXidByIdStatement(String findXidByIdStatement) {
         this.findXidByIdStatement = findXidByIdStatement;
+    }
+
+    public void setLeaseObtainStatement(String leaseObtainStatement) {
+        this.leaseObtainStatement = leaseObtainStatement;
+    }
+
+    public void setCurrentDateTimeStatement(String currentDateTimeStatement) {
+        this.currentDateTimeStatement = currentDateTimeStatement;
+    }
+
+    public void setLeaseUpdateStatement(String leaseUpdateStatement) {
+        this.leaseUpdateStatement = leaseUpdateStatement;
+    }
+
+    public void setLeaseOwnerStatement(String leaseOwnerStatement) {
+        this.leaseOwnerStatement = leaseOwnerStatement;
     }
 }

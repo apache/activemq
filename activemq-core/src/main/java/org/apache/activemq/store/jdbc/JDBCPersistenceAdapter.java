@@ -623,7 +623,7 @@ public class JDBCPersistenceAdapter extends DataSourceSupport implements Persist
                 }
             }
         } catch (IOException e) {
-            LOG.error("Failed to get database when trying keepalive: " + e, e);
+            LOG.warn("databaselocker keepalive resulted in: " + e, e);
         }
         if (stop) {
             stopBroker();
@@ -632,7 +632,7 @@ public class JDBCPersistenceAdapter extends DataSourceSupport implements Persist
 
     protected void stopBroker() {
         // we can no longer keep the lock so lets fail
-        LOG.info("No longer able to keep the exclusive lock so giving up being a master");
+        LOG.info(brokerService.getBrokerName() + ", no longer able to keep the exclusive lock so giving up being a master");
         try {
             brokerService.stop();
         } catch (Exception e) {

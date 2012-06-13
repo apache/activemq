@@ -28,6 +28,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 import javax.jms.IllegalStateException;
@@ -142,7 +143,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
     private ExecutorService executorService;
     private MessageTransformer transformer;
     private boolean clearDispatchList;
-    boolean inProgressClearRequiredFlag;
+    AtomicInteger inProgressClearRequiredFlag = new AtomicInteger(0);
 
     private MessageAck pendingAck;
     private long lastDeliveredSequenceId;
@@ -685,15 +686,15 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
         }    }
 
     void inProgressClearRequired() {
-        inProgressClearRequiredFlag = true;
+        inProgressClearRequiredFlag.incrementAndGet();
         // deal with delivered messages async to avoid lock contention with in progress acks
         clearDispatchList = true;
     }
 
     void clearMessagesInProgress() {
-        if (inProgressClearRequiredFlag) {
+        if (inProgressClearRequiredFlag.get() > 0) {
             synchronized (unconsumedMessages.getMutex()) {
-                if (inProgressClearRequiredFlag) {
+                if (inProgressClearRequiredFlag.get() > 0) {
                     if (LOG.isDebugEnabled()) {
                         LOG.debug(getConsumerId() + " clearing unconsumed list (" + unconsumedMessages.size() + ") on transport interrupt");
                     }
@@ -706,7 +707,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                     }
                     // allow dispatch on this connection to resume
                     session.connection.transportInterruptionProcessingComplete();
-                    inProgressClearRequiredFlag = false;
+                    inProgressClearRequiredFlag.decrementAndGet();
                 }
             }
         }

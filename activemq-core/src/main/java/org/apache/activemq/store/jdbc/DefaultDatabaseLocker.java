@@ -170,7 +170,7 @@ public class DefaultDatabaseLocker implements DatabaseLocker {
         }
     }
 
-    public boolean keepAlive() {
+    public boolean keepAlive() throws IOException {
         boolean result = false;
         try {
             lockUpdateStatement = connection.prepareStatement(statements.getLockUpdateStatement());

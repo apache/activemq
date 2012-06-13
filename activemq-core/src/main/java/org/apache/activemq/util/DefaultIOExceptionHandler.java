@@ -32,7 +32,7 @@ import org.slf4j.LoggerFactory;
 
     private static final Logger LOG = LoggerFactory
             .getLogger(DefaultIOExceptionHandler.class);
-    private BrokerService broker;
+    protected BrokerService broker;
     private boolean ignoreAllErrors = false;
     private boolean ignoreNoSpaceErrors = true;
     private boolean ignoreSQLExceptions = true;
@@ -94,13 +94,14 @@ import org.slf4j.LoggerFactory;
             new Thread("restart transport connectors post IO exception") {
                 public void run() {
                     try {
-                        while (isPersistenceAdapterDown()) {
+                        while (hasLockOwnership() && isPersistenceAdapterDown()) {
                             LOG.info("waiting for broker persistence adapter checkpoint to succeed before restarting transports");
                             TimeUnit.MILLISECONDS.sleep(resumeCheckSleepPeriod);
                         }
                         broker.startAllConnectors();
                     } catch (Exception e) {
-                        LOG.warn("Failure occurred while restarting broker connectors", e);
+                        LOG.warn("Stopping broker due to failure while restarting broker connectors", e);
+                        stopBroker(e);
                     } finally {
                         stopStartInProgress.compareAndSet(true, false);
                     }
@@ -119,7 +120,11 @@ import org.slf4j.LoggerFactory;
             return;
         }
 
-        LOG.info("Stopping the broker due to IO exception, " + exception, exception);
+        stopBroker(exception);
+    }
+
+    private void stopBroker(Exception exception) {
+        LOG.info("Stopping the broker due to exception, " + exception, exception);
         new Thread("Stopping the broker due to IO exception") {
             public void run() {
                 try {
@@ -129,6 +134,10 @@ import org.slf4j.LoggerFactory;
                 }
             }
         }.start();
+    }
+
+    protected boolean hasLockOwnership() throws IOException {
+        return true;
     }
 
     public void setBrokerService(BrokerService broker) {
