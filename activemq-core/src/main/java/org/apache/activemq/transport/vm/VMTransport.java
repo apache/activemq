@@ -106,7 +106,9 @@ public class VMTransport implements Transport, Task {
     public void dispatch(VMTransport transport, BlockingQueue<Object> pending, Object command) {
         TransportListener transportListener = transport.getTransportListener();
         if (transportListener != null) {
-            synchronized (started) {
+            // Lock here on the target transport's started since we want to wait for its start()
+            // method to finish dispatching out of the queue before we do our own.
+            synchronized (transport.started) {
 
                 // Ensure that no additional commands entered the queue in the small time window
                 // before the start method locks the dispatch lock and the oneway method was in
