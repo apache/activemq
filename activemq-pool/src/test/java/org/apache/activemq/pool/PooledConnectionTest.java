@@ -84,7 +84,9 @@ public class PooledConnectionTest extends TestCase {
 			Assert.fail("calling ActiveMQConnection.setClientID() twice with different clientID must raise an IllegalStateException"); 
 		} catch (IllegalStateException ise) {
 			log.debug("Correctly received " + ise);
-		}
+        } finally {
+            conn.close();
+        }
 		
 		// 3rd test: try to call setClientID() after start()
 		// should result in an exception
@@ -96,7 +98,9 @@ public class PooledConnectionTest extends TestCase {
 		Assert.fail("Calling setClientID() after start() mut raise a JMSException.");
 		} catch (IllegalStateException ise) {
 			log.debug("Correctly received " + ise);
-		}
+        } finally {
+            conn.close();
+        }
 		
 		log.debug("Test finished.");
 	}
