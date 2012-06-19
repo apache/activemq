@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
 import javax.jms.DeliveryMode;
 import javax.jms.JMSException;
 import javax.management.openmbean.ArrayType;
@@ -284,6 +285,7 @@ public final class OpenTypeSupport {
             try {
                 byte preview[] = new byte[(int)Math.min(length, 255)];
                 m.readBytes(preview);
+                m.reset();
 
                 // This is whack! Java 1.5 JMX spec does not support primitive
                 // arrays!
@@ -389,7 +391,7 @@ public final class OpenTypeSupport {
             return rc;
         }
     }
-    
+
 
     static class JobOpenTypeFactory extends AbstractOpenTypeFactory {
 
@@ -490,7 +492,7 @@ public final class OpenTypeSupport {
 
     private OpenTypeSupport() {
     }
-    
+
     public static OpenTypeFactory getFactory(Class<?> clazz) throws OpenDataException {
         return OPEN_TYPE_FACTORIES.get(clazz);
     }
