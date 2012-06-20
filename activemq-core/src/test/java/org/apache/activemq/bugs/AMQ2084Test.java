@@ -41,40 +41,41 @@ import javax.jms.TopicSubscriber;
 import javax.naming.InitialContext;
 
 import org.apache.activemq.broker.BrokerService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class AMQ2084Test {
 
     private static final Logger LOG = LoggerFactory.getLogger(AMQ2084Test.class);
     BrokerService broker;
     CountDownLatch qreceived;
-    
+    String connectionUri;
+
     @Before
     public void startBroker() throws Exception {
         broker = new BrokerService();
         broker.setPersistent(false);
-        broker.addConnector("tcp://localhost:61616");
+        connectionUri = broker.addConnector("tcp://localhost:0").getPublishableConnectString();
         broker.start();
-        
+
         qreceived = new CountDownLatch(1);
     }
-    
+
     @After
     public void stopBroker() throws Exception {
         if (broker != null) {
             broker.stop();
         }
     }
-    
+
     public void listenQueue(final String queueName, final String selectors) {
         try {
             Properties props = new Properties();
             props.put("java.naming.factory.initial", "org.apache.activemq.jndi.ActiveMQInitialContextFactory");
-            props.put("java.naming.provider.url", "tcp://localhost:61616");
+            props.put("java.naming.provider.url", connectionUri);
             props.put("queue.queueName", queueName);
 
             javax.naming.Context ctx = new InitialContext(props);
@@ -92,7 +93,7 @@ public class AMQ2084Test {
                             String msg = txtMsg.getText();
                             LOG.info("Queue Message Received: " + queueName + " - " + msg);
                             qreceived.countDown();
-                            
+
                         }
                         message.acknowledge();
                     } catch (Throwable e) {
@@ -110,7 +111,7 @@ public class AMQ2084Test {
         try {
             Properties props = new Properties();
             props.put("java.naming.factory.initial", "org.apache.activemq.jndi.ActiveMQInitialContextFactory");
-            props.put("java.naming.provider.url", "tcp://localhost:61616");
+            props.put("java.naming.provider.url", connectionUri);
             props.put("topic.topicName", topicName);
 
             javax.naming.Context ctx = new InitialContext(props);
@@ -144,7 +145,7 @@ public class AMQ2084Test {
         try {
             Properties props = new Properties();
             props.put("java.naming.factory.initial", "org.apache.activemq.jndi.ActiveMQInitialContextFactory");
-            props.put("java.naming.provider.url", "tcp://localhost:61616");
+            props.put("java.naming.provider.url", connectionUri);
             props.put("topic.topicName", topicName);
             javax.naming.Context ctx = new InitialContext(props);
             TopicConnectionFactory factory = (TopicConnectionFactory) ctx.lookup("ConnectionFactory");
@@ -166,15 +167,15 @@ public class AMQ2084Test {
         String xPath = "XPATH '//books//book[@lang=''en'']'";
         listenQueue("Consumer.Sample.VirtualTopic.TestXpath", xPath);
         publish("VirtualTopic.TestXpath", "<?xml version=\"1.0\" encoding=\"UTF-8\"?><books><book lang=\"en\">ABC</book></books>");
-        assertTrue("topic received: ", qreceived.await(20, TimeUnit.SECONDS));        
+        assertTrue("topic received: ", qreceived.await(20, TimeUnit.SECONDS));
     }
-    
+
     @Test
     public void tryXpathSelectorNoMatch() throws Exception {
         String xPath = "XPATH '//books//book[@lang=''es'']'";
         listenQueue("Consumer.Sample.VirtualTopic.TestXpath", xPath);
         publish("VirtualTopic.TestXpath", "<?xml version=\"1.0\" encoding=\"UTF-8\"?><books><book lang=\"en\">ABC</book></books>");
-        assertFalse("topic did not receive unmatched", qreceived.await(5, TimeUnit.SECONDS));        
+        assertFalse("topic did not receive unmatched", qreceived.await(5, TimeUnit.SECONDS));
     }
 
 }
