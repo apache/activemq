@@ -1088,7 +1088,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         }
     }
 
-/*    public void dumpTables(Connection c, String destinationName, String clientId, String
+/*    public static void dumpTables(Connection c, String destinationName, String clientId, String
       subscriptionName) throws SQLException { 
         printQuery(c, "Select * from ACTIVEMQ_MSGS", System.out); 
         printQuery(c, "Select * from ACTIVEMQ_ACKS", System.out); 
@@ -1100,23 +1100,23 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
       s.setString(1,destinationName); s.setString(2,clientId); s.setString(3,subscriptionName);
       printQuery(s,System.out); }
 
-    public void dumpTables(Connection c) throws SQLException {
-        printQuery(c, "Select * from ACTIVEMQ_MSGS", System.out);
+    public static void dumpTables(java.sql.Connection c) throws SQLException {
+        printQuery(c, "Select * from ACTIVEMQ_MSGS ORDER BY ID", System.out);
         printQuery(c, "Select * from ACTIVEMQ_ACKS", System.out);
     }
 
-    private void printQuery(Connection c, String query, PrintStream out)
+    private static void printQuery(java.sql.Connection c, String query, java.io.PrintStream out)
             throws SQLException {
         printQuery(c.prepareStatement(query), out);
     }
 
-    private void printQuery(PreparedStatement s, PrintStream out)
+    private static void printQuery(java.sql.PreparedStatement s, java.io.PrintStream out)
             throws SQLException {
 
         ResultSet set = null;
         try {
             set = s.executeQuery();
-            ResultSetMetaData metaData = set.getMetaData();
+            java.sql.ResultSetMetaData metaData = set.getMetaData();
             for (int i = 1; i <= metaData.getColumnCount(); i++) {
                 if (i == 1)
                     out.print("||");

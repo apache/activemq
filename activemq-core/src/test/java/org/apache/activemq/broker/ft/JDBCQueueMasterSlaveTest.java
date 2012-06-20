@@ -17,10 +17,12 @@
 package org.apache.activemq.broker.ft;
 
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.net.InetSocketAddress;
 import java.net.URI;
 import java.sql.Connection;
 import java.sql.SQLException;
+import javax.sql.DataSource;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.command.BrokerInfo;
@@ -31,13 +33,13 @@ import org.apache.activemq.transport.TransportServer;
 import org.apache.derby.jdbc.EmbeddedDataSource;
 
 public class JDBCQueueMasterSlaveTest extends QueueMasterSlaveTest {
-    protected EmbeddedDataSource sharedDs;
+    protected DataSource sharedDs;
     protected String MASTER_URL = "tcp://localhost:62001";
     protected String SLAVE_URL  = "tcp://localhost:62002";
 
     protected void setUp() throws Exception {
         // startup db
-        sharedDs = (EmbeddedDataSource) new DataSourceSupport().getDataSource();
+        sharedDs = new SyncDataSource((EmbeddedDataSource)new DataSourceSupport().getDataSource());
         super.setUp();
     }
     
@@ -97,7 +99,61 @@ public class JDBCQueueMasterSlaveTest extends QueueMasterSlaveTest {
         persistenceAdapter.setLockAcquireSleepInterval(500);
     }
 
-    protected EmbeddedDataSource getExistingDataSource() throws Exception {
+    protected DataSource getExistingDataSource() throws Exception {
         return sharedDs;
     }
+
+    // prevent concurrent calls from attempting to create the db at the same time
+    // can result in "already exists in this jvm" errors
+    class SyncDataSource implements DataSource {
+        final EmbeddedDataSource delegate;
+        SyncDataSource(EmbeddedDataSource dataSource) {
+            this.delegate = dataSource;
+        }
+            @Override
+            public Connection getConnection() throws SQLException {
+                synchronized (this) {
+                    return delegate.getConnection();
+                }
+            }
+
+            @Override
+            public Connection getConnection(String username, String password) throws SQLException {
+                synchronized (this) {
+                    return delegate.getConnection();
+                }
+            }
+
+            @Override
+            public PrintWriter getLogWriter() throws SQLException {
+                return null;
+            }
+
+            @Override
+            public void setLogWriter(PrintWriter out) throws SQLException {
+            }
+
+            @Override
+            public void setLoginTimeout(int seconds) throws SQLException {
+            }
+
+            @Override
+            public int getLoginTimeout() throws SQLException {
+                return 0;
+            }
+
+            @Override
+            public <T> T unwrap(Class<T> iface) throws SQLException {
+                return null;
+            }
+
+            @Override
+            public boolean isWrapperFor(Class<?> iface) throws SQLException {
+                return false;
+            }
+
+            EmbeddedDataSource getDelegate() {
+                return delegate;
+            }
+        };
 }

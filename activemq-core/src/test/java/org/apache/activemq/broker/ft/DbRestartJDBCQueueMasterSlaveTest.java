@@ -16,16 +16,17 @@
  */
 package org.apache.activemq.broker.ft;
 
-import java.sql.SQLException;
+import java.util.List;
+import javax.jms.Connection;
 import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageProducer;
-
+import javax.jms.Session;
 import org.apache.activemq.ActiveMQConnection;
+import org.apache.derby.jdbc.EmbeddedDataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.derby.jdbc.EmbeddedDataSource;
 
 public class DbRestartJDBCQueueMasterSlaveTest extends JDBCQueueMasterSlaveTest {
     private static final transient Logger LOG = LoggerFactory.getLogger(DbRestartJDBCQueueMasterSlaveTest.class);
@@ -34,7 +35,7 @@ public class DbRestartJDBCQueueMasterSlaveTest extends JDBCQueueMasterSlaveTest 
         verifyExpectedBroker(inflightMessageCount);
         if (++inflightMessageCount == failureCount) {
             LOG.info("STOPPING DB!@!!!!");
-            final EmbeddedDataSource ds = getExistingDataSource();
+            final EmbeddedDataSource ds = ((SyncDataSource)getExistingDataSource()).getDelegate();
             ds.setShutdownDatabase("shutdown");
             LOG.info("DB STOPPED!@!!!!");
             
@@ -42,9 +43,6 @@ public class DbRestartJDBCQueueMasterSlaveTest extends JDBCQueueMasterSlaveTest 
                 public void run() {
                     delayTillRestartRequired();
                     ds.setShutdownDatabase("false");
-                    try {
-                        ds.getConnection().close();
-                    } catch (SQLException ignored) {}
                     LOG.info("DB RESTARTED!@!!!!");
                 }
             };
@@ -77,13 +75,31 @@ public class DbRestartJDBCQueueMasterSlaveTest extends JDBCQueueMasterSlaveTest 
                     producer.send(producerDestination, message);
                     sent = true;
                 } catch (JMSException e) {
-                    LOG.info("Exception on producer send:", e);
+                    LOG.info("Exception on producer send for: " + message, e);
                     try { 
                         Thread.sleep(2000);
                     } catch (InterruptedException ignored) {
                     }
                 }
             } while(!sent);
+        }
+    }
+
+    @Override
+    protected Session createReceiveSession(Connection receiveConnection) throws Exception {
+        return receiveConnection.createSession(true, Session.SESSION_TRANSACTED);
+    }
+
+    @Override
+    protected void consumeMessage(Message message, List<Message> messageList) {
+        try {
+            receiveSession.commit();
+            super.consumeMessage(message, messageList);
+        } catch (JMSException e) {
+            LOG.info("Faild to commit message receipt: " + message, e);
+            try {
+                receiveSession.rollback();
+            } catch (JMSException ignored) {}
         }
     }
 }

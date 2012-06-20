@@ -20,12 +20,11 @@ import java.util.concurrent.TimeUnit;
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.store.jdbc.JDBCIOExceptionHandler;
-import org.apache.activemq.util.DefaultIOExceptionHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class DbRestartJDBCQueueMasterSlaveLeaseIntactQuiesceTest extends DbRestartJDBCQueueMasterSlaveLeaseIntactTest {
-    private static final transient Logger LOG = LoggerFactory.getLogger(DbRestartJDBCQueueMasterSlaveLeaseIntactQuiesceTest.class);
+public class DbRestartJDBCQueueMasterSlaveLeaseQuiesceTest extends DbRestartJDBCQueueMasterSlaveLeaseTest {
+    private static final transient Logger LOG = LoggerFactory.getLogger(DbRestartJDBCQueueMasterSlaveLeaseQuiesceTest.class);
 
     private long restartDelay = 500;
 

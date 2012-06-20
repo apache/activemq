@@ -17,10 +17,14 @@
 package org.apache.activemq.broker.ft;
 
 import java.io.IOException;
+import java.sql.Connection;
 import java.util.concurrent.TimeUnit;
+import junit.framework.Test;
 import org.apache.activemq.ActiveMQConnection;
+import org.apache.activemq.store.jdbc.DataSourceSupport;
 import org.apache.activemq.store.jdbc.JDBCPersistenceAdapter;
 import org.apache.activemq.store.jdbc.LeaseDatabaseLocker;
+import org.apache.activemq.store.jdbc.adapter.DefaultJDBCAdapter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,9 +50,9 @@ public class DbRestartJDBCQueueMasterSlaveLeaseTest extends DbRestartJDBCQueueMa
     @Override
     protected void delayTillRestartRequired() {
 
-        LOG.info("restart db after lease has expired. While Db is offline, master should stay alive, them lease up for grabs");
+        LOG.info("delay for less than lease quantum. While Db is offline, master should stay alive");
         try {
-            TimeUnit.MILLISECONDS.sleep(3000);
+            TimeUnit.SECONDS.sleep(1);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -56,10 +60,8 @@ public class DbRestartJDBCQueueMasterSlaveLeaseTest extends DbRestartJDBCQueueMa
 
     @Override
     protected void verifyExpectedBroker(int inflightMessageCount) {
-        if (inflightMessageCount == 0) {
+        if (inflightMessageCount == 0 || inflightMessageCount == failureCount + 10) {
             assertEquals("connected to master", master.getBrokerName(), ((ActiveMQConnection)sendConnection).getBrokerName());
         }
-        // the lock is up for grabs after the expiry
     }
-
 }
