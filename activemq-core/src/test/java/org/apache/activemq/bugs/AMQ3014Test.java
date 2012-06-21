@@ -48,7 +48,7 @@ import org.junit.Test;
  */
 public class AMQ3014Test {
     // Change this URL to be an unused port.
-    private static final String REMOTE_BROKER_URL = "tcp://localhost:50000";
+    private static final String BROKER_URL = "tcp://localhost:0";
 
     private List<BrokerInfo> remoteBrokerInfos = Collections
             .synchronizedList(new ArrayList<BrokerInfo>());
@@ -111,7 +111,7 @@ public class AMQ3014Test {
         remoteBroker.setBrokerName("remoteBroker");
         remoteBroker.setPersistent(false);
         remoteBroker.setUseJmx(false);
-        remoteBroker.addConnector(REMOTE_BROKER_URL);
+        remoteBroker.addConnector(BROKER_URL);
         remoteBroker.setSchedulerSupport(false);
     }
 
@@ -150,7 +150,7 @@ public class AMQ3014Test {
         // to the remote broker.
         DiscoveryNetworkConnector dnc = new DiscoveryNetworkConnector();
         SimpleDiscoveryAgent da = new SimpleDiscoveryAgent();
-        da.setServices(REMOTE_BROKER_URL);
+        da.setServices(remoteBroker.getTransportConnectors().get(0).getPublishableConnectString());
         dnc.setDiscoveryAgent(da);
         localBroker.addNetworkConnector(dnc);
 
