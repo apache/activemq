@@ -16,6 +16,13 @@
  */
 package org.apache.activemq.bugs;
 
+import static org.junit.Assert.fail;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.region.policy.FilePendingSubscriberMessageStoragePolicy;
 import org.apache.activemq.broker.region.policy.LastImageSubscriptionRecoveryPolicy;
@@ -31,15 +38,8 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
-
-import static org.junit.Assert.fail;
-
 public class AMQ3622Test {
-    
+
     protected BrokerService broker;
     protected AtomicBoolean failed = new AtomicBoolean(false);
     protected String connectionUri;
@@ -72,7 +72,7 @@ public class AMQ3622Test {
         policy.setSubscriptionRecoveryPolicy(new LastImageSubscriptionRecoveryPolicy());
         policy.setExpireMessagesPeriod(500);
         List<PolicyEntry> entries = new ArrayList<PolicyEntry>();
-        
+
         entries.add(policy);
         PolicyMap pMap = new PolicyMap();
         pMap.setPolicyEntries(entries);
@@ -90,16 +90,17 @@ public class AMQ3622Test {
         broker.waitUntilStopped();
         Logger.getRootLogger().removeAppender(appender);
     }
-    
+
     @Test
     public void go() throws Exception {
         StompConnection connection = new StompConnection();
-        connection.open("localhost", Integer.parseInt(connectionUri.replace("stomp://localhost:", "")));
+        Integer port = Integer.parseInt(connectionUri.split(":")[2]);
+        connection.open("localhost", port);        
         connection.connect("", "");
         connection.subscribe("/topic/foobar", Stomp.Headers.Subscribe.AckModeValues.CLIENT);
         connection.disconnect();
         Thread.sleep(1000);
-        
+
         if (failed.get()) {
             fail("Received NullPointerException");
         }
