@@ -29,7 +29,7 @@ import org.apache.activemq.command.*;
  */
 public abstract class DestinationMapEntry<T> implements Comparable<T> {
 
-    private ActiveMQDestination destination;
+    protected ActiveMQDestination destination;
 
     public int compareTo(Object that) {
         if (that instanceof DestinationMapEntry) {

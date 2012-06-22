@@ -18,28 +18,31 @@ package org.apache.activemq;
 
 import java.io.Serializable;
 import java.util.Random;
+import org.apache.activemq.filter.DestinationMapEntry;
+import org.apache.activemq.util.IntrospectionSupport;
 
 /**
- * Configuration options used to control how messages are re-delivered when they
+ * Configuration options for a messageConsumer used to control how messages are re-delivered when they
  * are rolled back.
+ * May be used server side on a per destination basis via the Broker RedeliveryPlugin
  *
  * @org.apache.xbean.XBean element="redeliveryPolicy"
  *
  */
-public class RedeliveryPolicy implements Cloneable, Serializable {
+public class RedeliveryPolicy extends DestinationMapEntry implements Cloneable, Serializable {
 
     public static final int NO_MAXIMUM_REDELIVERIES = -1;
     private static Random randomNumberGenerator;
 
     // +/-15% for a 30% spread -cgs
-    private double collisionAvoidanceFactor = 0.15d;
-    private int maximumRedeliveries = 6;
-    private long maximumRedeliveryDelay = -1;
-    private long initialRedeliveryDelay = 1000L;
-    private boolean useCollisionAvoidance;
-    private boolean useExponentialBackOff;
-    private double backOffMultiplier = 5.0;
-    private long redeliveryDelay = initialRedeliveryDelay;
+    protected double collisionAvoidanceFactor = 0.15d;
+    protected int maximumRedeliveries = 6;
+    protected long maximumRedeliveryDelay = -1;
+    protected long initialRedeliveryDelay = 1000L;
+    protected boolean useCollisionAvoidance;
+    protected boolean useExponentialBackOff;
+    protected double backOffMultiplier = 5.0;
+    protected long redeliveryDelay = initialRedeliveryDelay;
 
     public RedeliveryPolicy() {
     }
@@ -149,5 +152,10 @@ public class RedeliveryPolicy implements Cloneable, Serializable {
 
     public long getRedeliveryDelay() {
         return redeliveryDelay;
+    }
+
+    @Override
+    public String toString() {
+        return IntrospectionSupport.toString(this, DestinationMapEntry.class, null);
     }
 }
