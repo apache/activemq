@@ -48,10 +48,18 @@
         <destinationPolicy>
             <policyMap>
               <policyEntries>
-                <policyEntry topic=">" producerFlowControl="true" memoryLimit="1mb">
-                  <pendingSubscriberPolicy>
-                    <vmCursor />
-                  </pendingSubscriberPolicy>
+                <policyEntry topic=">" producerFlowControl="true">
+                    <!-- The constantPendingMessageLimitStrategy is used to prevent
+                         slow topic consumers to block producers and affect other consumers
+                         by limiting the number of messages that are retained
+                         For more information, see:
+
+                         http://activemq.apache.org/slow-consumer-handling.html
+
+                    -->
+                  <pendingMessageLimitStrategy>
+                    <constantPendingMessageLimitStrategy limit="1000"/>
+                  </pendingMessageLimitStrategy>
                 </policyEntry>
                 <policyEntry queue=">" producerFlowControl="true" memoryLimit="1mb">
                   <!-- Use VM cursor for better latency
