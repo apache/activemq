@@ -44,6 +44,7 @@ import org.apache.activemq.command.CommandTypes;
 import org.apache.activemq.command.ConnectionError;
 import org.apache.activemq.command.ConnectionId;
 import org.apache.activemq.command.ConnectionInfo;
+import org.apache.activemq.command.ConsumerControl;
 import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.DestinationInfo;
@@ -485,13 +486,13 @@ public class ProtocolConverter {
             throw new ProtocolException("SUBSCRIBE received without a subscription id!");
         }
 
-        ActiveMQDestination actualDest = translator.convertDestination(this, destination, true);
+        final ActiveMQDestination actualDest = translator.convertDestination(this, destination, true);
 
         if (actualDest == null) {
             throw new ProtocolException("Invalid Destination.");
         }
 
-        ConsumerId id = new ConsumerId(sessionId, consumerIdGenerator.getNextSequenceId());
+        final ConsumerId id = new ConsumerId(sessionId, consumerIdGenerator.getNextSequenceId());
         ConsumerInfo consumerInfo = new ConsumerInfo(id);
         consumerInfo.setPrefetchSize(1000);
         consumerInfo.setDispatchAsync(true);
@@ -540,9 +541,45 @@ public class ProtocolConverter {
             subscriptions.put(subscriptionId, stompSubscription);
         }
 
-        // dispatch can beat the receipt so send it early
-        sendReceipt(command);
-        sendToActiveMQ(consumerInfo, null);
+        final String receiptId = command.getHeaders().get(Stomp.Headers.RECEIPT_REQUESTED);
+        if (receiptId != null && consumerInfo.getPrefetchSize() > 0) {
+
+            final StompFrame cmd = command;
+            final int prefetch = consumerInfo.getPrefetchSize();
+
+            // Since dispatch could beat the receipt we set prefetch to zero to start and then
+            // once we've sent our Receipt we are safe to turn on dispatch if the response isn't
+            // an error message.
+            consumerInfo.setPrefetchSize(0);
+
+            final ResponseHandler handler = new ResponseHandler() {
+                public void onResponse(ProtocolConverter converter, Response response) throws IOException {
+                    if (response.isException()) {
+                        // Generally a command can fail.. but that does not invalidate the connection.
+                        // We report back the failure but we don't close the connection.
+                        Throwable exception = ((ExceptionResponse)response).getException();
+                        handleException(exception, cmd);
+                    } else {
+                        StompFrame sc = new StompFrame();
+                        sc.setAction(Stomp.Responses.RECEIPT);
+                        sc.setHeaders(new HashMap<String, String>(1));
+                        sc.getHeaders().put(Stomp.Headers.Response.RECEIPT_ID, receiptId);
+                        stompTransport.sendToStomp(sc);
+
+                        ConsumerControl control = new ConsumerControl();
+                        control.setPrefetch(prefetch);
+                        control.setDestination(actualDest);
+                        control.setConsumerId(id);
+
+                        sendToActiveMQ(control, null);
+                    }
+                }
+            };
+
+            sendToActiveMQ(consumerInfo, handler);
+        } else {
+            sendToActiveMQ(consumerInfo, createResponseHandler(command));
+        }
     }
 
     protected void onStompUnsubscribe(StompFrame command) throws ProtocolException {

@@ -194,7 +194,6 @@ public class StompTest extends CombinationTestSupport {
         String f = stompConnection.receiveFrame();
         assertTrue(f.startsWith("CONNECTED"));
         assertTrue(f.indexOf("response-id:1") >= 0);
-
     }
 
     public void testSendMessage() throws Exception {
@@ -383,7 +382,6 @@ public class StompTest extends CombinationTestSupport {
         stompConnection.sendFrame(frame);
     }
 
-
     public void testSubscriptionReceipts() throws Exception {
         final int done = 500;
         int count = 0;
@@ -392,7 +390,6 @@ public class StompTest extends CombinationTestSupport {
         URI connectUri = new URI(bindAddress);
 
         do {
-
             StompConnection sender = new StompConnection();
             sender.open(createSocket(connectUri));
             String frame = "CONNECT\n" + "login:system\n" + "passcode:manager\n\n" + Stomp.NULL;
@@ -434,7 +431,6 @@ public class StompTest extends CombinationTestSupport {
 
             receiver.disconnect();
         } while (count < done);
-
     }
 
     public void testSubscribeWithAutoAck() throws Exception {
@@ -569,7 +565,6 @@ public class StompTest extends CombinationTestSupport {
 
         frame = stompConnection.receiveFrame();
         assertTrue(frame.startsWith("MESSAGE"));
-
 
         frame = "DISCONNECT\n" + "\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
@@ -756,7 +751,6 @@ public class StompTest extends CombinationTestSupport {
         sendMessage(getName());
         StompFrame msg = stompConnection.receive();
 
-
         assertTrue(msg.getAction().equals("MESSAGE"));
 
         HashMap<String, String> ackHeaders = new HashMap<String, String>();
@@ -938,9 +932,43 @@ public class StompTest extends CombinationTestSupport {
         frame = "SUBSCRIBE\n" + "destination:/queue/USERS." + getQueueName() + "\n" + "ack:auto\n\n" + Stomp.NULL;
 
         stompConnection.sendFrame(frame);
-        String f = stompConnection.receiveFrame();
-        assertTrue(f.startsWith("ERROR"));
+        frame = stompConnection.receiveFrame();
+        assertTrue(frame.startsWith("ERROR"));
+    }
 
+    public void testSubscribeWithReceiptNotAuthorized() throws Exception {
+
+        String frame = "CONNECT\n" + "login:guest\n" + "passcode:password\n\n" + Stomp.NULL;
+        stompConnection.sendFrame(frame);
+
+        frame = stompConnection.receiveFrame();
+        assertTrue(frame.startsWith("CONNECTED"));
+
+        frame = "SUBSCRIBE\n" + "destination:/queue/USERS." + getQueueName() + "\n" +
+                "ack:auto\n" + "receipt:1\n" + "\n" + Stomp.NULL;
+
+        stompConnection.sendFrame(frame);
+        frame = stompConnection.receiveFrame();
+        assertTrue(frame.startsWith("ERROR"));
+        assertTrue("Error Frame did not contain receipt-id", frame.indexOf(Stomp.Headers.Response.RECEIPT_ID) >= 0);
+    }
+
+    public void testSubscribeWithInvalidSelector() throws Exception {
+
+        String frame = "CONNECT\n" + "login:system\n" + "passcode:manager\n\n" + Stomp.NULL;
+        stompConnection.sendFrame(frame);
+
+        frame = stompConnection.receiveFrame();
+        assertTrue(frame.startsWith("CONNECTED"));
+
+        frame = "SUBSCRIBE\n" + "destination:/queue/" + getQueueName() + "\n" + "selector:foo.bar = 1\n" + "ack:auto\n\n" + Stomp.NULL;
+
+        stompConnection.sendFrame(frame);
+        frame = stompConnection.receiveFrame();
+        assertTrue(frame.startsWith("ERROR"));
+
+        frame = "DISCONNECT\n" + "\n\n" + Stomp.NULL;
+        stompConnection.sendFrame(frame);
     }
 
     public void testTransformationUnknownTranslator() throws Exception {
@@ -1990,7 +2018,6 @@ public class StompTest extends CombinationTestSupport {
         frame = stompConnection.receiveFrame();
         assertTrue("Receipt Frame: " + frame, frame.trim().startsWith("RECEIPT"));
         assertTrue("Receipt contains correct receipt-id " + frame, frame.indexOf(Stomp.Headers.Response.RECEIPT_ID) >= 0);
-
 
         // The subscription should receive a response with the ReplyTo property set.
         StompFrame received = responder.receive();
