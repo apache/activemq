@@ -83,16 +83,16 @@ import org.apache.activemq.util.MarshallingSupport;
  * <CODE>String</CODE> representation of the primitive. <p/>
  * <P>
  * A value written as the row type can be read as the column type. <p/>
- * 
+ *
  * <PRE>
  *  | | boolean byte short char int long float double String byte[]
  * |----------------------------------------------------------------------
  * |boolean | X X |byte | X X X X X |short | X X X X |char | X X |int | X X X
  * |long | X X |float | X X X |double | X X |String | X X X X X X X X |byte[] |
  * X |----------------------------------------------------------------------
- * 
+ *
  * </PRE>
- * 
+ *
  * <p/>
  * <P>
  * Attempting to read a null value as a primitive type must be treated as
@@ -100,7 +100,7 @@ import org.apache.activemq.util.MarshallingSupport;
  * conversion method with a null value. Since <code>char</code> does not
  * support a <code>String</code> conversion, attempting to read a null value
  * as a <code>char</code> must throw a <code>NullPointerException</code>.
- * 
+ *
  * @openwire:marshaller code="27"
  * @see javax.jms.Session#createStreamMessage()
  * @see javax.jms.BytesMessage
@@ -137,7 +137,8 @@ public class ActiveMQStreamMessage extends ActiveMQMessage implements StreamMess
         storeContent();
     }
 
-    private void storeContent() {
+    @Override
+    public void storeContent() {
         if (dataOut != null) {
             try {
                 dataOut.close();
@@ -165,7 +166,7 @@ public class ActiveMQStreamMessage extends ActiveMQMessage implements StreamMess
      * If this message body was read-only, calling this method leaves the
      * message body in the same state as an empty body in a newly created
      * message.
-     * 
+     *
      * @throws JMSException if the JMS provider fails to clear the message body
      *                 due to some internal error.
      */
@@ -180,7 +181,7 @@ public class ActiveMQStreamMessage extends ActiveMQMessage implements StreamMess
 
     /**
      * Reads a <code>boolean</code> from the stream message.
-     * 
+     *
      * @return the <code>boolean</code> value read
      * @throws JMSException if the JMS provider fails to read the message due to
      *                 some internal error.
@@ -221,7 +222,7 @@ public class ActiveMQStreamMessage extends ActiveMQMessage implements StreamMess
 
     /**
      * Reads a <code>byte</code> value from the stream message.
-     * 
+     *
      * @return the next byte from the stream message as a 8-bit
      *         <code>byte</code>
      * @throws JMSException if the JMS provider fails to read the message due to
@@ -271,7 +272,7 @@ public class ActiveMQStreamMessage extends ActiveMQMessage implements StreamMess
 
     /**
      * Reads a 16-bit integer from the stream message.
-     * 
+     *
      * @return a 16-bit integer from the stream message
      * @throws JMSException if the JMS provider fails to read the message due to
      *                 some internal error.
@@ -324,7 +325,7 @@ public class ActiveMQStreamMessage extends ActiveMQMessage implements StreamMess
 
     /**
      * Reads a Unicode character value from the stream message.
-     * 
+     *
      * @return a Unicode character from the stream message
      * @throws JMSException if the JMS provider fails to read the message due to
      *                 some internal error.
@@ -370,7 +371,7 @@ public class ActiveMQStreamMessage extends ActiveMQMessage implements StreamMess
 
     /**
      * Reads a 32-bit integer from the stream message.
-     * 
+     *
      * @return a 32-bit integer value from the stream message, interpreted as an
      *         <code>int</code>
      * @throws JMSException if the JMS provider fails to read the message due to
@@ -426,7 +427,7 @@ public class ActiveMQStreamMessage extends ActiveMQMessage implements StreamMess
 
     /**
      * Reads a 64-bit integer from the stream message.
-     * 
+     *
      * @return a 64-bit integer value from the stream message, interpreted as a
      *         <code>long</code>
      * @throws JMSException if the JMS provider fails to read the message due to
@@ -485,7 +486,7 @@ public class ActiveMQStreamMessage extends ActiveMQMessage implements StreamMess
 
     /**
      * Reads a <code>float</code> from the stream message.
-     * 
+     *
      * @return a <code>float</code> value from the stream message
      * @throws JMSException if the JMS provider fails to read the message due to
      *                 some internal error.
@@ -533,7 +534,7 @@ public class ActiveMQStreamMessage extends ActiveMQMessage implements StreamMess
 
     /**
      * Reads a <code>double</code> from the stream message.
-     * 
+     *
      * @return a <code>double</code> value from the stream message
      * @throws JMSException if the JMS provider fails to read the message due to
      *                 some internal error.
@@ -585,7 +586,7 @@ public class ActiveMQStreamMessage extends ActiveMQMessage implements StreamMess
 
     /**
      * Reads a <CODE>String</CODE> from the stream message.
-     * 
+     *
      * @return a Unicode string from the stream message
      * @throws JMSException if the JMS provider fails to read the message due to
      *                 some internal error.
@@ -682,7 +683,7 @@ public class ActiveMQStreamMessage extends ActiveMQMessage implements StreamMess
      * <P>
      * To read the byte field value into a new <CODE>byte[]</CODE> object, use
      * the <CODE>readObject</CODE> method.
-     * 
+     *
      * @param value the buffer into which the data is read
      * @return the total number of bytes read into the buffer, or -1 if there is
      *         no more data because the end of the byte field has been reached
@@ -755,7 +756,7 @@ public class ActiveMQStreamMessage extends ActiveMQMessage implements StreamMess
      * An attempt to call <CODE>readObject</CODE> to read a byte field value
      * into a new <CODE>byte[]</CODE> object before the full value of the byte
      * field has been read will throw a <CODE>MessageFormatException</CODE>.
-     * 
+     *
      * @return a Java object from the stream message, in objectified format (for
      *         example, if the object was written as an <CODE>int</CODE>, an
      *         <CODE>Integer</CODE> is returned)
@@ -841,7 +842,7 @@ public class ActiveMQStreamMessage extends ActiveMQMessage implements StreamMess
      * Writes a <code>boolean</code> to the stream message. The value
      * <code>true</code> is written as the value <code>(byte)1</code>; the
      * value <code>false</code> is written as the value <code>(byte)0</code>.
-     * 
+     *
      * @param value the <code>boolean</code> value to be written
      * @throws JMSException if the JMS provider fails to write the message due
      *                 to some internal error.
@@ -859,7 +860,7 @@ public class ActiveMQStreamMessage extends ActiveMQMessage implements StreamMess
 
     /**
      * Writes a <code>byte</code> to the stream message.
-     * 
+     *
      * @param value the <code>byte</code> value to be written
      * @throws JMSException if the JMS provider fails to write the message due
      *                 to some internal error.
@@ -877,7 +878,7 @@ public class ActiveMQStreamMessage extends ActiveMQMessage implements StreamMess
 
     /**
      * Writes a <code>short</code> to the stream message.
-     * 
+     *
      * @param value the <code>short</code> value to be written
      * @throws JMSException if the JMS provider fails to write the message due
      *                 to some internal error.
@@ -895,7 +896,7 @@ public class ActiveMQStreamMessage extends ActiveMQMessage implements StreamMess
 
     /**
      * Writes a <code>char</code> to the stream message.
-     * 
+     *
      * @param value the <code>char</code> value to be written
      * @throws JMSException if the JMS provider fails to write the message due
      *                 to some internal error.
@@ -913,7 +914,7 @@ public class ActiveMQStreamMessage extends ActiveMQMessage implements StreamMess
 
     /**
      * Writes an <code>int</code> to the stream message.
-     * 
+     *
      * @param value the <code>int</code> value to be written
      * @throws JMSException if the JMS provider fails to write the message due
      *                 to some internal error.
@@ -931,7 +932,7 @@ public class ActiveMQStreamMessage extends ActiveMQMessage implements StreamMess
 
     /**
      * Writes a <code>long</code> to the stream message.
-     * 
+     *
      * @param value the <code>long</code> value to be written
      * @throws JMSException if the JMS provider fails to write the message due
      *                 to some internal error.
@@ -949,7 +950,7 @@ public class ActiveMQStreamMessage extends ActiveMQMessage implements StreamMess
 
     /**
      * Writes a <code>float</code> to the stream message.
-     * 
+     *
      * @param value the <code>float</code> value to be written
      * @throws JMSException if the JMS provider fails to write the message due
      *                 to some internal error.
@@ -967,7 +968,7 @@ public class ActiveMQStreamMessage extends ActiveMQMessage implements StreamMess
 
     /**
      * Writes a <code>double</code> to the stream message.
-     * 
+     *
      * @param value the <code>double</code> value to be written
      * @throws JMSException if the JMS provider fails to write the message due
      *                 to some internal error.
@@ -985,7 +986,7 @@ public class ActiveMQStreamMessage extends ActiveMQMessage implements StreamMess
 
     /**
      * Writes a <code>String</code> to the stream message.
-     * 
+     *
      * @param value the <code>String</code> value to be written
      * @throws JMSException if the JMS provider fails to write the message due
      *                 to some internal error.
@@ -1011,7 +1012,7 @@ public class ActiveMQStreamMessage extends ActiveMQMessage implements StreamMess
      * The byte array <code>value</code> is written to the message as a byte
      * array field. Consecutively written byte array fields are treated as two
      * distinct fields when the fields are read.
-     * 
+     *
      * @param value the byte array value to be written
      * @throws JMSException if the JMS provider fails to write the message due
      *                 to some internal error.
@@ -1029,7 +1030,7 @@ public class ActiveMQStreamMessage extends ActiveMQMessage implements StreamMess
      * The a portion of the byte array <code>value</code> is written to the
      * message as a byte array field. Consecutively written byte array fields
      * are treated as two distinct fields when the fields are read.
-     * 
+     *
      * @param value the byte array value to be written
      * @param offset the initial offset within the byte array
      * @param length the number of bytes to use
@@ -1053,7 +1054,7 @@ public class ActiveMQStreamMessage extends ActiveMQMessage implements StreamMess
      * This method works only for the objectified primitive object types (<code>Integer</code>,
      * <code>Double</code>, <code>Long</code>&nbsp;...),
      * <code>String</code> objects, and byte arrays.
-     * 
+     *
      * @param value the Java object to be written
      * @throws JMSException if the JMS provider fails to write the message due
      *                 to some internal error.
@@ -1097,7 +1098,7 @@ public class ActiveMQStreamMessage extends ActiveMQMessage implements StreamMess
     /**
      * Puts the message body in read-only mode and repositions the stream of
      * bytes to the beginning.
-     * 
+     *
      * @throws JMSException if an internal error occurs
      */
 
@@ -1144,6 +1145,12 @@ public class ActiveMQStreamMessage extends ActiveMQMessage implements StreamMess
             }
             this.dataIn = new DataInputStream(is);
         }
+    }
+
+    @Override
+    public void compress() throws IOException {
+        storeContent();
+        super.compress();
     }
 
     public String toString() {

@@ -105,20 +105,28 @@ public class ActiveMQTextMessage extends ActiveMQMessage implements TextMessage 
 
     public void beforeMarshall(WireFormat wireFormat) throws IOException {
         super.beforeMarshall(wireFormat);
+        storeContent();
+    }
 
-        ByteSequence content = getContent();
-        if (content == null && text != null) {
-            ByteArrayOutputStream bytesOut = new ByteArrayOutputStream();
-            OutputStream os = bytesOut;
-            ActiveMQConnection connection = getConnection();
-            if (connection != null && connection.isUseCompression()) {
-                compressed = true;
-                os = new DeflaterOutputStream(os);
+    @Override
+    public void storeContent() {
+        try {
+            ByteSequence content = getContent();
+            if (content == null && text != null) {
+                ByteArrayOutputStream bytesOut = new ByteArrayOutputStream();
+                OutputStream os = bytesOut;
+                ActiveMQConnection connection = getConnection();
+                if (connection != null && connection.isUseCompression()) {
+                    compressed = true;
+                    os = new DeflaterOutputStream(os);
+                }
+                DataOutputStream dataOut = new DataOutputStream(os);
+                MarshallingSupport.writeUTF8(dataOut, this.text);
+                dataOut.close();
+                setContent(bytesOut.toByteSequence());
             }
-            DataOutputStream dataOut = new DataOutputStream(os);
-            MarshallingSupport.writeUTF8(dataOut, this.text);
-            dataOut.close();
-            setContent(bytesOut.toByteSequence());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 

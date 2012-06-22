@@ -118,7 +118,8 @@ public class ActiveMQBytesMessage extends ActiveMQMessage implements BytesMessag
         storeContent();
     }
 
-    private void storeContent() {
+    @Override
+    public void storeContent() {
         try {
             if (dataOut != null) {
                 dataOut.close();
@@ -852,5 +853,23 @@ public class ActiveMQBytesMessage extends ActiveMQMessage implements BytesMessag
 
     public String toString() {
         return super.toString() + " ActiveMQBytesMessage{ " + "bytesOut = " + bytesOut + ", dataOut = " + dataOut + ", dataIn = " + dataIn + " }";
+    }
+
+    @Override
+    protected void doCompress() throws IOException {
+        compressed = true;
+        ByteSequence bytes = getContent();
+        int length = bytes.getLength();
+        ByteArrayOutputStream bytesOut = new ByteArrayOutputStream();
+        bytesOut.write(new byte[4]);
+        DeflaterOutputStream os = new DeflaterOutputStream(bytesOut);
+        DataOutputStream dataOut = new DataOutputStream(os);
+        dataOut.write(bytes.data, bytes.offset, bytes.length);
+        dataOut.flush();
+        dataOut.close();
+        bytes = bytesOut.toByteSequence();
+        ByteSequenceData.writeIntBig(bytes, length);
+        bytes.offset = 0;
+        setContent(bytes);
     }
 }

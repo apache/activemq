@@ -20,15 +20,16 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.Enumeration;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Vector;
+
 import javax.jms.DeliveryMode;
 import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.MessageFormatException;
 import javax.jms.MessageNotWriteableException;
+
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ScheduledMessage;
 import org.apache.activemq.broker.scheduler.CronParser;
@@ -39,7 +40,7 @@ import org.apache.activemq.util.JMSExceptionSupport;
 import org.apache.activemq.util.TypeConversionSupport;
 
 /**
- * 
+ *
  * @openwire:marshaller code="23"
  */
 public class ActiveMQMessage extends Message implements org.apache.activemq.Message, ScheduledMessage {
@@ -52,7 +53,6 @@ public class ActiveMQMessage extends Message implements org.apache.activemq.Mess
     public byte getDataStructureType() {
         return DATA_STRUCTURE_TYPE;
     }
-
 
     @Override
     public Message copy() {
@@ -280,6 +280,7 @@ public class ActiveMQMessage extends Message implements org.apache.activemq.Mess
         }
     }
 
+    @SuppressWarnings("rawtypes")
     public Enumeration getPropertyNames() throws JMSException {
         try {
             Vector<String> result = new Vector<String>(this.getProperties().keySet());
@@ -294,6 +295,7 @@ public class ActiveMQMessage extends Message implements org.apache.activemq.Mess
      * @return  Enumeration of all property names on this message
      * @throws JMSException
      */
+    @SuppressWarnings("rawtypes")
     public Enumeration getAllPropertyNames() throws JMSException {
         try {
             Vector<String> result = new Vector<String>(this.getProperties().keySet());
@@ -305,7 +307,6 @@ public class ActiveMQMessage extends Message implements org.apache.activemq.Mess
     }
 
     interface PropertySetter {
-
         void set(Message message, Object value) throws MessageFormatException;
     }
 
@@ -445,10 +446,8 @@ public class ActiveMQMessage extends Message implements org.apache.activemq.Mess
         }
     }
 
-    public void setProperties(Map properties) throws JMSException {
-        for (Iterator iter = properties.entrySet().iterator(); iter.hasNext();) {
-            Map.Entry entry = (Map.Entry) iter.next();
-
+    public void setProperties(Map<String, ?> properties) throws JMSException {
+        for (Map.Entry<String, ?> entry : properties.entrySet()) {
             // Lets use the object property method as we may contain standard
             // extension headers like JMSXGroupID
             setObjectProperty((String) entry.getKey(), entry.getValue());
@@ -473,7 +472,7 @@ public class ActiveMQMessage extends Message implements org.apache.activemq.Mess
             }
         }
     }
-    
+
     protected void  checkValidScheduled(String name, Object value) throws MessageFormatException {
         if (AMQ_SCHEDULED_DELAY.equals(name) || AMQ_SCHEDULED_PERIOD.equals(name) || AMQ_SCHEDULED_REPEAT.equals(name)) {
             if (value instanceof Long == false && value instanceof Integer == false) {
@@ -484,7 +483,7 @@ public class ActiveMQMessage extends Message implements org.apache.activemq.Mess
             CronParser.validate(value.toString());
         }
     }
-    
+
     protected Object  convertScheduled(String name, Object value) throws MessageFormatException {
         Object result = value;
         if (AMQ_SCHEDULED_DELAY.equals(name)){
@@ -679,5 +678,9 @@ public class ActiveMQMessage extends Message implements org.apache.activemq.Mess
 
     public Response visit(CommandVisitor visitor) throws Exception {
         return visitor.processMessage(this);
+    }
+
+    @Override
+    public void storeContent() {
     }
 }

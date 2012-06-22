@@ -35,7 +35,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * 
+ *
  */
 public class ActiveMQMessageTest extends TestCase {
 
@@ -54,10 +54,10 @@ public class ActiveMQMessageTest extends TestCase {
     private int jmsPriority;
     private long jmsTimestamp;
     private long[] consumerIDs;
-    
+
     /**
      * Constructor for ActiveMQMessageTest.
-     * 
+     *
      * @param name
      */
     public ActiveMQMessageTest(String name) {
@@ -87,7 +87,6 @@ public class ActiveMQMessageTest extends TestCase {
         for (int i = 0; i < this.consumerIDs.length; i++) {
             this.consumerIDs[i] = i;
         }
-
     }
 
     /*
@@ -126,7 +125,6 @@ public class ActiveMQMessageTest extends TestCase {
     public void testSetToForeignJMSID() throws Exception {
         ActiveMQMessage msg = new ActiveMQMessage();
         msg.setJMSMessageID("ID:EMS-SERVER.8B443C380083:429");
-
     }
 
     /*
@@ -269,7 +267,7 @@ public class ActiveMQMessageTest extends TestCase {
         assertEquals(0, msg.getJMSPriority());
 
         msg.setJMSPriority(90);
-        assertEquals(9, msg.getJMSPriority());                
+        assertEquals(9, msg.getJMSPriority());
     }
 
     public void testClearProperties() throws JMSException {
@@ -356,6 +354,7 @@ public class ActiveMQMessageTest extends TestCase {
         assertTrue(((Float)msg.getObjectProperty(name)).floatValue() == 1.3f);
     }
 
+    @SuppressWarnings("rawtypes")
     public void testGetPropertyNames() throws JMSException {
         ActiveMQMessage msg = new ActiveMQMessage();
         String name1 = "floatProperty";
@@ -379,6 +378,7 @@ public class ActiveMQMessageTest extends TestCase {
         assertFalse("prop name4 not found", found3);
     }
 
+    @SuppressWarnings("rawtypes")
     public void testGetAllPropertyNames() throws JMSException {
         ActiveMQMessage msg = new ActiveMQMessage();
         String name1 = "floatProperty";
@@ -449,7 +449,11 @@ public class ActiveMQMessageTest extends TestCase {
             }
 
             @Override
-            public void clearBody() throws JMSException {                
+            public void clearBody() throws JMSException {
+            }
+
+            @Override
+            public void storeContent() {
             }
         };
 
@@ -465,7 +469,7 @@ public class ActiveMQMessageTest extends TestCase {
 
         msg.beforeMarshall(new OpenWireFormat());
 
-        Map properties = msg.getProperties();
+        Map<String, Object> properties = msg.getProperties();
         assertEquals(properties.get("stringProperty"), "string");
         assertEquals(((Byte)properties.get("byteProperty")).byteValue(), 1);
         assertEquals(((Short)properties.get("shortProperty")).shortValue(), 1);
@@ -475,7 +479,6 @@ public class ActiveMQMessageTest extends TestCase {
         assertEquals(((Double)properties.get("doubleProperty")).doubleValue(), 1.1, 0);
         assertEquals(((Boolean)properties.get("booleanProperty")).booleanValue(), true);
         assertNull(properties.get("nullProperty"));
-
     }
 
     public void testSetNullProperty() throws JMSException {
@@ -942,5 +945,4 @@ public class ActiveMQMessageTest extends TestCase {
         msg.setJMSExpiration(System.currentTimeMillis() + 10000);
         assertFalse(msg.isExpired());
     }
-
 }

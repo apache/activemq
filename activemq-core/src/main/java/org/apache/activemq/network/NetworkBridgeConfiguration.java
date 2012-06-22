@@ -16,16 +16,16 @@
  */
 package org.apache.activemq.network;
 
+import java.util.List;
+
 import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ConsumerInfo;
 
-import java.util.List;
-
 /**
  * Configuration for a NetworkBridge
- * 
- * 
+ *
+ *
  */
 public class NetworkBridgeConfiguration {
     private boolean conduitSubscriptions = true;
@@ -43,7 +43,7 @@ public class NetworkBridgeConfiguration {
     private String password;
     private String destinationFilter = null;
     private String name = "NC";
-    
+
     private List<ActiveMQDestination> excludedDestinations;
     private List<ActiveMQDestination> dynamicallyIncludedDestinations;
     private List<ActiveMQDestination> staticallyIncludedDestinations;
@@ -53,6 +53,7 @@ public class NetworkBridgeConfiguration {
 
     private boolean alwaysSyncSend = false;
     private boolean staticBridge = false;
+    private boolean useCompression = false;
 
     /**
      * @return the conduitSubscriptions
@@ -264,41 +265,41 @@ public class NetworkBridgeConfiguration {
         this.name = name;
     }
 
-	public List<ActiveMQDestination> getExcludedDestinations() {
-		return excludedDestinations;
-	}
+    public List<ActiveMQDestination> getExcludedDestinations() {
+        return excludedDestinations;
+    }
 
-	public void setExcludedDestinations(
-			List<ActiveMQDestination> excludedDestinations) {
-		this.excludedDestinations = excludedDestinations;
-	}
+    public void setExcludedDestinations(
+            List<ActiveMQDestination> excludedDestinations) {
+        this.excludedDestinations = excludedDestinations;
+    }
 
-	public List<ActiveMQDestination> getDynamicallyIncludedDestinations() {
-		return dynamicallyIncludedDestinations;
-	}
+    public List<ActiveMQDestination> getDynamicallyIncludedDestinations() {
+        return dynamicallyIncludedDestinations;
+    }
 
-	public void setDynamicallyIncludedDestinations(
-			List<ActiveMQDestination> dynamicallyIncludedDestinations) {
-		this.dynamicallyIncludedDestinations = dynamicallyIncludedDestinations;
-	}
+    public void setDynamicallyIncludedDestinations(
+            List<ActiveMQDestination> dynamicallyIncludedDestinations) {
+        this.dynamicallyIncludedDestinations = dynamicallyIncludedDestinations;
+    }
 
-	public List<ActiveMQDestination> getStaticallyIncludedDestinations() {
-		return staticallyIncludedDestinations;
-	}
+    public List<ActiveMQDestination> getStaticallyIncludedDestinations() {
+        return staticallyIncludedDestinations;
+    }
 
-	public void setStaticallyIncludedDestinations(
-			List<ActiveMQDestination> staticallyIncludedDestinations) {
-		this.staticallyIncludedDestinations = staticallyIncludedDestinations;
-	}
-	
-    
+    public void setStaticallyIncludedDestinations(
+            List<ActiveMQDestination> staticallyIncludedDestinations) {
+        this.staticallyIncludedDestinations = staticallyIncludedDestinations;
+    }
+
+
 
     public boolean isSuppressDuplicateQueueSubscriptions() {
         return suppressDuplicateQueueSubscriptions;
     }
-    
+
     /**
-     * 
+     *
      * @param val if true, duplicate network queue subscriptions (in a cyclic network) will be suppressed
      */
     public void setSuppressDuplicateQueueSubscriptions(boolean val) {
@@ -310,13 +311,13 @@ public class NetworkBridgeConfiguration {
     }
 
     /**
-     * 
+     *
      * @param val if true, duplicate network topic subscriptions (in a cyclic network) will be suppressed
      */
     public void setSuppressDuplicateTopicSubscriptions(boolean val) {
         suppressDuplicateTopicSubscriptions  = val;
     }
-    
+
     /**
      * @return the brokerURL
      */
@@ -367,5 +368,20 @@ public class NetworkBridgeConfiguration {
 
     public void setStaticBridge(boolean staticBridge) {
         this.staticBridge = staticBridge;
+    }
+
+    /**
+     * @param useCompression
+     *      True if the Network should enforce compression for messages sent.
+     */
+    public void setUseCompression(boolean useCompression) {
+        this.useCompression = useCompression;
+    }
+
+    /**
+     * @return the useCompression setting, true if message will be compressed on send.
+     */
+    public boolean isUseCompression() {
+        return useCompression;
     }
 }

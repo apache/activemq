@@ -48,10 +48,10 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Forwards all messages from the local broker to the remote broker.
- * 
+ *
  * @org.apache.xbean.XBean
- * 
- * 
+ *
+ *
  */
 public class ForwardingBridge implements Service {
 
@@ -77,6 +77,7 @@ public class ForwardingBridge implements Service {
     private boolean dispatchAsync;
     private String destinationFilter = ">";
     private NetworkBridgeListener bridgeFailedListener;
+    private boolean useCompression = false;
 
     public ForwardingBridge(Transport localBroker, Transport remoteBroker) {
         this.localBroker = localBroker;
@@ -232,11 +233,13 @@ public class ForwardingBridge implements Service {
                 }
                 message.setTransactionId(null);
 
+                if (isUseCompression()) {
+                    message.compress();
+                }
+
                 if (!message.isResponseRequired()) {
-                    // If the message was originally sent using async send, we
-                    // will preserve that QOS
-                    // by bridging it using an async send (small chance of
-                    // message loss).
+                    // If the message was originally sent using async send, we will preserve that
+                    // QOS by bridging it using an async send (small chance of message loss).
                     remoteBroker.oneway(message);
                     dequeueCounter.incrementAndGet();
                     localBroker.oneway(new MessageAck(md, MessageAck.STANDARD_ACK_TYPE, 1));
@@ -380,6 +383,21 @@ public class ForwardingBridge implements Service {
 
     public long getEnqueueCounter() {
         return enqueueCounter.get();
+    }
+
+    /**
+     * @param useCompression
+     *      True if forwarded Messages should have their bodies compressed.
+     */
+    public void setUseCompression(boolean useCompression) {
+        this.useCompression = useCompression;
+    }
+
+    /**
+     * @return the vale of the useCompression setting, true if forwarded messages will be compressed.
+     */
+    public boolean isUseCompression() {
+        return useCompression;
     }
 
 }

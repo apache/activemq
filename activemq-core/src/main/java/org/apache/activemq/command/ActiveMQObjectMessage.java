@@ -53,7 +53,7 @@ import org.apache.activemq.wireformat.WireFormat;
  * <CODE>MessageNotWriteableException</CODE> is thrown. If
  * <CODE>clearBody</CODE> is called, the message can now be both read from and
  * written to.
- * 
+ *
  * @openwire:marshaller code="26"
  * @see javax.jms.Session#createObjectMessage()
  * @see javax.jms.Session#createObjectMessage(Serializable)
@@ -64,10 +64,10 @@ import org.apache.activemq.wireformat.WireFormat;
  * @see javax.jms.TextMessage
  */
 public class ActiveMQObjectMessage extends ActiveMQMessage implements ObjectMessage {
-    
+
     // TODO: verify classloader
     public static final byte DATA_STRUCTURE_TYPE = CommandTypes.ACTIVEMQ_OBJECT_MESSAGE;
-    static final ClassLoader ACTIVEMQ_CLASSLOADER = ActiveMQObjectMessage.class.getClassLoader(); 
+    static final ClassLoader ACTIVEMQ_CLASSLOADER = ActiveMQObjectMessage.class.getClassLoader();
 
     protected transient Serializable object;
 
@@ -86,9 +86,10 @@ public class ActiveMQObjectMessage extends ActiveMQMessage implements ObjectMess
             copy.object = object;
         }
         super.copy(copy);
-        
+
     }
 
+    @Override
     public void storeContent() {
         ByteSequence bodyAsBytes = getContent();
         if (bodyAsBytes == null && object != null) {
@@ -128,7 +129,7 @@ public class ActiveMQObjectMessage extends ActiveMQMessage implements ObjectMess
      * If this message body was read-only, calling this method leaves the
      * message body in the same state as an empty body in a newly created
      * message.
-     * 
+     *
      * @throws JMSException if the JMS provider fails to clear the message body
      *                 due to some internal error.
      */
@@ -144,7 +145,7 @@ public class ActiveMQObjectMessage extends ActiveMQMessage implements ObjectMess
      * snapshot of the object at the time <CODE>setObject()</CODE> is called;
      * subsequent modifications of the object will have no effect on the
      * <CODE>ObjectMessage</CODE> body.
-     * 
+     *
      * @param newObject the message's data
      * @throws JMSException if the JMS provider fails to set the object due to
      *                 some internal error.
@@ -166,7 +167,7 @@ public class ActiveMQObjectMessage extends ActiveMQMessage implements ObjectMess
     /**
      * Gets the serializable object containing this message's data. The default
      * value is null.
-     * 
+     *
      * @return the serializable object containing this message's data
      * @throws JMSException
      */
@@ -212,6 +213,12 @@ public class ActiveMQObjectMessage extends ActiveMQMessage implements ObjectMess
         // lets force the object to be deserialized again - as we could have
         // changed the object
         object = null;
+    }
+
+    @Override
+    public void compress() throws IOException {
+        storeContent();
+        super.compress();
     }
 
     public String toString() {

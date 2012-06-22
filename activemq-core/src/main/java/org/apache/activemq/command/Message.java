@@ -19,10 +19,14 @@ package org.apache.activemq.command;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.zip.DeflaterOutputStream;
+
 import javax.jms.JMSException;
+
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.broker.region.Destination;
@@ -94,6 +98,7 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
 
     public abstract Message copy();
     public abstract void clearBody() throws JMSException;
+    public abstract void storeContent();
 
     // useful to reduce the memory footprint of a persisted message
     public void clearMarshalledState() throws JMSException {
@@ -741,6 +746,25 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
 
     public boolean isDropped() {
         return false;
+    }
+
+    public void compress() throws IOException {
+        if (!isCompressed()) {
+            storeContent();
+            if (!isCompressed() && getContent() != null) {
+                doCompress();
+            }
+        }
+    }
+
+    protected void doCompress() throws IOException {
+        compressed = true;
+        ByteSequence bytes = getContent();
+        ByteArrayOutputStream bytesOut = new ByteArrayOutputStream();
+        OutputStream os = new DeflaterOutputStream(bytesOut);
+        os.write(bytes.data, bytes.offset, bytes.length);
+        os.close();
+        setContent(bytesOut.toByteSequence());
     }
 
     @Override

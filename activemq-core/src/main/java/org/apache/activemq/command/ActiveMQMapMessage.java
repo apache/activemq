@@ -131,7 +131,8 @@ public class ActiveMQMapMessage extends ActiveMQMessage implements MapMessage {
         map.clear();
     }
 
-    private void storeContent() {
+    @Override
+    public void storeContent() {
         try {
             if (getContent() == null && !map.isEmpty()) {
                 ByteArrayOutputStream bytesOut = new ByteArrayOutputStream();
@@ -739,6 +740,12 @@ public class ActiveMQMapMessage extends ActiveMQMessage implements MapMessage {
     private void initializeWriting() throws MessageNotWriteableException {
         checkReadOnlyBody();
         setContent(null);
+    }
+
+    @Override
+    public void compress() throws IOException {
+        storeContent();
+        super.compress();
     }
 
     public String toString() {

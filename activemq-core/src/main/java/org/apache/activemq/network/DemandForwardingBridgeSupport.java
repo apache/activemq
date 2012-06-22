@@ -666,7 +666,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
         }
     }
 
-    protected Message configureMessage(MessageDispatch md) {
+    protected Message configureMessage(MessageDispatch md) throws IOException {
         Message message = md.getMessage().copy();
         // Update the packet to show where it came from.
         message.setBrokerPath(appendToBrokerPath(message.getBrokerPath(), localBrokerPath));
@@ -676,6 +676,9 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
             message.setOriginalTransactionId(message.getTransactionId());
         }
         message.setTransactionId(null);
+        if (configuration.isUseCompression()) {
+            message.compress();
+        }
         return message;
     }
 
