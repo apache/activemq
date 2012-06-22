@@ -71,6 +71,14 @@ public abstract class Transaction {
         }
     }
 
+    public Synchronization findMatching(Synchronization r) {
+        int existing = synchronizations.indexOf(r);
+        if (existing != -1) {
+            return synchronizations.get(existing);
+        }
+        return null;
+    }
+
     public void removeSynchronization(Synchronization r) {
         synchronizations.remove(r);
     }

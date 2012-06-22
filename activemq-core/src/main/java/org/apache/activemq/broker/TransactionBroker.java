@@ -30,7 +30,6 @@ import javax.transaction.xa.XAException;
 import org.apache.activemq.ActiveMQMessageAudit;
 import org.apache.activemq.broker.jmx.ManagedRegionBroker;
 import org.apache.activemq.broker.region.Destination;
-import org.apache.activemq.broker.region.Queue;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.BaseCommand;
 import org.apache.activemq.command.ConnectionInfo;
@@ -139,17 +138,26 @@ public class TransactionBroker extends BrokerFilter {
     private void registerSync(Destination destination, Transaction transaction, BaseCommand command) {
         Synchronization sync = new PreparedDestinationCompletion(destination, command.isMessage());
         // ensure one per destination in the list
-        transaction.removeSynchronization(sync);
-        transaction.addSynchronization(sync);
+        Synchronization existing = transaction.findMatching(sync);
+        if (existing != null) {
+           ((PreparedDestinationCompletion)existing).incrementOpCount();
+        } else {
+            transaction.addSynchronization(sync);
+        }
     }
 
     static class PreparedDestinationCompletion extends Synchronization {
         final Destination destination;
         final boolean messageSend;
+        int opCount = 1;
         public PreparedDestinationCompletion(final Destination destination, boolean messageSend) {
             this.destination = destination;
             // rollback relevant to acks, commit to sends
             this.messageSend = messageSend;
+        }
+
+        public void incrementOpCount() {
+            opCount++;
         }
 
         @Override
@@ -179,9 +187,14 @@ public class TransactionBroker extends BrokerFilter {
         public void afterCommit() throws Exception {
             if (messageSend) {
                 destination.clearPendingMessages();
+                destination.getDestinationStatistics().getEnqueues().add(opCount);
+                destination.getDestinationStatistics().getMessages().add(opCount);
                 if (LOG.isDebugEnabled()) {
                     LOG.debug("cleared pending from afterCommit : " + destination);
                 }
+            } else {
+                destination.getDestinationStatistics().getDequeues().add(opCount);
+                destination.getDestinationStatistics().getMessages().subtract(opCount);
             }
         }
     }

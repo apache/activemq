@@ -354,6 +354,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
                 s.setLong(1, seq);
             } else {
                 byte[] xidVal = xid.getEncodedXidBytes();
+                xidVal[0] = '-';
                 setBinaryData(s, 1, xidVal);
                 s.setLong(2, seq);
             }

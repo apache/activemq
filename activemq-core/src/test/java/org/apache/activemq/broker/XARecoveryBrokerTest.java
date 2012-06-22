@@ -108,11 +108,13 @@ public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
         assertEquals("enqueue count does not see prepared", 0, destinationView.getQueueSize());
 
         TransactionId first = (TransactionId)dar.getData()[0];
+        int commitCount = 0;
         // via jmx, force outcome
         for (int i = 0; i < 4; i++) {
             RecoveredXATransactionViewMBean mbean =  getProxyToPreparedTransactionViewMBean((TransactionId)dar.getData()[i]);
             if (i%2==0) {
                 mbean.heuristicCommit();
+                commitCount++;
             } else {
                 mbean.heuristicRollback();
             }
@@ -123,6 +125,9 @@ public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
         assertNotNull(response);
         dar = (DataArrayResponse)response;
         assertEquals(0, dar.getData().length);
+
+        // verify messages available
+        assertEquals("enqueue count reflects outcome", commitCount, destinationView.getQueueSize());
 
         // verify mbeans gone
         try {
@@ -547,11 +552,20 @@ public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
         assertNull(m);
         assertNoMessagesLeft(connection);
 
+        // validate destination depth via jmx
+        DestinationViewMBean destinationView = getProxyToDestination(destinationList(destination)[0]);
+        assertEquals("enqueue count does not see prepared acks", 4, destinationView.getQueueSize());
+        assertEquals("enqueue count does not see prepared acks", 0, destinationView.getDequeueCount());
+
         connection.request(createCommitTransaction2Phase(connectionInfo, txid));
 
         // validate recovery complete
         dataArrayResponse = (DataArrayResponse)connection.request(recoverInfo);
         assertEquals("there are no prepared tx", 0, dataArrayResponse.getData().length);
+
+        assertEquals("enqueue count does not see commited acks", 0, destinationView.getQueueSize());
+        assertEquals("enqueue count does not see commited acks", 4, destinationView.getDequeueCount());
+
     }
 
     public void initCombosForTestTopicPersistentPreparedAcksNotLostOnRestart() {
