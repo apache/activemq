@@ -27,6 +27,7 @@ import javax.jms.MessageProducer;
 import javax.jms.Session;
 
 import junit.framework.TestCase;
+
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
@@ -81,7 +82,6 @@ public class TopicProducerFlowControlTest extends TestCase implements MessageLis
         broker.start();
         broker.waitUntilStarted();
     }
-
 
     protected void tearDown() throws Exception {
         broker.stop();
@@ -138,19 +138,17 @@ public class TopicProducerFlowControlTest extends TestCase implements MessageLis
 
         assertEquals("Didn't produce all messages", numMessagesToSend, produced.get());
         assertEquals("Didn't consume all messages", numMessagesToSend, consumed.get());
-
     }
 
     @Override
     public void onMessage(Message message) {
-        try {
-            Thread.sleep(1);
-        } catch (InterruptedException e) {
-        }
-
         long count = consumed.incrementAndGet();
         if (count % 100 == 0) {
             LOG.info("\tConsumed " + count + " messages");
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+            }
         }
     }
 }
