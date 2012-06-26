@@ -1078,6 +1078,120 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         assertTrue("Should find the connection's ManagedTransportConnection", found);
     }
 
+    public void testMoveMessagesToRetainOrder() throws Exception {
+        connection = connectionFactory.createConnection();
+        useConnection(connection);
+
+        ObjectName queueViewMBeanName = assertRegisteredObjectName(domain + ":Type=Queue,Destination=" + getDestinationString() + ",BrokerName=localhost");
+
+        QueueViewMBean queue = (QueueViewMBean)MBeanServerInvocationHandler.newProxyInstance(mbeanServer, queueViewMBeanName, QueueViewMBean.class, true);
+
+        String newDestination = getSecondDestinationString();
+        queue.moveMatchingMessagesTo("", newDestination);
+
+        queueViewMBeanName = assertRegisteredObjectName(domain + ":Type=Queue,Destination=" + newDestination + ",BrokerName=localhost");
+
+        queue = (QueueViewMBean)MBeanServerInvocationHandler.newProxyInstance(mbeanServer, queueViewMBeanName, QueueViewMBean.class, true);
+        int movedSize = MESSAGE_COUNT;
+        assertEquals("Unexpected number of messages ",movedSize,queue.getQueueSize());
+
+        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        Destination destination = session.createQueue(newDestination);
+        MessageConsumer consumer = session.createConsumer(destination);
+
+        int last = -1;
+        int current = -1;
+        Message message = null;
+        while ((message = consumer.receive(2000)) != null) {
+            if (message.propertyExists("counter")) {
+                current = message.getIntProperty("counter");
+                assertEquals(last, current - 1);
+                last = current;
+            }
+        }
+
+        // now lets remove them by selector
+        queue.removeMatchingMessages("");
+
+        assertEquals("Should have no more messages in the queue: " + queueViewMBeanName, 0, queue.getQueueSize());
+        assertEquals("dest has no memory usage", 0, queue.getMemoryPercentUsage());
+    }
+
+    public void testCopyMessagesToRetainOrder() throws Exception {
+        connection = connectionFactory.createConnection();
+        useConnection(connection);
+
+        ObjectName queueViewMBeanName = assertRegisteredObjectName(domain + ":Type=Queue,Destination=" + getDestinationString() + ",BrokerName=localhost");
+
+        QueueViewMBean queue = (QueueViewMBean)MBeanServerInvocationHandler.newProxyInstance(mbeanServer, queueViewMBeanName, QueueViewMBean.class, true);
+
+        String newDestination = getSecondDestinationString();
+        queue.copyMatchingMessagesTo("", newDestination);
+
+        queueViewMBeanName = assertRegisteredObjectName(domain + ":Type=Queue,Destination=" + newDestination + ",BrokerName=localhost");
+
+        queue = (QueueViewMBean)MBeanServerInvocationHandler.newProxyInstance(mbeanServer, queueViewMBeanName, QueueViewMBean.class, true);
+        int movedSize = MESSAGE_COUNT;
+        assertEquals("Unexpected number of messages ",movedSize,queue.getQueueSize());
+
+        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        Destination destination = session.createQueue(newDestination);
+        MessageConsumer consumer = session.createConsumer(destination);
+
+        int last = -1;
+        int current = -1;
+        Message message = null;
+        while ((message = consumer.receive(2000)) != null) {
+            if (message.propertyExists("counter")) {
+                current = message.getIntProperty("counter");
+                assertEquals(last, current - 1);
+                last = current;
+            }
+        }
+
+        // now lets remove them by selector
+        queue.removeMatchingMessages("");
+
+        assertEquals("Should have no more messages in the queue: " + queueViewMBeanName, 0, queue.getQueueSize());
+        assertEquals("dest has no memory usage", 0, queue.getMemoryPercentUsage());
+    }
+
+    public void testRemoveMatchingMessageRetainOrder() throws Exception {
+        connection = connectionFactory.createConnection();
+        useConnection(connection);
+
+        ObjectName queueViewMBeanName = assertRegisteredObjectName(domain + ":Type=Queue,Destination=" + getDestinationString() + ",BrokerName=localhost");
+
+        QueueViewMBean queue = (QueueViewMBean)MBeanServerInvocationHandler.newProxyInstance(mbeanServer, queueViewMBeanName, QueueViewMBean.class, true);
+
+        String queueName = getDestinationString();
+        queue.removeMatchingMessages("counter < 10");
+
+        int newSize = MESSAGE_COUNT - 10;
+        assertEquals("Unexpected number of messages ", newSize, queue.getQueueSize());
+
+        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        Destination destination = session.createQueue(queueName);
+        MessageConsumer consumer = session.createConsumer(destination);
+
+        int last = 9;
+        int current = 0;
+        Message message = null;
+        while ((message = consumer.receive(2000)) != null) {
+            if (message.propertyExists("counter")) {
+                current = message.getIntProperty("counter");
+                assertEquals(last, current - 1);
+                last = current;
+            }
+        }
+
+        // now lets remove them by selector
+        queue.removeMatchingMessages("");
+
+        assertEquals("Should have no more messages in the queue: " + queueViewMBeanName, 0, queue.getQueueSize());
+        assertEquals("dest has no memory usage", 0, queue.getMemoryPercentUsage());
+    }
+
     public void testBrowseBytesMessages() throws Exception {
         connection = connectionFactory.createConnection();
         useConnectionWithByteMessage(connection);

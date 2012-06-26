@@ -24,6 +24,7 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -1208,7 +1209,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
      */
     public int removeMatchingMessages(MessageReferenceFilter filter, int maximumMessages) throws Exception {
         int movedCounter = 0;
-        Set<MessageReference> set = new HashSet<MessageReference>();
+        Set<MessageReference> set = new LinkedHashSet<MessageReference>();
         ConnectionContext context = createConnectionContext();
         do {
             doPageIn(true);
@@ -1273,7 +1274,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
             int maximumMessages) throws Exception {
         int movedCounter = 0;
         int count = 0;
-        Set<MessageReference> set = new HashSet<MessageReference>();
+        Set<MessageReference> set = new LinkedHashSet<MessageReference>();
         do {
             int oldMaxSize = getMaxPageSize();
             setMaxPageSize((int) this.destinationStatistics.getMessages().getCount());
@@ -1364,7 +1365,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
     public int moveMatchingMessagesTo(ConnectionContext context, MessageReferenceFilter filter,
             ActiveMQDestination dest, int maximumMessages) throws Exception {
         int movedCounter = 0;
-        Set<QueueMessageReference> set = new HashSet<QueueMessageReference>();
+        Set<QueueMessageReference> set = new LinkedHashSet<QueueMessageReference>();
         do {
             doPageIn(true);
             pagedInMessagesLock.readLock().lock();
