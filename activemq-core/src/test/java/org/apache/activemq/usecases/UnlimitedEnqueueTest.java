@@ -49,7 +49,7 @@ public class UnlimitedEnqueueTest  {
 
     private static final Logger LOG = LoggerFactory.getLogger(UnlimitedEnqueueTest.class);
     BrokerService brokerService = null;
-    final long numMessages = 50000;
+    final long numMessages = 5000;
     final long numThreads = 10;
     final int payLoadSize = 100*1024;
 
@@ -78,7 +78,7 @@ public class UnlimitedEnqueueTest  {
         
         // optional, reduce the usage limit so that spooling will occur faster
         brokerService.getSystemUsage().getMemoryUsage().setLimit(10 * 1024 * 1024);
-        brokerService.getSystemUsage().getTempUsage().setLimit(numMessages * payLoadSize * 2);
+        brokerService.getSystemUsage().getTempUsage().setLimit((numMessages * payLoadSize) + (1000 * payLoadSize));
 
         PolicyMap policyMap = new PolicyMap();
         List<PolicyEntry> entries = new ArrayList<PolicyEntry>();
