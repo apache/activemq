@@ -1607,6 +1607,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                     @Override
                     public void afterRollback() throws Exception {
                         reference.setAcked(false);
+                        wakeup();
                     }
                 });
             }
@@ -1879,7 +1880,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                     continue;
                 }
                 if (!fullConsumers.contains(s) && !s.isFull()) {
-                    if (dispatchSelector.canSelect(s, node) && assignMessageGroup(s, (QueueMessageReference)node)) {
+                    if (dispatchSelector.canSelect(s, node) && assignMessageGroup(s, (QueueMessageReference)node) && !((QueueMessageReference) node).isAcked() ) {
                         // Dispatch it.
                         s.add(node);
                         target = s;
@@ -1894,8 +1895,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                     }
                 }
                 // make sure it gets dispatched again
-                if (!node.isDropped() && !((QueueMessageReference) node).isAcked() &&
-                        (!node.isDropped() || s.getConsumerInfo().isBrowser())) {
+                if (!node.isDropped()) {
                     interestCount++;
                 }
             }
