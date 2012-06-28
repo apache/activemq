@@ -197,12 +197,12 @@ public class Stomp11Test extends CombinationTestSupport {
 
         stompConnection.sendFrame(connectFrame);
         String f = stompConnection.receiveFrame();
-        assertTrue(f.startsWith("CONNECTED"));
-        assertTrue(f.indexOf("version:1.1") >= 0);
-        assertTrue(f.indexOf("heart-beat:") >= 0);
-        assertTrue(f.indexOf("session:") >= 0);
+        assertTrue("Failed to receive a connected frame.", f.startsWith("CONNECTED"));
+        assertTrue("Frame should have a versoion 1.1 header.", f.indexOf("version:1.1") >= 0);
+        assertTrue("Frame should have a heart beat header.", f.indexOf("heart-beat:") >= 0);
+        assertTrue("Frame should have a session header.", f.indexOf("session:") >= 0);
 
-        LOG.debug("Broker sent: " + f);
+        LOG.info("Broker sent: " + f);
 
         stompConnection.getStompSocket().getOutputStream().write('\n');
 
@@ -278,11 +278,13 @@ public class Stomp11Test extends CombinationTestSupport {
         Thread.sleep(TimeUnit.SECONDS.toMillis(10));
 
         try {
-            String message = "SEND\n" + "destination:/queue/" + getQueueName() + "\n\n" + "Hello World" + Stomp.NULL;
+            String message = "SEND\n" + "destination:/queue/" + getQueueName() + "\n" +
+                             "receipt:1\n\n" + "Hello World" + Stomp.NULL;
             stompConnection.sendFrame(message);
+            stompConnection.receiveFrame();
             fail("SEND frame has been accepted after missing heart beat");
         } catch (Exception ex) {
-            System.out.println(ex.getMessage());
+            LOG.info(ex.getMessage());
         }
     }
 

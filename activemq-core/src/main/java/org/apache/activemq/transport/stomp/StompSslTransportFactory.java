@@ -65,4 +65,13 @@ public class StompSslTransportFactory extends SslTransportFactory implements Bro
         this.brokerContext = brokerService.getBrokerContext();
     }
 
+    @Override
+    protected Transport createInactivityMonitor(Transport transport, WireFormat format) {
+        StompInactivityMonitor monitor = new StompInactivityMonitor(transport, format);
+
+        StompTransportFilter filter = (StompTransportFilter) transport.narrow(StompTransportFilter.class);
+        filter.setInactivityMonitor(monitor);
+
+        return monitor;
+    }
 }
