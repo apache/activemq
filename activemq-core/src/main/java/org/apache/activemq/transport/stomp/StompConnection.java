@@ -137,7 +137,14 @@ public class StompConnection {
     }
 
     public void disconnect() throws Exception {
+        disconnect(null);
+    }
+
+    public void disconnect(String receiptId) throws Exception {
         StompFrame frame = new StompFrame("DISCONNECT");
+        if (receiptId != null && !receiptId.isEmpty()) {
+            frame.getHeaders().put(Stomp.Headers.RECEIPT_REQUESTED, receiptId);
+        }
         sendFrame(frame.format());
     }
 
