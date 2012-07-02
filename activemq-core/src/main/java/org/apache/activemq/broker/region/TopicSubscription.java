@@ -19,7 +19,9 @@ package org.apache.activemq.broker.region;
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.concurrent.atomic.AtomicLong;
+
 import javax.jms.JMSException;
+
 import org.apache.activemq.ActiveMQMessageAudit;
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
@@ -45,11 +47,11 @@ public class TopicSubscription extends AbstractSubscription {
 
     private static final Logger LOG = LoggerFactory.getLogger(TopicSubscription.class);
     private static final AtomicLong CURSOR_NAME_COUNTER = new AtomicLong(0);
-    
+
     protected PendingMessageCursor matched;
     protected final SystemUsage usageManager;
     protected AtomicLong dispatchedCounter = new AtomicLong();
-       
+
     boolean singleDestination = true;
     Destination destination;
 
@@ -99,9 +101,9 @@ public class TopicSubscription extends AbstractSubscription {
             dispatch(node);
             setSlowConsumer(false);
         } else {
-            if ( info.getPrefetchSize() > 1 && matched.size() > info.getPrefetchSize() ) {
-                //we are slow
-                if(!isSlowConsumer()) {
+            if (info.getPrefetchSize() > 1 && matched.size() > info.getPrefetchSize()) {
+                // Slow consumers should log and set their state as such.
+                if (!isSlowConsumer()) {
                     LOG.warn(toString() + ": has twice its prefetch limit pending, without an ack; it appears to be slow");
                     setSlowConsumer(true);
                     for (Destination dest: destinations) {
@@ -131,15 +133,14 @@ public class TopicSubscription extends AbstractSubscription {
                             }
                             matchedListMutex.wait(20);
                         }
-                        //Temporary storage could be full - so just try to add the message
-                        //see https://issues.apache.org/activemq/browse/AMQ-2475
+                        // Temporary storage could be full - so just try to add the message
+                        // see https://issues.apache.org/activemq/browse/AMQ-2475
                         if (matched.tryAddMessageLast(node, 10)) {
                             break;
                         }
                     }
                 }
                 synchronized (matchedListMutex) {
-                    
                     // NOTE - be careful about the slaveBroker!
                     if (maximumPendingMessages > 0) {
                         // calculate the high water mark from which point we
@@ -154,28 +155,26 @@ public class TopicSubscription extends AbstractSubscription {
                         // lets discard old messages as we are a slow consumer
                         while (!matched.isEmpty() && matched.size() > maximumPendingMessages) {
                             int pageInSize = matched.size() - maximumPendingMessages;
-                            // only page in a 1000 at a time - else we could
-                            // blow da memory
+                            // only page in a 1000 at a time - else we could blow the memory
                             pageInSize = Math.max(1000, pageInSize);
                             LinkedList<MessageReference> list = null;
                             MessageReference[] oldMessages=null;
                             synchronized(matched){
                                 list = matched.pageInList(pageInSize);
-                            	oldMessages = messageEvictionStrategy.evictMessages(list);
-                            	for (MessageReference ref : list) {
-                            	    ref.decrementReferenceCount();
-                            	}
+                                oldMessages = messageEvictionStrategy.evictMessages(list);
+                                for (MessageReference ref : list) {
+                                    ref.decrementReferenceCount();
+                                }
                             }
                             int messagesToEvict = 0;
                             if (oldMessages != null){
-	                            messagesToEvict = oldMessages.length;
-	                            for (int i = 0; i < messagesToEvict; i++) {
-	                                MessageReference oldMessage = oldMessages[i];
-	                                discard(oldMessage);
-	                            }
+                                messagesToEvict = oldMessages.length;
+                                for (int i = 0; i < messagesToEvict; i++) {
+                                    MessageReference oldMessage = oldMessages[i];
+                                    discard(oldMessage);
+                                }
                             }
-                            // lets avoid an infinite loop if we are given a bad
-                            // eviction strategy
+                            // lets avoid an infinite loop if we are given a bad eviction strategy
                             // for a bad strategy lets just not evict
                             if (messagesToEvict == 0) {
                                 LOG.warn("No messages to evict returned for "  + destination + " from eviction strategy: " + messageEvictionStrategy + " out of " + list.size() + " candidates");
@@ -205,7 +204,7 @@ public class TopicSubscription extends AbstractSubscription {
     /**
      * Discard any expired messages from the matched list. Called from a
      * synchronized block.
-     * 
+     *
      * @throws IOException
      */
     protected void removeExpiredMessages() throws IOException {
@@ -275,12 +274,11 @@ public class TopicSubscription extends AbstractSubscription {
             dispatchMatched();
             return;
         } else if (ack.isDeliveredAck()) {
-            // Message was delivered but not acknowledged: update pre-fetch
-            // counters.
+            // Message was delivered but not acknowledged: update pre-fetch counters.
             // also. get these for a consumer expired message.
             if (destination != null && !ack.isInTransaction()) {
                 destination.getDestinationStatistics().getDequeues().add(ack.getMessageCount());
-                destination.getDestinationStatistics().getInflight().subtract(ack.getMessageCount());   
+                destination.getDestinationStatistics().getInflight().subtract(ack.getMessageCount());
             }
             dequeueCounter.addAndGet(ack.getMessageCount());
             dispatchMatched();
@@ -375,36 +373,35 @@ public class TopicSubscription extends AbstractSubscription {
     public int getMaxAuditDepth() {
         return maxAuditDepth;
     }
-    
+
     public synchronized void setMaxAuditDepth(int maxAuditDepth) {
         this.maxAuditDepth = maxAuditDepth;
         if (audit != null) {
             audit.setAuditDepth(maxAuditDepth);
         }
     }
-    
+
     public boolean isEnableAudit() {
         return enableAudit;
     }
 
     public synchronized void setEnableAudit(boolean enableAudit) {
         this.enableAudit = enableAudit;
-        if (enableAudit && audit==null) {
+        if (enableAudit && audit == null) {
             audit = new ActiveMQMessageAudit(maxAuditDepth,maxProducersToAudit);
         }
     }
-    
+
     // Implementation methods
     // -------------------------------------------------------------------------
     public boolean isFull() {
-        return getDispatchedQueueSize()  >= info.getPrefetchSize();
+        return getDispatchedQueueSize() >= info.getPrefetchSize();
     }
-    
+
     public int getInFlightSize() {
         return getDispatchedQueueSize();
     }
-    
-    
+
     /**
      * @return true when 60% or more room is left for dispatching messages
      */
@@ -456,7 +453,7 @@ public class TopicSubscription extends AbstractSubscription {
 
     /**
      * inform the MessageConsumer on the client to change it's prefetch
-     * 
+     *
      * @param newPrefetch
      */
     public void updateConsumerPrefetch(int newPrefetch) {
@@ -468,18 +465,17 @@ public class TopicSubscription extends AbstractSubscription {
         }
     }
 
-    private void dispatchMatched() throws IOException {       
+    private void dispatchMatched() throws IOException {
         synchronized (matchedListMutex) {
             if (!matched.isEmpty() && !isFull()) {
                 try {
                     matched.reset();
-                   
+
                     while (matched.hasNext() && !isFull()) {
                         MessageReference message = matched.next();
                         message.decrementReferenceCount();
                         matched.remove();
-                        // Message may have been sitting in the matched list a
-                        // while
+                        // Message may have been sitting in the matched list a while
                         // waiting for the consumer to ak the message.
                         if (message.isExpired()) {
                             discard(message);
@@ -503,8 +499,7 @@ public class TopicSubscription extends AbstractSubscription {
         md.setConsumerId(info.getConsumerId());
         md.setDestination(node.getRegionDestination().getActiveMQDestination());
         dispatchedCounter.incrementAndGet();
-        // Keep track if this subscription is receiving messages from a single
-        // destination.
+        // Keep track if this subscription is receiving messages from a single destination.
         if (singleDestination) {
             if (destination == null) {
                 destination = node.getRegionDestination();
@@ -572,4 +567,13 @@ public class TopicSubscription extends AbstractSubscription {
         return info.getPrefetchSize();
     }
 
+    @Override
+    public void setPrefetchSize(int newSize) {
+        info.setPrefetchSize(newSize);
+        try {
+            dispatchMatched();
+        } catch(Exception e) {
+            LOG.trace("Caught exception on dispatch after prefetch size change.");
+        }
+    }
 }

@@ -18,7 +18,6 @@ package org.apache.activemq.broker.region;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -148,35 +147,35 @@ public class Topic extends BaseDestination implements Task {
         } else {
             DurableTopicSubscription dsub = (DurableTopicSubscription) sub;
             super.addSubscription(context, sub);
-    		sub.add(context, this);
-    		if(dsub.isActive()) {
-	        	synchronized (consumers) {
-	        		boolean hasSubscription = false;
-	
-	        		if(consumers.size()==0) {
-	            		hasSubscription = false;
-	        		} else {
-		        		for(Subscription currentSub : consumers) {
-		        			if(currentSub.getConsumerInfo().isDurable()) {
-		        	            DurableTopicSubscription dcurrentSub = (DurableTopicSubscription) currentSub;
-		        	            if(dcurrentSub.getSubscriptionKey().equals(dsub.getSubscriptionKey())) {
-		        	            	hasSubscription = true;
-		        	            	break;
-		        	            }
-		        			}
-		        		}
-	        		}
-	        		
-	                if(!hasSubscription)
-	                	consumers.add(sub);
-	            }
-    		}
+            sub.add(context, this);
+            if(dsub.isActive()) {
+                synchronized (consumers) {
+                    boolean hasSubscription = false;
+
+                    if (consumers.size() == 0) {
+                        hasSubscription = false;
+                    } else {
+                        for (Subscription currentSub : consumers) {
+                            if (currentSub.getConsumerInfo().isDurable()) {
+                                DurableTopicSubscription dcurrentSub = (DurableTopicSubscription) currentSub;
+                                if (dcurrentSub.getSubscriptionKey().equals(dsub.getSubscriptionKey())) {
+                                    hasSubscription = true;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+
+                    if (!hasSubscription) {
+                        consumers.add(sub);
+                    }
+                }
+            }
             durableSubcribers.put(dsub.getSubscriptionKey(), dsub);
         }
     }
 
-    public void removeSubscription(ConnectionContext context, Subscription sub, long lastDeliveredSequenceId)
-            throws Exception {
+    public void removeSubscription(ConnectionContext context, Subscription sub, long lastDeliveredSequenceId) throws Exception {
         if (!sub.getConsumerInfo().isDurable()) {
             super.removeSubscription(context, sub, lastDeliveredSequenceId);
             synchronized (consumers) {
@@ -332,9 +331,7 @@ public class Topic extends BaseDestination implements Task {
                             + " See http://activemq.apache.org/producer-flow-control.html for more info");
                 }
 
-                // We can avoid blocking due to low usage if the producer is
-                // sending
-                // a sync message or
+                // We can avoid blocking due to low usage if the producer is sending a sync message or
                 // if it is using a producer window
                 if (producerInfo.getWindowSize() > 0 || message.isResponseRequired()) {
                     synchronized (messagesWaitingForSpace) {
@@ -378,10 +375,8 @@ public class Topic extends BaseDestination implements Task {
                     }
 
                 } else {
-                    // Producer flow control cannot be used, so we have do the
-                    // flow
-                    // control at the broker
-                    // by blocking this thread until there is space available.
+                    // Producer flow control cannot be used, so we have do the flow control
+                    // at the broker by blocking this thread until there is space available.
 
                     if (memoryUsage.isFull()) {
                         if (context.isInTransaction()) {
@@ -763,17 +758,6 @@ public class Topic extends BaseDestination implements Task {
         }
     }
 
-
-    private void clearPendingMessages(SubscriptionKey subscriptionKey) {
-        dispatchLock.readLock().lock();
-        try {
-            DurableTopicSubscription durableTopicSubscription = durableSubcribers.get(subscriptionKey);
-            clearPendingAndDispatch(durableTopicSubscription);
-        } finally {
-            dispatchLock.readLock().unlock();
-        }
-    }
-
     private void clearPendingAndDispatch(DurableTopicSubscription durableTopicSubscription) {
         synchronized (durableTopicSubscription.pendingLock) {
             durableTopicSubscription.pending.clear();
@@ -790,5 +774,4 @@ public class Topic extends BaseDestination implements Task {
     public Map<SubscriptionKey, DurableTopicSubscription> getDurableTopicSubs() {
         return durableSubcribers;
     }
-
 }

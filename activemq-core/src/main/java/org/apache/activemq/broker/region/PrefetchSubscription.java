@@ -808,4 +808,14 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
     protected int getPrefetchExtension() {
         return this.prefetchExtension.get();
     }
+
+    @Override
+    public void setPrefetchSize(int prefetchSize) {
+        this.info.setPrefetchSize(prefetchSize);
+        try {
+            this.dispatchPending();
+        } catch (Exception e) {
+            LOG.trace("Caught exception during dispatch after prefetch change.", e);
+        }
+    }
 }
