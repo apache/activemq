@@ -26,7 +26,7 @@ import javax.net.ssl.SSLSocketFactory;
 
 
 /**
- * 
+ *
  */
 public class StompSslAuthTest extends StompTest {
 
@@ -54,6 +54,9 @@ public class StompSslAuthTest extends StompTest {
     }
 
     // NOOP - These operations handled by jaas cert login module
+    public void testSubscribeWithReceiptNotAuthorized() throws Exception {
+    }
+
     public void testConnectNotAuthenticatedWrongUser() throws Exception {
     }
 
@@ -71,7 +74,7 @@ public class StompSslAuthTest extends StompTest {
 
     public void testJMSXUserIDIsSetInStompMessage() throws Exception {
     }
-    
+
     public void testClientSetMessageIdIsIgnored() throws Exception {
     }
 }
