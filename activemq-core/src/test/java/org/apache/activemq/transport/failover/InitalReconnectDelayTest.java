@@ -16,6 +16,16 @@
  */
 package org.apache.activemq.transport.failover;
 
+import static org.junit.Assert.assertTrue;
+
+import java.util.Date;
+import java.util.concurrent.CountDownLatch;
+
+import javax.jms.Connection;
+import javax.jms.MessageProducer;
+import javax.jms.Queue;
+import javax.jms.Session;
+
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.junit.After;
@@ -23,15 +33,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.jms.Connection;
-import javax.jms.MessageProducer;
-import javax.jms.Queue;
-import javax.jms.Session;
-import java.util.Date;
-import java.util.concurrent.CountDownLatch;
-
-import static org.junit.Assert.assertTrue;
 
 public class InitalReconnectDelayTest {
 
@@ -59,17 +60,16 @@ public class InitalReconnectDelayTest {
 
         //Halt the broker1...
         LOG.info("Stopping the Broker1...");
+        start = (new Date()).getTime();
         broker1.stop();
 
         LOG.info("Attempting to send... failover should kick in...");
-        start = (new Date()).getTime();
         producer.send(session.createTextMessage("TEST"));
         end = (new Date()).getTime();
 
         //Inital reconnection should kick in and be darned close to what we expected
         LOG.info("Failover took " + (end - start) + " ms.");
         assertTrue("Failover took " + (end - start) + " ms and should be > 14000.", (end - start) > 14000);
-
     }
 
     @Before
