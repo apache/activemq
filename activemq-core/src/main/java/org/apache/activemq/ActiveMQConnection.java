@@ -55,6 +55,7 @@ import javax.jms.XAConnection;
 
 import org.apache.activemq.advisory.DestinationSource;
 import org.apache.activemq.blob.BlobTransferPolicy;
+import org.apache.activemq.broker.region.policy.RedeliveryPolicyMap;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ActiveMQTempDestination;
@@ -131,7 +132,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     // Configuration options variables
     private ActiveMQPrefetchPolicy prefetchPolicy = new ActiveMQPrefetchPolicy();
     private BlobTransferPolicy blobTransferPolicy;
-    private RedeliveryPolicy redeliveryPolicy;
+    private RedeliveryPolicyMap redeliveryPolicyMap;
     private MessageTransformer transformer;
 
     private boolean disableTimeStampsByDefault;
@@ -1644,14 +1645,14 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
      * @throws JMSException
      */
     public RedeliveryPolicy getRedeliveryPolicy() throws JMSException {
-        return redeliveryPolicy;
+        return redeliveryPolicyMap.getDefaultEntry();
     }
 
     /**
      * Sets the redelivery policy to be used when messages are rolled back
      */
     public void setRedeliveryPolicy(RedeliveryPolicy redeliveryPolicy) {
-        this.redeliveryPolicy = redeliveryPolicy;
+        this.redeliveryPolicyMap.setDefaultEntry(redeliveryPolicy);
     }
 
     public BlobTransferPolicy getBlobTransferPolicy() {
@@ -2548,5 +2549,23 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
                 // it is ok to leave it to connection tear down phase
             }
         }
+    }
+
+    /**
+     * Sets the Connection wide RedeliveryPolicyMap for handling messages that are being rolled back.
+     * @param redeliveryPolicyMap the redeliveryPolicyMap to set
+     */
+    public void setRedeliveryPolicyMap(RedeliveryPolicyMap redeliveryPolicyMap) {
+        this.redeliveryPolicyMap = redeliveryPolicyMap;
+    }
+
+    /**
+     * Gets the Connection's configured RedeliveryPolicyMap which will be used by all the
+     * Consumers when dealing with transaction messages that have been rolled back.
+     *
+     * @return the redeliveryPolicyMap
+     */
+    public RedeliveryPolicyMap getRedeliveryPolicyMap() {
+        return redeliveryPolicyMap;
     }
 }

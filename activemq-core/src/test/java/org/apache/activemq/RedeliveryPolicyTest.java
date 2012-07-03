@@ -23,7 +23,9 @@ import javax.jms.TextMessage;
 
 import junit.framework.Test;
 
+import org.apache.activemq.broker.region.policy.RedeliveryPolicyMap;
 import org.apache.activemq.command.ActiveMQQueue;
+import org.apache.activemq.command.ActiveMQTopic;
 
 /**
  * Test cases used to test the JMS message exclusive consumers.
@@ -475,6 +477,114 @@ public class RedeliveryPolicyTest extends JmsTestSupport {
         assertEquals("1st", m.getText());
 
         m = (TextMessage)consumer.receive(100);
+        assertNotNull(m);
+        assertEquals("2nd", m.getText());
+        session.commit();
+    }
+
+    public void testRedeliveryPolicyPerDestination() throws Exception {
+
+        RedeliveryPolicy queuePolicy = new RedeliveryPolicy();
+        queuePolicy.setInitialRedeliveryDelay(0);
+        queuePolicy.setRedeliveryDelay(1000);
+        queuePolicy.setUseExponentialBackOff(false);
+        queuePolicy.setMaximumRedeliveries(2);
+
+        RedeliveryPolicy topicPolicy = new RedeliveryPolicy();
+        topicPolicy.setInitialRedeliveryDelay(0);
+        topicPolicy.setRedeliveryDelay(1000);
+        topicPolicy.setUseExponentialBackOff(false);
+        topicPolicy.setMaximumRedeliveries(3);
+
+        // Receive a message with the JMS API
+        RedeliveryPolicyMap map = connection.getRedeliveryPolicyMap();
+        map.put(new ActiveMQTopic(">"), topicPolicy);
+        map.put(new ActiveMQQueue(">"), queuePolicy);
+
+        connection.start();
+        Session session = connection.createSession(true, Session.AUTO_ACKNOWLEDGE);
+        ActiveMQQueue queue = new ActiveMQQueue("TEST");
+        ActiveMQTopic topic = new ActiveMQTopic("TEST");
+
+        MessageProducer producer = session.createProducer(null);
+
+        MessageConsumer queueConsumer = session.createConsumer(queue);
+        MessageConsumer topicConsumer = session.createConsumer(topic);
+
+        // Send the messages
+        producer.send(queue, session.createTextMessage("1st"));
+        producer.send(queue, session.createTextMessage("2nd"));
+        producer.send(topic, session.createTextMessage("1st"));
+        producer.send(topic, session.createTextMessage("2nd"));
+
+        session.commit();
+
+        TextMessage m;
+        m = (TextMessage)queueConsumer.receive(100);
+        assertNotNull(m);
+        assertEquals("1st", m.getText());
+        m = (TextMessage)topicConsumer.receive(100);
+        assertNotNull(m);
+        assertEquals("1st", m.getText());
+        m = (TextMessage)queueConsumer.receive(100);
+        assertNotNull(m);
+        assertEquals("2nd", m.getText());
+        m = (TextMessage)topicConsumer.receive(100);
+        assertNotNull(m);
+        assertEquals("2nd", m.getText());
+        session.rollback();
+
+        m = (TextMessage)queueConsumer.receive(100);
+        assertNotNull("first immediate redelivery", m);
+        m = (TextMessage)topicConsumer.receive(100);
+        assertNotNull("first immediate redelivery", m);
+        session.rollback();
+
+        m = (TextMessage)queueConsumer.receive(100);
+        assertNull("second delivery delayed: " + m, m);
+        m = (TextMessage)topicConsumer.receive(100);
+        assertNull("second delivery delayed: " + m, m);
+
+        m = (TextMessage)queueConsumer.receive(2000);
+        assertNotNull(m);
+        assertEquals("1st", m.getText());
+        m = (TextMessage)topicConsumer.receive(2000);
+        assertNotNull(m);
+        assertEquals("1st", m.getText());
+
+        m = (TextMessage)queueConsumer.receive(100);
+        assertNotNull(m);
+        assertEquals("2nd", m.getText());
+        m = (TextMessage)topicConsumer.receive(100);
+        assertNotNull(m);
+        assertEquals("2nd", m.getText());
+        session.rollback();
+
+        m = (TextMessage)queueConsumer.receive(2000);
+        assertNotNull(m);
+        assertEquals("1st", m.getText());
+        m = (TextMessage)topicConsumer.receive(2000);
+        assertNotNull(m);
+        assertEquals("1st", m.getText());
+
+        m = (TextMessage)queueConsumer.receive(100);
+        assertNotNull(m);
+        assertEquals("2nd", m.getText());
+        m = (TextMessage)topicConsumer.receive(100);
+        assertNotNull(m);
+        assertEquals("2nd", m.getText());
+        session.rollback();
+
+        // No third attempt for the Queue consumer
+        m = (TextMessage)queueConsumer.receive(2000);
+        assertNull(m);
+        m = (TextMessage)topicConsumer.receive(2000);
+        assertNotNull(m);
+        assertEquals("1st", m.getText());
+
+        m = (TextMessage)queueConsumer.receive(100);
+        assertNull(m);
+        m = (TextMessage)topicConsumer.receive(100);
         assertNotNull(m);
         assertEquals("2nd", m.getText());
         session.commit();

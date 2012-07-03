@@ -36,6 +36,7 @@ import javax.jms.TopicConnectionFactory;
 import javax.naming.Context;
 
 import org.apache.activemq.blob.BlobTransferPolicy;
+import org.apache.activemq.broker.region.policy.RedeliveryPolicyMap;
 import org.apache.activemq.jndi.JNDIBaseStorable;
 import org.apache.activemq.management.JMSStatsImpl;
 import org.apache.activemq.management.StatsCapable;
@@ -90,7 +91,10 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
 
     // client policies
     private ActiveMQPrefetchPolicy prefetchPolicy = new ActiveMQPrefetchPolicy();
-    private RedeliveryPolicy redeliveryPolicy = new RedeliveryPolicy();
+    private RedeliveryPolicyMap redeliveryPolicyMap = new RedeliveryPolicyMap();
+    {
+        redeliveryPolicyMap.setDefaultEntry(new RedeliveryPolicy());
+    }
     private BlobTransferPolicy blobTransferPolicy = new BlobTransferPolicy();
     private MessageTransformer transformer;
 
@@ -317,7 +321,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
         connection.setOptimizeAcknowledgeTimeOut(getOptimizeAcknowledgeTimeOut());
         connection.setUseRetroactiveConsumer(isUseRetroactiveConsumer());
         connection.setExclusiveConsumer(isExclusiveConsumer());
-        connection.setRedeliveryPolicy(getRedeliveryPolicy());
+        connection.setRedeliveryPolicyMap(getRedeliveryPolicyMap());
         connection.setTransformer(getTransformer());
         connection.setBlobTransferPolicy(getBlobTransferPolicy().copy());
         connection.setWatchTopicAdvisories(isWatchTopicAdvisories());
@@ -577,15 +581,27 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     }
 
     public RedeliveryPolicy getRedeliveryPolicy() {
-        return redeliveryPolicy;
+        return redeliveryPolicyMap.getDefaultEntry();
     }
 
     /**
-     * Sets the global redelivery policy to be used when a message is delivered
+     * Sets the global default redelivery policy to be used when a message is delivered
      * but the session is rolled back
      */
     public void setRedeliveryPolicy(RedeliveryPolicy redeliveryPolicy) {
-        this.redeliveryPolicy = redeliveryPolicy;
+        this.redeliveryPolicyMap.setDefaultEntry(redeliveryPolicy);
+    }
+
+    public RedeliveryPolicyMap getRedeliveryPolicyMap() {
+        return this.redeliveryPolicyMap;
+    }
+
+    /**
+     * Sets the global redelivery policy mapping to be used when a message is delivered
+     * but the session is rolled back
+     */
+    public void setRedeliveryPolicyMap(RedeliveryPolicyMap redeliveryPolicyMap) {
+        this.redeliveryPolicyMap = redeliveryPolicyMap;
     }
 
     public MessageTransformer getTransformer() {

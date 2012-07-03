@@ -208,7 +208,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
         }
 
         this.session = session;
-        this.redeliveryPolicy = session.connection.getRedeliveryPolicy();
+        this.redeliveryPolicy = session.connection.getRedeliveryPolicyMap().getEntryFor(dest);
         setTransformer(session.getTransformer());
 
         this.info = new ConsumerInfo(consumerId);
