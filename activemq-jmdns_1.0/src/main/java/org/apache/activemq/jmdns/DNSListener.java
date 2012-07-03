@@ -28,7 +28,7 @@ package org.apache.activemq.jmdns;
  * @author Werner Randelshofer, Rick Blair
  * @version 1.0  May 22, 2004  Created.
  */
-interface DNSListener
+public interface DNSListener
 {
     /**
      * Update a DNS record.

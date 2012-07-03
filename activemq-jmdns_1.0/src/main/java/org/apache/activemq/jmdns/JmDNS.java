@@ -737,7 +737,7 @@ public class JmDNS {
      * of answers to the question as they arrive, or from the cache if they
      * are already available.
      */
-    void addListener(DNSListener listener, DNSQuestion question) {
+    public void addListener(DNSListener listener, DNSQuestion question) {
         long now = System.currentTimeMillis();
 
         // add the new listener
@@ -760,7 +760,7 @@ public class JmDNS {
      * Remove a listener from all outstanding questions. The listener will no longer
      * receive any updates.
      */
-    void removeListener(DNSListener listener) {
+    public void removeListener(DNSListener listener) {
         synchronized (this) {
             listeners.remove(listener);
         }
