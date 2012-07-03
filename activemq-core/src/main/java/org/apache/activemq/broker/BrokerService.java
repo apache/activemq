@@ -1036,6 +1036,10 @@ public class BrokerService implements Service {
      * @throws IOException
      */
     public void setPersistenceAdapter(PersistenceAdapter persistenceAdapter) throws IOException {
+        if (!isPersistent() && ! (persistenceAdapter instanceof MemoryPersistenceAdapter)) {
+            LOG.warn("persistent=\"false\", ignoring configured persistenceAdapter: " + persistenceAdapter);
+            return;
+        }
         this.persistenceAdapter = persistenceAdapter;
         configureService(this.persistenceAdapter);
         this.persistenceAdapter = registerPersistenceAdapterMBean(persistenceAdapter);
