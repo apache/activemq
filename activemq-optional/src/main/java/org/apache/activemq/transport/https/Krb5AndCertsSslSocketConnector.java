@@ -86,20 +86,6 @@ public class Krb5AndCertsSslSocketConnector extends SslSocketConnector {
         }
     }
 
-    // @Override
-    // protected SSLServerSocketFactory createFactory() throws Exception {
-    // if(useCerts)
-    // return super.createFactory();
-    //
-    // SSLContext context = super.getProvider()==null
-    // ? SSLContext.getInstance(super.getProtocol())
-    // :SSLContext.getInstance(super.getProtocol(), super.getProvider());
-    // context.init(null, null, null);
-    //
-    // System.err.println("Creating socket factory");
-    // return context.getServerSocketFactory();
-    // }
-
     @Override
     public SslContextFactory getSslContextFactory() {
         final SslContextFactory factory = super.getSslContextFactory();
@@ -130,7 +116,6 @@ public class Krb5AndCertsSslSocketConnector extends SslSocketConnector {
      */
     @Override
     protected ServerSocket newServerSocket(String host, int port, int backlog) throws IOException {
-        System.err.println("Creating new KrbServerSocket for: " + host);
         logIfDebug("Creating new KrbServerSocket for: " + host);
         SSLServerSocket ss = null;
 
@@ -160,7 +145,6 @@ public class Krb5AndCertsSslSocketConnector extends SslSocketConnector {
 
             ss.setEnabledCipherSuites(combined);
         }
-        System.err.println("New socket created");
         return ss;
     };
 
@@ -186,7 +170,6 @@ public class Krb5AndCertsSslSocketConnector extends SslSocketConnector {
 
         if (useCerts)
             super.customize(endpoint, request);
-        System.err.println();
     }
 
     private void logIfDebug(String s) {

@@ -14,30 +14,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.activemq.transport.https;
+package org.apache.activemq.transport;
 
-import org.apache.activemq.broker.SslContext;
-import org.apache.activemq.transport.SecureSocketConnectorFactory;
-import org.apache.activemq.transport.http.HttpTransportServer;
 import org.eclipse.jetty.server.Connector;
+import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.nio.SelectChannelConnector;
 
-import java.net.URI;
+import java.util.Map;
 
-public class HttpsTransportServer extends HttpTransportServer {
-    private SslContext context;
+public class SocketConnectorFactory {
 
-    public HttpsTransportServer(URI uri, HttpsTransportFactory factory, SslContext context) {
-        super(uri, factory);
-        this.context = context;
-        this.socketConnectorFactory = new SecureSocketConnectorFactory(context);
+    private Map<String, Object> transportOptions;
+
+    public Connector createConnector() throws Exception {
+       return new SelectChannelConnector();
     }
 
-    public void doStart() throws Exception {
-        Connector sslConnector = socketConnectorFactory.createConnector();
-        
-        setConnector(sslConnector);
-
-        super.doStart();
+    public Map<String, Object> getTransportOptions() {
+        return transportOptions;
     }
 
+    public void setTransportOptions(Map<String, Object> transportOptions) {
+        this.transportOptions = transportOptions;
+    }
 }

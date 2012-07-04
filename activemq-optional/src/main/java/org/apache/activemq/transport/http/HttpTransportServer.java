@@ -17,6 +17,7 @@
 package org.apache.activemq.transport.http;
 
 import org.apache.activemq.command.BrokerInfo;
+import org.apache.activemq.transport.SocketConnectorFactory;
 import org.apache.activemq.transport.TransportServerSupport;
 import org.apache.activemq.transport.util.TextWireFormat;
 import org.apache.activemq.transport.xstream.XStreamWireFormat;
@@ -24,12 +25,12 @@ import org.apache.activemq.util.ServiceStopper;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.GzipHandler;
-import org.eclipse.jetty.server.nio.SelectChannelConnector;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 
 import java.net.InetSocketAddress;
 import java.net.URI;
+import java.util.Map;
 
 public class HttpTransportServer extends TransportServerSupport {
 
@@ -38,11 +39,13 @@ public class HttpTransportServer extends TransportServerSupport {
     private Server server;
     private Connector connector;
     private HttpTransportFactory transportFactory;
+    protected SocketConnectorFactory socketConnectorFactory;
 
     public HttpTransportServer(URI uri, HttpTransportFactory factory) {
         super(uri);
         this.bindAddress = uri;
         this.transportFactory = factory;
+        socketConnectorFactory = new SocketConnectorFactory();
     }
 
     public void setBrokerInfo(BrokerInfo brokerInfo) {
@@ -74,7 +77,7 @@ public class HttpTransportServer extends TransportServerSupport {
     protected void doStart() throws Exception {
         server = new Server();
         if (connector == null) {
-            connector = new SelectChannelConnector();
+            connector = socketConnectorFactory.createConnector();
         }
         connector.setHost(bindAddress.getHost());
         connector.setPort(bindAddress.getPort());
@@ -109,5 +112,11 @@ public class HttpTransportServer extends TransportServerSupport {
 
     public InetSocketAddress getSocketAddress() {
         return null;
+    }
+
+    @Override
+    public void setTransportOption(Map<String, Object> transportOptions) {
+        socketConnectorFactory.setTransportOptions(transportOptions);
+        super.setTransportOption(transportOptions);
     }
 }
