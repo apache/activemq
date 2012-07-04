@@ -20,6 +20,8 @@ import org.apache.activemq.spring.SpringSslContext;
 import org.apache.activemq.transport.https.Krb5AndCertsSslSocketConnector;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.eclipse.jetty.server.Connector;
+import org.eclipse.jetty.server.ssl.SslConnector;
+import org.eclipse.jetty.server.ssl.SslSelectChannelConnector;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 
 import org.apache.activemq.broker.SslContext;
@@ -47,7 +49,14 @@ public class SecureSocketConnectorFactory extends SocketConnectorFactory {
 
     @Override
     public Connector createConnector() throws Exception {
-        Krb5AndCertsSslSocketConnector sslConnector = new Krb5AndCertsSslSocketConnector();
+        IntrospectionSupport.setProperties(this, getTransportOptions());
+        SslConnector sslConnector;
+        if (Krb5AndCertsSslSocketConnector.isKrb(auth)) {
+            sslConnector = new Krb5AndCertsSslSocketConnector();
+            ((Krb5AndCertsSslSocketConnector)sslConnector).setMode(auth);
+        } else {
+            sslConnector = new SslSelectChannelConnector();
+        }
 
         SSLContext sslContext = context == null ? null : context.getSSLContext();
 
@@ -61,11 +70,6 @@ public class SecureSocketConnectorFactory extends SocketConnectorFactory {
             factory.setSslContext(sslContext);
 
         } else {
-            IntrospectionSupport.setProperties(this, getTransportOptions());
-
-            if (auth != null) {
-                sslConnector.setMode(auth);
-            }
 
             if (keyStore != null) {
                 factory.setKeyStorePath(keyStore);

@@ -70,6 +70,10 @@ public class Krb5AndCertsSslSocketConnector extends SslSocketConnector {
         setPasswords();
     }
 
+    public static boolean isKrb(String mode) {
+        return mode == MODE.KRB.toString() || mode == MODE.BOTH.toString();
+    }
+
     public void setMode(String mode) {
         useKrb = mode == MODE.KRB.toString() || mode == MODE.BOTH.toString();
         useCerts = mode == MODE.CERTS.toString() || mode == MODE.BOTH.toString();

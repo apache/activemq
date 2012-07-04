@@ -14,8 +14,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package org.apache.activemq.transport.wss;
 
-package org.apache.activemq.transport.ws;
+import org.apache.activemq.broker.SslContext;
+import org.apache.activemq.transport.TransportFactory;
+import org.apache.activemq.transport.TransportServer;
+import org.apache.activemq.transport.ws.WSTransportServer;
+import org.apache.activemq.util.IOExceptionSupport;
+import org.apache.activemq.util.IntrospectionSupport;
+import org.apache.activemq.util.URISupport;
 
 import java.io.IOException;
 import java.net.URI;
@@ -23,23 +30,17 @@ import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.activemq.transport.TransportFactory;
-import org.apache.activemq.transport.TransportServer;
-import org.apache.activemq.util.IOExceptionSupport;
-import org.apache.activemq.util.IntrospectionSupport;
-import org.apache.activemq.util.URISupport;
-
 /**
- * 
- * Factory for WebSocket (ws) transport
+ *
+ * Factory for Secure WebSocket (wss) transport
  *
  */
-public class WSTransportFactory extends TransportFactory {
+public class WSSTransportFactory extends TransportFactory {
 
     public TransportServer doBind(URI location) throws IOException {
         try {
             Map<String, String> options = new HashMap<String, String>(URISupport.parseParameters(location));
-            WSTransportServer result = new WSTransportServer(location);
+            WSSTransportServer result = new WSSTransportServer(location, SslContext.getCurrentSslContext());
             Map<String, Object> transportOptions = IntrospectionSupport.extractProperties(options, "transport.");
             result.setTransportOption(transportOptions);
             return result;

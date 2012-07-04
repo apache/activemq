@@ -18,6 +18,7 @@
 package org.apache.activemq.transport.ws;
 
 import org.apache.activemq.command.BrokerInfo;
+import org.apache.activemq.transport.SocketConnectorFactory;
 import org.apache.activemq.transport.TransportServerSupport;
 import org.apache.activemq.util.ServiceStopper;
 import org.eclipse.jetty.server.Connector;
@@ -28,6 +29,7 @@ import org.eclipse.jetty.servlet.ServletHolder;
 
 import java.net.InetSocketAddress;
 import java.net.URI;
+import java.util.Map;
 
 /**
  * Creates a web server and registers web socket server
@@ -38,16 +40,18 @@ public class WSTransportServer extends TransportServerSupport {
     private URI bindAddress;
     private Server server;
     private Connector connector;
+    protected SocketConnectorFactory socketConnectorFactory;
 
     public WSTransportServer(URI location) {
         super(location);
         this.bindAddress = location;
+        socketConnectorFactory = new SocketConnectorFactory();
     }
 
     protected void doStart() throws Exception {
         server = new Server();
         if (connector == null) {
-            connector = new SelectChannelConnector();
+            connector = socketConnectorFactory.createConnector();
         }
         connector.setHost(bindAddress.getHost());
         connector.setPort(bindAddress.getPort());
@@ -79,6 +83,16 @@ public class WSTransportServer extends TransportServerSupport {
     }
 
     public void setBrokerInfo(BrokerInfo brokerInfo) {
+    }
+
+    protected void setConnector(Connector connector) {
+        this.connector = connector;
+    }
+
+    @Override
+    public void setTransportOption(Map<String, Object> transportOptions) {
+        socketConnectorFactory.setTransportOptions(transportOptions);
+        super.setTransportOption(transportOptions);
     }
 
 }
