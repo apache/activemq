@@ -196,13 +196,14 @@ public class Stomp11Test extends CombinationTestSupport {
                               "\n" + Stomp.NULL;
 
         stompConnection.sendFrame(connectFrame);
-        String f = stompConnection.receiveFrame();
+        String f = stompConnection.receiveFrame().trim();
+
+        LOG.info("Broker sent: " + f);
+
         assertTrue("Failed to receive a connected frame.", f.startsWith("CONNECTED"));
         assertTrue("Frame should have a versoion 1.1 header.", f.indexOf("version:1.1") >= 0);
         assertTrue("Frame should have a heart beat header.", f.indexOf("heart-beat:") >= 0);
         assertTrue("Frame should have a session header.", f.indexOf("session:") >= 0);
-
-        LOG.info("Broker sent: " + f);
 
         stompConnection.getStompSocket().getOutputStream().write('\n');
 
