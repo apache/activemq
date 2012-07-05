@@ -87,7 +87,7 @@ public class SimpleNetworkTest {
         for (int i = 0; i < MESSAGE_COUNT; i++) {
             Message test = localSession.createTextMessage("test-" + i);
             producer.send(test);
-            Message msg = consumer1.receive(1000);
+            Message msg = consumer1.receive(3000);
             assertNotNull(msg);
             ActiveMQMessage amqMessage = (ActiveMQMessage) msg;
             assertTrue(amqMessage.isCompressed());
