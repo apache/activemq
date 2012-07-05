@@ -93,6 +93,16 @@
                 <bean id="Connector" class="org.eclipse.jetty.server.nio.SelectChannelConnector">
                     <property name="port" value="8161" />
                 </bean>
+                <!--
+                    Enable this connector if you wish to use https with web console
+                -->
+                <!--
+                <bean id="SecureConnector" class="org.eclipse.jetty.server.ssl.SslSelectChannelConnector">
+                    <property name="port" value="8162" />
+                    <property name="keystore" value="file:${activemq.conf}/broker.ks" />
+                    <property name="password" value="password" />
+                </bean>
+                -->
             </list>
         </property>
 
