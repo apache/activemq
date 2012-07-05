@@ -490,7 +490,7 @@ public class StompTest extends CombinationTestSupport {
         frame = stompConnection.receiveFrame();
         assertTrue(frame.startsWith("CONNECTED"));
 
-        frame = "SEND\n destination:/queue/" + getQueueName() + "\ncontent-length:5" + " \n\n" + "\u0001\u0002\u0000\u0004\u0005" + Stomp.NULL;
+        frame = "SEND\n" + "destination:/queue/" + getQueueName() + "\ncontent-length:5" + " \n\n" + "\u0001\u0002\u0000\u0004\u0005" + Stomp.NULL;
         stompConnection.sendFrame(frame);
 
         frame = "SUBSCRIBE\n" + "destination:/queue/" + getQueueName() + "\n" + "ack:auto\n\n" + Stomp.NULL;
@@ -519,7 +519,7 @@ public class StompTest extends CombinationTestSupport {
         assertTrue(frame.startsWith("CONNECTED"));
 
         for( int ix = 0; ix < MSG_COUNT; ix++) {
-            frame = "SEND\n destination:/queue/" + getQueueName() + "\ncontent-length:5" + " \n\n" + "\u0001\u0002\u0000\u0004\u0005" + Stomp.NULL;
+            frame = "SEND\n" + "destination:/queue/" + getQueueName() + "\ncontent-length:5" + " \n\n" + "\u0001\u0002\u0000\u0004\u0005" + Stomp.NULL;
             stompConnection.sendFrame(frame);
         }
 
@@ -1821,7 +1821,7 @@ public class StompTest extends CombinationTestSupport {
         assertTrue(receipt.getAction().startsWith("RECEIPT"));
         assertEquals("8fee4b8-4e5c9f66-4703-e936-2", receipt.getHeaders().get("receipt-id"));
 
-        frame = "SEND\n destination:/queue/" + getQueueName() + 123 + "\ncontent-length:0" + " \n\n" + Stomp.NULL;
+        frame = "SEND\n" + "destination:/queue/" + getQueueName() + 123 + "\ncontent-length:0" + " \n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
 
         frame = "SUBSCRIBE\n" + "destination:/queue/" + getQueueName() + 123 + "\n" + "id:8fee4b8-4e5c9f66-4703-e936-2" + "\n" + "receipt:8fee4b8-4e5c9f66-4703-e936-1" + "\n\n" + Stomp.NULL;

@@ -180,7 +180,8 @@ public class StompLoadTest {
         TimeUnit.SECONDS.sleep(5);
 
         for( int ix = 0; ix < MSG_COUNT; ix++) {
-            frame = "SEND\n destination:/topic/" + getDestinationName() +
+            frame = "SEND\n" +
+                    "destination:/topic/" + getDestinationName() +
                     "\nid:" + ix +
                     "\ncontent-length:5" + " \n\n" +
                     "\u0001\u0002\u0000\u0004\u0005" + Stomp.NULL;
