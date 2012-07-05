@@ -19,9 +19,9 @@ package org.apache.activemq.store.leveldb;
 import java.io.File;
 
 import junit.framework.TestCase;
+
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQTopic;
-import org.apache.activemq.store.memory.MemoryPersistenceAdapter;
 import org.apache.activemq.usage.SystemUsage;
 import org.apache.activemq.xbean.BrokerFactoryBean;
 import org.slf4j.Logger;
@@ -30,7 +30,7 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 
 /**
- * 
+ *
  */
 public class LevelDBConfigTest extends TestCase {
 
@@ -62,7 +62,7 @@ public class LevelDBConfigTest extends TestCase {
             assertEquals("Broker Config Error (populateJMSXUserID)", false, broker.isPopulateJMSXUserID());
             assertEquals("Broker Config Error (useLoggingForShutdownErrors)", true, broker.isUseLoggingForShutdownErrors());
             assertEquals("Broker Config Error (useJmx)", true, broker.isUseJmx());
-            assertEquals("Broker Config Error (persistent)", false, broker.isPersistent());
+            assertEquals("Broker Config Error (persistent)", true, broker.isPersistent());
             assertEquals("Broker Config Error (useShutdownHook)", false, broker.isUseShutdownHook());
             assertEquals("Broker Config Error (deleteAllMessagesOnStartup)", true, broker.isDeleteAllMessagesOnStartup());
             LOG.info("Success");
@@ -85,7 +85,7 @@ public class LevelDBConfigTest extends TestCase {
 
             assertNotNull(systemUsage.getStoreUsage().getStore());
             assertTrue(systemUsage.getStoreUsage().getStore() instanceof LevelDBPersistenceAdapter);
-                        
+
             LOG.info("Success");
 
         } finally {
