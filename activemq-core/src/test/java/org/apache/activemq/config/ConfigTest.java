@@ -31,7 +31,9 @@ import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.jms.Topic;
 import javax.sql.DataSource;
+
 import junit.framework.TestCase;
+
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
@@ -136,7 +138,7 @@ public class ConfigTest extends TestCase {
      */
     public void testJdbcConfig() throws Exception {
         // System.out.print("Checking jdbc persistence adapter configuration...
-        // ");     
+        // ");
         File journalFile = new File(JOURNAL_ROOT + "testJDBCConfig/journal");
         recursiveDelete(journalFile);
 
