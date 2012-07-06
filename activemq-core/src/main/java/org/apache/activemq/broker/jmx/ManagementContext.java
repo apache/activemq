@@ -24,8 +24,10 @@ import javax.management.*;
 import javax.management.remote.JMXConnectorServer;
 import javax.management.remote.JMXConnectorServerFactory;
 import javax.management.remote.JMXServiceURL;
+import javax.net.ServerSocketFactory;
 import java.io.IOException;
 import java.lang.reflect.Method;
+import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.net.ServerSocket;
 import java.rmi.registry.LocateRegistry;
@@ -427,7 +429,7 @@ public class ManagementContext implements Service {
                 registry = LocateRegistry.createRegistry(connectorPort, null, new RMIServerSocketFactory() {
                     public ServerSocket createServerSocket(int port)
                             throws IOException {
-                        registrySocket = new ServerSocket(port);
+                        registrySocket = ServerSocketFactory.getDefault().createServerSocket(connectorPort, 0, InetAddress.getByName(connectorHost));
                         registrySocket.setReuseAddress(true);
                         return registrySocket;
                     }});
