@@ -23,6 +23,8 @@ import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.concurrent.atomic.AtomicInteger;
 import javax.management.ObjectName;
@@ -364,21 +366,54 @@ public class BrokerView implements BrokerViewMBean {
         }
     }
 
+    public  Map<String, String> getTransportConnectors() {
+        Map<String, String> answer = new HashMap<String, String>();
+        try {
+            for (TransportConnector connector : brokerService.getTransportConnectors()) {
+                answer.put(connector.getName(), connector.getConnectUri().toString());
+            }
+        } catch (Exception e) {
+            LOG.debug("Failed to read URI to build transport connectors map", e);
+        }
+        return answer;
+    }
+
+    @Override
+    public String getTransportConnectorByType(String type) {
+        return brokerService.getTransportConnectorURIsAsMap().get(type);
+    }
+
+    @Deprecated
+    /**
+     * @deprecated use {@link #getTransportConnectors()} or {@link #getTransportConnectorByType(String)}
+     */
     public String getOpenWireURL() {
         String answer = brokerService.getTransportConnectorURIsAsMap().get("tcp");
         return answer != null ? answer : "";
     }
 
+    @Deprecated
+    /**
+     * @deprecated use {@link #getTransportConnectors()} or {@link #getTransportConnectorByType(String)}
+     */
     public String getStompURL() {
         String answer = brokerService.getTransportConnectorURIsAsMap().get("stomp");
         return answer != null ? answer : "";
     }
 
+    @Deprecated
+    /**
+     * @deprecated use {@link #getTransportConnectors()} or {@link #getTransportConnectorByType(String)}
+     */
     public String getSslURL() {
         String answer = brokerService.getTransportConnectorURIsAsMap().get("ssl");
         return answer != null ? answer : "";
     }
 
+    @Deprecated
+    /**
+     * @deprecated use {@link #getTransportConnectors()} or {@link #getTransportConnectorByType(String)}
+     */
     public String getStompSslURL() {
         String answer = brokerService.getTransportConnectorURIsAsMap().get("stomp+ssl");
         return answer != null ? answer : "";

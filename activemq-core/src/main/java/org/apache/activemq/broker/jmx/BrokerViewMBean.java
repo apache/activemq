@@ -19,6 +19,8 @@ package org.apache.activemq.broker.jmx;
 import javax.management.ObjectName;
 import org.apache.activemq.Service;
 
+import java.util.Map;
+
 
 /**
  * @author David Martin Clavo david(dot)martin(dot)clavo(at)gmail.com (for the reloadLog4jProperties method)
@@ -249,20 +251,42 @@ public interface BrokerViewMBean extends Service {
     @MBeanInfo(value="Reloads log4j.properties from the classpath.")
     public void reloadLog4jProperties() throws Throwable;
 
-    @MBeanInfo("The url of the openwire connector")
+    /**
+     * @deprecated use {@link #getTransportConnectors()} or {@link #getTransportConnectorByType(String)}
+     */
+    @Deprecated
+    @MBeanInfo("The url of the openwire connector - deprecated, use getTransportConnectors or getTransportConnectorByType instead")
     String getOpenWireURL();
 
-    @MBeanInfo("The url of the stomp connector")
+    /**
+     * @deprecated use {@link #getTransportConnectors()} or {@link #getTransportConnectorByType(String)}
+     */
+    @Deprecated
+    @MBeanInfo("The url of the stomp connector - deprecated, use getTransportConnectors or getTransportConnectorByType instead")
     String getStompURL();
 
-    @MBeanInfo("The url of the SSL connector")
+    /**
+     * @deprecated use {@link #getTransportConnectors()} or {@link #getTransportConnectorByType(String)}
+     */
+    @Deprecated
+    @MBeanInfo("The url of the SSL connector - deprecated, use getTransportConnectors or getTransportConnectorByType instead")
     String getSslURL();
 
-    @MBeanInfo("The url of the Stomp SSL connector")
+    /**
+     * @deprecated use {@link #getTransportConnectors()} or {@link #getTransportConnectorByType(String)}
+     */
+    @Deprecated
+    @MBeanInfo("The url of the Stomp SSL connector - deprecated, use getTransportConnectors or getTransportConnectorByType instead")
     String getStompSslURL();
 
     @MBeanInfo("The url of the VM connector")
     String getVMURL();
+
+    @MBeanInfo("The map of all defined transport connectors, with transport name as a key")
+    Map<String, String> getTransportConnectors();
+
+    @MBeanInfo("The url of transport connector by it's type; e.g. tcp, stomp, ssl, etc.")
+    String getTransportConnectorByType(String type);
 
     @MBeanInfo("The location of the data directory")
     public String getDataDirectory();

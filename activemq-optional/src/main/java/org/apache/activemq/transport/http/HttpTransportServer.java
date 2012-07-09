@@ -19,6 +19,7 @@ package org.apache.activemq.transport.http;
 import org.apache.activemq.command.BrokerInfo;
 import org.apache.activemq.transport.SocketConnectorFactory;
 import org.apache.activemq.transport.TransportServerSupport;
+import org.apache.activemq.transport.WebTransportServerSupport;
 import org.apache.activemq.transport.util.TextWireFormat;
 import org.apache.activemq.transport.xstream.XStreamWireFormat;
 import org.apache.activemq.util.ServiceStopper;
@@ -28,18 +29,15 @@ import org.eclipse.jetty.server.handler.GzipHandler;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.URI;
 import java.util.Map;
 
-public class HttpTransportServer extends TransportServerSupport {
+public class HttpTransportServer extends WebTransportServerSupport {
 
-    private URI bindAddress;
     private TextWireFormat wireFormat;
-    private Server server;
-    private Connector connector;
     private HttpTransportFactory transportFactory;
-    protected SocketConnectorFactory socketConnectorFactory;
 
     public HttpTransportServer(URI uri, HttpTransportFactory factory) {
         super(uri);
@@ -79,10 +77,9 @@ public class HttpTransportServer extends TransportServerSupport {
         if (connector == null) {
             connector = socketConnectorFactory.createConnector();
         }
-        connector.setHost(bindAddress.getHost());
-        connector.setPort(bindAddress.getPort());
-        connector.setServer(server);
-        server.addConnector(connector);
+
+        URI bind = getBindLocation();
+        bind();
 
         ServletContextHandler contextHandler =
             new ServletContextHandler(server, "/", ServletContextHandler.NO_SECURITY);
@@ -100,6 +97,7 @@ public class HttpTransportServer extends TransportServerSupport {
         contextHandler.setHandler(gzipHandler);
 
         server.start();
+        setConnectURI(new URI(bind.getScheme(), bind.getUserInfo(), host, connector.getLocalPort(), bind.getPath(), bind.getQuery(), bind.getFragment()));
     }
 
     protected void doStop(ServiceStopper stopper) throws Exception {

@@ -90,8 +90,9 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
     public void testConnectors() throws Exception{
         ObjectName brokerName = assertRegisteredObjectName(domain + ":Type=Broker,BrokerName=localhost");
         BrokerViewMBean broker = (BrokerViewMBean)MBeanServerInvocationHandler.newProxyInstance(mbeanServer, brokerName, BrokerViewMBean.class, true);
+
         assertEquals("openwire URL port doesn't equal bind Address",
-                     new URI(broker.getOpenWireURL()).getPort(),
+                     new URI(broker.getTransportConnectorByType("tcp")).getPort(),
                      new URI(this.broker.getTransportConnectors().get(0).getPublishableConnectString()).getPort());
     }
 

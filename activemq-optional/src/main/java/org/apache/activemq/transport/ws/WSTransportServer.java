@@ -20,6 +20,8 @@ package org.apache.activemq.transport.ws;
 import org.apache.activemq.command.BrokerInfo;
 import org.apache.activemq.transport.SocketConnectorFactory;
 import org.apache.activemq.transport.TransportServerSupport;
+import org.apache.activemq.transport.WebTransportServerSupport;
+import org.apache.activemq.util.InetAddressUtil;
 import org.apache.activemq.util.ServiceStopper;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
@@ -27,6 +29,7 @@ import org.eclipse.jetty.server.nio.SelectChannelConnector;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.URI;
 import java.util.Map;
@@ -35,12 +38,7 @@ import java.util.Map;
  * Creates a web server and registers web socket server
  *
  */
-public class WSTransportServer extends TransportServerSupport {
-
-    private URI bindAddress;
-    private Server server;
-    private Connector connector;
-    protected SocketConnectorFactory socketConnectorFactory;
+public class WSTransportServer extends WebTransportServerSupport {
 
     public WSTransportServer(URI location) {
         super(location);
@@ -50,13 +48,14 @@ public class WSTransportServer extends TransportServerSupport {
 
     protected void doStart() throws Exception {
         server = new Server();
+
         if (connector == null) {
             connector = socketConnectorFactory.createConnector();
         }
-        connector.setHost(bindAddress.getHost());
-        connector.setPort(bindAddress.getPort());
-        connector.setServer(server);
-        server.addConnector(connector);
+
+        URI bind = getBindLocation();
+
+        bind();
 
         ServletContextHandler contextHandler =
                 new ServletContextHandler(server, "/", ServletContextHandler.NO_SECURITY);
@@ -68,6 +67,7 @@ public class WSTransportServer extends TransportServerSupport {
         contextHandler.setAttribute("acceptListener", getAcceptListener());
 
         server.start();
+        setConnectURI(new URI(bind.getScheme(), bind.getUserInfo(), host, connector.getLocalPort(), bind.getPath(), bind.getQuery(), bind.getFragment()));
     }
 
     protected void doStop(ServiceStopper stopper) throws Exception {
