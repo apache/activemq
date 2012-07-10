@@ -222,7 +222,9 @@ public class Topic extends BaseDestination implements Task {
                     info = null;
                 } else {
                     synchronized (consumers) {
-                        consumers.add(subscription);
+                    	if (!consumers.contains(subscription)) {
+                    		consumers.add(subscription);
+                    	}
                     }
                 }
             }
