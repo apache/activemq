@@ -17,6 +17,7 @@
 package org.apache.activemq.network.jms;
 
 import java.util.concurrent.atomic.AtomicBoolean;
+
 import javax.jms.Connection;
 import javax.jms.Destination;
 import javax.jms.JMSException;
@@ -24,6 +25,7 @@ import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageListener;
 import javax.jms.MessageProducer;
+
 import org.apache.activemq.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -96,11 +98,11 @@ public abstract class DestinationBridge implements Service, MessageListener {
         int attempt = 0;
         final int maxRetries = jmsConnector.getReconnectionPolicy().getMaxSendRetries();
 
-        while (started.get() && message != null && ++attempt <= maxRetries) {
+        while (started.get() && message != null && attempt <= maxRetries) {
 
             try {
 
-                if (attempt > 0) {
+                if (attempt++ > 0) {
                     try {
                         Thread.sleep(jmsConnector.getReconnectionPolicy().getNextDelay(attempt));
                     } catch(InterruptedException e) {
