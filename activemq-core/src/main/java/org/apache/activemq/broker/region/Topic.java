@@ -220,6 +220,9 @@ public class Topic extends BaseDestination implements Task {
                     // Need to delete the subscription
                     topicStore.deleteSubscription(clientId, subscriptionName);
                     info = null;
+                    synchronized (consumers) {
+                    	consumers.remove(subscription);
+                    }
                 } else {
                     synchronized (consumers) {
                     	if (!consumers.contains(subscription)) {
