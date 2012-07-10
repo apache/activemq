@@ -18,18 +18,18 @@ package org.apache.activemq.broker.ft;
 
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.net.InetSocketAddress;
 import java.net.URI;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.sql.SQLFeatureNotSupportedException;
+import java.util.logging.Logger;
+
 import javax.sql.DataSource;
+
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
-import org.apache.activemq.command.BrokerInfo;
 import org.apache.activemq.store.jdbc.DataSourceSupport;
 import org.apache.activemq.store.jdbc.JDBCPersistenceAdapter;
-import org.apache.activemq.transport.TransportAcceptListener;
-import org.apache.activemq.transport.TransportServer;
 import org.apache.derby.jdbc.EmbeddedDataSource;
 
 public class JDBCQueueMasterSlaveTest extends QueueMasterSlaveTest {
@@ -42,7 +42,7 @@ public class JDBCQueueMasterSlaveTest extends QueueMasterSlaveTest {
         sharedDs = new SyncDataSource((EmbeddedDataSource)new DataSourceSupport().getDataSource());
         super.setUp();
     }
-    
+
     protected void createMaster() throws Exception {
         master = new BrokerService();
         master.setBrokerName("master");
@@ -154,6 +154,10 @@ public class JDBCQueueMasterSlaveTest extends QueueMasterSlaveTest {
 
             EmbeddedDataSource getDelegate() {
                 return delegate;
+            }
+
+            public Logger getParentLogger() throws SQLFeatureNotSupportedException {
+                return null;
             }
         };
 }
