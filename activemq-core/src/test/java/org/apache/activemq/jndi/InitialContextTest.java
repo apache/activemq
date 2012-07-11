@@ -23,6 +23,7 @@ import javax.naming.InitialContext;
 
 import junit.framework.TestCase;
 import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.ActiveMQXAConnectionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,6 +41,18 @@ public class InitialContextTest extends TestCase {
         ActiveMQConnectionFactory connectionFactory = (ActiveMQConnectionFactory)context.lookup("ConnectionFactory");
 
         assertTrue("Should have created a ConnectionFactory", connectionFactory != null);
+
+        LOG.info("Created with brokerURL: " + connectionFactory.getBrokerURL());
+
+    }
+
+    public void testInitialContextHasXA() throws Exception {
+        InitialContext context = new InitialContext();
+        assertTrue("Created context", context != null);
+
+        ActiveMQXAConnectionFactory connectionFactory = (ActiveMQXAConnectionFactory)context.lookup("XAConnectionFactory");
+
+        assertTrue("Should have created an XAConnectionFactory", connectionFactory != null);
 
         LOG.info("Created with brokerURL: " + connectionFactory.getBrokerURL());
 

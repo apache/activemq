@@ -48,7 +48,7 @@ import org.apache.activemq.command.ActiveMQTopic;
  */
 public class ActiveMQInitialContextFactory implements InitialContextFactory {
 
-    private static final String[] DEFAULT_CONNECTION_FACTORY_NAMES = {"ConnectionFactory", "QueueConnectionFactory", "TopicConnectionFactory"};
+    private static final String[] DEFAULT_CONNECTION_FACTORY_NAMES = {"ConnectionFactory", "XAConnectionFactory", "QueueConnectionFactory", "TopicConnectionFactory"};
 
     private String connectionPrefix = "connection.";
     private String queuePrefix = "queue.";
@@ -127,6 +127,10 @@ public class ActiveMQInitialContextFactory implements InitialContextFactory {
 
     protected ActiveMQConnectionFactory createConnectionFactory(String name, Hashtable environment) throws URISyntaxException {
         Hashtable temp = new Hashtable(environment);
+        if (DEFAULT_CONNECTION_FACTORY_NAMES[1].equals(name)) {
+            // don't try to mod environment, it may be readonly
+            temp.put("xa", String.valueOf(true));
+        }
         String prefix = connectionPrefix + name + ".";
         for (Iterator iter = environment.entrySet().iterator(); iter.hasNext();) {
             Map.Entry entry = (Map.Entry)iter.next();
