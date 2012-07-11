@@ -90,7 +90,7 @@ public class DurableSubscriptionActivationTest extends org.apache.activemq.TestS
         }
     }
 
-    public void testActivateWithExistingTopic1() throws Exception {
+    public void testActivateWithExistingTopic() throws Exception {
         // create durable subscription
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         session.createDurableSubscriber(topic, "SubsId");
@@ -101,36 +101,13 @@ public class DurableSubscriptionActivationTest extends org.apache.activemq.TestS
         // restart the broker
         restartBroker();
 
-        // activate
-        session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        session.createDurableSubscriber(topic, "SubsId");
-
+        d = broker.getDestination(topic);
         assertTrue("More than one consumer found: " + d.getConsumers().size(), d.getConsumers().size() == 1);
-
-        // re-activate
-        connection.close();
-        connection = createConnection();
-        session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        session.createDurableSubscriber(topic, "SubsId");
-
-        assertTrue("More than one consumer found: " + d.getConsumers().size(), d.getConsumers().size() == 1);
-    }
-
-    public void testActivateWithExistingTopic2() throws Exception {
-        // create durable subscription
-        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        session.createDurableSubscriber(topic, "SubsId");
-
-        // restart the broker
-        restartBroker();
-
-        Destination d1 = broker.getDestination(topic);
 
         // activate
         session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         session.createDurableSubscriber(topic, "SubsId");
 
-        Destination d = broker.getDestination(topic);
         assertTrue("More than one consumer found: " + d.getConsumers().size(), d.getConsumers().size() == 1);
 
         // re-activate
