@@ -76,6 +76,7 @@ public class DurableSubscriptionActivationTest extends org.apache.activemq.TestS
         broker.setDestinations(new ActiveMQDestination[]{topic});
 
         broker.start();
+        broker.waitUntilStarted();
 
         connection = createConnection();
     }
@@ -83,8 +84,10 @@ public class DurableSubscriptionActivationTest extends org.apache.activemq.TestS
     private void destroyBroker() throws Exception {
         if (connection != null)
             connection.close();
-        if (broker != null)
+        if (broker != null) {
             broker.stop();
+            broker.waitUntilStopped();
+        }
     }
 
     public void testActivateWithExistingTopic1() throws Exception {
@@ -121,6 +124,8 @@ public class DurableSubscriptionActivationTest extends org.apache.activemq.TestS
         // restart the broker
         restartBroker();
 
+        Destination d1 = broker.getDestination(topic);
+
         // activate
         session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         session.createDurableSubscriber(topic, "SubsId");
@@ -136,4 +141,5 @@ public class DurableSubscriptionActivationTest extends org.apache.activemq.TestS
 
         assertTrue("More than one consumer found: " + d.getConsumers().size(), d.getConsumers().size() == 1);
     }
+
 }

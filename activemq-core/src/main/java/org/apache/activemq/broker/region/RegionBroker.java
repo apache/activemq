@@ -181,7 +181,6 @@ public class RegionBroker extends EmptyBroker {
 
     @Override
     public void start() throws Exception {
-        ((TopicRegion)topicRegion).setKeepDurableSubsActive(keepDurableSubsActive);
         started = true;
         queueRegion.start();
         topicRegion.start();
@@ -722,6 +721,7 @@ public class RegionBroker extends EmptyBroker {
 
     public void setKeepDurableSubsActive(boolean keepDurableSubsActive) {
         this.keepDurableSubsActive = keepDurableSubsActive;
+        ((TopicRegion)topicRegion).setKeepDurableSubsActive(keepDurableSubsActive);
     }
 
     public DestinationInterceptor getDestinationInterceptor() {
