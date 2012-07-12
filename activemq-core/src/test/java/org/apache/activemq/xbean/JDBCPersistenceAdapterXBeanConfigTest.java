@@ -17,9 +17,7 @@
 package org.apache.activemq.xbean;
 
 import java.net.URI;
-
 import junit.framework.TestCase;
-
 import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.store.PersistenceAdapter;
@@ -28,7 +26,7 @@ import org.apache.activemq.store.jdbc.JDBCPersistenceAdapter;
 /**
  * 
  */
-public class JDBCPersistenceXBeanConfigTest extends TestCase {
+public class JDBCPersistenceAdapterXBeanConfigTest extends TestCase {
 
     protected BrokerService brokerService;
 
@@ -55,7 +53,7 @@ public class JDBCPersistenceXBeanConfigTest extends TestCase {
     }
 
     protected BrokerService createBroker() throws Exception {
-        String uri = "org/apache/activemq/xbean/jdbc-persistence-test.xml";
+        String uri = "org/apache/activemq/xbean/jdbc-persistence-adapter-test.xml";
         return BrokerFactory.createBroker(new URI("xbean:" + uri));
     }
 
