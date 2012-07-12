@@ -89,6 +89,9 @@ public class WebClient implements HttpSessionActivationListener, HttpSessionBind
     private CamelContext camelContext;
     private ProducerTemplate producerTemplate;
 
+    private String username;
+    private String password;
+
     public WebClient() {
         if (factory == null) {
             throw new IllegalStateException("initContext(ServletContext) not called");
@@ -138,6 +141,22 @@ public class WebClient implements HttpSessionActivationListener, HttpSessionBind
 
     public void setDeliveryMode(int deliveryMode) {
         this.deliveryMode = deliveryMode;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
     }
 
     public synchronized void closeConsumers() {
@@ -244,7 +263,7 @@ public class WebClient implements HttpSessionActivationListener, HttpSessionBind
 
     public Connection getConnection() throws JMSException {
         if (connection == null) {
-            connection = factory.createConnection();
+            connection = factory.createConnection(username, password);
             connection.start();
         }
         return connection;
@@ -368,7 +387,21 @@ public class WebClient implements HttpSessionActivationListener, HttpSessionBind
     }
 
     protected static WebClient createWebClient(HttpServletRequest request) {
-        return new WebClient();
+        WebClient client = new WebClient();
+        String auth = request.getHeader("Authorization");
+        if (auth != null) {
+            String[] tokens = auth.split(" ");
+            if (tokens.length == 2) {
+                String encoded = tokens[1].trim();
+                String credentials = new String(javax.xml.bind.DatatypeConverter.parseBase64Binary(encoded));
+                String[] creds = credentials.split(":");
+                if (creds.length == 2) {
+                    client.setUsername(creds[0]);
+                    client.setPassword(creds[1]);
+                }
+            }
+        }
+        return client;
     }
 
 }

@@ -178,4 +178,18 @@ public class RestTest extends JettyTestSupport {
         assertNotNull("Headers Exist", fields);
         assertEquals("header value", "value", fields.getStringField("property"));
     }
+
+    public void testAuth() throws Exception {
+        HttpClient httpClient = new HttpClient();
+        httpClient.start();
+        ContentExchange contentExchange = new ContentExchange();
+        httpClient.setConnectorType(HttpClient.CONNECTOR_SELECT_CHANNEL);
+        contentExchange.setMethod("POST");
+        contentExchange.setURL("http://localhost:8080/message/testPost?type=queue");
+        contentExchange.setRequestHeader("Authorization", "Basic YWRtaW46YWRtaW4=");
+        httpClient.send(contentExchange);
+
+        contentExchange.waitForDone();
+        assertTrue("success status", HttpStatus.isSuccess(contentExchange.getResponseStatus()));
+    }
 }

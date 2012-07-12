@@ -83,11 +83,11 @@ public class JettyTestSupport extends TestCase {
     }
 
     protected void tearDown() throws Exception {
+        session.close();
+        connection.close();
         server.stop();
         broker.stop();
         broker.waitUntilStopped();
-        session.close();
-        connection.close();
     }
 
     public void waitForJettySocketToAccept(String bindLocation) throws Exception {
