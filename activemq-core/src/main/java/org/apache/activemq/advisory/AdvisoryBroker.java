@@ -362,11 +362,11 @@ public class AdvisoryBroker extends BrokerFilter {
     }
 
     @Override
-    public void fastProducer(ConnectionContext context,ProducerInfo producerInfo) {
-        super.fastProducer(context, producerInfo);
+    public void fastProducer(ConnectionContext context,ProducerInfo producerInfo,ActiveMQDestination destination) {
+        super.fastProducer(context, producerInfo, destination);
         try {
-            if (!AdvisorySupport.isAdvisoryTopic(producerInfo.getDestination())) {
-                ActiveMQTopic topic = AdvisorySupport.getFastProducerAdvisoryTopic(producerInfo.getDestination());
+            if (!AdvisorySupport.isAdvisoryTopic(destination)) {
+                ActiveMQTopic topic = AdvisorySupport.getFastProducerAdvisoryTopic(destination);
                 ActiveMQMessage advisoryMessage = new ActiveMQMessage();
                 advisoryMessage.setStringProperty(AdvisorySupport.MSG_PROPERTY_PRODUCER_ID, producerInfo.getProducerId().toString());
                 fireAdvisory(context, topic, producerInfo, null, advisoryMessage);

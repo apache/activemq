@@ -200,7 +200,7 @@ public class AdvisoryTempDestinationTests extends TestCase {
 
     private PolicyEntry createPolicyEntry(ConstantPendingMessageLimitStrategy strategy) {
         PolicyEntry policy = new PolicyEntry();
-        policy.setAdvisdoryForFastProducers(true);
+        policy.setAdvisoryForFastProducers(true);
         policy.setAdvisoryForConsumed(true);
         policy.setAdvisoryForDelivery(true);
         policy.setAdvisoryForDiscardingMessages(true);

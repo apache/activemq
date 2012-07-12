@@ -510,11 +510,11 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport {
     }
 
     @Override
-    public void fastProducer(ConnectionContext context, ProducerInfo producerInfo) {
+    public void fastProducer(ConnectionContext context, ProducerInfo producerInfo,ActiveMQDestination destination) {
         if (isLogAll() || isLogProducerEvents() || isLogInternalEvents()) {
             LOG.info("Fast Producer : " + producerInfo);
         }
-        super.fastProducer(context, producerInfo);
+        super.fastProducer(context, producerInfo, destination);
     }
 
     @Override

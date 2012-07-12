@@ -282,8 +282,8 @@ public class MutableBrokerFilter implements Broker {
         return getNext().getBrokerSequenceId();
     }
     
-    public void fastProducer(ConnectionContext context,ProducerInfo producerInfo) {
-        getNext().fastProducer(context, producerInfo);
+    public void fastProducer(ConnectionContext context,ProducerInfo producerInfo,ActiveMQDestination destination) {
+        getNext().fastProducer(context, producerInfo, destination);
     }
 
     public void isFull(ConnectionContext context,Destination destination, Usage usage) {

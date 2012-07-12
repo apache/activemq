@@ -263,7 +263,7 @@ public class EmptyBroker implements Broker {
         return -1l;
     }
     
-    public void fastProducer(ConnectionContext context,ProducerInfo producerInfo) {
+    public void fastProducer(ConnectionContext context,ProducerInfo producerInfo,ActiveMQDestination destination) {
     }
 
     public void isFull(ConnectionContext context, Destination destination,Usage usage) {

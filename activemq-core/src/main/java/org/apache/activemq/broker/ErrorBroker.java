@@ -273,7 +273,7 @@ public class ErrorBroker implements Broker {
         throw new BrokerStoppedException(this.message);
     }
     
-    public void fastProducer(ConnectionContext context,ProducerInfo producerInfo) {
+    public void fastProducer(ConnectionContext context,ProducerInfo producerInfo,ActiveMQDestination destination) {
         throw new BrokerStoppedException(this.message);
     }
 

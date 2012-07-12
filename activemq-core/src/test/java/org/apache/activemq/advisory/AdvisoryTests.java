@@ -210,7 +210,7 @@ public class AdvisoryTests extends TestCase {
     protected void configureBroker(BrokerService answer) throws Exception {
         answer.setPersistent(false);
         PolicyEntry policy = new PolicyEntry();
-        policy.setAdvisdoryForFastProducers(true);
+        policy.setAdvisoryForFastProducers(true);
         policy.setAdvisoryForConsumed(true);
         policy.setAdvisoryForDelivery(true);
         policy.setAdvisoryForDiscardingMessages(true);

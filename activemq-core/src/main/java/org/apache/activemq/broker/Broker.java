@@ -361,8 +361,9 @@ public interface Broker extends Region, Service {
      * Called to notify a producer is too fast
      * @param context
      * @param producerInfo
+     * @param destination
      */
-    void fastProducer(ConnectionContext context,ProducerInfo producerInfo);
+    void fastProducer(ConnectionContext context,ProducerInfo producerInfo,ActiveMQDestination destination);
     
     /**
      * Called when a Usage reaches a limit

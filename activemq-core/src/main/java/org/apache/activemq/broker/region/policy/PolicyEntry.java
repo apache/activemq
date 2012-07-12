@@ -74,7 +74,7 @@ public class PolicyEntry extends DestinationMapEntry {
     private int timeBeforeDispatchStarts = 0;
     private int consumersBeforeDispatchStarts = 0;
     private boolean advisoryForSlowConsumers;
-    private boolean advisdoryForFastProducers;
+    private boolean advisoryForFastProducers;
     private boolean advisoryForDiscardingMessages;
     private boolean advisoryWhenFull;
     private boolean advisoryForDelivery;
@@ -159,7 +159,7 @@ public class PolicyEntry extends DestinationMapEntry {
         destination.setAdvisoryForDelivery(isAdvisoryForDelivery());
         destination.setAdvisoryForDiscardingMessages(isAdvisoryForDiscardingMessages());
         destination.setAdvisoryForSlowConsumers(isAdvisoryForSlowConsumers());
-        destination.setAdvisdoryForFastProducers(isAdvisdoryForFastProducers());
+        destination.setAdvisoryForFastProducers(isAdvisoryForFastProducers());
         destination.setAdvisoryWhenFull(isAdvisoryWhenFull());
         destination.setSendAdvisoryIfNoConsumers(sendAdvisoryIfNoConsumers);
         destination.setExpireMessagesPeriod(getExpireMessagesPeriod());
@@ -661,15 +661,15 @@ public class PolicyEntry extends DestinationMapEntry {
     /**
      * @return the advisdoryForFastProducers
      */
-    public boolean isAdvisdoryForFastProducers() {
-        return advisdoryForFastProducers;
+    public boolean isAdvisoryForFastProducers() {
+        return advisoryForFastProducers;
     }
 
     /**
-     * @param advisdoryForFastProducers the advisdoryForFastProducers to set
+     * @param advisoryForFastProducers the advisdoryForFastProducers to set
      */
-    public void setAdvisdoryForFastProducers(boolean advisdoryForFastProducers) {
-        this.advisdoryForFastProducers = advisdoryForFastProducers;
+    public void setAdvisoryForFastProducers(boolean advisoryForFastProducers) {
+        this.advisoryForFastProducers = advisoryForFastProducers;
     }
 
     public void setMaxExpirePageSize(int maxExpirePageSize) {

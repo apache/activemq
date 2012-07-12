@@ -76,7 +76,7 @@ public abstract class BaseDestination implements Destination {
     private int minimumMessageSize = 1024;
     private boolean lazyDispatch = false;
     private boolean advisoryForSlowConsumers;
-    private boolean advisdoryForFastProducers;
+    private boolean advisoryForFastProducers;
     private boolean advisoryForDiscardingMessages;
     private boolean advisoryWhenFull;
     private boolean advisoryForDelivery;
@@ -407,15 +407,15 @@ public abstract class BaseDestination implements Destination {
     /**
      * @return the advisdoryForFastProducers
      */
-    public boolean isAdvisdoryForFastProducers() {
-        return advisdoryForFastProducers;
+    public boolean isAdvisoryForFastProducers() {
+        return advisoryForFastProducers;
     }
 
     /**
-     * @param advisdoryForFastProducers the advisdoryForFastProducers to set
+     * @param advisoryForFastProducers the advisdoryForFastProducers to set
      */
-    public void setAdvisdoryForFastProducers(boolean advisdoryForFastProducers) {
-        this.advisdoryForFastProducers = advisdoryForFastProducers;
+    public void setAdvisoryForFastProducers(boolean advisoryForFastProducers) {
+        this.advisoryForFastProducers = advisoryForFastProducers;
     }
 
     public boolean isSendAdvisoryIfNoConsumers() {
@@ -509,8 +509,8 @@ public abstract class BaseDestination implements Destination {
      * @param producerInfo
      */
     public void fastProducer(ConnectionContext context, ProducerInfo producerInfo) {
-        if (advisdoryForFastProducers) {
-            broker.fastProducer(context, producerInfo);
+        if (advisoryForFastProducers) {
+            broker.fastProducer(context, producerInfo, getActiveMQDestination());
         }
     }
 

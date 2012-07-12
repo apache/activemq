@@ -16,18 +16,16 @@
  */
 package org.apache.activemq.bugs;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
 import javax.jms.BytesMessage;
 import javax.jms.Connection;
+import javax.jms.DeliveryMode;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
+import javax.jms.ResourceAllocationException;
 import javax.jms.Session;
 import javax.jms.TemporaryQueue;
 import javax.jms.Topic;
-
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.broker.BrokerService;
@@ -43,9 +41,13 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class AMQ3324Test {
 
-    private static final transient Logger LOG = LoggerFactory.getLogger(AMQ3324Test.class);
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
+public class AMQ3903Test {
+
+    private static final transient Logger LOG = LoggerFactory.getLogger(AMQ3903Test.class);
 
     private static final String bindAddress = "tcp://0.0.0.0:0";
     private BrokerService broker;
@@ -72,76 +74,65 @@ public class AMQ3324Test {
     }
 
     @Test
-    public void testTempMessageConsumedAdvisoryConnectionClose() throws Exception {
+    public void testAdvisoryForFastGenericProducer() throws Exception {
+        doTestAdvisoryForFastProducer(true);
+    }
+
+    @Test
+    public void testAdvisoryForFastDedicatedProducer() throws Exception {
+        doTestAdvisoryForFastProducer(false);
+    }
+
+    public void doTestAdvisoryForFastProducer(boolean genericProducer) throws Exception {
 
         Connection connection = cf.createConnection();
         connection.start();
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
 
         final TemporaryQueue queue = session.createTemporaryQueue();
-        MessageConsumer consumer = session.createConsumer(queue);
 
-        final Topic advisoryTopic = AdvisorySupport.getMessageConsumedAdvisoryTopic((ActiveMQDestination) queue);
+        final Topic advisoryTopic = AdvisorySupport.getFastProducerAdvisoryTopic((ActiveMQDestination) queue);
 
         MessageConsumer advisoryConsumer = session.createConsumer(advisoryTopic);
-        MessageProducer producer = session.createProducer(queue);
+        MessageProducer producer = session.createProducer(genericProducer ? null : queue);
 
-        // send lots of messages to the tempQueue
-        for (int i = 0; i < MESSAGE_COUNT; i++) {
-            BytesMessage m = session.createBytesMessage();
-            m.writeBytes(new byte[1024]);
-            producer.send(m);
-        }
-
-        // consume one message from tempQueue
-        Message msg = consumer.receive(5000);
-        assertNotNull(msg);
+        try {
+            // send lots of messages to the tempQueue
+            for (int i = 0; i < MESSAGE_COUNT; i++) {
+                BytesMessage m = session.createBytesMessage();
+                m.writeBytes(new byte[1024]);
+                if (genericProducer) {
+                    producer.send(queue, m, DeliveryMode.PERSISTENT, 4, 0);
+                } else {
+                    producer.send(m);
+                }
+            }
+        } catch (ResourceAllocationException expectedOnLimitReachedAfterFastAdvisory) {}
 
         // check one advisory message has produced on the advisoryTopic
-        Message advCmsg = advisoryConsumer.receive(5000);
+        Message advCmsg = advisoryConsumer.receive(4000);
         assertNotNull(advCmsg);
+
 
         connection.close();
         LOG.debug("Connection closed, destinations should now become inactive.");
-
-        assertTrue("The destination " + advisoryTopic + "was not removed. ", Wait.waitFor(new Wait.Condition() {
-            @Override
-            public boolean isSatisified() throws Exception {
-                return broker.getAdminView().getTopics().length == 0;
-            }
-        }));
-
-        assertTrue("The destination " + queue + " was not removed. ", Wait.waitFor(new Wait.Condition() {
-            @Override
-            public boolean isSatisified() throws Exception {
-                return broker.getAdminView().getTemporaryQueues().length == 0;
-            }
-        }));
     }
 
     protected BrokerService createBroker() throws Exception {
         BrokerService answer = new BrokerService();
-        answer.setUseMirroredQueues(true);
         answer.setPersistent(false);
-        answer.setSchedulePeriodForDestinationPurge(1000);
+        answer.setUseJmx(false);
 
         PolicyEntry entry = new PolicyEntry();
-        entry.setGcInactiveDestinations(true);
-        entry.setInactiveTimoutBeforeGC(2000);
-        entry.setProducerFlowControl(true);
-        entry.setAdvisoryForConsumed(true);
         entry.setAdvisoryForFastProducers(true);
-        entry.setAdvisoryForDelivery(true);
+        entry.setMemoryLimit(10000);
         PolicyMap map = new PolicyMap();
         map.setDefaultEntry(entry);
 
-        MirroredQueue mirrorQ = new MirroredQueue();
-        mirrorQ.setCopyMessage(true);
-        DestinationInterceptor[] destinationInterceptors = new DestinationInterceptor[]{mirrorQ};
-        answer.setDestinationInterceptors(destinationInterceptors);
-
         answer.setDestinationPolicy(map);
         answer.addConnector(bindAddress);
+
+        answer.getSystemUsage().setSendFailIfNoSpace(true);
 
         return answer;
     }

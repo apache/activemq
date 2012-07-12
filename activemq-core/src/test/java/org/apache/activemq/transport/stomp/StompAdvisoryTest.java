@@ -20,27 +20,21 @@ package org.apache.activemq.transport.stomp;
 import junit.framework.TestCase;
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
-import org.apache.activemq.JmsTestSupport;
 import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.region.policy.ConstantPendingMessageLimitStrategy;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.ActiveMQQueue;
-import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.util.URISupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.jms.*;
 import java.io.File;
-import java.io.IOException;
 import java.net.Socket;
 import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -59,7 +53,7 @@ public class StompAdvisoryTest extends TestCase {
 
     private PolicyEntry createPolicyEntry() {
         PolicyEntry policy = new PolicyEntry();
-        policy.setAdvisdoryForFastProducers(true);
+        policy.setAdvisoryForFastProducers(true);
         policy.setAdvisoryForConsumed(true);
         policy.setAdvisoryForDelivery(true);
         policy.setAdvisoryForDiscardingMessages(true);
@@ -78,7 +72,7 @@ public class StompAdvisoryTest extends TestCase {
 
         broker.setPersistent(false);
         PolicyEntry policy = new PolicyEntry();
-        policy.setAdvisdoryForFastProducers(true);
+        policy.setAdvisoryForFastProducers(true);
         policy.setAdvisoryForConsumed(true);
         policy.setAdvisoryForDelivery(true);
         policy.setAdvisoryForDiscardingMessages(true);

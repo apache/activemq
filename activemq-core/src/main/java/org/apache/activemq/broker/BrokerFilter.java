@@ -271,8 +271,8 @@ public class BrokerFilter implements Broker {
     }
 
    
-    public void fastProducer(ConnectionContext context,ProducerInfo producerInfo) {
-        next.fastProducer(context, producerInfo);
+    public void fastProducer(ConnectionContext context,ProducerInfo producerInfo,ActiveMQDestination destination) {
+        next.fastProducer(context, producerInfo, destination);
     }
 
     public void isFull(ConnectionContext context,Destination destination, Usage usage) {
