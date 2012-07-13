@@ -40,7 +40,8 @@
           <outputFileNameMapping>@{artifactId}@-@{baseVersion}@@{dashClassifier?}@.@{extension}@</outputFileNameMapping>
           <packagingExcludes>
             WEB-INF/lib/jetty*.jar,
-            WEB-INF/lib/servlet*.jar
+            WEB-INF/lib/servlet*.jar,
+            WEB-INF/lib/jstl*.jar
           </packagingExcludes>
             <archive>
             <manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>
@@ -128,7 +129,9 @@
 				javax.management.remote,
 				javax.naming,
 				org.w3c.dom,
-				javax.servlet*,
+				javax.servlet,
+                javax.servlet.http,
+                javax.servlet.resources,
 				javax.servlet.jsp,
 				javax.servlet.jsp.tagext,
 				javax.servlet.jsp.el,
@@ -276,10 +279,12 @@
     <dependency>
       <groupId>javax.servlet</groupId>
       <artifactId>jstl</artifactId>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>taglibs</groupId>
       <artifactId>standard</artifactId>
+      <scope>provided</scope>
     </dependency>
 
 

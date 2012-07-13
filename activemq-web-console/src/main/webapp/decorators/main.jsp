@@ -21,16 +21,16 @@
     <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
     <title>${requestContext.brokerQuery.brokerAdmin.brokerName} : <decorator:title default="ActiveMQ Console" /></title>
     <style type="text/css" media="screen">
-        @import url(<c:url value="/styles/sorttable.css"/>);
-        @import url(<c:url value="/styles/type-settings.css"/>);
-        @import url(<c:url value="/styles/site.css"/>);
-        @import url(<c:url value="/styles/prettify.css"/>);
+        @import url('${pageContext.request.contextPath}/styles/sorttable.css');
+        @import url('${pageContext.request.contextPath}/styles/type-settings.css');
+        @import url('${pageContext.request.contextPath}/styles/site.css');
+        @import url('${pageContext.request.contextPath}/styles/prettify.css');
     </style>
     <c:if test="${!disableJavaScript}">
-        <script type='text/javascript' src='<c:url value="/js/common.js"/>'></script>
-        <script type='text/javascript' src='<c:url value="/js/css.js"/>'></script>
-        <script type='text/javascript' src='<c:url value="/js/standardista-table-sorting.js"/>'></script>
-        <script type='text/javascript' src='<c:url value="/js/prettify.js"/>'></script>
+        <script type='text/javascript' src='${pageContext.request.contextPath}/js/common.js'></script>
+        <script type='text/javascript' src='${pageContext.request.contextPath}/js/css.js'></script>
+        <script type='text/javascript' src='${pageContext.request.contextPath}/js/standardista-table-sorting.js'></script>
+        <script type='text/javascript' src='${pageContext.request.contextPath}/js/prettify.js'></script>
         <script>addEvent(window, 'load', prettyPrint)</script>
     </c:if>
 
