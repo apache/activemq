@@ -40,8 +40,7 @@
           <outputFileNameMapping>@{artifactId}@-@{baseVersion}@@{dashClassifier?}@.@{extension}@</outputFileNameMapping>
           <packagingExcludes>
             WEB-INF/lib/jetty*.jar,
-            WEB-INF/lib/servlet*.jar,
-            WEB-INF/lib/jstl*.jar
+            WEB-INF/lib/servlet*.jar
           </packagingExcludes>
             <archive>
             <manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>
@@ -279,12 +278,10 @@
     <dependency>
       <groupId>javax.servlet</groupId>
       <artifactId>jstl</artifactId>
-      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>taglibs</groupId>
       <artifactId>standard</artifactId>
-      <scope>provided</scope>
     </dependency>
 
 
