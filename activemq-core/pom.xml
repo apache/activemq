@@ -67,7 +67,6 @@
   </properties>
 
   <dependencies>
-
     <!-- =============================== -->
     <!-- Required Dependencies -->
     <!-- =============================== -->
@@ -79,13 +78,11 @@
       <groupId>org.apache.geronimo.specs</groupId>
       <artifactId>geronimo-jms_1.1_spec</artifactId>
     </dependency>
-
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>activeio-core</artifactId>
       <optional>true</optional>
     </dependency>
-
     <dependency>
       <groupId>org.apache.activemq</groupId>
       <artifactId>kahadb</artifactId>
@@ -96,9 +93,10 @@
       <artifactId>activemq-protobuf</artifactId>
       <optional>false</optional>
     </dependency>
-        <dependency>
+    <dependency>
       <groupId>org.fusesource.fuse-extra</groupId>
       <artifactId>fusemq-leveldb</artifactId>
+      <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>org.fusesource.mqtt-client</groupId>
@@ -113,8 +111,6 @@
       <groupId>org.osgi</groupId>
       <artifactId>org.osgi.core</artifactId>
     </dependency>
-
-
     <dependency>
       <groupId>org.apache.activemq</groupId>
       <artifactId>activemq-jaas</artifactId>
@@ -156,12 +152,10 @@
       <artifactId>xbean-spring</artifactId>
       <optional>true</optional>
     </dependency>
-
     <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring-context</artifactId>
     </dependency>
-
     <dependency>
       <groupId>org.apache.derby</groupId>
       <artifactId>derby</artifactId>
@@ -183,7 +177,6 @@
       <artifactId>activemq-openwire-generator</artifactId>
       <optional>true</optional>
     </dependency>
-
 
     <!-- =============================== -->
     <!-- Testing Dependencies            -->
@@ -218,7 +211,6 @@
       <artifactId>spring-test</artifactId>
       <scope>test</scope>
     </dependency>
-
     <dependency>
       <groupId>commons-io</groupId>
       <artifactId>commons-io</artifactId>
@@ -229,7 +221,6 @@
       <artifactId>activemq-jmdns_1.0</artifactId>
       <optional>true</optional>
     </dependency>
-
     <dependency>
       <groupId>org.jasypt</groupId>
       <artifactId>jasypt</artifactId>
@@ -264,15 +255,12 @@
       <version>${directory-version}</version>
       <scope>test</scope>
     </dependency>
-
     <dependency>
       <groupId>org.apache.directory.server</groupId>
       <artifactId>apacheds-server-integ</artifactId>
       <version>${directory-version}</version>
       <scope>test</scope>
     </dependency>
-
-
     <dependency>
       <groupId>org.jmock</groupId>
       <artifactId>jmock-junit4</artifactId>
@@ -289,8 +277,6 @@
       <version>${ftpserver-version}</version>
       <scope>test</scope>
     </dependency>
-
-
   </dependencies>
 
   <reporting>
@@ -365,7 +351,6 @@
           </groups>
         </configuration>
       </plugin>
-
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>findbugs-maven-plugin</artifactId>
@@ -376,10 +361,9 @@
         </configuration>
       </plugin>
     </plugins>
-    </reporting>
+  </reporting>
 
   <build>
-
     <resources>
       <resource>
         <directory>${project.basedir}/src/main/resources</directory>
@@ -528,7 +512,6 @@
           </execution>
         </executions>
       </plugin>
-
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-clean-plugin</artifactId>
@@ -540,11 +523,9 @@
           </filesets>
         </configuration>
       </plugin>
-
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-antrun-plugin</artifactId>
-
         <executions>
           <execution>
           <id>package</id>
@@ -588,7 +569,6 @@
           </dependency>
         </dependencies>
       </plugin>
-
       <!-- generate the attached tests jar -->
       <plugin>
         <artifactId>maven-jar-plugin</artifactId>
@@ -600,7 +580,6 @@
           </execution>
         </executions>
       </plugin>
-
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>javacc-maven-plugin</artifactId>
@@ -618,7 +597,6 @@
           </execution>
         </executions>
       </plugin>
-
       <plugin>
         <groupId>org.apache.xbean</groupId>
         <artifactId>maven-xbean-plugin</artifactId>
@@ -647,7 +625,6 @@
           </dependency>
         </dependencies>
       </plugin>
-
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>cobertura-maven-plugin</artifactId>
@@ -663,7 +640,6 @@
       </plugin>
     </plugins>
   </build>
-
   <profiles>
     <profile>
       <id>openwire-generate</id>
@@ -701,5 +677,4 @@
       </build>
     </profile>
   </profiles>
-
 </project>
