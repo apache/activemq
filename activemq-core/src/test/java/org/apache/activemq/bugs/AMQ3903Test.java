@@ -92,8 +92,11 @@ public class AMQ3903Test {
         final TemporaryQueue queue = session.createTemporaryQueue();
 
         final Topic advisoryTopic = AdvisorySupport.getFastProducerAdvisoryTopic((ActiveMQDestination) queue);
+        final Topic advisoryWhenFullTopic = AdvisorySupport.getFullAdvisoryTopic((ActiveMQDestination) queue);
 
         MessageConsumer advisoryConsumer = session.createConsumer(advisoryTopic);
+        MessageConsumer advisoryWhenFullConsumer = session.createConsumer(advisoryWhenFullTopic);
+
         MessageProducer producer = session.createProducer(genericProducer ? null : queue);
 
         try {
@@ -113,6 +116,8 @@ public class AMQ3903Test {
         Message advCmsg = advisoryConsumer.receive(4000);
         assertNotNull(advCmsg);
 
+        advCmsg = advisoryWhenFullConsumer.receive(4000);
+        assertNotNull(advCmsg);
 
         connection.close();
         LOG.debug("Connection closed, destinations should now become inactive.");
@@ -125,6 +130,7 @@ public class AMQ3903Test {
 
         PolicyEntry entry = new PolicyEntry();
         entry.setAdvisoryForFastProducers(true);
+        entry.setAdvisoryWhenFull(true);
         entry.setMemoryLimit(10000);
         PolicyMap map = new PolicyMap();
         map.setDefaultEntry(entry);
