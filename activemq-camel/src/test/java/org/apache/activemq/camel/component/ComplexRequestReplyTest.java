@@ -18,6 +18,8 @@ package org.apache.activemq.camel.component;
 
 import static org.junit.Assert.assertNotNull;
 
+import java.util.concurrent.TimeUnit;
+
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.pool.PooledConnectionFactory;
@@ -30,8 +32,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import scala.actors.threadpool.TimeUnit;
 
 public class ComplexRequestReplyTest {
 
