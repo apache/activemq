@@ -33,8 +33,8 @@ public class TransactionIdConversion {
         LocalTransactionId t = (LocalTransactionId) tx;
         KahaLocalTransactionId kahaTxId = new KahaLocalTransactionId();
         kahaTxId.setConnectionId(t.getConnectionId().getValue());
-        kahaTxId.setTransacitonId(t.getValue());
-        rc.setLocalTransacitonId(kahaTxId);
+        kahaTxId.setTransactionId(t.getValue());
+        rc.setLocalTransactionId(kahaTxId);
         return rc;
     }
 
@@ -53,20 +53,20 @@ public class TransactionIdConversion {
             kahaTxId.setBranchQualifier(new Buffer(t.getBranchQualifier()));
             kahaTxId.setGlobalTransactionId(new Buffer(t.getGlobalTransactionId()));
             kahaTxId.setFormatId(t.getFormatId());
-            rc.setXaTransacitonId(kahaTxId);
+            rc.setXaTransactionId(kahaTxId);
         }
         return rc;
     }
 
     static TransactionId convert(KahaTransactionInfo transactionInfo) {
-        if (transactionInfo.hasLocalTransacitonId()) {
-            KahaLocalTransactionId tx = transactionInfo.getLocalTransacitonId();
+        if (transactionInfo.hasLocalTransactionId()) {
+            KahaLocalTransactionId tx = transactionInfo.getLocalTransactionId();
             LocalTransactionId rc = new LocalTransactionId();
             rc.setConnectionId(new ConnectionId(tx.getConnectionId()));
-            rc.setValue(tx.getTransacitonId());
+            rc.setValue(tx.getTransactionId());
             return rc;
         } else {
-            KahaXATransactionId tx = transactionInfo.getXaTransacitonId();
+            KahaXATransactionId tx = transactionInfo.getXaTransactionId();
             XATransactionId rc = new XATransactionId();
             rc.setBranchQualifier(tx.getBranchQualifier().toByteArray());
             rc.setGlobalTransactionId(tx.getGlobalTransactionId().toByteArray());

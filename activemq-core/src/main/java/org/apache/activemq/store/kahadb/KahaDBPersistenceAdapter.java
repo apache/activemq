@@ -43,9 +43,9 @@ import java.util.Set;
 /**
  * An implementation of {@link PersistenceAdapter} designed for use with
  * KahaDB - Embedded Lightweight Non-Relational Database
- * 
+ *
  * @org.apache.xbean.XBean element="kahaDB"
- * 
+ *
  */
 public class KahaDBPersistenceAdapter implements PersistenceAdapter, BrokerServiceAware {
     private final KahaDBStore letter = new KahaDBStore();
@@ -202,7 +202,7 @@ public class KahaDBPersistenceAdapter implements PersistenceAdapter, BrokerServi
 
     /**
      * Get the journalMaxFileLength
-     * 
+     *
      * @return the journalMaxFileLength
      */
     public int getJournalMaxFileLength() {
@@ -212,7 +212,7 @@ public class KahaDBPersistenceAdapter implements PersistenceAdapter, BrokerServi
     /**
      * When set using Xbean, values of the form "20 Mb", "1024kb", and "1g" can
      * be used
-     * 
+     *
      * @org.apache.xbean.Property propertyEditor="org.apache.activemq.util.MemoryIntPropertyEditor"
      */
     public void setJournalMaxFileLength(int journalMaxFileLength) {
@@ -225,7 +225,7 @@ public class KahaDBPersistenceAdapter implements PersistenceAdapter, BrokerServi
     public void setMaxFailoverProducersToTrack(int maxFailoverProducersToTrack) {
         this.letter.setMaxFailoverProducersToTrack(maxFailoverProducersToTrack);
     }
-    
+
     public int getMaxFailoverProducersToTrack() {
         return this.letter.getMaxFailoverProducersToTrack();
     }
@@ -237,14 +237,14 @@ public class KahaDBPersistenceAdapter implements PersistenceAdapter, BrokerServi
     public void setFailoverProducersAuditDepth(int failoverProducersAuditDepth) {
         this.letter.setFailoverProducersAuditDepth(failoverProducersAuditDepth);
     }
-    
+
     public int getFailoverProducersAuditDepth() {
         return this.letter.getFailoverProducersAuditDepth();
     }
-    
+
     /**
      * Get the checkpointInterval
-     * 
+     *
      * @return the checkpointInterval
      */
     public long getCheckpointInterval() {
@@ -253,7 +253,7 @@ public class KahaDBPersistenceAdapter implements PersistenceAdapter, BrokerServi
 
     /**
      * Set the checkpointInterval
-     * 
+     *
      * @param checkpointInterval
      *            the checkpointInterval to set
      */
@@ -263,7 +263,7 @@ public class KahaDBPersistenceAdapter implements PersistenceAdapter, BrokerServi
 
     /**
      * Get the cleanupInterval
-     * 
+     *
      * @return the cleanupInterval
      */
     public long getCleanupInterval() {
@@ -272,7 +272,7 @@ public class KahaDBPersistenceAdapter implements PersistenceAdapter, BrokerServi
 
     /**
      * Set the cleanupInterval
-     * 
+     *
      * @param cleanupInterval
      *            the cleanupInterval to set
      */
@@ -282,7 +282,7 @@ public class KahaDBPersistenceAdapter implements PersistenceAdapter, BrokerServi
 
     /**
      * Get the indexWriteBatchSize
-     * 
+     *
      * @return the indexWriteBatchSize
      */
     public int getIndexWriteBatchSize() {
@@ -302,7 +302,7 @@ public class KahaDBPersistenceAdapter implements PersistenceAdapter, BrokerServi
 
     /**
      * Get the journalMaxWriteBatchSize
-     * 
+     *
      * @return the journalMaxWriteBatchSize
      */
     public int getJournalMaxWriteBatchSize() {
@@ -322,7 +322,7 @@ public class KahaDBPersistenceAdapter implements PersistenceAdapter, BrokerServi
 
     /**
      * Get the enableIndexWriteAsync
-     * 
+     *
      * @return the enableIndexWriteAsync
      */
     public boolean isEnableIndexWriteAsync() {
@@ -331,7 +331,7 @@ public class KahaDBPersistenceAdapter implements PersistenceAdapter, BrokerServi
 
     /**
      * Set the enableIndexWriteAsync
-     * 
+     *
      * @param enableIndexWriteAsync
      *            the enableIndexWriteAsync to set
      */
@@ -341,7 +341,7 @@ public class KahaDBPersistenceAdapter implements PersistenceAdapter, BrokerServi
 
     /**
      * Get the directory
-     * 
+     *
      * @return the directory
      */
     public File getDirectory() {
@@ -358,7 +358,7 @@ public class KahaDBPersistenceAdapter implements PersistenceAdapter, BrokerServi
 
     /**
      * Get the enableJournalDiskSyncs
-     * 
+     *
      * @return the enableJournalDiskSyncs
      */
     public boolean isEnableJournalDiskSyncs() {
@@ -367,7 +367,7 @@ public class KahaDBPersistenceAdapter implements PersistenceAdapter, BrokerServi
 
     /**
      * Set the enableJournalDiskSyncs
-     * 
+     *
      * @param enableJournalDiskSyncs
      *            the enableJournalDiskSyncs to set
      */
@@ -377,7 +377,7 @@ public class KahaDBPersistenceAdapter implements PersistenceAdapter, BrokerServi
 
     /**
      * Get the indexCacheSize
-     * 
+     *
      * @return the indexCacheSize
      */
     public int getIndexCacheSize() {
@@ -397,7 +397,7 @@ public class KahaDBPersistenceAdapter implements PersistenceAdapter, BrokerServi
 
     /**
      * Get the ignoreMissingJournalfiles
-     * 
+     *
      * @return the ignoreMissingJournalfiles
      */
     public boolean isIgnoreMissingJournalfiles() {
@@ -406,7 +406,7 @@ public class KahaDBPersistenceAdapter implements PersistenceAdapter, BrokerServi
 
     /**
      * Set the ignoreMissingJournalfiles
-     * 
+     *
      * @param ignoreMissingJournalfiles
      *            the ignoreMissingJournalfiles to set
      */
@@ -476,7 +476,7 @@ public class KahaDBPersistenceAdapter implements PersistenceAdapter, BrokerServi
     public void setMaxAsyncJobs(int maxAsyncJobs) {
         letter.setMaxAsyncJobs(maxAsyncJobs);
     }
-    
+
     /**
      * @return the databaseLockedWaitDelay
      */
@@ -573,15 +573,15 @@ public class KahaDBPersistenceAdapter implements PersistenceAdapter, BrokerServi
             LocalTransactionId t = (LocalTransactionId) txid;
             KahaLocalTransactionId kahaTxId = new KahaLocalTransactionId();
             kahaTxId.setConnectionId(t.getConnectionId().getValue());
-            kahaTxId.setTransacitonId(t.getValue());
-            rc.setLocalTransacitonId(kahaTxId);
+            kahaTxId.setTransactionId(t.getValue());
+            rc.setLocalTransactionId(kahaTxId);
         } else {
             XATransactionId t = (XATransactionId) txid;
             KahaXATransactionId kahaTxId = new KahaXATransactionId();
             kahaTxId.setBranchQualifier(new Buffer(t.getBranchQualifier()));
             kahaTxId.setGlobalTransactionId(new Buffer(t.getGlobalTransactionId()));
             kahaTxId.setFormatId(t.getFormatId());
-            rc.setXaTransacitonId(kahaTxId);
+            rc.setXaTransactionId(kahaTxId);
         }
         return rc;
     }

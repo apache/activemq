@@ -90,7 +90,7 @@ public class MultiKahaDBPersistenceAdapter extends DestinationMap implements Per
                 kahaTxId.setGlobalTransactionId(new Buffer(t.getGlobalTransactionId()));
                 kahaTxId.setFormatId(t.getFormatId());
             }
-            rc.setXaTransacitonId(kahaTxId);
+            rc.setXaTransactionId(kahaTxId);
             return rc;
         }
     };

@@ -137,14 +137,14 @@ message KahaDestination {
 }
 
 message KahaTransactionInfo {
-  optional KahaLocalTransactionId local_transaciton_id=1;
-  optional KahaXATransactionId xa_transaciton_id=2;
+  optional KahaLocalTransactionId local_transaction_id=1;
+  optional KahaXATransactionId xa_transaction_id=2;
   optional KahaLocation previous_entry=3;
 }
 
 message KahaLocalTransactionId {
   required string connection_id=1;
-  required int64 transaciton_id=1;
+  required int64 transaction_id=1;
 }
 
 message KahaXATransactionId {
