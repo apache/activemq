@@ -621,6 +621,38 @@ public class Stomp11Test extends CombinationTestSupport {
         assertEquals("JMSXGroupID", "abc", message.getStringProperty("JMSXGroupID"));
         ActiveMQTextMessage amqMessage = (ActiveMQTextMessage)message;
         assertEquals("GroupID", "abc", amqMessage.getGroupID());
+
+        frame = "DISCONNECT\n" + "\n\n" + Stomp.NULL;
+        stompConnection.sendFrame(frame);
+    }
+
+    public void testSendMessageWithRepeatedEntries() throws Exception {
+
+        MessageConsumer consumer = session.createConsumer(queue);
+
+        String frame = "CONNECT\n" + "login:system\n" + "passcode:manager\n" +
+                "accept-version:1.1" + "\n\n" + Stomp.NULL;
+        stompConnection.sendFrame(frame);
+
+        frame = stompConnection.receiveFrame();
+        assertTrue(frame.startsWith("CONNECTED"));
+
+        frame = "SEND\n" +
+        		"value:newest" + "\n" +
+        		"value:older" + "\n" +
+        		"value:oldest" + "\n" +
+        		"destination:/queue/" + getQueueName() +
+        		"\n\n" + "Hello World" + Stomp.NULL;
+
+        stompConnection.sendFrame(frame);
+
+        TextMessage message = (TextMessage)consumer.receive(2500);
+        assertNotNull(message);
+        assertEquals("Hello World", message.getText());
+        assertEquals("newest", message.getStringProperty("value"));
+
+        frame = "DISCONNECT\n" + "\n\n" + Stomp.NULL;
+        stompConnection.sendFrame(frame);
     }
 
     public void testSubscribeWithMessageSentWithEncodedProperties() throws Exception {

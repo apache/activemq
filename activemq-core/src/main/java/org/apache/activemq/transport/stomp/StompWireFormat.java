@@ -208,7 +208,10 @@ public class StompWireFormat implements WireFormat {
                     ByteSequence nameSeq = stream.toByteSequence();
                     String name = new String(nameSeq.getData(), nameSeq.getOffset(), nameSeq.getLength(), "UTF-8");
                     String value = decodeHeader(headerLine);
-                    headers.put(name, value);
+
+                    if (!headers.containsKey(name)) {
+                    	headers.put(name, value);
+                    }
                 } catch (Exception e) {
                     throw new ProtocolException("Unable to parser header line [" + line + "]", true);
                 }
