@@ -661,7 +661,7 @@ public class ProtocolConverter {
             heartBeat = defaultHeartBeat;
         }
 
-        HashSet<String> acceptsVersions = new HashSet<String>(Arrays.asList(accepts.split(Stomp.COMMA)));
+        HashSet<String> acceptsVersions = new HashSet<String>(Arrays.asList(accepts.trim().split(Stomp.COMMA)));
         acceptsVersions.retainAll(Arrays.asList(Stomp.SUPPORTED_PROTOCOL_VERSIONS));
         if (acceptsVersions.isEmpty()) {
             throw new ProtocolException("Invalid Protocol version[" + accepts +"], supported versions are: " +
@@ -670,7 +670,7 @@ public class ProtocolConverter {
             this.version = Collections.max(acceptsVersions);
         }
 
-        configureInactivityMonitor(heartBeat);
+        configureInactivityMonitor(heartBeat.trim());
 
         IntrospectionSupport.setProperties(connectionInfo, headers, "activemq.");
         connectionInfo.setConnectionId(connectionId);

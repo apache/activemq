@@ -60,6 +60,23 @@ public class StompTelnetTest extends CombinationTestSupport {
         }
     }
 
+    public void testCRLF11() throws Exception {
+
+        for (TransportConnector connector : broker.getTransportConnectors()) {
+            LOG.info("try: " + connector.getConnectUri());
+
+            StompConnection stompConnection = new StompConnection();
+            stompConnection.open(createSocket(connector.getConnectUri()));
+            String frame = "CONNECT\r\naccept-version:1.1\r\n\r\n" + Stomp.NULL;
+            stompConnection.sendFrame(frame);
+
+            frame = stompConnection.receiveFrame();
+            LOG.info("response from: " + connector.getConnectUri() + ", " + frame);
+            assertTrue(frame.startsWith("CONNECTED"));
+            stompConnection.close();
+        }
+    }
+
     protected Socket createSocket(URI connectUri) throws IOException {
         return new Socket("127.0.0.1", connectUri.getPort());
     }
