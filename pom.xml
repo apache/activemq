@@ -64,7 +64,8 @@
     <fusemq-leveldb-version>1.2</fusemq-leveldb-version>
     <geronimo-version>1.0</geronimo-version>
     <howl-version>0.1.8</howl-version>
-    <hawtbuf-version>1.6</hawtbuf-version>
+    <hawtbuf-version>1.9</hawtbuf-version>
+    <hawtdispatch-version>1.11</hawtdispatch-version>
     <hsqldb-version>1.7.2.2</hsqldb-version>
     <jasypt-version>1.8</jasypt-version>
     <jdom-version>1.0</jdom-version>

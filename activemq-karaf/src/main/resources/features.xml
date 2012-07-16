@@ -77,5 +77,13 @@
       <feature version="[2,3)">war</feature>
       <bundle>mvn:org.apache.activemq/activemq-web-console/${activemq-version}/war</bundle>
     </feature>
+
+    <feature name="activemq-extra" version="${activemq-version}" resolver="(obr)">
+        <bundle>mvn:org.fusesource.mqtt-client/mqtt-client/${mqtt-client-version}</bundle>
+        <bundle>mvn:org.fusesource.hawtbuf/hawtbuf/${hawtbuf-version}</bundle>
+        <bundle>mvn:org.fusesource.fuse-extra/fusemq-leveldb/${fusemq-leveldb-version}/jar/bundle</bundle>
+        <bundle>mvn:org.fusesource.hawtdispatch/hawtdispatch/${hawtdispatch-version}</bundle>
+        <bundle>mvn:org.fusesource.hawtdispatch/hawtdispatch-transport/${hawtdispatch-version}</bundle>
+    </feature>
 </features>
 
