@@ -74,8 +74,22 @@ public class ActiveMQSslConnectionFactoryTest extends CombinationTestSupport {
         ActiveMQSslConnectionFactory cf = new ActiveMQSslConnectionFactory("tcp://localhost:61610?wireFormat.tcpNoDelayEnabled=true");
         connection = (ActiveMQConnection)cf.createConnection();
         assertNotNull(connection);
+        connection.start();
+        connection.stop();
+    	brokerStop();
+    }
 
-	brokerStop();
+    public void testCreateFailoverTcpConnectionUsingKnownPort() throws Exception {
+        // Control case: check that the factory can create an ordinary (non-ssl) connection.
+        broker = createBroker("tcp://localhost:61610?wireFormat.tcpNoDelayEnabled=true");
+
+        // This should create the connection.
+        ActiveMQSslConnectionFactory cf = new ActiveMQSslConnectionFactory("failover:(tcp://localhost:61610?wireFormat.tcpNoDelayEnabled=true)");
+        connection = (ActiveMQConnection)cf.createConnection();
+        assertNotNull(connection);
+        connection.start();
+        connection.stop();
+    	brokerStop();
     }
 
     public void testCreateSslConnection() throws Exception {
@@ -91,6 +105,26 @@ public class ActiveMQSslConnectionFactoryTest extends CombinationTestSupport {
         connection = (ActiveMQConnection)cf.createConnection();
         LOG.info("Created client connection");
         assertNotNull(connection);
+        connection.start();
+        connection.stop();
+        brokerStop();
+    }
+
+    public void testFailoverSslConnection() throws Exception {
+        // Create SSL/TLS connection with trusted cert from truststore.
+    	String sslUri = "ssl://localhost:61611";
+        broker = createSslBroker(sslUri);
+        assertNotNull(broker);
+
+        // This should create the connection.
+        ActiveMQSslConnectionFactory cf = new ActiveMQSslConnectionFactory("failover:(" + sslUri + ")?maxReconnectAttempts=4");
+        cf.setTrustStore("server.keystore");
+        cf.setTrustStorePassword("password");
+        connection = (ActiveMQConnection)cf.createConnection();
+        LOG.info("Created client connection");
+        assertNotNull(connection);
+        connection.start();
+        connection.stop();
 
         brokerStop();
     }
@@ -143,6 +177,7 @@ public class ActiveMQSslConnectionFactoryTest extends CombinationTestSupport {
         // Start up a broker with a tcp connector.
         BrokerService service = new BrokerService();
         service.setPersistent(false);
+        service.setUseJmx(false);
         connector = service.addConnector(uri);
         service.start();
 

@@ -19,7 +19,6 @@ package org.apache.activemq;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.security.KeyStore;
@@ -34,10 +33,8 @@ import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 
-import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.SslContext;
 import org.apache.activemq.transport.Transport;
-import org.apache.activemq.transport.tcp.SslTransportFactory;
 import org.apache.activemq.util.JMSExceptionSupport;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -104,38 +101,37 @@ public class ActiveMQSslConnectionFactory extends ActiveMQConnectionFactory {
      * @author sepandm@gmail.com
      */
     protected Transport createTransport() throws JMSException {
-        // If the given URI is non-ssl, let superclass handle it.
-        if (!brokerURL.getScheme().equals("ssl")) {
-            return super.createTransport();
-        }
-
+        SslContext existing = SslContext.getCurrentSslContext();
         try {
-            if (keyManager == null || trustManager == null) {
-                trustManager = createTrustManager();
+            if (keyStore != null || trustStore != null) {
                 keyManager = createKeyManager();
-                // secureRandom can be left as null
+                trustManager = createTrustManager();
+                if (keyManager != null || trustManager != null) {
+                    SslContext.setCurrentSslContext(new SslContext(keyManager, trustManager, secureRandom));
+                }
             }
-            SslTransportFactory sslFactory = new SslTransportFactory();
-            SslContext ctx = new SslContext(keyManager, trustManager, secureRandom);
-            SslContext.setCurrentSslContext(ctx);
-            return sslFactory.doConnect(brokerURL);
+            return super.createTransport();
         } catch (Exception e) {
             throw JMSExceptionSupport.create("Could not create Transport. Reason: " + e, e);
+        } finally {
+            SslContext.setCurrentSslContext(existing);
         }
     }
 
     protected TrustManager[] createTrustManager() throws Exception {
         TrustManager[] trustStoreManagers = null;
         KeyStore trustedCertStore = KeyStore.getInstance("jks");
-        
-        InputStream tsStream = getUrlOrResourceAsStream(trustStore);
-        
-        trustedCertStore.load(tsStream, trustStorePassword.toCharArray());
-        TrustManagerFactory tmf  = 
-            TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
-  
-        tmf.init(trustedCertStore);
-        trustStoreManagers = tmf.getTrustManagers();
+
+        if (trustStore != null) {
+            InputStream tsStream = getUrlOrResourceAsStream(trustStore);
+
+            trustedCertStore.load(tsStream, trustStorePassword.toCharArray());
+            TrustManagerFactory tmf  =
+                    TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+
+            tmf.init(trustedCertStore);
+            trustStoreManagers = tmf.getTrustManagers();
+        }
         return trustStoreManagers; 
     }
 
@@ -144,15 +140,15 @@ public class ActiveMQSslConnectionFactory extends ActiveMQConnectionFactory {
             KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());  
         KeyStore ks = KeyStore.getInstance("jks");
         KeyManager[] keystoreManagers = null;
-        
-        byte[] sslCert = loadClientCredential(keyStore);
-        
-       
-        if (sslCert != null && sslCert.length > 0) {
-            ByteArrayInputStream bin = new ByteArrayInputStream(sslCert);
-            ks.load(bin, keyStorePassword.toCharArray());
-            kmf.init(ks, keyStorePassword.toCharArray());
-            keystoreManagers = kmf.getKeyManagers();
+        if (keyStore != null) {
+            byte[] sslCert = loadClientCredential(keyStore);
+
+            if (sslCert != null && sslCert.length > 0) {
+                ByteArrayInputStream bin = new ByteArrayInputStream(sslCert);
+                ks.load(bin, keyStorePassword.toCharArray());
+                kmf.init(ks, keyStorePassword.toCharArray());
+                keystoreManagers = kmf.getKeyManagers();
+            }
         }
         return keystoreManagers;          
     }
@@ -162,7 +158,6 @@ public class ActiveMQSslConnectionFactory extends ActiveMQConnectionFactory {
             return null;
         }
         InputStream in = getUrlOrResourceAsStream(fileName);
-        //FileInputStream in = new FileInputStream(fileName);
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         byte[] buf = new byte[512];
         int i = in.read(buf);
@@ -206,7 +201,7 @@ public class ActiveMQSslConnectionFactory extends ActiveMQConnectionFactory {
      * 
      * @param trustStore If specified with a scheme, treat as a URL, otherwise treat as a classpath resource.
      */
-    public void setTrustStore(String trustStore) {
+    public void setTrustStore(String trustStore) throws Exception {
         this.trustStore = trustStore;
         trustManager = null;
     }
@@ -234,7 +229,7 @@ public class ActiveMQSslConnectionFactory extends ActiveMQConnectionFactory {
      * 
      * @param keyStore If specified with a scheme, treat as a URL, otherwise treat as a classpath resource.
      */
-    public void setKeyStore(String keyStore) {
+    public void setKeyStore(String keyStore) throws Exception {
         this.keyStore = keyStore;
         keyManager = null;
     }
