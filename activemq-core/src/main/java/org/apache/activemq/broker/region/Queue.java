@@ -1008,7 +1008,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
     public void doBrowse(List<Message> browseList, int max) {
         final ConnectionContext connectionContext = createConnectionContext();
         try {
-            pageInMessages(false);
+            pageInMessages(!isUseCache());
             List<MessageReference> toExpire = new ArrayList<MessageReference>();
 
             pagedInPendingDispatchLock.writeLock().lock();
