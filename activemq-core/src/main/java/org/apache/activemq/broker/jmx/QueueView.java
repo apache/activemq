@@ -36,12 +36,18 @@ public class QueueView extends DestinationView implements QueueViewMBean {
     }
 
     public CompositeData getMessage(String messageId) throws OpenDataException {
-        QueueMessageReference ref = ((Queue)destination).getMessage(messageId);
-        Message rc = ref.getMessage();
-        if (rc == null) {
-            return null;
+    	CompositeData result = null;
+    	QueueMessageReference ref = ((Queue)destination).getMessage(messageId);
+
+        if (ref != null) {
+	        Message rc = ref.getMessage();
+	        if (rc == null) {
+	            return null;
+	        }
+	        result = OpenTypeSupport.convert(rc);
         }
-        return OpenTypeSupport.convert(rc);
+
+        return result;
     }
 
     public void purge() throws Exception {
@@ -117,7 +123,7 @@ public class QueueView extends DestinationView implements QueueViewMBean {
             throw new JMSException("Could not find message: "+ messageId);
         }
     }
-    
+
     public int cursorSize() {
         Queue queue = (Queue) destination;
         if (queue.getMessages() != null){
@@ -126,7 +132,7 @@ public class QueueView extends DestinationView implements QueueViewMBean {
         return 0;
     }
 
-   
+
     public boolean doesCursorHaveMessagesBuffered() {
        Queue queue = (Queue) destination;
        if (queue.getMessages() != null){
@@ -136,7 +142,7 @@ public class QueueView extends DestinationView implements QueueViewMBean {
 
     }
 
-    
+
     public boolean doesCursorHaveSpace() {
         Queue queue = (Queue) destination;
         if (queue.getMessages() != null){
@@ -145,7 +151,7 @@ public class QueueView extends DestinationView implements QueueViewMBean {
         return false;
     }
 
-    
+
     public long getCursorMemoryUsage() {
         Queue queue = (Queue) destination;
         if (queue.getMessages() != null &&  queue.getMessages().getSystemUsage() != null){
