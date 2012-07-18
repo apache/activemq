@@ -57,7 +57,7 @@ public class XBeanBrokerService extends BrokerService {
     public void afterPropertiesSet() throws Exception {
         ensureSystemUsageHasStore();
         if (shouldAutostart()) {
-            startAsync();
+            start();
         }
     }
 

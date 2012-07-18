@@ -27,7 +27,7 @@
     <!-- Allows us to use system properties as variables in this configuration file -->
     <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer"/>
 
-    <broker xmlns="http://activemq.apache.org/schema/core" brokerName="${name}" dataDirectory="${karaf.data}/activemq/${name}" useShutdownHook="false">
+    <broker xmlns="http://activemq.apache.org/schema/core" brokerName="${name}" dataDirectory="${karaf.data}/activemq/${name}" useShutdownHook="false" startAsync="true">
 
         <!--
             For better performances use VM cursor and small memory limit.

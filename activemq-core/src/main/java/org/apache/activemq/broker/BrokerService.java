@@ -222,8 +222,8 @@ public class BrokerService implements Service {
     private DestinationFilter virtualConsumerDestinationFilter;
 
     private final Object persistenceAdapterLock = new Object();
-    private boolean persistenceAdapterStarted = false;
     private Throwable startException = null;
+    private boolean startAsync = false;
 
     static {
         String localHostName = "localhost";
@@ -496,19 +496,11 @@ public class BrokerService implements Service {
     @PostConstruct
     public void autoStart() throws Exception {
         if(shouldAutostart()) {
-            startAsync();
+            start();
         }
     }
 
     public void start() throws Exception {
-        doStart(false);
-    }
-
-    public void startAsync() throws Exception {
-        doStart(true);
-    }
-
-    public void doStart(boolean async) throws Exception {
         if (stopped.get() || !started.compareAndSet(false, true)) {
             // lets just ignore redundant start() calls
             // as its way too easy to not be completely sure if start() has been
@@ -529,9 +521,8 @@ public class BrokerService implements Service {
                 startManagementContext();
             }
 
-            startPersistenceAdapter(async);
-            startBroker(async);
-            startedLatch.countDown();
+            startPersistenceAdapter(startAsync);
+            startBroker(startAsync);
         } catch (Exception e) {
             LOG.error("Failed to start ActiveMQ JMS Message Broker (" + getBrokerName() + ", " + brokerId + "). Reason: " + e, e);
             try {
@@ -599,7 +590,6 @@ public class BrokerService implements Service {
     }
 
     private void doStartBroker() throws Exception {
-
         if (startException != null) {
             return;
         }
@@ -644,6 +634,7 @@ public class BrokerService implements Service {
         LOG.info("ActiveMQ JMS Message Broker (" + getBrokerName() + ", " + brokerId + ") started");
         getBroker().brokerServiceStarted();
         checkSystemUsageLimits();
+        startedLatch.countDown();
     }
 
     /**
@@ -2789,5 +2780,13 @@ public class BrokerService implements Service {
 
     public Throwable getStartException() {
         return startException;
+    }
+
+    public boolean isStartAsync() {
+        return startAsync;
+    }
+
+    public void setStartAsync(boolean startAsync) {
+        this.startAsync = startAsync;
     }
 }
