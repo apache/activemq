@@ -221,6 +221,10 @@ public class BrokerService implements Service {
     private int offlineDurableSubscriberTaskSchedule = 300000;
     private DestinationFilter virtualConsumerDestinationFilter;
 
+    private final Object persistenceAdapterLock = new Object();
+    private boolean persistenceAdapterStarted = false;
+    private Exception startException = null;
+
     static {
         String localHostName = "localhost";
         try {
@@ -517,54 +521,8 @@ public class BrokerService implements Service {
                 startManagementContext();
             }
 
-            getPersistenceAdapter().setUsageManager(getProducerSystemUsage());
-            getPersistenceAdapter().setBrokerName(getBrokerName());
-            LOG.info("Using Persistence Adapter: " + getPersistenceAdapter());
-            if (deleteAllMessagesOnStartup) {
-                deleteAllMessages();
-            }
-            getPersistenceAdapter().start();
-            slave = false;
-            startDestinations();
-            addShutdownHook();
-            getBroker().start();
-            if (isUseJmx()) {
-                if (getManagementContext().isCreateConnector() && !getManagementContext().isConnectorStarted()) {
-                    // try to restart management context
-                    // typical for slaves that use the same ports as master
-                    managementContext.stop();
-                    startManagementContext();
-                }
-                ManagedRegionBroker managedBroker = (ManagedRegionBroker) regionBroker;
-                managedBroker.setContextBroker(broker);
-                adminView.setBroker(managedBroker);
-            }
-            BrokerRegistry.getInstance().bind(getBrokerName(), this);
-            // see if there is a MasterBroker service and if so, configure
-            // it and start it.
-            for (Service service : services) {
-                if (service instanceof MasterConnector) {
-                    configureService(service);
-                    service.start();
-                }
-            }
-            if (!isSlave() && (this.masterConnector == null || isShutdownOnMasterFailure() == false)) {
-                startAllConnectors();
-            }
-            if (!stopped.get()) {
-                if (isUseJmx() && masterConnector != null) {
-                    registerFTConnectorMBean(masterConnector);
-                }
-            }
-            if (brokerId == null) {
-                brokerId = broker.getBrokerId();
-            }
-            if (ioExceptionHandler == null) {
-                setIoExceptionHandler(new DefaultIOExceptionHandler());
-            }
-            LOG.info("ActiveMQ JMS Message Broker (" + getBrokerName() + ", " + brokerId + ") started");
-            getBroker().brokerServiceStarted();
-            checkSystemUsageLimits();
+            startPersistenceAdapter();
+            startBroker();
             startedLatch.countDown();
         } catch (Exception e) {
             LOG.error("Failed to start ActiveMQ JMS Message Broker (" + getBrokerName() + ", " + brokerId + "). Reason: " + e, e);
@@ -579,6 +537,88 @@ public class BrokerService implements Service {
         } finally {
             MDC.remove("activemq.broker");
         }
+    }
+
+    private void startPersistenceAdapter() throws Exception {
+        new Thread() {
+            @Override
+            public void run() {
+                try {
+                    getPersistenceAdapter().setUsageManager(getProducerSystemUsage());
+                    getPersistenceAdapter().setBrokerName(getBrokerName());
+                    LOG.info("Using Persistence Adapter: " + getPersistenceAdapter());
+                    if (deleteAllMessagesOnStartup) {
+                        deleteAllMessages();
+                    }
+                    getPersistenceAdapter().start();
+                } catch (Exception e) {
+                    startException = e;
+                } finally {
+                    synchronized (persistenceAdapterLock) {
+                        persistenceAdapterLock.notifyAll();
+                    }
+                }
+            }
+        }.start();
+    }
+
+    private void startBroker() throws Exception {
+        new Thread() {
+            @Override
+            public void run() {
+                try {
+                    synchronized (persistenceAdapterLock) {
+                        persistenceAdapterLock.wait();
+                    }
+                    if (startException != null) {
+                        return;
+                    }
+                    slave = false;
+                    startDestinations();
+                    addShutdownHook();
+                    getBroker().start();
+                    if (isUseJmx()) {
+                        if (getManagementContext().isCreateConnector() && !getManagementContext().isConnectorStarted()) {
+                            // try to restart management context
+                            // typical for slaves that use the same ports as master
+                            managementContext.stop();
+                            startManagementContext();
+                        }
+                        ManagedRegionBroker managedBroker = (ManagedRegionBroker) regionBroker;
+                        managedBroker.setContextBroker(broker);
+                        adminView.setBroker(managedBroker);
+                    }
+                    BrokerRegistry.getInstance().bind(getBrokerName(), BrokerService.this);
+                    // see if there is a MasterBroker service and if so, configure
+                    // it and start it.
+                    for (Service service : services) {
+                        if (service instanceof MasterConnector) {
+                            configureService(service);
+                            service.start();
+                        }
+                    }
+                    if (!isSlave() && (masterConnector == null || isShutdownOnMasterFailure() == false)) {
+                        startAllConnectors();
+                    }
+                    if (!stopped.get()) {
+                        if (isUseJmx() && masterConnector != null) {
+                            registerFTConnectorMBean(masterConnector);
+                        }
+                    }
+                    if (brokerId == null) {
+                        brokerId = broker.getBrokerId();
+                    }
+                    if (ioExceptionHandler == null) {
+                        setIoExceptionHandler(new DefaultIOExceptionHandler());
+                    }
+                    LOG.info("ActiveMQ JMS Message Broker (" + getBrokerName() + ", " + brokerId + ") started");
+                    getBroker().brokerServiceStarted();
+                    checkSystemUsageLimits();
+                } catch (Exception e) {
+                    startException = e;
+                }
+            }
+        }.start();
     }
 
     /**
@@ -783,6 +823,9 @@ public class BrokerService implements Service {
         boolean waitSucceeded = false;
         while (isStarted() && !stopped.get() && !waitSucceeded) {
             try {
+                if (startException != null) {
+                    return waitSucceeded;
+                }
                 waitSucceeded = startedLatch.await(100L, TimeUnit.MILLISECONDS);
             } catch (InterruptedException ignore) {
             }
@@ -2717,5 +2760,9 @@ public class BrokerService implements Service {
     public boolean shouldRecordVirtualDestination(ActiveMQDestination destination) {
         return isUseVirtualTopics() && destination.isQueue() &&
                 getVirtualTopicConsumerDestinationFilter().matches(destination);
+    }
+
+    public Exception getStartException() {
+        return startException;
     }
 }

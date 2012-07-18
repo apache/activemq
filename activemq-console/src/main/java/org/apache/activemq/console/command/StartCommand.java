@@ -115,6 +115,9 @@ public class StartCommand extends AbstractCommand {
         BrokerService broker = BrokerFactory.createBroker(configURI);
         brokers.add(broker);
         broker.start();
+        if (!broker.waitUntilStarted()) {
+            throw broker.getStartException();
+        }
     }
 
     /**
