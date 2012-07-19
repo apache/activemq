@@ -77,14 +77,7 @@
                             <tr>
                                 <td valign="top" width="100%" style="overflow:hidden;">
                                     <div class="body-content">
-                                        <p class="error">Error!</p>
-                                        <p align="center">Exception occurred while processing this request, check the log for more information!</p>
-
-                                                <p>What do you want to do next?</p>
-                                                <ul class="alternate" type="square">
-                                                    <li><a title="Manage ActiveMQ broker" href="/admin/">Manage ActiveMQ broker</a></li>
-                                                    <li><a title="See some Web demos" href="/demo/">See some Web demos</a></li>
-                                                </ul>
+                                        <p align="center">Broker is currently in <b>slave</b> mode!</p>
                                     </div>
                                 </td>
                                 <td valign="top">

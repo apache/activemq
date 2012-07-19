@@ -19,6 +19,7 @@
 <decorators defaultdir="/decorators">
   <excludes>
     <pattern>/xml/*</pattern>
+    <pattern>/slave.jsp</pattern>
   </excludes>
 
   <decorator name="main" page="main.jsp">

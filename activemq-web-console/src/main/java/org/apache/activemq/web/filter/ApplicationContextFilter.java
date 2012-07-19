@@ -29,7 +29,10 @@ import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
+import org.apache.activemq.web.BrokerFacade;
 import org.springframework.web.bind.ServletRequestDataBinder;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.context.support.WebApplicationContextUtils;
@@ -60,6 +63,7 @@ public class ApplicationContextFilter implements Filter {
     private String applicationContextName = "applicationContext";
     private String requestContextName = "requestContext";
     private String requestName = "request";
+    private final String slavePage = "slave.jsp";
 
     public void init(FilterConfig config) throws ServletException {
         this.servletContext = config.getServletContext();
@@ -76,6 +80,17 @@ public class ApplicationContextFilter implements Filter {
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
         // lets register a requestContext in the requestScope
         Map requestContextWrapper = createRequestContextWrapper(request);
+        String path = ((HttpServletRequest)request).getRequestURI();
+        // handle slave brokers
+        try {
+            if (((BrokerFacade)requestContextWrapper.get("brokerQuery")).isSlave()
+                    && (!(path.endsWith("css") || path.endsWith("png")) && !path.endsWith(slavePage))) {
+                ((HttpServletResponse)response).sendRedirect(slavePage);
+                return;
+            }
+        } catch (Exception e) {
+            throw new IOException(e);
+        }
         request.setAttribute(requestContextName, requestContextWrapper);
         request.setAttribute(requestName, request);
         chain.doFilter(request, response);

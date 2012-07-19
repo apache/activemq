@@ -520,7 +520,7 @@ public class BrokerService implements Service {
             if (isUseJmx()) {
                 startManagementContext();
             }
-
+            BrokerRegistry.getInstance().bind(getBrokerName(), BrokerService.this);
             startPersistenceAdapter(startAsync);
             startBroker(startAsync);
         } catch (Exception e) {
@@ -608,7 +608,6 @@ public class BrokerService implements Service {
             managedBroker.setContextBroker(broker);
             adminView.setBroker(managedBroker);
         }
-        BrokerRegistry.getInstance().bind(getBrokerName(), BrokerService.this);
         // see if there is a MasterBroker service and if so, configure
         // it and start it.
         for (Service service : services) {
