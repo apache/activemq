@@ -430,6 +430,7 @@
           <useFile>true</useFile>
           <argLine>${surefire.argLine}</argLine>
           <useManifestOnlyJar>false</useManifestOnlyJar>
+          <runOrder>alphabetical</runOrder>
 
            <systemProperties>
             <property>
