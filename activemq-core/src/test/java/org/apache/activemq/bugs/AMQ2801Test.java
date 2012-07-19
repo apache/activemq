@@ -105,12 +105,11 @@ public class AMQ2801Test
 
     @After
     public void tearDown() throws Exception {
+        conn1.close();
+        conn2.close();
         if (broker != null) {
             broker.stop();
         }
-
-        conn1.close();
-        conn2.close();
     }
 
     private void produceMessages() throws Exception {
