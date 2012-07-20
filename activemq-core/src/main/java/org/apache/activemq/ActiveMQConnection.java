@@ -110,6 +110,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     public static final String DEFAULT_USER = ActiveMQConnectionFactory.DEFAULT_USER;
     public static final String DEFAULT_PASSWORD = ActiveMQConnectionFactory.DEFAULT_PASSWORD;
     public static final String DEFAULT_BROKER_URL = ActiveMQConnectionFactory.DEFAULT_BROKER_URL;
+    public static int DEFAULT_THREAD_POOL_SIZE = 1000;
 
     private static final Logger LOG = LoggerFactory.getLogger(ActiveMQConnection.class);
 
@@ -199,6 +200,8 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     private boolean messagePrioritySupported = true;
     private boolean transactedIndividualAck = false;
     private boolean nonBlockingRedelivery = false;
+
+    private int maxThreadPoolSize = DEFAULT_THREAD_POOL_SIZE;
 
     /**
      * Construct an <code>ActiveMQConnection</code>
@@ -978,7 +981,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     public TaskRunnerFactory getSessionTaskRunner() {
         synchronized (this) {
             if (sessionTaskRunner == null) {
-                sessionTaskRunner = new TaskRunnerFactory("ActiveMQ Session Task", ThreadPriorities.INBOUND_CLIENT_SESSION, false, 1000, isUseDedicatedTaskRunner());
+                sessionTaskRunner = new TaskRunnerFactory("ActiveMQ Session Task", ThreadPriorities.INBOUND_CLIENT_SESSION, false, 1000, isUseDedicatedTaskRunner(), maxThreadPoolSize);
             }
         }
         return sessionTaskRunner;
@@ -2567,5 +2570,13 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
      */
     public RedeliveryPolicyMap getRedeliveryPolicyMap() {
         return redeliveryPolicyMap;
+    }
+
+    public int getMaxThreadPoolSize() {
+        return maxThreadPoolSize;
+    }
+
+    public void setMaxThreadPoolSize(int maxThreadPoolSize) {
+        this.maxThreadPoolSize = maxThreadPoolSize;
     }
 }

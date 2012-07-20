@@ -18,6 +18,7 @@ package org.apache.activemq.thread;
 
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -44,6 +45,7 @@ public class TaskRunnerFactory implements Executor {
     private AtomicLong id = new AtomicLong(0);
     private boolean dedicatedTaskRunner;
     private AtomicBoolean initDone = new AtomicBoolean(false);
+    private int maxThreadPoolSize = Integer.MAX_VALUE;
 
     public TaskRunnerFactory() {
         this("ActiveMQ Task", Thread.NORM_PRIORITY, true, 1000);
@@ -54,11 +56,16 @@ public class TaskRunnerFactory implements Executor {
     }
 
     public TaskRunnerFactory(String name, int priority, boolean daemon, int maxIterationsPerRun, boolean dedicatedTaskRunner) {
+        this(name, priority, daemon, maxIterationsPerRun, dedicatedTaskRunner, Integer.MAX_VALUE);
+    }
+
+    public TaskRunnerFactory(String name, int priority, boolean daemon, int maxIterationsPerRun, boolean dedicatedTaskRunner, int maxThreadPoolSize) {
         this.name = name;
         this.priority = priority;
         this.daemon = daemon;
         this.maxIterationsPerRun = maxIterationsPerRun;
         this.dedicatedTaskRunner = dedicatedTaskRunner;
+        this.maxThreadPoolSize = maxThreadPoolSize;
     }
 
     public void init() {
@@ -103,7 +110,7 @@ public class TaskRunnerFactory implements Executor {
     }
 
     protected ExecutorService createDefaultExecutor() {
-        ThreadPoolExecutor rc = new ThreadPoolExecutor(0, Integer.MAX_VALUE, 30, TimeUnit.SECONDS, new SynchronousQueue<Runnable>(), new ThreadFactory() {
+        ThreadPoolExecutor rc = new ThreadPoolExecutor(0, getMaxThreadPoolSize(), 30, TimeUnit.SECONDS, new SynchronousQueue<Runnable>(), new ThreadFactory() {
             public Thread newThread(Runnable runnable) {
                 Thread thread = new Thread(runnable, name + "-" + id.incrementAndGet());
                 thread.setDaemon(daemon);
@@ -160,5 +167,13 @@ public class TaskRunnerFactory implements Executor {
 
     public void setDedicatedTaskRunner(boolean dedicatedTaskRunner) {
         this.dedicatedTaskRunner = dedicatedTaskRunner;
+    }
+
+    public int getMaxThreadPoolSize() {
+        return maxThreadPoolSize;
+    }
+
+    public void setMaxThreadPoolSize(int maxThreadPoolSize) {
+        this.maxThreadPoolSize = maxThreadPoolSize;
     }
 }

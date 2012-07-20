@@ -41,6 +41,7 @@ import org.apache.activemq.jndi.JNDIBaseStorable;
 import org.apache.activemq.management.JMSStatsImpl;
 import org.apache.activemq.management.StatsCapable;
 import org.apache.activemq.management.StatsImpl;
+import org.apache.activemq.thread.TaskRunnerFactory;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportFactory;
 import org.apache.activemq.transport.TransportListener;
@@ -66,6 +67,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     public static final String DEFAULT_USER = null;
     public static final String DEFAULT_PASSWORD = null;
     public static final int DEFAULT_PRODUCER_WINDOW_SIZE = 0;
+
 
     protected static final Executor DEFAULT_CONNECTION_EXECUTOR = new ScheduledThreadPoolExecutor(5, new ThreadFactory() {
         public Thread newThread(Runnable run) {
@@ -127,6 +129,8 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     private boolean messagePrioritySupported = true;
     private boolean transactedIndividualAck = false;
     private boolean nonBlockingRedelivery = false;
+    private int maxThreadPoolSize = ActiveMQConnection.DEFAULT_THREAD_POOL_SIZE;
+    private TaskRunnerFactory sessionTaskRunner;
 
     // /////////////////////////////////////////////
     //
@@ -338,6 +342,8 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
         connection.setMessagePrioritySupported(isMessagePrioritySupported());
         connection.setTransactedIndividualAck(isTransactedIndividualAck());
         connection.setNonBlockingRedelivery(isNonBlockingRedelivery());
+        connection.setMaxThreadPoolSize(getMaxThreadPoolSize());
+        connection.setSessionTaskRunner(getSessionTaskRunner());
         if (transportListener != null) {
             connection.addTransportListener(transportListener);
         }
@@ -1095,4 +1101,19 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
          this.nonBlockingRedelivery = nonBlockingRedelivery;
      }
 
+    public int getMaxThreadPoolSize() {
+        return maxThreadPoolSize;
+    }
+
+    public void setMaxThreadPoolSize(int maxThreadPoolSize) {
+        this.maxThreadPoolSize = maxThreadPoolSize;
+    }
+
+    public TaskRunnerFactory getSessionTaskRunner() {
+        return sessionTaskRunner;
+    }
+
+    public void setSessionTaskRunner(TaskRunnerFactory sessionTaskRunner) {
+        this.sessionTaskRunner = sessionTaskRunner;
+    }
 }
