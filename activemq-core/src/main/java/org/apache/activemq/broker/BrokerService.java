@@ -2386,11 +2386,11 @@ public class BrokerService implements Service {
         if (policy != null) {
             connector.setMessageAuthorizationPolicy(policy);
         }
-        connector.getStatistics().setEnabled(enableStatistics);
-        connector.start();
         if (isUseJmx()) {
             connector = registerConnectorMBean(connector);
         }
+        connector.getStatistics().setEnabled(enableStatistics);
+        connector.start();
         return connector;
     }
 
