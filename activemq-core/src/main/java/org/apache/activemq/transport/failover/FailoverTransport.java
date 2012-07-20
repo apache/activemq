@@ -40,6 +40,8 @@ import org.apache.activemq.broker.SslContext;
 import org.apache.activemq.command.Command;
 import org.apache.activemq.command.ConnectionControl;
 import org.apache.activemq.command.ConnectionId;
+import org.apache.activemq.command.MessageDispatch;
+import org.apache.activemq.command.MessagePull;
 import org.apache.activemq.command.RemoveInfo;
 import org.apache.activemq.command.Response;
 import org.apache.activemq.state.ConnectionStateTracker;
@@ -532,6 +534,16 @@ public class FailoverTransport implements CompositeTransport {
                             Response response = new Response();
                             response.setCorrelationId(command.getCommandId());
                             myTransportListener.onCommand(response);
+                        }
+                        return;
+                    } else if (command instanceof MessagePull) {
+                        // Simulate response to MessagePull if timed as we can't honor that now.
+                    	MessagePull pullRequest = (MessagePull) command;
+                    	if (pullRequest.getTimeout() != 0) {
+	                        MessageDispatch dispatch = new MessageDispatch();
+	                        dispatch.setConsumerId(pullRequest.getConsumerId());
+	                        dispatch.setDestination(pullRequest.getDestination());
+                            myTransportListener.onCommand(dispatch);
                         }
                         return;
                     }

@@ -708,6 +708,9 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                     // allow dispatch on this connection to resume
                     session.connection.transportInterruptionProcessingComplete();
                     inProgressClearRequiredFlag.decrementAndGet();
+
+                    // Wake up any blockers and allow them to recheck state.
+                    unconsumedMessages.getMutex().notifyAll();
                 }
             }
         }
