@@ -60,6 +60,7 @@ public class MessageServlet extends MessageServletSupport {
     private long defaultReadTimeout = -1;
     private long maximumReadTimeout = 20000;
     private long requestTimeout = 1000;
+    private String defaultContentType = "text/xml";
 
     private HashMap<String, WebClient> clients = new HashMap<String, WebClient>();
 
@@ -76,6 +77,10 @@ public class MessageServlet extends MessageServletSupport {
         name = servletConfig.getInitParameter("replyTimeout");
         if (name != null) {
             requestTimeout = asLong(name);
+        }
+        name = servletConfig.getInitParameter("defaultContentType");
+        if (name != null) {
+            defaultContentType = name;
         }
     }
 
@@ -236,7 +241,7 @@ public class MessageServlet extends MessageServletSupport {
         try {
 
             // write a responds
-            response.setContentType("text/xml");
+            response.setContentType(defaultContentType);
             PrintWriter writer = response.getWriter();
 
             // handle any message(s)
@@ -280,11 +285,6 @@ public class MessageServlet extends MessageServletSupport {
         }
     }
 
-    protected boolean isRicoAjax(HttpServletRequest request) {
-        String rico = request.getParameter("rico");
-        return rico != null && rico.equals("true");
-    }
-
     public WebClient getWebClient(HttpServletRequest request) {
         String clientId = request.getParameter("clientId");
         if (clientId != null) {
@@ -305,15 +305,13 @@ public class MessageServlet extends MessageServletSupport {
     }
 
     protected String getContentType(HttpServletRequest request) {
-        /*
-         * log("Params: " + request.getParameterMap()); Enumeration iter =
-         * request.getHeaderNames(); while (iter.hasMoreElements()) { String
-         * name = (String) iter.nextElement(); log("Header: " + name + " = " +
-         * request.getHeader(name)); }
-         */
         String value = request.getParameter("xml");
         if (value != null && "true".equalsIgnoreCase(value)) {
             return "text/xml";
+        }
+        value = request.getParameter("json");
+        if (value != null && "true".equalsIgnoreCase(value)) {
+            return "application/json";
         }
         return null;
     }
