@@ -520,9 +520,14 @@ public class BrokerService implements Service {
             if (isUseJmx()) {
                 startManagementContext();
             }
-            BrokerRegistry.getInstance().bind(getBrokerName(), BrokerService.this);
+            // in jvm master slave, lets not publish over existing broker till we get the lock
+            final BrokerRegistry brokerRegistry = BrokerRegistry.getInstance();
+            if (brokerRegistry.lookup(getBrokerName()) == null) {
+                brokerRegistry.bind(getBrokerName(), BrokerService.this);
+            }
             startPersistenceAdapter(startAsync);
             startBroker(startAsync);
+            brokerRegistry.bind(getBrokerName(), BrokerService.this);
         } catch (Exception e) {
             LOG.error("Failed to start ActiveMQ JMS Message Broker (" + getBrokerName() + ", " + brokerId + "). Reason: " + e, e);
             try {
