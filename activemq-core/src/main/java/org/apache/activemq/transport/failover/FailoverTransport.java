@@ -343,6 +343,8 @@ public class FailoverTransport implements CompositeTransport {
 
     public void stop() throws Exception {
         Transport transportToStop = null;
+        List<Transport> backupsToStop = new ArrayList<Transport>(backups.size());
+
         synchronized (reconnectMutex) {
             if (LOG.isDebugEnabled()) {
                 LOG.debug("Stopped " + this);
@@ -353,8 +355,13 @@ public class FailoverTransport implements CompositeTransport {
             started = false;
             disposed = true;
             connected = false;
-            for (BackupTransport t : backups) {
-                t.setDisposed(true);
+            for (BackupTransport backup : backups) {
+                backup.setDisposed(true);
+                Transport transport = backup.getTransport();
+                if (transport != null) {
+                    transport.setTransportListener(disposedListener);
+                    backupsToStop.add(transport);
+                }
             }
             backups.clear();
 
@@ -369,6 +376,12 @@ public class FailoverTransport implements CompositeTransport {
         reconnectTask.shutdown();
         if (transportToStop != null) {
             transportToStop.stop();
+        }
+        for (Transport transport : backupsToStop) {
+            try {
+                disposeTransport(transport);
+            } catch (Exception e) {
+            }
         }
     }
 
@@ -538,11 +551,11 @@ public class FailoverTransport implements CompositeTransport {
                         return;
                     } else if (command instanceof MessagePull) {
                         // Simulate response to MessagePull if timed as we can't honor that now.
-                    	MessagePull pullRequest = (MessagePull) command;
-                    	if (pullRequest.getTimeout() != 0) {
-	                        MessageDispatch dispatch = new MessageDispatch();
-	                        dispatch.setConsumerId(pullRequest.getConsumerId());
-	                        dispatch.setDestination(pullRequest.getDestination());
+                        MessagePull pullRequest = (MessagePull) command;
+                        if (pullRequest.getTimeout() != 0) {
+                            MessageDispatch dispatch = new MessageDispatch();
+                            dispatch.setConsumerId(pullRequest.getConsumerId());
+                            dispatch.setDestination(pullRequest.getDestination());
                             myTransportListener.onCommand(dispatch);
                         }
                         return;
