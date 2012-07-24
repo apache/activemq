@@ -69,7 +69,7 @@
 
     <feature name="activemq-camel" version="${activemq-version}" resolver="(obr)">
         <feature version="${activemq-version}">activemq</feature>
-        <feature version="${camel-version}">camel-jms</feature>
+        <feature version="${camel-version-range}">camel-jms</feature>
         <bundle>mvn:org.apache.activemq/activemq-camel/${activemq-version}</bundle>
     </feature>
 
