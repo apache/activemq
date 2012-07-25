@@ -248,6 +248,20 @@
       <scope>test</scope>
     </dependency>
 
+    <!--  Joram JMS conformance tests -->
+    <dependency>
+      <groupId>org.fusesource.joram-jms-tests</groupId>
+      <artifactId>joram-jms-tests</artifactId>
+      <version>1.0</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <!-- using it for Jetty's JNDI context to work /w Joram tests. -->
+      <groupId>org.eclipse.jetty.aggregate</groupId>
+      <artifactId>jetty-all-server</artifactId>
+      <scope>test</scope>
+    </dependency>
+
     <!--  LDAP tests -->
     <dependency>
       <groupId>org.apache.directory.server</groupId>
