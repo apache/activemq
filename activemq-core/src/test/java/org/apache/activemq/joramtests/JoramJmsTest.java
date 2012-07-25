@@ -19,6 +19,7 @@ package org.apache.activemq.joramtests;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
+
 import org.objectweb.jtests.jms.conform.connection.ConnectionTest;
 import org.objectweb.jtests.jms.conform.connection.TopicConnectionTest;
 import org.objectweb.jtests.jms.conform.message.MessageBodyTest;
@@ -27,11 +28,8 @@ import org.objectweb.jtests.jms.conform.message.MessageTypeTest;
 import org.objectweb.jtests.jms.conform.message.headers.MessageHeaderTest;
 import org.objectweb.jtests.jms.conform.message.properties.JMSXPropertyTest;
 import org.objectweb.jtests.jms.conform.message.properties.MessagePropertyConversionTest;
-import org.objectweb.jtests.jms.conform.message.properties.MessagePropertyTest;
-import org.objectweb.jtests.jms.conform.queue.QueueBrowserTest;
 import org.objectweb.jtests.jms.conform.queue.TemporaryQueueTest;
 import org.objectweb.jtests.jms.conform.selector.SelectorSyntaxTest;
-import org.objectweb.jtests.jms.conform.selector.SelectorTest;
 import org.objectweb.jtests.jms.conform.session.QueueSessionTest;
 import org.objectweb.jtests.jms.conform.session.SessionTest;
 import org.objectweb.jtests.jms.conform.session.TopicSessionTest;
@@ -59,11 +57,11 @@ public class JoramJmsTest extends TestCase {
         suite.addTestSuite(SessionTest.class);
         suite.addTestSuite(TopicSessionTest.class);
         suite.addTestSuite(TemporaryTopicTest.class);
+        suite.addTestSuite(UnifiedSessionTest.class);
 // TODO: figure out why the following tests are failing..
 //        suite.addTestSuite(MessagePropertyTest.class);
 //        suite.addTestSuite(QueueBrowserTest.class);
 //        suite.addTestSuite(SelectorTest.class);
-//        suite.addTestSuite(UnifiedSessionTest.class);
         return suite;
     }
 

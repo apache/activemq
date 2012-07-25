@@ -205,14 +205,14 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
      * @throws JMSException
      */
     public QueueConnection createQueueConnection() throws JMSException {
-        return createActiveMQConnection();
+        return createActiveMQConnection().enforceQueueOnlyConnection();
     }
 
     /**
      * @return Returns the QueueConnection.
      */
     public QueueConnection createQueueConnection(String userName, String password) throws JMSException {
-        return createActiveMQConnection(userName, password);
+        return createActiveMQConnection(userName, password).enforceQueueOnlyConnection();
     }
 
     /**

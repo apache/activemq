@@ -154,6 +154,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     private int sendTimeout =0;
     private boolean sendAcksAsync=true;
     private boolean checkForDuplicates = true;
+    private boolean queueOnlyConnection = false;
 
     private final Transport transport;
     private final IdGenerator clientIdGenerator;
@@ -780,6 +781,11 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     public ConnectionConsumer createDurableConnectionConsumer(Topic topic, String subscriptionName, String messageSelector, ServerSessionPool sessionPool, int maxMessages,
                                                               boolean noLocal) throws JMSException {
         checkClosedOrFailed();
+
+        if (queueOnlyConnection) {
+            throw new IllegalStateException("QueueConnection cannot be used to create Pub/Sub based resources.");
+        }
+
         ensureConnectionInfoSent();
         SessionId sessionId = new SessionId(info.getConnectionId(), -1);
         ConsumerInfo info = new ConsumerInfo(new ConsumerId(sessionId, consumerIdGenerator.getNextSequenceId()));
@@ -2578,5 +2584,15 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
 
     public void setMaxThreadPoolSize(int maxThreadPoolSize) {
         this.maxThreadPoolSize = maxThreadPoolSize;
+    }
+
+    /**
+     * Enable enforcement of QueueConnection semantics.
+     *
+     * @return this object, useful for chaining
+     */
+    ActiveMQConnection enforceQueueOnlyConnection() {
+        this.queueOnlyConnection = true;
+        return this;
     }
 }
