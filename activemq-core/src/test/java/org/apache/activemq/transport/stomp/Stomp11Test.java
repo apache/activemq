@@ -739,7 +739,7 @@ public class Stomp11Test extends CombinationTestSupport {
     }
 
     public void testHeaderValuesAreNotWSTrimmed() throws Exception {
-
+        stompConnection.setVersion(Stomp.V1_1);
         String connectFrame = "STOMP\n" +
                               "login:system\n" +
                               "passcode:manager\n" +

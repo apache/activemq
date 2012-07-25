@@ -652,23 +652,12 @@ public class ProtocolConverter {
         String passcode = headers.get(Stomp.Headers.Connect.PASSCODE);
         String clientId = headers.get(Stomp.Headers.Connect.CLIENT_ID);
         String heartBeat = headers.get(Stomp.Headers.Connect.HEART_BEAT);
-        String accepts = headers.get(Stomp.Headers.Connect.ACCEPT_VERSION);
 
-        if (accepts == null) {
-            accepts = Stomp.DEFAULT_VERSION;
-        }
         if (heartBeat == null) {
             heartBeat = defaultHeartBeat;
         }
 
-        HashSet<String> acceptsVersions = new HashSet<String>(Arrays.asList(accepts.trim().split(Stomp.COMMA)));
-        acceptsVersions.retainAll(Arrays.asList(Stomp.SUPPORTED_PROTOCOL_VERSIONS));
-        if (acceptsVersions.isEmpty()) {
-            throw new ProtocolException("Invalid Protocol version[" + accepts +"], supported versions are: " +
-                                        Arrays.toString(Stomp.SUPPORTED_PROTOCOL_VERSIONS), true);
-        } else {
-            this.version = Collections.max(acceptsVersions);
-        }
+        this.version = StompCodec.detectVersion(headers);
 
         configureInactivityMonitor(heartBeat.trim());
 
@@ -735,11 +724,9 @@ public class ProtocolConverter {
                         sc.setHeaders(responseHeaders);
                         sendToStomp(sc);
 
-                        if (version.equals(Stomp.V1_1)) {
-                            StompWireFormat format = stompTransport.getWireFormat();
-                            if (format != null) {
-                                format.setEncodingEnabled(true);
-                            }
+                        StompWireFormat format = stompTransport.getWireFormat();
+                        if (format != null) {
+                            format.setStompVersion(version);
                         }
                     }
                 });

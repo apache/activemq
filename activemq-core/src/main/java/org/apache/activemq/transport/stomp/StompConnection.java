@@ -32,6 +32,7 @@ public class StompConnection {
 
     private Socket stompSocket;
     private ByteArrayOutputStream inputBuffer = new ByteArrayOutputStream();
+    private String version = Stomp.DEFAULT_VERSION;
 
     public void open(String host, int port) throws IOException, UnknownHostException {
         open(new Socket(host, port));
@@ -71,6 +72,7 @@ public class StompConnection {
         stompSocket.setSoTimeout((int)timeOut);
         InputStream is = stompSocket.getInputStream();
         StompWireFormat wf = new StompWireFormat();
+        wf.setStompVersion(version);
         DataInputStream dis = new DataInputStream(is);
         return (StompFrame)wf.unmarshal(dis);
     }
@@ -248,4 +250,11 @@ public class StompConnection {
         return result.toString();
     }
 
+    public String getVersion() {
+        return version;
+    }
+
+    public void setVersion(String version) {
+        this.version = version;
+    }
 }

@@ -21,7 +21,11 @@ import org.apache.activemq.util.ByteArrayOutputStream;
 import org.apache.activemq.util.DataByteArrayInputStream;
 
 import java.io.ByteArrayInputStream;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
 
 public class StompCodec {
 
@@ -35,6 +39,7 @@ public class StompCodec {
     int contentLength = -1;
     int readLength = 0;
     int previousByte = -1;
+    String version = Stomp.DEFAULT_VERSION;
 
     public StompCodec(TcpTransport transport) {
         this.transport = transport;
@@ -54,17 +59,21 @@ public class StompCodec {
                currentCommand.write(b);
                // end of headers section, parse action and header
                if (b == '\n' && (previousByte == '\n' || currentCommand.endsWith(crlfcrlf))) {
-                   if (transport.getWireFormat() instanceof StompWireFormat) {
-                       DataByteArrayInputStream data = new DataByteArrayInputStream(currentCommand.toByteArray());
-                       action = ((StompWireFormat)transport.getWireFormat()).parseAction(data);
-                       headers = ((StompWireFormat)transport.getWireFormat()).parseHeaders(data);
+                   StompWireFormat wf = (StompWireFormat) transport.getWireFormat();
+                   DataByteArrayInputStream data = new DataByteArrayInputStream(currentCommand.toByteArray());
+                   action = wf.parseAction(data);
+                   headers = wf.parseHeaders(data);
+                   try {
+                       if (action.equals(Stomp.Commands.CONNECT) || action.equals(Stomp.Commands.STOMP)) {
+                           wf.setStompVersion(detectVersion(headers));
+                       }
                        String contentLengthHeader = headers.get(Stomp.Headers.CONTENT_LENGTH);
                        if ((action.equals(Stomp.Commands.SEND) || action.equals(Stomp.Responses.MESSAGE)) && contentLengthHeader != null) {
-                           contentLength = ((StompWireFormat)transport.getWireFormat()).parseContentLength(contentLengthHeader);
+                           contentLength = wf.parseContentLength(contentLengthHeader);
                        } else {
                            contentLength = -1;
                        }
-                   }
+                   } catch (ProtocolException ignore) {}
                    processedHeaders = true;
                    currentCommand.reset();
                }
@@ -98,5 +107,21 @@ public class StompCodec {
         processedHeaders = false;
         currentCommand.reset();
         contentLength = -1;
+    }
+
+    public static String detectVersion(Map<String, String> headers) throws ProtocolException {
+        String accepts = headers.get(Stomp.Headers.Connect.ACCEPT_VERSION);
+
+        if (accepts == null) {
+            accepts = Stomp.DEFAULT_VERSION;
+        }
+        HashSet<String> acceptsVersions = new HashSet<String>(Arrays.asList(accepts.trim().split(Stomp.COMMA)));
+        acceptsVersions.retainAll(Arrays.asList(Stomp.SUPPORTED_PROTOCOL_VERSIONS));
+        if (acceptsVersions.isEmpty()) {
+            throw new ProtocolException("Invalid Protocol version[" + accepts +"], supported versions are: " +
+                    Arrays.toString(Stomp.SUPPORTED_PROTOCOL_VERSIONS), true);
+        } else {
+            return Collections.max(acceptsVersions);
+        }
     }
 }

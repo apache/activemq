@@ -45,8 +45,8 @@ public class StompWireFormat implements WireFormat {
     private static final int MAX_HEADERS = 1000;
     private static final int MAX_DATA_LENGTH = 1024 * 1024 * 100;
 
-    private boolean encodingEnabled = false;
     private int version = 1;
+    private String stompVersion = Stomp.DEFAULT_VERSION;
 
     public ByteSequence marshal(Object command) throws IOException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -208,6 +208,9 @@ public class StompWireFormat implements WireFormat {
                     ByteSequence nameSeq = stream.toByteSequence();
                     String name = new String(nameSeq.getData(), nameSeq.getOffset(), nameSeq.getLength(), "UTF-8");
                     String value = decodeHeader(headerLine);
+                    if (stompVersion.equals(Stomp.V1_0)) {
+                        value = value.trim();
+                    }
 
                     if (!headers.containsKey(name)) {
                     	headers.put(name, value);
@@ -239,7 +242,7 @@ public class StompWireFormat implements WireFormat {
 
     private String encodeHeader(String header) throws IOException {
         String result = header;
-        if (this.encodingEnabled) {
+        if (!stompVersion.equals(Stomp.V1_0)) {
             byte[] utf8buf = header.getBytes("UTF-8");
             ByteArrayOutputStream stream = new ByteArrayOutputStream(utf8buf.length);
             for(byte val : utf8buf) {
@@ -307,12 +310,11 @@ public class StompWireFormat implements WireFormat {
         this.version = version;
     }
 
-    public boolean isEncodingEnabled() {
-        return this.encodingEnabled;
+    public String getStompVersion() {
+        return stompVersion;
     }
 
-    public void setEncodingEnabled(boolean value) {
-        this.encodingEnabled = value;
+    public void setStompVersion(String stompVersion) {
+        this.stompVersion = stompVersion;
     }
-
 }
