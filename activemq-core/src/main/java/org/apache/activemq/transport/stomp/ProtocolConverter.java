@@ -22,10 +22,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -603,9 +600,13 @@ public class ProtocolConverter {
 
         // check if it is a durable subscription
         String durable = command.getHeaders().get("activemq.subscriptionName");
+        String clientId = durable;
+        if (this.version.equals(Stomp.V1_1)) {
+            clientId = connectionInfo.getClientId();
+        }
         if (durable != null) {
             RemoveSubscriptionInfo info = new RemoveSubscriptionInfo();
-            info.setClientId(durable);
+            info.setClientId(clientId);
             info.setSubscriptionName(durable);
             info.setConnectionId(connectionId);
             sendToActiveMQ(info, createResponseHandler(command));
