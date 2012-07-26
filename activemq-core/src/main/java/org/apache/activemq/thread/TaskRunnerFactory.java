@@ -18,7 +18,7 @@ package org.apache.activemq.thread;
 
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -46,6 +46,7 @@ public class TaskRunnerFactory implements Executor {
     private boolean dedicatedTaskRunner;
     private AtomicBoolean initDone = new AtomicBoolean(false);
     private int maxThreadPoolSize = Integer.MAX_VALUE;
+    private RejectedExecutionHandler rejectedTaskHandler = null;
 
     public TaskRunnerFactory() {
         this("ActiveMQ Task", Thread.NORM_PRIORITY, true, 1000);
@@ -118,6 +119,9 @@ public class TaskRunnerFactory implements Executor {
                 return thread;
             }
         });
+        if (rejectedTaskHandler != null) {
+            rc.setRejectedExecutionHandler(rejectedTaskHandler);
+        }
         return rc;
     }
 
@@ -175,5 +179,13 @@ public class TaskRunnerFactory implements Executor {
 
     public void setMaxThreadPoolSize(int maxThreadPoolSize) {
         this.maxThreadPoolSize = maxThreadPoolSize;
+    }
+
+    public RejectedExecutionHandler getRejectedTaskHandler() {
+        return rejectedTaskHandler;
+    }
+
+    public void setRejectedTaskHandler(RejectedExecutionHandler rejectedTaskHandler) {
+        this.rejectedTaskHandler = rejectedTaskHandler;
     }
 }

@@ -28,6 +28,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -203,6 +204,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     private boolean nonBlockingRedelivery = false;
 
     private int maxThreadPoolSize = DEFAULT_THREAD_POOL_SIZE;
+    private RejectedExecutionHandler rejectedTaskHandler = null;
 
     /**
      * Construct an <code>ActiveMQConnection</code>
@@ -985,9 +987,11 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     }
 
     public TaskRunnerFactory getSessionTaskRunner() {
+        System.out.println(maxThreadPoolSize);
         synchronized (this) {
             if (sessionTaskRunner == null) {
                 sessionTaskRunner = new TaskRunnerFactory("ActiveMQ Session Task", ThreadPriorities.INBOUND_CLIENT_SESSION, false, 1000, isUseDedicatedTaskRunner(), maxThreadPoolSize);
+                sessionTaskRunner.setRejectedTaskHandler(rejectedTaskHandler);
             }
         }
         return sessionTaskRunner;
@@ -2594,5 +2598,13 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     ActiveMQConnection enforceQueueOnlyConnection() {
         this.queueOnlyConnection = true;
         return this;
+    }
+
+    public RejectedExecutionHandler getRejectedTaskHandler() {
+        return rejectedTaskHandler;
+    }
+
+    public void setRejectedTaskHandler(RejectedExecutionHandler rejectedTaskHandler) {
+        this.rejectedTaskHandler = rejectedTaskHandler;
     }
 }

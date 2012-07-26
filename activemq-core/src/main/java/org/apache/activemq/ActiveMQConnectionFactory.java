@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.Executor;
+import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadFactory;
 
@@ -131,6 +132,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     private boolean nonBlockingRedelivery = false;
     private int maxThreadPoolSize = ActiveMQConnection.DEFAULT_THREAD_POOL_SIZE;
     private TaskRunnerFactory sessionTaskRunner;
+    private RejectedExecutionHandler rejectedTaskHandler = null;
 
     // /////////////////////////////////////////////
     //
@@ -344,6 +346,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
         connection.setNonBlockingRedelivery(isNonBlockingRedelivery());
         connection.setMaxThreadPoolSize(getMaxThreadPoolSize());
         connection.setSessionTaskRunner(getSessionTaskRunner());
+        connection.setRejectedTaskHandler(getRejectedTaskHandler());
         if (transportListener != null) {
             connection.addTransportListener(transportListener);
         }
@@ -1115,5 +1118,13 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
 
     public void setSessionTaskRunner(TaskRunnerFactory sessionTaskRunner) {
         this.sessionTaskRunner = sessionTaskRunner;
+    }
+
+    public RejectedExecutionHandler getRejectedTaskHandler() {
+        return rejectedTaskHandler;
+    }
+
+    public void setRejectedTaskHandler(RejectedExecutionHandler rejectedTaskHandler) {
+        this.rejectedTaskHandler = rejectedTaskHandler;
     }
 }
