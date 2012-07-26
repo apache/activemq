@@ -16,20 +16,21 @@
  */
 package org.apache.activemq.joramtests;
 
+import java.io.File;
+import java.net.URI;
+import java.util.Hashtable;
+
+import javax.jms.ConnectionFactory;
+import javax.naming.Context;
+import javax.naming.InitialContext;
+import javax.naming.NamingException;
+
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.objectweb.jtests.jms.admin.Admin;
-
-import javax.jms.ConnectionFactory;
-import javax.naming.Context;
-import javax.naming.InitialContext;
-import javax.naming.NamingException;
-import java.io.File;
-import java.net.URI;
-import java.util.Hashtable;
 
 /**
  *
@@ -118,6 +119,7 @@ public class ActiveMQAdmin implements Admin {
     public void createConnectionFactory(String name) {
         try {
             final ConnectionFactory factory = new ActiveMQConnectionFactory("vm://localhost");
+            ((ActiveMQConnectionFactory) factory).setNestedMapAndListEnabled(false);
             context.bind(name, factory);
         } catch (NamingException e) {
             throw new RuntimeException(e);

@@ -347,6 +347,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
         connection.setMaxThreadPoolSize(getMaxThreadPoolSize());
         connection.setSessionTaskRunner(getSessionTaskRunner());
         connection.setRejectedTaskHandler(getRejectedTaskHandler());
+        connection.setNestedMapAndListEnabled(isNestedMapAndListEnabled());
         if (transportListener != null) {
             connection.addTransportListener(transportListener);
         }
@@ -765,6 +766,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
         props.setProperty("transactedIndividualAck", Boolean.toString(isTransactedIndividualAck()));
         props.setProperty("nonBlockingRedelivery", Boolean.toString(isNonBlockingRedelivery()));
         props.setProperty("maxThreadPoolSize", Integer.toString(getMaxThreadPoolSize()));
+        props.setProperty("nestedMapAndListEnabled", Boolean.toString(isNestedMapAndListEnabled()));
     }
 
     public boolean isUseCompression() {
