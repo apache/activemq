@@ -19,15 +19,13 @@ package org.apache.activemq;
 import java.util.Enumeration;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import javax.jms.*;
 import javax.jms.IllegalStateException;
-import javax.jms.JMSException;
-import javax.jms.Message;
-import javax.jms.Queue;
-import javax.jms.QueueBrowser;
 
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.command.MessageDispatch;
+import org.apache.activemq.selector.SelectorParser;
 
 /**
  * A client uses a <CODE>QueueBrowser</CODE> object to look at messages on a
@@ -69,27 +67,27 @@ public class ActiveMQQueueBrowser implements QueueBrowser, Enumeration {
 
     /**
      * Constructor for an ActiveMQQueueBrowser - used internally
-     *
-     * @param theSession
-     * @param dest
-     * @param selector
      * @throws JMSException
      */
     protected ActiveMQQueueBrowser(ActiveMQSession session, ConsumerId consumerId, ActiveMQDestination destination, String selector, boolean dispatchAsync) throws JMSException {
+        if (destination == null) {
+            throw new InvalidDestinationException("Don't understand null destinations");
+        } else if (destination.getPhysicalName() == null) {
+            throw new InvalidDestinationException("The destination object was not given a physical name.");
+        }
+        if (selector != null && selector.trim().length() != 0) {
+            // Validate the selector
+            SelectorParser.parse(selector);
+        }
+
         this.session = session;
         this.consumerId = consumerId;
         this.destination = destination;
         this.selector = selector;
         this.dispatchAsync = dispatchAsync;
-        this.consumer = createConsumer();
     }
 
     /**
-     * @param session
-     * @param originalDestination
-     * @param selectorExpression
-     * @param cnum
-     * @return
      * @throws JMSException
      */
     private ActiveMQMessageConsumer createConsumer() throws JMSException {
@@ -185,7 +183,7 @@ public class ActiveMQQueueBrowser implements QueueBrowser, Enumeration {
             }
 
             try {
-                Message answer = consumer.receiveNoWait();
+                javax.jms.Message answer = consumer.receiveNoWait();
                 if (answer != null) {
                     return answer;
                 }
