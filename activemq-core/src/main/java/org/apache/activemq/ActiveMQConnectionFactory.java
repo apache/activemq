@@ -764,6 +764,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
         props.setProperty("messagePrioritySupported", Boolean.toString(isMessagePrioritySupported()));
         props.setProperty("transactedIndividualAck", Boolean.toString(isTransactedIndividualAck()));
         props.setProperty("nonBlockingRedelivery", Boolean.toString(isNonBlockingRedelivery()));
+        props.setProperty("maxThreadPoolSize", Integer.toString(getMaxThreadPoolSize()));
     }
 
     public boolean isUseCompression() {
