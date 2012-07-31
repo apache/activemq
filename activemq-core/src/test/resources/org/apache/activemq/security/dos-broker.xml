@@ -57,7 +57,9 @@
       </authorizationPlugin>
     </plugins>
       <transportConnectors>
-            <transportConnector uri="tcp://localhost:61616?maximumConnections=2"/>
+          <!-- disable keepalive and use low tolerance for inactive connections such that rogue clients that connect
+          and do nothing (dos style) get aborted -->
+            <transportConnector uri="tcp://localhost:61616?maximumConnections=2&amp;wireFormat.maxInactivityDuration=500&amp;transport.useKeepAlive=false"/>
         </transportConnectors>
   </broker>
 

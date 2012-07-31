@@ -299,11 +299,6 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
                         + " command: " + command + ", exception: " + e, e);
             }
 
-            if (e instanceof java.lang.SecurityException) {
-                // still need to close this down - in case the peer of this transport doesn't play nice
-                delayedStop(2000, "Failed with SecurityException: " + e.getLocalizedMessage(), e);
-            }
-
             if (responseRequired) {
                 response = new ExceptionResponse(e);
             } else {
@@ -721,6 +716,10 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
             LOG.warn("Failed to add Connection " + info.getConnectionId() + ", reason: " + e.toString());
             if (LOG.isDebugEnabled()) {
                 LOG.debug("Exception detail:", e);
+            }
+            if (e instanceof SecurityException) {
+                // close this down - in case the peer of this transport doesn't play nice
+                delayedStop(2000, "Failed with SecurityException: " + e.getLocalizedMessage(), e);
             }
             throw e;
         }

@@ -180,7 +180,7 @@ public abstract class AbstractInactivityMonitor extends TransportFilter {
         }
         if (!commandReceived.get() && monitorStarted.get() && !ASYNC_TASKS.isTerminating()) {
             if (LOG.isDebugEnabled()) {
-                LOG.debug("No message received since last read check for " + toString() + "! Throwing InactivityIOException.");
+                LOG.debug("No message received since last read check for " + toString() + ". Throwing InactivityIOException.");
             }
             ASYNC_TASKS.execute(new Runnable() {
                 public void run() {

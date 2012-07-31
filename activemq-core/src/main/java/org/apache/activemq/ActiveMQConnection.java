@@ -1301,7 +1301,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
      * @return
      * @throws JMSException
      */
-    public void syncSendPacket(Command command, final AsyncCallback onComplete) throws JMSException {
+    public void syncSendPacket(final Command command, final AsyncCallback onComplete) throws JMSException {
         if(onComplete==null) {
             syncSendPacket(command);
         } else {
@@ -1336,8 +1336,8 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
                                 } catch(Throwable e) {
                                     LOG.error("Caught an exception trying to create a JMSException for " +exception,e);
                                 }
-                                //dispose of transport for security exceptions
-                                if (exception instanceof SecurityException){
+                                // dispose of transport for security exceptions on connection initiation
+                                if (exception instanceof SecurityException && command instanceof ConnectionInfo){
                                     Transport t = transport;
                                     if (null != t){
                                         ServiceSupport.dispose(t);
@@ -1380,7 +1380,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
                             LOG.error("Caught an exception trying to create a JMSException for " +er.getException(),e);
                         }
                         //dispose of transport for security exceptions
-                        if (er.getException() instanceof SecurityException){
+                        if (er.getException() instanceof SecurityException && command instanceof ConnectionInfo){
                             Transport t = this.transport;
                             if (null != t){
                                 ServiceSupport.dispose(t);
