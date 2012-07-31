@@ -23,6 +23,7 @@ import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
+import javax.jms.TransactionRolledBackException;
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.derby.jdbc.EmbeddedDataSource;
 import org.slf4j.Logger;
@@ -96,10 +97,28 @@ public class DbRestartJDBCQueueMasterSlaveTest extends JDBCQueueMasterSlaveTest 
             receiveSession.commit();
             super.consumeMessage(message, messageList);
         } catch (JMSException e) {
-            LOG.info("Faild to commit message receipt: " + message, e);
+            LOG.info("Failed to commit message receipt: " + message, e);
             try {
                 receiveSession.rollback();
             } catch (JMSException ignored) {}
+
+            if (e.getCause() instanceof TransactionRolledBackException) {
+                TransactionRolledBackException transactionRolledBackException = (TransactionRolledBackException)e.getCause();
+                if (transactionRolledBackException.getMessage().indexOf("in doubt") != -1) {
+                    // failover chucked bc there is a missing reply to a commit. the ack may have got there and the reply
+                    // was lost or the ack may be lost.
+                    // so we may not get a resend.
+                    //
+                    // REVISIT: A JDBC store IO exception should not cause the connection to drop, so it needs to be wrapped
+                    // possibly by the IOExceptionHandler
+                    // The commit/close wrappers in jdbc TransactionContext need to delegate to the IOExceptionHandler
+
+                    // this would leave the application aware of the store failure, and possible aware of whether the commit
+                    // was a success, rather than going into failover-retries as it does now.
+
+                }
+
+            }
         }
     }
 }
