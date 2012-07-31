@@ -178,4 +178,37 @@ public class URISupportTest extends TestCase {
         assertEquals(parameters.get("proxyPort"), "80");
     }
 
+    public void testIsCompositeURIWithQueryNoSlashes() throws URISyntaxException {
+        URI[] compositeURIs = new URI[] { new URI("test:(part1://host?part1=true)?outside=true"), new URI("broker:(tcp://localhost:61616)?name=foo") };
+        for (URI uri : compositeURIs) {
+            assertTrue(uri + " must be detected as composite URI", URISupport.isCompositeURI(uri));
+        }
+    }
+
+    public void testIsCompositeURIWithQueryAndSlashes() throws URISyntaxException {
+        URI[] compositeURIs = new URI[] { new URI("test://(part1://host?part1=true)?outside=true"), new URI("broker://(tcp://localhost:61616)?name=foo") };
+        for (URI uri : compositeURIs) {
+            assertTrue(uri + " must be detected as composite URI", URISupport.isCompositeURI(uri));
+        }
+    }
+
+    public void testIsCompositeURINoQueryNoSlashes() throws URISyntaxException {
+        URI[] compositeURIs = new URI[] { new URI("test:(part1://host,part2://(sub1://part,sube2:part))"), new URI("test:(path)/path") };
+        for (URI uri : compositeURIs) {
+            assertTrue(uri + " must be detected as composite URI", URISupport.isCompositeURI(uri));
+        }
+    }
+
+    public void testIsCompositeURINoQueryNoSlashesNoParentheses() throws URISyntaxException {
+        assertFalse("test:part1" + " must be detected as non-composite URI", URISupport.isCompositeURI(new URI("test:part1")));
+    }
+
+    public void testIsCompositeURINoQueryWithSlashes() throws URISyntaxException {
+        URI[] compositeURIs = new URI[] { new URI("failover://(tcp://bla:61616,tcp://bla:61617)"),
+                new URI("failover://(tcp://localhost:61616,ssl://anotherhost:61617)") };
+        for (URI uri : compositeURIs) {
+            assertTrue(uri + " must be detected as composite URI", URISupport.isCompositeURI(uri));
+        }
+    }
+
 }

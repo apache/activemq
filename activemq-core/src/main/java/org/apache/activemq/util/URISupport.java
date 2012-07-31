@@ -205,18 +205,12 @@ public class URISupport {
     }
 
     public static boolean isCompositeURI(URI uri) {
-        if (uri.getQuery() != null) {
-            return false;
-        } else {
-            String ssp = stripPrefix(uri.getRawSchemeSpecificPart().trim(), "(").trim();
-            ssp = stripPrefix(ssp, "//").trim();
-            try {
-                new URI(ssp);
-            } catch (URISyntaxException e) {
-                return false;
-            }
+        String ssp = stripPrefix(uri.getRawSchemeSpecificPart().trim(), "//").trim();
+
+        if (ssp.indexOf('(') == 0 && checkParenthesis(ssp)) {
             return true;
         }
+        return false;
     }
 
     public static int indexOfParenthesisMatch(String str, int first) throws URISyntaxException {
