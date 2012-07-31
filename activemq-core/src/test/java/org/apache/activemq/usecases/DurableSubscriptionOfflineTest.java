@@ -44,6 +44,7 @@ import org.apache.activemq.store.jdbc.JDBCPersistenceAdapter;
 import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
 import org.apache.activemq.util.Wait;
 import org.apache.kahadb.journal.Journal;
+import org.apache.kahadb.page.PageFile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -753,6 +754,57 @@ public class DurableSubscriptionOfflineTest extends org.apache.activemq.TestSupp
         session.close();
         con.close();
         assertEquals(0, listener.count);
+    }
+
+    public void testRemovedDurableSubDeletesFromIndex() throws Exception {
+
+        if (! (broker.getPersistenceAdapter() instanceof KahaDBPersistenceAdapter)) {
+            return;
+        }
+
+        // fails for numMessages > 3000
+        final int numMessages = 100;
+
+        KahaDBPersistenceAdapter kahaDBPersistenceAdapter = (KahaDBPersistenceAdapter)broker.getPersistenceAdapter();
+        PageFile pageFile = kahaDBPersistenceAdapter.getStore().getPageFile();
+        LOG.info("PageCount " + pageFile.getPageCount() + " f:" + pageFile.getFreePageCount() + ", fileSize:" + pageFile.getFile().length());
+
+        long lastDiff = 0;
+        for (int repeats=0; repeats<4; repeats++) {
+
+            LOG.info("Iteration: "+ repeats  + " Count:" + pageFile.getPageCount() + " f:" + pageFile.getFreePageCount());
+
+            Connection con = createConnection("cliId1" + "-" + repeats);
+            Session session = con.createSession(false, Session.AUTO_ACKNOWLEDGE);
+            session.createDurableSubscriber(topic, "SubsId", "filter = 'true'", true);
+            session.close();
+            con.close();
+
+            // send messages
+            con = createConnection();
+            session = con.createSession(false, Session.AUTO_ACKNOWLEDGE);
+            MessageProducer producer = session.createProducer(null);
+
+            for (int i = 0; i < numMessages; i++) {
+                Message message = session.createMessage();
+                message.setStringProperty("filter", "true");
+                producer.send(topic, message);
+            }
+            con.close();
+
+            Connection con2 = createConnection("cliId1" + "-" + repeats);
+            Session session2 = con2.createSession(false, Session.AUTO_ACKNOWLEDGE);
+            session2.unsubscribe("SubsId");
+            session2.close();
+            con2.close();
+
+            LOG.info("PageCount " + pageFile.getPageCount() + " f:" + pageFile.getFreePageCount() +  " diff: " + (pageFile.getPageCount() - pageFile.getFreePageCount()) + " fileSize:" + pageFile.getFile().length());
+
+            if (lastDiff != 0) {
+                assertEquals("Only use X pages per iteration", lastDiff, pageFile.getPageCount() - pageFile.getFreePageCount());
+            }
+            lastDiff = pageFile.getPageCount() - pageFile.getFreePageCount();
+        }
     }
 
     public void initCombosForTestOfflineSubscriptionWithSelectorAfterRestart() throws Exception {
