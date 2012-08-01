@@ -25,6 +25,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.PrintWriter;
 import java.text.NumberFormat;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -419,6 +420,51 @@ public class BTreeIndexTest extends IndexTestSupport {
 
         test.clear(tx);
         tx.commit();
+    }
+
+    public void testIndexRepeatFillClearIncrementingPageReuse() throws Exception {
+        pf = new PageFile(directory, getClass().getName());
+        pf.setPageSize(4*1024);
+        pf.load();
+
+        tx = pf.tx();
+        long id = tx.allocate().getPageId();
+
+        BTreeIndex<Long, String> test = new BTreeIndex<Long, String>(pf, id);
+        test.setKeyMarshaller(LongMarshaller.INSTANCE);
+        test.setValueMarshaller(StringMarshaller.INSTANCE);
+        test.load(tx);
+        tx.commit();
+
+        final int count = 5000;
+        final int reps = 2;
+        final long[] diffs = new long[reps];
+        long keyVal = 0;
+        final String payload = new String(new byte[50]);
+
+        LOG.info("PF diff:" + (pf.getPageCount() - pf.getFreePageCount()) + " pc:" + pf.getPageCount() + " f:" + pf.getFreePageCount() );
+
+        for (int i=0; i<reps; i++) {
+
+            for (int j = 0; j < count; j++) {
+                tx = pf.tx();
+                test.put(tx, keyVal++, payload);
+                tx.commit();
+            }
+
+            tx = pf.tx();
+            for (long k = keyVal - count; k < keyVal; k++) {
+                test.remove(tx, k);
+            }
+            test.clear(tx);
+            tx.commit();
+            diffs[i] = pf.getPageCount() - pf.getFreePageCount();
+
+            LOG.info("PF diff:" + (pf.getPageCount() - pf.getFreePageCount()) + " pc:" + pf.getPageCount() + " f:" + pf.getFreePageCount());
+        }
+        for (int i=1; i<diffs.length; i++) {
+            assertEquals("diff is constant:" + Arrays.toString(diffs), diffs[0],diffs[i]);
+        }
     }
 
     public void testListIndexConsistancyOverTime() throws Exception {

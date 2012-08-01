@@ -282,7 +282,7 @@ public final class BTreeNode<Key,Value> {
             idx = idx < 0 ? -(idx + 1) : idx + 1;
             BTreeNode<Key, Value> child = getChild(tx, idx);
             if( child.getPageId() == index.getPageId() ) {
-                throw new IOException("BTree corrupted: Cylce detected.");
+                throw new IOException("BTree corrupted: Cycle detected.");
             }
             Value rc = child.remove(tx, key);
             
@@ -293,6 +293,7 @@ public final class BTreeNode<Key,Value> {
                 if( child.isBranch() ) {
                     // This is cause branches are never really empty.. they just go down to 1 child..
                     children[idx] = child.children[0];
+                    tx.free(child.getPage());
                 } else {
                     
                     // The child was a leaf. Then we need to actually remove it from this branch node..
@@ -508,7 +509,10 @@ public final class BTreeNode<Key,Value> {
         if( prefix.length()>0 && parent == null ) {
             throw new IllegalStateException("Cycle back to root node detected.");
         }
-        
+        if (parent == null) {
+            prefix += "|";
+            out.println(prefix + getPageId());
+        }
         if( isBranch() ) {
             for(int i=0 ; i < children.length; i++) {
                 BTreeNode<Key, Value> child = getChild(tx, i);

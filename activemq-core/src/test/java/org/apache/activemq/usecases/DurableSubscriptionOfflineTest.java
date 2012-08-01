@@ -762,15 +762,14 @@ public class DurableSubscriptionOfflineTest extends org.apache.activemq.TestSupp
             return;
         }
 
-        // fails for numMessages > 3000
-        final int numMessages = 100;
+        final int numMessages = 2750;
 
         KahaDBPersistenceAdapter kahaDBPersistenceAdapter = (KahaDBPersistenceAdapter)broker.getPersistenceAdapter();
         PageFile pageFile = kahaDBPersistenceAdapter.getStore().getPageFile();
         LOG.info("PageCount " + pageFile.getPageCount() + " f:" + pageFile.getFreePageCount() + ", fileSize:" + pageFile.getFile().length());
 
         long lastDiff = 0;
-        for (int repeats=0; repeats<4; repeats++) {
+        for (int repeats=0; repeats<2; repeats++) {
 
             LOG.info("Iteration: "+ repeats  + " Count:" + pageFile.getPageCount() + " f:" + pageFile.getFreePageCount());
 
@@ -801,7 +800,7 @@ public class DurableSubscriptionOfflineTest extends org.apache.activemq.TestSupp
             LOG.info("PageCount " + pageFile.getPageCount() + " f:" + pageFile.getFreePageCount() +  " diff: " + (pageFile.getPageCount() - pageFile.getFreePageCount()) + " fileSize:" + pageFile.getFile().length());
 
             if (lastDiff != 0) {
-                assertEquals("Only use X pages per iteration", lastDiff, pageFile.getPageCount() - pageFile.getFreePageCount());
+                assertEquals("Only use X pages per iteration: " + repeats, lastDiff, pageFile.getPageCount() - pageFile.getFreePageCount());
             }
             lastDiff = pageFile.getPageCount() - pageFile.getFreePageCount();
         }
