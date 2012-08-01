@@ -18,6 +18,7 @@ package org.apache.activemq.transport.ws;
 
 import java.io.IOException;
 import java.security.cert.X509Certificate;
+import java.util.concurrent.CountDownLatch;
 
 import org.apache.activemq.command.Command;
 import org.apache.activemq.transport.TransportSupport;
@@ -30,14 +31,19 @@ import org.apache.activemq.util.ByteSequence;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.ServiceStopper;
 import org.eclipse.jetty.websocket.WebSocket;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Implements web socket and mediates between servlet and the broker
  */
 class StompSocket extends TransportSupport implements WebSocket.OnTextMessage, StompTransport {
+    private static final Logger LOG = LoggerFactory.getLogger(StompSocket.class);
+
     Connection outbound;
     ProtocolConverter protocolConverter = new ProtocolConverter(this, null);
     StompWireFormat wireFormat = new StompWireFormat();
+    private final CountDownLatch socketTransportStarted = new CountDownLatch(1);
 
     @Override
     public void onOpen(Connection connection) {
@@ -50,6 +56,17 @@ class StompSocket extends TransportSupport implements WebSocket.OnTextMessage, S
 
     @Override
     public void onMessage(String data) {
+
+        if (!transportStartedAtLeastOnce()) {
+            LOG.debug("Waiting for StompSocket to be properly started...");
+            try {
+                socketTransportStarted.await();
+            } catch (InterruptedException e) {
+                LOG.warn("While waiting for StompSocket to be properly started, we got interrupted!! Should be okay, but you could see race conditions...");
+            }
+        }
+
+
         try {
             protocolConverter.onStompCommand((StompFrame)wireFormat.unmarshal(new ByteSequence(data.getBytes("UTF-8"))));
         } catch (Exception e) {
@@ -57,8 +74,13 @@ class StompSocket extends TransportSupport implements WebSocket.OnTextMessage, S
         }
     }
 
+    private boolean transportStartedAtLeastOnce() {
+        return socketTransportStarted.getCount() == 0;
+    }
+
     @Override
     protected void doStart() throws Exception {
+        socketTransportStarted.countDown();
     }
 
     @Override
