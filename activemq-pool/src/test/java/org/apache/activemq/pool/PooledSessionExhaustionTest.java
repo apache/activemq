@@ -16,14 +16,20 @@
  */
 package org.apache.activemq.pool;
 
-import org.apache.activemq.*;
+import javax.jms.Connection;
+import javax.jms.ConnectionFactory;
+import javax.jms.Destination;
+import javax.jms.Message;
+import javax.jms.MessageConsumer;
+import javax.jms.MessageProducer;
+import javax.jms.Session;
+import javax.jms.TextMessage;
+
+import junit.framework.TestCase;
+
+import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
-
-import junit.framework.*;
-import javax.jms.*;
-import javax.jms.Message;
-
 import org.apache.log4j.Logger;
 
 public class PooledSessionExhaustionTest extends TestCase {
@@ -42,6 +48,7 @@ public class PooledSessionExhaustionTest extends TestCase {
     protected void setUp() throws Exception {
         broker = new BrokerService();
         broker.setPersistent(false);
+        broker.setUseJmx(false);
         TransportConnector connector = broker.addConnector("tcp://localhost:0");
         broker.start();
         connectionUri = connector.getPublishableConnectString();
