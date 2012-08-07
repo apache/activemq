@@ -1149,7 +1149,7 @@ public class FailoverTransport implements CompositeTransport {
                 }
                 backups.removeAll(disposedList);
                 disposedList.clear();
-                for (Iterator<URI> iter = backupList.iterator(); iter.hasNext() && backups.size() < backupPoolSize; ) {
+                for (Iterator<URI> iter = backupList.iterator(); !disposed && iter.hasNext() && backups.size() < backupPoolSize; ) {
                     URI uri = iter.next();
                     if (connectedTransportURI != null && !connectedTransportURI.equals(uri)) {
                         try {
