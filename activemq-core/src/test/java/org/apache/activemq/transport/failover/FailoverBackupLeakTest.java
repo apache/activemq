@@ -92,7 +92,7 @@ public class FailoverBackupLeakTest {
             buildConnection(factory);
         }
 
-        assertTrue(connectionProperties +  " broker1 connection count not zero", Wait.waitFor(new Wait.Condition() {
+        assertTrue(connectionProperties +  " broker1 connection count not zero: was["+getConnectionCount(s1)+"]", Wait.waitFor(new Wait.Condition() {
 
             @Override
             public boolean isSatisified() throws Exception {
@@ -100,7 +100,7 @@ public class FailoverBackupLeakTest {
             }
         }));
 
-        assertTrue(connectionProperties +  " broker2 connection count not zero", Wait.waitFor(new Wait.Condition() {
+        assertTrue(connectionProperties +  " broker2 connection count not zero: was["+getConnectionCount(s2)+"]", Wait.waitFor(new Wait.Condition() {
 
             @Override
             public boolean isSatisified() throws Exception {

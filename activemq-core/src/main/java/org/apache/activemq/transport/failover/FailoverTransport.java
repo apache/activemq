@@ -355,15 +355,6 @@ public class FailoverTransport implements CompositeTransport {
             started = false;
             disposed = true;
             connected = false;
-            for (BackupTransport backup : backups) {
-                backup.setDisposed(true);
-                Transport transport = backup.getTransport();
-                if (transport != null) {
-                    transport.setTransportListener(disposedListener);
-                    backupsToStop.add(transport);
-                }
-            }
-            backups.clear();
 
             if (connectedTransport.get() != null) {
                 transportToStop = connectedTransport.getAndSet(null);
@@ -374,14 +365,28 @@ public class FailoverTransport implements CompositeTransport {
             sleepMutex.notifyAll();
         }
         reconnectTask.shutdown();
-        if (transportToStop != null) {
-            transportToStop.stop();
+        synchronized(backupMutex) {
+            for (BackupTransport backup : backups) {
+                backup.setDisposed(true);
+                Transport transport = backup.getTransport();
+                if (transport != null) {
+                    transport.setTransportListener(disposedListener);
+                    backupsToStop.add(transport);
+                }
+            }
+            backups.clear();
         }
         for (Transport transport : backupsToStop) {
             try {
+                if (LOG.isTraceEnabled()) {
+                    LOG.trace("Stopped backup: " + transport);
+                }
                 disposeTransport(transport);
             } catch (Exception e) {
             }
+        }
+        if (transportToStop != null) {
+            transportToStop.stop();
         }
     }
 
