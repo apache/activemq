@@ -19,13 +19,16 @@ package org.apache.activemq.transport.failover;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.util.concurrent.TimeUnit;
+
 import javax.jms.Connection;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
 import javax.jms.Queue;
 import javax.jms.Session;
+
 import junit.framework.TestCase;
+
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
@@ -40,11 +43,15 @@ public class FailoverUpdateURIsTest extends TestCase {
     String firstTcpUri = "tcp://localhost:61616";
     String secondTcpUri = "tcp://localhost:61626";
     Connection connection = null;
+    BrokerService bs1 = null;
     BrokerService bs2 = null;
 
     public void tearDown() throws Exception {
         if (connection != null) {
             connection.close();
+        }
+        if (bs1 != null) {
+            bs1.stop();
         }
         if (bs2 != null) {
             bs2.stop();
@@ -64,7 +71,7 @@ public class FailoverUpdateURIsTest extends TestCase {
         out.write(firstTcpUri.getBytes());
         out.close();
 
-        BrokerService bs1 = createBroker("bs1", firstTcpUri);
+        bs1 = createBroker("bs1", firstTcpUri);
         bs1.start();
 
         // no failover uri's to start with, must be read from file...
@@ -82,6 +89,7 @@ public class FailoverUpdateURIsTest extends TestCase {
 
         bs1.stop();
         bs1.waitUntilStopped();
+        bs1 = null;
 
         bs2 = createBroker("bs2", secondTcpUri);
         bs2.start();
@@ -108,7 +116,7 @@ public class FailoverUpdateURIsTest extends TestCase {
 
     public void testAutoUpdateURIs() throws Exception {
 
-        BrokerService bs1 = new BrokerService();
+        bs1 = new BrokerService();
         bs1.setUseJmx(false);
         TransportConnector transportConnector = bs1.addConnector(firstTcpUri);
         transportConnector.setUpdateClusterClients(true);
@@ -138,6 +146,7 @@ public class FailoverUpdateURIsTest extends TestCase {
         LOG.info("stopping brokerService 1");
         bs1.stop();
         bs1.waitUntilStopped();
+        bs1 = null;
 
         producer.send(message);
         msg = consumer.receive(4000);
