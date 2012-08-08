@@ -16,6 +16,13 @@
  */
 package org.apache.activemq.transport.failover;
 
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
+import java.io.IOException;
+import java.net.URI;
+
 import org.apache.activemq.command.ConnectionId;
 import org.apache.activemq.command.ConnectionInfo;
 import org.apache.activemq.command.MessageAck;
@@ -30,24 +37,17 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.io.IOException;
-import java.net.URI;
-
-import static org.junit.Assert.*;
-
 public class FailoverTransportTest {
 
     protected Transport transport;
     protected FailoverTransport failoverTransport;
-    private int commandsReceived;
 
-	@Before
-	public void setUp() throws Exception {
-        commandsReceived = 0;
-	}
+    @Before
+    public void setUp() throws Exception {
+    }
 
-	@After
-	public void tearDown() throws Exception {
+    @After
+    public void tearDown() throws Exception {
         if (transport != null) {
             transport.stop();
         }
@@ -62,7 +62,6 @@ public class FailoverTransportTest {
         transport.setTransportListener(new TransportListener() {
 
             public void onCommand(Object command) {
-                commandsReceived++;
             }
 
             public void onException(IOException error) {
@@ -87,52 +86,51 @@ public class FailoverTransportTest {
     }
 
     @Test(timeout=30000)
-	public void testCommandsIgnoredWhenOffline() throws Exception {
-		this.transport = createTransport();
+    public void testCommandsIgnoredWhenOffline() throws Exception {
+        this.transport = createTransport();
 
-		assertNotNull(failoverTransport);
+        assertNotNull(failoverTransport);
 
-		ConnectionStateTracker tracker = failoverTransport.getStateTracker();
-		assertNotNull(tracker);
+        ConnectionStateTracker tracker = failoverTransport.getStateTracker();
+        assertNotNull(tracker);
 
-		ConnectionId id = new ConnectionId("1");
-		ConnectionInfo connection = new ConnectionInfo(id);
+        ConnectionId id = new ConnectionId("1");
+        ConnectionInfo connection = new ConnectionInfo(id);
 
-		// Track a connection
-		tracker.track(connection);
-		try {
-			this.transport.oneway(new RemoveInfo(new ConnectionId("1")));
-		} catch(Exception e) {
-			fail("Should not have failed to remove this known connection");
-		}
+        // Track a connection
+        tracker.track(connection);
+        try {
+            this.transport.oneway(new RemoveInfo(new ConnectionId("1")));
+        } catch(Exception e) {
+            fail("Should not have failed to remove this known connection");
+        }
 
-		try {
-			this.transport.oneway(new RemoveInfo(new ConnectionId("2")));
-		} catch(Exception e) {
-			fail("Should not have failed to remove this unknown connection");
-		}
+        try {
+            this.transport.oneway(new RemoveInfo(new ConnectionId("2")));
+        } catch(Exception e) {
+            fail("Should not have failed to remove this unknown connection");
+        }
 
-		this.transport.oneway(new MessageAck());
-		this.transport.oneway(new ShutdownInfo());
-	}
+        this.transport.oneway(new MessageAck());
+        this.transport.oneway(new ShutdownInfo());
+    }
 
-	@Test(timeout=30000)
-	public void testResponsesSentWhenRequestForIgnoredCommands() throws Exception {
-		this.transport = createTransport();
-		assertNotNull(failoverTransport);
-		MessageAck ack = new MessageAck();
-		assertNotNull("Should have received a Response", this.transport.request(ack));
-		RemoveInfo info = new RemoveInfo(new ConnectionId("2"));
-		assertNotNull("Should have received a Response", this.transport.request(info));
-	}
+    @Test(timeout=30000)
+    public void testResponsesSentWhenRequestForIgnoredCommands() throws Exception {
+        this.transport = createTransport();
+        assertNotNull(failoverTransport);
+        MessageAck ack = new MessageAck();
+        assertNotNull("Should have received a Response", this.transport.request(ack));
+        RemoveInfo info = new RemoveInfo(new ConnectionId("2"));
+        assertNotNull("Should have received a Response", this.transport.request(info));
+    }
 
     protected Transport createTransport() throws Exception {
-    	Transport transport = TransportFactory.connect(
-    			new URI("failover://(tcp://localhost:1234)"));
+        Transport transport = TransportFactory.connect(
+                new URI("failover://(tcp://localhost:1234?transport.connectTimeout=10000)"));
         transport.setTransportListener(new TransportListener() {
 
             public void onCommand(Object command) {
-            	commandsReceived++;
             }
 
             public void onException(IOException error) {
