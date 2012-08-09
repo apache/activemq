@@ -16,7 +16,21 @@
  */
 package org.apache.activemq.transport.failover;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import javax.jms.Connection;
+import javax.jms.JMSException;
+import javax.jms.MessageConsumer;
+import javax.jms.Queue;
+import javax.jms.Session;
+
 import junit.framework.TestCase;
+
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
@@ -24,18 +38,6 @@ import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.network.NetworkConnector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.jms.Connection;
-import javax.jms.JMSException;
-import javax.jms.MessageConsumer;
-import javax.jms.Queue;
-import javax.jms.Session;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 public class FailoverClusterTestSupport extends TestCase {
     protected final Logger logger = LoggerFactory.getLogger(getClass());
@@ -68,12 +70,12 @@ public class FailoverClusterTestSupport extends TestCase {
         assertTrue("Only 3 connections should be found: " + set,
                 set.size() == 3);
     }
-    
+
     protected void assertClientsConnectionsEvenlyDistributed(double minimumPercentage) {
-    	Map<String, Double> clientConnectionCounts = new HashMap<String, Double>();
+        Map<String, Double> clientConnectionCounts = new HashMap<String, Double>();
         int total = 0;
         for (ActiveMQConnection c : connections) {
-        	String key = c.getTransportChannel().getRemoteAddress();
+            String key = c.getTransportChannel().getRemoteAddress();
             if (key != null) {
                 total++;
                 if (clientConnectionCounts.containsKey(key)) {
@@ -87,20 +89,20 @@ public class FailoverClusterTestSupport extends TestCase {
         }
         Set<String> keys = clientConnectionCounts.keySet();
         for(String key: keys){
-        	double count = (double)clientConnectionCounts.get(key);
-        	double percentage = count / (double)total;
+            double count = (double)clientConnectionCounts.get(key);
+            double percentage = count / (double)total;
             logger.info(count + " of " + total + " connections for " + key + " = " + percentage);
-        	assertTrue("Connections distribution expected to be >= than " + minimumPercentage
+            assertTrue("Connections distribution expected to be >= than " + minimumPercentage
                     + ".  Actuall distribution was " + percentage + " for connection " + key,
                     percentage >= minimumPercentage);
         }
     }
-    
+
     protected void assertAllConnectedTo(String url) throws Exception {
         for (ActiveMQConnection c : connections) {
             assertEquals(c.getTransportChannel().getRemoteAddress(), url);
         }
-    } 
+    }
 
     protected void addBroker(String name, BrokerService brokerService) {
         brokers.put(name, brokerService);
@@ -109,7 +111,7 @@ public class FailoverClusterTestSupport extends TestCase {
     protected BrokerService getBroker(String name) {
         return brokers.get(name);
     }
-    
+
     protected void stopBroker(String name) throws Exception {
         BrokerService broker = brokers.remove(name);
         broker.stop();
@@ -122,8 +124,13 @@ public class FailoverClusterTestSupport extends TestCase {
 
     protected void destroyBrokerCluster() throws JMSException, Exception {
         for (BrokerService b : brokers.values()) {
-            b.stop();
-            b.waitUntilStopped();
+            try {
+                b.stop();
+                b.waitUntilStopped();
+            } catch (Exception e) {
+                // Keep on going, we want to try and stop them all.
+                logger.info("Error while stopping broker["+ b.getBrokerName() +"] continuing...");
+            }
         }
         brokers.clear();
     }
@@ -144,8 +151,7 @@ public class FailoverClusterTestSupport extends TestCase {
     }
 
     protected void addTransportConnector(BrokerService brokerService,
-                                         String connectorName, String uri, boolean clustered)
-            throws Exception {
+                                         String connectorName, String uri, boolean clustered) throws Exception {
         TransportConnector connector = brokerService.addConnector(uri);
         connector.setName(connectorName);
         if (clustered) {
@@ -160,8 +166,7 @@ public class FailoverClusterTestSupport extends TestCase {
     }
 
     protected void addNetworkBridge(BrokerService answer, String bridgeName,
-                                    String uri, boolean duplex, String destinationFilter)
-            throws Exception {
+                                    String uri, boolean duplex, String destinationFilter) throws Exception {
         NetworkConnector network = answer.addNetworkConnector(uri);
         network.setName(bridgeName);
         network.setDuplex(duplex);
@@ -173,14 +178,12 @@ public class FailoverClusterTestSupport extends TestCase {
     protected void createClients() throws Exception {
         createClients(NUMBER_OF_CLIENTS);
     }
-    
+
     @SuppressWarnings("unused")
-	protected void createClients(int numOfClients) throws Exception {
-        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(
-                clientUrl);
+    protected void createClients(int numOfClients) throws Exception {
+        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(clientUrl);
         for (int i = 0; i < numOfClients; i++) {
-            ActiveMQConnection c = (ActiveMQConnection) factory
-                    .createConnection();
+            ActiveMQConnection c = (ActiveMQConnection) factory.createConnection();
             c.start();
             Session s = c.createSession(false, Session.AUTO_ACKNOWLEDGE);
             Queue queue = s.createQueue(getClass().getName());
