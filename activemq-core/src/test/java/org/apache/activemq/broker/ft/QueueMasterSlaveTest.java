@@ -74,7 +74,8 @@ public class QueueMasterSlaveTest extends JmsTopicSendReceiveWithTwoConnectionsT
 
     protected void tearDown() throws Exception {
         super.tearDown();
-
+        master.stop();
+        master.waitUntilStopped();
         slaveStarted.await(5, TimeUnit.SECONDS);
         BrokerService brokerService = slave.get();
         if( brokerService!=null ) {
