@@ -892,13 +892,27 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                         if (!deliveredMessages.isEmpty()) {
                             if (optimizeAcknowledge) {
                                 ackCounter++;
-                                if (ackCounter >= (info.getPrefetchSize() * .65) || (optimizeAcknowledgeTimeOut > 0 && System.currentTimeMillis() >= (optimizeAckTimestamp + optimizeAcknowledgeTimeOut))) {
+                                
+                                // AMQ-3956 evaluate both expired and normal msgs as 
+                                // otherwise consumer may get stalled
+                                if (ackCounter + deliveredCounter >= (info.getPrefetchSize() * .65) || (optimizeAcknowledgeTimeOut > 0 && System.currentTimeMillis() >= (optimizeAckTimestamp + optimizeAcknowledgeTimeOut))) {
                                     MessageAck ack = makeAckForAllDeliveredMessages(MessageAck.STANDARD_ACK_TYPE);
                                     if (ack != null) {
                                         deliveredMessages.clear();
                                         ackCounter = 0;
                                         session.sendAck(ack);
                                         optimizeAckTimestamp = System.currentTimeMillis();
+                                    }
+                                    // AMQ-3956 - as further optimization send 
+                                    // ack for expired msgs when there are any.
+                                    // This resets the deliveredCounter to 0 so that
+                                    // we won't sent standard acks with every msg just
+                                    // because the deliveredCounter just below 
+                                    // 0.5 * prefetch as used in ackLater()
+                                    if (pendingAck != null && deliveredCounter > 0) {
+                                    	session.sendAck(pendingAck);
+                                    	pendingAck = null;
+                                    	deliveredCounter = 0;
                                     }
                                 }
                             } else {
@@ -979,8 +993,9 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                 }
             }
         }
-
-        if ((0.5 * info.getPrefetchSize()) <= (deliveredCounter - additionalWindowSize)) {
+        // AMQ-3956 evaluate both expired and normal msgs as 
+        // otherwise consumer may get stalled
+        if ((0.5 * info.getPrefetchSize()) <= (deliveredCounter + ackCounter - additionalWindowSize)) {
             session.sendAck(pendingAck);
             pendingAck=null;
             deliveredCounter = 0;
