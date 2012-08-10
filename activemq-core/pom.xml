@@ -415,7 +415,7 @@
                     </goals>
                   </pluginExecutionFilter>
                   <action>
-                    <execute></execute>
+                    <ignore></ignore>
                   </action>
                 </pluginExecution>
               </pluginExecutions>
@@ -543,7 +543,7 @@
 
             <!-- Don't run the openwire encoding tests since the test and impls are code generated -->
             <exclude>org/apache/activemq/openwire/v*/**</exclude>
-            
+
             <!-- this is a list of our slowest tests (slowest on top).. disabled to bring the build down to about 30 min -->
             <exclude>org/apache/activemq/camel/TransactedConsumeTest.*</exclude>
             <exclude>org/apache/activemq/usecases/JdbcDurableSubDupTest.*</exclude>
@@ -947,7 +947,7 @@
             <exclude>org/apache/activemq/store/jdbc/JDBCStoreBrokerTest.*</exclude>
             <exclude>org/apache/activemq/broker/ft/MasterSlaveSlaveDieTest.*</exclude>
             <exclude>org/apache/activemq/security/XBeanSecurityWithGuestNoCredentialsOnlyTest.*</exclude>
-            
+
           </excludes>
         </configuration>
       </plugin>
