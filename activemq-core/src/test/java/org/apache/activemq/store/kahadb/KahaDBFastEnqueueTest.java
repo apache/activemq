@@ -92,6 +92,8 @@ public class KahaDBFastEnqueueTest {
         LOG.info("Rate:                       " + (toSend * 1000/duration) + "m/s");
         LOG.info("Total send:             " + totalSent);
         LOG.info("Total journal write: " + kahaDBPersistenceAdapter.getStore().getJournal().length());
+        LOG.info("Total index size " + kahaDBPersistenceAdapter.getStore().getPageFile().getDiskSize());
+        LOG.info("Total store size: " + kahaDBPersistenceAdapter.size());
         LOG.info("Journal writes %:    " + kahaDBPersistenceAdapter.getStore().getJournal().length() / (double)totalSent * 100 + "%");
 
         restartBroker(0, 1200000);
@@ -134,6 +136,8 @@ public class KahaDBFastEnqueueTest {
         LOG.info("Rate:                       " + (toSend * 1000/duration) + "m/s");
         LOG.info("Total send:             " + totalSent);
         LOG.info("Total journal write: " + kahaDBPersistenceAdapter.getStore().getJournal().length());
+        LOG.info("Total index size " + kahaDBPersistenceAdapter.getStore().getPageFile().getDiskSize());
+        LOG.info("Total store size: " + kahaDBPersistenceAdapter.size());
         LOG.info("Journal writes %:    " + kahaDBPersistenceAdapter.getStore().getJournal().length() / (double)totalSent * 100 + "%");
 
         restartBroker(0, 0);

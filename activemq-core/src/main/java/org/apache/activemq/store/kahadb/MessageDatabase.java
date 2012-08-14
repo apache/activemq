@@ -207,7 +207,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
     protected boolean enableJournalDiskSyncs=true;
     protected boolean archiveDataLogs;
     protected File directoryArchive;
-    protected AtomicLong storeSize = new AtomicLong(0);
+    protected AtomicLong journalSize = new AtomicLong(0);
     long checkpointInterval = 5*1000;
     long cleanupInterval = 30*1000;
     int journalMaxFileLength = Journal.DEFAULT_MAX_FILE_LENGTH;
@@ -2170,7 +2170,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         manager.setChecksum(checksumJournalFiles || checkForCorruptJournalFiles);
         manager.setWriteBatchSize(getJournalMaxWriteBatchSize());
         manager.setArchiveDataLogs(isArchiveDataLogs());
-        manager.setSizeAccumulator(storeSize);
+        manager.setSizeAccumulator(journalSize);
         manager.setEnableAsyncDiskSync(isEnableJournalDiskSyncs());
         if (getDirectoryArchive() != null) {
             IOHelper.mkdirs(getDirectoryArchive());

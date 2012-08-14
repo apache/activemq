@@ -65,7 +65,6 @@ import org.apache.activemq.usage.MemoryUsage;
 import org.apache.activemq.usage.SystemUsage;
 import org.apache.activemq.util.ServiceStopper;
 import org.apache.activemq.wireformat.WireFormat;
-import org.apache.kahadb.util.ByteSequence;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.kahadb.journal.Location;
@@ -994,7 +993,11 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
     }
 
     public long size() {
-        return storeSize.get();
+        try {
+            return journalSize.get() + getPageFile().getDiskSize();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public void beginTransaction(ConnectionContext context) throws IOException {
