@@ -987,7 +987,6 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     }
 
     public TaskRunnerFactory getSessionTaskRunner() {
-        System.out.println(maxThreadPoolSize);
         synchronized (this) {
             if (sessionTaskRunner == null) {
                 sessionTaskRunner = new TaskRunnerFactory("ActiveMQ Session Task", ThreadPriorities.INBOUND_CLIENT_SESSION, false, 1000, isUseDedicatedTaskRunner(), maxThreadPoolSize);
