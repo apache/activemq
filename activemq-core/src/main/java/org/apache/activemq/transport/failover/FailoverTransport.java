@@ -265,7 +265,7 @@ public class FailoverTransport implements CompositeTransport {
                 if (reconnectOk) {
                     updated.remove(failedConnectTransportURI);
                     reconnectTask.wakeup();
-                } else {
+                } else if (!isDisposed()) {
                     propagateFailureToExceptionListener(e);
                 }
             }
