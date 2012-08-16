@@ -74,7 +74,7 @@ public class MessageListenerServlet extends MessageServletSupport {
     private long defaultReadTimeout = -1;
     private long maximumReadTimeout = 25000;
     private int maximumMessages = 100;
-    private Timer clientCleanupTimer = new Timer();
+    private Timer clientCleanupTimer = new Timer("ActiveMQ Ajax Client Cleanup Timer", true);
     private HashMap<String,AjaxWebClient> ajaxWebClients = new HashMap<String,AjaxWebClient>();
 
     public void init() throws ServletException {
