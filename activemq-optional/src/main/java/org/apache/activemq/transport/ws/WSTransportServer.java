@@ -22,6 +22,7 @@ import org.apache.activemq.transport.SocketConnectorFactory;
 import org.apache.activemq.transport.TransportServerSupport;
 import org.apache.activemq.transport.WebTransportServerSupport;
 import org.apache.activemq.util.InetAddressUtil;
+import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.util.ServiceStopper;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
@@ -39,6 +40,8 @@ import java.util.Map;
  *
  */
 public class WSTransportServer extends WebTransportServerSupport {
+
+    int maxTextMessageSize = -1;
 
     public WSTransportServer(URI location) {
         super(location);
@@ -61,6 +64,9 @@ public class WSTransportServer extends WebTransportServerSupport {
                 new ServletContextHandler(server, "/", ServletContextHandler.NO_SECURITY);
 
         ServletHolder holder = new ServletHolder();
+        if (maxTextMessageSize != -1) {
+            holder.setInitParameter("maxTextMessageSize", String.valueOf(maxTextMessageSize));
+        }
         holder.setServlet(new StompServlet());
         contextHandler.addServlet(holder, "/");
 
@@ -91,8 +97,16 @@ public class WSTransportServer extends WebTransportServerSupport {
 
     @Override
     public void setTransportOption(Map<String, Object> transportOptions) {
+        IntrospectionSupport.setProperties(this, transportOptions);
         socketConnectorFactory.setTransportOptions(transportOptions);
         super.setTransportOption(transportOptions);
     }
 
+    public int getMaxTextMessageSize() {
+        return maxTextMessageSize;
+    }
+
+    public void setMaxTextMessageSize(int maxTextMessageSize) {
+        this.maxTextMessageSize = maxTextMessageSize;
+    }
 }
