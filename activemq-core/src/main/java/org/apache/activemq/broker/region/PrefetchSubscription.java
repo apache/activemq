@@ -427,6 +427,8 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                             dispatched.remove(node);
                             node.getRegionDestination().getDestinationStatistics().getInflight().decrement();
                         }
+                        node.getRegionDestination().wakeup();
+                        dispatchPending();
                     }
 
                     @Override
