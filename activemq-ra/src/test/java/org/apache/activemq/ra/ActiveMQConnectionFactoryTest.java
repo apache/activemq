@@ -23,6 +23,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import javax.jms.Connection;
 import junit.framework.TestCase;
+import org.apache.activemq.ActiveMQConnection;
 
 /**
  *
@@ -48,6 +49,7 @@ public class ActiveMQConnectionFactoryTest extends TestCase {
         info.setServerUrl(url);
         info.setUserName(user);
         info.setPassword(pwd);
+        info.setAllPrefetchValues(new Integer(100));
     }
 
     @Override
@@ -70,6 +72,8 @@ public class ActiveMQConnectionFactoryTest extends TestCase {
         ois.close();
         
         Connection con = deserializedFactory.createConnection("defaultUser", "defaultPassword");
+        ActiveMQConnection connection = ((ActiveMQConnection)((ManagedConnectionProxy)con).getManagedConnection().getPhysicalConnection());
+        assertEquals(100, connection.getPrefetchPolicy().getQueuePrefetch());
         assertNotNull("Connection object returned by ActiveMQConnectionFactory.createConnection() is null", con);
     }
 
