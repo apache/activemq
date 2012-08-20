@@ -25,6 +25,7 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
+
 import org.apache.kahadb.index.ListIndex;
 import org.apache.kahadb.journal.Location;
 import org.apache.kahadb.page.Transaction;
@@ -201,7 +202,9 @@ public class PList extends ListIndex<String, Location> {
 
         @Override
         public boolean hasNext() {
-            return iterator.hasNext();
+            synchronized (indexLock) {
+                return iterator.hasNext();
+            }
         }
 
         @Override
