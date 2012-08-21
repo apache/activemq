@@ -45,6 +45,7 @@ public class AdvisoryConsumer implements ActiveMQDispatcher {
         info.setDestination(AdvisorySupport.TEMP_DESTINATION_COMPOSITE_ADVISORY_TOPIC);
         info.setPrefetchSize(1000);
         info.setNoLocal(true);
+        info.setDispatchAsync(true);
 
         this.connection.addDispatcher(info.getConsumerId(), this);
         this.connection.syncSendPacket(this.info);
