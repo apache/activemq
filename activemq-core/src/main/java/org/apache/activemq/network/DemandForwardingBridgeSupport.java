@@ -405,7 +405,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
         if (!disposed.get()) {
             try {
                 if (command.isMessageDispatch()) {
-                    waitStarted();
+                    safeWaitUntilStarted();
                     MessageDispatch md = (MessageDispatch) command;
                     serviceRemoteConsumerAdvisory(md.getMessage().getDataStructure());
                     ackAdvisory(md.getMessage());
@@ -686,6 +686,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
         if (!disposed.get()) {
             try {
                 if (command.isMessageDispatch()) {
+                    safeWaitUntilStarted();
                     enqueueCounter.incrementAndGet();
                     final MessageDispatch md = (MessageDispatch) command;
                     final DemandSubscription sub = subscriptionMapByLocalId.get(md.getConsumerId());
@@ -1211,10 +1212,6 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
         return removeDone;
     }
 
-    protected void waitStarted() throws InterruptedException {
-        startedLatch.await();
-    }
-
     /**
      * Performs a timed wait on the started latch and then checks for disposed before performing
      * another wait each time the the started wait times out.
@@ -1227,11 +1224,6 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                 return;
             }
         }
-    }
-
-    protected void clearDownSubscriptions() {
-        subscriptionMapByLocalId.clear();
-        subscriptionMapByRemoteId.clear();
     }
 
     protected NetworkBridgeFilter createNetworkBridgeFilter(ConsumerInfo info) throws IOException {
@@ -1252,7 +1244,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                     if (LOG.isTraceEnabled()) {
                         LOG.trace(configuration.getBrokerName() + " disconnecting local loop back connection for: " + remoteBrokerName + ", with id:" + remoteBrokerId);
                     }
-                    waitStarted();
+                    safeWaitUntilStarted();
                     ServiceSupport.dispose(this);
                 }
             }
