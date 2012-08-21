@@ -1693,7 +1693,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
             pendingWakeups.incrementAndGet();
             this.taskRunner.wakeup();
         } catch (InterruptedException e) {
-            LOG.warn("Async task tunner failed to wakeup ", e);
+            LOG.warn("Async task runner failed to wakeup ", e);
         }
     }
 
@@ -1879,19 +1879,19 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                     interestCount++;
                     continue;
                 }
-                if (!fullConsumers.contains(s) && !s.isFull()) {
-                    if (dispatchSelector.canSelect(s, node) && assignMessageGroup(s, (QueueMessageReference)node) && !((QueueMessageReference) node).isAcked() ) {
-                        // Dispatch it.
-                        s.add(node);
-                        target = s;
-                        break;
-                    }
-                } else {
-                    // no further dispatch of list to a full consumer to
-                    // avoid out of order message receipt
-                    fullConsumers.add(s);
-                    if (LOG.isTraceEnabled()) {
-                        LOG.trace("Sub full " + s);
+                if (!fullConsumers.contains(s)) {
+                    if (!s.isFull()) {
+                        if (dispatchSelector.canSelect(s, node) && assignMessageGroup(s, (QueueMessageReference)node) && !((QueueMessageReference) node).isAcked() ) {
+                            // Dispatch it.
+                            s.add(node);
+                            target = s;
+                            break;
+                        }
+                    } else {
+                        // no further dispatch of list to a full consumer to
+                        // avoid out of order message receipt
+                        fullConsumers.add(s);
+                        LOG.trace("Subscription full {}", s);
                     }
                 }
                 // make sure it gets dispatched again
