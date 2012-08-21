@@ -656,7 +656,7 @@ public class PListTest {
 
     @Before
     public void setUp() throws Exception {
-        File directory = new File("/tmp/target/test/PlistDB");
+        File directory = new File("target/test/PlistDB");
         IOHelper.mkdirs(directory);
         IOHelper.deleteChildren(directory);
         startStore(directory);
