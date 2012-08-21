@@ -202,9 +202,7 @@ public class PList extends ListIndex<String, Location> {
 
         @Override
         public boolean hasNext() {
-            synchronized (indexLock) {
-                return iterator.hasNext();
-            }
+            return iterator.hasNext();
         }
 
         @Override

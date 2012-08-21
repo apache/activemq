@@ -16,7 +16,16 @@
  */
 package org.apache.kahadb.page;
 
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InterruptedIOException;
+import java.io.RandomAccessFile;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -862,7 +871,7 @@ public class PageFile {
         return nextTxid.incrementAndGet();
     }
 
-    void readPage(long pageId, byte[] data) throws IOException {
+    synchronized void readPage(long pageId, byte[] data) throws IOException {
         readFile.seek(toOffset(pageId));
         readFile.readFully(data);
     }
