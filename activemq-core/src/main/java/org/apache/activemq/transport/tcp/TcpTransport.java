@@ -189,7 +189,7 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
      */
     @Override
     public String toString() {
-        return "" + (socket.isConnected() ? "tcp://" + socket.getInetAddress() + ":" + socket.getPort()
+        return "" + (socket.isConnected() ? "tcp://" + socket.getInetAddress() + ":" + socket.getPort() + "@" + socket.getLocalPort()
                 : (localLocation != null ? localLocation : remoteLocation)) ;
     }
 
