@@ -55,7 +55,7 @@ public class BlobJDBCAdapter extends DefaultJDBCAdapter {
 
         String addMessageStatement = "INSERT INTO "
             + statements.getFullMessageTableName()
-            + "(ID, MSGID_PROD, MSGID_SEQ, CONTAINER, EXPIRATION, PRIORITY, MSG) VALUES (?, ?, ?, ?, ?, ?, empty_blob(), empty_blob())";
+            + "(ID, MSGID_PROD, MSGID_SEQ, CONTAINER, EXPIRATION, PRIORITY, MSG, XID) VALUES (?, ?, ?, ?, ?, ?, empty_blob(), empty_blob())";
         statements.setAddMessageStatement(addMessageStatement);
 
         String findMessageByIdStatement = "SELECT MSG FROM " +
