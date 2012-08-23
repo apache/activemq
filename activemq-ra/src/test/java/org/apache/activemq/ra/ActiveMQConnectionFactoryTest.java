@@ -22,8 +22,12 @@ import java.io.ByteArrayOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import javax.jms.Connection;
+import javax.jms.Session;
+import javax.jms.TopicSubscriber;
+
 import junit.framework.TestCase;
 import org.apache.activemq.ActiveMQConnection;
+import org.apache.activemq.ActiveMQTopicSubscriber;
 
 /**
  *
@@ -75,6 +79,22 @@ public class ActiveMQConnectionFactoryTest extends TestCase {
         ActiveMQConnection connection = ((ActiveMQConnection)((ManagedConnectionProxy)con).getManagedConnection().getPhysicalConnection());
         assertEquals(100, connection.getPrefetchPolicy().getQueuePrefetch());
         assertNotNull("Connection object returned by ActiveMQConnectionFactory.createConnection() is null", con);
+    }
+
+    public void testOptimizeDurablePrefetch() throws Exception {
+        ActiveMQConnectionRequestInfo info = new ActiveMQConnectionRequestInfo();
+        info.setServerUrl(url);
+        info.setUserName(user);
+        info.setPassword(pwd);
+        info.setOptimizeDurableTopicPrefetch(new Integer(500));
+        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(mcf, new ConnectionManagerAdapter(), info);
+        Connection con = factory.createConnection("defaultUser", "defaultPassword");
+        con.setClientID("x");
+        Session sess = con.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        TopicSubscriber sub = sess.createDurableSubscriber(sess.createTopic("TEST"), "x");
+        con.start();
+
+        assertEquals(500, ((ActiveMQTopicSubscriber)sub).getPrefetchNumber());
     }
 
 }
