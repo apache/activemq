@@ -28,6 +28,7 @@ import java.util.Set;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import org.apache.activemq.broker.region.BaseDestination;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.command.ProducerId;
@@ -59,7 +60,7 @@ import org.slf4j.LoggerFactory;
  */
 public class DefaultJDBCAdapter implements JDBCAdapter {
     private static final Logger LOG = LoggerFactory.getLogger(DefaultJDBCAdapter.class);
-    public static final int MAX_ROWS = 10000;
+    public static final int MAX_ROWS = BaseDestination.MAX_PAGE_SIZE;
     protected Statements statements;
     protected boolean batchStatments = true;
     protected boolean prioritizedMessages;

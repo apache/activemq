@@ -31,6 +31,8 @@ import junit.framework.Test;
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.region.policy.PolicyEntry;
+import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.jdbc.JDBCPersistenceAdapter;
@@ -144,9 +146,17 @@ public class DurableSubscriptionSelectorTest extends org.apache.activemq.TestSup
         }
         setDefaultPersistenceAdapter(broker);
 
+        /* use maxPageSize policy in place of always pulling from the broker in maxRows chunks
         if (broker.getPersistenceAdapter() instanceof JDBCPersistenceAdapter) {
-            ((JDBCPersistenceAdapter)broker.getPersistenceAdapter()).setMaxRows(5000);    
-        }
+            ((JDBCPersistenceAdapter)broker.getPersistenceAdapter()).setMaxRows(5000);
+        }*/
+
+        PolicyMap policyMap = new PolicyMap();
+        PolicyEntry defaultEntry = new PolicyEntry();
+        defaultEntry.setMaxPageSize(5000);
+        policyMap.setDefaultEntry(defaultEntry);
+        broker.setDestinationPolicy(policyMap);
+
         broker.start();
     }
 

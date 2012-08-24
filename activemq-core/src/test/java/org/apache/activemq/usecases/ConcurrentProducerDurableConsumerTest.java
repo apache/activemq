@@ -414,7 +414,9 @@ public class ConcurrentProducerDurableConsumerTest extends TestSupport {
                 priority = message.getJMSPriority();
             } catch (JMSException ignored) {}
             if (!messageLists.containsKey(priority)) {
-                messageLists.put(priority, new MessageIdList());
+                MessageIdList perPriorityList =  new MessageIdList();
+                perPriorityList.setParent(allMessagesList);
+                messageLists.put(priority, perPriorityList);
             }
             messageLists.get(priority).onMessage(message);
             if (count.incrementAndGet() == 1) {
