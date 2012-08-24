@@ -145,7 +145,11 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                 // perhaps we should inform the caller that we are no longer valid to dispatch to?
                 return;
             }
-            enqueueCounter++;
+
+            // Don't increment for the pullTimeout control message.
+            if (!node.equals(QueueMessageReference.NULL_MESSAGE)) {
+                enqueueCounter++;
+            }
             pending.addMessageLast(node);
         }
         dispatchPending();
