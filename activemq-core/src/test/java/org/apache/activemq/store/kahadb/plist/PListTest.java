@@ -48,7 +48,6 @@ public class PListTest {
     final Vector<Throwable> exceptions = new Vector<Throwable>();
     ExecutorService executor;
 
-
     @Test
     public void testAddLast() throws Exception {
         final int COUNT = 1000;
@@ -147,7 +146,6 @@ public class PListTest {
         assertFalse(plist.remove("doesNotExist"));
     }
 
-
     @Test
     public void testRemoveSingleEntry() throws Exception {
         plist.addLast("First", new ByteSequence("A".getBytes()));
@@ -168,7 +166,6 @@ public class PListTest {
         assertTrue(plist.remove(0));
         assertFalse(plist.remove(0));
     }
-
 
     @Test
     public void testConcurrentAddRemove() throws Exception {
@@ -260,7 +257,6 @@ public class PListTest {
         assertTrue("finished ok", finishedInTime);
     }
 
-
     @Test
     public void testConcurrentAddLast() throws Exception {
         File directory = store.getDirectory();
@@ -309,7 +305,6 @@ public class PListTest {
         LOG.info("After Load index file: " + store.pageFile.getFile().length());
         LOG.info("After remove index file: " + store.pageFile.getFile().length());
     }
-
 
     @Test
     public void testConcurrentAddRemoveWithPreload() throws Exception {
@@ -440,40 +435,6 @@ public class PListTest {
         boolean shutdown = executor.awaitTermination(60*60, TimeUnit.SECONDS);
         assertTrue("no exceptions: " + exceptions, exceptions.isEmpty());
         assertTrue("test did not  timeout ", shutdown);
-    }
-
-    @Test
-    public void testSerialAddIterate() throws Exception {
-        File directory = store.getDirectory();
-        store.stop();
-        IOHelper.mkdirs(directory);
-        IOHelper.deleteChildren(directory);
-        store = new PListStore();
-        store.setIndexPageSize(512);
-        store.setJournalMaxFileLength(100*1024);
-        store.setDirectory(directory);
-        store.setCleanupInterval(-1);
-        store.setIndexEnablePageCaching(false);
-        store.setIndexWriteBatchSize(2000);
-        store.setEnableIndexWriteAsync(false);
-        store.start();
-
-        final int iterations = 1000;
-        final int numLists = 1;
-
-        LOG.info("create");
-        for (int i=0; i<numLists;i++) {
-            new Job(i, PListTest.TaskType.CREATE, iterations).run();
-        }
-
-        LOG.info("serial add and iterate");
-        for (int i=0; i<iterations; i++) {
-            new Job(0, TaskType.ADD, i).run();
-            new Job(0, TaskType.ITERATE, 0).run();
-        }
-
-        assertTrue("no exceptions: " + exceptions, exceptions.isEmpty());
-        LOG.info("Num dataFiles:" + store.getJournal().getFiles().size());
     }
 
     @Test
