@@ -1169,6 +1169,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                 store.resetBatching();
             }
             messages.gc();
+            messages.reset();
             asyncWakeup();
         } finally {
             messagesLock.writeLock().unlock();

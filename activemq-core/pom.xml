@@ -609,7 +609,6 @@
             <exclude>org/apache/activemq/transport/failover/FailoverDuplicateTest.*</exclude>
             <exclude>org/apache/activemq/transport/vm/VmTransportNetworkBrokerTest.*</exclude>
             <exclude>org/apache/activemq/ExpiryHogTest.*</exclude>
-            <exclude>org/apache/activemq/bugs/AMQ2801Test.*</exclude>
             <exclude>org/apache/activemq/usecases/BrowseOverNetworkTest.*</exclude>
             <exclude>org/apache/activemq/usecases/ExpiredMessagesWithNoConsumerTest.*</exclude>
             <exclude>org/apache/kahadb/index/HashIndexTest.*</exclude>

@@ -253,8 +253,6 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
         batchList.clear();
         clearIterator(false);
         batchResetNeeded = true;
-        // wonder do we need to determine size here, it may change before restart
-        resetSize();
         setCacheEnabled(false);
     }
 
@@ -269,6 +267,8 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
             LOG.trace(this + " - fillBatch");
         }
         if (batchResetNeeded) {
+            resetSize();
+            setMaxBatchSize(Math.min(regionDestination.getMaxPageSize(), size));
             resetBatch();
             this.batchResetNeeded = false;
         }
@@ -305,7 +305,8 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
     @Override
     public String toString() {
         return super.toString() + ":" + regionDestination.getActiveMQDestination().getPhysicalName() + ",batchResetNeeded=" + batchResetNeeded
-                    + ",storeHasMessages=" + this.storeHasMessages + ",size=" + this.size + ",cacheEnabled=" + isCacheEnabled();
+                    + ",storeHasMessages=" + this.storeHasMessages + ",size=" + this.size + ",cacheEnabled=" + isCacheEnabled()
+                    + ",maxBatchSize:" + maxBatchSize;
     }
     
     protected abstract void doFillBatch() throws Exception;

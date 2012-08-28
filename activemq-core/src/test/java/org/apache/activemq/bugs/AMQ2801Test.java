@@ -181,9 +181,9 @@ public class AMQ2801Test
             DurableSubscriptionViewMBean sub = (DurableSubscriptionViewMBean)
                 broker.getManagementContext().newProxyInstance(subName, DurableSubscriptionViewMBean.class, true);
 
-            LOG.info(sub.getSubscriptionName() + ": pending = " + sub.getPendingQueueSize());
+            LOG.info(sub.getSubscriptionName() + ": pending = " + sub.getPendingQueueSize() + ", dispatched: " + sub.getDispatchedQueueSize());
             if(sub.getSubscriptionName().equals(SUBSCRIPTION1)) {
-                assertEquals("Incorrect number of pending messages", MSG_COUNT, sub.getPendingQueueSize());
+                assertEquals("Incorrect number of pending messages", MSG_COUNT, sub.getPendingQueueSize() + sub.getDispatchedQueueSize());
             } else {
                 assertEquals("Incorrect number of pending messages", 0, sub.getPendingQueueSize());
             }

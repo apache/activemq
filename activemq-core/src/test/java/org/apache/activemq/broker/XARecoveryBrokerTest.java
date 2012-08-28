@@ -24,8 +24,6 @@ import javax.management.InstanceNotFoundException;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 import junit.framework.Test;
-
-import org.apache.activemq.broker.jmx.DestinationView;
 import org.apache.activemq.broker.jmx.DestinationViewMBean;
 import org.apache.activemq.broker.jmx.RecoveredXATransactionViewMBean;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
@@ -43,7 +41,6 @@ import org.apache.activemq.command.SessionInfo;
 import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.command.TransactionInfo;
 import org.apache.activemq.command.XATransactionId;
-import org.apache.activemq.store.jdbc.JDBCPersistenceAdapter;
 import org.apache.activemq.util.JMXSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -233,9 +230,10 @@ public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
         }
 
         // We should get the committed transactions.
-        for (int i = 0; i < expectedMessageCount(4, destination); i++) {
+        final int countToReceive = expectedMessageCount(4, destination);
+        for (int i = 0; i < countToReceive ; i++) {
             Message m = receiveMessage(connection, TimeUnit.SECONDS.toMillis(10));
-            assertNotNull(m);
+            assertNotNull("Got non null message: " + i, m);
         }
 
         assertNoMessagesLeft(connection);
