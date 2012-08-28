@@ -41,8 +41,6 @@ import java.util.Map;
  */
 public class WSTransportServer extends WebTransportServerSupport {
 
-    int maxTextMessageSize = -1;
-
     public WSTransportServer(URI location) {
         super(location);
         this.bindAddress = location;
@@ -64,9 +62,14 @@ public class WSTransportServer extends WebTransportServerSupport {
                 new ServletContextHandler(server, "/", ServletContextHandler.NO_SECURITY);
 
         ServletHolder holder = new ServletHolder();
-        if (maxTextMessageSize != -1) {
-            holder.setInitParameter("maxTextMessageSize", String.valueOf(maxTextMessageSize));
+        Map<String, Object> webSocketOptions = IntrospectionSupport.extractProperties(transportOptions, "websocket.");
+        for(Map.Entry<String,Object> webSocketEntry : webSocketOptions.entrySet()) {
+            Object value = webSocketEntry.getValue();
+            if (value != null) {
+                holder.setInitParameter(webSocketEntry.getKey(), value.toString());
+            }
         }
+
         holder.setServlet(new StompServlet());
         contextHandler.addServlet(holder, "/");
 
@@ -97,16 +100,9 @@ public class WSTransportServer extends WebTransportServerSupport {
 
     @Override
     public void setTransportOption(Map<String, Object> transportOptions) {
-        IntrospectionSupport.setProperties(this, transportOptions);
-        socketConnectorFactory.setTransportOptions(transportOptions);
+        Map<String, Object> socketOptions = IntrospectionSupport.extractProperties(transportOptions, "transport.");
+        socketConnectorFactory.setTransportOptions(socketOptions);
         super.setTransportOption(transportOptions);
     }
 
-    public int getMaxTextMessageSize() {
-        return maxTextMessageSize;
-    }
-
-    public void setMaxTextMessageSize(int maxTextMessageSize) {
-        this.maxTextMessageSize = maxTextMessageSize;
-    }
 }

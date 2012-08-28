@@ -64,7 +64,7 @@ public class WSTransportTest {
                 new URI("broker:()/localhost?persistent=false&useJmx=false"));
 
         stompUri = broker.addConnector("stomp://localhost:0").getPublishableConnectString();
-        wsUri = broker.addConnector("ws://127.0.0.1:61623").getPublishableConnectString();
+        wsUri = broker.addConnector("ws://127.0.0.1:61623?websocket.maxTextMessageSize=99999&transport.maxIdleTime=1001").getPublishableConnectString();
         broker.setDeleteAllMessagesOnStartup(deleteMessages);
         broker.start();
         broker.waitUntilStarted();

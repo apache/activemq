@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.transport;
 
+import org.apache.activemq.util.IntrospectionSupport;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.nio.SelectChannelConnector;
@@ -27,7 +28,9 @@ public class SocketConnectorFactory {
     private Map<String, Object> transportOptions;
 
     public Connector createConnector() throws Exception {
-       return new SelectChannelConnector();
+        SelectChannelConnector connector = new SelectChannelConnector();
+        IntrospectionSupport.setProperties(connector, transportOptions, "");
+        return connector;
     }
 
     public Map<String, Object> getTransportOptions() {

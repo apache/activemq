@@ -41,7 +41,7 @@ public class WSSTransportFactory extends TransportFactory {
         try {
             Map<String, String> options = new HashMap<String, String>(URISupport.parseParameters(location));
             WSSTransportServer result = new WSSTransportServer(location, SslContext.getCurrentSslContext());
-            Map<String, Object> transportOptions = IntrospectionSupport.extractProperties(options, "transport.");
+            Map<String, Object> transportOptions = IntrospectionSupport.extractProperties(options, "");
             result.setTransportOption(transportOptions);
             return result;
         } catch (URISyntaxException e) {
