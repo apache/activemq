@@ -19,10 +19,10 @@ package org.apache.activemq.pool;
 
 import java.io.IOException;
 import java.util.Iterator;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
-
 import javax.jms.JMSException;
 import javax.jms.Session;
 
@@ -39,7 +39,7 @@ public class ConnectionPool {
 
     private ActiveMQConnection connection;
     private ConcurrentHashMap<SessionKey, SessionPool> cache;
-    private ConcurrentLinkedQueue<PooledSession> loanedSessions = new ConcurrentLinkedQueue<PooledSession>();
+    private List<PooledSession> loanedSessions = new CopyOnWriteArrayList<PooledSession>();
     private AtomicBoolean started = new AtomicBoolean(false);
     private int referenceCount;
     private ObjectPoolFactory poolFactory;

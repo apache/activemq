@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.pool;
 
+import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import javax.jms.Connection;
@@ -54,13 +55,13 @@ import org.slf4j.LoggerFactory;
  * href="http://jencks.org/Message+Driven+POJOs">this example</a>
  *
  */
-public class PooledConnection implements TopicConnection, QueueConnection, EnhancedConnection {
+public class PooledConnection implements TopicConnection, QueueConnection, EnhancedConnection, PooledSessionEventListener {
     private static final transient Logger LOG = LoggerFactory.getLogger(PooledConnection.class);
 
     private ConnectionPool pool;
-    private boolean stopped;
-    private final CopyOnWriteArrayList<TemporaryQueue> connTempQueues = new CopyOnWriteArrayList<TemporaryQueue>();
-    private final CopyOnWriteArrayList<TemporaryTopic> connTempTopics = new CopyOnWriteArrayList<TemporaryTopic>();
+    private volatile boolean stopped;
+    private final List<TemporaryQueue> connTempQueues = new CopyOnWriteArrayList<TemporaryQueue>();
+    private final List<TemporaryTopic> connTempTopics = new CopyOnWriteArrayList<TemporaryTopic>();
 
     public PooledConnection(ConnectionPool pool) {
         this.pool = pool;
@@ -151,20 +152,17 @@ public class PooledConnection implements TopicConnection, QueueConnection, Enhan
 
         // Add a temporary destination event listener to the session that notifies us when
         // the session creates temporary destinations.
-        result.addTempDestEventListener(new PooledSessionEventListener() {
-
-            @Override
-            public void onTemporaryQueueCreate(TemporaryQueue tempQueue) {
-                connTempQueues.add(tempQueue);
-            }
-
-            @Override
-            public void onTemporaryTopicCreate(TemporaryTopic tempTopic) {
-                connTempTopics.add(tempTopic);
-            }
-        });
-
+        result.addTempDestEventListener(this);
         return (Session) result;
+    }
+
+
+    public void onTemporaryQueueCreate(TemporaryQueue tempQueue) {
+        connTempQueues.add(tempQueue);
+    }
+
+    public void onTemporaryTopicCreate(TemporaryTopic tempTopic) {
+        connTempTopics.add(tempTopic);
     }
 
     // EnhancedCollection API

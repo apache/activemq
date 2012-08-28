@@ -78,7 +78,10 @@ public class PooledSession implements Session, TopicSession, QueueSession, XASes
     }
 
     public void addTempDestEventListener(PooledSessionEventListener listener) {
-        this.tempDestEventListeners.add(listener);
+        // only add if really needed
+        if (!tempDestEventListeners.contains(listener)) {
+            this.tempDestEventListeners.add(listener);
+        }
     }
 
     protected boolean isIgnoreClose() {
@@ -123,6 +126,7 @@ public class PooledSession implements Session, TopicSession, QueueSession, XASes
             } finally {
                 consumers.clear();
                 browsers.clear();
+                tempDestEventListeners.clear();
             }
 
             if (invalidate) {
