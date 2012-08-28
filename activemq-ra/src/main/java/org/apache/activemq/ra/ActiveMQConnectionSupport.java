@@ -209,6 +209,23 @@ public class ActiveMQConnectionSupport {
     }
 
     /**
+     * @param optimizeDurableTopicPrefetch
+     */
+    public void setOptimizeDurableTopicPrefetch(Integer optimizeDurableTopicPrefetch) {
+        if ( log.isDebugEnabled() ) {
+            log.debug("setting [optimizeDurableTopicPrefetch] to: " + optimizeDurableTopicPrefetch);
+        }
+        info.setOptimizeDurableTopicPrefetch(optimizeDurableTopicPrefetch);
+    }
+
+    /**
+     * @return durable topic prefetch
+     */
+    public Integer getOptimizeDurableTopicPrefetch() {
+        return info.getOptimizeDurableTopicPrefetch();
+    }
+
+    /**
      * @param durableTopicPrefetch
      */
     public void setDurableTopicPrefetch(Integer durableTopicPrefetch) {

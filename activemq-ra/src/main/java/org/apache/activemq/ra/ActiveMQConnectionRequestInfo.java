@@ -251,6 +251,10 @@ public class ActiveMQConnectionRequestInfo implements ConnectionRequestInfo, Ser
         return Integer.valueOf(prefetchPolicy().getDurableTopicPrefetch());
     }
 
+    public Integer getOptimizeDurableTopicPrefetch() {
+        return Integer.valueOf(prefetchPolicy().getOptimizeDurableTopicPrefetch());
+    }
+
     public Integer getInputStreamPrefetch() {
         return Integer.valueOf(prefetchPolicy().getInputStreamPrefetch());
     }
