@@ -213,8 +213,6 @@
           </systemProperties>
           <excludes>
               <exclude>**/JmsJdbcXALoadTest.java</exclude><!-- used only for manual xa performance testing -->
-              <!-- This currently fails with Camel 2.10-->
-              <exclude>**/ActiveMQJmsHeaderRouteTest.*</exclude>
           </excludes>
         </configuration>
       </plugin>

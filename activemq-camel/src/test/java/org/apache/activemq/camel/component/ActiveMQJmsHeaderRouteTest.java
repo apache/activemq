@@ -18,11 +18,12 @@ package org.apache.activemq.camel.component;
 
 import java.util.Date;
 import java.util.List;
-
 import javax.jms.Destination;
+
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.camel.CamelContext;
 import org.apache.camel.Exchange;
+import org.apache.camel.Processor;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.AssertionClause;
 import org.apache.camel.component.mock.MockEndpoint;
@@ -30,6 +31,7 @@ import org.apache.camel.test.junit4.CamelTestSupport;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import static org.apache.activemq.camel.component.ActiveMQComponent.activeMQComponent;
 
 /**
@@ -56,11 +58,9 @@ public class ActiveMQJmsHeaderRouteTest extends CamelTestSupport {
 
         template.sendBodyAndHeader("activemq:test.a", expectedBody, "cheese", 123);
 
-        resultEndpoint.setResultWaitTime(10000);
-        //resultEndpoint.assertIsSatisfied();
+        resultEndpoint.assertIsSatisfied();
 
         List<Exchange> list = resultEndpoint.getReceivedExchanges();
-        System.err.println("The lisr  = " + list);
         Exchange exchange = list.get(0);
         Object replyTo = exchange.getIn().getHeader("JMSReplyTo");
         LOG.info("Reply to is: " + replyTo);
@@ -82,24 +82,16 @@ public class ActiveMQJmsHeaderRouteTest extends CamelTestSupport {
     protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             public void configure() throws Exception {
-                /***
                 from("activemq:test.a").process(new Processor() {
                     public void process(Exchange exchange) throws Exception {
-                        // lets set the custom JMS headers using the JMS API
-						JmsMessage jmsMessage = assertIsInstanceOf(JmsMessage.class, exchange.getIn());
-						
-                        jmsMessage.getJmsMessage().setJMSReplyTo(replyQueue);
-                        jmsMessage.getJmsMessage().setJMSCorrelationID(correlationID);
-                        jmsMessage.getJmsMessage().setJMSType(messageType);
+                        // lets set the custom JMS headers using the Camel API
+                        exchange.getIn().setHeader("JMSReplyTo", replyQueue);
+                        exchange.getIn().setHeader("JMSCorrelationID", correlationID);
+                        exchange.getIn().setHeader("JMSType", messageType);
                     }
                 }).to("activemq:test.b?preserveMessageQos=true");
 
                 from("activemq:test.b").to("mock:result");
-
-                 */
-                from("activemq:test.b").to("mock:result");
-                from("activemq:test.a").to("activemq:test.b?preserveMessageQos=true");
-
 
             }
         };
