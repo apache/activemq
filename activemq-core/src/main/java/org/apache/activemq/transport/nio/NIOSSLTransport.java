@@ -17,15 +17,6 @@
 
 package org.apache.activemq.transport.nio;
 
-import org.apache.activemq.command.Command;
-import org.apache.activemq.openwire.OpenWireFormat;
-import org.apache.activemq.thread.DefaultThreadPools;
-import org.apache.activemq.util.IOExceptionSupport;
-import org.apache.activemq.util.ServiceStopper;
-import org.apache.activemq.wireformat.WireFormat;
-
-import javax.net.SocketFactory;
-import javax.net.ssl.*;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.EOFException;
@@ -34,6 +25,22 @@ import java.net.Socket;
 import java.net.URI;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
+import java.security.cert.X509Certificate;
+
+import javax.net.SocketFactory;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLEngine;
+import javax.net.ssl.SSLEngineResult;
+import javax.net.ssl.SSLPeerUnverifiedException;
+import javax.net.ssl.SSLSession;
+
+import org.apache.activemq.command.Command;
+import org.apache.activemq.command.ConnectionInfo;
+import org.apache.activemq.openwire.OpenWireFormat;
+import org.apache.activemq.thread.DefaultThreadPools;
+import org.apache.activemq.util.IOExceptionSupport;
+import org.apache.activemq.util.ServiceStopper;
+import org.apache.activemq.wireformat.WireFormat;
 
 public class NIOSSLTransport extends NIOTransport  {
 
@@ -227,7 +234,6 @@ public class NIOSSLTransport extends NIOTransport  {
         status = res.getStatus();
         handshakeStatus = res.getHandshakeStatus();
 
-
         //TODO deal with BUFFER_OVERFLOW
 
         if (status == SSLEngineResult.Status.CLOSED) {
@@ -272,6 +278,37 @@ public class NIOSSLTransport extends NIOTransport  {
             channel = null;
         }
         super.doStop(stopper);
+    }
+
+    /**
+     * Overriding in order to add the client's certificates to ConnectionInfo
+     * Commmands.
+     *
+     * @param command The Command coming in.
+     */
+    @Override
+    public void doConsume(Object command) {
+        if (command instanceof ConnectionInfo) {
+            ConnectionInfo connectionInfo = (ConnectionInfo)command;
+            connectionInfo.setTransportContext(getPeerCertificates());
+        }
+        super.doConsume(command);
+    }
+
+    /**
+     * @return peer certificate chain associated with the ssl socket
+     */
+    public X509Certificate[] getPeerCertificates() {
+
+        X509Certificate[] clientCertChain = null;
+        try {
+            if (sslSession != null) {
+                clientCertChain = (X509Certificate[])sslSession.getPeerCertificates();
+            }
+        } catch (SSLPeerUnverifiedException e) {
+        }
+
+        return clientCertChain;
     }
 
     public boolean isNeedClientAuth() {
