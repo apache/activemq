@@ -44,6 +44,7 @@ public class NetworkTestSupport extends BrokerTestSupport {
     protected BrokerService remoteBroker;
     protected SystemUsage remoteMemoryManager;
     protected TransportConnector remoteConnector;
+    protected boolean useJmx = false;
 
     protected void setUp() throws Exception {
         super.setUp();
@@ -61,6 +62,7 @@ public class NetworkTestSupport extends BrokerTestSupport {
         BrokerService broker = BrokerFactory.createBroker(new URI("broker:()/localhost?persistent=false&useJmx=false&"));
         connector = createConnector();
         broker.addConnector(connector);
+        broker.setUseJmx(useJmx);
         return broker;
     }
 
@@ -104,7 +106,7 @@ public class NetworkTestSupport extends BrokerTestSupport {
     protected BrokerService createRemoteBroker(PersistenceAdapter persistenceAdapter) throws Exception {
         BrokerService answer = new BrokerService();
         answer.setBrokerName("remote");
-        answer.setUseJmx(false);
+        answer.setUseJmx(useJmx);
         answer.setPersistenceAdapter(persistenceAdapter);
         return answer;
     }
