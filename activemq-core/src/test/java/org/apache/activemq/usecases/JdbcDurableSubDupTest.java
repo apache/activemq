@@ -77,7 +77,7 @@ public class JdbcDurableSubDupTest {
         broker.setAdvisorySupport(false);
         broker.setPersistenceAdapter(new JDBCPersistenceAdapter());
         PolicyEntry policyEntry = new PolicyEntry();
-        policyEntry.setMaxAuditDepth(2000);
+        policyEntry.setMaxAuditDepth(3000);
         policyEntry.setMaxPageSize(150);
         policyEntry.setPrioritizedMessages(true);
         PolicyMap policyMap = new PolicyMap();

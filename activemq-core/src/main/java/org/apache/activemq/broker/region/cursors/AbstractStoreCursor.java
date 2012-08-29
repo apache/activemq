@@ -34,7 +34,7 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
     protected final Destination regionDestination;
     protected final PendingList batchList;
     private Iterator<MessageReference> iterator = null;
-    protected boolean batchResetNeeded = true;
+    protected boolean batchResetNeeded = false;
     private boolean storeHasMessages = false;
     protected int size;
     private MessageId lastCachedId;
@@ -53,8 +53,7 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
     
     public final synchronized void start() throws Exception{
         if (!isStarted()) {
-            clear();
-            super.start();      
+            super.start();
             resetBatch();
             resetSize();
             setCacheEnabled(!this.storeHasMessages&&useCache);
