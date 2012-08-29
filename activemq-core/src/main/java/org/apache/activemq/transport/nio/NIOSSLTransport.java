@@ -52,7 +52,6 @@ public class NIOSSLTransport extends NIOTransport  {
     protected SSLEngine sslEngine;
     protected SSLSession sslSession;
 
-
     protected boolean handshakeInProgress = false;
     protected SSLEngineResult.Status status = null;
     protected SSLEngineResult.HandshakeStatus handshakeStatus = null;
@@ -79,7 +78,8 @@ public class NIOSSLTransport extends NIOTransport  {
                 sslContext = SSLContext.getDefault();
             }
 
-            // initialize engine
+            // initialize engine, the initial sslSession we get will need to be
+            // updated once the ssl handshake process is completed.
             sslEngine = sslContext.createSSLEngine();
             sslEngine.setUseClientMode(false);
             if (enabledCipherSuites != null) {
@@ -101,17 +101,20 @@ public class NIOSSLTransport extends NIOTransport  {
             sslEngine.beginHandshake();
             handshakeStatus = sslEngine.getHandshakeStatus();
             doHandshake();
-
         } catch (Exception e) {
             throw new IOException(e);
         }
-
     }
 
     protected void finishHandshake() throws Exception  {
           if (handshakeInProgress) {
               handshakeInProgress = false;
               nextFrameSize = -1;
+
+              // Once handshake completes we need to ask for the now real sslSession
+              // otherwise the session would return 'SSL_NULL_WITH_NULL_NULL' for the
+              // cipher suite.
+              sslSession = sslEngine.getSession();
 
               // listen for events telling us when the socket is readable.
               selection = SelectorManager.getInstance().register(channel, new SelectorManager.Listener() {
@@ -164,7 +167,6 @@ public class NIOSSLTransport extends NIOTransport  {
                 if (status == SSLEngineResult.Status.OK && handshakeStatus != SSLEngineResult.HandshakeStatus.NEED_UNWRAP) {
                     processCommand(plain);
                 }
-
             }
         } catch (IOException e) {
             onException(e);
@@ -281,8 +283,7 @@ public class NIOSSLTransport extends NIOTransport  {
     }
 
     /**
-     * Overriding in order to add the client's certificates to ConnectionInfo
-     * Commmands.
+     * Overriding in order to add the client's certificates to ConnectionInfo Commmands.
      *
      * @param command The Command coming in.
      */
