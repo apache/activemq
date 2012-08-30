@@ -61,14 +61,15 @@ import org.apache.commons.pool.impl.GenericObjectPoolFactory;
 public class PooledConnectionFactory implements ConnectionFactory, Service {
     private static final transient Logger LOG = LoggerFactory.getLogger(PooledConnectionFactory.class);
     private ConnectionFactory connectionFactory;
-    private Map<ConnectionKey, LinkedList<ConnectionPool>> cache = new HashMap<ConnectionKey, LinkedList<ConnectionPool>>();
+    private final Map<ConnectionKey, LinkedList<ConnectionPool>> cache = new HashMap<ConnectionKey, LinkedList<ConnectionPool>>();
     private ObjectPoolFactory poolFactory;
     private int maximumActive = 500;
     private int maxConnections = 1;
     private int idleTimeout = 30 * 1000;
     private boolean blockIfSessionPoolIsFull = true;
-    private AtomicBoolean stopped = new AtomicBoolean(false);
+    private final AtomicBoolean stopped = new AtomicBoolean(false);
     private long expiryTimeout = 0l;
+    private boolean createConnectionOnStartup = true;
 
     public PooledConnectionFactory() {
         this(new ActiveMQConnectionFactory());
@@ -116,12 +117,19 @@ public class PooledConnectionFactory implements ConnectionFactory, Service {
         // Now.. we might get a connection, but it might be that we need to
         // dump it..
         if (connection != null && connection.expiredCheck()) {
+            if (LOG.isTraceEnabled()) {
+                LOG.trace("Connection has expired: {}", connection);
+            }
             connection = null;
         }
 
         if (connection == null) {
             ActiveMQConnection delegate = createConnection(key);
             connection = createConnectionPool(delegate);
+
+            if (LOG.isTraceEnabled()) {
+                LOG.trace("Created new connection: {}", connection);
+            }
         }
         pools.add(connection);
         return new PooledConnection(connection);
@@ -142,28 +150,28 @@ public class PooledConnectionFactory implements ConnectionFactory, Service {
         }
     }
 
-    /**
-     * @see org.apache.activemq.service.Service#start()
-     */
     public void start() {
-        try {
-            stopped.set(false);
-            createConnection();
-        } catch (JMSException e) {
-            LOG.warn("Create pooled connection during start failed.", e);
-            IOExceptionSupport.create(e);
+        LOG.debug("Staring the PooledConnectionFactory");
+        stopped.set(false);
+        if (isCreateConnectionOnStartup()) {
+            try {
+                // warm the pool by creating a connection during startup
+                createConnection();
+            } catch (JMSException e) {
+                LOG.warn("Create pooled connection during start failed. This exception will be ignored.", e);
+            }
         }
     }
 
     public void stop() {
-        LOG.debug("Stop the PooledConnectionFactory, number of connections in cache: "+cache.size());
+        LOG.debug("Stopping the PooledConnectionFactory, number of connections in cache: {}", cache.size());
         stopped.set(true);
         for (Iterator<LinkedList<ConnectionPool>> iter = cache.values().iterator(); iter.hasNext();) {
             for (ConnectionPool connection : iter.next()) {
                 try {
                     connection.close();
-                }catch(Exception e) {
-                    LOG.warn("Close connection failed",e);
+                } catch (Exception e) {
+                    LOG.warn("Close connection failed for connection: " + connection + ". This exception will be ignored.",e);
                 }
             }
         }
@@ -263,5 +271,21 @@ public class PooledConnectionFactory implements ConnectionFactory, Service {
 
     public long getExpiryTimeout() {
         return expiryTimeout;
+    }
+
+    public boolean isCreateConnectionOnStartup() {
+        return createConnectionOnStartup;
+    }
+
+    /**
+     * Whether to create a connection on starting this {@link PooledConnectionFactory}.
+     * <p/>
+     * This can be used to warmup the pool on startup. Notice that any kind of exception
+     * happens during startup is logged at WARN level and ignored.
+     *
+     * @param createConnectionOnStartup <tt>true</tt> to create a connection on startup
+     */
+    public void setCreateConnectionOnStartup(boolean createConnectionOnStartup) {
+        this.createConnectionOnStartup = createConnectionOnStartup;
     }
 }

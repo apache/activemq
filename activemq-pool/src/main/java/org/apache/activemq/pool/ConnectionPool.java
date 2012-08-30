@@ -224,4 +224,9 @@ public class ConnectionPool {
     void onSessionInvalidated(PooledSession session) {
         this.loanedSessions.remove(session);
     }
+
+    @Override
+    public String toString() {
+        return "ConnectionPool[" + connection + "]";
+    }
 }
