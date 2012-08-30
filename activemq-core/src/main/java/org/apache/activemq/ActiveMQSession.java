@@ -800,6 +800,11 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      * receipt in the session can be used; however, all forms of sending
      * messages are still supported.
      * <P>
+     * If this session has been closed, then an {@link IllegalStateException} is
+     * thrown, if trying to set a new listener. However setting the listener
+     * to <tt>null</tt> is allowed, to clear the listener, even if this session
+     * has been closed prior.
+     * <P>
      * This is an expert facility not used by regular JMS clients.
      *
      * @param listener the message listener to associate with this session
@@ -810,7 +815,12 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      * @see javax.jms.ServerSession
      */
     public void setMessageListener(MessageListener listener) throws JMSException {
-        checkClosed();
+        // only check for closed if we set a new listener, as we allow to clear
+        // the listener, such as when an application is shutting down, and is
+        // no longer using a message listener on this session
+        if (listener != null) {
+            checkClosed();
+        }
         this.messageListener = listener;
 
         if (listener != null) {
