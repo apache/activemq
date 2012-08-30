@@ -58,7 +58,7 @@
     <commons-io-version>1.4</commons-io-version>
     <commons-lang-version>2.6</commons-lang-version>
     <commons-logging-version>1.1.1</commons-logging-version>
-    <commons-pool-version>1.5.7</commons-pool-version>
+    <commons-pool-version>1.6</commons-pool-version>
     <commons-primitives-version>1.0</commons-primitives-version>
     <commons-net-version>2.2</commons-net-version>
     <directory-version>2.0.0-M6</directory-version>
@@ -1145,7 +1145,7 @@
                     </goals>
                   </pluginExecutionFilter>
                   <action>
-                    <execute></execute>
+                    <ignore></ignore>
                   </action>
                 </pluginExecution>
                 <pluginExecution>
