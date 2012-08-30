@@ -55,11 +55,11 @@ public class LeaseDatabaseLockerTest {
 
         LeaseDatabaseLocker lockerA = new LeaseDatabaseLocker();
         brokerService.setBrokerName("First");
-        lockerA.setPersistenceAdapter(jdbc);
+        lockerA.configure(jdbc);
 
         final LeaseDatabaseLocker lockerB = new LeaseDatabaseLocker();
         brokerService.setBrokerName("Second");
-        lockerB.setPersistenceAdapter(jdbc);
+        lockerB.configure(jdbc);
         final AtomicBoolean blocked = new AtomicBoolean(true);
 
         final Connection connection = dataSource.getConnection();

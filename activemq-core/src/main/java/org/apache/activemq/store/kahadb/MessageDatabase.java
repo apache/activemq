@@ -368,49 +368,10 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         }
     }
 
-    private void lock() throws IOException {
-
-        if (lockFile == null) {
-            File lockFileName = new File(directory, "lock");
-            lockFile = new LockFile(lockFileName, true);
-            if (failIfDatabaseIsLocked) {
-                lockFile.lock();
-            } else {
-                boolean locked = false;
-                while ((!isStopped()) && (!isStopping())) {
-                    try {
-                        lockFile.lock();
-                        locked = true;
-                        break;
-                    } catch (IOException e) {
-                        LOG.info("Database "
-                                + lockFileName
-                                + " is locked... waiting "
-                                + (getDatabaseLockedWaitDelay() / 1000)
-                                + " seconds for the database to be unlocked. Reason: "
-                                + e);
-                        try {
-                            Thread.sleep(getDatabaseLockedWaitDelay());
-                        } catch (InterruptedException e1) {
-                        }
-                    }
-                }
-                if (!locked) {
-                    throw new IOException("attempt to obtain lock aborted due to shutdown");
-                }
-            }
-        }
-    }
-
-    // for testing
-    public LockFile getLockFile() {
-        return lockFile;
-    }
-
     public void load() throws IOException {
         this.indexLock.writeLock().lock();
+        IOHelper.mkdirs(directory);
         try {
-            lock();
             if (deleteAllMessages) {
                 getJournal().start();
                 getJournal().delete();
@@ -430,30 +391,25 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
 
     public void close() throws IOException, InterruptedException {
         if( opened.compareAndSet(true, false)) {
+            this.indexLock.writeLock().lock();
             try {
-                this.indexLock.writeLock().lock();
-                try {
-                    if (metadata.page != null) {
-                        pageFile.tx().execute(new Transaction.Closure<IOException>() {
-                            public void execute(Transaction tx) throws IOException {
-                                checkpointUpdate(tx, true);
-                            }
-                        });
-                    }
-                    pageFile.unload();
-                    metadata = new Metadata();
-                } finally {
-                    this.indexLock.writeLock().unlock();
+                if (metadata.page != null) {
+                    pageFile.tx().execute(new Transaction.Closure<IOException>() {
+                        public void execute(Transaction tx) throws IOException {
+                            checkpointUpdate(tx, true);
+                        }
+                    });
                 }
-                journal.close();
-                synchronized (checkpointThreadLock) {
-                    if (checkpointThread != null) {
-                        checkpointThread.join();
-                    }
-                }
+                pageFile.unload();
+                metadata = new Metadata();
             } finally {
-                lockFile.unlock();
-                lockFile=null;
+                this.indexLock.writeLock().unlock();
+            }
+            journal.close();
+            synchronized (checkpointThreadLock) {
+                if (checkpointThread != null) {
+                    checkpointThread.join();
+                }
             }
         }
     }

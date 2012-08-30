@@ -27,6 +27,7 @@ import org.apache.activemq.command.ProducerId;
 import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.command.XATransactionId;
 import org.apache.activemq.protobuf.Buffer;
+import org.apache.activemq.broker.Locker;
 import org.apache.activemq.store.MessageStore;
 import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.TopicMessageStore;
@@ -49,6 +50,7 @@ import java.util.Set;
  */
 public class KahaDBPersistenceAdapter implements PersistenceAdapter, BrokerServiceAware {
     private final KahaDBStore letter = new KahaDBStore();
+    private Locker locker;
 
     /**
      * @param context
@@ -189,6 +191,7 @@ public class KahaDBPersistenceAdapter implements PersistenceAdapter, BrokerServi
      * @see org.apache.activemq.Service#start()
      */
     public void start() throws Exception {
+        getLocker().start();
         this.letter.start();
     }
 
@@ -197,7 +200,11 @@ public class KahaDBPersistenceAdapter implements PersistenceAdapter, BrokerServi
      * @see org.apache.activemq.Service#stop()
      */
     public void stop() throws Exception {
-        this.letter.stop();
+        try {
+            this.letter.stop();
+        } finally {
+            getLocker().stop();
+        }
     }
 
     /**
@@ -584,6 +591,24 @@ public class KahaDBPersistenceAdapter implements PersistenceAdapter, BrokerServi
             rc.setXaTransactionId(kahaTxId);
         }
         return rc;
+    }
+
+    public void setLocker(Locker locker) {
+        this.locker = locker;
+    }
+
+    protected Locker getLocker() throws IOException {
+        if (this.locker == null) {
+            this.locker = createDefaultLocker();
+        }
+        return this.locker;
+    }
+
+    protected Locker createDefaultLocker() throws IOException {
+        SharedFileLocker locker = new SharedFileLocker();
+        locker.configure(this);
+        locker.setLockAcquireSleepInterval(getDatabaseLockedWaitDelay());
+        return locker;
     }
 
     @Override

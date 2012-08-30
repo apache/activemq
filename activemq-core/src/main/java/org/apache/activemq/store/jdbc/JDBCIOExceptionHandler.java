@@ -17,6 +17,8 @@
 package org.apache.activemq.store.jdbc;
 
 import java.io.IOException;
+
+import org.apache.activemq.broker.Locker;
 import org.apache.activemq.util.DefaultIOExceptionHandler;
 
 /**
@@ -34,7 +36,7 @@ public class JDBCIOExceptionHandler extends DefaultIOExceptionHandler {
         boolean hasLock = true;
         if (broker.getPersistenceAdapter() instanceof JDBCPersistenceAdapter) {
             JDBCPersistenceAdapter jdbcPersistenceAdapter = (JDBCPersistenceAdapter) broker.getPersistenceAdapter();
-            DatabaseLocker locker = jdbcPersistenceAdapter.getDatabaseLocker();
+            Locker locker = jdbcPersistenceAdapter.getDatabaseLocker();
             if (locker != null) {
                 try {
                     if (!locker.keepAlive()) {

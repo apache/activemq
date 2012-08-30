@@ -24,7 +24,10 @@ import java.sql.SQLFeatureNotSupportedException;
 
 import javax.sql.DataSource;
 
+import org.apache.activemq.broker.AbstractLocker;
+import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.util.Handler;
+import org.apache.activemq.util.ServiceStopper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,12 +38,11 @@ import org.slf4j.LoggerFactory;
  * @org.apache.xbean.XBean element="database-locker"
  * 
  */
-public class DefaultDatabaseLocker implements DatabaseLocker {
+public class DefaultDatabaseLocker extends AbstractLocker {
     public static final long DEFAULT_LOCK_ACQUIRE_SLEEP_INTERVAL = 1000;
     private static final Logger LOG = LoggerFactory.getLogger(DefaultDatabaseLocker.class);
     protected DataSource dataSource;
     protected Statements statements;
-    protected long lockAcquireSleepInterval = DEFAULT_LOCK_ACQUIRE_SLEEP_INTERVAL;
 
     protected PreparedStatement lockCreateStatement;
     protected PreparedStatement lockUpdateStatement;
@@ -48,20 +50,16 @@ public class DefaultDatabaseLocker implements DatabaseLocker {
     protected boolean stopping;
     protected Handler<Exception> exceptionHandler;
     protected int queryTimeout = 10;
-    
-    public DefaultDatabaseLocker() {
-    }
-    
-    public DefaultDatabaseLocker(JDBCPersistenceAdapter persistenceAdapter) throws IOException {
-        setPersistenceAdapter(persistenceAdapter);
-    }
 
-    public void setPersistenceAdapter(JDBCPersistenceAdapter adapter) throws IOException {
-        this.dataSource = adapter.getLockDataSource();
-        this.statements = adapter.getStatements();
+    public void configure(PersistenceAdapter adapter) throws IOException {
+        if (adapter instanceof JDBCPersistenceAdapter) {
+            this.dataSource = ((JDBCPersistenceAdapter) adapter).getLockDataSource();
+            this.statements = ((JDBCPersistenceAdapter) adapter).getStatements();
+        }
+        lockAcquireSleepInterval = DEFAULT_LOCK_ACQUIRE_SLEEP_INTERVAL;
     }
     
-    public void start() throws Exception {
+    public void doStart() throws Exception {
         stopping = false;
 
         LOG.info("Attempting to acquire the exclusive lock to become the Master broker");
@@ -134,7 +132,7 @@ public class DefaultDatabaseLocker implements DatabaseLocker {
         LOG.info("Becoming the master on dataSource: " + dataSource);
     }
 
-    public void stop() throws Exception {
+    public void doStop(ServiceStopper stopper) throws Exception {
         stopping = true;
         try {
             if (lockCreateStatement != null) {

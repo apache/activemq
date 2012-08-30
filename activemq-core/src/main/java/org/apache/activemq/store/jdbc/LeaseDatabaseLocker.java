@@ -25,7 +25,11 @@ import java.sql.Timestamp;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 import javax.sql.DataSource;
+
+import org.apache.activemq.broker.AbstractLocker;
+import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.util.IOExceptionSupport;
+import org.apache.activemq.util.ServiceStopper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,12 +40,11 @@ import org.slf4j.LoggerFactory;
  * @org.apache.xbean.XBean element="lease-database-locker"
  * 
  */
-public class LeaseDatabaseLocker implements DatabaseLocker {
+public class LeaseDatabaseLocker extends AbstractLocker {
     private static final Logger LOG = LoggerFactory.getLogger(LeaseDatabaseLocker.class);
     public static final long DEFAULT_LOCK_ACQUIRE_SLEEP_INTERVAL = 5000;
     protected DataSource dataSource;
     protected Statements statements;
-    protected long lockAcquireSleepInterval = DEFAULT_LOCK_ACQUIRE_SLEEP_INTERVAL;
 
     protected boolean stopping;
     protected int maxAllowableDiffFromDBTime = 0;
@@ -51,13 +54,16 @@ public class LeaseDatabaseLocker implements DatabaseLocker {
     JDBCPersistenceAdapter persistenceAdapter;
 
 
-    public void setPersistenceAdapter(JDBCPersistenceAdapter adapter) throws IOException {
-        this.dataSource = adapter.getLockDataSource();
-        this.statements = adapter.getStatements();
-        this.persistenceAdapter = adapter;
+    public void configure(PersistenceAdapter adapter) throws IOException {
+        if (adapter instanceof JDBCPersistenceAdapter) {
+            this.persistenceAdapter = (JDBCPersistenceAdapter)adapter;
+            this.dataSource = ((JDBCPersistenceAdapter) adapter).getLockDataSource();
+            this.statements = ((JDBCPersistenceAdapter) adapter).getStatements();
+        }
+        lockAcquireSleepInterval = DEFAULT_LOCK_ACQUIRE_SLEEP_INTERVAL;
     }
     
-    public void start() throws Exception {
+    public void doStart() throws Exception {
         stopping = false;
 
         LOG.info(getLeaseHolderId() + " attempting to acquire exclusive lease to become the Master broker");
@@ -176,7 +182,7 @@ public class LeaseDatabaseLocker implements DatabaseLocker {
         return result;
     }
 
-    public void stop() throws Exception {
+    public void doStop(ServiceStopper stopper) throws Exception {
         releaseLease();
         stopping = true;
     }

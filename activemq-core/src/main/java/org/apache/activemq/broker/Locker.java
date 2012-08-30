@@ -14,27 +14,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.activemq.store.jdbc;
+package org.apache.activemq.broker;
+
+import org.apache.activemq.Service;
+import org.apache.activemq.store.PersistenceAdapter;
 
 import java.io.IOException;
 
-import org.apache.activemq.Service;
-
 /**
- * Represents some kind of lock service to ensure that a broker is the only master
- *
- * @deprecated As of 5.7.0, use more general {@link org.apache.activemq.broker.Locker} instead
+ * Represents a lock service to ensure that a broker is the only master
  */
-@Deprecated
-public interface DatabaseLocker extends Service {
+public interface Locker extends Service {
 
-    /**
-     * allow the injection of a jdbc persistence adapter
-     * @param adapter the persistence adapter to use
-     * @throws IOException 
-     */
-    void setPersistenceAdapter(JDBCPersistenceAdapter adapter) throws IOException;
-    
     /**
      * Used by a timer to keep alive the lock.
      * If the method returns false the broker should be terminated
@@ -44,8 +35,32 @@ public interface DatabaseLocker extends Service {
 
     /**
      * set the delay interval in milliseconds between lock acquire attempts
+     *
      * @param lockAcquireSleepInterval the sleep interval in miliseconds
      */
     void setLockAcquireSleepInterval(long lockAcquireSleepInterval);
-    
+
+    /**
+     * Set the name of the lock to use.
+     */
+    public void setName(String name);
+
+    /**
+     * Specify whether to fail immediately if the lock is already held.  When set, the CustomLock must throw an
+     * IOException immediately upon detecting the lock is already held.
+     *
+     * @param failIfLocked: true => fail immediately if the lock is held; false => block until the lock can be obtained
+     *                      (default).
+     */
+    public void setFailIfLocked(boolean failIfLocked);
+
+
+    /**
+     * Configure the locker with the persistence adapter currently used
+     *
+     * @param persistenceAdapter
+     * @throws IOException
+     */
+    public void configure(PersistenceAdapter persistenceAdapter) throws IOException;
+
 }

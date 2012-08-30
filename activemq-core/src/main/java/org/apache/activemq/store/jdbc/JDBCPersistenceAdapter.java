@@ -41,6 +41,7 @@ import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.command.ProducerId;
 import org.apache.activemq.openwire.OpenWireFormat;
+import org.apache.activemq.broker.Locker;
 import org.apache.activemq.store.MessageStore;
 import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.TopicMessageStore;
@@ -89,7 +90,7 @@ public class JDBCPersistenceAdapter extends DataSourceSupport implements Persist
     private boolean useDatabaseLock = true;
     private long lockKeepAlivePeriod = 1000*30;
     private long lockAcquireSleepInterval = DefaultDatabaseLocker.DEFAULT_LOCK_ACQUIRE_SLEEP_INTERVAL;
-    private DatabaseLocker databaseLocker;
+    private Locker locker;
     private boolean createTablesOnStartup = true;
     private DataSource lockDataSource;
     private int transactionIsolation;
@@ -299,7 +300,7 @@ public class JDBCPersistenceAdapter extends DataSourceSupport implements Persist
         }
 
         if (isUseDatabaseLock()) {
-            DatabaseLocker service = getDatabaseLocker();
+            Locker service = getDatabaseLocker();
             if (service == null) {
                 LOG.warn("No databaseLocker configured for the JDBC Persistence Adapter");
             } else {
@@ -340,7 +341,7 @@ public class JDBCPersistenceAdapter extends DataSourceSupport implements Persist
         }
         
         // do not shutdown clockDaemon as it may kill the thread initiating shutdown
-        DatabaseLocker service = getDatabaseLocker();
+        Locker service = getDatabaseLocker();
         if (service != null) {
             service.stop();
         }
@@ -392,21 +393,40 @@ public class JDBCPersistenceAdapter extends DataSourceSupport implements Persist
         return adapter;
     }
 
-    public DatabaseLocker getDatabaseLocker() throws IOException {
-        if (databaseLocker == null && isUseDatabaseLock()) {
-            setDatabaseLocker(loadDataBaseLocker());
+    /**
+     *
+     * @deprecated as of 5.7.0, replaced by {@link #getLocker()}
+     */
+    @Deprecated
+    public Locker getDatabaseLocker() throws IOException {
+        return getLocker();
+    }
+
+    public Locker getLocker() throws IOException {
+        if (locker == null && isUseDatabaseLock()) {
+            setLocker(loadDataBaseLocker());
         }
-        return databaseLocker;
+        return locker;
+    }
+
+    /**
+     * Sets the database locker strategy to use to lock the database on startup
+     * @throws IOException
+     *
+     * @deprecated as of 5.7.0, replaced by {@link #setLocker(org.apache.activemq.broker.Locker)}
+     */
+    public void setDatabaseLocker(Locker locker) throws IOException {
+        setLocker(locker);
     }
 
     /**
      * Sets the database locker strategy to use to lock the database on startup
      * @throws IOException 
      */
-    public void setDatabaseLocker(DatabaseLocker locker) throws IOException {
-        databaseLocker = locker;
-        databaseLocker.setPersistenceAdapter(this);
-        databaseLocker.setLockAcquireSleepInterval(getLockAcquireSleepInterval());
+    public void setLocker(Locker locker) throws IOException {
+        this.locker = locker;
+        locker.configure(this);
+        locker.setLockAcquireSleepInterval(getLockAcquireSleepInterval());
     }
 
     public DataSource getLockDataSource() throws IOException {
@@ -616,7 +636,7 @@ public class JDBCPersistenceAdapter extends DataSourceSupport implements Persist
     protected void databaseLockKeepAlive() {
         boolean stop = false;
         try {
-            DatabaseLocker locker = getDatabaseLocker();
+            Locker locker = getDatabaseLocker();
             if (locker != null) {
                 if (!locker.keepAlive()) {
                     stop = true;
@@ -640,8 +660,8 @@ public class JDBCPersistenceAdapter extends DataSourceSupport implements Persist
         }
     }
 
-    protected DatabaseLocker loadDataBaseLocker() throws IOException {
-        DatabaseLocker locker = (DefaultDatabaseLocker) loadAdapter(lockFactoryFinder, "lock");       
+    protected Locker loadDataBaseLocker() throws IOException {
+        DefaultDatabaseLocker locker = (DefaultDatabaseLocker) loadAdapter(lockFactoryFinder, "lock");
         if (locker == null) {
             locker = new DefaultDatabaseLocker();
             LOG.debug("Using default JDBC Locker: " + locker);

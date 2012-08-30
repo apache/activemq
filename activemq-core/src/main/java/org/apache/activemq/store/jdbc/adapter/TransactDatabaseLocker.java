@@ -36,15 +36,8 @@ import org.slf4j.LoggerFactory;
 public class TransactDatabaseLocker extends DefaultDatabaseLocker {
     private static final Logger LOG = LoggerFactory.getLogger(TransactDatabaseLocker.class);
     
-    public TransactDatabaseLocker() {
-    }
-    
-    public TransactDatabaseLocker(JDBCPersistenceAdapter persistenceAdapter) throws IOException {
-        setPersistenceAdapter(persistenceAdapter);
-    }
-    
     @Override
-    public void start() throws Exception {
+    public void doStart() throws Exception {
         stopping = false;
 
         LOG.info("Attempting to acquire the exclusive lock to become the Master broker");
