@@ -91,7 +91,7 @@ public class PooledConnectionFactoryMaximumActiveTest extends TestCase
         ActiveMQConnectionFactory amq = new ActiveMQConnectionFactory("vm://broker1?marshal=false&broker.persistent=false");
         PooledConnectionFactory cf = new PooledConnectionFactory(amq);
         cf.setMaxConnections(3);
-        cf.setMaximumActive(1);
+        cf.setMaximumActiveSessionPerConnection(1);
         cf.setBlockIfSessionPoolIsFull(true);
         conn = cf.createConnection();
 

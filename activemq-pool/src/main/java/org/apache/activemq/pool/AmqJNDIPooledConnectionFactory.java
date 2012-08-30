@@ -89,6 +89,10 @@ public class AmqJNDIPooledConnectionFactory extends PooledConnectionFactory
         if (temp != null && temp.length() > 0) {
             setMaximumActive(Integer.parseInt(temp));
         }
+        temp = properties.getProperty("maximumActiveSessionPerConnection");
+        if (temp != null && temp.length() > 0) {
+            setMaximumActiveSessionPerConnection(Integer.parseInt(temp));
+        }
         temp = properties.getProperty("maxConnections");
         if (temp != null && temp.length() > 0) {
             setMaxConnections(Integer.parseInt(temp));
@@ -98,9 +102,10 @@ public class AmqJNDIPooledConnectionFactory extends PooledConnectionFactory
     public void populateProperties(Properties props) {
         ((ActiveMQConnectionFactory) getConnectionFactory())
                 .populateProperties(props);
-        props
-                .setProperty("maximumActive", Integer
-                        .toString(getMaximumActive()));
+        props.setProperty("maximumActive", Integer
+                .toString(getMaximumActive()));
+        props.setProperty("maximumActiveSessionPerConnection", Integer
+                .toString(getMaximumActiveSessionPerConnection()));
         props.setProperty("maxConnections", Integer
                 .toString(getMaxConnections()));
     }

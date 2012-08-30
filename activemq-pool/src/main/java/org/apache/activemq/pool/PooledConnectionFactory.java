@@ -63,7 +63,7 @@ public class PooledConnectionFactory implements ConnectionFactory, Service {
     private ConnectionFactory connectionFactory;
     private final Map<ConnectionKey, LinkedList<ConnectionPool>> cache = new HashMap<ConnectionKey, LinkedList<ConnectionPool>>();
     private ObjectPoolFactory poolFactory;
-    private int maximumActive = 500;
+    private int maximumActiveSessionPerConnection = 500;
     private int maxConnections = 1;
     private int idleTimeout = 30 * 1000;
     private boolean blockIfSessionPoolIsFull = true;
@@ -193,15 +193,31 @@ public class PooledConnectionFactory implements ConnectionFactory, Service {
         this.poolFactory = poolFactory;
     }
 
+    /**
+     * @deprecated use {@link #getMaximumActiveSessionPerConnection()}
+     */
+    @Deprecated
     public int getMaximumActive() {
-        return maximumActive;
+        return getMaximumActiveSessionPerConnection();
+    }
+
+    /**
+     * @deprecated use {@link #setMaximumActiveSessionPerConnection(int)}
+     */
+    @Deprecated
+    public void setMaximumActive(int maximumActive) {
+        setMaximumActiveSessionPerConnection(maximumActive);
+    }
+
+    public int getMaximumActiveSessionPerConnection() {
+        return maximumActiveSessionPerConnection;
     }
 
     /**
      * Sets the maximum number of active sessions per connection
      */
-    public void setMaximumActive(int maximumActive) {
-        this.maximumActive = maximumActive;
+    public void setMaximumActiveSessionPerConnection(int maximumActiveSessionPerConnection) {
+        this.maximumActiveSessionPerConnection = maximumActiveSessionPerConnection;
     }
 
     /**
@@ -242,10 +258,10 @@ public class PooledConnectionFactory implements ConnectionFactory, Service {
      */
     protected ObjectPoolFactory createPoolFactory() {
          if (blockIfSessionPoolIsFull) {
-            return new GenericObjectPoolFactory(null, maximumActive);
+            return new GenericObjectPoolFactory(null, maximumActiveSessionPerConnection);
         } else {
             return new GenericObjectPoolFactory(null,
-                maximumActive,
+                maximumActiveSessionPerConnection,
                 GenericObjectPool.WHEN_EXHAUSTED_FAIL,
                 GenericObjectPool.DEFAULT_MAX_WAIT);
         }
