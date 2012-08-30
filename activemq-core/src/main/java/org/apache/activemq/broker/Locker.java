@@ -56,7 +56,9 @@ public interface Locker extends Service {
 
 
     /**
-     * Configure the locker with the persistence adapter currently used
+     * Optionally configure the locker with the persistence adapter currently used
+     * You can use persistence adapter configuration details like, data directory
+     * datasource, etc. to be used by the locker
      *
      * @param persistenceAdapter
      * @throws IOException

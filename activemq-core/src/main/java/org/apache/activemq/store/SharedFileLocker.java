@@ -14,10 +14,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.activemq.store.kahadb;
+package org.apache.activemq.store;
 
 import org.apache.activemq.broker.AbstractLocker;
-import org.apache.activemq.store.PersistenceAdapter;
+import org.apache.activemq.store.kahadb.MessageDatabase;
 import org.apache.activemq.util.ServiceStopper;
 import org.apache.kahadb.util.LockFile;
 import org.slf4j.Logger;
