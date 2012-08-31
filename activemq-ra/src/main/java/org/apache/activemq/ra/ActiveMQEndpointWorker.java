@@ -21,6 +21,7 @@ import java.lang.reflect.Method;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.jms.Connection;
 import javax.jms.ConnectionConsumer;
+import javax.jms.Destination;
 import javax.jms.ExceptionListener;
 import javax.jms.JMSException;
 import javax.jms.Message;
@@ -97,67 +98,76 @@ public class ActiveMQEndpointWorker {
             public void run() {
                 currentReconnectDelay = INITIAL_RECONNECT_DELAY;
                 MessageActivationSpec activationSpec = endpointActivationKey.getActivationSpec();
-                if ( LOG.isInfoEnabled() ) {
+                if (LOG.isInfoEnabled()) {
                     LOG.info("Establishing connection to broker [" + adapter.getInfo().getServerUrl() + "]");
                 }
 
-                while ( connecting.get() && running ) {
-                try {
-                    connection = adapter.makeConnection(activationSpec);
-                    connection.setExceptionListener(new ExceptionListener() {
-                        public void onException(JMSException error) {
-                            if (!serverSessionPool.isClosing()) {
+                while (connecting.get() && running) {
+                    try {
+                        connection = adapter.makeConnection(activationSpec);
+                        connection.setExceptionListener(new ExceptionListener() {
+                            public void onException(JMSException error) {
+                                if (!serverSessionPool.isClosing()) {
                                     // initiate reconnection only once, i.e. on initial exception
                                     // and only if not already trying to connect
                                     LOG.error("Connection to broker failed: " + error.getMessage(), error);
-                                    if ( connecting.compareAndSet(false, true) ) {
-                                        synchronized ( connectWork ) {
+                                    if (connecting.compareAndSet(false, true)) {
+                                        synchronized (connectWork) {
                                             disconnect();
                                             serverSessionPool.closeIdleSessions();
                                             connect();
-                            }
+                                        }
                                     } else {
                                         // connection attempt has already been initiated
                                         LOG.info("Connection attempt already in progress, ignoring connection exception");
-                        }
+                                    }
                                 }
                             }
-                    });
+                        });
                         connection.start();
 
-                        int prefetchSize = activationSpec.getMaxMessagesPerSessionsIntValue() * activationSpec.getMaxSessionsIntValue();
-                    if (activationSpec.isDurableSubscription()) {
+                        if (activationSpec.isDurableSubscription()) {
                             consumer = connection.createDurableConnectionConsumer(
                                     (Topic) dest,
-                                    activationSpec.getSubscriptionName(), 
+                                    activationSpec.getSubscriptionName(),
                                     emptyToNull(activationSpec.getMessageSelector()),
-                                    serverSessionPool, 
-                                    prefetchSize,
+                                    serverSessionPool,
+                                    connection.getPrefetchPolicy().getDurableTopicPrefetch(),
                                     activationSpec.getNoLocalBooleanValue());
-                    } else {
+                        } else {
                             consumer = connection.createConnectionConsumer(
-                                    dest, 
-                                    emptyToNull(activationSpec.getMessageSelector()), 
-                                    serverSessionPool, 
-                                    prefetchSize,
-                                                                       activationSpec.getNoLocalBooleanValue());
-                    }
+                                    dest,
+                                    emptyToNull(activationSpec.getMessageSelector()),
+                                    serverSessionPool,
+                                    getPrefetch(activationSpec, connection, dest),
+                                    activationSpec.getNoLocalBooleanValue());
+                        }
 
 
-                        if ( connecting.compareAndSet(true, false) ) {
-                            if ( LOG.isInfoEnabled() ) {
+                        if (connecting.compareAndSet(true, false)) {
+                            if (LOG.isInfoEnabled()) {
                                 LOG.info("Successfully established connection to broker [" + adapter.getInfo().getServerUrl() + "]");
                             }
                         } else {
                             LOG.error("Could not release connection lock");
                         }
-                } catch (JMSException error) {
-                        if ( LOG.isDebugEnabled() ) {
+                    } catch (JMSException error) {
+                        if (LOG.isDebugEnabled()) {
                             LOG.debug("Failed to connect: " + error.getMessage(), error);
-                }
+                        }
                         disconnect();
                         pause(error);
+                    }
+                }
             }
+
+            private int getPrefetch(MessageActivationSpec activationSpec, ActiveMQConnection connection, ActiveMQDestination destination) {
+                if (destination.isTopic()) {
+                    return connection.getPrefetchPolicy().getTopicPrefetch();
+                } else if (destination.isQueue()) {
+                    return connection.getPrefetchPolicy().getQueuePrefetch();
+                } else {
+                    return activationSpec.getMaxMessagesPerSessionsIntValue() * activationSpec.getMaxSessionsIntValue();
                 }
             }
             
