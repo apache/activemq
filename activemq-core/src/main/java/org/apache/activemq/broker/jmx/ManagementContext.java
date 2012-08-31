@@ -114,8 +114,8 @@ public class ManagementContext implements Service {
                                 LOG.info("JMX consoles can connect to " + server.getAddress());
                             }
                         } catch (IOException e) {
-                            LOG.warn("Failed to start jmx connector: " + e.getMessage());
-                            LOG.debug("Reason for failed jms connector start", e);
+                            LOG.warn("Failed to start jmx connector: " + e.getMessage() + ". Will restart management to re-create jmx connector, trying to remedy this issue.");
+                            LOG.debug("Reason for failed jmx connector start", e);
                         } finally {
                             MDC.remove("activemq.broker");
                         }
@@ -133,9 +133,8 @@ public class ManagementContext implements Service {
             if (mbeanServer != null) {
                 for (Iterator<ObjectName> iter = registeredMBeanNames.iterator(); iter.hasNext();) {
                     ObjectName name = iter.next();
-                    
-                        mbeanServer.unregisterMBean(name);
-                    
+                    LOG.debug("Unregistering MBean {}", name);
+                    mbeanServer.unregisterMBean(name);
                 }
             }
             registeredMBeanNames.clear();
@@ -144,15 +143,24 @@ public class ManagementContext implements Service {
             if (server != null) {
                 try {
                 	if (!connectorStarting.get()) {
-                		server.stop();
+                        LOG.debug("Stopping jmx connector");
+                        server.stop();
                 	}
                 } catch (IOException e) {
                     LOG.warn("Failed to stop jmx connector: " + e.getMessage());
                 }
+                // stop naming service mbean
                 try {
-                    getMBeanServer().invoke(namingServiceObjectName, "stop", null, null);
+                    if (getMBeanServer().isRegistered(namingServiceObjectName)) {
+                        LOG.debug("Stopping MBean {}", namingServiceObjectName);
+                        getMBeanServer().invoke(namingServiceObjectName, "stop", null, null);
+                        LOG.debug("Unregistering MBean {}", namingServiceObjectName);
+                        getMBeanServer().unregisterMBean(namingServiceObjectName);
+                    }
                 } catch (Throwable ignore) {
+                    LOG.warn("Error stopping and unregsitering mbean " + namingServiceObjectName + " due " + ignore.getMessage());
                 }
+                namingServiceObjectName = null;
             }
             if (locallyCreateMBeanServer && beanServer != null) {
                 // check to see if the factory knows about this server
@@ -162,7 +170,7 @@ public class ManagementContext implements Service {
                 }
             }
             beanServer = null;
-            if(registrySocket!=null) {
+            if (registrySocket!=null) {
                 try {
                     registrySocket.close();
                 } catch (IOException e) {
@@ -170,6 +178,9 @@ public class ManagementContext implements Service {
                 registrySocket = null;
             }
         }
+
+        // clear reference to aid GC
+        registry = null;
     }
 
     /**
@@ -475,9 +486,8 @@ public class ManagementContext implements Service {
             mbeanServer.setAttribute(namingServiceObjectName, attr);
         } catch(ClassNotFoundException e) {
             LOG.debug("Probably not using JRE 1.4: " + e.getLocalizedMessage());
-        }
-        catch (Throwable e) {
-            LOG.debug("Failed to create local registry", e);
+        } catch (Throwable e) {
+            LOG.debug("Failed to create local registry. This exception will be ignored.", e);
         }
         // Create the JMXConnectorServer
         String rmiServer = "";
@@ -489,7 +499,8 @@ public class ManagementContext implements Service {
         String serviceURL = "service:jmx:rmi://" + rmiServer + "/jndi/rmi://" +getConnectorHost()+":" + connectorPort + connectorPath;
         JMXServiceURL url = new JMXServiceURL(serviceURL);
         connectorServer = JMXConnectorServerFactory.newJMXConnectorServer(url, environment, mbeanServer);
-        
+
+        LOG.debug("Created JMXConnectorServer {}", connectorServer);
     }
 
     public String getConnectorPath() {
