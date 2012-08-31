@@ -56,23 +56,42 @@ public class ActiveMQManagedConnectionFactory extends ActiveMQConnectionSupport
         {
             if ( log.isDebugEnabled() ) {
                 log.debug("copying standard ResourceAdapter configuration properties");
-        }
+            }
+
             ActiveMQConnectionRequestInfo baseInfo = ((MessageResourceAdapter) adapter).getInfo().copy();
             if (getClientid() == null) {
                 setClientid(baseInfo.getClientid());
-        }
+            }
             if (getPassword() == null) {
                 setPassword(baseInfo.getPassword());
-        }
+            }
             if (getServerUrl() == null) {
                 setServerUrl(baseInfo.getServerUrl());
-        }
+            }
             if (getUseInboundSession() == null) {
                 setUseInboundSession(baseInfo.getUseInboundSession());
-        }
+            }
             if (getUserName() == null) {
                 setUserName(baseInfo.getUserName());
-    }
+            }
+            if (getDurableTopicPrefetch() != null) {
+                setDurableTopicPrefetch(baseInfo.getDurableTopicPrefetch());
+            }
+            if (getOptimizeDurableTopicPrefetch() != null) {
+                setOptimizeDurableTopicPrefetch(baseInfo.getOptimizeDurableTopicPrefetch());
+            }
+            if (getQueuePrefetch() != null) {
+                setQueuePrefetch(baseInfo.getQueuePrefetch());
+            }
+            if (getQueueBrowserPrefetch() != null) {
+                setQueueBrowserPrefetch(baseInfo.getQueueBrowserPrefetch());
+            }
+            if (getTopicPrefetch() != null) {
+                setTopicPrefetch(baseInfo.getTopicPrefetch());
+            }
+            if (getInputStreamPrefetch() != null) {
+                setInputStreamPrefetch(baseInfo.getInputStreamPrefetch());
+            }
         }
     }
 

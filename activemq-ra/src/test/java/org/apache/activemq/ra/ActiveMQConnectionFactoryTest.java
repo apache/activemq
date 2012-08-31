@@ -21,9 +21,14 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.util.Timer;
 import javax.jms.Connection;
 import javax.jms.Session;
 import javax.jms.TopicSubscriber;
+import javax.resource.spi.BootstrapContext;
+import javax.resource.spi.UnavailableException;
+import javax.resource.spi.XATerminator;
+import javax.resource.spi.work.WorkManager;
 
 import junit.framework.TestCase;
 import org.apache.activemq.ActiveMQConnection;
@@ -82,19 +87,22 @@ public class ActiveMQConnectionFactoryTest extends TestCase {
     }
 
     public void testOptimizeDurablePrefetch() throws Exception {
-        ActiveMQConnectionRequestInfo info = new ActiveMQConnectionRequestInfo();
-        info.setServerUrl(url);
-        info.setUserName(user);
-        info.setPassword(pwd);
-        info.setOptimizeDurableTopicPrefetch(new Integer(500));
-        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(mcf, new ConnectionManagerAdapter(), info);
-        Connection con = factory.createConnection("defaultUser", "defaultPassword");
+        ActiveMQResourceAdapter ra = new ActiveMQResourceAdapter();
+        ra.setServerUrl(url);
+        ra.setUserName(user);
+        ra.setPassword(pwd);
+
+        ra.setOptimizeDurableTopicPrefetch(0);
+        ra.setDurableTopicPrefetch(0);
+
+        Connection con = ra.makeConnection();
+
         con.setClientID("x");
         Session sess = con.createSession(false, Session.AUTO_ACKNOWLEDGE);
         TopicSubscriber sub = sess.createDurableSubscriber(sess.createTopic("TEST"), "x");
         con.start();
 
-        assertEquals(500, ((ActiveMQTopicSubscriber)sub).getPrefetchNumber());
+        assertEquals(0, ((ActiveMQTopicSubscriber)sub).getPrefetchNumber());
     }
 
 }
