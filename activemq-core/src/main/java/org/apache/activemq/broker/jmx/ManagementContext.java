@@ -19,6 +19,7 @@ package org.apache.activemq.broker.jmx;
 import org.apache.activemq.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 
 import javax.management.*;
 import javax.management.remote.JMXConnectorServer;
@@ -69,6 +70,7 @@ public class ManagementContext implements Service {
     private ServerSocket registrySocket;
     private final List<ObjectName> registeredMBeanNames = new CopyOnWriteArrayList<ObjectName>();
     private boolean allowRemoteAddressInMBeanNames = true;
+    private String brokerName;
 
     public ManagementContext() {
         this(null);
@@ -90,21 +92,32 @@ public class ManagementContext implements Service {
                 Thread t = new Thread("JMX connector") {
                     @Override
                     public void run() {
+                        // ensure we use MDC logging with the broker name, so people can see the logs if MDC was in use
+                        if (brokerName != null) {
+                            MDC.put("activemq.broker", brokerName);
+                        }
                         try {
                             JMXConnectorServer server = connectorServer;
                             if (started.get() && server != null) {
                                 LOG.debug("Starting JMXConnectorServer...");
                                 connectorStarting.set(true);
                                 try {
+                                    // need to remove MDC as we must not inherit MDC in child threads causing leaks
+                                    MDC.remove("activemq.broker");
                                 	server.start();
                                 } finally {
-                                	connectorStarting.set(false);
+                                    if (brokerName != null) {
+                                        MDC.put("activemq.broker", brokerName);
+                                    }
+                                    connectorStarting.set(false);
                                 }
                                 LOG.info("JMX consoles can connect to " + server.getAddress());
                             }
                         } catch (IOException e) {
                             LOG.warn("Failed to start jmx connector: " + e.getMessage());
                             LOG.debug("Reason for failed jms connector start", e);
+                        } finally {
+                            MDC.remove("activemq.broker");
                         }
                     }
                 };
@@ -157,6 +170,21 @@ public class ManagementContext implements Service {
                 registrySocket = null;
             }
         }
+    }
+
+    /**
+     * Gets the broker name this context is used by, may be <tt>null</tt>
+     * if the broker name was not set.
+     */
+    public String getBrokerName() {
+        return brokerName;
+    }
+
+    /**
+     * Sets the broker name this context is being used by.
+     */
+    public void setBrokerName(String brokerName) {
+        this.brokerName = brokerName;
     }
 
     /**

@@ -506,7 +506,7 @@ public class BrokerService implements Service {
             // as its way too easy to not be completely sure if start() has been
             // called or not with the gazillion of different configuration
             // mechanisms
-            // throw new IllegalStateException("Allready started.");
+            // throw new IllegalStateException("Already started.");
             return;
         }
 
@@ -518,7 +518,14 @@ public class BrokerService implements Service {
             }
             processHelperProperties();
             if (isUseJmx()) {
-                startManagementContext();
+                // need to remove MDC during starting JMX, as that would otherwise causes leaks, as spawned threads inheirt the MDC and
+                // we cannot cleanup clear that during shutdown of the broker.
+                MDC.remove("activemq.broker");
+                try {
+                    startManagementContext();
+                } finally {
+                    MDC.put("activemq.broker", brokerName);
+                }
             }
             // in jvm master slave, lets not publish over existing broker till we get the lock
             final BrokerRegistry brokerRegistry = BrokerRegistry.getInstance();
@@ -678,7 +685,7 @@ public class BrokerService implements Service {
         stopAllConnectors(stopper);
         // remove any VMTransports connected
         // this has to be done after services are stopped,
-        // to avoid timimg issue with discovery (spinning up a new instance)
+        // to avoid timing issue with discovery (spinning up a new instance)
         BrokerRegistry.getInstance().unbind(getBrokerName());
         VMTransportFactory.stopped(getBrokerName());
         if (broker != null) {
@@ -2290,6 +2297,7 @@ public class BrokerService implements Service {
     }
 
     protected void startManagementContext() throws Exception {
+        getManagementContext().setBrokerName(brokerName);
         getManagementContext().start();
         adminView = new BrokerView(this, null);
         ObjectName objectName = getBrokerObjectName();
