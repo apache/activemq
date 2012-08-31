@@ -46,7 +46,7 @@
     <aries-version>0.3</aries-version>
     <axion-version>1.0-M3-dev</axion-version>
     <axis-version>1.4.2</axis-version>
-    <camel-version>2.10.0</camel-version>
+    <camel-version>2.10.1</camel-version>
     <camel-version-range>2.10,3</camel-version-range>
     <cglib-version>2.0</cglib-version>
     <openjpa-version>1.2.0</openjpa-version>
