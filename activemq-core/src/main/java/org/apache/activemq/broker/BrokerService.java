@@ -1005,13 +1005,9 @@ public class BrokerService implements Service {
             if (systemUsage == null) {
                 systemUsage = new SystemUsage("Main", getPersistenceAdapter(), getTempDataStore());
                 systemUsage.setExecutor(getExecutor());
-                systemUsage.getMemoryUsage().setLimit(1024 * 1024 * 64); // Default
-                                                                         // 64
-                                                                         // Meg
-                systemUsage.getTempUsage().setLimit(1024L * 1024 * 1000 * 50); // 50
-                                                                                // Gb
-                systemUsage.getStoreUsage().setLimit(1024L * 1024 * 1000 * 100); // 100
-                                                                                 // GB
+                systemUsage.getMemoryUsage().setLimit(1024 * 1024 * 64); // 64 MB
+                systemUsage.getTempUsage().setLimit(1024L * 1024 * 1024 * 50); // 50 GB
+                systemUsage.getStoreUsage().setLimit(1024L * 1024 * 1024 * 100); // 100 GB
                 addService(this.systemUsage);
             }
             return systemUsage;
