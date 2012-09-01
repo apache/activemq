@@ -26,6 +26,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -1222,7 +1223,7 @@ public class BrokerService implements Service {
                 if (uri != null) {
                     String scheme = uri.getScheme();
                     if (scheme != null) {
-                        answer.put(scheme.toLowerCase(), uri.toString());
+                        answer.put(scheme.toLowerCase(Locale.ENGLISH), uri.toString());
                     }
                 }
             } catch (Exception e) {

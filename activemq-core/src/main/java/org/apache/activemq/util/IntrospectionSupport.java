@@ -26,6 +26,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.Map.Entry;
@@ -101,10 +102,10 @@ public final class IntrospectionSupport {
                         continue;
                     }
                     if (name.startsWith("get")) {
-                        name = name.substring(3, 4).toLowerCase()
+                        name = name.substring(3, 4).toLowerCase(Locale.ENGLISH)
                                 + name.substring(4);
                     } else {
-                        name = name.substring(2, 3).toLowerCase()
+                        name = name.substring(2, 3).toLowerCase(Locale.ENGLISH)
                                 + name.substring(3);
                     }
                     props.put(optionPrefix + name, strValue);
@@ -293,7 +294,7 @@ public final class IntrospectionSupport {
         if (value instanceof ActiveMQDestination) {
             ActiveMQDestination destination = (ActiveMQDestination)value;
             buffer.append(destination.getQualifiedName());
-        } else if (key.toString().toLowerCase().contains("password")){
+        } else if (key.toString().toLowerCase(Locale.ENGLISH).contains("password")){
             buffer.append("*****");           
         } else {
             buffer.append(value);

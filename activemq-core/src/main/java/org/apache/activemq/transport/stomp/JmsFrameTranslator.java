@@ -21,6 +21,7 @@ import java.io.Serializable;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
 import javax.jms.JMSException;
@@ -171,7 +172,7 @@ public class JmsFrameTranslator extends LegacyFrameTranslator implements
             throws JMSException {
         StringWriter buffer = new StringWriter();
         HierarchicalStreamWriter out;
-        if (transformation.toLowerCase().endsWith("json")) {
+        if (transformation.toLowerCase(Locale.ENGLISH).endsWith("json")) {
             out = new JettisonMappedXmlDriver(new Configuration(), false).createWriter(buffer);
         } else {
             out = new PrettyPrintWriter(buffer);
@@ -201,7 +202,7 @@ public class JmsFrameTranslator extends LegacyFrameTranslator implements
 
         StringWriter buffer = new StringWriter();
         HierarchicalStreamWriter out;
-        if (transformation.toLowerCase().endsWith("json")) {
+        if (transformation.toLowerCase(Locale.ENGLISH).endsWith("json")) {
             out = new JettisonMappedXmlDriver().createWriter(buffer);
         } else {
             out = new PrettyPrintWriter(buffer);

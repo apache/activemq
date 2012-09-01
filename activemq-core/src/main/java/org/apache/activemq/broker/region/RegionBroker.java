@@ -48,6 +48,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -600,7 +601,7 @@ public class RegionBroker extends EmptyBroker {
     public String getBrokerName() {
         if (brokerName == null) {
             try {
-                brokerName = InetAddressUtil.getLocalHostName().toLowerCase();
+                brokerName = InetAddressUtil.getLocalHostName().toLowerCase(Locale.ENGLISH);
             } catch (Exception e) {
                 brokerName = "localhost";
             }

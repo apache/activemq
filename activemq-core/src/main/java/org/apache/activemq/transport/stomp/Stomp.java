@@ -16,6 +16,8 @@
  */
 package org.apache.activemq.transport.stomp;
 
+import java.util.Locale;
+
 public interface Stomp {
     String NULL = "\u0000";
     String NEWLINE = "\n";
@@ -172,11 +174,11 @@ public interface Stomp {
         JMS_ADVISORY_JSON;
 
         public String toString() {
-            return name().replaceAll("_", "-").toLowerCase();
+            return name().replaceAll("_", "-").toLowerCase(Locale.ENGLISH);
         }
 
         public static Transformations getValue(String value) {
-            return valueOf(value.replaceAll("-", "_").toUpperCase());
+            return valueOf(value.replaceAll("-", "_").toUpperCase(Locale.ENGLISH));
         }
     }
 }

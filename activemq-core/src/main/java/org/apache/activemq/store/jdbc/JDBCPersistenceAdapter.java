@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Collections;
+import java.util.Locale;
 import java.util.Set;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -478,7 +479,7 @@ public class JDBCPersistenceAdapter extends DataSourceSupport implements Persist
             try {
                 // Make the filename file system safe.
                 String dirverName = c.getConnection().getMetaData().getDriverName();
-                dirverName = dirverName.replaceAll("[^a-zA-Z0-9\\-]", "_").toLowerCase();
+                dirverName = dirverName.replaceAll("[^a-zA-Z0-9\\-]", "_").toLowerCase(Locale.ENGLISH);
 
                 try {
                     adapter = finder.newInstance(dirverName);

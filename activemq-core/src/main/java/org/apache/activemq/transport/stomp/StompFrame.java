@@ -19,6 +19,7 @@ package org.apache.activemq.transport.stomp;
 import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
 import org.apache.activemq.command.Command;
@@ -186,7 +187,7 @@ public class StompFrame implements Command {
         for (Map.Entry<String, String> entry : headers.entrySet()) {
             buffer.append(entry.getKey());
             buffer.append(":");
-            if (forLogging && entry.getKey().toString().toLowerCase().contains(Stomp.Headers.Connect.PASSCODE)) {
+            if (forLogging && entry.getKey().toString().toLowerCase(Locale.ENGLISH).contains(Stomp.Headers.Connect.PASSCODE)) {
                 buffer.append("*****");
             } else {
                 buffer.append(entry.getValue());
