@@ -72,10 +72,10 @@
       <artifactId>activemq-core</artifactId>
     </dependency>
 
+    <!-- to use AMQ with Camel efficient we would need to use pooling -->
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>activemq-pool</artifactId>
-      <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>org.apache.geronimo.specs</groupId>
