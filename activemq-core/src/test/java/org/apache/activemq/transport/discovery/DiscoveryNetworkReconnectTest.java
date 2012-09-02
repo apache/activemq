@@ -100,6 +100,7 @@ public class DiscoveryNetworkReconnectTest {
         
         context.checking(new Expectations(){{
             allowing (managementContext).getJmxDomainName(); will (returnValue("Test"));
+            allowing (managementContext).setBrokerName("BrokerNC");
             allowing (managementContext).start();
             allowing (managementContext).isCreateConnector();
             allowing (managementContext).stop();
