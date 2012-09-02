@@ -19,6 +19,7 @@ package org.apache.activemq.camel.component;
 import org.apache.activemq.spring.ActiveMQConnectionFactory;
 import org.apache.activemq.pool.PooledConnectionFactory;
 import org.apache.camel.Endpoint;
+import org.apache.camel.component.jms.JmsConfiguration;
 import org.apache.camel.component.jms.JmsConsumer;
 import org.apache.camel.component.jms.JmsEndpoint;
 import org.apache.camel.component.jms.JmsProducer;
@@ -53,6 +54,20 @@ public class ActiveMQConfigureTest extends CamelTestSupport {
         assertEquals("pubSubDomain", false, template.isPubSubDomain());
         SingleConnectionFactory connectionFactory = assertIsInstanceOf(SingleConnectionFactory.class, template.getConnectionFactory());
         assertIsInstanceOf(ActiveMQConnectionFactory.class, connectionFactory.getTargetConnectionFactory());
+    }
+
+    @Test
+    public void testSessionTransactedWithoutTransactionManager() throws Exception {
+        JmsEndpoint endpoint = resolveMandatoryEndpoint("activemq:test.foo?transacted=true&lazyCreateTransactionManager=false");
+        JmsConfiguration configuration = endpoint.getConfiguration();
+        
+        assertIsInstanceOf(ActiveMQConfiguration.class, configuration);
+
+        assertTrue("The JMS sessions are not transacted!", endpoint.isTransacted());
+        assertTrue("The JMS sessions are not transacted!", configuration.isTransacted());
+
+        assertNull("A transaction manager has been lazy-created!", endpoint.getTransactionManager());
+        assertNull("A transaction manager has been lazy-created!", configuration.getTransactionManager());
     }
 
     @Test

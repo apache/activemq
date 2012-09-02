@@ -115,18 +115,6 @@ public class ActiveMQConfiguration extends JmsConfiguration {
         this.usePooledConnection = usePooledConnection;
     }
 
-    @Override
-    public PlatformTransactionManager getTransactionManager() {
-        PlatformTransactionManager answer = super.getTransactionManager();
-        if (isTransacted() && answer == null) {
-            // lets auto-default the transaction manager if its not specified
-            answer = createTransactionManager();
-            setTransactionManager(answer);
-            answer = getTransactionManager();
-        }
-        return answer;
-    }
-
     /**
      * Factory method to create a default transaction manager if one is not specified
      */
