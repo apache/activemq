@@ -18,25 +18,22 @@ package org.apache.activemq.util;
 
 import java.beans.PropertyEditor;
 import java.beans.PropertyEditorManager;
-import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Set;
 import java.util.Map.Entry;
-
+import java.util.Set;
 import javax.net.ssl.SSLServerSocket;
 
 import org.apache.activemq.command.ActiveMQDestination;
-
-
-
 
 public final class IntrospectionSupport {
     
@@ -46,17 +43,19 @@ public final class IntrospectionSupport {
                 "org.springframework.beans.propertyeditors",
                 "org.apache.activemq.util" };
         synchronized (PropertyEditorManager.class) {
-            String[] existingSearchPath = PropertyEditorManager.getEditorSearchPath();
-            String[] newSearchPath = (String[]) Array.newInstance(String.class,
-                    existingSearchPath.length + additionalPath.length);
-            System.arraycopy(existingSearchPath, 0,
-                    newSearchPath, 0,
-                    existingSearchPath.length);
-            System.arraycopy(additionalPath, 0, 
-                    newSearchPath, existingSearchPath.length,
-                    additionalPath.length);
+            List<String> list = new ArrayList<String>();
+            list.addAll(Arrays.asList(PropertyEditorManager.getEditorSearchPath()));
+
+            if (!list.contains(additionalPath[0])) {
+                list.add(additionalPath[0]);
+            }
+            if (!list.contains(additionalPath[1])) {
+                list.add(additionalPath[1]);
+            }
+
+            String[] newSearchPath = list.toArray(new String[list.size()]);
             try {
-                PropertyEditorManager.setEditorSearchPath(newSearchPath);                
+                PropertyEditorManager.setEditorSearchPath(newSearchPath);
                 PropertyEditorManager.registerEditor(String[].class, StringArrayEditor.class);
             } catch(java.security.AccessControlException ignore) {
                 // we might be in an applet...
