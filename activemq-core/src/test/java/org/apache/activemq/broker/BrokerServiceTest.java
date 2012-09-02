@@ -77,8 +77,8 @@ public class BrokerServiceTest extends TestCase {
     public void testSystemUsage()
     {
         BrokerService service = new BrokerService();
-        assertEquals( service.getSystemUsage().getMemoryUsage().getLimit(), 1024 * 1024 * 64 );
-        assertEquals( service.getSystemUsage().getTempUsage().getLimit(), 1024L * 1024 * 1000 * 50 );
-        assertEquals( service.getSystemUsage().getStoreUsage().getLimit(), 1024L * 1024 * 1000 * 100 );
+        assertEquals( 1024 * 1024 * 64, service.getSystemUsage().getMemoryUsage().getLimit() );
+        assertEquals( 1024L * 1024 * 1024 * 50, service.getSystemUsage().getTempUsage().getLimit() );
+        assertEquals( 1024L * 1024 * 1024 * 100, service.getSystemUsage().getStoreUsage().getLimit() );
     }
 }
