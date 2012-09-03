@@ -21,52 +21,35 @@ import junit.framework.TestCase;
 /**
  *
  */
-public class StringArrayEditorTest extends TestCase {
-
-    private StringArrayEditor editor = new StringArrayEditor();
+public class StringArrayConverterTest extends TestCase {
 
     public void testConvertToStringArray() throws Exception {
-        editor.setAsText(null);
-        assertEquals(null, editor.getValue());
-        editor.setAsText("");
-        assertEquals(null, editor.getValue());
+        assertEquals(null, StringArrayConverter.convertToStringArray(null));
+        assertEquals(null, StringArrayConverter.convertToStringArray(""));
 
-        editor.setAsText("foo");
-        String[] array = (String[]) editor.getValue();
+        String[] array = StringArrayConverter.convertToStringArray("foo");
         assertEquals(1, array.length);
         assertEquals("foo", array[0]);
 
-        editor.setAsText("foo,bar");
-        array = (String[]) editor.getValue();
+        array = StringArrayConverter.convertToStringArray("foo,bar");
         assertEquals(2, array.length);
         assertEquals("foo", array[0]);
         assertEquals("bar", array[1]);
 
-        editor.setAsText("foo,bar,baz");
-        array = (String[]) editor.getValue();
+        array = StringArrayConverter.convertToStringArray("foo,bar,baz");
+        assertEquals(3, array.length);
         assertEquals("foo", array[0]);
         assertEquals("bar", array[1]);
         assertEquals("baz", array[2]);
     }
 
     public void testConvertToString() throws Exception {
-        editor.setValue(null);
-        assertEquals(null, editor.getAsText());
-
-        editor.setValue(new String[]{});
-        assertEquals(null, editor.getAsText());
-
-        editor.setValue(new String[]{""});
-        assertEquals("", editor.getAsText());
-
-        editor.setValue(new String[]{"foo"});
-        assertEquals("foo", editor.getAsText());
-
-        editor.setValue(new String[]{"foo", "bar"});
-        assertEquals("foo,bar", editor.getAsText());
-
-        editor.setValue(new String[]{"foo", "bar", "baz"});
-        assertEquals("foo,bar,baz", editor.getAsText());
+        assertEquals(null, StringArrayConverter.convertToString(null));
+        assertEquals(null, StringArrayConverter.convertToString(new String[]{}));
+        assertEquals("", StringArrayConverter.convertToString(new String[]{""}));
+        assertEquals("foo", StringArrayConverter.convertToString(new String[]{"foo"}));
+        assertEquals("foo,bar", StringArrayConverter.convertToString(new String[]{"foo", "bar"}));
+        assertEquals("foo,bar,baz", StringArrayConverter.convertToString(new String[]{"foo", "bar", "baz"}));
     }
 
 }

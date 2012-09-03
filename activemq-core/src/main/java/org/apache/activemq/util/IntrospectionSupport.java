@@ -56,7 +56,6 @@ public final class IntrospectionSupport {
             String[] newSearchPath = list.toArray(new String[list.size()]);
             try {
                 PropertyEditorManager.setEditorSearchPath(newSearchPath);
-                PropertyEditorManager.registerEditor(String[].class, StringArrayEditor.class);
             } catch(java.security.AccessControlException ignore) {
                 // we might be in an applet...
             }
@@ -91,7 +90,7 @@ public final class IntrospectionSupport {
 
                 try {
 
-                    Object value = method.invoke(target, new Object[] {});
+                    Object value = method.invoke(target);
                     if (value == null) {
                         continue;
                     }
@@ -198,10 +197,10 @@ public final class IntrospectionSupport {
             // If the type is null or it matches the needed type, just use the
             // value directly
             if (value == null || value.getClass() == setter.getParameterTypes()[0]) {
-                setter.invoke(target, new Object[] {value});
+                setter.invoke(target, value);
             } else {
                 // We need to convert it
-                setter.invoke(target, new Object[] {convert(value, setter.getParameterTypes()[0])});
+                setter.invoke(target, convert(value, setter.getParameterTypes()[0]));
             }
             return true;
         } catch (Throwable ignore) {
@@ -210,6 +209,11 @@ public final class IntrospectionSupport {
     }
 
     private static Object convert(Object value, Class type) {
+        // special for String[] as we do not want to use a PropertyEditor for that
+        if (type.isAssignableFrom(String[].class)) {
+            return StringArrayConverter.convertToStringArray(value);
+        }
+
         PropertyEditor editor = PropertyEditorManager.findEditor(type);
         if (editor != null) {
             editor.setAsText(value.toString());
@@ -219,6 +223,12 @@ public final class IntrospectionSupport {
     }
 
     public static String convertToString(Object value, Class type) {
+        // special for String[] as we do not want to use a PropertyEditor for that
+        if (value != null && value.getClass().isAssignableFrom(String[].class)) {
+            String[] array = (String[]) value;
+            return StringArrayConverter.convertToString(array);
+        }
+
         PropertyEditor editor = PropertyEditorManager.findEditor(type);
         if (editor != null) {
             editor.setValue(value);
@@ -242,6 +252,11 @@ public final class IntrospectionSupport {
     }
 
     private static boolean isSettableType(Class clazz) {
+        // special for String[]
+        if (clazz.isAssignableFrom(String[].class)) {
+            return true;
+        }
+
         if (PropertyEditorManager.findEditor(clazz) != null) {
             return true;
         }
