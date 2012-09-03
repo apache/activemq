@@ -76,6 +76,7 @@ public abstract class DurableSubscriptionTestSupport extends TestSupport {
         broker.setPersistenceAdapter(createPersistenceAdapter());
         broker.setPersistent(true);
         broker.start();
+        broker.waitUntilStarted();
 
         connection = createConnection();
     }
@@ -87,6 +88,7 @@ public abstract class DurableSubscriptionTestSupport extends TestSupport {
         broker.setPersistenceAdapter(createPersistenceAdapter());
         broker.setPersistent(true);
         broker.start();
+        broker.waitUntilStarted();
 
         connection = createConnection();
     }
@@ -97,6 +99,7 @@ public abstract class DurableSubscriptionTestSupport extends TestSupport {
         }
         if (broker != null) {
             broker.stop();
+            broker.waitUntilStopped();
         }
     }
 

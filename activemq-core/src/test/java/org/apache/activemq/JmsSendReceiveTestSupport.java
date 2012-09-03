@@ -169,7 +169,7 @@ public class JmsSendReceiveTestSupport extends TestSupport implements MessageLis
      * Waits for messages to be delivered.
      */
     protected void waitForMessagesToBeDelivered() {
-        long maxWaitTime = 30000;
+        long maxWaitTime = 60000;
         long waitTime = maxWaitTime;
         long start = (maxWaitTime <= 0) ? 0 : System.currentTimeMillis();
 
