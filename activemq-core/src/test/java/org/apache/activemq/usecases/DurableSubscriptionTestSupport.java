@@ -283,6 +283,36 @@ public abstract class DurableSubscriptionTestSupport extends TestSupport {
         assertNull(consumer.receive(5000));
     }
 
+    public void testDurableSubscriptionRetroactive() throws Exception {
+
+        // Create the durable sub.
+        connection.start();
+        session = connection.createSession(false, javax.jms.Session.AUTO_ACKNOWLEDGE);
+
+        Topic topic = session.createTopic("TestTopic?consumer.retroactive=true");
+        consumer = session.createDurableSubscriber(topic, "sub1");
+        connection.close();
+
+        // Produce
+        connection = createConnection();
+        connection.start();
+        session = connection.createSession(false, javax.jms.Session.AUTO_ACKNOWLEDGE);
+        producer = session.createProducer(topic);
+        producer.setDeliveryMode(DeliveryMode.PERSISTENT);
+        producer.send(session.createTextMessage("Msg:1"));
+
+        restartBroker();
+
+        // connect second durable to pick up retroactive message
+        connection.start();
+        session = connection.createSession(false, javax.jms.Session.AUTO_ACKNOWLEDGE);
+        consumer = session.createDurableSubscriber(topic, "sub2");
+
+        // Try to get the message.
+        assertTextMessageEquals("Msg:1", consumer.receive(5000));
+        assertNull(consumer.receive(2000));
+    }
+
     public void testDurableSubscriptionRollbackRedeliver() throws Exception {
 
         // Create the durable sub.

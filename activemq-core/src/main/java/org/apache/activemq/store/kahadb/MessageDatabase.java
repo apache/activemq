@@ -1278,7 +1278,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
             if (!command.getRetroactive()) {
                 ackLocation = sd.orderIndex.nextMessageId-1;
             } else {
-                addAckLocationForRetroactiveSub(tx, sd, ackLocation, subscriptionKey);
+                addAckLocationForRetroactiveSub(tx, sd, subscriptionKey);
             }
             sd.subscriptionAcks.put(tx, subscriptionKey, new LastAck(ackLocation));
             sd.subscriptionCache.add(subscriptionKey);
@@ -1857,23 +1857,22 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
     }
 
     // new sub is interested in potentially all existing messages
-    private void addAckLocationForRetroactiveSub(Transaction tx, StoredDestination sd, Long messageSequence, String subscriptionKey) throws IOException {
-        SequenceSet sequences = sd.ackPositions.get(tx, subscriptionKey);
-        if (sequences == null) {
-            sequences = new SequenceSet();
-            sequences.add(messageSequence);
-            sd.ackPositions.add(tx, subscriptionKey, sequences);
-        } else {
-            sequences.add(messageSequence);
-            sd.ackPositions.put(tx, subscriptionKey, sequences);
+    private void addAckLocationForRetroactiveSub(Transaction tx, StoredDestination sd, String subscriptionKey) throws IOException {
+        SequenceSet allOutstanding = new SequenceSet();
+        Iterator<Map.Entry<String, SequenceSet>> iterator = sd.ackPositions.iterator(tx);
+        while (iterator.hasNext()) {
+            SequenceSet set = iterator.next().getValue();
+            for (Long entry : set) {
+                allOutstanding.add(entry);
+            }
         }
+        sd.ackPositions.put(tx, subscriptionKey, allOutstanding);
 
-        Long count = sd.messageReferences.get(messageSequence);
-        if (count == null) {
-            count = Long.valueOf(0L);
+        for (Long ackPosition : allOutstanding) {
+            Long count = sd.messageReferences.get(ackPosition);
+            count = count.longValue() + 1;
+            sd.messageReferences.put(ackPosition, count);
         }
-        count = count.longValue() + 1;
-        sd.messageReferences.put(messageSequence, count);
     }
 
     // on a new message add, all existing subs are interested in this message

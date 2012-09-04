@@ -123,6 +123,7 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
             tsp.setEnableAudit(isEnableAudit());
             tsp.setMemoryUsageHighWaterMark(getMemoryUsageHighWaterMark());
             tsp.setUseCache(isUseCache());
+            tsp.setCacheEnabled(isUseCache() && tsp.isEmpty());
             topics.put(destination, tsp);
             storePrefetches.add(tsp);
             if (isStarted()) {

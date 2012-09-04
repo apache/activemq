@@ -867,7 +867,7 @@ public class DurableSubscriptionOfflineTest extends org.apache.activemq.TestSupp
             producer.send(topic, message);
         }
 
-        LOG.info("after restart, sent: " + filtered);
+        LOG.info("after restart, total sent with filter='true': " + filtered);
         Thread.sleep(1 * 1000);
         session.close();
         con.close();
@@ -876,7 +876,7 @@ public class DurableSubscriptionOfflineTest extends org.apache.activemq.TestSupp
         con = createConnection("offCli1");
         session = con.createSession(false, Session.AUTO_ACKNOWLEDGE);
         MessageConsumer consumer = session.createDurableSubscriber(topic, "SubsId", "filter = 'true'", true);
-        Listener listener = new Listener();
+        Listener listener = new Listener("1>");
         consumer.setMessageListener(listener);
 
         Connection con3 = createConnection("offCli2");

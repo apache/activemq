@@ -52,6 +52,7 @@ class TopicStorePrefetch extends AbstractStoreCursor {
         this.subscriberName = subscriberName;
         this.maxProducersToAudit=32;
         this.maxAuditDepth=10000;
+        resetSize();
     }
 
     public boolean recoverMessageReference(MessageId messageReference) throws Exception {

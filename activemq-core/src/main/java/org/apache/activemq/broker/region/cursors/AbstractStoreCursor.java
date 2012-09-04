@@ -61,9 +61,7 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
     }
 
     protected void resetSize() {
-        if (isStarted()) {
-            this.size = getStoreSize();
-        }
+        this.size = getStoreSize();
         this.storeHasMessages=this.size > 0;
     }
 
