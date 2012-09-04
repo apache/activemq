@@ -29,4 +29,8 @@ public class AMQStoreDurableSubscriptionTest extends DurableSubscriptionTestSupp
         adapter.setDirectory(dataDir);
         return adapter;
     }
+
+    public void testDurableSubscriptionRetroactive() throws Exception {
+        // nop
+    }
 }

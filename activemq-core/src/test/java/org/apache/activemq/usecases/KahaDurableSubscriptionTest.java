@@ -32,4 +32,10 @@ public class KahaDurableSubscriptionTest extends DurableSubscriptionTestSupport 
         adaptor.setDirectory(dataDir);
         return adaptor;
     }
+
+
+    public void testDurableSubscriptionRetroactive() throws Exception {
+        // nop
+    }
+
 }
