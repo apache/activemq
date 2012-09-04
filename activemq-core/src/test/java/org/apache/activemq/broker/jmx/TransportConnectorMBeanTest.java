@@ -78,6 +78,8 @@ public class TransportConnectorMBeanTest {
     }
 
     private Set<ObjectName> getRegisteredMbeans() throws Exception {
+        // need a little sleep to ensure JMX is up to date
+        Thread.sleep(200);
         return broker.getManagementContext().queryNames(null, null);
     }
 
