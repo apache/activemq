@@ -322,7 +322,8 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                 // determine demand.
                 if (!configuration.isStaticBridge()) {
                     demandConsumerInfo = new ConsumerInfo(remoteSessionInfo, 1);
-                    demandConsumerInfo.setDispatchAsync(configuration.isDispatchAsync());
+                    // always dispatch advisories async so that we never block the producer broker if we are slow
+                    demandConsumerInfo.setDispatchAsync(true);
                     String advisoryTopic = configuration.getDestinationFilter();
                     if (configuration.isBridgeTempDestinations()) {
                         advisoryTopic += "," + AdvisorySupport.TEMP_DESTINATION_COMPOSITE_ADVISORY_TOPIC;
