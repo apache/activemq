@@ -16,8 +16,11 @@
  */
 package org.apache.activemq.broker;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
@@ -97,6 +100,7 @@ import org.apache.activemq.thread.Scheduler;
 import org.apache.activemq.thread.TaskRunnerFactory;
 import org.apache.activemq.transport.TransportFactory;
 import org.apache.activemq.transport.TransportServer;
+import org.apache.activemq.transport.stomp.ProtocolConverter;
 import org.apache.activemq.transport.vm.VMTransportFactory;
 import org.apache.activemq.usage.SystemUsage;
 import org.apache.activemq.util.BrokerSupport;
@@ -124,6 +128,7 @@ public class BrokerService implements Service {
     protected CountDownLatch slaveStartSignal = new CountDownLatch(1);
     public static final String DEFAULT_PORT = "61616";
     public static final String LOCAL_HOST_NAME;
+    public static final String BROKER_VERSION;
     public static final String DEFAULT_BROKER_NAME = "localhost";
     private static final Logger LOG = LoggerFactory.getLogger(BrokerService.class);
     private static final long serialVersionUID = 7353129142305630237L;
@@ -234,11 +239,31 @@ public class BrokerService implements Service {
             LOG.error("Failed to resolve localhost");
         }
         LOCAL_HOST_NAME = localHostName;
+
+        InputStream in = null;
+        String version = null;
+        if ((in = ProtocolConverter.class.getResourceAsStream("/org/apache/activemq/version.txt")) != null) {
+            BufferedReader reader = new BufferedReader(new InputStreamReader(in));
+            try {
+                version = reader.readLine();
+            } catch(Exception e) {
+            }
+        }
+        BROKER_VERSION = version;
     }
 
     @Override
     public String toString() {
         return "BrokerService[" + getBrokerName() + "]";
+    }
+
+    private String getBrokerVersion() {
+        String version = ActiveMQConnectionMetaData.PROVIDER_VERSION;
+        if (version == null) {
+            version = BROKER_VERSION;
+        }
+
+        return version;
     }
 
     /**
@@ -643,7 +668,12 @@ public class BrokerService implements Service {
         if (ioExceptionHandler == null) {
             setIoExceptionHandler(new DefaultIOExceptionHandler());
         }
-        LOG.info("ActiveMQ JMS Message Broker (" + getBrokerName() + ", " + brokerId + ") started");
+
+        if (LOG.isInfoEnabled()) {
+            LOG.info("ActiveMQ " + getBrokerVersion() + " JMS Message Broker ("
+                    + getBrokerName() + ", " + brokerId + ") started");
+        }
+
         getBroker().brokerServiceStarted();
         checkSystemUsageLimits();
         startedLatch.countDown();
@@ -671,7 +701,11 @@ public class BrokerService implements Service {
             }.start();
         }
 
-        LOG.info("ActiveMQ Message Broker (" + getBrokerName() + ", " + brokerId + ") is shutting down");
+        if (LOG.isInfoEnabled()) {
+            LOG.info("ActiveMQ " + getBrokerVersion() + " JMS Message Broker ("
+                    + getBrokerName() + ", " + brokerId + ") is shutting down");
+        }
+
         removeShutdownHook();
         if (this.scheduler != null) {
             this.scheduler.stop();
@@ -742,7 +776,11 @@ public class BrokerService implements Service {
         this.destinationInterceptors = null;
         this.destinationFactory = null;
 
-        LOG.info("ActiveMQ JMS Message Broker (" + getBrokerName() + ", " + brokerId + ") stopped");
+        if (LOG.isInfoEnabled()) {
+            LOG.info("ActiveMQ " + getBrokerVersion() + " JMS Message Broker ("
+                    + getBrokerName() + ", " + brokerId + ") stopped");
+        }
+
         synchronized (shutdownHooks) {
             for (Runnable hook : shutdownHooks) {
                 try {
@@ -868,9 +906,11 @@ public class BrokerService implements Service {
      */
     public Broker getBroker() throws Exception {
         if (broker == null) {
-            LOG.info("ActiveMQ " + ActiveMQConnectionMetaData.PROVIDER_VERSION + " JMS Message Broker ("
-                    + getBrokerName() + ") is starting");
-            LOG.info("For help or more information please see: http://activemq.apache.org/");
+            if (LOG.isInfoEnabled()) {
+                LOG.info("ActiveMQ " + getBrokerVersion() + " JMS Message Broker ("
+                        + getBrokerName() + ") is starting");
+                LOG.info("For help or more information please see: http://activemq.apache.org/");
+            }
             broker = createBroker();
         }
         return broker;
