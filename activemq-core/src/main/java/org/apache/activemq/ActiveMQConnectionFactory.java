@@ -21,10 +21,7 @@ import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
-import java.util.concurrent.Executor;
 import java.util.concurrent.RejectedExecutionHandler;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.ThreadFactory;
 
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
@@ -68,15 +65,6 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     public static final String DEFAULT_USER = null;
     public static final String DEFAULT_PASSWORD = null;
     public static final int DEFAULT_PRODUCER_WINDOW_SIZE = 0;
-
-
-    protected static final Executor DEFAULT_CONNECTION_EXECUTOR = new ScheduledThreadPoolExecutor(5, new ThreadFactory() {
-        public Thread newThread(Runnable run) {
-            Thread thread = new Thread(run);
-            thread.setPriority(ThreadPriorities.INBOUND_CLIENT_CONNECTION);
-            return thread;
-        }
-    });
 
     protected URI brokerURL;
     protected String userName;
@@ -255,11 +243,10 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
      *
      * @return The newly created Transport.
      * @throws JMSException If unable to create trasnport.
-     * @author sepandm@gmail.com
      */
     protected Transport createTransport() throws JMSException {
         try {
-            return TransportFactory.connect(brokerURL, DEFAULT_CONNECTION_EXECUTOR);
+            return TransportFactory.connect(brokerURL);
         } catch (Exception e) {
             throw JMSExceptionSupport.create("Could not create Transport. Reason: " + e, e);
         }
