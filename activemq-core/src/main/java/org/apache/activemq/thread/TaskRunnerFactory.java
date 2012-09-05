@@ -49,7 +49,11 @@ public class TaskRunnerFactory implements Executor {
     private RejectedExecutionHandler rejectedTaskHandler = null;
 
     public TaskRunnerFactory() {
-        this("ActiveMQ Task", Thread.NORM_PRIORITY, true, 1000);
+        this("ActiveMQ Task");
+    }
+
+    public TaskRunnerFactory(String name) {
+        this(name, Thread.NORM_PRIORITY, true, 1000);
     }
 
     private TaskRunnerFactory(String name, int priority, boolean daemon, int maxIterationsPerRun) {
@@ -98,7 +102,7 @@ public class TaskRunnerFactory implements Executor {
     }
 
     public void execute(Runnable runnable) {
-        execute(runnable, "ActiveMQ Task");
+        execute(runnable, name);
     }
 
     public void execute(Runnable runnable, String name) {

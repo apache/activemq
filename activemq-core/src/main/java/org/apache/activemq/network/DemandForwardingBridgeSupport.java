@@ -70,7 +70,6 @@ import org.apache.activemq.command.ShutdownInfo;
 import org.apache.activemq.command.WireFormatInfo;
 import org.apache.activemq.filter.DestinationFilter;
 import org.apache.activemq.filter.MessageEvaluationContext;
-import org.apache.activemq.thread.DefaultThreadPools;
 import org.apache.activemq.thread.TaskRunnerFactory;
 import org.apache.activemq.transport.DefaultTransportListener;
 import org.apache.activemq.transport.FutureResponse;
@@ -93,7 +92,7 @@ import org.slf4j.LoggerFactory;
  */
 public abstract class DemandForwardingBridgeSupport implements NetworkBridge, BrokerServiceAware {
     private static final Logger LOG = LoggerFactory.getLogger(DemandForwardingBridgeSupport.class);
-    private final TaskRunnerFactory asyncTaskRunner = DefaultThreadPools.getDefaultTaskRunnerFactory();
+    private TaskRunnerFactory asyncTaskRunner;
     protected static final String DURABLE_SUB_PREFIX = "NC-DS_";
     protected final Transport localBroker;
     protected final Transport remoteBroker;
@@ -157,6 +156,9 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
 
     public void start() throws Exception {
         if (started.compareAndSet(false, true)) {
+            asyncTaskRunner = new TaskRunnerFactory("ActiveMQ ForwardingBridge Task");
+            asyncTaskRunner.init();
+
             localBroker.setTransportListener(new DefaultTransportListener() {
 
                 @Override
@@ -374,6 +376,10 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                     startedLatch.countDown();
                     startedLatch.countDown();
                     localStartedLatch.countDown();
+
+                    // stop task runner
+                    asyncTaskRunner.shutdown();
+                    asyncTaskRunner = null;
                     ss.throwFirstException();
                 }
             }

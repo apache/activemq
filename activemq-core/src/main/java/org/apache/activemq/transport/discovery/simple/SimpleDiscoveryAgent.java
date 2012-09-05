@@ -21,7 +21,7 @@ import java.net.URI;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.activemq.command.DiscoveryEvent;
-import org.apache.activemq.thread.DefaultThreadPools;
+import org.apache.activemq.thread.TaskRunnerFactory;
 import org.apache.activemq.transport.discovery.DiscoveryAgent;
 import org.apache.activemq.transport.discovery.DiscoveryListener;
 import org.slf4j.Logger;
@@ -46,6 +46,7 @@ public class SimpleDiscoveryAgent implements DiscoveryAgent {
     private DiscoveryListener listener;
     private String services[] = new String[] {};
     private final AtomicBoolean running = new AtomicBoolean(false);
+    private TaskRunnerFactory taskRunner;
 
     class SimpleDiscoveryEvent extends DiscoveryEvent {
 
@@ -72,6 +73,9 @@ public class SimpleDiscoveryAgent implements DiscoveryAgent {
     }
 
     public void start() throws Exception {
+        taskRunner = new TaskRunnerFactory();
+        taskRunner.init();
+
         running.set(true);
         for (int i = 0; i < services.length; i++) {
             listener.onServiceAdd(new SimpleDiscoveryEvent(services[i]));
@@ -80,6 +84,11 @@ public class SimpleDiscoveryAgent implements DiscoveryAgent {
 
     public void stop() throws Exception {
         running.set(false);
+
+        taskRunner.shutdown();
+
+        // TODO: Should we not remove the services on the listener?
+
         synchronized (sleepMutex) {
             sleepMutex.notifyAll();
         }
@@ -110,7 +119,7 @@ public class SimpleDiscoveryAgent implements DiscoveryAgent {
         if (event.failed.compareAndSet(false, true)) {
 
             listener.onServiceRemove(event);
-            DefaultThreadPools.getDefaultTaskRunnerFactory().execute(new Runnable() {
+            taskRunner.execute(new Runnable() {
                 public void run() {
 
                     // We detect a failed connection attempt because the service
