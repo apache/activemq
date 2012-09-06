@@ -29,6 +29,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.apache.activemq.command.KeepAliveInfo;
 import org.apache.activemq.command.WireFormatInfo;
 import org.apache.activemq.thread.SchedulerTimerTask;
+import org.apache.activemq.util.ThreadPoolUtils;
 import org.apache.activemq.wireformat.WireFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -364,7 +365,7 @@ public abstract class AbstractInactivityMonitor extends TransportFilter {
                   READ_CHECK_TIMER.cancel();
                     WRITE_CHECK_TIMER = null;
                     READ_CHECK_TIMER = null;
-                    ASYNC_TASKS.shutdown();
+                    ThreadPoolUtils.shutdown(ASYNC_TASKS);
                     ASYNC_TASKS = null;
                 }
             }

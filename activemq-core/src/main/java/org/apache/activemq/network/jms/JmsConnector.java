@@ -35,6 +35,7 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.Service;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.util.LRUCache;
+import org.apache.activemq.util.ThreadPoolUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.jndi.JndiTemplate;
@@ -166,7 +167,8 @@ public abstract class JmsConnector implements Service {
     public void stop() throws Exception {
         if (started.compareAndSet(true, false)) {
 
-            this.connectionSerivce.shutdown();
+            ThreadPoolUtils.shutdown(connectionSerivce);
+            connectionSerivce = null;
 
             for (DestinationBridge bridge : inboundBridges) {
                 bridge.stop();

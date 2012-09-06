@@ -39,6 +39,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.activemq.command.DiscoveryEvent;
 import org.apache.activemq.transport.discovery.DiscoveryAgent;
 import org.apache.activemq.transport.discovery.DiscoveryListener;
+import org.apache.activemq.util.ThreadPoolUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -348,7 +349,10 @@ public class MulticastDiscoveryAgent implements DiscoveryAgent, Runnable {
             if (runner != null) {
                 runner.interrupt();
             }
-            getExecutor().shutdownNow();
+            if (executor != null) {
+                ThreadPoolUtils.shutdownNow(executor);
+                executor = null;
+            }
         }
     }
 

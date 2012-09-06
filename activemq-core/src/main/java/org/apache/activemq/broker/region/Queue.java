@@ -86,6 +86,7 @@ import org.apache.activemq.transaction.Synchronization;
 import org.apache.activemq.usage.Usage;
 import org.apache.activemq.usage.UsageListener;
 import org.apache.activemq.util.BrokerSupport;
+import org.apache.activemq.util.ThreadPoolUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -883,7 +884,8 @@ public class Queue extends BaseDestination implements Task, UsageListener {
             taskRunner.shutdown();
         }
         if (this.executor != null) {
-            this.executor.shutdownNow();
+            ThreadPoolUtils.shutdownNow(executor);
+            executor = null;
         }
 
         scheduler.cancel(expireMessagesTask);

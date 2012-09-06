@@ -64,6 +64,7 @@ import org.apache.activemq.store.kahadb.data.KahaDestination.DestinationType;
 import org.apache.activemq.usage.MemoryUsage;
 import org.apache.activemq.usage.SystemUsage;
 import org.apache.activemq.util.ServiceStopper;
+import org.apache.activemq.util.ThreadPoolUtils;
 import org.apache.activemq.wireformat.WireFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -237,10 +238,12 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
             this.globalTopicSemaphore.drainPermits();
         }
         if (this.queueExecutor != null) {
-            this.queueExecutor.shutdownNow();
+            ThreadPoolUtils.shutdownNow(queueExecutor);
+            queueExecutor = null;
         }
         if (this.topicExecutor != null) {
-            this.topicExecutor.shutdownNow();
+            ThreadPoolUtils.shutdownNow(topicExecutor);
+            topicExecutor = null;
         }
         LOG.info("Stopped KahaDB");
         super.doStop(stopper);

@@ -92,9 +92,40 @@ public class TaskRunnerFactory implements Executor {
         }
     }
 
+    /**
+     * Performs a shutdown only, by which the thread pool is shutdown by not graceful nor aggressively.
+     *
+     * @see ThreadPoolUtils#shutdown(java.util.concurrent.ExecutorService)
+     */
     public void shutdown() {
         if (executor != null) {
-            ThreadPoolUtils.shutdown(executor, shutdownAwaitTermination);
+            ThreadPoolUtils.shutdown(executor);
+            executor = null;
+        }
+        initDone.set(false);
+    }
+
+    /**
+     * Performs a shutdown now (aggressively) on the thread pool.
+     *
+     * @see ThreadPoolUtils#shutdownNow(java.util.concurrent.ExecutorService)
+     */
+    public void shutdownNow() {
+        if (executor != null) {
+            ThreadPoolUtils.shutdownNow(executor);
+            executor = null;
+        }
+        initDone.set(false);
+    }
+
+    /**
+     * Performs a graceful shutdown.
+     *
+     * @see ThreadPoolUtils#shutdownGraceful(java.util.concurrent.ExecutorService)
+     */
+    public void shutdownGraceful() {
+        if (executor != null) {
+            ThreadPoolUtils.shutdownGraceful(executor, shutdownAwaitTermination);
             executor = null;
         }
         initDone.set(false);
@@ -119,8 +150,17 @@ public class TaskRunnerFactory implements Executor {
         if (executor != null) {
             executor.execute(runnable);
         } else {
-            new Thread(runnable, name + "-" + id.incrementAndGet()).start();
+            doExecuteNewThread(runnable, name);
         }
+    }
+
+    private void doExecuteNewThread(Runnable runnable, String name) {
+        String threadName = name + "-" + id.incrementAndGet();
+        Thread thread = new Thread(runnable, threadName);
+        thread.setDaemon(daemon);
+
+        LOG.trace("Created and running thread[{}]: {}", threadName, thread);
+        thread.start();
     }
 
     protected ExecutorService createDefaultExecutor() {

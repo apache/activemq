@@ -111,6 +111,7 @@ import org.apache.activemq.util.IOHelper;
 import org.apache.activemq.util.InetAddressUtil;
 import org.apache.activemq.util.JMXSupport;
 import org.apache.activemq.util.ServiceStopper;
+import org.apache.activemq.util.ThreadPoolUtils;
 import org.apache.activemq.util.URISupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -769,7 +770,7 @@ public class BrokerService implements Service {
             this.taskRunnerFactory = null;
         }
         if (this.executor != null) {
-            this.executor.shutdownNow();
+            ThreadPoolUtils.shutdownNow(executor);
             this.executor = null;
         }
 
@@ -2410,8 +2411,7 @@ public class BrokerService implements Service {
                 }
                 if (networkConnectorStartExecutor != null) {
                     // executor done when enqueued tasks are complete
-                    networkConnectorStartExecutor.shutdown();
-                    networkConnectorStartExecutor = null;
+                    ThreadPoolUtils.shutdown(networkConnectorStartExecutor);
                 }
 
                 for (Iterator<ProxyConnector> iter = getProxyConnectors().iterator(); iter.hasNext();) {
@@ -2755,7 +2755,7 @@ public class BrokerService implements Service {
 
     /**
      * Sets whether Authenticated User Name information is shown in MBeans that support this field.
-     * @param true if MBeans should expose user name information.
+     * @param value if MBeans should expose user name information.
      */
     public void setPopulateUserNameInMBeans(boolean value) {
         this.populateUserNameInMBeans = value;

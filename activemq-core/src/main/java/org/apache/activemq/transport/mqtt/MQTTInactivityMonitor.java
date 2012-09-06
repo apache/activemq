@@ -33,6 +33,7 @@ import org.apache.activemq.transport.AbstractInactivityMonitor;
 import org.apache.activemq.transport.InactivityIOException;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportFilter;
+import org.apache.activemq.util.ThreadPoolUtils;
 import org.apache.activemq.wireformat.WireFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -276,7 +277,7 @@ public class MQTTInactivityMonitor extends TransportFilter {
                 if (CHECKER_COUNTER == 0) {
                     READ_CHECK_TIMER.cancel();
                     READ_CHECK_TIMER = null;
-                    ASYNC_TASKS.shutdown();
+                    ThreadPoolUtils.shutdown(ASYNC_TASKS);
                     ASYNC_TASKS = null;
                 }
             }

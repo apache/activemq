@@ -69,6 +69,7 @@ import org.apache.activemq.usage.Usage;
 import org.apache.activemq.usage.UsageListener;
 import org.apache.activemq.util.ByteSequence;
 import org.apache.activemq.util.IOExceptionSupport;
+import org.apache.activemq.util.ThreadPoolUtils;
 import org.apache.activemq.wireformat.WireFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -287,7 +288,8 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
         // Take one final checkpoint and stop checkpoint processing.
         checkpoint(true, true);
         checkpointTask.shutdown();
-        checkpointExecutor.shutdown();
+        ThreadPoolUtils.shutdown(checkpointExecutor);
+        checkpointExecutor = null;
 
         queues.clear();
         topics.clear();

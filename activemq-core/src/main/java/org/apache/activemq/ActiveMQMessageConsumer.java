@@ -26,7 +26,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
@@ -61,6 +60,7 @@ import org.apache.activemq.transaction.Synchronization;
 import org.apache.activemq.util.Callback;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.util.JMSExceptionSupport;
+import org.apache.activemq.util.ThreadPoolUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -769,12 +769,8 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                 }
             }
             if (executorService != null) {
-                executorService.shutdown();
-                try {
-                    executorService.awaitTermination(60, TimeUnit.SECONDS);
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                }
+                ThreadPoolUtils.shutdownGraceful(executorService, 60000L);
+                executorService = null;
             }
 
             if (session.isClientAcknowledge()) {

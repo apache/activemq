@@ -103,6 +103,7 @@ import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.util.JMSExceptionSupport;
 import org.apache.activemq.util.LongSequenceGenerator;
 import org.apache.activemq.util.ServiceSupport;
+import org.apache.activemq.util.ThreadPoolUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -692,10 +693,10 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
         } finally {
             try {
                 if (executor != null) {
-                    executor.shutdown();
+                    ThreadPoolUtils.shutdown(executor);
                 }
             } catch (Throwable e) {
-                LOG.error("Error shutting down thread pool " + e, e);
+                LOG.warn("Error shutting down thread pool: " + executor + ". This exception will be ignored.", e);
             }
 
             ServiceSupport.dispose(this.transport);

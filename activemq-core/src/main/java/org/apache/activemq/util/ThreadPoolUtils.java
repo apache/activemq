@@ -24,27 +24,53 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- *
+ * Utility methods for working with thread pools {@link ExecutorService}.
  */
-public class ThreadPoolUtils {
+public final class ThreadPoolUtils {
 
     private static final Logger LOG = LoggerFactory.getLogger(ThreadPoolUtils.class);
 
-    // TODO: Should be 30 sec
-    // but lowered due some unit tests dont yet properly shutdown, so want to run these a bit faster
-    public static final long DEFAULT_SHUTDOWN_AWAIT_TERMINATION = 10 * 1000L;
+    public static final long DEFAULT_SHUTDOWN_AWAIT_TERMINATION = 30 * 1000L;
+
+    /**
+     * Shutdown the given executor service only (ie not graceful shutdown).
+     *
+     * @see java.util.concurrent.ExecutorService#shutdown()
+     */
+    public static void shutdown(ExecutorService executorService) {
+        doShutdown(executorService, -1, true);
+    }
+
+    /**
+     * Shutdown now the given executor service aggressively.
+     *
+     * @param executorService the executor service to shutdown now
+     * @return list of tasks that never commenced execution
+     * @see java.util.concurrent.ExecutorService#shutdownNow()
+     */
+    public static List<Runnable> shutdownNow(ExecutorService executorService) {
+        List<Runnable> answer = null;
+        if (!executorService.isShutdown()) {
+            LOG.debug("Forcing shutdown of ExecutorService: {}", executorService);
+            answer = executorService.shutdownNow();
+            if (LOG.isTraceEnabled()) {
+                LOG.trace("Shutdown of ExecutorService: {} is shutdown: {} and terminated: {}.",
+                        new Object[]{executorService, executorService.isShutdown(), executorService.isTerminated()});
+            }
+        }
+
+        return answer;
+    }
 
     /**
      * Shutdown the given executor service graceful at first, and then aggressively
      * if the await termination timeout was hit.
      * <p/>
-     * This implementation invokes the {@link #shutdown(java.util.concurrent.ExecutorService, long)}
+     * This implementation invokes the {@link #shutdownGraceful(java.util.concurrent.ExecutorService, long)}
      * with a timeout value of {@link #DEFAULT_SHUTDOWN_AWAIT_TERMINATION} millis.
-     *
-     * @see #shutdown(java.util.concurrent.ExecutorService, long)
      */
-    public void shutdown(ExecutorService executorService) {
-        shutdown(executorService, DEFAULT_SHUTDOWN_AWAIT_TERMINATION);
+    public static void shutdownGraceful(ExecutorService executorService) {
+        doShutdown(executorService, DEFAULT_SHUTDOWN_AWAIT_TERMINATION, false);
     }
 
     /**
@@ -57,13 +83,34 @@ public class ThreadPoolUtils {
      * forces a shutdown. The parameter <tt>shutdownAwaitTermination</tt>
      * is used as timeout value waiting for orderly shutdown to
      * complete normally, before going aggressively.
+     * <p/>
+     * Notice if the given parameter <tt>shutdownAwaitTermination</tt> is negative, then a quick shutdown
+     * is commenced, by invoking the {@link java.util.concurrent.ExecutorService#shutdown()} method
+     * and then exit from this method (ie. no graceful shutdown is performed).
      *
      * @param executorService the executor service to shutdown
-     * @param shutdownAwaitTermination timeout in millis to wait for orderly shutdown
-     * @see java.util.concurrent.ExecutorService#shutdown()
+     * @param shutdownAwaitTermination timeout in millis to wait for orderly shutdown, if the value if negative
+     *                                 then the thread pool is <b>not</b> graceful shutdown, but a regular shutdown
+     *                                 is commenced.
      */
-    public static void shutdown(ExecutorService executorService, long shutdownAwaitTermination) {
+    public static void shutdownGraceful(ExecutorService executorService, long shutdownAwaitTermination) {
+        doShutdown(executorService, shutdownAwaitTermination, false);
+    }
+
+    private static void doShutdown(ExecutorService executorService, long shutdownAwaitTermination, boolean quick) {
         // code from Apache Camel - org.apache.camel.impl.DefaultExecutorServiceManager
+
+        if (executorService == null) {
+            return;
+        }
+
+        if (quick) {
+            // do not shutdown graceful, but just quick shutdown on the thread pool
+            executorService.shutdown();
+            LOG.debug("Quick shutdown of ExecutorService: {} is shutdown: {} and terminated: {}.",
+                    new Object[]{executorService, executorService.isShutdown(), executorService.isTerminated()});
+            return;
+        }
 
         if (shutdownAwaitTermination <= 0) {
             throw new IllegalArgumentException("ShutdownAwaitTermination must be a positive number, was: " + shutdownAwaitTermination);
@@ -103,27 +150,6 @@ public class ThreadPoolUtils {
                         new Object[]{executorService, executorService.isShutdown(), executorService.isTerminated(), TimeUtils.printDuration(watch.taken())});
             }
         }
-    }
-
-    /**
-     * Shutdown now the given executor service aggressively.
-     *
-     * @param executorService the executor service to shutdown now
-     * @return list of tasks that never commenced execution
-     * @see java.util.concurrent.ExecutorService#shutdownNow()
-     */
-    public static List<Runnable> shutdownNow(ExecutorService executorService) {
-        List<Runnable> answer = null;
-        if (!executorService.isShutdown()) {
-            LOG.debug("Forcing shutdown of ExecutorService: {}", executorService);
-            answer = executorService.shutdownNow();
-            if (LOG.isTraceEnabled()) {
-                LOG.trace("Shutdown of ExecutorService: {} is shutdown: {} and terminated: {}.",
-                        new Object[]{executorService, executorService.isShutdown(), executorService.isTerminated()});
-            }
-        }
-
-        return answer;
     }
 
     /**
