@@ -20,10 +20,10 @@
     <meta charset="utf-8">
     <title>Chat Example Using STOMP Over WebSockets</title>
     <!--[if lt IE 9]>
-      <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+      <script src="https://html5shim.googlecode.com/svn/trunk/html5.js"></script>
     <![endif]-->
-    <script src='http://ajax.googleapis.com/ajax/libs/jquery/1.4/jquery.min.js'></script>
-    <script src="../../../../../../../../activemq-web-demo/src/main/webapp/websocket/stomp.js"></script>
+    <script src='https://ajax.googleapis.com/ajax/libs/jquery/1.4/jquery.min.js'></script>
+    <script src="stomp.js"></script>
     <script>//<![CDATA[
     $(document).ready(function() {
       if(window.WebSocket) {
@@ -35,8 +35,13 @@
         var passcode = "password";
         destination = "/queue/websocket";
 
-        $("#status").html("Connecting");
+        $("#status").html("Connecting " + url);
         client = Stomp.client(url);
+
+        // this allows to display debug logs directly on the web page
+        client.debug = function(str) {
+        $("#debug").append(str + "\n");
+        };
 
         // the client is notified when it is connected to the server.
         client.connect(login, passcode, function(frame) {
@@ -53,6 +58,7 @@
   </head>
   <body>
     <div id="status">Loading</div>
+    <pre id="debug"></pre>
     <div id="received"></div>
   </body>
 </html>

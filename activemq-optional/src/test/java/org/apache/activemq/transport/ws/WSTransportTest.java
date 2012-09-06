@@ -29,8 +29,16 @@ import java.net.UnknownHostException;
 
 import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.SslContext;
+import org.apache.activemq.spring.SpringSslContext;
 import org.apache.activemq.transport.stomp.StompConnection;
 import org.apache.activemq.util.Wait;
+import org.eclipse.jetty.server.Connector;
+import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.nio.SelectChannelConnector;
+import org.eclipse.jetty.server.ssl.SslSocketConnector;
+import org.eclipse.jetty.util.ssl.SslContextFactory;
+import org.eclipse.jetty.webapp.WebAppContext;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -51,11 +59,12 @@ public class WSTransportTest {
     private static final int MESSAGE_COUNT = 1000;
 
     private BrokerService broker;
+    private Server server;
     private WebDriver driver;
     private File profileDir;
 
     private String stompUri;
-    private String wsUri;
+    protected String wsUri;
 
     private StompConnection stompConnection = new StompConnection();
 
@@ -63,13 +72,50 @@ public class WSTransportTest {
         BrokerService broker = BrokerFactory.createBroker(
                 new URI("broker:()/localhost?persistent=false&useJmx=false"));
 
+        SpringSslContext context = new SpringSslContext();
+        context.setKeyStore("src/test/resources/server.keystore");
+        context.setKeyStoreKeyPassword("password");
+        context.setTrustStore("src/test/resources/client.keystore");
+        context.setTrustStorePassword("password");
+        context.afterPropertiesSet();
+        broker.setSslContext(context);
+
         stompUri = broker.addConnector("stomp://localhost:0").getPublishableConnectString();
-        wsUri = broker.addConnector("ws://127.0.0.1:61623?websocket.maxTextMessageSize=99999&transport.maxIdleTime=1001").getPublishableConnectString();
+        wsUri = broker.addConnector(getWSConnectorURI()).getPublishableConnectString();
         broker.setDeleteAllMessagesOnStartup(deleteMessages);
         broker.start();
         broker.waitUntilStarted();
 
         return broker;
+    }
+
+    protected String getWSConnectorURI() {
+        return "ws://127.0.0.1:61623?websocket.maxTextMessageSize=99999&transport.maxIdleTime=1001";
+    }
+
+    protected Server createWebServer() throws Exception {
+        Server server = new Server();
+
+        Connector connector = createJettyConnector();
+        connector.setServer(server);
+
+        WebAppContext context = new WebAppContext();
+        context.setResourceBase("src/test/webapp");
+        context.setContextPath("/");
+        context.setServer(server);
+
+        server.setHandler(context);
+        server.setConnectors(new Connector[] {
+                connector
+        });
+        server.start();
+        return server;
+    }
+
+    protected Connector createJettyConnector() {
+        SelectChannelConnector connector = new SelectChannelConnector();
+        connector.setPort(8080);
+        return connector;
     }
 
     protected void stopBroker() throws Exception {
@@ -85,6 +131,7 @@ public class WSTransportTest {
         profileDir = new File("activemq-data/profiles");
         broker = createBroker(true);
         stompConnect();
+        server = createWebServer();
     }
 
     @After
@@ -98,6 +145,9 @@ public class WSTransportTest {
             if (driver != null) {
                 driver.quit();
                 driver = null;
+            }
+            if (server != null) {
+                server.stop();
             }
         }
     }
@@ -153,15 +203,13 @@ public class WSTransportTest {
         }
     }
 
+    protected String getTestURI() {
+        return "http://localhost:8080/websocket.html#" + wsUri;
+    }
+
     public void doTestWebSockets(WebDriver driver) throws Exception {
 
-        URL url = getClass().getResource("websocket.html");
-
-        LOG.info("working dir = ");
-
-        LOG.info("page url: " + url);
-
-        driver.get(url + "#" + wsUri);
+        driver.get(getTestURI());
 
         final WebElement webStatus = driver.findElement(By.id("status"));
         final WebElement webReceived = driver.findElement(By.id("received"));
