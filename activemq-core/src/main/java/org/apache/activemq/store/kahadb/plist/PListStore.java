@@ -484,6 +484,6 @@ public class PListStore extends ServiceSupport implements BrokerServiceAware, Ru
     @Override
     public String toString() {
         String path = getDirectory() != null ? getDirectory().getAbsolutePath() : "DIRECTORY_NOT_SET";
-        return "PListStore:[" + path + " ]";
+        return "PListStore:[" + path + "]";
     }
 }
