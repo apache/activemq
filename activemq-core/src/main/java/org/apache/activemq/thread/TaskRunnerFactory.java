@@ -26,6 +26,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.apache.activemq.util.ThreadPoolUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * Manages the thread pool for long running tasks. Long running tasks are not
  * always active but when they are active, they may need a few iterations of
@@ -37,6 +41,7 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 public class TaskRunnerFactory implements Executor {
 
+    private static final Logger LOG = LoggerFactory.getLogger(TaskRunnerFactory.class);
     private ExecutorService executor;
     private int maxIterationsPerRun;
     private String name;
@@ -44,6 +49,7 @@ public class TaskRunnerFactory implements Executor {
     private boolean daemon;
     private AtomicLong id = new AtomicLong(0);
     private boolean dedicatedTaskRunner;
+    private long shutdownAwaitTermination = 30000;
     private AtomicBoolean initDone = new AtomicBoolean(false);
     private int maxThreadPoolSize = Integer.MAX_VALUE;
     private RejectedExecutionHandler rejectedTaskHandler = null;
@@ -82,12 +88,14 @@ public class TaskRunnerFactory implements Executor {
             } else if (executor == null) {
                 executor = createDefaultExecutor();
             }
+            LOG.debug("Initialized TaskRunnerFactory[{}] using ExecutorService: {}", name, executor);
         }
     }
 
     public void shutdown() {
         if (executor != null) {
-            executor.shutdownNow();
+            ThreadPoolUtils.shutdown(executor, shutdownAwaitTermination);
+            executor = null;
         }
         initDone.set(false);
     }
@@ -107,6 +115,7 @@ public class TaskRunnerFactory implements Executor {
 
     public void execute(Runnable runnable, String name) {
         init();
+        LOG.trace("Execute[{}] runnable: {}", name, runnable);
         if (executor != null) {
             executor.execute(runnable);
         } else {
@@ -117,9 +126,12 @@ public class TaskRunnerFactory implements Executor {
     protected ExecutorService createDefaultExecutor() {
         ThreadPoolExecutor rc = new ThreadPoolExecutor(0, getMaxThreadPoolSize(), 30, TimeUnit.SECONDS, new SynchronousQueue<Runnable>(), new ThreadFactory() {
             public Thread newThread(Runnable runnable) {
-                Thread thread = new Thread(runnable, name + "-" + id.incrementAndGet());
+                String threadName = name + "-" + id.incrementAndGet();
+                Thread thread = new Thread(runnable, threadName);
                 thread.setDaemon(daemon);
                 thread.setPriority(priority);
+
+                LOG.trace("Created thread[{}]: {}", threadName, thread);
                 return thread;
             }
         });
@@ -192,4 +204,13 @@ public class TaskRunnerFactory implements Executor {
     public void setRejectedTaskHandler(RejectedExecutionHandler rejectedTaskHandler) {
         this.rejectedTaskHandler = rejectedTaskHandler;
     }
+
+    public long getShutdownAwaitTermination() {
+        return shutdownAwaitTermination;
+    }
+
+    public void setShutdownAwaitTermination(long shutdownAwaitTermination) {
+        this.shutdownAwaitTermination = shutdownAwaitTermination;
+    }
+
 }

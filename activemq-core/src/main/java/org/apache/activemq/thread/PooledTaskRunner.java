@@ -18,11 +18,15 @@ package org.apache.activemq.thread;
 
 import java.util.concurrent.Executor;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * 
  */
 class PooledTaskRunner implements TaskRunner {
 
+    private static final Logger LOG = LoggerFactory.getLogger(PooledTaskRunner.class);
     private final int maxIterationsPerRun;
     private final Executor executor;
     private final Task task;
@@ -32,7 +36,7 @@ class PooledTaskRunner implements TaskRunner {
     private boolean iterating;
     private volatile Thread runningThread;
 
-    public PooledTaskRunner(Executor executor, Task task, int maxIterationsPerRun) {
+    public PooledTaskRunner(Executor executor, final Task task, int maxIterationsPerRun) {
         this.executor = executor;
         this.maxIterationsPerRun = maxIterationsPerRun;
         this.task = task;
@@ -42,6 +46,7 @@ class PooledTaskRunner implements TaskRunner {
                 try {
                     runTask();
                 } finally {
+                    LOG.trace("Run task done: {}", task);
                     runningThread = null;
                 }
             }
@@ -84,6 +89,7 @@ class PooledTaskRunner implements TaskRunner {
      * @throws InterruptedException
      */
     public void shutdown(long timeout) throws InterruptedException {
+        LOG.trace("Shutdown timeout: {} task: {}", task);
         synchronized (runable) {
             shutdown = true;
             // the check on the thread is done
@@ -119,6 +125,7 @@ class PooledTaskRunner implements TaskRunner {
         boolean done = false;
         try {
             for (int i = 0; i < maxIterationsPerRun; i++) {
+                LOG.trace("Running task iteration {} - {}", i, task);
                 if (!task.iterate()) {
                     done = true;
                     break;

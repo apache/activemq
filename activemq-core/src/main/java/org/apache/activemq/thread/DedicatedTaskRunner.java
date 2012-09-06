@@ -16,11 +16,15 @@
  */
 package org.apache.activemq.thread;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * 
  */
 class DedicatedTaskRunner implements TaskRunner {
 
+    private static final Logger LOG = LoggerFactory.getLogger(DedicatedTaskRunner.class);
     private final Task task;
     private final Thread thread;
 
@@ -29,11 +33,15 @@ class DedicatedTaskRunner implements TaskRunner {
     private boolean pending;
     private boolean shutdown;
 
-    public DedicatedTaskRunner(Task task, String name, int priority, boolean daemon) {
+    public DedicatedTaskRunner(final Task task, String name, int priority, boolean daemon) {
         this.task = task;
         thread = new Thread(name) {
             public void run() {
-                runTask();
+                try {
+                    runTask();
+                } finally {
+                    LOG.trace("Run task done: {}", task);
+                }
             }
         };
         thread.setDaemon(daemon);
@@ -61,6 +69,7 @@ class DedicatedTaskRunner implements TaskRunner {
      * @throws InterruptedException
      */
     public void shutdown(long timeout) throws InterruptedException {
+        LOG.trace("Shutdown timeout: {} task: {}", task);
         synchronized (mutex) {
             shutdown = true;
             pending = true;
@@ -95,6 +104,7 @@ class DedicatedTaskRunner implements TaskRunner {
                     }
                 }
 
+                LOG.trace("Running task {}", task);
                 if (!task.iterate()) {
                     // wait to be notified.
                     synchronized (mutex) {
