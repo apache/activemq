@@ -288,11 +288,12 @@ public class VMTransport implements Transport, Task {
                         throw new TransportDisposedIOException("The Transport has been disposed");
                     }
 
+                    String name = "ActiveMQ VMTransport: " + toString();
                     if (taskRunnerFactory == null) {
-                        taskRunnerFactory = new TaskRunnerFactory("ActiveMQ VMTransport: " + toString());
+                        taskRunnerFactory = new TaskRunnerFactory(name);
                         taskRunnerFactory.init();
                     }
-                    taskRunner = result = taskRunnerFactory.createTaskRunner(this, "VMTransport: " + toString());
+                    taskRunner = result = taskRunnerFactory.createTaskRunner(this, name);
                 }
             }
         }
