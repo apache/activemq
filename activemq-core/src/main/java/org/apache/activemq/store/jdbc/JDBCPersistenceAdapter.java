@@ -301,7 +301,7 @@ public class JDBCPersistenceAdapter extends DataSourceSupport implements Persist
         }
 
         if (isUseDatabaseLock()) {
-            Locker service = getDatabaseLocker();
+            Locker service = getLocker();
             if (service == null) {
                 LOG.warn("No databaseLocker configured for the JDBC Persistence Adapter");
             } else {

@@ -36,7 +36,7 @@ public class JDBCIOExceptionHandler extends DefaultIOExceptionHandler {
         boolean hasLock = true;
         if (broker.getPersistenceAdapter() instanceof JDBCPersistenceAdapter) {
             JDBCPersistenceAdapter jdbcPersistenceAdapter = (JDBCPersistenceAdapter) broker.getPersistenceAdapter();
-            Locker locker = jdbcPersistenceAdapter.getDatabaseLocker();
+            Locker locker = jdbcPersistenceAdapter.getLocker();
             if (locker != null) {
                 try {
                     if (!locker.keepAlive()) {
