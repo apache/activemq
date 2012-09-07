@@ -25,6 +25,7 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.usage.SystemUsage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.CachedIntrospectionResults;
 
 /**
  * An ActiveMQ Message Broker. It consists of a number of transport
@@ -85,7 +86,13 @@ public class XBeanBrokerService extends BrokerService {
     public void destroy() throws Exception {
         stop();
     }
-    
+
+    @Override
+    public void stop() throws Exception {
+        // must clear this Spring cache to avoid any memory leaks
+        CachedIntrospectionResults.clearClassLoader(getClass().getClassLoader());
+        super.stop();
+    }
 
     /**
      * Sets whether or not the broker is started along with the ApplicationContext it is defined within.

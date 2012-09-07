@@ -17,30 +17,24 @@
 package org.apache.activemq.xbean;
 
 import java.beans.PropertyEditorManager;
-import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URI;
-import java.util.Map;
 
 import org.apache.activemq.broker.BrokerFactoryHandler;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.spring.Utils;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.util.URISupport;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.apache.xbean.spring.context.ResourceXmlApplicationContext;
 import org.apache.xbean.spring.context.impl.URIEditor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.FatalBeanException;
 import org.springframework.beans.factory.xml.XmlBeanDefinitionReader;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
-import org.springframework.core.io.UrlResource;
-import org.springframework.util.ResourceUtils;
 
 /**
  * 
