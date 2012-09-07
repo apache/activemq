@@ -36,7 +36,7 @@ public class DbRestartJDBCQueueMasterSlaveLeaseTest extends DbRestartJDBCQueueMa
         super.configureJdbcPersistenceAdapter(persistenceAdapter);
         persistenceAdapter.setLockAcquireSleepInterval(getLockAcquireSleepInterval());
         persistenceAdapter.setLockKeepAlivePeriod(getLockKeepAlivePeriod());
-        persistenceAdapter.setDatabaseLocker(new LeaseDatabaseLocker());
+        persistenceAdapter.setLocker(new LeaseDatabaseLocker());
     }
 
     private long getLockKeepAlivePeriod() {

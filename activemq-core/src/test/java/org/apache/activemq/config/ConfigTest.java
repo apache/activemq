@@ -191,7 +191,7 @@ public class ConfigTest extends TestCase {
         }});
 
         adapter.start();
-        assertTrue("has the locker override", adapter.getDatabaseLocker() instanceof TransactDatabaseLocker);
+        assertTrue("has the locker override", adapter.getLocker() instanceof TransactDatabaseLocker);
         adapter.stop();
     }
 
@@ -220,7 +220,7 @@ public class ConfigTest extends TestCase {
         }});
 
         adapter.start();
-        assertEquals("has the default locker", adapter.getDatabaseLocker().getClass(), DefaultDatabaseLocker.class);
+        assertEquals("has the default locker", adapter.getLocker().getClass(), DefaultDatabaseLocker.class);
         adapter.stop();
     }
 
