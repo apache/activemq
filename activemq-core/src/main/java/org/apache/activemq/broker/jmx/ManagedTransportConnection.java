@@ -49,9 +49,10 @@ public class ManagedTransportConnection extends TransportConnection {
     private final boolean populateUserName;
 
     public ManagedTransportConnection(TransportConnector connector, Transport transport, Broker broker,
-                                      TaskRunnerFactory factory, ManagementContext context, ObjectName connectorName)
+                                      TaskRunnerFactory factory, TaskRunnerFactory stopFactory,
+                                      ManagementContext context, ObjectName connectorName)
         throws IOException {
-        super(connector, transport, broker, factory);
+        super(connector, transport, broker, factory, stopFactory);
         this.managementContext = context;
         this.connectorName = connectorName;
         this.mbean = new ConnectionView(this, managementContext);

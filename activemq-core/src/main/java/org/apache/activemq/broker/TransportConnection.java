@@ -52,7 +52,6 @@ import org.apache.activemq.state.ConsumerState;
 import org.apache.activemq.state.ProducerState;
 import org.apache.activemq.state.SessionState;
 import org.apache.activemq.state.TransactionState;
-import org.apache.activemq.thread.DefaultThreadPools;
 import org.apache.activemq.thread.Task;
 import org.apache.activemq.thread.TaskRunner;
 import org.apache.activemq.thread.TaskRunnerFactory;
@@ -117,6 +116,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
     private final AtomicInteger protocolVersion = new AtomicInteger(CommandTypes.PROTOCOL_VERSION);
     private DemandForwardingBridge duplexBridge;
     private final TaskRunnerFactory taskRunnerFactory;
+    private final TaskRunnerFactory stopTaskRunnerFactory;
     private TransportConnectionStateRegister connectionStateRegister = new SingleTransportConnectionStateRegister();
     private final ReentrantReadWriteLock serviceLock = new ReentrantReadWriteLock();
     private String duplexNetworkConnectorId;
@@ -125,18 +125,20 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
     /**
      * @param taskRunnerFactory - can be null if you want direct dispatch to the transport
      *                          else commands are sent async.
+     * @param stopTaskRunnerFactory - can <b>not</b> be null, used for stopping this connection.
      */
     public TransportConnection(TransportConnector connector, final Transport transport, Broker broker,
-                               TaskRunnerFactory taskRunnerFactory) {
+                               TaskRunnerFactory taskRunnerFactory, TaskRunnerFactory stopTaskRunnerFactory) {
         this.connector = connector;
         this.broker = broker;
-        this.messageAuthorizationPolicy = connector.getMessageAuthorizationPolicy();
         RegionBroker rb = (RegionBroker) broker.getAdaptor(RegionBroker.class);
         brokerConnectionStates = rb.getConnectionStates();
         if (connector != null) {
             this.statistics.setParent(connector.getStatistics());
+            this.messageAuthorizationPolicy = connector.getMessageAuthorizationPolicy();
         }
         this.taskRunnerFactory = taskRunnerFactory;
+        this.stopTaskRunnerFactory = stopTaskRunnerFactory;
         this.transport = transport;
         this.transport.setTransportListener(new DefaultTransportListener() {
             @Override
@@ -939,6 +941,9 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
     }
 
     public void stop() throws Exception {
+        // do not stop task the task runner factories (taskRunnerFactory, stopTaskRunnerFactory)
+        // as their lifecycle is handled elsewhere
+
         stopAsync();
         while (!stopped.await(5, TimeUnit.SECONDS)) {
             LOG.info("The connection to '" + transport.getRemoteAddress() + "' is taking a long time to shutdown.");
@@ -952,7 +957,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
                 stopError = cause;
             }
             try {
-                DefaultThreadPools.getDefaultTaskRunnerFactory().execute(new Runnable() {
+                stopTaskRunnerFactory.execute(new Runnable() {
                     public void run() {
                         try {
                             Thread.sleep(waitTime);
@@ -961,9 +966,9 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
                         } catch (InterruptedException e) {
                         }
                     }
-                }, "delayedStop:" + transport.getRemoteAddress());
+                });
             } catch (Throwable t) {
-                LOG.warn("cannot create stopAsync :", t);
+                LOG.warn("Cannot create stopAsync. This exception will be ignored.", t);
             }
         }
     }
@@ -988,7 +993,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
                 }
             }
             try {
-                DefaultThreadPools.getDefaultTaskRunnerFactory().execute(new Runnable() {
+                stopTaskRunnerFactory.execute(new Runnable() {
                     public void run() {
                         serviceLock.writeLock().lock();
                         try {
@@ -1000,9 +1005,9 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
                             serviceLock.writeLock().unlock();
                         }
                     }
-                }, "StopAsync:" + transport.getRemoteAddress());
+                });
             } catch (Throwable t) {
-                LOG.warn("cannot create async transport stopper thread.. not waiting for stop to complete, reason:", t);
+                LOG.warn("Cannot create async transport stopper thread. This exception is ignored. Not waiting for stop to complete", t);
                 stopped.countDown();
             }
         }
@@ -1013,8 +1018,8 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         return "Transport Connection to: " + transport.getRemoteAddress();
     }
 
-    protected void doStop() throws Exception, InterruptedException {
-        LOG.debug("Stopping connection: " + transport.getRemoteAddress());
+    protected void doStop() throws Exception {
+        LOG.debug("Stopping connection: {}", transport.getRemoteAddress());
         connector.onStopped(this);
         try {
             synchronized (this) {
@@ -1026,16 +1031,17 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
                 }
             }
         } catch (Exception ignore) {
-            LOG.trace("Exception caught stopping", ignore);
+            LOG.trace("Exception caught stopping. This exception is ignored.", ignore);
         }
         try {
             transport.stop();
             LOG.debug("Stopped transport: " + transport.getRemoteAddress());
         } catch (Exception e) {
-            LOG.debug("Could not stop transport: " + e, e);
+            LOG.debug("Could not stop transport to " + transport.getRemoteAddress() + ". This exception is ignored.", e);
         }
         if (taskRunner != null) {
             taskRunner.shutdown(1);
+            taskRunner = null;
         }
         active = false;
         // Run the MessageDispatch callbacks so that message references get
@@ -1063,14 +1069,14 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
             for (TransportConnectionState cs : connectionStates) {
                 cs.getContext().getStopping().set(true);
                 try {
-                    LOG.debug("Cleaning up connection resources: " + getRemoteAddress());
+                    LOG.debug("Cleaning up connection resources: {}", getRemoteAddress());
                     processRemoveConnection(cs.getInfo().getConnectionId(), 0l);
                 } catch (Throwable ignore) {
                     ignore.printStackTrace();
                 }
             }
         }
-        LOG.debug("Connection Stopped: " + getRemoteAddress());
+        LOG.debug("Connection Stopped: {}", getRemoteAddress());
     }
 
     /**

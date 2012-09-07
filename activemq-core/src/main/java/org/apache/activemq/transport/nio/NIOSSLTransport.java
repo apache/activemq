@@ -37,7 +37,7 @@ import javax.net.ssl.SSLSession;
 import org.apache.activemq.command.Command;
 import org.apache.activemq.command.ConnectionInfo;
 import org.apache.activemq.openwire.OpenWireFormat;
-import org.apache.activemq.thread.DefaultThreadPools;
+import org.apache.activemq.thread.TaskRunnerFactory;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.ServiceStopper;
 import org.apache.activemq.wireformat.WireFormat;
@@ -52,9 +52,10 @@ public class NIOSSLTransport extends NIOTransport  {
     protected SSLEngine sslEngine;
     protected SSLSession sslSession;
 
-    protected boolean handshakeInProgress = false;
+    protected volatile boolean handshakeInProgress = false;
     protected SSLEngineResult.Status status = null;
     protected SSLEngineResult.HandshakeStatus handshakeStatus = null;
+    protected TaskRunnerFactory taskRunnerFactory;
 
     public NIOSSLTransport(WireFormat wireFormat, SocketFactory socketFactory, URI remoteLocation, URI localLocation) throws UnknownHostException, IOException {
         super(wireFormat, socketFactory, remoteLocation, localLocation);
@@ -259,7 +260,7 @@ public class NIOSSLTransport extends NIOTransport  {
                 case NEED_TASK:
                     Runnable task;
                     while ((task = sslEngine.getDelegatedTask()) != null) {
-                        DefaultThreadPools.getDefaultTaskRunnerFactory().execute(task);
+                        taskRunnerFactory.execute(task);
                     }
                     break;
                 case NEED_WRAP:
@@ -274,7 +275,18 @@ public class NIOSSLTransport extends NIOTransport  {
     }
 
     @Override
+    protected void doStart() throws Exception {
+        taskRunnerFactory = new TaskRunnerFactory("ActiveMQ NIOSSLTransport Task");
+        // no need to init as we can delay that until demand (eg in doHandshake)
+        super.doStart();
+    }
+
+    @Override
     protected void doStop(ServiceStopper stopper) throws Exception {
+        if (taskRunnerFactory != null) {
+            taskRunnerFactory.shutdownNow();
+            taskRunnerFactory = null;
+        }
         if (channel != null) {
             channel.close();
             channel = null;

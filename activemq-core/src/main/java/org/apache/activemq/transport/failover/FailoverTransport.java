@@ -46,9 +46,9 @@ import org.apache.activemq.command.RemoveInfo;
 import org.apache.activemq.command.Response;
 import org.apache.activemq.state.ConnectionStateTracker;
 import org.apache.activemq.state.Tracked;
-import org.apache.activemq.thread.DefaultThreadPools;
 import org.apache.activemq.thread.Task;
 import org.apache.activemq.thread.TaskRunner;
+import org.apache.activemq.thread.TaskRunnerFactory;
 import org.apache.activemq.transport.CompositeTransport;
 import org.apache.activemq.transport.DefaultTransportListener;
 import org.apache.activemq.transport.FutureResponse;
@@ -86,6 +86,7 @@ public class FailoverTransport implements CompositeTransport {
     private URI connectedTransportURI;
     private URI failedConnectTransportURI;
     private final AtomicReference<Transport> connectedTransport = new AtomicReference<Transport>();
+    private final TaskRunnerFactory reconnectTaskFactory;
     private final TaskRunner reconnectTask;
     private boolean started;
     private boolean initialized;
@@ -128,7 +129,9 @@ public class FailoverTransport implements CompositeTransport {
         brokerSslContext = SslContext.getCurrentSslContext();
         stateTracker.setTrackTransactions(true);
         // Setup a task that is used to reconnect the a connection async.
-        reconnectTask = DefaultThreadPools.getDefaultTaskRunnerFactory().createTaskRunner(new Task() {
+        reconnectTaskFactory = new TaskRunnerFactory();
+        reconnectTaskFactory.init();
+        reconnectTask = reconnectTaskFactory.createTaskRunner(new Task() {
             public boolean iterate() {
                 boolean result = false;
                 if (!started) {
@@ -345,26 +348,31 @@ public class FailoverTransport implements CompositeTransport {
         Transport transportToStop = null;
         List<Transport> backupsToStop = new ArrayList<Transport>(backups.size());
 
-        synchronized (reconnectMutex) {
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("Stopped " + this);
-            }
-            if (!started) {
-                return;
-            }
-            started = false;
-            disposed = true;
-            connected = false;
+        try {
+            synchronized (reconnectMutex) {
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("Stopped " + this);
+                }
+                if (!started) {
+                    return;
+                }
+                started = false;
+                disposed = true;
+                connected = false;
 
-            if (connectedTransport.get() != null) {
-                transportToStop = connectedTransport.getAndSet(null);
+                if (connectedTransport.get() != null) {
+                    transportToStop = connectedTransport.getAndSet(null);
+                }
+                reconnectMutex.notifyAll();
             }
-            reconnectMutex.notifyAll();
+            synchronized (sleepMutex) {
+                sleepMutex.notifyAll();
+            }
+        } finally {
+            reconnectTask.shutdown();
+            reconnectTaskFactory.shutdownNow();
         }
-        synchronized (sleepMutex) {
-            sleepMutex.notifyAll();
-        }
-        reconnectTask.shutdown();
+
         synchronized(backupMutex) {
             for (BackupTransport backup : backups) {
                 backup.setDisposed(true);

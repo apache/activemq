@@ -37,7 +37,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import javax.net.SocketFactory;
 
 import org.apache.activemq.Service;
-import org.apache.activemq.thread.DefaultThreadPools;
+import org.apache.activemq.thread.TaskRunnerFactory;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportLoggerFactory;
 import org.apache.activemq.transport.TransportThreadSupport;
@@ -536,13 +536,17 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
                 //closing the socket can hang also
                 final CountDownLatch latch = new CountDownLatch(1);
 
-                DefaultThreadPools.getDefaultTaskRunnerFactory().execute(new Runnable() {
+                // need a async task for this
+                final TaskRunnerFactory taskRunnerFactory = new TaskRunnerFactory();
+                taskRunnerFactory.execute(new Runnable() {
                     public void run() {
+                        LOG.trace("Closing socket {}", socket);
                         try {
                             socket.close();
+                            LOG.debug("Closed socket {}", socket);
                         } catch (IOException e) {
                             if (LOG.isDebugEnabled()) {
-                                LOG.debug("Caught exception closing socket", e);
+                                LOG.debug("Caught exception closing socket " + socket + ". This exception will be ignored.", e);
                             }
                         } finally {
                             latch.countDown();
@@ -554,14 +558,20 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
                     latch.await(1,TimeUnit.SECONDS);
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
+                } finally {
+                    taskRunnerFactory.shutdownNow();
                 }
 
             } else {
-
+                // close synchronously
+                LOG.trace("Closing socket {}", socket);
                 try {
                     socket.close();
+                    LOG.debug("Closed socket {}", socket);
                 } catch (IOException e) {
-                    LOG.debug("Caught exception closing socket",e);
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug("Caught exception closing socket " + socket + ". This exception will be ignored.", e);
+                    }
                 }
             }
         }

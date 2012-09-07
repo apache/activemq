@@ -30,9 +30,9 @@ import org.apache.activemq.command.Message;
 import org.apache.activemq.command.RemoveInfo;
 import org.apache.activemq.command.Response;
 import org.apache.activemq.state.ConnectionStateTracker;
-import org.apache.activemq.thread.DefaultThreadPools;
 import org.apache.activemq.thread.Task;
 import org.apache.activemq.thread.TaskRunner;
+import org.apache.activemq.thread.TaskRunnerFactory;
 import org.apache.activemq.transport.CompositeTransport;
 import org.apache.activemq.transport.DefaultTransportListener;
 import org.apache.activemq.transport.FutureResponse;
@@ -63,6 +63,7 @@ public class FanoutTransport implements CompositeTransport {
     private final ConnectionStateTracker stateTracker = new ConnectionStateTracker();
     private final ConcurrentHashMap<Integer, RequestCounter> requestMap = new ConcurrentHashMap<Integer, RequestCounter>();
 
+    private final TaskRunnerFactory reconnectTaskFactory;
     private final TaskRunner reconnectTask;
     private boolean started;
 
@@ -157,7 +158,9 @@ public class FanoutTransport implements CompositeTransport {
 
     public FanoutTransport() throws InterruptedIOException {
         // Setup a task that is used to reconnect the a connection async.
-        reconnectTask = DefaultThreadPools.getDefaultTaskRunnerFactory().createTaskRunner(new Task() {
+        reconnectTaskFactory = new TaskRunnerFactory();
+        reconnectTaskFactory.init();
+        reconnectTask = reconnectTaskFactory.createTaskRunner(new Task() {
             public boolean iterate() {
                 return doConnect();
             }
@@ -291,27 +294,31 @@ public class FanoutTransport implements CompositeTransport {
     }
 
     public void stop() throws Exception {
-        synchronized (reconnectMutex) {
-            ServiceStopper ss = new ServiceStopper();
+        try {
+            synchronized (reconnectMutex) {
+                ServiceStopper ss = new ServiceStopper();
 
-            if (!started) {
-                return;
-            }
-            started = false;
-            disposed = true;
-            connected=false;
-
-            for (Iterator<FanoutTransportHandler> iter = transports.iterator(); iter.hasNext();) {
-                FanoutTransportHandler th = iter.next();
-                if (th.transport != null) {
-                    ss.stop(th.transport);
+                if (!started) {
+                    return;
                 }
-            }
+                started = false;
+                disposed = true;
+                connected=false;
 
-            LOG.debug("Stopped: " + this);
-            ss.throwFirstException();
+                for (Iterator<FanoutTransportHandler> iter = transports.iterator(); iter.hasNext();) {
+                    FanoutTransportHandler th = iter.next();
+                    if (th.transport != null) {
+                        ss.stop(th.transport);
+                    }
+                }
+
+                LOG.debug("Stopped: " + this);
+                ss.throwFirstException();
+            }
+        } finally {
+            reconnectTask.shutdown();
+            reconnectTaskFactory.shutdownNow();
         }
-        reconnectTask.shutdown();
     }
 
 	public int getMinAckCount() {

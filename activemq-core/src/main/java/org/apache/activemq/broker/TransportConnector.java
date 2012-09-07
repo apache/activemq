@@ -32,7 +32,6 @@ import org.apache.activemq.broker.region.ConnectorStatistics;
 import org.apache.activemq.command.BrokerInfo;
 import org.apache.activemq.command.ConnectionControl;
 import org.apache.activemq.security.MessageAuthorizationPolicy;
-import org.apache.activemq.thread.DefaultThreadPools;
 import org.apache.activemq.thread.TaskRunnerFactory;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportAcceptListener;
@@ -220,7 +219,7 @@ public class TransportConnector implements Connector, BrokerServiceAware {
         getServer().setAcceptListener(new TransportAcceptListener() {
             public void onAccept(final Transport transport) {
                 try {
-                    DefaultThreadPools.getDefaultTaskRunnerFactory().execute(new Runnable() {
+                    brokerService.getTaskRunnerFactory().execute(new Runnable() {
                         public void run() {
                             try {
                                 Connection connection = createConnection(transport);
@@ -310,8 +309,10 @@ public class TransportConnector implements Connector, BrokerServiceAware {
     // Implementation methods
     // -------------------------------------------------------------------------
     protected Connection createConnection(Transport transport) throws IOException {
+        // prefer to use task runner from broker service as stop task runner, as we can then
+        // tie it to the lifecycle of the broker service
         TransportConnection answer = new TransportConnection(this, transport, broker, disableAsyncDispatch ? null
-                : taskRunnerFactory);
+                : taskRunnerFactory, brokerService.getTaskRunnerFactory());
         boolean statEnabled = this.getStatistics().isEnabled();
         answer.getStatistics().setEnabled(statEnabled);
         answer.setMessageAuthorizationPolicy(messageAuthorizationPolicy);

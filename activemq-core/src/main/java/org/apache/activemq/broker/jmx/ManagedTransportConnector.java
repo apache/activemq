@@ -49,7 +49,10 @@ public class ManagedTransportConnector extends TransportConnector {
     }
 
     protected Connection createConnection(Transport transport) throws IOException {
-        return new ManagedTransportConnection(this, transport, getBroker(), isDisableAsyncDispatch() ? null : getTaskRunnerFactory(), managementContext, connectorName);
+        // prefer to use task runner from broker service as stop task runner, as we can then
+        // tie it to the lifecycle of the broker service
+        return new ManagedTransportConnection(this, transport, getBroker(), isDisableAsyncDispatch() ? null : getTaskRunnerFactory(),
+                getBrokerService().getTaskRunnerFactory(), managementContext, connectorName);
     }
 
     protected static synchronized long getNextConnectionId() {

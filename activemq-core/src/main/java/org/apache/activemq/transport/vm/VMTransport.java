@@ -26,9 +26,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.activemq.command.ShutdownInfo;
-import org.apache.activemq.thread.DefaultThreadPools;
 import org.apache.activemq.thread.Task;
 import org.apache.activemq.thread.TaskRunner;
+import org.apache.activemq.thread.TaskRunnerFactory;
 import org.apache.activemq.transport.FutureResponse;
 import org.apache.activemq.transport.ResponseCallback;
 import org.apache.activemq.transport.Transport;
@@ -55,6 +55,7 @@ public class VMTransport implements Transport, Task {
 
     // Implementation
     private LinkedBlockingQueue<Object> messageQueue;
+    private TaskRunnerFactory taskRunnerFactory;
     private TaskRunner taskRunner;
 
     // Transport State
@@ -188,6 +189,7 @@ public class VMTransport implements Transport, Task {
                     tr.shutdown(TimeUnit.SECONDS.toMillis(1));
                 } catch(Exception e) {
                 }
+                taskRunner = null;
             }
 
             // let the peer know that we are disconnecting after attempting
@@ -196,6 +198,12 @@ public class VMTransport implements Transport, Task {
             try {
                 peer.transportListener.onCommand(new ShutdownInfo());
             } catch (Exception ignore) {
+            }
+
+            // shutdown task runner factory
+            if (taskRunnerFactory != null) {
+                taskRunnerFactory.shutdownNow();
+                taskRunnerFactory = null;
             }
         }
     }
@@ -280,7 +288,11 @@ public class VMTransport implements Transport, Task {
                         throw new TransportDisposedIOException("The Transport has been disposed");
                     }
 
-                    taskRunner = result = DefaultThreadPools.getDefaultTaskRunnerFactory().createTaskRunner(this, "VMTransport: " + toString());
+                    if (taskRunnerFactory == null) {
+                        taskRunnerFactory = new TaskRunnerFactory("ActiveMQ VMTransport: " + toString());
+                        taskRunnerFactory.init();
+                    }
+                    taskRunner = result = taskRunnerFactory.createTaskRunner(this, "VMTransport: " + toString());
                 }
             }
         }

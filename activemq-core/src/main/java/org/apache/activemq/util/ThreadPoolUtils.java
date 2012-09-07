@@ -30,7 +30,7 @@ public final class ThreadPoolUtils {
 
     private static final Logger LOG = LoggerFactory.getLogger(ThreadPoolUtils.class);
 
-    public static final long DEFAULT_SHUTDOWN_AWAIT_TERMINATION = 30 * 1000L;
+    public static final long DEFAULT_SHUTDOWN_AWAIT_TERMINATION = 10 * 1000L;
 
     /**
      * Shutdown the given executor service only (ie not graceful shutdown).
@@ -38,7 +38,7 @@ public final class ThreadPoolUtils {
      * @see java.util.concurrent.ExecutorService#shutdown()
      */
     public static void shutdown(ExecutorService executorService) {
-        doShutdown(executorService, -1, true);
+        doShutdown(executorService, 0);
     }
 
     /**
@@ -70,7 +70,7 @@ public final class ThreadPoolUtils {
      * with a timeout value of {@link #DEFAULT_SHUTDOWN_AWAIT_TERMINATION} millis.
      */
     public static void shutdownGraceful(ExecutorService executorService) {
-        doShutdown(executorService, DEFAULT_SHUTDOWN_AWAIT_TERMINATION, false);
+        doShutdown(executorService, DEFAULT_SHUTDOWN_AWAIT_TERMINATION);
     }
 
     /**
@@ -83,62 +83,49 @@ public final class ThreadPoolUtils {
      * forces a shutdown. The parameter <tt>shutdownAwaitTermination</tt>
      * is used as timeout value waiting for orderly shutdown to
      * complete normally, before going aggressively.
-     * <p/>
-     * Notice if the given parameter <tt>shutdownAwaitTermination</tt> is negative, then a quick shutdown
-     * is commenced, by invoking the {@link java.util.concurrent.ExecutorService#shutdown()} method
-     * and then exit from this method (ie. no graceful shutdown is performed).
      *
      * @param executorService the executor service to shutdown
-     * @param shutdownAwaitTermination timeout in millis to wait for orderly shutdown, if the value if negative
-     *                                 then the thread pool is <b>not</b> graceful shutdown, but a regular shutdown
-     *                                 is commenced.
+     * @param shutdownAwaitTermination timeout in millis to wait for orderly shutdown
      */
     public static void shutdownGraceful(ExecutorService executorService, long shutdownAwaitTermination) {
-        doShutdown(executorService, shutdownAwaitTermination, false);
+        doShutdown(executorService, shutdownAwaitTermination);
     }
 
-    private static void doShutdown(ExecutorService executorService, long shutdownAwaitTermination, boolean quick) {
+    private static void doShutdown(ExecutorService executorService, long shutdownAwaitTermination) {
         // code from Apache Camel - org.apache.camel.impl.DefaultExecutorServiceManager
 
         if (executorService == null) {
             return;
         }
 
-        if (quick) {
-            // do not shutdown graceful, but just quick shutdown on the thread pool
-            executorService.shutdown();
-            LOG.debug("Quick shutdown of ExecutorService: {} is shutdown: {} and terminated: {}.",
-                    new Object[]{executorService, executorService.isShutdown(), executorService.isTerminated()});
-            return;
-        }
-
-        if (shutdownAwaitTermination <= 0) {
-            throw new IllegalArgumentException("ShutdownAwaitTermination must be a positive number, was: " + shutdownAwaitTermination);
-        }
-
         // shutting down a thread pool is a 2 step process. First we try graceful, and if that fails, then we go more aggressively
         // and try shutting down again. In both cases we wait at most the given shutdown timeout value given
-        // (total wait could then be 2 x shutdownAwaitTermination)
-        boolean warned = false;
-        StopWatch watch = new StopWatch();
+        // (total wait could then be 2 x shutdownAwaitTermination, but when we shutdown the 2nd time we are aggressive and thus
+        // we ought to shutdown much faster)
         if (!executorService.isShutdown()) {
+            boolean warned = false;
+            StopWatch watch = new StopWatch();
+
             LOG.trace("Shutdown of ExecutorService: {} with await termination: {} millis", executorService, shutdownAwaitTermination);
             executorService.shutdown();
-            try {
-                if (!awaitTermination(executorService, shutdownAwaitTermination)) {
-                    warned = true;
-                    LOG.warn("Forcing shutdown of ExecutorService: {} due first await termination elapsed.", executorService);
-                    executorService.shutdownNow();
-                    // we are now shutting down aggressively, so wait to see if we can completely shutdown or not
+
+            if (shutdownAwaitTermination > 0) {
+                try {
                     if (!awaitTermination(executorService, shutdownAwaitTermination)) {
-                        LOG.warn("Cannot completely force shutdown of ExecutorService: {} due second await termination elapsed.", executorService);
+                        warned = true;
+                        LOG.warn("Forcing shutdown of ExecutorService: {} due first await termination elapsed.", executorService);
+                        executorService.shutdownNow();
+                        // we are now shutting down aggressively, so wait to see if we can completely shutdown or not
+                        if (!awaitTermination(executorService, shutdownAwaitTermination)) {
+                            LOG.warn("Cannot completely force shutdown of ExecutorService: {} due second await termination elapsed.", executorService);
+                        }
                     }
+                } catch (InterruptedException e) {
+                    warned = true;
+                    LOG.warn("Forcing shutdown of ExecutorService: {} due interrupted.", executorService);
+                    // we were interrupted during shutdown, so force shutdown
+                    executorService.shutdownNow();
                 }
-            } catch (InterruptedException e) {
-                warned = true;
-                LOG.warn("Forcing shutdown of ExecutorService: {} due interrupted.", executorService);
-                // we were interrupted during shutdown, so force shutdown
-                executorService.shutdownNow();
             }
 
             // if we logged at WARN level, then report at INFO level when we are complete so the end user can see this in the log
@@ -155,8 +142,8 @@ public final class ThreadPoolUtils {
     /**
      * Awaits the termination of the thread pool.
      * <p/>
-     * This implementation will log every 5th second at INFO level that we are waiting, so the end user
-     * can see we are not hanging in case it takes longer time to shutdown the pool.
+     * This implementation will log every 2nd second at INFO level that we are waiting, so the end user
+     * can see we are not hanging in case it takes longer time to terminate the pool.
      *
      * @param executorService            the thread pool
      * @param shutdownAwaitTermination   time in millis to use as timeout
@@ -166,15 +153,15 @@ public final class ThreadPoolUtils {
     public static boolean awaitTermination(ExecutorService executorService, long shutdownAwaitTermination) throws InterruptedException {
         // log progress every 5th second so end user is aware of we are shutting down
         StopWatch watch = new StopWatch();
-        long interval = Math.min(5000, shutdownAwaitTermination);
+        long interval = Math.min(2000, shutdownAwaitTermination);
         boolean done = false;
         while (!done && interval > 0) {
             if (executorService.awaitTermination(interval, TimeUnit.MILLISECONDS)) {
                 done = true;
             } else {
-                LOG.info("Waited {} for ExecutorService: {} to shutdown...", TimeUtils.printDuration(watch.taken()), executorService);
+                LOG.info("Waited {} for ExecutorService: {} to terminate...", TimeUtils.printDuration(watch.taken()), executorService);
                 // recalculate interval
-                interval = Math.min(5000, shutdownAwaitTermination - watch.taken());
+                interval = Math.min(2000, shutdownAwaitTermination - watch.taken());
             }
         }
 
