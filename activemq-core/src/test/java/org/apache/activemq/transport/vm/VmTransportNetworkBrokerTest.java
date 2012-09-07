@@ -30,7 +30,6 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.bugs.embedded.ThreadExplorer;
 import org.apache.activemq.network.NetworkConnector;
-import org.apache.activemq.thread.DefaultThreadPools;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -93,21 +92,17 @@ public class VmTransportNetworkBrokerTest extends TestCase {
         broker.stop();
         broker.waitUntilStopped();
 
-        // must only be called when all brokers and connections are done!
-        DefaultThreadPools.shutdown();
-
         // let it settle
         TimeUnit.SECONDS.sleep(5);        
 
         // get final threads but filter out any daemon threads that the JVM may have created.
         Thread[] threads = filterDaemonThreads(ThreadExplorer.listThreads());
         int threadCountAfterStop = threads.length;
-        
-        if (LOG.isDebugEnabled()) {
-        	LOG.debug(ThreadExplorer.show("active after stop"));
-        	LOG.debug("originalThreadCount=" + originalThreadCount + " threadCountAfterStop=" + threadCountAfterStop); 
-        }
-        
+
+        // lets see the thread counts at INFO level so they are always in the test log
+        LOG.info(ThreadExplorer.show("active after stop"));
+        LOG.info("originalThreadCount=" + originalThreadCount + " threadCountAfterStop=" + threadCountAfterStop);
+
         assertTrue("Threads are leaking: " + 
         		ThreadExplorer.show("active after stop") + 
         		". originalThreadCount=" + 
