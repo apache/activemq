@@ -32,17 +32,19 @@ import org.apache.activemq.command.ActiveMQBlobMessage;
  */
 public class BlobUploader {
 
-    private BlobTransferPolicy blobTransferPolicy;
+    private final BlobTransferPolicy blobTransferPolicy;
     private File file;
     private InputStream in;
 
     public BlobUploader(BlobTransferPolicy blobTransferPolicy, InputStream in) {
-        this.blobTransferPolicy = blobTransferPolicy;
+        // need to do a defensive copy
+        this.blobTransferPolicy = blobTransferPolicy.copy();
         this.in = in;
     }
 
     public BlobUploader(BlobTransferPolicy blobTransferPolicy, File file) {
-        this.blobTransferPolicy = blobTransferPolicy;
+        // need to do a defensive copy
+        this.blobTransferPolicy = blobTransferPolicy.copy();
         this.file = file;
     }
 

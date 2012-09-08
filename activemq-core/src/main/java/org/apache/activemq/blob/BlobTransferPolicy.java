@@ -42,7 +42,9 @@ public class BlobTransferPolicy {
         that.defaultUploadUrl = this.defaultUploadUrl;
         that.brokerUploadUrl = this.brokerUploadUrl;
         that.uploadUrl = this.uploadUrl;
+        that.bufferSize = this.bufferSize;
         that.uploadStrategy = this.uploadStrategy;
+        that.downloadStrategy = this.downloadStrategy;
         return that;
     }
 

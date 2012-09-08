@@ -27,10 +27,11 @@ import org.apache.activemq.command.ActiveMQBlobMessage;
  */
 public class BlobDownloader {
 
-    private BlobTransferPolicy blobTransferPolicy;
+    private final BlobTransferPolicy blobTransferPolicy;
     
     public BlobDownloader(BlobTransferPolicy transferPolicy) {
-        this.blobTransferPolicy = transferPolicy;
+        // need to do a defensive copy
+        this.blobTransferPolicy = transferPolicy.copy();
     }
     
     public InputStream getInputStream(ActiveMQBlobMessage message) throws IOException, JMSException {
