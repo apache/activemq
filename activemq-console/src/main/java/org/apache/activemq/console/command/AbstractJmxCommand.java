@@ -64,7 +64,8 @@ public abstract class AbstractJmxCommand extends AbstractCommand {
     }
 
     public static boolean isSunJVM() {
-        return getJVM().equals("Sun Microsystems Inc.");
+        // need to check for Oracle as that is the name for Java7 onwards.
+        return getJVM().equals("Sun Microsystems Inc.") || getJVM().startsWith("Oracle");
     }
 
     /**
