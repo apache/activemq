@@ -248,7 +248,7 @@ public class ActiveMQMessageProducer extends ActiveMQMessageProducerSupport impl
         }
 
         ActiveMQDestination dest;
-        if (destination == info.getDestination()) {
+        if (destination.equals(info.getDestination())) {
             dest = (ActiveMQDestination)destination;
         } else if (info.getDestination() == null) {
             dest = ActiveMQDestination.transform(destination);
