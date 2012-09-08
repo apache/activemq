@@ -1901,19 +1901,21 @@ public class BrokerService implements Service {
                           " only has " + dirFreeSpace / (1024 * 1024) + " mb of usable space");
             }
 
-            long maxJournalFileSize;
+            if (isPersistent()) {
+                long maxJournalFileSize;
 
-            if (usage.getTempUsage().getStore() != null) {
-                maxJournalFileSize = usage.getTempUsage().getStore().getJournalMaxFileLength();
-            } else {
-                maxJournalFileSize = org.apache.kahadb.journal.Journal.DEFAULT_MAX_FILE_LENGTH;
-            }
+                if (usage.getTempUsage().getStore() != null) {
+                    maxJournalFileSize = usage.getTempUsage().getStore().getJournalMaxFileLength();
+                } else {
+                    maxJournalFileSize = org.apache.kahadb.journal.Journal.DEFAULT_MAX_FILE_LENGTH;
+                }
 
-            if (storeLimit < maxJournalFileSize) {
-                LOG.error("Temporary Store limit is " + storeLimit / (1024 * 1024) +
-                          " mb, whilst the max journal file size for the temporary store is: " +
-                          maxJournalFileSize / (1024 * 1024) + " mb, " +
-                          "the temp store will not accept any data when used.");
+                if (storeLimit < maxJournalFileSize) {
+                    LOG.error("Temporary Store limit is " + storeLimit / (1024 * 1024) +
+                              " mb, whilst the max journal file size for the temporary store is: " +
+                              maxJournalFileSize / (1024 * 1024) + " mb, " +
+                              "the temp store will not accept any data when used.");
+                }
             }
         }
     }
