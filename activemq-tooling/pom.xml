@@ -28,7 +28,7 @@
   <groupId>org.apache.activemq.tooling</groupId>
   <artifactId>activemq-tooling</artifactId>
   <packaging>pom</packaging>
-  <name>ActiveMQ Tooling</name>
+  <name>ActiveMQ :: Tooling</name>
 
   <modules>
     <module>maven-activemq-memtest-plugin</module>

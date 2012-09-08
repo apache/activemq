@@ -27,7 +27,7 @@
   </parent>
 
   <artifactId>activemq-openwire-generator</artifactId>
-  <name>Openwire Generator</name>
+  <name>ActiveMQ :: Openwire Generator</name>
 
   <dependencies>
     <dependency>
