@@ -35,7 +35,7 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.RMIServerSocketFactory;
 import java.util.*;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -68,7 +68,7 @@ public class ManagementContext implements Service {
     private ObjectName namingServiceObjectName;
     private Registry registry;
     private ServerSocket registrySocket;
-    private final List<ObjectName> registeredMBeanNames = new CopyOnWriteArrayList<ObjectName>();
+    private final Map<ObjectName, ObjectName> registeredMBeanNames = new ConcurrentHashMap<ObjectName, ObjectName>();
     private boolean allowRemoteAddressInMBeanNames = true;
     private String brokerName;
 
@@ -130,14 +130,19 @@ public class ManagementContext implements Service {
     public void stop() throws Exception {
         if (started.compareAndSet(true, false)) {
             MBeanServer mbeanServer = getMBeanServer();
+
+            // unregister the mbeans we have registered
             if (mbeanServer != null) {
-                for (Iterator<ObjectName> iter = registeredMBeanNames.iterator(); iter.hasNext();) {
-                    ObjectName name = iter.next();
-                    LOG.debug("Unregistering MBean {}", name);
-                    mbeanServer.unregisterMBean(name);
+                for (Map.Entry<ObjectName, ObjectName> entry : registeredMBeanNames.entrySet()) {
+                    ObjectName actualName = entry.getValue();
+                    if (actualName != null && beanServer.isRegistered(actualName)) {
+                        LOG.debug("Unregistering MBean {}", actualName);
+                        mbeanServer.unregisterMBean(actualName);
+                    }
                 }
             }
             registeredMBeanNames.clear();
+
             JMXConnectorServer server = connectorServer;
             connectorServer = null;
             if (server != null) {
@@ -347,11 +352,17 @@ public class ManagementContext implements Service {
     
     public ObjectInstance registerMBean(Object bean, ObjectName name) throws Exception{
         ObjectInstance result = getMBeanServer().registerMBean(bean, name);
-        this.registeredMBeanNames.add(name);
+        this.registeredMBeanNames.put(name, result.getObjectName());
         return result;
     }
     
-    public Set<ObjectName>  queryNames(ObjectName name, QueryExp query) throws Exception{
+    public Set<ObjectName> queryNames(ObjectName name, QueryExp query) throws Exception{
+    	if (name != null) {
+    		ObjectName actualName = this.registeredMBeanNames.get(name);
+    		if (actualName != null) {
+    			return getMBeanServer().queryNames(actualName, query);
+    		}
+        }
         return getMBeanServer().queryNames(name, query);
     }
     
@@ -366,8 +377,10 @@ public class ManagementContext implements Service {
      * @throws JMException
      */
     public void unregisterMBean(ObjectName name) throws JMException {
-        if (beanServer != null && beanServer.isRegistered(name) && this.registeredMBeanNames.remove(name)) {
-            beanServer.unregisterMBean(name);
+        ObjectName actualName = this.registeredMBeanNames.get(name);
+        if (beanServer != null && actualName != null && beanServer.isRegistered(actualName) && this.registeredMBeanNames.remove(name) != null) {
+            LOG.debug("Unregistering MBean {}", actualName);
+            beanServer.unregisterMBean(actualName);
         }
     }
 
