@@ -83,12 +83,19 @@ public class ManagementContext implements Service {
     public void start() throws IOException {
         // lets force the MBeanServer to be created if needed
         if (started.compareAndSet(false, true)) {
+            // force mbean server to be looked up, so we have it
             getMBeanServer();
+
             if (connectorServer != null) {
                 try {
-                    getMBeanServer().invoke(namingServiceObjectName, "start", null, null);
+                    if (getMBeanServer().isRegistered(namingServiceObjectName)) {
+                        LOG.debug("Invoking start on mbean: {}", namingServiceObjectName);
+                        getMBeanServer().invoke(namingServiceObjectName, "start", null, null);
+                    }
                 } catch (Throwable ignore) {
+                    LOG.debug("Error invoking start on mbean " + namingServiceObjectName + ". This exception is ignored.", ignore);
                 }
+
                 Thread t = new Thread("JMX connector") {
                     @Override
                     public void run() {
@@ -171,14 +178,27 @@ public class ManagementContext implements Service {
                 // check to see if the factory knows about this server
                 List list = MBeanServerFactory.findMBeanServer(null);
                 if (list != null && !list.isEmpty() && list.contains(beanServer)) {
+                    LOG.debug("Releasing MBeanServer {}", beanServer);
                     MBeanServerFactory.releaseMBeanServer(beanServer);
                 }
             }
             beanServer = null;
+
             if (registrySocket!=null) {
                 try {
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug("Closing registry socket {}, is closed: {}, is bound: {}",
+                            new Object[]{registrySocket, registrySocket.isClosed(), registrySocket.isBound()});
+                    }
+
                     registrySocket.close();
+
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug("Closed registry socket {}, is closed: {}, is bound: {}",
+                            new Object[]{registrySocket, registrySocket.isClosed(), registrySocket.isBound()});
+                    }
                 } catch (IOException e) {
+                    LOG.debug("Error closing registry socket " + registrySocket + ". This exception is ignored.", e);
                 }
                 registrySocket = null;
             }
@@ -471,10 +491,9 @@ public class ManagementContext implements Service {
     /**
      * @param mbeanServer
      * @throws MalformedObjectNameException
-     * @throws MalformedURLException
      * @throws IOException
      */
-    private void createConnector(MBeanServer mbeanServer) throws MalformedObjectNameException, MalformedURLException, IOException {
+    private void createConnector(MBeanServer mbeanServer) throws MalformedObjectNameException, IOException {
         // Create the NamingService, needed by JSR 160
         try {
             if (registry == null) {
