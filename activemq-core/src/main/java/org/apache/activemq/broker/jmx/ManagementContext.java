@@ -16,27 +16,33 @@
  */
 package org.apache.activemq.broker.jmx;
 
+import java.io.IOException;
+import java.lang.reflect.Method;
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
+import javax.management.Attribute;
+import javax.management.InstanceNotFoundException;
+import javax.management.JMException;
+import javax.management.MBeanServer;
+import javax.management.MBeanServerFactory;
+import javax.management.MBeanServerInvocationHandler;
+import javax.management.MalformedObjectNameException;
+import javax.management.ObjectInstance;
+import javax.management.ObjectName;
+import javax.management.QueryExp;
+import javax.management.remote.JMXConnectorServer;
+import javax.management.remote.JMXConnectorServerFactory;
+import javax.management.remote.JMXServiceURL;
+
 import org.apache.activemq.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
-
-import javax.management.*;
-import javax.management.remote.JMXConnectorServer;
-import javax.management.remote.JMXConnectorServerFactory;
-import javax.management.remote.JMXServiceURL;
-import javax.net.ServerSocketFactory;
-import java.io.IOException;
-import java.lang.reflect.Method;
-import java.net.InetAddress;
-import java.net.MalformedURLException;
-import java.net.ServerSocket;
-import java.rmi.registry.LocateRegistry;
-import java.rmi.registry.Registry;
-import java.rmi.server.RMIServerSocketFactory;
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * An abstraction over JMX mbean registration
@@ -67,7 +73,6 @@ public class ManagementContext implements Service {
     private JMXConnectorServer connectorServer;
     private ObjectName namingServiceObjectName;
     private Registry registry;
-    private ServerSocket registrySocket;
     private final Map<ObjectName, ObjectName> registeredMBeanNames = new ConcurrentHashMap<ObjectName, ObjectName>();
     private boolean allowRemoteAddressInMBeanNames = true;
     private String brokerName;
@@ -83,6 +88,12 @@ public class ManagementContext implements Service {
     public void start() throws IOException {
         // lets force the MBeanServer to be created if needed
         if (started.compareAndSet(false, true)) {
+
+            // fallback and use localhost
+            if (connectorHost == null) {
+                connectorHost = "localhost";
+            }
+
             // force mbean server to be looked up, so we have it
             getMBeanServer();
 
@@ -183,25 +194,6 @@ public class ManagementContext implements Service {
                 }
             }
             beanServer = null;
-
-            if (registrySocket!=null) {
-                try {
-                    if (LOG.isDebugEnabled()) {
-                        LOG.debug("Closing registry socket {}, is closed: {}, is bound: {}",
-                            new Object[]{registrySocket, registrySocket.isClosed(), registrySocket.isBound()});
-                    }
-
-                    registrySocket.close();
-
-                    if (LOG.isDebugEnabled()) {
-                        LOG.debug("Closed registry socket {}, is closed: {}, is bound: {}",
-                            new Object[]{registrySocket, registrySocket.isClosed(), registrySocket.isBound()});
-                    }
-                } catch (IOException e) {
-                    LOG.debug("Error closing registry socket " + registrySocket + ". This exception is ignored.", e);
-                }
-                registrySocket = null;
-            }
         }
 
         // clear reference to aid GC
@@ -497,13 +489,8 @@ public class ManagementContext implements Service {
         // Create the NamingService, needed by JSR 160
         try {
             if (registry == null) {
-                registry = LocateRegistry.createRegistry(connectorPort, null, new RMIServerSocketFactory() {
-                    public ServerSocket createServerSocket(int port)
-                            throws IOException {
-                        registrySocket = ServerSocketFactory.getDefault().createServerSocket(connectorPort, 0, InetAddress.getByName(connectorHost));
-                        registrySocket.setReuseAddress(true);
-                        return registrySocket;
-                    }});
+                LOG.debug("Creating RMIRegistry on port {}", connectorPort);
+                registry = LocateRegistry.createRegistry(connectorPort);
             }
             namingServiceObjectName = ObjectName.getInstance("naming:type=rmiregistry");
 
