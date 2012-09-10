@@ -44,10 +44,10 @@ public class DefaultDatabaseLocker extends AbstractLocker {
     protected DataSource dataSource;
     protected Statements statements;
 
-    protected PreparedStatement lockCreateStatement;
-    protected PreparedStatement lockUpdateStatement;
-    protected Connection connection;
-    protected boolean stopping;
+    protected volatile PreparedStatement lockCreateStatement;
+    protected volatile PreparedStatement lockUpdateStatement;
+    protected volatile Connection connection;
+    protected volatile boolean stopping;
     protected Handler<Exception> exceptionHandler;
     protected int queryTimeout = 10;
 
@@ -148,23 +148,25 @@ public class DefaultDatabaseLocker extends AbstractLocker {
         } catch (SQLFeatureNotSupportedException e) {
             LOG.warn("Failed to cancel locking query on dataSource" + dataSource, e);    		
         }
-        try {
-            if (connection != null && !connection.isClosed()) {
+
+        // when the connection is closed from an outside source (lost TCP
+        // connection, db server, etc) and this connection is managed by a pool
+        // it is important to close the connection so that we don't leak
+        // connections
+
+        if (connection != null) {
+            try {
+                connection.rollback();
+            } catch (SQLException sqle) {
+                LOG.warn("Exception while rollbacking the connection on shutdown. This exception is ignored.", sqle);
+            } finally {
                 try {
-                    connection.rollback();
-                } catch (SQLException sqle) {
-                    LOG.warn("Exception while rollbacking the connection on shutdown", sqle);
-                } finally {
-                    try {
-                        connection.close();
-                    } catch (SQLException ignored) {
-                        LOG.debug("Exception while closing connection on shutdown", ignored);
-                    }
-                    lockCreateStatement = null;
+                    connection.close();
+                } catch (SQLException ignored) {
+                    LOG.debug("Exception while closing connection on shutdown. This exception is ignored.", ignored);
                 }
+                lockCreateStatement = null;
             }
-        } catch (SQLException sqle) {
-            LOG.warn("Exception while checking close status of connection on shutdown", sqle);
         }
     }
 
