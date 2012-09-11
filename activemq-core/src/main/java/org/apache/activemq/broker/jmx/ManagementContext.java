@@ -174,7 +174,7 @@ public class ManagementContext implements Service {
                 }
                 // stop naming service mbean
                 try {
-                    if (getMBeanServer().isRegistered(namingServiceObjectName)) {
+                    if (namingServiceObjectName != null && getMBeanServer().isRegistered(namingServiceObjectName)) {
                         LOG.debug("Stopping MBean {}", namingServiceObjectName);
                         getMBeanServer().invoke(namingServiceObjectName, "stop", null, null);
                         LOG.debug("Unregistering MBean {}", namingServiceObjectName);
