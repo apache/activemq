@@ -710,7 +710,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
             command.setDestination(dest);
             command.setSubscriptionKey(subscriptionKey);
             command.setMessageId(messageId.toString());
-            command.setTransactionInfo(transactionIdTransformer.transform(ack.getTransactionId()));
+            command.setTransactionInfo(ack != null ? transactionIdTransformer.transform(ack.getTransactionId()) : null);
             if (ack != null && ack.isUnmatchedAck()) {
                 command.setAck(UNMATCHED);
             } else {
