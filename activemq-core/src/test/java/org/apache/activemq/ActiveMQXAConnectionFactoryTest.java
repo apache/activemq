@@ -336,6 +336,8 @@ public class ActiveMQXAConnectionFactoryTest extends CombinationTestSupport {
         connection.close();
 
         assertTransactionGoneFromBroker(tid);
+
+        broker.stop();
     }
 
     private void assertTransactionGoneFromFailoverState(
