@@ -78,7 +78,8 @@ public class JobSchedulerTest {
         String str = new String("test1");
         scheduler.schedule("id:1", new ByteSequence(str.getBytes()), cronTab, 0, 0, 0);
 
-        assertTrue(latch.await(60, TimeUnit.SECONDS));
+        // need a little slack so go over 60 seconds
+        assertTrue(latch.await(70, TimeUnit.SECONDS));
         assertEquals(0, latch.getCount());
     }
 

@@ -50,7 +50,8 @@ public class SecurityJMXTest extends TestCase {
 	public void setUp() throws Exception {
 		broker = createBroker();
 		broker.waitUntilStarted();
-		Thread.sleep(500);
+
+		Thread.sleep(1000);
 	}
 
 	public void tearDown() throws Exception {
@@ -81,7 +82,7 @@ public class SecurityJMXTest extends TestCase {
         headers.put("JMSDeliveryMode", Integer.toString(DeliveryMode.PERSISTENT));
         String msgId = queueMbean.sendTextMessage(headers, "test", "system", "manager");
         // allow message to expire on the queue
-        TimeUnit.SECONDS.sleep(3);
+        TimeUnit.SECONDS.sleep(4);
         
         Connection c = new ActiveMQConnectionFactory("vm://localhost").createConnection("system", "manager");
         c.start();
