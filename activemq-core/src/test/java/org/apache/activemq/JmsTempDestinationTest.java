@@ -44,6 +44,7 @@ import javax.jms.TextMessage;
 import junit.framework.TestCase;
 import org.apache.activemq.transport.TransportListener;
 import org.apache.activemq.transport.vm.VMTransport;
+import org.apache.activemq.util.Wait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -246,15 +247,23 @@ public class JmsTempDestinationTest extends TestCase {
      * @throws JMSException
      * @throws InterruptedException
      */
-    public void testPublishFailsForDestoryedTempDestination() throws JMSException, InterruptedException {
+    public void testPublishFailsForDestroyedTempDestination() throws Exception {
 
         Connection tempConnection = factory.createConnection();
         connections.add(tempConnection);
         Session tempSession = tempConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        TemporaryQueue queue = tempSession.createTemporaryQueue();
+        final TemporaryQueue queue = tempSession.createTemporaryQueue();
 
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         connection.start();
+
+        final ActiveMQConnection activeMQConnection = (ActiveMQConnection) connection;
+        assertTrue("creation advisory received in time with async dispatch", Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                return activeMQConnection.activeTempDestinations.containsKey(queue);
+            }
+        }));
 
         // This message delivery should work since the temp connection is still
         // open.
