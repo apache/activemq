@@ -79,6 +79,11 @@ public class BrokerView implements BrokerViewMBean {
         return ActiveMQConnectionMetaData.PROVIDER_VERSION;
     }
 
+    @Override
+    public String getUptime() {
+        return brokerService.getUptime();
+    }
+
     public void gc() throws Exception {
         brokerService.getBroker().gc();
         try {

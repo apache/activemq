@@ -47,6 +47,12 @@ public interface BrokerViewMBean extends Service {
     String getBrokerVersion();
 
     /**
+     * @return Uptime of the broker.
+     */
+    @MBeanInfo("Uptime of the broker.")
+    String getUptime();
+
+    /**
      * The Broker will flush it's caches so that the garbage collector can
      * reclaim more memory.
      *

@@ -25,6 +25,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -112,6 +113,7 @@ import org.apache.activemq.util.InetAddressUtil;
 import org.apache.activemq.util.JMXSupport;
 import org.apache.activemq.util.ServiceStopper;
 import org.apache.activemq.util.ThreadPoolUtils;
+import org.apache.activemq.util.TimeUtils;
 import org.apache.activemq.util.URISupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -231,6 +233,7 @@ public class BrokerService implements Service {
     private final Object persistenceAdapterLock = new Object();
     private Throwable startException = null;
     private boolean startAsync = false;
+    private Date startDate;
 
     static {
         String localHostName = "localhost";
@@ -483,6 +486,15 @@ public class BrokerService implements Service {
         }
     }
 
+    public String getUptime() {
+        // compute and log uptime
+        if (startDate == null) {
+            return "not started";
+        }
+        long delta = new Date().getTime() - startDate.getTime();
+        return TimeUtils.printDuration(delta);
+    }
+
     public boolean isStarted() {
         return started.get();
     }
@@ -537,6 +549,7 @@ public class BrokerService implements Service {
             return;
         }
 
+        startDate = new Date();
         MDC.put("activemq.broker", brokerName);
 
         try {
@@ -778,6 +791,9 @@ public class BrokerService implements Service {
         this.destinationFactory = null;
 
         if (LOG.isInfoEnabled()) {
+            if (startDate != null) {
+                LOG.info("Uptime {}", getUptime());
+            }
             LOG.info("ActiveMQ " + getBrokerVersion() + " JMS Message Broker ("
                     + getBrokerName() + ", " + brokerId + ") stopped");
         }
@@ -793,6 +809,9 @@ public class BrokerService implements Service {
         }
 
         MDC.remove("activemq.broker");
+
+        // and clear start date
+        startDate = null;
 
         stopper.throwFirstException();
     }
