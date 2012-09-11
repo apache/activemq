@@ -25,6 +25,7 @@ import java.io.ObjectOutputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.KeyStore;
+import java.security.SecureRandom;
 
 import javax.jms.ExceptionListener;
 import javax.jms.JMSException;
@@ -120,6 +121,22 @@ public class ActiveMQSslConnectionFactoryTest extends CombinationTestSupport {
         ActiveMQSslConnectionFactory cf = new ActiveMQSslConnectionFactory("failover:(" + sslUri + ")?maxReconnectAttempts=4");
         cf.setTrustStore("server.keystore");
         cf.setTrustStorePassword("password");
+        connection = (ActiveMQConnection)cf.createConnection();
+        LOG.info("Created client connection");
+        assertNotNull(connection);
+        connection.start();
+        connection.stop();
+
+        brokerStop();
+    }
+
+    public void testFailoverSslConnectionWithKeyAndTrustManagers() throws Exception {
+        String sslUri = "ssl://localhost:61611";
+        broker = createSslBroker(sslUri);
+        assertNotNull(broker);
+
+        ActiveMQSslConnectionFactory cf = new ActiveMQSslConnectionFactory("failover:(" + sslUri + ")?maxReconnectAttempts=4");
+        cf.setKeyAndTrustManagers(getKeyManager(), getTrustManager(), new SecureRandom());
         connection = (ActiveMQConnection)cf.createConnection();
         LOG.info("Created client connection");
         assertNotNull(connection);

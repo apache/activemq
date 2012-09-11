@@ -104,9 +104,9 @@ public class ActiveMQSslConnectionFactory extends ActiveMQConnectionFactory {
             if (keyStore != null || trustStore != null) {
                 keyManager = createKeyManager();
                 trustManager = createTrustManager();
-                if (keyManager != null || trustManager != null) {
-                    SslContext.setCurrentSslContext(new SslContext(keyManager, trustManager, secureRandom));
-                }
+            }
+            if (keyManager != null || trustManager != null) {
+                SslContext.setCurrentSslContext(new SslContext(keyManager, trustManager, secureRandom));
             }
             return super.createTransport();
         } catch (Exception e) {
