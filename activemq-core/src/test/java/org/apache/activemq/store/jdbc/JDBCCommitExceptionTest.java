@@ -164,7 +164,7 @@ public class JDBCCommitExceptionTest extends TestCase {
         dataSource.setCreateDatabase("create");
 
         jdbc.setDataSource(dataSource);
-        jdbc.setUseDatabaseLock(false);
+        jdbc.setUseLock(false);
         jdbc.deleteAllMessages();
 
         broker.setPersistenceAdapter(jdbc);

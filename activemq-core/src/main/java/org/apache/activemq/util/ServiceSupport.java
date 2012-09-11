@@ -51,6 +51,7 @@ public abstract class ServiceSupport implements Service {
             boolean success = false;
             stopped.set(false);
             try {
+                preStart();
                 doStart();
                 success = true;
             } finally {
@@ -70,6 +71,8 @@ public abstract class ServiceSupport implements Service {
                 doStop(stopper);
             } catch (Exception e) {
                 stopper.onException(this, e);
+            } finally {
+                postStop(stopper);
             }
             stopped.set(true);
             started.set(false);
@@ -110,7 +113,23 @@ public abstract class ServiceSupport implements Service {
         this.serviceListeners.remove(l);
     }
 
+    /**
+     *
+     * handle for various operations after stopping the service (like locking)
+     *
+     * @throws Exception
+     */
+    protected void postStop(ServiceStopper stopper) throws Exception {}
+
     protected abstract void doStop(ServiceStopper stopper) throws Exception;
+
+    /**
+     *
+     * handle for various operations before starting the service (like locking)
+     *
+     * @throws Exception
+     */
+    protected void preStart() throws Exception {}
 
     protected abstract void doStart() throws Exception;
 }

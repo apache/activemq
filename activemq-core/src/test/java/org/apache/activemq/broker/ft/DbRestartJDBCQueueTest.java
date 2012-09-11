@@ -28,9 +28,10 @@ import javax.jms.Session;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.JmsTopicSendReceiveWithTwoConnectionsTest;
 import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.store.jdbc.DataSourceSupport;
+import org.apache.activemq.store.jdbc.DataSourceServiceSupport;
 import org.apache.activemq.store.jdbc.JDBCPersistenceAdapter;
 import org.apache.activemq.util.DefaultIOExceptionHandler;
+import org.apache.activemq.util.IOHelper;
 import org.apache.derby.jdbc.EmbeddedDataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,7 +52,7 @@ public class DbRestartJDBCQueueTest extends JmsTopicSendReceiveWithTwoConnection
         topic = false;
         verbose = true;
         // startup db
-        sharedDs = (EmbeddedDataSource) new DataSourceSupport().getDataSource();
+        sharedDs = (EmbeddedDataSource) DataSourceServiceSupport.createDataSource(IOHelper.getDefaultDataDirectory());
 
         broker = new BrokerService();
 
@@ -65,9 +66,9 @@ public class DbRestartJDBCQueueTest extends JmsTopicSendReceiveWithTwoConnection
         broker.setDeleteAllMessagesOnStartup(true);
         JDBCPersistenceAdapter persistenceAdapter = new JDBCPersistenceAdapter();
         persistenceAdapter.setDataSource(sharedDs);
-        persistenceAdapter.setUseDatabaseLock(false);
+        persistenceAdapter.setUseLock(false);
         persistenceAdapter.setLockKeepAlivePeriod(500);
-        persistenceAdapter.setLockAcquireSleepInterval(500);
+        persistenceAdapter.getLocker().setLockAcquireSleepInterval(500);
         broker.setPersistenceAdapter(persistenceAdapter);
         broker.start();
         super.setUp();

@@ -347,7 +347,7 @@ public class FailoverStaticNetworkTest {
                         brokerA.setBrokerName("Pair");
                         brokerA.setBrokerObjectName(new ObjectName(brokerA.getManagementContext().getJmxDomainName() + ":" + "BrokerName="
                                 + JMXSupport.encodeObjectNamePart("A") + "," + "Type=Broker"));
-                        ((KahaDBPersistenceAdapter)brokerA.getPersistenceAdapter()).setDatabaseLockedWaitDelay(1000);
+                        ((KahaDBPersistenceAdapter)brokerA.getPersistenceAdapter()).getLocker().setLockAcquireSleepInterval(1000);
                         brokerA.start();
                         brokerA.waitUntilStopped();
 
@@ -378,7 +378,7 @@ public class FailoverStaticNetworkTest {
                         // so they can coexist in local jmx we set the object name b/c the brokername identifies the shared store
                         brokerA1.setBrokerObjectName(new ObjectName(brokerA.getManagementContext().getJmxDomainName() + ":" + "BrokerName="
                             + JMXSupport.encodeObjectNamePart("A1") + "," + "Type=Broker"));
-                        ((KahaDBPersistenceAdapter)brokerA1.getPersistenceAdapter()).setDatabaseLockedWaitDelay(1000);
+                        ((KahaDBPersistenceAdapter)brokerA1.getPersistenceAdapter()).getLocker().setLockAcquireSleepInterval(1000);
                         brokerA1.start();
                         brokerA1.waitUntilStopped();
 

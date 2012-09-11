@@ -21,6 +21,7 @@ import java.io.IOException;
 
 import javax.sql.DataSource;
 
+import org.apache.activemq.broker.LockableServiceSupport;
 import org.apache.activemq.util.IOHelper;
 import org.apache.derby.jdbc.EmbeddedDataSource;
 
@@ -30,16 +31,16 @@ import org.apache.derby.jdbc.EmbeddedDataSource;
  * 
  * 
  */
-public class DataSourceSupport {
+abstract public class DataSourceServiceSupport extends LockableServiceSupport {
 
     private String dataDirectory = IOHelper.getDefaultDataDirectory();
     private File dataDirectoryFile;
     private DataSource dataSource;
 
-    public DataSourceSupport() {
+    public DataSourceServiceSupport() {
     }
 
-    public DataSourceSupport(DataSource dataSource) {
+    public DataSourceServiceSupport(DataSource dataSource) {
         this.dataSource = dataSource;
     }
 
@@ -64,7 +65,7 @@ public class DataSourceSupport {
 
     public DataSource getDataSource() throws IOException {
         if (dataSource == null) {
-            dataSource = createDataSource();
+            dataSource = createDataSource(getDataDirectoryFile().getCanonicalPath());
             if (dataSource == null) {
                 throw new IllegalArgumentException("No dataSource property has been configured");
             }
@@ -76,10 +77,10 @@ public class DataSourceSupport {
         this.dataSource = dataSource;
     }
 
-    protected DataSource createDataSource() throws IOException {
+    public static DataSource createDataSource(String homeDir) throws IOException {
 
         // Setup the Derby datasource.
-        System.setProperty("derby.system.home", getDataDirectoryFile().getCanonicalPath());
+        System.setProperty("derby.system.home", homeDir);
         System.setProperty("derby.storage.fileSyncTransactionLog", "true");
         System.setProperty("derby.storage.pageCacheSize", "100");
 
@@ -92,5 +93,7 @@ public class DataSourceSupport {
     public String toString() {
         return "" + dataSource;
     }
+
+
 
 }

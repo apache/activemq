@@ -16,36 +16,42 @@
  */
 package org.apache.activemq.broker;
 
-import org.apache.activemq.broker.Locker;
-import org.apache.activemq.util.ServiceSupport;
-
 import java.io.IOException;
 
-public abstract class AbstractLocker extends ServiceSupport implements Locker {
+/**
+ * A lockable broker resource. Uses {@link Locker} to guarantee that only single instance is running
+ *
+ */
+public interface Lockable {
 
-    public static final long DEFAULT_LOCK_ACQUIRE_SLEEP_INTERVAL = 10 * 1000;
+    /**
+     * Turn locking on/off on the resource
+     *
+     * @param useLock
+     */
+    public void setUseLock(boolean useLock);
 
-    protected String name;
-    protected boolean failIfLocked = false;
-    protected long lockAcquireSleepInterval = DEFAULT_LOCK_ACQUIRE_SLEEP_INTERVAL;
+    /**
+     * Create a default locker
+     *
+     * @return default locker
+     * @throws IOException
+     */
+    public Locker createDefaultLocker() throws IOException;
 
-    @Override
-    public boolean keepAlive() throws IOException {
-        return true;
-    }
+    /**
+     * Set locker to be used
+     *
+     * @param locker
+     * @throws IOException
+     */
+    public void setLocker(Locker locker) throws IOException;
 
-    @Override
-    public void setLockAcquireSleepInterval(long lockAcquireSleepInterval) {
-        this.lockAcquireSleepInterval = lockAcquireSleepInterval;
-    }
+    /**
+     * Period (in milliseconds) on which {@link org.apache.activemq.broker.Locker#keepAlive()} should be checked
+     *
+     * @param lockKeepAlivePeriod
+     */
+    public void setLockKeepAlivePeriod(long lockKeepAlivePeriod);
 
-    @Override
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    @Override
-    public void setFailIfLocked(boolean failIfLocked) {
-        this.failIfLocked = failIfLocked;
-    }
 }

@@ -22,13 +22,15 @@ import java.io.IOException;
 import org.apache.activeio.journal.Journal;
 import org.apache.activeio.journal.active.JournalImpl;
 import org.apache.activeio.journal.active.JournalLockedException;
+import org.apache.activemq.broker.Locker;
 import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.PersistenceAdapterFactory;
-import org.apache.activemq.store.jdbc.DataSourceSupport;
+import org.apache.activemq.store.jdbc.DataSourceServiceSupport;
 import org.apache.activemq.store.jdbc.JDBCAdapter;
 import org.apache.activemq.store.jdbc.JDBCPersistenceAdapter;
 import org.apache.activemq.store.jdbc.Statements;
 import org.apache.activemq.thread.TaskRunnerFactory;
+import org.apache.activemq.util.ServiceStopper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,7 +40,7 @@ import org.slf4j.LoggerFactory;
  * @org.apache.xbean.XBean
  * 
  */
-public class JournalPersistenceAdapterFactory extends DataSourceSupport implements PersistenceAdapterFactory {
+public class JournalPersistenceAdapterFactory extends DataSourceServiceSupport implements PersistenceAdapterFactory {
 
     private static final int JOURNAL_LOCKED_WAIT_DELAY = 10 * 1000;
 
@@ -185,16 +187,12 @@ public class JournalPersistenceAdapterFactory extends DataSourceSupport implemen
         jdbcPersistenceAdapter.setStatements(statements);
     }
 
-    public boolean isUseDatabaseLock() {
-        return jdbcPersistenceAdapter.isUseDatabaseLock();
-    }
-
     /**
      * Sets whether or not an exclusive database lock should be used to enable
      * JDBC Master/Slave. Enabled by default.
      */
     public void setUseDatabaseLock(boolean useDatabaseLock) {
-        jdbcPersistenceAdapter.setUseDatabaseLock(useDatabaseLock);
+        jdbcPersistenceAdapter.setUseLock(useDatabaseLock);
     }
 
     public boolean isCreateTablesOnStartup() {
@@ -245,4 +243,18 @@ public class JournalPersistenceAdapterFactory extends DataSourceSupport implemen
         }
     }
 
+    @Override
+    public Locker createDefaultLocker() throws IOException {
+        return null;
+    }
+
+    @Override
+    public void init() throws Exception {
+    }
+
+    @Override
+    protected void doStop(ServiceStopper stopper) throws Exception {}
+
+    @Override
+    protected void doStart() throws Exception {}
 }

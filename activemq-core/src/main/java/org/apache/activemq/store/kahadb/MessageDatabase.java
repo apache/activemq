@@ -221,7 +221,6 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
     private int indexCacheSize = 10000;
     private boolean checkForCorruptJournalFiles = false;
     private boolean checksumJournalFiles = false;
-    private int databaseLockedWaitDelay = DEFAULT_DATABASE_LOCKED_WAIT_DELAY;
     protected boolean forceRecoverIndex = false;
     private final Object checkpointThreadLock = new Object();
     private boolean rewriteOnRedelivery = false;
@@ -2306,20 +2305,6 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
      */
     public void setDirectoryArchive(File directoryArchive) {
         this.directoryArchive = directoryArchive;
-    }
-
-    /**
-     * @return the databaseLockedWaitDelay
-     */
-    public int getDatabaseLockedWaitDelay() {
-        return this.databaseLockedWaitDelay;
-    }
-
-    /**
-     * @param databaseLockedWaitDelay the databaseLockedWaitDelay to set
-     */
-    public void setDatabaseLockedWaitDelay(int databaseLockedWaitDelay) {
-        this.databaseLockedWaitDelay = databaseLockedWaitDelay;
     }
 
     public boolean isRewriteOnRedelivery() {

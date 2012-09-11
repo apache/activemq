@@ -28,8 +28,9 @@ import javax.sql.DataSource;
 
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
-import org.apache.activemq.store.jdbc.DataSourceSupport;
+import org.apache.activemq.store.jdbc.DataSourceServiceSupport;
 import org.apache.activemq.store.jdbc.JDBCPersistenceAdapter;
+import org.apache.activemq.util.IOHelper;
 import org.apache.derby.jdbc.EmbeddedDataSource;
 
 public class JDBCQueueMasterSlaveTest extends QueueMasterSlaveTest {
@@ -39,7 +40,7 @@ public class JDBCQueueMasterSlaveTest extends QueueMasterSlaveTest {
 
     protected void setUp() throws Exception {
         // startup db
-        sharedDs = new SyncDataSource((EmbeddedDataSource)new DataSourceSupport().getDataSource());
+        sharedDs = new SyncDataSource((EmbeddedDataSource) DataSourceServiceSupport.createDataSource(IOHelper.getDefaultDataDirectory()));
         super.setUp();
     }
 
@@ -96,7 +97,7 @@ public class JDBCQueueMasterSlaveTest extends QueueMasterSlaveTest {
 
     protected void configureJdbcPersistenceAdapter(JDBCPersistenceAdapter persistenceAdapter) throws IOException {
         persistenceAdapter.setLockKeepAlivePeriod(500);
-        persistenceAdapter.setLockAcquireSleepInterval(500);
+        persistenceAdapter.getLocker().setLockAcquireSleepInterval(500);
     }
 
     protected DataSource getExistingDataSource() throws Exception {

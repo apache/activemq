@@ -17,14 +17,11 @@
 package org.apache.activemq.broker.ft;
 
 import java.io.IOException;
-import java.sql.Connection;
 import java.util.concurrent.TimeUnit;
-import junit.framework.Test;
+
 import org.apache.activemq.ActiveMQConnection;
-import org.apache.activemq.store.jdbc.DataSourceSupport;
 import org.apache.activemq.store.jdbc.JDBCPersistenceAdapter;
 import org.apache.activemq.store.jdbc.LeaseDatabaseLocker;
-import org.apache.activemq.store.jdbc.adapter.DefaultJDBCAdapter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,7 +31,7 @@ public class DbRestartJDBCQueueMasterSlaveLeaseTest extends DbRestartJDBCQueueMa
     @Override
     protected void configureJdbcPersistenceAdapter(JDBCPersistenceAdapter persistenceAdapter) throws IOException {
         super.configureJdbcPersistenceAdapter(persistenceAdapter);
-        persistenceAdapter.setLockAcquireSleepInterval(getLockAcquireSleepInterval());
+        persistenceAdapter.getLocker().setLockAcquireSleepInterval(getLockAcquireSleepInterval());
         persistenceAdapter.setLockKeepAlivePeriod(getLockKeepAlivePeriod());
         persistenceAdapter.setLocker(new LeaseDatabaseLocker());
     }

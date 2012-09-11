@@ -54,6 +54,7 @@ import org.apache.activemq.util.ByteSequence;
 import org.apache.activemq.util.FactoryFinder;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.LongSequenceGenerator;
+import org.apache.activemq.util.ServiceStopper;
 import org.apache.activemq.wireformat.WireFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -70,7 +71,7 @@ import org.slf4j.LoggerFactory;
  * 
  * 
  */
-public class JDBCPersistenceAdapter extends DataSourceSupport implements PersistenceAdapter,
+public class JDBCPersistenceAdapter extends DataSourceServiceSupport implements PersistenceAdapter,
     BrokerServiceAware {
 
     private static final Logger LOG = LoggerFactory.getLogger(JDBCPersistenceAdapter.class);
@@ -79,19 +80,17 @@ public class JDBCPersistenceAdapter extends DataSourceSupport implements Persist
     private static FactoryFinder lockFactoryFinder = new FactoryFinder(
                                                                     "META-INF/services/org/apache/activemq/store/jdbc/lock/");
 
+    public static final long DEFAULT_LOCK_KEEP_ALIVE_PERIOD = 30 * 1000;
+
     private WireFormat wireFormat = new OpenWireFormat();
     private BrokerService brokerService;
     private Statements statements;
     private JDBCAdapter adapter;
     private MemoryTransactionStore transactionStore;
     private ScheduledThreadPoolExecutor clockDaemon;
-    private ScheduledFuture<?> cleanupTicket, keepAliveTicket;
+    private ScheduledFuture<?> cleanupTicket;
     private int cleanupPeriod = 1000 * 60 * 5;
     private boolean useExternalMessageReferences;
-    private boolean useDatabaseLock = true;
-    private long lockKeepAlivePeriod = 1000*30;
-    private long lockAcquireSleepInterval = DefaultDatabaseLocker.DEFAULT_LOCK_ACQUIRE_SLEEP_INTERVAL;
-    private Locker locker;
     private boolean createTablesOnStartup = true;
     private DataSource lockDataSource;
     private int transactionIsolation;
@@ -105,6 +104,10 @@ public class JDBCPersistenceAdapter extends DataSourceSupport implements Persist
     
     protected LongSequenceGenerator sequenceGenerator = new LongSequenceGenerator();
     protected int maxRows = DefaultJDBCAdapter.MAX_ROWS;
+
+    {
+        setLockKeepAlivePeriod(DEFAULT_LOCK_KEEP_ALIVE_PERIOD);
+    }
 
     public JDBCPersistenceAdapter() {
     }
@@ -281,8 +284,8 @@ public class JDBCPersistenceAdapter extends DataSourceSupport implements Persist
         }
     }
 
-
-    public void start() throws Exception {
+    @Override
+    public void init() throws Exception {
         getAdapter().setUseExternalMessageReferences(isUseExternalMessageReferences());
 
         if (isCreateTablesOnStartup()) {
@@ -299,26 +302,9 @@ public class JDBCPersistenceAdapter extends DataSourceSupport implements Persist
                 transactionContext.commit();
             }
         }
+    }
 
-        if (isUseDatabaseLock()) {
-            Locker service = getLocker();
-            if (service == null) {
-                LOG.warn("No databaseLocker configured for the JDBC Persistence Adapter");
-            } else {
-                service.start();
-                if (lockKeepAlivePeriod > 0) {
-                    keepAliveTicket = getScheduledThreadPoolExecutor().scheduleAtFixedRate(new Runnable() {
-                        public void run() {
-                            databaseLockKeepAlive();
-                        }
-                    }, lockKeepAlivePeriod, lockKeepAlivePeriod, TimeUnit.MILLISECONDS);
-                }
-                if (brokerService != null) {
-                    brokerService.getBroker().nowMasterBroker();
-                }
-            }
-        }
-
+    public void doStart() throws Exception {
         // Cleanup the db periodically.
         if (cleanupPeriod > 0) {
             cleanupTicket = getScheduledThreadPoolExecutor().scheduleWithFixedDelay(new Runnable() {
@@ -331,20 +317,10 @@ public class JDBCPersistenceAdapter extends DataSourceSupport implements Persist
         createMessageAudit();
     }
 
-    public synchronized void stop() throws Exception {
+    public synchronized void doStop(ServiceStopper stopper) throws Exception {
         if (cleanupTicket != null) {
             cleanupTicket.cancel(true);
             cleanupTicket = null;
-        }
-        if (keepAliveTicket != null) {
-            keepAliveTicket.cancel(false);
-            keepAliveTicket = null;
-        }
-        
-        // do not shutdown clockDaemon as it may kill the thread initiating shutdown
-        Locker service = getDatabaseLocker();
-        if (service != null) {
-            service.stop();
         }
     }
 
@@ -403,13 +379,6 @@ public class JDBCPersistenceAdapter extends DataSourceSupport implements Persist
         return getLocker();
     }
 
-    public Locker getLocker() throws IOException {
-        if (locker == null && isUseDatabaseLock()) {
-            setLocker(loadDataBaseLocker());
-        }
-        return locker;
-    }
-
     /**
      * Sets the database locker strategy to use to lock the database on startup
      * @throws IOException
@@ -418,16 +387,6 @@ public class JDBCPersistenceAdapter extends DataSourceSupport implements Persist
      */
     public void setDatabaseLocker(Locker locker) throws IOException {
         setLocker(locker);
-    }
-
-    /**
-     * Sets the database locker strategy to use to lock the database on startup
-     * @throws IOException 
-     */
-    public void setLocker(Locker locker) throws IOException {
-        this.locker = locker;
-        locker.configure(this);
-        locker.setLockAcquireSleepInterval(getLockAcquireSleepInterval());
     }
 
     public DataSource getLockDataSource() throws IOException {
@@ -595,16 +554,15 @@ public class JDBCPersistenceAdapter extends DataSourceSupport implements Persist
         this.createTablesOnStartup = createTablesOnStartup;
     }
 
-    public boolean isUseDatabaseLock() {
-        return useDatabaseLock;
-    }
-
     /**
+     * @deprecated use {@link #setUseLock(boolean)} instead
+     *
      * Sets whether or not an exclusive database lock should be used to enable
      * JDBC Master/Slave. Enabled by default.
      */
+    @Deprecated
     public void setUseDatabaseLock(boolean useDatabaseLock) {
-        this.useDatabaseLock = useDatabaseLock;
+        setUseLock(useDatabaseLock);
     }
 
     public static void log(String msg, SQLException e) {
@@ -634,39 +592,13 @@ public class JDBCPersistenceAdapter extends DataSourceSupport implements Persist
     public void setUsageManager(SystemUsage usageManager) {
     }
 
-    protected void databaseLockKeepAlive() {
-        boolean stop = false;
-        try {
-            Locker locker = getDatabaseLocker();
-            if (locker != null) {
-                if (!locker.keepAlive()) {
-                    stop = true;
-                }
-            }
-        } catch (IOException e) {
-            LOG.warn("databaselocker keepalive resulted in: " + e, e);
-        }
-        if (stop) {
-            stopBroker();
-        }
-    }
-
-    protected void stopBroker() {
-        // we can no longer keep the lock so lets fail
-        LOG.info(brokerService.getBrokerName() + ", no longer able to keep the exclusive lock so giving up being a master");
-        try {
-            brokerService.stop();
-        } catch (Exception e) {
-            LOG.warn("Failure occurred while stopping broker");
-        }
-    }
-
-    protected Locker loadDataBaseLocker() throws IOException {
+    public Locker createDefaultLocker() throws IOException {
         DefaultDatabaseLocker locker = (DefaultDatabaseLocker) loadAdapter(lockFactoryFinder, "lock");
         if (locker == null) {
             locker = new DefaultDatabaseLocker();
             LOG.debug("Using default JDBC Locker: " + locker);
         }
+        locker.configure(this);
         return locker;
     }
 
@@ -711,24 +643,15 @@ public class JDBCPersistenceAdapter extends DataSourceSupport implements Persist
         return 0;
     }
 
-    public long getLockKeepAlivePeriod() {
-        return lockKeepAlivePeriod;
-    }
-
-    public void setLockKeepAlivePeriod(long lockKeepAlivePeriod) {
-        this.lockKeepAlivePeriod = lockKeepAlivePeriod;
-    }
-
-    public long getLockAcquireSleepInterval() {
-        return lockAcquireSleepInterval;
-    }
-
     /**
+     * @deprecated use {@link Locker#setLockAcquireSleepInterval(long)} instead
+     *
      * millisecond interval between lock acquire attempts, applied to newly created DefaultDatabaseLocker
      * not applied if DataBaseLocker is injected.
+     *
      */
-    public void setLockAcquireSleepInterval(long lockAcquireSleepInterval) {
-        this.lockAcquireSleepInterval = lockAcquireSleepInterval;
+    public void setLockAcquireSleepInterval(long lockAcquireSleepInterval) throws IOException {
+        getLocker().setLockAcquireSleepInterval(lockAcquireSleepInterval);
     }
     
     /**

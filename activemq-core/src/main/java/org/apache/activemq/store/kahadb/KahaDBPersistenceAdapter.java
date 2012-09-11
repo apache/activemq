@@ -17,8 +17,8 @@
 package org.apache.activemq.store.kahadb;
 
 import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.broker.BrokerServiceAware;
 import org.apache.activemq.broker.ConnectionContext;
+import org.apache.activemq.broker.LockableServiceSupport;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
@@ -37,6 +37,7 @@ import org.apache.activemq.store.kahadb.data.KahaLocalTransactionId;
 import org.apache.activemq.store.kahadb.data.KahaTransactionInfo;
 import org.apache.activemq.store.kahadb.data.KahaXATransactionId;
 import org.apache.activemq.usage.SystemUsage;
+import org.apache.activemq.util.ServiceStopper;
 
 import java.io.File;
 import java.io.IOException;
@@ -49,9 +50,8 @@ import java.util.Set;
  * @org.apache.xbean.XBean element="kahaDB"
  *
  */
-public class KahaDBPersistenceAdapter implements PersistenceAdapter, BrokerServiceAware {
+public class KahaDBPersistenceAdapter extends LockableServiceSupport implements PersistenceAdapter {
     private final KahaDBStore letter = new KahaDBStore();
-    private Locker locker;
 
     /**
      * @param context
@@ -191,8 +191,7 @@ public class KahaDBPersistenceAdapter implements PersistenceAdapter, BrokerServi
      * @throws Exception
      * @see org.apache.activemq.Service#start()
      */
-    public void start() throws Exception {
-        getLocker().start();
+    public void doStart() throws Exception {
         this.letter.start();
     }
 
@@ -200,12 +199,8 @@ public class KahaDBPersistenceAdapter implements PersistenceAdapter, BrokerServi
      * @throws Exception
      * @see org.apache.activemq.Service#stop()
      */
-    public void stop() throws Exception {
-        try {
-            this.letter.stop();
-        } finally {
-            getLocker().stop();
-        }
+    public void doStop(ServiceStopper stopper) throws Exception {
+        this.letter.stop();
     }
 
     /**
@@ -486,17 +481,13 @@ public class KahaDBPersistenceAdapter implements PersistenceAdapter, BrokerServi
     }
 
     /**
-     * @return the databaseLockedWaitDelay
-     */
-    public int getDatabaseLockedWaitDelay() {
-        return letter.getDatabaseLockedWaitDelay();
-    }
-
-    /**
+     * @deprecated use {@link Locker#setLockAcquireSleepInterval(long)} instead
+     *
      * @param databaseLockedWaitDelay the databaseLockedWaitDelay to set
      */
-    public void setDatabaseLockedWaitDelay(int databaseLockedWaitDelay) {
-       letter.setDatabaseLockedWaitDelay(databaseLockedWaitDelay);
+    @Deprecated
+    public void setDatabaseLockedWaitDelay(int databaseLockedWaitDelay) throws IOException {
+       getLocker().setLockAcquireSleepInterval(databaseLockedWaitDelay);
     }
 
     public boolean getForceRecoverIndex() {
@@ -594,23 +585,14 @@ public class KahaDBPersistenceAdapter implements PersistenceAdapter, BrokerServi
         return rc;
     }
 
-    public void setLocker(Locker locker) {
-        this.locker = locker;
-    }
-
-    protected Locker getLocker() throws IOException {
-        if (this.locker == null) {
-            this.locker = createDefaultLocker();
-        }
-        return this.locker;
-    }
-
-    protected Locker createDefaultLocker() throws IOException {
+    public Locker createDefaultLocker() throws IOException {
         SharedFileLocker locker = new SharedFileLocker();
         locker.configure(this);
-        locker.setLockAcquireSleepInterval(getDatabaseLockedWaitDelay());
         return locker;
     }
+
+    @Override
+    public void init() throws Exception {}
 
     @Override
     public String toString() {
