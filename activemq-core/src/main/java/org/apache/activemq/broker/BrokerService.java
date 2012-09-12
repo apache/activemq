@@ -2515,12 +2515,14 @@ public class BrokerService implements Service {
         // created at startup, so no sync needed
         if (virtualConsumerDestinationFilter == null) {
             Set <ActiveMQQueue> consumerDestinations = new HashSet<ActiveMQQueue>();
-            for (DestinationInterceptor interceptor : destinationInterceptors) {
-                if (interceptor instanceof VirtualDestinationInterceptor) {
-                    VirtualDestinationInterceptor virtualDestinationInterceptor = (VirtualDestinationInterceptor) interceptor;
-                    for (VirtualDestination virtualDestination: virtualDestinationInterceptor.getVirtualDestinations()) {
-                        if (virtualDestination instanceof VirtualTopic) {
-                            consumerDestinations.add(new ActiveMQQueue(((VirtualTopic) virtualDestination).getPrefix() + DestinationFilter.ANY_DESCENDENT));
+            if (destinationInterceptors != null) {
+                for (DestinationInterceptor interceptor : destinationInterceptors) {
+                    if (interceptor instanceof VirtualDestinationInterceptor) {
+                        VirtualDestinationInterceptor virtualDestinationInterceptor = (VirtualDestinationInterceptor) interceptor;
+                        for (VirtualDestination virtualDestination: virtualDestinationInterceptor.getVirtualDestinations()) {
+                            if (virtualDestination instanceof VirtualTopic) {
+                                consumerDestinations.add(new ActiveMQQueue(((VirtualTopic) virtualDestination).getPrefix() + DestinationFilter.ANY_DESCENDENT));
+                            }
                         }
                     }
                 }
