@@ -166,7 +166,7 @@
         <include>org.springframework.ws:spring-oxm-tiger</include>
         <include>org.codehaus.jettison:jettison</include>
         <include>org.apache.velocity:velocity</include>
-        <include>net.sf.josql:josql</include>
+        <include>org.apache.servicemix.bundles:org.apache.servicemix.bundles.josql</include>
         <include>org.jasypt:jasypt</include>
         <!-- leveldb -->
         <include>org.fusesource.fuse-extra:fusemq-leveldb</include>
@@ -197,8 +197,6 @@
         <!-- Atom/RSS support -->
         <include>rome:rome</include>
         <include>jdom:jdom</include>
-        <!--  Camel web dependencies -->
-        <include>org.fusesource.commonman:commons-management</include>
       </includes>
     </dependencySet>
   </dependencySets>

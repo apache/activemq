@@ -37,76 +37,82 @@
     <projectName>Apache ActiveMQ</projectName>
     <!-- base url for site deployment.  See distribution management for full url.  Override this in settings.xml for staging -->
     <staging.siteURL>scp://people.apache.org/x1/www/activemq.apache.org</staging.siteURL>
-    <spring-version>3.0.7.RELEASE</spring-version>
-    <spring-osgi-version>1.2.1</spring-osgi-version>
+
+    <!-- JAR dependency versions -->
+    <activemq-protobuf-version>1.1</activemq-protobuf-version>
     <activesoap-version>1.3</activesoap-version>
     <annogen-version>0.1.0</annogen-version>
     <ant-version>1.8.4</ant-version>
     <aopalliance-version>1.0</aopalliance-version>
     <aries-version>0.3</aries-version>
     <axion-version>1.0-M3-dev</axion-version>
-    <axis-version>1.4.2</axis-version>
+    <axis-version>1.4</axis-version>
     <camel-version>2.10.1</camel-version>
     <camel-version-range>2.10,3</camel-version-range>
     <cglib-version>2.0</cglib-version>
-    <openjpa-version>1.2.0</openjpa-version>
     <commons-beanutils-version>1.8.3</commons-beanutils-version>
     <commons-collections-version>3.2.1</commons-collections-version>
-    <commons-daemon-version>1.0.7</commons-daemon-version>
+    <commons-daemon-version>1.0.10</commons-daemon-version>
     <commons-dbcp-version>1.4</commons-dbcp-version>
-    <httpclient-version>4.1.3</httpclient-version>
     <commons-io-version>1.4</commons-io-version>
     <commons-lang-version>2.6</commons-lang-version>
     <commons-logging-version>1.1.1</commons-logging-version>
     <commons-pool-version>1.6</commons-pool-version>
     <commons-primitives-version>1.0</commons-primitives-version>
-    <commons-net-version>2.2</commons-net-version>
+    <commons-net-version>3.1</commons-net-version>
     <directory-version>2.0.0-M6</directory-version>
     <fusemq-leveldb-version>1.3</fusemq-leveldb-version>
+    <ftpserver-version>1.0.6</ftpserver-version>
     <geronimo-version>1.0</geronimo-version>
-    <howl-version>0.1.8</howl-version>
     <hawtbuf-version>1.9</hawtbuf-version>
     <hawtdispatch-version>1.11</hawtdispatch-version>
-    <hsqldb-version>1.7.2.2</hsqldb-version>
-    <jasypt-version>1.8</jasypt-version>
+    <howl-version>0.1.8</howl-version>
+    <hsqldb-version>1.8.0.10</hsqldb-version>
+    <httpclient-version>4.1.3</httpclient-version>
+    <jasypt-version>1.9.0</jasypt-version>
     <jdom-version>1.0</jdom-version>
     <jetty-version>7.6.5.v20120716</jetty-version>
     <jsp-version>2.1.v20100127</jsp-version>
     <jstl-version>1.1.2</jstl-version>
     <jettison-version>1.3.2</jettison-version>
     <jmock-version>2.5.1</jmock-version>
-    <josql-version>1.5</josql-version>
+    <josql-version>1.5_5</josql-version>
     <junit-version>4.10</junit-version>
     <jxta-version>2.0</jxta-version>
-    <karaf-version>2.2.0</karaf-version>
+    <karaf-version>2.2.9</karaf-version>
     <leveldbjni-version>1.2</leveldbjni-version>
     <log4j-version>1.2.17</log4j-version>
     <mqtt-client-version>1.3</mqtt-client-version>
-    <org-apache-derby-version>10.8.2.2</org-apache-derby-version>
+    <openjpa-version>1.2.0</openjpa-version>
+    <opensymphony-version>2.4.2</opensymphony-version>
+    <org-apache-derby-version>10.9.1.0</org-apache-derby-version>
+    <org.osgi.core-version>4.2.0</org.osgi.core-version>
     <p2psockets-version>1.1.2</p2psockets-version>
     <regexp-version>1.3</regexp-version>
     <rome-version>1.0</rome-version>
+    <saxon-version>9.4</saxon-version>
     <slf4j-version>1.6.6</slf4j-version>
+    <spring-version>3.0.7.RELEASE</spring-version>
+    <spring-osgi-version>1.2.1</spring-osgi-version>
     <spring-oxm-version>1.5.10</spring-oxm-version>
-    <xalan-version>2.7.0</xalan-version>
-    <xmlbeans-version>2.2.0</xmlbeans-version>
+    <stax2-api-version>3.0.2</stax2-api-version>
+    <velocity-version>1.7</velocity-version>
+    <woodstox-core-asl-version>4.1.4</woodstox-core-asl-version>
+    <xalan-version>2.7.1</xalan-version>
+    <xmlbeans-version>2.5.0</xmlbeans-version>
     <xpp3-version>1.1.4c</xpp3-version>
     <xstream-version>1.4.3</xstream-version>
     <xbean-version>3.11.1</xbean-version>
-    <velocity-version>1.6.4</velocity-version>
-    <ftpserver-version>1.0.0</ftpserver-version>
-    <activemq-protobuf-version>1.1</activemq-protobuf-version>
-    <opensymphony-version>2.4.2</opensymphony-version>
-    <zookeeper-version>3.0.0</zookeeper-version>
-    <org.osgi.core-version>4.2.0</org.osgi.core-version>
-    <woodstox-core-asl-version>4.0.8</woodstox-core-asl-version>
-    <stax2-api-version>3.0.2</stax2-api-version>
+    <xerces-version>2.9.1</xerces-version>
+    <zookeeper-version>3.3.5</zookeeper-version>
+
     <site-repo-url>scpexe://people.apache.org/www/activemq.apache.org/maven/</site-repo-url>
     <source-version>1.6</source-version>
     <target-version>1.6</target-version>
     <javase-javadoc-url>http://download.oracle.com/javase/6/docs/api/</javase-javadoc-url>
     <javaee-javadoc-url>http://download.oracle.com/javaee/6/api/</javaee-javadoc-url>
     <slf4j-javadoc-url>http://www.slf4j.org/apidocs/</slf4j-javadoc-url>
+
     <!-- Maven Plugin Version for this Project -->
     <maven-bundle-plugin-version>2.3.7</maven-bundle-plugin-version>
     <maven-surefire-plugin-version>2.9</maven-surefire-plugin-version>
@@ -142,7 +148,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
   <prerequisites>
-    <maven>2.0.9</maven>
+    <maven>3.0.2</maven>
   </prerequisites>
 
   <url>http://activemq.apache.org</url>
@@ -760,18 +766,13 @@
       <!-- =============================== -->
       <!-- For XMLBeans -->
       <dependency>
-        <groupId>xmlbeans</groupId>
-        <artifactId>xbean</artifactId>
+        <groupId>org.apache.xmlbeans</groupId>
+        <artifactId>xmlbeans</artifactId>
         <version>${xmlbeans-version}</version>
       </dependency>
       <dependency>
-        <groupId>xmlbeans</groupId>
-        <artifactId>xmlpublic</artifactId>
-        <version>${xmlbeans-version}</version>
-      </dependency>
-      <dependency>
-        <groupId>xmlbeans</groupId>
-        <artifactId>xbean_xpath</artifactId>
+        <groupId>org.apache.xmlbeans</groupId>
+        <artifactId>xmlbeans-xpath</artifactId>
         <version>${xmlbeans-version}</version>
       </dependency>
 
@@ -979,14 +980,8 @@
         <optional>true</optional>
       </dependency>
       <dependency>
-        <groupId>net.sf.josql</groupId>
-        <artifactId>josql</artifactId>
-        <version>${josql-version}</version>
-        <optional>true</optional>
-      </dependency>
-      <dependency>
-        <groupId>net.sf.josql</groupId>
-        <artifactId>gentlyweb-utils</artifactId>
+        <groupId>org.apache.servicemix.bundles</groupId>
+        <artifactId>org.apache.servicemix.bundles.josql</artifactId>
         <version>${josql-version}</version>
         <optional>true</optional>
       </dependency>

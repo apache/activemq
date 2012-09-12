@@ -30,23 +30,6 @@
   <name>ActiveMQ :: Optional</name>
   <description>Optional ActiveMQ features</description>
 
-
-  <repositories>
-   <!-- Holds the josql artifacts -->
-   <repository>
-     <id>fusesource.m2</id>
-     <name>FUSE Community Release Repository</name>
-     <url>http://repo.fusesource.com/maven2</url>
-     <snapshots>
-       <enabled>false</enabled>
-     </snapshots>
-     <releases>
-       <enabled>true</enabled>
-     </releases>
-   </repository>
-  </repositories>
-
-
   <dependencies>
     <!-- activemq -->
     <dependency>
@@ -109,6 +92,7 @@
     <dependency>
       <groupId>axis</groupId>
       <artifactId>axis</artifactId>
+      <optional>true</optional>
     </dependency>
 
     <dependency>
@@ -140,19 +124,31 @@
     </dependency>
 
     <dependency>
-      <groupId>xmlbeans</groupId>
-      <artifactId>xbean</artifactId>
-      <optional>true</optional>
-    </dependency>
-
-    <dependency>
-      <groupId>xmlbeans</groupId>
-      <artifactId>xmlpublic</artifactId>
+      <groupId>org.apache.xmlbeans</groupId>
+      <artifactId>xmlbeans</artifactId>
       <optional>true</optional>
     </dependency>
     <dependency>
-      <groupId>xmlbeans</groupId>
-      <artifactId>xbean_xpath</artifactId>
+      <groupId>org.apache.xmlbeans</groupId>
+      <artifactId>xmlbeans-xpath</artifactId>
+      <optional>true</optional>
+      <exclusions>
+	    <exclusion>
+		  <groupId>net.sf.saxon</groupId>
+		  <artifactId>saxon</artifactId>
+		</exclusion>
+	  </exclusions>	
+    </dependency>
+    <dependency>
+      <groupId>net.sf.saxon</groupId>
+      <artifactId>Saxon-HE</artifactId>
+      <version>${saxon-version}</version>
+      <optional>true</optional>
+    </dependency>
+    <dependency>
+      <groupId>xerces</groupId>
+      <artifactId>xercesImpl</artifactId>
+      <version>${xerces-version}</version>
       <optional>true</optional>
     </dependency>
 
@@ -194,13 +190,17 @@
       <artifactId>velocity</artifactId>
     </dependency>
     <dependency>
-      <groupId>net.sf.josql</groupId>
-      <artifactId>josql</artifactId>
+      <groupId>org.apache.servicemix.bundles</groupId>
+      <artifactId>org.apache.servicemix.bundles.josql</artifactId>
     </dependency>
+<!-- 
+    TODO: Not needed, but OSGi bundle on the way: https://issues.apache.org/jira/browse/SMX4-1238 
     <dependency>
       <groupId>net.sf.josql</groupId>
       <artifactId>gentlyweb-utils</artifactId>
+      <version>1.5</version>
     </dependency>
+-->
 
     <dependency>
       <groupId>org.seleniumhq.selenium</groupId>

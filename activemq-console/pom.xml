@@ -45,21 +45,6 @@
     </activemq.osgi.export>
   </properties>
   
-  <repositories>
-    <!-- for net.sf.josql dependency not yet in central -->
-    <repository>
-      <id>com.fusesource.m2</id>
-      <name>Fusesource Release Repository</name>
-      <url>http://repo.fusesource.com/nexus/content/groups/public/</url>
-      <snapshots>
-        <enabled>false</enabled>
-      </snapshots>
-      <releases>
-        <enabled>true</enabled>
-      </releases>
-    </repository>
-  </repositories>
-
   <dependencies>
     <!-- activemq related dependencies -->
     <dependency>
@@ -140,12 +125,8 @@
       <version>${commons-lang-version}</version>
     </dependency>
     <dependency>
-      <groupId>net.sf.josql</groupId>
-      <artifactId>josql</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>net.sf.josql</groupId>
-      <artifactId>gentlyweb-utils</artifactId>
+      <groupId>org.apache.servicemix.bundles</groupId>
+      <artifactId>org.apache.servicemix.bundles.josql</artifactId>
     </dependency>
     <dependency>
       <groupId>org.jasypt</groupId>
