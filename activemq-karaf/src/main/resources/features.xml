@@ -26,10 +26,11 @@
         <bundle dependency="true">mvn:commons-pool/commons-pool/${commons-pool-version}</bundle>
         <bundle dependency="true">mvn:commons-collections/commons-collections/${commons-collections-version}</bundle>
         <bundle dependency='true'>mvn:commons-lang/commons-lang/${commons-lang-version}</bundle>
-        <bundle dependency="true">mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.commons-codec/1.3_3</bundle>
+        <bundle dependency="true">mvn:commons-codec/commons-codec/1.4</bundle>
+        <bundle dependency="true">mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.velocity/1.7_4</bundle>
+        <!-- TODO: oro is not really needed, but we need a new velocity bundle to fix this: https://issues.apache.org/jira/browse/SMX4-1244 -->
         <bundle dependency="true">mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.oro/2.0.8_3</bundle>
-        <bundle dependency="true">mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.velocity/1.7_1</bundle>
-        <bundle dependency="true">mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.jasypt/1.6_1</bundle>
+        <bundle dependency="true">mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.jasypt/1.9.0_1</bundle>
         <bundle dependency="true">mvn:org.apache.servicemix.specs/org.apache.servicemix.specs.stax-api-1.0/${servicemix.specs.version}</bundle>
         <bundle dependency="true">mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.xpp3/${xpp3-bundle-version}</bundle>
         <bundle dependency="true">mvn:joda-time/joda-time/${jodatime-bundle-version}</bundle>
@@ -47,7 +48,7 @@
     </feature>
 
     <feature name="activemq-spring" version="${activemq-version}" resolver="(obr)">
-        <feature version="[1,2)">spring-dm</feature>
+        <feature version="[1.2,2)">spring-dm</feature>
         <feature version="${activemq-version}">activemq</feature>
         <bundle dependency="true">mvn:org.apache.xbean/xbean-spring/${xbean-version}</bundle>
         <bundle>mvn:org.apache.activemq/activemq-spring/${activemq-version}</bundle>
@@ -63,7 +64,7 @@
 
     <feature name="activemq-optional" version="${activemq-version}" resolver="(obr)">
         <feature version="${activemq-version}">activemq-blueprint</feature>
-        <feature version="[7.0,8.0)">jetty</feature>
+        <feature version="[7.5,8.0)">jetty</feature>
         <bundle>mvn:org.apache.activemq/activemq-optional/${activemq-version}</bundle>
     </feature>
 
