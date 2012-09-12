@@ -23,8 +23,6 @@ import org.apache.activemq.util.IntrospectionSupport;
 /**
  * Helper utility that can be used to set the properties on any object using
  * command line arguments.
- * 
- * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
  */
 public final class CommandLineSupport {
 
@@ -43,10 +41,10 @@ public final class CommandLineSupport {
      * target.setPersistent(true);
      * 
      * Notice the the proper conversion for the argument is determined by examining the 
-     * setter arguement type.  
+     * setter argument type.
      * 
      * @param target the object that will have it's properties set
-     * @param args the commline options
+     * @param args the command line options
      * @return any arguments that are not valid options for the target
      */
     public static String[] setOptions(Object target, String[] args) {
@@ -95,9 +93,6 @@ public final class CommandLineSupport {
 
     /**
      * converts strings like: test-enabled to testEnabled
-     * 
-     * @param name
-     * @return
      */
     private static String convertOptionToPropertyName(String name) {
         String rc = "";

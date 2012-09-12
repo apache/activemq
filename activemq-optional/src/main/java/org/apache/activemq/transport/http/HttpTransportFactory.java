@@ -36,9 +36,6 @@ import org.apache.activemq.wireformat.WireFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * @author David Martin Clavo david(dot)martin(dot)clavo(at)gmail.com (logging improvement modifications)
- */
 public class HttpTransportFactory extends TransportFactory {
 
     private static final Logger LOG = LoggerFactory.getLogger(HttpTransportFactory.class);

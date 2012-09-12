@@ -22,10 +22,6 @@ import java.net.URI;
 import org.apache.activemq.transport.http.HttpClientTransport;
 import org.apache.activemq.transport.util.TextWireFormat;
 
-/**
- * @author john.silva
- */
-
 public class HttpsClientTransport extends HttpClientTransport {
   
   public HttpsClientTransport(TextWireFormat wireFormat, URI remoteUrl) {

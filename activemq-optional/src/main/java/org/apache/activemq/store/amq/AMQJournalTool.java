@@ -53,8 +53,6 @@ import org.josql.Query;
 
 /**
  * Allows you to view the contents of a Journal.
- * 
- * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
  */
 public class AMQJournalTool {
 

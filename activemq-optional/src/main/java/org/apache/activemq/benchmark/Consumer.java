@@ -25,10 +25,6 @@ import javax.jms.Session;
 import javax.jms.TextMessage;
 import javax.jms.Topic;
 
-/**
- * @author James Strachan
- * 
- */
 public class Consumer extends BenchmarkSupport implements MessageListener {
 
     public Consumer() {

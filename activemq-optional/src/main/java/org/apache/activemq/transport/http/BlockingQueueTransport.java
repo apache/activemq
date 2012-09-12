@@ -31,7 +31,7 @@ import org.apache.activemq.util.ServiceStopper;
  *
  * 
  */
-public class BlockingQueueTransport extends TransportSupport {
+public class  BlockingQueueTransport extends TransportSupport {
     public static final long MAX_TIMEOUT = 30000L;
 
     private BlockingQueue<Object> queue;

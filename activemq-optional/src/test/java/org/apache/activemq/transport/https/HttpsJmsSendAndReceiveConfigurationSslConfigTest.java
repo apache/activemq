@@ -21,10 +21,6 @@ import org.apache.activemq.JmsTopicSendReceiveTest;
 import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
 
-/**
- * @author Claudio Corsi
- * 
- */
 public class HttpsJmsSendAndReceiveConfigurationSslConfigTest extends
 		JmsTopicSendReceiveTest {
 

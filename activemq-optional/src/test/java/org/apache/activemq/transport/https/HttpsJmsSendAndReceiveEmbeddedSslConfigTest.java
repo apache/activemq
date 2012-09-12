@@ -21,10 +21,6 @@ import org.apache.activemq.JmsTopicSendReceiveTest;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.spring.SpringSslContext;
 
-/**
- * @author Claudio Corsi
- * 
- */
 public class HttpsJmsSendAndReceiveEmbeddedSslConfigTest extends
 		JmsTopicSendReceiveTest {
 

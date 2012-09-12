@@ -28,10 +28,6 @@ import javax.jms.Message;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
 
-/**
- * @author James Strachan
- * 
- */
 public class Producer extends BenchmarkSupport {
 
     int loops = -1;
