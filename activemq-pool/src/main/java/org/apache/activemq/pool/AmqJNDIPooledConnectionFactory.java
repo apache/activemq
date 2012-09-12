@@ -17,12 +17,13 @@
 package org.apache.activemq.pool;
 
 import java.util.Properties;
+
 import javax.naming.NamingException;
 import javax.naming.Reference;
+
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.jndi.JNDIReferenceFactory;
 import org.apache.activemq.jndi.JNDIStorableInterface;
-import org.apache.activemq.pool.PooledConnectionFactory;
 
 /**
 * AmqJNDIPooledConnectionFactory.java
@@ -35,7 +36,7 @@ public class AmqJNDIPooledConnectionFactory extends PooledConnectionFactory
     public AmqJNDIPooledConnectionFactory() {
         super();
     }
-    
+
     public AmqJNDIPooledConnectionFactory(String brokerURL) {
         super(brokerURL);
     }
@@ -46,7 +47,7 @@ public class AmqJNDIPooledConnectionFactory extends PooledConnectionFactory
 
     /**
      * set the properties for this instance as retrieved from JNDI
-     * 
+     *
      * @param props
      */
     public synchronized void setProperties(Properties props) {
@@ -56,7 +57,7 @@ public class AmqJNDIPooledConnectionFactory extends PooledConnectionFactory
 
     /**
      * Get the properties from this instance for storing in JNDI
-     * 
+     *
      * @return the properties
      */
     public synchronized Properties getProperties() {
@@ -69,7 +70,7 @@ public class AmqJNDIPooledConnectionFactory extends PooledConnectionFactory
 
     /**
      * Retrive a Reference for this instance to store in JNDI
-     * 
+     *
      * @return the built Reference
      * @throws NamingException
      *             if error on building Reference
@@ -87,7 +88,7 @@ public class AmqJNDIPooledConnectionFactory extends PooledConnectionFactory
                 .buildFromProperties(properties);
         String temp = properties.getProperty("maximumActive");
         if (temp != null && temp.length() > 0) {
-            setMaximumActive(Integer.parseInt(temp));
+            setMaximumActiveSessionPerConnection(Integer.parseInt(temp));
         }
         temp = properties.getProperty("maximumActiveSessionPerConnection");
         if (temp != null && temp.length() > 0) {
@@ -103,7 +104,7 @@ public class AmqJNDIPooledConnectionFactory extends PooledConnectionFactory
         ((ActiveMQConnectionFactory) getConnectionFactory())
                 .populateProperties(props);
         props.setProperty("maximumActive", Integer
-                .toString(getMaximumActive()));
+                .toString(getMaximumActiveSessionPerConnection()));
         props.setProperty("maximumActiveSessionPerConnection", Integer
                 .toString(getMaximumActiveSessionPerConnection()));
         props.setProperty("maxConnections", Integer

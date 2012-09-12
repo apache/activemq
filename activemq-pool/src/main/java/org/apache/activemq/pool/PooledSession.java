@@ -51,28 +51,32 @@ import org.apache.activemq.ActiveMQQueueSender;
 import org.apache.activemq.ActiveMQSession;
 import org.apache.activemq.ActiveMQTopicPublisher;
 import org.apache.activemq.AlreadyClosedException;
+import org.apache.activemq.util.JMSExceptionSupport;
+import org.apache.commons.pool.KeyedObjectPool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class PooledSession implements Session, TopicSession, QueueSession, XASession {
     private static final transient Logger LOG = LoggerFactory.getLogger(PooledSession.class);
 
+    private final SessionKey key;
+    private final KeyedObjectPool<SessionKey, PooledSession> sessionPool;
+    private final CopyOnWriteArrayList<MessageConsumer> consumers = new CopyOnWriteArrayList<MessageConsumer>();
+    private final CopyOnWriteArrayList<QueueBrowser> browsers = new CopyOnWriteArrayList<QueueBrowser>();
+    private final CopyOnWriteArrayList<PooledSessionEventListener> tempDestEventListeners =
+        new CopyOnWriteArrayList<PooledSessionEventListener>();
+
     private ActiveMQSession session;
-    private SessionPool sessionPool;
     private ActiveMQMessageProducer messageProducer;
     private ActiveMQQueueSender queueSender;
     private ActiveMQTopicPublisher topicPublisher;
     private boolean transactional = true;
     private boolean ignoreClose;
-
-    private final CopyOnWriteArrayList<MessageConsumer> consumers = new CopyOnWriteArrayList<MessageConsumer>();
-    private final CopyOnWriteArrayList<QueueBrowser> browsers = new CopyOnWriteArrayList<QueueBrowser>();
-    private final CopyOnWriteArrayList<PooledSessionEventListener> tempDestEventListeners =
-        new CopyOnWriteArrayList<PooledSessionEventListener>();
     private boolean isXa;
 
-    public PooledSession(ActiveMQSession aSession, SessionPool sessionPool) {
-        this.session = aSession;
+    public PooledSession(SessionKey key, ActiveMQSession session, KeyedObjectPool<SessionKey, PooledSession> sessionPool) {
+        this.key = key;
+        this.session = session;
         this.sessionPool = sessionPool;
         this.transactional = session.isTransacted();
     }
@@ -92,10 +96,9 @@ public class PooledSession implements Session, TopicSession, QueueSession, XASes
         this.ignoreClose = ignoreClose;
     }
 
+    @Override
     public void close() throws JMSException {
         if (!ignoreClose) {
-            // TODO a cleaner way to reset??
-
             boolean invalidate = false;
             try {
                 // lets reset the session
@@ -130,8 +133,8 @@ public class PooledSession implements Session, TopicSession, QueueSession, XASes
             }
 
             if (invalidate) {
-                // lets close the session and not put the session back into
-                // the pool
+                // lets close the session and not put the session back into the pool
+                // instead invalidate it so the pool can create a new one on demand.
                 if (session != null) {
                     try {
                         session.close();
@@ -140,45 +143,62 @@ public class PooledSession implements Session, TopicSession, QueueSession, XASes
                     }
                     session = null;
                 }
-                sessionPool.invalidateSession(this);
+                try {
+                    sessionPool.invalidateObject(key, this);
+                } catch (Exception e) {
+                    throw JMSExceptionSupport.create(e);
+                }
             } else {
-                sessionPool.returnSession(this);
+                try {
+                    sessionPool.returnObject(key, this);
+                } catch (Exception e) {
+                    throw JMSExceptionSupport.create(e);
+                }
             }
         }
     }
 
+    @Override
     public void commit() throws JMSException {
         getInternalSession().commit();
     }
 
+    @Override
     public BytesMessage createBytesMessage() throws JMSException {
         return getInternalSession().createBytesMessage();
     }
 
+    @Override
     public MapMessage createMapMessage() throws JMSException {
         return getInternalSession().createMapMessage();
     }
 
+    @Override
     public Message createMessage() throws JMSException {
         return getInternalSession().createMessage();
     }
 
+    @Override
     public ObjectMessage createObjectMessage() throws JMSException {
         return getInternalSession().createObjectMessage();
     }
 
+    @Override
     public ObjectMessage createObjectMessage(Serializable serializable) throws JMSException {
         return getInternalSession().createObjectMessage(serializable);
     }
 
+    @Override
     public Queue createQueue(String s) throws JMSException {
         return getInternalSession().createQueue(s);
     }
 
+    @Override
     public StreamMessage createStreamMessage() throws JMSException {
         return getInternalSession().createStreamMessage();
     }
 
+    @Override
     public TemporaryQueue createTemporaryQueue() throws JMSException {
         TemporaryQueue result;
 
@@ -192,6 +212,7 @@ public class PooledSession implements Session, TopicSession, QueueSession, XASes
         return result;
     }
 
+    @Override
     public TemporaryTopic createTemporaryTopic() throws JMSException {
         TemporaryTopic result;
 
@@ -205,38 +226,47 @@ public class PooledSession implements Session, TopicSession, QueueSession, XASes
         return result;
     }
 
+    @Override
     public void unsubscribe(String s) throws JMSException {
         getInternalSession().unsubscribe(s);
     }
 
+    @Override
     public TextMessage createTextMessage() throws JMSException {
         return getInternalSession().createTextMessage();
     }
 
+    @Override
     public TextMessage createTextMessage(String s) throws JMSException {
         return getInternalSession().createTextMessage(s);
     }
 
+    @Override
     public Topic createTopic(String s) throws JMSException {
         return getInternalSession().createTopic(s);
     }
 
+    @Override
     public int getAcknowledgeMode() throws JMSException {
         return getInternalSession().getAcknowledgeMode();
     }
 
+    @Override
     public boolean getTransacted() throws JMSException {
         return getInternalSession().getTransacted();
     }
 
+    @Override
     public void recover() throws JMSException {
         getInternalSession().recover();
     }
 
+    @Override
     public void rollback() throws JMSException {
         getInternalSession().rollback();
     }
 
+    @Override
     public XAResource getXAResource() {
         if (session == null) {
             throw new IllegalStateException("Session is closed");
@@ -244,10 +274,12 @@ public class PooledSession implements Session, TopicSession, QueueSession, XASes
         return session.getTransactionContext();
     }
 
+    @Override
     public Session getSession() {
         return this;
     }
 
+    @Override
     public void run() {
         if (session != null) {
             session.run();
@@ -256,68 +288,84 @@ public class PooledSession implements Session, TopicSession, QueueSession, XASes
 
     // Consumer related methods
     // -------------------------------------------------------------------------
+    @Override
     public QueueBrowser createBrowser(Queue queue) throws JMSException {
         return addQueueBrowser(getInternalSession().createBrowser(queue));
     }
 
+    @Override
     public QueueBrowser createBrowser(Queue queue, String selector) throws JMSException {
         return addQueueBrowser(getInternalSession().createBrowser(queue, selector));
     }
 
+    @Override
     public MessageConsumer createConsumer(Destination destination) throws JMSException {
         return addConsumer(getInternalSession().createConsumer(destination));
     }
 
+    @Override
     public MessageConsumer createConsumer(Destination destination, String selector) throws JMSException {
         return addConsumer(getInternalSession().createConsumer(destination, selector));
     }
 
+    @Override
     public MessageConsumer createConsumer(Destination destination, String selector, boolean noLocal) throws JMSException {
         return addConsumer(getInternalSession().createConsumer(destination, selector, noLocal));
     }
 
+    @Override
     public TopicSubscriber createDurableSubscriber(Topic topic, String selector) throws JMSException {
         return addTopicSubscriber(getInternalSession().createDurableSubscriber(topic, selector));
     }
 
+    @Override
     public TopicSubscriber createDurableSubscriber(Topic topic, String name, String selector, boolean noLocal) throws JMSException {
         return addTopicSubscriber(getInternalSession().createDurableSubscriber(topic, name, selector, noLocal));
     }
 
+    @Override
     public MessageListener getMessageListener() throws JMSException {
         return getInternalSession().getMessageListener();
     }
 
+    @Override
     public void setMessageListener(MessageListener messageListener) throws JMSException {
         getInternalSession().setMessageListener(messageListener);
     }
 
+    @Override
     public TopicSubscriber createSubscriber(Topic topic) throws JMSException {
         return addTopicSubscriber(getInternalSession().createSubscriber(topic));
     }
 
+    @Override
     public TopicSubscriber createSubscriber(Topic topic, String selector, boolean local) throws JMSException {
         return addTopicSubscriber(getInternalSession().createSubscriber(topic, selector, local));
     }
 
+    @Override
     public QueueReceiver createReceiver(Queue queue) throws JMSException {
         return addQueueReceiver(getInternalSession().createReceiver(queue));
     }
 
+    @Override
     public QueueReceiver createReceiver(Queue queue, String selector) throws JMSException {
         return addQueueReceiver(getInternalSession().createReceiver(queue, selector));
     }
 
     // Producer related methods
     // -------------------------------------------------------------------------
+    @Override
     public MessageProducer createProducer(Destination destination) throws JMSException {
         return new PooledProducer(getMessageProducer(), destination);
     }
 
+    @Override
     public QueueSender createSender(Queue queue) throws JMSException {
         return new PooledQueueSender(getQueueSender(), queue);
     }
 
+    @Override
     public TopicPublisher createPublisher(Topic topic) throws JMSException {
         return new PooledTopicPublisher(getTopicPublisher(), topic);
     }
@@ -371,11 +419,9 @@ public class PooledSession implements Session, TopicSession, QueueSession, XASes
 
     private MessageConsumer addConsumer(MessageConsumer consumer) {
         consumers.add(consumer);
-        // must wrap in PooledMessageConsumer to ensure the onConsumerClose
-        // method is invoked
-        // when the returned consumer is closed, to avoid memory leak in this
-        // session class
-        // in case many consumers is created
+        // must wrap in PooledMessageConsumer to ensure the onConsumerClose method is
+        // invoked when the returned consumer is closed, to avoid memory leak in this
+        // session class in case many consumers is created
         return new PooledMessageConsumer(this, consumer);
     }
 
@@ -393,6 +439,7 @@ public class PooledSession implements Session, TopicSession, QueueSession, XASes
         this.isXa = isXa;
     }
 
+    @Override
     public String toString() {
         return "PooledSession { " + session + " }";
     }

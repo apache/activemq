@@ -79,6 +79,6 @@ public class PooledMessageConsumer implements MessageConsumer {
 
     @Override
     public String toString() {
-        return delegate.toString();
+        return "PooledMessageConsumer { " + delegate + " }";
     }
 }

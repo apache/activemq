@@ -25,12 +25,12 @@ import org.apache.activemq.ActiveMQMessageProducer;
 
 /**
  * A pooled {@link MessageProducer}
- * 
- * 
  */
 public class PooledProducer implements MessageProducer {
-    private ActiveMQMessageProducer messageProducer;
-    private Destination destination;
+
+    private final ActiveMQMessageProducer messageProducer;
+    private final Destination destination;
+
     private int deliveryMode;
     private boolean disableMessageID;
     private boolean disableMessageTimestamp;
@@ -48,21 +48,26 @@ public class PooledProducer implements MessageProducer {
         this.timeToLive = messageProducer.getTimeToLive();
     }
 
+    @Override
     public void close() throws JMSException {
     }
 
+    @Override
     public void send(Destination destination, Message message) throws JMSException {
         send(destination, message, getDeliveryMode(), getPriority(), getTimeToLive());
     }
 
+    @Override
     public void send(Message message) throws JMSException {
         send(destination, message, getDeliveryMode(), getPriority(), getTimeToLive());
     }
 
+    @Override
     public void send(Message message, int deliveryMode, int priority, long timeToLive) throws JMSException {
         send(destination, message, deliveryMode, priority, timeToLive);
     }
 
+    @Override
     public void send(Destination destination, Message message, int deliveryMode, int priority, long timeToLive) throws JMSException {
         if (destination == null) {
             destination = this.destination;
@@ -75,46 +80,57 @@ public class PooledProducer implements MessageProducer {
         }
     }
 
+    @Override
     public Destination getDestination() {
         return destination;
     }
 
+    @Override
     public int getDeliveryMode() {
         return deliveryMode;
     }
 
+    @Override
     public void setDeliveryMode(int deliveryMode) {
         this.deliveryMode = deliveryMode;
     }
 
+    @Override
     public boolean getDisableMessageID() {
         return disableMessageID;
     }
 
+    @Override
     public void setDisableMessageID(boolean disableMessageID) {
         this.disableMessageID = disableMessageID;
     }
 
+    @Override
     public boolean getDisableMessageTimestamp() {
         return disableMessageTimestamp;
     }
 
+    @Override
     public void setDisableMessageTimestamp(boolean disableMessageTimestamp) {
         this.disableMessageTimestamp = disableMessageTimestamp;
     }
 
+    @Override
     public int getPriority() {
         return priority;
     }
 
+    @Override
     public void setPriority(int priority) {
         this.priority = priority;
     }
 
+    @Override
     public long getTimeToLive() {
         return timeToLive;
     }
 
+    @Override
     public void setTimeToLive(long timeToLive) {
         this.timeToLive = timeToLive;
     }
@@ -125,8 +141,8 @@ public class PooledProducer implements MessageProducer {
         return messageProducer;
     }
 
+    @Override
     public String toString() {
         return "PooledProducer { " + messageProducer + " }";
     }
-
 }

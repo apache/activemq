@@ -17,13 +17,13 @@
 package org.apache.activemq.pool;
 
 /**
- * A cache key for the session details
- *
- * 
+ * A cache key for the session details used to locate PooledSession intances.
  */
 public class SessionKey {
-    private boolean transacted;
-    private int ackMode;
+
+    private final boolean transacted;
+    private final int ackMode;
+
     private int hash;
 
     public SessionKey(boolean transacted, int ackMode) {

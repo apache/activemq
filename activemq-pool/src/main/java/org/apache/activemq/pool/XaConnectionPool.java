@@ -16,9 +16,6 @@
  */
 package org.apache.activemq.pool;
 
-import org.apache.activemq.ActiveMQConnection;
-import org.apache.commons.pool.ObjectPoolFactory;
-
 import javax.jms.JMSException;
 import javax.jms.Session;
 import javax.transaction.RollbackException;
@@ -27,21 +24,32 @@ import javax.transaction.SystemException;
 import javax.transaction.TransactionManager;
 import javax.transaction.xa.XAResource;
 
+import org.apache.activemq.ActiveMQConnection;
+import org.apache.commons.pool.ObjectPoolFactory;
+
 /**
  * An XA-aware connection pool.  When a session is created and an xa transaction is active,
  * the session will automatically be enlisted in the current transaction.
- * 
+ *
  * @author gnodet
  */
 public class XaConnectionPool extends ConnectionPool {
 
     private TransactionManager transactionManager;
 
-    public XaConnectionPool(ActiveMQConnection connection, ObjectPoolFactory poolFactory, TransactionManager transactionManager) {
-        super(connection, poolFactory);
+    public XaConnectionPool(ActiveMQConnection connection, TransactionManager transactionManager) {
+        super(connection);
         this.transactionManager = transactionManager;
     }
 
+    /**
+     * @deprecated
+     */
+    public XaConnectionPool(ActiveMQConnection connection, ObjectPoolFactory poolFactory, TransactionManager transactionManager) {
+        this(connection, transactionManager);
+    }
+
+    @Override
     public Session createSession(boolean transacted, int ackMode) throws JMSException {
         try {
             boolean isXa = (transactionManager != null && transactionManager.getStatus() != Status.STATUS_NO_TRANSACTION);
@@ -74,8 +82,7 @@ public class XaConnectionPool extends ConnectionPool {
     protected XAResource createXaResource(PooledSession session) throws JMSException {
         return session.getXAResource();
     }
-    
-    
+
     protected class Synchronization implements javax.transaction.Synchronization {
         private final PooledSession session;
 
@@ -85,7 +92,7 @@ public class XaConnectionPool extends ConnectionPool {
 
         public void beforeCompletion() {
         }
-        
+
         public void afterCompletion(int status) {
             try {
                 // This will return session to the pool.
@@ -99,5 +106,4 @@ public class XaConnectionPool extends ConnectionPool {
             }
         }
     }
-    
 }

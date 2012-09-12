@@ -18,12 +18,11 @@ package org.apache.activemq.pool;
 
 /**
  * A cache key for the connection details
- * 
- * 
  */
 public class ConnectionKey {
-    private String userName;
-    private String password;
+
+    private final String userName;
+    private final String password;
     private int hash;
 
     public ConnectionKey(String userName, String password) {

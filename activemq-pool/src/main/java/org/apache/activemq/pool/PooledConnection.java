@@ -47,7 +47,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Represents a proxy {@link Connection} which is-a {@link TopicConnection} and
  * {@link QueueConnection} which is pooled and on {@link #close()} will return
- * itself to the sessionPool.
+ * its reference to the ConnectionPool backing it.
  *
  * <b>NOTE</b> this implementation is only intended for use when sending
  * messages. It does not deal with pooling of consumers; for that look at a
@@ -63,6 +63,14 @@ public class PooledConnection implements TopicConnection, QueueConnection, Enhan
     private final List<TemporaryQueue> connTempQueues = new CopyOnWriteArrayList<TemporaryQueue>();
     private final List<TemporaryTopic> connTempTopics = new CopyOnWriteArrayList<TemporaryTopic>();
 
+    /**
+     * Creates a new PooledConnection instance that uses the given ConnectionPool to create
+     * and manage its resources.  The ConnectionPool instance can be shared amongst many
+     * PooledConnection instances.
+     *
+     * @param pool
+     *      The connection and pool manager backing this proxy connection object.
+     */
     public PooledConnection(ConnectionPool pool) {
         this.pool = pool;
         this.pool.incrementReferenceCount();
@@ -75,6 +83,7 @@ public class PooledConnection implements TopicConnection, QueueConnection, Enhan
         return new PooledConnection(pool);
     }
 
+    @Override
     public void close() throws JMSException {
         this.cleanupConnectionTemporaryDestinations();
         if (this.pool != null) {
@@ -83,45 +92,55 @@ public class PooledConnection implements TopicConnection, QueueConnection, Enhan
         }
     }
 
+    @Override
     public void start() throws JMSException {
         assertNotClosed();
         pool.start();
     }
 
+    @Override
     public void stop() throws JMSException {
         stopped = true;
     }
 
+    @Override
     public ConnectionConsumer createConnectionConsumer(Destination destination, String selector, ServerSessionPool serverSessionPool, int maxMessages)
             throws JMSException {
         return getConnection().createConnectionConsumer(destination, selector, serverSessionPool, maxMessages);
     }
 
+    @Override
     public ConnectionConsumer createConnectionConsumer(Topic topic, String s, ServerSessionPool serverSessionPool, int maxMessages) throws JMSException {
         return getConnection().createConnectionConsumer(topic, s, serverSessionPool, maxMessages);
     }
 
+    @Override
     public ConnectionConsumer createDurableConnectionConsumer(Topic topic, String selector, String s1, ServerSessionPool serverSessionPool, int i)
             throws JMSException {
         return getConnection().createDurableConnectionConsumer(topic, selector, s1, serverSessionPool, i);
     }
 
+    @Override
     public String getClientID() throws JMSException {
         return getConnection().getClientID();
     }
 
+    @Override
     public ExceptionListener getExceptionListener() throws JMSException {
         return getConnection().getExceptionListener();
     }
 
+    @Override
     public ConnectionMetaData getMetaData() throws JMSException {
         return getConnection().getMetaData();
     }
 
+    @Override
     public void setExceptionListener(ExceptionListener exceptionListener) throws JMSException {
         getConnection().setExceptionListener(exceptionListener);
     }
 
+    @Override
     public void setClientID(String clientID) throws JMSException {
 
         // ignore repeated calls to setClientID() with the same client id
@@ -132,20 +151,24 @@ public class PooledConnection implements TopicConnection, QueueConnection, Enhan
         }
     }
 
+    @Override
     public ConnectionConsumer createConnectionConsumer(Queue queue, String selector, ServerSessionPool serverSessionPool, int maxMessages) throws JMSException {
         return getConnection().createConnectionConsumer(queue, selector, serverSessionPool, maxMessages);
     }
 
     // Session factory methods
     // -------------------------------------------------------------------------
+    @Override
     public QueueSession createQueueSession(boolean transacted, int ackMode) throws JMSException {
         return (QueueSession) createSession(transacted, ackMode);
     }
 
+    @Override
     public TopicSession createTopicSession(boolean transacted, int ackMode) throws JMSException {
         return (TopicSession) createSession(transacted, ackMode);
     }
 
+    @Override
     public Session createSession(boolean transacted, int ackMode) throws JMSException {
         PooledSession result;
         result = (PooledSession) pool.createSession(transacted, ackMode);
@@ -156,6 +179,16 @@ public class PooledConnection implements TopicConnection, QueueConnection, Enhan
         return (Session) result;
     }
 
+    // EnhancedCollection API
+    // -------------------------------------------------------------------------
+
+    @Override
+    public DestinationSource getDestinationSource() throws JMSException {
+        return getConnection().getDestinationSource();
+    }
+
+    // Implementation methods
+    // -------------------------------------------------------------------------
 
     public void onTemporaryQueueCreate(TemporaryQueue tempQueue) {
         connTempQueues.add(tempQueue);
@@ -164,16 +197,6 @@ public class PooledConnection implements TopicConnection, QueueConnection, Enhan
     public void onTemporaryTopicCreate(TemporaryTopic tempTopic) {
         connTempTopics.add(tempTopic);
     }
-
-    // EnhancedCollection API
-    // -------------------------------------------------------------------------
-
-    public DestinationSource getDestinationSource() throws JMSException {
-        return getConnection().getDestinationSource();
-    }
-
-    // Implementation methods
-    // -------------------------------------------------------------------------
 
     public ActiveMQConnection getConnection() throws JMSException {
         assertNotClosed();
@@ -221,5 +244,27 @@ public class PooledConnection implements TopicConnection, QueueConnection, Enhan
             }
         }
         connTempTopics.clear();
+    }
+
+    /**
+     * @return the total number of Pooled session including idle sessions that are not
+     *          currently loaned out to any client.
+     */
+    public int getNumSessions() {
+        return this.pool.getNumSessions();
+    }
+
+    /**
+     * @return the number of Sessions that are currently checked out of this Connection's session pool.
+     */
+    public int getNumActiveSessions() {
+        return this.pool.getNumActiveSessions();
+    }
+
+    /**
+     * @return the number of Sessions that are idle in this Connection's sessions pool.
+     */
+    public int getNumtIdleSessions() {
+        return this.pool.getNumIdleSessions();
     }
 }

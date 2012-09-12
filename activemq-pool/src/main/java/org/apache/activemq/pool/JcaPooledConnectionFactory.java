@@ -19,7 +19,7 @@ import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 
 /**
- * 
+ *
  */
 public class JcaPooledConnectionFactory extends XaPooledConnectionFactory {
 
@@ -46,7 +46,6 @@ public class JcaPooledConnectionFactory extends XaPooledConnectionFactory {
     }
 
     protected ConnectionPool createConnectionPool(ActiveMQConnection connection) {
-        return new JcaConnectionPool(connection, getPoolFactory(), getTransactionManager(), getName());
+        return new JcaConnectionPool(connection, getTransactionManager(), getName());
     }
-
 }

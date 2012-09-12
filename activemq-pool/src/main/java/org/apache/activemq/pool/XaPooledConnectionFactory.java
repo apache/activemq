@@ -28,7 +28,7 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 public class XaPooledConnectionFactory extends PooledConnectionFactory {
 
     private TransactionManager transactionManager;
-    
+
     public XaPooledConnectionFactory() {
         super();
     }
@@ -50,7 +50,6 @@ public class XaPooledConnectionFactory extends PooledConnectionFactory {
     }
 
     protected ConnectionPool createConnectionPool(ActiveMQConnection connection) {
-        return new XaConnectionPool(connection, getPoolFactory(), getTransactionManager());
+        return new XaConnectionPool(connection, getTransactionManager());
     }
-
 }

@@ -25,7 +25,7 @@ import javax.jms.TopicPublisher;
 import org.apache.activemq.ActiveMQTopicPublisher;
 
 /**
- * 
+ * A {@link TopicPublisher} instance that is created and managed by a PooledConnection.
  */
 public class PooledTopicPublisher extends PooledProducer implements TopicPublisher {
 
@@ -33,22 +33,27 @@ public class PooledTopicPublisher extends PooledProducer implements TopicPublish
         super(messageProducer, destination);
     }
 
+    @Override
     public Topic getTopic() throws JMSException {
         return getTopicPublisher().getTopic();
     }
 
+    @Override
     public void publish(Message message) throws JMSException {
         getTopicPublisher().publish((Topic) getDestination(), message);
     }
 
+    @Override
     public void publish(Message message, int i, int i1, long l) throws JMSException {
         getTopicPublisher().publish((Topic) getDestination(), message, i, i1, l);
     }
 
+    @Override
     public void publish(Topic topic, Message message) throws JMSException {
         getTopicPublisher().publish(topic, message);
     }
 
+    @Override
     public void publish(Topic topic, Message message, int i, int i1, long l) throws JMSException {
         getTopicPublisher().publish(topic, message, i, i1, l);
     }

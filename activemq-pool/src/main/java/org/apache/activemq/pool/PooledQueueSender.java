@@ -25,7 +25,7 @@ import javax.jms.QueueSender;
 import org.apache.activemq.ActiveMQQueueSender;
 
 /**
- * 
+ * {@link QueueSender} instance that is created and managed by the PooledConnection.
  */
 public class PooledQueueSender extends PooledProducer implements QueueSender {
 
@@ -33,21 +33,22 @@ public class PooledQueueSender extends PooledProducer implements QueueSender {
         super(messageProducer, destination);
     }
 
+    @Override
     public void send(Queue queue, Message message, int i, int i1, long l) throws JMSException {
         getQueueSender().send(queue, message, i, i1, l);
     }
 
+    @Override
     public void send(Queue queue, Message message) throws JMSException {
         getQueueSender().send(queue, message);
     }
 
+    @Override
     public Queue getQueue() throws JMSException {
         return getQueueSender().getQueue();
     }
 
-
     protected ActiveMQQueueSender getQueueSender() {
         return (ActiveMQQueueSender) getMessageProducer();
     }
-
 }

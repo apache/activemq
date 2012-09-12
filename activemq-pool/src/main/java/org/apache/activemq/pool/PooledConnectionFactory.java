@@ -16,28 +16,27 @@
  */
 package org.apache.activemq.pool;
 
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
+
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
 import javax.jms.JMSException;
+
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.Service;
-import org.apache.activemq.util.IOExceptionSupport;
+import org.apache.activemq.util.JMSExceptionSupport;
+import org.apache.commons.pool.KeyedObjectPool;
+import org.apache.commons.pool.KeyedPoolableObjectFactory;
+import org.apache.commons.pool.ObjectPoolFactory;
+import org.apache.commons.pool.impl.GenericKeyedObjectPool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.commons.pool.ObjectPoolFactory;
-import org.apache.commons.pool.impl.GenericObjectPool;
-import org.apache.commons.pool.impl.GenericObjectPoolFactory;
 
 /**
  * A JMS provider which pools Connection, Session and MessageProducer instances
- * so it can be used with tools like <a href="http://camel.apache.org/activemq.html">Camel</a> and Spring's <a
- * href="http://activemq.apache.org/spring-support.html">JmsTemplate and MessagListenerContainer</a>.
+ * so it can be used with tools like <a href="http://camel.apache.org/activemq.html">Camel</a> and Spring's
+ * <a href="http://activemq.apache.org/spring-support.html">JmsTemplate and MessagListenerContainer</a>.
  * Connections, sessions and producers are returned to a pool after use so that they can be reused later
  * without having to undergo the cost of creating them again.
  *
@@ -54,92 +53,193 @@ import org.apache.commons.pool.impl.GenericObjectPoolFactory;
  * all messages don't end up going to just one of the consumers. See this FAQ entry for more detail:
  * http://activemq.apache.org/i-do-not-receive-messages-in-my-second-consumer.html
  *
+ * Optionally, one may configure the pool to examine and possibly evict objects as they sit idle in the
+ * pool. This is performed by an "idle object eviction" thread, which runs asynchronously. Caution should
+ * be used when configuring this optional feature. Eviction runs contend with client threads for access
+ * to objects in the pool, so if they run too frequently performance issues may result. The idle object
+ * eviction thread may be configured using the {@link setTimeBetweenExpirationCheckMillis} method.  By
+ * default the value is -1 which means no eviction thread will be run.  Set to a non-negative value to
+ * configure the idle eviction thread to run.
+ *
  * @org.apache.xbean.XBean element="pooledConnectionFactory"
- *
- *
  */
 public class PooledConnectionFactory implements ConnectionFactory, Service {
     private static final transient Logger LOG = LoggerFactory.getLogger(PooledConnectionFactory.class);
+
+    private final AtomicBoolean stopped = new AtomicBoolean(false);
+    private final GenericKeyedObjectPool<ConnectionKey, ConnectionPool> connectionsPool;
+
     private ConnectionFactory connectionFactory;
-    private final Map<ConnectionKey, LinkedList<ConnectionPool>> cache = new HashMap<ConnectionKey, LinkedList<ConnectionPool>>();
-    private ObjectPoolFactory poolFactory;
+
     private int maximumActiveSessionPerConnection = 500;
-    private int maxConnections = 1;
     private int idleTimeout = 30 * 1000;
     private boolean blockIfSessionPoolIsFull = true;
-    private final AtomicBoolean stopped = new AtomicBoolean(false);
     private long expiryTimeout = 0l;
     private boolean createConnectionOnStartup = true;
 
+    /**
+     * Creates new PooledConnectionFactory with a default ActiveMQConnectionFactory instance.
+     * <p/>
+     * The URI used to connect to ActiveMQ comes from the default value of ActiveMQConnectionFactory.
+     */
     public PooledConnectionFactory() {
         this(new ActiveMQConnectionFactory());
     }
 
+    /**
+     * Creates a new PooledConnectionFactory that will use the given broker URI to connect to
+     * ActiveMQ.
+     *
+     * @param brokerURL
+     *      The URI to use to configure the internal ActiveMQConnectionFactory.
+     */
     public PooledConnectionFactory(String brokerURL) {
         this(new ActiveMQConnectionFactory(brokerURL));
     }
 
+    /**
+     * Creates a new PooledConnectionFactory that will use the given ActiveMQConnectionFactory to
+     * create new ActiveMQConnection instances that will be pooled.
+     *
+     * @param connectionFactory
+     *      The ActiveMQConnectionFactory to create new Connections for this pool.
+     */
     public PooledConnectionFactory(ActiveMQConnectionFactory connectionFactory) {
         this.connectionFactory = connectionFactory;
+
+        this.connectionsPool = new GenericKeyedObjectPool<ConnectionKey, ConnectionPool>(
+            new KeyedPoolableObjectFactory<ConnectionKey, ConnectionPool>() {
+
+                @Override
+                public void activateObject(ConnectionKey key, ConnectionPool connection) throws Exception {
+                }
+
+                @Override
+                public void destroyObject(ConnectionKey key, ConnectionPool connection) throws Exception {
+                    try {
+                        if (LOG.isTraceEnabled()) {
+                            LOG.trace("Destroying connection: {}", connection);
+                        }
+                        connection.close();
+                    } catch (Exception e) {
+                        LOG.warn("Close connection failed for connection: " + connection + ". This exception will be ignored.",e);
+                    }
+                }
+
+                @Override
+                public ConnectionPool makeObject(ConnectionKey key) throws Exception {
+                    ActiveMQConnection delegate = createConnection(key);
+
+                    ConnectionPool connection = new ConnectionPool(delegate);
+                    connection.setIdleTimeout(getIdleTimeout());
+                    connection.setExpiryTimeout(getExpiryTimeout());
+                    connection.setMaximumActiveSessionPerConnection(getMaximumActiveSessionPerConnection());
+                    connection.setBlockIfSessionPoolIsFull(isBlockIfSessionPoolIsFull());
+
+                    if (LOG.isTraceEnabled()) {
+                        LOG.trace("Created new connection: {}", connection);
+                    }
+
+                    return connection;
+                }
+
+                @Override
+                public void passivateObject(ConnectionKey key, ConnectionPool connection) throws Exception {
+                }
+
+                @Override
+                public boolean validateObject(ConnectionKey key, ConnectionPool connection) {
+                    if (connection != null && connection.expiredCheck()) {
+                        if (LOG.isTraceEnabled()) {
+                            LOG.trace("Connection has expired: {} and will be destroyed", connection);
+                        }
+
+                        return false;
+                    }
+
+                    return true;
+                }
+        });
+
+        // Set max idle (not max active) since our connections always idle in the pool.
+        this.connectionsPool.setMaxIdle(1);
+
+        // We always want our validate method to control when idle objects are evicted.
+        this.connectionsPool.setTestOnBorrow(true);
+        this.connectionsPool.setTestWhileIdle(true);
     }
 
+    /**
+     * @return the currently configured ConnectionFactory used to create the pooled Connections.
+     */
     public ConnectionFactory getConnectionFactory() {
         return connectionFactory;
     }
 
+    /**
+     * Sets the ConnectionFactory used to create new pooled Connections.
+     * <p/>
+     * Updates to this value do not affect Connections that were previously created and placed
+     * into the pool.  In order to allocate new Connections based off this new ConnectionFactory
+     * it is first necessary to {@link clear} the pooled Connections.
+     *
+     * @param connectionFactory
+     *      The factory to use to create pooled Connections.
+     */
     public void setConnectionFactory(ConnectionFactory connectionFactory) {
         this.connectionFactory = connectionFactory;
     }
 
+    @Override
     public Connection createConnection() throws JMSException {
         return createConnection(null, null);
     }
 
+    @Override
     public synchronized Connection createConnection(String userName, String password) throws JMSException {
         if (stopped.get()) {
             LOG.debug("PooledConnectionFactory is stopped, skip create new connection.");
             return null;
         }
 
-        ConnectionKey key = new ConnectionKey(userName, password);
-        LinkedList<ConnectionPool> pools = cache.get(key);
-
-        if (pools == null) {
-            pools = new LinkedList<ConnectionPool>();
-            cache.put(key, pools);
-        }
-
         ConnectionPool connection = null;
-        if (pools.size() == maxConnections) {
-            connection = pools.removeFirst();
-        }
+        ConnectionKey key = new ConnectionKey(userName, password);
 
-        // Now.. we might get a connection, but it might be that we need to
-        // dump it..
-        if (connection != null && connection.expiredCheck()) {
-            if (LOG.isTraceEnabled()) {
-                LOG.trace("Connection has expired: {}", connection);
+        // This will either return an existing non-expired ConnectionPool or it
+        // will create a new one to meet the demand.
+        if (connectionsPool.getNumIdle(key) < getMaxConnections()) {
+            try {
+                // we want borrowObject to return the one we added.
+                connectionsPool.setLifo(true);
+                connectionsPool.addObject(key);
+            } catch (Exception e) {
+                throw JMSExceptionSupport.create("Error while attempting to add new Connection to the pool", e);
             }
-            connection = null;
+        } else {
+            // now we want the oldest one in the pool.
+            connectionsPool.setLifo(false);
         }
 
-        if (connection == null) {
-            ActiveMQConnection delegate = createConnection(key);
-            connection = createConnectionPool(delegate);
-
-            if (LOG.isTraceEnabled()) {
-                LOG.trace("Created new connection: {}", connection);
-            }
+        try {
+            connection = connectionsPool.borrowObject(key);
+        } catch (Exception e) {
+            throw JMSExceptionSupport.create("Error while attempting to retrieve a connection from the pool", e);
         }
-        pools.add(connection);
+
+        try {
+            connectionsPool.returnObject(key, connection);
+        } catch (Exception e) {
+            throw JMSExceptionSupport.create("Error when returning connection to the pool", e);
+        }
+
         return new PooledConnection(connection);
     }
 
-    protected ConnectionPool createConnectionPool(ActiveMQConnection connection) {
-        ConnectionPool result =  new ConnectionPool(connection, getPoolFactory());
-        result.setIdleTimeout(getIdleTimeout());
-        result.setExpiryTimeout(getExpiryTimeout());
-        return result;
+    /**
+     * @deprecated
+     */
+    public ObjectPoolFactory<?> getPoolFactory() {
+        return null;
     }
 
     protected ActiveMQConnection createConnection(ConnectionKey key) throws JMSException {
@@ -150,8 +250,9 @@ public class PooledConnectionFactory implements ConnectionFactory, Service {
         }
     }
 
+    @Override
     public void start() {
-        LOG.debug("Staring the PooledConnectionFactory");
+        LOG.debug("Staring the PooledConnectionFactory: create on start = {}", isCreateConnectionOnStartup());
         stopped.set(false);
         if (isCreateConnectionOnStartup()) {
             try {
@@ -163,34 +264,32 @@ public class PooledConnectionFactory implements ConnectionFactory, Service {
         }
     }
 
+    @Override
     public void stop() {
-        LOG.debug("Stopping the PooledConnectionFactory, number of connections in cache: {}", cache.size());
-        stopped.set(true);
-        for (Iterator<LinkedList<ConnectionPool>> iter = cache.values().iterator(); iter.hasNext();) {
-            for (ConnectionPool connection : iter.next()) {
-                try {
-                    connection.close();
-                } catch (Exception e) {
-                    LOG.warn("Close connection failed for connection: " + connection + ". This exception will be ignored.",e);
-                }
+        LOG.debug("Stopping the PooledConnectionFactory, number of connections in cache: {}",
+                  connectionsPool.getNumActive());
+
+        if (stopped.compareAndSet(false, true)) {
+            try {
+                connectionsPool.close();
+            } catch (Exception e) {
             }
         }
-        cache.clear();
-    }
-
-    public ObjectPoolFactory getPoolFactory() {
-        if (poolFactory == null) {
-            poolFactory = createPoolFactory();
-        }
-        return poolFactory;
     }
 
     /**
-     * Sets the object pool factory used to create individual session pools for
-     * each connection
+     * Clears all connections from the pool.  Each connection that is currently in the pool is
+     * closed and removed from the pool.  A new connection will be created on the next call to
+     * {@link createConnection}.  Care should be taken when using this method as Connections that
+     * are in use be client's will be closed.
      */
-    public void setPoolFactory(ObjectPoolFactory poolFactory) {
-        this.poolFactory = poolFactory;
+    public void clear() {
+
+        if (stopped.get()) {
+            return;
+        }
+
+        this.connectionsPool.clear();
     }
 
     /**
@@ -209,12 +308,22 @@ public class PooledConnectionFactory implements ConnectionFactory, Service {
         setMaximumActiveSessionPerConnection(maximumActive);
     }
 
+    /**
+     * Returns the currently configured maximum number of sessions a pooled Connection will
+     * create before it either blocks or throws an exception when a new session is requested,
+     * depending on configuration.
+     *
+     * @return the number of session instances that can be taken from a pooled connection.
+     */
     public int getMaximumActiveSessionPerConnection() {
         return maximumActiveSessionPerConnection;
     }
 
     /**
      * Sets the maximum number of active sessions per connection
+     *
+     * @param maximumActiveSessionPerConnection
+     *      The maximum number of active session per connection in the pool.
      */
     public void setMaximumActiveSessionPerConnection(int maximumActiveSessionPerConnection) {
         this.maximumActiveSessionPerConnection = maximumActiveSessionPerConnection;
@@ -237,40 +346,61 @@ public class PooledConnectionFactory implements ConnectionFactory, Service {
     }
 
     /**
-     * @return the maxConnections
+     * Returns whether a pooled Connection will enter a blocked state or will throw an Exception
+     * once the maximum number of sessions has been borrowed from the the Session Pool.
+     *
+     * @return true if the pooled Connection createSession method will block when the limit is hit.
+     * @see setBlockIfSessionPoolIsFull
      */
-    public int getMaxConnections() {
-        return maxConnections;
+    public boolean isBlockIfSessionPoolIsFull() {
+        return this.blockIfSessionPoolIsFull;
     }
 
     /**
+     * Returns the maximum number to pooled Connections that this factory will allow before it
+     * begins to return connections from the pool on calls to ({@link createConnection}.
+     *
+     * @return the maxConnections that will be created for this pool.
+     */
+    public int getMaxConnections() {
+        return connectionsPool.getMaxIdle();
+    }
+
+    /**
+     * Sets the maximum number of pooled Connections (defaults to one).  Each call to
+     * {@link createConnection} will result in a new Connection being create up to the max
+     * connections value.
+     *
      * @param maxConnections the maxConnections to set
      */
     public void setMaxConnections(int maxConnections) {
-        this.maxConnections = maxConnections;
+        this.connectionsPool.setMaxIdle(maxConnections);
     }
 
     /**
-     * Creates an ObjectPoolFactory. Its behavior is controlled by the two
-     * properties @see #maximumActive and @see #blockIfSessionPoolIsFull.
+     * Gets the Idle timeout value applied to new Connection's that are created by this pool.
+     * <p/>
+     * The idle timeout is used determine if a Connection instance has sat to long in the pool unused
+     * and if so is closed and removed from the pool.  The default value is 30 seconds.
      *
-     * @return the newly created but empty ObjectPoolFactory
+     * @return
      */
-    protected ObjectPoolFactory createPoolFactory() {
-         if (blockIfSessionPoolIsFull) {
-            return new GenericObjectPoolFactory(null, maximumActiveSessionPerConnection);
-        } else {
-            return new GenericObjectPoolFactory(null,
-                maximumActiveSessionPerConnection,
-                GenericObjectPool.WHEN_EXHAUSTED_FAIL,
-                GenericObjectPool.DEFAULT_MAX_WAIT);
-        }
-    }
-
     public int getIdleTimeout() {
         return idleTimeout;
     }
 
+    /**
+     * Sets the idle timeout value for Connection's that are created by this pool, defaults to 30 seconds.
+     * <p/>
+     * For a Connection that is in the pool but has no current users the idle timeout determines how
+     * long the Connection can live before it is eligible for removal from the pool.  Normally the
+     * connections are tested when an attempt to check one out occurs so a Connection instance can sit
+     * in the pool much longer than its idle timeout if connections are used infrequently.
+     *
+     *
+     * @param idleTimeout
+     *      The maximum time a pooled Connection can sit unused before it is eligible for removal.
+     */
     public void setIdleTimeout(int idleTimeout) {
         this.idleTimeout = idleTimeout;
     }
@@ -285,10 +415,16 @@ public class PooledConnectionFactory implements ConnectionFactory, Service {
         this.expiryTimeout = expiryTimeout;
     }
 
+    /**
+     * @return the configured expiration timeout for connections in the pool.
+     */
     public long getExpiryTimeout() {
         return expiryTimeout;
     }
 
+    /**
+     * @return true if a Connection is created immediately on a call to {@link start}.
+     */
     public boolean isCreateConnectionOnStartup() {
         return createConnectionOnStartup;
     }
@@ -296,12 +432,56 @@ public class PooledConnectionFactory implements ConnectionFactory, Service {
     /**
      * Whether to create a connection on starting this {@link PooledConnectionFactory}.
      * <p/>
-     * This can be used to warmup the pool on startup. Notice that any kind of exception
+     * This can be used to warm-up the pool on startup. Notice that any kind of exception
      * happens during startup is logged at WARN level and ignored.
      *
      * @param createConnectionOnStartup <tt>true</tt> to create a connection on startup
      */
     public void setCreateConnectionOnStartup(boolean createConnectionOnStartup) {
         this.createConnectionOnStartup = createConnectionOnStartup;
+    }
+
+    /**
+     * Gets the Pool of ConnectionPool instances which are keyed by different ConnectionKeys.
+     *
+     * @return this factories pool of ConnectionPool instances.
+     */
+    KeyedObjectPool<ConnectionKey, ConnectionPool> getConnectionsPool() {
+        return this.connectionsPool;
+    }
+
+    /**
+     * Sets the number of milliseconds to sleep between runs of the idle Connection eviction thread.
+     * When non-positive, no idle object eviction thread will be run, and Connections will only be
+     * checked on borrow to determine if they have sat idle for too long or have failed for some
+     * other reason.
+     * <p/>
+     * By default this value is set to -1 and no expiration thread ever runs.
+     *
+     * @param timeBetweenExpirationCheckMillis
+     *      The time to wait between runs of the idle Connection eviction thread.
+     */
+    public void setTimeBetweenExpirationCheckMillis(long timeBetweenExpirationCheckMillis) {
+        this.connectionsPool.setTimeBetweenEvictionRunsMillis(timeBetweenExpirationCheckMillis);
+    }
+
+    /**
+     * @return the number of milliseconds to sleep between runs of the idle connection eviction thread.
+     */
+    public long setTimeBetweenExpirationCheckMillis() {
+        return this.connectionsPool.getTimeBetweenEvictionRunsMillis();
+    }
+
+    /**
+     * @return the number of Connections currently in the Pool
+     */
+    public int getNumConnections() {
+        return this.connectionsPool.getNumIdle();
+    }
+
+    /**
+     * @deprecated
+     */
+    public void setPoolFactory(ObjectPoolFactory<?> factory) {
     }
 }

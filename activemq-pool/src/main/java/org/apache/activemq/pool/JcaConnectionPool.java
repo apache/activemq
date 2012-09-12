@@ -28,9 +28,16 @@ public class JcaConnectionPool extends XaConnectionPool {
 
     private String name;
 
-    public JcaConnectionPool(ActiveMQConnection connection, ObjectPoolFactory poolFactory, TransactionManager transactionManager, String name) {
-        super(connection, poolFactory, transactionManager);
+    public JcaConnectionPool(ActiveMQConnection connection, TransactionManager transactionManager, String name) {
+        super(connection, transactionManager);
         this.name = name;
+    }
+
+    /**
+     * @deprecated
+     */
+    public JcaConnectionPool(ActiveMQConnection connection, ObjectPoolFactory poolFactory, TransactionManager transactionManager, String name) {
+        this(connection, transactionManager, name);
     }
 
     protected XAResource createXaResource(PooledSession session) throws JMSException {

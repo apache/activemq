@@ -35,7 +35,7 @@ import org.apache.activemq.test.TestSupport;
 import org.apache.activemq.util.SocketProxy;
 
 /**
- * 
+ *
  */
 public class PooledTopicPublisherTest extends TestSupport {
 
@@ -52,7 +52,7 @@ public class PooledTopicPublisherTest extends TestSupport {
         publisher.publish(session.createMessage());
     }
 
-    
+
     public void testSetGetExceptionListener() throws Exception {
         PooledConnectionFactory pcf = new PooledConnectionFactory();
         pcf.setConnectionFactory(new ActiveMQConnectionFactory("vm://test"));
@@ -65,37 +65,37 @@ public class PooledTopicPublisherTest extends TestSupport {
         connection.setExceptionListener(listener);
         assertEquals(listener, connection.getExceptionListener());
     }
-    
+
     public void testPooledConnectionAfterInactivity() throws Exception {
         BrokerService broker = new BrokerService();
         TransportConnector networkConnector = broker.addConnector("tcp://localhost:0");
         broker.setPersistent(false);
         broker.setUseJmx(false);
         broker.start();
-        
+
         SocketProxy proxy = new SocketProxy(networkConnector.getConnectUri());
-        
+
         PooledConnectionFactory pcf = new PooledConnectionFactory();
         String uri = proxy.getUrl().toString() + "?trace=true&wireFormat.maxInactivityDuration=500&wireFormat.maxInactivityDurationInitalDelay=500";
         pcf.setConnectionFactory(new ActiveMQConnectionFactory(uri));
-        
+
         PooledConnection conn =  (PooledConnection) pcf.createConnection();
         ActiveMQConnection amq = conn.getConnection();
+        assertNotNull(amq);
         final CountDownLatch gotException = new CountDownLatch(1);
-        //amq.set
         conn.setExceptionListener(new ExceptionListener() {
             public void onException(JMSException exception) {
                 gotException.countDown();
             }});
         conn.setClientID(getName());
-        
+
         // let it hang, simulate a server hang so inactivity timeout kicks in
         proxy.pause();
         //assertTrue("got an exception", gotException.await(5, TimeUnit.SECONDS));
         TimeUnit.SECONDS.sleep(2);
         conn.close();
     }
-    
+
     @Override
     protected void tearDown() throws Exception {
         if (connection != null) {
