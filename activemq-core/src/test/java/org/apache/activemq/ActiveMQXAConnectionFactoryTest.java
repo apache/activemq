@@ -56,6 +56,21 @@ import org.slf4j.LoggerFactory;
 public class ActiveMQXAConnectionFactoryTest extends CombinationTestSupport {
     private static final Logger LOG = LoggerFactory.getLogger(ActiveMQXAConnectionFactoryTest.class);
     long txGenerator = System.currentTimeMillis();
+    private ActiveMQConnection connection;
+    private BrokerService broker;
+
+    protected void tearDown() throws Exception {
+        // Try our best to close any previously opend connection.
+        try {
+            connection.close();
+        } catch (Throwable ignore) {
+        }
+        // Try our best to stop any previously started broker.
+        try {
+            broker.stop();
+        } catch (Throwable ignore) {
+        }
+    }
 
     public void testCopy() throws URISyntaxException, JMSException {
         ActiveMQXAConnectionFactory cf = new ActiveMQXAConnectionFactory("vm://localhost?");
@@ -97,25 +112,25 @@ public class ActiveMQXAConnectionFactoryTest extends CombinationTestSupport {
     }
 
     public void testCreateVMConnectionWithEmbdeddBroker() throws URISyntaxException, JMSException {
-        ActiveMQXAConnectionFactory cf = new ActiveMQXAConnectionFactory(
-                                                                         "vm://localhost?broker.persistent=false");
+        ActiveMQXAConnectionFactory cf = new ActiveMQXAConnectionFactory("vm://myBroker?broker.persistent=false");
         // Make sure the broker is not created until the connection is
         // instantiated.
-        assertNull(BrokerRegistry.getInstance().lookup("localhost"));
-        Connection connection = cf.createConnection();
+        assertNull(BrokerRegistry.getInstance().lookup("myBroker"));
+        connection = (ActiveMQConnection) cf.createConnection();
         // This should create the connection.
         assertNotNull(connection);
         // Verify the broker was created.
-        assertNotNull(BrokerRegistry.getInstance().lookup("localhost"));
+        assertNotNull(BrokerRegistry.getInstance().lookup("myBroker"));
         connection.close();
         // Verify the broker was destroyed.
-        assertNull(BrokerRegistry.getInstance().lookup("localhost"));
+        assertNull(BrokerRegistry.getInstance().lookup("myBroker"));
+
+        connection.close();
     }
 
     public void testGetBrokerName() throws URISyntaxException, JMSException {
-        ActiveMQXAConnectionFactory cf = new ActiveMQXAConnectionFactory(
-                                                                         "vm://localhost?broker.persistent=false");
-        ActiveMQConnection connection = (ActiveMQConnection)cf.createConnection();
+        ActiveMQXAConnectionFactory cf = new ActiveMQXAConnectionFactory("vm://localhost?broker.persistent=false");
+        connection = (ActiveMQConnection)cf.createConnection();
         connection.start();
 
         String brokerName = connection.getBrokerName();
@@ -135,52 +150,83 @@ public class ActiveMQXAConnectionFactoryTest extends CombinationTestSupport {
 
     public void testIsSameRM() throws URISyntaxException, JMSException, XAException {
 
-        ActiveMQXAConnectionFactory cf1 = new ActiveMQXAConnectionFactory("vm://localhost?broker.persistent=false");
-        XAConnection connection1 = (XAConnection)cf1.createConnection();
-        XASession session1 = connection1.createXASession();
-        XAResource resource1 = session1.getXAResource();
+        XAConnection connection1 = null;
+        XAConnection connection2 = null;
+        try {
+            ActiveMQXAConnectionFactory cf1 = new ActiveMQXAConnectionFactory("vm://localhost?broker.persistent=false");
+            connection1 = (XAConnection)cf1.createConnection();
+            XASession session1 = connection1.createXASession();
+            XAResource resource1 = session1.getXAResource();
 
-        ActiveMQXAConnectionFactory cf2 = new ActiveMQXAConnectionFactory("vm://localhost?broker.persistent=false");
-        XAConnection connection2 = (XAConnection)cf2.createConnection();
-        XASession session2 = connection2.createXASession();
-        XAResource resource2 = session2.getXAResource();
+            ActiveMQXAConnectionFactory cf2 = new ActiveMQXAConnectionFactory("vm://localhost?broker.persistent=false");
+            connection2 = (XAConnection)cf2.createConnection();
+            XASession session2 = connection2.createXASession();
+            XAResource resource2 = session2.getXAResource();
 
-        assertTrue(resource1.isSameRM(resource2));
-
-        connection1.close();
-        connection2.close();
+            assertTrue(resource1.isSameRM(resource2));
+            session1.close();
+            session2.close();
+        } finally {
+            if (connection1 != null) {
+                try {
+                    connection1.close();
+                } catch (Exception e) {
+                    // ignore
+                }
+            }
+            if (connection2 != null) {
+                try {
+                    connection2.close();
+                } catch (Exception e) {
+                    // ignore
+                }
+            }
+        }
     }
 
     public void testVanilaTransactionalProduceReceive() throws Exception {
 
-        ActiveMQXAConnectionFactory cf1 = new ActiveMQXAConnectionFactory("vm://localhost?broker.persistent=false");
-        XAConnection connection1 = (XAConnection)cf1.createConnection();
-        connection1.start();
-        XASession session = connection1.createXASession();
-        XAResource resource = session.getXAResource();
-        Destination dest = new ActiveMQQueue(getName());
+        XAConnection connection1 = null;
+        try {
+            ActiveMQXAConnectionFactory cf1 = new ActiveMQXAConnectionFactory("vm://localhost?broker.persistent=false");
+            connection1 = (XAConnection)cf1.createConnection();
+            connection1.start();
+            XASession session = connection1.createXASession();
+            XAResource resource = session.getXAResource();
+            Destination dest = new ActiveMQQueue(getName());
 
-        // publish a message
-        Xid tid = createXid();
-        resource.start(tid, XAResource.TMNOFLAGS);
-        MessageProducer producer = session.createProducer(dest);
-        ActiveMQTextMessage message  = new ActiveMQTextMessage();
-        message.setText(getName());
-        producer.send(message);
-        resource.end(tid, XAResource.TMSUCCESS);
-        resource.commit(tid, true);
-        session.close();
+            // publish a message
+            Xid tid = createXid();
+            resource.start(tid, XAResource.TMNOFLAGS);
+            MessageProducer producer = session.createProducer(dest);
+            ActiveMQTextMessage message  = new ActiveMQTextMessage();
+            message.setText(getName());
+            producer.send(message);
+            resource.end(tid, XAResource.TMSUCCESS);
+            resource.commit(tid, true);
+            session.close();
 
-        session = connection1.createXASession();
-        MessageConsumer consumer = session.createConsumer(dest);
-        tid = createXid();
-        resource = session.getXAResource();
-        resource.start(tid, XAResource.TMNOFLAGS);
-        TextMessage receivedMessage = (TextMessage) consumer.receive(1000);
-        assertNotNull(receivedMessage);
-        assertEquals(getName(), receivedMessage.getText());
-        resource.end(tid, XAResource.TMSUCCESS);
-        resource.commit(tid, true);
+            session = connection1.createXASession();
+            MessageConsumer consumer = session.createConsumer(dest);
+            tid = createXid();
+            resource = session.getXAResource();
+            resource.start(tid, XAResource.TMNOFLAGS);
+            TextMessage receivedMessage = (TextMessage) consumer.receive(1000);
+            assertNotNull(receivedMessage);
+            assertEquals(getName(), receivedMessage.getText());
+            resource.end(tid, XAResource.TMSUCCESS);
+            resource.commit(tid, true);
+            session.close();
+
+        } finally {
+            if (connection1 != null) {
+                try {
+                    connection1.close();
+                } catch (Exception e) {
+                    // ignore
+                }
+            }
+        }
     }
 
     public void testConsumerCloseTransactionalSendReceive() throws Exception {
@@ -382,7 +428,7 @@ public class ActiveMQXAConnectionFactoryTest extends CombinationTestSupport {
 
     protected void assertCreateConnection(String uri) throws Exception {
         // Start up a broker with a tcp connector.
-        BrokerService broker = new BrokerService();
+        broker = new BrokerService();
         broker.setPersistent(false);
         TransportConnector connector = broker.addConnector(uri);
         broker.start();
