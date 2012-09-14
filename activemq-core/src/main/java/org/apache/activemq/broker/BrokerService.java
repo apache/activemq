@@ -186,6 +186,7 @@ public class BrokerService implements Service {
     private PolicyMap destinationPolicy;
     private final AtomicBoolean started = new AtomicBoolean(false);
     private final AtomicBoolean stopped = new AtomicBoolean(false);
+    private final AtomicBoolean stopping = new AtomicBoolean(false);
     private BrokerPlugin[] plugins;
     private boolean keepDurableSubsActive = true;
     private boolean useVirtualTopics = true;
@@ -549,6 +550,7 @@ public class BrokerService implements Service {
             return;
         }
 
+        stopping.set(false);
         startDate = new Date();
         MDC.put("activemq.broker", brokerName);
 
@@ -700,7 +702,8 @@ public class BrokerService implements Service {
      */
     @PreDestroy
     public void stop() throws Exception {
-        if (!started.get()) {
+        if (!stopping.compareAndSet(false, true)) {
+            LOG.trace("Broker already stopping/stopped");
             return;
         }
 
@@ -795,7 +798,7 @@ public class BrokerService implements Service {
                 LOG.info("Uptime {}", getUptime());
             }
             LOG.info("ActiveMQ " + getBrokerVersion() + " JMS Message Broker ("
-                    + getBrokerName() + ", " + brokerId + ") stopped");
+                    + getBrokerName() + ", " + brokerId + ") is shutdown");
         }
 
         synchronized (shutdownHooks) {
