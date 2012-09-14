@@ -49,22 +49,18 @@
       <groupId>${project.groupId}</groupId>
       <artifactId>activemq-console</artifactId>
     </dependency>
-
     <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring-core</artifactId>
-      <version>${spring-version}</version>
     </dependency>
     <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring-jms</artifactId>
-      <version>${spring-version}</version>
     </dependency>
     <dependency>
       <groupId>aopalliance</groupId>
       <artifactId>aopalliance</artifactId>
     </dependency>
-
     <dependency>
       <groupId>com.thoughtworks.xstream</groupId>
       <artifactId>xstream</artifactId>
@@ -73,7 +69,6 @@
       <groupId>xpp3</groupId>
       <artifactId>xpp3</artifactId>
     </dependency>
-
     <dependency>
       <groupId>org.eclipse.jetty.aggregate</groupId>
       <artifactId>jetty-all-server</artifactId>
@@ -88,41 +83,33 @@
         <artifactId>jetty-websocket</artifactId>
         <version>${jetty-version}</version>
     </dependency>
-
     <dependency>
       <groupId>axis</groupId>
       <artifactId>axis</artifactId>
       <optional>true</optional>
     </dependency>
-
     <dependency>
       <groupId>org.apache.httpcomponents</groupId>
       <artifactId>httpclient</artifactId>
-      <version>${httpclient-version}</version>
     </dependency>
-
     <dependency>
       <groupId>commons-pool</groupId>
       <artifactId>commons-pool</artifactId>
     </dependency>
-
     <dependency>
       <groupId>commons-collections</groupId>
       <artifactId>commons-collections</artifactId>
     </dependency>
-
     <dependency>
       <groupId>commons-logging</groupId>
       <artifactId>commons-logging</artifactId>
       <scope>test</scope>
     </dependency>
-
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
       <scope>compile</scope>
     </dependency>
-
     <dependency>
       <groupId>org.apache.xmlbeans</groupId>
       <artifactId>xmlbeans</artifactId>
@@ -133,11 +120,11 @@
       <artifactId>xmlbeans-xpath</artifactId>
       <optional>true</optional>
       <exclusions>
-	    <exclusion>
-		  <groupId>net.sf.saxon</groupId>
-		  <artifactId>saxon</artifactId>
-		</exclusion>
-	  </exclusions>	
+        <exclusion>
+          <groupId>net.sf.saxon</groupId>
+          <artifactId>saxon</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>net.sf.saxon</groupId>
@@ -151,13 +138,11 @@
       <version>${xerces-version}</version>
       <optional>true</optional>
     </dependency>
-
     <dependency>
       <groupId>xalan</groupId>
       <artifactId>xalan</artifactId>
       <optional>true</optional>
     </dependency>
-
     <dependency>
       <groupId>log4j</groupId>
       <artifactId>log4j</artifactId>
@@ -184,7 +169,6 @@
       <artifactId>jettison</artifactId>
       <scope>test</scope>
     </dependency>
-
     <dependency>
       <groupId>org.apache.velocity</groupId>
       <artifactId>velocity</artifactId>
@@ -193,15 +177,14 @@
       <groupId>org.apache.servicemix.bundles</groupId>
       <artifactId>org.apache.servicemix.bundles.josql</artifactId>
     </dependency>
-<!-- 
-    TODO: Not needed, but OSGi bundle on the way: https://issues.apache.org/jira/browse/SMX4-1238 
+<!--
+    TODO: Not needed, but OSGi bundle on the way: https://issues.apache.org/jira/browse/SMX4-1238
     <dependency>
       <groupId>net.sf.josql</groupId>
       <artifactId>gentlyweb-utils</artifactId>
       <version>1.5</version>
     </dependency>
 -->
-
     <dependency>
       <groupId>org.seleniumhq.selenium</groupId>
       <artifactId>selenium-java</artifactId>
@@ -220,9 +203,7 @@
       <version>2.21.0</version>
       <scope>test</scope>
     </dependency>
-
   </dependencies>
-
   <build>
     <plugins>
         <plugin>
@@ -269,8 +250,6 @@
         <configuration>
         </configuration>
       </plugin>
-
     </plugins>
   </build>
-
 </project>

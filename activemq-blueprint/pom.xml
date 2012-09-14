@@ -68,7 +68,6 @@
     </plugin>
     <plugin>
       <artifactId>maven-install-plugin</artifactId>
-      <version>${maven-install-plugin-version}</version>
     </plugin>
     </plugins>
   </build>
