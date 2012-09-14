@@ -578,13 +578,13 @@ public class BrokerService implements Service {
             startBroker(startAsync);
             brokerRegistry.bind(getBrokerName(), BrokerService.this);
         } catch (Exception e) {
-            LOG.error("Failed to start ActiveMQ JMS Message Broker (" + getBrokerName() + ", " + brokerId + "). Reason: " + e, e);
+            LOG.error("Failed to start Apache ActiveMQ (" + getBrokerName() + ", " + brokerId + "). Reason: " + e, e);
             try {
                 if (!stopped.get()) {
                     stop();
                 }
             } catch (Exception ex) {
-                LOG.warn("Failed to stop broker after failure in start ", ex);
+                LOG.warn("Failed to stop broker after failure in start. This exception will be ignored.", ex);
             }
             throw e;
         } finally {
@@ -650,7 +650,17 @@ public class BrokerService implements Service {
         slave = false;
         startDestinations();
         addShutdownHook();
-        getBroker().start();
+
+        broker = getBroker();
+        brokerId = broker.getBrokerId();
+
+        // need to log this after creating the broker so we have its id and name
+        if (LOG.isInfoEnabled()) {
+            LOG.info("Apache ActiveMQ " + getBrokerVersion() + " ("
+                    + getBrokerName() + ", " + brokerId + ") is starting");
+        }
+        broker.start();
+
         if (isUseJmx()) {
             if (getManagementContext().isCreateConnector() && !getManagementContext().isConnectorStarted()) {
                 // try to restart management context
@@ -678,16 +688,14 @@ public class BrokerService implements Service {
                 registerFTConnectorMBean(masterConnector);
             }
         }
-        if (brokerId == null) {
-            brokerId = broker.getBrokerId();
-        }
         if (ioExceptionHandler == null) {
             setIoExceptionHandler(new DefaultIOExceptionHandler());
         }
 
         if (LOG.isInfoEnabled()) {
-            LOG.info("ActiveMQ " + getBrokerVersion() + " JMS Message Broker ("
+            LOG.info("Apache ActiveMQ " + getBrokerVersion() + " ("
                     + getBrokerName() + ", " + brokerId + ") started");
+            LOG.info("For help or more information please see: http://activemq.apache.org");
         }
 
         getBroker().brokerServiceStarted();
@@ -719,7 +727,7 @@ public class BrokerService implements Service {
         }
 
         if (LOG.isInfoEnabled()) {
-            LOG.info("ActiveMQ " + getBrokerVersion() + " JMS Message Broker ("
+            LOG.info("Apache ActiveMQ " + getBrokerVersion() + " ("
                     + getBrokerName() + ", " + brokerId + ") is shutting down");
         }
 
@@ -795,9 +803,10 @@ public class BrokerService implements Service {
 
         if (LOG.isInfoEnabled()) {
             if (startDate != null) {
-                LOG.info("Uptime {}", getUptime());
+                LOG.info("Apache ActiveMQ " + getBrokerVersion() + " ("
+                        + getBrokerName() + ", " + brokerId + ") uptime " + getUptime());
             }
-            LOG.info("ActiveMQ " + getBrokerVersion() + " JMS Message Broker ("
+            LOG.info("Apache ActiveMQ " + getBrokerVersion() + " ("
                     + getBrokerName() + ", " + brokerId + ") is shutdown");
         }
 
@@ -929,11 +938,6 @@ public class BrokerService implements Service {
      */
     public Broker getBroker() throws Exception {
         if (broker == null) {
-            if (LOG.isInfoEnabled()) {
-                LOG.info("ActiveMQ " + getBrokerVersion() + " JMS Message Broker ("
-                        + getBrokerName() + ") is starting");
-                LOG.info("For help or more information please see: http://activemq.apache.org/");
-            }
             broker = createBroker();
         }
         return broker;
