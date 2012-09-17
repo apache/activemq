@@ -20,7 +20,6 @@ import java.net.URI;
 
 import junit.framework.Test;
 import junit.textui.TestRunner;
-
 import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.transport.TransportBrokerTestSupport;

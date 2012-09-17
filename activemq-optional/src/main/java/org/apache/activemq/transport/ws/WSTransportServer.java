@@ -17,23 +17,19 @@
 
 package org.apache.activemq.transport.ws;
 
+import java.net.InetSocketAddress;
+import java.net.URI;
+import java.util.Map;
+
 import org.apache.activemq.command.BrokerInfo;
 import org.apache.activemq.transport.SocketConnectorFactory;
-import org.apache.activemq.transport.TransportServerSupport;
 import org.apache.activemq.transport.WebTransportServerSupport;
-import org.apache.activemq.util.InetAddressUtil;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.util.ServiceStopper;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.server.nio.SelectChannelConnector;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
-
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.net.URI;
-import java.util.Map;
 
 /**
  * Creates a web server and registers web socket server

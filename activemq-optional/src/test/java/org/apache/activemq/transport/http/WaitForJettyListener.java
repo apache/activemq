@@ -18,7 +18,6 @@ package org.apache.activemq.transport.http;
 
 import java.net.Socket;
 import java.net.URL;
-
 import javax.net.SocketFactory;
 
 import org.apache.activemq.util.Wait;

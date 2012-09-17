@@ -17,7 +17,6 @@
 package org.apache.activemq.axis;
 
 import java.util.HashMap;
-
 import javax.jms.ConnectionFactory;
 import javax.jms.QueueConnectionFactory;
 import javax.jms.TopicConnectionFactory;

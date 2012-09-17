@@ -17,7 +17,6 @@
 package org.apache.activemq.tool;
 
 import java.io.IOException;
-
 import javax.jms.Connection;
 import javax.jms.JMSException;
 import javax.jms.Message;

@@ -16,12 +16,12 @@
  */
 package org.apache.activemq.transport.https;
 
+import java.net.URI;
+
 import org.apache.activemq.broker.SslContext;
 import org.apache.activemq.transport.SecureSocketConnectorFactory;
 import org.apache.activemq.transport.http.HttpTransportServer;
 import org.eclipse.jetty.server.Connector;
-
-import java.net.URI;
 
 public class HttpsTransportServer extends HttpTransportServer {
     private SslContext context;

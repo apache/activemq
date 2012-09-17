@@ -16,11 +16,8 @@
  */
 package org.apache.activemq.transport.http;
 
-import static org.junit.Assert.*;
-
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
-
 import javax.jms.BytesMessage;
 import javax.jms.MapMessage;
 import javax.jms.MessageConsumer;
@@ -43,6 +40,10 @@ import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * This test covers the Message Compression feature of the ActiveMQConnectionFactory.setUseCompression

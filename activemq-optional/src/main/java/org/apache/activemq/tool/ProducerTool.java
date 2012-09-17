@@ -17,7 +17,6 @@
 package org.apache.activemq.tool;
 
 import java.util.Date;
-
 import javax.jms.Connection;
 import javax.jms.DeliveryMode;
 import javax.jms.JMSException;

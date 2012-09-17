@@ -16,19 +16,18 @@
  */
 package org.apache.activemq.transport.wss;
 
-import org.apache.activemq.broker.SslContext;
-import org.apache.activemq.transport.TransportFactory;
-import org.apache.activemq.transport.TransportServer;
-import org.apache.activemq.transport.ws.WSTransportServer;
-import org.apache.activemq.util.IOExceptionSupport;
-import org.apache.activemq.util.IntrospectionSupport;
-import org.apache.activemq.util.URISupport;
-
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
+
+import org.apache.activemq.broker.SslContext;
+import org.apache.activemq.transport.TransportFactory;
+import org.apache.activemq.transport.TransportServer;
+import org.apache.activemq.util.IOExceptionSupport;
+import org.apache.activemq.util.IntrospectionSupport;
+import org.apache.activemq.util.URISupport;
 
 /**
  *

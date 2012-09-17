@@ -16,15 +16,12 @@
  */
 package org.apache.activemq.transport.wss;
 
+import java.net.URI;
+
 import org.apache.activemq.broker.SslContext;
 import org.apache.activemq.transport.SecureSocketConnectorFactory;
-import org.apache.activemq.transport.https.Krb5AndCertsSslSocketConnector;
 import org.apache.activemq.transport.ws.WSTransportServer;
 import org.eclipse.jetty.server.Connector;
-import org.eclipse.jetty.util.ssl.SslContextFactory;
-
-import javax.net.ssl.SSLContext;
-import java.net.URI;
 
 public class WSSTransportServer extends WSTransportServer {
     private SslContext context;

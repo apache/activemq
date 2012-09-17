@@ -17,7 +17,6 @@
 package org.apache.activemq.util;
 
 import java.util.Hashtable;
-
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
 import javax.jms.JMSException;

@@ -23,8 +23,6 @@ import javax.jms.Session;
 import javax.jms.TextMessage;
 
 import org.springframework.oxm.AbstractMarshaller;
-import org.springframework.oxm.Marshaller;
-import org.springframework.oxm.Unmarshaller;
 import org.springframework.xml.transform.StringResult;
 import org.springframework.xml.transform.StringSource;
 

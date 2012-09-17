@@ -25,14 +25,14 @@ import javax.jms.ObjectMessage;
 import javax.jms.Session;
 import javax.jms.TextMessage;
 
+import com.thoughtworks.xstream.io.json.JettisonMappedXmlDriver;
 import junit.framework.TestCase;
-
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.ActiveMQMessageConsumer;
 
-import com.thoughtworks.xstream.io.json.JettisonMappedXmlDriver;
-
-import static org.apache.activemq.util.oxm.AbstractXMLMessageTransformer.MessageTransform.*;
+import static org.apache.activemq.util.oxm.AbstractXMLMessageTransformer.MessageTransform.ADAPTIVE;
+import static org.apache.activemq.util.oxm.AbstractXMLMessageTransformer.MessageTransform.OBJECT;
+import static org.apache.activemq.util.oxm.AbstractXMLMessageTransformer.MessageTransform.XML;
 
 /**
  * 

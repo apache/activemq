@@ -18,7 +18,6 @@ package org.apache.activemq.util;
 
 import java.io.IOException;
 import java.util.Properties;
-
 import javax.jms.Connection;
 import javax.jms.JMSException;
 import javax.jms.MessageConsumer;

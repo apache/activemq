@@ -16,12 +16,11 @@
  */
 package org.apache.activemq.transport;
 
+import java.util.Map;
+
 import org.apache.activemq.util.IntrospectionSupport;
 import org.eclipse.jetty.server.Connector;
-import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.nio.SelectChannelConnector;
-
-import java.util.Map;
 
 public class SocketConnectorFactory {
 

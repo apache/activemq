@@ -19,7 +19,6 @@ package org.apache.activemq.util.xstream;
 import java.io.Serializable;
 import java.io.StringReader;
 import java.io.StringWriter;
-
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
@@ -28,14 +27,13 @@ import javax.jms.ObjectMessage;
 import javax.jms.Session;
 import javax.jms.TextMessage;
 
-import org.apache.activemq.MessageTransformerSupport;
-
 import com.thoughtworks.xstream.XStream;
 import com.thoughtworks.xstream.io.HierarchicalStreamDriver;
 import com.thoughtworks.xstream.io.HierarchicalStreamReader;
 import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
 import com.thoughtworks.xstream.io.xml.PrettyPrintWriter;
 import com.thoughtworks.xstream.io.xml.XppReader;
+import org.apache.activemq.MessageTransformerSupport;
 
 /**
  * Transforms object messages to text messages and vice versa using

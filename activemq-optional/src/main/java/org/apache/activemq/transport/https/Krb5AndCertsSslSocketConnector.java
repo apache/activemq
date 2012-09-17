@@ -25,7 +25,6 @@ import java.security.Principal;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
-
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLSocket;

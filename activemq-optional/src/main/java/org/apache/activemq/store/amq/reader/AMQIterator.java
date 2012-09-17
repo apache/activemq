@@ -17,8 +17,8 @@
 package org.apache.activemq.store.amq.reader;
 
 import java.util.Iterator;
-
 import javax.jms.Message;
+
 import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.filter.BooleanExpression;
 import org.apache.activemq.filter.MessageEvaluationContext;

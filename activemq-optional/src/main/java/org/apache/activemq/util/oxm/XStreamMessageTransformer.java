@@ -20,7 +20,6 @@ package org.apache.activemq.util.oxm;
 import java.io.Serializable;
 import java.io.StringReader;
 import java.io.StringWriter;
-
 import javax.jms.JMSException;
 import javax.jms.ObjectMessage;
 import javax.jms.Session;

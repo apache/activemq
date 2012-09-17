@@ -18,7 +18,6 @@
 package org.apache.activemq.util.oxm;
 
 import java.io.Serializable;
-
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
@@ -28,9 +27,6 @@ import javax.jms.Session;
 import javax.jms.TextMessage;
 
 import org.apache.activemq.MessageTransformerSupport;
-
-import com.thoughtworks.xstream.XStream;
-import com.thoughtworks.xstream.io.HierarchicalStreamDriver;
 
 /**
  * Abstract class used as a base for implementing transformers from object to text messages (in XML/JSON format)

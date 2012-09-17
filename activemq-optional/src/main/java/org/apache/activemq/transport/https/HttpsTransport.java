@@ -20,7 +20,6 @@ import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URI;
-
 import javax.net.ssl.HttpsURLConnection;
 
 import org.apache.activemq.transport.http.HttpTransport;

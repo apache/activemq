@@ -16,18 +16,15 @@
  */
 package org.apache.activemq.transport;
 
-import org.apache.activemq.spring.SpringSslContext;
+import javax.net.ssl.SSLContext;
+
+import org.apache.activemq.broker.SslContext;
 import org.apache.activemq.transport.https.Krb5AndCertsSslSocketConnector;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.ssl.SslConnector;
 import org.eclipse.jetty.server.ssl.SslSelectChannelConnector;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
-
-import org.apache.activemq.broker.SslContext;
-
-import javax.net.ssl.SSLContext;
-import java.util.Map;
 
 public class SecureSocketConnectorFactory extends SocketConnectorFactory {
 

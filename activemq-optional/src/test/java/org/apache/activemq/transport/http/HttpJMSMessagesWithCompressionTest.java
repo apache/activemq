@@ -19,7 +19,6 @@ package org.apache.activemq.transport.http;
 
 import java.net.URISyntaxException;
 import java.util.concurrent.atomic.AtomicInteger;
-
 import javax.jms.BytesMessage;
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;

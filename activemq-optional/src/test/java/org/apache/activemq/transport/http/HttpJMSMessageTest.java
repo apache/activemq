@@ -18,7 +18,6 @@
 package org.apache.activemq.transport.http;
 
 import java.net.URISyntaxException;
-
 import javax.jms.ConnectionFactory;
 import javax.jms.MapMessage;
 import javax.jms.MessageConsumer;
@@ -26,7 +25,6 @@ import javax.jms.MessageProducer;
 import javax.jms.Session;
 
 import junit.framework.Test;
-
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.JMSMessageTest;
 import org.apache.activemq.broker.BrokerService;

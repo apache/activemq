@@ -16,12 +16,12 @@
  */
 package org.apache.activemq.transport;
 
+import java.net.InetAddress;
+import java.net.URI;
+
 import org.apache.activemq.util.InetAddressUtil;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
-
-import java.net.InetAddress;
-import java.net.URI;
 
 abstract public class WebTransportServerSupport extends TransportServerSupport {
 

@@ -16,9 +16,12 @@
  */
 package org.apache.activemq.transport.http;
 
+import java.net.InetSocketAddress;
+import java.net.URI;
+import java.util.Map;
+
 import org.apache.activemq.command.BrokerInfo;
 import org.apache.activemq.transport.SocketConnectorFactory;
-import org.apache.activemq.transport.TransportServerSupport;
 import org.apache.activemq.transport.WebTransportServerSupport;
 import org.apache.activemq.transport.util.TextWireFormat;
 import org.apache.activemq.transport.xstream.XStreamWireFormat;
@@ -28,11 +31,6 @@ import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.GzipHandler;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
-
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.net.URI;
-import java.util.Map;
 
 public class HttpTransportServer extends WebTransportServerSupport {
 

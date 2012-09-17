@@ -17,7 +17,6 @@
 package org.apache.activemq.filter;
 
 import java.io.StringReader;
-
 import javax.jms.BytesMessage;
 import javax.jms.JMSException;
 import javax.jms.TextMessage;
@@ -26,10 +25,9 @@ import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 
-import org.xml.sax.InputSource;
-
 import org.apache.activemq.command.Message;
 import org.apache.activemq.util.ByteArrayInputStream;
+import org.xml.sax.InputSource;
 
 public class JAXPXPathEvaluator implements XPathExpression.XPathEvaluator {
 

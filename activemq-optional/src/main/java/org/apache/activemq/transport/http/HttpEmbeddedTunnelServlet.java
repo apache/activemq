@@ -17,7 +17,6 @@
 package org.apache.activemq.transport.http;
 
 import java.net.URI;
-
 import javax.servlet.ServletException;
 
 import org.apache.activemq.broker.BrokerService;

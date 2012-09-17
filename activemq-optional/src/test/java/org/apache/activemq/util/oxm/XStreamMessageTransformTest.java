@@ -17,8 +17,6 @@
 
 package org.apache.activemq.util.oxm;
 
-import static org.apache.activemq.util.oxm.AbstractXMLMessageTransformer.MessageTransform.ADAPTIVE;
-
 import javax.jms.Destination;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
@@ -27,10 +25,11 @@ import javax.jms.ObjectMessage;
 import javax.jms.Session;
 import javax.jms.TextMessage;
 
+import com.thoughtworks.xstream.io.json.JettisonMappedXmlDriver;
 import org.apache.activemq.ActiveMQMessageConsumer;
 import org.apache.activemq.util.xstream.SamplePojo;
 
-import com.thoughtworks.xstream.io.json.JettisonMappedXmlDriver;
+import static org.apache.activemq.util.oxm.AbstractXMLMessageTransformer.MessageTransform.ADAPTIVE;
 
 public class XStreamMessageTransformTest extends
 		AbstractXMLMessageTransformerTest {

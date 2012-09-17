@@ -18,8 +18,8 @@ package org.apache.activemq.store.amq.reader;
 
 import java.io.File;
 import java.util.Set;
-
 import javax.jms.Message;
+
 import junit.framework.TestCase;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
