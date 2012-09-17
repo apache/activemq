@@ -234,9 +234,9 @@
                 </Export-Package>
                 <Import-Package>
                     org.eclipse.jetty*;version="[7.5,8.0)";resolution:=optional,
-                    !org.apache.activemq.transport.ws*;version=${project.version};,
-                    !org.apache.activemq.transport.xstream;version=${project.version};,
-                    !org.apache.activemq.transport.util;version=${project.version};,
+                    !org.apache.activemq.transport.ws*;version=${project.version},
+                    !org.apache.activemq.transport.xstream;version=${project.version},
+                    !org.apache.activemq.transport.util;version=${project.version},
                     org.apache.activemq*;version=${project.version};resolution:=optional
                 </Import-Package>
             </instructions>

@@ -49,7 +49,7 @@ import org.apache.http.conn.params.ConnRoutePNames;
 import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.impl.client.BasicResponseHandler;
 import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.impl.conn.tsccm.ThreadSafeClientConnManager;
+import org.apache.http.impl.conn.PoolingClientConnectionManager;
 import org.apache.http.message.AbstractHttpMessage;
 import org.apache.http.params.HttpConnectionParams;
 import org.apache.http.params.HttpParams;
@@ -59,8 +59,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * A HTTP {@link org.apache.activemq.transport.TransportChannel} which uses the
- * <a href="http://jakarta.apache.org/commons/httpclient/">commons-httpclient</a>
+ * A HTTP {@link org.apache.activemq.transport.Transport} which uses the
+ * <a href="http://hc.apache.org/index.html">Apache HTTP Client</a>
  * library
  */
 public class HttpClientTransport extends HttpTransportSupport {
@@ -285,7 +285,7 @@ public class HttpClientTransport extends HttpTransportSupport {
     }
 
     protected HttpClient createHttpClient() {
-        DefaultHttpClient client = new DefaultHttpClient(new ThreadSafeClientConnManager());
+        DefaultHttpClient client = new DefaultHttpClient(new PoolingClientConnectionManager());
         if (useCompression) {
             client.addRequestInterceptor( new HttpRequestInterceptor() {
                 @Override

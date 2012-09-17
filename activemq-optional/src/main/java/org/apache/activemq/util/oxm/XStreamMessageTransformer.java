@@ -32,6 +32,8 @@ import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
 import com.thoughtworks.xstream.io.xml.PrettyPrintWriter;
 import com.thoughtworks.xstream.io.xml.XppReader;
 
+import org.xmlpull.mxp1.MXParser;
+
 /**
  * Transforms object messages to text messages and vice versa using
  * {@link XStream}
@@ -99,7 +101,7 @@ public class XStreamMessageTransformer extends AbstractXMLMessageTransformer {
         if (streamDriver != null) {
         	in = streamDriver.createReader(new StringReader(textMessage.getText()));
         } else {
-        	in = new XppReader(new StringReader(textMessage.getText()));
+        	in = new XppReader(new StringReader(textMessage.getText()), new MXParser());
         }
         return getXStream().unmarshal(in);
     }
