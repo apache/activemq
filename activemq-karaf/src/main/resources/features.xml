@@ -66,6 +66,13 @@
         <feature version="${activemq-version}">activemq-blueprint</feature>
         <feature version="[7.5,8.0)">jetty</feature>
         <bundle>mvn:org.apache.activemq/activemq-optional/${activemq-version}</bundle>
+        <bundle>mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.josql/${josql-version}</bundle>
+        <bundle>mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.xmlresolver/${xmlresolver-bundle-version}</bundle>
+        <bundle>mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.saxon/${saxon-bundle-version}</bundle>
+        <bundle>mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.ant/${ant-bundle-version}</bundle>
+        <bundle>mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.xmlbeans/${xmlbeans-bundle-version}</bundle>
+        <bundle>mvn:org.apache.httpcomponents/httpcore-osgi/${httpclient-version}</bundle>
+        <bundle>mvn:org.apache.httpcomponents/httpclient-osgi/${httpclient-version}</bundle>
     </feature>
 
     <feature name="activemq-camel" version="${activemq-version}" resolver="(obr)">
