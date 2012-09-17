@@ -17,17 +17,22 @@
 
 package org.apache.activemq.util.oxm;
 
+import java.io.StringReader;
+import java.io.StringWriter;
 import javax.jms.JMSException;
 import javax.jms.ObjectMessage;
 import javax.jms.Session;
 import javax.jms.TextMessage;
+import javax.xml.transform.Result;
+import javax.xml.transform.Source;
+import javax.xml.transform.stream.StreamResult;
+import javax.xml.transform.stream.StreamSource;
 
-import org.springframework.oxm.AbstractMarshaller;
-import org.springframework.xml.transform.StringResult;
-import org.springframework.xml.transform.StringSource;
+import org.springframework.oxm.support.AbstractMarshaller;
+
 
 /**
- * Transforms object messages to text messages and vice versa using {@link Spring OXM}
+ * Transforms object messages to text messages and vice versa using Spring OXM.
  *
  */
 public class OXMMessageTransformer extends AbstractXMLMessageTransformer {
@@ -51,10 +56,12 @@ public class OXMMessageTransformer extends AbstractXMLMessageTransformer {
      */
 	protected String marshall(Session session, ObjectMessage objectMessage)
 			throws JMSException {
-		StringResult result = new StringResult();
 		try {
-			marshaller.marshal(objectMessage.getObject(), result);
-			return result.toString();
+            StringWriter writer = new StringWriter();
+            Result result = new StreamResult(writer);
+            marshaller.marshal(objectMessage.getObject(), result);
+            writer.flush();
+			return writer.toString();
 		} catch (Exception e) {
 			throw new JMSException(e.getMessage());
 		}
@@ -67,7 +74,9 @@ public class OXMMessageTransformer extends AbstractXMLMessageTransformer {
 	protected Object unmarshall(Session session, TextMessage textMessage)
 			throws JMSException {
 		try {
-			return marshaller.unmarshal(new StringSource(textMessage.getText()));
+            String text = textMessage.getText();
+            Source source = new StreamSource(new StringReader(text));
+			return marshaller.unmarshal(source);
 		} catch (Exception e) {
 			throw new JMSException(e.getMessage());
 		}

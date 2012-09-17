@@ -162,9 +162,9 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-        <groupId>org.springframework.ws</groupId>
-        <artifactId>spring-oxm-tiger</artifactId>
-        <optional>true</optional>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-oxm</artifactId>
+      <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>org.apache.xbean</groupId>

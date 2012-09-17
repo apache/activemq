@@ -64,6 +64,7 @@
 
     <feature name="activemq-optional" version="${activemq-version}" resolver="(obr)">
         <feature version="${activemq-version}">activemq-blueprint</feature>
+        <feature version="${activemq-version}">activemq-spring</feature>
         <feature version="[7.5,8.0)">jetty</feature>
         <bundle>mvn:org.apache.activemq/activemq-optional/${activemq-version}</bundle>
         <bundle>mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.josql/${josql-version}</bundle>
@@ -73,6 +74,7 @@
         <bundle>mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.xmlbeans/${xmlbeans-bundle-version}</bundle>
         <bundle>mvn:org.apache.httpcomponents/httpcore-osgi/${httpclient-version}</bundle>
         <bundle>mvn:org.apache.httpcomponents/httpclient-osgi/${httpclient-version}</bundle>
+        <bundle>mvn:org.springframework/spring-oxm/${spring-version}</bundle>
     </feature>
 
     <feature name="activemq-camel" version="${activemq-version}" resolver="(obr)">

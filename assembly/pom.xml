@@ -230,8 +230,8 @@
       <optional>false</optional>
     </dependency>
     <dependency>
-        <groupId>org.springframework.ws</groupId>
-        <artifactId>spring-oxm-tiger</artifactId>
+        <groupId>org.springframework</groupId>
+        <artifactId>spring-oxm</artifactId>
     </dependency>
     <dependency>
       <groupId>org.codehaus.jettison</groupId>
