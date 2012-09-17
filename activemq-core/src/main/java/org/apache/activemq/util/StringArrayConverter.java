@@ -29,8 +29,6 @@ import java.util.StringTokenizer;
  */
 public class StringArrayConverter {
 
-    // TODO: Remove System.out
-
     public static String[] convertToStringArray(Object value) {
         if (value == null) {
             return null;

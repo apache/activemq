@@ -18,6 +18,7 @@ package org.apache.activemq.util;
 
 import java.beans.PropertyEditorSupport;
 
+@Deprecated
 public class BooleanEditor extends PropertyEditorSupport {
 
     public String getJavaInitializationString() {

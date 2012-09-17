@@ -18,12 +18,13 @@ package org.apache.activemq.util;
 
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Map;
 
 import org.apache.activemq.command.ActiveMQDestination;
 
 public final class TypeConversionSupport {
 
-    static class ConversionKey {
+    private static class ConversionKey {
         final Class from;
         final Class to;
         final int hashCode;
@@ -48,7 +49,7 @@ public final class TypeConversionSupport {
         Object convert(Object value);
     }
 
-    private static final HashMap<ConversionKey, Converter> CONVERSION_MAP = new HashMap<ConversionKey, Converter>();
+    private static final Map<ConversionKey, Converter> CONVERSION_MAP = new HashMap<ConversionKey, Converter>();
     static {
         Converter toStringConverter = new Converter() {
             public Object convert(Object value) {
@@ -142,20 +143,29 @@ public final class TypeConversionSupport {
     private TypeConversionSupport() {
     }
 
-    public static Object convert(Object value, Class clazz) {
+    public static Object convert(Object value, Class type) {
 
-        assert value != null && clazz != null;
-
-        if (value.getClass() == clazz) {
-            return value;
-        }
-
-        Converter c = CONVERSION_MAP.get(new ConversionKey(value.getClass(), clazz));
-        if (c == null) {
+        if (value == null) {
+            // lets avoid NullPointerException when converting to boolean for null values
+            if (boolean.class.isAssignableFrom(type)) {
+                return Boolean.FALSE;
+            }
             return null;
         }
-        return c.convert(value);
 
+        // eager same instance type test to avoid the overhead of invoking the type converter
+        // if already same type
+        if (type.isInstance(value)) {
+            return type.cast(value);
+        }
+
+        // lookup converter
+        Converter c = CONVERSION_MAP.get(new ConversionKey(value.getClass(), type));
+        if (c != null) {
+            return c.convert(value);
+        } else {
+            return null;
+        }
     }
 
 }

@@ -24,6 +24,7 @@ import java.util.regex.Pattern;
  * Converts string values like "20 Mb", "1024kb", and "1g" to int values in
  * bytes.
  */
+@Deprecated
 public class MemoryIntPropertyEditor extends PropertyEditorSupport {
     public void setAsText(String text) throws IllegalArgumentException {
 

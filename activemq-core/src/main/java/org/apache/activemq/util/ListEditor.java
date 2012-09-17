@@ -26,6 +26,7 @@ import org.springframework.util.StringUtils;
  * Used to serialize lists of ActiveMQDestinations. 
  * @see org.apache.activemq.util.IntrospectionSupport
  */
+@Deprecated
 public class ListEditor extends PropertyEditorSupport {
 	
 	public static final String DEFAULT_SEPARATOR = ",";
