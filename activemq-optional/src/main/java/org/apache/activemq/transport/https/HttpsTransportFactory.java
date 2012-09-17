@@ -54,6 +54,15 @@ public class HttpsTransportFactory extends HttpTransportFactory {
     }
 
     protected Transport createTransport(URI location, WireFormat wf) throws MalformedURLException {
-        return new HttpsClientTransport(asTextWireFormat(wf), location);
+        // need to remove options from uri
+        URI uri;
+        try {
+            uri = URISupport.removeQuery(location);
+        } catch (URISyntaxException e) {
+            MalformedURLException cause = new MalformedURLException("Error removing query on " + location);
+            cause.initCause(e);
+            throw cause;
+        }
+        return new HttpsClientTransport(asTextWireFormat(wf), uri);
     }
 }

@@ -17,6 +17,7 @@
 package org.apache.activemq.transport.http;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.HashMap;
@@ -66,7 +67,16 @@ public class HttpTransportFactory extends TransportFactory {
 
     protected Transport createTransport(URI location, WireFormat wf) throws IOException {
         TextWireFormat textWireFormat = asTextWireFormat(wf);
-        return new HttpClientTransport(textWireFormat, location);
+        // need to remove options from uri
+        URI uri;
+        try {
+            uri = URISupport.removeQuery(location);
+        } catch (URISyntaxException e) {
+            MalformedURLException cause = new MalformedURLException("Error removing query on " + location);
+            cause.initCause(e);
+            throw cause;
+        }
+        return new HttpClientTransport(textWireFormat, uri);
     }
 
     @SuppressWarnings("rawtypes")
