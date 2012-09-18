@@ -47,6 +47,10 @@ You can find more information about ActiveMQ on the <a href="http://activemq.apa
         <td><b>${requestContext.brokerQuery.brokerAdmin.brokerId}</b></td>
     </tr>
     <tr>
+        <td>Uptime</td>
+        <td><b>${requestContext.brokerQuery.brokerAdmin.uptime}</b></td>
+    </tr>
+    <tr>
         <td>Store percent used</td>
         <td><b>${requestContext.brokerQuery.brokerAdmin.storePercentUsage}</b></td>
     </tr>
