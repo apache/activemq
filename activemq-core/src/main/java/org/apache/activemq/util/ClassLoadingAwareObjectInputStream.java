@@ -34,13 +34,16 @@ public class ClassLoadingAwareObjectInputStream extends ObjectInputStream {
      */
     private static final HashMap<String, Class> primClasses = new HashMap<String, Class>(8, 1.0F);
 
+    private final ClassLoader inLoader;
+
     public ClassLoadingAwareObjectInputStream(InputStream in) throws IOException {
         super(in);
+        inLoader = in.getClass().getClassLoader();
     }
 
     protected Class<?> resolveClass(ObjectStreamClass classDesc) throws IOException, ClassNotFoundException {
         ClassLoader cl = Thread.currentThread().getContextClassLoader();
-        return load(classDesc.getName(), cl);
+        return load(classDesc.getName(), cl, inLoader);
     }
 
     protected Class<?> resolveProxyClass(String[] interfaces) throws IOException, ClassNotFoundException {
@@ -54,24 +57,34 @@ public class ClassLoadingAwareObjectInputStream extends ObjectInputStream {
             return Proxy.getProxyClass(cl, cinterfaces);
         } catch (IllegalArgumentException e) {
             try {
-                return Proxy.getProxyClass(FALLBACK_CLASS_LOADER, cinterfaces);
+                return Proxy.getProxyClass(inLoader, cinterfaces);
             } catch (IllegalArgumentException e1) {
+                // ignore
+            }
+            try {
+                return Proxy.getProxyClass(FALLBACK_CLASS_LOADER, cinterfaces);
+            } catch (IllegalArgumentException e2) {
+                // ignore
             }
 
             throw new ClassNotFoundException(null, e);
         }
     }
 
-    private Class<?> load(String className, ClassLoader cl) throws ClassNotFoundException {
-        try {
-            return Class.forName(className, false, cl);
-        } catch (ClassNotFoundException e) {
-            final Class<?> clazz = (Class<?>) primClasses.get(className);
-            if (clazz != null) {
-                return clazz;
-            } else {
-                return Class.forName(className, false, FALLBACK_CLASS_LOADER);
+    private Class<?> load(String className, ClassLoader... cl) throws ClassNotFoundException {
+        for (ClassLoader loader : cl) {
+            try {
+                return Class.forName(className, false, loader);
+            } catch (ClassNotFoundException e) {
+                // ignore
             }
+        }
+        // fallback
+        final Class<?> clazz = (Class<?>) primClasses.get(className);
+        if (clazz != null) {
+            return clazz;
+        } else {
+            return Class.forName(className, false, FALLBACK_CLASS_LOADER);
         }
     }
 
