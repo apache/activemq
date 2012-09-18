@@ -31,8 +31,6 @@ import org.springframework.web.servlet.mvc.Controller;
 
 /**
  * Sends a message
- *
- *
  */
 public class SendMessage extends DestinationFacade implements Controller {
 

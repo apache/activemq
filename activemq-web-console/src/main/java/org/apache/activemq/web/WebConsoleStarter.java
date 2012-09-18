@@ -75,7 +75,7 @@ public class WebConsoleStarter implements ServletContextListener {
             context.stop();
             context.destroy();
         }
-        // do nothing, since the context is destoyed anyway
+        // do nothing, since the context is destroyed anyway
     }
 
 }

@@ -29,9 +29,6 @@ import org.springframework.web.servlet.mvc.Controller;
 
 /**
  * Moves a message from one to another queue
- * 
- * @author <a href="http://www.nighttale.net">Dejan Bosanac</a>
- * 
  */
 public class MoveMessage extends DestinationFacade implements Controller {
     private String messageId;
@@ -62,8 +59,6 @@ public class MoveMessage extends DestinationFacade implements Controller {
     public void setMessageId(String messageId) {
         this.messageId = messageId;
     }
-    
-    
 
     public String getDestination() {
 		return destination;
