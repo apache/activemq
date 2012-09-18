@@ -19,6 +19,7 @@ package org.apache.activemq.thread;
 import java.util.HashMap;
 import java.util.Timer;
 import java.util.TimerTask;
+
 import org.apache.activemq.util.ServiceStopper;
 import org.apache.activemq.util.ServiceSupport;
 
@@ -54,7 +55,7 @@ public final class Scheduler extends ServiceSupport {
         TimerTask ticket = timerTasks.remove(task);
         if (ticket != null) {
             ticket.cancel();
-            timer.purge();//remove cancelled TimerTasks
+            timer.purge(); // remove cancelled TimerTasks
         }
     }
 
@@ -70,7 +71,6 @@ public final class Scheduler extends ServiceSupport {
     @Override
     protected synchronized void doStart() throws Exception {
         this.timer = new Timer(name, true);
-
     }
 
     @Override
@@ -78,7 +78,6 @@ public final class Scheduler extends ServiceSupport {
        if (this.timer != null) {
            this.timer.cancel();
        }
-
     }
 
     public String getName() {

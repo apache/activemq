@@ -146,6 +146,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     private boolean useAsyncSend;
     private boolean optimizeAcknowledge;
     private long optimizeAcknowledgeTimeOut = 0;
+    private long optimizedAckScheduledAckInterval = 0;
     private boolean nestedMapAndListEnabled = true;
     private boolean useRetroactiveConsumer;
     private boolean exclusiveConsumer;
@@ -484,8 +485,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
      *
      * @return the listener or <code>null</code> if no listener is registered with the connection.
      */
-    public ClientInternalExceptionListener getClientInternalExceptionListener()
-    {
+    public ClientInternalExceptionListener getClientInternalExceptionListener() {
         return clientInternalExceptionListener;
     }
 
@@ -498,8 +498,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
      *
      * @param listener the exception listener
      */
-    public void setClientInternalExceptionListener(ClientInternalExceptionListener listener)
-    {
+    public void setClientInternalExceptionListener(ClientInternalExceptionListener listener) {
         this.clientInternalExceptionListener = listener;
     }
 
@@ -1775,7 +1774,6 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
         this.sendAcksAsync = sendAcksAsync;
     }
 
-
     /**
      * Returns the time this connection was created
      */
@@ -1901,8 +1899,8 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
             } catch (Exception e) {
                 onClientInternalException(e);
             }
-
         }
+
         for (Iterator<TransportListener> iter = transportListeners.iterator(); iter.hasNext();) {
             TransportListener listener = iter.next();
             listener.onCommand(command);
@@ -1937,6 +1935,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
             }
         }
     }
+
     /**
      * Used for handling async exceptions
      *
@@ -1976,8 +1975,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
                     } catch (JMSException e) {
                         LOG.warn("Exception during connection cleanup, " + e, e);
                     }
-                    for (Iterator<TransportListener> iter = transportListeners
-                            .iterator(); iter.hasNext();) {
+                    for (Iterator<TransportListener> iter = transportListeners.iterator(); iter.hasNext();) {
                         TransportListener listener = iter.next();
                         listener.onException(error);
                     }
@@ -2051,9 +2049,8 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
 
         checkClosedOrFailed();
 
-        for (Iterator<ActiveMQSession> i = this.sessions.iterator(); i.hasNext();) {
-            ActiveMQSession s = i.next();
-            if (s.isInUse(destination)) {
+        for (ActiveMQSession session : this.sessions) {
+            if (session.isInUse(destination)) {
                 throw new JMSException("A consumer is consuming from the temporary destination");
             }
         }
@@ -2109,7 +2106,6 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
         info.setDestination(destination);
         info.setTimeout(0);
         syncSendPacket(info);
-
     }
 
     public boolean isDispatchAsync() {
@@ -2159,8 +2155,6 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     public InputStream createInputStream(Destination dest, String messageSelector, boolean noLocal) throws JMSException {
         return createInputStream(dest, messageSelector, noLocal,  -1);
     }
-
-
 
     public InputStream createInputStream(Destination dest, String messageSelector, boolean noLocal, long timeout) throws JMSException {
         return doCreateInputStream(dest, messageSelector, noLocal, null, timeout);
@@ -2276,12 +2270,9 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
 
         msg.setJMSExpiration(expiration);
         msg.setJMSPriority(priority);
-
         msg.setJMSRedelivered(false);
         msg.setMessageId(messageId);
-
         msg.onSend();
-
         msg.setProducerId(msg.getMessageId().getProducerId());
 
         if (LOG.isDebugEnabled()) {
@@ -2293,7 +2284,6 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
         } else {
             syncSendPacket(msg);
         }
-
     }
 
     public void addOutputStream(ActiveMQOutputStream stream) {
@@ -2319,13 +2309,15 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
                 LOG.info("JVM told to shutdown");
                 System.exit(0);
             }
-            if (false && "close".equals(text)){
-                LOG.error("Broker " + getBrokerInfo() + "shutdown connection");
-                try {
-                    close();
-                } catch (JMSException e) {
-                }
-            }
+
+            // TODO Should we handle the "close" case?
+            // if (false && "close".equals(text)){
+            //     LOG.error("Broker " + getBrokerInfo() + "shutdown connection");
+            //     try {
+            //         close();
+            //     } catch (JMSException e) {
+            //     }
+            // }
         }
     }
 
@@ -2341,14 +2333,12 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
 
     protected void onConsumerControl(ConsumerControl command) {
         if (command.isClose()) {
-            for (Iterator<ActiveMQSession> i = this.sessions.iterator(); i.hasNext();) {
-                ActiveMQSession s = i.next();
-                s.close(command.getConsumerId());
+            for (ActiveMQSession session : this.sessions) {
+                session.close(command.getConsumerId());
             }
         } else {
-            for (Iterator<ActiveMQSession> i = this.sessions.iterator(); i.hasNext();) {
-                ActiveMQSession s = i.next();
-                s.setPrefetchSize(command.getConsumerId(), command.getPrefetch());
+            for (ActiveMQSession session : this.sessions) {
+                session.setPrefetchSize(command.getConsumerId(), command.getPrefetch());
             }
         }
     }
@@ -2517,7 +2507,6 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
         this.checkForDuplicates = checkForDuplicates;
     }
 
-
     public boolean isTransactedIndividualAck() {
         return transactedIndividualAck;
     }
@@ -2606,5 +2595,26 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
 
     public void setRejectedTaskHandler(RejectedExecutionHandler rejectedTaskHandler) {
         this.rejectedTaskHandler = rejectedTaskHandler;
+    }
+
+    /**
+     * Gets the configured time interval that is used to force all MessageConsumers that have optimizedAcknowledge enabled
+     * to send an ack for any outstanding Message Acks.  By default this value is set to zero meaning that the consumers
+     * will not do any background Message acknowledgment.
+     *
+     * @return the scheduledOptimizedAckInterval
+     */
+    public long getOptimizedAckScheduledAckInterval() {
+        return optimizedAckScheduledAckInterval;
+    }
+
+    /**
+     * Sets the amount of time between scheduled sends of any outstanding Message Acks for consumers that
+     * have been configured with optimizeAcknowledge enabled.
+     *
+     * @param scheduledOptimizedAckInterval the scheduledOptimizedAckInterval to set
+     */
+    public void setOptimizedAckScheduledAckInterval(long optimizedAckScheduledAckInterval) {
+        this.optimizedAckScheduledAckInterval = optimizedAckScheduledAckInterval;
     }
 }

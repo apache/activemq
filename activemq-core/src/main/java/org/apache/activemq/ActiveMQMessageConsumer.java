@@ -152,6 +152,8 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
 
     private long optimizeAckTimestamp = System.currentTimeMillis();
     private long optimizeAcknowledgeTimeOut = 0;
+    private long optimizedAckScheduledAckInterval = 0;
+    private Runnable optimizedAckTask;
     private long failoverRedeliveryWaitPeriod = 0;
     private boolean transactedIndividualAck = false;
     private boolean nonBlockingRedelivery = false;
@@ -189,13 +191,11 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
             String connectionID = session.connection.getConnectionInfo().getConnectionId().getValue();
 
             if (physicalName.indexOf(connectionID) < 0) {
-                throw new InvalidDestinationException(
-                                                      "Cannot use a Temporary destination from another Connection");
+                throw new InvalidDestinationException("Cannot use a Temporary destination from another Connection");
             }
 
             if (session.connection.isDeleted(dest)) {
-                throw new InvalidDestinationException(
-                                                      "Cannot use a Temporary destination that has been deleted");
+                throw new InvalidDestinationException("Cannot use a Temporary destination that has been deleted");
             }
             if (prefetch < 0) {
                 throw new JMSException("Cannot have a prefetch size less than zero");
@@ -258,7 +258,9 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                                    && !info.isBrowser();
         if (this.optimizeAcknowledge) {
             this.optimizeAcknowledgeTimeOut = session.connection.getOptimizeAcknowledgeTimeOut();
+            setOptimizedAckScheduledAckInterval(session.connection.getOptimizedAckScheduledAckInterval());
         }
+
         this.info.setOptimizedAcknowledge(this.optimizeAcknowledge);
         this.failoverRedeliveryWaitPeriod = session.connection.getConsumerFailoverRedeliveryWaitPeriod();
         this.nonBlockingRedelivery = session.connection.isNonBlockingRedelivery();
@@ -415,8 +417,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
     public void setMessageListener(MessageListener listener) throws JMSException {
         checkClosed();
         if (info.getPrefetchSize() == 0) {
-            throw new JMSException(
-                                   "Illegal prefetch size of zero. This setting is not supported for asynchronous consumers please set a value of at least 1");
+            throw new JMSException("Illegal prefetch size of zero. This setting is not supported for asynchronous consumers please set a value of at least 1");
         }
         if (listener != null) {
             boolean wasRunning = session.isRunning();
@@ -551,7 +552,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                     session.acknowledge();
                 }
             });
-        }else if (session.isIndividualAcknowledge()) {
+        } else if (session.isIndividualAcknowledge()) {
             m.setAcknowledgeCallback(new Callback() {
                 public void execute() throws Exception {
                     session.checkClosed();
@@ -683,7 +684,8 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
         this.session.asyncSendPacket(removeCommand);
         if (interrupted) {
             Thread.currentThread().interrupt();
-        }    }
+        }
+    }
 
     void inProgressClearRequired() {
         inProgressClearRequiredFlag.incrementAndGet();
@@ -771,6 +773,10 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
             if (executorService != null) {
                 ThreadPoolUtils.shutdownGraceful(executorService, 60000L);
                 executorService = null;
+            }
+            if (optimizedAckTask != null) {
+                this.session.connection.getScheduler().cancel(optimizedAckTask);
+                optimizedAckTask = null;
             }
 
             if (session.isClientAcknowledge()) {
@@ -888,8 +894,8 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                         if (!deliveredMessages.isEmpty()) {
                             if (optimizeAcknowledge) {
                                 ackCounter++;
-                                
-                                // AMQ-3956 evaluate both expired and normal msgs as 
+
+                                // AMQ-3956 evaluate both expired and normal msgs as
                                 // otherwise consumer may get stalled
                                 if (ackCounter + deliveredCounter >= (info.getPrefetchSize() * .65) || (optimizeAcknowledgeTimeOut > 0 && System.currentTimeMillis() >= (optimizeAckTimestamp + optimizeAcknowledgeTimeOut))) {
                                     MessageAck ack = makeAckForAllDeliveredMessages(MessageAck.STANDARD_ACK_TYPE);
@@ -899,16 +905,16 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                                         session.sendAck(ack);
                                         optimizeAckTimestamp = System.currentTimeMillis();
                                     }
-                                    // AMQ-3956 - as further optimization send 
+                                    // AMQ-3956 - as further optimization send
                                     // ack for expired msgs when there are any.
                                     // This resets the deliveredCounter to 0 so that
                                     // we won't sent standard acks with every msg just
-                                    // because the deliveredCounter just below 
+                                    // because the deliveredCounter just below
                                     // 0.5 * prefetch as used in ackLater()
                                     if (pendingAck != null && deliveredCounter > 0) {
-                                    	session.sendAck(pendingAck);
-                                    	pendingAck = null;
-                                    	deliveredCounter = 0;
+                                        session.sendAck(pendingAck);
+                                        pendingAck = null;
+                                        deliveredCounter = 0;
                                     }
                                 }
                             } else {
@@ -989,7 +995,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                 }
             }
         }
-        // AMQ-3956 evaluate both expired and normal msgs as 
+        // AMQ-3956 evaluate both expired and normal msgs as
         // otherwise consumer may get stalled
         if ((0.5 * info.getPrefetchSize()) <= (deliveredCounter + ackCounter - additionalWindowSize)) {
             session.sendAck(pendingAck);
@@ -1470,5 +1476,56 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
 
     public void setFailureError(IOException failureError) {
         this.failureError = failureError;
+    }
+
+    /**
+     * @return the optimizedAckScheduledAckInterval
+     */
+    public long getOptimizedAckScheduledAckInterval() {
+        return optimizedAckScheduledAckInterval;
+    }
+
+    /**
+     * @param optimizedAckScheduledAckInterval the optimizedAckScheduledAckInterval to set
+     */
+    public void setOptimizedAckScheduledAckInterval(long optimizedAckScheduledAckInterval) throws JMSException {
+        this.optimizedAckScheduledAckInterval = optimizedAckScheduledAckInterval;
+
+        if (this.optimizedAckTask != null) {
+            try {
+                this.session.connection.getScheduler().cancel(optimizedAckTask);
+            } catch (JMSException e) {
+                LOG.debug("Caught exception while cancelling old optimized ack task", e);
+                throw e;
+            }
+            this.optimizedAckTask = null;
+        }
+
+        // Should we periodically send out all outstanding acks.
+        if (this.optimizeAcknowledge && this.optimizedAckScheduledAckInterval > 0) {
+            this.optimizedAckTask = new Runnable() {
+
+                @Override
+                public void run() {
+                    try {
+                        if (optimizeAcknowledge && !unconsumedMessages.isClosed()) {
+                            if (LOG.isInfoEnabled()) {
+                                LOG.info("Consumer:{} is performing scheduled delivery of outstanding optimized Acks", info.getConsumerId());
+                            }
+                            deliverAcks();
+                        }
+                    } catch (Exception e) {
+                        LOG.debug("Optimized Ack Task caught exception during ack", e);
+                    }
+                }
+            };
+
+            try {
+                this.session.connection.getScheduler().executePeriodically(optimizedAckTask, optimizedAckScheduledAckInterval);
+            } catch (JMSException e) {
+                LOG.debug("Caught exception while scheduling new optimized ack task", e);
+                throw e;
+            }
+        }
     }
 }

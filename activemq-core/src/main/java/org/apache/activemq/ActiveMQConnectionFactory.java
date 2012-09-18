@@ -92,6 +92,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     private boolean disableTimeStampsByDefault;
     private boolean optimizedMessageDispatch = true;
     private long optimizeAcknowledgeTimeOut = 300;
+    private long optimizedAckScheduledAckInterval = 0;
     private boolean copyMessageOnSend = true;
     private boolean useCompression;
     private boolean objectMessageSerializationDefered;
@@ -312,6 +313,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
         connection.setAlwaysSessionAsync(isAlwaysSessionAsync());
         connection.setOptimizeAcknowledge(isOptimizeAcknowledge());
         connection.setOptimizeAcknowledgeTimeOut(getOptimizeAcknowledgeTimeOut());
+        connection.setOptimizedAckScheduledAckInterval(getOptimizedAckScheduledAckInterval());
         connection.setUseRetroactiveConsumer(isUseRetroactiveConsumer());
         connection.setExclusiveConsumer(isExclusiveConsumer());
         connection.setRedeliveryPolicyMap(getRedeliveryPolicyMap());
@@ -1116,5 +1118,26 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
 
     public void setRejectedTaskHandler(RejectedExecutionHandler rejectedTaskHandler) {
         this.rejectedTaskHandler = rejectedTaskHandler;
+    }
+
+    /**
+     * Gets the configured time interval that is used to force all MessageConsumers that have optimizedAcknowledge enabled
+     * to send an ack for any outstanding Message Acks.  By default this value is set to zero meaning that the consumers
+     * will not do any background Message acknowledgment.
+     *
+     * @return the scheduledOptimizedAckInterval
+     */
+    public long getOptimizedAckScheduledAckInterval() {
+        return optimizedAckScheduledAckInterval;
+    }
+
+    /**
+     * Sets the amount of time between scheduled sends of any outstanding Message Acks for consumers that
+     * have been configured with optimizeAcknowledge enabled.
+     *
+     * @param scheduledOptimizedAckInterval the scheduledOptimizedAckInterval to set
+     */
+    public void setOptimizedAckScheduledAckInterval(long optimizedAckScheduledAckInterval) {
+        this.optimizedAckScheduledAckInterval = optimizedAckScheduledAckInterval;
     }
 }

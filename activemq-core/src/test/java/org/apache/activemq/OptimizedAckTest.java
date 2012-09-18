@@ -16,10 +16,13 @@
  */
 package org.apache.activemq;
 
+import java.util.concurrent.TimeUnit;
+
 import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
 import javax.jms.Queue;
 import javax.jms.Session;
+
 import org.apache.activemq.broker.BrokerRegistry;
 import org.apache.activemq.broker.region.RegionBroker;
 import org.apache.activemq.util.Wait;
@@ -82,7 +85,6 @@ public class OptimizedAckTest extends TestSupport {
          }
      }
 
-
      public void testVerySlowReceivedMessageStillInflight() throws Exception {
          connection.start();
          Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -118,5 +120,51 @@ public class OptimizedAckTest extends TestSupport {
                  }));
              }
          }
+     }
+
+     public void testReceivedMessageNotInFlightAfterScheduledAckFires() throws Exception {
+         connection.setOptimizedAckScheduledAckInterval(TimeUnit.SECONDS.toMillis(10));
+         connection.start();
+         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+         Queue queue = session.createQueue("test");
+         MessageProducer producer = session.createProducer(queue);
+         for (int i = 0; i < 10; i++) {
+             producer.send(session.createTextMessage("Hello" + i));
+         }
+
+         final RegionBroker regionBroker = (RegionBroker) BrokerRegistry.getInstance().findFirst().getRegionBroker();
+         MessageConsumer consumer = session.createConsumer(queue);
+
+         assertTrue("prefetch full", Wait.waitFor(new Wait.Condition() {
+             @Override
+             public boolean isSatisified() throws Exception {
+                 LOG.info("inflight count: " + regionBroker.getDestinationStatistics().getInflight().getCount());
+                 return 10 == regionBroker.getDestinationStatistics().getInflight().getCount();
+             }
+         }));
+
+         for (int i=0; i<10; i++) {
+            javax.jms.Message msg = consumer.receive(4000);
+            assertNotNull(msg);
+             if (i<7) {
+                 assertEquals("all prefetch is still in flight", 10, regionBroker.getDestinationStatistics().getInflight().getCount());
+             } else {
+                 assertTrue("most are acked but 3 remain", Wait.waitFor(new Wait.Condition(){
+                     @Override
+                     public boolean isSatisified() throws Exception {
+                         LOG.info("inflight count: " + regionBroker.getDestinationStatistics().getInflight().getCount());
+                         return 3 == regionBroker.getDestinationStatistics().getInflight().getCount();
+                     }
+                 }));
+             }
+         }
+
+         assertTrue("After delay the scheduled ack should ack all inflight.", Wait.waitFor(new Wait.Condition(){
+             @Override
+             public boolean isSatisified() throws Exception {
+                 LOG.info("inflight count: " + regionBroker.getDestinationStatistics().getInflight().getCount());
+                 return 0 == regionBroker.getDestinationStatistics().getInflight().getCount();
+             }
+         }));
      }
 }
