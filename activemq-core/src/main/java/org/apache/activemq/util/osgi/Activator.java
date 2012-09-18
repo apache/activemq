@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.BufferedReader;
+import java.util.List;
 import java.util.Properties;
 import java.util.ArrayList;
 import java.util.concurrent.ConcurrentHashMap;
@@ -148,7 +149,7 @@ public class Activator implements BundleActivator, SynchronousBundleListener, Ob
 
                 String className = properties.getProperty("class");
                 if (className == null) {
-                    warnings.append("("+(wrrningCounter++)+") Invalid sevice file in bundle "+wrapper+": 'class' property not defined.");
+                    warnings.append("("+(wrrningCounter++)+") Invalid service file in bundle "+wrapper+": 'class' property not defined.");
                     continue;
                 }
 
@@ -166,7 +167,7 @@ public class Activator implements BundleActivator, SynchronousBundleListener, Ob
             }
 
             if( clazz == null ) {
-                // Since OSGi is such a tricky enviorment to work in.. lets give folks the
+                // Since OSGi is such a tricky environment to work in.. lets give folks the
                 // most information we can in the error message.
                 String msg = "Service not found: '" + path + "'";
                 if (warnings.length()!= 0) {
@@ -218,7 +219,7 @@ public class Activator implements BundleActivator, SynchronousBundleListener, Ob
 
     private static class BundleWrapper {
         private final Bundle bundle;
-        private final ArrayList<String> cachedServices = new ArrayList<String>();
+        private final List<String> cachedServices = new ArrayList<String>();
 
         public BundleWrapper(Bundle bundle) {
             this.bundle = bundle;
