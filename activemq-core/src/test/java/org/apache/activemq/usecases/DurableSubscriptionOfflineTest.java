@@ -16,6 +16,9 @@
  */
 package org.apache.activemq.usecases;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Random;
 import java.util.HashSet;
 import java.util.Vector;
@@ -56,7 +59,7 @@ public class DurableSubscriptionOfflineTest extends org.apache.activemq.TestSupp
     public boolean keepDurableSubsActive = true;
     private BrokerService broker;
     private ActiveMQTopic topic;
-    private Vector<Throwable> exceptions = new Vector<Throwable>();
+    private List<Throwable> exceptions = new ArrayList<Throwable>();
 
     protected ActiveMQConnectionFactory createConnectionFactory() throws Exception {
         ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory("vm://" + getName(true));
@@ -1661,7 +1664,7 @@ public class DurableSubscriptionOfflineTest extends org.apache.activemq.TestSupp
         }
         executorService.shutdown();
         executorService.awaitTermination(10, TimeUnit.MINUTES);
-        assertTrue("No exceptions  " + exceptions.elements(), exceptions.isEmpty());
+        assertTrue("No exceptions expected, but was: " + exceptions, exceptions.isEmpty());
     }
 
     public static class Listener implements MessageListener {

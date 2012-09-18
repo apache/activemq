@@ -69,7 +69,7 @@ public class NetworkRestartTest extends TestSupport {
 
 
         localProducer.send(localSession.createTextMessage("after"));
-        Message after = remoteConsumer.receive(1000);
+        Message after = remoteConsumer.receive(3000);
         assertNotNull(after);
         assertEquals("after", ((TextMessage)after).getText());
 
@@ -104,7 +104,7 @@ public class NetworkRestartTest extends TestSupport {
 
 
         localProducer.send(localSession.createTextMessage("after"));
-        Message after = remoteConsumer.receive(1000);
+        Message after = remoteConsumer.receive(3000);
         assertNotNull(after);
         assertEquals("after", ((TextMessage)after).getText());
     }
