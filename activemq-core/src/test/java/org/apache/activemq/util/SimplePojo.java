@@ -31,6 +31,7 @@ public class SimplePojo {
     List<ActiveMQDestination> favorites = new ArrayList<ActiveMQDestination>();
     List<ActiveMQDestination> nonFavorites = new ArrayList<ActiveMQDestination>();
     List<ActiveMQDestination> others = new ArrayList<ActiveMQDestination>();
+    String[] systems;
     
     public int getAge() {
         return age;
@@ -74,5 +75,10 @@ public class SimplePojo {
 	public void setOthers(List<ActiveMQDestination> others) {
 		this.others = others;
 	}
-    
+    public String[] getSystems() {
+        return systems;
+    }
+    public void setSystems(String[] systems) {
+        this.systems = systems;
+    }
 }

@@ -21,10 +21,14 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
+ * Used by xbean to set integers.
+ * <p/>
+ * <b>Important: </b> Do not use this for other purposes than xbean, as property editors
+ * are not thread safe, and they are slow to use.
+ * <p/>
  * Converts string values like "20 Mb", "1024kb", and "1g" to int values in
  * bytes.
  */
-@Deprecated
 public class MemoryIntPropertyEditor extends PropertyEditorSupport {
     public void setAsText(String text) throws IllegalArgumentException {
 

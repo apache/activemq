@@ -18,7 +18,12 @@ package org.apache.activemq.util;
 
 import java.beans.PropertyEditorSupport;
 
-@Deprecated
+/**
+ * Used by xbean to set booleans.
+ * <p/>
+ * <b>Important: </b> Do not use this for other purposes than xbean, as property editors
+ * are not thread safe, and they are slow to use.
+ */
 public class BooleanEditor extends PropertyEditorSupport {
 
     public String getJavaInitializationString() {

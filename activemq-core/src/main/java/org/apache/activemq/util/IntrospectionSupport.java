@@ -16,12 +16,9 @@
  */
 package org.apache.activemq.util;
 
-import java.beans.PropertyEditor;
-import java.beans.PropertyEditorManager;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -34,34 +31,13 @@ import java.util.Set;
 import javax.net.ssl.SSLServerSocket;
 
 import org.apache.activemq.command.ActiveMQDestination;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public final class IntrospectionSupport {
-    
-    static {
-        // Add Spring and ActiveMQ specific property editors
-        String[] additionalPath = new String[] {
-                "org.springframework.beans.propertyeditors",
-                "org.apache.activemq.util" };
-        synchronized (PropertyEditorManager.class) {
-            List<String> list = new ArrayList<String>();
-            list.addAll(Arrays.asList(PropertyEditorManager.getEditorSearchPath()));
 
-            if (!list.contains(additionalPath[0])) {
-                list.add(additionalPath[0]);
-            }
-            if (!list.contains(additionalPath[1])) {
-                list.add(additionalPath[1]);
-            }
+    private static final Logger LOG = LoggerFactory.getLogger(IntrospectionSupport.class);
 
-            String[] newSearchPath = list.toArray(new String[list.size()]);
-            try {
-                PropertyEditorManager.setEditorSearchPath(newSearchPath);
-            } catch(java.security.AccessControlException ignore) {
-                // we might be in an applet...
-            }
-        }
-    }
-    
     private IntrospectionSupport() {
     }
 
@@ -86,7 +62,7 @@ public final class IntrospectionSupport {
             String name = method.getName();
             Class type = method.getReturnType();
             Class params[] = method.getParameterTypes();
-            if ((name.startsWith("is") || name.startsWith("get")) && params.length == 0 && type != null && isSettableType(type)) {
+            if ((name.startsWith("is") || name.startsWith("get")) && params.length == 0 && type != null) {
 
                 try {
 
@@ -208,33 +184,75 @@ public final class IntrospectionSupport {
         }
     }
 
-    private static Object convert(Object value, Class type) {
+    private static Object convert(Object value, Class to) {
+        if (value == null) {
+            // lets avoid NullPointerException when converting to boolean for null values
+            if (boolean.class.isAssignableFrom(to)) {
+                return Boolean.FALSE;
+            }
+            return null;
+        }
+
+        // eager same instance type test to avoid the overhead of invoking the type converter
+        // if already same type
+        if (to.isAssignableFrom(value.getClass())) {
+            return to.cast(value);
+        }
+
         // special for String[] as we do not want to use a PropertyEditor for that
-        if (type.isAssignableFrom(String[].class)) {
+        if (to.isAssignableFrom(String[].class)) {
             return StringArrayConverter.convertToStringArray(value);
         }
 
-        PropertyEditor editor = PropertyEditorManager.findEditor(type);
-        if (editor != null) {
-            editor.setAsText(value.toString());
-            return editor.getValue();
+        // special for String to List<ActiveMQDestination> as we do not want to use a PropertyEditor for that
+        if (value.getClass().equals(String.class) && to.equals(List.class)) {
+            Object answer = StringToListOfActiveMQDestinationConverter.convertToActiveMQDestination(value);
+            if (answer != null) {
+                return answer;
+            }
         }
-        return null;
+
+        TypeConversionSupport.Converter converter = TypeConversionSupport.lookupConverter(value.getClass(), to);
+        if (converter != null) {
+            return converter.convert(value);
+        } else {
+            throw new IllegalArgumentException("Cannot convert from " + value.getClass()
+                    + " to " + to + " with value " + value);
+        }
     }
 
-    public static String convertToString(Object value, Class type) {
+    public static String convertToString(Object value, Class to) {
+        if (value == null) {
+            return null;
+        }
+
+        // already a String
+        if (value instanceof String) {
+            return (String) value;
+        }
+
         // special for String[] as we do not want to use a PropertyEditor for that
-        if (value != null && value.getClass().isAssignableFrom(String[].class)) {
+        if (String[].class.isInstance(value)) {
             String[] array = (String[]) value;
             return StringArrayConverter.convertToString(array);
         }
 
-        PropertyEditor editor = PropertyEditorManager.findEditor(type);
-        if (editor != null) {
-            editor.setValue(value);
-            return editor.getAsText();
+        // special for String to List<ActiveMQDestination> as we do not want to use a PropertyEditor for that
+        if (List.class.isInstance(value)) {
+            // if the list is a ActiveMQDestination, then return a comma list
+            String answer = StringToListOfActiveMQDestinationConverter.convertFromActiveMQDestination(value);
+            if (answer != null) {
+                return answer;
+            }
         }
-        return null;
+
+        TypeConversionSupport.Converter converter = TypeConversionSupport.lookupConverter(value.getClass(), String.class);
+        if (converter != null) {
+            return (String) converter.convert(value);
+        } else {
+            throw new IllegalArgumentException("Cannot convert from " + value.getClass()
+                    + " to " + to + " with value " + value);
+        }
     }
 
     private static Method findSetterMethod(Class clazz, String name) {
@@ -249,19 +267,6 @@ public final class IntrospectionSupport {
             }
         }
         return null;
-    }
-
-    private static boolean isSettableType(Class clazz) {
-        // special for String[]
-        if (clazz.isAssignableFrom(String[].class)) {
-            return true;
-        }
-
-        if (PropertyEditorManager.findEditor(clazz) != null) {
-            return true;
-        }
-        	
-        return false;
     }
 
     public static String toString(Object target) {
@@ -349,7 +354,7 @@ public final class IntrospectionSupport {
                 }
                 map.put(field.getName(), o);
             } catch (Throwable e) {
-                e.printStackTrace();
+                LOG.debug("Error getting field " + field + " on class " + startClass + ". This exception is ignored.", e);
             }
         }
 

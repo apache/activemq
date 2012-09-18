@@ -16,12 +16,17 @@
  */
 package org.apache.activemq.util;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.activemq.command.ActiveMQDestination;
 
+/**
+ * Type conversion support for ActiveMQ.
+ */
 public final class TypeConversionSupport {
 
     private static class ConversionKey {
@@ -45,7 +50,7 @@ public final class TypeConversionSupport {
         }
     }
 
-    interface Converter {
+    public interface Converter {
         Object convert(Object value);
     }
 
@@ -138,16 +143,25 @@ public final class TypeConversionSupport {
                 return ActiveMQDestination.createDestination((String)value, ActiveMQDestination.QUEUE_TYPE);
             }
         });
+        CONVERSION_MAP.put(new ConversionKey(String.class, URI.class), new Converter() {
+            public Object convert(Object value) {
+                String text = value.toString();
+                try {
+                    return new URI(text);
+                } catch (URISyntaxException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        });
     }
 
     private TypeConversionSupport() {
     }
 
-    public static Object convert(Object value, Class type) {
-
+    public static Object convert(Object value, Class to) {
         if (value == null) {
             // lets avoid NullPointerException when converting to boolean for null values
-            if (boolean.class.isAssignableFrom(type)) {
+            if (boolean.class.isAssignableFrom(to)) {
                 return Boolean.FALSE;
             }
             return null;
@@ -155,17 +169,55 @@ public final class TypeConversionSupport {
 
         // eager same instance type test to avoid the overhead of invoking the type converter
         // if already same type
-        if (type.isInstance(value)) {
-            return type.cast(value);
+        if (to.isInstance(value)) {
+            return to.cast(value);
         }
 
         // lookup converter
-        Converter c = CONVERSION_MAP.get(new ConversionKey(value.getClass(), type));
+        Converter c = lookupConverter(value.getClass(), to);
         if (c != null) {
             return c.convert(value);
         } else {
             return null;
         }
+    }
+
+    public static Converter lookupConverter(Class from, Class to) {
+        // use wrapped type for primitives
+        if (from.isPrimitive()) {
+            from = convertPrimitiveTypeToWrapperType(from);
+        }
+        if (to.isPrimitive()) {
+            to = convertPrimitiveTypeToWrapperType(to);
+        }
+
+        return CONVERSION_MAP.get(new ConversionKey(from, to));
+    }
+
+    /**
+     * Converts primitive types such as int to its wrapper type like
+     * {@link Integer}
+     */
+    private static Class<?> convertPrimitiveTypeToWrapperType(Class<?> type) {
+        Class<?> rc = type;
+        if (type.isPrimitive()) {
+            if (type == int.class) {
+                rc = Integer.class;
+            } else if (type == long.class) {
+                rc = Long.class;
+            } else if (type == double.class) {
+                rc = Double.class;
+            } else if (type == float.class) {
+                rc = Float.class;
+            } else if (type == short.class) {
+                rc = Short.class;
+            } else if (type == byte.class) {
+                rc = Byte.class;
+            } else if (type == boolean.class) {
+                rc = Boolean.class;
+            }
+        }
+        return rc;
     }
 
 }

@@ -52,6 +52,7 @@ public class ReflectionSupportTest extends TestCase {
         map.put("favorites", favoritesString);
         map.put("nonFavorites", nonFavoritesString);
         map.put("others", null);
+        map.put("systems", "windows,mac");
         
         IntrospectionSupport.setProperties(pojo, map);
         
@@ -62,6 +63,8 @@ public class ReflectionSupportTest extends TestCase {
         assertEquals(favorites, pojo.getFavorites());
         assertEquals(nonFavorites, pojo.getNonFavorites());
         assertNull(pojo.getOthers());
+        assertEquals("windows", pojo.getSystems()[0]);
+        assertEquals("mac", pojo.getSystems()[1]);
     }
     
     public void testGetProperties() {
@@ -72,6 +75,7 @@ public class ReflectionSupportTest extends TestCase {
     	pojo.setFavorites(favorites);
     	pojo.setNonFavorites(nonFavorites);
     	pojo.setOthers(null);
+        pojo.setSystems(new String[]{"windows", "mac"});
     	
     	Properties props = new Properties();
     	
@@ -79,10 +83,11 @@ public class ReflectionSupportTest extends TestCase {
     	
     	assertEquals("Dejan", props.get("name"));
     	assertEquals("31", props.get("age"));
-    	assertEquals("True", props.get("enabled"));
+    	assertEquals("true", props.get("enabled"));
     	assertEquals(favoritesString, props.get("favorites"));
     	assertEquals(nonFavoritesString, props.get("nonFavorites"));
     	assertNull(props.get("others"));
+        assertEquals("windows,mac", props.get("systems"));
     }
     
     public void testSetBoolean() {
