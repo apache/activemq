@@ -138,7 +138,6 @@
         <include>${pom.groupId}:activemq-xmpp</include>
         <include>${pom.groupId}:activemq-spring</include>
         <include>${pom.groupId}:activeio-core</include>
-        <include>${pom.groupId}:activemq-jmdns_1.0</include>
         <include>commons-beanutils:commons-beanutils</include>
         <include>commons-collections:commons-collections</include>
         <include>commons-httpclient:commons-httpclient</include>
@@ -168,6 +167,7 @@
         <include>org.apache.velocity:velocity</include>
         <include>org.apache.servicemix.bundles:org.apache.servicemix.bundles.josql</include>
         <include>org.jasypt:jasypt</include>
+        <include>javax.jmdns:jmdns</include>
         <!-- leveldb -->
         <include>org.fusesource.fuse-extra:fusemq-leveldb</include>
         <include>org.fusesource.hawtbuf:hawtbuf</include>

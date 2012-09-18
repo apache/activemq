@@ -75,6 +75,7 @@
         <bundle>mvn:org.apache.httpcomponents/httpcore-osgi/${httpclient-version}</bundle>
         <bundle>mvn:org.apache.httpcomponents/httpclient-osgi/${httpclient-version}</bundle>
         <bundle>mvn:org.springframework/spring-oxm/${spring-version}</bundle>
+        <bundle>mvn:javax.jmdns/jmdns/${jmdns-version}</bundle>
     </feature>
 
     <feature name="activemq-camel" version="${activemq-version}" resolver="(obr)">

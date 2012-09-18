@@ -23,11 +23,10 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
-
-import org.apache.activemq.jmdns.JmDNS;
-import org.apache.activemq.jmdns.ServiceEvent;
-import org.apache.activemq.jmdns.ServiceInfo;
-import org.apache.activemq.jmdns.ServiceListener;
+import javax.jmdns.JmDNS;
+import javax.jmdns.ServiceEvent;
+import javax.jmdns.ServiceInfo;
+import javax.jmdns.ServiceListener;
 
 import org.apache.activemq.command.DiscoveryEvent;
 import org.apache.activemq.transport.discovery.DiscoveryAgent;
@@ -46,7 +45,7 @@ import org.slf4j.LoggerFactory;
 public class ZeroconfDiscoveryAgent implements DiscoveryAgent, ServiceListener {
     private static final Logger LOG = LoggerFactory.getLogger(ZeroconfDiscoveryAgent.class);
 
-    private static final String TYPE_SUFFIX = "ActiveMQ-4.";
+    private static final String TYPE_SUFFIX = "ActiveMQ-5.";
 
     private JmDNS jmdns;
     private InetAddress localAddress;
@@ -92,7 +91,11 @@ public class ZeroconfDiscoveryAgent implements DiscoveryAgent, ServiceListener {
             final JmDNS closeTarget = jmdns;
             Thread thread = new Thread() {
                 public void run() {
-                    closeTarget.close();
+                    try {
+                        JmDNSFactory.onClose(getLocalAddress(), closeTarget);
+                    } catch (IOException e) {
+                        LOG.debug("Error closing JmDNS " + getLocalhost() + ". This exception will be ignored.", e);
+                    }
                 }
             };
 
@@ -200,7 +203,7 @@ public class ZeroconfDiscoveryAgent implements DiscoveryAgent, ServiceListener {
         if (LOG.isDebugEnabled()) {
             LOG.debug("Registering service type: " + type + " name: " + name + " details: " + map);
         }
-        return new ServiceInfo(type, name + "." + type, port, weight, priority, "");
+        return ServiceInfo.create(type, name + "." + type, port, weight, priority, "");
     }
 
     protected JmDNS createJmDNS() throws IOException {

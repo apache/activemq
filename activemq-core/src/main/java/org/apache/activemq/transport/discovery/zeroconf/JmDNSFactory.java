@@ -21,7 +21,7 @@ import java.net.InetAddress;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
-import org.apache.activemq.jmdns.JmDNS;
+import javax.jmdns.JmDNS;
 
 public final class JmDNSFactory {
 
@@ -39,20 +39,14 @@ public final class JmDNSFactory {
         UsageTracker tracker = registry.get(address);
         if (tracker == null) {
             tracker = new UsageTracker();
-            tracker.jmDNS = new JmDNS(address) {
-                public void close() {
-                    if (onClose(address)) {
-                        super.close();
-                    }
-                }
-            };
+            tracker.jmDNS = JmDNS.create(address);
             registry.put(address, tracker);
         }
         tracker.count.incrementAndGet();
         return tracker.jmDNS;
     }
 
-    static synchronized boolean onClose(InetAddress address) {
+    static synchronized boolean onClose(InetAddress address, JmDNS dns) {
         UsageTracker tracker = registry.get(address);
         if (tracker != null) {
             if (tracker.count.decrementAndGet() == 0) {

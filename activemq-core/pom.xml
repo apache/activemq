@@ -38,6 +38,7 @@
       javax.annotation*;resolution:=optional,
       javax.transaction*;resolution:=optional,
       javax.security*;resolution:=optional,
+      javax.jmdns*;resolution:=optional,
       org.codehaus.jettison*;resolution:=optional,
       org.apache.activeio*;resolution:=optional,
       org.apache.camel*;resolution:=optional,
@@ -219,8 +220,8 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>org.apache.activemq</groupId>
-      <artifactId>activemq-jmdns_1.0</artifactId>
+      <groupId>javax.jmdns</groupId>
+      <artifactId>jmdns</artifactId>
       <optional>true</optional>
     </dependency>
     <dependency>
