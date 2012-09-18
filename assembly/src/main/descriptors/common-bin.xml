@@ -118,8 +118,13 @@
         <include>org.apache.geronimo.specs:geronimo-jms_1.1_spec</include>
         <include>org.apache.geronimo.specs:geronimo-jta_1.0.1B_spec</include>
         <include>${pom.groupId}:activemq-web</include>
-
-        <!-- camel -->
+      </includes>
+    </dependencySet>
+    <dependencySet>
+      <outputDirectory>/lib/camel</outputDirectory>
+      <unpack>false</unpack>
+      <scope>runtime</scope>
+      <includes>
         <include>org.apache.camel:camel-core</include>
         <include>org.apache.camel:camel-spring</include>
         <include>org.apache.camel:camel-jetty</include>
@@ -131,7 +136,6 @@
       <outputDirectory>/lib/optional</outputDirectory>
       <unpack>false</unpack>
       <scope>runtime</scope>
-      <useTransitiveFiltering>true</useTransitiveFiltering>
       <includes>
         <include>${pom.groupId}:activemq-optional</include>
         <include>${pom.groupId}:activemq-pool</include>
@@ -168,6 +172,15 @@
         <include>org.apache.servicemix.bundles:org.apache.servicemix.bundles.josql</include>
         <include>org.jasypt:jasypt</include>
         <include>javax.jmdns:jmdns</include>
+      </includes>
+    </dependencySet>
+    <dependencySet>
+      <outputDirectory>/lib/extra</outputDirectory>
+      <unpack>false</unpack>
+      <scope>runtime</scope>
+      <!-- to include all the transitive JARs that leveldb requires -->
+      <useTransitiveFiltering>true</useTransitiveFiltering>
+      <includes>
         <!-- leveldb -->
         <include>org.fusesource.fuse-extra:fusemq-leveldb</include>
         <include>org.fusesource.hawtbuf:hawtbuf</include>

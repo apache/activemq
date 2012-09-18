@@ -30,8 +30,8 @@ import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
@@ -49,8 +49,8 @@ public class Main {
     private File activeMQHome;
     private File activeMQBase;
     private ClassLoader classLoader;
-    private Set<File> extensions = new HashSet<File>(5);
-    private Set<File> activeMQClassPath = new HashSet<File>(5);
+    private final Set<File> extensions = new LinkedHashSet<File>();
+    private final Set<File> activeMQClassPath = new LinkedHashSet<File>();
 
     public static void main(String[] args) {
 
@@ -96,11 +96,15 @@ public class Main {
             app.addExtensionDirectory(homeLibDir);
 
             if (!baseIsHome) {
+                app.addExtensionDirectory(new File(baseLibDir, "camel"));
                 app.addExtensionDirectory(new File(baseLibDir, "optional"));
                 app.addExtensionDirectory(new File(baseLibDir, "web"));
+                app.addExtensionDirectory(new File(baseLibDir, "extra"));
             }
+            app.addExtensionDirectory(new File(homeLibDir, "camel"));
             app.addExtensionDirectory(new File(homeLibDir, "optional"));
             app.addExtensionDirectory(new File(homeLibDir, "web"));
+            app.addExtensionDirectory(new File(homeLibDir, "extra"));
         }
 
         // Add any custom classpath specified from the system property
@@ -238,6 +242,7 @@ public class Main {
             buffer.append(" ").append(arg);
         }
         System.out.println("    JVM args:" + buffer.toString());
+        System.out.println("Extensions classpath:\n  " + getExtensionDirForLogging());
 
         System.out.println("ACTIVEMQ_HOME: " + getActiveMQHome());
         System.out.println("ACTIVEMQ_BASE: " + getActiveMQBase());
@@ -254,9 +259,7 @@ public class Main {
             Method runTask = task.getMethod("main", new Class[] {
                 String[].class, InputStream.class, PrintStream.class
             });
-            runTask.invoke(task.newInstance(), new Object[] {
-                args, System.in, System.out
-            });
+            runTask.invoke(task.newInstance(), args, System.in, System.out);
         } catch (InvocationTargetException e) {
             throw e.getCause();
         }
@@ -409,5 +412,18 @@ public class Main {
             activeMQDataDir = new File(getActiveMQBase() + "/data");
         }
         return activeMQDataDir;
+    }
+
+    public String getExtensionDirForLogging() {
+        StringBuilder sb = new StringBuilder("[");
+        for (Iterator<File> it = extensions.iterator(); it.hasNext();) {
+            File file = it.next();
+            sb.append(file.getPath());
+            if (it.hasNext()) {
+                sb.append(",");
+            }
+        }
+        sb.append("]");
+        return sb.toString();
     }
 }
