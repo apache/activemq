@@ -122,8 +122,8 @@
            <artifactId>regexp</artifactId>
         </exclusion>
         <exclusion>
-           <groupId>org.apache.activemq</groupId>
-           <artifactId>activemq-jmdns_1.0</artifactId>
+           <groupId>javax.jmdns</groupId>
+           <artifactId>jmdns</artifactId>
         </exclusion>
         <exclusion>
            <groupId>xalan</groupId>
@@ -196,10 +196,6 @@
     <dependency>
         <groupId>org.springframework</groupId>
         <artifactId>spring-context</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.derby</groupId>
-      <artifactId>derby</artifactId>
     </dependency>
     <dependency>
       <groupId>org.apache.geronimo.specs</groupId>
