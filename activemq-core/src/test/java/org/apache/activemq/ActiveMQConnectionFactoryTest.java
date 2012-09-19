@@ -22,6 +22,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Map;
 
 import javax.jms.ExceptionListener;
 import javax.jms.JMSException;
@@ -102,20 +103,20 @@ public class ActiveMQConnectionFactoryTest extends CombinationTestSupport {
     }
 
     public void testCreateVMConnectionWithEmbdeddBroker() throws URISyntaxException, JMSException {
-        ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory("vm://localhost?broker.persistent=false");
+        ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory("vm://myBroker2?broker.persistent=false");
         // Make sure the broker is not created until the connection is
         // instantiated.
-        assertNull(BrokerRegistry.getInstance().lookup("localhost"));
+        assertNull(BrokerRegistry.getInstance().lookup("myBroker2"));
         connection = (ActiveMQConnection)cf.createConnection();
         // This should create the connection.
         assertNotNull(connection);
         // Verify the broker was created.
-        assertNotNull(BrokerRegistry.getInstance().lookup("localhost"));
+        assertNotNull(BrokerRegistry.getInstance().lookup("myBroker2"));
 
         connection.close();
 
         // Verify the broker was destroyed.
-        assertNull(BrokerRegistry.getInstance().lookup("localhost"));
+        assertNull(BrokerRegistry.getInstance().lookup("myBroker2"));
     }
 
     public void testGetBrokerName() throws URISyntaxException, JMSException {
