@@ -21,10 +21,7 @@
 
 <web-app>
 
-    <display-name>ActiveMQ Web Demos</display-name>
-    <description>
-    Apache ActiveMQ Web Demos
-    </description>
+    <display-name>Apache ActiveMQ Web Demo</display-name>
 
     <!-- context config -->
     <context-param>
@@ -32,14 +29,28 @@
         <param-value>vm://localhost</param-value>
         <description>The URL of the Message Broker to connect to</description>
     </context-param>
-
     <context-param>
         <param-name>org.apache.activemq.embeddedBroker</param-name>
         <param-value>true</param-value>
         <description>Whether we should include an embedded broker or not</description>
     </context-param>
 
-    <!-- servlet mappings -->
+	<!-- filters -->
+	<filter>
+		<filter-name>session</filter-name>
+		<filter-class>org.apache.activemq.web.SessionFilter</filter-class>
+	</filter>
+	<filter-mapping>
+		<filter-name>session</filter-name>
+		<url-pattern>/*</url-pattern>
+	</filter-mapping>
+
+	<!-- listener -->
+	<listener>
+		<listener-class>org.apache.activemq.web.SessionListener</listener-class>
+	</listener>
+
+	<!-- servlet mappings -->
     
     <!-- the subscription REST servlet -->
     <servlet>
@@ -59,7 +70,6 @@
                 <param-value>consumer.prefetchSize=1</param-value>
         </init-param> 
         -->
-
     </servlet>
 
     <!-- the queue browse servlet -->
@@ -74,7 +84,8 @@
         <servlet-class>org.apache.activemq.web.PortfolioPublishServlet</servlet-class>
         <load-on-startup>1</load-on-startup>
     </servlet>
-    
+
+	<!-- servlet mappings -->
     <servlet-mapping>
         <servlet-name>AjaxServlet</servlet-name>
         <url-pattern>/amq/*</url-pattern>
@@ -95,17 +106,4 @@
         <url-pattern>/portfolioPublish</url-pattern>
     </servlet-mapping>
 
-    <filter>
-      <filter-name>session</filter-name>
-      <filter-class>org.apache.activemq.web.SessionFilter</filter-class>
-    </filter>
-    
-    <filter-mapping>
-      <filter-name>session</filter-name>
-      <url-pattern>/*</url-pattern>
-    </filter-mapping>
-
-    <listener>
-        <listener-class>org.apache.activemq.web.SessionListener</listener-class>
-    </listener>
 </web-app>
