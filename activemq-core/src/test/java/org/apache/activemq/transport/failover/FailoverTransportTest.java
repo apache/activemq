@@ -59,7 +59,7 @@ public class FailoverTransportTest {
     public void testReconnectUnlimited() throws Exception {
 
         Transport transport = TransportFactory.connect(
-                new URI("failover://(tcp://0.0.0.0:61616)?useExponentialBackOff=false&reconnectDelay=100&initialReconnectDelay=0"));
+                new URI("failover://(tcp://0.0.0.0:61616)?useExponentialBackOff=false&reconnectDelay=0&initialReconnectDelay=0"));
 
         transport.setTransportListener(new TransportListener() {
 
