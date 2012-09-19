@@ -52,6 +52,10 @@ import org.slf4j.LoggerFactory;
  */
 public class MessageServlet extends MessageServletSupport {
 
+    // its a bit pita that this servlet got intermixed with jetty continuation/rest
+    // instead of creating a special for that. We should have kept a simple servlet
+    // for good old fashioned request/response blocked communication.
+
     private static final long serialVersionUID = 8737914695188481219L;
 
     private static final Logger LOG = LoggerFactory.getLogger(MessageServlet.class);
@@ -132,7 +136,7 @@ public class MessageServlet extends MessageServletSupport {
                    ActiveMQTextMessage answer = new ActiveMQTextMessage();
                    answer.setText(body);
 
-                   writeResponse(request, response, answer);
+                   writeMessageResponse(response.getWriter(), answer);
                } catch (Exception e) {
                    IOException ex = new IOException();
                    ex.initCause(e);
@@ -249,10 +253,10 @@ public class MessageServlet extends MessageServletSupport {
             // handle any message(s)
             if (message == null) {
                 // No messages so OK response of for ajax else no content.
-                response.setStatus(HttpServletResponse.SC_OK);
-                response.setContentType("text/plain");
-                writer.write("No message received");
-                writer.flush();
+                response.setStatus(HttpServletResponse.SC_NO_CONTENT);
+//                response.setContentType("text/plain");
+//                writer.write("No message received");
+//                writer.flush();
             } else {
                 // We have at least one message so set up the response
                 messages = 1;
