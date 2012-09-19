@@ -131,7 +131,8 @@ public class MessageServlet extends MessageServletSupport {
                    String body = (String)client.getProducerTemplate().requestBody(point, text);
                    ActiveMQTextMessage answer = new ActiveMQTextMessage();
                    answer.setText(body);
-                   writeMessageResponse(response.getWriter(), answer);
+
+                   writeResponse(request, response, answer);
                } catch (Exception e) {
                    IOException ex = new IOException();
                    ex.initCause(e);
@@ -148,6 +149,8 @@ public class MessageServlet extends MessageServletSupport {
             // lets return a unique URI for reliable messaging
             response.setHeader("messageID", message.getJMSMessageID());
             response.setStatus(HttpServletResponse.SC_OK);
+            response.getWriter().write("Message sent");
+
         } catch (JMSException e) {
             throw new ServletException("Could not post JMS message: " + e, e);
         }
@@ -241,23 +244,34 @@ public class MessageServlet extends MessageServletSupport {
         try {
 
             // write a responds
-            response.setContentType(defaultContentType);
             PrintWriter writer = response.getWriter();
 
             // handle any message(s)
             if (message == null) {
                 // No messages so OK response of for ajax else no content.
-                response.setStatus(HttpServletResponse.SC_NO_CONTENT);
+                response.setStatus(HttpServletResponse.SC_OK);
+                response.setContentType("text/plain");
+                writer.write("No message received");
+                writer.flush();
             } else {
                 // We have at least one message so set up the response
-                response.setStatus(HttpServletResponse.SC_OK);
+                messages = 1;
+
                 String type = getContentType(request);
                 if (type != null) {
                     response.setContentType(type);
+                } else {
+                    if (isXmlContent(message)) {
+                        response.setContentType(defaultContentType);
+                    } else {
+                        response.setContentType("text/plain");
+                    }
                 }
+                response.setStatus(HttpServletResponse.SC_OK);
 
                 setResponseHeaders(response, message);
                 writeMessageResponse(writer, message);
+                writer.flush();
             }
         } finally {
             if (LOG.isDebugEnabled()) {
@@ -283,6 +297,21 @@ public class MessageServlet extends MessageServletSupport {
                 writer.print(object.toString());
             }
         }
+    }
+
+    protected boolean isXmlContent(Message message) throws JMSException {
+        if (message instanceof TextMessage) {
+            TextMessage textMsg = (TextMessage)message;
+            String txt = textMsg.getText();
+            if (txt != null) {
+                // assume its xml when it starts with <
+                if (txt.startsWith("<")) {
+                    return true;
+                }
+            }
+        }
+        // for any other kind of messages we dont assume xml
+        return false;
     }
 
     public WebClient getWebClient(HttpServletRequest request) {
