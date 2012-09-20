@@ -48,6 +48,11 @@
           $("#status").html("Connected");
           client.subscribe(destination, function(message) {
             $("#received").html(message.body);
+            if (message.body == "messages #1000") {
+                client.disconnect(function() {
+                    $("#status").html("Disconnected");
+                });
+            }
           });
         });
       } else {

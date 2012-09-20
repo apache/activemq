@@ -245,6 +245,15 @@ public class WSTransportTest {
                     return webReceived.getText().equals("messages #" + MESSAGE_COUNT);
                 }
             }));
+
+            Thread.sleep(1000);
+
+            assertTrue("Should have disconnected", Wait.waitFor(new Wait.Condition() {
+
+                public boolean isSatisified() throws Exception {
+                    return webStatus.getText().equals("Disconnected");
+                }
+            }));
         }
     }
 }
