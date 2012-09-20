@@ -24,7 +24,7 @@ import org.apache.activemq.state.CommandVisitor;
 
 /**
  * @openwire:marshaller code="5"
- * 
+ *
  */
 public class ConsumerInfo extends BaseCommand {
 
@@ -117,7 +117,7 @@ public class ConsumerInfo extends BaseCommand {
 
     /**
      * Is used to uniquely identify the consumer to the broker.
-     * 
+     *
      * @openwire:property version=1 cache=true
      */
     public ConsumerId getConsumerId() {
@@ -130,7 +130,7 @@ public class ConsumerInfo extends BaseCommand {
 
     /**
      * Is this consumer a queue browser?
-     * 
+     *
      * @openwire:property version=1
      */
     public boolean isBrowser() {
@@ -144,7 +144,7 @@ public class ConsumerInfo extends BaseCommand {
     /**
      * The destination that the consumer is interested in receiving messages
      * from. This destination could be a composite destination.
-     * 
+     *
      * @openwire:property version=1 cache=true
      */
     public ActiveMQDestination getDestination() {
@@ -158,7 +158,7 @@ public class ConsumerInfo extends BaseCommand {
     /**
      * How many messages a broker will send to the client without receiving an
      * ack before he stops dispatching messages to the client.
-     * 
+     *
      * @openwire:property version=1
      */
     public int getPrefetchSize() {
@@ -173,7 +173,7 @@ public class ConsumerInfo extends BaseCommand {
     /**
      * How many messages a broker will keep around, above the prefetch limit,
      * for non-durable topics before starting to discard older messages.
-     * 
+     *
      * @openwire:property version=1
      */
     public int getMaximumPendingMessageLimit() {
@@ -190,7 +190,7 @@ public class ConsumerInfo extends BaseCommand {
      * done async, then he broker use a STP style of processing. STP is more
      * appropriate in high bandwidth situations or when being used by and in vm
      * transport.
-     * 
+     *
      * @openwire:property version=1
      */
     public boolean isDispatchAsync() {
@@ -204,7 +204,7 @@ public class ConsumerInfo extends BaseCommand {
     /**
      * The JMS selector used to filter out messages that this consumer is
      * interested in.
-     * 
+     *
      * @openwire:property version=1
      */
     public String getSelector() {
@@ -217,7 +217,7 @@ public class ConsumerInfo extends BaseCommand {
 
     /**
      * Used to identify the name of a durable subscription.
-     * 
+     *
      * @openwire:property version=1
      */
     public String getSubscriptionName() {
@@ -229,27 +229,9 @@ public class ConsumerInfo extends BaseCommand {
     }
 
     /**
-     * @deprecated
-     * @return
-     * @see getSubscriptionName
-     */
-    public String getSubcriptionName() {
-        return subscriptionName;
-    }
-
-    /**
-     * @deprecated
-     * @see setSubscriptionName
-     * @param durableSubscriptionId
-     */
-    public void setSubcriptionName(String durableSubscriptionId) {
-        this.subscriptionName = durableSubscriptionId;
-    }
-
-    /**
      * Set noLocal to true to avoid receiving messages that were published
      * locally on the same connection.
-     * 
+     *
      * @openwire:property version=1
      */
     public boolean isNoLocal() {
@@ -265,7 +247,7 @@ public class ConsumerInfo extends BaseCommand {
      * receive messages from the destination. If there are multiple exclusive
      * consumers for a destination, the first one created will be the exclusive
      * consumer of the destination.
-     * 
+     *
      * @openwire:property version=1
      */
     public boolean isExclusive() {
@@ -283,7 +265,7 @@ public class ConsumerInfo extends BaseCommand {
      * published to the topic. If the consumer is durable then it will receive
      * all persistent messages that are still stored in persistent storage for
      * that topic.
-     * 
+     *
      * @openwire:property version=1
      */
     public boolean isRetroactive() {
@@ -305,7 +287,7 @@ public class ConsumerInfo extends BaseCommand {
      * are other higher priority consumers available to dispatch to. This allows
      * letting the broker to have an affinity to higher priority consumers.
      * Default priority is 0.
-     * 
+     *
      * @openwire:property version=1
      */
     public byte getPriority() {
@@ -318,7 +300,7 @@ public class ConsumerInfo extends BaseCommand {
 
     /**
      * The route of brokers the command has moved through.
-     * 
+     *
      * @openwire:property version=1 cache=true
      */
     public BrokerId[] getBrokerPath() {
@@ -334,7 +316,7 @@ public class ConsumerInfo extends BaseCommand {
      * predicates into the selector on the fly. Handy if if say a Security
      * Broker interceptor wants to filter out messages based on security level
      * of the consumer.
-     * 
+     *
      * @openwire:property version=1
      */
     public BooleanExpression getAdditionalPredicate() {
@@ -396,7 +378,7 @@ public class ConsumerInfo extends BaseCommand {
     /**
      * The broker may be able to optimize it's processing or provides better QOS
      * if it knows the consumer will not be sending ranged acks.
-     * 
+     *
      * @return true if the consumer will not send range acks.
      * @openwire:property version=1
      */
@@ -423,11 +405,11 @@ public class ConsumerInfo extends BaseCommand {
             }
         }
     }
-    
+
     public synchronized boolean isNetworkConsumersEmpty() {
         return networkConsumerIds == null || networkConsumerIds.isEmpty();
     }
-    
+
     public synchronized List<ConsumerId> getNetworkConsumerIds(){
         List<ConsumerId> result = new ArrayList<ConsumerId>();
         if (networkConsumerIds != null) {
@@ -437,10 +419,10 @@ public class ConsumerInfo extends BaseCommand {
     }
 
     /**
-     * Tracks the original subscription id that causes a subscription to 
+     * Tracks the original subscription id that causes a subscription to
      * percolate through a network when networkTTL > 1. Tracking the original
      * subscription allows duplicate suppression.
-     * 
+     *
      * @return array of the current subscription path
      * @openwire:property version=4
      */
@@ -451,7 +433,7 @@ public class ConsumerInfo extends BaseCommand {
         }
         return result;
     }
-    
+
     public void setNetworkConsumerPath(ConsumerId[] consumerPath) {
         if (consumerPath != null) {
             for (int i=0; i<consumerPath.length; i++) {
@@ -463,7 +445,7 @@ public class ConsumerInfo extends BaseCommand {
     public void setLastDeliveredSequenceId(long lastDeliveredSequenceId) {
         this.lastDeliveredSequenceId  = lastDeliveredSequenceId;
     }
-    
+
     public long getLastDeliveredSequenceId() {
         return lastDeliveredSequenceId;
     }

@@ -112,13 +112,6 @@ public abstract class TransportFactory {
         return tf.doBind(location);
     }
 
-    /**
-     * @deprecated
-     */
-    public static TransportServer bind(String brokerId, URI location) throws IOException {
-        return bind(location);
-    }
-
     public static TransportServer bind(BrokerService brokerService, URI location) throws IOException {
         TransportFactory tf = findTransportFactory(location);
         if( brokerService!=null && tf instanceof BrokerServiceAware ) {
@@ -159,7 +152,6 @@ public abstract class TransportFactory {
                 throw new IllegalArgumentException("Invalid connect parameters: " + options);
             }
             return rc;
-
         } catch (URISyntaxException e) {
             throw IOExceptionSupport.create(e);
         }
@@ -265,7 +257,7 @@ public abstract class TransportFactory {
      * @throws Exception
      */
     @SuppressWarnings("rawtypes")
-	public Transport serverConfigure(Transport transport, WireFormat format, HashMap options) throws Exception {
+    public Transport serverConfigure(Transport transport, WireFormat format, HashMap options) throws Exception {
         if (options.containsKey(THREAD_NAME_FILTER)) {
             transport = new ThreadNameFilter(transport);
         }

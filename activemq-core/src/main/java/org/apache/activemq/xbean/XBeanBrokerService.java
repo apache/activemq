@@ -23,29 +23,26 @@ import javax.annotation.PreDestroy;
 
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.usage.SystemUsage;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.CachedIntrospectionResults;
 
 /**
  * An ActiveMQ Message Broker. It consists of a number of transport
  * connectors, network connectors and a bunch of properties which can be used to
  * configure the broker as its lazily created.
- * 
+ *
  * @org.apache.xbean.XBean element="broker" rootElement="true"
- * @org.apache.xbean.Defaults {code:xml} 
+ * @org.apache.xbean.Defaults {code:xml}
  * <broker test="foo.bar">
  *   lets.
  *   see what it includes.
- * </broker>   
+ * </broker>
  * {code}
- * 
+ *
  */
 public class XBeanBrokerService extends BrokerService {
-    private static final transient Logger LOG = LoggerFactory.getLogger(XBeanBrokerService.class);
-    
+
     private boolean start = true;
-    
+
     public XBeanBrokerService() {
     }
 
@@ -102,23 +99,4 @@ public class XBeanBrokerService extends BrokerService {
     public void setStart(boolean start) {
         this.start = start;
     }
-
-    /**
-     * Sets whether the broker should shutdown the ApplicationContext when the broker jvm is shutdown.
-     * The broker can be stopped because the underlying JDBC store is unavailable for example.
-     */
-    @Deprecated
-    public void setDestroyApplicationContextOnShutdown(boolean destroy) {
-        LOG.warn("destroyApplicationContextOnShutdown parameter is deprecated, please use shutdown hooks instead");
-    }
-    
-    /**
-     * Sets whether the broker should shutdown the ApplicationContext when the broker is stopped.
-     * The broker can be stopped because the underlying JDBC store is unavailable for example.
-     */
-    @Deprecated
-    public void setDestroyApplicationContextOnStop(boolean destroy) {
-        LOG.warn("destroyApplicationContextOnStop parameter is deprecated, please use shutdown hooks instead");
-    }
-    
 }

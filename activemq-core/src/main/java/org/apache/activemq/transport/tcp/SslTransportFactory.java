@@ -20,16 +20,13 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
-import java.security.SecureRandom;
 import java.util.HashMap;
 import java.util.Map;
 
 import javax.net.ServerSocketFactory;
 import javax.net.SocketFactory;
-import javax.net.ssl.KeyManager;
 import javax.net.ssl.SSLServerSocketFactory;
 import javax.net.ssl.SSLSocketFactory;
-import javax.net.ssl.TrustManager;
 
 import org.apache.activemq.broker.SslContext;
 import org.apache.activemq.transport.Transport;
@@ -46,13 +43,8 @@ import org.slf4j.LoggerFactory;
  * contribution from this class is that it is aware of SslTransportServer and
  * SslTransport classes. All Transports and TransportServers created from this
  * factory will have their needClientAuth option set to false.
- *
- * @author sepandm@gmail.com (Sepand)
- * @author David Martin Clavo david(dot)martin(dot)clavo(at)gmail.com (logging improvement modifications)
- *
  */
 public class SslTransportFactory extends TcpTransportFactory {
-    // The log this uses.,
     private static final Logger LOG = LoggerFactory.getLogger(SslTransportFactory.class);
 
     /**
@@ -82,7 +74,6 @@ public class SslTransportFactory extends TcpTransportFactory {
      */
     @SuppressWarnings("rawtypes")
     public Transport compositeConfigure(Transport transport, WireFormat format, Map options) {
-
         SslTransport sslTransport = (SslTransport)transport.narrow(SslTransport.class);
         IntrospectionSupport.setProperties(sslTransport, options);
 
@@ -138,7 +129,6 @@ public class SslTransportFactory extends TcpTransportFactory {
      * @throws IOException
      */
     protected SocketFactory createSocketFactory() throws IOException {
-
         if( SslContext.getCurrentSslContext()!=null ) {
             SslContext ctx = SslContext.getCurrentSslContext();
             try {
@@ -150,19 +140,4 @@ public class SslTransportFactory extends TcpTransportFactory {
             return SSLSocketFactory.getDefault();
         }
     }
-
-    /**
-     *
-     * @param km
-     * @param tm
-     * @param random
-     * @deprecated "Do not use anymore... using static initializers like this method only allows the JVM to use 1 SSL configuration per broker."
-     * @see org.apache.activemq.broker.SslContext#setCurrentSslContext(SslContext)
-     * @see org.apache.activemq.broker.SslContext#getSSLContext()
-     */
-    public void setKeyAndTrustManagers(KeyManager[] km, TrustManager[] tm, SecureRandom random) {
-        SslContext ctx = new SslContext(km, tm, random);
-        SslContext.setCurrentSslContext(ctx);
-    }
-
 }

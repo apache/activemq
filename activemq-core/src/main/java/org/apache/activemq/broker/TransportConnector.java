@@ -19,13 +19,13 @@ package org.apache.activemq.broker;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.StringTokenizer;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.regex.Pattern;
 
 import javax.management.ObjectName;
+
 import org.apache.activemq.broker.jmx.ManagedTransportConnector;
 import org.apache.activemq.broker.jmx.ManagementContext;
 import org.apache.activemq.broker.region.ConnectorStatistics;
@@ -46,13 +46,12 @@ import org.slf4j.LoggerFactory;
 
 /**
  * @org.apache.xbean.XBean
- *
  */
 public class TransportConnector implements Connector, BrokerServiceAware {
 
     final Logger LOG = LoggerFactory.getLogger(TransportConnector.class);
 
-    protected CopyOnWriteArrayList<TransportConnection> connections = new CopyOnWriteArrayList<TransportConnection>();
+    protected final CopyOnWriteArrayList<TransportConnection> connections = new CopyOnWriteArrayList<TransportConnection>();
     protected TransportStatusDetector statusDector;
     private BrokerService brokerService;
     private TransportServer server;
@@ -90,7 +89,6 @@ public class TransportConnector implements Connector, BrokerServiceAware {
                 setEnableStatusMonitor(false);
             }
         }
-
     }
 
     /**
@@ -104,8 +102,7 @@ public class TransportConnector implements Connector, BrokerServiceAware {
      * Factory method to create a JMX managed version of this transport
      * connector
      */
-    public ManagedTransportConnector asManagedConnector(ManagementContext context, ObjectName connectorName)
-            throws IOException, URISyntaxException {
+    public ManagedTransportConnector asManagedConnector(ManagementContext context, ObjectName connectorName) throws IOException, URISyntaxException {
         ManagedTransportConnector rc = new ManagedTransportConnector(context, connectorName, getServer());
         rc.setBrokerInfo(getBrokerInfo());
         rc.setConnectUri(getConnectUri());
@@ -134,19 +131,6 @@ public class TransportConnector implements Connector, BrokerServiceAware {
 
     public void setBrokerInfo(BrokerInfo brokerInfo) {
         this.brokerInfo = brokerInfo;
-    }
-
-    /**
-     *
-     * @deprecated use the {@link #setBrokerService(BrokerService)} method
-     *             instead.
-     */
-    @Deprecated
-    public void setBrokerName(String name) {
-        if (this.brokerInfo == null) {
-            this.brokerInfo = new BrokerInfo();
-        }
-        this.brokerInfo.setBrokerName(name);
     }
 
     public TransportServer getServer() throws IOException, URISyntaxException {
@@ -272,8 +256,7 @@ public class TransportConnector implements Connector, BrokerServiceAware {
         String publishableConnectString = null;
         if (theConnectURI != null) {
             publishableConnectString = theConnectURI.toString();
-            // strip off server side query parameters which may not be compatible to
-            // clients
+            // strip off server side query parameters which may not be compatible to clients
             if (theConnectURI.getRawQuery() != null) {
                 publishableConnectString = publishableConnectString.substring(0, publishableConnectString
                         .indexOf(theConnectURI.getRawQuery()) - 1);
@@ -297,9 +280,8 @@ public class TransportConnector implements Connector, BrokerServiceAware {
             this.statusDector.stop();
         }
 
-        for (Iterator<TransportConnection> iter = connections.iterator(); iter.hasNext();) {
-            TransportConnection c = iter.next();
-            ss.stop(c);
+        for (TransportConnection connection : connections) {
+            ss.stop(connection);
         }
         server = null;
         ss.throwFirstException();
@@ -341,8 +323,8 @@ public class TransportConnector implements Connector, BrokerServiceAware {
         if (discoveryUri != null) {
             DiscoveryAgent agent = DiscoveryAgentFactory.createDiscoveryAgent(discoveryUri);
 
-            if( agent!=null && agent instanceof BrokerServiceAware ) {
-                ((BrokerServiceAware)agent).setBrokerService(brokerService);
+            if (agent != null && agent instanceof BrokerServiceAware) {
+                ((BrokerServiceAware) agent).setBrokerService(brokerService);
             }
 
             return agent;
@@ -428,9 +410,8 @@ public class TransportConnector implements Connector, BrokerServiceAware {
         control.setConnectedBrokers(connectedBrokers);
         control.setRebalanceConnection(rebalance);
         return control;
-
     }
-    
+
     public void addPeerBroker(BrokerInfo info) {
         if (isMatchesClusterFilter(info.getBrokerName())) {
             synchronized (peerBrokers) {
@@ -438,7 +419,7 @@ public class TransportConnector implements Connector, BrokerServiceAware {
             }
         }
     }
-    
+
     public void removePeerBroker(BrokerInfo info) {
         synchronized (peerBrokers) {
             getPeerBrokers().remove(info.getBrokerURL());
@@ -455,7 +436,6 @@ public class TransportConnector implements Connector, BrokerServiceAware {
     }
 
     public void updateClientClusterInfo() {
-
         if (isRebalanceClusterClients() || isUpdateClusterClients()) {
             ConnectionControl control = getConnectionControl();
             for (Connection c : this.connections) {
@@ -480,6 +460,7 @@ public class TransportConnector implements Connector, BrokerServiceAware {
                 }
             }
         }
+
         return result;
     }
 
@@ -620,5 +601,4 @@ public class TransportConnector implements Connector, BrokerServiceAware {
     public void setMaximumConsumersAllowedPerConnection(int maximumConsumersAllowedPerConnection) {
         this.maximumConsumersAllowedPerConnection = maximumConsumersAllowedPerConnection;
     }
-
 }

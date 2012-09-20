@@ -18,7 +18,6 @@ package org.apache.activemq.console.filter;
 
 import java.net.URI;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 
 import javax.jms.Connection;
@@ -74,8 +73,8 @@ public class AmqMessagesQueryFilter extends AbstractQueryFilter {
         String selector = "";
 
         // Convert to message selector
-        for (Iterator i = queries.iterator(); i.hasNext(); ) {
-            selector = selector + "(" + i.next().toString() + ") AND ";
+        for (Object query : queries) {
+            selector = selector + "(" + query.toString() + ") AND ";
         }
 
         // Remove last AND
@@ -130,34 +129,18 @@ public class AmqMessagesQueryFilter extends AbstractQueryFilter {
     /**
      * Create and start a JMS connection
      *
-     * @param brokerUrl - broker url to connect to.
-     * @return JMS connection
-     * @throws JMSException
-     * @deprecated Use createConnection() instead, and pass the url to the ConnectionFactory when it's created.
-     */
-    @Deprecated
-    protected Connection createConnection(URI brokerUrl) throws JMSException {
-        // maintain old behaviour, when called this way.
-        connectionFactory = (new ActiveMQConnectionFactory(brokerUrl));
-        return createConnection();
-    }
-
-    /**
-     * Create and start a JMS connection
-     *
      * @return JMS connection
      * @throws JMSException
      */
     protected Connection createConnection() throws JMSException {
         // maintain old behaviour, when called either way.
-        if (null == connectionFactory)
+        if (null == connectionFactory) {
             connectionFactory = (new ActiveMQConnectionFactory(getBrokerUrl()));
-
+        }
         Connection conn = connectionFactory.createConnection();
         conn.start();
         return conn;
     }
-
 
     /**
      * Get the broker url being used.
@@ -194,5 +177,4 @@ public class AmqMessagesQueryFilter extends AbstractQueryFilter {
     public void setDestination(Destination destination) {
         this.destination = destination;
     }
-
 }
