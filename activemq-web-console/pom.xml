@@ -30,7 +30,11 @@
   <name>ActiveMQ :: Web Console</name>
   <description>Web Console for ActiveMQ</description>
 
-  <build>
+	<properties>
+		<jetty.port>8080</jetty.port>
+	</properties>
+
+	<build>
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -239,20 +243,6 @@
       <version>3.1.1</version>
     </dependency>
 
-    <!-- enable commons-logging when inside jetty6:run -->
-    <!--
-    <dependency>
-        <groupId>org.slf4j</groupId>
-        <artifactId>jcl104-over-slf4j</artifactId>
-        <version>1.5.0</version>
-    </dependency>
-    -->
-    <!--
-        <dependency>
-          <groupId>org.slf4j</groupId>
-          <artifactId>slf4j-jcl</artifactId>
-        </dependency>
-    -->
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
@@ -310,13 +300,4 @@
     </dependency>
   </dependencies>
 
-  <properties>
-    <jetty.port>8080</jetty.port>
-<!--      <activemq.osgi.dynamic.import>
-        javax.naming,
-        org.xml.*,
-        javax.xml.*,
-        org.w3c.*,
-    </activemq.osgi.dynamic.import> -->
-  </properties>
 </project>

@@ -1,8 +1,8 @@
 
 Welcome to the ActiveMQ Web Console
 
-To run the console you must install a recent distro of Maven
-such as version 2.0.4 or later
+To run the console you must install a recent distro of Apache Maven
+such as version 3.0.4 or later
 	
 		http://maven.apache.org/
 
