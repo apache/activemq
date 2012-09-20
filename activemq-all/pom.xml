@@ -27,7 +27,7 @@
 
   <artifactId>activemq-all</artifactId>
   <packaging>jar</packaging>
-  <name>ActiveMQ :: Jar Bundle</name>
+  <name>ActiveMQ :: All JAR bundle</name>
   <description>Puts together an ActiveMQ jar bundle</description>
 
   <dependencies>
