@@ -34,15 +34,17 @@ public class IndividualDeadLetterStrategy extends AbstractDeadLetterStrategy {
 
     private String topicPrefix = "ActiveMQ.DLQ.Topic.";
     private String queuePrefix = "ActiveMQ.DLQ.Queue.";
+    private String topicSuffix;
+    private String queueSuffix;
     private boolean useQueueForQueueMessages = true;
     private boolean useQueueForTopicMessages = true;
     private boolean destinationPerDurableSubscriber;
 
     public ActiveMQDestination getDeadLetterQueueFor(Message message, Subscription subscription) {
         if (message.getDestination().isQueue()) {
-            return createDestination(message, queuePrefix, useQueueForQueueMessages, subscription);
+            return createDestination(message, queuePrefix, queueSuffix, useQueueForQueueMessages, subscription);
         } else {
-            return createDestination(message, topicPrefix, useQueueForTopicMessages, subscription);
+            return createDestination(message, topicPrefix, topicSuffix, useQueueForTopicMessages, subscription);
         }
     }
 
@@ -69,6 +71,28 @@ public class IndividualDeadLetterStrategy extends AbstractDeadLetterStrategy {
      */
     public void setTopicPrefix(String topicPrefix) {
         this.topicPrefix = topicPrefix;
+    }
+
+    public String getQueueSuffix() {
+        return queueSuffix;
+    }
+
+    /**
+     * Sets the suffix to use for all dead letter queues for queue messages
+     */
+    public void setQueueSuffix(String queueSuffix) {
+        this.queueSuffix = queueSuffix;
+    }
+
+    public String getTopicSuffix() {
+        return topicSuffix;
+    }
+
+    /**
+     * Sets the suffix to use for all dead letter queues for topic messages
+     */
+    public void setTopicSuffix(String topicSuffix) {
+        this.topicSuffix = topicSuffix;
     }
 
     public boolean isUseQueueForQueueMessages() {
@@ -113,6 +137,7 @@ public class IndividualDeadLetterStrategy extends AbstractDeadLetterStrategy {
     // -------------------------------------------------------------------------
     protected ActiveMQDestination createDestination(Message message,
                                                     String prefix,
+                                                    String suffix,
                                                     boolean useQueue,
                                                     Subscription subscription ) {
         String name = null;
@@ -129,6 +154,11 @@ public class IndividualDeadLetterStrategy extends AbstractDeadLetterStrategy {
         if (destinationPerDurableSubscriber && subscription instanceof DurableTopicSubscription) {
             name += "." + ((DurableTopicSubscription)subscription).getSubscriptionKey();
         }
+
+        if (suffix != null && !suffix.isEmpty()) {
+            name += suffix;
+        }
+
         if (useQueue) {
             return new ActiveMQQueue(name);
         } else {
