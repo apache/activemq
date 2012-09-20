@@ -137,10 +137,11 @@
                 javax.management.openmbean,
                 javax.net,
                 org.apache.commons.logging;version="[1.1,2)";resolution:=optional,
-                org.slf4j;version="[1.5,2)";resolution:=optional,
-                        org.slf4j.spi;version="[1.5,2)";resolution:=optional,
+                org.slf4j;version="[1.6,2)";resolution:=optional,
+                org.slf4j.spi;version="[1.6,2)";resolution:=optional,
                 org.apache.log4j;version="[1.2.14,2)";resolution:=optional,
-                       org.apache.log4j.spi;version="[1.2.14,2)";resolution:=optional,
+                org.apache.log4j.spi;version="[1.2.14,2)";resolution:=optional,
+				org.eclipse.jetty.continuation;resolution:=optional
             </Import-Package>
           </instructions>
         </configuration>
