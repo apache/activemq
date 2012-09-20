@@ -94,6 +94,11 @@ public abstract class AbstractInactivityMonitor extends TransportFilter {
             lastRunTime = now;
             readCheck();
         }
+
+        @Override
+        public String toString() {
+            return "ReadChecker";
+        }
     };
 
     private boolean allowReadCheck(long elapsed) {
@@ -110,6 +115,11 @@ public abstract class AbstractInactivityMonitor extends TransportFilter {
             }
             lastRunTime = now;
             writeCheck();
+        }
+
+        @Override
+        public String toString() {
+            return "WriteChecker";
         }
     };
 
@@ -142,6 +152,9 @@ public abstract class AbstractInactivityMonitor extends TransportFilter {
             }
             ASYNC_TASKS.execute(new Runnable() {
                 public void run() {
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug("Running {}", this);
+                    }
                     if (monitorStarted.get()) {
                         try {
                             // If we can't get the lock it means another write beat us into the
@@ -159,6 +172,11 @@ public abstract class AbstractInactivityMonitor extends TransportFilter {
                              }
                         }
                     }
+                }
+
+                @Override
+                public String toString() {
+                    return "WriteCheck[" + getRemoteAddress() + "]";
                 };
             });
         } else {
@@ -185,7 +203,15 @@ public abstract class AbstractInactivityMonitor extends TransportFilter {
             }
             ASYNC_TASKS.execute(new Runnable() {
                 public void run() {
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug("Running {}", this);
+                    }
                     onException(new InactivityIOException("Channel was inactive for too (>" + readCheckTime + ") long: "+next.getRemoteAddress()));
+                }
+
+                @Override
+                public String toString() {
+                    return "ReadCheck[" + getRemoteAddress() + "]";
                 };
             });
         } else {
@@ -332,8 +358,8 @@ public abstract class AbstractInactivityMonitor extends TransportFilter {
             synchronized(AbstractInactivityMonitor.class) {
                 if( CHECKER_COUNTER == 0 ) {
                     ASYNC_TASKS = createExecutor();
-                    READ_CHECK_TIMER = new Timer("InactivityMonitor ReadCheck",true);
-                    WRITE_CHECK_TIMER = new Timer("InactivityMonitor WriteCheck",true);
+                    READ_CHECK_TIMER = new Timer("ActiveMQ InactivityMonitor ReadCheckTimer",true);
+                    WRITE_CHECK_TIMER = new Timer("ActiveMQ InactivityMonitor WriteCheckTimer",true);
                 }
                 CHECKER_COUNTER++;
                 if (readCheckTime > 0) {
@@ -374,13 +400,15 @@ public abstract class AbstractInactivityMonitor extends TransportFilter {
 
     private ThreadFactory factory = new ThreadFactory() {
         public Thread newThread(Runnable runnable) {
-            Thread thread = new Thread(runnable, "InactivityMonitor Async Task: "+runnable);
+            Thread thread = new Thread(runnable, "ActiveMQ InactivityMonitor Worker");
             thread.setDaemon(true);
             return thread;
         }
     };
 
     private ThreadPoolExecutor createExecutor() {
+        // TODO: This value of 10 seconds seems to low, see discussion at
+        // http://activemq.2283324.n4.nabble.com/InactivityMonitor-Creating-too-frequent-threads-tp4656752.html;cid=1348142445209-351
         ThreadPoolExecutor exec = new ThreadPoolExecutor(0, Integer.MAX_VALUE, 10, TimeUnit.SECONDS, new SynchronousQueue<Runnable>(), factory);
         exec.allowCoreThreadTimeOut(true);
         return exec;

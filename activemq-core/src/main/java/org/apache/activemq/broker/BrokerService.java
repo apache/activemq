@@ -1181,7 +1181,7 @@ public class BrokerService implements Service {
 
     public TaskRunnerFactory getTaskRunnerFactory() {
         if (this.taskRunnerFactory == null) {
-            this.taskRunnerFactory = new TaskRunnerFactory("BrokerService["+getBrokerName()+"] Task", getTaskRunnerPriority(), true, 1000,
+            this.taskRunnerFactory = new TaskRunnerFactory("ActiveMQ BrokerService["+getBrokerName()+"] Task", getTaskRunnerPriority(), true, 1000,
                     isDedicatedTaskRunner());
         }
         return this.taskRunnerFactory;
@@ -2550,7 +2550,7 @@ public class BrokerService implements Service {
                 @Override
                 public Thread newThread(Runnable runnable) {
                     this.i++;
-                    Thread thread = new Thread(runnable, "BrokerService.worker." + this.i);
+                    Thread thread = new Thread(runnable, "ActiveMQ BrokerService.worker." + this.i);
                     thread.setDaemon(true);
                     thread.setUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
                         @Override
