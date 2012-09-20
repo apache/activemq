@@ -26,8 +26,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
 
-import org.apache.felix.gogo.commands.Option;
+import org.apache.felix.gogo.commands.Argument;
 import org.apache.felix.gogo.commands.Command;
+import org.apache.felix.gogo.commands.Option;
 import org.apache.karaf.shell.console.OsgiCommandSupport;
 
 /**
@@ -35,8 +36,8 @@ import org.apache.karaf.shell.console.OsgiCommandSupport;
  */
  @Command(scope="activemq", name="create-broker", description="Creates a broker instance.")
 public class CreateBrokerCommand extends OsgiCommandSupport {
-    
-    @Option(name = "-n", aliases = {"--name"}, description = "The name of the broker (defaults to localhost).")
+
+    @Argument(name = "name", description = "The name of the broker (defaults to localhost).")
     private String name = "localhost";
     @Option(name = "-t", aliases = {"--type"}, description = "type of configuration to be used: spring or blueprint (defaults to spring)")
     private String type = "spring";
@@ -58,12 +59,12 @@ public class CreateBrokerCommand extends OsgiCommandSupport {
 
             mkdir(deploy);
             File configFile = new File(deploy, name + "-broker.xml");
-            
+
             if (!type.equalsIgnoreCase("spring") && !type.equalsIgnoreCase("blueprint")) {
                 System.out.println("@|green Unknown type '" + type + "' Using spring by default");
                 type = "spring";
             }
-            
+
             copyFilteredResourceTo(configFile, type.toLowerCase() + ".xml", props);
 
             System.out.println("");
