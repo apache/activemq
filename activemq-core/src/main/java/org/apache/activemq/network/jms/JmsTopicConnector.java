@@ -20,11 +20,11 @@ import javax.jms.Connection;
 import javax.jms.Destination;
 import javax.jms.ExceptionListener;
 import javax.jms.JMSException;
+import javax.jms.Session;
 import javax.jms.Topic;
 import javax.jms.TopicConnection;
 import javax.jms.TopicConnectionFactory;
 import javax.jms.TopicSession;
-import javax.jms.Session;
 import javax.naming.NamingException;
 
 import org.slf4j.Logger;
@@ -426,18 +426,36 @@ public class JmsTopicConnector extends JmsConnector {
 
     protected Topic createForeignTopic(TopicSession session, String topicName) throws JMSException {
         Topic result = null;
-        try {
-            result = session.createTopic(topicName);
-        } catch (JMSException e) {
-            // look-up the Topic
+
+        if (preferJndiDestinationLookup) {
             try {
+                // look-up the Queue
                 result = (Topic)jndiOutboundTemplate.lookup(topicName, Topic.class);
-            } catch (NamingException e1) {
-                String errStr = "Failed to look-up Topic for name: " + topicName;
-                LOG.error(errStr, e);
-                JMSException jmsEx = new JMSException(errStr);
-                jmsEx.setLinkedException(e1);
-                throw jmsEx;
+            } catch (NamingException e) {
+                try {
+                    result = session.createTopic(topicName);
+                } catch (JMSException e1) {
+                    String errStr = "Failed to look-up or create Topic for name: " + topicName;
+                    LOG.error(errStr, e);
+                    JMSException jmsEx = new JMSException(errStr);
+                    jmsEx.setLinkedException(e1);
+                    throw jmsEx;
+                }
+            }
+        } else {
+            try {
+                result = session.createTopic(topicName);
+            } catch (JMSException e) {
+                // look-up the Topic
+                try {
+                    result = (Topic)jndiOutboundTemplate.lookup(topicName, Topic.class);
+                } catch (NamingException e1) {
+                    String errStr = "Failed to look-up Topic for name: " + topicName;
+                    LOG.error(errStr, e);
+                    JMSException jmsEx = new JMSException(errStr);
+                    jmsEx.setLinkedException(e1);
+                    throw jmsEx;
+                }
             }
         }
         return result;
