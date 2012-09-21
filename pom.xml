@@ -1259,6 +1259,8 @@
             <exclude>**/*.data</exclude>
             <exclude>**/webapp/test/assets/*</exclude>
             <exclude>**/*.lck</exclude>
+            <exclude>**/*.patch</exclude>
+            <exclude>**/*.diff</exclude>
             <!-- plotkit -->
             <exclude>**/webapp/js/plotkit/**/*</exclude>
             <!-- Eclipse files -->
