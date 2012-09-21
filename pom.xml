@@ -139,7 +139,7 @@
     <cobertura-maven-plugin-version>2.5.1</cobertura-maven-plugin-version>
     <taglist-maven-plugin-version>2.4</taglist-maven-plugin-version>
     <build-helper-maven-plugin-version>1.7</build-helper-maven-plugin-version>
-    <apache-rat-plugin-version>0.7</apache-rat-plugin-version>
+    <apache-rat-plugin-version>0.8</apache-rat-plugin-version>
     <ianal-maven-plugin-version>1.0-alpha-1</ianal-maven-plugin-version>
     <!-- OSGi bundles properties -->
     <activemq.osgi.import.pkg>*</activemq.osgi.import.pkg>
@@ -1258,6 +1258,7 @@
             <exclude>**/webapp/js/standardista-table-sorting.js</exclude>
             <exclude>**/*.data</exclude>
             <exclude>**/webapp/test/assets/*</exclude>
+            <exclude>**/*.lck</exclude>
             <!-- plotkit -->
             <exclude>**/webapp/js/plotkit/**/*</exclude>
             <!-- Eclipse files -->
@@ -1265,7 +1266,9 @@
             <exclude>**/eclipse-classes/**/*</exclude>
             <exclude>**/target/**/*</exclude>
             <exclude>**/*.iml</exclude>
-            <exclude>.idea/**/*</exclude>
+            <exclude>**/*.ipr</exclude>
+            <exclude>**/*.iws</exclude>
+            <exclude>**/.idea/**/*</exclude>
             <exclude>.git/**/*</exclude>
           </excludes>
         </configuration>
