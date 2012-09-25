@@ -18,7 +18,6 @@ package org.apache.activemq.broker.region;
 
 import java.io.IOException;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
@@ -30,6 +29,7 @@ import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.cursors.PendingMessageCursor;
 import org.apache.activemq.broker.region.cursors.StoreDurableSubscriberCursor;
+import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.Message;
@@ -55,9 +55,9 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
     private AtomicLong offlineTimestamp = new AtomicLong(-1);
 
     public DurableTopicSubscription(Broker broker, SystemUsage usageManager, ConnectionContext context, ConsumerInfo info, boolean keepDurableSubsActive)
-        throws JMSException {
-        super(broker,usageManager, context, info);
-        this.pending = new StoreDurableSubscriberCursor(broker,context.getClientId(), info.getSubscriptionName(), info.getPrefetchSize(), this);
+            throws JMSException {
+        super(broker, usageManager, context, info);
+        this.pending = new StoreDurableSubscriberCursor(broker, context.getClientId(), info.getSubscriptionName(), info.getPrefetchSize(), this);
         this.pending.setSystemUsage(usageManager);
         this.pending.setMemoryUsageHighWaterMark(getCursorMemoryHighWaterMark());
         this.keepDurableSubsActive = keepDurableSubsActive;
@@ -80,8 +80,8 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
     }
 
     /**
-     * store will have a pending ack for all durables, irrespective of the selector
-     * so we need to ack if node is un-matched
+     * store will have a pending ack for all durables, irrespective of the
+     * selector so we need to ack if node is un-matched
      */
     public void unmatched(MessageReference node) throws IOException {
         MessageAck ack = new MessageAck();
@@ -101,23 +101,23 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
         }
         // do it just once per destination
         if (durableDestinations.containsKey(destination.getActiveMQDestination())) {
-             return;
+            return;
         }
         durableDestinations.put(destination.getActiveMQDestination(), destination);
 
         if (active.get() || keepDurableSubsActive) {
-            Topic topic = (Topic)destination;
+            Topic topic = (Topic) destination;
             topic.activate(context, this);
             if (pending.isEmpty(topic)) {
                 topic.recoverRetroactiveMessages(context, this);
             }
-            this.enqueueCounter+=pending.size();
+            this.enqueueCounter += pending.size();
         } else if (destination.getMessageStore() != null) {
-            TopicMessageStore store = (TopicMessageStore)destination.getMessageStore();
+            TopicMessageStore store = (TopicMessageStore) destination.getMessageStore();
             try {
-                this.enqueueCounter+=store.getMessageCount(subscriptionKey.getClientId(),subscriptionKey.getSubscriptionName());
+                this.enqueueCounter += store.getMessageCount(subscriptionKey.getClientId(), subscriptionKey.getSubscriptionName());
             } catch (IOException e) {
-                JMSException jmsEx = new JMSException("Failed to retrieve enqueueCount from store "+ e);
+                JMSException jmsEx = new JMSException("Failed to retrieve enqueueCount from store " + e);
                 jmsEx.setLinkedException(e);
                 throw jmsEx;
             }
@@ -125,16 +125,24 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
         dispatchPending();
     }
 
-    public void activate(SystemUsage memoryManager, ConnectionContext context,
-            ConsumerInfo info) throws Exception {
+    public void activate(SystemUsage memoryManager, ConnectionContext context, ConsumerInfo info, RegionBroker regionBroker) throws Exception {
         if (!active.get()) {
             this.context = context;
             this.info = info;
+
+            // On Activation we should update the configuration based on our new consumer info.
+            ActiveMQDestination dest = this.info.getDestination();
+            if (dest != null && regionBroker.getDestinationPolicy() != null) {
+                PolicyEntry entry = regionBroker.getDestinationPolicy().getEntryFor(dest);
+                if (entry != null) {
+                    entry.configure(broker, usageManager, this);
+                }
+            }
+
             LOG.debug("Activating " + this);
             if (!keepDurableSubsActive) {
-                for (Iterator<Destination> iter = durableDestinations.values()
-                        .iterator(); iter.hasNext();) {
-                    Topic topic = (Topic) iter.next();
+                for (Destination destination : durableDestinations.values()) {
+                    Topic topic = (Topic) destination;
                     add(context, topic);
                     topic.activate(context, this);
                 }
@@ -148,9 +156,8 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
                 // If nothing was in the persistent store, then try to use the
                 // recovery policy.
                 if (pending.isEmpty()) {
-                    for (Iterator<Destination> iter = durableDestinations.values()
-                            .iterator(); iter.hasNext();) {
-                        Topic topic = (Topic) iter.next();
+                    for (Destination destination : durableDestinations.values()) {
+                        Topic topic = (Topic) destination;
                         topic.recoverRetroactiveMessages(context, this);
                     }
                 }
@@ -171,8 +178,8 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
             pending.stop();
 
             synchronized (dispatchLock) {
-                for (Iterator<Destination> iter = durableDestinations.values().iterator(); iter.hasNext();) {
-                    Topic topic = (Topic)iter.next();
+                for (Destination destination : durableDestinations.values()) {
+                    Topic topic = (Topic) destination;
                     if (!keepDurableSubsActive) {
                         topic.deactivate(context, this);
                     } else {
@@ -247,7 +254,7 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
     }
 
     protected void doAddRecoveredMessage(MessageReference message) throws Exception {
-        synchronized(pending) {
+        synchronized (pending) {
             pending.addRecoveredMessage(message);
         }
     }
@@ -275,8 +282,9 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
     }
 
     public synchronized String toString() {
-        return "DurableTopicSubscription-" + getSubscriptionKey() + ", id=" + info.getConsumerId() + ", active=" + isActive() + ", destinations=" + durableDestinations.size() + ", total=" + enqueueCounter + ", pending="
-               + getPendingQueueSize() + ", dispatched=" + dispatchCounter + ", inflight=" + dispatched.size() + ", prefetchExtension=" + getPrefetchExtension();
+        return "DurableTopicSubscription-" + getSubscriptionKey() + ", id=" + info.getConsumerId() + ", active=" + isActive() + ", destinations="
+                + durableDestinations.size() + ", total=" + enqueueCounter + ", pending=" + getPendingQueueSize() + ", dispatched=" + dispatchCounter
+                + ", inflight=" + dispatched.size() + ", prefetchExtension=" + getPrefetchExtension();
     }
 
     public SubscriptionKey getSubscriptionKey() {
@@ -289,7 +297,6 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
     public void destroy() {
         synchronized (pendingLock) {
             try {
-
                 pending.reset();
                 while (pending.hasNext()) {
                     MessageReference node = pending.next();
@@ -301,7 +308,7 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
                 pending.clear();
             }
         }
-        synchronized  (dispatchLock) {
+        synchronized (dispatchLock) {
             for (MessageReference node : dispatched) {
                 node.decrementReferenceCount();
             }
@@ -321,7 +328,7 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
     }
 
     protected boolean isDropped(MessageReference node) {
-       return false;
+        return false;
     }
 
     public boolean isKeepDurableSubsActive() {

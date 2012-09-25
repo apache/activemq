@@ -16,10 +16,18 @@
  */
 package org.apache.activemq.broker.region;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
+
 import javax.jms.InvalidDestinationException;
 import javax.jms.JMSException;
+
 import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
@@ -147,7 +155,7 @@ public class TopicRegion extends AbstractRegion {
                                            + " subscriberName: " + key.getSubscriptionName());
                 }
             }
-            sub.activate(usageManager, context, info);
+            sub.activate(usageManager, context, info, broker);
             return sub;
         } else {
             return super.addConsumer(context, info);
@@ -332,8 +340,6 @@ public class TopicRegion extends AbstractRegion {
         }
     }
 
-    /**
-     */
     private boolean hasDurableSubChanged(ConsumerInfo info1, ConsumerInfo info2) {
         if (info1.getSelector() != null ^ info2.getSelector() != null) {
             return true;
@@ -367,5 +373,4 @@ public class TopicRegion extends AbstractRegion {
     public boolean durableSubscriptionExists(SubscriptionKey key) {
         return this.durableSubscriptions.containsKey(key);
     }
-
 }
