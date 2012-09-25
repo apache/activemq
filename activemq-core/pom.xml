@@ -1193,7 +1193,7 @@
         <dependency>
           <groupId>org.apache.activemq</groupId>
           <artifactId>activemq-openwire-generator</artifactId>
-          <version>${activemq-version}</version>
+          <version>${project.version}</version>
           <optional>true</optional>
         </dependency>
       </dependencies>
