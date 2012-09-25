@@ -92,7 +92,7 @@
     <feature name="activemq-extra" version="${activemq-version}" resolver="(obr)">
         <bundle>mvn:org.fusesource.mqtt-client/mqtt-client/${mqtt-client-version}</bundle>
         <bundle>mvn:org.fusesource.hawtbuf/hawtbuf/${hawtbuf-version}</bundle>
-        <bundle>mvn:org.fusesource.fuse-extra/fusemq-leveldb/${fusemq-leveldb-version}/jar/bundle</bundle>
+        <bundle>mvn:org.apache.activemq/activemq-leveldb/${activemq-version}/jar/bundle</bundle>
         <bundle>mvn:org.fusesource.hawtdispatch/hawtdispatch/${hawtdispatch-version}</bundle>
         <bundle>mvn:org.fusesource.hawtdispatch/hawtdispatch-transport/${hawtdispatch-version}</bundle>
     </feature>
