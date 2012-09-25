@@ -127,10 +127,6 @@
     </dependency>
     <dependency>
       <groupId>org.apache.camel</groupId>
-      <artifactId>camel-jetty</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.camel</groupId>
       <artifactId>camel-jms</artifactId>
     </dependency>
 
@@ -294,6 +290,12 @@
     </dependency>
 
     <dependency>
+      <groupId>org.jasypt</groupId>
+      <artifactId>jasypt-spring3</artifactId>
+      <version>${jasypt-version}</version>
+    </dependency>
+
+    <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
       <scope>test</scope>
@@ -342,6 +344,18 @@
         </executions>
       </plugin>
       <plugin>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>validate-config</id>
+            <phase>test-compile</phase>
+            <goals>
+             <goal>testCompile</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
         <artifactId>maven-surefire-plugin</artifactId>
         <executions>
           <execution>
@@ -352,6 +366,9 @@
             </goals>
             <configuration>
              <forkMode>pertest</forkMode>
+             <environmentVariables>
+                 <ACTIVEMQ_ENCRYPTION_PASSWORD>activemq</ACTIVEMQ_ENCRYPTION_PASSWORD>
+             </environmentVariables>
             </configuration>
           </execution>
         </executions>

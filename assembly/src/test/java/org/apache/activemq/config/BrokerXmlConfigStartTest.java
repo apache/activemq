@@ -28,11 +28,13 @@ import javax.jms.JMSException;
 
 import junit.framework.TestCase;
 import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.broker.BrokerContext;
 import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnection;
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.transport.stomp.StompConnection;
+import org.apache.activemq.util.URISupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -68,7 +70,7 @@ public class BrokerXmlConfigStartTest extends TestCase {
         // alive, now try connect to connect
         try {
             for (TransportConnector transport : broker.getTransportConnectors()) {
-                final URI UriToConnectTo = transport.getConnectUri();
+                final URI UriToConnectTo = URISupport.removeQuery(transport.getConnectUri());
                  
                 if (UriToConnectTo.getScheme().startsWith("stomp")) {
                     LOG.info("validating alive with connection to: " + UriToConnectTo);
@@ -98,6 +100,9 @@ public class BrokerXmlConfigStartTest extends TestCase {
 
     public void setUp() throws Exception {
         System.setProperty("activemq.base", "target");
+        System.setProperty("activemq.home", "target"); // not a valid home but ok for xml validation
+        System.setProperty("activemq.data", "target");
+        System.setProperty("activemq.conf", "target/conf");
         secProps = new Properties();
         secProps.load(new FileInputStream(new File("target/conf/credentials.properties")));
     }

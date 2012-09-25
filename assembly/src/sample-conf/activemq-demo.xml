@@ -47,7 +47,7 @@
           - Change the brokerName attribute to something unique
     -->
 
-    <broker xmlns="http://activemq.apache.org/schema/core" brokerName="amq-broker" useJmx="true" destroyApplicationContextOnStop="true">
+    <broker xmlns="http://activemq.apache.org/schema/core" brokerName="amq-broker" useJmx="true">
 
         <!--
             Examples of destination-specific policies using destination
@@ -204,6 +204,11 @@
             <!-- Create a XMPP transport for XMPP clients. -->
             <transportConnector name="xmpp" uri="xmpp://localhost:61222"/>
         </transportConnectors>
+
+        <!-- destroy the spring context on shutdown to stop jetty -->
+        <shutdownHooks>
+            <bean xmlns="http://www.springframework.org/schema/beans" class="org.apache.activemq.hooks.SpringContextHook" />
+        </shutdownHooks>
 
     </broker>
 

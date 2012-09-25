@@ -75,32 +75,27 @@ public class CommandAgent implements Service, ExceptionListener {
      */
     @PreDestroy
     public void stop() throws Exception {
-        ServiceStopper stopper = new ServiceStopper();
         if (consumer != null) {
             try {
                 consumer.close();
                 consumer = null;
-            } catch (JMSException e) {
-                stopper.onException(this, e);
+            } catch (JMSException ignored) {
             }
         }
         if (session != null) {
             try {
                 session.close();
                 session = null;
-            } catch (JMSException e) {
-                stopper.onException(this, e);
+            } catch (JMSException ignored) {
             }
         }
         if (connection != null) {
             try {
                 connection.close();
                 connection = null;
-            } catch (JMSException e) {
-                stopper.onException(this, e);
+            } catch (JMSException ignored) {
             }
         }
-        stopper.throwFirstException();
     }
 
     // Properties

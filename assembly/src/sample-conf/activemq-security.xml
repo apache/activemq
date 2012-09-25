@@ -70,9 +70,9 @@
             <property xmlns="http://www.springframework.org/schema/beans" name="environment">
                 <map xmlns="http://www.springframework.org/schema/beans">
                     <entry xmlns="http://www.springframework.org/schema/beans" key="jmx.remote.x.password.file"
-                           value="conf/jmx.password"/>
+                           value="${activemq.conf}/jmx.password"/>
                     <entry xmlns="http://www.springframework.org/schema/beans" key="jmx.remote.x.access.file"
-                           value="conf/jmx.access"/>
+                           value="${activemq.conf}/jmx.access"/>
                 </map>
             </property>
         </managementContext>
@@ -116,7 +116,12 @@
     <transportConnectors>
        <transportConnector name="default" uri="tcp://0.0.0.0:61616"/>
     </transportConnectors>
-    
+
+    <!-- destroy the spring context on shutdown to stop jetty -->
+    <shutdownHooks>
+        <bean xmlns="http://www.springframework.org/schema/beans" class="org.apache.activemq.hooks.SpringContextHook" />
+    </shutdownHooks>
+
   </broker>
 
   <!-- 

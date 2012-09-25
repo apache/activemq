@@ -127,7 +127,6 @@
       <includes>
         <include>org.apache.camel:camel-core</include>
         <include>org.apache.camel:camel-spring</include>
-        <include>org.apache.camel:camel-jetty</include>
         <include>org.apache.camel:camel-jms</include>
         <include>org.apache.activemq:activemq-camel</include>
       </includes>
@@ -171,6 +170,7 @@
         <include>org.apache.velocity:velocity</include>
         <include>org.apache.servicemix.bundles:org.apache.servicemix.bundles.josql</include>
         <include>org.jasypt:jasypt</include>
+        <include>org.jasypt:jasypt-spring3</include>
         <include>javax.jmdns:jmdns</include>
       </includes>
     </dependencySet>
