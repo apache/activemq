@@ -40,7 +40,7 @@ public final class OpenWireFormat implements WireFormat {
 
     public static final int DEFAULT_VERSION = CommandTypes.PROTOCOL_STORE_VERSION;
     public static final int DEFAULT_WIRE_VERSION = CommandTypes.PROTOCOL_VERSION;
-    public static final int DEFAULT_MAX_FRAME_SIZE = 100 * 1024 * 1024; //100 MB
+    public static final long DEFAULT_MAX_FRAME_SIZE = Long.MAX_VALUE;
 
     static final byte NULL_TYPE = CommandTypes.NULL;
     private static final int MARSHAL_CACHE_SIZE = Short.MAX_VALUE / 2;

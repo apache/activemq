@@ -119,6 +119,11 @@ public class NumberRangesWhileMarshallingTest extends TestCase {
 
     }
 
+    public void testDefaultMaxFrameSizeUnlimited() {
+        OpenWireFormat wf = new OpenWireFormat();
+        assertEquals(Long.MAX_VALUE, wf.getMaxFrameSize());
+    }
+
     protected void setUp() throws Exception {
         super.setUp();
         openWireformat = createOpenWireFormat();
