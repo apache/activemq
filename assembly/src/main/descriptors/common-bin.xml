@@ -182,7 +182,7 @@
       <useTransitiveFiltering>true</useTransitiveFiltering>
       <includes>
         <!-- leveldb -->
-        <include>org.fusesource.fuse-extra:fusemq-leveldb</include>
+        <include>org.apache.activemq:activemq-leveldb</include>
         <include>org.fusesource.hawtbuf:hawtbuf</include>
         <!-- mqtt -->
         <include>org.fusesource.mqtt-client:mqtt-client</include>

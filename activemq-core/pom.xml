@@ -54,7 +54,8 @@
       org.springframework.beans.factory.xml;resolution:=optional,
       org.w3c.dom.traversal*;resolution:=optional,
       org.fusesource.hawtbuf*;resolution:=optional,
-      org.fusesource.mq.leveldb*;resolution:=optional,
+      org.apache.activemq.store.leveldb*;resolution:=optional,
+      org.apache.activemq.leveldb*;resolution:=optional,
       org.fusesource.mqtt.client*;resolution:=optional,
       org.fusesource.mqtt.codec*;resolution:=optional,
       *
@@ -93,11 +94,6 @@
       <groupId>org.apache.activemq.protobuf</groupId>
       <artifactId>activemq-protobuf</artifactId>
       <optional>false</optional>
-    </dependency>
-    <dependency>
-      <groupId>org.fusesource.fuse-extra</groupId>
-      <artifactId>fusemq-leveldb</artifactId>
-      <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>org.fusesource.mqtt-client</groupId>
@@ -234,7 +230,13 @@
       <version>${jasypt-version}</version>
       <optional>true</optional>
     </dependency>
-
+    <dependency>
+      <groupId>org.mortbay.jetty</groupId>
+      <artifactId>jetty-util</artifactId>
+      <version>6.1.26</version>
+      <scope>test</scope>
+    </dependency>
+    
     <!-- database testing -->
     <dependency>
       <groupId>commons-collections</groupId>
@@ -830,7 +832,6 @@
             <exclude>org/apache/activemq/pool/PooledConnectionFactoryMaximumActiveTest.*</exclude>
             <exclude>org/apache/activemq/pool/PooledConnectionFactoryTest.*</exclude>
             <exclude>org/apache/activemq/network/DemandForwardingBridgeFilterTest.*</exclude>
-            <exclude>org/apache/activemq/store/leveldb/LevelDBConfigTest.*</exclude>
             <exclude>org/apache/activemq/test/message/NestedMapMessageTest.*</exclude>
             <exclude>org/apache/activemq/transport/failover/FailoverTimeoutTest.*</exclude>
             <exclude>org/apache/activemq/broker/scheduler/JobSchedulerTest.*</exclude>

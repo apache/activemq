@@ -56,6 +56,10 @@
     </dependency>
     <dependency>
       <groupId>${project.groupId}</groupId>
+      <artifactId>activemq-leveldb</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
       <artifactId>activemq-console</artifactId>
     </dependency>
     <dependency>
@@ -149,10 +153,6 @@
       <artifactId>commons-pool</artifactId>
       <optional>true</optional>
     </dependency>
-    <dependency>
-	    <groupId>org.fusesource.fuse-extra</groupId>
-	    <artifactId>fusemq-leveldb</artifactId>
-	  </dependency>
     <dependency>
       <groupId>activesoap</groupId>
       <artifactId>jaxp-api</artifactId>
