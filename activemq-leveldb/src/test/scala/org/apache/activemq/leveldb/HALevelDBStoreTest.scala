@@ -14,17 +14,35 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.activemq.store.leveldb;
+package org.apache.activemq.leveldb
 
-import org.fusesource.mq.leveldb.LevelDBStore;
-
+import org.apache.activemq.store.PersistenceAdapter
+import java.io.File
 
 /**
- * An implementation of {@link org.apache.activemq.store.PersistenceAdapter} designed for use with
- * LevelDB - Embedded Lightweight Non-Relational Database
+ * <p>
+ * </p>
  *
- * @org.apache.xbean.XBean element="levelDB"
- *
+ * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
  */
-public class LevelDBPersistenceAdapter extends LevelDBStore {
+class HALevelDBStoreTest extends LevelDBStoreTest {
+  override protected def setUp: Unit = {
+    TestingHDFSServer.start
+    super.setUp
+  }
+
+  override protected def tearDown: Unit = {
+    super.tearDown
+    TestingHDFSServer.stop
+  }
+
+  override protected def createPersistenceAdapter(delete: Boolean): PersistenceAdapter = {
+    var store: HALevelDBStore = new HALevelDBStore
+    store.setDirectory(new File("target/activemq-data/haleveldb"))
+    store.setDfsDirectory("localhost")
+    if (delete) {
+      store.deleteAllMessages
+    }
+    return store
+  }
 }

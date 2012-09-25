@@ -1056,6 +1056,8 @@
           </execution>
         </executions>
       </plugin>
+      <!-- disabled until the xbean 3.11.2 plugin is released -->
+      <!--
       <plugin>
         <groupId>org.apache.xbean</groupId>
         <artifactId>maven-xbean-plugin</artifactId>
@@ -1064,6 +1066,9 @@
           <execution>
           <phase>process-classes</phase>
             <configuration>
+              <includes>
+                <include>${basedir}/../activemq-leveldb/src/main/scala</include>
+              </includes>
               <strictXsdOrder>false</strictXsdOrder>
               <namespace>http://activemq.apache.org/schema/core</namespace>
               <schema>${basedir}/target/classes/activemq.xsd</schema>
@@ -1084,6 +1089,7 @@
           </dependency>
         </dependencies>
       </plugin>
+      -->
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>cobertura-maven-plugin</artifactId>
@@ -1218,6 +1224,48 @@
                 </goals>
               </execution>
             </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <!-- To generate the XBean meta-data, run: mvn -P xbean-generate clean process-classes -->
+    <profile>
+      <id>xbean-generate</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.xbean</groupId>
+            <artifactId>maven-xbean-plugin</artifactId>
+            <version>3.11.2-SNAPSHOT</version>
+            <executions>
+              <execution>
+              <phase>process-classes</phase>
+                <configuration>
+                  <includes>
+                    <include>${basedir}/../activemq-leveldb/src/main/java</include>
+                  </includes>
+                  <classPathIncludes>
+                    <classPathInclude>${basedir}/../activemq-leveldb/target/classes</classPathInclude>
+                  </classPathIncludes>
+                  <strictXsdOrder>false</strictXsdOrder>
+                  <namespace>http://activemq.apache.org/schema/core</namespace>
+                  <schema>${basedir}/src/main/resources/activemq.xsd</schema>
+                  <outputDir>${basedir}/src/main/resources</outputDir>
+                  <generateSpringSchemasFile>false</generateSpringSchemasFile>
+                  <excludedClasses>org.apache.activemq.broker.jmx.AnnotatedMBean,org.apache.activemq.broker.jmx.DestinationViewMBean</excludedClasses>
+                </configuration>
+                <goals>
+                  <goal>mapping</goal>
+                </goals>
+              </execution>
+            </executions>
+            <dependencies>
+              <dependency>
+                <groupId>com.thoughtworks.qdox</groupId>
+                <artifactId>qdox</artifactId>
+                <version>1.12</version>
+              </dependency>
+            </dependencies>
           </plugin>
         </plugins>
       </build>

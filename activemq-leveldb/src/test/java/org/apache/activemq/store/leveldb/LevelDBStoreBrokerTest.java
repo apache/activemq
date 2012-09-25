@@ -23,7 +23,7 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.BrokerTest;
 import org.apache.activemq.store.kahadb.KahaDBStore;
 import org.apache.activemq.util.IOHelper;
-import org.fusesource.mq.leveldb.LevelDBStore;
+import org.apache.activemq.leveldb.LevelDBStore;
 
 /**
  * Once the wire format is completed we can test against real persistence storage.
