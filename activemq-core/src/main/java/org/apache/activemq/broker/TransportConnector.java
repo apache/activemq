@@ -62,7 +62,6 @@ public class TransportConnector implements Connector, BrokerServiceAware {
     private DiscoveryAgent discoveryAgent;
     private final ConnectorStatistics statistics = new ConnectorStatistics();
     private URI discoveryUri;
-    private URI connectUri;
     private String name;
     private boolean disableAsyncDispatch;
     private boolean enableStatusMonitor = false;
@@ -105,7 +104,6 @@ public class TransportConnector implements Connector, BrokerServiceAware {
     public ManagedTransportConnector asManagedConnector(ManagementContext context, ObjectName connectorName) throws IOException, URISyntaxException {
         ManagedTransportConnector rc = new ManagedTransportConnector(context, connectorName, getServer());
         rc.setBrokerInfo(getBrokerInfo());
-        rc.setConnectUri(getConnectUri());
         rc.setDisableAsyncDispatch(isDisableAsyncDispatch());
         rc.setDiscoveryAgent(getDiscoveryAgent());
         rc.setDiscoveryUri(getDiscoveryUri());
@@ -345,16 +343,11 @@ public class TransportConnector implements Connector, BrokerServiceAware {
     }
 
     public URI getConnectUri() throws IOException, URISyntaxException {
-        if (connectUri == null) {
-            if (server != null) {
-                connectUri = server.getConnectURI();
-            }
+        if (server != null) {
+            return server.getConnectURI();
+        } else {
+            return uri;
         }
-        return connectUri;
-    }
-
-    public void setConnectUri(URI transportUri) {
-        this.connectUri = transportUri;
     }
 
     public void onStarted(TransportConnection connection) {

@@ -43,14 +43,14 @@ abstract public class WebTransportServerSupport extends TransportServerSupport {
         bindHost = (bindHost == null || bindHost.length() == 0) ? "localhost" : bindHost;
         InetAddress addr = InetAddress.getByName(bindHost);
         host = addr.getCanonicalHostName();
-        if (addr.isAnyLocalAddress()) {
-            host = InetAddressUtil.getLocalHostName();
-        }
 
         connector.setHost(host);
         connector.setPort(bindAddress.getPort());
         connector.setServer(server);
         server.addConnector(connector);
-
+        if (addr.isAnyLocalAddress()) {
+            host = InetAddressUtil.getLocalHostName();
+        }
+        setConnectURI(new URI(bind.getScheme(), bind.getUserInfo(), host, bindAddress.getPort(), bind.getPath(), bind.getQuery(), bind.getFragment()));
     }
 }

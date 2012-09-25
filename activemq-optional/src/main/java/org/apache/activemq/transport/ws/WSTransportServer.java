@@ -72,7 +72,6 @@ public class WSTransportServer extends WebTransportServerSupport {
         contextHandler.setAttribute("acceptListener", getAcceptListener());
 
         server.start();
-        setConnectURI(new URI(bind.getScheme(), bind.getUserInfo(), host, connector.getLocalPort(), bind.getPath(), bind.getQuery(), bind.getFragment()));
     }
 
     protected void doStop(ServiceStopper stopper) throws Exception {

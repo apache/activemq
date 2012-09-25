@@ -95,7 +95,6 @@ public class HttpTransportServer extends WebTransportServerSupport {
         contextHandler.setHandler(gzipHandler);
 
         server.start();
-        setConnectURI(new URI(bind.getScheme(), bind.getUserInfo(), host, connector.getLocalPort(), bind.getPath(), bind.getQuery(), bind.getFragment()));
     }
 
     protected void doStop(ServiceStopper stopper) throws Exception {

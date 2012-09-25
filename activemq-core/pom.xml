@@ -955,7 +955,7 @@
             <exclude>org/apache/activemq/store/jdbc/JDBCStoreBrokerTest.*</exclude>
             <exclude>org/apache/activemq/broker/ft/MasterSlaveSlaveDieTest.*</exclude>
             <exclude>org/apache/activemq/security/XBeanSecurityWithGuestNoCredentialsOnlyTest.*</exclude>
-
+            <exclude>org/apache/activemq/store/kahadb/plist/PListTest.*</exclude>
           </excludes>
         </configuration>
       </plugin>
