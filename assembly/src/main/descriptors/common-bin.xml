@@ -28,6 +28,7 @@
         <include>conf/*.ts</include>
         <include>conf/*.ks</include>
         <include>conf/*.cert</include>
+        <include>webapps/*.ico</include>
       </includes>
     </fileSet>
 
