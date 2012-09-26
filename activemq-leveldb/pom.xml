@@ -322,6 +322,9 @@
           <childDelegation>false</childDelegation>
           <useFile>true</useFile>
           <failIfNoTests>false</failIfNoTests>
+          <excludes>
+            <exclude>**/EnqueueRateScenariosTest.*</exclude>
+          </excludes>
         </configuration>
       </plugin>
       <plugin>
@@ -416,16 +419,6 @@
           </execution>
         </executions>
         </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-surefire-plugin</artifactId>
-        <configuration>
-          <forkMode>always</forkMode>
-          <excludes>
-            <exclude>**/EnqueueRateScenariosTest.*</exclude>
-          </excludes>          
-        </configuration>
-      </plugin>
     </plugins>
   </build>  
 </project>

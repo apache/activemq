@@ -40,7 +40,7 @@ abstract class JMSClientScenario extends Scenario {
   def indexed_destination_name(i:Int) = destination_type match {
     case "queue" => queue_prefix+destination_name+"-"+(i%destination_count)
     case "topic" => topic_prefix+destination_name+"-"+(i%destination_count)
-    case _ => error("Unsuported destination type: "+destination_type)
+    case _ => sys.error("Unsuported destination type: "+destination_type)
   }
 
 

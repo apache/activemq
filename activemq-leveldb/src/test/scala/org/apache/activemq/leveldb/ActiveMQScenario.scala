@@ -38,7 +38,7 @@ class ActiveMQScenario extends JMSClientScenario {
   override protected def destination(i:Int):Destination = destination_type match {
     case "queue" => new ActiveMQQueue(indexed_destination_name(i))
     case "topic" => new ActiveMQTopic(indexed_destination_name(i))
-    case _ => error("Unsuported destination type: "+destination_type)
+    case _ => sys.error("Unsuported destination type: "+destination_type)
   }
 
 }

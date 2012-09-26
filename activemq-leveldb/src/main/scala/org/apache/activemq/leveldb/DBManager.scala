@@ -31,7 +31,6 @@ import org.apache.activemq.leveldb.record.{SubscriptionRecord, CollectionRecord}
 import util.TimeMetric
 import java.util.HashMap
 import collection.mutable.{HashSet, ListBuffer}
-import org.apache.activemq.thread.DefaultThreadPools
 
 case class MessageRecord(id:MessageId, data:Buffer, syncNeeded:Boolean) {
   var locator:(Long, Int) = _
@@ -297,7 +296,7 @@ class DelayableUOW(val manager:DBManager) extends BaseRetained {
       if( manager.asyncCapacityRemaining.addAndGet(-s) > 0 ) {
         asyncCapacityUsed = s
         countDownFuture.countDown
-        DefaultThreadPools.getDefaultTaskRunnerFactory.execute(^{
+        manager.parent.brokerService.getTaskRunnerFactory.execute(^{
           complete_listeners.foreach(_())
         })
       } else {
@@ -319,7 +318,7 @@ class DelayableUOW(val manager:DBManager) extends BaseRetained {
       } else {
         manager.uow_complete_latency.add(System.nanoTime() - disposed_at)
         countDownFuture.countDown
-        DefaultThreadPools.getDefaultTaskRunnerFactory.execute(^{
+        manager.parent.brokerService.getTaskRunnerFactory.execute(^{
           complete_listeners.foreach(_())
         })
       }
