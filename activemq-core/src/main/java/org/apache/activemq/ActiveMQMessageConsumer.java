@@ -1059,8 +1059,16 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                 session.doStartTransaction();
                 ack.setTransactionId(session.getTransactionContext().getTransactionId());
             }
-            session.sendAck(ack);
+
+            // if there is a pending delivered ack then we need to send that since there
+            // could be expired Messages in the ack which haven't been acked yet and the
+            // ack for all deliveries might not include those in its range of acks.  The
+            // pending standard acks will be included in the ack for all deliveries.
+            if (pendingAck != null && pendingAck.isDeliveredAck()) {
+                session.sendAck(pendingAck);
+            }
             pendingAck = null;
+            session.sendAck(ack);
 
             // Adjust the counters
             deliveredCounter = Math.max(0, deliveredCounter - deliveredMessages.size());
