@@ -1,4 +1,4 @@
-Apache ActiveMQ Copyright 2005-2009 Apache Software Foundation
+Apache ActiveMQ Copyright 2005-2012 Apache Software Foundation
 
 This product includes software developed by
 The Apache Software Foundation (http://www.apache.org/).
@@ -40,8 +40,6 @@ Sun Microsystems, Inc. and portions Copyright Apache Software Foundation.
 Some portions of the code are Copyright:
   2006 Tim Vernum
   1999 Jason Gilbert.
-
-The jboss integration module contains some LGPL code.
 
 This product includes software developed by
    Yahoo! Inc. (www.yahoo.com)
