@@ -44,7 +44,6 @@
     <dependency>
       <groupId>org.apache.activemq</groupId>
       <artifactId>activemq-core</artifactId>
-      <version>5.7-SNAPSHOT</version>
       <scope>provided</scope>
     </dependency>
 
@@ -186,14 +185,12 @@
     <dependency>
       <groupId>org.apache.activemq</groupId>
       <artifactId>activemq-core</artifactId>
-      <version>5.7-SNAPSHOT</version>
       <type>test-jar</type>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.activemq</groupId>
       <artifactId>activemq-console</artifactId>
-      <version>5.7-SNAPSHOT</version>
       <scope>test</scope>
     </dependency>
 
