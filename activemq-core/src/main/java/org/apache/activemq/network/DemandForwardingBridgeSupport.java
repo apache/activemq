@@ -273,14 +273,14 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                 }
                 startedLatch.countDown();
                 localStartedLatch.countDown();
+            }
 
-                safeWaitUntilStarted();
+            safeWaitUntilStarted();
 
-                if (!disposed.get()) {
-                    setupStaticDestinations();
-                } else {
-                    LOG.warn("Network connection between " + localBroker + " and " + remoteBroker + "(" + remoteBrokerName + ") was interrupted during establishment.");
-                }
+            if (!disposed.get()) {
+                setupStaticDestinations();
+            } else {
+                LOG.warn("Network connection between " + localBroker + " and " + remoteBroker + "(" + remoteBrokerName + ") was interrupted during establishment.");
             }
         }
     }
