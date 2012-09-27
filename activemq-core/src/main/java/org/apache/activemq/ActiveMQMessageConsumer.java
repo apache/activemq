@@ -879,11 +879,8 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
             return;
         }
         if (messageExpired) {
-            synchronized (deliveredMessages) {
-                deliveredMessages.remove(md);
-            }
+            acknowledge(md, MessageAck.DELIVERED_ACK_TYPE);
             stats.getExpiredMessageCount().increment();
-            ackLater(md, MessageAck.DELIVERED_ACK_TYPE);
         } else {
             stats.onMessage();
             if (session.getTransacted()) {
@@ -1060,13 +1057,6 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                 ack.setTransactionId(session.getTransactionContext().getTransactionId());
             }
 
-            // if there is a pending delivered ack then we need to send that since there
-            // could be expired Messages in the ack which haven't been acked yet and the
-            // ack for all deliveries might not include those in its range of acks.  The
-            // pending standard acks will be included in the ack for all deliveries.
-            if (pendingAck != null && pendingAck.isDeliveredAck()) {
-                session.sendAck(pendingAck);
-            }
             pendingAck = null;
             session.sendAck(ack);
 
@@ -1137,7 +1127,11 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
     }
 
     void acknowledge(MessageDispatch md) throws JMSException {
-        MessageAck ack = new MessageAck(md,MessageAck.INDIVIDUAL_ACK_TYPE,1);
+        acknowledge(md, MessageAck.INDIVIDUAL_ACK_TYPE);
+    }
+
+    void acknowledge(MessageDispatch md, byte ackType) throws JMSException {
+        MessageAck ack = new MessageAck(md, ackType, 1);
         session.sendAck(ack);
         synchronized(deliveredMessages){
             deliveredMessages.remove(md);
