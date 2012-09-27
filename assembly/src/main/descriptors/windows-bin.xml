@@ -40,14 +40,22 @@
       <outputDirectory>/</outputDirectory>
       <includes>
         <include>bin/*.bat</include>
-         <include>bin/activemq</include>
-         <include>bin/activemq-admin</include>
         <include>bin/win32/*.bat</include>
         <include>bin/win32/*.conf</include>
         <include>bin/win64/*.bat</include>
         <include>bin/win64/*.conf</include>
       </includes>
       <lineEnding>dos</lineEnding>
+    </fileSet>
+
+    <fileSet>
+      <directory>src/release</directory>
+      <outputDirectory>/</outputDirectory>
+      <includes>
+        <include>bin/activemq</include>
+        <include>bin/activemq-admin</include>
+      </includes>
+      <lineEnding>unix</lineEnding>
     </fileSet>
 
     <!-- Copy over files that should not get the line endings converted -->
