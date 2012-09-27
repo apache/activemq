@@ -516,9 +516,6 @@
             <exclude>**/QueueConsumerCloseAndReconnectTest.*</exclude>
             <exclude>**/TwoBrokerMulticastQueueTest.*</exclude>
 
-            <!-- TODO move to optional module...  -->
-            <exclude>**/TwoBrokerTopicSendReceiveUsingHttpTest.*</exclude>
-
             <!-- This test only works on machines which have ssh propertly configured -->
             <exclude>**/SSHTunnelNetworkReconnectTest.*</exclude>
 
@@ -1151,9 +1148,6 @@
                 <!-- m2 tests failing since move from assembly  -->
                 <exclude>**/QueueConsumerCloseAndReconnectTest.*</exclude>
                 <exclude>**/TwoBrokerMulticastQueueTest.*</exclude>
-
-                <!-- TODO move to optional module...  -->
-                <exclude>**/TwoBrokerTopicSendReceiveUsingHttpTest.*</exclude>
 
                 <!-- This test only works on machines which have ssh propertly configured -->
                 <exclude>**/SSHTunnelNetworkReconnectTest.*</exclude>
