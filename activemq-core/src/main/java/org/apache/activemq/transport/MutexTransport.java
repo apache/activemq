@@ -24,7 +24,7 @@ import java.util.concurrent.locks.ReentrantLock;
  */
 public class MutexTransport extends TransportFilter {
 
-    private final ReentrantLock wreiteLock = new ReentrantLock();
+    private final ReentrantLock writeLock = new ReentrantLock();
     private boolean syncOnCommand;
 
     public MutexTransport(Transport next) {
@@ -40,11 +40,11 @@ public class MutexTransport extends TransportFilter {
     @Override
     public void onCommand(Object command) {
         if (syncOnCommand) {
-            wreiteLock.lock();
+            writeLock.lock();
             try {
                 transportListener.onCommand(command);
             } finally {
-                wreiteLock.unlock();
+                writeLock.unlock();
             }
         } else {
             transportListener.onCommand(command);
@@ -53,41 +53,41 @@ public class MutexTransport extends TransportFilter {
 
     @Override
     public FutureResponse asyncRequest(Object command, ResponseCallback responseCallback) throws IOException {
-        wreiteLock.lock();
+        writeLock.lock();
         try {
             return next.asyncRequest(command, null);
         } finally {
-            wreiteLock.unlock();
+            writeLock.unlock();
         }
     }
 
     @Override
     public void oneway(Object command) throws IOException {
-        wreiteLock.lock();
+        writeLock.lock();
         try {
             next.oneway(command);
         } finally {
-            wreiteLock.unlock();
+            writeLock.unlock();
         }
     }
 
     @Override
     public Object request(Object command) throws IOException {
-        wreiteLock.lock();
+        writeLock.lock();
         try {
             return next.request(command);
         } finally {
-            wreiteLock.unlock();
+            writeLock.unlock();
         }
     }
 
     @Override
     public Object request(Object command, int timeout) throws IOException {
-        wreiteLock.lock();
+        writeLock.lock();
         try {
             return next.request(command, timeout);
         } finally {
-            wreiteLock.unlock();
+            writeLock.unlock();
         }
     }
 
