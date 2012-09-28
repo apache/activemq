@@ -20,11 +20,12 @@ import java.net.URI;
 
 /**
  * Abstraction that allows you to control which brokers a NetworkConnector connects bridges to.
- * 
- * 
  */
 public interface ConnectionFilter {
+
     /**
+     * Connect the filter to a given location.
+     *
      * @param location
      * @return true if the network connector should establish a connection to the specified location.
      */

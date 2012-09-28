@@ -16,23 +16,17 @@
  */
 package org.apache.activemq.network;
 
-import java.io.IOException;
-
 import org.apache.activemq.command.Command;
 import org.apache.activemq.transport.Transport;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * A demand forwarding bridge which works with multicast style transports where
  * a single Transport could be communicating with multiple remote brokers
- * 
+ *
  * @org.apache.xbean.XBean
- * 
- * 
+ *
  */
 public class CompositeDemandForwardingBridge extends DemandForwardingBridgeSupport {
-    private static final Logger LOG = LoggerFactory.getLogger(CompositeDemandForwardingBridge.class);
 
     public CompositeDemandForwardingBridge(NetworkBridgeConfiguration configuration, Transport localBroker,
                                            Transport remoteBroker) {
@@ -41,6 +35,5 @@ public class CompositeDemandForwardingBridge extends DemandForwardingBridgeSuppo
     }
 
     protected void serviceLocalBrokerInfo(Command command) throws InterruptedException {
-        // TODO is there much we can do here?
     }
 }

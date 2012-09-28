@@ -29,18 +29,16 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Represents a network bridge interface
- * 
- * 
  */
 public class DemandSubscription {
     private static final Logger LOG = LoggerFactory.getLogger(DemandSubscription.class);
 
     private final ConsumerInfo remoteInfo;
     private final ConsumerInfo localInfo;
-    private Set<ConsumerId> remoteSubsIds = new CopyOnWriteArraySet<ConsumerId>();
+    private final Set<ConsumerId> remoteSubsIds = new CopyOnWriteArraySet<ConsumerId>();
+    private final AtomicInteger dispatched = new AtomicInteger(0);
+    private final AtomicBoolean activeWaiter = new AtomicBoolean();
 
-    private AtomicInteger dispatched = new AtomicInteger(0);
-    private AtomicBoolean activeWaiter = new AtomicBoolean();
     private NetworkBridgeFilter networkBridgeFilter;
 
     DemandSubscription(ConsumerInfo info) {
@@ -52,7 +50,7 @@ public class DemandSubscription {
 
     /**
      * Increment the consumers associated with this subscription
-     * 
+     *
      * @param id
      * @return true if added
      */
@@ -62,7 +60,7 @@ public class DemandSubscription {
 
     /**
      * Increment the consumers associated with this subscription
-     * 
+     *
      * @param id
      * @return true if removed
      */
@@ -108,7 +106,8 @@ public class DemandSubscription {
                     }
                 }
                 if (this.dispatched.get() > 0) {
-                    LOG.warn("demand sub interrupted or timedout while waiting for outstanding responses, expect potentially " + this.dispatched.get() + " duplicate deliveried");
+                    LOG.warn("demand sub interrupted or timedout while waiting for outstanding responses, " +
+                             "expect potentially " + this.dispatched.get() + " duplicate deliveried");
                 }
             }
         }

@@ -16,6 +16,12 @@
  */
 package org.apache.activemq.network;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.management.MalformedObjectNameException;
+import javax.management.ObjectName;
+
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.jmx.AnnotatedMBean;
 import org.apache.activemq.broker.jmx.NetworkBridgeView;
@@ -23,11 +29,6 @@ import org.apache.activemq.broker.jmx.NetworkBridgeViewMBean;
 import org.apache.activemq.util.JMXSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.management.MalformedObjectNameException;
-import javax.management.ObjectName;
-import java.util.HashMap;
-import java.util.Map;
 
 public class MBeanNetworkListener implements NetworkBridgeListener {
 
@@ -44,7 +45,6 @@ public class MBeanNetworkListener implements NetworkBridgeListener {
 
     @Override
     public void bridgeFailed() {
-
     }
 
     @Override
@@ -80,7 +80,6 @@ public class MBeanNetworkListener implements NetworkBridgeListener {
             LOG.debug("Network bridge could not be unregistered in JMX: " + e.getMessage(), e);
         }
     }
-
 
     protected ObjectName createNetworkBridgeObjectName(NetworkBridge bridge) throws MalformedObjectNameException {
         Map<String, String> map = new HashMap<String, String>(connectorName.getKeyPropertyList());

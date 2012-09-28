@@ -46,7 +46,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * 
+ * Connector class for bridging broker networks.
  */
 public abstract class NetworkConnector extends NetworkBridgeConfiguration implements Service {
 
@@ -54,7 +54,7 @@ public abstract class NetworkConnector extends NetworkBridgeConfiguration implem
     protected URI localURI;
     protected ConnectionFilter connectionFilter;
     protected ConcurrentHashMap<URI, NetworkBridge> bridges = new ConcurrentHashMap<URI, NetworkBridge>();
-    
+
     protected ServiceSupport serviceSupport = new ServiceSupport() {
 
         protected void doStart() throws Exception {
@@ -72,7 +72,7 @@ public abstract class NetworkConnector extends NetworkBridgeConfiguration implem
     private List<ActiveMQDestination> staticallyIncludedDestinations = new CopyOnWriteArrayList<ActiveMQDestination>();
     private BrokerService brokerService;
     private ObjectName objectName;
-    
+
     public NetworkConnector() {
     }
 
@@ -91,7 +91,7 @@ public abstract class NetworkConnector extends NetworkBridgeConfiguration implem
     /**
      * @return Returns the durableDestinations.
      */
-    public Set getDurableDestinations() {
+    public Set<ActiveMQDestination> getDurableDestinations() {
         return durableDestinations;
     }
 
@@ -179,14 +179,14 @@ public abstract class NetworkConnector extends NetworkBridgeConfiguration implem
         dests = destsList.toArray(new ActiveMQDestination[destsList.size()]);
         result.setStaticallyIncludedDestinations(dests);
         if (durableDestinations != null) {
-            
+
             HashSet<ActiveMQDestination> topics = new HashSet<ActiveMQDestination>();
             for (ActiveMQDestination d : durableDestinations) {
                 if( d.isTopic() ) {
                     topics.add(d);
                 }
             }
-            
+
             ActiveMQDestination[] dest = new ActiveMQDestination[topics.size()];
             dest = (ActiveMQDestination[])topics.toArray(dest);
             result.setDurableDestinations(dest);
@@ -218,7 +218,7 @@ public abstract class NetworkConnector extends NetworkBridgeConfiguration implem
     }
 
     public boolean isStarted() {
-	    return serviceSupport.isStarted();
+        return serviceSupport.isStarted();
     }
 
     public boolean isStopped() {
@@ -269,9 +269,7 @@ public abstract class NetworkConnector extends NetworkBridgeConfiguration implem
             LOG.debug("Network bridge could not be unregistered in JMX: " + e.getMessage(), e);
         }
     }
-    
 
-    @SuppressWarnings("unchecked")
     protected ObjectName createNetworkBridgeObjectName(NetworkBridge bridge) throws MalformedObjectNameException {
         ObjectName connectorName = getObjectName();
         Map<String, String> map = new HashMap<String, String>(connectorName.getKeyPropertyList());
@@ -294,9 +292,8 @@ public abstract class NetworkConnector extends NetworkBridgeConfiguration implem
         }
         return removeSucceeded;
     }
-    
+
     public Collection<NetworkBridge> activeBridges() {
         return bridges.values();
     }
-
 }

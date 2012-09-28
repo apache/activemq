@@ -21,7 +21,7 @@ import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.NetworkBridgeFilter;
 
 /**
- * implement default behaviour, filter that will not allow resend to origin
+ * implement default behavior, filter that will not allow re-send to origin
  * based on brokerPath and which respects networkTTL
  *
  *  @org.apache.xbean.XBean

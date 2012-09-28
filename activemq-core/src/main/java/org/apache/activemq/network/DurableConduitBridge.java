@@ -17,7 +17,6 @@
 package org.apache.activemq.network;
 
 import java.io.IOException;
-import java.util.Iterator;
 
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ConsumerId;
@@ -29,17 +28,15 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Consolidates subscriptions
- * 
- * 
  */
 public class DurableConduitBridge extends ConduitBridge {
     private static final Logger LOG = LoggerFactory.getLogger(DurableConduitBridge.class);
 
     /**
      * Constructor
-     * 
+     *
      * @param configuration
-     * 
+     *
      * @param localBroker
      * @param remoteBroker
      */
@@ -50,14 +47,13 @@ public class DurableConduitBridge extends ConduitBridge {
 
     /**
      * Subscriptions for these destinations are always created
-     * 
+     *
      */
     protected void setupStaticDestinations() {
         super.setupStaticDestinations();
         ActiveMQDestination[] dests = configuration.isDynamicOnly() ? null : durableDestinations;
         if (dests != null) {
-            for (int i = 0; i < dests.length; i++) {
-                ActiveMQDestination dest = dests[i];
+            for (ActiveMQDestination dest : dests) {
                 if (isPermissableDestination(dest) && !doesConsumerExist(dest)) {
                     DemandSubscription sub = createDemandSubscription(dest);
                     if (dest.isTopic()) {
@@ -88,8 +84,8 @@ public class DurableConduitBridge extends ConduitBridge {
             info.setSubscriptionName(getSubscriberName(info.getDestination()));
             // and override the consumerId with something unique so that it won't
             // be removed if the durable subscriber (at the other end) goes away
-            info.setConsumerId(new ConsumerId(localSessionInfo.getSessionId(), consumerIdGenerator
-                    .getNextSequenceId()));
+            info.setConsumerId(new ConsumerId(localSessionInfo.getSessionId(),
+                               consumerIdGenerator.getNextSequenceId()));
         }
         info.setSelector(null);
         return doCreateDemandSubscription(info);
@@ -102,8 +98,7 @@ public class DurableConduitBridge extends ConduitBridge {
 
     protected boolean doesConsumerExist(ActiveMQDestination dest) {
         DestinationFilter filter = DestinationFilter.parseFilter(dest);
-        for (Iterator i = subscriptionMapByLocalId.values().iterator(); i.hasNext();) {
-            DemandSubscription ds = (DemandSubscription)i.next();
+        for (DemandSubscription ds : subscriptionMapByLocalId.values()) {
             if (filter.matches(ds.getLocalInfo().getDestination())) {
                 return true;
             }

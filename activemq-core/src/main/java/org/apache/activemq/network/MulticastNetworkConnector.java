@@ -26,13 +26,12 @@ import org.apache.activemq.util.ServiceStopper;
  * A network connector which uses some kind of multicast-like transport that
  * communicates with potentially many remote brokers over a single logical
  * {@link Transport} instance such as when using multicast.
- * 
+ *
  * This implementation does not depend on multicast at all; any other group
  * based transport could be used.
- * 
+ *
  * @org.apache.xbean.XBean
- * 
- * 
+ *
  */
 public class MulticastNetworkConnector extends NetworkConnector {
 
@@ -151,5 +150,4 @@ public class MulticastNetworkConnector extends NetworkConnector {
         bridge.setBrokerService(getBrokerService());
         return bridge;
     }
-
 }

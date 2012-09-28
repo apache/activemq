@@ -17,6 +17,7 @@
 package org.apache.activemq.network;
 
 import java.util.List;
+
 import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.command.BrokerId;
 import org.apache.activemq.command.ConsumerInfo;
@@ -27,15 +28,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * implement conditional behaviour for queue consumers,
- * allows replaying back to origin if no consumers are present on the local broker
- * after a configurable delay, irrespective of the networkTTL
- * Also allows rate limiting of messages through the network, useful for static includes
+ * implement conditional behavior for queue consumers, allows replaying back to
+ * origin if no consumers are present on the local broker after a configurable
+ * delay, irrespective of the networkTTL Also allows rate limiting of messages
+ * through the network, useful for static includes
  *
- *  @org.apache.xbean.XBean
+ * @org.apache.xbean.XBean
  */
-
 public class ConditionalNetworkBridgeFilterFactory implements NetworkBridgeFilterFactory {
+
     boolean replayWhenNoConsumers = false;
     int replayDelay = 0;
     int rateLimit = 0;
@@ -104,13 +105,15 @@ public class ConditionalNetworkBridgeFilterFactory implements NetworkBridgeFilte
                     match = allowReplayWhenNoConsumers && hasNoLocalConsumers(message, mec) && hasNotJustArrived(message);
 
                     if (match && LOG.isTraceEnabled()) {
-                        LOG.trace("Replaying  [" + message.getMessageId() +"] for [" + message.getDestination() +"] back to origin in the absence of a local consumer");
+                        LOG.trace("Replaying  [" + message.getMessageId() + "] for [" + message.getDestination()
+                                + "] back to origin in the absence of a local consumer");
                     }
                 }
 
                 if (match && rateLimitExceeded()) {
                     if (LOG.isTraceEnabled()) {
-                        LOG.trace("Throttled network consumer rejecting [" + message.getMessageId() + "] for [" + message.getDestination() + " " + matchCount + ">" + rateLimit  + "/" + rateDuration);
+                        LOG.trace("Throttled network consumer rejecting [" + message.getMessageId() + "] for [" + message.getDestination() + " " + matchCount
+                                + ">" + rateLimit + "/" + rateDuration);
                     }
                     match = false;
                 }
@@ -124,7 +127,7 @@ public class ConditionalNetworkBridgeFilterFactory implements NetworkBridgeFilte
         }
 
         private boolean hasNotJustArrived(Message message) {
-            return replayDelay ==0 || (message.getBrokerInTime() + replayDelay < System.currentTimeMillis());
+            return replayDelay == 0 || (message.getBrokerInTime() + replayDelay < System.currentTimeMillis());
         }
 
         private boolean hasNoLocalConsumers(final Message message, final MessageEvaluationContext mec) {
@@ -132,7 +135,8 @@ public class ConditionalNetworkBridgeFilterFactory implements NetworkBridgeFilte
             for (Subscription sub : consumers) {
                 if (!sub.getConsumerInfo().isNetworkSubscription() && !sub.getConsumerInfo().isBrowser()) {
                     if (LOG.isTraceEnabled()) {
-                        LOG.trace("Not replaying [" + message.getMessageId() + "] for [" + message.getDestination() +"] to origin due to existing local consumer: " + sub.getConsumerInfo());
+                        LOG.trace("Not replaying [" + message.getMessageId() + "] for [" + message.getDestination()
+                                + "] to origin due to existing local consumer: " + sub.getConsumerInfo());
                     }
                     return false;
                 }

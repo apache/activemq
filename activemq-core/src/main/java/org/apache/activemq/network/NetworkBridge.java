@@ -17,48 +17,70 @@
 package org.apache.activemq.network;
 
 import javax.management.ObjectName;
-import org.apache.activemq.Service;
 
+import org.apache.activemq.Service;
 
 /**
  * Represents a network bridge interface
- * 
- * 
  */
 public interface NetworkBridge extends Service {
-    
+
     /**
-     * Service an exception
+     * Service an exception received from the Remote Broker connection.
      * @param error
      */
     void serviceRemoteException(Throwable error);
-    
+
     /**
-     * servicee an exception
+     * Service an exception received from the Local Broker connection.
      * @param error
      */
     void serviceLocalException(Throwable error);
-    
+
     /**
      * Set the NetworkBridgeFailedListener
      * @param listener
      */
     void setNetworkBridgeListener(NetworkBridgeListener listener);
-    
-    
+
+    /**
+     * @return the network address of the remote broker connection.
+     */
     String getRemoteAddress();
 
+    /**
+     * @return the name of the remote broker this bridge is connected to.
+     */
     String getRemoteBrokerName();
 
+    /**
+     * @return the network address of the local broker connection.
+     */
     String getLocalAddress();
 
+    /**
+     * @return the name of the local broker this bridge is connected to.
+     */
     String getLocalBrokerName();
 
+    /**
+     * @return the current number of enqueues this bridge has.
+     */
     long getEnqueueCounter();
 
+    /**
+     * @return the current number of dequeues this bridge has.
+     */
     long getDequeueCounter();
 
+    /**
+     * @param objectName
+     *      The ObjectName assigned to this bridge in the MBean server.
+     */
     void setMbeanObjectName(ObjectName objectName);
 
+    /**
+     * @return the MBean name used to identify this bridge in the MBean server.
+     */
     ObjectName getMbeanObjectName();
 }

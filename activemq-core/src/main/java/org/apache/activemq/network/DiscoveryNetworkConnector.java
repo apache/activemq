@@ -19,15 +19,15 @@ package org.apache.activemq.network;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+
+import javax.management.ObjectName;
 
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.SslContext;
 import org.apache.activemq.command.DiscoveryEvent;
 import org.apache.activemq.transport.Transport;
-import org.apache.activemq.transport.TransportDisposedIOException;
 import org.apache.activemq.transport.TransportFactory;
 import org.apache.activemq.transport.discovery.DiscoveryAgent;
 import org.apache.activemq.transport.discovery.DiscoveryAgentFactory;
@@ -36,26 +36,22 @@ import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.util.ServiceStopper;
 import org.apache.activemq.util.ServiceSupport;
 import org.apache.activemq.util.URISupport;
-import org.apache.activemq.util.URISupport.CompositeData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.management.ObjectName;
 
 /**
  * A network connector which uses a discovery agent to detect the remote brokers
  * available and setup a connection to each available remote broker
- * 
+ *
  * @org.apache.xbean.XBean element="networkConnector"
- * 
+ *
  */
 public class DiscoveryNetworkConnector extends NetworkConnector implements DiscoveryListener {
     private static final Logger LOG = LoggerFactory.getLogger(DiscoveryNetworkConnector.class);
 
     private DiscoveryAgent discoveryAgent;
-    
     private Map<String, String> parameters;
-    
+
     public DiscoveryNetworkConnector() {
     }
 
@@ -71,8 +67,7 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
             IntrospectionSupport.setProperties(getDiscoveryAgent(), parameters);
         } catch (URISyntaxException e) {
             LOG.warn("failed to parse query parameters from discoveryURI: " + discoveryURI, e);
-        }  
-        
+        }
     }
 
     public void onServiceAdd(DiscoveryEvent event) {
@@ -89,20 +84,27 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
                 LOG.warn("Could not connect to remote URI: " + url + " due to bad URI syntax: " + e, e);
                 return;
             }
+
             // Should we try to connect to that URI?
             synchronized (bridges) {
                 if( bridges.containsKey(uri) ) {
-                    LOG.debug("Discovery agent generated a duplicate onServiceAdd event for: "+uri );
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug("Discovery agent generated a duplicate onServiceAdd event for: "+uri );
+                    }
                     return;
                 }
             }
             if (localURI.equals(uri)) {
-                LOG.debug("not connecting loopback: " + uri);
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("not connecting loopback: " + uri);
+                }
                 return;
             }
 
             if (connectionFilter != null && !connectionFilter.connectTo(uri)) {
-                LOG.debug("connectionFilter disallows connection to: " + uri);
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("connectionFilter disallows connection to: " + uri);
+                }
                 return;
             }
 
@@ -112,7 +114,10 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
             } catch (URISyntaxException e) {
                 LOG.warn("could not apply query parameters: " + parameters + " to: " + connectUri, e);
             }
-            LOG.info("Establishing network connection from " + localURI + " to " + connectUri);
+
+            if (LOG.isInfoEnabled()) {
+                LOG.info("Establishing network connection from " + localURI + " to " + connectUri);
+            }
 
             Transport remoteTransport;
             Transport localTransport;
@@ -123,7 +128,9 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
                     remoteTransport = TransportFactory.connect(connectUri);
                 } catch (Exception e) {
                     LOG.warn("Could not connect to remote URI: " + connectUri + ": " + e.getMessage());
-                    LOG.debug("Connection failure exception: " + e, e);
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug("Connection failure exception: " + e, e);
+                    }
                     return;
                 }
                 try {
@@ -131,7 +138,9 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
                 } catch (Exception e) {
                     ServiceSupport.dispose(remoteTransport);
                     LOG.warn("Could not connect to local URI: " + localURI + ": " + e.getMessage());
-                    LOG.debug("Connection failure exception: " + e, e);
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug("Connection failure exception: " + e, e);
+                    }
                     return;
                 }
             } finally {
@@ -147,11 +156,15 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
                 ServiceSupport.dispose(localTransport);
                 ServiceSupport.dispose(remoteTransport);
                 LOG.warn("Could not start network bridge between: " + localURI + " and: " + uri + " due to: " + e);
-                LOG.debug("Start failure exception: " + e, e);
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("Start failure exception: " + e, e);
+                }
                 try {
                     discoveryAgent.serviceFailed(event);
                 } catch (IOException e1) {
-                    LOG.debug("Discovery agent failure while handling failure event: " + e1.getMessage(), e1);
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug("Discovery agent failure while handling failure event: " + e1.getMessage(), e1);
+                    }
                 }
             }
         }
@@ -168,9 +181,8 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
                 return;
             }
 
-            NetworkBridge bridge;
             synchronized (bridges) {
-                bridge = bridges.remove(uri);
+                bridges.remove(uri);
             }
         }
     }

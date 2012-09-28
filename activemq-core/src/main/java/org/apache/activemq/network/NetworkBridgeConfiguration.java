@@ -24,8 +24,6 @@ import org.apache.activemq.command.ConsumerInfo;
 
 /**
  * Configuration for a NetworkBridge
- *
- *
  */
 public class NetworkBridgeConfiguration {
     private boolean conduitSubscriptions = true;
@@ -233,7 +231,7 @@ public class NetworkBridgeConfiguration {
             }   else {
                 return AdvisorySupport.CONSUMER_ADVISORY_TOPIC_PREFIX + ">";
             }
-        }   else {
+        } else {
             // prepend consumer advisory prefix
             // to keep backward compatibility
             if (!this.destinationFilter.startsWith(AdvisorySupport.CONSUMER_ADVISORY_TOPIC_PREFIX)) {
@@ -291,8 +289,6 @@ public class NetworkBridgeConfiguration {
             List<ActiveMQDestination> staticallyIncludedDestinations) {
         this.staticallyIncludedDestinations = staticallyIncludedDestinations;
     }
-
-
 
     public boolean isSuppressDuplicateQueueSubscriptions() {
         return suppressDuplicateQueueSubscriptions;

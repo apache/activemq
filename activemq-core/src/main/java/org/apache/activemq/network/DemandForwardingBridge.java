@@ -17,18 +17,14 @@
 package org.apache.activemq.network;
 
 import org.apache.activemq.transport.Transport;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Forwards messages from the local broker to the remote broker based on demand.
- * 
+ *
  * @org.apache.xbean.XBean
- * 
- * 
+ *
  */
 public class DemandForwardingBridge extends DemandForwardingBridgeSupport {
-    private static final Logger LOG = LoggerFactory.getLogger(DemandForwardingBridge.class);
 
     public DemandForwardingBridge(NetworkBridgeConfiguration configuration, Transport localBroker,
                                   Transport remoteBroker) {

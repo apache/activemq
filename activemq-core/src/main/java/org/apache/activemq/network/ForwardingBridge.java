@@ -51,7 +51,6 @@ import org.slf4j.LoggerFactory;
  *
  * @org.apache.xbean.XBean
  *
- *
  */
 public class ForwardingBridge implements Service {
 
@@ -162,8 +161,11 @@ public class ForwardingBridge implements Service {
             topicConsumerInfo.setPriority(ConsumerInfo.NETWORK_CONSUMER_PRIORITY);
             localBroker.oneway(topicConsumerInfo);
         }
-        LOG.info("Network connection between " + localBroker + " and " + remoteBroker
-                 + " has been established.");
+
+        if (LOG.isInfoEnabled()) {
+            LOG.info("Network connection between " + localBroker + " and " + remoteBroker
+                     + " has been established.");
+        }
     }
 
     public void stop() throws Exception {
@@ -186,7 +188,9 @@ public class ForwardingBridge implements Service {
 
     public void serviceRemoteException(Throwable error) {
         LOG.info("Unexpected remote exception: " + error);
-        LOG.debug("Exception trace: ", error);
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("Exception trace: ", error);
+        }
     }
 
     protected void serviceRemoteCommand(Command command) {
@@ -399,5 +403,4 @@ public class ForwardingBridge implements Service {
     public boolean isUseCompression() {
         return useCompression;
     }
-
 }
