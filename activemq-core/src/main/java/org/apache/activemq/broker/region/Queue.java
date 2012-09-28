@@ -210,11 +210,19 @@ public class Queue extends BaseDestination implements Task, UsageListener {
 
     private final FlowControlTimeoutTask flowControlTimeoutTask = new FlowControlTimeoutTask();
 
-    private static final Comparator<Subscription> orderedCompare = new Comparator<Subscription>() {
+    private final Comparator<Subscription> orderedCompare = new Comparator<Subscription>() {
 
         public int compare(Subscription s1, Subscription s2) {
             // We want the list sorted in descending order
-            return s2.getConsumerInfo().getPriority() - s1.getConsumerInfo().getPriority();
+            int val = s2.getConsumerInfo().getPriority() - s1.getConsumerInfo().getPriority();
+            if (val == 0 && messageGroupOwners != null) {
+                // then ascending order of assigned message groups to favour less loaded consumers
+                // Long.compare in jdk7
+                long x = s1.getConsumerInfo().getLastDeliveredSequenceId();
+                long y = s2.getConsumerInfo().getLastDeliveredSequenceId();
+                val = (x < y) ? -1 : ((x == y) ? 0 : 1);
+            }
+            return val;
         }
     };
 
@@ -1934,8 +1942,6 @@ public class Queue extends BaseDestination implements Task, UsageListener {
         String groupId = node.getGroupID();
         int sequence = node.getGroupSequence();
         if (groupId != null) {
-            //MessageGroupMap messageGroupOwners = ((Queue) node
-            //        .getRegionDestination()).getMessageGroupOwners();
 
             MessageGroupMap messageGroupOwners = getMessageGroupOwners();
             // If we can own the first, then no-one else should own the
@@ -1956,6 +1962,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                         // A group sequence < 1 is an end of group signal.
                         if (sequence < 0) {
                             messageGroupOwners.removeGroup(groupId);
+                            subscription.getConsumerInfo().setLastDeliveredSequenceId(subscription.getConsumerInfo().getLastDeliveredSequenceId() - 1);
                         }
                     } else {
                         result = false;
@@ -1979,6 +1986,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                 LOG.warn("Failed to set boolean header: " + e, e);
             }
         }
+        subs.getConsumerInfo().setLastDeliveredSequenceId(subs.getConsumerInfo().getLastDeliveredSequenceId() + 1);
     }
 
     protected void pageInMessages(boolean force) throws Exception {
