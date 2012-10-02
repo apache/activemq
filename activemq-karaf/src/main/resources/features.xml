@@ -1,3 +1,4 @@
+<?xml version='1.0' encoding='UTF-8'?>
 <!--
 
     Licensed to the Apache Software Foundation (ASF) under one or more
@@ -17,8 +18,8 @@
 
 -->
 
-<features name="activemq-${activemq-version}" xmlns="http://karaf.apache.org/xmlns/features/v1.0.0">
-    <feature name="activemq" version="${activemq-version}" resolver="(obr)">
+<features name="activemq-${project.version}">
+    <feature name="activemq" version="${project.version}" resolver="(obr)" start-level="50">
         <bundle dependency="true">mvn:org.apache.geronimo.specs/geronimo-annotation_1.0_spec/1.1.1</bundle>
         <bundle dependency="true">mvn:org.apache.geronimo.specs/geronimo-jta_1.1_spec/1.1.1</bundle>
         <bundle dependency="true">mvn:org.apache.geronimo.specs/geronimo-jms_1.1_spec/1.1.1</bundle>
@@ -38,35 +39,35 @@
         <bundle dependency="true">mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.dom4j/${dom4j-bundle-version}</bundle>
         <bundle dependency="true">mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.xstream/${xstream-bundle-version}</bundle>
         <bundle dependency="true">mvn:org.apache.aries.transaction/org.apache.aries.transaction.manager/${aries-version}</bundle>
-        <bundle>mvn:org.apache.activemq/activemq-core/${activemq-version}</bundle>
-        <bundle>mvn:org.apache.activemq/kahadb/${activemq-version}</bundle>
-        <bundle>mvn:org.apache.activemq/activemq-console/${activemq-version}</bundle>
-        <bundle>mvn:org.apache.activemq/activemq-ra/${activemq-version}</bundle>
-        <bundle>mvn:org.apache.activemq/activemq-pool/${activemq-version}</bundle>
-        <bundle>mvn:org.apache.activemq/activemq-karaf/${activemq-version}</bundle>
+        <bundle>mvn:org.apache.activemq/activemq-core/${project.version}</bundle>
+        <bundle>mvn:org.apache.activemq/kahadb/${project.version}</bundle>
+        <bundle>mvn:org.apache.activemq/activemq-console/${project.version}</bundle>
+        <bundle>mvn:org.apache.activemq/activemq-ra/${project.version}</bundle>
+        <bundle>mvn:org.apache.activemq/activemq-pool/${project.version}</bundle>
+        <bundle>mvn:org.apache.activemq/activemq-karaf/${project.version}</bundle>
         <bundle>mvn:org.apache.aries.transaction/org.apache.aries.transaction.manager/${aries-version}</bundle>
     </feature>
 
-    <feature name="activemq-spring" version="${activemq-version}" resolver="(obr)">
+    <feature name="activemq-spring" version="${project.version}" resolver="(obr)" start-level="50">
         <feature version="[1.2,2)">spring-dm</feature>
-        <feature version="${activemq-version}">activemq</feature>
+        <feature version="${project.version}">activemq</feature>
         <bundle dependency="true">mvn:org.apache.xbean/xbean-spring/${xbean-version}</bundle>
-        <bundle>mvn:org.apache.activemq/activemq-spring/${activemq-version}</bundle>
+        <bundle>mvn:org.apache.activemq/activemq-spring/${project.version}</bundle>
     </feature>
 
-    <feature name="activemq-blueprint" version="${activemq-version}" resolver="(obr)">
-        <feature version="${activemq-version}">activemq</feature>
+    <feature name="activemq-blueprint" version="${project.version}" resolver="(obr)" start-level="50">
+        <feature version="${project.version}">activemq</feature>
         <bundle dependency="true">mvn:org.apache.servicemix.specs/org.apache.servicemix.specs.scripting-api-1.0/${servicemix.specs.version}</bundle>
         <bundle dependency="true">mvn:org.apache.commons/commons-jexl/2.0.1</bundle>
         <bundle dependency="true">mvn:org.apache.xbean/xbean-blueprint/${xbean-version}</bundle>
-        <bundle>mvn:org.apache.activemq/activemq-blueprint/${activemq-version}</bundle>
+        <bundle>mvn:org.apache.activemq/activemq-blueprint/${project.version}</bundle>
     </feature>
 
-    <feature name="activemq-optional" version="${activemq-version}" resolver="(obr)">
-        <feature version="${activemq-version}">activemq-blueprint</feature>
-        <feature version="${activemq-version}">activemq-spring</feature>
-        <feature version="[7.5,8.0)">jetty</feature>
-        <bundle>mvn:org.apache.activemq/activemq-optional/${activemq-version}</bundle>
+    <feature name="activemq-optional" version="${project.version}" resolver="(obr)" start-level="50">
+        <feature version="${project.version}">activemq-blueprint</feature>
+        <feature version="${project.version}">activemq-spring</feature>
+        <feature>jetty</feature>
+        <bundle>mvn:org.apache.activemq/activemq-optional/${project.version}</bundle>
         <bundle>mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.josql/${josql-version}</bundle>
         <bundle>mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.xmlresolver/${xmlresolver-bundle-version}</bundle>
         <bundle>mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.saxon/${saxon-bundle-version}</bundle>
@@ -78,21 +79,21 @@
         <bundle>mvn:javax.jmdns/jmdns/${jmdns-version}</bundle>
     </feature>
 
-    <feature name="activemq-camel" version="${activemq-version}" resolver="(obr)">
-        <feature version="${activemq-version}">activemq</feature>
+    <feature name="activemq-camel" version="${project.version}" resolver="(obr)" start-level="50">
+        <feature version="${project.version}">activemq</feature>
         <feature version="${camel-version-range}">camel-jms</feature>
-        <bundle>mvn:org.apache.activemq/activemq-camel/${activemq-version}</bundle>
+        <bundle>mvn:org.apache.activemq/activemq-camel/${project.version}</bundle>
     </feature>
 
-    <feature name="activemq-web-console" version="${activemq-version}" resolver="(obr)">
-      <feature version="[2,3)">war</feature>
-      <bundle>mvn:org.apache.activemq/activemq-web-console/${activemq-version}/war</bundle>
+    <feature name="activemq-web-console" version="${project.version}" resolver="(obr)" start-level="50">
+      <feature>war</feature>
+      <bundle>mvn:org.apache.activemq/activemq-web-console/${project.version}/war</bundle>
     </feature>
 
-    <feature name="activemq-extra" version="${activemq-version}" resolver="(obr)">
+    <feature name="activemq-extra" version="${project.version}" resolver="(obr)" start-level="50">
         <bundle>mvn:org.fusesource.mqtt-client/mqtt-client/${mqtt-client-version}</bundle>
         <bundle>mvn:org.fusesource.hawtbuf/hawtbuf/${hawtbuf-version}</bundle>
-        <bundle>mvn:org.apache.activemq/activemq-leveldb/${activemq-version}/jar/bundle</bundle>
+        <bundle>mvn:org.apache.activemq/activemq-leveldb/${project.version}/jar/bundle</bundle>
         <bundle>mvn:org.fusesource.hawtdispatch/hawtdispatch/${hawtdispatch-version}</bundle>
         <bundle>mvn:org.fusesource.hawtdispatch/hawtdispatch-transport/${hawtdispatch-version}</bundle>
     </feature>
