@@ -56,10 +56,9 @@
                     <div id="asf_logo">
                         <div id="activemq_logo">
                             <a style="float:left; width:280px;display:block;text-indent:-5000px;text-decoration:none;line-height:60px; margin-top:10px; margin-left:100px;"
-                               href="http://activemq.apache.org/"
-                               title="The most popular and powerful open source Message Broker">ActiveMQ</a>
+                                href="http://activemq.apache.org/" title="The most popular and powerful open source Message Broker">ActiveMQ</a> &trade;
                             <a style="float:right; width:210px;display:block;text-indent:-5000px;text-decoration:none;line-height:60px; margin-top:15px; margin-right:10px;"
-                               href="http://www.apache.org/" title="The Apache Software Foundation">ASF</a>
+                                href="http://www.apache.org/" title="The Apache Software Foundation">ASF</a>
                         </div>
                     </div>
 
