@@ -35,9 +35,9 @@ public class ManagedTempQueueRegion extends TempQueueRegion {
 
     private final ManagedRegionBroker regionBroker;
 
-    public ManagedTempQueueRegion(ManagedRegionBroker broker, BrokerService brokerService, DestinationStatistics destinationStatistics, SystemUsage memoryManager, TaskRunnerFactory taskRunnerFactory,
+    public ManagedTempQueueRegion(ManagedRegionBroker broker, DestinationStatistics destinationStatistics, SystemUsage memoryManager, TaskRunnerFactory taskRunnerFactory,
                                   DestinationFactory destinationFactory) {
-        super(broker, brokerService, destinationStatistics, memoryManager, taskRunnerFactory, destinationFactory);
+        super(broker, destinationStatistics, memoryManager, taskRunnerFactory, destinationFactory);
         this.regionBroker = broker;
     }
 

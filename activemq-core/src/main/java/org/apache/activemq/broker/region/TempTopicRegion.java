@@ -21,6 +21,7 @@ import javax.jms.JMSException;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.command.ActiveMQTempTopic;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.thread.TaskRunnerFactory;
 import org.apache.activemq.usage.SystemUsage;
@@ -37,9 +38,6 @@ public class TempTopicRegion extends AbstractTempRegion {
     public TempTopicRegion(RegionBroker broker, DestinationStatistics destinationStatistics, SystemUsage memoryManager, TaskRunnerFactory taskRunnerFactory,
                            DestinationFactory destinationFactory) {
         super(broker, destinationStatistics, memoryManager, taskRunnerFactory, destinationFactory);
-        // We should allow the following to be configurable via a Destination
-        // Policy
-        // setAutoCreateDestinations(false);
     }
 
     protected Subscription createSubscription(ConnectionContext context, ConsumerInfo info) throws JMSException {
@@ -82,9 +80,4 @@ public class TempTopicRegion extends AbstractTempRegion {
         super.removeDestination(context, destination, timeout);
     }
 
-    
-    protected Destination doCreateDestination(ConnectionContext context,
-            ActiveMQDestination destination) throws Exception {
-        return destinationFactory.createDestination(context, destination, destinationStatistics);
-    }
 }

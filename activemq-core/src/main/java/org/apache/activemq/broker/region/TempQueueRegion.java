@@ -33,24 +33,10 @@ import org.slf4j.LoggerFactory;
  * 
  */
 public class TempQueueRegion extends AbstractTempRegion {
-    private static final Logger LOG = LoggerFactory.getLogger(TempQueueRegion.class);
-    private final BrokerService brokerService;
-    
-    public TempQueueRegion(RegionBroker broker, BrokerService brokerService, DestinationStatistics destinationStatistics, SystemUsage memoryManager, TaskRunnerFactory taskRunnerFactory,
+
+    public TempQueueRegion(RegionBroker broker, DestinationStatistics destinationStatistics, SystemUsage memoryManager, TaskRunnerFactory taskRunnerFactory,
                            DestinationFactory destinationFactory) {
         super(broker, destinationStatistics, memoryManager, taskRunnerFactory, destinationFactory);
-        // We should allow the following to be configurable via a Destination
-        // Policy
-        // setAutoCreateDestinations(false);
-        this.brokerService = brokerService;
-    }
-
-    protected Destination doCreateDestination(ConnectionContext context, ActiveMQDestination destination) throws Exception {  
-        TempQueue result = new TempQueue(brokerService, destination, null, destinationStatistics, taskRunnerFactory);
-        brokerService.getDestinationPolicy();
-        configureQueue(result, destination);
-        result.initialize();
-        return result;
     }
 
     protected Subscription createSubscription(ConnectionContext context, ConsumerInfo info) throws JMSException {
@@ -87,17 +73,4 @@ public class TempQueueRegion extends AbstractTempRegion {
     public void processDispatchNotification(MessageDispatchNotification messageDispatchNotification) throws Exception {
         processDispatchNotificationViaDestination(messageDispatchNotification);
     }
-
-    protected void configureQueue(Queue queue, ActiveMQDestination destination) {
-        if (broker == null) {
-            throw new IllegalStateException("broker property is not set");
-        }
-        if (broker.getDestinationPolicy() != null) {
-            PolicyEntry entry = broker.getDestinationPolicy().getEntryFor(destination);
-            if (entry != null) {
-                entry.configure(broker,queue);
-            }
-        }
-    }
-
 }

@@ -78,17 +78,13 @@ public abstract class AbstractTempRegion extends AbstractRegion {
         }
     }
 
-    protected abstract Destination doCreateDestination(
-            ConnectionContext context, ActiveMQDestination destination)
-            throws Exception;
-
     protected synchronized Destination createDestination(
             ConnectionContext context, ActiveMQDestination destination)
             throws Exception {
         Destination result = cachedDestinations.remove(new CachedDestination(
                 destination));
         if (result == null) {
-            result = doCreateDestination(context, destination);
+            result =  destinationFactory.createDestination(context, destination, destinationStatistics);
         }
         return result;
     }

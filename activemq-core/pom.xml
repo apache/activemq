@@ -607,6 +607,7 @@
             <exclude>org/apache/activemq/usecases/MulticastDiscoveryOnFaultyNetworkTest.*</exclude>
             <exclude>org/apache/activemq/bugs/JmsDurableTopicSlowReceiveTest.*</exclude>
             <exclude>org/apache/activemq/usecases/TopicProducerFlowControlTest.*</exclude>
+            <exclude>org/apache/activemq/usecases/TempTopicProducerFlowControlTest.*</exclude>
             <exclude>org/apache/activemq/store/jdbc/JDBCNegativeQueueTest.*</exclude>
             <exclude>org/apache/activemq/bugs/AMQ2314Test.*</exclude>
             <exclude>org/apache/activemq/kaha/LoadTest.*</exclude>

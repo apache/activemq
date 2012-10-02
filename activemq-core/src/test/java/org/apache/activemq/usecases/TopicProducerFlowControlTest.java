@@ -30,6 +30,8 @@ import javax.jms.Session;
 import junit.framework.TestCase;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.ActiveMQPrefetchPolicy;
+import org.apache.activemq.RedeliveryPolicy;
 import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
@@ -103,6 +105,9 @@ public class TopicProducerFlowControlTest extends TestCase implements MessageLis
         connectionFactory.setAlwaysSyncSend(true);
         connectionFactory.setProducerWindowSize(1024);
 
+        ActiveMQPrefetchPolicy prefetchPolicy = new ActiveMQPrefetchPolicy();
+        prefetchPolicy.setAll(5000);
+        connectionFactory.setPrefetchPolicy(prefetchPolicy);
         // Start the test destination listener
         Connection c = connectionFactory.createConnection();
         c.start();
@@ -158,10 +163,10 @@ public class TopicProducerFlowControlTest extends TestCase implements MessageLis
         assertEquals("Didn't consume all messages", numMessagesToSend, consumed.get());
 
          assertTrue("Producer got blocked", Wait.waitFor(new Wait.Condition() {
-            public boolean isSatisified() throws Exception {
-                return blockedCounter.get() > 0;
-            }
-        }, 5 * 1000));
+             public boolean isSatisified() throws Exception {
+                 return blockedCounter.get() > 0;
+             }
+         }, 5 * 1000));
     }
 
     protected Destination createDestination(Session listenerSession) throws Exception {

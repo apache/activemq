@@ -77,6 +77,7 @@ public class DestinationFactoryImpl extends DestinationFactory {
             if (destination.isTemporary()) {
                 final ActiveMQTempDestination tempDest = (ActiveMQTempDestination)destination;
                 Queue queue = new TempQueue(brokerService, destination, null, destinationStatistics, taskRunnerFactory);
+                configureQueue(queue, destination);
                 queue.initialize();
                 return queue;
             } else {
@@ -89,6 +90,7 @@ public class DestinationFactoryImpl extends DestinationFactory {
         } else if (destination.isTemporary()) {
             
             Topic topic = new Topic(brokerService, destination, null, destinationStatistics, taskRunnerFactory);
+            configureTopic(topic, destination);
             topic.initialize();
             return topic;
         } else {
