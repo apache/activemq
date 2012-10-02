@@ -70,6 +70,7 @@
     <howl-version>0.1.8</howl-version>
     <hsqldb-version>1.8.0.10</hsqldb-version>
     <httpclient-version>4.2.1</httpclient-version>
+    <httpcore-version>4.2.1</httpcore-version>
     <jackson-version>1.9.2</jackson-version>
     <jasypt-version>1.9.0</jasypt-version>
     <jdom-version>1.0</jdom-version>
@@ -826,6 +827,12 @@
         <groupId>org.apache.httpcomponents</groupId>
         <artifactId>httpclient</artifactId>
         <version>${httpclient-version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.apache.httpcomponents</groupId>
+        <artifactId>httpcore</artifactId>
+        <version>${httpcore-version}</version>
       </dependency>
 
       <dependency>

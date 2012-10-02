@@ -144,7 +144,6 @@
         <include>${pom.groupId}:activeio-core</include>
         <include>commons-beanutils:commons-beanutils</include>
         <include>commons-collections:commons-collections</include>
-        <include>commons-httpclient:commons-httpclient</include>
         <include>commons-dbcp:commons-dbcp</include>
         <include>commons-pool:commons-pool</include>
         <include>commons-codec:commons-codec</include>
@@ -153,6 +152,8 @@
         <include>org.slf4j:slf4j-log4j12</include>
         <include>log4j:log4j</include>
         <include>org.apache.geronimo.specs:geronimo-j2ee-connector_1.5_spec</include>
+        <include>org.apache.httpcomponents:httpclient</include>
+        <include>org.apache.httpcomponents:httpcore</include>
         <include>org.apache.xbean:xbean-spring</include>
         <include>org.springframework:spring-aop</include>
         <include>org.springframework:spring-asm</include>

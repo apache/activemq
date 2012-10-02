@@ -72,6 +72,8 @@
         <include>bin/activemq-admin</include>
         <include>bin/macosx/activemq</include>
         <include>bin/linux-*/activemq</include>
+        <include>example/**/*.sh</include>
+        <include>example/**/*.rb</include>
       </includes>
       <directoryMode>0755</directoryMode>
       <fileMode>0755</fileMode>
