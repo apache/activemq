@@ -1,0 +1,52 @@
+Usage:
+  java org.apache.activemq.console.command.store.amq.AMQJournalTool [options]* (directory) * 
+  
+Displays the records stored in the Journal log files used by ActiveMQ.  This
+tool supports loading the journal data files from multiple directories.  Normally
+it is run against the journal archive directory and the active journal directory.
+
+This tool supports controlling the output format using Velocity [1] templates.  
+It also supports filtering out records using a SQL like WHERE syntax implemented
+using JoSQL.
+  
+Options to control output format:
+  
+Any valid Velocity Template Language (VTL) expression can be used to control the 
+display of the record.  
+  
+  --message-format=VTL          The format used to display message records. Message
+      records get created every time a producer sends a persistent message to the broker.
+      The message gets recorded in the journal even if it's transaction is rolled back.
+      Default VTL: ${location.dataFileId},${location.offset}|${type}|${record.destination}|${record.messageId}|${record.properties}|${body}
+      
+  --topic-ack-format=VTL        The format used to display topic ack records.  A topic
+      ack records that a durable subscription for a topic has acknowleged a set of messages.
+      Default VTL: ${location.dataFileId},${location.offset}|${type}|${record.destination}|${record.clientId}|${record.subscritionName}|${record.messageId}
+      
+  --queue-ack-format=VTL        The format used to display queue ack records. A queue
+      ack records that a consumer for a quue has acknowleged a message.
+      Default VTL: ${location.dataFileId},${location.offset}|${type}|${record.destination}|${record.messageAck.lastMessageId}
+      
+  --transaction-format=VTL      The format used to display transaction records. Transaction records
+      are used to record transaction related actions like commit and rollback.
+      Default VTL: ${location.dataFileId},${location.offset}|${type}|${record.transactionId}
+      
+  --trace-format=VTL            The format used to display trace records.
+      Trace records are informational messages stored in the journal that assist in Auditing.  
+      For example a trace message is recorded whenever the broker is restarted or when the 
+      long term store is checkpointed.  
+      Default VTL: ${location.dataFileId},${location.offset}|${type}|${record.message}
+  
+Options to control the selection of records displayed:  
+  --where=VALUE                 The where clause used to control the records selected
+      for display.  It can select on all the fields available in the velocity context.
+      example:  --where="type='ActiveMQTextMessage' and location.dataFileId > 2"
+      
+Other Options:
+  --help                        Show this help screen.
+
+Example:
+
+  java org.apache.activemq.console.command.store.amq.AMQJournalTool /path/to/archive /path/to/journal
+  
+ 

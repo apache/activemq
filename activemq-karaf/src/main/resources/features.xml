@@ -1,0 +1,101 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!--
+
+    Licensed to the Apache Software Foundation (ASF) under one or more
+    contributor license agreements.  See the NOTICE file distributed with
+    this work for additional information regarding copyright ownership.
+    The ASF licenses this file to You under the Apache License, Version 2.0
+    (the "License"); you may not use this file except in compliance with
+    the License.  You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+-->
+
+<features name="activemq-${project.version}">
+    <feature name="activemq" version="${project.version}" resolver="(obr)" start-level="50">
+        <bundle dependency="true">mvn:org.apache.geronimo.specs/geronimo-annotation_1.0_spec/1.1.1</bundle>
+        <bundle dependency="true">mvn:org.apache.geronimo.specs/geronimo-jta_1.1_spec/1.1.1</bundle>
+        <bundle dependency="true">mvn:org.apache.geronimo.specs/geronimo-jms_1.1_spec/1.1.1</bundle>
+        <bundle dependency="true">mvn:org.apache.geronimo.specs/geronimo-j2ee-management_1.1_spec/1.0.1</bundle>
+        <bundle dependency="true">mvn:commons-pool/commons-pool/${commons-pool-version}</bundle>
+        <bundle dependency="true">mvn:commons-collections/commons-collections/${commons-collections-version}</bundle>
+        <bundle dependency='true'>mvn:commons-lang/commons-lang/${commons-lang-version}</bundle>
+        <bundle dependency="true">mvn:commons-codec/commons-codec/1.4</bundle>
+        <bundle dependency="true">mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.velocity/1.7_4</bundle>
+        <!-- TODO: oro is not really needed, but we need a new velocity bundle to fix this: https://issues.apache.org/jira/browse/SMX4-1244 -->
+        <bundle dependency="true">mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.oro/2.0.8_3</bundle>
+        <bundle dependency="true">mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.jasypt/1.9.0_1</bundle>
+        <bundle dependency="true">mvn:org.apache.servicemix.specs/org.apache.servicemix.specs.stax-api-1.0/${servicemix.specs.version}</bundle>
+        <bundle dependency="true">mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.xpp3/${xpp3-bundle-version}</bundle>
+        <bundle dependency="true">mvn:joda-time/joda-time/${jodatime-bundle-version}</bundle>
+        <bundle dependency="true">mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.jdom/${jdom-bundle-version}</bundle>
+        <bundle dependency="true">mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.dom4j/${dom4j-bundle-version}</bundle>
+        <bundle dependency="true">mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.xstream/${xstream-bundle-version}</bundle>
+        <bundle dependency="true">mvn:org.apache.aries.transaction/org.apache.aries.transaction.manager/${aries-version}</bundle>
+        <bundle>mvn:org.apache.activemq/activemq-core/${project.version}</bundle>
+        <bundle>mvn:org.apache.activemq/kahadb/${project.version}</bundle>
+        <bundle>mvn:org.apache.activemq/activemq-console/${project.version}</bundle>
+        <bundle>mvn:org.apache.activemq/activemq-ra/${project.version}</bundle>
+        <bundle>mvn:org.apache.activemq/activemq-pool/${project.version}</bundle>
+        <bundle>mvn:org.apache.activemq/activemq-karaf/${project.version}</bundle>
+        <bundle>mvn:org.apache.aries.transaction/org.apache.aries.transaction.manager/${aries-version}</bundle>
+    </feature>
+
+    <feature name="activemq-spring" version="${project.version}" resolver="(obr)" start-level="50">
+        <feature version="[1.2,2)">spring-dm</feature>
+        <feature version="${project.version}">activemq</feature>
+        <bundle dependency="true">mvn:org.apache.xbean/xbean-spring/${xbean-version}</bundle>
+        <bundle>mvn:org.apache.activemq/activemq-spring/${project.version}</bundle>
+    </feature>
+
+    <feature name="activemq-blueprint" version="${project.version}" resolver="(obr)" start-level="50">
+        <feature version="${project.version}">activemq</feature>
+        <bundle dependency="true">mvn:org.apache.servicemix.specs/org.apache.servicemix.specs.scripting-api-1.0/${servicemix.specs.version}</bundle>
+        <bundle dependency="true">mvn:org.apache.commons/commons-jexl/2.0.1</bundle>
+        <bundle dependency="true">mvn:org.apache.xbean/xbean-blueprint/${xbean-version}</bundle>
+        <bundle>mvn:org.apache.activemq/activemq-blueprint/${project.version}</bundle>
+    </feature>
+
+    <feature name="activemq-optional" version="${project.version}" resolver="(obr)" start-level="50">
+        <feature version="${project.version}">activemq-blueprint</feature>
+        <feature version="${project.version}">activemq-spring</feature>
+        <feature>jetty</feature>
+        <bundle>mvn:org.apache.activemq/activemq-optional/${project.version}</bundle>
+        <bundle>mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.josql/${josql-version}</bundle>
+        <bundle>mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.xmlresolver/${xmlresolver-bundle-version}</bundle>
+        <bundle>mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.saxon/${saxon-bundle-version}</bundle>
+        <bundle>mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.ant/${ant-bundle-version}</bundle>
+        <bundle>mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.xmlbeans/${xmlbeans-bundle-version}</bundle>
+        <bundle>mvn:org.apache.httpcomponents/httpcore-osgi/${httpclient-version}</bundle>
+        <bundle>mvn:org.apache.httpcomponents/httpclient-osgi/${httpclient-version}</bundle>
+        <bundle>mvn:org.springframework/spring-oxm/${spring-version}</bundle>
+        <bundle>mvn:javax.jmdns/jmdns/${jmdns-version}</bundle>
+    </feature>
+
+    <feature name="activemq-camel" version="${project.version}" resolver="(obr)" start-level="50">
+        <feature version="${project.version}">activemq</feature>
+        <feature version="${camel-version-range}">camel-jms</feature>
+        <bundle>mvn:org.apache.activemq/activemq-camel/${project.version}</bundle>
+    </feature>
+
+    <feature name="activemq-web-console" version="${project.version}" resolver="(obr)" start-level="50">
+      <feature>war</feature>
+      <bundle>mvn:org.apache.activemq/activemq-web-console/${project.version}/war</bundle>
+    </feature>
+
+    <feature name="activemq-extra" version="${project.version}" resolver="(obr)" start-level="50">
+        <bundle>mvn:org.fusesource.mqtt-client/mqtt-client/${mqtt-client-version}</bundle>
+        <bundle>mvn:org.fusesource.hawtbuf/hawtbuf/${hawtbuf-version}</bundle>
+        <bundle>mvn:org.apache.activemq/activemq-leveldb/${project.version}/jar/bundle</bundle>
+        <bundle>mvn:org.fusesource.hawtdispatch/hawtdispatch/${hawtdispatch-version}</bundle>
+        <bundle>mvn:org.fusesource.hawtdispatch/hawtdispatch-transport/${hawtdispatch-version}</bundle>
+    </feature>
+</features>
+

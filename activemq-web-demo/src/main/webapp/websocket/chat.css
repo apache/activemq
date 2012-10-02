@@ -1,0 +1,112 @@
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+* {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Helvetica Neue', Helvetica, Verdana, Arial, sans-serif;
+  padding: 10px;
+}
+
+#disconnect {
+  display: none;
+}
+#subscribe {
+  display: none;
+}
+
+#debug {
+  background-color: #F0F0F0;
+  font-size: 12px;
+  width: 800px;
+  margin-left: 0px;
+  margin-top: 10px;
+  margin-right: 0px;
+  padding: 10px;
+  border: 1px solid #CCC;
+}
+
+#send_form {
+  width: 800px;
+  bottom: 10px;
+}
+
+#send_form #send_form_input {
+  border: 1px solid #CCC;
+  font-size: 16px;
+  height: 20px;
+  padding: 10px;
+  width: 800px;
+}
+
+#send_form input[disabled] {
+  background-color: #EEE;
+}
+
+#messages {
+  bottom: 25px;
+  left: 0;
+  overflow: auto;
+  padding: 5px;
+  right: 0;
+  top: 2em;
+  z-index: -1;
+}
+
+.message {
+  width: 95%;
+}
+
+.timestamp {
+  font-size: 12px;
+}
+
+.me, .nick {
+  float: left;
+  width: 100px;
+}
+
+.me {
+  color: #F99;
+}
+
+.nick {
+  color: #99F;
+}
+
+.status {
+  background-color: #DDD;
+}
+
+form dt {
+   clear:both;
+   width:19%;
+   float:left;
+   text-align:right;
+}
+
+form dd {
+   float:left;
+   width:80%;
+   margin:0 0 0.5em 0.25em;
+}
+
+input {
+   width: 320px;
+}
