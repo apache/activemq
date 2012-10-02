@@ -22,7 +22,7 @@
   <parent>
     <groupId>org.apache.activemq</groupId>
     <artifactId>tests</artifactId>
-    <version>5.7-SNAPSHOT</version>
+    <version>5.7.0</version>
   </parent>
 
   <artifactId>activemq-itest-spring31</artifactId>
