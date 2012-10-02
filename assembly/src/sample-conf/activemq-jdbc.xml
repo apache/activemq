@@ -42,6 +42,10 @@
   </bean>
 
   <broker useJmx="false" brokerName="jdbcBroker" xmlns="http://activemq.apache.org/schema/core">
+
+    <!--
+        See more database locker options at http://activemq.apache.org/pluggable-storage-lockers.html
+    -->
     <persistenceAdapter>
        <jdbcPersistenceAdapter dataDirectory="${activemq.data}" dataSource="#derby-ds"/>
     </persistenceAdapter>
