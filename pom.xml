@@ -216,6 +216,7 @@
     <module>activemq-web-demo</module>
     <module>activemq-web-console</module>
     <module>activemq-xmpp</module>
+    <module>tests</module>
     <module>assembly</module>
     <module>kahadb</module>
   </modules>
