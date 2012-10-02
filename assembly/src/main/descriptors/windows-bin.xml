@@ -20,6 +20,7 @@
   <formats>
     <format>zip</format>
   </formats>
+
   <fileSets>
 
     <!-- Copy over everything that needs to get dos line endings -->
@@ -61,7 +62,7 @@
     <!-- Copy over files that should not get the line endings converted -->
     <fileSet>
       <directory>src/release</directory>
-      <outputDirectory></outputDirectory>
+      <outputDirectory>/</outputDirectory>
       <includes>
         <include>bin/win32/*.exe</include>
         <include>bin/win32/*.dll</include>

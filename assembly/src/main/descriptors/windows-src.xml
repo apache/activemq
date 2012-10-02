@@ -16,10 +16,12 @@
   limitations under the License.
 -->
 <assembly>
+
   <id>src</id>
   <formats>
     <format>zip</format>
   </formats>
+
   <fileSets>
     <!-- Binary Files -->
     <fileSet>
@@ -77,8 +79,6 @@
 
         <exclude>**/target/**</exclude>
         <exclude>**/build/**</exclude>
-        <!-- exclude>data/**</exclude>
-        <exclude>*/data/**</exclude -->
         <exclude>activemq-data/**</exclude>
         <exclude>*/activemq-data/**</exclude>
         <exclude>**/eclipse-classes/**</exclude>
@@ -97,5 +97,7 @@
       </excludes>
       <lineEnding>dos</lineEnding>
     </fileSet>
+
   </fileSets>
+
 </assembly>

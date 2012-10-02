@@ -16,21 +16,8 @@
     limitations under the License.
 -->
 <component>
-  <!--<id>common-bin</id>-->
 
   <fileSets>
-    <!-- Copy over files that should not get the line endings converted -->
-    <fileSet>
-      <directory>src/release</directory>
-      <outputDirectory>/</outputDirectory>
-      <includes>
-        <include>bin/*.jar</include>
-        <include>conf/*.ts</include>
-        <include>conf/*.ks</include>
-        <include>conf/*.cert</include>
-        <include>webapps/*.ico</include>
-      </includes>
-    </fileSet>
 
     <!-- Copy over all sample configurations -->
     <fileSet>

@@ -16,10 +16,12 @@
     limitations under the License.
 -->
 <assembly>
+
   <id>bin</id>
   <formats>
     <format>tar.gz</format>
   </formats>
+
   <fileSets>
 
     <!-- Copy over everything that needs to get unix line endings -->
@@ -31,7 +33,9 @@
         <exclude>conf/*.ts</exclude>
         <exclude>conf/*.ks</exclude>
         <exclude>conf/*.cert</exclude>
-      </excludes>
+        <exclude>example/**/*.sh</exclude>
+		<exclude>example/**/*.rb</exclude>
+	  </excludes>
       <fileMode>0644</fileMode>
       <directoryMode>0755</directoryMode>
       <lineEnding>unix</lineEnding>
@@ -51,7 +55,7 @@
     <!-- Copy over the files that should not get the line endings converted but need to be chmod to 755 -->
     <fileSet>
       <directory>src/release</directory>
-      <outputDirectory></outputDirectory>
+      <outputDirectory>/</outputDirectory>
       <includes>
         <include>bin/linux-*/wrapper</include>
         <include>bin/linux-*/libwrapper.so</include>
@@ -65,7 +69,7 @@
     <!-- Copy over the files that need unix line endings and also chmod to 755 -->
     <fileSet>
       <directory>src/release</directory>
-      <outputDirectory></outputDirectory>
+      <outputDirectory>/</outputDirectory>
       <includes>
         <include>bin/activemq</include>
         <include>bin/diag</include>

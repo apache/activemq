@@ -16,10 +16,12 @@
   limitations under the License.
 -->
 <assembly>
+
   <id>src</id>
   <formats>
     <format>tar.gz</format>
   </formats>
+
   <fileSets>
     <!-- Binary Files -->
     <fileSet>
@@ -78,8 +80,6 @@
         <exclude>assembly/src/release/bin/*/wrapper</exclude>
         <exclude>**/target/**</exclude>
         <exclude>**/build/**</exclude>
-        <!-- exclude>data/**</exclude>
-        <exclude>*/data/**</exclude -->
         <exclude>activemq-data/**</exclude>
         <exclude>*/activemq-data/**</exclude>
         <exclude>**/eclipse-classes/**</exclude>
@@ -100,5 +100,7 @@
       <directoryMode>0755</directoryMode>
       <lineEnding>unix</lineEnding>
     </fileSet>
+
   </fileSets>
+
 </assembly>
