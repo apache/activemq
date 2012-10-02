@@ -76,13 +76,26 @@
         <include>bin/activemq-admin</include>
         <include>bin/macosx/activemq</include>
         <include>bin/linux-*/activemq</include>
+      </includes>
+      <directoryMode>0755</directoryMode>
+      <fileMode>0755</fileMode>
+      <lineEnding>unix</lineEnding>
+	</fileSet>
+
+    <!-- Copy over example scripts that need unix line endings and also chmod to 755 -->
+    <fileSet>
+      <directory>src/release</directory>
+      <outputDirectory>/</outputDirectory>
+      <includes>
         <include>example/**/*.sh</include>
         <include>example/**/*.rb</include>
       </includes>
       <directoryMode>0755</directoryMode>
       <fileMode>0755</fileMode>
       <lineEnding>unix</lineEnding>
-    </fileSet>
+	  <!-- need to filter to ensure script files have AMQ version number included -->
+      <filtered>true</filtered>
+	</fileSet>
 
   </fileSets>
 

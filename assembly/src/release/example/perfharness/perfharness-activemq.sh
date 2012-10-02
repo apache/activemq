@@ -22,15 +22,15 @@
 # Sample Usage: 
 #   ./perfharness-activemq.sh -d dynamicQueues/FOO -tc jms.r11.PutGet -nt 6
 #
-# It assumes that the apache-activemq JAR and 
+# It assumes that the apache-activemq-${project.version}.jar and 
 # perfharness.jar files are in the current directory.  If they are not,
 # set the ACTIVEMQ_HOME and PERFHARNESS_HOME env variable to the correct location.
 #
 # You can download the perfharness.jar file from:
 # http://www.alphaworks.ibm.com/tech/perfharness
 #
-# By Default the test connects the the vm://localhost broker.  To change that, use
-# set the BROKER_URL to the broker url you want to use.
+# By Default the test connects the the vm://localhost broker.
+# To change that, use set the BROKER_URL to the broker url you want to use.
 #
 # ==================================================================
 
