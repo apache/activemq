@@ -1,0 +1,103 @@
+<?xml version='1.0' encoding='UTF-8'?>
+
+<xs:schema
+    xmlns:xs='http://www.w3.org/2001/XMLSchema'
+    xmlns:jaxb='http://java.sun.com/xml/ns/jaxb'
+    targetNamespace='http://etherx.jabber.org/streams'
+    xmlns='http://etherx.jabber.org/streams'
+    elementFormDefault='unqualified'
+    jaxb:version="2.0">
+
+    <xs:import namespace='jabber:client'
+        schemaLocation='jabber-client.xsd'/>
+
+    <xs:import namespace='jabber:server'
+        schemaLocation='jabber-server.xsd'/>
+
+    <xs:import namespace='jabber:server:dialback'
+        schemaLocation='dialback.xsd'/>
+
+    <xs:import namespace='urn:ietf:params:xml:ns:xmpp-streams'
+        schemaLocation='streamerror.xsd'/>
+
+    <xs:import namespace='http://www.w3.org/XML/1998/namespace'
+        schemaLocation='xml.xsd'/>
+
+    <xs:element name='stream'>
+        <xs:complexType>
+            <xs:sequence xmlns:client='jabber:client'
+                xmlns:server='jabber:server'
+                xmlns:db='jabber:server:dialback'>
+                <xs:element ref='features' minOccurs='0' maxOccurs='1'/>
+                <xs:any namespace='urn:ietf:params:xml:ns:xmpp-tls'
+                    minOccurs='0'
+                    maxOccurs='unbounded'>
+                    <xs:annotation>
+                        <xs:appinfo>
+                            <jaxb:property name="xmppTls"/>
+                        </xs:appinfo>
+                    </xs:annotation>
+                </xs:any>
+                <xs:any namespace='urn:ietf:params:xml:ns:xmpp-sasl'
+                    minOccurs='0'
+                    maxOccurs='unbounded'>
+                    <xs:annotation>
+                        <xs:appinfo>
+                            <jaxb:property name="xmppSasl"/>
+                        </xs:appinfo>
+                    </xs:annotation>
+                </xs:any>
+                <xs:choice minOccurs='0' maxOccurs='1'>
+                    <xs:choice minOccurs='0' maxOccurs='unbounded'>
+                        <xs:annotation>
+                            <xs:appinfo>
+                                <jaxb:property name="clientMessages"/>
+                            </xs:appinfo>
+                        </xs:annotation>
+                        <xs:element xmlns:client='jabber:client' ref='client:message'/>
+                        <xs:element xmlns:client='jabber:client' ref='client:presence'/>
+                        <xs:element xmlns:client='jabber:client' ref='client:iq'/>
+                    </xs:choice>
+                    <xs:choice minOccurs='0' maxOccurs='unbounded'>
+                        <xs:annotation>
+                            <xs:appinfo>
+                                <jaxb:property name="serverMessages"/>
+                            </xs:appinfo>
+                        </xs:annotation>
+                        <xs:element xmlns:server='jabber:server' ref='server:message'/>
+                        <xs:element xmlns:server='jabber:server' ref='server:presence'/>
+                        <xs:element xmlns:server='jabber:server' ref='server:iq'/>
+                        <xs:element xmlns:db='jabber:server:dialback' ref='db:result'/>
+                        <xs:element xmlns:db='jabber:server:dialback' ref='db:verify'/>
+                    </xs:choice>
+                </xs:choice>
+                <xs:element ref='error' minOccurs='0' maxOccurs='1'/>
+            </xs:sequence>
+            <xs:attribute name='from' type='xs:string' use='optional'/>
+            <xs:attribute name='id' type='xs:NMTOKEN' use='optional'/>
+            <xs:attribute name='to' type='xs:string' use='optional'/>
+            <xs:attribute name='version' type='xs:decimal' use='optional'/>
+            <xs:attribute ref='xml:lang' use='optional'/>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name='features'>
+        <xs:complexType>
+            <xs:choice minOccurs='0' maxOccurs='unbounded'>
+                <xs:any namespace='##other'/>
+            </xs:choice>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name='error'>
+        <xs:complexType>
+            <xs:sequence  xmlns:err='urn:ietf:params:xml:ns:xmpp-streams'>
+                <xs:group   ref='err:streamErrorGroup'/>
+                <xs:element xmlns:err='urn:ietf:params:xml:ns:xmpp-streams' ref='err:text'
+                    minOccurs='0'
+                    maxOccurs='1'/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+</xs:schema>

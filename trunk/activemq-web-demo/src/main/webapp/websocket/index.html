@@ -1,0 +1,175 @@
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one or more
+  contributor license agreements.  See the NOTICE file distributed with
+  this work for additional information regarding copyright ownership.
+  The ASF licenses this file to You under the Apache License, Version 2.0
+  (the "License"); you may not use this file except in compliance with
+  the License.  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+    <link rel="stylesheet" href="chat.css" type="text/css">
+    <style type="text/css" media="screen">
+        @import url(/admin/styles/sorttable.css);
+        @import url(/admin/styles/type-settings.css);
+        @import url(/admin/styles/site.css);
+        @import url(/admin/styles/prettify.css);
+    </style>
+    <title>Chat Example Using Stomp Over WebSocket</title>
+    <link rel="stylesheet" type="text/css" href="chat.css"></link>
+    <script type="text/javascript" src="../js/jquery-1.4.2.min.js"></script>
+    <script src='stomp.js'></script>
+    <script src='chat.js'></script>
+    <script>
+        $(document).ready(function() {
+        var supported = ("WebSocket" in window);
+        if(!supported) {
+        var msg = "Your browser does not support Web Sockets. This example will not work properly.<br>";
+        msg += "Please use a Web Browser with Web Sockets support (WebKit or Google Chrome).";
+        $("#connect").html(msg);
+        }
+        });
+    </script>
+</head>
+<body>
+
+<div class="white_box">
+    <div class="header">
+        <div class="header_l">
+            <div class="header_r">
+            </div>
+        </div>
+    </div>
+    <div class="content">
+        <div class="content_l">
+            <div class="content_r">
+
+                <div>
+
+                    <!-- Banner -->
+                    <div id="asf_logo">
+                        <div id="activemq_logo">
+                            <a style="float:left; width:280px;display:block;text-indent:-5000px;text-decoration:none;line-height:60px; margin-top:10px; margin-left:100px;"
+                               href="http://activemq.apache.org/"
+                               title="The most popular and powerful open source Message Broker">ActiveMQ</a>
+                            <a style="float:right; width:210px;display:block;text-indent:-5000px;text-decoration:none;line-height:60px; margin-top:15px; margin-right:10px;"
+                               href="http://www.apache.org/" title="The Apache Software Foundation">ASF</a>
+                        </div>
+                    </div>
+
+
+                    <div class="top_red_bar">
+                        <div id="site-breadcrumbs">
+                            <a href="../index.html" title="Home">Home</a>
+                        </div>
+                        <div id="site-quicklinks"><P>
+                            <a href="http://activemq.apache.org/support.html"
+                               title="Get help and support using Apache ActiveMQ">Support</a></p>
+                        </div>
+                    </div>
+
+                    <table border="0">
+                        <tbody>
+                        <tr>
+                            <td valign="top" width="100%" style="overflow:hidden;">
+                                <div class="body-content">
+
+<div id='connect'>
+    <form id='connect_form'>
+        <dl>
+            <dt><label for=connect_url>Server URL</label></dt>
+            <dd><input name=url id='connect_url' value='ws://localhost:61614/stomp'></dd>
+            <dt><label for=connect_login>Login</label></dt>
+            <dd><input id='connect_login' placeholder="User Login" value="guest"></dd>
+            <dt><label for=connect_passcode>Password</label></dt>
+            <dd><input id='connect_passcode' type=password placeholder="User Password" value="guest"></dd>
+            <dt><label for=destination>Destination</label></dt>
+            <dd><input id='destination' placeholder="Destination" value="/queue/test"></dd>
+            <dt>&nbsp;</dt>
+            <dd><input type=submit id='connect_submit' value="Connect"></dd>
+        </dl>
+    </form>
+
+    <p><b>Make sure you have enabled <a href="http://activemq.apache.org/websockets.html">websockets transport</a> before running this demo</b></p>
+    <p>This is adapted <a href="https://github.com/jmesnil/stomp-websocket">stomp-websocket</a> library demo</p>
+    <p>Use the form above to connect to the Stomp server and subscribe to the destination.</p>
+    <p>Once connected, you can send messages to the destination with the text field at the bottom of this page</p>
+
+
+</div>
+<div id="disconnect">
+    <form id='disconnect_form'>
+        <input type=submit id='disconnect_submit' value="Disconnect">
+    </form>
+</div>
+<div id="messages">
+</div>
+
+<form id='send_form'>
+    <input id='send_form_input' placeholder="Type your message here" disabled />
+</form>
+
+<pre id="debug"></pre>
+
+                                </div>
+                            </td>
+                            <td valign="top">
+
+                                <div class="navigation">
+                                    <div class="navigation_top">
+                                        <div class="navigation_bottom">
+                                            <H3>Useful Links</H3>
+
+                                            <ul class="alternate" type="square">
+                                                <li><a href="http://activemq.apache.org/"
+                                                       title="The most popular and powerful open source Message Broker">Documentation</a></li>
+                                                <li><a href="http://activemq.apache.org/faq.html">FAQ</a></li>
+                                                <li><a href="http://activemq.apache.org/download.html">Downloads</a>
+                                                </li>
+                                                <li><a href="http://activemq.apache.org/discussion-forums.html">Forums</a>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+
+
+                    <div class="bottom_red_bar"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="black_box">
+        <div class="footer">
+            <div class="footer_l">
+                <div class="footer_r">
+                    <div>
+                        Copyright 2005-2012 The Apache Software Foundation.
+
+                        (<a href="?printable=true">printable version</a>)
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="design_attribution"><a href="http://hiramchirino.com/">Graphic Design By Hiram</a></div>
+
+</body>
+</html>
+

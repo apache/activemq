@@ -1,0 +1,312 @@
+## ---------------------------------------------------------------------------
+## Licensed to the Apache Software Foundation (ASF) under one or more
+## contributor license agreements.  See the NOTICE file distributed with
+## this work for additional information regarding copyright ownership.
+## The ASF licenses this file to You under the Apache License, Version 2.0
+## (the "License"); you may not use this file except in compliance with
+## the License.  You may obtain a copy of the License at
+##
+## http://www.apache.org/licenses/LICENSE-2.0
+##
+## Unless required by applicable law or agreed to in writing, software
+## distributed under the License is distributed on an "AS IS" BASIS,
+## WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+## See the License for the specific language governing permissions and
+## limitations under the License.
+## ---------------------------------------------------------------------------
+
+
+##########################
+## Define basic objects ##
+##########################
+
+dn: dc=apache,dc=org
+objectClass: dcObject
+objectClass: organization
+dc: apache
+o: Apache
+
+dn: dc=activemq,dc=apache,dc=org
+objectClass: dcObject
+objectClass: container
+objectClass: top
+cn: activemq
+dc: activemq
+
+dn: ou=ActiveMQ,dc=activemq,dc=apache,dc=org
+objectClass: organizationalUnit
+objectClass: top
+ou: ActiveMQ
+
+dn: ou=Services,dc=activemq,dc=apache,dc=org
+ou: Services
+objectClass: organizationalUnit
+objectClass: top
+
+dn: cn=mqbroker,ou=Services,dc=activemq,dc=apache,dc=org
+cn: mqbroker
+objectClass: organizationalRole
+objectClass: top
+objectClass: simpleSecurityObject
+userPassword: {SSHA}YvMAkkd66cDecNoejo8jnw5uUUBziyl0
+description: Bind user for MQ broker
+
+
+###################
+## Define groups ##
+###################
+
+
+dn: ou=Group,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
+objectClass: organizationalUnit
+objectClass: top
+ou: Group
+
+dn: cn=admins,ou=Group,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
+cn: admins
+member: uid=admin
+objectClass: groupOfNames
+objectClass: top
+
+dn: cn=users,ou=Group,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
+cn: users
+member: uid=jdoe
+objectClass: groupOfNames
+objectClass: top
+
+
+##################
+## Define users ##
+##################
+
+
+dn: ou=User,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
+objectClass: organizationalUnit
+objectClass: top
+ou: User
+
+dn: uid=admin,ou=User,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
+uid: admin
+userPassword: {SSHA}YvMAkkd66cDecNoejo8jnw5uUUBziyl0
+objectclass: uidObject
+objectclass: organizationalPerson
+objectclass: person
+objectclass: top
+cn: Admin
+sn: Admin
+
+
+dn: uid=jdoe,ou=User,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
+uid: jdoe
+userPassword: {SSHA}YvMAkkd66cDecNoejo8jnw5uUUBziyl0
+objectclass: uidObject
+objectclass: organizationalPerson
+objectclass: person
+objectclass: top
+cn: Jane Doe
+sn: Doe
+
+
+#########################
+## Define destinations ##
+#########################
+
+dn: ou=Destination,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
+objectClass: organizationalUnit
+objectClass: top
+ou: Destination
+
+dn: ou=Topic,ou=Destination,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
+objectClass: organizationalUnit
+objectClass: top
+ou: Topic
+
+dn: ou=Queue,ou=Destination,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
+objectClass: organizationalUnit
+objectClass: top
+ou: Queue
+
+## TEST.FOO
+
+dn: cn=TEST.FOO,ou=Queue,ou=Destination,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
+cn: TEST.FOO
+description: A queue
+objectClass: applicationProcess
+objectClass: top
+
+dn: cn=admin,cn=TEST.FOO,ou=Queue,ou=Destination,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
+cn: admin
+description: Admin privilege group, members are roles
+member: cn=admins,ou=Group,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
+member: cn=users,ou=Group,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
+objectClass: groupOfNames
+objectClass: top
+
+dn: cn=read,cn=TEST.FOO,ou=Queue,ou=Destination,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
+cn: read
+member: cn=users,ou=Group,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
+member: cn=admins,ou=Group,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
+objectClass: groupOfNames
+objectClass: top
+
+dn: cn=write,cn=TEST.FOO,ou=Queue,ou=Destination,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
+cn: write
+objectClass: groupOfNames
+objectClass: top
+member: cn=users,ou=Group,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
+member: cn=admins,ou=Group,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
+
+## TEST.FOOBAR
+
+dn: cn=TEST.FOOBAR,ou=Queue,ou=Destination,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
+cn: TEST.BAR
+description: A queue
+objectClass: applicationProcess
+objectClass: top
+
+dn: cn=admin,cn=TEST.FOOBAR,ou=Queue,ou=Destination,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
+cn: admin
+description: Admin privilege group, members are roles
+member: cn=admins,ou=Group,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
+member: cn=users,ou=Group,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
+objectClass: groupOfNames
+objectClass: top
+
+dn: cn=read,cn=TEST.FOOBAR,ou=Queue,ou=Destination,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
+cn: read
+member: cn=users,ou=Group,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
+member: cn=admins,ou=Group,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
+member: uid=jdoe,ou=User,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
+member: cn=notthere,ou=Group,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
+objectClass: groupOfNames
+objectClass: top
+
+dn: cn=write,cn=TEST.FOOBAR,ou=Queue,ou=Destination,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
+cn: write
+objectClass: groupOfNames
+objectClass: top
+member: cn=users,ou=Group,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
+member: cn=admins,ou=Group,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
+member: uid=jdoe,ou=User,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
+
+## FOO.>
+
+dn: cn=FOO.$,ou=Queue,ou=Destination,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
+cn: FOO.$
+description: A queue
+objectClass: applicationProcess
+objectClass: top
+
+dn: cn=admin,cn=FOO.$,ou=Queue,ou=Destination,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
+cn: admin
+description: Admin privilege group, members are roles
+member: cn=admins,ou=Group,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
+member: cn=users,ou=Group,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
+objectClass: groupOfNames
+objectClass: top
+
+dn: cn=read,cn=FOO.$,ou=Queue,ou=Destination,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
+cn: read
+member: cn=users,ou=Group,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
+member: cn=admins,ou=Group,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
+objectClass: groupOfNames
+objectClass: top
+
+dn: cn=write,cn=FOO.$,ou=Queue,ou=Destination,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
+cn: write
+objectClass: groupOfNames
+objectClass: top
+member: cn=users,ou=Group,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
+member: cn=admins,ou=Group,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
+
+## BAR.*
+
+dn: cn=BAR.*,ou=Queue,ou=Destination,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
+cn: BAR.*
+description: A queue
+objectClass: applicationProcess
+objectClass: top
+
+dn: cn=admin,cn=BAR.*,ou=Queue,ou=Destination,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
+cn: admin
+description: Admin privilege group, members are roles
+member: cn=admins,ou=Group,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
+member: cn=users,ou=Group,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
+objectClass: groupOfNames
+objectClass: top
+
+dn: cn=read,cn=BAR.*,ou=Queue,ou=Destination,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
+cn: read
+member: cn=users,ou=Group,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
+member: cn=admins,ou=Group,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
+objectClass: groupOfNames
+objectClass: top
+
+dn: cn=write,cn=BAR.*,ou=Queue,ou=Destination,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
+cn: write
+objectClass: groupOfNames
+objectClass: top
+member: cn=users,ou=Group,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
+member: cn=admins,ou=Group,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
+
+#######################
+## Define advisories ##
+#######################
+
+dn: cn=ActiveMQ.Advisory.$,ou=Topic,ou=Destination,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
+cn: ActiveMQ.Advisory.$
+objectClass: applicationProcess
+objectClass: top
+description: Advisory topics
+
+dn: cn=read,cn=ActiveMQ.Advisory.$,ou=Topic,ou=Destination,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
+cn: read
+member: cn=admins,ou=Group,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
+member: cn=users,ou=Group,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
+objectClass: groupOfNames
+objectClass: top
+
+dn: cn=write,cn=ActiveMQ.Advisory.$,ou=Topic,ou=Destination,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
+cn: write
+member: cn=admins,ou=Group,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
+member: cn=users,ou=Group,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
+objectClass: groupOfNames
+objectClass: top
+
+dn: cn=admin,cn=ActiveMQ.Advisory.$,ou=Topic,ou=Destination,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
+cn: admin
+member: cn=admins,ou=Group,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
+member: cn=users,ou=Group,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
+objectClass: groupOfNames
+objectClass: top
+
+######################
+## Define temporary ##
+######################
+
+dn: ou=Temp,ou=Destination,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
+objectClass: organizationalUnit
+objectClass: top
+ou: Temp
+
+dn: cn=read,ou=Temp,ou=Destination,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
+cn: read
+member: cn=admins,ou=Group,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
+member: cn=users,ou=Group,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
+objectClass: groupOfNames
+objectClass: top
+
+dn: cn=write,ou=Temp,ou=Destination,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
+cn: write
+member: cn=admins,ou=Group,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
+member: cn=users,ou=Group,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
+objectClass: groupOfNames
+objectClass: top
+
+dn: cn=admin,ou=Temp,ou=Destination,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
+cn: admin
+member: cn=admins,ou=Group,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
+member: cn=users,ou=Group,ou=ActiveMQ,dc=activemq,dc=apache,dc=org
+objectClass: groupOfNames
+objectClass: top
+
