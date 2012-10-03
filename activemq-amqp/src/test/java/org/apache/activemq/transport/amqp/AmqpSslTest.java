@@ -28,7 +28,7 @@ import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 
 @Ignore("hangs atm, needs investigation")
-public class AmqpSslTest extends AmqpTest {
+public class AmqpSslTest extends AmqpTestSupport {
     public void startBroker() throws Exception {
         System.setProperty("javax.net.ssl.trustStore", "src/test/resources/client.keystore");
         System.setProperty("javax.net.ssl.trustStorePassword", "password");

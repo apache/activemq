@@ -27,7 +27,7 @@ import org.junit.Test;
 /**
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
  */
-public class SwiftMQClientTest extends AmqpTest {
+public class SwiftMQClientTest extends AmqpTestSupport {
 
     @Test
     public void testSendReceive() throws Exception {
@@ -64,6 +64,7 @@ public class SwiftMQClientTest extends AmqpTest {
                 p.close();
                 session.close();
             }
+
 //            {
 //                Session session = connection.createSession(10, 10);
 //                Consumer c = session.createConsumer(queue, 100, qos, true, null);

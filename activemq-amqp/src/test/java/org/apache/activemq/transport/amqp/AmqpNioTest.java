@@ -18,7 +18,7 @@ package org.apache.activemq.transport.amqp;
 
 import org.apache.activemq.broker.BrokerService;
 
-public class AmqpNioTest extends AmqpTest {
+public class AmqpNioTest extends AmqpTestSupport {
     protected void addAMQPConnector(BrokerService brokerService) throws Exception {
         brokerService.addConnector("amqp+nio://localhost:1883?maxInactivityDuration=-1");
     }

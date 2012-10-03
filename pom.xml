@@ -1373,6 +1373,12 @@
 
   <profiles>
     <profile>
+      <id>unstable</id>
+      <modules>
+        <module>activemq-amqp</module>
+      </modules>
+    </profile>
+    <profile>
       <id>apache-release</id>
       <activation>
         <property>

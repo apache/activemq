@@ -14,11 +14,38 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.activemq.transport.amqp;
+package org.apache.activemq.transport.amqp.transform;
+
+import javax.jms.BytesMessage;
+import javax.jms.Message;
 
 /**
 * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
 */
 public class AMQPNativeInboundTransformer extends InboundTransformer {
 
+
+    public AMQPNativeInboundTransformer(JMSVendor vendor) {
+        super(vendor);
+    }
+
+    @Override
+    public Message transform(long messageFormat, byte [] amqpMessage, int offset, int len) throws Exception {
+
+        BytesMessage rc = vendor.createBytesMessage();
+        rc.writeBytes(amqpMessage, offset, len);
+
+        rc.setJMSDeliveryMode(defaultDeliveryMode);
+        rc.setJMSPriority(defaultPriority);
+
+        final long now = System.currentTimeMillis();
+        rc.setJMSTimestamp(now);
+        if( defaultTtl > 0 ) {
+            rc.setJMSExpiration(now + defaultTtl);
+        }
+
+        rc.setLongProperty(prefixVendor + "MESSAGE_FORMAT", messageFormat);
+        rc.setBooleanProperty(prefixVendor + "NATIVE", false);
+        return rc;
+    }
 }

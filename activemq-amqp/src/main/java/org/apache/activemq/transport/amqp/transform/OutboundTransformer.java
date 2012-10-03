@@ -14,16 +14,39 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.activemq.transport.amqp;
+package org.apache.activemq.transport.amqp.transform;
+
+import org.apache.qpid.proton.engine.Delivery;
+
+import javax.jms.Message;
 
 /**
 * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
 */
-public class InboundTransformer {
+public abstract class OutboundTransformer {
 
+    JMSVendor vendor;
     String prefixVendor = "JMS_AMQP_";
-    int defaultDeliveryMode = javax.jms.Message.DEFAULT_DELIVERY_MODE;
-    int defaultPriority = javax.jms.Message.DEFAULT_PRIORITY;
-    long defaultTtl = javax.jms.Message.DEFAULT_TIME_TO_LIVE;
 
+    public OutboundTransformer(JMSVendor vendor) {
+        this.vendor = vendor;
+    }
+
+    public abstract byte[] transform(Message jms) throws Exception;
+
+    public String getPrefixVendor() {
+        return prefixVendor;
+    }
+
+    public void setPrefixVendor(String prefixVendor) {
+        this.prefixVendor = prefixVendor;
+    }
+
+    public JMSVendor getVendor() {
+        return vendor;
+    }
+
+    public void setVendor(JMSVendor vendor) {
+        this.vendor = vendor;
+    }
 }
