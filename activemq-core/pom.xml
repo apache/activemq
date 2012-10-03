@@ -475,9 +475,6 @@
             -->
           </systemProperties>
 
-          <includes>
-            <include>**/*Test.*</include>
-          </includes>
           <excludes>
             <exclude>**/perf/SimpleDurableTopicTest.*</exclude>
             <!-- These tests run too slow to execute as part of the unit tests -->
@@ -1111,7 +1108,27 @@
         <plugins>
           <plugin>
             <artifactId>maven-surefire-plugin</artifactId>
-            <configuration>
+            <!-- not ideal to have to duplicate the config but the excludes don't override otherwise -->
+            <executions>
+             <execution>
+              <id>default-test</id>
+              <phase>test</phase>
+              <goals>
+               <goal>test</goal>
+              </goals>
+              <configuration>
+                <forkMode>pertest</forkMode>
+                <childDelegation>false</childDelegation>
+                <useFile>true</useFile>
+                <argLine>${surefire.argLine}</argLine>
+                <useManifestOnlyJar>false</useManifestOnlyJar>
+                <runOrder>alphabetical</runOrder>
+                <systemProperties>
+                  <property>
+                   <name>org.apache.activemq.default.directory.prefix</name>
+                   <value>target/</value>
+                   </property>
+                </systemProperties>
               <excludes>
                 <exclude>**/perf/SimpleDurableTopicTest.*</exclude>
                 <!-- These tests run too slow to execute as part of the unit tests -->
@@ -1185,6 +1202,8 @@
                 <exclude>org/apache/activemq/broker/ft/DbRestartJDBCQueueTest.*</exclude>
             </excludes>
             </configuration>
+            </execution>
+           </executions>
           </plugin>
         </plugins>
       </build>
