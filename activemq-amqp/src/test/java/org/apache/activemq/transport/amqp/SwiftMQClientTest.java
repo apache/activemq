@@ -23,6 +23,7 @@ import com.swiftmq.amqp.v100.messaging.AMQPMessage;
 import com.swiftmq.amqp.v100.types.AMQPString;
 import com.swiftmq.amqp.v100.types.AMQPType;
 import org.junit.Test;
+import static org.junit.Assert.*;
 
 /**
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
@@ -50,39 +51,38 @@ public class SwiftMQClientTest extends AmqpTestSupport {
             });
             connection.connect();
             {
-                String data = String.format("%010d", 0);
 
                 Session session = connection.createSession(10, 10);
                 Producer p = session.createProducer(queue, qos);
                 for (int i = 0; i < nMsgs; i++) {
                     AMQPMessage msg = new AMQPMessage();
-                    String s = "Message #" + (i + 1);
-                    System.out.println("Sending " + s);
-                    msg.setAmqpValue(new AmqpValue(new AMQPString(s + ", data: " + data)));
+                    System.out.println("Sending " + i);
+                    msg.setAmqpValue(new AmqpValue(new AMQPString(String.format("%010d", i))));
                     p.send(msg);
                 }
                 p.close();
                 session.close();
             }
 
-//            {
-//                Session session = connection.createSession(10, 10);
-//                Consumer c = session.createConsumer(queue, 100, qos, true, null);
-//
-//                // Receive messages non-transacted
-//                for (int i = 0; i < nMsgs; i++) {
-//                    AMQPMessage msg = c.receive();
-//                    final AMQPType value = msg.getAmqpValue().getValue();
-//                    if (value instanceof AMQPString) {
-//                        AMQPString s = (AMQPString) value;
-//                        System.out.println("Received: " + s.getValue());
-//                    }
-//                    if (!msg.isSettled())
-//                        msg.accept();
-//                }
-//                c.close();
-//                session.close();
-//            }
+            {
+                Session session = connection.createSession(10, 10);
+                Consumer c = session.createConsumer(queue, 100, qos, true, null);
+
+                // Receive messages non-transacted
+                for (int i = 0; i < nMsgs; i++) {
+                    AMQPMessage msg = c.receive();
+                    final AMQPType value = msg.getAmqpValue().getValue();
+                    if (value instanceof AMQPString) {
+                        String s = ((AMQPString) value).getValue();
+                        assertEquals(String.format("%010d", i), s);
+                        System.out.println("Received: " + i);
+                    }
+                    if (!msg.isSettled())
+                        msg.accept();
+                }
+                c.close();
+                session.close();
+            }
             connection.close();
         } catch (Exception e) {
             e.printStackTrace();

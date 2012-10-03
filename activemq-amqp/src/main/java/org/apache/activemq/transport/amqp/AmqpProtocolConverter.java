@@ -86,7 +86,7 @@ class AmqpProtocolConverter {
                 int count = protonTransport.output(data, 0, size);
                 if (count > 0) {
                     final Buffer buffer = new Buffer(data, 0, count);
-                    System.out.println("writing: " + buffer.toString().substring(5).replaceAll("(..)", "$1 "));
+//                    System.out.println("writing: " + buffer.toString().substring(5).replaceAll("(..)", "$1 "));
                     amqpTransport.sendToAmqp(buffer);
                 } else {
                     done = true;
@@ -116,7 +116,7 @@ class AmqpProtocolConverter {
 
 
         try {
-            System.out.println("reading: " + frame.toString().substring(5).replaceAll("(..)", "$1 "));
+//            System.out.println("reading: " + frame.toString().substring(5).replaceAll("(..)", "$1 "));
             protonTransport.input(frame.data, frame.offset, frame.length);
         } catch (Throwable e) {
             handleException(new AmqpProtocolException("Could not decode AMQP frame: " + frame, true, e));

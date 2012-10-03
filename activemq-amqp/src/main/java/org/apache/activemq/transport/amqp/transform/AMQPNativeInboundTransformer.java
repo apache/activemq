@@ -45,7 +45,7 @@ public class AMQPNativeInboundTransformer extends InboundTransformer {
         }
 
         rc.setLongProperty(prefixVendor + "MESSAGE_FORMAT", messageFormat);
-        rc.setBooleanProperty(prefixVendor + "NATIVE", false);
+        rc.setBooleanProperty(prefixVendor + "NATIVE", true);
         return rc;
     }
 }
