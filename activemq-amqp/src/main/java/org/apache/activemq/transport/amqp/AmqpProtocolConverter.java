@@ -289,7 +289,7 @@ class AmqpProtocolConverter {
         }
     }
 
-    InboundTransformer inboundTransformer = new AMQPNativeInboundTransformer(ActiveMQJMSVendor.INSTANCE);
+    InboundTransformer inboundTransformer = new JMSMappingInboundTransformer(ActiveMQJMSVendor.INSTANCE);
 
     class ProducerContext extends AmqpDeliveryListener {
         private final ProducerId producerId;
@@ -322,7 +322,8 @@ class AmqpProtocolConverter {
             }
 
             final Buffer buffer = current.toBuffer();
-            final ActiveMQMessage message = (ActiveMQMessage) inboundTransformer.transform(delivery.getMessageFormat(), buffer.data, buffer.offset, buffer.length);
+            EncodedMessage em = new EncodedMessage(delivery.getMessageFormat(), buffer.data, buffer.offset, buffer.length);
+            final ActiveMQMessage message = (ActiveMQMessage) inboundTransformer.transform(em);
             current = null;
 
             if( message.getDestination()==null ) {
@@ -365,7 +366,7 @@ class AmqpProtocolConverter {
 
     }
 
-    OutboundTransformer outboundTransformer = new AMQPNativeOutboundTransformer(ActiveMQJMSVendor.INSTANCE);
+    OutboundTransformer outboundTransformer = new AutoOutboundTransformer(ActiveMQJMSVendor.INSTANCE);
 
     class ConsumerContext extends AmqpDeliveryListener {
         private final ConsumerId consumerId;
@@ -432,17 +433,19 @@ class AmqpProtocolConverter {
                 }
 
                 final MessageDispatch md = outbound.removeFirst();
-                final byte[] tag = nextTag();
-                final Delivery delivery = sender.delivery(tag, 0, tag.length);
-                delivery.setContext(md);
-
                 try {
                     final ActiveMQMessage jms = (ActiveMQMessage) md.getMessage();
-                    final byte[] amqpMessage = outboundTransformer.transform(jms);
-                    if( amqpMessage!=null && amqpMessage.length > 0 ) {
-                        current = new Buffer(amqpMessage);
+                    final EncodedMessage amqp = outboundTransformer.transform(jms);
+                    if( amqp!=null && amqp.getLength() > 0 ) {
+
+                        current = new Buffer(amqp.getArray(), amqp.getArrayOffset(), amqp.getLength());
+                        final byte[] tag = nextTag();
+                        final Delivery delivery = sender.delivery(tag, 0, tag.length);
+                        delivery.setContext(md);
+
                     } else {
                         // TODO: message could not be generated what now?
+
                     }
                 } catch (Exception e) {
                     e.printStackTrace();

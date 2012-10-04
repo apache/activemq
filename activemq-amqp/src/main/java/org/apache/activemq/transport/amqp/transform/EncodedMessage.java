@@ -16,37 +16,21 @@
  */
 package org.apache.activemq.transport.amqp.transform;
 
-import org.apache.qpid.proton.engine.Delivery;
-
-import javax.jms.Message;
+import org.apache.qpid.proton.type.Binary;
 
 /**
-* @author <a href="http://hiramchirino.com">Hiram Chirino</a>
-*/
-public abstract class OutboundTransformer {
+ * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
+ */
+public class EncodedMessage extends Binary {
 
-    JMSVendor vendor;
-    String prefixVendor = "JMS_AMQP_";
+    final long messageFormat;
 
-    public OutboundTransformer(JMSVendor vendor) {
-        this.vendor = vendor;
+    public EncodedMessage(long messageFormat, byte[] data, int offset, int length) {
+        super(data, offset, length);
+        this.messageFormat = messageFormat;
     }
 
-    public abstract EncodedMessage transform(Message jms) throws Exception;
-
-    public String getPrefixVendor() {
-        return prefixVendor;
-    }
-
-    public void setPrefixVendor(String prefixVendor) {
-        this.prefixVendor = prefixVendor;
-    }
-
-    public JMSVendor getVendor() {
-        return vendor;
-    }
-
-    public void setVendor(JMSVendor vendor) {
-        this.vendor = vendor;
+    public long getMessageFormat() {
+        return messageFormat;
     }
 }

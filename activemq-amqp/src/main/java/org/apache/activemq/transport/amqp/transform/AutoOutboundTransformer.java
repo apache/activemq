@@ -16,37 +16,33 @@
  */
 package org.apache.activemq.transport.amqp.transform;
 
-import org.apache.qpid.proton.engine.Delivery;
-
+import javax.jms.BytesMessage;
+import javax.jms.JMSException;
 import javax.jms.Message;
+import javax.jms.MessageFormatException;
 
 /**
 * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
 */
-public abstract class OutboundTransformer {
+public class AutoOutboundTransformer extends JMSMappingOutboundTransformer {
 
-    JMSVendor vendor;
-    String prefixVendor = "JMS_AMQP_";
-
-    public OutboundTransformer(JMSVendor vendor) {
-        this.vendor = vendor;
+    public AutoOutboundTransformer(JMSVendor vendor) {
+        super(vendor);
     }
 
-    public abstract EncodedMessage transform(Message jms) throws Exception;
-
-    public String getPrefixVendor() {
-        return prefixVendor;
+    @Override
+    public EncodedMessage transform(Message msg) throws Exception {
+        if( msg == null )
+            return null;
+        if( msg.getBooleanProperty(prefixVendor + "NATIVE") ) {
+            if( msg instanceof BytesMessage ) {
+                return AMQPNativeOutboundTransformer.transform(this, (BytesMessage)msg);
+            } else {
+                return null;
+            }
+        } else {
+            return JMSMappingOutboundTransformer.transform(this, msg);
+        }
     }
 
-    public void setPrefixVendor(String prefixVendor) {
-        this.prefixVendor = prefixVendor;
-    }
-
-    public JMSVendor getVendor() {
-        return vendor;
-    }
-
-    public void setVendor(JMSVendor vendor) {
-        this.vendor = vendor;
-    }
 }

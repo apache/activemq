@@ -64,4 +64,14 @@ public class ActiveMQJMSVendor extends JMSVendor {
     public void setJMSXGroupSequence(Message msg, int value) {
         ((ActiveMQMessage)msg).setGroupSequence(value);
     }
+
+    @Override
+    public void setJMSXDeliveryCount(Message msg, long value) {
+        ((ActiveMQMessage)msg).setRedeliveryCounter((int) value);
+    }
+
+    @Override
+    public String toAddress(Destination dest) {
+        return ((ActiveMQDestination)dest).getQualifiedName();
+    }
 }

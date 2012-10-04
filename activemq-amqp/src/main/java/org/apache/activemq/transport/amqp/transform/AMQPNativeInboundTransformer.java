@@ -30,10 +30,10 @@ public class AMQPNativeInboundTransformer extends InboundTransformer {
     }
 
     @Override
-    public Message transform(long messageFormat, byte [] amqpMessage, int offset, int len) throws Exception {
+    public Message transform(EncodedMessage amqpMessage) throws Exception {
 
         BytesMessage rc = vendor.createBytesMessage();
-        rc.writeBytes(amqpMessage, offset, len);
+        rc.writeBytes(amqpMessage.getArray(), amqpMessage.getArrayOffset(), amqpMessage.getLength());
 
         rc.setJMSDeliveryMode(defaultDeliveryMode);
         rc.setJMSPriority(defaultPriority);
@@ -44,7 +44,7 @@ public class AMQPNativeInboundTransformer extends InboundTransformer {
             rc.setJMSExpiration(now + defaultTtl);
         }
 
-        rc.setLongProperty(prefixVendor + "MESSAGE_FORMAT", messageFormat);
+        rc.setLongProperty(prefixVendor + "MESSAGE_FORMAT", amqpMessage.getMessageFormat());
         rc.setBooleanProperty(prefixVendor + "NATIVE", true);
         return rc;
     }

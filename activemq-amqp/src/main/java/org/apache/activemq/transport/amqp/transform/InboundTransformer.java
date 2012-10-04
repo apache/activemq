@@ -36,7 +36,7 @@ public abstract class InboundTransformer {
         this.vendor = vendor;
     }
 
-    abstract public Message transform(long messageFormat, byte [] data, int offset, int len) throws Exception;
+    abstract public Message transform(EncodedMessage amqpMessage) throws Exception;
 
     public int getDefaultDeliveryMode() {
         return defaultDeliveryMode;

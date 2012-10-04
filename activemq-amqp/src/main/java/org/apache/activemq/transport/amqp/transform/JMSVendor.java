@@ -19,11 +19,16 @@ abstract public class JMSVendor {
 
     public abstract MapMessage createMapMessage();
 
-    public abstract void setJMSXUserID(Message jms, String value);
+    public abstract void setJMSXUserID(Message msg, String value);
 
     public abstract Destination createDestination(String name);
 
-    public abstract void setJMSXGroupID(Message jms, String groupId);
+    public abstract void setJMSXGroupID(Message msg, String groupId);
 
-    public abstract void setJMSXGroupSequence(Message jms, int i);
+    public abstract void setJMSXGroupSequence(Message msg, int i);
+
+    public abstract void setJMSXDeliveryCount(Message rc, long l);
+
+    public abstract String toAddress(Destination msgDestination);
+
 }

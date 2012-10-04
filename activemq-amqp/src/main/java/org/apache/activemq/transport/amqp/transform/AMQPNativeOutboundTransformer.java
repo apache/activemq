@@ -17,6 +17,7 @@
 package org.apache.activemq.transport.amqp.transform;
 
 import javax.jms.BytesMessage;
+import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageFormatException;
 
@@ -30,30 +31,31 @@ public class AMQPNativeOutboundTransformer extends OutboundTransformer {
     }
 
     @Override
-    public byte[] transform(Message jms) throws Exception {
-        if( jms == null )
+    public EncodedMessage transform(Message msg) throws Exception {
+        if( msg == null )
             return null;
-        if( !(jms instanceof BytesMessage) )
+        if( !(msg instanceof BytesMessage) )
             return null;
-
-        long messageFormat;
         try {
-            if( !jms.getBooleanProperty(prefixVendor + "NATIVE") ) {
+            if( !msg.getBooleanProperty(prefixVendor + "NATIVE") ) {
                 return null;
             }
-            messageFormat = jms.getLongProperty(prefixVendor + "MESSAGE_FORMAT");
         } catch (MessageFormatException e) {
             return null;
         }
-
-        // TODO: Proton should probably expose a way to set the msg format
-        // delivery.settMessageFormat(messageFormat);
-
-        BytesMessage bytesMessage = (BytesMessage) jms;
-        byte data[] = new byte[(int) bytesMessage.getBodyLength()];
-        bytesMessage.readBytes(data);
-        return data;
+        return transform(this, (BytesMessage) msg);
     }
 
+    static EncodedMessage transform(OutboundTransformer options, BytesMessage msg) throws JMSException {
+        long messageFormat;
+        try {
+            messageFormat = msg.getLongProperty(options.prefixVendor + "MESSAGE_FORMAT");
+        } catch (MessageFormatException e) {
+            return null;
+        }
+        byte data[] = new byte[(int) msg.getBodyLength()];
+        msg.readBytes(data);
+        return new EncodedMessage(messageFormat, data, 0, data.length);
+    }
 
 }

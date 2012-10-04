@@ -38,11 +38,13 @@ public class JMSMappingInboundTransformer extends InboundTransformer {
     }
 
     @Override
-    public Message transform(long messageFormat, byte [] amqpMessage, int offset, int len) throws Exception {
+    public Message transform(EncodedMessage amqpMessage) throws Exception {
         org.apache.qpid.proton.message.Message amqp = new org.apache.qpid.proton.message.Message();
 
+        int offset = amqpMessage.getArrayOffset();
+        int len = amqpMessage.getLength();
         while( len > 0 ) {
-            final int decoded = amqp.decode(amqpMessage, offset, len);
+            final int decoded = amqp.decode(amqpMessage.getArray(), offset, len);
             assert decoded > 0: "Make progress decoding the message";
             offset += decoded;
             len -= decoded;
@@ -110,7 +112,7 @@ public class JMSMappingInboundTransformer extends InboundTransformer {
                 rc.setBooleanProperty(prefixVendor + "FirstAcquirer", header.getFirstAcquirer());
             }
             if( header.getDeliveryCount()!=null ) {
-                rc.setLongProperty("JMSXDeliveryCount", header.getDeliveryCount().longValue());
+                vendor.setJMSXDeliveryCount(rc, header.getDeliveryCount().longValue());
             }
         }
 
@@ -187,7 +189,7 @@ public class JMSMappingInboundTransformer extends InboundTransformer {
             }
         }
 
-        rc.setLongProperty(prefixVendor + "MESSAGE_FORMAT", messageFormat);
+        rc.setLongProperty(prefixVendor + "MESSAGE_FORMAT", amqpMessage.getMessageFormat());
         rc.setBooleanProperty(prefixVendor + "NATIVE", false);
         return rc;
     }
