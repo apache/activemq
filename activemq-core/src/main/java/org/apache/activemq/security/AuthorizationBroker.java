@@ -45,25 +45,21 @@ public class AuthorizationBroker extends BrokerFilter implements SecurityAdminMB
         super(next);
         this.authorizationMap = authorizationMap;
     }
-           
-    @Override
-    public void addDestinationInfo(ConnectionContext context, DestinationInfo info) throws Exception {
-        addDestination(context, info.getDestination(),true);
-        super.addDestinationInfo(context, info);
-    }
 
-    @Override
-    public Destination addDestination(ConnectionContext context, ActiveMQDestination destination,boolean create) throws Exception {
+    protected SecurityContext checkSecurityContext(ConnectionContext context) throws SecurityException {
         final SecurityContext securityContext = context.getSecurityContext();
         if (securityContext == null) {
             throw new SecurityException("User is not authenticated.");
         }
-        
+        return securityContext;
+    }
+
+    protected boolean checkDestinationAdmin(SecurityContext securityContext, ActiveMQDestination destination) {
         Destination existing = this.getDestinationMap().get(destination);
         if (existing != null) {
-        	return super.addDestination(context, destination,create);
+            return true;
         }
-        
+
         if (!securityContext.isBrokerContext()) {
             Set<?> allowedACLs = null;
             if (!destination.isTemporary()) {
@@ -73,9 +69,29 @@ public class AuthorizationBroker extends BrokerFilter implements SecurityAdminMB
             }
 
             if (allowedACLs != null && !securityContext.isInOneOf(allowedACLs)) {
-                throw new SecurityException("User " + securityContext.getUserName() + " is not authorized to create: " + destination);
+                return false;
             }
+        }
+        return true;
+    }
+           
+    @Override
+    public void addDestinationInfo(ConnectionContext context, DestinationInfo info) throws Exception {
+        final SecurityContext securityContext = checkSecurityContext(context);
 
+        if (!checkDestinationAdmin(securityContext, info.getDestination())) {
+            throw new SecurityException("User " + securityContext.getUserName() + " is not authorized to create: " + info.getDestination());
+        }
+
+        super.addDestinationInfo(context, info);
+    }
+
+    @Override
+    public Destination addDestination(ConnectionContext context, ActiveMQDestination destination,boolean create) throws Exception {
+        final SecurityContext securityContext = checkSecurityContext(context);
+        
+        if (!checkDestinationAdmin(securityContext, destination)) {
+            throw new SecurityException("User " + securityContext.getUserName() + " is not authorized to create: " + destination);
         }
 
         return super.addDestination(context, destination,create);
@@ -83,31 +99,30 @@ public class AuthorizationBroker extends BrokerFilter implements SecurityAdminMB
 
     @Override
     public void removeDestination(ConnectionContext context, ActiveMQDestination destination, long timeout) throws Exception {
+        final SecurityContext securityContext = checkSecurityContext(context);
 
-        final SecurityContext securityContext = context.getSecurityContext();
-        if (securityContext == null) {
-            throw new SecurityException("User is not authenticated.");
-        }
-        Set<?> allowedACLs = null;
-        if (!destination.isTemporary()) {
-            allowedACLs = authorizationMap.getAdminACLs(destination);
-        } else {
-            allowedACLs = authorizationMap.getTempDestinationAdminACLs();
-        }
-
-        if (!securityContext.isBrokerContext() && allowedACLs != null && !securityContext.isInOneOf(allowedACLs)) {
+        if (!checkDestinationAdmin(securityContext, destination)) {
             throw new SecurityException("User " + securityContext.getUserName() + " is not authorized to remove: " + destination);
         }
+
         super.removeDestination(context, destination, timeout);
     }
 
     @Override
-    public Subscription addConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
+    public void removeDestinationInfo(ConnectionContext context, DestinationInfo info) throws Exception {
+        final SecurityContext securityContext = checkSecurityContext(context);
 
-        final SecurityContext subject = context.getSecurityContext();
-        if (subject == null) {
-            throw new SecurityException("User is not authenticated.");
+        if (!checkDestinationAdmin(securityContext, info.getDestination())) {
+            throw new SecurityException("User " + securityContext.getUserName() + " is not authorized to remove: " + info.getDestination());
         }
+
+        super.removeDestinationInfo(context, info);
+    }
+
+    @Override
+    public Subscription addConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
+        final SecurityContext securityContext = checkSecurityContext(context);
+
         Set<?> allowedACLs = null;
         if (!info.getDestination().isTemporary()) {
             allowedACLs = authorizationMap.getReadACLs(info.getDestination());
@@ -115,10 +130,10 @@ public class AuthorizationBroker extends BrokerFilter implements SecurityAdminMB
             allowedACLs = authorizationMap.getTempDestinationReadACLs();
         }
 
-        if (!subject.isBrokerContext() && allowedACLs != null && !subject.isInOneOf(allowedACLs)) {
-            throw new SecurityException("User " + subject.getUserName() + " is not authorized to read from: " + info.getDestination());
+        if (!securityContext.isBrokerContext() && allowedACLs != null && !securityContext.isInOneOf(allowedACLs)) {
+            throw new SecurityException("User " + securityContext.getUserName() + " is not authorized to read from: " + info.getDestination());
         }
-        subject.getAuthorizedReadDests().put(info.getDestination(), info.getDestination());
+        securityContext.getAuthorizedReadDests().put(info.getDestination(), info.getDestination());
 
         /*
          * Need to think about this a little more. We could do per message
@@ -146,12 +161,9 @@ public class AuthorizationBroker extends BrokerFilter implements SecurityAdminMB
 
     @Override
     public void addProducer(ConnectionContext context, ProducerInfo info) throws Exception {
+        final SecurityContext securityContext = checkSecurityContext(context);
 
-        SecurityContext subject = context.getSecurityContext();
-        if (subject == null) {
-            throw new SecurityException("User is not authenticated.");
-        }
-        if (!subject.isBrokerContext() && info.getDestination() != null) {
+        if (!securityContext.isBrokerContext() && info.getDestination() != null) {
 
             Set<?> allowedACLs = null;
             if (!info.getDestination().isTemporary()) {
@@ -159,10 +171,10 @@ public class AuthorizationBroker extends BrokerFilter implements SecurityAdminMB
             } else {
                 allowedACLs = authorizationMap.getTempDestinationWriteACLs();
             }
-            if (allowedACLs != null && !subject.isInOneOf(allowedACLs)) {
-                throw new SecurityException("User " + subject.getUserName() + " is not authorized to write to: " + info.getDestination());
+            if (allowedACLs != null && !securityContext.isInOneOf(allowedACLs)) {
+                throw new SecurityException("User " + securityContext.getUserName() + " is not authorized to write to: " + info.getDestination());
             }
-            subject.getAuthorizedWriteDests().put(info.getDestination(), info.getDestination());
+            securityContext.getAuthorizedWriteDests().put(info.getDestination(), info.getDestination());
         }
 
         super.addProducer(context, info);
@@ -170,11 +182,9 @@ public class AuthorizationBroker extends BrokerFilter implements SecurityAdminMB
 
     @Override
     public void send(ProducerBrokerExchange producerExchange, Message messageSend) throws Exception {
-        SecurityContext subject = producerExchange.getConnectionContext().getSecurityContext();
-        if (subject == null) {
-            throw new SecurityException("User is not authenticated.");
-        }
-        if (!subject.isBrokerContext() && !subject.getAuthorizedWriteDests().contains(messageSend.getDestination())) {
+        final SecurityContext securityContext = checkSecurityContext(producerExchange.getConnectionContext());
+
+        if (!securityContext.isBrokerContext() && !securityContext.getAuthorizedWriteDests().contains(messageSend.getDestination())) {
 
             Set<?> allowedACLs = null;
             if (!messageSend.getDestination().isTemporary()) {
@@ -183,10 +193,10 @@ public class AuthorizationBroker extends BrokerFilter implements SecurityAdminMB
                 allowedACLs = authorizationMap.getTempDestinationWriteACLs();
             }
 
-            if (allowedACLs != null && !subject.isInOneOf(allowedACLs)) {
-                throw new SecurityException("User " + subject.getUserName() + " is not authorized to write to: " + messageSend.getDestination());
+            if (allowedACLs != null && !securityContext.isInOneOf(allowedACLs)) {
+                throw new SecurityException("User " + securityContext.getUserName() + " is not authorized to write to: " + messageSend.getDestination());
             }
-            subject.getAuthorizedWriteDests().put(messageSend.getDestination(), messageSend.getDestination());
+            securityContext.getAuthorizedWriteDests().put(messageSend.getDestination(), messageSend.getDestination());
         }
 
         super.send(producerExchange, messageSend);
