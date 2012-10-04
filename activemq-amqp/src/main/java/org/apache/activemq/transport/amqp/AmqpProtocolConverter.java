@@ -305,11 +305,18 @@ class AmqpProtocolConverter {
 
         @Override
         public void onDelivery(Delivery delivery) throws Exception {
-            if( current ==null ) {
+            Receiver receiver = ((Receiver)delivery.getLink());
+            if( !delivery.isReadable() ) {
+                System.out.println("it was not readable!");
+//                delivery.settle();
+//                receiver.advance();
+                return;
+            }
+
+            if( current==null ) {
                 current = new ByteArrayOutputStream();
             }
 
-            Receiver receiver = ((Receiver)delivery.getLink());
             int count;
             byte data[] = new byte[1024*4];
             while( (count = receiver.recv(data, 0, data.length)) > 0 ) {
@@ -320,6 +327,9 @@ class AmqpProtocolConverter {
             if( count == 0 ) {
                 return;
             }
+
+            receiver.advance();
+            delivery.settle();
 
             final Buffer buffer = current.toBuffer();
             EncodedMessage em = new EncodedMessage(delivery.getMessageFormat(), buffer.data, buffer.offset, buffer.length);
@@ -410,18 +420,21 @@ class AmqpProtocolConverter {
             pumpProtonToSocket();
         }
 
-        Buffer current;
+        Buffer currentBuffer;
+        Delivery currentDelivery;
 
         public void pumpOutbound() {
             while(true) {
 
-                while( current!=null ) {
-                    int sent = sender.send(current.data, current.offset, current.length);
+                while( currentBuffer !=null ) {
+                    int sent = sender.send(currentBuffer.data, currentBuffer.offset, currentBuffer.length);
                     if( sent > 0 ) {
-                        current.moveHead(sent);
-                        if( current.length == 0 ) {
+                        currentBuffer.moveHead(sent);
+                        if( currentBuffer.length == 0 ) {
+                            currentDelivery.settle();
                             sender.advance();
-                            current = null;
+                            currentBuffer = null;
+                            currentDelivery = null;
                         }
                     } else {
                         return;
@@ -438,10 +451,10 @@ class AmqpProtocolConverter {
                     final EncodedMessage amqp = outboundTransformer.transform(jms);
                     if( amqp!=null && amqp.getLength() > 0 ) {
 
-                        current = new Buffer(amqp.getArray(), amqp.getArrayOffset(), amqp.getLength());
+                        currentBuffer = new Buffer(amqp.getArray(), amqp.getArrayOffset(), amqp.getLength());
                         final byte[] tag = nextTag();
-                        final Delivery delivery = sender.delivery(tag, 0, tag.length);
-                        delivery.setContext(md);
+                        currentDelivery = sender.delivery(tag, 0, tag.length);
+                        currentDelivery.setContext(md);
 
                     } else {
                         // TODO: message could not be generated what now?

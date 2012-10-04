@@ -34,7 +34,9 @@ public class SwiftMQClientTest extends AmqpTestSupport {
     public void testSendReceive() throws Exception {
 
         String queue = "testqueue";
-        int nMsgs = 1;
+        int nMsgs = 100;
+        final String dataFormat = "%01024d";
+
         int qos = QoS.AT_MOST_ONCE;
         AMQPContext ctx = new AMQPContext(AMQPContext.CLIENT);
 
@@ -57,28 +59,34 @@ public class SwiftMQClientTest extends AmqpTestSupport {
                 for (int i = 0; i < nMsgs; i++) {
                     AMQPMessage msg = new AMQPMessage();
                     System.out.println("Sending " + i);
-                    msg.setAmqpValue(new AmqpValue(new AMQPString(String.format("%010d", i))));
+                    msg.setAmqpValue(new AmqpValue(new AMQPString(String.format(dataFormat, i))));
                     p.send(msg);
                 }
                 p.close();
                 session.close();
             }
-
+            System.out.println("=======================================================================================");
+            System.out.println(" receiving ");
+            System.out.println("=======================================================================================");
             {
                 Session session = connection.createSession(10, 10);
                 Consumer c = session.createConsumer(queue, 100, qos, true, null);
 
                 // Receive messages non-transacted
-                for (int i = 0; i < nMsgs; i++) {
+                int i = 0;
+                while ( i < nMsgs) {
                     AMQPMessage msg = c.receive();
-                    final AMQPType value = msg.getAmqpValue().getValue();
-                    if (value instanceof AMQPString) {
-                        String s = ((AMQPString) value).getValue();
-                        assertEquals(String.format("%010d", i), s);
-                        System.out.println("Received: " + i);
+                    if( msg!=null ) {
+                        final AMQPType value = msg.getAmqpValue().getValue();
+                        if (value instanceof AMQPString) {
+                            String s = ((AMQPString) value).getValue();
+                            assertEquals(String.format(dataFormat, i), s);
+                            System.out.println("Received: " + i);
+                        }
+                        if (!msg.isSettled())
+                            msg.accept();
+                        i++;
                     }
-                    if (!msg.isSettled())
-                        msg.accept();
                 }
                 c.close();
                 session.close();

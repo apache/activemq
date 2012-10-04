@@ -59,7 +59,9 @@ public class AmqpTransportFilter extends TransportFilter implements AmqpTranspor
     public void oneway(Object o) throws IOException {
         try {
             final Command command = (Command) o;
-            protocolConverter.onActiveMQCommand(command);
+            synchronized (protocolConverter) {
+                protocolConverter.onActiveMQCommand(command);
+            }
         } catch (Exception e) {
             throw IOExceptionSupport.create(e);
         }
@@ -70,8 +72,9 @@ public class AmqpTransportFilter extends TransportFilter implements AmqpTranspor
             if (trace) {
                 TRACE.trace("Received: \n" + command);
             }
-
-            protocolConverter.onAMQPData((Buffer) command);
+            synchronized (protocolConverter) {
+                protocolConverter.onAMQPData((Buffer) command);
+            }
         } catch (IOException e) {
             handleException(e);
         } catch (JMSException e) {

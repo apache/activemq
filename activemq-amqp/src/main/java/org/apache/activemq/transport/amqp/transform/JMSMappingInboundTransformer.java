@@ -52,7 +52,9 @@ public class JMSMappingInboundTransformer extends InboundTransformer {
 
         Message rc;
         final Section body = amqp.getBody();
-        if( body instanceof Data ) {
+        if( body == null ) {
+            rc = vendor.createMessage();
+        } else if( body instanceof Data ) {
             Binary d = ((Data) body).getValue();
             BytesMessage m = vendor.createBytesMessage();
             m.writeBytes(d.getArray(), d.getArrayOffset(), d.getLength());
@@ -91,7 +93,7 @@ public class JMSMappingInboundTransformer extends InboundTransformer {
 //                    jms = m;
             }
         } else {
-            throw new RuntimeException("Unexpected body type.");
+            throw new RuntimeException("Unexpected body type: "+body.getClass());
         }
         rc.setJMSDeliveryMode(defaultDeliveryMode);
         rc.setJMSPriority(defaultPriority);
