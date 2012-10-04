@@ -32,7 +32,7 @@ public class JMSClientTest extends AmqpTestSupport {
     @Test
     public void testSendReceive() throws Exception {
 
-        QueueImpl queue = new QueueImpl("BURL:direct://amq.direct//test");
+        QueueImpl queue = new QueueImpl("queue://testqueue");
         int nMsgs = 100;
         final String dataFormat = "%01024d";
 
