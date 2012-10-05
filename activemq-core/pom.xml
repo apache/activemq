@@ -474,7 +474,9 @@
             </property>
             -->
           </systemProperties>
-
+          <includes>
+            <include>**/*Test.*</include>
+          </includes>
           <excludes>
             <exclude>**/perf/SimpleDurableTopicTest.*</exclude>
             <!-- These tests run too slow to execute as part of the unit tests -->
@@ -1129,6 +1131,9 @@
                    <value>target/</value>
                    </property>
                 </systemProperties>
+              <includes>
+                <include>**/*Test.*</include>
+              </includes>
               <excludes>
                 <exclude>**/perf/SimpleDurableTopicTest.*</exclude>
                 <!-- These tests run too slow to execute as part of the unit tests -->
