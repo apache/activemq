@@ -307,6 +307,9 @@ public class Transaction implements Iterable<Page> {
                             System.arraycopy(buf, 0, data, 0, pageSize);
                             Transaction.this.write(current, data);
 
+                            // make the new link visible
+                            pageFile.addToCache(current);
+
                             // Reset for the next page chunk
                             pos = 0;
                             // The page header marshalled after the data is written.

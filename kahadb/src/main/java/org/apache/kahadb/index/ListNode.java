@@ -309,15 +309,7 @@ public final class ListNode<Key, Value> {
     }
 
     public void storeUpdate(Transaction tx) throws IOException {
-        try {
-            if (this.entries.size() == 1) {
-                getContainingList().storeNode(tx, this, true);
-            } else {
-                getContainingList().storeNode(tx, this, false);
-            }
-        } catch (Transaction.PageOverflowIOException e) {
-            split(tx, ADD_FIRST);
-        }
+        getContainingList().storeNode(tx, this, true);
     }
 
     private void store(Transaction tx, boolean addFirst) throws IOException {
@@ -342,11 +334,7 @@ public final class ListNode<Key, Value> {
     }
 
     private void store(Transaction tx) throws IOException {
-        if (this.entries.size() == 1) {
-            getContainingList().storeNode(tx, this, true);
-        } else {
-            getContainingList().storeNode(tx, this, false);
-        }
+        getContainingList().storeNode(tx, this, true);
     }
 
     private void split(Transaction tx, boolean isAddFirst) throws IOException {
