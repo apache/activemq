@@ -101,7 +101,7 @@
   <profiles>
     <profile>
       <!-- profile which is activated is the swiftmq-client-home prop is defined.
-           Tt tests the amqp broker impl using the swiftmq client libs -->
+           It tests the amqp broker impl using the swiftmq client libs -->
       <id>swiftmq-client</id>
       <activation>
         <property><name>swiftmq-client-home</name></property>
