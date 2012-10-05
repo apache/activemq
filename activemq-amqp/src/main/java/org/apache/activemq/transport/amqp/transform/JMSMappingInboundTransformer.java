@@ -20,6 +20,7 @@ import org.apache.qpid.proton.type.Binary;
 import org.apache.qpid.proton.type.messaging.*;
 
 import javax.jms.*;
+import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -62,12 +63,14 @@ public class JMSMappingInboundTransformer extends InboundTransformer {
         } else if (body instanceof AmqpSequence ) {
             AmqpSequence sequence = (AmqpSequence) body;
             StreamMessage m = vendor.createStreamMessage();
-            throw new RuntimeException("not implemented");
-//                jms = m;
+            for( Object item : sequence.getValue()) {
+                m.writeObject(item);
+            }
+            rc = m;
         } else if (body instanceof AmqpValue) {
             Object value = ((AmqpValue) body).getValue();
             if( value == null ) {
-                rc = vendor.createMessage();
+                rc = vendor.createObjectMessage();
             } if( value instanceof String ) {
                 TextMessage m = vendor.createTextMessage();
                 m.setText((String) value);
@@ -78,19 +81,22 @@ public class JMSMappingInboundTransformer extends InboundTransformer {
                 m.writeBytes(d.getArray(), d.getArrayOffset(), d.getLength());
                 rc = m;
             } else if( value instanceof List) {
-                List d = (List) value;
                 StreamMessage m = vendor.createStreamMessage();
-                throw new RuntimeException("not implemented");
-//                    jms = m;
+                for( Object item : (List) value) {
+                    m.writeObject(item);
+                }
+                rc = m;
             } else if( value instanceof Map) {
-                Map d = (Map) value;
                 MapMessage m = vendor.createMapMessage();
-                throw new RuntimeException("not implemented");
-//                    jms = m;
+                final Set<Map.Entry<String, Object>> set = ((Map) value).entrySet();
+                for (Map.Entry<String, Object> entry : set) {
+                    m.setObject(entry.getKey(), entry.getValue());
+                }
+                rc = m;
             } else {
                 ObjectMessage m = vendor.createObjectMessage();
-                throw new RuntimeException("not implemented");
-//                    jms = m;
+                m.setObject((Serializable) value);
+                rc = m;
             }
         } else {
             throw new RuntimeException("Unexpected body type: "+body.getClass());

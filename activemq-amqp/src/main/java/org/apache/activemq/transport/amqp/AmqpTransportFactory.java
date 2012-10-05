@@ -55,11 +55,14 @@ public class AmqpTransportFactory extends TcpTransportFactory implements BrokerS
     public Transport serverConfigure(Transport transport, WireFormat format, HashMap options) throws Exception {
         transport = super.serverConfigure(transport, format, options);
 
-        MutexTransport mutex = transport.narrow(MutexTransport.class);
-        if (mutex != null) {
-            mutex.setSyncOnCommand(true);
+        // strip off the mutex transport.
+        if( transport instanceof MutexTransport ) {
+            transport = ((MutexTransport)transport).getNext();
         }
-
+//        MutexTransport mutex = transport.narrow(MutexTransport.class);
+//        if (mutex != null) {
+//            mutex.setSyncOnCommand(true);
+//        }
         return transport;
     }
 

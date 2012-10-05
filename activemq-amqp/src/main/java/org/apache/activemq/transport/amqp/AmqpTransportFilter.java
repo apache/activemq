@@ -59,8 +59,11 @@ public class AmqpTransportFilter extends TransportFilter implements AmqpTranspor
     public void oneway(Object o) throws IOException {
         try {
             final Command command = (Command) o;
-            synchronized (protocolConverter) {
+            protocolConverter.lock.lock();
+            try {
                 protocolConverter.onActiveMQCommand(command);
+            } finally {
+                protocolConverter.lock.unlock();
             }
         } catch (Exception e) {
             throw IOExceptionSupport.create(e);
@@ -72,8 +75,11 @@ public class AmqpTransportFilter extends TransportFilter implements AmqpTranspor
             if (trace) {
                 TRACE.trace("Received: \n" + command);
             }
-            synchronized (protocolConverter) {
+            protocolConverter.lock.lock();
+            try {
                 protocolConverter.onAMQPData((Buffer) command);
+            } finally {
+                protocolConverter.lock.unlock();
             }
         } catch (IOException e) {
             handleException(e);
@@ -83,6 +89,7 @@ public class AmqpTransportFilter extends TransportFilter implements AmqpTranspor
     }
 
     public void sendToActiveMQ(Command command) {
+        assert protocolConverter.lock.isHeldByCurrentThread();
         TransportListener l = transportListener;
         if (l != null) {
             l.onCommand(command);
@@ -90,6 +97,7 @@ public class AmqpTransportFilter extends TransportFilter implements AmqpTranspor
     }
 
     public void sendToAmqp(Buffer command) throws IOException {
+        assert protocolConverter.lock.isHeldByCurrentThread();
         if (trace) {
             TRACE.trace("Sending: \n" + command);
         }

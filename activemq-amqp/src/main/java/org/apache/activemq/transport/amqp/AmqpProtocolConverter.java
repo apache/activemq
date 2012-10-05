@@ -19,22 +19,23 @@ package org.apache.activemq.transport.amqp;
 import org.apache.activemq.broker.BrokerContext;
 import org.apache.activemq.command.*;
 import org.apache.activemq.transport.amqp.transform.*;
-import org.apache.activemq.util.*;
+import org.apache.activemq.util.IOExceptionSupport;
+import org.apache.activemq.util.IdGenerator;
+import org.apache.activemq.util.LongSequenceGenerator;
 import org.apache.qpid.proton.engine.*;
-import org.apache.qpid.proton.engine.Session;
 import org.apache.qpid.proton.engine.impl.ConnectionImpl;
 import org.apache.qpid.proton.engine.impl.TransportImpl;
-import org.fusesource.hawtbuf.*;
+import org.fusesource.hawtbuf.Buffer;
+import org.fusesource.hawtbuf.ByteArrayOutputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.jms.*;
+import javax.jms.JMSException;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-
-import org.fusesource.hawtbuf.ByteArrayOutputStream;
+import java.util.concurrent.locks.ReentrantLock;
 
 class AmqpProtocolConverter {
 
@@ -49,6 +50,8 @@ class AmqpProtocolConverter {
     public AmqpProtocolConverter(AmqpTransport amqpTransport, BrokerContext brokerContext) {
         this.amqpTransport = amqpTransport;
     }
+
+    ReentrantLock lock = new ReentrantLock();
 
 //
 //    private static final Buffer PING_RESP_FRAME = new PINGRESP().encode();
@@ -212,6 +215,8 @@ class AmqpProtocolConverter {
     private final ConnectionId connectionId = new ConnectionId(CONNECTION_ID_GENERATOR.generateId());
     private ConnectionInfo connectionInfo = new ConnectionInfo();
     private long nextSessionId = 0;
+    private long nextTempDestinationId = 0;
+    HashMap<Sender, ActiveMQDestination> tempDestinations = new HashMap<Sender, ActiveMQDestination>();
 
     static abstract class AmqpDeliveryListener {
         abstract public void onDelivery(Delivery delivery) throws Exception;
@@ -219,6 +224,7 @@ class AmqpProtocolConverter {
     }
 
     private void onConnectionOpen() throws AmqpProtocolException {
+
         connectionInfo.setResponseRequired(true);
         connectionInfo.setConnectionId(connectionId);
 //        configureInactivityMonitor(connect.keepAlive());
@@ -246,7 +252,6 @@ class AmqpProtocolConverter {
 
         sendToActiveMQ(connectionInfo, new ResponseHandler() {
             public void onResponse(AmqpProtocolConverter converter, Response response) throws IOException {
-
                 protonConnection.open();
                 pumpProtonToSocket();
 
@@ -289,7 +294,7 @@ class AmqpProtocolConverter {
         }
     }
 
-    InboundTransformer inboundTransformer = new JMSMappingInboundTransformer(ActiveMQJMSVendor.INSTANCE);
+    InboundTransformer inboundTransformer = new AMQPNativeInboundTransformer(ActiveMQJMSVendor.INSTANCE);
 
     class ProducerContext extends AmqpDeliveryListener {
         private final ProducerId producerId;
@@ -355,13 +360,13 @@ class AmqpProtocolConverter {
         // Client is producing to this receiver object
 
         ProducerId producerId = new ProducerId(sessionContext.sessionId, sessionContext.nextProducerId++);
-        ActiveMQDestination destination = ActiveMQDestination.createDestination(receiver.getRemoteTargetAddress(), ActiveMQDestination.QUEUE_TYPE);
-        ProducerContext producerContext = new ProducerContext(producerId, destination);
+        ActiveMQDestination dest = ActiveMQDestination.createDestination(receiver.getRemoteTargetAddress(), ActiveMQDestination.QUEUE_TYPE);
+        ProducerContext producerContext = new ProducerContext(producerId, dest);
 
         receiver.setContext(producerContext);
         receiver.flow(1024 * 64);
         ProducerInfo producerInfo = new ProducerInfo(producerId);
-        producerInfo.setDestination(destination);
+        producerInfo.setDestination(dest);
         sendToActiveMQ(producerInfo, new ResponseHandler() {
             public void onResponse(AmqpProtocolConverter converter, Response response) throws IOException {
                 receiver.open();
@@ -485,11 +490,30 @@ class AmqpProtocolConverter {
 
         subscriptionsByConsumerId.put(id, consumerContext);
 
-        ActiveMQDestination destination = ActiveMQDestination.createDestination(sender.getRemoteSourceAddress(), ActiveMQDestination.QUEUE_TYPE);
+        ActiveMQDestination dest;
+        if( sender.getRemoteSourceAddress() != null ) {
+            dest = ActiveMQDestination.createDestination(sender.getRemoteSourceAddress(), ActiveMQDestination.QUEUE_TYPE);
+        } else {
+            // lets create a temp dest.
+//            if (topic) {
+//                dest = new ActiveMQTempTopic(info.getConnectionId(), tempDestinationIdGenerator.getNextSequenceId());
+//            } else {
+                dest = new ActiveMQTempQueue(connectionId, nextTempDestinationId++);
+//            }
+
+            DestinationInfo info = new DestinationInfo();
+            info.setConnectionId(connectionId);
+            info.setOperationType(DestinationInfo.ADD_OPERATION_TYPE);
+            info.setDestination(dest);
+            sendToActiveMQ(info, null);
+            tempDestinations.put(sender, dest);
+            sender.setLocalSourceAddress(inboundTransformer.getVendor().toAddress(dest));
+        }
+
 
         sender.setContext(consumerContext);
         ConsumerInfo consumerInfo = new ConsumerInfo(id);
-        consumerInfo.setDestination(destination);
+        consumerInfo.setDestination(dest);
         consumerInfo.setPrefetchSize(100);
         consumerInfo.setDispatchAsync(true);
 

@@ -20,7 +20,7 @@ import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
 import org.objectweb.jtests.jms.admin.Admin;
-import org.apache.qpid.amqp_1_0.jms.impl.ConnectionFactoryImpl;
+    import org.apache.qpid.amqp_1_0.jms.impl.ConnectionFactoryImpl;
 import org.apache.qpid.amqp_1_0.jms.impl.QueueImpl;
 import org.apache.qpid.amqp_1_0.jms.impl.TopicImpl;
 
@@ -31,6 +31,7 @@ import javax.naming.NamingException;
 import java.io.File;
 import java.net.URI;
 import java.util.Hashtable;
+import java.util.logging.*;
 
 /**
  *
@@ -40,6 +41,7 @@ public class ActiveMQAdmin implements Admin {
 
     Context context;
     {
+        // enableJMSFrameTracing();
         try {
             // Use the jetty JNDI context since it's mutable.
             final Hashtable<String, String> env = new Hashtable<String, String>();
@@ -51,6 +53,29 @@ public class ActiveMQAdmin implements Admin {
         }
     }
 
+    private void enableJMSFrameTracing() {
+        final SimpleFormatter formatter = new SimpleFormatter();
+        Handler handler = new Handler() {
+            @Override
+            public void publish(LogRecord r) {
+                System.out.println(String.format("%s:%s", r.getLoggerName(), r.getMessage()));
+            }
+
+            @Override
+            public void flush() {
+                System.out.flush();
+            }
+
+            @Override
+            public void close() throws SecurityException {
+            }
+        };
+
+        Logger log = Logger.getLogger("RAW");
+        log.addHandler(handler);
+        log.setLevel(Level.FINEST);
+    }
+
     protected BrokerService createBroker() throws Exception {
         return BrokerFactory.createBroker(new URI("broker://()/localhost?persistent=false"));
     }
@@ -59,22 +84,26 @@ public class ActiveMQAdmin implements Admin {
         return getClass().getName();
     }
 
-    BrokerService broker;
-    int port;
+    static BrokerService broker;
+    static int port;
 
     public void startServer() throws Exception {
+        if( broker!=null ) {
+            stopServer();
+        }
         if (System.getProperty("basedir") == null) {
             File file = new File(".");
             System.setProperty("basedir", file.getAbsolutePath());
         }
         broker = createBroker();
+        TransportConnector connector = broker.addConnector("amqp://localhost:0");
         broker.start();
-        final TransportConnector connector = broker.addConnector("amqp://localhost:0");
         port = connector.getConnectUri().getPort();
     }
 
     public void stopServer() throws Exception {
         broker.stop();
+        broker = null;
     }
 
     public void start() throws Exception {

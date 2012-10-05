@@ -34,7 +34,7 @@ public class JMSClientTest extends AmqpTestSupport {
 
         QueueImpl queue = new QueueImpl("queue://testqueue");
         int nMsgs = 100;
-        final String dataFormat = "%01024d";
+        final String dataFormat = "%010240d";
 
         final ConnectionFactoryImpl factory = new ConnectionFactoryImpl("localhost", port, null, null);
 

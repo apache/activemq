@@ -45,25 +45,38 @@ public class JoramJmsTest extends TestCase {
 
     public static Test suite() {
         TestSuite suite = new TestSuite();
-// TODO: figure out why the following tests are failing..
-//        suite.addTestSuite(ConnectionTest.class);
-//        suite.addTestSuite(TopicConnectionTest.class);
-//        suite.addTestSuite(MessageHeaderTest.class);
-//        suite.addTestSuite(MessageBodyTest.class);
-//        suite.addTestSuite(MessageDefaultTest.class);
-//        suite.addTestSuite(MessageTypeTest.class);
-//        suite.addTestSuite(JMSXPropertyTest.class);
-//        suite.addTestSuite(MessagePropertyConversionTest.class);
-//        suite.addTestSuite(TemporaryQueueTest.class);
-//        suite.addTestSuite(SelectorSyntaxTest.class);
-//        suite.addTestSuite(QueueSessionTest.class);
-//        suite.addTestSuite(SessionTest.class);
-//        suite.addTestSuite(TopicSessionTest.class);
-//        suite.addTestSuite(TemporaryTopicTest.class);
-//        suite.addTestSuite(UnifiedSessionTest.class);
-//        suite.addTestSuite(QueueBrowserTest.class);
-//        suite.addTestSuite(MessagePropertyTest.class);
-//        suite.addTestSuite(SelectorTest.class);
+
+        // Passing tests
+        suite.addTestSuite(JMSXPropertyTest.class);
+        suite.addTestSuite(MessageBodyTest.class);
+        suite.addTestSuite(MessageDefaultTest.class);
+        suite.addTestSuite(MessagePropertyConversionTest.class);
+        suite.addTestSuite(MessagePropertyTest.class);
+
+        if (false ) {
+// TODO: Fails due to JMS client impl error.
+        suite.addTestSuite(UnifiedSessionTest.class);
+// TODO: Fails due to https://issues.apache.org/jira/browse/PROTON-62: ClassCastException when processing an Attach frame
+        suite.addTestSuite(QueueSessionTest.class);
+        suite.addTestSuite(SessionTest.class);
+// TODO: Fails due to inconsistent ObjectMessage mapping in the JMS client.
+        suite.addTestSuite(MessageTypeTest.class);
+// TODO: Fails due to temp destinations not being supported yet.
+        suite.addTestSuite(MessageHeaderTest.class);
+        suite.addTestSuite(TemporaryQueueTest.class);
+        suite.addTestSuite(TemporaryTopicTest.class);
+// TODO: Fails due to selectors not being implemented yet.
+        suite.addTestSuite(SelectorSyntaxTest.class);
+        suite.addTestSuite(SelectorTest.class);
+// TODO: Fails due to: javax.jms.IllegalStateException: Cannot set client-id to "publisherConnection"; client-id must be set on connection creation
+        suite.addTestSuite(TopicConnectionTest.class);
+        suite.addTestSuite(TopicSessionTest.class);
+// TODO: figure out why the following tests fail..
+// TODO: figure out why the following tests hang..
+        suite.addTestSuite(ConnectionTest.class);
+        suite.addTestSuite(QueueBrowserTest.class);
+
+        }
         return suite;
     }
 

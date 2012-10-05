@@ -26,8 +26,10 @@ import org.apache.qpid.proton.type.messaging.*;
 
 import javax.jms.*;
 import java.io.ByteArrayOutputStream;
+import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -95,11 +97,25 @@ public class JMSMappingOutboundTransformer extends OutboundTransformer {
         } if( msg instanceof TextMessage ) {
             body = new AmqpValue(((TextMessage) msg).getText());
         } if( msg instanceof MapMessage ) {
-            throw new RuntimeException("Not implemented");
+            final HashMap map = new HashMap();
+            final MapMessage m = (MapMessage) msg;
+            final Enumeration names = m.getMapNames();
+            while (names.hasMoreElements()) {
+                String key = (String) names.nextElement();
+                map.put(key, m.getObject(key));
+            }
+            body = new AmqpValue(map);
         } if( msg instanceof StreamMessage ) {
-            throw new RuntimeException("Not implemented");
+            ArrayList list = new ArrayList();
+            final StreamMessage m = (StreamMessage) msg;
+            try {
+                while(true) {
+                    list.add(m.readObject());
+                }
+            } catch(MessageEOFException e){}
+            body = new AmqpSequence(list);
         } if( msg instanceof ObjectMessage ) {
-            throw new RuntimeException("Not implemented");
+            body = new AmqpValue(((ObjectMessage) msg).getObject());
         }
 
         header.setDurable(msg.getJMSDeliveryMode() == DeliveryMode.PERSISTENT ? true : false);
