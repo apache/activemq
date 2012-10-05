@@ -78,12 +78,12 @@ public class DurableSubscriptionSelectorTest extends org.apache.activemq.TestSup
 
         Wait.waitFor(new Wait.Condition() { public boolean isSatisified() { return received >= 1;} }, 10000);
 
-        assertEquals("Message is not recieved.", 1, received);
+        assertEquals("Message is not received.", 1, received);
 
         sendMessage(true);
         Thread.sleep(100);
 
-        assertEquals("Message is not recieved.", 2, received);
+        assertEquals("Message is not received.", 2, received);
     }
 
     private void openConsumer() throws Exception {

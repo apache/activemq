@@ -67,7 +67,7 @@ public class Topic extends BaseDestination implements Task {
     private final ReentrantReadWriteLock dispatchLock = new ReentrantReadWriteLock();
     private DispatchPolicy dispatchPolicy = new SimpleDispatchPolicy();
     private SubscriptionRecoveryPolicy subscriptionRecoveryPolicy;
-    private final ConcurrentHashMap<SubscriptionKey, DurableTopicSubscription> durableSubcribers = new ConcurrentHashMap<SubscriptionKey, DurableTopicSubscription>();
+    private final ConcurrentHashMap<SubscriptionKey, DurableTopicSubscription> durableSubscribers = new ConcurrentHashMap<SubscriptionKey, DurableTopicSubscription>();
     private final TaskRunner taskRunner;
     private final LinkedList<Runnable> messagesWaitingForSpace = new LinkedList<Runnable>();
     private final Runnable sendMessagesWaitingForSpaceTask = new Runnable() {
@@ -171,7 +171,7 @@ public class Topic extends BaseDestination implements Task {
                     }
                 }
             }
-            durableSubcribers.put(dsub.getSubscriptionKey(), dsub);
+            durableSubscribers.put(dsub.getSubscriptionKey(), dsub);
         }
     }
 
@@ -188,7 +188,7 @@ public class Topic extends BaseDestination implements Task {
     public void deleteSubscription(ConnectionContext context, SubscriptionKey key) throws Exception {
         if (topicStore != null) {
             topicStore.deleteSubscription(key.clientId, key.subscriptionName);
-            DurableTopicSubscription removed = durableSubcribers.remove(key);
+            DurableTopicSubscription removed = durableSubscribers.remove(key);
             if (removed != null) {
                 destinationStatistics.getConsumers().decrement();
                 // deactivate and remove
@@ -505,7 +505,7 @@ public class Topic extends BaseDestination implements Task {
     }
 
     private boolean canOptimizeOutPersistence() {
-        return durableSubcribers.size() == 0;
+        return durableSubscribers.size() == 0;
     }
 
     @Override
@@ -590,7 +590,7 @@ public class Topic extends BaseDestination implements Task {
                 });
                 final ConnectionContext connectionContext = createConnectionContext();
                 for (Message message : toExpire) {
-                    for (DurableTopicSubscription sub : durableSubcribers.values()) {
+                    for (DurableTopicSubscription sub : durableSubscribers.values()) {
                         if (!sub.isActive()) {
                             messageExpired(connectionContext, sub, message);
                         }
@@ -725,9 +725,9 @@ public class Topic extends BaseDestination implements Task {
     protected boolean isOptimizeStorage(){
         boolean result = false;
 
-        if (isDoOptimzeMessageStorage() && durableSubcribers.isEmpty()==false){
+        if (isDoOptimzeMessageStorage() && durableSubscribers.isEmpty()==false){
                 result = true;
-                for (DurableTopicSubscription s : durableSubcribers.values()) {
+                for (DurableTopicSubscription s : durableSubscribers.values()) {
                     if (s.isActive()== false){
                         result = false;
                         break;
@@ -755,7 +755,7 @@ public class Topic extends BaseDestination implements Task {
     public void clearPendingMessages() {
         dispatchLock.readLock().lock();
         try {
-            for (DurableTopicSubscription durableTopicSubscription : durableSubcribers.values()) {
+            for (DurableTopicSubscription durableTopicSubscription : durableSubscribers.values()) {
                 clearPendingAndDispatch(durableTopicSubscription);
             }
         } finally {
@@ -777,6 +777,6 @@ public class Topic extends BaseDestination implements Task {
     }
 
     public Map<SubscriptionKey, DurableTopicSubscription> getDurableTopicSubs() {
-        return durableSubcribers;
+        return durableSubscribers;
     }
 }
