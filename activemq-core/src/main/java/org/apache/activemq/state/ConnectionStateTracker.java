@@ -98,7 +98,9 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
         public void onResponse(Command response) {
             ConnectionId connectionId = info.getConnectionId();
             ConnectionState cs = connectionStates.get(connectionId);
-            cs.removeTransactionState(info.getTransactionId());
+            if (cs != null) {
+                cs.removeTransactionState(info.getTransactionId());
+            }
         }
     }
     
