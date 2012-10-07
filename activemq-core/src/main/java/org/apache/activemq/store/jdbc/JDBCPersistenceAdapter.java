@@ -95,6 +95,7 @@ public class JDBCPersistenceAdapter extends DataSourceServiceSupport implements 
     private DataSource lockDataSource;
     private int transactionIsolation;
     private File directory;
+    private boolean changeAutoCommitAllowed = true;
     
     protected int maxProducersToAudit=1024;
     protected int maxAuditDepth=1000;
@@ -518,6 +519,20 @@ public class JDBCPersistenceAdapter extends DataSourceServiceSupport implements 
      */
     public void setCleanupPeriod(int cleanupPeriod) {
         this.cleanupPeriod = cleanupPeriod;
+    }
+
+    public boolean isChangeAutoCommitAllowed() {
+        return changeAutoCommitAllowed;
+    }
+
+    /**
+     * Whether the JDBC driver allows to set the auto commit.
+     * Some drivers does not allow changing the auto commit. The default value is true.
+     *
+     * @param changeAutoCommitAllowed true to change, false to not change.
+     */
+    public void setChangeAutoCommitAllowed(boolean changeAutoCommitAllowed) {
+        this.changeAutoCommitAllowed = changeAutoCommitAllowed;
     }
 
     public void deleteAllMessages() throws IOException {

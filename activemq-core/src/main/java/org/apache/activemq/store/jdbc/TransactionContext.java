@@ -56,9 +56,12 @@ public class TransactionContext {
         if (connection == null) {
             try {
                 connection = dataSource.getConnection();
-                boolean autoCommit = !inTx;
-                if (connection.getAutoCommit() != autoCommit) {
-                    connection.setAutoCommit(autoCommit);
+                if (persistenceAdapter.isChangeAutoCommitAllowed()) {
+                    boolean autoCommit = !inTx;
+                    if (connection.getAutoCommit() != autoCommit) {
+                        LOG.trace("Setting auto commit to {} on connection {}", autoCommit, connection);
+                        connection.setAutoCommit(autoCommit);
+                    }
                 }
             } catch (SQLException e) {
                 JDBCPersistenceAdapter.log("Could not get JDBC connection: ", e);
