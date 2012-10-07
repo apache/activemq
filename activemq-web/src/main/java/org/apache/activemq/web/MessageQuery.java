@@ -19,12 +19,13 @@ package org.apache.activemq.web;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
-
+import javax.jms.BytesMessage;
 import javax.jms.JMSException;
 import javax.jms.MapMessage;
 import javax.jms.Message;
 import javax.jms.ObjectMessage;
 import javax.jms.QueueBrowser;
+import javax.jms.StreamMessage;
 import javax.jms.TextMessage;
 
 /**
@@ -88,21 +89,27 @@ public class MessageQuery extends QueueBrowseQuery {
         if (message instanceof MapMessage) {
             return createMapBody((MapMessage) message);
         }
-        return null;
-    }
-
-    public Map<String, Object> getPropertiesMap() throws JMSException {
-        Map<String, Object> answer = new HashMap<String, Object>();
-        Message aMessage = getMessage();
-        Enumeration iter = aMessage.getPropertyNames();
-        while (iter.hasMoreElements()) {
-            String name = (String) iter.nextElement();
-            Object value = aMessage.getObjectProperty(name);
-            if (value != null) {
-                answer.put(name, value);
+        if (message instanceof BytesMessage) {
+            BytesMessage msg = (BytesMessage) message;
+            int len = (int) msg.getBodyLength();
+            if (len > -1) {
+                byte[] data = new byte[len];
+                msg.readBytes(data);
+                return new String(data);
+            } else {
+                return "";
             }
         }
-        return answer;
+        if (message instanceof StreamMessage) {
+            return "StreamMessage is not viewable";
+        }
+
+        // unknown message type
+        if (message != null) {
+            return "Unknown message type [" + message.getClass().getName() + "] " + message;
+        }
+
+        return null;
     }
 
     protected Map<String, Object> createMapBody(MapMessage mapMessage) throws JMSException {
