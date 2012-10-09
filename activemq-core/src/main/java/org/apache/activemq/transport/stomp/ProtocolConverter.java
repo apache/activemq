@@ -737,10 +737,11 @@ public class ProtocolConverter {
     }
 
     protected void onStompDisconnect(StompFrame command) throws ProtocolException {
-        checkConnected();
-        sendToActiveMQ(connectionInfo.createRemoveCommand(), createResponseHandler(command));
-        sendToActiveMQ(new ShutdownInfo(), createResponseHandler(command));
-        connected.set(false);
+        if (connected.get()) {
+            sendToActiveMQ(connectionInfo.createRemoveCommand(), createResponseHandler(command));
+            sendToActiveMQ(new ShutdownInfo(), createResponseHandler(command));
+            connected.set(false);
+        }
     }
 
     protected void checkConnected() throws ProtocolException {

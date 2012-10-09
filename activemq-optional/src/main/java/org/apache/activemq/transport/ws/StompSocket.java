@@ -21,8 +21,10 @@ import java.security.cert.X509Certificate;
 import java.util.concurrent.CountDownLatch;
 
 import org.apache.activemq.command.Command;
+import org.apache.activemq.command.ShutdownInfo;
 import org.apache.activemq.transport.TransportSupport;
 import org.apache.activemq.transport.stomp.ProtocolConverter;
+import org.apache.activemq.transport.stomp.Stomp;
 import org.apache.activemq.transport.stomp.StompFrame;
 import org.apache.activemq.transport.stomp.StompInactivityMonitor;
 import org.apache.activemq.transport.stomp.StompTransport;
@@ -52,6 +54,11 @@ class StompSocket extends TransportSupport implements WebSocket.OnTextMessage, S
 
     @Override
     public void onClose(int closeCode, String message) {
+        try {
+            protocolConverter.onStompCommand(new StompFrame(Stomp.Commands.DISCONNECT));
+        } catch (Exception e) {
+            LOG.warn("Failed to close WebSocket", e);
+        }
     }
 
     @Override
