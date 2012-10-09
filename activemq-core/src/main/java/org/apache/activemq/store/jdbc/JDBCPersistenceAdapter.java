@@ -608,7 +608,7 @@ public class JDBCPersistenceAdapter extends DataSourceServiceSupport implements 
     }
 
     public Locker createDefaultLocker() throws IOException {
-        DefaultDatabaseLocker locker = (DefaultDatabaseLocker) loadAdapter(lockFactoryFinder, "lock");
+        Locker locker = (Locker) loadAdapter(lockFactoryFinder, "lock");
         if (locker == null) {
             locker = new DefaultDatabaseLocker();
             LOG.debug("Using default JDBC Locker: " + locker);
