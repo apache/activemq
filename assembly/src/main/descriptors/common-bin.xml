@@ -19,6 +19,17 @@
 
   <fileSets>
 
+    <!-- Copy over binary files -->
+    <fileSet>
+      <directory>src/release</directory>
+      <outputDirectory>/</outputDirectory>
+      <includes>
+        <include>conf/*.ts</include>
+        <include>conf/*.ks</include>
+        <include>conf/*.cert</include>
+      </includes>
+    </fileSet>
+
     <!-- Copy over all sample configurations -->
     <fileSet>
       <directory>src/sample-conf</directory>
