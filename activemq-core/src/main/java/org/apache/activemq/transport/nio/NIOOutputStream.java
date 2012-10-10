@@ -23,9 +23,9 @@ import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.nio.channels.WritableByteChannel;
 
-import org.apache.activemq.transport.tcp.TimeStampStream;
-
 import javax.net.ssl.SSLEngine;
+
+import org.apache.activemq.transport.tcp.TimeStampStream;
 
 /**
  * An optimized buffered outputstream for Tcp
@@ -192,6 +192,16 @@ public class NIOOutputStream extends OutputStream implements TimeStampStream {
                 // written.
                 out.write(plain);
                 remaining = data.remaining();
+
+                // if the data buffer was larger than the packet buffer we might need to
+                // wrap more packets until we reach the end of data, but only when plain
+                // has no more space since we are non-blocking and a write might not have
+                // written anything.
+                if (data.hasRemaining() && !plain.hasRemaining()) {
+                    plain.clear();
+                    engine.wrap(data, plain);
+                    plain.flip();
+                }
             }
         } finally {
             writeTimestamp = -1;

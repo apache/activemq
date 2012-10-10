@@ -2174,4 +2174,44 @@ public class StompTest extends CombinationTestSupport {
         frame = "DISCONNECT\n" + "\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
     }
+
+    public void testSendReceiveBigMessage() throws Exception {
+
+        String frame = "CONNECT\n" + "login:system\n" + "passcode:manager\n\n" + Stomp.NULL;
+        stompConnection.sendFrame(frame);
+
+        frame = stompConnection.receiveFrame();
+        assertTrue(frame.startsWith("CONNECTED"));
+
+        frame = "SUBSCRIBE\n" + "destination:/queue/" + getQueueName() + "\n" + "ack:auto\n\n" + Stomp.NULL;
+        stompConnection.sendFrame(frame);
+
+        int size = 100;
+        char[] bigBodyArray = new char[size];
+        Arrays.fill(bigBodyArray, 'a');
+        String bigBody = new String(bigBodyArray);
+
+        frame = "SEND\n" + "destination:/queue/" + getQueueName() + "\n\n" + bigBody + Stomp.NULL;
+
+        stompConnection.sendFrame(frame);
+
+        StompFrame sframe = stompConnection.receive();
+        assertNotNull(sframe);
+        assertEquals("MESSAGE", sframe.getAction());
+        assertEquals(bigBody, sframe.getBody());
+
+        size = 3000000;
+        bigBodyArray = new char[size];
+        Arrays.fill(bigBodyArray, 'a');
+        bigBody = new String(bigBodyArray);
+
+        frame = "SEND\n" + "destination:/queue/" + getQueueName() + "\n\n" + bigBody + Stomp.NULL;
+
+        stompConnection.sendFrame(frame);
+
+        sframe = stompConnection.receive(30000);
+        assertNotNull(sframe);
+        assertEquals("MESSAGE", sframe.getAction());
+        assertEquals(bigBody, sframe.getBody());
+    }
 }
