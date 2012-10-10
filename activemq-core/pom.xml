@@ -635,8 +635,8 @@
                     <plugin>
                         <artifactId>maven-surefire-plugin</artifactId>
                         <configuration>
-                            <excludes>
-                                <exclude>**/DoSTest.*</exclude>
+                            <excludes combine.children="append">
+                                <exclude>none</exclude>
                             </excludes>
                         </configuration>
                     </plugin>
@@ -656,7 +656,7 @@
                     <plugin>
                         <artifactId>maven-surefire-plugin</artifactId>
                         <configuration>
-                            <excludes>
+                            <excludes combine.children="append">
                                 <!-- http://jira.activemq.org/jira/browse/AMQ-626 -->
                                 <exclude>**/MultipleTestsWithSpringFactoryBeanTest.*</exclude>
                                 <exclude>**/MultipleTestsWithXBeanFactoryBeanTest.*</exclude>
@@ -726,7 +726,7 @@
                     <plugin>
                         <artifactId>maven-surefire-plugin</artifactId>
                         <configuration>
-                            <excludes>
+                            <excludes combine.children="append">
                                 <exclude>**/perf/SimpleDurableTopicTest.*</exclude>
                                 <!-- These tests run too slow to execute as part of the unit tests -->
                                 <exclude>**/TransactionNotStartedErrorTest.*</exclude>
