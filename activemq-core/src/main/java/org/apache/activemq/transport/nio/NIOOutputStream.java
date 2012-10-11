@@ -197,7 +197,7 @@ public class NIOOutputStream extends OutputStream implements TimeStampStream {
                 // wrap more packets until we reach the end of data, but only when plain
                 // has no more space since we are non-blocking and a write might not have
                 // written anything.
-                if (data.hasRemaining() && !plain.hasRemaining()) {
+                if (engine != null && data.hasRemaining() && !plain.hasRemaining()) {
                     plain.clear();
                     engine.wrap(data, plain);
                     plain.flip();
