@@ -16,14 +16,26 @@
  */
 package org.apache.activemq;
 
-import javax.jms.*;
-import javax.jms.Message;
 import java.util.concurrent.CountDownLatch;
 
+import javax.jms.Connection;
+import javax.jms.DeliveryMode;
+import javax.jms.JMSException;
+import javax.jms.Message;
+import javax.jms.MessageConsumer;
+import javax.jms.MessageListener;
+import javax.jms.Queue;
+import javax.jms.Session;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
- * 
+ *
  */
 public class JmsSendWithAsyncCallbackTest extends TestSupport {
+
+    private static final Logger LOG = LoggerFactory.getLogger(JmsSendWithAsyncCallbackTest.class);
 
     private Connection connection;
 
@@ -42,7 +54,6 @@ public class JmsSendWithAsyncCallbackTest extends TestSupport {
         }
         super.tearDown();
     }
-    
 
     public void testAsyncCallbackIsFaster() throws JMSException, InterruptedException {
         connection.start();
@@ -67,8 +78,8 @@ public class JmsSendWithAsyncCallbackTest extends TestSupport {
         double callbackRate = benchmarkCallbackRate();
         double nonCallbackRate = benchmarkNonCallbackRate();
 
-        System.out.println(String.format("AsyncCallback Send rate: %,.2f m/s", callbackRate));
-        System.out.println(String.format("NonAsyncCallback Send rate: %,.2f m/s", nonCallbackRate));
+        LOG.info(String.format("AsyncCallback Send rate: %,.2f m/s", callbackRate));
+        LOG.info(String.format("NonAsyncCallback Send rate: %,.2f m/s", nonCallbackRate));
 
         // The async style HAS to be faster than the non-async style..
         assertTrue( callbackRate/nonCallbackRate > 1.5 );
@@ -111,5 +122,4 @@ public class JmsSendWithAsyncCallbackTest extends TestSupport {
         messagesSent.await();
         return 1000.0 * count / (System.currentTimeMillis() - start);
     }
-
 }
