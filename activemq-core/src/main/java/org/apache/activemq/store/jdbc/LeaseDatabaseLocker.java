@@ -42,7 +42,6 @@ import org.slf4j.LoggerFactory;
  */
 public class LeaseDatabaseLocker extends AbstractLocker {
     private static final Logger LOG = LoggerFactory.getLogger(LeaseDatabaseLocker.class);
-    public static final long DEFAULT_LOCK_ACQUIRE_SLEEP_INTERVAL = 5000;
     protected DataSource dataSource;
     protected Statements statements;
 
@@ -60,7 +59,6 @@ public class LeaseDatabaseLocker extends AbstractLocker {
             this.dataSource = ((JDBCPersistenceAdapter) adapter).getLockDataSource();
             this.statements = ((JDBCPersistenceAdapter) adapter).getStatements();
         }
-        lockAcquireSleepInterval = DEFAULT_LOCK_ACQUIRE_SLEEP_INTERVAL;
     }
     
     public void doStart() throws Exception {

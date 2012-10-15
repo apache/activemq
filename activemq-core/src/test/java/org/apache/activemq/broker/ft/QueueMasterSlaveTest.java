@@ -122,7 +122,7 @@ public class QueueMasterSlaveTest extends JmsTopicSendReceiveWithTwoConnectionsT
         assertNull("No message there yet", qConsumer.receive(1000));
         qConsumer.close();
         master.stop();
-        assertTrue("slave started", slaveStarted.await(10, TimeUnit.SECONDS));
+        assertTrue("slave started", slaveStarted.await(15, TimeUnit.SECONDS));
 
         final String text = "ForUWhenSlaveKicksIn";
         producer.send(new ActiveMQTopic("VirtualTopic.TA1"), session.createTextMessage(text));
