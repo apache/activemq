@@ -263,7 +263,11 @@ public class WebClient implements HttpSessionActivationListener, HttpSessionBind
 
     public Connection getConnection() throws JMSException {
         if (connection == null) {
-            connection = factory.createConnection(username, password);
+            if (username != null && password != null) {
+                connection = factory.createConnection(username, password);
+            } else {
+                connection = factory.createConnection();
+            }
             connection.start();
         }
         return connection;

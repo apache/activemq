@@ -112,6 +112,20 @@ public class MessageQuery extends QueueBrowseQuery {
         return null;
     }
 
+    public Map<String, Object> getPropertiesMap() throws JMSException {
+        Map<String, Object> answer = new HashMap<String, Object>();
+        Message aMessage = getMessage();
+        Enumeration iter = aMessage.getPropertyNames();
+        while (iter.hasMoreElements()) {
+            String name = (String) iter.nextElement();
+            Object value = aMessage.getObjectProperty(name);
+            if (value != null) {
+                answer.put(name, value);
+            }
+        }
+        return answer;
+    }
+
     protected Map<String, Object> createMapBody(MapMessage mapMessage) throws JMSException {
         Map<String, Object> answer = new HashMap<String, Object>();
         Enumeration iter = mapMessage.getMapNames();
