@@ -16,16 +16,16 @@
  */
 package org.apache.activemq.transport.stomp;
 
-import org.apache.activemq.transport.tcp.TcpTransport;
-import org.apache.activemq.util.ByteArrayOutputStream;
-import org.apache.activemq.util.DataByteArrayInputStream;
-
 import java.io.ByteArrayInputStream;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+
+import org.apache.activemq.transport.tcp.TcpTransport;
+import org.apache.activemq.util.ByteArrayOutputStream;
+import org.apache.activemq.util.DataByteArrayInputStream;
 
 public class StompCodec {
 
@@ -64,9 +64,6 @@ public class StompCodec {
                    action = wf.parseAction(data);
                    headers = wf.parseHeaders(data);
                    try {
-                       if (action.equals(Stomp.Commands.CONNECT) || action.equals(Stomp.Commands.STOMP)) {
-                           wf.setStompVersion(detectVersion(headers));
-                       }
                        String contentLengthHeader = headers.get(Stomp.Headers.CONTENT_LENGTH);
                        if ((action.equals(Stomp.Commands.SEND) || action.equals(Stomp.Responses.MESSAGE)) && contentLengthHeader != null) {
                            contentLength = wf.parseContentLength(contentLengthHeader);
