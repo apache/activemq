@@ -332,9 +332,10 @@ public final class BTreeNode<Key,Value> {
                         keys = child.keys;
                         children = child.children;
                         values = child.values;
+                        // free up the page..
+                        tx.free(child.getPage());
                     }
-                    // free up the page..
-                    tx.free(child.getPage());
+                    
                 }
                 index.storeNode(tx, this, true);
             }
