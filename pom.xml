@@ -112,7 +112,7 @@
     <xmlresolver-bundle-version>1.2_5</xmlresolver-bundle-version>
     <xpp3-version>1.1.4c</xpp3-version>
     <xstream-version>1.4.3</xstream-version>
-    <xbean-version>3.11.1</xbean-version>
+    <xbean-version>3.12</xbean-version>
     <xerces-version>2.9.1</xerces-version>
     <zookeeper-version>3.3.5</zookeeper-version>
 

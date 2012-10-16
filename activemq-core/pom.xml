@@ -1194,7 +1194,7 @@
           <plugin>
             <groupId>org.apache.xbean</groupId>
             <artifactId>maven-xbean-plugin</artifactId>
-            <version>3.11.2-SNAPSHOT</version>
+            <version>3.12</version>
             <executions>
               <execution>
               <phase>process-classes</phase>
