@@ -43,6 +43,7 @@ import org.slf4j.LoggerFactory;
 import static org.fusesource.hawtbuf.UTF8Buffer.utf8;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 
 public class MQTTTest {
@@ -59,6 +60,7 @@ public class MQTTTest {
         brokerService = new BrokerService();
         brokerService.setPersistent(false);
         brokerService.setAdvisorySupport(false);
+        brokerService.setUseJmx(false);
         this.numberOfMessages = 2000;
     }
 
@@ -86,7 +88,8 @@ public class MQTTTest {
             public void run() {
                 for (int i = 0; i < numberOfMessages; i++){
                     try {
-                        Message message = subscribeConnection.receive();
+                        Message message = subscribeConnection.receive(5, TimeUnit.SECONDS);
+                        assertNotNull("Should get a message", message);
                         message.ack();
                         latch.countDown();
                     } catch (Exception e) {
@@ -120,13 +123,13 @@ public class MQTTTest {
 
         connection.connect();
 
-
         Topic[] topics = {new Topic(utf8("foo"), QoS.AT_MOST_ONCE)};
         connection.subscribe(topics);
         for (int i = 0; i < numberOfMessages; i++) {
             String payload = "Test Message: " + i;
-            connection.publish("foo", payload.getBytes(), QoS.AT_MOST_ONCE, false);
-            Message message = connection.receive();
+            connection.publish("foo2", payload.getBytes(), QoS.AT_MOST_ONCE, false);
+            Message message = connection.receive(5, TimeUnit.SECONDS);
+            assertNotNull("Should get a message", message);
             assertEquals(payload, new String(message.getPayload()));
         }
         connection.disconnect();
@@ -147,7 +150,8 @@ public class MQTTTest {
         for (int i = 0; i < numberOfMessages; i++) {
             String payload = "Test Message: " + i;
             connection.publish("foo", payload.getBytes(), QoS.AT_LEAST_ONCE, false);
-            Message message = connection.receive();
+            Message message = connection.receive(5, TimeUnit.SECONDS);
+            assertNotNull("Should get a message", message);
             message.ack();
             assertEquals(payload, new String(message.getPayload()));
         }
@@ -173,7 +177,9 @@ public class MQTTTest {
         for (int i = 0; i < numberOfMessages; i++) {
             String payload = "Test Message: " + i;
             pubConnection.publish("foo", payload.getBytes(), QoS.EXACTLY_ONCE, false);
-            Message message = subConnection.receive();
+            Message message = subConnection.receive(5, TimeUnit.SECONDS);
+            assertNotNull("Should get a message", message);
+            LOG.debug(payload);
             message.ack();
             assertEquals(payload, new String(message.getPayload()));
         }
@@ -204,7 +210,8 @@ public class MQTTTest {
         subConnection.subscribe(topics);
         for (int i = 0; i < 10; i++) {
             pubConnection.publish("foo", payload, QoS.AT_LEAST_ONCE, false);
-            Message message = subConnection.receive();
+            Message message = subConnection.receive(5, TimeUnit.SECONDS);
+            assertNotNull("Should get a message", message);
             message.ack();
             assertArrayEquals(payload, message.getPayload());
         }
@@ -232,7 +239,8 @@ public class MQTTTest {
         for (int i = 0; i < numberOfMessages; i++) {
             String payload = "Test Message: " + i;
             connection.publish("foo/bah", payload.getBytes(), QoS.AT_LEAST_ONCE, false);
-            ActiveMQMessage message = (ActiveMQMessage) consumer.receive();
+            ActiveMQMessage message = (ActiveMQMessage) consumer.receive(5000);
+            assertNotNull("Should get a message", message);
             ByteSequence bs = message.getContent();
             assertEquals(payload, new String(bs.data, bs.offset, bs.length));
         }
@@ -264,7 +272,8 @@ public class MQTTTest {
             String payload = "This is Test Message: " + i;
             TextMessage sendMessage = s.createTextMessage(payload);
             producer.send(sendMessage);
-            Message message = connection.receive();
+            Message message = connection.receive(5, TimeUnit.SECONDS);
+            assertNotNull("Should get a message", message);
             message.ack();
             assertEquals(payload, new String(message.getPayload()));
         }
